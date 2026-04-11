@@ -748,21 +748,92 @@ serve(async (req) => {
             });
           }
           if (RESEND_API_KEY && email) {
-            await sendM2Email(email, "TechAlert is Active — You'll Hear About Available Techs Before Anyone Else", m2Email({
-              greeting: `Hey${meta.company_name ? " " + meta.company_name : ""} —`,
-              headline: "TechAlert Hiring Monitor is Live",
-              body: `<p style="margin:0 0 12px">Starting tomorrow, we'll scan three sources daily and alert you when licensed tradespeople become available in Metro Detroit:</p>
-<p style="margin:0 0 8px">🏛️ <strong>Michigan MIOSHA License Database</strong> — public records of every licensed boiler operator, steam engineer, and pressure vessel inspector in the state</p>
-<p style="margin:0 0 8px">🔍 <strong>Apollo Professional Database</strong> — HVAC techs, plumbers, pipefitters, and electricians in your area</p>
-<p style="margin:0 0 16px">📋 <strong>Job Board Monitoring</strong> — tradespeople actively posting their availability</p>
-<p style="margin:0 0 8px"><strong>How alerts work:</strong></p>
-<ul style="margin:0 0 16px;padding-left:20px;color:#475569">
-<li>Score 7-10: Instant SMS + email alert (hot candidates)</li>
-<li>Score 5-6: Daily email digest</li>
-<li>Each candidate includes name, trade, city, license info, and availability score</li>
-</ul>
-<p style="margin:0;color:#64748b;font-size:13px">Reply to adjust your target roles or zip codes. Questions? Call Matt: (313) 806-4952</p>`,
-            }));
+            const companyGreet = meta.company_name ? ` ${meta.company_name}` : "";
+            const welcomeHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;">
+<tr><td align="center" style="padding:32px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
+
+  <!-- HEADER -->
+  <tr><td style="background:linear-gradient(135deg,#0a1628 0%,#1e293b 100%);padding:36px 28px 28px;border-radius:16px 16px 0 0;border-bottom:3px solid #00d4ff;text-align:center;">
+    <p style="margin:0;color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;">⚡ TechAlert</p>
+    <p style="margin:12px 0 0;color:#fff;font-size:26px;font-weight:800;line-height:1.2;letter-spacing:-0.5px;">You're In.</p>
+    <p style="margin:6px 0 0;color:#94a3b8;font-size:14px;">Your hiring advantage starts tomorrow morning.</p>
+  </td></tr>
+
+  <!-- BODY -->
+  <tr><td style="background:#fff;padding:28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+    <p style="color:#1e293b;font-size:15px;line-height:1.8;margin:0 0 20px;">Hey${companyGreet} —</p>
+    <p style="color:#475569;font-size:15px;line-height:1.8;margin:0 0 20px;">Welcome to TechAlert. Starting tomorrow at 7am, we scan <strong>three sources every single day</strong> looking for licensed tradespeople in your area — and alert you before anyone else knows they're available.</p>
+
+    <!-- SOURCE CARDS -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+      <tr><td style="padding:14px 16px;background:#0a162808;border-radius:12px;border-left:4px solid #00d4ff;margin-bottom:8px;">
+        <p style="margin:0;font-size:14px;color:#1e293b;font-weight:700;">🏛️ Michigan MIOSHA License Database</p>
+        <p style="margin:4px 0 0;font-size:13px;color:#64748b;line-height:1.5;">Public records of every licensed boiler operator, steam engineer, and pressure vessel inspector in the state. <strong>New license issued = new talent entering the market.</strong> No other tool monitors this.</p>
+      </td></tr>
+      <tr><td style="height:8px;"></td></tr>
+      <tr><td style="padding:14px 16px;background:#0a162808;border-radius:12px;border-left:4px solid #8b5cf6;">
+        <p style="margin:0;font-size:14px;color:#1e293b;font-weight:700;">🔍 Apollo Professional Database</p>
+        <p style="margin:4px 0 0;font-size:13px;color:#64748b;line-height:1.5;">HVAC techs, plumbers, pipefitters, and electricians matched by location and title across Metro Detroit.</p>
+      </td></tr>
+      <tr><td style="height:8px;"></td></tr>
+      <tr><td style="padding:14px 16px;background:#0a162808;border-radius:12px;border-left:4px solid #f59e0b;">
+        <p style="margin:0;font-size:14px;color:#1e293b;font-weight:700;">📋 Job Board Monitoring</p>
+        <p style="margin:4px 0 0;font-size:13px;color:#64748b;line-height:1.5;">Tradespeople actively posting their availability on Indeed, ZipRecruiter, and forums.</p>
+      </td></tr>
+    </table>
+
+    <!-- HOW ALERTS WORK -->
+    <p style="margin:0 0 12px;font-size:14px;font-weight:800;color:#1e293b;text-transform:uppercase;letter-spacing:0.5px;">How Your Alerts Work</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+      <tr>
+        <td style="padding:10px 14px;background:#dc262610;border-radius:10px;">
+          <p style="margin:0;font-size:13px;color:#1e293b;"><span style="font-weight:800;color:#dc2626;">🔥 Score 8-10</span> — Instant SMS + email. Active job seeker, fresh license, local.</p>
+        </td>
+      </tr>
+      <tr><td style="height:6px;"></td></tr>
+      <tr>
+        <td style="padding:10px 14px;background:#e8621a10;border-radius:10px;">
+          <p style="margin:0;font-size:13px;color:#1e293b;"><span style="font-weight:800;color:#e8621a;">⚡ Score 7</span> — Instant SMS + email. Likely available, recent license or job board appearance.</p>
+        </td>
+      </tr>
+      <tr><td style="height:6px;"></td></tr>
+      <tr>
+        <td style="padding:10px 14px;background:#f59e0b10;border-radius:10px;">
+          <p style="margin:0;font-size:13px;color:#1e293b;"><span style="font-weight:800;color:#f59e0b;">📋 Score 5-6</span> — Daily email digest. Professional profile matches your criteria.</p>
+        </td>
+      </tr>
+    </table>
+
+    <p style="color:#475569;font-size:15px;line-height:1.8;margin:0 0 8px;">Each candidate alert includes their <strong>name, trade, city, license info, contact details</strong> (when available), and our AI availability score.</p>
+    <p style="color:#475569;font-size:14px;line-height:1.8;margin:0;">Want to adjust your target roles or zip codes? Just reply to this email.</p>
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td style="padding:20px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 16px 16px;background:#0a1628;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td>
+        <table cellpadding="0" cellspacing="0"><tr>
+          <td style="vertical-align:middle;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt"></td>
+          <td style="padding-left:12px;vertical-align:middle;">
+            <p style="margin:0;font-size:14px;font-weight:700;color:#fff;">Matt Michels</p>
+            <p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">Detroit Web Agency · <a href="tel:+13138064952" style="color:#00d4ff;text-decoration:none;">(313) 806-4952</a></p>
+          </td>
+        </tr></table>
+      </td>
+      <td style="text-align:right;vertical-align:middle;">
+        <p style="margin:0;font-size:10px;color:#64748b;"><a href="mailto:matt@mattmichelstraining.com?subject=Unsubscribe%20TechAlert" style="color:#64748b;text-decoration:none;">Unsubscribe</a></p>
+      </td>
+    </tr></table>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body></html>`;
+            await sendM2Email(email, `⚡ TechAlert is Live — Your Hiring Advantage Starts Tomorrow`, welcomeHtml);
             await notifyMatt(
               `💰 New TechAlert Client — ${meta.company_name || email} ($${meta.plan === "bundle" ? "49" : "99"}/mo)`,
               `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Phone: ${meta.owner_phone || "n/a"}<br>Plan: ${meta.plan || "standalone"}</p>`

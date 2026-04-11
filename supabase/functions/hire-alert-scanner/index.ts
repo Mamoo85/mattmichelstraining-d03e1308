@@ -20,7 +20,7 @@ async function notifyMatt(subject: string, html: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "M² TechAlert <matt@mattmichelstraining.com>",
+      from: "Detroit Web Agency <matt@mattmichelstraining.com>",
       to: ["matt@mattmichelstraining.com"],
       subject,
       html,
@@ -234,7 +234,7 @@ Return JSON: { "score": number, "reason": "one sentence explanation" }`,
   return result;
 }
 
-// Send alert email to a client
+// Send alert email to a client — premium design
 async function sendAlertEmail(
   client: { owner_email: string; company_name: string },
   candidates: ScoredCandidate[],
@@ -242,63 +242,156 @@ async function sendAlertEmail(
 ) {
   if (!RESEND_API_KEY || !client.owner_email) return;
 
+  const hotCount = candidates.filter((c) => c.availability_score >= 7).length;
+
+  const sourceLabel = (s: string) =>
+    s === "miosha" ? "MIOSHA License DB" : s === "apollo" ? "Apollo" : "Job Board";
+
+  const sourceIcon = (s: string) =>
+    s === "miosha" ? "🏛️" : s === "apollo" ? "🔍" : "📋";
+
+  const scoreBg = (s: number) =>
+    s >= 8 ? "#dc2626" : s >= 7 ? "#e8621a" : s >= 5 ? "#f59e0b" : "#94a3b8";
+
   const candidateCards = candidates
     .map(
       (c) => `
-    <div style="border:1px solid ${c.availability_score >= 7 ? "#fbbf24" : "#e2e8f0"};border-radius:8px;padding:18px;margin:0 0 14px;background:${c.availability_score >= 7 ? "#fffbeb" : "#fff"};">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin:0 0 6px;">
-        <p style="margin:0;font-size:15px;font-weight:700;color:#1e293b;">${c.full_name}</p>
-        <span style="background:${c.availability_score >= 7 ? "#e8621a" : "#64748b"};color:#fff;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;margin-left:12px;">
-          ${c.availability_score}/10 ${c.availability_score >= 7 ? "🔥" : ""}
-        </span>
-      </div>
-      <p style="margin:0 0 4px;font-size:13px;color:#64748b;"><strong>Trade:</strong> ${c.license_type || "Field Technician"} · <strong>Location:</strong> ${c.city || "Metro Detroit"}</p>
-      ${c.license_number ? `<p style="margin:0 0 4px;font-size:13px;color:#64748b;"><strong>License:</strong> ${c.license_number}${c.license_expiry ? ` (exp. ${c.license_expiry})` : ""}</p>` : ""}
-      ${c.email ? `<p style="margin:0 0 4px;font-size:13px;color:#0ea5e9;"><strong>Email:</strong> ${c.email}</p>` : ""}
-      <p style="margin:6px 0 0;font-size:13px;color:#334155;font-style:italic;">${c.score_reason}</p>
-      <p style="margin:6px 0 0;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;">Source: ${c.source === "miosha" ? "Michigan MIOSHA License DB" : c.source === "apollo" ? "Apollo Professional Database" : "Job Board Monitoring"}</p>
-    </div>`
+    <tr><td style="padding:0 0 16px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-radius:12px;overflow:hidden;border:1px solid ${c.availability_score >= 7 ? "#e8621a40" : "#e2e8f0"};${c.availability_score >= 7 ? "box-shadow:0 2px 8px rgba(232,98,26,0.12);" : ""}">
+        <!-- Score bar -->
+        <tr><td style="background:${c.availability_score >= 7 ? "linear-gradient(135deg,#0a1628,#1e293b)" : "#f8fafc"};padding:14px 18px;">
+          <table width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td>
+              <p style="margin:0;font-size:16px;font-weight:800;color:${c.availability_score >= 7 ? "#fff" : "#1e293b"};letter-spacing:-0.3px;">${c.full_name}</p>
+              <p style="margin:3px 0 0;font-size:12px;color:${c.availability_score >= 7 ? "#94a3b8" : "#64748b"};">${sourceIcon(c.source)} ${sourceLabel(c.source)}</p>
+            </td>
+            <td style="text-align:right;vertical-align:top;">
+              <table cellpadding="0" cellspacing="0"><tr>
+                <td style="background:${scoreBg(c.availability_score)};color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:800;font-family:-apple-system,sans-serif;letter-spacing:0.5px;">
+                  ${c.availability_score >= 8 ? "🔥 " : c.availability_score >= 7 ? "⚡ " : ""}${c.availability_score}/10
+                </td>
+              </tr></table>
+            </td>
+          </tr></table>
+        </td></tr>
+        <!-- Details -->
+        <tr><td style="padding:16px 18px;background:#fff;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="padding:0 0 8px;">
+                <table cellpadding="0" cellspacing="0"><tr>
+                  <td style="background:#00d4ff18;color:#0891b2;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">${c.license_type || "Field Technician"}</td>
+                  <td width="8"></td>
+                  <td style="background:#f1f5f9;color:#64748b;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;">📍 ${c.city || "Metro Detroit"}</td>
+                </tr></table>
+              </td>
+            </tr>
+            ${c.license_number ? `<tr><td style="padding:4px 0;font-size:13px;color:#475569;">🪪 License: <strong>${c.license_number}</strong>${c.license_expiry ? ` · Exp: ${c.license_expiry}` : ""}</td></tr>` : ""}
+            ${c.email ? `<tr><td style="padding:4px 0;font-size:13px;"><a href="mailto:${c.email}" style="color:#0891b2;text-decoration:none;font-weight:600;">✉️ ${c.email}</a></td></tr>` : ""}
+            ${c.phone ? `<tr><td style="padding:4px 0;font-size:13px;"><a href="tel:${c.phone}" style="color:#e8621a;text-decoration:none;font-weight:700;font-size:15px;">📞 ${c.phone}</a></td></tr>` : ""}
+            <tr><td style="padding:8px 0 0;">
+              <p style="margin:0;font-size:12px;color:#64748b;line-height:1.5;font-style:italic;background:#f8fafc;padding:8px 12px;border-radius:8px;border-left:3px solid ${scoreBg(c.availability_score)};">${c.score_reason}</p>
+            </td></tr>
+          </table>
+        </td></tr>
+      </table>
+    </td></tr>`
     )
     .join("");
+
+  const subjectEmoji = hotCount >= 3 ? "🔥🔥🔥" : hotCount >= 1 ? "🔥" : "📋";
+  const subjectText = hotCount > 0
+    ? `${subjectEmoji} ${hotCount} hot ${hotCount === 1 ? "candidate" : "candidates"} — act fast`
+    : `${candidates.length} licensed ${candidates.length === 1 ? "tech" : "techs"} spotted nearby`;
 
   await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "TechAlert <matt@mattmichelstraining.com>",
+      from: "TechAlert by Detroit Web Agency <matt@mattmichelstraining.com>",
       to: [client.owner_email],
-      subject: `[TechAlert] ${candidates.length} licensed ${candidates.length === 1 ? "tech" : "techs"} spotted in your area — ${dateStr}`,
+      bcc: ["matthewmichels4@gmail.com"],
+      subject: `${subjectText} | TechAlert ${dateStr}`,
       html: `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;">
-<tr><td align="center" style="padding:24px 16px;">
+<body style="margin:0;padding:0;background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;">
+<tr><td align="center" style="padding:32px 16px;">
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
 
-  <tr><td style="background:#0a1628;padding:24px 28px;border-radius:10px 10px 0 0;">
-    <p style="margin:0;color:#00d4ff;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">TechAlert by Detroit Web Agency</p>
-    <p style="margin:6px 0 0;color:#fff;font-size:20px;font-weight:700;">Licensed Techs Available in Your Area</p>
-    <p style="margin:4px 0 0;color:#94a3b8;font-size:13px;">${dateStr} · ${candidates.length} ${candidates.length === 1 ? "candidate" : "candidates"} found</p>
+  <!-- HEADER -->
+  <tr><td style="background:linear-gradient(135deg,#0a1628 0%,#1e293b 100%);padding:32px 28px 24px;border-radius:16px 16px 0 0;border-bottom:3px solid #00d4ff;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td>
+        <p style="margin:0;color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;">⚡ TechAlert</p>
+        <p style="margin:8px 0 0;color:#fff;font-size:24px;font-weight:800;line-height:1.2;letter-spacing:-0.5px;">New Licensed Techs<br>in Your Area</p>
+      </td>
+      <td style="text-align:right;vertical-align:top;">
+        <table cellpadding="0" cellspacing="0"><tr>
+          <td style="background:#00d4ff20;border:1px solid #00d4ff40;padding:12px 16px;border-radius:12px;text-align:center;">
+            <p style="margin:0;font-size:28px;font-weight:900;color:#00d4ff;line-height:1;">${candidates.length}</p>
+            <p style="margin:2px 0 0;font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;font-weight:700;">${candidates.length === 1 ? "Candidate" : "Candidates"}</p>
+          </td>
+        </tr></table>
+      </td>
+    </tr></table>
+    <p style="margin:16px 0 0;color:#94a3b8;font-size:13px;">${dateStr}${client.company_name ? ` · for ${client.company_name}` : ""}</p>
   </td></tr>
 
-  <tr><td style="background:#fff;padding:28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
-    <p style="color:#334155;font-size:15px;line-height:1.7;margin:0 0 24px;">
-      We scanned MIOSHA's public license database, Apollo, and job boards. Here's what we found near you today.
-      <strong>Be first — your competitors don't have this.</strong>
+  <!-- URGENCY BAR (only for hot candidates) -->
+  ${hotCount > 0 ? `<tr><td style="background:#e8621a;padding:12px 28px;">
+    <p style="margin:0;color:#fff;font-size:13px;font-weight:700;text-align:center;">🔥 ${hotCount} high-availability ${hotCount === 1 ? "candidate" : "candidates"} detected — your competitors don't have this intel</p>
+  </td></tr>` : ""}
+
+  <!-- BODY -->
+  <tr><td style="background:#fff;padding:28px;${hotCount > 0 ? "" : "border-top:1px solid #e2e8f0;"}">
+    <p style="color:#1e293b;font-size:15px;line-height:1.7;margin:0 0 8px;">
+      Hey${client.company_name ? ` ${client.company_name} team` : ""} —
+    </p>
+    <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      We scanned Michigan's MIOSHA license database, Apollo, and job boards this morning. ${hotCount > 0 ? `<strong>${hotCount} high-scoring ${hotCount === 1 ? "candidate" : "candidates"}</strong> — act fast before someone else does.` : "Here's what we found near you."}
     </p>
 
-    ${candidateCards}
-
-    <hr style="border:1px solid #e2e8f0;margin:24px 0;">
-    <p style="font-size:12px;color:#94a3b8;line-height:1.7;">Candidates scored 1-10 on immediate availability. 7+ triggers an SMS alert. Source data comes from Michigan MIOSHA public license records and professional databases. Reply to adjust your target roles or zip codes.</p>
+    <!-- CANDIDATE CARDS -->
+    <table width="100%" cellpadding="0" cellspacing="0">
+      ${candidateCards}
+    </table>
   </td></tr>
 
-  <tr><td style="padding:16px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;background:#f8fafc;">
-    <div style="display:flex;align-items:center;gap:12px;">
-      <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" alt="Matt">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency<br>(313) 806-4952 · detroitwebagent.com</div>
-    </div>
+  <!-- HOW SCORING WORKS -->
+  <tr><td style="background:#f8fafc;padding:20px 28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+    <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;">How Scoring Works</p>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="padding:4px 0;font-size:12px;color:#475569;">🔥 <strong>8-10</strong> — Active job seeker, fresh license, local, has contact info</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0;font-size:12px;color:#475569;">⚡ <strong>7</strong> — Likely available: recent license or appeared on job board</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0;font-size:12px;color:#475569;">📋 <strong>5-6</strong> — Possibly available: professional profile matches your criteria</td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td style="padding:20px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 16px 16px;background:#0a1628;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td>
+        <table cellpadding="0" cellspacing="0"><tr>
+          <td style="vertical-align:middle;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt"></td>
+          <td style="padding-left:12px;vertical-align:middle;">
+            <p style="margin:0;font-size:14px;font-weight:700;color:#fff;">Matt Michels</p>
+            <p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">Detroit Web Agency · <a href="tel:+13138064952" style="color:#00d4ff;text-decoration:none;">(313) 806-4952</a></p>
+          </td>
+        </tr></table>
+      </td>
+      <td style="text-align:right;vertical-align:middle;">
+        <p style="margin:0;font-size:10px;color:#475569;">Reply to adjust roles or zip codes</p>
+        <p style="margin:2px 0 0;font-size:10px;color:#475569;"><a href="mailto:matt@mattmichelstraining.com?subject=Unsubscribe%20TechAlert" style="color:#64748b;text-decoration:none;">Unsubscribe</a></p>
+      </td>
+    </tr></table>
   </td></tr>
 
 </table>
@@ -432,7 +525,9 @@ serve(async () => {
       // SMS for hot candidates (7+) matching this client's roles
       if (client.notify_sms && client.owner_phone && clientHotCandidates.length) {
         const top = clientHotCandidates[0];
-        const smsBody = `TechAlert: ${clientHotCandidates.length} hot licensed ${clientHotCandidates.length === 1 ? "tech" : "techs"} in Metro Detroit!\n\nTop: ${top.full_name} — ${top.license_type || "tradesperson"} (${top.city || "local"})\nScore: ${top.availability_score}/10\n\nCheck your email for full details. Reply STOP to opt out.`;
+        const smsBody = clientHotCandidates.length === 1
+          ? `🔥 TechAlert: Licensed ${top.license_type || "tech"} just spotted in ${top.city || "Metro Detroit"}!\n\n${top.full_name} — Score ${top.availability_score}/10\n${top.email ? `Email: ${top.email}\n` : ""}${top.phone ? `Phone: ${top.phone}\n` : ""}\nYou're the ONLY company getting this alert. Move fast.\n\nFull details in your email. Reply STOP to opt out.\n— Detroit Web Agency`
+          : `🔥 TechAlert: ${clientHotCandidates.length} licensed techs just spotted in Metro Detroit!\n\nTop match: ${top.full_name} — ${top.license_type || "tradesperson"} in ${top.city || "local"} (${top.availability_score}/10)\n\nYour competitors don't have this intel. Check your email NOW.\n\nReply STOP to opt out.\n— Detroit Web Agency`;
         await sendSMS(client.owner_phone, TWILIO_PHONE_NUMBER, smsBody, "hire_alert");
       }
     } catch (e) {
@@ -463,66 +558,120 @@ serve(async () => {
     errors: null,
   });
 
-  // Founder daily report — Matt sees every candidate found today with full scores
+  // Founder daily report — premium executive dashboard for Matt
+  const sourceBreakdown = {
+    miosha: scored.filter((c) => c.source === "miosha").length,
+    apollo: scored.filter((c) => c.source === "apollo").length,
+    firecrawl: scored.filter((c) => c.source === "firecrawl").length,
+  };
+
   const candidateRows = scored.length
     ? scored
         .sort((a, b) => b.availability_score - a.availability_score)
         .map(
-          (c) =>
-            `<tr style="border-bottom:1px solid #e2e8f0;">
-              <td style="padding:10px 8px;font-size:13px;color:#1e293b;font-weight:${c.availability_score >= 7 ? "700" : "400"};">${c.full_name}</td>
-              <td style="padding:10px 8px;font-size:13px;color:#64748b;">${c.license_type || "—"}</td>
-              <td style="padding:10px 8px;font-size:13px;color:#64748b;">${c.city || "—"}</td>
-              <td style="padding:10px 8px;font-size:13px;text-align:center;">
-                <span style="background:${c.availability_score >= 7 ? "#e8621a" : c.availability_score >= 5 ? "#f59e0b" : "#94a3b8"};color:#fff;padding:2px 8px;border-radius:12px;font-weight:700;">${c.availability_score}/10</span>
+          (c, i) => {
+            const rowBg = c.availability_score >= 7 ? "#0a16280a" : i % 2 === 0 ? "#fff" : "#f8fafc";
+            const scoreBg = c.availability_score >= 8 ? "#dc2626" : c.availability_score >= 7 ? "#e8621a" : c.availability_score >= 5 ? "#f59e0b" : "#94a3b8";
+            const sourceIcon = c.source === "miosha" ? "🏛️" : c.source === "apollo" ? "🔍" : "📋";
+            return `<tr style="background:${rowBg};border-bottom:1px solid #e2e8f0;">
+              <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:${c.availability_score >= 7 ? "800" : "500"};">${c.full_name}${c.email ? `<br><span style="font-size:11px;color:#0891b2;font-weight:400;">${c.email}</span>` : ""}${c.phone ? `<br><span style="font-size:11px;color:#e8621a;font-weight:600;">${c.phone}</span>` : ""}</td>
+              <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.license_type || "—"}${c.license_number ? `<br><span style="font-size:10px;color:#94a3b8;">#${c.license_number}</span>` : ""}</td>
+              <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.city || "—"}</td>
+              <td style="padding:12px 10px;text-align:center;">
+                <span style="display:inline-block;background:${scoreBg};color:#fff;padding:3px 10px;border-radius:12px;font-weight:800;font-size:12px;">${c.availability_score >= 8 ? "🔥 " : ""}${c.availability_score}/10</span>
               </td>
-              <td style="padding:10px 8px;font-size:12px;color:#94a3b8;">${c.source}</td>
-              <td style="padding:10px 8px;font-size:12px;color:#334155;">${c.score_reason}</td>
-            </tr>`
+              <td style="padding:12px 10px;font-size:11px;color:#64748b;">${sourceIcon} ${c.source}</td>
+              <td style="padding:12px 10px;font-size:11px;color:#475569;line-height:1.4;">${c.score_reason}</td>
+            </tr>`;
+          }
         )
         .join("")
-    : `<tr><td colspan="6" style="padding:16px;text-align:center;color:#94a3b8;font-size:13px;">No new candidates found today.</td></tr>`;
+    : `<tr><td colspan="6" style="padding:32px;text-align:center;color:#94a3b8;font-size:14px;">No new candidates found today. Scanner ran successfully across all 3 sources.</td></tr>`;
 
   await notifyMatt(
-    `TechAlert Founder Report — ${dateStr} (${newCandidates.length} new, ${allHotCandidates.length} hot 🔥)`,
-    `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:680px;">
+    `${allHotCandidates.length > 0 ? "🔥 " : ""}TechAlert — ${dateStr} — ${newCandidates.length} new${allHotCandidates.length > 0 ? `, ${allHotCandidates.length} HOT` : ""}`,
+    `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;"><tr><td align="center" style="padding:32px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:720px;">
 
-<tr><td style="background:#0a1628;padding:24px 28px;border-radius:10px 10px 0 0;">
-  <p style="margin:0;color:#00d4ff;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">TechAlert — Founder Daily Report</p>
-  <p style="margin:6px 0 0;color:#fff;font-size:20px;font-weight:700;">${dateStr}</p>
+<!-- HEADER -->
+<tr><td style="background:linear-gradient(135deg,#0a1628 0%,#1e293b 100%);padding:28px 28px 20px;border-radius:16px 16px 0 0;border-bottom:3px solid #00d4ff;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td>
+      <p style="margin:0;color:#00d4ff;font-size:10px;font-weight:800;letter-spacing:4px;text-transform:uppercase;">⚡ TechAlert — Founder Report</p>
+      <p style="margin:8px 0 0;color:#fff;font-size:22px;font-weight:800;letter-spacing:-0.5px;">${dateStr}</p>
+      <p style="margin:4px 0 0;color:#64748b;font-size:12px;">Daily scan complete · ${clients.length} active ${clients.length === 1 ? "client" : "clients"}</p>
+    </td>
+    <td style="text-align:right;vertical-align:top;">
+      <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff40;" alt="Matt">
+    </td>
+  </tr></table>
 </td></tr>
 
-<tr><td style="background:#fff;padding:20px 28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
-    <tr>
-      <td style="text-align:center;padding:12px;background:#f1f5f9;border-radius:8px;"><p style="margin:0;font-size:22px;font-weight:700;color:#1e293b;">${allRaw.length}</p><p style="margin:4px 0 0;font-size:11px;color:#64748b;text-transform:uppercase;">Total Found</p></td>
-      <td width="12"></td>
-      <td style="text-align:center;padding:12px;background:#f1f5f9;border-radius:8px;"><p style="margin:0;font-size:22px;font-weight:700;color:#1e293b;">${newCandidates.length}</p><p style="margin:4px 0 0;font-size:11px;color:#64748b;text-transform:uppercase;">New to DB</p></td>
-      <td width="12"></td>
-      <td style="text-align:center;padding:12px;background:${allHotCandidates.length > 0 ? "#fff7ed" : "#f1f5f9"};border-radius:8px;border:${allHotCandidates.length > 0 ? "2px solid #e8621a" : "none"};"><p style="margin:0;font-size:22px;font-weight:700;color:${allHotCandidates.length > 0 ? "#e8621a" : "#1e293b"};">${allHotCandidates.length}</p><p style="margin:4px 0 0;font-size:11px;color:#64748b;text-transform:uppercase;">Hot (7+) 🔥</p></td>
-      <td width="12"></td>
-      <td style="text-align:center;padding:12px;background:#f1f5f9;border-radius:8px;"><p style="margin:0;font-size:22px;font-weight:700;color:#1e293b;">${clients.length}</p><p style="margin:4px 0 0;font-size:11px;color:#64748b;text-transform:uppercase;">Clients Alerted</p></td>
-    </tr>
-  </table>
+<!-- KPI DASHBOARD -->
+<tr><td style="background:#1e293b;padding:20px 28px;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td style="text-align:center;padding:16px 8px;background:#ffffff08;border-radius:12px;">
+      <p style="margin:0;font-size:32px;font-weight:900;color:#00d4ff;line-height:1;">${allRaw.length}</p>
+      <p style="margin:4px 0 0;font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Scanned</p>
+    </td>
+    <td width="8"></td>
+    <td style="text-align:center;padding:16px 8px;background:#ffffff08;border-radius:12px;">
+      <p style="margin:0;font-size:32px;font-weight:900;color:#fff;line-height:1;">${newCandidates.length}</p>
+      <p style="margin:4px 0 0;font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">New</p>
+    </td>
+    <td width="8"></td>
+    <td style="text-align:center;padding:16px 8px;background:${allHotCandidates.length > 0 ? "#e8621a15" : "#ffffff08"};border-radius:12px;${allHotCandidates.length > 0 ? "border:1px solid #e8621a40;" : ""}">
+      <p style="margin:0;font-size:32px;font-weight:900;color:${allHotCandidates.length > 0 ? "#e8621a" : "#fff"};line-height:1;">${allHotCandidates.length}</p>
+      <p style="margin:4px 0 0;font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Hot 🔥</p>
+    </td>
+    <td width="8"></td>
+    <td style="text-align:center;padding:16px 8px;background:#ffffff08;border-radius:12px;">
+      <p style="margin:0;font-size:32px;font-weight:900;color:#10b981;line-height:1;">${alertsSent}</p>
+      <p style="margin:4px 0 0;font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Alerted</p>
+    </td>
+  </tr></table>
+</td></tr>
 
-  <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#1e293b;">All Scored Candidates Today</p>
-  <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
-    <tr style="background:#f8fafc;">
-      <th style="padding:10px 8px;font-size:11px;color:#64748b;text-align:left;text-transform:uppercase;letter-spacing:1px;">Name</th>
-      <th style="padding:10px 8px;font-size:11px;color:#64748b;text-align:left;text-transform:uppercase;letter-spacing:1px;">Trade</th>
-      <th style="padding:10px 8px;font-size:11px;color:#64748b;text-align:left;text-transform:uppercase;letter-spacing:1px;">City</th>
-      <th style="padding:10px 8px;font-size:11px;color:#64748b;text-align:center;text-transform:uppercase;letter-spacing:1px;">Score</th>
-      <th style="padding:10px 8px;font-size:11px;color:#64748b;text-align:left;text-transform:uppercase;letter-spacing:1px;">Source</th>
-      <th style="padding:10px 8px;font-size:11px;color:#64748b;text-align:left;text-transform:uppercase;letter-spacing:1px;">Reason</th>
+<!-- SOURCE BREAKDOWN -->
+<tr><td style="background:#1e293b;padding:0 28px 16px;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td style="padding:8px 12px;background:#ffffff06;border-radius:8px;">
+      <span style="font-size:11px;color:#94a3b8;">🏛️ MIOSHA: <strong style="color:#00d4ff;">${sourceBreakdown.miosha}</strong></span>
+      <span style="font-size:11px;color:#334155;"> · </span>
+      <span style="font-size:11px;color:#94a3b8;">🔍 Apollo: <strong style="color:#00d4ff;">${sourceBreakdown.apollo}</strong></span>
+      <span style="font-size:11px;color:#334155;"> · </span>
+      <span style="font-size:11px;color:#94a3b8;">📋 Job Boards: <strong style="color:#00d4ff;">${sourceBreakdown.firecrawl}</strong></span>
+    </td>
+  </tr></table>
+</td></tr>
+
+<!-- CANDIDATE TABLE -->
+<tr><td style="background:#fff;padding:24px 20px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+  <p style="margin:0 0 16px;font-size:14px;font-weight:800;color:#1e293b;text-transform:uppercase;letter-spacing:0.5px;">All Candidates · Sorted by Score</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+    <tr style="background:#0a1628;">
+      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Name</th>
+      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Trade</th>
+      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">City</th>
+      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:center;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Score</th>
+      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Src</th>
+      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Intel</th>
     </tr>
     ${candidateRows}
   </table>
 </td></tr>
 
-<tr><td style="padding:16px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;background:#f8fafc;">
-  <p style="margin:0;font-size:12px;color:#94a3b8;">Scores: 🔥 7+ = alert sent to clients · ⚡ 5-6 = digest only · Gray = stored, no alert. Sources: MIOSHA (MI public license DB), Apollo, job boards.</p>
+<!-- LEGEND + FOOTER -->
+<tr><td style="padding:20px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 16px 16px;background:#0a1628;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td style="font-size:11px;color:#64748b;line-height:1.6;">
+      🔥 <strong style="color:#e8621a;">8-10</strong> = alert sent &nbsp;·&nbsp;
+      ⚡ <strong style="color:#f59e0b;">5-7</strong> = digest only &nbsp;·&nbsp;
+      <span style="color:#94a3b8;">Below 5</span> = stored, no alert<br>
+      Sources: MIOSHA public license DB · Apollo · Indeed/ZipRecruiter
+    </td>
+  </tr></table>
 </td></tr>
 
 </table></td></tr></table>

@@ -365,18 +365,19 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
     body: (name) => `<p>Hey ${name} — your dispatch board is live. Reply with your tech list and I'll have everything set up within 24 hours. — Matt</p>`,
   },
   hire_alert_subscription: {
-    subject: "TechAlert is Active — We'll Alert You When Licensed Techs Go Available",
+    subject: "⚡ TechAlert is Live — Your Hiring Advantage Starts Tomorrow",
     nextStage: "📧 Welcome Email Sent",
     body: (name) => `
-      <p>Hey ${name}!</p>
-      <p>Welcome to TechAlert. Starting tomorrow morning, we'll scan three sources every day looking for licensed tradespeople available in Metro Detroit:</p>
-      <ul>
-        <li><strong>Michigan MIOSHA License Database</strong> — public records of every licensed boiler operator and steam engineer in the state</li>
-        <li><strong>Apollo Professional Database</strong> — HVAC techs, plumbers, pipefitters, and electricians by location and title</li>
-        <li><strong>Job Board Monitoring</strong> — tradespeople actively posting their availability</li>
-      </ul>
-      <p><strong>Hot candidates (score 7+)</strong> trigger an immediate SMS to your phone. <strong>All other candidates (score 5+)</strong> appear in your daily morning email digest.</p>
-      <p>Want to adjust your target roles or zip codes? Just reply to this email and let me know.</p>`,
+      <p>Hey ${name} —</p>
+      <p>Welcome to TechAlert. Starting tomorrow at 7am, we scan <strong>three sources every single day</strong> and alert you before anyone else knows a licensed tech is available:</p>
+      <p>🏛️ <strong>Michigan MIOSHA License Database</strong> — new license issued = new talent entering the market. No other tool monitors this.</p>
+      <p>🔍 <strong>Apollo Professional Database</strong> — HVAC techs, plumbers, pipefitters, and electricians matched by location.</p>
+      <p>📋 <strong>Job Board Monitoring</strong> — tradespeople actively posting their availability.</p>
+      <p><strong>How alerts work:</strong></p>
+      <p>🔥 <strong>Score 7-10:</strong> Instant SMS + email — act fast, these are hot<br>
+      📋 <strong>Score 5-6:</strong> Daily email digest — worth keeping an eye on</p>
+      <p>Each alert includes name, trade, city, license info, contact details (when available), and our AI availability score.</p>
+      <p style="color:#64748b;font-size:13px;">Want to adjust your target roles or zip codes? Just reply to this email. — Matt</p>`,
   },
 };
 
