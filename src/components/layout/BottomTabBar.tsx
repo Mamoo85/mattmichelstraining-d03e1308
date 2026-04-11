@@ -71,7 +71,7 @@ const HIDDEN_PATHS = [
   "/demo-real-estate",
   "/detroit-web-design", "/whats-included",
   "/matrix", "/matrix-training", "/matrix-merch",
-  "/admin",
+  "/admin", "/dwa-admin", "/field-service",
 ];
 
 const BottomTabBar = () => {
