@@ -18,15 +18,22 @@ jobs:
         with:
           version: latest
 
+      - name: Remove unused edge functions (zero-client products)
+        run: |
+          supabase functions delete ag-price-alerts --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete text-marketing-sender --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete re-newsletter-send --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-storm-lead-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-crime-digest-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete recall-alert-checker --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-church-newsletter-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-promo-planner-checkout --project-ref $SUPABASE_PROJECT_REF || true
+
       - name: Deploy contractor-lead-notify edge function
         run: |
           supabase functions deploy contractor-lead-notify --project-ref $SUPABASE_PROJECT_REF --no-verify-jwt
 
       - name: Deploy missed-call-handler edge function
-        # continue-on-error: secondary project is at function limit — missed-call-handler cannot be
-        # created as a new function until spend cap is disabled in Supabase dashboard for zmyczlfuufhngzovkjdh.
-        # Fix: Project Settings → Billing → disable spend cap → re-run this workflow.
-        continue-on-error: true
         run: |
           supabase functions deploy missed-call-handler --project-ref $SUPABASE_PROJECT_REF --no-verify-jwt
 
