@@ -206,6 +206,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ad_spend_allocation: {
+        Row: {
+          created_at: string
+          id: string
+          monthly_budget: number | null
+          notes: string | null
+          percentage_allocation: number | null
+          platform: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          monthly_budget?: number | null
+          notes?: string | null
+          percentage_allocation?: number | null
+          platform: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          monthly_budget?: number | null
+          notes?: string | null
+          percentage_allocation?: number | null
+          platform?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       admin_media_files: {
         Row: {
           created_at: string
@@ -898,6 +931,48 @@ export type Database = {
           tier?: string | null
           updated_at?: string | null
           website?: string | null
+        }
+        Relationships: []
+      }
+      business_strategy: {
+        Row: {
+          competitive_advantages: string[] | null
+          created_at: string
+          id: string
+          key_risks: string[] | null
+          mission_statement: string | null
+          monthly_overhead_target: number | null
+          monthly_revenue_target: number | null
+          primary_targets: string[] | null
+          quarterly_goals: Json | null
+          secondary_targets: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          competitive_advantages?: string[] | null
+          created_at?: string
+          id?: string
+          key_risks?: string[] | null
+          mission_statement?: string | null
+          monthly_overhead_target?: number | null
+          monthly_revenue_target?: number | null
+          primary_targets?: string[] | null
+          quarterly_goals?: Json | null
+          secondary_targets?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          competitive_advantages?: string[] | null
+          created_at?: string
+          id?: string
+          key_risks?: string[] | null
+          mission_statement?: string | null
+          monthly_overhead_target?: number | null
+          monthly_revenue_target?: number | null
+          primary_targets?: string[] | null
+          quarterly_goals?: Json | null
+          secondary_targets?: string[] | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -5851,6 +5926,60 @@ export type Database = {
           last_report_at?: string | null
           report_count?: number | null
           stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      product_wiki: {
+        Row: {
+          active_hooks_count: number | null
+          agent_connections: string[] | null
+          category: Database["public"]["Enums"]["wiki_category"]
+          client_description: string | null
+          created_at: string
+          description: string | null
+          dev_hours_spent: number | null
+          id: string
+          last_updated: string
+          monthly_operating_cost: number | null
+          printable_steps: Json | null
+          priority_rank: number | null
+          product_name: string
+          tech_stack: string[] | null
+          updated_by: string | null
+        }
+        Insert: {
+          active_hooks_count?: number | null
+          agent_connections?: string[] | null
+          category?: Database["public"]["Enums"]["wiki_category"]
+          client_description?: string | null
+          created_at?: string
+          description?: string | null
+          dev_hours_spent?: number | null
+          id?: string
+          last_updated?: string
+          monthly_operating_cost?: number | null
+          printable_steps?: Json | null
+          priority_rank?: number | null
+          product_name: string
+          tech_stack?: string[] | null
+          updated_by?: string | null
+        }
+        Update: {
+          active_hooks_count?: number | null
+          agent_connections?: string[] | null
+          category?: Database["public"]["Enums"]["wiki_category"]
+          client_description?: string | null
+          created_at?: string
+          description?: string | null
+          dev_hours_spent?: number | null
+          id?: string
+          last_updated?: string
+          monthly_operating_cost?: number | null
+          printable_steps?: Json | null
+          priority_rank?: number | null
+          product_name?: string
+          tech_stack?: string[] | null
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -11012,6 +11141,7 @@ export type Database = {
         | "agency_admin"
         | "client"
       lift_video_status: "pending_review" | "approved" | "rejected" | "archived"
+      wiki_category: "core_product" | "add_on" | "system" | "process"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -11150,6 +11280,7 @@ export const Constants = {
         "client",
       ],
       lift_video_status: ["pending_review", "approved", "rejected", "archived"],
+      wiki_category: ["core_product", "add_on", "system", "process"],
     },
   },
 } as const
