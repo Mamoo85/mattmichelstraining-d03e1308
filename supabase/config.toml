@@ -267,6 +267,9 @@ verify_jwt = false
 [functions.contractor-lead-notify]
 verify_jwt = false
 
+[functions.contractor-lead-health-monitor]
+verify_jwt = false
+
 [functions.contractor-prospector]
 verify_jwt = false
 

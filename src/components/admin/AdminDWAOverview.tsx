@@ -199,8 +199,8 @@ export default function AdminDWAOverview() {
             <p>Scans Michigan MIOSHA license DB daily. New license issued = new tech entering the market. No other tool does this.</p>
           </div>
           <div>
-            <p className="text-emerald-400 font-bold mb-1">SiteRadar — $49/mo (FieldDesk add-on)</p>
-            <p>Identifies the businesses visiting their website by IP. Reverse lookup gives company name, not anonymous analytics.</p>
+            <p className="text-emerald-400 font-bold mb-1">Contractor Leads — $399/mo</p>
+            <p>Exclusive territory lead gen. Homeowner fills form on SEO page, contractor gets SMS + email within minutes. 7-day free trial.</p>
           </div>
         </div>
       </div>

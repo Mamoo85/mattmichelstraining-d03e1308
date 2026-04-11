@@ -4,6 +4,7 @@
 // No status tracking needed — simpler and actually works.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
@@ -40,35 +41,15 @@ serve(async (req) => {
       return twiml("<Hangup/>");
     }
 
-    // Send SMS back to caller if we have Twilio credentials
-    if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN) {
-      const smsBody = "Hey! I just saw your call and I'll call you right back. — Matt @ Detroit Web Agency (313) 806-4952";
-      const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
-      const smsRes = await fetch(
-        `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Basic ${credentials}`,
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({
-            To: fromNumber,
-            From: toNumber,
-            Body: smsBody,
-          }),
-        }
-      );
-
-      if (smsRes.ok) {
-        const result = await smsRes.json();
-        console.log(`[missed-call-handler] SMS sent to ${fromNumber} — SID: ${result.sid}`);
-      } else {
-        const err = await smsRes.text();
-        console.error(`[missed-call-handler] Twilio SMS error: ${err}`);
-      }
+    // Send SMS back to caller using shared TCPA-compliant sendSMS
+    const smsBody = "Hey! I just saw your call and I'll call you right back. — Matt @ Detroit Web Agency (313) 806-4952";
+    const smsResult = await sendSMS(fromNumber, toNumber, smsBody, "missed_call");
+    if (smsResult.success) {
+      console.log(`[missed-call-handler] SMS sent to ${fromNumber} — SID: ${smsResult.sid}`);
+    } else if (smsResult.skipped) {
+      console.log(`[missed-call-handler] SMS skipped — ${fromNumber} is opted out`);
     } else {
-      console.warn("[missed-call-handler] TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN not set — SMS skipped");
+      console.error(`[missed-call-handler] SMS failed: ${smsResult.error}`);
     }
   } catch (e: unknown) {
     console.error("[missed-call-handler] Error:", e instanceof Error ? e.message : String(e));

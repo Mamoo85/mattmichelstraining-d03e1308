@@ -3,6 +3,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -19,7 +20,7 @@ serve(async (req) => {
       .select(`
         id, name, phone, email, message, project_type, created_at,
         contractor_lead_sites (trade, city, state, slug, active_contractor_id),
-        contractor_clients (name, business_name, email)
+        contractor_clients (name, business_name, email, phone)
       `)
       .eq("status", "new")
       .is("notified_at", null)
@@ -46,6 +47,18 @@ serve(async (req) => {
             html: `<p>Hey — you have a new lead waiting.<br><strong>${lead.name}</strong> — <a href="tel:${lead.phone}">${lead.phone}</a>${lead.email ? ` — ${lead.email}` : ""}</p><p>Reply to this email or call them directly. First one to respond wins the job.<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI \u00b7 (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>`,
           }),
         });
+
+        // SMS the contractor too
+        if (contractor.phone) {
+          const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+          const smsBody = `🔥 New ${site?.trade || "service"} lead!\n${lead.name} — ${lead.phone}${lead.project_type ? `\nProject: ${lead.project_type}` : ""}\nThis lead is EXCLUSIVE to you. Call them now!\n— M² Lead Network`;
+          const smsResult = await sendSMS(contractor.phone, TWILIO_PHONE, smsBody, "contractor_leads");
+          if (smsResult.success) {
+            console.log(`[LEAD-NOTIFY] SMS sent to contractor ${contractor.phone}`);
+          } else {
+            console.error(`[LEAD-NOTIFY] SMS failed: ${smsResult.error}`);
+          }
+        }
 
         await sb.from("contractor_leads")
           .update({ notified_at: new Date().toISOString(), status: "notified" })

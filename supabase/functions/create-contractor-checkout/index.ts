@@ -44,6 +44,7 @@ serve(async (req) => {
       mode: "subscription",
       payment_method_types: ["card"],
       customer_email: email,
+      subscription_data: { trial_period_days: 7 },
       line_items: [{ price: "price_1THQqsD52tPWee46ri58gzXf", quantity: 1 }],
       metadata: {
         type: "contractor_lead_subscription",

@@ -434,7 +434,7 @@ const Admin = () => {
         { key: "dwa-overview", label: "🏗 DWA Overview", component: <AdminDWAOverview /> },
         { key: "field-crm-clients", label: "🏢 FieldDesk Clients", component: <AdminFieldCRMClients /> },
         { key: "hire-alert-clients", label: "🔔 TechAlert Clients", component: <AdminHireAlertClients /> },
-        { key: "dwa-visitor-intel", label: "👁 SiteRadar (Visitor Intel)", component: <VisitorIntelFeed /> },
+        { key: "dwa-visitor-intel", label: "👁 Visitor Intel", component: <VisitorIntelFeed /> },
         { key: "dwa-dispatch-map", label: "🗺 Dispatch Map", component: <TechDispatchMap /> },
         { key: "dwa-review-engine", label: "⭐ Review Engine", component: <ReviewLeaderboard /> },
         { key: "dwa-crm", label: "🏗️ Web Design CRM", component: <AdminWebDesignCRM /> },

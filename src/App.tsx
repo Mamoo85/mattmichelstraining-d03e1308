@@ -123,6 +123,7 @@ const GbpManagement = lazyRetry(() => import("./pages/GbpManagement"));
 const NewsletterSponsor = lazyRetry(() => import("./pages/NewsletterSponsor"));
 const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
+const ContractorTerritory = lazyRetry(() => import("./pages/ContractorTerritory"));
 const FieldServiceManagement = lazyRetry(() => import("./pages/FieldServiceManagement"));
 const FieldServiceDispatch = lazyRetry(() => import("./pages/FieldServiceDispatch"));
 const FieldServiceTechApp = lazyRetry(() => import("./pages/FieldServiceTechApp"));
@@ -142,6 +143,7 @@ const DentalWebDesign = lazyRetry(() => import("./pages/DentalWebDesign"));
 const LegalWebDesign = lazyRetry(() => import("./pages/LegalWebDesign"));
 const HealthcareWebDesign = lazyRetry(() => import("./pages/HealthcareWebDesign"));
 const RestaurantWebDesign = lazyRetry(() => import("./pages/RestaurantWebDesign"));
+const RestaurantSMS = lazyRetry(() => import("./pages/RestaurantSMS"));
 const SocialMediaAI = lazyRetry(() => import("./pages/SocialMediaAI"));
 const TrainerSocialAI = lazyRetry(() => import("./pages/TrainerSocialAI"));
 const GetStarted = lazyRetry(() => import("./pages/GetStarted"));
@@ -535,6 +537,7 @@ const App = () => (
                     <Route path="/gbp-management" element={<GbpManagement />} />
                     <Route path="/sponsor" element={<NewsletterSponsor />} />
                     <Route path="/contractor-leads" element={<ContractorLeads />} />
+                    <Route path="/contractors/:slug" element={<ContractorTerritory />} />
                     <Route path="/field-service" element={<FieldServiceManagement />} />
                     <Route path="/field-service/dispatch" element={<FieldServiceDispatch />} />
                     <Route path="/field-service/tech" element={<FieldServiceTechApp />} />
@@ -553,6 +556,7 @@ const App = () => (
                     <Route path="/legal-web-design" element={<LegalWebDesign />} />
                     <Route path="/healthcare-web-design" element={<HealthcareWebDesign />} />
                     <Route path="/restaurant-web-design" element={<RestaurantWebDesign />} />
+                    <Route path="/restaurant-sms" element={<RestaurantSMS />} />
                     <Route path="/social-media-ai" element={<SocialMediaAI />} />
                     <Route path="/trainer-social-ai" element={<TrainerSocialAI />} />
                     <Route path="/get-started" element={<GetStarted />} />

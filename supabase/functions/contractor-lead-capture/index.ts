@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -139,6 +140,18 @@ serve(async (req) => {
 </body></html>`,
             }),
           });
+
+          // SMS the contractor immediately (in addition to email)
+          if (contractor.phone) {
+            const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+            const smsBody = `🔥 New ${tradeLabel} lead in ${cityLabel}!\n${name} — ${phone}${project_type ? `\nProject: ${project_type}` : ""}\nThis lead is EXCLUSIVE to you. Call them now!\n— M² Lead Network`;
+            const smsResult = await sendSMS(contractor.phone, TWILIO_PHONE, smsBody, "contractor_leads");
+            if (smsResult.success) {
+              console.log(`[LEAD-CAPTURE] SMS sent to contractor ${contractor.phone} — SID: ${smsResult.sid}`);
+            } else {
+              console.error(`[LEAD-CAPTURE] SMS failed to contractor: ${smsResult.error}`);
+            }
+          }
 
           // Mark lead as notified
           if (lead) {

@@ -1,24 +1,38 @@
+import { useState } from "react";
 import SEOHead from "@/components/layout/SEOHead";
-import WaitlistGate from "@/components/WaitlistGate";
-import { Phone, CheckCircle, XCircle } from "lucide-react";
+import { Phone, CheckCircle, XCircle, Shield, Zap, Clock, DollarSign, ArrowRight, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-const TRADES = [
-  { slug: "roofing-chicago", trade: "Roofing", city: "Chicago", state: "IL", monthly: "$249" },
-  { slug: "hvac-columbus", trade: "HVAC", city: "Columbus", state: "OH", monthly: "$249" },
-  { slug: "plumbing-phoenix", trade: "Plumbing", city: "Phoenix", state: "AZ", monthly: "$249" },
-  { slug: "electrical-dallas", trade: "Electrical", city: "Dallas", state: "TX", monthly: "$249" },
-  { slug: "roofing-charlotte", trade: "Roofing", city: "Charlotte", state: "NC", monthly: "$199" },
-  { slug: "hvac-denver", trade: "HVAC", city: "Denver", state: "CO", monthly: "$199" },
-  { slug: "plumbing-nashville", trade: "Plumbing", city: "Nashville", state: "TN", monthly: "$199" },
-  { slug: "gutters-atlanta", trade: "Gutters / Siding", city: "Atlanta", state: "GA", monthly: "$199" },
+const TERRITORIES = [
+  { slug: "hvac-detroit", trade: "HVAC", city: "Detroit", state: "MI", monthly: "$399" },
+  { slug: "hvac-warren", trade: "HVAC", city: "Warren", state: "MI", monthly: "$399" },
+  { slug: "plumbing-detroit", trade: "Plumbing", city: "Detroit", state: "MI", monthly: "$399" },
+  { slug: "plumbing-sterling-heights", trade: "Plumbing", city: "Sterling Heights", state: "MI", monthly: "$399" },
+  { slug: "electrician-detroit", trade: "Electrical", city: "Detroit", state: "MI", monthly: "$399" },
+  { slug: "electrician-dearborn", trade: "Electrical", city: "Dearborn", state: "MI", monthly: "$399" },
+  { slug: "roofing-detroit", trade: "Roofing", city: "Detroit", state: "MI", monthly: "$399" },
+  { slug: "roofing-warren", trade: "Roofing", city: "Warren", state: "MI", monthly: "$399" },
+  { slug: "plumbing-dearborn", trade: "Plumbing", city: "Dearborn", state: "MI", monthly: "$399" },
+  { slug: "hvac-sterling-heights", trade: "HVAC", city: "Sterling Heights", state: "MI", monthly: "$399" },
+  { slug: "roofing-troy", trade: "Roofing", city: "Troy", state: "MI", monthly: "$399" },
+  { slug: "electrician-warren", trade: "Electrical", city: "Warren", state: "MI", monthly: "$399" },
+  { slug: "plumbing-troy", trade: "Plumbing", city: "Troy", state: "MI", monthly: "$399" },
+  { slug: "hvac-dearborn", trade: "HVAC", city: "Dearborn", state: "MI", monthly: "$399" },
+  { slug: "roofing-southfield", trade: "Roofing", city: "Southfield", state: "MI", monthly: "$399" },
+  { slug: "hvac-livonia", trade: "HVAC", city: "Livonia", state: "MI", monthly: "$399" },
+  { slug: "plumbing-livonia", trade: "Plumbing", city: "Livonia", state: "MI", monthly: "$399" },
+  { slug: "electrician-troy", trade: "Electrical", city: "Troy", state: "MI", monthly: "$399" },
+  { slug: "roofing-livonia", trade: "Roofing", city: "Livonia", state: "MI", monthly: "$399" },
+  { slug: "electrician-livonia", trade: "Electrical", city: "Livonia", state: "MI", monthly: "$399" },
 ];
 
 const WINS = [
   "Every lead is exclusive — you're the only contractor who gets it",
   "Leads are real homeowners who searched for your service, filled out a form, and asked to be contacted",
-  "You get name, phone, email, and project details in your inbox within minutes",
+  "You get name, phone, email, and project details via SMS + email within minutes",
   "Flat monthly fee — no per-lead charges, no surprises",
-  "Cancel anytime — no contracts, no minimums",
+  "7-day free trial — cancel anytime, no contracts",
 ];
 
 const PAIN = [
@@ -28,30 +42,141 @@ const PAIN = [
   { label: "Word of mouth alone", sub: "Good but unpredictable. Feast or famine." },
 ];
 
+interface HypeModalProps {
+  territory: typeof TERRITORIES[0];
+  onClose: () => void;
+  onConfirm: () => void;
+  loading: boolean;
+}
+
+function HypeModal({ territory, onClose, onConfirm, loading }: HypeModalProps) {
+  return (
+    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-[#1e293b] border border-slate-600 rounded-xl max-w-md w-full p-6 relative" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute top-3 right-3 text-slate-400 hover:text-white">
+          <X size={20} />
+        </button>
+        <div className="text-center mb-6">
+          <div className="w-14 h-14 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Zap size={28} className="text-primary" />
+          </div>
+          <h3 className="text-xl font-black text-white">You're about to lock in {territory.city}</h3>
+          <p className="text-slate-400 text-sm mt-1">{territory.trade} — {territory.city}, {territory.state}</p>
+        </div>
+
+        <div className="space-y-3 mb-6">
+          <div className="flex items-start gap-3">
+            <Shield size={16} className="text-green-400 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-slate-200"><strong className="text-white">Exclusive territory.</strong> No other {territory.trade.toLowerCase()} company in {territory.city} gets these leads. Ever.</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <Zap size={16} className="text-yellow-400 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-slate-200"><strong className="text-white">Instant delivery.</strong> New leads hit your phone via SMS + email within minutes. No login required.</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <DollarSign size={16} className="text-green-400 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-slate-200"><strong className="text-white">No per-lead fees.</strong> Flat {territory.monthly}/mo after your free trial. One job pays for months of leads.</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <Clock size={16} className="text-blue-400 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-slate-200"><strong className="text-white">7-day free trial.</strong> See real leads before you pay a dime. Cancel anytime.</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <DollarSign size={16} className="text-emerald-400 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-slate-200"><strong className="text-white">Daily-prorated refunds.</strong> Cancel mid-month? You get back every unused day. Just a $10 processing fee. No games.</p>
+          </div>
+        </div>
+
+        <button
+          onClick={onConfirm}
+          disabled={loading}
+          className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 px-6 rounded-lg text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          {loading ? "Opening checkout..." : <>Start Free Trial <ArrowRight size={16} /></>}
+        </button>
+        <p className="text-center text-[11px] text-slate-500 mt-3">
+          7-day free trial. {territory.monthly}/mo after. Cancel anytime — daily-prorated refunds, $10 processing fee.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function ContractorLeads() {
+  const { toast } = useToast();
+  const [selectedTerritory, setSelectedTerritory] = useState<typeof TERRITORIES[0] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ name: "", business_name: "", email: "", phone: "", trade: "", city: "" });
+
+  const handleTerritoryClick = (t: typeof TERRITORIES[0]) => {
+    setForm((f) => ({ ...f, trade: t.trade.toLowerCase(), city: t.city }));
+    setShowForm(true);
+    setTimeout(() => document.getElementById("signup-form")?.scrollIntoView({ behavior: "smooth" }), 100);
+  };
+
+  const handleFormSubmit = () => {
+    if (!form.email || !form.name || !form.phone) {
+      toast({ title: "Please fill out all fields", variant: "destructive" });
+      return;
+    }
+    const territory = TERRITORIES.find((t) => t.trade.toLowerCase() === form.trade && t.city === form.city);
+    if (!territory) {
+      toast({ title: "Please select a territory first", variant: "destructive" });
+      return;
+    }
+    setSelectedTerritory(territory);
+  };
+
+  const handleCheckout = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-contractor-checkout", {
+        body: {
+          email: form.email,
+          name: form.name,
+          business_name: form.business_name || form.name,
+          phone: form.phone,
+          trade: form.trade,
+          city: form.city,
+          state: "MI",
+        },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast({ title: "Checkout failed", description: msg, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <SEOHead
-        title="Exclusive Contractor Leads — Any City in the US | M2 Lead Network"
-        description="Exclusive roofing, HVAC, plumbing, and electrical leads in your market. No shared leads. One contractor per trade per city. Flat monthly fee."
+        title="Exclusive Contractor Leads — Metro Detroit | M² Lead Network"
+        description="Exclusive roofing, HVAC, plumbing, and electrical leads in Metro Detroit. No shared leads. One contractor per trade per city. $399/mo flat fee with 7-day free trial."
       />
       <div className="min-h-screen bg-background text-foreground">
-        {/* Hero Banner */}
-        <div className="w-full">
-          <img
-            src="/images/hero-contractor-leads.png"
-            alt="Contractor Lead System — Exclusive leads in your city"
-            className="w-full object-cover"
-          />
-        </div>
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-16 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M2 Lead Network</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M² Lead Network</p>
           <h1 className="text-3xl font-black mb-4 leading-tight">Exclusive contractor leads.<br />One company per city.</h1>
           <p className="text-slate-300 text-base max-w-xl mx-auto leading-relaxed">
-            Every roofing, HVAC, plumbing, and electrical lead generated in your market goes <strong className="text-white">only to you</strong>. No Angi. No shared bids. Flat monthly fee — cancel anytime.
+            Every roofing, HVAC, plumbing, and electrical lead generated in your Metro Detroit market goes <strong className="text-white">only to you</strong>. No Angi. No shared bids. $399/mo flat — 7-day free trial.
           </p>
-          <div className="mt-6">
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => { setShowForm(true); setTimeout(() => document.getElementById("signup-form")?.scrollIntoView({ behavior: "smooth" }), 100); }}
+              className="bg-primary hover:bg-primary/90 text-white px-6 py-3 font-bold text-sm transition-all inline-flex items-center gap-2"
+            >
+              Start Free Trial <ArrowRight size={14} />
+            </button>
             <a href="tel:+13138064952" className="border border-white/30 text-white px-6 py-3 font-bold text-sm hover:bg-white/10 transition-all inline-flex items-center gap-2">
               <Phone size={14} /> (313) 806-4952
             </a>
@@ -97,25 +222,125 @@ export default function ContractorLeads() {
           </div>
 
           {/* Open Territories */}
-          <h2 className="text-lg font-black text-foreground mb-4 uppercase tracking-wide">Open territories</h2>
+          <h2 className="text-lg font-black text-foreground mb-4 uppercase tracking-wide">Open territories — Metro Detroit</h2>
+          <p className="text-sm text-muted-foreground mb-4">Click any territory to claim it. First contractor to sign up owns it exclusively.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-12">
-            {TRADES.map((t) => (
-              <div key={t.slug} className="bg-card border border-border p-4 flex items-center justify-between">
+            {TERRITORIES.map((t) => (
+              <button
+                key={t.slug}
+                onClick={() => handleTerritoryClick(t)}
+                className="bg-card border border-border p-4 flex items-center justify-between hover:border-primary/50 hover:bg-primary/5 transition-all text-left group"
+              >
                 <div>
                   <p className="font-bold text-sm text-foreground">{t.trade} — {t.city}, {t.state}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Starting at {t.monthly}/mo</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{t.monthly}/mo after 7-day free trial</p>
                 </div>
-              </div>
+                <ArrowRight size={14} className="text-muted-foreground group-hover:text-primary transition-colors" />
+              </button>
             ))}
           </div>
 
-          {/* Waitlist Gate */}
-          <WaitlistGate
-            productName="Contractor Leads"
-            description="We're onboarding a limited number of contractors in select markets. Join the waitlist and Matt will reach out personally when your area opens up."
-          />
+          {/* Signup Form */}
+          {showForm && (
+            <div id="signup-form" className="bg-[#1e293b] border border-slate-600 rounded-xl p-6 mb-12">
+              <h3 className="text-lg font-black text-white mb-4">Claim your territory</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <input
+                  type="text"
+                  placeholder="Your name *"
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  className="bg-slate-800 border border-slate-600 text-white px-4 py-3 text-sm rounded placeholder:text-slate-500"
+                />
+                <input
+                  type="text"
+                  placeholder="Business name"
+                  value={form.business_name}
+                  onChange={(e) => setForm((f) => ({ ...f, business_name: e.target.value }))}
+                  className="bg-slate-800 border border-slate-600 text-white px-4 py-3 text-sm rounded placeholder:text-slate-500"
+                />
+                <input
+                  type="email"
+                  placeholder="Email address *"
+                  value={form.email}
+                  onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                  className="bg-slate-800 border border-slate-600 text-white px-4 py-3 text-sm rounded placeholder:text-slate-500"
+                />
+                <input
+                  type="tel"
+                  placeholder="Phone number *"
+                  value={form.phone}
+                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                  className="bg-slate-800 border border-slate-600 text-white px-4 py-3 text-sm rounded placeholder:text-slate-500"
+                />
+                <select
+                  value={form.trade}
+                  onChange={(e) => setForm((f) => ({ ...f, trade: e.target.value }))}
+                  className="bg-slate-800 border border-slate-600 text-white px-4 py-3 text-sm rounded"
+                >
+                  <option value="">Select trade *</option>
+                  <option value="hvac">HVAC</option>
+                  <option value="plumbing">Plumbing</option>
+                  <option value="electrical">Electrical</option>
+                  <option value="roofing">Roofing</option>
+                </select>
+                <select
+                  value={form.city}
+                  onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+                  className="bg-slate-800 border border-slate-600 text-white px-4 py-3 text-sm rounded"
+                >
+                  <option value="">Select city *</option>
+                  <option value="Detroit">Detroit</option>
+                  <option value="Warren">Warren</option>
+                  <option value="Sterling Heights">Sterling Heights</option>
+                  <option value="Dearborn">Dearborn</option>
+                  <option value="Troy">Troy</option>
+                  <option value="Southfield">Southfield</option>
+                  <option value="Livonia">Livonia</option>
+                </select>
+              </div>
+              <button
+                onClick={handleFormSubmit}
+                className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 px-6 rounded text-sm transition-all"
+              >
+                Continue to checkout
+              </button>
+              <p className="text-center text-[11px] text-slate-500 mt-2">7-day free trial. $399/mo after. Cancel anytime.</p>
+            </div>
+          )}
+
+          {/* Refund Policy */}
+          <div className="bg-green-950/20 border border-green-900/30 p-5 rounded-lg mb-10">
+            <h3 className="font-bold text-sm text-foreground mb-2 flex items-center gap-2">
+              <Shield size={16} className="text-green-500" /> Our refund policy is dead simple
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Cancel anytime. If you cancel mid-month, we refund every unused day — prorated daily. Your monthly rate divided by 30, times the days remaining. We keep a flat <strong className="text-foreground">$10 processing fee</strong>. That's it. No hoops, no waiting, no "retention department." You text Matt, you're done.
+            </p>
+            <p className="text-[12px] text-muted-foreground mt-2">
+              Example: Cancel on day 10? You get back 20 days worth — that's $266 minus $10 = <strong className="text-foreground">$256 refund</strong>. Fair for everyone.
+            </p>
+          </div>
+
+          {/* Bottom CTA */}
+          <div className="text-center py-8 border-t border-border">
+            <p className="text-sm text-muted-foreground mb-2">Don't see your city? Have questions?</p>
+            <a href="tel:+13138064952" className="text-primary font-bold text-sm hover:underline inline-flex items-center gap-1">
+              <Phone size={14} /> Call Matt — (313) 806-4952
+            </a>
+          </div>
         </div>
       </div>
+
+      {/* Hype Modal */}
+      {selectedTerritory && (
+        <HypeModal
+          territory={selectedTerritory}
+          onClose={() => setSelectedTerritory(null)}
+          onConfirm={handleCheckout}
+          loading={loading}
+        />
+      )}
     </>
   );
 }
