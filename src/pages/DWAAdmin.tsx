@@ -19,6 +19,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "contracts", label: "Contracts" },
   { id: "import", label: "Import" },
   { id: "command", label: "Command Deck" },
+  { id: "board", label: "📋 Board Report" },
 ];
 
 function QuickLinks() {
@@ -169,6 +170,12 @@ export default function DWAAdmin() {
             <h2 className="text-white/40 text-xs uppercase tracking-wide mb-4">Command Deck</h2>
             <DWACommandDeck />
           </div>
+        )}
+
+        {activeTab === "board" && (
+          <Suspense fallback={<div className="text-white/40 text-sm">Loading board report…</div>}>
+            <AdminBoardReport />
+          </Suspense>
         )}
       </main>
     </div>
