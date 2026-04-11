@@ -435,7 +435,7 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
               <ExternalLink size={10} className="text-muted-foreground hover:text-foreground" />
             </a>
           )}
-          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive/50 hover:text-destructive hover:bg-destructive/10" onClick={() => { if (confirm(`Delete ${lead.business_name}?`)) onDelete(lead); }}>
+          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive/50 hover:text-destructive hover:bg-destructive/10" onClick={() => onDelete(lead)}>
             <Trash2 size={10} />
           </Button>
         </div>
@@ -690,7 +690,6 @@ export default function AdminProspector() {
 
   const bulkDeletePipeline = async () => {
     if (selectedPipelineIds.size === 0) { toast.error("No leads selected"); return; }
-    if (!confirm(`Delete ${selectedPipelineIds.size} leads permanently?`)) return;
     setBatchProcessing(true);
     try {
       const ids = Array.from(selectedPipelineIds);
@@ -718,7 +717,6 @@ export default function AdminProspector() {
       }
     }
     if (dupeIds.length === 0) { toast.info("No duplicates found"); return; }
-    if (!confirm(`Found ${dupeIds.length} duplicate leads. Delete them?`)) return;
     setBatchProcessing(true);
     try {
       const { error } = await (supabase as any).from("prospect_pipeline").delete().in("id", dupeIds);
@@ -1703,7 +1701,6 @@ export default function AdminProspector() {
                   disabled={batchProcessing}
                   onClick={async () => {
                     const ids = filteredPipelineLeads.map(l => l.id);
-                    if (!confirm(`Delete all ${ids.length} filtered leads?`)) return;
                     setBatchProcessing(true);
                     try {
                       const { error } = await (supabase as any).from("prospect_pipeline").delete().in("id", ids);
@@ -2010,7 +2007,7 @@ export default function AdminProspector() {
                     <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-primary" disabled={!lead.email || leadSendingId === lead.id} onClick={() => sendOneEmail(lead)}>
                       {leadSendingId === lead.id ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
                     </Button>
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" onClick={() => { if (confirm(`Delete ${lead.business_name}?`)) deleteLead(lead); }}>
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" onClick={() => deleteLead(lead)}>
                       <Trash2 size={12} />
                     </Button>
                   </div>
