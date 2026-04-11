@@ -264,3 +264,26 @@
 .animate-shimmer-badge {
   animation: shimmer-badge 2s ease-in-out infinite;
 }
+
+/* DWA Command Center Print Styles */
+@media print {
+  .print\:block { display: block !important; }
+  .print\:hidden { display: none !important; }
+  header, nav, aside, .print-hide { display: none !important; }
+  body, html { background: #fff !important; color: #000 !important; }
+  .print\:text-black { color: #000 !important; }
+  .print\:bg-white { background: #fff !important; }
+  .print\:border-gray-300 { border-color: #d1d5db !important; }
+  .print\:bg-gray-50 { background: #f9fafb !important; }
+  .print\:bg-gray-200 { background: #e5e7eb !important; }
+  .print\:text-gray-500 { color: #6b7280 !important; }
+  .print\:text-gray-600 { color: #4b5563 !important; }
+  .print\:bg-blue-100 { background: #dbeafe !important; }
+  .print\:text-blue-800 { color: #1e40af !important; }
+  .print\:border-blue-200 { border-color: #bfdbfe !important; }
+  .print\:bg-blue-50 { background: #eff6ff !important; }
+  .print\:text-red-700 { color: #b91c1c !important; }
+  .print\:bg-blue-500 { background: #3b82f6 !important; }
+  .print\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
+  @page { margin: 1.5cm; }
+}
