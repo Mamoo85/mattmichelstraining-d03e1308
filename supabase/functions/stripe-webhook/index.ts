@@ -624,7 +624,7 @@ serve(async (req) => {
       const customerEmail = session.customer_details?.email || session.customer_email;
       const customerName = session.customer_details?.name || null;
       const userId = customerEmail ? await getUserIdByEmail(sb, customerEmail) : null;
-      const guide = priceId ? GUIDE_MAP[priceId] : null;
+      let guide = priceId ? GUIDE_MAP[priceId] : null;
       const txItemName = guide?.title || meta.item_name || "Purchase";
       const txItemType = meta.type === "gift_card" ? "gift_card" : guide ? "pdf" : (meta.item_type || "purchase");
 
@@ -2351,7 +2351,7 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
-      const guide = GUIDE_MAP[priceId];
+      guide = GUIDE_MAP[priceId];
 
       if (!RESEND_API_KEY) {
         console.error("[WEBHOOK] RESEND_API_KEY not set");

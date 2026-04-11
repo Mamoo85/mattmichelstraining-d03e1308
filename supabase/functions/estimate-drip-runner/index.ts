@@ -32,8 +32,8 @@ serve(async (req) => {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   // POST = intake new estimate
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method === "POST") {
-    if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
     try {
       const { client_email, prospect_name, prospect_phone, job_type, estimate_amount, city } = await req.json();
       if (!client_email || !prospect_phone) return new Response(JSON.stringify({ error: "client_email and prospect_phone required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });

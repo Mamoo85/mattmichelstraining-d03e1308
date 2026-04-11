@@ -59,37 +59,34 @@ serve(async (req) => {
     }
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    let orderId: string | null = null;
 
     // Pre-insert a pending order so we have context when the webhook fires
     if (product_type === "website_audit") {
-      await sb.from("audit_orders").insert({
+      const { data } = await sb.from("audit_orders").insert({
         email,
         business_name: business_name || null,
         business_url: business_url || null,
         status: "pending",
-      }).select().single().then(({ data }) => {
-        // Store order id in metadata below
-        (body as any).__order_id = data?.id;
-      }).catch(() => {});
+      }).select("id").single();
+      orderId = data?.id ?? null;
     } else if (product_type === "gbp_post_pack") {
-      await sb.from("gbp_post_packs").insert({
+      const { data } = await sb.from("gbp_post_packs").insert({
         email,
         business_name: business_name || null,
         business_info: JSON.stringify({ city, industry, business_info }),
         status: "pending",
-      }).select().single().then(({ data }) => {
-        (body as any).__order_id = data?.id;
-      }).catch(() => {});
+      }).select("id").single();
+      orderId = data?.id ?? null;
     } else if (product_type === "competitor_report") {
-      await sb.from("competitor_reports").insert({
+      const { data } = await sb.from("competitor_reports").insert({
         email,
         business_name: business_name || null,
         city: city || null,
         industry: industry || null,
         status: "pending",
-      }).select().single().then(({ data }) => {
-        (body as any).__order_id = data?.id;
-      }).catch(() => {});
+      }).select("id").single();
+      orderId = data?.id ?? null;
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -115,7 +112,7 @@ serve(async (req) => {
         city: city || "",
         industry: industry || "",
         business_info: business_info || "",
-        order_id: (body as any).__order_id || "",
+        order_id: orderId || "",
       },
       success_url: `${BASE_URL}${product.success_path}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${BASE_URL}${product.cancel_path}`,

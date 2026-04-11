@@ -36,7 +36,7 @@ serve(async (req: Request) => {
     const { data: job, error: jobError } = await sb
       .from("field_service_jobs")
       .select(
-        "id, title, scheduled_time, field_service_customers(company_name, address, phone), field_service_techs:assigned_tech_id(name), field_service_clients:client_id(company_name)"
+        "id, title, scheduled_time, assigned_tech_id, field_service_customers(company_name, address, phone), field_service_clients:client_id(company_name)"
       )
       .eq("id", job_id)
       .maybeSingle();
@@ -48,29 +48,30 @@ serve(async (req: Request) => {
       });
     }
 
-    const customer = job.field_service_customers as { company_name: string; address: string; phone: string } | null;
-    const tech = job.field_service_techs as { name: string } | null;
-    const client = job.field_service_clients as { company_name: string } | null;
+    const jobData = job as any;
+    const customerArr = jobData.field_service_customers;
+    const customer = Array.isArray(customerArr) ? customerArr[0] : customerArr;
+    const clientArr = jobData.field_service_clients;
+    const client = Array.isArray(clientArr) ? clientArr[0] : clientArr;
 
-    const techPhone = tech ? null : null; // Tech phone not stored; SMS goes to customer for most events
-    // For job_assigned we SMS the tech — but tech phone is in field_service_techs.phone
     // Fetch tech phone separately for job_assigned
     let techPhoneNumber: string | null = null;
-    if (event === "job_assigned" && job.assigned_tech_id) {
+    let techName = "A technician";
+    if (jobData.assigned_tech_id) {
       const { data: techRow } = await sb
         .from("field_service_techs")
-        .select("phone")
-        .eq("id", job.assigned_tech_id)
+        .select("name, phone")
+        .eq("id", jobData.assigned_tech_id)
         .maybeSingle();
       if (techRow?.phone) techPhoneNumber = techRow.phone;
+      if (techRow?.name) techName = techRow.name;
     }
 
     const clientName = client?.company_name ?? "Your service provider";
-    const techName = tech?.name ?? "A technician";
     const custAddress = customer?.address ?? "your location";
     const custPhone = customer?.phone ?? null;
     const custCompany = customer?.company_name ?? "customer";
-    const scheduledTime = job.scheduled_time ?? "TBD";
+    const scheduledTime = jobData.scheduled_time ?? "TBD";
 
     let smsTo: string | null = null;
     let smsBody = "";

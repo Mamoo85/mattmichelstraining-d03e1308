@@ -29,11 +29,9 @@ function addFrequency(dateStr: string, frequency: string): string {
 }
 
 async function processContract(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   contract: Record<string, unknown>
 ): Promise<{ id: string; title: string }> {
-  const today = new Date().toISOString().split("T")[0];
-
   const { error: jobError } = await supabase.from("field_service_jobs").insert({
     client_id: contract.client_id,
     customer_id: contract.customer_id ?? null,
@@ -103,7 +101,6 @@ Deno.serve(async (req: Request) => {
     let contracts: Record<string, unknown>[] = [];
 
     if (contractId) {
-      // Manual mode: single contract
       const { data, error } = await supabase
         .from("field_service_contracts")
         .select("*")
@@ -112,7 +109,6 @@ Deno.serve(async (req: Request) => {
       if (error) throw new Error(`Contract not found: ${error.message}`);
       contracts = [data];
     } else {
-      // Scheduled mode: all due contracts
       const { data, error } = await supabase
         .from("field_service_contracts")
         .select("*")
