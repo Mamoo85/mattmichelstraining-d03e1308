@@ -18,6 +18,60 @@ jobs:
         with:
           version: latest
 
+      - name: Remove unused edge functions (zero-client products, confirmed via SQL)
+        run: |
+          # Wave 3/4/5 niche products — 0 paying clients confirmed
+          supabase functions delete ag-price-alerts --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete ai-automated-bots --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete ai-churn-preventer --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete ai-price-monitor-sender --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete battlecard-sender --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete bid-intel-scan --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete churn-radar --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete collections-sender --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete competitor-report --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-abandoned-cart-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-church-newsletter-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-client-report-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-crime-digest-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-direct-mail-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-estimate-drip-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-foundation-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-google-qa-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-hoa-secretary-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-hoa-violation-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-insurance-drip-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-landlord-letters-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-market-intel-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-new-hire-check-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-obituary-service-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-onboarding-agent-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-payment-chaser-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-promo-planner-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-quote-followup-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-reactivation-email-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-report-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-review-responder-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-speed-lead-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-storm-lead-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-testimonial-harvester-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-video-script-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-voicemail-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete create-welcome-drip-checkout --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete financial-advisor-content-sender --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete grant-finder-sender --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete license-expiry-checker --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete monthly-client-report --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete multi-service-drip --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete new-mover-sender --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete permit-watch-scanner --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete podcast-pitch-sender --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete re-newsletter-add-contacts --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete re-newsletter-send --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete real-estate-drip-sender --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete recall-alert-checker --project-ref $SUPABASE_PROJECT_REF || true
+          supabase functions delete text-marketing-sender --project-ref $SUPABASE_PROJECT_REF || true
+
       - name: Deploy contractor-lead-notify edge function
         run: |
           supabase functions deploy contractor-lead-notify --project-ref $SUPABASE_PROJECT_REF --no-verify-jwt
