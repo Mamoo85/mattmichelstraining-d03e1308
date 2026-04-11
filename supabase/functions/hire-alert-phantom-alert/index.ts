@@ -63,7 +63,7 @@ serve(async (req) => {
           .eq("id", client.id);
 
         const firstName = client.owner_name?.split(" ")[0] || client.company_name || "there";
-        const checkoutUrl = `${SITE_URL}/hire-alert`;
+        const checkoutUrl = `${SITE_URL}/hire-alert?prefilled_email=${encodeURIComponent(client.owner_email || "")}`;
         const tradeLabel = (client.target_roles?.[0] || "tradesperson").toLowerCase();
 
         if (client.phone && freshCandidate) {
