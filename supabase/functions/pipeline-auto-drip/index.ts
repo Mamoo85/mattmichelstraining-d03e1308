@@ -14,6 +14,62 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// ── Master Niche Smoother: 50+ trades ──
+const NICHE_MAP: [RegExp, string][] = [
+  [/hvac|heating|cooling|furnace|air.?condition/i, "HVAC"],
+  [/plumb|pipe|drain|water.?heater/i, "plumbing"],
+  [/roof|shingle|gutter/i, "roofing"],
+  [/electric|wiring|lighting/i, "electrical"],
+  [/concrete|paving|asphalt|cement|driveway|foundation/i, "concrete"],
+  [/landscape|lawn|hardscape|irrigation|sprinkler/i, "landscaping"],
+  [/tree|arborist|stump/i, "tree service"],
+  [/paint|stain|coating/i, "painting"],
+  [/floor|epoxy|carpet|tile|hardwood/i, "flooring"],
+  [/remodel|renovat|kitchen|bath|addition/i, "remodeling"],
+  [/fence|fencing|gate/i, "fencing"],
+  [/deck|patio|porch/i, "decking"],
+  [/pest|exterminat|bug|rodent/i, "pest control"],
+  [/mason|brick|stone|chimney/i, "masonry"],
+  [/carpenter|woodwork|cabinet|framing/i, "carpentry"],
+  [/siding|exterior|stucco/i, "siding"],
+  [/window|door|glass|glazing/i, "window and door"],
+  [/clean|janitor|power.?wash|pressure.?wash|maid/i, "cleaning"],
+  [/pool|spa|hot.?tub/i, "pool service"],
+  [/drywall|sheetrock|plaster|insulation/i, "drywall"],
+  [/excavat|grading|trench|dirt|site.?prep/i, "excavation"],
+  [/weld|fabrication|metal/i, "welding"],
+  [/garage|overhead.?door/i, "garage door"],
+  [/security|alarm|cctv|av|home.?theater/i, "A/V and security"],
+  [/solar|panel/i, "solar"],
+  [/mold|water.?damage|fire.?damage|mitigation|restoration/i, "restoration"],
+  [/septic|sewer/i, "septic"],
+  [/moving|mover|storage/i, "moving"],
+  [/locksmith|key|safe/i, "locksmith"],
+  [/sign|awning/i, "signage"],
+  [/appliance|repair/i, "appliance repair"],
+  [/wrecker|tow/i, "towing"],
+  [/snow|plow|ice/i, "snow removal"],
+  [/junk|dumpster|hauling|waste/i, "junk removal"],
+  [/wrought.?iron/i, "ironwork"],
+  [/boiler|steam/i, "boiler service"],
+  [/auto|mechanic|body.?shop|collision/i, "auto repair"],
+  [/demol/i, "demolition"],
+  [/asbestos|abatement|lead.?removal|hazmat/i, "environmental remediation"],
+  [/fire.?protect|sprinkler.?system/i, "fire protection"],
+  [/elevator|escalator/i, "elevator service"],
+  [/marine|boat|dock/i, "marine service"],
+  [/pav|striping|seal.?coat/i, "paving"],
+];
+
+function normalizeIndustry(raw: string | null | undefined): string {
+  if (!raw) return "contracting";
+  const input = raw.toLowerCase();
+  for (const [regex, label] of NICHE_MAP) {
+    if (regex.test(input)) return label;
+  }
+  return "contracting";
+}
+
 const DRIP_SCHEDULE = [
   { step: 1, delayDays: 0, subject: "Competitors getting calls you're not", label: "1_Day_1_Sent" },
   { step: 2, delayDays: 3, subject: "Quick follow-up — saw something on your site", label: "2_Day_4_Sent" },
@@ -42,11 +98,12 @@ async function generateDripEmail(step: number, businessName: string, industry: s
   const scheduleItem = DRIP_SCHEDULE[step - 1];
   const subject = scheduleItem.subject.replace("{{business}}", businessName);
   const firstName = contactName?.split(" ")[0] || "there";
+  const niche = normalizeIndustry(industry);
 
   const prompts: Record<number, string> = {
-    1: `Write a cold outreach email from Matt at Detroit Web Agency (a web design & digital marketing agency in Grosse Pointe, MI). Recipient: ${firstName} at ${businessName} (${industry}). Subject: "${subject}". The hook: their competitors are showing up on Google and getting the calls they're not. ${siteFlaw ? `Mention this specific issue: "${siteFlaw}".` : ""} Include a soft CTA to check out a quick demo. Keep it under 150 words, conversational, not salesy. Do NOT include any signature — just the email body. Output ONLY the email body HTML (no subject line, no signature).`,
-    2: `Write a short follow-up email (step 2 of 4) from Matt at Detroit Web Agency to ${firstName} at ${businessName}. Reference the previous email about their online presence. Mention a demo link. Keep it under 100 words, casual. Do NOT include any signature. Output ONLY the email body HTML.`,
-    3: `Write a value-add email (step 3 of 4) from Matt at Detroit Web Agency to ${firstName} at ${businessName} (${industry}). Do a quick "online presence check" — mention things like Google Business Profile, mobile speed, and local SEO. Keep it helpful, not pushy. Under 120 words. Do NOT include any signature. Output ONLY the email body HTML.`,
+    1: `Write a cold outreach email from Matt at Detroit Web Agency (a web design & digital marketing agency in Grosse Pointe, MI). Recipient: ${firstName} at ${businessName} (a ${niche} company). Subject: "${subject}". The hook: ask if they're taking on new ${niche} jobs right now, and mention their competitors are showing up on Google and getting the calls they're not. ${siteFlaw ? `Mention this specific issue: "${siteFlaw}".` : ""} Include a soft CTA to check out a quick demo. Keep it under 150 words, conversational, not salesy. Do NOT include any signature — just the email body. Output ONLY the email body HTML (no subject line, no signature).`,
+    2: `Write a short follow-up email (step 2 of 4) from Matt at Detroit Web Agency to ${firstName} at ${businessName} (${niche}). Reference the previous email about their online presence. Mention a demo link. Keep it under 100 words, casual. Do NOT include any signature. Output ONLY the email body HTML.`,
+    3: `Write a value-add email (step 3 of 4) from Matt at Detroit Web Agency to ${firstName} at ${businessName} (${niche}). Do a quick "online presence check" — mention things like Google Business Profile, mobile speed, and local SEO. Keep it helpful, not pushy. Under 120 words. Do NOT include any signature. Output ONLY the email body HTML.`,
     4: `Write a breakup email (final step) from Matt at Detroit Web Agency to ${firstName} at ${businessName}. Keep it short, respectful, and leave the door open. Mention you won't email again but they can reach out anytime. Under 80 words. Do NOT include any signature. Output ONLY the email body HTML.`,
   };
 
@@ -71,11 +128,11 @@ async function generateDripEmail(step: number, businessName: string, industry: s
     console.error("[DRIP] AI generation error:", e);
   }
 
-  // Fallback templates
+  // Fallback templates using normalized niche
   const fallbacks: Record<number, string> = {
-    1: `<p>Hi ${firstName},</p><p>I was looking at businesses in the ${industry} space near you, and I noticed something — your competitors are showing up ahead of you on Google.</p>${siteFlaw ? `<p>I also spotted this on your site: <em>${siteFlaw}</em></p>` : ""}<p>If you're curious how they're getting those calls, I put together a quick breakdown. Happy to share — no strings attached.</p>`,
+    1: `<p>Hi ${firstName},</p><p>Are you guys taking on new ${niche} jobs right now? I was looking at ${niche} companies near you, and I noticed your competitors are showing up ahead of you on Google.</p>${siteFlaw ? `<p>I also spotted this on your site: <em>${siteFlaw}</em></p>` : ""}<p>If you're curious how they're getting those calls, I put together a quick breakdown. Happy to share — no strings attached.</p>`,
     2: `<p>Hi ${firstName},</p><p>Just following up on my note from a few days ago. I put together a quick demo showing what your online presence could look like with a few tweaks.</p><p>Worth a 2-minute look?</p>`,
-    3: `<p>Hi ${firstName},</p><p>Did a quick online presence check for ${businessName} — looked at your Google Business Profile, mobile site speed, and local search visibility.</p><p>There are a few quick wins that could help you show up more. Happy to share what I found.</p>`,
+    3: `<p>Hi ${firstName},</p><p>Did a quick online presence check for ${businessName} — looked at your Google Business Profile, mobile site speed, and local search visibility.</p><p>There are a few quick wins that could help you show up more for ${niche} searches in your area. Happy to share what I found.</p>`,
     4: `<p>Hi ${firstName},</p><p>This is my last note — I don't want to be that guy who keeps emailing. If you ever want to chat about getting more visibility online, I'm here.</p><p>Wishing you and ${businessName} all the best.</p>`,
   };
 
