@@ -159,8 +159,6 @@ const SeasonalPromos = lazyRetry(() => import("./pages/SeasonalPromos"));
 const ReferralProgram = lazyRetry(() => import("./pages/ReferralProgram"));
 const SlowDaySMS = lazyRetry(() => import("./pages/SlowDaySMS"));
 const NewHomeownerCampaign = lazyRetry(() => import("./pages/NewHomeownerCampaign"));
-const ObituaryService = lazyRetry(() => import("./pages/ObituaryService"));
-const SermonPrep = lazyRetry(() => import("./pages/SermonPrep"));
 const HOASecretary = lazyRetry(() => import("./pages/HOASecretary"));
 const HOAMinutesTemplate = lazyRetry(() => import("./pages/HOAMinutesTemplate"));
 const HOAMeetingMinutes = lazyRetry(() => import("./pages/blog/HOAMeetingMinutes"));
@@ -205,14 +203,10 @@ const ContractorInvoicing = lazyRetry(() => import("./pages/ContractorInvoicing"
 const AIVoicemailTranscription = lazyRetry(() => import("./pages/AIVoicemailTranscription"));
 const AIPhoneAnswering = lazyRetry(() => import("./pages/AIPhoneAnswering"));
 const TextMessageMarketing = lazyRetry(() => import("./pages/TextMessageMarketing"));
-const AIBlogPostService = lazyRetry(() => import("./pages/AIBlogPostService"));
 const ReviewRequestSMS = lazyRetry(() => import("./pages/ReviewRequestSMS"));
-const AIPressRelease = lazyRetry(() => import("./pages/AIPressRelease"));
 const QuoteFollowupSMS = lazyRetry(() => import("./pages/QuoteFollowupSMS"));
-const AISocialCaptionPack = lazyRetry(() => import("./pages/AISocialCaptionPack"));
 const WinBackSMS = lazyRetry(() => import("./pages/WinBackSMS"));
 const WeeklyBusinessDigest = lazyRetry(() => import("./pages/WeeklyBusinessDigest"));
-const AIProposalGenerator = lazyRetry(() => import("./pages/AIProposalGenerator"));
 const HolidaySMSBlast = lazyRetry(() => import("./pages/HolidaySMSBlast"));
 const AIWebsiteCopy = lazyRetry(() => import("./pages/AIWebsiteCopy"));
 const CompetitorWatch = lazyRetry(() => import("./pages/CompetitorWatch"));
@@ -230,7 +224,6 @@ const WelcomeDrip = lazyRetry(() => import("./pages/WelcomeDrip"));
 const ReviewAlerts = lazyRetry(() => import("./pages/ReviewAlerts"));
 const PromoPlanner = lazyRetry(() => import("./pages/PromoPlanner"));
 const ReactivationEmails = lazyRetry(() => import("./pages/ReactivationEmails"));
-const SalesScripts = lazyRetry(() => import("./pages/SalesScripts"));
 const DirectMail = lazyRetry(() => import("./pages/DirectMail"));
 const WarrantyReminders = lazyRetry(() => import("./pages/WarrantyReminders"));
 const HiringAssistant = lazyRetry(() => import("./pages/HiringAssistant"));
@@ -247,7 +240,6 @@ const AIDirectorySubmitter = lazyRetry(() => import("./pages/AIDirectorySubmitte
 const M2Development = lazyRetry(() => import("./pages/M2Development"));
 const AIHandbook = lazyRetry(() => import("./pages/AIHandbook"));
 const AIGrantFinder = lazyRetry(() => import("./pages/AIGrantFinder"));
-const AIReviewResponse = lazyRetry(() => import("./pages/AIReviewResponse"));
 const AIBattlecard = lazyRetry(() => import("./pages/AIBattlecard"));
 const AIMarketIntel = lazyRetry(() => import("./pages/AIMarketIntel"));
 const AIPermitMonitor = lazyRetry(() => import("./pages/AIPermitMonitor"));
@@ -274,7 +266,6 @@ const RecallAlertService = lazyRetry(() => import("./pages/RecallAlertService"))
 const PermitWatch = lazyRetry(() => import("./pages/PermitWatch"));
 const HireAlert = lazyRetry(() => import("./pages/HireAlert"));
 const WebsiteSpeedAudits = lazyRetry(() => import("./pages/WebsiteSpeedAudits"));
-const BedtimeStories = lazyRetry(() => import("./pages/BedtimeStories"));
 const CrimeDigest = lazyRetry(() => import("./pages/CrimeDigest"));
 const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
 const RegulatoryFilingMonitor = lazyRetry(() => import("./pages/RegulatoryFilingMonitor"));
@@ -287,7 +278,6 @@ const CreditDispute = lazyRetry(() => import("./pages/CreditDispute"));
 const MedicalBillDispute = lazyRetry(() => import("./pages/MedicalBillDispute"));
 const SupplementAnalyzer = lazyRetry(() => import("./pages/SupplementAnalyzer"));
 const TradeAssociationIntel = lazyRetry(() => import("./pages/TradeAssociationIntel"));
-const ChildrensStories = lazyRetry(() => import("./pages/ChildrensStories"));
 const LuxuryRealEstate = lazyRetry(() => import("./pages/LuxuryRealEstate"));
 const TechSupportServices = lazyRetry(() => import("./pages/TechSupportServices"));
 const RevenuePreventer = lazyRetry(() => import("./pages/RevenuePreventer"));
@@ -576,8 +566,6 @@ const App = () => (
                     <Route path="/referral-program" element={<ReferralProgram />} />
                     <Route path="/slow-day-sms" element={<SlowDaySMS />} />
                     <Route path="/new-homeowner-campaign" element={<NewHomeownerCampaign />} />
-                    <Route path="/obituary-service" element={<ObituaryService />} />
-                    <Route path="/sermon-prep" element={<SermonPrep />} />
                     <Route path="/hoa-secretary" element={<HOASecretary />} />
                     <Route path="/hoa-minutes-template" element={<HOAMinutesTemplate />} />
                     <Route path="/blog/hoa-meeting-minutes" element={<HOAMeetingMinutes />} />
@@ -617,14 +605,10 @@ const App = () => (
                     <Route path="/ai-voicemail" element={<AIVoicemailTranscription />} />
                     <Route path="/ai-phone-answering" element={<AIPhoneAnswering />} />
                     <Route path="/text-message-marketing" element={<TextMessageMarketing />} />
-                    <Route path="/ai-blog-posts" element={<AIBlogPostService />} />
                     <Route path="/review-request-sms" element={<ReviewRequestSMS />} />
-                    <Route path="/ai-press-release" element={<AIPressRelease />} />
                     <Route path="/quote-followup-sms" element={<QuoteFollowupSMS />} />
-                    <Route path="/ai-social-captions" element={<AISocialCaptionPack />} />
                     <Route path="/winback-sms" element={<WinBackSMS />} />
                     <Route path="/weekly-business-digest" element={<WeeklyBusinessDigest />} />
-                    <Route path="/ai-proposal" element={<AIProposalGenerator />} />
                     <Route path="/holiday-sms" element={<HolidaySMSBlast />} />
                     <Route path="/ai-website-copy" element={<AIWebsiteCopy />} />
                     <Route path="/competitor-watch" element={<CompetitorWatch />} />
@@ -642,7 +626,6 @@ const App = () => (
                     <Route path="/review-alerts" element={<ReviewAlerts />} />
                     <Route path="/promo-planner" element={<PromoPlanner />} />
                     <Route path="/reactivation-emails" element={<ReactivationEmails />} />
-                    <Route path="/sales-scripts" element={<SalesScripts />} />
                     <Route path="/direct-mail" element={<DirectMail />} />
                     <Route path="/warranty-reminders" element={<WarrantyReminders />} />
                     <Route path="/hiring-assistant" element={<HiringAssistant />} />
@@ -661,7 +644,6 @@ const App = () => (
                     <Route path="/business-directory" element={<BusinessDirectory />} />
                     <Route path="/ai-handbook" element={<AIHandbook />} />
                     <Route path="/ai-grant-finder" element={<AIGrantFinder />} />
-                    <Route path="/ai-review-response" element={<AIReviewResponse />} />
                     <Route path="/ai-battlecard" element={<AIBattlecard />} />
                     <Route path="/ai-market-intel" element={<AIMarketIntel />} />
                     <Route path="/ai-permit-monitor" element={<AIPermitMonitor />} />
@@ -688,7 +670,6 @@ const App = () => (
                     <Route path="/permit-watch" element={<PermitWatch />} />
                     <Route path="/hire-alert" element={<HireAlert />} />
                     <Route path="/website-speed-audit" element={<WebsiteSpeedAudits />} />
-                    <Route path="/bedtime-stories" element={<BedtimeStories />} />
                     <Route path="/crime-digest" element={<CrimeDigest />} />
                     <Route path="/license-monitor" element={<LicenseMonitor />} />
                     <Route path="/regulatory-filing-monitor" element={<RegulatoryFilingMonitor />} />
@@ -701,7 +682,6 @@ const App = () => (
                     <Route path="/medical-bill-dispute" element={<MedicalBillDispute />} />
                     <Route path="/supplement-analyzer" element={<SupplementAnalyzer />} />
                     <Route path="/trade-association-intel" element={<TradeAssociationIntel />} />
-                    <Route path="/childrens-stories" element={<ChildrensStories />} />
                     <Route path="/luxury-re-intel" element={<LuxuryRealEstate />} />
                     <Route path="/tech-support" element={<TechSupportServices />} />
                     <Route path="/revenue-preventer" element={<RevenuePreventer />} />
