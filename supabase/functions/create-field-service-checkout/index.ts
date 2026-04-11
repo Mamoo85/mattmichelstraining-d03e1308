@@ -38,14 +38,14 @@ serve(async (req: Request) => {
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Insert pending client row
-    await sb.from("field_service_clients").insert({
-      company_name: company || "New Client",
+    await sb.from("field_crm_clients").upsert({
+      business_name: company || "New Client",
       owner_name: name ?? null,
-      owner_email: email,
+      email: email,
       plan: plan ?? "standalone",
       industry: industry || "field_service",
-      active: false,
-    });
+      status: "pending",
+    }, { onConflict: "email" });
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
