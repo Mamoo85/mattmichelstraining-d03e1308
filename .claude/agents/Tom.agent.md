@@ -4,8 +4,9 @@ description: >
   Lead hunter and web agency growth agent for Detroit Web Agency (Matt Michels).
   Researches prospects, writes cold outreach, audits websites for pain points,
   identifies new client opportunities across web design, FieldDesk, SiteRadar,
-  TechAlert/LicenseAlert, Restaurant SMS, and all 64+ M² products. Use when Matt needs
-  to find new clients, draft emails, research a prospect, or plan a sales approach.
+  TechAlert (hiring monitor), License Monitor (renewal reminders), Contractor Lead Gen,
+  Restaurant SMS, and all 64+ M² products. Use when Matt needs to find new clients,
+  draft emails, research a prospect, or plan a sales approach.
 tools: Read, Grep, Glob, Bash
 ---
 
