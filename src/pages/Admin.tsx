@@ -110,6 +110,7 @@ const AdminInstagramPosts     = lazyRetry(() => import("@/components/admin/Admin
 const AdminContentGenerator   = lazyRetry(() => import("@/components/admin/AdminContentGenerator"));
 
 // DWA domain
+const AdminBoardReport        = lazyRetry(() => import("@/components/admin/AdminBoardReport"));
 const AdminDWAOverview        = lazyRetry(() => import("@/components/admin/AdminDWAOverview"));
 const AdminHireAlertClients   = lazyRetry(() => import("@/components/admin/AdminHireAlertClients"));
 
