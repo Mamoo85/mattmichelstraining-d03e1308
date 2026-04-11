@@ -10,7 +10,6 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 serve(async (req) => {
-  // Allow both cron (service role) and direct calls
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   try {
@@ -35,37 +34,44 @@ serve(async (req) => {
       const site = (lead as any).contractor_lead_sites;
       const contractor = (lead as any).contractor_clients;
 
-      if (contractor?.email && RESEND_API_KEY) {
+      if (!contractor) {
+        console.log(`[LEAD-NOTIFY] No contractor found for lead ${lead.id}, skipping`);
+        continue;
+      }
+
+      // Email the contractor (if Resend is configured)
+      if (contractor.email && RESEND_API_KEY) {
         await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "M² Lead Network <matt@mattmichelstraining.com>",
+            from: "Detroit Web Agency <matt@mattmichelstraining.com>",
             to: [contractor.email],
             bcc: ["matthewmichels@gmail.com", "matthewmichels4@gmail.com"],
             subject: `New ${site?.trade || "service"} lead — ${lead.name}`,
-            html: `<p>Hey — you have a new lead waiting.<br><strong>${lead.name}</strong> — <a href="tel:${lead.phone}">${lead.phone}</a>${lead.email ? ` — ${lead.email}` : ""}</p><p>Reply to this email or call them directly. First one to respond wins the job.<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI \u00b7 (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>`,
+            html: `<p>Hey — you have a new lead waiting.<br><strong>${lead.name}</strong> — <a href="tel:${lead.phone}">${lead.phone}</a>${lead.email ? ` — ${lead.email}` : ""}</p><p>Reply to this email or call them directly. First one to respond wins the job.<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>`,
           }),
         });
-
-        // SMS the contractor too
-        if (contractor.phone) {
-          const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
-          const smsBody = `🔥 New ${site?.trade || "service"} lead!\n${lead.name} — ${lead.phone}${lead.project_type ? `\nProject: ${lead.project_type}` : ""}\nThis lead is EXCLUSIVE to you. Call them now!\n— M² Lead Network`;
-          const smsResult = await sendSMS(contractor.phone, TWILIO_PHONE, smsBody, "contractor_leads");
-          if (smsResult.success) {
-            console.log(`[LEAD-NOTIFY] SMS sent to contractor ${contractor.phone}`);
-          } else {
-            console.error(`[LEAD-NOTIFY] SMS failed: ${smsResult.error}`);
-          }
-        }
-
-        await sb.from("contractor_leads")
-          .update({ notified_at: new Date().toISOString(), status: "notified" })
-          .eq("id", lead.id);
-
-        count++;
       }
+
+      // SMS the contractor (independent of email — always attempt if phone exists)
+      if (contractor.phone) {
+        const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+        const smsBody = `🔥 New ${site?.trade || "service"} lead!\n${lead.name} — ${lead.phone}${lead.project_type ? `\nProject: ${lead.project_type}` : ""}\nThis lead is EXCLUSIVE to you. Call them now!\n— Detroit Web Agency`;
+        const smsResult = await sendSMS(contractor.phone, TWILIO_PHONE, smsBody, "contractor_leads");
+        if (smsResult.success) {
+          console.log(`[LEAD-NOTIFY] SMS sent to contractor ${contractor.phone}`);
+        } else {
+          console.error(`[LEAD-NOTIFY] SMS failed: ${smsResult.error}`);
+        }
+      }
+
+      // Mark as notified (we attempted delivery via email and/or SMS)
+      await sb.from("contractor_leads")
+        .update({ notified_at: new Date().toISOString(), status: "notified" })
+        .eq("id", lead.id);
+
+      count++;
     }
 
     console.log(`[LEAD-NOTIFY] Sent ${count} delayed notifications`);

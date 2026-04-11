@@ -69,7 +69,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "M² Leads <matt@mattmichelstraining.com>",
+          from: "Detroit Web Agency <matt@mattmichelstraining.com>",
           to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
           subject: `🔥 New ${tradeLabel} lead — ${cityLabel} — ${name}`,
           html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:24px;">
@@ -106,12 +106,14 @@ serve(async (req) => {
           .eq("id", site.active_contractor_id)
           .single();
 
-        if (contractor?.email) {
-          await fetch("https://api.resend.com/emails", {
+        if (contractor) {
+          // Email the contractor (if Resend is configured)
+          if (contractor.email && RESEND_API_KEY) {
+            await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² Lead Network <matt@mattmichelstraining.com>",
+              from: "Detroit Web Agency <matt@mattmichelstraining.com>",
               to: [contractor.email], bcc: ["matthewmichels4@gmail.com"],
               subject: `🔥 New ${tradeLabel} lead — ${name} in ${cityLabel}`,
               html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:24px;">
@@ -140,11 +142,12 @@ serve(async (req) => {
 </body></html>`,
             }),
           });
+          }
 
-          // SMS the contractor immediately (in addition to email)
+          // SMS the contractor immediately (independent of email)
           if (contractor.phone) {
             const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
-            const smsBody = `🔥 New ${tradeLabel} lead in ${cityLabel}!\n${name} — ${phone}${project_type ? `\nProject: ${project_type}` : ""}\nThis lead is EXCLUSIVE to you. Call them now!\n— M² Lead Network`;
+            const smsBody = `🔥 New ${tradeLabel} lead in ${cityLabel}!\n${name} — ${phone}${project_type ? `\nProject: ${project_type}` : ""}\nThis lead is EXCLUSIVE to you. Call them now!\n— Detroit Web Agency`;
             const smsResult = await sendSMS(contractor.phone, TWILIO_PHONE, smsBody, "contractor_leads");
             if (smsResult.success) {
               console.log(`[LEAD-CAPTURE] SMS sent to contractor ${contractor.phone} — SID: ${smsResult.sid}`);

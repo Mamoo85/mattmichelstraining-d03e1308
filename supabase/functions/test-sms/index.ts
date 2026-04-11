@@ -35,7 +35,7 @@ serve(async (req) => {
     const result = await sendSMS(
       to,
       TWILIO_PHONE_NUMBER,
-      "This is a test from M² Development. If you received this, Twilio is working! 🎉",
+      "This is a test from Detroit Web Agency. If you received this, Twilio is working!",
       "test-sms"
     );
 
