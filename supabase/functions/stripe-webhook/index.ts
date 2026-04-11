@@ -1822,6 +1822,60 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── LICENSE MONITOR — welcome SMS with MMS Vision intake instructions ──
+      if (meta.type === "license_monitor_subscription" && customerEmail) {
+        try {
+          const lmSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          const clientPhone = meta.phone || null;
+          const businessName = meta.business_name || meta.businessName || customerName || customerEmail;
+          const ownerName = meta.name || meta.ownerName || customerName || null;
+          const firstName = ownerName?.split(" ")[0] || businessName || "there";
+
+          await (lmSb.from as any)("license_monitor_clients").insert({
+            business_name: businessName,
+            owner_name: ownerName,
+            owner_email: customerEmail,
+            phone: clientPhone,
+            stripe_customer_id: session.customer as string || null,
+            stripe_subscription_id: session.subscription as string || null,
+            active: true,
+          });
+
+          // Welcome SMS with MMS Vision instructions
+          if (clientPhone) {
+            await sendSMS(
+              clientPhone,
+              Deno.env.get("TWILIO_PHONE_NUMBER") || "",
+              `Welcome to License Monitor, ${firstName}! Reply to this text with a photo of each license card you want us to track. We'll extract the details automatically and remind you before expiry.\n\n— Matt (313) 806-4952`,
+              "license_monitor"
+            );
+          }
+
+          // Welcome email
+          if (RESEND_API_KEY) {
+            await sendM2Email(
+              customerEmail,
+              "License Monitor is Active — Text Us Your License Cards",
+              m2Email({
+                greeting: `Hey ${firstName} —`,
+                headline: "License Monitor is Live",
+                body: `<p style="margin:0 0 12px">Your Business License Monitor is active. Here's how to get started:</p>
+<p style="margin:0 0 8px"><strong>📱 Text a photo of each license card</strong> to <strong>(313) 806-4952</strong>. We'll extract the details automatically using AI vision.</p>
+<p style="margin:0 0 8px"><strong>🔔 You'll get reminders</strong> at 90, 60, 30, 14, and 7 days before each expiry date — SMS + email.</p>
+<p style="margin:0 0 16px"><strong>Works for any license</strong> in any state — contractor licenses, business licenses, professional certifications, and more.</p>
+<p style="margin:0;color:#64748b;font-size:13px">Questions? Reply to this email or text me. I read every message.</p>`,
+              })
+            );
+          }
+
+          await notifyMatt(
+            `💰 New License Monitor Client — ${businessName} ($25/mo)`,
+            `<p><strong>${businessName}</strong><br>Email: ${customerEmail}<br>Phone: ${clientPhone || "n/a"}</p>`
+          );
+        } catch (e) { console.error("[WEBHOOK] license_monitor_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       if (customerEmail && AGENCY_SERVICE_LABELS[meta.type]) {
         try {
           const serviceLabel = AGENCY_SERVICE_LABELS[meta.type];
