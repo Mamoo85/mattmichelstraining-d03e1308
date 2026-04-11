@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import DWAStats from "@/components/dwa-admin/DWAStats";
 import DWAClientRoster from "@/components/dwa-admin/DWAClientRoster";
 import DWARecentJobs from "@/components/dwa-admin/DWARecentJobs";
@@ -7,7 +7,9 @@ import DWADataImport from "@/components/dwa-admin/DWADataImport";
 import AssetManager from "@/components/field-service/AssetManager";
 import ContractManager from "@/components/field-service/ContractManager";
 
-type Tab = "overview" | "clients" | "jobs" | "assets" | "contracts" | "import" | "command";
+const AdminBoardReport = lazy(() => import("@/components/admin/AdminBoardReport"));
+
+type Tab = "overview" | "clients" | "jobs" | "assets" | "contracts" | "import" | "command" | "board";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
