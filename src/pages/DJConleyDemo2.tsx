@@ -97,9 +97,14 @@ export default function DJConleyDemo2() {
               </div>
             ))}
           </div>
-          <p style={{ margin: "10px 0 0", fontSize: 11, color: "#475569", textAlign: "center" }}>
-            eWay-CRM shows you nothing. We tell you Stellantis Facilities was on your site 14 minutes ago.
-          </p>
+          <div style={{ marginTop: 14, background: "#060e1a", borderRadius: 12, padding: "14px 16px", border: "1px solid #00d4ff20" }}>
+            <p style={{ margin: "0 0 6px", fontSize: 12, color: "#00d4ff", fontWeight: 700 }}>💰 What's a single identified visitor worth to Pat?</p>
+            <p style={{ margin: 0, fontSize: 12, color: "#94a3b8", lineHeight: 1.7 }}>
+              Stellantis Facilities Mgmt viewed "Boiler Tune-Up Services" 14 minutes ago. A multi-unit boiler service contract with a Stellantis plant runs <strong style={{ color: "#10b981" }}>$40,000–$120,000/year</strong>.
+              If Pat calls them before his competitor does, that's one phone call worth more than 4 months of FieldDesk fees.
+              <br /><span style={{ color: "#475569" }}>SiteRadar names the company. eWay shows nothing. That's the gap.</span>
+            </p>
+          </div>
         </div>
 
         {/* ── Dispatch Board / Map Toggle ── */}
