@@ -100,7 +100,7 @@ const ALL_SERVICES = [
   { table: "luxury_re_clients", name: "Luxury Real Estate Intelligence", price: "$299/mo", priceNum: 299 },
   { table: "seo_guard_clients", name: "SEO Guard", price: "$29/mo", priceNum: 29 },
   { table: "leads", name: "Communications Center (SMS CRM)", price: "$0/mo", priceNum: 0 },
-  { table: "field_service_clients", name: "Field Service Management", price: "$199-299/mo", priceNum: 249 },
+  { table: "field_crm_clients", name: "Field Service Management", price: "$199-299/mo", priceNum: 249 },
   { table: "hire_alert_clients", name: "TechAlert Hiring Monitor", price: "$49-99/mo", priceNum: 74 },
 ] as const;
 
