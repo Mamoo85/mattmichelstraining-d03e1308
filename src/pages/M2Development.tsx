@@ -81,7 +81,6 @@ const ADDONS: AddOn[] = [
   { icon: RefreshCw, title: "Website Refresh", price: "$199", desc: "Homepage copy rewrite, CTA updates, mobile fixes, and speed optimization.", link: "/web-design-services" },
   { icon: Target, title: "Local SEO Pages", price: "$299", desc: "10 keyword-targeted landing pages to dominate local search results.", link: "/local-seo-pages" },
   { icon: BarChart3, title: "GBP Management", price: "$49/mo", desc: "Weekly posts, review responses, and profile optimization. Rank higher on Google Maps.", link: "/local-marketing" },
-  { icon: MessageSquare, title: "AI Review Response", price: "$49/mo", desc: "Professional responses to Google & Yelp reviews within 24 hours.", link: "/ai-review-response" },
   { icon: TrendingUp, title: "SEO Reports", price: "$149/mo", desc: "Monthly SEO tracking with keyword rankings, traffic analysis, and action items.", link: "/seo-reports" },
 ];
 

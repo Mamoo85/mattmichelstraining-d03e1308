@@ -35,6 +35,18 @@ const priorityBadge: Record<string, string> = {
   low: "bg-gray-500 text-white",
 };
 
+const TODAY = new Date().toISOString().split("T")[0];
+
+const DEMO_JOBS: DispatchJob[] = [
+  { id: "d1", title: "Emergency: High-Pressure Alarm", priority: "emergency", status: "open", scheduled_date: TODAY, scheduled_time: "07:30", field_service_customers: { company_name: "Chrysler Sterling Heights Assembly", phone: "(586) 939-7000" }, field_service_techs: null },
+  { id: "d2", title: "Boiler Controls Upgrade Quote", priority: "normal", status: "open", scheduled_date: TODAY, scheduled_time: "14:00", field_service_customers: { company_name: "Detroit Water & Sewage Dept.", phone: "(313) 267-8000" }, field_service_techs: null },
+  { id: "d3", title: "Annual Boiler Tune-Up", priority: "high", status: "assigned", scheduled_date: TODAY, scheduled_time: "08:00", field_service_customers: { company_name: "Ford Motor Co. — River Rouge", phone: "(313) 845-8540" }, field_service_techs: { name: "Mike Johnson" } },
+  { id: "d4", title: "Annual PM + CSD-1 Test", priority: "high", status: "assigned", scheduled_date: TODAY, scheduled_time: "10:30", field_service_customers: { company_name: "Henry Ford Hospital", phone: "(313) 916-2600" }, field_service_techs: { name: "Dan Kowalski" } },
+  { id: "d5", title: "Combustion Analysis — Unit 3", priority: "normal", status: "en_route", scheduled_date: TODAY, scheduled_time: "09:00", field_service_customers: { company_name: "DTE Energy Plant — Trenton", phone: "(734) 675-7100" }, field_service_techs: { name: "Tony Radke" } },
+  { id: "d6", title: "Burner Replacement — 200 HP", priority: "high", status: "on_site", scheduled_date: TODAY, scheduled_time: "07:00", field_service_customers: { company_name: "Stellantis Jefferson North Assembly", phone: "(313) 567-1800" }, field_service_techs: { name: "Chris Oller" } },
+  { id: "d7", title: "Pressure Vessel Inspection", priority: "normal", status: "completed", scheduled_date: TODAY, scheduled_time: "06:30", field_service_customers: { company_name: "GM Technical Center — Warren", phone: "(586) 986-5000" }, field_service_techs: { name: "Chris Oller" } },
+];
+
 const DispatchBoard: React.FC<DispatchBoardProps> = ({ clientId }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedJob, setSelectedJob] = useState<DispatchJob | null>(null);
@@ -46,6 +58,7 @@ const DispatchBoard: React.FC<DispatchBoardProps> = ({ clientId }) => {
   } = useQuery({
     queryKey: ["field-jobs", clientId],
     queryFn: async () => {
+      if (clientId === "demo") return DEMO_JOBS;
       const { data, error } = await supabase
         .from("field_service_jobs")
         .select(

@@ -18,8 +18,16 @@ interface Tech {
   client_id: string;
 }
 
+const DEMO_TECH: Tech = { id: "demo", name: "Mike Johnson", client_id: "demo" };
+
+const DEMO_TECH_JOBS: FieldJob[] = [
+  { id: "d1", title: "Emergency: High-Pressure Alarm", description: "Boiler tripped high-limit at 175 PSI. Investigate and reset.", priority: "emergency", status: "en_route", scheduled_date: new Date().toISOString().split("T")[0], scheduled_time: "07:30", notes: "Contact: Dave Kotrba (plant manager)", customer: { company_name: "Chrysler Sterling Heights Assembly", address: "38111 Van Dyke Ave", city: "Sterling Heights", phone: "(586) 939-7000" } },
+  { id: "d2", title: "Annual Boiler Tune-Up", description: "Full safety inspection, combustion analysis, and CSD-1 test.", priority: "high", status: "open", scheduled_date: new Date().toISOString().split("T")[0], scheduled_time: "13:30", notes: "Unit 2 — East Powerhouse", customer: { company_name: "Ford Motor Co. — River Rouge", address: "3001 Miller Rd", city: "Dearborn", phone: "(313) 845-8540" } },
+];
+
 export default function FieldServiceTechApp() {
-  const [tech, setTech] = useState<Tech | null>(null);
+  const isDemo = new URLSearchParams(window.location.search).get("demo") === "1";
+  const [tech, setTech] = useState<Tech | null>(isDemo ? DEMO_TECH : null);
   const [jobs, setJobs] = useState<FieldJob[]>([]);
   const [selectedJob, setSelectedJob] = useState<FieldJob | null>(null);
   const [loadingJobs, setLoadingJobs] = useState(false);
@@ -74,6 +82,7 @@ export default function FieldServiceTechApp() {
   }, [isOnline, tech, syncOfflineQueue]);
 
   const fetchJobs = useCallback(async (techId: string) => {
+    if (techId === "demo") { setJobs(DEMO_TECH_JOBS); return; }
     setLoadingJobs(true);
     try {
       const { data, error } = await supabase

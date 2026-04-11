@@ -1,30 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import SEOHead from "@/components/layout/SEOHead";
-import { Phone, CheckCircle, XCircle, Shield, Zap, Clock, DollarSign, ArrowRight, X } from "lucide-react";
+import { Phone, CheckCircle, XCircle, Shield, Zap, Clock, DollarSign, ArrowRight, X, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const TERRITORIES = [
   { slug: "hvac-detroit", trade: "HVAC", city: "Detroit", state: "MI", monthly: "$399" },
   { slug: "hvac-warren", trade: "HVAC", city: "Warren", state: "MI", monthly: "$399" },
+  { slug: "hvac-sterling-heights", trade: "HVAC", city: "Sterling Heights", state: "MI", monthly: "$399" },
+  { slug: "hvac-dearborn", trade: "HVAC", city: "Dearborn", state: "MI", monthly: "$399" },
+  { slug: "hvac-livonia", trade: "HVAC", city: "Livonia", state: "MI", monthly: "$399" },
   { slug: "plumbing-detroit", trade: "Plumbing", city: "Detroit", state: "MI", monthly: "$399" },
   { slug: "plumbing-sterling-heights", trade: "Plumbing", city: "Sterling Heights", state: "MI", monthly: "$399" },
+  { slug: "plumbing-dearborn", trade: "Plumbing", city: "Dearborn", state: "MI", monthly: "$399" },
+  { slug: "plumbing-troy", trade: "Plumbing", city: "Troy", state: "MI", monthly: "$399" },
+  { slug: "plumbing-livonia", trade: "Plumbing", city: "Livonia", state: "MI", monthly: "$399" },
   { slug: "electrician-detroit", trade: "Electrical", city: "Detroit", state: "MI", monthly: "$399" },
   { slug: "electrician-dearborn", trade: "Electrical", city: "Dearborn", state: "MI", monthly: "$399" },
+  { slug: "electrician-warren", trade: "Electrical", city: "Warren", state: "MI", monthly: "$399" },
+  { slug: "electrician-troy", trade: "Electrical", city: "Troy", state: "MI", monthly: "$399" },
+  { slug: "electrician-livonia", trade: "Electrical", city: "Livonia", state: "MI", monthly: "$399" },
   { slug: "roofing-detroit", trade: "Roofing", city: "Detroit", state: "MI", monthly: "$399" },
   { slug: "roofing-warren", trade: "Roofing", city: "Warren", state: "MI", monthly: "$399" },
-  { slug: "plumbing-dearborn", trade: "Plumbing", city: "Dearborn", state: "MI", monthly: "$399" },
-  { slug: "hvac-sterling-heights", trade: "HVAC", city: "Sterling Heights", state: "MI", monthly: "$399" },
   { slug: "roofing-troy", trade: "Roofing", city: "Troy", state: "MI", monthly: "$399" },
-  { slug: "electrician-warren", trade: "Electrical", city: "Warren", state: "MI", monthly: "$399" },
-  { slug: "plumbing-troy", trade: "Plumbing", city: "Troy", state: "MI", monthly: "$399" },
-  { slug: "hvac-dearborn", trade: "HVAC", city: "Dearborn", state: "MI", monthly: "$399" },
   { slug: "roofing-southfield", trade: "Roofing", city: "Southfield", state: "MI", monthly: "$399" },
-  { slug: "hvac-livonia", trade: "HVAC", city: "Livonia", state: "MI", monthly: "$399" },
-  { slug: "plumbing-livonia", trade: "Plumbing", city: "Livonia", state: "MI", monthly: "$399" },
-  { slug: "electrician-troy", trade: "Electrical", city: "Troy", state: "MI", monthly: "$399" },
   { slug: "roofing-livonia", trade: "Roofing", city: "Livonia", state: "MI", monthly: "$399" },
-  { slug: "electrician-livonia", trade: "Electrical", city: "Livonia", state: "MI", monthly: "$399" },
 ];
 
 const WINS = [
@@ -104,12 +105,35 @@ function HypeModal({ territory, onClose, onConfirm, loading }: HypeModalProps) {
 
 export default function ContractorLeads() {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [selectedTerritory, setSelectedTerritory] = useState<typeof TERRITORIES[0] | null>(null);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", business_name: "", email: "", phone: "", trade: "", city: "" });
+  const [takenSlugs, setTakenSlugs] = useState<Set<string>>(new Set());
+
+  const successTrade = searchParams.get("trade");
+  const successCity = searchParams.get("city");
+  const isSuccess = searchParams.get("success") === "1";
+
+  // Load territory availability on mount
+  useEffect(() => {
+    supabase
+      .from("contractor_lead_sites" as never)
+      .select("slug, active_contractor_id")
+      .then(({ data }) => {
+        if (!data) return;
+        const taken = new Set(
+          (data as { slug: string; active_contractor_id: string | null }[])
+            .filter((r) => r.active_contractor_id !== null)
+            .map((r) => r.slug)
+        );
+        setTakenSlugs(taken);
+      });
+  }, []);
 
   const handleTerritoryClick = (t: typeof TERRITORIES[0]) => {
+    if (takenSlugs.has(t.slug)) return;
     setForm((f) => ({ ...f, trade: t.trade.toLowerCase(), city: t.city }));
     setShowForm(true);
     setTimeout(() => document.getElementById("signup-form")?.scrollIntoView({ behavior: "smooth" }), 100);
@@ -120,9 +144,15 @@ export default function ContractorLeads() {
       toast({ title: "Please fill out all fields", variant: "destructive" });
       return;
     }
-    const territory = TERRITORIES.find((t) => t.trade.toLowerCase() === form.trade && t.city === form.city);
+    const territory = TERRITORIES.find(
+      (t) => t.trade.toLowerCase() === form.trade && t.city === form.city
+    );
     if (!territory) {
       toast({ title: "Please select a territory first", variant: "destructive" });
+      return;
+    }
+    if (takenSlugs.has(territory.slug)) {
+      toast({ title: "That territory is already taken", description: "Pick another city or trade.", variant: "destructive" });
       return;
     }
     setSelectedTerritory(territory);
@@ -155,6 +185,43 @@ export default function ContractorLeads() {
       setLoading(false);
     }
   };
+
+  // Success state — shown after returning from Stripe checkout
+  if (isSuccess) {
+    return (
+      <>
+        <SEOHead title="You're In — Contractor Leads | M² Lead Network" description="" />
+        <div className="min-h-screen bg-background flex items-center justify-center px-6 py-20">
+          <div className="max-w-md w-full text-center">
+            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-5">
+              <CheckCircle size={36} className="text-green-500" />
+            </div>
+            <h1 className="text-2xl font-black text-foreground mb-3">
+              You're locked in.
+            </h1>
+            {successTrade && successCity && (
+              <p className="text-primary font-bold text-lg mb-4">
+                {successTrade} — {successCity}, MI
+              </p>
+            )}
+            <p className="text-muted-foreground text-sm leading-relaxed mb-8">
+              Your 7-day free trial has started. Every {successTrade?.toLowerCase() || "contractor"} lead that comes in for {successCity || "your territory"} goes <strong className="text-foreground">only to you</strong>. You'll get an SMS + email the moment a new lead arrives.
+            </p>
+            <div className="bg-[#1e293b] rounded-xl p-5 text-left space-y-3 mb-8">
+              <p className="text-sm text-slate-300"><span className="text-green-400 font-bold">✓</span> Territory reserved exclusively for you</p>
+              <p className="text-sm text-slate-300"><span className="text-green-400 font-bold">✓</span> Welcome email sent — check your inbox</p>
+              <p className="text-sm text-slate-300"><span className="text-green-400 font-bold">✓</span> SMS notifications active on new leads</p>
+              <p className="text-sm text-slate-300"><span className="text-green-400 font-bold">✓</span> $399/mo begins after your free trial</p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Questions? Text or call Matt directly:{" "}
+              <a href="tel:+13138064952" className="text-primary font-bold hover:underline">(313) 806-4952</a>
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -222,22 +289,35 @@ export default function ContractorLeads() {
           </div>
 
           {/* Open Territories */}
-          <h2 className="text-lg font-black text-foreground mb-4 uppercase tracking-wide">Open territories — Metro Detroit</h2>
-          <p className="text-sm text-muted-foreground mb-4">Click any territory to claim it. First contractor to sign up owns it exclusively.</p>
+          <h2 className="text-lg font-black text-foreground mb-2 uppercase tracking-wide">Open territories — Metro Detroit</h2>
+          <p className="text-sm text-muted-foreground mb-4">Click any available territory to claim it. First contractor to sign up owns it exclusively.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-12">
-            {TERRITORIES.map((t) => (
-              <button
-                key={t.slug}
-                onClick={() => handleTerritoryClick(t)}
-                className="bg-card border border-border p-4 flex items-center justify-between hover:border-primary/50 hover:bg-primary/5 transition-all text-left group"
-              >
-                <div>
-                  <p className="font-bold text-sm text-foreground">{t.trade} — {t.city}, {t.state}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{t.monthly}/mo after 7-day free trial</p>
-                </div>
-                <ArrowRight size={14} className="text-muted-foreground group-hover:text-primary transition-colors" />
-              </button>
-            ))}
+            {TERRITORIES.map((t) => {
+              const taken = takenSlugs.has(t.slug);
+              return (
+                <button
+                  key={t.slug}
+                  onClick={() => handleTerritoryClick(t)}
+                  disabled={taken}
+                  className={`border p-4 flex items-center justify-between transition-all text-left group ${
+                    taken
+                      ? "bg-slate-900/50 border-slate-700 opacity-60 cursor-not-allowed"
+                      : "bg-card border-border hover:border-primary/50 hover:bg-primary/5 cursor-pointer"
+                  }`}
+                >
+                  <div>
+                    <p className="font-bold text-sm text-foreground">{t.trade} — {t.city}, {t.state}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {taken ? "Territory taken" : `${t.monthly}/mo after 7-day free trial`}
+                    </p>
+                  </div>
+                  {taken
+                    ? <Lock size={14} className="text-slate-500 flex-shrink-0" />
+                    : <ArrowRight size={14} className="text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                  }
+                </button>
+              );
+            })}
           </div>
 
           {/* Signup Form */}
