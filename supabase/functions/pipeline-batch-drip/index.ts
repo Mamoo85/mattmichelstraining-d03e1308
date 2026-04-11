@@ -53,8 +53,10 @@ serve(async (req) => {
       });
     }
 
-    // Filter to only leads with email
-    const emailableLeads = leads.filter((l: any) => !!l.email);
+    // For draft_all, we can draft even without email. For send actions, require email.
+    const emailableLeads = action === "draft_all"
+      ? leads
+      : leads.filter((l: any) => !!l.email);
     if (emailableLeads.length === 0) {
       return new Response(JSON.stringify({ error: "None of the selected leads have an email address" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },

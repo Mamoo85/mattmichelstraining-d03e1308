@@ -479,7 +479,7 @@ function buildFieldServiceBody(
 
     <div style="border-top:1px solid #1e3a5f;padding-top:20px">
       <p style="color:#e2e8f0;font-size:14px;margin:0">— Matt Michels</p>
-      <p style="color:#4a6fa5;font-size:12px;margin:5px 0 0">Detroit Web Agency &nbsp;·&nbsp; (313) 806-4952 &nbsp;·&nbsp; <a href="mailto:matt@mattmichelstraining.com" style="color:#00d4ff;text-decoration:none">matt@mattmichelstraining.com</a></p>
+      <p style="color:#4a6fa5;font-size:12px;margin:5px 0 0">Detroit Web Agency &nbsp;·&nbsp; (313) 806-4952 &nbsp;·&nbsp; <a href="mailto:matt@detroitwebagent.com" style="color:#00d4ff;text-decoration:none">matt@detroitwebagent.com</a></p>
     </div>`;
 }
 
@@ -534,7 +534,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Matt Michels — Detroit Web Agency <matt@mattmichelstraining.com>",
+          from: "Matt Michels — Detroit Web Agency <matt@detroitwebagent.com>",
           to: [client_email],
           bcc: ["matthewmichels4@gmail.com"],
           subject: "Your Field Service App is Live — Click Here to Log In",

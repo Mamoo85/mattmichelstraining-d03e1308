@@ -14,6 +14,62 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// ── Master Niche Smoother: 50+ trades ──
+const NICHE_MAP: [RegExp, string][] = [
+  [/hvac|heating|cooling|furnace|air.?condition/i, "HVAC"],
+  [/plumb|pipe|drain|water.?heater/i, "plumbing"],
+  [/roof|shingle|gutter/i, "roofing"],
+  [/electric|wiring|lighting/i, "electrical"],
+  [/concrete|paving|asphalt|cement|driveway|foundation/i, "concrete"],
+  [/landscape|lawn|hardscape|irrigation|sprinkler/i, "landscaping"],
+  [/tree|arborist|stump/i, "tree service"],
+  [/paint|stain|coating/i, "painting"],
+  [/floor|epoxy|carpet|tile|hardwood/i, "flooring"],
+  [/remodel|renovat|kitchen|bath|addition/i, "remodeling"],
+  [/fence|fencing|gate/i, "fencing"],
+  [/deck|patio|porch/i, "decking"],
+  [/pest|exterminat|bug|rodent/i, "pest control"],
+  [/mason|brick|stone|chimney/i, "masonry"],
+  [/carpenter|woodwork|cabinet|framing/i, "carpentry"],
+  [/siding|exterior|stucco/i, "siding"],
+  [/window|door|glass|glazing/i, "window and door"],
+  [/clean|janitor|power.?wash|pressure.?wash|maid/i, "cleaning"],
+  [/pool|spa|hot.?tub/i, "pool service"],
+  [/drywall|sheetrock|plaster|insulation/i, "drywall"],
+  [/excavat|grading|trench|dirt|site.?prep/i, "excavation"],
+  [/weld|fabrication|metal/i, "welding"],
+  [/garage|overhead.?door/i, "garage door"],
+  [/security|alarm|cctv|av|home.?theater/i, "A/V and security"],
+  [/solar|panel/i, "solar"],
+  [/mold|water.?damage|fire.?damage|mitigation|restoration/i, "restoration"],
+  [/septic|sewer/i, "septic"],
+  [/moving|mover|storage/i, "moving"],
+  [/locksmith|key|safe/i, "locksmith"],
+  [/sign|awning/i, "signage"],
+  [/appliance|repair/i, "appliance repair"],
+  [/wrecker|tow/i, "towing"],
+  [/snow|plow|ice/i, "snow removal"],
+  [/junk|dumpster|hauling|waste/i, "junk removal"],
+  [/wrought.?iron/i, "ironwork"],
+  [/boiler|steam/i, "boiler service"],
+  [/auto|mechanic|body.?shop|collision/i, "auto repair"],
+  [/demol/i, "demolition"],
+  [/asbestos|abatement|lead.?removal|hazmat/i, "environmental remediation"],
+  [/fire.?protect|sprinkler.?system/i, "fire protection"],
+  [/elevator|escalator/i, "elevator service"],
+  [/marine|boat|dock/i, "marine service"],
+  [/pav|striping|seal.?coat/i, "paving"],
+];
+
+function normalizeIndustry(raw: string | null | undefined): string {
+  if (!raw) return "contracting";
+  const input = raw.toLowerCase();
+  for (const [regex, label] of NICHE_MAP) {
+    if (regex.test(input)) return label;
+  }
+  return "contracting";
+}
+
 const DRIP_SCHEDULE = [
   { step: 1, delayDays: 0, subject: "Competitors getting calls you're not", label: "1_Day_1_Sent" },
   { step: 2, delayDays: 3, subject: "Quick follow-up — saw something on your site", label: "2_Day_4_Sent" },
@@ -21,31 +77,49 @@ const DRIP_SCHEDULE = [
   { step: 4, delayDays: 14, subject: "Last message from me", label: "4_Day_15_Sent" },
 ];
 
+const BANNER_URL = "https://mattmichelstraining.com/images/dwa-email-banner.png";
+const BOAT_PHOTO_URL = "https://mattmichelstraining.com/images/matt-boat.jpg";
+
+const EMAIL_SIGNATURE = `
+<div style="margin-top:32px;padding-top:20px;border-top:1px solid #1e293b;">
+  <table cellpadding="0" cellspacing="0" border="0"><tr>
+    <td style="padding-right:14px;vertical-align:top;">
+      <img src="${BOAT_PHOTO_URL}" alt="Matt Michels" width="56" height="56" style="border-radius:50%;object-fit:cover;display:block;" />
+    </td>
+    <td style="vertical-align:top;font-size:13px;color:#94a3b8;font-family:Arial,sans-serif;">
+      <strong style="color:#22d3ee;">Matt Michels</strong> | Lead Web Agent<br/>
+      <span style="color:#64748b;">Detroit Web Agency · (313) 806-4952</span><br/>
+      <a href="https://detroitwebagent.com" style="color:#22d3ee;text-decoration:none;font-size:12px;">detroitwebagent.com</a>
+    </td>
+  </tr></table>
+</div>`;
+
 async function generateDripEmail(step: number, businessName: string, industry: string, siteFlaw: string | null, contactName: string | null): Promise<{ subject: string; html: string }> {
   const scheduleItem = DRIP_SCHEDULE[step - 1];
   const subject = scheduleItem.subject.replace("{{business}}", businessName);
   const firstName = contactName?.split(" ")[0] || "there";
+  const niche = normalizeIndustry(industry);
 
   const prompts: Record<number, string> = {
-    1: `Write a cold outreach email from Matt at M² Digital (a web design & digital marketing agency). Recipient: ${firstName} at ${businessName} (${industry}). Subject: "${subject}". The hook: their competitors are showing up on Google and getting the calls they're not. ${siteFlaw ? `Mention this specific issue: "${siteFlaw}".` : ""} Include a soft CTA to check out a quick demo. Keep it under 150 words, conversational, not salesy. Sign off as Matt Michels. Output ONLY the email body HTML (no subject line).`,
-    2: `Write a short follow-up email (step 2 of 4) from Matt at M² Digital to ${firstName} at ${businessName}. Reference the previous email about their online presence. Mention a demo link. Keep it under 100 words, casual. Sign off as Matt. Output ONLY the email body HTML.`,
-    3: `Write a value-add email (step 3 of 4) from Matt at M² Digital to ${firstName} at ${businessName} (${industry}). Do a quick "online presence check" — mention things like Google Business Profile, mobile speed, and local SEO. Keep it helpful, not pushy. Under 120 words. Sign off as Matt. Output ONLY the email body HTML.`,
-    4: `Write a breakup email (final step) from Matt at M² Digital to ${firstName} at ${businessName}. Keep it short, respectful, and leave the door open. Mention you won't email again but they can reach out anytime. Under 80 words. Sign off as Matt Michels. Output ONLY the email body HTML.`,
+    1: `Write a cold outreach email from Matt at Detroit Web Agency (a web design & digital marketing agency in Grosse Pointe, MI). Recipient: ${firstName} at ${businessName} (a ${niche} company). Subject: "${subject}". The hook: ask if they're taking on new ${niche} jobs right now, and mention their competitors are showing up on Google and getting the calls they're not. ${siteFlaw ? `Mention this specific issue: "${siteFlaw}".` : ""} Include a soft CTA to check out a quick demo. Keep it under 150 words, conversational, not salesy. Do NOT include any signature — just the email body. Output ONLY the email body HTML (no subject line, no signature).`,
+    2: `Write a short follow-up email (step 2 of 4) from Matt at Detroit Web Agency to ${firstName} at ${businessName} (${niche}). Reference the previous email about their online presence. Mention a demo link. Keep it under 100 words, casual. Do NOT include any signature. Output ONLY the email body HTML.`,
+    3: `Write a value-add email (step 3 of 4) from Matt at Detroit Web Agency to ${firstName} at ${businessName} (${niche}). Do a quick "online presence check" — mention things like Google Business Profile, mobile speed, and local SEO. Keep it helpful, not pushy. Under 120 words. Do NOT include any signature. Output ONLY the email body HTML.`,
+    4: `Write a breakup email (final step) from Matt at Detroit Web Agency to ${firstName} at ${businessName}. Keep it short, respectful, and leave the door open. Mention you won't email again but they can reach out anytime. Under 80 words. Do NOT include any signature. Output ONLY the email body HTML.`,
   };
 
   try {
-    const res = await fetch("https://ai.lovable.dev/api/generate-text", {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
-        prompt: prompts[step] || prompts[1],
+        messages: [{ role: "user", content: prompts[step] || prompts[1] }],
         max_tokens: 600,
       }),
     });
     if (res.ok) {
       const data = await res.json();
-      const body = data?.text || data?.content || "";
+      const body = data?.choices?.[0]?.message?.content || "";
       if (body.length > 50) {
         return { subject, html: wrapEmailHtml(body) };
       }
@@ -54,12 +128,12 @@ async function generateDripEmail(step: number, businessName: string, industry: s
     console.error("[DRIP] AI generation error:", e);
   }
 
-  // Fallback templates
+  // Fallback templates using normalized niche
   const fallbacks: Record<number, string> = {
-    1: `<p>Hi ${firstName},</p><p>I was looking at businesses in the ${industry} space near you, and I noticed something — your competitors are showing up ahead of you on Google.</p>${siteFlaw ? `<p>I also spotted this on your site: <em>${siteFlaw}</em></p>` : ""}<p>If you're curious how they're getting those calls, I put together a quick breakdown. Happy to share — no strings attached.</p><p>Best,<br/>Matt Michels<br/>M² Digital</p>`,
-    2: `<p>Hi ${firstName},</p><p>Just following up on my note from a few days ago. I put together a quick demo showing what your online presence could look like with a few tweaks.</p><p>Worth a 2-minute look?</p><p>— Matt</p>`,
-    3: `<p>Hi ${firstName},</p><p>Did a quick online presence check for ${businessName} — looked at your Google Business Profile, mobile site speed, and local search visibility.</p><p>There are a few quick wins that could help you show up more. Happy to share what I found.</p><p>— Matt</p>`,
-    4: `<p>Hi ${firstName},</p><p>This is my last note — I don't want to be that guy who keeps emailing. If you ever want to chat about getting more visibility online, I'm here.</p><p>Wishing you and ${businessName} all the best.</p><p>— Matt Michels<br/>M² Digital</p>`,
+    1: `<p>Hi ${firstName},</p><p>Are you guys taking on new ${niche} jobs right now? I was looking at ${niche} companies near you, and I noticed your competitors are showing up ahead of you on Google.</p>${siteFlaw ? `<p>I also spotted this on your site: <em>${siteFlaw}</em></p>` : ""}<p>If you're curious how they're getting those calls, I put together a quick breakdown. Happy to share — no strings attached.</p>`,
+    2: `<p>Hi ${firstName},</p><p>Just following up on my note from a few days ago. I put together a quick demo showing what your online presence could look like with a few tweaks.</p><p>Worth a 2-minute look?</p>`,
+    3: `<p>Hi ${firstName},</p><p>Did a quick online presence check for ${businessName} — looked at your Google Business Profile, mobile site speed, and local search visibility.</p><p>There are a few quick wins that could help you show up more for ${niche} searches in your area. Happy to share what I found.</p>`,
+    4: `<p>Hi ${firstName},</p><p>This is my last note — I don't want to be that guy who keeps emailing. If you ever want to chat about getting more visibility online, I'm here.</p><p>Wishing you and ${businessName} all the best.</p>`,
   };
 
   return { subject, html: wrapEmailHtml(fallbacks[step] || fallbacks[1]) };
@@ -67,8 +141,14 @@ async function generateDripEmail(step: number, businessName: string, industry: s
 
 function wrapEmailHtml(body: string): string {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family:Arial,sans-serif;font-size:14px;color:#333;line-height:1.6;max-width:600px;margin:0 auto;padding:20px;">
+<body style="font-family:Arial,sans-serif;font-size:14px;color:#e2e8f0;line-height:1.6;max-width:600px;margin:0 auto;padding:0;background:#0f172a;">
+<div style="background:#0a0a0f;padding:0;">
+  <img src="${BANNER_URL}" alt="Detroit Web Agency" width="600" style="width:100%;max-width:600px;display:block;height:auto;" />
+</div>
+<div style="padding:24px 20px;background:#0f172a;">
 ${body}
+${EMAIL_SIGNATURE}
+</div>
 </body></html>`;
 }
 
@@ -84,11 +164,12 @@ async function sendEmail(to: string, subject: string, html: string): Promise<{ s
         "X-Connection-Api-Key": RESEND_API_KEY,
       },
       body: JSON.stringify({
-        from: "Matt Michels <matt@mattmichelstraining.com>",
+        from: "Matt Michels | Detroit Web Agency <matt@detroitwebagent.com>",
         to: [to],
+        bcc: ["matthewmichels4@gmail.com"],
         subject,
         html,
-        reply_to: "matt@mattmichelstraining.com",
+        reply_to: "matt@detroitwebagent.com",
       }),
     });
     const data = await res.json();

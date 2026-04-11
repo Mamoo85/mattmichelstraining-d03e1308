@@ -11,9 +11,10 @@
 4. [People Domain](#people)
 5. [Business Domain](#business)
 6. [Marketing Domain](#marketing)
-7. [Agency Domain](#agency)
-8. [Universal AI Bar (Ask Oz)](#ai-bar)
-9. [Enhancement Recommendations](#enhancements)
+7. [Detroit Web Agency Domain](#dwa)
+8. [Agency Domain](#agency)
+9. [Universal AI Bar (Ask Oz)](#ai-bar)
+10. [Enhancement Recommendations](#enhancements)
 
 ---
 
@@ -409,7 +410,80 @@ Lets you choose which AI model powers each task category:
 
 ---
 
-# 7. Agency Domain {#agency}
+# 7. Detroit Web Agency Domain {#dwa}
+
+**Tab label**: "Detroit Web Agency" | **Icon**: Wrench | **Color**: `#00d4ff`
+**Purpose**: Single hub for all DWA products — FieldDesk, SiteRadar, TechAlert. All testing tools in one place.
+
+## 7.1 DWA Overview (`AdminDWAOverview`)
+
+Central command center for Detroit Web Agency products.
+
+**Stats cards**: FieldDesk active clients, TechAlert active clients, total candidates in DB, hot alerts sent.
+
+**Quick Links** (open in new tab):
+- `/field-service` — FieldDesk landing page
+- `/hire-alert` — TechAlert landing page
+- `/field-service/dispatch` — Dispatcher board
+- `/field-service/tech` — Tech mobile app
+- `/dwa-admin` — DWA admin panel
+- `/demo-djconley-v2` — DJ Conley demo site
+
+**$0 Test Checkouts**: One-click buttons that invoke `create-test-checkout` for:
+- FieldDesk (`field_service_subscription`) — seeds `field_crm_clients`
+- TechAlert (`hire_alert_subscription`) — seeds `hire_alert_clients`
+
+**Scanner Control**: Shows last run time + candidates found. "Invoke Scanner Now" button manually fires `hire-alert-scanner` edge function without waiting for 7am cron. Use this to test the full scanning pipeline immediately.
+
+## 7.2 FieldDesk Clients (`AdminFieldCRMClients`)
+
+Manages `field_crm_clients` table. Add/edit/delete clients, generate JavaScript tracking snippets for SiteRadar.
+
+**Snippet Generator**: Each client gets a unique `visitor_script_key`. Click "Get Tracking Snippet" to copy the JS tag — paste before `</body>` on their website. Visitors start appearing in SiteRadar immediately.
+
+**Stats**: Active count, monthly revenue (from `monthly_price` field), total visitors tracked.
+
+## 7.3 TechAlert Clients (`AdminHireAlertClients`)
+
+Manages `hire_alert_clients` table. Shows plan (bundle $49 vs standalone $99), target roles, notify flags.
+
+**Role tags**: Shows which of 8 trades each client is monitoring (boiler_operator, hvac_tech, plumber, electrician, pipefitter, steam_engineer, refrigeration_tech, fire_suppression).
+
+**Scanner Runs table**: Last 10 runs from `hire_alert_runs` — timestamp, source, candidates found, alerts sent, error status.
+
+**Recent Candidates table**: Last 20 rows from `hire_alert_candidates` — name, license type, city, source (miosha/apollo/firecrawl), status (new/alerted/hired/inactive).
+
+## 7.4 SiteRadar / Visitor Intel (`VisitorIntelFeed`)
+
+Live feed of business visitors across all FieldDesk clients. Company name, page visited, time. Use to demonstrate value to prospects ("someone from Ford Motor visited your site 3 times this week").
+
+## 7.5 Dispatch Map (`TechDispatchMap`)
+
+Google Maps view of live tech GPS locations from `tech_locations` table. Pins show tech name + current job.
+
+## 7.6 Review Engine (`ReviewLeaderboard`)
+
+Review monitoring leaderboard. Shows client review scores, recent reviews, response queue.
+
+## 7.7 Web Design CRM (`AdminWebDesignCRM`)
+
+Pipeline for website clients — new leads, in-progress builds, live sites.
+
+## 7.8 Prospector (`AdminProspector`)
+
+Find field service companies in Metro Detroit to pitch. Queries `prospect_pipeline` table.
+
+## 7.9 Demo Links (`AdminDemoLinkGenerator`)
+
+Generate shareable demo links for prospects (DJ Conley, etc.).
+
+## 7.10 Scouting Dashboard (`AdminScoutingDashboard`)
+
+Lead scoring and qualification dashboard for DWA prospects.
+
+---
+
+# 8. Agency Domain {#agency}
 
 ## 7.1 Agency CRM (`AdminAgencyCRM`)
 **Monitored by**: Agent Ops, Tom
