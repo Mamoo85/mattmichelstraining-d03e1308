@@ -86,10 +86,10 @@ export default function DWADataImport() {
     queryKey: ['dwa-clients-import'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('field_service_clients')
-        .select('id, company_name')
-        .eq('active', true)
-        .order('company_name');
+        .from('field_crm_clients')
+        .select('id, business_name')
+        .eq('status', 'active')
+        .order('business_name');
       if (error) throw error;
       return data ?? [];
     },

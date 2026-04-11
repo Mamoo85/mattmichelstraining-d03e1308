@@ -31,29 +31,18 @@ export default function DWAStats() {
         activeClientsRes,
         totalClientsRes,
         activePlansRes,
-        openJobsRes,
-        weekJobsRes,
       ] = await Promise.all([
         supabase
-          .from("field_service_clients")
+          .from("field_crm_clients")
           .select("*", { count: "exact", head: true })
-          .eq("active", true),
+          .eq("status", "active"),
         supabase
-          .from("field_service_clients")
+          .from("field_crm_clients")
           .select("*", { count: "exact", head: true }),
         supabase
-          .from("field_service_clients")
+          .from("field_crm_clients")
           .select("plan")
-          .eq("active", true),
-        supabase
-          .from("field_service_jobs")
-          .select("*", { count: "exact", head: true })
-          .not("status", "in", '("completed","invoiced")'),
-        supabase
-          .from("field_service_jobs")
-          .select("*", { count: "exact", head: true })
-          .eq("status", "completed")
-          .gte("completed_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+          .eq("status", "active"),
       ]);
 
       const mrr = (activePlansRes.data ?? []).reduce((sum, row) => {
@@ -66,23 +55,20 @@ export default function DWAStats() {
         activeClients: activeClientsRes.count ?? 0,
         totalClients: totalClientsRes.count ?? 0,
         mrr,
-        openJobs: openJobsRes.count ?? 0,
-        weekJobs: weekJobsRes.count ?? 0,
       };
     },
     staleTime: 60_000,
   });
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
       <StatCard label="Active Clients" value={data?.activeClients ?? 0} loading={isLoading} />
       <StatCard
         label="Monthly MRR"
         value={data ? `$${data.mrr.toLocaleString()}` : "$0"}
         loading={isLoading}
       />
-      <StatCard label="Open Jobs" value={data?.openJobs ?? 0} loading={isLoading} />
-      <StatCard label="Jobs This Week" value={data?.weekJobs ?? 0} loading={isLoading} />
+      <StatCard label="Total Clients" value={data?.totalClients ?? 0} loading={isLoading} />
     </div>
   );
 }

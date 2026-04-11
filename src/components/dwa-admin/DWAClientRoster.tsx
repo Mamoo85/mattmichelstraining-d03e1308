@@ -6,16 +6,14 @@ import { toast } from "sonner";
 
 interface Client {
   id: string;
-  company_name: string;
+  business_name: string;
   owner_name: string | null;
-  owner_email: string | null;
-  owner_phone: string | null;
+  email: string | null;
+  phone: string | null;
   plan: string | null;
   industry: string | null;
-  active: boolean;
+  status: string | null;
   created_at: string;
-  tech_count?: number;
-  job_count?: number;
 }
 
 function formatIndustry(industry: string | null): string {
@@ -40,8 +38,8 @@ function PlanBadge({ plan }: { plan: string | null }) {
   );
 }
 
-function StatusBadge({ active }: { active: boolean }) {
-  if (active) {
+function StatusBadge({ status }: { status: string | null }) {
+  if (status === "active") {
     return (
       <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">
         Active
@@ -50,7 +48,7 @@ function StatusBadge({ active }: { active: boolean }) {
   }
   return (
     <span className="px-2 py-0.5 rounded text-xs font-medium bg-white/10 text-white/40 border border-white/20">
-      Inactive
+      {status ?? "Inactive"}
     </span>
   );
 }
@@ -63,10 +61,10 @@ function AddClientModal({
   onSuccess: () => void;
 }) {
   const [form, setForm] = useState({
-    company_name: "",
+    business_name: "",
     owner_name: "",
-    owner_email: "",
-    owner_phone: "",
+    email: "",
+    phone: "",
     plan: "standalone",
     industry: "hvac",
   });
@@ -74,19 +72,19 @@ function AddClientModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.company_name.trim()) {
+    if (!form.business_name.trim()) {
       toast.error("Company name is required");
       return;
     }
     setLoading(true);
-    const { error } = await supabase.from("field_service_clients").insert({
-      company_name: form.company_name.trim(),
+    const { error } = await supabase.from("field_crm_clients").insert({
+      business_name: form.business_name.trim(),
       owner_name: form.owner_name.trim() || null,
-      owner_email: form.owner_email.trim() || null,
-      owner_phone: form.owner_phone.trim() || null,
+      email: form.email.trim() || null,
+      phone: form.phone.trim() || null,
       plan: form.plan,
       industry: form.industry,
-      active: true,
+      status: "active",
     });
     setLoading(false);
     if (error) {
@@ -110,8 +108,8 @@ function AddClientModal({
             <input
               className="w-full bg-[#0a1628] border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 focus:outline-none focus:border-[#00d4ff]/50"
               placeholder="ABC Roofing LLC"
-              value={form.company_name}
-              onChange={(e) => setForm((f) => ({ ...f, company_name: e.target.value }))}
+              value={form.business_name}
+              onChange={(e) => setForm((f) => ({ ...f, business_name: e.target.value }))}
             />
           </div>
           <div>
@@ -127,26 +125,26 @@ function AddClientModal({
           </div>
           <div>
             <label className="block text-xs text-white/50 mb-1 uppercase tracking-wide">
-              Owner Email
+              Email
             </label>
             <input
               type="email"
               className="w-full bg-[#0a1628] border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 focus:outline-none focus:border-[#00d4ff]/50"
               placeholder="john@abcroofing.com"
-              value={form.owner_email}
-              onChange={(e) => setForm((f) => ({ ...f, owner_email: e.target.value }))}
+              value={form.email}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
             />
           </div>
           <div>
             <label className="block text-xs text-white/50 mb-1 uppercase tracking-wide">
-              Owner Phone
+              Phone
             </label>
             <input
               type="tel"
               className="w-full bg-[#0a1628] border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 focus:outline-none focus:border-[#00d4ff]/50"
               placeholder="+13135550123"
-              value={form.owner_phone}
-              onChange={(e) => setForm((f) => ({ ...f, owner_phone: e.target.value }))}
+              value={form.phone}
+              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
             />
           </div>
           <div>
@@ -214,41 +212,20 @@ export default function DWAClientRoster() {
     queryKey: ["dwa-clients"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("field_service_clients")
+        .from("field_crm_clients")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-
-      const enriched = await Promise.all(
-        (data ?? []).map(async (client) => {
-          const [techRes, jobRes] = await Promise.all([
-            supabase
-              .from("field_service_techs")
-              .select("*", { count: "exact", head: true })
-              .eq("client_id", client.id),
-            supabase
-              .from("field_service_jobs")
-              .select("*", { count: "exact", head: true })
-              .eq("client_id", client.id),
-          ]);
-          return {
-            ...client,
-            tech_count: techRes.count ?? 0,
-            job_count: jobRes.count ?? 0,
-          } as Client;
-        })
-      );
-
-      return enriched;
+      return (data ?? []) as Client[];
     },
     staleTime: 60_000,
   });
 
   const filtered = clients.filter(
     (c) =>
-      c.company_name.toLowerCase().includes(search.toLowerCase()) ||
-      (c.owner_email ?? "").toLowerCase().includes(search.toLowerCase())
+      c.business_name.toLowerCase().includes(search.toLowerCase()) ||
+      (c.email ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -295,12 +272,6 @@ export default function DWAClientRoster() {
                 <th className="text-left px-4 py-3 text-white/40 font-medium uppercase tracking-wide text-xs">
                   Phone
                 </th>
-                <th className="text-center px-4 py-3 text-white/40 font-medium uppercase tracking-wide text-xs">
-                  Techs
-                </th>
-                <th className="text-center px-4 py-3 text-white/40 font-medium uppercase tracking-wide text-xs">
-                  Jobs
-                </th>
                 <th className="text-left px-4 py-3 text-white/40 font-medium uppercase tracking-wide text-xs">
                   Status
                 </th>
@@ -316,7 +287,7 @@ export default function DWAClientRoster() {
               {isLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i} className="border-b border-white/5">
-                    {Array.from({ length: 10 }).map((_, j) => (
+                    {Array.from({ length: 8 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 bg-white/5 rounded animate-pulse" />
                       </td>
@@ -325,7 +296,7 @@ export default function DWAClientRoster() {
                 ))
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-4 py-8 text-center text-white/30">
+                  <td colSpan={8} className="px-4 py-8 text-center text-white/30">
                     {search ? "No clients match your search." : "No clients yet."}
                   </td>
                 </tr>
@@ -336,7 +307,7 @@ export default function DWAClientRoster() {
                     className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
                   >
                     <td className="px-4 py-3 text-white font-medium">
-                      {client.company_name}
+                      {client.business_name}
                     </td>
                     <td className="px-4 py-3">
                       <PlanBadge plan={client.plan} />
@@ -345,19 +316,13 @@ export default function DWAClientRoster() {
                       {formatIndustry(client.industry)}
                     </td>
                     <td className="px-4 py-3 text-white/60">
-                      {client.owner_email ?? "—"}
+                      {client.email ?? "—"}
                     </td>
                     <td className="px-4 py-3 text-white/60">
-                      {client.owner_phone ?? "—"}
-                    </td>
-                    <td className="px-4 py-3 text-center text-white/70">
-                      {client.tech_count}
-                    </td>
-                    <td className="px-4 py-3 text-center text-white/70">
-                      {client.job_count}
+                      {client.phone ?? "—"}
                     </td>
                     <td className="px-4 py-3">
-                      <StatusBadge active={client.active} />
+                      <StatusBadge status={client.status} />
                     </td>
                     <td className="px-4 py-3 text-white/40 text-xs">
                       {new Date(client.created_at).toLocaleDateString()}
