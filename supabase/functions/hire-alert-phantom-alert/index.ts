@@ -13,8 +13,8 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
-const SITE_URL = "https://detroitwebagency.com";
-const FROM_EMAIL = "TechAlert <matt@detroitwebagency.com>";
+const SITE_URL = "https://detroitwebagent.com";
+const FROM_EMAIL = "TechAlert <matt@detroitwebagent.com>";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -92,7 +92,7 @@ serve(async (req) => {
             body: JSON.stringify({
               from: FROM_EMAIL,
               to: [client.owner_email],
-              reply_to: "matt@detroitwebagency.com",
+              reply_to: "matt@detroitwebagent.com",
               subject: `We found a ${freshCandidate.availability_score}/10 ${freshCandidate.license_type || tradeLabel} today — your trial ended`,
               html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a1628;padding:32px;border-radius:12px;max-width:520px;margin:0 auto;">
 <p style="color:#e8621a;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin:0 0 12px;">⚡ TECHALERT — CANDIDATE FOUND</p>

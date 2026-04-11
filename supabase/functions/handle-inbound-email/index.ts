@@ -2,7 +2,7 @@
 // Receives inbound emails via Resend or SendGrid inbound webhooks.
 // Extracts sender + body, calls ai-reply-detector to categorize and handle.
 // Set up: configure Resend/SendGrid inbound to POST to this endpoint.
-// Reply-To on Tom's outbound: replies@detroitwebagency.com → inbound webhook here.
+// Reply-To on Tom's outbound: replies@detroitwebagent.com → inbound webhook here.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 

@@ -13,7 +13,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
 const MATT_CELL = "+13138064952";
-const FROM_EMAIL = "TechAlert <matt@detroitwebagency.com>";
+const FROM_EMAIL = "TechAlert <matt@detroitwebagent.com>";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -61,7 +61,7 @@ serve(async (req) => {
         body: JSON.stringify({
           from: FROM_EMAIL,
           to: [email],
-          reply_to: "matt@detroitwebagency.com",
+          reply_to: "matt@detroitwebagent.com",
           subject: "Your TechAlert 3-Day Trial Is Live",
           html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a1628;padding:32px;border-radius:12px;max-width:520px;margin:0 auto;">
 <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;margin:0 0 12px;">⚡ TECHALERT — 3-DAY TRIAL</p>

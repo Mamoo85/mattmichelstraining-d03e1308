@@ -2511,9 +2511,9 @@ serve(async (req) => {
                   method: "POST",
                   headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
                   body: JSON.stringify({
-                    from: "Detroit Web Agency <matt@detroitwebagency.com>",
+                    from: "Detroit Web Agency <matt@detroitwebagent.com>",
                     to: [customerEmail],
-                    bcc: ["matt@detroitwebagency.com"],
+                    bcc: ["matt@detroitwebagent.com"],
                     subject: `Lead Unlocked — ${lead?.name || "New Lead"} (${site?.trade || "Service"} in ${site?.city || "Metro Detroit"})`,
                     html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
 <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
@@ -2541,8 +2541,8 @@ serve(async (req) => {
                   method: "POST",
                   headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
                   body: JSON.stringify({
-                    from: "DWA System <matt@detroitwebagency.com>",
-                    to: ["matt@detroitwebagency.com"],
+                    from: "DWA System <matt@detroitwebagent.com>",
+                    to: ["matt@detroitwebagent.com"],
                     subject: `💰 PPL Sale $50 — ${contractor?.business_name || customerEmail}`,
                     html: `<p><strong>${contractor?.business_name || "Contractor"}</strong> bought a ${site?.trade || "service"} lead in ${site?.city || "Metro Detroit"} for $50.<br>Lead: ${lead?.name} — ${lead?.phone}<br>Contractor email: ${customerEmail}</p>`,
                   }),

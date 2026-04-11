@@ -9,8 +9,8 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
 const MATT_CELL = "+13138064952";
-const FROM_EMAIL = "Matt Michels <matt@detroitwebagency.com>";
-const REPLY_TO = "matt@detroitwebagency.com";
+const FROM_EMAIL = "Matt Michels <matt@detroitwebagent.com>";
+const REPLY_TO = "matt@detroitwebagent.com";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

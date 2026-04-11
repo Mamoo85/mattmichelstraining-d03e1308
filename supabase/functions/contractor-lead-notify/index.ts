@@ -11,7 +11,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
-const SITE_URL = "https://www.detroitwebagency.com";
+const SITE_URL = "https://www.detroitwebagent.com";
 
 serve(async (req) => {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -59,9 +59,9 @@ serve(async (req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "Detroit Web Agency <matt@detroitwebagency.com>",
+              from: "Detroit Web Agency <matt@detroitwebagent.com>",
               to: [contractor.email],
-              bcc: ["matt@detroitwebagency.com"],
+              bcc: ["matt@detroitwebagent.com"],
               subject: `New ${site?.trade || "service"} lead — ${lead.name}`,
               html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
 <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">

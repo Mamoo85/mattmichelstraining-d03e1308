@@ -72,16 +72,16 @@ serve(async (req) => {
     }).eq("id", lead_id);
 
     const site = (lead as any).contractor_lead_sites;
-    const rawOrigin = req.headers.get("origin") || "https://www.detroitwebagency.com";
+    const rawOrigin = req.headers.get("origin") || "https://www.detroitwebagent.com";
     const ALLOWED_ORIGINS = [
-      "https://www.detroitwebagency.com",
-      "https://detroitwebagency.com",
+      "https://www.detroitwebagent.com",
+      "https://detroitwebagent.com",
       "https://www.mattmichelstraining.com",
       "https://mattmichelstraining.com",
       "http://localhost:5173",
       "http://localhost:8080",
     ];
-    const origin = ALLOWED_ORIGINS.includes(rawOrigin) ? rawOrigin : "https://www.detroitwebagency.com";
+    const origin = ALLOWED_ORIGINS.includes(rawOrigin) ? rawOrigin : "https://www.detroitwebagent.com";
 
     // Create Stripe one-time checkout, expires in 30 min (minimum allowed)
     const session = await stripe.checkout.sessions.create({

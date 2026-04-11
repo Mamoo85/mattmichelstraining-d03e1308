@@ -51,7 +51,7 @@ serve(async (req) => {
     .single();
 
   if (!client) {
-    return twiml("Hi! We couldn't find an account for this number. Visit detroitwebagency.com/license-monitor to sign up, or text Matt at (313) 806-4952.");
+    return twiml("Hi! We couldn't find an account for this number. Visit detroitwebagent.com/license-monitor to sign up, or text Matt at (313) 806-4952.");
   }
 
   // Pass image to Claude Vision
