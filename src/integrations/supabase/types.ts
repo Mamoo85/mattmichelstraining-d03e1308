@@ -1905,38 +1905,59 @@ export type Database = {
         Row: {
           active: boolean | null
           business_name: string
+          city: string | null
           created_at: string | null
           email: string
           id: string
           industry: string | null
           last_lead_at: string | null
           lead_count: number | null
+          name: string | null
+          onboarded_at: string | null
+          phone: string | null
           service_area: string | null
+          state: string | null
           stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trade: string | null
         }
         Insert: {
           active?: boolean | null
           business_name: string
+          city?: string | null
           created_at?: string | null
           email: string
           id?: string
           industry?: string | null
           last_lead_at?: string | null
           lead_count?: number | null
+          name?: string | null
+          onboarded_at?: string | null
+          phone?: string | null
           service_area?: string | null
+          state?: string | null
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trade?: string | null
         }
         Update: {
           active?: boolean | null
           business_name?: string
+          city?: string | null
           created_at?: string | null
           email?: string
           id?: string
           industry?: string | null
           last_lead_at?: string | null
           lead_count?: number | null
+          name?: string | null
+          onboarded_at?: string | null
+          phone?: string | null
           service_area?: string | null
+          state?: string | null
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trade?: string | null
         }
         Relationships: []
       }
@@ -3857,6 +3878,143 @@ export type Database = {
           send_count?: number | null
           state?: string | null
           stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      hire_alert_candidates: {
+        Row: {
+          alerted_at: string | null
+          city: string | null
+          client_id: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          license_number: string | null
+          license_type: string | null
+          name: string
+          phone: string | null
+          raw_data: Json | null
+          score: number | null
+          source: string | null
+          state: string | null
+          status: string | null
+          trade: string | null
+        }
+        Insert: {
+          alerted_at?: string | null
+          city?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          license_number?: string | null
+          license_type?: string | null
+          name: string
+          phone?: string | null
+          raw_data?: Json | null
+          score?: number | null
+          source?: string | null
+          state?: string | null
+          status?: string | null
+          trade?: string | null
+        }
+        Update: {
+          alerted_at?: string | null
+          city?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          license_number?: string | null
+          license_type?: string | null
+          name?: string
+          phone?: string | null
+          raw_data?: Json | null
+          score?: number | null
+          source?: string | null
+          state?: string | null
+          status?: string | null
+          trade?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hire_alert_candidates_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "hire_alert_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hire_alert_clients: {
+        Row: {
+          active: boolean | null
+          company_name: string
+          created_at: string | null
+          id: string
+          owner_email: string
+          owner_phone: string | null
+          plan: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          target_roles: string[] | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_name: string
+          created_at?: string | null
+          id?: string
+          owner_email: string
+          owner_phone?: string | null
+          plan?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          target_roles?: string[] | null
+        }
+        Update: {
+          active?: boolean | null
+          company_name?: string
+          created_at?: string | null
+          id?: string
+          owner_email?: string
+          owner_phone?: string | null
+          plan?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          target_roles?: string[] | null
+        }
+        Relationships: []
+      }
+      hire_alert_runs: {
+        Row: {
+          candidates_alerted: number | null
+          candidates_found: number | null
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          started_at: string | null
+          status: string | null
+        }
+        Insert: {
+          candidates_alerted?: number | null
+          candidates_found?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          started_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          candidates_alerted?: number | null
+          candidates_found?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          started_at?: string | null
+          status?: string | null
         }
         Relationships: []
       }
