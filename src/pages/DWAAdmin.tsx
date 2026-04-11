@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import DWAStats from "@/components/dwa-admin/DWAStats";
 import DWAClientRoster from "@/components/dwa-admin/DWAClientRoster";
 import DWARecentJobs from "@/components/dwa-admin/DWARecentJobs";
@@ -7,7 +7,9 @@ import DWADataImport from "@/components/dwa-admin/DWADataImport";
 import AssetManager from "@/components/field-service/AssetManager";
 import ContractManager from "@/components/field-service/ContractManager";
 
-type Tab = "overview" | "clients" | "jobs" | "assets" | "contracts" | "import" | "command";
+const AdminBoardReport = lazy(() => import("@/components/admin/AdminBoardReport"));
+
+type Tab = "overview" | "clients" | "jobs" | "assets" | "contracts" | "import" | "command" | "board";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -17,6 +19,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "contracts", label: "Contracts" },
   { id: "import", label: "Import" },
   { id: "command", label: "Command Deck" },
+  { id: "board", label: "📋 Board Report" },
 ];
 
 function QuickLinks() {
@@ -167,6 +170,12 @@ export default function DWAAdmin() {
             <h2 className="text-white/40 text-xs uppercase tracking-wide mb-4">Command Deck</h2>
             <DWACommandDeck />
           </div>
+        )}
+
+        {activeTab === "board" && (
+          <Suspense fallback={<div className="text-white/40 text-sm">Loading board report…</div>}>
+            <AdminBoardReport />
+          </Suspense>
         )}
       </main>
     </div>
