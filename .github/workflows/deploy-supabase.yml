@@ -18,14 +18,13 @@ jobs:
         with:
           version: latest
 
-      - name: Deploy missed-call-handler edge function
-        continue-on-error: true
-        run: |
-          supabase functions deploy missed-call-handler --project-ref $SUPABASE_PROJECT_REF --no-verify-jwt
-
       - name: Deploy contractor-lead-notify edge function
         run: |
           supabase functions deploy contractor-lead-notify --project-ref $SUPABASE_PROJECT_REF --no-verify-jwt
+
+      - name: Deploy missed-call-handler edge function
+        run: |
+          supabase functions deploy missed-call-handler --project-ref $SUPABASE_PROJECT_REF --no-verify-jwt
 
       - name: Sync secrets to Supabase
         run: |
