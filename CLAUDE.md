@@ -35,23 +35,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - The snippet is generated per-client from Admin → DWA → Visitor Intel → "Install Tracking Snippets"
 - Adding RB2B to mattmichelstraining.com: minimal perf impact, but low B2B match rate on fitness site
 
-### Products Killed This Session (removed from routes + AllServices)
+### Products Killed (removed from routes + AllServices)
 - AI Blog Post Writing, AI Press Release Engine, AI Social Caption Pack, AI Proposal Generator, AI Sales Script Generator, AI Review Response, AI Bedtime Stories, AI Children's Stories, AI Sermon Prep, AI Obituary Service
 - Reason: ChatGPT does these for free. Standalone products with no defensibility.
 
-### TechAlert — Cron Fixes Applied
-- `hire-alert-scanner-daily` cron was broken (used `current_setting()` that was never configured)
-- Fixed via `supabase/migrations/20260411130000_fix_hire_alert_scanner_cron.sql` using vault approach
-- Same fix applied to `contractor-lead-health-monitor` cron
+### TechAlert — FULLY AUTONOMOUS ✅
+- Self-serve checkout at `/hire-alert` → Stripe → webhook → DB insert → welcome email → daily scanner → alerts. No manual steps.
+- `hire-alert-scanner-daily` cron fixed via `20260411130000_fix_hire_alert_scanner_cron.sql` (vault approach)
+- Cancellation fix: `customer.subscription.deleted` now sets `active = false` on `hire_alert_clients` (and field_crm, social_media, gbp_saas) — was missing, fixed 2026-04-11
+- Welcome email: premium teal HTML with MIOSHA/Apollo/job board source cards + tiered alert explainer
+
+### Remote Control — UPGRADED ✅
+- `supabase/functions/remote-control/index.ts` — 12 commands: status, oracle, tom, pulse, revenue, dwa, shield, comply, scout, upsell, launch, help
+- Uses shared `_shared/ai.ts` instead of inline client
+- Logs `source` field (phone/n8n/api) to `remote_control_log`
+- Migration: `20260411155000_remote_control_source_column.sql`
+- Trigger via: `POST /functions/v1/remote-control` with `Authorization: Bearer <REMOTE_CONTROL_SECRET>` and `{ "command": "oracle", "source": "phone" }`
 
 ### Contractor Leads Dashboard
 - `src/components/admin/AdminContractorLeads.tsx` — 601-line dashboard wired into Admin.tsx DWA tab
 - Contractor-prospector now accepts `{ target_trade, target_city }` POST body for manual targeting
 
 ### Next Priority Items (in order)
-1. **Merge to main** — Matt needs to merge `claude/remote-control-setup-EuTWO` → main for Lovable to deploy all these changes
-2. **TechAlert self-serve** — checkout → welcome email → scanner running → fully autonomous
-3. **Contractor leads — get first client** — $50 Facebook ad proving leads exist → hand 3-5 free → convert to $399/mo
+1. ~~**Merge to main**~~ ✅ Done (PR #75)
+2. ~~**TechAlert self-serve**~~ ✅ Done — fully autonomous
+3. **Contractor leads — get first client** — $50 Facebook ad proving leads exist → hand 3-5 free leads → convert to $399/mo
 4. **Tom.agent.md update** — Jobber per-user attack angle, restaurant SMS pitch, LicenseAlert hook
 
 ---

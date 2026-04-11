@@ -389,6 +389,15 @@ serve(async (req) => {
           await syncTierToProfile(sb, email, "free", customerId);
         }
 
+        // Deactivate B2B product clients on cancellation
+        await Promise.all([
+          sb.from("hire_alert_clients").update({ active: false }).eq("stripe_subscription_id", subscription.id),
+          sb.from("field_crm_clients").update({ active: false }).eq("stripe_subscription_id", subscription.id),
+          sb.from("social_media_clients").update({ active: false }).eq("stripe_subscription_id", subscription.id),
+          sb.from("gbp_saas_clients").update({ active: false }).eq("stripe_subscription_id", subscription.id),
+        ]);
+        console.log(`[WEBHOOK] Deactivated B2B clients for subscription ${subscription.id}`);
+
         // Trigger Shield win-back sequence
         const productName = (subscription.items?.data?.[0]?.price?.nickname) || "M² subscription";
         await fetch(`${SUPABASE_URL}/functions/v1/shield-winback`, {
