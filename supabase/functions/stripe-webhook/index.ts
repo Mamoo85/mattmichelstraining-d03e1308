@@ -2391,6 +2391,114 @@ serve(async (req) => {
       });
     }
 
+      // ── CONTRACTOR LEAD PPL PAYMENT ($50/lead) ───────────────────────────
+      if (meta.type === "contractor_lead_payment") {
+        try {
+          const pplSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+          // Idempotency: if already sold with this exact session, return 200 early
+          const { data: existingLead } = await pplSb
+            .from("contractor_leads")
+            .select("status, payment_session_id")
+            .eq("id", meta.lead_id)
+            .single();
+
+          if (existingLead?.status === "sold" && existingLead?.payment_session_id === session.id) {
+            return new Response(JSON.stringify({ received: true }), { status: 200 });
+          }
+
+          // Atomic: record purchase + mark lead sold in parallel
+          await Promise.all([
+            pplSb.from("contractor_lead_purchases").insert({
+              contractor_id: meta.contractor_id,
+              lead_id: meta.lead_id,
+              amount_cents: session.amount_total || 5000,
+              stripe_session_id: session.id,
+            }),
+            pplSb.from("contractor_leads").update({
+              status: "sold",
+              paid_by_contractor_id: meta.contractor_id,
+              payment_amount_cents: session.amount_total || 5000,
+              payment_session_id: session.id,
+              checkout_locked_by: null,
+              lock_expires_at: null,
+            }).eq("id", meta.lead_id),
+          ]);
+
+          // Fetch lead + contractor details for notifications
+          const [{ data: lead }, { data: contractor }] = await Promise.all([
+            pplSb.from("contractor_leads")
+              .select("name, phone, email, project_type, contractor_lead_sites(trade, city)")
+              .eq("id", meta.lead_id)
+              .single(),
+            pplSb.from("contractor_clients")
+              .select("name, business_name, phone, email")
+              .eq("id", meta.contractor_id)
+              .single(),
+          ]);
+
+          const site = (lead as any)?.contractor_lead_sites;
+          const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+
+          // Send SMS receipt + Matt notification in parallel
+          await Promise.all([
+            // SMS receipt to contractor
+            contractor?.phone
+              ? sendSMS(
+                  contractor.phone,
+                  TWILIO_PHONE,
+                  `LEAD PURCHASED ✓\n${lead?.name}\n📞 ${lead?.phone}${lead?.email ? `\n📧 ${lead.email}` : ""}\nProject: ${lead?.project_type || "Service request"}\nCall them NOW — exclusive to you.\n— Detroit Web Agency`,
+                  "contractor_leads"
+                )
+              : Promise.resolve(),
+            // Email receipt to contractor
+            RESEND_API_KEY && customerEmail
+              ? fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    from: "Detroit Web Agency <matt@detroitwebagency.com>",
+                    to: [customerEmail],
+                    bcc: ["matt@detroitwebagency.com"],
+                    subject: `Lead Unlocked — ${lead?.name || "New Lead"} (${site?.trade || "Service"} in ${site?.city || "Metro Detroit"})`,
+                    html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
+  <div style="background:#00d4ff;height:4px;"></div>
+  <div style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.9;">
+    <p><strong>✅ Lead Purchased — Call them now.</strong></p>
+    <table style="border-collapse:collapse;width:100%;margin:16px 0;">
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Name</td><td style="padding:8px 0;font-weight:600;">${lead?.name || "—"}</td></tr>
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Phone</td><td style="padding:8px 0;font-weight:600;"><a href="tel:${lead?.phone}" style="color:#00d4ff;">${lead?.phone || "—"}</a></td></tr>
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Email</td><td style="padding:8px 0;">${lead?.email || "—"}</td></tr>
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Project</td><td style="padding:8px 0;">${lead?.project_type || "—"}</td></tr>
+    </table>
+    <p style="color:#64748b;font-size:13px;">This lead is exclusive to you. No other contractor received this contact info.</p>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:13px;color:#334155;">
+      <strong>Matt Michels</strong> · Detroit Web Agency · (313) 806-4952
+    </div>
+  </div>
+</div></body></html>`,
+                  }),
+                })
+              : Promise.resolve(),
+            // Notify Matt
+            RESEND_API_KEY
+              ? fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    from: "DWA System <matt@detroitwebagency.com>",
+                    to: ["matt@detroitwebagency.com"],
+                    subject: `💰 PPL Sale $50 — ${contractor?.business_name || customerEmail}`,
+                    html: `<p><strong>${contractor?.business_name || "Contractor"}</strong> bought a ${site?.trade || "service"} lead in ${site?.city || "Metro Detroit"} for $50.<br>Lead: ${lead?.name} — ${lead?.phone}<br>Contractor email: ${customerEmail}</p>`,
+                  }),
+                })
+              : Promise.resolve(),
+          ]);
+        } catch (e) { console.error("[WEBHOOK] contractor_lead_payment error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── CONTRACTOR LEAD SUBSCRIPTION ─────────────────────────────────────
       if (meta.type === "contractor_lead_subscription") {
         try {
