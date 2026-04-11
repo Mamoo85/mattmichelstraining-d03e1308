@@ -92,7 +92,7 @@ export default function DJConleyDemo2() {
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <p style={{ margin: 0, fontSize: 11, color: "#00d4ff" }}>{v.time}</p>
-                  <p style={{ margin: 0, fontSize: 10, color: "#475569" }}>Potential lead</p>
+                  <p style={{ margin: 0, fontSize: 10, color: "#10b981", fontWeight: 700 }}>{v.value}</p>
                 </div>
               </div>
             ))}
@@ -100,9 +100,10 @@ export default function DJConleyDemo2() {
           <div style={{ marginTop: 14, background: "#060e1a", borderRadius: 12, padding: "14px 16px", border: "1px solid #00d4ff20" }}>
             <p style={{ margin: "0 0 6px", fontSize: 12, color: "#00d4ff", fontWeight: 700 }}>💰 What's a single identified visitor worth to Pat?</p>
             <p style={{ margin: 0, fontSize: 12, color: "#94a3b8", lineHeight: 1.7 }}>
-              Stellantis Facilities Mgmt viewed "Boiler Tune-Up Services" 14 minutes ago. A multi-unit boiler service contract with a Stellantis plant runs <strong style={{ color: "#10b981" }}>$40,000–$120,000/year</strong>.
-              If Pat calls them before his competitor does, that's one phone call worth more than 4 months of FieldDesk fees.
-              <br /><span style={{ color: "#475569" }}>SiteRadar names the company. eWay shows nothing. That's the gap.</span>
+              Stellantis Facilities Mgmt viewed "Boiler Tune-Up Services" 14 minutes ago. A multi-unit boiler service contract with a Stellantis plant runs{" "}
+              <strong style={{ color: "#10b981" }}>$40,000–$120,000/year</strong>.
+              If Pat calls them before his competitor does, that's one phone call worth more than 4 months of FieldDesk fees.{" "}
+              <span style={{ color: "#475569" }}>SiteRadar names the company. eWay shows nothing. That's the gap.</span>
             </p>
           </div>
         </div>
@@ -186,6 +187,77 @@ export default function DJConleyDemo2() {
           <p style={{ margin: "0 0 6px", fontSize: 13, color: "#94a3b8" }}>Switching from FieldServio to FieldDesk</p>
           <p style={{ margin: "0 0 4px", fontSize: 36, fontWeight: 900, color: "#10b981" }}>Save $14,412 in Year One</p>
           <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>$1,400/mo → $199/mo × 12 months = $14,412 back in Pat's pocket</p>
+        </div>
+
+        {/* ── Problems Solved ── */}
+        <div style={{ background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 16, padding: "22px 24px", marginBottom: 20 }}>
+          <p style={{ margin: "0 0 4px", fontWeight: 800, fontSize: 15 }}>✅ Every Problem We Actually Solve</p>
+          <p style={{ margin: "0 0 18px", fontSize: 12, color: "#64748b" }}>
+            The $14,412 is just the check. Here's what you get back in your daily life — and what your customers stop experiencing.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            {PROBLEMS_SOLVED.map((p) => (
+              <div key={p.problem} style={{ background: "#060e1a", borderRadius: 12, padding: "13px 16px", border: "1px solid #1e3a5f" }}>
+                <p style={{ margin: "0 0 5px", fontSize: 12, color: "#ef4444", fontWeight: 700 }}>❌ {p.problem}</p>
+                <p style={{ margin: 0, fontSize: 12, color: "#10b981", lineHeight: 1.5 }}>✓ {p.solution}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Emergency Button — The $72k You're Leaving Behind ── */}
+        <div style={{ background: "#0a1628", border: "2px solid #dc262640", borderRadius: 16, padding: "22px 24px", marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 20, flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 280 }}>
+              <p style={{ margin: "0 0 4px", fontSize: 11, color: "#dc2626", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase" }}>🚨 Missing From Your Current Site</p>
+              <p style={{ margin: "0 0 12px", fontWeight: 800, fontSize: 16 }}>The Emergency Button That's Costing Pat ~$72,000/Year</p>
+              <p style={{ margin: "0 0 14px", fontSize: 13, color: "#94a3b8", lineHeight: 1.7 }}>
+                A plant manager Googles "emergency boiler repair Warren MI" at 2am. They land on djconley.com.
+                There's no big red emergency button. No click-to-call. No "we answer 24/7" front and center.
+                They scroll for 4 seconds, don't find it, and call the competitor who does have it.
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
+                {[
+                  { label: "Avg emergency job", value: "$1,200–$1,800" },
+                  { label: "Lost jobs/month (est.)", value: "4–5 jobs" },
+                  { label: "Annual lost revenue", value: "~$72,000" },
+                ].map((s) => (
+                  <div key={s.label} style={{ background: "#060e1a", borderRadius: 10, padding: "10px 12px", textAlign: "center", border: "1px solid #dc262630" }}>
+                    <p style={{ margin: "0 0 3px", fontSize: 18, fontWeight: 900, color: "#dc2626" }}>{s.value}</p>
+                    <p style={{ margin: 0, fontSize: 10, color: "#64748b" }}>{s.label}</p>
+                  </div>
+                ))}
+              </div>
+              <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+                Detroit Web Agency adds a floating "🚨 Emergency Service" button to your site that pulses on mobile.
+                One tap calls the shop directly. <strong style={{ color: "#fff" }}>This is included with your website build.</strong>
+              </p>
+            </div>
+            <div style={{ flex: "0 0 auto", minWidth: 200 }}>
+              {/* Mock emergency button */}
+              <p style={{ margin: "0 0 10px", fontSize: 11, color: "#64748b", fontWeight: 600, textAlign: "center" }}>What it looks like on Pat's site:</p>
+              <div style={{ background: "#060e1a", borderRadius: 16, padding: "24px 20px", border: "1px solid #1e3a5f", textAlign: "center" }}>
+                <div style={{ fontSize: 12, color: "#475569", marginBottom: 20, lineHeight: 1.6 }}>djconley.com homepage...</div>
+                <div style={{
+                  background: "#dc2626",
+                  borderRadius: 50,
+                  padding: "14px 22px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  boxShadow: "0 0 20px #dc262660",
+                  cursor: "pointer",
+                  fontSize: 14,
+                  fontWeight: 800,
+                  color: "#fff",
+                  animation: "pulse 2s infinite",
+                }}>
+                  🚨 Emergency Service
+                </div>
+                <div style={{ fontSize: 10, color: "#475569", marginTop: 10 }}>Click-to-call · Floating · Always visible</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* ── TechAlert Kicker ── */}
