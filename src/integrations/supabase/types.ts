@@ -2827,6 +2827,314 @@ export type Database = {
         }
         Relationships: []
       }
+      field_service_assets: {
+        Row: {
+          active: boolean
+          asset_type: string | null
+          client_id: string
+          created_at: string
+          customer_id: string | null
+          id: string
+          install_date: string | null
+          last_service_at: string | null
+          location_notes: string | null
+          manufacturer: string | null
+          model: string | null
+          name: string
+          notes: string | null
+          serial_number: string | null
+        }
+        Insert: {
+          active?: boolean
+          asset_type?: string | null
+          client_id: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          install_date?: string | null
+          last_service_at?: string | null
+          location_notes?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          name: string
+          notes?: string | null
+          serial_number?: string | null
+        }
+        Update: {
+          active?: boolean
+          asset_type?: string | null
+          client_id?: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          install_date?: string | null
+          last_service_at?: string | null
+          location_notes?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          name?: string
+          notes?: string | null
+          serial_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "field_service_assets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "field_crm_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_service_assets_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      field_service_contracts: {
+        Row: {
+          active: boolean
+          asset_id: string | null
+          assigned_tech_id: string | null
+          client_id: string
+          created_at: string
+          customer_id: string | null
+          description: string | null
+          frequency: string
+          id: string
+          next_due_date: string
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          asset_id?: string | null
+          assigned_tech_id?: string | null
+          client_id: string
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          frequency?: string
+          id?: string
+          next_due_date: string
+          title: string
+        }
+        Update: {
+          active?: boolean
+          asset_id?: string | null
+          assigned_tech_id?: string | null
+          client_id?: string
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          frequency?: string
+          id?: string
+          next_due_date?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "field_service_contracts_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_service_contracts_assigned_tech_id_fkey"
+            columns: ["assigned_tech_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_techs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_service_contracts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "field_crm_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_service_contracts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      field_service_customers: {
+        Row: {
+          active: boolean
+          address: string | null
+          city: string | null
+          client_id: string
+          company_name: string
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          notes: string | null
+          phone: string | null
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          city?: string | null
+          client_id: string
+          company_name: string
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          city?: string | null
+          client_id?: string
+          company_name?: string
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "field_service_customers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "field_crm_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      field_service_jobs: {
+        Row: {
+          asset_id: string | null
+          assigned_tech_id: string | null
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          customer_id: string | null
+          description: string | null
+          id: string
+          notes: string | null
+          priority: string
+          scheduled_date: string | null
+          scheduled_time: string | null
+          started_at: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          asset_id?: string | null
+          assigned_tech_id?: string | null
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          started_at?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          asset_id?: string | null
+          assigned_tech_id?: string | null
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          started_at?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "field_service_jobs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_service_jobs_assigned_tech_id_fkey"
+            columns: ["assigned_tech_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_techs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_service_jobs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "field_crm_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_service_jobs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      field_service_techs: {
+        Row: {
+          active: boolean
+          client_id: string
+          created_at: string
+          id: string
+          name: string
+          phone: string | null
+          pin: string | null
+        }
+        Insert: {
+          active?: boolean
+          client_id: string
+          created_at?: string
+          id?: string
+          name: string
+          phone?: string | null
+          pin?: string | null
+        }
+        Update: {
+          active?: boolean
+          client_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          pin?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "field_service_techs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "field_crm_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fitness_report_clients: {
         Row: {
           active: boolean | null
@@ -3963,6 +4271,45 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "inventory_alert_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_notes: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          note: string
+          tech_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          note: string
+          tech_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          note?: string
+          tech_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_notes_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_notes_tech_id_fkey"
+            columns: ["tech_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_techs"
             referencedColumns: ["id"]
           },
         ]
