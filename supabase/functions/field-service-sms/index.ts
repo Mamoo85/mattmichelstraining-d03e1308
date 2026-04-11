@@ -36,7 +36,7 @@ serve(async (req: Request) => {
     const { data: job, error: jobError } = await sb
       .from("field_service_jobs")
       .select(
-        "id, title, scheduled_time, assigned_tech_id, field_service_customers(company_name, address, phone), field_service_clients:client_id(company_name)"
+        "id, title, scheduled_time, assigned_tech_id, field_service_customers(company_name, address, phone), field_crm_clients:client_id(business_name)"
       )
       .eq("id", job_id)
       .maybeSingle();

@@ -2746,9 +2746,9 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
       if (meta.type === "field_service_subscription") {
         try {
           const { email, name, company, plan } = meta;
-          await sb.from("field_service_clients").upsert(
-            { owner_email: email, owner_name: name || null, company_name: company || "New Client", plan: plan || "standalone", active: true, stripe_customer_id: session.customer as string },
-            { onConflict: "owner_email" }
+          await sb.from("field_crm_clients").upsert(
+            { email: email, owner_name: name || null, business_name: company || "New Client", plan: plan || "standalone", status: "active", stripe_customer_id: session.customer as string },
+            { onConflict: "email" }
           );
           await Promise.all([
             notifyMatt(`New Field Service Client: ${company || email}`, `<p>New Detroit Web Agency Field Service signup:<br/>Name: ${name}<br/>Email: ${email}<br/>Company: ${company}<br/>Plan: ${plan}</p>`),
