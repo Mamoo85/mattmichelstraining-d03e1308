@@ -503,14 +503,14 @@ serve(async (req) => {
     if (service_type === "field_service_subscription") {
       // Look up the client record to get UUID and company name
       const { data: fsClient } = await sb
-        .from("field_service_clients")
-        .select("id, plan, company_name")
-        .eq("owner_email", client_email)
+        .from("field_crm_clients")
+        .select("id, plan, business_name")
+        .eq("email", client_email)
         .maybeSingle();
 
       const clientId = fsClient?.id || "";
       const clientPlan = plan || fsClient?.plan || "standalone";
-      const companyDisplay = fsClient?.company_name || company || name;
+      const companyDisplay = fsClient?.business_name || company || name;
       const dispatchUrl = clientId
         ? `https://detroitwebagency.com/field-service/dispatch?client=${clientId}`
         : "https://detroitwebagency.com/field-service/dispatch";

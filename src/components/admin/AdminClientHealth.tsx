@@ -67,7 +67,7 @@ const SERVICE_TABLES = [
   { table: "story_subscription_clients", service: "Children\'s Story Subscription", price: "$9.99/mo", lastField: null, freq: 7 },
   { table: "luxury_re_clients", service: "Luxury Real Estate Intelligence", price: "$299/mo", lastField: null, freq: 7 },
   { table: "leads", service: "SMS Leads (Comms Center)", price: "$0/mo", lastField: null, freq: 0 },
-  { table: "field_service_clients", service: "Field Service Management", price: "$199-299/mo", lastField: null, freq: 0 },
+  { table: "field_crm_clients", service: "Field Service Management", price: "$199-299/mo", lastField: null, freq: 0 },
   { table: "hire_alert_clients", service: "TechAlert Hiring Monitor", price: "$49-99/mo", lastField: "created_at", freq: 1 },
 ] as const;
 

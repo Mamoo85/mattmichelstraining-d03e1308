@@ -36,7 +36,7 @@ serve(async (req: Request) => {
     const { data: job, error: jobError } = await sb
       .from("field_service_jobs")
       .select(
-        "id, title, scheduled_time, assigned_tech_id, field_service_customers(company_name, address, phone), field_service_clients:client_id(company_name)"
+        "id, title, scheduled_time, assigned_tech_id, field_service_customers(company_name, address, phone), field_crm_clients:client_id(business_name)"
       )
       .eq("id", job_id)
       .maybeSingle();
@@ -51,7 +51,7 @@ serve(async (req: Request) => {
     const jobData = job as any;
     const customerArr = jobData.field_service_customers;
     const customer = Array.isArray(customerArr) ? customerArr[0] : customerArr;
-    const clientArr = jobData.field_service_clients;
+    const clientArr = jobData.field_crm_clients;
     const client = Array.isArray(clientArr) ? clientArr[0] : clientArr;
 
     // Fetch tech phone separately for job_assigned
@@ -67,7 +67,7 @@ serve(async (req: Request) => {
       if (techRow?.name) techName = techRow.name;
     }
 
-    const clientName = client?.company_name ?? "Your service provider";
+    const clientName = client?.business_name ?? "Your service provider";
     const custAddress = customer?.address ?? "your location";
     const custPhone = customer?.phone ?? null;
     const custCompany = customer?.company_name ?? "customer";
