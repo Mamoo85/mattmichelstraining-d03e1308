@@ -74,7 +74,7 @@ describe("ContractorTerritory", () => {
   });
 
   it("does not submit without name or phone", async () => {
-    renderSlug("plumbing-warren");
+    renderSlug("plumbing-detroit");
     fireEvent.click(screen.getByRole("button", { name: /get my free quote/i }));
     await waitFor(() => {
       expect(mockInvoke).not.toHaveBeenCalled();
