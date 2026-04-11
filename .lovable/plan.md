@@ -1,63 +1,90 @@
 
 
-## Assessment: Gemini's "20-Agent Dynamic Swarm" Plan
+# DWA Living Command Center — Internal Wiki & Strategy Board
 
-### The Bottom Line
+## What We're Building
 
-You already have 31 agents and 5 autonomous edge functions running on cron jobs. Gemini's plan is essentially proposing to rebuild what you already have — but worse, because it consolidates everything into a single edge function that will absolutely time out.
+Two new tabs in the DWA Admin dashboard that serve as your internal playbook — a living, searchable, printable knowledge base for running Detroit Web Agency. Everything you need to onboard yourself, hand a client a clean PDF, or look up how any system works.
 
-### What You Already Have (That Gemini Doesn't Know About)
+## Database (3 new tables)
 
-- **31 agent personas** in `.claude/agents/` (Tom, Oz, Scarlett, Selma, Shield, Scout, etc.)
-- **5 autonomous edge functions** running on pg_cron: `oz-autonomous`, `tom-autonomous`, `ops-autonomous`, `scarlett-autonomous`, `selma-autonomous`
-- **Agent Oz** already acts as your "board chair" — pulls data from all product tables, generates weekly intelligence, emails you a digest
-- Each agent runs independently on its own schedule, solving the timeout problem Gemini is trying to address
+**`product_wiki`** — Your systems encyclopedia
+- `id`, `product_name`, `category` (enum: "core_product" | "add_on" | "system" | "process"), `description` (rich text/markdown), `client_description` (the clean client-facing version), `priority_rank`, `tech_stack` (text[]), `monthly_operating_cost` (numeric), `dev_hours_spent` (numeric), `active_hooks_count` (int), `agent_connections` (text[] — which agents touch this product), `printable_steps` (jsonb — step-by-step array with title/body/image_url), `last_updated` (timestamptz), `updated_by` (text)
+- RLS: service_role + admin only
 
-### What's Wrong With Gemini's Plan
+**`business_strategy`** — Single-row strategy config
+- `id`, `primary_targets` (text[]), `secondary_targets` (text[]), `monthly_overhead_target` (numeric), `monthly_revenue_target` (numeric), `mission_statement` (text), `competitive_advantages` (text[]), `key_risks` (text[]), `quarterly_goals` (jsonb), `updated_at`
+- RLS: service_role + admin only
 
-1. **Single edge function for 20 agents = guaranteed timeout.** Even with batching 3-5 at a time, 20 LLM calls in one function invocation will blow past Supabase's execution limits. Your current architecture (separate functions on separate crons) is already the correct solution.
+**`ad_spend_allocation`** — Marketing budget breakdown
+- `id`, `platform` (text — LinkedIn, Local SEO, Direct Mail, etc.), `percentage_allocation` (numeric), `monthly_budget` (numeric), `status` (text — active/paused/planned), `notes` (text), `updated_at`
+- RLS: service_role + admin only
 
-2. **An `agent_personas` table with `system_prompt` is unnecessary overhead.** Your agents' prompts are already in the edge function code where they belong — versioned in git, deployable, and not requiring a database round-trip before every AI call.
+## UI Components (2 new tabs)
 
-3. **The 20 agent roster is mostly redundant.** You already have equivalents for 15+ of the proposed agents:
-   - "CFO" = Cashier agent
-   - "Risk Assessor" = Red agent (security auditor)
-   - "Copywriter" = Scarlett agent
-   - "Tech Debt Auditor" = Trim agent
-   - "API Scout" = Scout agent
-   - "Competitor Tracker" = Scout agent
-   - "Deliverability Hawk" = Comply agent
-   - "Database Administrator" = already covered by Oz's ops monitoring
-   - "Pricing Strategist" = Rev agent
-   - "Automation Architect" = Oz agent
+### Tab 1: "📖 Playbook" (Matt's Guide)
 
-### What Would Actually Add Value
+A searchable wiki with two view modes per entry: **Matt's Copy** (internal — costs, agents, tech debt, real talk) and **Client Copy** (clean, professional, no internals).
 
-Instead of rebuilding your architecture, here's what's worth doing:
+- **Left sidebar**: Category tree (Core Products, Add-Ons, Systems, Processes) with search filter
+- **Main panel**: Selected wiki entry with:
+  - Editable markdown description (using a textarea with preview toggle — not a heavy WYSIWYG)
+  - "Matt's View" / "Client View" toggle
+  - Step-by-step guide section (ordered steps with title + description + optional image URL)
+  - Metrics card: Priority rank, Tech Stack badges, Monthly Cost, Dev Hours, Active Hooks
+  - **Agent Connections** panel: Which agents (from your 31) touch this product and what they do
+- **Actions bar**:
+  - "Print Matt's Copy" — generates browser print-friendly view (CSS @media print)
+  - "Print Client Copy" — same but only shows client_description + steps, no cost/agent data
+  - "Save as PDF" — uses browser print-to-PDF (no server-side PDF generation needed)
+- **Auto-seed**: On first load, if the table is empty, seed it with entries from the existing `knowledge/M2_Product_Catalog.md` (the 36 products) and `knowledge/field-service-brief.md` (FieldDesk, SiteRadar, TechAlert). This runs client-side via a "Seed from Knowledge Base" button.
 
-1. **Fix the existing build errors first** — 3 edge functions have TypeScript errors right now (`bid-intel-approve`, `birthday-campaign-sender`, `church-newsletter-sender`, `collections-sender`) that are blocking deployments.
+### Tab 2: "📊 Strategy" (Business Plan & Ad Spend)
 
-2. **Add 3-5 genuinely missing perspectives** as new standalone edge functions:
-   - **Seasonality Forecaster** — adjusts outreach templates by season (HVAC winter vs summer pitches)
-   - **Blue-Collar Translator** — a lint pass on outgoing emails to kill tech jargon
-   - **Devil's Advocate** — weekly counter-analysis of top-performing strategies
+- **Top section**: Editable strategy card — primary/secondary targets as tag inputs, revenue/overhead targets as number inputs, mission statement textarea, competitive advantages list
+- **Bottom section**: Ad Spend allocation
+  - Editable table of platforms with percentage + monthly budget + status
+  - **Recharts PieChart** showing allocation breakdown by platform (uses existing recharts dependency)
+  - **Progress bars** showing each platform's spend vs target
+- **Print view**: Clean single-page strategy summary with pie chart for board meetings
 
-3. **Build the "Board Report" UI** — aggregate the existing agent outputs (from `ai_action_queue`) into a single weekly dashboard view with accordion sections by department. This is the one good idea from Gemini's plan.
+## Agent Integration Points (Audit Results)
 
-### Recommended Plan (If Approved)
+Here are places where agents can be wired into this system:
 
-**Phase 1: Fix build errors** (immediate)
-- Fix `err` type in `bid-intel-approve` (`(err as Error).message`)
-- Fix duplicate `bcc` properties in `birthday-campaign-sender`, `church-newsletter-sender`, `collections-sender`
+1. **Oz Agent** — can auto-update `product_wiki.active_hooks_count` and `dev_hours_spent` by scanning the codebase weekly
+2. **Cashier Agent** — can auto-update `product_wiki.monthly_operating_cost` from Stripe/Twilio/Resend usage
+3. **Scout Agent** — can auto-populate `business_strategy.key_risks` from competitive intel scans
+4. **Rev Agent** — can auto-update `ad_spend_allocation` based on actual Stripe revenue by source
+5. **Scarlett Agent** — can auto-generate `product_wiki.client_description` drafts from the internal description
+6. **Trim Agent** — can flag stale wiki entries (last_updated > 30 days) in the morning digest
+7. **Tom Agent** — can reference `product_wiki.client_description` when generating cold emails (instead of hardcoded pitches)
 
-**Phase 2: Agent Board Report UI** 
-- Add a "Board Report" tab to the DWA Admin dashboard
-- Query `ai_action_queue` for recent agent outputs grouped by agent
-- Display in accordion/tab layout by department (C-Suite, Growth, Ops, Intel)
+These connections will be stored in `agent_connections` on each wiki entry and displayed in the UI. The actual agent wiring is Phase 2 (separate edge function updates).
 
-**Phase 3: Add missing agent functions** (optional, separate deploys)
-- `seasonality-agent` — standalone cron, adjusts pitch templates quarterly
-- `jargon-filter-agent` — standalone cron, audits outgoing email copy
+## Print/PDF Architecture
 
-This keeps your bots autonomous (separate functions, separate schedules, no single point of failure) while giving you the consolidated visibility Gemini's plan promises.
+No server-side PDF generation. Instead:
+- CSS `@media print` styles that hide nav, tabs, and non-essential UI
+- A "Print" button that calls `window.print()` with the appropriate view (Matt vs Client)
+- The print stylesheet formats content as a clean document with DWA branding header
+- Works in any browser, saves to PDF via the browser's built-in "Save as PDF" printer
+
+## Files to Create/Modify
+
+1. **Migration**: `product_wiki`, `business_strategy`, `ad_spend_allocation` tables + RLS
+2. **`src/components/dwa-admin/DWAPlaybook.tsx`** — Wiki tab component
+3. **`src/components/dwa-admin/DWAStrategy.tsx`** — Strategy tab component  
+4. **`src/components/dwa-admin/PlaybookPrintView.tsx`** — Print-optimized layout
+5. **`src/pages/DWAAdmin.tsx`** — Add two new tabs ("📖 Playbook", "📊 Strategy")
+6. **`src/index.css`** — Add `@media print` styles for clean PDF output
+
+## Implementation Order
+
+1. Run migration (3 tables + RLS)
+2. Build DWAPlaybook.tsx with CRUD, search, Matt/Client toggle, print
+3. Build DWAStrategy.tsx with editable targets + Recharts pie chart + print
+4. Wire both into DWAAdmin.tsx tabs
+5. Add print CSS
+6. Seed initial wiki data from knowledge files
 
