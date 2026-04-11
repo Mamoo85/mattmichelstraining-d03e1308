@@ -307,7 +307,7 @@ All secrets below are already set in Lovable Cloud and working. Do NOT add secre
 ### SMS (Twilio)
 - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`, `TWILIO_API_KEY`
 - **Approved phone number**: `+13139921219` — A2P 10DLC registered (Low Volume Mixed messaging service), approved April 2026
-- **Twilio webhook URL** (voice/missed call): `https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/missed-call-text`
+- **Twilio webhook URL** (voice/missed call): `https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/missed-call-handler`
 - **CRITICAL**: The secondary Supabase project `zmyczlfuufhngzovkjdh` (where Twilio webhooks point) is deployed via GitHub Actions and is SEPARATE from the Lovable primary project. Secrets are NOT shared between them. If Twilio webhook-triggered SMS is failing silently, it means `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_PHONE_NUMBER` need to be added to the secondary project's Edge Function secrets in the Supabase dashboard (`zmyczlfuufhngzovkjdh`). The Lovable project handles all Stripe/checkout/scheduled functions — the secondary handles webhook endpoints only.
 
 ### Social Media
