@@ -132,6 +132,18 @@ verify_jwt = false
 [functions.license-vision-intake]
 verify_jwt = false
 
+[functions.test-license-vision]
+verify_jwt = false
+
+[functions.generate-digital-audit]
+verify_jwt = false
+
+[functions.missed-call-textback]
+verify_jwt = false
+
+[functions.contractor-aged-lead-downsell]
+verify_jwt = false
+
 [functions.release-pending-replies]
 verify_jwt = false
 
