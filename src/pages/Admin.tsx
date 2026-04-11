@@ -113,6 +113,7 @@ const AdminContentGenerator   = lazyRetry(() => import("@/components/admin/Admin
 const AdminBoardReport        = lazyRetry(() => import("@/components/admin/AdminBoardReport"));
 const AdminDWAOverview        = lazyRetry(() => import("@/components/admin/AdminDWAOverview"));
 const AdminHireAlertClients   = lazyRetry(() => import("@/components/admin/AdminHireAlertClients"));
+const AdminContractorLeads    = lazyRetry(() => import("@/components/admin/AdminContractorLeads"));
 
 // Agency domain
 const AdminWebDesignCRM       = lazyRetry(() => import("@/components/admin/AdminWebDesignCRM"));
@@ -432,6 +433,7 @@ const Admin = () => {
       tools: [
         { key: "board-report", label: "📋 Agent Board Report", component: <AdminBoardReport /> },
         { key: "dwa-overview", label: "🏗 DWA Overview", component: <AdminDWAOverview /> },
+        { key: "contractor-leads", label: "🏗 Contractor Leads", component: <AdminContractorLeads /> },
         { key: "field-crm-clients", label: "🏢 FieldDesk Clients", component: <AdminFieldCRMClients /> },
         { key: "hire-alert-clients", label: "🔔 TechAlert Clients", component: <AdminHireAlertClients /> },
         { key: "dwa-visitor-intel", label: "👁 Visitor Intel", component: <VisitorIntelFeed /> },
