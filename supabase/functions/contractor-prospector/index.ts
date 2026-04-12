@@ -308,6 +308,9 @@ async function getDailySendCount(sb: any): Promise<number> {
 }
 
 serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response('ok', { headers: corsHeaders });
+  }
   try {
     const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY")!;
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
@@ -552,11 +555,11 @@ serve(async (req) => {
         cap: DAILY_SEND_CAP,
         combos,
       }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     log("ERROR", { msg });
-    return new Response(JSON.stringify({ error: msg }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

@@ -168,11 +168,11 @@ serve(async (req) => {
     console.log(`[dead-lead-drip] drip1=${drip1Count} drip2=${drip2Count} drip3=${drip3Count}`);
     return new Response(
       JSON.stringify({ ok: true, drip1: drip1Count, drip2: drip2Count, drip3: drip3Count }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[dead-lead-drip] Error:", msg);
-    return new Response(JSON.stringify({ error: msg }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
