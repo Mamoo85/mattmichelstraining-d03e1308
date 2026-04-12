@@ -138,9 +138,6 @@ verify_jwt = false
 [functions.generate-digital-audit]
 verify_jwt = false
 
-[functions.missed-call-textback]
-verify_jwt = false
-
 [functions.contractor-aged-lead-downsell]
 verify_jwt = false
 
@@ -1027,6 +1024,12 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.missed-call-handler]
+verify_jwt = false
+
+[functions.missed-call-status]
+verify_jwt = false
+
+[functions.process-pending-sms]
 verify_jwt = false
 
 [functions.monthly-client-report]
