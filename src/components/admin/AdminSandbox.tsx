@@ -332,6 +332,7 @@ export default function AdminSandbox() {
   const [previewData, setPreviewData] = useState<any>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const { toast } = useToast();
+  const [search, setSearch] = useState("");
 
   const PREVIEWABLE = ["pet_memorial_subscription", "employee_credential_audit"];
 
