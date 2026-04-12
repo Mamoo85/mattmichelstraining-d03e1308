@@ -118,6 +118,7 @@ const AdminDWARevenueDashboard = lazyRetry(() => import("@/components/admin/Admi
 const AdminSimulationSuite     = lazyRetry(() => import("@/components/admin/AdminSimulationSuite"));
 const AdminGlobalOutbox        = lazyRetry(() => import("@/components/admin/AdminGlobalOutbox"));
 const AdminGhostDelayManager   = lazyRetry(() => import("@/components/admin/AdminGhostDelayManager"));
+const AdminDeadLeads           = lazyRetry(() => import("@/components/admin/AdminDeadLeads"));
 
 // Agency domain
 const AdminWebDesignCRM       = lazyRetry(() => import("@/components/admin/AdminWebDesignCRM"));
@@ -444,6 +445,7 @@ const Admin = () => {
         { key: "dwa-simulation", label: "🧪 Simulation", component: <AdminSimulationSuite /> },
         { key: "dwa-outbox", label: "📨 Global Outbox", component: <AdminGlobalOutbox /> },
         { key: "dwa-ghost-delay", label: "👻 Ghost Delay", component: <AdminGhostDelayManager /> },
+        { key: "dwa-dead-leads", label: "♻️ Dead Leads", component: <AdminDeadLeads /> },
         { key: "contractor-leads", label: "🏗 Contractor Leads", component: <AdminContractorLeads /> },
         { key: "field-crm-clients", label: "🏢 FieldDesk Clients", component: <AdminFieldCRMClients /> },
         { key: "hire-alert-clients", label: "🔔 TechAlert Clients", component: <AdminHireAlertClients /> },

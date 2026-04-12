@@ -1,0 +1,165 @@
+// handle-dead-lead-reply — Twilio inbound SMS webhook
+// Routes incoming replies from dead lead contacts to the right action:
+//   YES/positive  → instant SMS to contractor with lead info + $50 tab notice
+//   HARD_NO       → Google review ask (white-labeled from contractor)
+//   OPT_OUT       → insert to sms_opt_outs, mark contact opted_out
+
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
+const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+
+const OPT_OUT_KEYWORDS = ["stop", "unsubscribe", "cancel", "quit", "end", "remove"];
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: { "Access-Control-Allow-Origin": "*" } });
+  }
+
+  const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+  try {
+    // Twilio sends form-encoded body
+    const text = await req.text();
+    const params = new URLSearchParams(text);
+    const fromPhone = params.get("From") || "";
+    const replyBody = (params.get("Body") || "").trim();
+
+    if (!fromPhone || !replyBody) {
+      return new Response("<Response/>", { status: 200, headers: { "Content-Type": "text/xml" } });
+    }
+
+    // Find the most recent active drip contact with this phone
+    const { data: contact } = await sb
+      .from("dead_lead_contacts" as any)
+      .select("*, dead_lead_campaigns(trade, contractor_id, contractor_clients(id, business_name, phone, google_review_link, email))")
+      .eq("phone", fromPhone)
+      .in("status", ["drip1_sent", "drip2_sent", "drip3_sent"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!contact) {
+      // Not a dead lead contact — ignore
+      return new Response("<Response/>", { status: 200, headers: { "Content-Type": "text/xml" } });
+    }
+
+    const campaign = (contact as any).dead_lead_campaigns;
+    const contractor = (campaign as any).contractor_clients;
+    const trade = campaign?.trade || "service";
+    const bizName = contractor?.business_name || "your contractor";
+
+    // ── OPT-OUT ───────────────────────────────────────────────────────────
+    if (OPT_OUT_KEYWORDS.includes(replyBody.toLowerCase())) {
+      await Promise.all([
+        sb.from("dead_lead_contacts" as any).update({ status: "opted_out", reply_text: replyBody }).eq("id", contact.id),
+        sb.from("sms_opt_outs").upsert({ phone: fromPhone, source: "dead_lead_reply" }),
+      ]);
+      return new Response("<Response/>", { status: 200, headers: { "Content-Type": "text/xml" } });
+    }
+
+    // ── AI CLASSIFICATION ─────────────────────────────────────────────────
+    let classification = "unknown";
+    if (ANTHROPIC_API_KEY) {
+      try {
+        const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "x-api-key": ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 10,
+            messages: [{
+              role: "user",
+              content: `Classify this SMS reply from a homeowner who was asked if they still need ${trade} work. Reply with exactly one word: POSITIVE, HARD_NO, or UNKNOWN.\n\nReply: "${replyBody}"`,
+            }],
+          }),
+        });
+        const aiData = await aiRes.json();
+        const raw = aiData.content?.[0]?.text?.trim().toUpperCase() || "UNKNOWN";
+        if (raw.includes("POSITIVE")) classification = "POSITIVE";
+        else if (raw.includes("HARD_NO") || raw.includes("NO")) classification = "HARD_NO";
+        else classification = "UNKNOWN";
+      } catch { classification = "UNKNOWN"; }
+    } else {
+      // Fallback: keyword detection
+      const lower = replyBody.toLowerCase();
+      if (lower.includes("yes") || lower.includes("still") || lower.includes("need") || lower.includes("interested")) {
+        classification = "POSITIVE";
+      } else if (lower.includes("no") || lower.includes("fixed") || lower.includes("already") || lower.includes("someone else")) {
+        classification = "HARD_NO";
+      }
+    }
+
+    // ── POSITIVE REPLY → instant contractor notification ──────────────────
+    if (classification === "POSITIVE") {
+      await sb.from("dead_lead_contacts" as any).update({
+        status: "replied_positive",
+        reply_text: replyBody,
+        contractor_notified_at: new Date().toISOString(),
+      }).eq("id", contact.id);
+
+      // SMS contractor immediately — remove Matt from the loop
+      if (contractor?.phone) {
+        await sendSMS(
+          contractor.phone,
+          TWILIO_PHONE_NUMBER,
+          `\u267b\ufe0f DEAD LEAD REVIVED: ${contact.name || fromPhone} just replied they still need ${trade} work. Call them now: ${fromPhone}. ($50 added to your tab.)`,
+          "dead_lead_reactivation"
+        );
+      }
+
+      // Also email Matt as backup notification
+      if (RESEND_API_KEY) {
+        fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: "DWA System <matt@detroitwebagent.com>",
+            to: ["matt@detroitwebagent.com"],
+            subject: `\u267b\ufe0f Dead Lead Revived — ${contact.name || fromPhone} (${bizName})`,
+            html: `<p><strong>${contact.name || fromPhone}</strong> replied YES to the ${trade} dead lead drip for <strong>${bizName}</strong>.</p><p>Phone: ${fromPhone}</p><p>Reply: "${replyBody}"</p><p>Contractor has been SMSed instantly. Invoice them $50.</p>`,
+          }),
+        }).catch(() => {});
+      }
+    }
+
+    // ── HARD NO → Google review ask ───────────────────────────────────────
+    else if (classification === "HARD_NO") {
+      await sb.from("dead_lead_contacts" as any).update({
+        status: "review_requested",
+        reply_text: replyBody,
+      }).eq("id", contact.id);
+
+      if (contractor?.google_review_link) {
+        await sendSMS(
+          fromPhone,
+          TWILIO_PHONE_NUMBER,
+          `Glad you got it sorted! If ${bizName} was helpful during the quote process, a quick Google review would mean a lot to their local crew: ${contractor.google_review_link}`,
+          "dead_lead_reactivation"
+        );
+      }
+    }
+
+    // ── UNKNOWN → just log it ─────────────────────────────────────────────
+    else {
+      await sb.from("dead_lead_contacts" as any).update({
+        status: "replied_negative",
+        reply_text: replyBody,
+      }).eq("id", contact.id);
+    }
+
+    return new Response("<Response/>", { status: 200, headers: { "Content-Type": "text/xml" } });
+  } catch (e: unknown) {
+    console.error("[handle-dead-lead-reply]", e);
+    return new Response("<Response/>", { status: 200, headers: { "Content-Type": "text/xml" } });
+  }
+});

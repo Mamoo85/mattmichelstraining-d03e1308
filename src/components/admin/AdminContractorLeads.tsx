@@ -73,6 +73,9 @@ export default function AdminContractorLeads() {
   const [showFbGuide, setShowFbGuide] = useState(false);
   const [pipelineFilter, setPipelineFilter] = useState("all");
   const [lastRefresh, setLastRefresh] = useState(Date.now());
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [quickForm, setQuickForm] = useState({ site_id: "", name: "", phone: "", email: "", description: "" });
+  const [submittingLead, setSubmittingLead] = useState(false);
 
   const load = useCallback(async () => {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -139,6 +142,42 @@ export default function AdminContractorLeads() {
     ? pipeline
     : pipeline.filter((p) => p.offer_pitched === pipelineFilter || p.status === pipelineFilter);
 
+  // ── Quick Lead Entry ───────────────────────────────────────────────────────
+  const submitQuickLead = async () => {
+    if (!quickForm.site_id || !quickForm.name.trim() || !quickForm.phone.trim()) {
+      toast.error("Trade/city, name, and phone are required");
+      return;
+    }
+    setSubmittingLead(true);
+    try {
+      const phone = quickForm.phone.replace(/\D/g, "");
+      const e164 = phone.length === 10 ? `+1${phone}` : phone.length === 11 ? `+${phone}` : quickForm.phone;
+      const { data: lead, error } = await supabase
+        .from("contractor_leads" as never)
+        .insert({
+          site_id: quickForm.site_id,
+          name: quickForm.name.trim(),
+          phone: e164,
+          email: quickForm.email.trim() || null,
+          project_type: quickForm.description.trim() || null,
+          source: "admin-manual",
+          status: "new",
+        } as never)
+        .select("id")
+        .single();
+      if (error || !lead) throw new Error((error as any)?.message || "Insert failed");
+      await supabase.functions.invoke("contractor-lead-notify", { body: { lead_id: (lead as any).id } });
+      toast.success("Lead added — contractors notified");
+      setQuickForm({ site_id: "", name: "", phone: "", email: "", description: "" });
+      setShowQuickAdd(false);
+      load();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSubmittingLead(false);
+    }
+  };
+
   // ── Save Facebook page ID ──────────────────────────────────────────────────
   const saveFbPageId = async (territoryId: string, pageId: string) => {
     if (!pageId.trim()) return;
@@ -184,6 +223,92 @@ export default function AdminContractorLeads() {
 
   return (
     <div className="space-y-8 pb-12">
+
+      {/* ── Quick Lead Entry ─────────────────────────────────────────────── */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Quick Lead Entry</h2>
+          <button
+            onClick={() => setShowQuickAdd(!showQuickAdd)}
+            className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-md"
+            style={{ background: "#e8621a", color: "#fff" }}
+          >
+            {showQuickAdd ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            {showQuickAdd ? "Close" : "Add Lead"}
+          </button>
+        </div>
+        {showQuickAdd && (
+          <div className="bg-card border border-border rounded-lg p-4 space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs text-muted-foreground font-semibold mb-1">TRADE + CITY *</label>
+                <select
+                  value={quickForm.site_id}
+                  onChange={e => setQuickForm(f => ({ ...f, site_id: e.target.value }))}
+                  className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground"
+                >
+                  <option value="">Select territory…</option>
+                  {territories.map((t: any) => (
+                    <option key={t.id} value={t.id}>{t.trade} — {t.city}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground font-semibold mb-1">HOMEOWNER NAME *</label>
+                <input
+                  value={quickForm.name}
+                  onChange={e => setQuickForm(f => ({ ...f, name: e.target.value }))}
+                  placeholder="John Smith"
+                  className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground font-semibold mb-1">PHONE *</label>
+                <input
+                  value={quickForm.phone}
+                  onChange={e => setQuickForm(f => ({ ...f, phone: e.target.value }))}
+                  placeholder="3135551234"
+                  className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground font-semibold mb-1">EMAIL</label>
+                <input
+                  value={quickForm.email}
+                  onChange={e => setQuickForm(f => ({ ...f, email: e.target.value }))}
+                  placeholder="john@email.com"
+                  className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-xs text-muted-foreground font-semibold mb-1">PROJECT DESCRIPTION</label>
+                <input
+                  value={quickForm.description}
+                  onChange={e => setQuickForm(f => ({ ...f, description: e.target.value }))}
+                  placeholder="Furnace replacement, 2,000 sq ft home…"
+                  className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={submitQuickLead}
+                disabled={submittingLead}
+                className="text-sm font-bold px-4 py-2 rounded-md disabled:opacity-60"
+                style={{ background: "#e8621a", color: "#fff" }}
+              >
+                {submittingLead ? "Adding…" : "Add Lead + Notify"}
+              </button>
+              <button
+                onClick={() => setShowQuickAdd(false)}
+                className="text-sm px-4 py-2 rounded-md border border-border text-muted-foreground"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* ── Section 1: Revenue Header ─────────────────────────────────────── */}
       <div>

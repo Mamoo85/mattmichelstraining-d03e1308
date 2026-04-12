@@ -12,7 +12,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-04-11. Update this section every session.*
+*Last updated: 2026-04-12. Update this section every session.*
+
+### Phase 5 — Dead Lead Reactivation + ROI Scorecard COMPLETE ✅
+All work merged to `main`. Lovable auto-deploys on merge.
+
+**Phase 5 shipped:**
+- `dead_lead_campaigns` + `dead_lead_contacts` tables (RLS + service_role policies)
+- `contractor_clients.google_review_link` + `contractor_clients.roi_token` columns (backfilled)
+- `dead-lead-drip` — white-labeled 3-msg SMS drip (contractor's business name, not DWA). Runs daily 10am ET.
+- `handle-dead-lead-reply` — Twilio inbound webhook: POSITIVE → instant SMS to contractor + email Matt; HARD_NO → Google review ask; OPT_OUT → sms_opt_outs
+- `contractor-roi-sms` — weekly Friday 9am ET, skips if all metrics = 0, uses `roi_token` not `client_id`
+- `contractor-roi-report` — GET edge function, token-secured, returns 7-day stats
+- `ContractorROIReport.tsx` — `/roi?token=XYZ` magic link page, 4 stat cards, no login required
+- `AdminDeadLeads.tsx` — CSV upload + campaign manager, "Run Drip Now" button
+- Quick Lead Entry form in `AdminContractorLeads.tsx` — trade+city dropdown, notifies contractors instantly
+- Admin.tsx: `♻️ Dead Leads` tab wired into DWA domain
+- App.tsx: `/roi` route added (public, no auth)
+- config.toml: `verify_jwt = false` for all 4 new functions
+
+### Contractor Leads — Credibility-First Rule
+- NEVER pitch contractors until ≥5 real leads exist in `contractor_leads` table — use Quick Lead Entry admin form
+- Facebook ads NOT the first move. CPL $45–60 in Metro Detroit, $75–100/day minimum, 4–8 weeks to optimize
+- Sequence: manual leads → outreach with proof → PPL → territory lock → ads to scale
+- **Dead Lead Reactivation is the REAL zero-ad-spend pitch**: contractor uploads their dead quotes → 3-msg SMS drip → $50/positive reply. No leads table needed — monetizes what contractors already own.
+- Missed-Call Catch is LIVE at `/missed-call-catch` ($99/mo)
+- ROI Scorecard: `/roi?token=XYZ` — texted weekly on Fridays, proves value without login, skips zero-value weeks
 
 ### Phase 4 — Admin Command Center COMPLETE ✅
 All Phase 3+4 work merged to `main`. Lovable auto-deploys on merge.

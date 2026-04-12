@@ -1500,3 +1500,15 @@ verify_jwt = false
 
 [functions.hire-alert-scanner]
 verify_jwt = false
+
+[functions.dead-lead-drip]
+verify_jwt = false
+
+[functions.handle-dead-lead-reply]
+verify_jwt = false
+
+[functions.contractor-roi-sms]
+verify_jwt = false
+
+[functions.contractor-roi-report]
+verify_jwt = false
