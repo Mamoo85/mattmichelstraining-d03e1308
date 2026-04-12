@@ -14,6 +14,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-04-12. Update this section every session.*
 
+### Phase 9 — Legal/Compliance Hardening + Dutch Auction COMPLETE ✅
+Work on `claude/opusplan-setup-nmyYS`. Merge to main to deploy.
+
+**TCPA Expiry Filter — CRITICAL LEGAL FIX:**
+- Migration `20260412050000_tcpa_dutch_auction.sql` — `last_contact_date date` on `dead_lead_contacts`
+- `dead-lead-drip` — all 3 loops check 18-month EBR cutoff before sending. Uses `last_contact_date` if provided, else `created_at` as proxy. Expired → `status='tcpa_expired'` (terminal, never texted).
+- `dead-lead-intake` — parses "phone, name, YYYY-MM-DD" format. Scrubs 18mo+ leads at upload. Returns `contacts_scrubbed_tcpa` count.
+- `dwa-operator` — `tcpa_expired` is terminal; excluded from `contacted` denominator (they never received a text).
+- Legal: EBR covers 3mo (inquiry) / 18mo (transaction). We use 18mo for all dead leads (conservative). Undated leads use upload date as proxy.
+
+**Dutch Auction for PPL Leads:**
+- `contractor-aged-lead-downsell` — 3-tier decay: 48-72h=$35, 72-96h=$20, 96h+=$10 (was flat $15)
+- `create-aged-lead-checkout` — price from `aged_tier` in DB (not URL params). Prevents manipulation.
+
+**Audit findings not requiring action:**
+- Phantom alerts — uses real DB candidates (score≥7, last 24h). Not fabrication. No FTC risk.
+- 10DLC — Matt confirmed complete.
+- LARA Socrata API — good improvement, deferred (needs specific endpoint URL research).
+
+**Senior care vertical — next target:**
+- Assisted living, skilled nursing, home health agencies have identical pain points to contractors
+- Products that fit TODAY: Dead Lead Reactivation, TechAlert (CNA/LPN license monitoring), After-Job Drip, Review Monitor
+- TechAlert angle: state nursing license DB → "We monitor when licensed CNAs enter your market"
+- Action needed: add senior care to Tom's prospecting trades in `tom-autonomous` and `contractor-prospector`
+
 ### Stripe Webhook — Critical Fix COMPLETE ✅
 Fixed tonight. Two issues found and resolved:
 
