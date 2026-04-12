@@ -255,7 +255,7 @@ serve(async (req) => {
       console.error("Missing STRIPE_WEBHOOK_SECRET or stripe-signature header");
       return new Response("Webhook signature verification failed", { status: 400 });
     }
-    const event: Stripe.Event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+    const event: Stripe.Event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
