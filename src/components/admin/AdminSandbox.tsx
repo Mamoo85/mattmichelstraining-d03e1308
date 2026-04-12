@@ -644,9 +644,9 @@ export default function AdminSandbox() {
         </DialogContent>
       </Dialog>
 
-      {/* Header */}
+      {/* Header + Search */}
       <div className="bg-slate-900 rounded-lg p-5 border border-orange-500/20">
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3 mb-4">
           <Zap className="h-5 w-5 text-orange-500 mt-0.5 shrink-0" />
           <div>
             <h2 className="text-white font-bold text-lg">Product Sandbox</h2>
@@ -659,54 +659,93 @@ export default function AdminSandbox() {
             </p>
           </div>
         </div>
+        <Input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search products..."
+          className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 h-9"
+        />
       </div>
 
       {/* Instant Delivery */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <h3 className="text-white font-semibold">Instant Delivery</h3>
-          <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Fires in seconds</Badge>
+      {instant.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-white font-semibold">Instant Delivery</h3>
+            <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Fires in seconds</Badge>
+            <span className="text-slate-500 text-xs ml-auto">{instant.length} products</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {instant.map(p => <ProductCard key={p.id} p={p} badgeClass="bg-orange-500/20 text-orange-400 border-orange-500/30" btnClass="bg-orange-500 hover:bg-orange-600 text-white" />)}
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {instant.map(p => <ProductCard key={p.id} p={p} badgeClass="bg-orange-500/20 text-orange-400 border-orange-500/30" btnClass="bg-orange-500 hover:bg-orange-600 text-white" />)}
-        </div>
-      </div>
+      )}
 
       {/* Subscriptions */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <h3 className="text-white font-semibold">Subscriptions</h3>
-          <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs">Welcome email + DB record</Badge>
+      {subs.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-white font-semibold">Subscriptions</h3>
+            <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs">Welcome email + DB record</Badge>
+            <span className="text-slate-500 text-xs ml-auto">{subs.length} products</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {subs.map(p => <ProductCard key={p.id} p={p} badgeClass="bg-slate-600 text-slate-300 border-slate-500" btnClass="bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600" />)}
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {subs.map(p => <ProductCard key={p.id} p={p} badgeClass="bg-slate-600 text-slate-300 border-slate-500" btnClass="bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600" />)}
-        </div>
-      </div>
+      )}
 
       {/* Social Media Lab */}
-      <SocialMediaLab />
+      {!search && <SocialMediaLab />}
 
       {/* SMS Products */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <h3 className="text-white font-semibold">SMS &amp; Monitoring Products</h3>
-          <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs">Welcome email + DB record + Twilio</Badge>
+      {smsProducts.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-white font-semibold">SMS &amp; Monitoring Products</h3>
+            <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs">Welcome email + DB record + Twilio</Badge>
+            <span className="text-slate-500 text-xs ml-auto">{smsProducts.length} products</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {smsProducts.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-purple-500/50" badgeClass="bg-purple-500/20 text-purple-400 border-purple-500/30" btnClass="bg-purple-900/30 hover:bg-purple-800/40 text-purple-300 border border-purple-600/50" />)}
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {smsProducts.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-purple-500/50" badgeClass="bg-purple-500/20 text-purple-400 border-purple-500/30" btnClass="bg-purple-900/30 hover:bg-purple-800/40 text-purple-300 border border-purple-600/50" />)}
-        </div>
-      </div>
+      )}
 
       {/* Autonomous Products */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <h3 className="text-white font-semibold">Autonomous Products</h3>
-          <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">Welcome email + DB record + AI automation</Badge>
+      {autonomousProducts.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-white font-semibold">Autonomous Products</h3>
+            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">Welcome email + DB record + AI automation</Badge>
+            <span className="text-slate-500 text-xs ml-auto">{autonomousProducts.length} products</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {autonomousProducts.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-emerald-500/50" badgeClass="bg-emerald-500/20 text-emerald-400 border-emerald-500/30" btnClass="bg-emerald-900/30 hover:bg-emerald-800/40 text-emerald-300 border border-emerald-600/50" />)}
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {autonomousProducts.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-emerald-500/50" badgeClass="bg-emerald-500/20 text-emerald-400 border-emerald-500/30" btnClass="bg-emerald-900/30 hover:bg-emerald-800/40 text-emerald-300 border border-emerald-600/50" />)}
+      )}
+
+      {/* Detroit Web Agency */}
+      {dwaProducts.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-white font-semibold">Detroit Web Agency</h3>
+            <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 text-xs">FieldDesk · TechAlert · SiteRadar</Badge>
+            <span className="text-slate-500 text-xs ml-auto">{dwaProducts.length} products</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {dwaProducts.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-cyan-500/50" badgeClass="bg-cyan-500/20 text-cyan-400 border-cyan-500/30" btnClass="bg-cyan-900/30 hover:bg-cyan-800/40 text-cyan-300 border border-cyan-600/50" />)}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Empty search state */}
+      {search && instant.length === 0 && subs.length === 0 && smsProducts.length === 0 && autonomousProducts.length === 0 && dwaProducts.length === 0 && (
+        <div className="text-center py-12 text-slate-500">
+          No products match "<span className="text-slate-300">{search}</span>"
+        </div>
+      )}
 
       {/* What to check */}
       <Card className="bg-slate-800 border-slate-700">
