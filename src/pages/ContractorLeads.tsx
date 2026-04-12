@@ -5,14 +5,12 @@ import { toast } from "sonner";
 import { Phone, CheckCircle, XCircle, Loader2, ArrowRight } from "lucide-react";
 
 const TRADES = [
-  { slug: "roofing-chicago", trade: "roofing", label: "Roofing", city: "Chicago", state: "IL", monthly: "$399" },
-  { slug: "hvac-columbus", trade: "hvac", label: "HVAC", city: "Columbus", state: "OH", monthly: "$399" },
-  { slug: "plumbing-phoenix", trade: "plumbing", label: "Plumbing", city: "Phoenix", state: "AZ", monthly: "$399" },
-  { slug: "electrical-dallas", trade: "electrical", label: "Electrical", city: "Dallas", state: "TX", monthly: "$399" },
-  { slug: "roofing-charlotte", trade: "roofing", label: "Roofing", city: "Charlotte", state: "NC", monthly: "$299" },
-  { slug: "hvac-denver", trade: "hvac", label: "HVAC", city: "Denver", state: "CO", monthly: "$299" },
-  { slug: "plumbing-nashville", trade: "plumbing", label: "Plumbing", city: "Nashville", state: "TN", monthly: "$299" },
-  { slug: "gutters-atlanta", trade: "gutters", label: "Gutters / Siding", city: "Atlanta", state: "GA", monthly: "$299" },
+  { slug: "hvac-metro-detroit", trade: "hvac", label: "HVAC", city: "Metro Detroit", state: "MI", monthly: "$399" },
+  { slug: "plumbing-metro-detroit", trade: "plumbing", label: "Plumbing", city: "Metro Detroit", state: "MI", monthly: "$399" },
+  { slug: "roofing-metro-detroit", trade: "roofing", label: "Roofing", city: "Metro Detroit", state: "MI", monthly: "$399" },
+  { slug: "electrical-metro-detroit", trade: "electrical", label: "Electrical", city: "Metro Detroit", state: "MI", monthly: "$399" },
+  { slug: "boiler-metro-detroit", trade: "boiler", label: "Boiler / Mechanical", city: "Metro Detroit", state: "MI", monthly: "$399" },
+  { slug: "gutters-metro-detroit", trade: "gutters", label: "Gutters / Siding", city: "Metro Detroit", state: "MI", monthly: "$299" },
 ];
 
 const WINS = [
@@ -81,16 +79,16 @@ export default function ContractorLeads() {
   return (
     <>
       <SEOHead
-        title="Exclusive Contractor Leads — Any City in the US | M2 Lead Network"
-        description="Exclusive roofing, HVAC, plumbing, and electrical leads in your market. No shared leads. One contractor per trade per city. Flat monthly fee."
+        title="Exclusive Contractor Leads — Metro Detroit | Detroit Web Agency"
+        description="Exclusive roofing, HVAC, plumbing, and electrical leads in Metro Detroit. No shared leads. One contractor per trade. Flat monthly fee."
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-16 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">M2 Lead Network</p>
-          <h1 className="text-3xl font-black mb-4 leading-tight">Exclusive contractor leads.<br />One company per city.</h1>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">Detroit Web Agency</p>
+          <h1 className="text-3xl font-black mb-4 leading-tight">Exclusive contractor leads.<br />Metro Detroit. One company per trade.</h1>
           <p className="text-slate-300 text-base max-w-xl mx-auto leading-relaxed">
-            Every roofing, HVAC, plumbing, and electrical lead generated in your market goes <strong className="text-white">only to you</strong>. No Angi. No shared bids. Flat monthly fee — cancel anytime.
+            Every roofing, HVAC, plumbing, and electrical lead generated in Metro Detroit goes <strong className="text-white">only to you</strong>. No Angi. No shared bids. Flat monthly fee — cancel anytime.
           </p>
           <div className="mt-6">
             <a href="tel:+13139921219" className="border border-white/30 text-white px-6 py-3 font-bold text-sm hover:bg-white/10 transition-all inline-flex items-center gap-2">

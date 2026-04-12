@@ -110,18 +110,15 @@ async function scanMIOSHA(): Promise<RawCandidate[]> {
 }
 
 // Source 2: Apollo People Search — tradespeople in Metro Detroit
+// Paginates up to 3 pages per city group (75 results max), extracts phone numbers
 async function scanApollo(): Promise<RawCandidate[]> {
   if (!APOLLO_API_KEY) return [];
 
-  const metroDetroitLocations = [
-    "Detroit, Michigan",
-    "Warren, Michigan",
-    "Dearborn, Michigan",
-    "Livonia, Michigan",
-    "Troy, Michigan",
-    "Sterling Heights, Michigan",
-    "Farmington Hills, Michigan",
-    "Royal Oak, Michigan",
+  // Split into batches so pagination is more targeted
+  const locationBatches = [
+    ["Detroit, Michigan", "Dearborn, Michigan", "Livonia, Michigan"],
+    ["Warren, Michigan", "Sterling Heights, Michigan", "Troy, Michigan"],
+    ["Farmington Hills, Michigan", "Royal Oak, Michigan"],
   ];
 
   const tradeTitles = [
@@ -135,42 +132,65 @@ async function scanApollo(): Promise<RawCandidate[]> {
     "Industrial Mechanic",
   ];
 
-  try {
-    const res = await fetch("https://api.apollo.io/api/v1/people/search", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-cache",
-        "X-Api-Key": APOLLO_API_KEY,
-      },
-      body: JSON.stringify({
-        person_titles: tradeTitles,
-        person_locations: metroDetroitLocations,
-        page: 1,
-        per_page: 25,
-      }),
-    });
+  const allPeople: RawCandidate[] = [];
+  const seenIds = new Set<string>();
 
-    if (!res.ok) {
-      console.error("[hire-alert-scanner] Apollo error:", res.status, await res.text());
-      return [];
+  for (const locations of locationBatches) {
+    // Paginate up to 3 pages per city batch
+    for (let page = 1; page <= 3; page++) {
+      try {
+        const res = await fetch("https://api.apollo.io/api/v1/people/search", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache",
+            "X-Api-Key": APOLLO_API_KEY,
+          },
+          body: JSON.stringify({
+            person_titles: tradeTitles,
+            person_locations: locations,
+            page,
+            per_page: 25,
+          }),
+        });
+
+        if (!res.ok) {
+          console.warn(`[hire-alert-scanner] Apollo HTTP ${res.status} (batch page ${page})`);
+          break;
+        }
+
+        const data = await res.json();
+        const people: Record<string, unknown>[] = data?.people || [];
+
+        if (!people.length) break; // No more results for this batch
+
+        for (const p of people) {
+          const id = p.id as string;
+          if (!id || seenIds.has(id)) continue;
+          seenIds.add(id);
+
+          const phoneNumbers = p.phone_numbers as Array<{ sanitized_number?: string }> | undefined;
+          const phone = phoneNumbers?.[0]?.sanitized_number || undefined;
+
+          allPeople.push({
+            full_name: `${p.first_name || ""} ${p.last_name || ""}`.trim(),
+            phone,
+            email: (p.email as string) || undefined,
+            license_type: (p.title as string) || undefined,
+            city: (p.city as string) || (p.state as string) || undefined,
+            source: "apollo" as const,
+            raw_data: { apollo_id: id, linkedin_url: p.linkedin_url, organization: p.organization },
+          });
+        }
+      } catch (e) {
+        console.warn(`[hire-alert-scanner] Apollo error (batch page ${page}):`, e);
+        break;
+      }
     }
-
-    const data = await res.json();
-    const people = data?.people || [];
-
-    return people.map((p: Record<string, unknown>) => ({
-      full_name: `${p.first_name || ""} ${p.last_name || ""}`.trim(),
-      email: (p.email as string) || undefined,
-      license_type: (p.title as string) || undefined,
-      city: (p.city as string) || (p.state as string) || undefined,
-      source: "apollo" as const,
-      raw_data: { apollo_id: p.id, linkedin_url: p.linkedin_url, organization: p.organization },
-    }));
-  } catch (e) {
-    console.error("[hire-alert-scanner] Apollo fetch error:", e);
-    return [];
   }
+
+  console.log(`[hire-alert-scanner] Apollo: found ${allPeople.length} candidates`);
+  return allPeople;
 }
 
 // Source 3: Firecrawl job board search — active job seekers posting availability
@@ -218,31 +238,60 @@ Return a JSON array. Only include people actively seeking work. Return [] if non
   return allResults;
 }
 
-// Score candidate availability via AI
+// Score candidate availability via AI with real signals
 async function scoreCandidate(candidate: RawCandidate): Promise<{ score: number; reason: string }> {
+  // Compute signals before sending to AI
+  const hasPhone = !!candidate.phone;
+  const hasEmail = !!candidate.email;
+  const hasLicenseNumber = !!candidate.license_number;
+  const isFromJobBoard = candidate.source === "firecrawl";
+
+  // License recency signal: if expiry is 2+ years out, license was recently issued
+  let licenseRecent = false;
+  if (candidate.license_expiry) {
+    const expiry = new Date(candidate.license_expiry);
+    const monthsUntilExpiry = (expiry.getTime() - Date.now()) / (30 * 24 * 60 * 60 * 1000);
+    licenseRecent = monthsUntilExpiry > 20; // new licenses typically expire in 2+ years
+  }
+
   const result = await generateJSON<{ score: number; reason: string }>(
-    `Score this tradesperson's immediate hire availability from 1-10.
+    `Score this tradesperson's immediate hire availability from 1-10. Be precise — avoid defaulting to 5 or 6.
 
 Candidate:
 Name: ${candidate.full_name}
 Trade/License: ${candidate.license_type || "unknown"}
-Source: ${candidate.source}
+Source: ${candidate.source}${isFromJobBoard ? " (JOB BOARD — actively seeking work)" : ""}
 City: ${candidate.city || "unknown"}
-License Number: ${candidate.license_number || "none recorded"}
+License Number: ${hasLicenseNumber ? candidate.license_number : "none"}${licenseRecent ? " (RECENTLY ISSUED — new to market)" : ""}
 License Expiry: ${candidate.license_expiry || "unknown"}
-Email Available: ${candidate.email ? "yes" : "no"}
+Has Phone Number: ${hasPhone ? "YES" : "no"}
+Has Email: ${hasEmail ? "YES" : "no"}
 
-Scoring guide:
-10 = Active job seeker, fresh license, Metro Detroit location, has contact info
-7-9 = Likely available: recent license issuance, local, or appeared on job board
-5-6 = Possibly available: Apollo profile, local trade title
-3-4 = Unclear availability: limited data
-1-2 = Likely employed/unavailable or out of area
+Scoring rules (apply ALL that match, then sum):
+- Base: 4 points for having a verifiable trade title
+- +3 if appeared on a job board (actively seeking)
+- +2 if license number exists AND recently issued (new to market)
+- +1 if has phone number (immediately contactable)
+- +1 if has email address
+- +1 if city is Metro Detroit area
+- -2 if no license number AND source is MIOSHA (parse error — likely bad data)
+- Cap at 10, floor at 1
 
-Return JSON: { "score": number, "reason": "one sentence explanation" }`,
-    { score: 5, reason: "Insufficient data to score" },
+Return JSON: { "score": number, "reason": "one sentence citing the top 1-2 signals" }`,
+    null, // no default — derive score from signals if AI fails
     400
   );
+
+  // If AI fails, compute a rule-based score from signals
+  if (!result || typeof result.score !== "number") {
+    let score = 4; // base for having a trade title
+    if (isFromJobBoard) score += 3;
+    if (hasLicenseNumber && licenseRecent) score += 2;
+    if (hasPhone) score += 1;
+    if (hasEmail) score += 1;
+    score = Math.min(10, Math.max(1, score));
+    return { score, reason: `Rule-based: source=${candidate.source}, phone=${hasPhone}, license=${hasLicenseNumber}` };
+  }
 
   return result;
 }

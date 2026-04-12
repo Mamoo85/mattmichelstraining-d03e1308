@@ -12,7 +12,8 @@ const log = (step: string, data?: any) =>
 
 // ── Daily send cap to protect domain reputation ──
 const DAILY_SEND_CAP = 30;
-const DEAD_LEAD_CAP = 5; // separate cap for dead lead reactivation pitches
+const DEAD_LEAD_CAP = 5;      // dead lead reactivation pitches/day
+const TECH_ALERT_CAP = 5;     // TechAlert trial pitches/day
 
 // ── Metro Detroit targets only ──
 const TRADES = ["roofer", "HVAC contractor", "plumber", "electrician", "dentist"];
@@ -295,6 +296,96 @@ async function getDailyDeadLeadCount(sb: any): Promise<number> {
   return count || 0;
 }
 
+// ── Check how many TechAlert pitches sent today ──
+async function getDailyTechAlertCount(sb: any): Promise<number> {
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+  const { count } = await sb
+    .from("outreach_leads")
+    .select("id", { count: "exact", head: true })
+    .eq("offer_pitched", "tech_alert")
+    .gte("created_at", todayStart.toISOString());
+  return count || 0;
+}
+
+// Pitch rotation by day-of-year: 0=dead lead, 1=tech alert, 2=web design
+function getTodayPitchRotation(): "dead_lead" | "tech_alert" | "web_design" {
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+  const r = dayOfYear % 3;
+  return r === 0 ? "dead_lead" : r === 1 ? "tech_alert" : "web_design";
+}
+
+// Map trade → TechAlert target_roles
+function getTargetRolesForTrade(trade: string): string[] {
+  const t = trade.toLowerCase();
+  if (t.includes("hvac")) return ["hvac_tech", "pipefitter"];
+  if (t.includes("plumb")) return ["plumber", "pipefitter"];
+  if (t.includes("electric")) return ["electrician"];
+  if (t.includes("boiler") || t.includes("steam") || t.includes("mechanical")) return ["boiler_operator", "steam_engineer"];
+  return [];
+}
+
+// ── AGENT 4: SNIPER_TECH — TechAlert cold pitch ──
+async function sniperTechAlertEmail(
+  businessName: string,
+  trade: string,
+  city: string,
+  reviewCount: number,
+): Promise<{ subject: string; body: string }> {
+  const cityShort = city.replace(" MI", "");
+  const tradeClean = trade.replace(" contractor", "");
+  const prompt = `You are writing a 4-sentence cold email from Matt Michels at Detroit Web Agency to the owner of "${businessName}", a ${tradeClean} in ${cityShort}, MI.
+
+The offer: TechAlert — a service that monitors Michigan's MIOSHA license database daily and texts them the moment a licensed ${tradeClean} technician becomes available in their area. $99/mo, cancel anytime. They're getting a free trial today — no card required.
+
+They have ${reviewCount} Google reviews — reference this to prove you looked them up.
+
+Rules:
+1. EXACTLY 4 sentences
+2. Sentence 1: Prove you found them specifically — mention their review count, trade, or city
+3. Sentence 2: Mention hiring pain — good licensed ${tradeClean} techs are hard to find, and by the time you hear about one, they're already gone
+4. Sentence 3: TechAlert scans Michigan's MIOSHA license DB daily — when a new tech gets licensed in your area, you get a text first. Free trial, no card.
+5. Sentence 4: Soft CTA — reply to claim their trial or text (313) 806-4952
+6. Start with "Hey —"
+7. Sign off: "— Matt, Detroit Web Agency"
+8. Conversational, direct. Not salesy.
+9. Subject line: Under 40 chars
+
+Format:
+SUBJECT: [subject line]
+BODY:
+[4-sentence email]`;
+
+  const text = await generateText(prompt, 400);
+  const subjectMatch = text.match(/SUBJECT:\s*(.+)/);
+  const bodyMatch = text.match(/BODY:\s*([\s\S]+)/);
+  return {
+    subject: subjectMatch?.[1]?.trim() || `finding ${tradeClean} techs in ${cityShort}`,
+    body: bodyMatch?.[1]?.trim() || text,
+  };
+}
+
+function buildTechAlertEmailHtml(body: string): string {
+  const htmlBody = body.replace(/\n/g, "<br>");
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a1628;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#0f172a;border:1px solid #00d4ff30;border-radius:8px;overflow:hidden;">
+<tr><td style="background:#00d4ff;padding:3px 0;"></td></tr>
+<tr><td style="padding:8px 24px 4px;background:#0a1628;">
+  <span style="font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#00d4ff;">⚡ TechAlert by Detroit Web Agency</span>
+</td></tr>
+<tr><td style="padding:16px 24px 24px;color:#e2e8f0;font-size:15px;line-height:1.8;background:#0f172a;">
+${htmlBody}
+<div style="margin-top:20px;padding-top:16px;border-top:1px solid #1e3a5f;">
+<span style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13138064952" style="color:#00d4ff;text-decoration:none;">(313) 806-4952</a> · <a href="https://detroitwebagent.com" style="color:#00d4ff;text-decoration:none;">detroitwebagent.com</a></span>
+</div>
+</td></tr>
+<tr><td style="background:#0a1628;padding:12px 24px;border-top:1px solid #1e3a5f;font-size:11px;color:#475569;">
+Detroit Web Agency · Grosse Pointe, MI
+</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
 // ── Check how many emails sent today from this domain ──
 async function getDailySendCount(sb: any): Promise<number> {
   const todayStart = new Date();
@@ -327,9 +418,13 @@ serve(async (req) => {
       );
     }
 
-    // Check dead lead daily cap
+    // Check dead lead and TechAlert daily caps
     const deadLeadSentToday = await getDailyDeadLeadCount(sb);
+    const techAlertSentToday = await getDailyTechAlertCount(sb);
     let deadLeadSent = deadLeadSentToday;
+    let techAlertSent = techAlertSentToday;
+    const pitchRotation = getTodayPitchRotation();
+    log("Pitch rotation today", { pitchRotation, deadLeadSent, techAlertSent });
 
     // Optional manual override — allows dashboard to target a specific trade + city
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
@@ -394,8 +489,79 @@ serve(async (req) => {
           continue;
         }
 
+        // ── TECH ALERT PITCH: day 2 of 3-day rotation for trade contractors ──
+        if (DEAD_LEAD_TRADES.has(trade) && pitchRotation === "tech_alert" && techAlertSent < TECH_ALERT_CAP) {
+          let taSubject: string, taBody: string;
+          try {
+            ({ subject: taSubject, body: taBody } = await sniperTechAlertEmail(name, trade, city, reviewCount));
+          } catch (taErr) {
+            log("TechAlert sniper failed", { name, error: String(taErr) });
+            taSubject = ""; taBody = "";
+          }
+          if (taSubject && taBody) {
+            const taHtml = buildTechAlertEmailHtml(taBody);
+            const taRes = await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@detroitwebagent.com>",
+                to: [email],
+                bcc: ["matt@detroitwebagent.com"],
+                subject: taSubject,
+                html: taHtml,
+              }),
+            });
+            if (taRes.ok) {
+              // Log the outreach
+              await sb.from("outreach_leads").insert({
+                business_name: name,
+                city: city.replace(" MI", ""),
+                industry: trade.charAt(0).toUpperCase() + trade.slice(1).replace(" contractor", ""),
+                phone, email, website: website || null,
+                status: "emailed", channel: "email",
+                offer_pitched: "tech_alert",
+                last_contact_date: new Date().toISOString().split("T")[0],
+                drip_campaign_status: { d0_sent: true, d0_sent_at: new Date().toISOString() },
+                notes: `TechAlert pitch. Reviews: ${reviewCount}, Rating: ${rating}`,
+              });
+              await sb.from("email_send_log" as any).insert({
+                recipient_email: email, template_name: "contractor_tech_alert_d0",
+                status: "sent", message_id: `ta_d0_${Date.now()}_${email}`,
+              });
+
+              // Auto-enroll as TechAlert trial — prospect gets a real alert tomorrow morning
+              // They never see a paywall until their 72h trial expires
+              const targetRoles = getTargetRolesForTrade(trade);
+              const { data: existingTrial } = await sb
+                .from("hire_alert_clients")
+                .select("id")
+                .eq("owner_email", email)
+                .maybeSingle();
+              if (!existingTrial) {
+                await sb.from("hire_alert_clients").insert({
+                  company_name: name,
+                  owner_email: email,
+                  owner_phone: phone || null,
+                  target_roles: targetRoles,
+                  active: false,
+                  trial_status: "active",
+                  trial_started_at: new Date().toISOString(),
+                  notify_email: true,
+                  notify_sms: false,
+                });
+                log("TechAlert trial auto-enrolled", { name, email, targetRoles });
+              }
+
+              techAlertSent++;
+              log("TechAlert pitch sent", { name, email, city });
+              await new Promise(r => setTimeout(r, 500));
+              continue;
+            }
+          }
+        }
+
         // ── DEAD LEAD PITCH: for trade contractors, send reactivation pitch ──
-        if (DEAD_LEAD_TRADES.has(trade) && deadLeadSent < DEAD_LEAD_CAP) {
+        if (DEAD_LEAD_TRADES.has(trade) && (pitchRotation === "dead_lead" || techAlertSent >= TECH_ALERT_CAP) && deadLeadSent < DEAD_LEAD_CAP) {
           let dlSubject: string, dlBody: string;
           try {
             ({ subject: dlSubject, body: dlBody } = await sniperDeadLeadEmail(name, trade, city, reviewCount, rating));
@@ -548,8 +714,10 @@ serve(async (req) => {
         found: totalFound,
         emailed: totalEmailed,
         deadLeadEmailed: totalDeadLeadEmailed,
+        techAlertEmailed: techAlertSent - techAlertSentToday,
         skipped: totalSkipped,
         scoutRejected: totalScoutRejected,
+        pitchRotation,
         dailySentBefore: dailySent,
         dailySentAfter: dailySent + totalEmailed,
         cap: DAILY_SEND_CAP,

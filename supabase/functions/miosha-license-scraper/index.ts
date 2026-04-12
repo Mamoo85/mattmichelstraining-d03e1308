@@ -1,7 +1,12 @@
-// miosha-license-scraper — scrapes Michigan LARA license database directly
-// Uses Firecrawl to fetch actual LARA VAL pages (not web search — real DB pages)
-// Upserts into hire_alert_candidates by license_number (dedup key)
+// miosha-license-scraper — scrapes Michigan LARA license database
+// Uses Firecrawl with form interaction actions to submit the LARA VAL search form,
+// then parses the resulting markdown table for new license holders.
 // Called by hire-alert-scanner OR run standalone via cron/admin trigger.
+//
+// NOTE: LARA VAL (w2.lara.state.mi.us/VAL) is an ASP.NET WebForms app.
+// URL query params are ignored — must interact with the form via browser actions.
+// TODO: Michigan also publishes LARA data on data.michigan.gov (Socrata API).
+// If this scraper underperforms, switch to the Socrata endpoint for reliability.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -11,7 +16,6 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 
 // Michigan LARA license type codes for trades we care about
-// Source: https://w2.lara.state.mi.us/VAL/License/Search
 const LARA_LICENSE_TYPES = [
   { code: "BOP",  label: "Boiler Operator 1st Class" },
   { code: "BOP2", label: "Boiler Operator 2nd Class" },
@@ -20,8 +24,6 @@ const LARA_LICENSE_TYPES = [
   { code: "PL",   label: "Plumbing Contractor" },
 ];
 
-// Base URL for Michigan LARA VAL license search — sorted by issue date descending
-// so we always pick up the newest licenses first
 const LARA_SEARCH_URL = "https://w2.lara.state.mi.us/VAL/License/Search";
 
 interface LicenseCandidate {
@@ -37,7 +39,8 @@ async function scrapeLARAType(licenseCode: string, label: string): Promise<Licen
   if (!FIRECRAWL_API_KEY) return [];
 
   const controller = new AbortController();
-  const tid = setTimeout(() => controller.abort(), 10000);
+  // 35s: form interaction (wait + click + postback + results) takes ~15-20s
+  const tid = setTimeout(() => controller.abort(), 35000);
 
   try {
     const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
@@ -48,15 +51,29 @@ async function scrapeLARAType(licenseCode: string, label: string): Promise<Licen
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        // Direct fetch of the LARA search results for this license type,
-        // sorted by IssuedDate DESC so fresh licenses appear first.
-        url: `${LARA_SEARCH_URL}?ltype=${licenseCode}&sort=issued&order=desc&page=1`,
+        url: LARA_SEARCH_URL,
         formats: ["markdown"],
-        onlyMainContent: true,
-        waitFor: 3000, // wait for JS table to render
+        onlyMainContent: false,
+        waitFor: 2000,
         actions: [
-          // Some LARA pages need a button click to run the search
+          // Wait for ASP.NET form to fully initialize
           { type: "wait", milliseconds: 2000 },
+          // Select the license type from the dropdown.
+          // LARA VAL uses AutoPostBack=true, so selecting triggers a page postback.
+          // Firecrawl's click on an <option> within a <select> changes the value.
+          {
+            type: "click",
+            selector: `select option[value="${licenseCode}"]`,
+          },
+          // Wait for ASP.NET postback to complete (page may reload)
+          { type: "wait", milliseconds: 3000 },
+          // Click the Search button — multiple selector patterns for resilience
+          {
+            type: "click",
+            selector: "input[value='Search'], input[type='submit'], #btnSearch, [id*='btnSearch'], button[type='submit']",
+          },
+          // Wait for results table to render
+          { type: "wait", milliseconds: 5000 },
         ],
       }),
     });
@@ -70,18 +87,20 @@ async function scrapeLARAType(licenseCode: string, label: string): Promise<Licen
     const data = await res.json();
     const markdown: string = data?.data?.markdown || "";
 
-    if (!markdown || markdown.length < 100) {
-      console.warn(`[miosha-scraper] Empty/short response for ${licenseCode} (${markdown.length} chars)`);
+    if (!markdown || markdown.length < 200) {
+      console.warn(`[miosha-scraper] Thin response for ${licenseCode} (${markdown.length} chars) — form interaction may have failed`);
       return [];
     }
 
-    // Parse the markdown table — LARA tables look like:
-    // | Name | License # | Type | City | Issued | Expiry |
-    return parseLARATable(markdown, label);
+    const candidates = parseLARATable(markdown, label);
+    if (candidates.length === 0) {
+      console.warn(`[miosha-scraper] No candidates parsed for ${licenseCode} — table format may have changed`);
+    }
+    return candidates;
   } catch (e: unknown) {
     clearTimeout(tid);
     const isAbort = e instanceof Error && e.name === "AbortError";
-    console.warn(`[miosha-scraper] ${isAbort ? "Timeout" : "Error"} scraping ${licenseCode}`);
+    console.warn(`[miosha-scraper] ${isAbort ? "Timeout (35s)" : "Error"} scraping ${licenseCode}:`, e instanceof Error ? e.message : String(e));
     return [];
   }
 }
@@ -95,20 +114,21 @@ function parseLARATable(markdown: string, licenseLabel: string): LicenseCandidat
     const cells = line.split("|").map((s) => s.trim()).filter(Boolean);
     if (cells.length < 2) continue;
 
-    // Skip header rows
+    // Skip header and separator rows
     const firstCell = cells[0].toLowerCase();
-    if (firstCell === "name" || firstCell === "licensee" || firstCell.startsWith("-")) continue;
+    if (firstCell === "name" || firstCell === "licensee" || firstCell.startsWith("-") || firstCell.startsWith("=")) continue;
 
-    // Heuristic: first cell is a name (contains letters, no digits run)
-    // Second or third cell is a license number (alphanumeric)
+    // First cell must look like a person/business name (letters, no long digit runs)
     const nameCell = cells[0];
     if (!/[A-Za-z]{2,}/.test(nameCell)) continue;
-    if (nameCell.length < 3 || nameCell.length > 60) continue;
+    if (nameCell.length < 3 || nameCell.length > 80) continue;
+    // Skip cells that are obviously table headers or metadata
+    if (/license|type|number|city|state|issued|expir|search/i.test(nameCell)) continue;
 
-    // Try to extract license number (pattern: letters+digits, e.g. BOP12345)
+    // Find license number: letters + digits pattern (e.g. BOP12345, SE98765)
     const licNumCell = cells.find((c) => /^[A-Z]{1,5}\d{4,}$/i.test(c.replace(/\s/g, "")));
 
-    // Try to find an expiry date (MM/DD/YYYY or YYYY-MM-DD)
+    // Find expiry date (MM/DD/YYYY or YYYY-MM-DD)
     const datePattern = /\d{1,2}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2}/;
     const expiryCell = cells.slice(2).find((c) => datePattern.test(c));
     let expiryISO: string | null = null;
@@ -125,9 +145,11 @@ function parseLARATable(markdown: string, licenseLabel: string): LicenseCandidat
       }
     }
 
-    // Try to find a Michigan city in the cells
+    // Find a city cell: alphabetic only, 3-25 chars, not the name cell, not a known header word
     const miCityCell = cells.find((c) =>
-      /^[A-Za-z\s]{3,20}$/.test(c) && c !== nameCell && !/license|type|number|city|state/i.test(c)
+      c !== nameCell &&
+      /^[A-Za-z\s]{3,25}$/.test(c) &&
+      !/^(license|type|number|city|state|issued|expir|active|status)$/i.test(c.trim())
     );
 
     candidates.push({
@@ -171,7 +193,6 @@ serve(async (req) => {
           if (c.city) row.city = c.city;
 
           if (c.license_number) {
-            // Upsert by license_number — avoids re-alerting on the same person
             const { data: existing } = await sb
               .from("hire_alert_candidates")
               .select("id, status")
@@ -189,7 +210,7 @@ serve(async (req) => {
               newCount++;
             }
           } else {
-            // No license number — check for duplicate by name + license_type
+            // No license number — dedup by name + license_type + source
             const { data: existing } = await sb
               .from("hire_alert_candidates")
               .select("id")

@@ -55,11 +55,12 @@ serve(async (req) => {
         const trade = site?.trade || lead.project_type || "Service";
         const city = site?.city || "Metro Detroit";
 
-        // Find all active contractors who cover this trade
+        // Find active contractors who cover this specific trade — no plumber gets a roofing lead
         const { data: contractors } = await sb
           .from("contractor_clients")
           .select("id, phone, email")
           .eq("active", true)
+          .eq("trade", trade)
           .limit(50);
 
         if (!contractors?.length) continue;
@@ -72,7 +73,7 @@ serve(async (req) => {
           await sendSMS(
             contractor.phone,
             TWILIO_PHONE_NUMBER,
-            `Lead in ${city}: homeowner still needs a ${trade} quote — been sitting 48h unclaimed. $15 gets you their contact info: ${checkoutUrl}&cid=${contractor.id}`,
+            `Lead in ${city}: homeowner still needs a ${trade} quote — been sitting 48h unclaimed. $15 gets you their contact info: ${checkoutUrl}&cid=${contractor.id}\nReply STOP to opt out`,
             "contractor_leads"
           );
         }

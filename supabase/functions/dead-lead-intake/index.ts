@@ -10,7 +10,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 const SITE_URL = Deno.env.get("SITE_URL") || "https://detroitwebagent.com";
-const FREE_TIER_LIMIT = 2; // max contacts allowed on the free trial
+const FREE_TIER_LIMIT = 10; // max contacts allowed on the free trial
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",

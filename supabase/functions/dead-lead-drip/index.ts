@@ -58,7 +58,7 @@ serve(async (req) => {
               .replace("{name}", firstName)
               .replace("{bizName}", bizName)
               .replace("{trade}", trade)
-          : `Hey ${firstName}, this is the dispatch desk following up for ${bizName}. Did you ever get that ${trade} issue taken care of, or are you still looking for a quote?`;
+          : `Hey ${firstName}, this is the dispatch desk following up for ${bizName}. Did you ever get that ${trade} issue taken care of, or are you still looking for a quote?\nReply STOP to opt out`;
 
         await sendSMS(
           contact.phone,
@@ -103,7 +103,7 @@ serve(async (req) => {
               .replace("{name}", firstName)
               .replace("{bizName}", bizName)
               .replace("{trade}", trade)
-          : `Hey ${firstName} — ${bizName} again. Still available if you need ${trade} help. Just reply YES and we'll get someone out to you.`;
+          : `Hey ${firstName} — ${bizName} again. Still available if you need ${trade} help. Just reply YES and we'll get someone out to you.\nReply STOP to opt out`;
 
         await sendSMS(
           contact.phone,
@@ -148,7 +148,7 @@ serve(async (req) => {
               .replace("{name}", firstName)
               .replace("{bizName}", bizName)
               .replace("{trade}", trade)
-          : `Last follow-up from ${bizName} — if you ever need ${trade} work in the future, just reply and we'll make it easy. Take care!`;
+          : `Last follow-up from ${bizName} — if you ever need ${trade} work in the future, just reply and we'll make it easy. Take care!\nReply STOP to opt out`;
 
         await sendSMS(
           contact.phone,
