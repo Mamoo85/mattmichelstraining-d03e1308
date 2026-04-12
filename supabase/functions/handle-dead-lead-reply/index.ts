@@ -41,14 +41,21 @@ async function chargeContractor(
       "metadata[contractor_id]": contractorId,
     }),
   });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Stripe charge failed (${res.status}): ${errText}`);
+  }
   const pi = await res.json();
+  if (pi.error) {
+    throw new Error(`Stripe payment intent error: ${pi.error.message}`);
+  }
   await (sb as any).from("dead_lead_charges").insert({
     contact_id: contactId,
     contractor_id: contractorId,
     amount_cents: 5000,
     stripe_payment_intent_id: pi.id,
-    status: pi.status === "succeeded" ? "succeeded" : pi.error ? "failed" : "pending",
-    error_message: pi.error?.message || null,
+    status: pi.status === "succeeded" ? "succeeded" : "pending",
+    error_message: null,
   });
   console.log(`[handle-dead-lead-reply] charge ${pi.id} status=${pi.status}`);
 }
