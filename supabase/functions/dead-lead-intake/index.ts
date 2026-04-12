@@ -145,6 +145,7 @@ serve(async (req) => {
       phone: l.phone,
       name: l.name,
       status: "pending",
+      last_contact_date: l.last_contact_date,
     }));
     const { error: contactErr } = await sb
       .from("dead_lead_contacts" as any)
@@ -169,6 +170,7 @@ serve(async (req) => {
         campaign_id: campaign.id,
         contractor_id: contractorId,
         contacts_added: parsedLeads.length,
+        contacts_scrubbed_tcpa: scrubbedCount,
       }),
       { status: 200, headers: { ...CORS, "Content-Type": "application/json" } }
     );
