@@ -38,11 +38,27 @@ serve(async (req) => {
         const contractor = (campaign as any).contractor_clients;
         const bizName = contractor?.business_name || "your contractor";
         const trade = campaign?.trade || "service";
+        const firstName = contact.name?.split(" ")[0] || "there";
+
+        // Use selected custom copy variant if available, else default template
+        const { data: customCopy } = await sb
+          .from("campaign_copy_variants" as any)
+          .select("drip1_copy")
+          .eq("campaign_id", campaign.id)
+          .eq("selected", true)
+          .maybeSingle();
+
+        const body = customCopy?.drip1_copy
+          ? customCopy.drip1_copy
+              .replace("{name}", firstName)
+              .replace("{bizName}", bizName)
+              .replace("{trade}", trade)
+          : `Hey ${firstName}, this is the dispatch desk following up for ${bizName}. Did you ever get that ${trade} issue taken care of, or are you still looking for a quote?`;
 
         await sendSMS(
           contact.phone,
           TWILIO_PHONE_NUMBER,
-          `Hey ${contact.name?.split(" ")[0] || "there"}, this is the dispatch desk following up for ${bizName}. Did you ever get that ${trade} issue taken care of, or are you still looking for a quote?`,
+          body,
           "dead_lead_reactivation"
         );
 
