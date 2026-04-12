@@ -14,6 +14,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-04-12. Update this section every session.*
 
+### Stripe Webhook — Critical Fix COMPLETE ✅
+Fixed tonight. Two issues found and resolved:
+
+1. **`constructEventAsync` bug** (root cause — 825/825 failures): `stripe.webhooks.constructEvent()` is synchronous and throws in Deno. Every webhook died before reading the event type. Lovable/Gemini applied the fix: `await stripe.webhooks.constructEventAsync()` on line 258 of `stripe-webhook/index.ts`.
+2. **Duplicate endpoint / wrong signing secret**: Two Stripe webhook destinations existed (`engaging-harmony` + `vibrant-glow`) each with different `whsec_` secrets. The env var `STRIPE_WEBHOOK_SECRET` only matched one. `engaging-harmony` deleted; `STRIPE_WEBHOOK_SECRET` in Lovable updated to match `vibrant-glow`'s secret.
+
+**Action still needed**: Resend failed events in Stripe → vibrant-glow → Event deliveries → Failed → Resend all `checkout.session.completed` failures to re-activate any customers who paid but weren't provisioned.
+
+**Known silent failure patterns (audit findings — not yet fixed):**
+- `stripe-webhook` handlers return 200 even on DB write failure (Stripe won't retry, Matt not notified)
+- `chargeContractor()` in `handle-dead-lead-reply` doesn't check `res.ok` before parsing Stripe response
+- Autonomous agents (`scarlett`, `selma`, `ops`, `hire-alert-scanner`) have no `agent_heartbeats` upsert — crashes are invisible
+- Matt notification emails use `.catch(() => {})` throughout — fire-and-forget failures undetected
+
 ### Phase 8 — DWA Level 5 Autonomy Agents COMPLETE ✅
 Work on `claude/opusplan-setup-nmyYS`. Merge to main to deploy.
 
