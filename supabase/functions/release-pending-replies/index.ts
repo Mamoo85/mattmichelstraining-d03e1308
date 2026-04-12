@@ -12,9 +12,14 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const FROM_EMAIL = "Matt Michels <matt@detroitwebagent.com>";
 const REPLY_TO = "matt@detroitwebagent.com";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: { "Access-Control-Allow-Origin": "*" } });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -31,7 +36,7 @@ serve(async (req) => {
 
     if (error) throw error;
     if (!drafts || drafts.length === 0) {
-      return new Response(JSON.stringify({ ok: true, sent: 0 }), { status: 200 });
+      return new Response(JSON.stringify({ ok: true, sent: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     console.log(`[release-pending-replies] Sending ${drafts.length} pending drafts`);
@@ -79,11 +84,11 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ ok: true, sent: sentCount, errors: errors.length ? errors : undefined }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[release-pending-replies] Error:", e);
-    return new Response(JSON.stringify({ error: msg }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

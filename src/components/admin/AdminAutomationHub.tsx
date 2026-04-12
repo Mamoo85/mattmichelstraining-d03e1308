@@ -18,9 +18,10 @@ interface AutomationCardProps {
   stats: { label: string; value: string | number }[];
   actions: { label: string; onClick: () => void; loading?: boolean; variant?: "default" | "outline" }[];
   badge?: string;
+  links?: { label: string; href: string }[];
 }
 
-function AutomationCard({ icon: Icon, title, description, status, stats, actions, badge }: AutomationCardProps) {
+function AutomationCard({ icon: Icon, title, description, status, stats, actions, badge, links }: AutomationCardProps) {
   const statusColor = status === "active" ? "text-green-500" : status === "running" ? "text-primary" : "text-muted-foreground";
   const statusLabel = status === "active" ? "Active" : status === "running" ? "Running..." : "Idle";
 
@@ -57,19 +58,22 @@ function AutomationCard({ icon: Icon, title, description, status, stats, actions
         </div>
         <div className="flex gap-2">
           {actions.map(action => (
-            <Button
-              key={action.label}
-              onClick={action.onClick}
-              disabled={action.loading}
-              variant={action.variant || "default"}
-              size="sm"
-              className="flex-1 text-xs font-bold"
-            >
+            <Button key={action.label} onClick={action.onClick} disabled={action.loading} variant={action.variant || "default"} size="sm" className="flex-1 text-xs font-bold">
               {action.loading ? <Loader2 size={11} className="animate-spin mr-1" /> : null}
               {action.label}
             </Button>
           ))}
         </div>
+        {links && links.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {links.map(link => (
+              <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer"
+                className="text-[10px] font-semibold text-primary hover:underline flex items-center gap-1">
+                {link.label} →
+              </a>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -331,6 +335,7 @@ export default function AdminAutomationHub() {
           badge="$49–199/mo"
           stats={[{ label: "Frequency", value: "Weekly" }, { label: "Source", value: "HIBP" }, { label: "Alert", value: "Email" }]}
           actions={[{ label: darkWebRunning ? "Scanning..." : "Run Scan Now", onClick: () => runFunction("dark-web-domain-scan", {}, setDarkWebRunning, "Dark web scan complete"), loading: darkWebRunning }]}
+          links={[{ label: "Product Page", href: "/dark-web-monitor" }]}
         />
 
         {/* Gov Contract Monitor */}
@@ -342,6 +347,7 @@ export default function AdminAutomationHub() {
           badge="$299/mo"
           stats={[{ label: "Frequency", value: "Daily" }, { label: "Source", value: "SAM.gov" }, { label: "Alert", value: "Email" }]}
           actions={[{ label: govContractRunning ? "Scanning..." : "Run Now", onClick: () => runFunction("gov-contract-monitor", {}, setGovContractRunning, "Gov contract scan complete"), loading: govContractRunning }]}
+          links={[{ label: "Product Page", href: "/gov-contract-monitor" }]}
         />
 
         {/* Podcast Revenue Machine */}
@@ -397,17 +403,7 @@ export default function AdminAutomationHub() {
           badge="$49/mo"
           stats={[{ label: "Frequency", value: "Weekly" }, { label: "Source", value: "USPTO" }, { label: "Alert", value: "Email" }]}
           actions={[{ label: trademarkRunning ? "Scanning..." : "Run Scan Now", onClick: () => runFunction("trademark-watch-scan", {}, setTrademarkRunning, "Trademark scan complete"), loading: trademarkRunning }]}
-        />
-
-        {/* Pet Memorial */}
-        <AutomationCard
-          icon={CheckCircle}
-          title="AI Pet Memorial Service"
-          description="One-time: generates poem + tribute + memorial page on payment"
-          status={petMemorialRunning ? "running" : "idle"}
-          badge="$79 one-time"
-          stats={[{ label: "Trigger", value: "On Pay" }, { label: "Output", value: "Poem+Page" }, { label: "Delivery", value: "Email" }]}
-          actions={[{ label: petMemorialRunning ? "Generating..." : "Test Generate", onClick: () => runFunction("generate-pet-memorial", { pet_name: "Buddy", pet_species: "Dog", personality_traits: "Loyal, playful", favorite_memories: "Morning walks", customer_email: "test@test.com", customer_name: "Test User" }, setPetMemorialRunning, "Pet memorial test generated — check test@test.com"), loading: petMemorialRunning }]}
+          links={[{ label: "Product Page", href: "/trademark-watch" }]}
         />
       </div>
 

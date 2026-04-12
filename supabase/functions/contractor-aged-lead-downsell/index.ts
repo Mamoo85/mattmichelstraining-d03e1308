@@ -12,9 +12,14 @@ const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
 const FUNCTIONS_URL = `${Deno.env.get("SUPABASE_URL") || ""}/functions/v1`;
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: { "Access-Control-Allow-Origin": "*" } });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -32,7 +37,7 @@ serve(async (req) => {
       .limit(20);
 
     if (!agedLeads?.length) {
-      return new Response(JSON.stringify({ ok: true, downsold: 0 }), { status: 200 });
+      return new Response(JSON.stringify({ ok: true, downsold: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     console.log(`[aged-downsell] Processing ${agedLeads.length} aged leads`);
@@ -80,11 +85,11 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ ok: true, downsold: downsoldCount, aged_leads_found: agedLeads.length }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[aged-downsell] Error:", e);
-    return new Response(JSON.stringify({ error: msg }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
