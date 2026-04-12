@@ -73,6 +73,60 @@ serve(async (req) => {
       return new Response("<Response/>", { status: 200, headers: { "Content-Type": "text/xml" } });
     }
 
+    // ── ADMIN A/B CAMPAIGN RESUME ─────────────────────────────────────────
+    // Matt texts "A" or "B" to select copy variant and resume a paused campaign.
+    // His phone can never match a dead_lead_contacts row, so this is safe.
+    if (fromPhone === ADMIN_PHONE) {
+      const cmd = replyBody.toUpperCase().trim();
+      if (cmd === "A" || cmd === "B") {
+        // Find the most recently paused campaign
+        const { data: pausedCampaign } = await sb
+          .from("dead_lead_campaigns" as any)
+          .select("id, trade, contractor_clients(business_name)")
+          .eq("status", "paused")
+          .order("paused_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (pausedCampaign) {
+          // Mark selected variant and resume campaign in parallel
+          await Promise.all([
+            sb.from("campaign_copy_variants" as any)
+              .update({ selected: true, selected_at: new Date().toISOString() })
+              .eq("campaign_id", pausedCampaign.id)
+              .eq("variant_label", cmd),
+            sb.from("dead_lead_campaigns" as any)
+              .update({ status: "active", pause_reason: null, paused_at: null })
+              .eq("id", pausedCampaign.id),
+          ]);
+
+          // Reset drip3_sent contacts back to pending so they re-enter new sequence
+          await sb
+            .from("dead_lead_contacts" as any)
+            .update({ status: "pending", drip1_sent_at: null, drip2_sent_at: null, drip3_sent_at: null })
+            .eq("campaign_id", pausedCampaign.id)
+            .eq("status", "drip3_sent");
+
+          const bizName = (pausedCampaign as any).contractor_clients?.business_name || "Unknown";
+          const trade = (pausedCampaign as any).trade || "service";
+          await sendSMS(
+            ADMIN_PHONE,
+            TWILIO_PHONE_NUMBER,
+            `DWA-OP: Resumed "${bizName}" (${trade}) with Variant ${cmd}. Exhausted contacts re-queued with new copy.`,
+            "dwa_operator"
+          );
+        } else {
+          await sendSMS(
+            ADMIN_PHONE,
+            TWILIO_PHONE_NUMBER,
+            `DWA-OP: No paused campaigns found to resume.`,
+            "dwa_operator"
+          );
+        }
+      }
+      return new Response("<Response/>", { status: 200, headers: { "Content-Type": "text/xml" } });
+    }
+
     // Find the most recent active drip contact with this phone
     const { data: contact } = await sb
       .from("dead_lead_contacts" as any)
