@@ -420,7 +420,7 @@ serve(async (req: Request) => {
   const { data: clients } = await sb.from("hire_alert_clients").select("*").or("active.eq.true,trial_status.eq.active");
   if (!clients?.length) {
     console.log("[hire-alert-scanner] No active clients");
-    return new Response(JSON.stringify({ processed: 0 }), { status: 200 });
+    return new Response(JSON.stringify({ processed: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   // Run all three sources in parallel
@@ -701,6 +701,6 @@ serve(async (req: Request) => {
       hot_candidates: allHotCandidates.length,
       alerts_sent: alertsSent,
     }),
-    { status: 200 }
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
 });

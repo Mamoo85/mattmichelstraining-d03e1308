@@ -46,7 +46,7 @@ serve(async (req) => {
       .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
     if (!unnotified || unnotified.length === 0) {
-      return new Response(JSON.stringify({ notified: 0 }), { status: 200 });
+      return new Response(JSON.stringify({ notified: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     let count = 0;
@@ -116,10 +116,10 @@ serve(async (req) => {
     }
 
     console.log(`[LEAD-NOTIFY] Sent ${count} notifications`);
-    return new Response(JSON.stringify({ notified: count }), { status: 200 });
+    return new Response(JSON.stringify({ notified: count }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[LEAD-NOTIFY] Error:", e);
-    return new Response(JSON.stringify({ error: msg }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
