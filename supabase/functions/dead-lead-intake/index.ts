@@ -23,6 +23,14 @@ function normalizePhone(raw: string): string {
   return raw;
 }
 
+// TCPA: EBR exemption expires 18 months after last customer inquiry.
+function isTcpaExpired(dateStr: string | null, uploadedAt: Date): boolean {
+  const cutoff = new Date(uploadedAt);
+  cutoff.setMonth(cutoff.getMonth() - 18);
+  const ref = dateStr ? new Date(dateStr) : null;
+  return ref !== null && ref < cutoff;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: CORS });
