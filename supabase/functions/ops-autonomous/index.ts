@@ -98,6 +98,13 @@ serve(async (req) => {
       );
     }
 
+    await sb.from("agent_heartbeats").upsert({
+      agent_name: "ops-autonomous",
+      last_run_at: new Date().toISOString(),
+      last_status: "ok",
+      last_result: JSON.stringify({ stale_intake: noIntake?.length || 0, ghost_preview: ghostPreview?.length || 0, active_projects: activeProjects?.length || 0, recent_wins: recentWins?.length || 0 }),
+    }, { onConflict: "agent_name" }).catch(() => {});
+
     return new Response(JSON.stringify({
       ok: true,
       stale_intake: noIntake?.length || 0,
