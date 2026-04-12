@@ -14,6 +14,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-04-12. Update this section every session.*
 
+### Phase 7 — Self-Serve Intake + Stripe Auto-Billing COMPLETE ✅
+Work on `claude/opusplan-setup-nmyYS`. Merge to main to deploy.
+
+**Phase 7 shipped:**
+- `dead-lead-intake` edge function — public POST, creates contractor + campaign + contacts from self-serve form, SMSes Matt
+- `dead-lead-billing-setup` edge function — creates Stripe customer + Checkout Session in setup mode (card save)
+- `DeadLeadIntake.tsx` — public page at `/dead-lead-intake`, DWA dark branding, paste leads textarea, billing CTA after submit
+- `stripe-webhook` — `dead_lead_billing_setup` handler saves `stripe_payment_method_id` + sets `dead_lead_billing_active = true`
+- `handle-dead-lead-reply` — auto-charges $50 via Stripe PaymentIntent on POSITIVE reply (if card saved), logs to `dead_lead_charges`
+- Migration `20260412030000_dead_lead_billing.sql` — `stripe_payment_method_id` + `dead_lead_billing_active` on `contractor_clients`, new `dead_lead_charges` table
+- `App.tsx` — `/dead-lead-intake` route added (public, no auth)
+- `config.toml` — `verify_jwt = false` for `dead-lead-intake` + `dead-lead-billing-setup`
+
+**Dead lead billing flow:**
+1. Contractor submits intake form → campaign auto-creates → Matt gets SMS
+2. Contractor optionally saves card (Stripe hosted setup) → `dead_lead_billing_active = true`
+3. When homeowner replies YES → contractor gets instant SMS + $50 auto-charged (or manual invoice if no card)
+4. Matt gets email: "✅ $50 auto-charged" vs "⚠️ No card on file — invoice manually"
+
+**Matt's action when contractor replies interested to cold email:**
+- Text them: `detroitwebagent.com/dead-lead-intake` — they self-onboard, zero friction
+
 ### Phase 6 — Dead Lead Prospecting + Monitoring Automation COMPLETE ✅
 All work merged to `main`. Lovable auto-deploys on merge.
 

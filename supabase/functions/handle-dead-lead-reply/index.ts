@@ -13,6 +13,45 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
+const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY") || "";
+
+async function chargeContractor(
+  sb: ReturnType<typeof createClient>,
+  contactId: string,
+  contractorId: string,
+  stripeCustomerId: string,
+  paymentMethodId: string,
+  leadName: string
+): Promise<void> {
+  const res = await fetch("https://api.stripe.com/v1/payment_intents", {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${btoa(STRIPE_SECRET_KEY + ":")}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      amount: "5000",
+      currency: "usd",
+      customer: stripeCustomerId,
+      payment_method: paymentMethodId,
+      confirm: "true",
+      off_session: "true",
+      description: `Dead Lead Revived — ${leadName}`,
+      "metadata[contact_id]": contactId,
+      "metadata[contractor_id]": contractorId,
+    }),
+  });
+  const pi = await res.json();
+  await (sb as any).from("dead_lead_charges").insert({
+    contact_id: contactId,
+    contractor_id: contractorId,
+    amount_cents: 5000,
+    stripe_payment_intent_id: pi.id,
+    status: pi.status === "succeeded" ? "succeeded" : pi.error ? "failed" : "pending",
+    error_message: pi.error?.message || null,
+  });
+  console.log(`[handle-dead-lead-reply] charge ${pi.id} status=${pi.status}`);
+}
 
 const OPT_OUT_KEYWORDS = ["stop", "unsubscribe", "cancel", "quit", "end", "remove"];
 
@@ -37,7 +76,7 @@ serve(async (req) => {
     // Find the most recent active drip contact with this phone
     const { data: contact } = await sb
       .from("dead_lead_contacts" as any)
-      .select("*, dead_lead_campaigns(trade, contractor_id, contractor_clients(id, business_name, phone, google_review_link, email))")
+      .select("*, dead_lead_campaigns(trade, contractor_id, contractor_clients(id, business_name, phone, email, google_review_link, stripe_customer_id, stripe_payment_method_id, dead_lead_billing_active))")
       .eq("phone", fromPhone)
       .in("status", ["drip1_sent", "drip2_sent", "drip3_sent"])
       .order("created_at", { ascending: false })
@@ -99,7 +138,7 @@ serve(async (req) => {
       }
     }
 
-    // ── POSITIVE REPLY → instant contractor notification ──────────────────
+    // ── POSITIVE REPLY → instant contractor notification + auto-charge ───────
     if (classification === "POSITIVE") {
       await sb.from("dead_lead_contacts" as any).update({
         status: "replied_positive",
@@ -107,17 +146,28 @@ serve(async (req) => {
         contractor_notified_at: new Date().toISOString(),
       }).eq("id", contact.id);
 
+      const billingActive = (contractor as any)?.dead_lead_billing_active;
+      const stripeCustomerId = (contractor as any)?.stripe_customer_id;
+      const paymentMethodId = (contractor as any)?.stripe_payment_method_id;
+      const billingNote = billingActive ? "($50 charged automatically.)" : "($50 added to your tab.)";
+
       // SMS contractor immediately — remove Matt from the loop
       if (contractor?.phone) {
         await sendSMS(
           contractor.phone,
           TWILIO_PHONE_NUMBER,
-          `\u267b\ufe0f DEAD LEAD REVIVED: ${contact.name || fromPhone} just replied they still need ${trade} work. Call them now: ${fromPhone}. ($50 added to your tab.)`,
+          `\u267b\ufe0f DEAD LEAD REVIVED: ${contact.name || fromPhone} just replied they still need ${trade} work. Call them now: ${fromPhone}. ${billingNote}`,
           "dead_lead_reactivation"
         );
       }
 
-      // Also email Matt as backup notification
+      // Auto-charge $50 if card is saved
+      if (billingActive && stripeCustomerId && paymentMethodId && STRIPE_SECRET_KEY) {
+        chargeContractor(sb, contact.id, campaign.contractor_id, stripeCustomerId, paymentMethodId, contact.name || fromPhone)
+          .catch((e) => console.error("[handle-dead-lead-reply] charge failed:", e));
+      }
+
+      // Email Matt — note auto-charged vs manual
       if (RESEND_API_KEY) {
         fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -126,7 +176,7 @@ serve(async (req) => {
             from: "DWA System <matt@detroitwebagent.com>",
             to: ["matt@detroitwebagent.com"],
             subject: `\u267b\ufe0f Dead Lead Revived — ${contact.name || fromPhone} (${bizName})`,
-            html: `<p><strong>${contact.name || fromPhone}</strong> replied YES to the ${trade} dead lead drip for <strong>${bizName}</strong>.</p><p>Phone: ${fromPhone}</p><p>Reply: "${replyBody}"</p><p>Contractor has been SMSed instantly. Invoice them $50.</p>`,
+            html: `<p><strong>${contact.name || fromPhone}</strong> replied YES to the ${trade} dead lead drip for <strong>${bizName}</strong>.</p><p>Phone: ${fromPhone}</p><p>Reply: "${replyBody}"</p><p>${billingActive ? "✅ <strong>$50 auto-charged</strong> to their saved card." : "⚠️ No card on file — invoice manually $50."}</p>`,
           }),
         }).catch(() => {});
       }
