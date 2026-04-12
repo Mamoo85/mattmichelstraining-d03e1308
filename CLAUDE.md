@@ -14,6 +14,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-04-12. Update this section every session.*
 
+### Documentation Sync — 2026-04-12 ✅
+Updated CLAUDE.md to reflect accurate codebase scale (293 pages, 539 edge functions, 414 migrations), added missing `db:reset` command, corrected edge function count in conventions, added `M2_Project_Hierarchy_Clean.mmd` to knowledge index, and updated the dev branch note.
+
 ### Stripe Webhook — Critical Fix COMPLETE ✅
 Fixed tonight. Two issues found and resolved:
 
@@ -195,6 +198,7 @@ npm run test         # Vitest (single run)
 npm run test:watch   # Vitest in watch mode
 npm run db:push      # push local migrations to Supabase
 npm run db:diff      # diff local schema vs remote
+npm run db:reset     # reset local DB to clean state
 ```
 
 Run a single test file: `npx vitest run src/path/to/file.test.ts`
@@ -242,6 +246,7 @@ git fetch origin main && git checkout origin/main -- knowledge/
 - `knowledge/M2_Product_Catalog.md` — All 36 products, pricing, margins, edge functions, flows
 - `knowledge/M2_Ad_Strategy_Action_Plan.md` — Paid ads roadmap and campaign blueprints
 - `knowledge/M2_Project_Hierarchy.mmd` — System architecture diagram (Mermaid)
+- `knowledge/M2_Project_Hierarchy_Clean.mmd` — Cleaned system architecture diagram (Mermaid)
 - `knowledge/TechAlert_Value_Proposition.md` — TechAlert pitch angles, objection handling, ROI math, market gap analysis, legal status
 
 ## Owner
@@ -261,7 +266,7 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - **Domain**: mattmichelstraining.com
 - **Repo**: `mamoo85/m2training` (GitHub)
 - **Supabase Project**: Managed by Lovable (primary — starts with 'e'). Secondary ref `zmyczlfuufhngzovkjdh` exists for GitHub Actions but migrations deploy automatically via Lovable on merge to main. Do NOT apply migrations manually via MCP to the secondary project.
-- **Dev branch**: `claude/remote-control-setup-EuTWO`
+- **Dev branch**: `claude/add-claude-documentation-agjzt` (current) — previous branches archived in session state below
 
 ## Brand
 - Primary orange: `#e8621a`
@@ -412,9 +417,9 @@ Products: Commercial Lease Abstractor, Patent Watch Intelligence, PE/Investor Se
 **Key marketing brief**: `knowledge/field-service-brief.md` — cold email angles, bundle math, eWay replacement talking points, MIOSHA hook, Pat demo sequence
 
 ## Codebase Scale
-- **271** frontend pages in `src/pages/`
-- **474** Supabase Edge Functions in `supabase/functions/`
-- **358** migration files (all dated 2026)
+- **293** frontend pages in `src/pages/`
+- **539** Supabase Edge Functions in `supabase/functions/`
+- **414** migration files (all dated 2026)
 - **31** AI agents in `.claude/agents/`
 - **67+** product lines across 5 waves + DWA suite
 - **298** routes in `src/App.tsx`
@@ -456,7 +461,7 @@ TanStack Query v5 with localStorage persistence via `PersistQueryClientProvider`
 - Required env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 
 ## Edge Function Conventions
-- 453 functions in `supabase/functions/[name]/index.ts` — navigate by product name
+- 539 functions in `supabase/functions/[name]/index.ts` — navigate by product name
 - Shared utilities: `supabase/functions/_shared/ai.ts` (generateText, generateJSON), `_shared/twilio.ts` (sendSMS with TCPA), `_shared/email-templates/`, `_shared/transactional-email-templates/`
 - Autonomous scheduled functions: `tom-autonomous`, `oz-autonomous`, `scarlett-autonomous`, `selma-autonomous`, `ops-autonomous`
 - AI calls: Claude Haiku only (`claude-haiku-4-5-20251001`), `max_tokens` 800–1200
