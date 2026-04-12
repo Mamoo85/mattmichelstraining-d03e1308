@@ -1,6 +1,9 @@
 // contractor-aged-lead-downsell — daily cron 2pm ET
-// Finds contractor leads that have been unclaimed for 48h (status='new')
-// Downsells them to a wider contractor pool at $15 via SMS blast.
+// Dutch auction: unclaimed leads decay through 3 price tiers over 96h.
+// Tier 1 (48-72h): $35 — first markdown
+// Tier 2 (72-96h): $20 — second markdown
+// Tier 3 (96h+):   $10 — final clearance
+// aged_tier column tracks which tier has been sent (0=fresh, 1=$35, 2=$20, 3=$10)
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -12,6 +15,20 @@ const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
 const FUNCTIONS_URL = `${Deno.env.get("SUPABASE_URL") || ""}/functions/v1`;
 
+interface Tier {
+  label: string;
+  priceCents: number;
+  minAge: number; // hours
+  maxAge: number; // hours (Infinity = no upper bound)
+  nextTier: number;
+}
+
+const TIERS: Tier[] = [
+  { label: "First Markdown",    priceCents: 3500, minAge: 48, maxAge: 72,        nextTier: 1 },
+  { label: "Second Markdown",   priceCents: 2000, minAge: 72, maxAge: 96,        nextTier: 2 },
+  { label: "Final Clearance",   priceCents: 1000, minAge: 96, maxAge: Infinity,  nextTier: 3 },
+];
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: { "Access-Control-Allow-Origin": "*" } });
@@ -20,66 +37,77 @@ serve(async (req) => {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   try {
-    const cutoff48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+    const now = Date.now();
+    let totalBlasted = 0;
 
-    // Find unclaimed leads older than 48h that haven't been downsold yet
-    const { data: agedLeads } = await sb
-      .from("contractor_leads")
-      .select("*, contractor_lead_sites(trade, city)")
-      .eq("status", "new")
-      .eq("is_aged", false)
-      .lte("created_at", cutoff48h)
-      .limit(20);
+    for (const tier of TIERS) {
+      const minCutoff = new Date(now - tier.maxAge * 3600000).toISOString();
+      const maxCutoff = new Date(now - tier.minAge * 3600000).toISOString();
 
-    if (!agedLeads?.length) {
-      return new Response(JSON.stringify({ ok: true, downsold: 0 }), { status: 200 });
-    }
+      // aged_tier = previous tier index (0 for first, 1 for second, 2 for third)
+      const prevTier = tier.nextTier - 1;
 
-    console.log(`[aged-downsell] Processing ${agedLeads.length} aged leads`);
+      const query = sb
+        .from("contractor_leads")
+        .select("id, project_type, contractor_lead_sites(trade, city)")
+        .eq("status", "new")
+        .eq("aged_tier", prevTier)
+        .lte("created_at", maxCutoff);
 
-    let downsoldCount = 0;
+      // Only apply upper age bound for tiers 1 and 2
+      const { data: agedLeads } = tier.maxAge < Infinity
+        ? await query.gte("created_at", minCutoff).limit(20)
+        : await query.limit(20);
 
-    for (const lead of agedLeads) {
-      try {
-        // Mark as aged to prevent double-blast
-        await sb.from("contractor_leads")
-          .update({ is_aged: true })
-          .eq("id", lead.id);
+      if (!agedLeads?.length) continue;
 
-        const site = (lead as any).contractor_lead_sites;
-        const trade = site?.trade || lead.project_type || "Service";
-        const city = site?.city || "Metro Detroit";
+      console.log(`[aged-downsell] Tier ${tier.nextTier} (${tier.label}): ${agedLeads.length} leads @ $${tier.priceCents / 100}`);
 
-        // Find all active contractors who cover this trade
-        const { data: contractors } = await sb
-          .from("contractor_clients")
-          .select("id, phone, email")
-          .eq("active", true)
-          .limit(50);
+      const { data: contractors } = await sb
+        .from("contractor_clients")
+        .select("id, phone")
+        .eq("active", true)
+        .limit(50);
 
-        if (!contractors?.length) continue;
+      if (!contractors?.length) continue;
 
-        // Build $15 checkout URL — direct to Stripe via create-aged-lead-checkout function
-        const checkoutUrl = `${FUNCTIONS_URL}/create-aged-lead-checkout?lead_id=${lead.id}`;
+      for (const lead of agedLeads) {
+        try {
+          await sb.from("contractor_leads")
+            .update({ aged_tier: tier.nextTier, is_aged: tier.nextTier >= 3 })
+            .eq("id", lead.id);
 
-        for (const contractor of contractors) {
-          if (!contractor.phone) continue;
-          await sendSMS(
-            contractor.phone,
-            TWILIO_PHONE_NUMBER,
-            `Cold Lead: Homeowner in ${city} requested a ${trade} quote 2 days ago. Unclaimed. $15 unlocks their contact info: ${checkoutUrl}&cid=${contractor.id}`,
-            "contractor_leads"
-          );
+          const site = (lead as any).contractor_lead_sites;
+          const trade = site?.trade || lead.project_type || "Service";
+          const city = site?.city || "Metro Detroit";
+          const priceLabel = `$${tier.priceCents / 100}`;
+          const checkoutUrl = `${FUNCTIONS_URL}/create-aged-lead-checkout?lead_id=${lead.id}`;
+
+          const msgMap: Record<number, string> = {
+            1: `Price Drop: Homeowner in ${city} still needs ${trade} work. Marked down to ${priceLabel}. Claim it: ${checkoutUrl}&cid=`,
+            2: `${trade} lead in ${city} — dropping to ${priceLabel}. Getting cleared out soon: ${checkoutUrl}&cid=`,
+            3: `Final: ${trade} lead in ${city} down to ${priceLabel}. Last call before we archive it: ${checkoutUrl}&cid=`,
+          };
+
+          for (const contractor of contractors) {
+            if (!contractor.phone) continue;
+            await sendSMS(
+              contractor.phone,
+              TWILIO_PHONE_NUMBER,
+              msgMap[tier.nextTier] + contractor.id,
+              "contractor_leads"
+            );
+          }
+
+          totalBlasted++;
+        } catch (e) {
+          console.error(`[aged-downsell] Error for lead ${lead.id}:`, e);
         }
-
-        downsoldCount++;
-      } catch (e) {
-        console.error(`[aged-downsell] Error for lead ${lead.id}:`, e);
       }
     }
 
     return new Response(
-      JSON.stringify({ ok: true, downsold: downsoldCount, aged_leads_found: agedLeads.length }),
+      JSON.stringify({ ok: true, blasted: totalBlasted }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (e: unknown) {
