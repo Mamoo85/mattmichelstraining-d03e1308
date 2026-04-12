@@ -5627,8 +5627,6 @@ ${fwdInstructions}`,
     // ── Unhandled event types (invoice.finalized, etc.) — acknowledge safely ──
     console.log(`[WEBHOOK] Unhandled event type: ${event.type} — acknowledging`);
     return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
-
-
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("[STRIPE-WEBHOOK] Error:", msg);
