@@ -678,6 +678,13 @@ serve(async () => {
 </body></html>`
   );
 
+  await sb.from("agent_heartbeats" as any).upsert({
+    agent_name: "hire-alert-scanner",
+    last_run_at: new Date().toISOString(),
+    last_status: "ok",
+    last_result: JSON.stringify({ candidates_found: allRaw.length, new_candidates: newCandidates.length, hot_candidates: allHotCandidates.length, alerts_sent: alertsSent }),
+  }, { onConflict: "agent_name" }).catch(() => {});
+
   return new Response(
     JSON.stringify({
       candidates_found: allRaw.length,
