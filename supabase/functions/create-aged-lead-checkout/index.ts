@@ -1,6 +1,7 @@
-// create-aged-lead-checkout — GET redirect to Stripe for $15 aged lead downsell
+// create-aged-lead-checkout — GET redirect to Stripe for aged lead Dutch auction
 // Called directly from the SMS link: /functions/v1/create-aged-lead-checkout?lead_id=X&cid=Y
-// Looks up contractor email, creates Stripe session, 302 redirects to checkout.
+// Price is derived from aged_tier in DB — never trusted from URL params.
+// Tier 0 (fresh/fallback): $50, Tier 1: $35, Tier 2: $20, Tier 3: $10
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
@@ -13,6 +14,14 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const SITE_URL = "https://detroitwebagent.com";
 const FALLBACK_URL = `${SITE_URL}/contractor-leads`;
 const SOLD_URL = `${SITE_URL}/lead-claimed`;
+
+// Dutch auction pricing by aged_tier — derived from DB, not URL params
+const TIER_PRICES: Record<number, number> = {
+  0: 5000, // $50 — fresh (shouldn't reach checkout at this tier, but safe fallback)
+  1: 3500, // $35 — first markdown (48-72h)
+  2: 2000, // $20 — second markdown (72-96h)
+  3: 1000, // $10 — final clearance (96h+)
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -56,6 +65,11 @@ serve(async (req) => {
     const city = site?.city || "Metro Detroit";
     const now = new Date();
 
+    // Price from DB-stored tier — no URL manipulation possible
+    const agedTier: number = (lead as any).aged_tier ?? 0;
+    const unitAmount = TIER_PRICES[agedTier] ?? 1500;
+    const priceLabel = `$${(unitAmount / 100).toFixed(0)}`;
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -64,10 +78,10 @@ serve(async (req) => {
       line_items: [{
         price_data: {
           currency: "usd",
-          unit_amount: 1500, // $15
+          unit_amount: unitAmount,
           product_data: {
-            name: `Cold Lead — ${trade} in ${city}`,
-            description: `Unclaimed homeowner lead. Requested ${trade} quote 2+ days ago. Contact info unlocked instantly on payment.`,
+            name: `${priceLabel} Cold Lead — ${trade} in ${city}`,
+            description: `Unclaimed homeowner lead. Requested ${trade} quote. Contact info unlocked instantly on payment.`,
           },
         },
         quantity: 1,
@@ -79,6 +93,7 @@ serve(async (req) => {
         contractor_email: contractor.email,
         trade,
         city,
+        aged_tier: String(agedTier),
       },
       success_url: `${SITE_URL}/lead-unlocked?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: FALLBACK_URL,
