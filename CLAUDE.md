@@ -14,8 +14,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-04-12. Update this section every session.*
 
-### Phase 7 — Self-Serve Intake + Stripe Auto-Billing COMPLETE ✅
+### Phase 8 — DWA Level 5 Autonomy Agents COMPLETE ✅
 Work on `claude/opusplan-setup-nmyYS`. Merge to main to deploy.
+
+**Phase 8 shipped:**
+- `dwa-operator` edge function — runs every 4h; auto-pauses zero-reply campaigns (40+ texts, 0 replies) and high opt-out (>15%) campaigns; generates A/B SMS copy alternatives via free Gemini (hardcoded fallbacks); texts Matt with previews + "Reply A or B to resume"; monitors billing (positive replies with no card on file); updates `agent_heartbeats`
+- `dwa-closer` edge function — runs daily 2pm ET; finds warm/exhausted dead lead prospects; context-aware (reads `system_comms_log` history); Firecrawl website scrape (max 3/run, 5s timeout, caches result); generates personalized bundle pitch (FieldDesk + TechAlert + dead lead) via free Gemini; routes 100% through `email_reply_drafts` ghost delay; texts Matt 10-min preview; records `outreach_cooldowns`
+- `handle-dead-lead-reply` — new admin routing block: Matt texts "A" or "B" → selects copy variant, resumes paused campaign, resets drip3_sent contacts back to pending with new copy
+- `dead-lead-drip` — all 3 loops now check `campaign_copy_variants` for selected variant before using default template; **also fixed production bug** (status was missing from dead_lead_campaigns select, making the active-campaign guard always skip all contacts)
+- Migration `20260412040000_dwa_agents_tables.sql` — `outreach_cooldowns` table (anti-collision, 7-day per-agent cooldown), `campaign_copy_variants` table (A/B SMS alternatives), `pause_reason`/`paused_at`/`completed_at` columns on `dead_lead_campaigns`, 2 cron schedules
+- `config.toml` — `verify_jwt = false` for `dwa-operator` + `dwa-closer`
+
+**DWA operator flow:**
+1. dwa-operator scans active campaigns every 4h
+2. Zero-reply or dead campaign → auto-pause + Gemini generates A/B copy → SMS Matt with previews
+3. Matt replies "A" or "B" → handle-dead-lead-reply selects variant, resumes campaign, re-queues exhausted contacts
+4. dead-lead-drip picks up resumed contacts using the selected custom copy
+
+**QA audit fixes applied this session:**
+- Zone 1 RED: Firecrawl fetch in dwa-closer has `AbortController` 5s timeout — hung scrapes no longer block the function
+- Zone 4 RED: dead-lead-drip was silently sending zero SMS (campaign.status always undefined) — fixed by adding `status` to dead_lead_campaigns select in all three drip loops
+- Zone 5 RED: dwa-closer AI prompt Rule 8 explicitly bans "AI"/"artificial intelligence" in client-facing output
+
+**Anti-collision architecture:**
+- `outreach_cooldowns` table — one row per prospect email/phone, tracks `last_agent` + `last_contacted_at`
+- dwa-closer checks cooldowns + `system_comms_log` + `suppressed_emails` before every send
+- 7-day cooldown window; Closer skips anyone contacted by Tom, prospector, or drip in last 7 days
+
+### Phase 7 — Self-Serve Intake + Stripe Auto-Billing COMPLETE ✅
+All work on `claude/opusplan-setup-nmyYS`. Merge to main to deploy.
 
 **Phase 7 shipped:**
 - `dead-lead-intake` edge function — public POST, creates contractor + campaign + contacts from self-serve form, SMSes Matt
