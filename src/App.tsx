@@ -124,6 +124,7 @@ const NewsletterSponsor = lazyRetry(() => import("./pages/NewsletterSponsor"));
 const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
 const ContractorROIReport = lazyRetry(() => import("./pages/ContractorROIReport"));
+const DeadLeadIntake = lazyRetry(() => import("./pages/DeadLeadIntake"));
 const ContractorTerritory = lazyRetry(() => import("./pages/ContractorTerritory"));
 const ClaimLead = lazyRetry(() => import("./pages/ClaimLead"));
 const LeadUnlocked = lazyRetry(() => import("./pages/LeadUnlocked"));
@@ -535,6 +536,7 @@ const App = () => (
                     <Route path="/sponsor" element={<NewsletterSponsor />} />
                     <Route path="/contractor-leads" element={<ContractorLeads />} />
                     <Route path="/roi" element={<ContractorROIReport />} />
+                    <Route path="/dead-lead-intake" element={<DeadLeadIntake />} />
                     <Route path="/contractors/:slug" element={<ContractorTerritory />} />
                     <Route path="/claim-lead" element={<ClaimLead />} />
                     <Route path="/lead-unlocked" element={<LeadUnlocked />} />

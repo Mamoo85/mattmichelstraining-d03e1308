@@ -2679,6 +2679,29 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── DEAD LEAD BILLING SETUP (card saved via Stripe setup mode) ──────────
+      if (meta.type === "dead_lead_billing_setup" && session.mode === "setup") {
+        try {
+          const dlSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          // Retrieve setup intent to get the payment method
+          const siRes = await fetch(`https://api.stripe.com/v1/setup_intents/${session.setup_intent}`, {
+            headers: { Authorization: `Basic ${btoa((Deno.env.get("STRIPE_SECRET_KEY") || "") + ":")}` },
+          });
+          const si = await siRes.json();
+          const paymentMethodId = si.payment_method;
+
+          if (meta.contractor_id && paymentMethodId) {
+            await dlSb.from("contractor_clients" as any).update({
+              stripe_customer_id: session.customer as string,
+              stripe_payment_method_id: paymentMethodId,
+              dead_lead_billing_active: true,
+            }).eq("id", meta.contractor_id);
+            console.log(`[WEBHOOK] Dead lead billing active for contractor ${meta.contractor_id}, pm=${paymentMethodId}`);
+          }
+        } catch (e) { console.error("[WEBHOOK] dead_lead_billing_setup error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── CONTRACTOR LEAD SUBSCRIPTION ─────────────────────────────────────
       if (meta.type === "contractor_lead_subscription") {
         try {

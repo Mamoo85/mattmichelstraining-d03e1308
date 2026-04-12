@@ -27,7 +27,7 @@ serve(async (req) => {
     // ── DRIP 1: pending contacts in active campaigns ──────────────────────
     const { data: drip1Contacts } = await sb
       .from("dead_lead_contacts" as any)
-      .select("*, dead_lead_campaigns(trade, contractor_id, contractor_clients(business_name, phone))")
+      .select("*, dead_lead_campaigns(id, trade, status, contractor_id, contractor_clients(business_name, phone))")
       .eq("status", "pending")
       .limit(50);
 
@@ -38,11 +38,27 @@ serve(async (req) => {
         const contractor = (campaign as any).contractor_clients;
         const bizName = contractor?.business_name || "your contractor";
         const trade = campaign?.trade || "service";
+        const firstName = contact.name?.split(" ")[0] || "there";
+
+        // Use selected custom copy variant if available, else default template
+        const { data: customCopy } = await sb
+          .from("campaign_copy_variants" as any)
+          .select("drip1_copy")
+          .eq("campaign_id", campaign.id)
+          .eq("selected", true)
+          .maybeSingle();
+
+        const body = customCopy?.drip1_copy
+          ? customCopy.drip1_copy
+              .replace("{name}", firstName)
+              .replace("{bizName}", bizName)
+              .replace("{trade}", trade)
+          : `Hey ${firstName}, this is the dispatch desk following up for ${bizName}. Did you ever get that ${trade} issue taken care of, or are you still looking for a quote?`;
 
         await sendSMS(
           contact.phone,
           TWILIO_PHONE_NUMBER,
-          `Hey ${contact.name?.split(" ")[0] || "there"}, this is the dispatch desk following up for ${bizName}. Did you ever get that ${trade} issue taken care of, or are you still looking for a quote?`,
+          body,
           "dead_lead_reactivation"
         );
 
@@ -57,7 +73,7 @@ serve(async (req) => {
     // ── DRIP 2: drip1_sent contacts where 2+ days have passed ────────────
     const { data: drip2Contacts } = await sb
       .from("dead_lead_contacts" as any)
-      .select("*, dead_lead_campaigns(trade, contractor_clients(business_name))")
+      .select("*, dead_lead_campaigns(id, trade, status, contractor_clients(business_name))")
       .eq("status", "drip1_sent")
       .lte("drip1_sent_at", twoDaysAgo)
       .limit(50);
@@ -68,11 +84,26 @@ serve(async (req) => {
         if (campaign?.status !== "active") continue;
         const bizName = (campaign as any).contractor_clients?.business_name || "your contractor";
         const trade = campaign?.trade || "service";
+        const firstName = contact.name?.split(" ")[0] || "there";
+
+        const { data: customCopy } = await sb
+          .from("campaign_copy_variants" as any)
+          .select("drip2_copy")
+          .eq("campaign_id", campaign.id)
+          .eq("selected", true)
+          .maybeSingle();
+
+        const body = customCopy?.drip2_copy
+          ? customCopy.drip2_copy
+              .replace("{name}", firstName)
+              .replace("{bizName}", bizName)
+              .replace("{trade}", trade)
+          : `Hey ${firstName} — ${bizName} again. Still available if you need ${trade} help. Just reply YES and we'll get someone out to you.`;
 
         await sendSMS(
           contact.phone,
           TWILIO_PHONE_NUMBER,
-          `Hey ${contact.name?.split(" ")[0] || "there"} — ${bizName} again. Still available if you need ${trade} help. Just reply YES and we'll get someone out to you.`,
+          body,
           "dead_lead_reactivation"
         );
 
@@ -87,7 +118,7 @@ serve(async (req) => {
     // ── DRIP 3: drip2_sent contacts where 2+ days have passed ────────────
     const { data: drip3Contacts } = await sb
       .from("dead_lead_contacts" as any)
-      .select("*, dead_lead_campaigns(trade, contractor_clients(business_name))")
+      .select("*, dead_lead_campaigns(id, trade, status, contractor_clients(business_name))")
       .eq("status", "drip2_sent")
       .lte("drip2_sent_at", twoDaysAgo)
       .limit(50);
@@ -98,11 +129,26 @@ serve(async (req) => {
         if (campaign?.status !== "active") continue;
         const bizName = (campaign as any).contractor_clients?.business_name || "your contractor";
         const trade = campaign?.trade || "service";
+        const firstName = contact.name?.split(" ")[0] || "there";
+
+        const { data: customCopy } = await sb
+          .from("campaign_copy_variants" as any)
+          .select("drip3_copy")
+          .eq("campaign_id", campaign.id)
+          .eq("selected", true)
+          .maybeSingle();
+
+        const body = customCopy?.drip3_copy
+          ? customCopy.drip3_copy
+              .replace("{name}", firstName)
+              .replace("{bizName}", bizName)
+              .replace("{trade}", trade)
+          : `Last follow-up from ${bizName} — if you ever need ${trade} work in the future, just reply and we'll make it easy. Take care!`;
 
         await sendSMS(
           contact.phone,
           TWILIO_PHONE_NUMBER,
-          `Last follow-up from ${bizName} — if you ever need ${trade} work in the future, just reply and we'll make it easy. Take care!`,
+          body,
           "dead_lead_reactivation"
         );
 
