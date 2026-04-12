@@ -40,6 +40,19 @@ serve(async (req) => {
       try {
         const campaign = (contact as any).dead_lead_campaigns;
         if (campaign?.status !== "active") continue;
+
+        // TCPA expiry check — skip contacts older than 18 months
+        const refDate = contact.last_contact_date
+          ? new Date(contact.last_contact_date)
+          : new Date(contact.created_at);
+        if (refDate < tcpaCutoff) {
+          await sb.from("dead_lead_contacts" as any)
+            .update({ status: "tcpa_expired" })
+            .eq("id", contact.id);
+          tcpaSkipped++;
+          continue;
+        }
+
         const contractor = (campaign as any).contractor_clients;
         const bizName = contractor?.business_name || "your contractor";
         const trade = campaign?.trade || "service";
