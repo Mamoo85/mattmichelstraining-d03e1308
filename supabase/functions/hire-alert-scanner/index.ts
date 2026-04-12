@@ -53,7 +53,7 @@ interface RawCandidate {
   license_expiry?: string;
   city?: string;
   zip?: string;
-  source: "miosha" | "apollo" | "firecrawl";
+  source: "bpl" | "apollo" | "firecrawl" | "florida_dbpr";
   raw_data?: Record<string, unknown>;
 }
 
@@ -62,38 +62,88 @@ interface ScoredCandidate extends RawCandidate {
   score_reason: string;
 }
 
-// Source 1: MIOSHA Public License Database (Michigan boiler operators — public records)
-async function scanMIOSHA(): Promise<RawCandidate[]> {
-  const results = await firecrawlSearch(
-    'site:michigan.gov "boiler operator" OR "steam engineer" "licensed" Michigan 2025 OR 2026'
-  );
-  if (!results.length) return [];
+// Source 1: Michigan BPL FOIA Excel Downloads — direct government data, no API key needed
+// Downloads official LARA/BPL license lists, filters for recent (30-day) issuances
+async function scanBPL(): Promise<RawCandidate[]> {
+  const BPL_INDEX = "https://www.michigan.gov/lara/bureau-list/bpl/license-lists-and-reports";
+  const TRADE_KEYWORDS = ["boiler", "steam", "electri", "plumb", "hvac", "mechanic", "nursing", "nurse", "lpn", "cna"];
 
-  const context = results
-    .slice(0, 5)
-    .map((r) => `Title: ${r.title}\nURL: ${r.url}\nContent: ${r.markdown?.slice(0, 600)}`)
-    .join("\n\n---\n\n");
+  let indexHtml = "";
+  try {
+    const ctl = new AbortController();
+    setTimeout(() => ctl.abort(), 10_000);
+    const r = await fetch(BPL_INDEX, { signal: ctl.signal, headers: { "User-Agent": "Mozilla/5.0" } });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    indexHtml = await r.text();
+  } catch (e) {
+    console.error("[hire-alert-scanner] BPL index fetch failed:", e);
+    return [];
+  }
 
-  const candidates = await generateJSON<RawCandidate[]>(
-    `Extract licensed boiler operators and steam engineers from these Michigan MIOSHA/LARA public records search results.
+  // Extract .xlsx download URLs that match trade keywords
+  const xlsxUrls: string[] = [];
+  for (const m of indexHtml.matchAll(/href="([^"]*\.xlsx[^"]*)"/gi)) {
+    const href = m[1];
+    const url = href.startsWith("http") ? href : `https://www.michigan.gov${href}`;
+    if (TRADE_KEYWORDS.some(kw => url.toLowerCase().includes(kw))) xlsxUrls.push(url);
+  }
+  // Fallback: take first 3 xlsx links if none matched keywords
+  if (!xlsxUrls.length) {
+    for (const m of indexHtml.matchAll(/href="([^"]*\.xlsx[^"]*)"/gi)) {
+      const href = m[1];
+      xlsxUrls.push(href.startsWith("http") ? href : `https://www.michigan.gov${href}`);
+      if (xlsxUrls.length >= 3) break;
+    }
+  }
+  if (!xlsxUrls.length) {
+    console.log("[hire-alert-scanner] No BPL xlsx links found on page");
+    return [];
+  }
 
-Content:
-${context}
+  const candidates: RawCandidate[] = [];
+  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
-For each licensed individual found, extract:
-- full_name: their name
-- license_type: "1st Class Boiler Operator", "2nd Class Boiler Operator", "Steam Engineer", or "Pressure Vessel Inspector"
-- license_number: their license number if visible
-- license_expiry: expiry date as YYYY-MM-DD if visible
-- city: city in Michigan
-- source: always "miosha"
+  for (const url of xlsxUrls.slice(0, 4)) {
+    try {
+      const ctl = new AbortController();
+      setTimeout(() => ctl.abort(), 20_000);
+      const res = await fetch(url, { signal: ctl.signal });
+      if (!res.ok) continue;
+      const buf = await res.arrayBuffer();
+      if (buf.byteLength > 10_000_000) {
+        console.log(`[hire-alert-scanner] BPL file too large (${buf.byteLength}b), skipping`);
+        continue;
+      }
+      const { read, utils } = await import("https://esm.sh/xlsx@0.18.5");
+      const wb = read(new Uint8Array(buf), { type: "array", sheetRows: 3000 });
+      const rows: Record<string, string>[] = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
 
-Return a JSON array of objects. If no individuals found, return [].`,
-    [],
-    1000
-  );
-
-  return (candidates || []).map((c) => ({ ...c, source: "miosha" as const }));
+      for (const row of rows) {
+        const name = String(row["Name"] || row["Licensee Name"] || row["Full Name"] || row["FULL_NAME"] || "").trim();
+        if (!name || name.length < 3) continue;
+        // Skip if no recent issue date
+        const issueDateStr = String(row["Issue Date"] || row["Effective Date"] || row["License Date"] || "").trim();
+        if (issueDateStr) {
+          const dt = new Date(issueDateStr).getTime();
+          if (!isNaN(dt) && dt < thirtyDaysAgo) continue;
+        }
+        candidates.push({
+          full_name: name,
+          license_type: String(row["License Type"] || row["Type"] || row["License Description"] || "").trim() || undefined,
+          license_number: String(row["License Number"] || row["License #"] || row["LICENSE_NO"] || "").trim() || undefined,
+          license_expiry: String(row["Expiration Date"] || row["Exp Date"] || "").trim() || undefined,
+          city: String(row["City"] || row["Mailing City"] || "").trim() || undefined,
+          zip: String(row["Zip"] || row["Zip Code"] || "").trim() || undefined,
+          source: "bpl",
+          raw_data: { source_url: url },
+        });
+      }
+    } catch (e) {
+      console.error(`[hire-alert-scanner] BPL file parse error (${url}):`, e);
+    }
+  }
+  console.log(`[hire-alert-scanner] BPL: ${candidates.length} recent candidates from ${Math.min(xlsxUrls.length, 4)} files`);
+  return candidates;
 }
 
 // Source 2: Apollo People Search — tradespeople in Metro Detroit
@@ -205,6 +255,84 @@ Return a JSON array. Only include people actively seeking work. Return [] if non
   return allResults;
 }
 
+// Source 4: Florida DBPR weekly CSV bulk downloads — multi-state expansion
+async function scanFloridaDBPR(): Promise<RawCandidate[]> {
+  const DBPR_INDEX = "https://www2.myfloridalicense.com/instant-public-records/";
+  const TRADE_KEYWORDS = ["construction", "electrical", "contractor", "plumbing", "mechanical", "hvac"];
+
+  let pageHtml = "";
+  try {
+    const ctl = new AbortController();
+    setTimeout(() => ctl.abort(), 10_000);
+    const r = await fetch(DBPR_INDEX, { signal: ctl.signal, headers: { "User-Agent": "Mozilla/5.0" } });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    pageHtml = await r.text();
+  } catch (e) {
+    console.error("[hire-alert-scanner] DBPR index fetch failed:", e);
+    return [];
+  }
+
+  // Extract CSV/txt links for relevant trades
+  const csvUrls: string[] = [];
+  for (const m of pageHtml.matchAll(/href="([^"]*\.(?:csv|txt|zip)[^"]*)"/gi)) {
+    const href = m[1];
+    if (TRADE_KEYWORDS.some(kw => href.toLowerCase().includes(kw))) {
+      csvUrls.push(href.startsWith("http") ? href : `https://www2.myfloridalicense.com${href}`);
+    }
+  }
+  if (!csvUrls.length) return [];
+
+  const candidates: RawCandidate[] = [];
+  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+  for (const url of csvUrls.slice(0, 2)) {
+    try {
+      const ctl = new AbortController();
+      setTimeout(() => ctl.abort(), 15_000);
+      const res = await fetch(url, { signal: ctl.signal });
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (text.length > 5_000_000) continue;
+
+      const lines = text.split("\n").filter(Boolean);
+      if (lines.length < 2) continue;
+      // ASCII quote/comma delimited format
+      const parseRow = (line: string) => line.split(",").map(cell => cell.replace(/^"|"$/g, "").trim());
+      const headers = parseRow(lines[0]);
+
+      for (const line of lines.slice(1, 3000)) {
+        const values = parseRow(line);
+        const row: Record<string, string> = {};
+        headers.forEach((h, i) => { row[h] = values[i] || ""; });
+
+        const name = String(row["Name"] || row["Licensee Name"] || row["Full Name"] || row["LICENSEE_NAME"] || "").trim();
+        if (!name || name.length < 3) continue;
+
+        const issueDateStr = String(row["Issue Date"] || row["Original Issue Date"] || row["License Issued"] || "").trim();
+        if (issueDateStr) {
+          const dt = new Date(issueDateStr).getTime();
+          if (!isNaN(dt) && dt < thirtyDaysAgo) continue;
+        }
+
+        candidates.push({
+          full_name: name,
+          license_type: String(row["License Type"] || row["Type Description"] || "").trim() || undefined,
+          license_number: String(row["License Number"] || row["Lic Nbr"] || "").trim() || undefined,
+          license_expiry: String(row["Expiration Date"] || row["Exp Date"] || "").trim() || undefined,
+          city: String(row["City"] || row["Mailing City"] || "").trim() || undefined,
+          zip: String(row["Zip"] || row["Zip Code"] || "").trim() || undefined,
+          source: "florida_dbpr",
+          raw_data: { source_url: url, state: "FL" },
+        });
+      }
+    } catch (e) {
+      console.error(`[hire-alert-scanner] DBPR file error (${url}):`, e);
+    }
+  }
+  console.log(`[hire-alert-scanner] Florida DBPR: ${candidates.length} recent candidates`);
+  return candidates;
+}
+
 // Score candidate availability via AI
 async function scoreCandidate(candidate: RawCandidate): Promise<{ score: number; reason: string }> {
   const result = await generateJSON<{ score: number; reason: string }>(
@@ -245,10 +373,10 @@ async function sendAlertEmail(
   const hotCount = candidates.filter((c) => c.availability_score >= 7).length;
 
   const sourceLabel = (s: string) =>
-    s === "miosha" ? "MIOSHA License DB" : s === "apollo" ? "Apollo" : "Job Board";
+    s === "bpl" ? "MI BPL License DB" : s === "apollo" ? "Apollo" : s === "florida_dbpr" ? "FL DBPR" : "Job Board";
 
   const sourceIcon = (s: string) =>
-    s === "miosha" ? "🏛️" : s === "apollo" ? "🔍" : "📋";
+    s === "bpl" ? "🏛️" : s === "apollo" ? "🔍" : s === "florida_dbpr" ? "🌴" : "📋";
 
   const scoreBg = (s: number) =>
     s >= 8 ? "#dc2626" : s >= 7 ? "#e8621a" : s >= 5 ? "#f59e0b" : "#94a3b8";
@@ -350,7 +478,7 @@ async function sendAlertEmail(
       Hey${client.company_name ? ` ${client.company_name} team` : ""} —
     </p>
     <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 24px;">
-      We scanned Michigan's MIOSHA license database, Apollo, and job boards this morning. ${hotCount > 0 ? `<strong>${hotCount} high-scoring ${hotCount === 1 ? "candidate" : "candidates"}</strong> — act fast before someone else does.` : "Here's what we found near you."}
+      We scanned Michigan's BPL license database, Florida DBPR, Apollo, and job boards this morning. ${hotCount > 0 ? `<strong>${hotCount} high-scoring ${hotCount === 1 ? "candidate" : "candidates"}</strong> — act fast before someone else does.` : "Here's what we found near you."}
     </p>
 
     <!-- CANDIDATE CARDS -->
@@ -414,16 +542,17 @@ serve(async () => {
     return new Response(JSON.stringify({ processed: 0 }), { status: 200 });
   }
 
-  // Run all three sources in parallel
+  // Run all sources in parallel
   console.log("[hire-alert-scanner] Scanning all sources...");
-  const [mioshaCandidates, apolloCandidates, jobBoardCandidates] = await Promise.all([
-    scanMIOSHA(),
+  const [bplCandidates, apolloCandidates, jobBoardCandidates, floridaCandidates] = await Promise.all([
+    scanBPL(),
     scanApollo(),
     scanJobBoards(),
+    scanFloridaDBPR(),
   ]);
 
-  const allRaw = [...mioshaCandidates, ...apolloCandidates, ...jobBoardCandidates];
-  console.log(`[hire-alert-scanner] Raw candidates: MIOSHA=${mioshaCandidates.length} Apollo=${apolloCandidates.length} JobBoards=${jobBoardCandidates.length}`);
+  const allRaw = [...bplCandidates, ...apolloCandidates, ...jobBoardCandidates, ...floridaCandidates];
+  console.log(`[hire-alert-scanner] Raw candidates: BPL=${bplCandidates.length} Apollo=${apolloCandidates.length} JobBoards=${jobBoardCandidates.length} FloridaDBPR=${floridaCandidates.length}`);
 
   // Deduplicate by license_number (for MIOSHA) or name+city
   const seen = new Set<string>();
@@ -438,7 +567,7 @@ serve(async () => {
   const { data: existingRecords } = await sb
     .from("hire_alert_candidates")
     .select("license_number, full_name, city")
-    .in("source", ["miosha", "apollo", "firecrawl"]);
+    .in("source", ["bpl", "apollo", "firecrawl", "florida_dbpr"]);
 
   const existingKeys = new Set(
     (existingRecords || []).map((r) =>
@@ -492,6 +621,11 @@ serve(async () => {
     pipefitter: ["pipefitter", "steamfitter", "ua local", "ua 636"],
     electrician: ["electrician", "electrical"],
     industrial_mechanic: ["industrial mechanic", "maintenance mechanic"],
+    // Senior care roles
+    cna: ["cna", "certified nurse aide", "certified nursing aide", "nurse aide", "nursing assistant"],
+    lpn: ["lpn", "licensed practical nurse", "licensed vocational nurse"],
+    rn: ["rn", "registered nurse"],
+    home_health_aide: ["home health aide", "hha", "personal care aide"],
   };
 
   function candidateMatchesRoles(licenseType: string | undefined, targetRoles: string[]): boolean {
@@ -560,9 +694,10 @@ serve(async () => {
 
   // Founder daily report — premium executive dashboard for Matt
   const sourceBreakdown = {
-    miosha: scored.filter((c) => c.source === "miosha").length,
+    bpl: scored.filter((c) => c.source === "bpl").length,
     apollo: scored.filter((c) => c.source === "apollo").length,
     firecrawl: scored.filter((c) => c.source === "firecrawl").length,
+    florida_dbpr: scored.filter((c) => c.source === "florida_dbpr").length,
   };
 
   const candidateRows = scored.length
@@ -572,7 +707,7 @@ serve(async () => {
           (c, i) => {
             const rowBg = c.availability_score >= 7 ? "#0a16280a" : i % 2 === 0 ? "#fff" : "#f8fafc";
             const scoreBg = c.availability_score >= 8 ? "#dc2626" : c.availability_score >= 7 ? "#e8621a" : c.availability_score >= 5 ? "#f59e0b" : "#94a3b8";
-            const sourceIcon = c.source === "miosha" ? "🏛️" : c.source === "apollo" ? "🔍" : "📋";
+            const sourceIcon = c.source === "bpl" ? "🏛️" : c.source === "apollo" ? "🔍" : c.source === "florida_dbpr" ? "🌴" : "📋";
             return `<tr style="background:${rowBg};border-bottom:1px solid #e2e8f0;">
               <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:${c.availability_score >= 7 ? "800" : "500"};">${c.full_name}${c.email ? `<br><span style="font-size:11px;color:#0891b2;font-weight:400;">${c.email}</span>` : ""}${c.phone ? `<br><span style="font-size:11px;color:#e8621a;font-weight:600;">${c.phone}</span>` : ""}</td>
               <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.license_type || "—"}${c.license_number ? `<br><span style="font-size:10px;color:#94a3b8;">#${c.license_number}</span>` : ""}</td>
