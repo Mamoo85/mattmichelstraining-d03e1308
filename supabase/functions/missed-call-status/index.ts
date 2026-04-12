@@ -14,7 +14,7 @@ const MISSED_STATUSES = new Set(["no-answer", "busy", "failed"]);
 
 const TEXT_BODY =
   "Hey, it's Matt from Detroit Web Agency — sorry I missed your call! " +
-  "What were you calling about? I'll get back to you ASAP. — Matt (313) 806-4952";
+  "What were you calling about? I'll get back to you ASAP. — Matt (313) 992-1219";
 
 serve(async (req) => {
   if (req.method !== "POST") {
