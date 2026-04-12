@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-04-12. Update this section every session.*
+*Last updated: 2026-04-13. Update this section every session.*
 
 ### Documentation Sync — 2026-04-12 ✅
 Updated CLAUDE.md to reflect accurate codebase scale (293 pages, 539 edge functions, 414 migrations), added missing `db:reset` command, corrected edge function count in conventions, added `M2_Project_Hierarchy_Clean.mmd` to knowledge index, and updated the dev branch note.
@@ -25,11 +25,35 @@ Fixed tonight. Two issues found and resolved:
 
 **Action still needed**: Resend failed events in Stripe → vibrant-glow → Event deliveries → Failed → Resend all `checkout.session.completed` failures to re-activate any customers who paid but weren't provisioned.
 
-**Known silent failure patterns (audit findings — not yet fixed):**
-- `stripe-webhook` handlers return 200 even on DB write failure (Stripe won't retry, Matt not notified)
-- `chargeContractor()` in `handle-dead-lead-reply` doesn't check `res.ok` before parsing Stripe response
-- Autonomous agents (`scarlett`, `selma`, `ops`, `hire-alert-scanner`) have no `agent_heartbeats` upsert — crashes are invisible
-- Matt notification emails use `.catch(() => {})` throughout — fire-and-forget failures undetected
+**Known silent failure patterns (audit findings — partially fixed):**
+- `stripe-webhook` handlers return 200 even on DB write failure (Stripe won't retry, Matt not notified) — NOT YET FIXED
+- `chargeContractor()` in `handle-dead-lead-reply` doesn't check `res.ok` before parsing Stripe response — NOT YET FIXED
+- Autonomous agents all have `agent_heartbeats` upserts ✅ (scarlett, selma, ops, hire-alert-scanner all verified)
+- Matt notification emails use `.catch(() => {})` throughout — fire-and-forget failures undetected — NOT YET FIXED
+
+### Pre-Launch Audit — 2026-04-13 COMPLETE ✅
+Commit `9b6f92c3` — all merged to main and deployed.
+
+**Fixed:**
+- **19 broken crons** (`20260413000000_fix_broken_crons.sql`) — `current_setting('app.supabase_url')` produces NULL in pg_cron context; all affected crons recreated with `vault.decrypted_secrets` pattern. Also removed duplicate `license-expiry-checker-daily`.
+- **Wave 4 webhooks** already done (prior session) — 7 handlers in stripe-webhook for storm/recall/permit/speed/bedtime/crime/license
+- **Wave 4 crons** already done (prior session) — `20260412000000_wave4_crons.sql`
+- **AdminSandbox** — added Detroit Web Agency section (FieldDesk + TechAlert now visible/testable)
+- **AdminOpsCenter** — added missed_call_clients + tech_support_tickets, excluded Matt's emails from counts
+- **AdminClientHealth** — added seo_guard_clients + missed_call_clients + tech_support_tickets
+- **App.tsx** — /dwa-admin now uses AgencyAdminRoute (proper admin guard)
+- **auto-onboard** — SMS_TYPES now includes _subscription variants so webhook-keyed types resolve to SMS welcome template
+- **AnnouncementBanner** — hidden on detroitwebagency.com domain
+- **SEOHead** — added to HireAlert, HireAlertTrial, SeoGuard, AllServices, DeadLeadIntake
+- **GetStarted.tsx** — SEO title fixed to "Detroit Web Agency" (was "M2 Training")
+- **DarkWebMonitor.tsx** — checkout now uses `supabase.functions.invoke()` (was raw `fetch()`)
+- **AutomationHub** — added product page links to podcast/regulatory/competitor/re-newsletter cards
+
+**Remaining / not fixed:**
+- stripe-webhook handlers return 200 on DB upsert failures (Stripe won't retry)
+- `chargeContractor()` in handle-dead-lead-reply: no `res.ok` check
+- DJ Conley demo link in AdminDWAOverview — check if `/demo-djconley-2` is wired correctly (was `/demo-djconley-v2`)
+- AdminFieldCRMClients: no clickable client detail panel
 
 ### Phase 8 — DWA Level 5 Autonomy Agents COMPLETE ✅
 Work on `claude/opusplan-setup-nmyYS`. Merge to main to deploy.
