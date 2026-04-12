@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { sendSMS } from "../_shared/twilio.ts";
+import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2025-08-27.basil",
@@ -5622,6 +5622,13 @@ ${fwdInstructions}`,
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("[STRIPE-WEBHOOK] Error:", msg);
+    // Alert Matt on fatal webhook failures (signature errors, crashes, etc.)
+    sendSMS(
+      ADMIN_PHONE,
+      Deno.env.get("TWILIO_PHONE_NUMBER") || "",
+      `STRIPE-WEBHOOK FATAL: ${msg.slice(0, 120)}`,
+      "stripe_webhook_error"
+    ).catch(() => {});
     return new Response(JSON.stringify({ error: msg }), { status: 400 });
   }
 });
