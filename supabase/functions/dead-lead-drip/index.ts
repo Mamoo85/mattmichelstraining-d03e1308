@@ -22,7 +22,12 @@ serve(async (req) => {
     const now = new Date();
     const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString();
 
-    let drip1Count = 0, drip2Count = 0, drip3Count = 0;
+    // TCPA: EBR exemption expires 18 months after last customer inquiry.
+    // If last_contact_date is set, use it; otherwise fall back to created_at.
+    const tcpaCutoff = new Date(now);
+    tcpaCutoff.setMonth(tcpaCutoff.getMonth() - 18);
+
+    let drip1Count = 0, drip2Count = 0, drip3Count = 0, tcpaSkipped = 0;
 
     // ── DRIP 1: pending contacts in active campaigns ──────────────────────
     const { data: drip1Contacts } = await sb
