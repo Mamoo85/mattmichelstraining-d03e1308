@@ -5596,7 +5596,7 @@ ${fwdInstructions}`,
       // Unmatched checkout.session.completed — log and acknowledge
       console.log(`[WEBHOOK] checkout.session.completed with unhandled meta.type: ${meta.type || "none"}`);
       return new Response(JSON.stringify({ received: true }), { status: 200 });
-    } // ── END checkout.session.completed block ──
+    
 
     // ── LUKE — Capture abandoned checkouts for recovery emails ────────────────
     if (event.type === "checkout.session.expired") {
