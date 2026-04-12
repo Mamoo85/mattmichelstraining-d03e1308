@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
+// Killed products removed from OpsCenter
+const KILLED_NAMES = ["AI Obituary Service", "Sermon Prep", "AI Bedtime Stories", "Children's Story Subscription"];
+
 const ALL_SERVICES = [
   { table: "social_media_clients", name: "Social Media AI", price: "$99/mo", priceNum: 99 },
   { table: "gbp_saas_clients", name: "GBP SaaS", price: "$49/mo", priceNum: 49 },
@@ -37,7 +40,6 @@ const ALL_SERVICES = [
   { table: "review_request_clients", name: "Review Request SMS", price: "$29/mo", priceNum: 29 },
   { table: "contractor_clients", name: "Contractor Lead Gen", price: "$399/mo", priceNum: 399 },
   { table: "b2b_subscribers", name: "B2B Dental Database", price: "$49/mo", priceNum: 49 },
-  // ── 10 New SMS/Monitoring Products ────────────────────────────────────────
   { table: "review_monitor_clients", name: "Review Monitor", price: "$25/mo", priceNum: 25 },
   { table: "sms_blast_clients", name: "Weekly SMS Blast", price: "$19/mo", priceNum: 19 },
   { table: "noshow_clients", name: "No-Show Re-Booker", price: "$25/mo", priceNum: 25 },
@@ -48,8 +50,6 @@ const ALL_SERVICES = [
   { table: "referral_program_clients", name: "Referral Program", price: "$39/mo", priceNum: 39 },
   { table: "slow_day_clients", name: "Slow Day SMS", price: "$25/mo", priceNum: 25 },
   { table: "homeowner_campaign_clients", name: "New Homeowner Campaign", price: "$59/mo", priceNum: 59 },
-  { table: "obituary_clients", name: "AI Obituary Service", price: "$199/mo", priceNum: 199 },
-  { table: "sermon_prep_clients", name: "Sermon Prep", price: "$79/mo", priceNum: 79 },
   { table: "hoa_secretary_clients", name: "HOA Secretary AI", price: "$149/mo", priceNum: 149 },
   { table: "hoa_violation_clients", name: "HOA Violation Letters", price: "$149/mo", priceNum: 149 },
   { table: "rfp_alert_clients", name: "RFP Alert Service", price: "$149/mo", priceNum: 149 },
@@ -72,22 +72,17 @@ const ALL_SERVICES = [
   { table: "trademark_watch_clients", name: "Trademark Watch Service", price: "$49/mo", priceNum: 49 },
   { table: "competitor_pricing_clients", name: "Competitor Pricing Intel", price: "$149/mo", priceNum: 149 },
   { table: "re_newsletter_clients", name: "Real Estate Newsletter", price: "$79/mo", priceNum: 79 },
-  // ── One-Time Products ─────────────────────────────────────────────────────
   { table: "pet_memorial_submissions", name: "AI Pet Memorial", price: "$79 one-time", priceNum: 79 },
   { table: "employee_credential_audits", name: "Employee Credential Audit", price: "$149 one-time", priceNum: 149 },
   { table: "new_hire_breach_checks", name: "New Hire Breach Screen", price: "$9.99/check", priceNum: 9.99 },
-  // ── Wave 4: Seven New Products (April 2026) ──────────────────────────────
   { table: "storm_lead_clients", name: "Storm Damage Leads", price: "$29/mo", priceNum: 29 },
   { table: "recall_alert_clients", name: "Recall Alert Service", price: "$19/mo", priceNum: 19 },
   { table: "permit_watch_clients", name: "Permit Watch", price: "$29/mo", priceNum: 29 },
   { table: "speed_audit_clients", name: "Website Speed Audit", price: "$29/mo", priceNum: 29 },
-  { table: "bedtime_story_clients", name: "AI Bedtime Stories", price: "$4.99/mo", priceNum: 4.99 },
   { table: "crime_digest_clients", name: "Neighborhood Crime Digest", price: "$19/mo", priceNum: 19 },
   { table: "license_monitor_clients", name: "Business License Monitor", price: "$25/mo", priceNum: 25 },
-  // ── High-Ticket Products ─────────────────────────────────────────────────
   { table: "reg_filing_clients", name: "Regulatory Filing Monitor", price: "$497/mo", priceNum: 497 },
   { table: "bid_intel_clients", name: "Bid Intelligence", price: "$599/mo", priceNum: 599 },
-  // ── Wave 3: Remaining Products ───────────────────────────────────────────
   { table: "commercial_lease_clients", name: "Commercial Lease Abstractor", price: "$149/mo", priceNum: 149 },
   { table: "patent_watch_clients", name: "Patent Watch Intelligence", price: "$199/mo", priceNum: 199 },
   { table: "pe_intelligence_clients", name: "PE/Investor Sector Intelligence", price: "$299/mo", priceNum: 299 },
@@ -96,13 +91,18 @@ const ALL_SERVICES = [
   { table: "medical_bill_clients", name: "Medical Bill Dispute Letters", price: "$79/mo", priceNum: 79 },
   { table: "supplement_analyzer_clients", name: "Supplement Stack Analyzer", price: "$19/mo", priceNum: 19 },
   { table: "trade_association_clients", name: "Trade Association Intelligence", price: "$149/mo", priceNum: 149 },
-  { table: "story_subscription_clients", name: "Children's Story Subscription", price: "$9.99/mo", priceNum: 9.99 },
   { table: "luxury_re_clients", name: "Luxury Real Estate Intelligence", price: "$299/mo", priceNum: 299 },
   { table: "seo_guard_clients", name: "SEO Guard", price: "$29/mo", priceNum: 29 },
   { table: "leads", name: "Communications Center (SMS CRM)", price: "$0/mo", priceNum: 0 },
   { table: "field_crm_clients", name: "Field Service Management", price: "$199-299/mo", priceNum: 249 },
   { table: "hire_alert_clients", name: "TechAlert Hiring Monitor", price: "$49-99/mo", priceNum: 74 },
 ] as const;
+
+const isTestAccount = (r: { business_name?: string; email?: string }) => {
+  const bn = (r.business_name || "").toLowerCase();
+  const em = (r.email || "").toLowerCase();
+  return bn.includes("test") || em.includes("test") || bn === "demo" || em.includes("demo@");
+};
 
 interface ClientRecord {
   business_name: string;
@@ -160,12 +160,16 @@ export default function AdminOpsCenter() {
             services.push({ name: svc.name, price: svc.price, priceNum: svc.priceNum, activeCount: 0, totalRevenue: 0, clients: [] });
             continue;
           }
-          const clients: ClientRecord[] = rows.map((r: any) => ({
+          const allClients: ClientRecord[] = rows.map((r: any) => ({
             business_name: r.business_name || "Unknown",
             email: r.email || "N/A",
             phone: r.phone || undefined,
             created_at: r.created_at || "",
           }));
+          
+          // Filter out test accounts
+          const clients = allClients.filter(c => !isTestAccount(c));
+          const testCount = allClients.length - clients.length;
 
           const c = clients.length;
           const rev = c * svc.priceNum;
