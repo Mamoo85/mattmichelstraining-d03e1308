@@ -393,10 +393,13 @@ export default function AdminSandbox() {
 
   const resetStatus = (id: string) => setStatuses(s => ({ ...s, [id]: "idle" }));
 
-  const instant = PRODUCTS.filter(p => p.type === "instant");
-  const subs = PRODUCTS.filter(p => p.type === "subscription" && p.category === "Subscription");
-  const smsProducts = PRODUCTS.filter(p => p.category === "SMS Products");
-  const autonomousProducts = PRODUCTS.filter(p => p.category === "Autonomous Products");
+  const q = search.toLowerCase();
+  const matches = (p: Product) => !q || p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q);
+  const instant = PRODUCTS.filter(p => p.type === "instant" && matches(p));
+  const subs = PRODUCTS.filter(p => p.type === "subscription" && p.category === "Subscription" && matches(p));
+  const smsProducts = PRODUCTS.filter(p => p.category === "SMS Products" && matches(p));
+  const autonomousProducts = PRODUCTS.filter(p => p.category === "Autonomous Products" && matches(p));
+  const dwaProducts = PRODUCTS.filter(p => p.category === "Detroit Web Agency" && matches(p));
 
   const StatusIcon = ({ status }: { status: TestStatus }) => {
     if (status === "loading") return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
