@@ -87,7 +87,7 @@ serve(async (req) => {
     // ── DRIP 3: drip2_sent contacts where 2+ days have passed ────────────
     const { data: drip3Contacts } = await sb
       .from("dead_lead_contacts" as any)
-      .select("*, dead_lead_campaigns(trade, contractor_clients(business_name))")
+      .select("*, dead_lead_campaigns(id, trade, status, contractor_clients(business_name))")
       .eq("status", "drip2_sent")
       .lte("drip2_sent_at", twoDaysAgo)
       .limit(50);
