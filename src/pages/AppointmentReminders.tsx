@@ -19,7 +19,7 @@ const STEPS = [
 export default function AppointmentReminders() {
   const [form, setForm] = useState({
     name: "",
-    business_name: "",
+    businessName: "",
     email: "",
     phone: "",
   });
@@ -29,14 +29,14 @@ export default function AppointmentReminders() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-6">
         <div className="text-center max-w-sm">
           <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={32} className="text-green-500" />
           </div>
-          <h1 className="text-2xl font-black text-foreground mb-3">You're all set.</h1>
-          <p className="text-muted-foreground leading-relaxed">Matt will reach out within 24 hours to connect your scheduling and get reminders running.</p>
-          <p className="mt-4 text-sm text-muted-foreground">Questions? <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a></p>
+          <h1 className="text-2xl font-black text-white mb-3">You're all set.</h1>
+          <p className="text-slate-400 leading-relaxed">Matt will reach out within 24 hours to connect your scheduling and get reminders running.</p>
+          <p className="mt-4 text-sm text-slate-500">Questions? <a href="tel:+13138064952" className="text-cyan-500">(313) 806-4952</a></p>
         </div>
       </div>
     );
@@ -44,7 +44,7 @@ export default function AppointmentReminders() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.email || !form.business_name) {
+    if (!form.email || !form.businessName) {
       toast.error("Business name and email are required");
       return;
     }
@@ -63,17 +63,17 @@ export default function AppointmentReminders() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-[#0a0a0f] text-white">
       {/* Hero */}
-      <div className="bg-[#1e293b] text-white px-6 py-16 text-center">
-        <p className="inline-block text-[11px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full mb-4">Appointment Reminder SMS</p>
-        <h1 className="text-3xl font-black mb-4 leading-tight">
+      <div className="bg-[#0a1628] text-white px-6 py-16 text-center border-b border-slate-800">
+        <p className="inline-block text-[11px] font-bold uppercase tracking-widest text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full mb-4">Appointment Reminder SMS</p>
+        <h1 className="text-3xl md:text-4xl font-black mb-4 leading-tight">
           Stop losing money to no-shows.
         </h1>
         <p className="text-slate-300 text-sm max-w-xl mx-auto leading-relaxed mb-4">
           AI sends personalized text reminders 24 hours and 1 hour before every appointment. Your customers show up, your schedule stays full.
         </p>
-        <p className="text-2xl font-black text-primary">$39<span className="text-sm font-normal text-slate-400">/month</span></p>
+        <p className="text-2xl font-black text-cyan-400">$39<span className="text-sm font-normal text-slate-400">/month</span></p>
         <p className="text-[12px] text-slate-400 mt-1">7-day free trial. Cancel anytime.</p>
       </div>
 
@@ -81,97 +81,97 @@ export default function AppointmentReminders() {
         {/* Benefits */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
           {BENEFITS.map(({ icon: Icon, label, sub }) => (
-            <div key={label} className="bg-card border border-border p-5">
-              <Icon size={20} className="text-primary mb-3" />
-              <p className="font-bold text-sm text-foreground mb-1">{label}</p>
-              <p className="text-[12px] text-muted-foreground">{sub}</p>
+            <div key={label} className="bg-slate-800/50 border border-slate-700 p-5">
+              <Icon size={20} className="text-cyan-500 mb-3" />
+              <p className="font-bold text-sm text-white mb-1">{label}</p>
+              <p className="text-[12px] text-slate-400">{sub}</p>
             </div>
           ))}
         </div>
 
         {/* How it works */}
-        <h2 className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-4">How it works</h2>
+        <h2 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-4">How it works</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
           {STEPS.map(({ num, title, desc }) => (
-            <div key={num} className="bg-card border border-border p-5">
-              <p className="text-2xl font-black text-primary mb-2">{num}</p>
-              <p className="font-bold text-sm text-foreground mb-1">{title}</p>
-              <p className="text-[12px] text-muted-foreground">{desc}</p>
+            <div key={num} className="text-center">
+              <div className="w-10 h-10 rounded-full bg-cyan-500 text-white font-black flex items-center justify-center mx-auto mb-3">{num}</div>
+              <p className="font-bold text-sm text-white mb-1">{title}</p>
+              <p className="text-[12px] text-slate-400">{desc}</p>
             </div>
           ))}
         </div>
 
         {/* Sign-up form */}
-        <div className="bg-card border border-border p-6 mb-10">
-          <h2 className="text-sm font-black uppercase tracking-widest text-foreground mb-4">
+        <div className="bg-slate-800/50 border border-slate-700 p-6 mb-10">
+          <h2 className="text-sm font-black uppercase tracking-widest text-white mb-4">
             Get Started — $39/month
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Your Name</label>
+                <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Your Name</label>
                 <input
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="John Smith"
-                  className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none"
+                  className="w-full bg-[#0a0a0f] border border-slate-700 text-white px-3 py-2.5 text-sm focus:ring-1 focus:ring-cyan-500 outline-none"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Business Name *</label>
+                <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Business Name *</label>
                 <input
                   required
-                  value={form.business_name}
-                  onChange={e => setForm(f => ({ ...f, business_name: e.target.value }))}
+                  value={form.businessName}
+                  onChange={e => setForm(f => ({ ...f, businessName: e.target.value }))}
                   placeholder="Smith Plumbing Co."
-                  className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none"
+                  className="w-full bg-[#0a0a0f] border border-slate-700 text-white px-3 py-2.5 text-sm focus:ring-1 focus:ring-cyan-500 outline-none"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Email *</label>
+                <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Email *</label>
                 <input
                   type="email"
                   required
                   value={form.email}
                   onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                   placeholder="you@business.com"
-                  className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none"
+                  className="w-full bg-[#0a0a0f] border border-slate-700 text-white px-3 py-2.5 text-sm focus:ring-1 focus:ring-cyan-500 outline-none"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Phone</label>
+                <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 block mb-1">Phone</label>
                 <input
                   type="tel"
                   value={form.phone}
                   onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                   placeholder="(313) 555-0100"
-                  className="w-full bg-background border border-border px-3 py-2.5 text-sm focus:ring-1 focus:ring-primary outline-none"
+                  className="w-full bg-[#0a0a0f] border border-slate-700 text-white px-3 py-2.5 text-sm focus:ring-1 focus:ring-cyan-500 outline-none"
                 />
               </div>
             </div>
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-primary text-white py-3 font-bold text-sm uppercase tracking-widest hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-3 font-bold text-sm uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {submitting ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
               {submitting ? "Processing..." : "Start Free Trial — $39/mo"}
             </button>
-            <p className="text-[11px] text-muted-foreground text-center">Secure checkout via Stripe. 7-day free trial. Cancel anytime.</p>
+            <p className="text-[11px] text-slate-500 text-center">Secure checkout via Stripe. 7-day free trial. Cancel anytime.</p>
           </form>
         </div>
 
         {/* Founder credibility */}
-        <div className="bg-card border border-border p-5 mb-10 flex items-start gap-4">
+        <div className="bg-slate-800/50 border border-slate-700 p-5 mb-10 flex items-start gap-4">
           <img src="/images/matt-boat.jpg" alt="Matt Michels" className="w-[72px] h-[72px] rounded-full object-cover flex-shrink-0" />
-          <p className="text-[13px] text-muted-foreground leading-relaxed">
-            <span className="font-bold text-foreground">Matt Michels — Grosse Pointe, MI.</span>{" "}
+          <p className="text-[13px] text-slate-400 leading-relaxed">
+            <span className="font-bold text-white">Matt Michels — Grosse Pointe, MI.</span>{" "}
             I built this after watching local businesses lose thousands every month to no-shows. A simple text reminder changes everything.
           </p>
         </div>
 
-        <p className="text-[12px] text-muted-foreground text-center">
-          Questions? Email <a href="mailto:matt@mattmichelstraining.com" className="text-primary">matt@mattmichelstraining.com</a> or text <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a>
+        <p className="text-[12px] text-slate-500 text-center">
+          Questions? Email <a href="mailto:matt@mattmichelstraining.com" className="text-cyan-500">matt@mattmichelstraining.com</a> or text <a href="tel:+13138064952" className="text-cyan-500">(313) 806-4952</a>
         </p>
       </div>
     </div>
