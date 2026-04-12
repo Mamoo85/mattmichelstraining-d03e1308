@@ -81,6 +81,38 @@ export default function AdminDeadLeads() {
   const recentActivity = allContacts?.filter((c: any) => c.status === "replied_positive").slice(0, 10) || [];
   const hasRecentActivity = recentActivity.some((c: any) => c.contractor_notified_at && Date.now() - new Date(c.contractor_notified_at).getTime() < 24 * 60 * 60 * 1000);
 
+  // Billing status per contractor with active campaigns
+  const { data: billingContractors } = useQuery({
+    queryKey: ["dead_lead_billing_status"],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("contractor_clients")
+        .select("id, business_name, phone, dead_lead_billing_active, stripe_payment_method_id, dead_lead_campaigns(id, status)")
+        .not("dead_lead_campaigns", "is", null)
+        .order("business_name");
+      // Only contractors who have at least one campaign
+      return (data || []).filter((c: any) => c.dead_lead_campaigns?.length > 0);
+    },
+    refetchInterval: 30000,
+  });
+
+  // Recent charges
+  const { data: charges } = useQuery({
+    queryKey: ["dead_lead_charges"],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("dead_lead_charges")
+        .select("*, dead_lead_contacts(name, phone)")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      return data || [];
+    },
+    refetchInterval: 30000,
+  });
+
+  const autoRevenue = charges?.filter((c: any) => c.status === "succeeded").reduce((s: number, c: any) => s + (c.amount_cents || 0), 0) || 0;
+  const needsManualInvoice = allContacts?.filter((c: any) => c.status === "replied_positive").length || 0;
+
   const { data: contacts } = useQuery({
     queryKey: ["dead_lead_contacts", selectedCampaignId],
     queryFn: async () => {
@@ -266,6 +298,67 @@ export default function AdminDeadLeads() {
             })}
           </div>
         )}
+
+        {/* Billing Panel */}
+        <div style={{ background: "#0f2342", border: "1px solid #1e3a5f", borderRadius: 10, marginBottom: 16, overflow: "hidden" }}>
+          <div style={{ padding: "10px 14px", borderBottom: "1px solid #1e3a5f", display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ color: "#00d4ff", fontSize: 13, fontWeight: 700 }}>💳 Billing Status</span>
+            <span style={{ color: "#64748b", fontSize: 12, marginLeft: "auto" }}>
+              Auto-collected: <strong style={{ color: "#10b981" }}>${(autoRevenue / 100).toFixed(0)}</strong>
+              <span style={{ margin: "0 8px", color: "#334155" }}>·</span>
+              Positive replies: <strong style={{ color: "#f59e0b" }}>{needsManualInvoice}</strong>
+            </span>
+          </div>
+          {/* Contractor billing rows */}
+          {billingContractors?.map((c: any) => {
+            const active = c.dead_lead_billing_active;
+            const activeCamps = (c.dead_lead_campaigns || []).filter((d: any) => d.status === "active").length;
+            return (
+              <div key={c.id} style={{ padding: "10px 14px", borderTop: "1px solid #1e3a5f", display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <span style={{ color: "#e2e8f0", fontWeight: 600, fontSize: 14 }}>{c.business_name}</span>
+                  <span style={{ color: "#64748b", fontSize: 12, marginLeft: 8 }}>{activeCamps} active campaign{activeCamps !== 1 ? "s" : ""}</span>
+                </div>
+                {active ? (
+                  <span style={{ background: "#052e16", color: "#10b981", fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20, border: "1px solid #166534" }}>
+                    ✓ Card saved — auto-billing
+                  </span>
+                ) : (
+                  <span style={{ background: "#451a03", color: "#f59e0b", fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 20, border: "1px solid #92400e" }}>
+                    ⚠ No card — invoice manually
+                  </span>
+                )}
+              </div>
+            );
+          })}
+          {!billingContractors?.length && (
+            <div style={{ padding: "16px 14px", color: "#64748b", fontSize: 13 }}>No contractors with campaigns yet.</div>
+          )}
+          {/* Recent charges */}
+          {charges && charges.length > 0 && (
+            <>
+              <div style={{ padding: "8px 14px", borderTop: "2px solid #1e3a5f", background: "#0a1628" }}>
+                <span style={{ color: "#64748b", fontSize: 11, fontWeight: 600, letterSpacing: "0.5px" }}>RECENT AUTO-CHARGES</span>
+              </div>
+              {charges.slice(0, 5).map((ch: any) => (
+                <div key={ch.id} style={{ padding: "8px 14px", borderTop: "1px solid #1e3a5f", display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ color: ch.status === "succeeded" ? "#10b981" : ch.status === "failed" ? "#ef4444" : "#64748b", fontSize: 12, fontWeight: 700, width: 70 }}>
+                    {ch.status === "succeeded" ? "✓ $50" : ch.status === "failed" ? "✗ FAIL" : "⏳ pend"}
+                  </span>
+                  <span style={{ color: "#94a3b8", fontSize: 13, flex: 1 }}>
+                    {ch.dead_lead_contacts?.name || ch.dead_lead_contacts?.phone || "—"}
+                  </span>
+                  <span style={{ color: "#475569", fontSize: 11 }}>
+                    {ch.created_at ? new Date(ch.created_at).toLocaleDateString() : "—"}
+                  </span>
+                  {ch.error_message && (
+                    <span style={{ color: "#ef4444", fontSize: 11, maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ch.error_message}</span>
+                  )}
+                </div>
+              ))}
+            </>
+          )}
+        </div>
 
         {/* Campaigns list */}
         <div style={{ display: "grid", gap: 10, marginBottom: 24 }}>
