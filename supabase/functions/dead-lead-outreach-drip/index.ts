@@ -28,7 +28,85 @@ serve(async () => {
   const now = new Date();
   let d4Sent = 0;
   let d8Sent = 0;
+  let scD4Sent = 0;
+  let scD8Sent = 0;
 
+  // ── Senior Care TechAlert drip (D4 + D8) ────────────────────────────────────
+  const { data: scLeads } = await sb
+    .from("outreach_leads" as any)
+    .select("id, business_name, email, industry, city, drip_campaign_status, last_contact_date")
+    .eq("offer_pitched", "techalert_senior_care")
+    .eq("status", "emailed")
+    .not("email", "is", null);
+
+  for (const lead of (scLeads || [])) {
+    const drip = (lead.drip_campaign_status as any) || {};
+    if (!drip.d0_sent) continue;
+    const d0Date = drip.d0_sent_at ? new Date(drip.d0_sent_at) : new Date(lead.last_contact_date || now);
+    const daysSince = (now.getTime() - d0Date.getTime()) / 86400000;
+
+    if (daysSince >= 4 && daysSince < 9 && !drip.d4_sent) {
+      const body = `Hey — just following up on the note I sent earlier this week about TechAlert.
+
+Finding licensed CNAs and LPNs who are actually available right now is the hardest part of running a senior care facility. Michigan publishes every nursing license as public record — we just check it every morning and text you the moment a new one goes active in your area.
+
+$99/mo. No agency fees. You're always first to call.
+
+Worth a quick conversation? Reply here or text me: (313) 806-4952.
+
+— Matt, Detroit Web Agency`;
+
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "Matt Michels <matt@detroitwebagent.com>",
+          to: [lead.email],
+          bcc: ["matt@detroitwebagent.com"],
+          subject: `quick follow-up — ${lead.business_name}`,
+          html: buildHtml(body),
+        }),
+      });
+      if (res.ok) {
+        await sb.from("outreach_leads" as any).update({
+          drip_campaign_status: { ...drip, d4_sent: true, d4_sent_at: now.toISOString() },
+        }).eq("id", lead.id);
+        scD4Sent++;
+      }
+      await new Promise(r => setTimeout(r, 500));
+
+    } else if (daysSince >= 8 && !drip.d8_sent) {
+      const body = `Hey — last note on this.
+
+A home health agency in Warren used TechAlert to find a new LPN last month. She'd just passed her boards and hadn't posted anywhere yet. They called her before she ever got on Indeed.
+
+If staffing ever gets tight enough to try something different: matt@detroitwebagent.com or (313) 806-4952.
+
+— Matt, Detroit Web Agency`;
+
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "Matt Michels <matt@detroitwebagent.com>",
+          to: [lead.email],
+          bcc: ["matt@detroitwebagent.com"],
+          subject: `last note — ${lead.business_name}`,
+          html: buildHtml(body),
+        }),
+      });
+      if (res.ok) {
+        await sb.from("outreach_leads" as any).update({
+          drip_campaign_status: { ...drip, d8_sent: true, d8_sent_at: now.toISOString() },
+          status: "drip_complete",
+        }).eq("id", lead.id);
+        scD8Sent++;
+      }
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }
+
+  // ── Dead lead reactivation drip (D4 + D8) ───────────────────────────────────
   const { data: leads } = await sb
     .from("outreach_leads" as any)
     .select("id, business_name, email, industry, city, drip_campaign_status, last_contact_date")
@@ -108,8 +186,8 @@ If you ever want to try it with your own dead estimates: matt@detroitwebagent.co
     }
   }
 
-  console.log(`[dead-lead-outreach-drip] d4=${d4Sent}, d8=${d8Sent}`);
-  return new Response(JSON.stringify({ ok: true, d4: d4Sent, d8: d8Sent }), {
+  console.log(`[dead-lead-outreach-drip] d4=${d4Sent}, d8=${d8Sent}, sc_d4=${scD4Sent}, sc_d8=${scD8Sent}`);
+  return new Response(JSON.stringify({ ok: true, d4: d4Sent, d8: d8Sent, senior_care_d4: scD4Sent, senior_care_d8: scD8Sent }), {
     status: 200, headers: { "Content-Type": "application/json" },
   });
 });

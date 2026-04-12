@@ -14,6 +14,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-04-12. Update this section every session.*
 
+### Phase 10 — Senior Care Vertical + Multi-State TechAlert COMPLETE ✅
+Work on `claude/opusplan-setup-nmyYS`. Merge to main to deploy.
+
+**Senior Care Vertical (new revenue lane — softer buyers, massive staffing pain):**
+- `contractor-prospector` — added `sniperSeniorCareEmail()` + `buildSeniorCareEmailHtml()`. Assisted living/home health/skilled nursing route to TechAlert CNA/LPN/RN pitch (3/day cap). Skips Scout/Sniper flow. Logs `offer_pitched: "techalert_senior_care"`.
+- `dead-lead-outreach-drip` — D4+D8 follow-up sequence added for `techalert_senior_care` leads. D4 reinforces "first to call" angle. D8 uses social proof story (home health agency finding LPN before Indeed).
+- `Tom.agent.md` — full senior care section added (section 12): why soft buyers, three facility types, TechAlert pitch + objections, license types monitored (CNA/LPN/RN), secondary pitch (License Monitor + Dead Lead Reactivation). Template C2 added. Product Matching table updated. Field Service Prospects updated to include assisted living/home health/SNF.
+
+**Multi-State TechAlert + BPL Excel downloads:**
+- `hire-alert-scanner` — `scanMIOSHA()` replaced with `scanBPL()`: fetches Michigan LARA BPL page, extracts xlsx download links for boiler/electrical/plumbing/HVAC/nursing trades, parses with SheetJS (dynamic import, 10MB limit, 3000 rows, 30-day filter). No Firecrawl needed for MI license data.
+- `hire-alert-scanner` — `scanFloridaDBPR()` added: fetches Florida DBPR instant public records page, downloads CSV files for construction/electrical/plumbing/HVAC, parses ASCII quote/comma delimited format.
+- All four sources run in parallel: BPL, Apollo, job boards, Florida DBPR.
+- Added CNA/LPN/RN/home_health_aide to `ROLE_KEYWORDS` for senior care client matching.
+- Source type updated: "bpl" + "florida_dbpr" replace "miosha".
+
+**Senior care target profile:** Assisted living (30+ beds), home health agencies (10+ field workers), skilled nursing (Medicare/Medicaid regulated). TechAlert is $99/mo vs. $8,000–15,000 agency fee per hire. One hire = 7+ years of the service paid.
+
 ### Phase 9 — Legal/Compliance Hardening + Dutch Auction COMPLETE ✅
 Work on `claude/opusplan-setup-nmyYS`. Merge to main to deploy.
 

@@ -128,6 +128,7 @@ Match prospects to the right M² product based on their business type:
 | HVAC / Plumbing / Electrical / Boiler (3–15 techs) | FieldDesk ($199/mo) | TechAlert, SiteRadar, License Monitor, Review Monitor |
 | Field service co. currently on Jobber | FieldDesk ($199/mo flat) | Attack: "Jobber charges $29/hire. We don't." |
 | Any field service co. short-staffed | TechAlert ($99/mo) | License Monitor |
+| Assisted living / skilled nursing / home health (5–50 staff) | TechAlert ($99/mo) — CNA/LPN/RN alerts | Dead Lead Reactivation (old inquiry follow-up), License Monitor |
 | Any local business with a website | SiteRadar ($49/mo) | Review Monitor |
 | Contractor needing leads (skeptical, new) | Contractor Lead Gen (5 free → $50/lead PPL) | Convert to $399/mo territory lock after proof |
 | Contractor needing leads (proven/trusted) | Contractor Lead Gen ($399/mo territory) | TechAlert, License Monitor |
@@ -137,6 +138,48 @@ Match prospects to the right M² product based on their business type:
 | Independent restaurant / bar / cafe | Restaurant SMS ($19/mo) | Weekly SMS Blast, Website build |
 | Any business with SMS list | Weekly SMS Blast ($19/mo) | Seasonal Promo Blaster |
 | Seasonal service business | Seasonal Promo Blaster ($29/mo) | — |
+
+### 12. Senior Care TechAlert Sales (Assisted Living / Skilled Nursing / Home Health)
+**Why senior care is the next big vertical:**
+- Staffing is their #1 operating pain. Period. CNAs turn over at 65–100% annually. One unfilled CNA shift = unsafe staffing ratios + DHHS citations.
+- They're softer buyers than contractors — they expect professional service, will pay for a solution that actually works
+- Their HR departments actively look for CNA pipeline tools
+- Michigan BPL issues LPN and RN licenses. MI-NATES is the CNA registry. Both feed TechAlert.
+
+**The three senior care customer types:**
+1. **Assisted Living Facilities (ALF)** — Need: CNA and home health aides. Pain: high turnover, hard to find warm bodies who are licensed. Typical size: 30–200 residents, 15–60 staff.
+2. **Home Health Agencies** — Need: CNA and LPN. Pain: constantly short-staffed, can't accept new clients without more field workers. A new LPN = they can take on 15–20 more clients.
+3. **Skilled Nursing Facilities (SNF)** — Need: CNA, LPN, and RN. Pain: must maintain state-mandated staffing ratios or face citations. One missed ratio = potential Medicare/Medicaid compliance issue.
+
+**TechAlert senior care pitch:**
+- Michigan's Bureau of Professional Licensing issues every LPN and RN license. We check it daily.
+- New license issued = someone just passed boards or transferred from another state = they're looking.
+- We text you the moment it happens: name, license number, issue date.
+- $99/mo vs. a staffing agency that charges 15–25% of annual salary ($8,000–15,000 per hire).
+
+**The hook line (use this):** "You know how hard it is to find a CNA who's actually licensed and available right now? Michigan publishes every nursing license issued in the state. We check it every morning and text you when a new one goes active. For $99/month, you're always first to call."
+
+**Objections and rebuttals:**
+- *"We use staffing agencies"* → "That's $8,000–12,000 per hire in agency fees. We're $99/month whether we find you one or a hundred. One hire and we've paid for ourselves for 7 years."
+- *"We post on Indeed"* → "Indeed is reactive — you post, you wait, you compete with every other facility in Michigan. TechAlert is proactive — the moment a new CNA license drops, you know before anyone else posts."
+- *"We can't afford it right now"* → "One CNA shift you can't fill costs you $800–1,200 in agency temp fees. That's 8–12 months of TechAlert. One filled shift from our alert and it's paid for."
+- *"How do you get this data?"* → "Michigan LARA (Bureau of Professional Licensing) publishes it as public record. We just monitor it for you so you don't have to."
+
+**Who to target:**
+- Facilities in Metro Detroit with 30+ beds (they have enough staff to have a real hiring problem)
+- Home health agencies with 10+ field workers
+- Any facility that has Indeed job postings for CNA/LPN right now (they're actively desperate)
+- Find them: Google "assisted living [city] MI", "home health agency [city] MI", "skilled nursing [city] MI"
+
+**License types TechAlert monitors for senior care:**
+- CNA: Michigan CNA Registry (MI-NATES) — new certifications and reinstatements
+- LPN: Michigan BPL License DB — Licensed Practical Nurse
+- RN: Michigan BPL License DB — Registered Nurse
+- (Florida expansion: DBPR nursing licenses for FL senior care facilities)
+
+**Secondary pitch after TechAlert is sold:**
+- License Monitor ($25/mo): "Are you tracking when your staff's CNA/LPN certifications expire? One expired cert on a chart review = citation. We'll text you 90 days before anyone on your team is due."
+- Dead Lead Reactivation: "Do you have a list of former CNAs who interviewed but didn't take the job? We can send them a reactivation text — 'Hey, are you still looking? We have an opening' — you pay $50 only if they say yes."
 
 ---
 
@@ -193,6 +236,17 @@ Match prospects to the right M² product based on their business type:
 > We built a tool that checks it every morning. When a new license pops up or someone's status changes — usually means they just finished an apprenticeship or switched jobs — we text you their name and license info before anyone else knows they're available.
 >
 > $99/mo. No recruiter fees. First to call usually gets the hire.
+>
+> Local guy in Grosse Pointe — happy to talk this week. — Matt (313) 806-4952
+
+### Template C2 — TechAlert Senior Care (CNA/LPN/RN staffing alert)
+> Subject: new CNA licenses just dropped in [city]
+>
+> Hey [Name] — you probably already know how hard it is to find a CNA who's actually licensed and available right now in [city].
+>
+> Michigan's Bureau of Professional Licensing publishes every nursing license issued in the state — LPN, RN, CNA — as public record. We built a tool that checks it every morning. When a new license goes active in your area, we text you the name and license number immediately, before anyone else posts a job ad.
+>
+> $99/mo. No recruiter fees. One hire pays for the whole year.
 >
 > Local guy in Grosse Pointe — happy to talk this week. — Matt (313) 806-4952
 
@@ -309,7 +363,12 @@ Target industries (in priority order):
 4. Boiler/industrial service companies
 5. Pest control companies with 2–8 techs
 6. Landscaping companies with 4–20 crew members
+7. **Assisted living facilities** (30+ beds) — TechAlert CNA/LPN pitch
+8. **Home health agencies** (10+ field workers) — TechAlert CNA/LPN pitch
+9. **Skilled nursing facilities** — TechAlert CNA/LPN/RN pitch
 
 **Primary pain point to probe:** "What software do your techs use in the field right now?" If the answer is eWay, paper, or "just their phone," that's a FieldDesk sale. If they say they can't find good techs, that's TechAlert. If they mention license renewals or compliance, that's License Monitor.
+
+**For senior care:** "How are you finding CNAs right now?" If the answer is Indeed, staffing agencies, or word of mouth — that's a TechAlert sale. Use Template C2. Pitch is $99/mo vs. $8,000+ agency fees per hire.
 
 Always pitch the website first — it unlocks the bundle discounts and builds the relationship before the recurring SaaS.
