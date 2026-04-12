@@ -1,8 +1,7 @@
 import { useState } from "react";
 import SEOHead from "@/components/layout/SEOHead";
 import { Shield, AlertTriangle, Eye, Lock, CheckCircle, Zap, Users, Globe } from "lucide-react";
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
+import { supabase } from "@/integrations/supabase/client";
 
 const STATS = [
   { icon: AlertTriangle, value: "24B+", label: "Credentials leaked in 2024", color: "#ef4444" },
@@ -85,16 +84,12 @@ export default function DarkWebMonitor() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/create-dark-web-monitor-checkout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (data.url) {
+      const { data, error } = await supabase.functions.invoke("create-dark-web-monitor-checkout", { body: form });
+      if (error) throw new Error(error.message);
+      if (data?.url) {
         window.location.href = data.url;
       } else {
-        setError(data.error || "Something went wrong. Please try again.");
+        setError(data?.error || "Something went wrong. Please try again.");
       }
     } catch {
       setError("Network error. Please try again.");

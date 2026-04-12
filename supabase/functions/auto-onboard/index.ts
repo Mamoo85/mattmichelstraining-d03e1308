@@ -399,6 +399,11 @@ const SMS_TYPES = new Set([
   "sms_blast", "noshow_rebooker", "estimate_followup", "invoice_chaser",
   "afterjob_drip", "promo_blaster", "referral_program", "slow_day_sms",
   "homeowner_campaign", "review_monitor",
+  // _subscription suffixed variants (sent by stripe-webhook)
+  "sms_blast_subscription", "noshow_subscription", "estimate_drip_subscription",
+  "invoice_chaser_subscription", "afterjob_drip_subscription", "promo_blaster_subscription",
+  "referral_program_subscription", "slow_day_subscription", "homeowner_campaign_subscription",
+  "review_monitor_subscription",
 ]);
 
 function getTemplate(serviceType: string): OnboardTemplate | null {

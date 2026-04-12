@@ -110,6 +110,9 @@ const SERVICE_TABLES = [
   { table: "leads", service: "SMS Leads (Comms Center)", price: "$0/mo", lastField: null, freq: 0 },
   { table: "field_crm_clients", service: "Field Service Management", price: "$199-299/mo", lastField: null, freq: 0 },
   { table: "hire_alert_clients", service: "TechAlert Hiring Monitor", price: "$49-99/mo", lastField: "created_at", freq: 1 },
+  { table: "seo_guard_clients", service: "SEO Guard", price: "$29/mo", lastField: "last_report_at", freq: 7 },
+  { table: "missed_call_clients", service: "Missed Call Text-Back", price: "$99/mo", lastField: null, freq: 0 },
+  { table: "tech_support_tickets", service: "Local Tech Support", price: "$49/session", lastField: null, freq: 0 },
 ] as const;
 
 function daysBetween(dateStr: string | null): number | null {

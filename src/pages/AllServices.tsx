@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Phone } from "lucide-react";
+import SEOHead from "@/components/layout/SEOHead";
 
 interface Service {
   name: string;
@@ -97,6 +98,7 @@ const TOTAL_SERVICES = CATEGORIES.reduce((sum, cat) => sum + cat.services.length
 export default function AllServices() {
   return (
     <div className="min-h-screen text-white" style={{ background: "#0a0a0f" }}>
+      <SEOHead title="All Services — Detroit Web Agency" description="The full Detroit Web Agency service stack: FieldDesk CRM, TechAlert hiring monitor, SiteRadar visitor intel, SEO Guard, dead lead reactivation, and more." path="/all-services" />
       {/* Hero */}
       <section className="relative py-16 px-4 text-center overflow-hidden" style={{ borderBottom: "1px solid rgba(148,163,184,0.08)" }}>
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, #22d3ee 1px, transparent 1px)", backgroundSize: "32px 32px" }} />

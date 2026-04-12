@@ -359,6 +359,7 @@ export default function AdminAutomationHub() {
           badge="$199/mo"
           stats={[{ label: "Frequency", value: "6 hrs" }, { label: "Pieces", value: "5/ep" }, { label: "Delivery", value: "Email" }]}
           actions={[{ label: podcastRunning ? "Checking..." : "Check Feeds Now", onClick: () => runFunction("podcast-content-generator", {}, setPodcastRunning, "Podcast feeds checked"), loading: podcastRunning }]}
+          links={[{ label: "Product Page", href: "/podcast-revenue-machine" }]}
         />
 
         {/* Regulatory Monitor */}
@@ -370,6 +371,7 @@ export default function AdminAutomationHub() {
           badge="$197/mo"
           stats={[{ label: "Frequency", value: "Weekly" }, { label: "Source", value: "Fed Register" }, { label: "Alert", value: "Email" }]}
           actions={[{ label: regulatoryRunning ? "Scanning..." : "Run Scan Now", onClick: () => runFunction("regulatory-monitor-scan", {}, setRegulatoryRunning, "Regulatory scan complete"), loading: regulatoryRunning }]}
+          links={[{ label: "Product Page", href: "/regulatory-monitor" }]}
         />
 
         {/* Competitor Pricing */}
@@ -381,6 +383,7 @@ export default function AdminAutomationHub() {
           badge="$149/mo"
           stats={[{ label: "Frequency", value: "Weekly" }, { label: "Detection", value: "Hash diff" }, { label: "Alert", value: "Email" }]}
           actions={[{ label: competitorRunning ? "Scanning..." : "Run Scan Now", onClick: () => runFunction("competitor-pricing-scan", {}, setCompetitorRunning, "Competitor pricing scan complete"), loading: competitorRunning }]}
+          links={[{ label: "Product Page", href: "/competitor-pricing" }]}
         />
 
         {/* Real Estate Newsletter */}
@@ -392,6 +395,7 @@ export default function AdminAutomationHub() {
           badge="$79/mo"
           stats={[{ label: "Frequency", value: "Weekly" }, { label: "Content", value: "AI Market" }, { label: "Delivery", value: "Resend" }]}
           actions={[{ label: reNewsletterRunning ? "Sending..." : "Send Now", onClick: () => runFunction("re-newsletter-send", {}, setReNewsletterRunning, "RE newsletters sent"), loading: reNewsletterRunning }]}
+          links={[{ label: "Product Page", href: "/real-estate-newsletter" }]}
         />
 
         {/* Trademark Watch */}

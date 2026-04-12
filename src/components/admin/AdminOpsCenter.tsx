@@ -96,12 +96,15 @@ const ALL_SERVICES = [
   { table: "leads", name: "Communications Center (SMS CRM)", price: "$0/mo", priceNum: 0 },
   { table: "field_crm_clients", name: "Field Service Management", price: "$199-299/mo", priceNum: 249 },
   { table: "hire_alert_clients", name: "TechAlert Hiring Monitor", price: "$49-99/mo", priceNum: 74 },
+  { table: "missed_call_clients", name: "Missed Call Text-Back", price: "$99/mo", priceNum: 99 },
+  { table: "tech_support_tickets", name: "Local Tech Support", price: "$49/session", priceNum: 49 },
 ] as const;
 
+const MATT_EMAILS = new Set(["matt@mattmichelstraining.com", "matthewmichels4@gmail.com"]);
 const isTestAccount = (r: { business_name?: string; email?: string }) => {
   const bn = (r.business_name || "").toLowerCase();
   const em = (r.email || "").toLowerCase();
-  return bn.includes("test") || em.includes("test") || bn === "demo" || em.includes("demo@");
+  return bn.includes("test") || em.includes("test") || bn === "demo" || em.includes("demo@") || MATT_EMAILS.has(em);
 };
 
 interface ClientRecord {

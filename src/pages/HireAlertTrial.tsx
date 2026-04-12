@@ -4,6 +4,7 @@
 // This page is the self-serve version for when we're ready to automate it.
 
 import { useState } from "react";
+import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 
 const TRADE_OPTIONS = [
@@ -83,6 +84,7 @@ export default function HireAlertTrial() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#0a1628", padding: "48px 24px" }}>
+      <SEOHead title="TechAlert Free Trial — Detroit Web Agency" description="Start your free 3-day TechAlert trial. We'll scan MIOSHA, Apollo, and job boards for available licensed tradespeople and alert you the moment a match appears." path="/hire-alert-trial" />
       <div style={{ maxWidth: 560, margin: "0 auto" }}>
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>

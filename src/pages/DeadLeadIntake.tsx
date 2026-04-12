@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 
 const TRADES = ["HVAC", "Plumbing", "Roofing", "Electrical", "General Contractor", "Landscaping", "Painting", "Other"];
@@ -163,6 +164,7 @@ export default function DeadLeadIntake() {
 
   return (
     <Page>
+      <SEOHead title="Dead Lead Reactivation — Detroit Web Agency" description="Upload your old unsold leads and let us text them for you. $50 per positive reply. No monthly fee, no contracts. We only get paid when you do." path="/dead-lead-intake" />
       <Card>
         <div style={{ marginBottom: 28 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>

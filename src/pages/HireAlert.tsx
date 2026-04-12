@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import SEOHead from "@/components/layout/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,6 +77,7 @@ export default function HireAlert() {
 
   return (
     <div style={{ background: "#0a1628", minHeight: "100vh", color: "#fff", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+      <SEOHead title="TechAlert — Licensed Tradesperson Hiring Monitor | Detroit Web Agency" description="Daily MIOSHA + Apollo + job board scans. Get instant alerts when licensed boiler operators, HVAC techs, plumbers, and electricians become available in Michigan. $49–99/mo." path="/hire-alert" />
 
       {/* Nav */}
       <nav style={{ padding: "16px 24px", borderBottom: "1px solid #1e3a5f", display: "flex", justifyContent: "space-between", alignItems: "center" }}>

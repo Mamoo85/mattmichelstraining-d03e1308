@@ -204,8 +204,8 @@ export default function GetStarted() {
   return (
     <>
       <SEOHead
-        title="Get Started | M2 Training"
-        description="Book a free consultation with Matt Michels. No sales pitch, no pressure — just a quick conversation about what you need."
+        title="Get Started — Detroit Web Agency"
+        description="Pick one tool to grow your business. No sales pitch, no pressure — just a quick conversation about what you need. We handle the tech."
         path="/get-started"
       />
       <div className="min-h-screen bg-background text-foreground">

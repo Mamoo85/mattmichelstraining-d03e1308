@@ -446,6 +446,7 @@ export default function AdminSandbox() {
   const subs = PRODUCTS.filter(p => p.type === "subscription" && p.category === "Subscription");
   const smsProducts = PRODUCTS.filter(p => p.category === "SMS Products");
   const autonomousProducts = PRODUCTS.filter(p => p.category === "Autonomous Products");
+  const dwaProducts = PRODUCTS.filter(p => p.category === "Detroit Web Agency");
   const wave4Products = PRODUCTS.filter(p => p.category === "Wave 4");
   const highTicketProducts = PRODUCTS.filter(p => p.category === "High-Ticket");
 
@@ -753,6 +754,17 @@ export default function AdminSandbox() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {autonomousProducts.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-emerald-500/50" badgeClass="bg-emerald-500/20 text-emerald-400 border-emerald-500/30" btnClass="bg-emerald-900/30 hover:bg-emerald-800/40 text-emerald-300 border border-emerald-600/50" />)}
+        </div>
+      </div>
+
+      {/* Detroit Web Agency Products */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <h3 className="text-white font-semibold">Detroit Web Agency</h3>
+          <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 text-xs">FieldDesk · TechAlert · SiteRadar</Badge>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {dwaProducts.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-cyan-500/50" badgeClass="bg-cyan-500/20 text-cyan-400 border-cyan-500/30" btnClass="bg-cyan-900/30 hover:bg-cyan-800/40 text-cyan-300 border border-cyan-600/50" />)}
         </div>
       </div>
 

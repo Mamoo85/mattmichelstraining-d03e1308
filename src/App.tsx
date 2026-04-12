@@ -719,7 +719,7 @@ const App = () => (
                      <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
                      <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
                      <Route path="/admin" element={<AgencyAdminRoute><Admin /></AgencyAdminRoute>} />
-                     <Route path="/dwa-admin" element={<ProtectedRoute><DWAAdmin /></ProtectedRoute>} />
+                     <Route path="/dwa-admin" element={<AgencyAdminRoute><DWAAdmin /></AgencyAdminRoute>} />
                      <Route path="/admin/view-user/:userId" element={<ProtectedRoute><AdminViewUser /></ProtectedRoute>} />
                      <Route path="/comms-center" element={<ProtectedRoute><CommunicationsCenter /></ProtectedRoute>} />
                      <Route path="/dashboard" element={<ZoneDashboard />} />
