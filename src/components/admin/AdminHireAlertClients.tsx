@@ -435,6 +435,7 @@ export default function AdminHireAlertClients() {
                 ))}
               </tbody>
             </table>
+          </div>
         </div>
       ) : (
         <div className="rounded-2xl border border-dashed border-amber-500/20 bg-amber-500/5 p-8 text-center">
