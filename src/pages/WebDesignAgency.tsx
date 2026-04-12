@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 /* ── Hard data that makes the page feel real ─────── */
-const PHONE = "(313) 806-4952";
+const PHONE = "(313) 992-1219";
 
 const RESULTS = [
   { before: "No website", after: "Ranked #1 on Google Maps within 6 weeks", industry: "Plumber · Eastpointe" },
@@ -159,7 +159,7 @@ const WebDesignAgency = () => {
       });
       setSent(true);
     } catch {
-      toast.error("Something went wrong. Call me directly — (313) 806-4952");
+      toast.error("Something went wrong. Call me directly — (313) 992-1219");
     } finally {
       setSending(false);
     }

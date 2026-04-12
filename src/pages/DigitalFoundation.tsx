@@ -79,11 +79,11 @@ export default function DigitalFoundation() {
               Your 7-day free trial has started — you won't be charged until day 8.
             </p>
             <a
-              href="tel:+13138064952"
+              href="tel:+13139921219"
               className="inline-flex items-center gap-2 font-bold"
               style={{ color: "#22d3ee" }}
             >
-              <Phone size={16} /> (313) 806-4952
+              <Phone size={16} /> (313) 992-1219
             </a>
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function DigitalFoundation() {
       if (data?.url) window.location.href = data.url;
       else throw new Error("No checkout URL returned");
     } catch (e: any) {
-      toast.error(e.message || "Something went wrong. Call (313) 806-4952");
+      toast.error(e.message || "Something went wrong. Call (313) 992-1219");
     } finally {
       setSubmitting(false);
     }
@@ -151,11 +151,11 @@ export default function DigitalFoundation() {
                 Get Started — 7 Days Free <ArrowRight size={16} />
               </a>
               <a
-                href="tel:+13138064952"
+                href="tel:+13139921219"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition hover:bg-white/5"
                 style={{ border: "1px solid rgba(148,163,184,0.25)", color: "#e2e8f0" }}
               >
-                <Phone size={14} /> (313) 806-4952
+                <Phone size={14} /> (313) 992-1219
               </a>
             </div>
           </div>
@@ -366,11 +366,11 @@ export default function DigitalFoundation() {
                 <br />
                 Questions? Call{" "}
                 <a
-                  href="tel:+13138064952"
+                  href="tel:+13139921219"
                   className="font-medium"
                   style={{ color: "#22d3ee" }}
                 >
-                  (313) 806-4952
+                  (313) 992-1219
                 </a>
               </p>
             </form>
@@ -387,11 +387,11 @@ export default function DigitalFoundation() {
             Let's fix that this week.
           </p>
           <a
-            href="tel:+13138064952"
+            href="tel:+13139921219"
             className="inline-flex items-center gap-2 px-8 py-3 rounded-lg font-bold transition-all duration-300"
             style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 30px rgba(6,182,212,0.3)" }}
           >
-            <Phone size={16} /> Call Matt — (313) 806-4952
+            <Phone size={16} /> Call Matt — (313) 992-1219
           </a>
         </section>
       </div>

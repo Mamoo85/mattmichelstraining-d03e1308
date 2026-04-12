@@ -259,7 +259,7 @@ export default function VisibilityScore() {
                         </Button>
                       </a>
                       <a
-                        href="tel:+13138064952"
+                        href="tel:+13139921219"
                         className="inline-flex items-center justify-center gap-2 border border-border px-5 py-2 rounded-lg text-sm font-medium hover:bg-muted/50"
                       >
                         <Phone size={14} /> Call Matt

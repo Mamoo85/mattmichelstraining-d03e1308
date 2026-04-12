@@ -173,7 +173,7 @@ const MicroSaasToolPage = () => {
         {/* Footer */}
         <footer className="bg-[#0f172a] border-t border-slate-800 py-8">
           <div className="max-w-4xl mx-auto px-4 text-center text-sm text-slate-500">
-            <p>Detroit Web Agency · Matt Michels · Grosse Pointe, MI · (313) 806-4952</p>
+            <p>Detroit Web Agency · Matt Michels · Grosse Pointe, MI · (313) 992-1219</p>
             <p className="mt-2">
               <Link to="/" className="text-slate-400 hover:text-white">Home</Link>
               {" · "}

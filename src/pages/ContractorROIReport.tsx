@@ -63,7 +63,7 @@ export default function ContractorROIReport() {
       <div style={{ textAlign: "center", maxWidth: 400 }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
         <h1 style={{ color: "#fff", fontSize: 22, margin: "0 0 12px" }}>Report Unavailable</h1>
-        <p style={{ color: "#64748b", fontSize: 15 }}>This link may have expired or is invalid. Text Matt at <a href="tel:+13138064952" style={{ color: "#00d4ff" }}>(313) 806-4952</a> for help.</p>
+        <p style={{ color: "#64748b", fontSize: 15 }}>This link may have expired or is invalid. Text Matt at <a href="tel:+13139921219" style={{ color: "#00d4ff" }}>(313) 992-1219</a> for help.</p>
       </div>
     </div>
   );
@@ -100,10 +100,10 @@ export default function ContractorROIReport() {
             Questions about your report or want to add a service?
           </p>
           <a
-            href="tel:+13138064952"
+            href="tel:+13139921219"
             style={{ color: "#00d4ff", fontSize: 16, fontWeight: 700, textDecoration: "none" }}
           >
-            Text Matt: (313) 806-4952
+            Text Matt: (313) 992-1219
           </a>
         </div>
 

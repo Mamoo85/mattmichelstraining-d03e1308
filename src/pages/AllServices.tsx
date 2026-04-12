@@ -119,7 +119,7 @@ export default function AllServices() {
             style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 30px rgba(6,182,212,0.3)" }}
           >
             <Phone className="w-4 h-4" />
-            (313) 806-4952 — Text or call Matt
+            (313) 992-1219 — Text or call Matt
           </a>
         </div>
       </section>
@@ -181,7 +181,7 @@ export default function AllServices() {
             style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 30px rgba(6,182,212,0.3)" }}
           >
             <Phone className="w-5 h-5" />
-            Text Matt at (313) 806-4952
+            Text Matt at (313) 992-1219
           </a>
         </div>
       </section>

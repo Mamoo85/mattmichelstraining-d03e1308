@@ -41,7 +41,7 @@ export default function DeadLeadIntake() {
               no action needed from you.
             </p>
             <p style={{ color: "#00d4ff", fontSize: 13, marginTop: 20 }}>
-              Questions? Text Matt: (313) 806-4952
+              Questions? Text Matt: (313) 992-1219
             </p>
           </div>
         </Card>
@@ -100,7 +100,7 @@ export default function DeadLeadIntake() {
       if (fnErr || data?.error) throw new Error(data?.error || fnErr?.message);
       if (data?.setup_url) window.location.href = data.setup_url;
     } catch (e: any) {
-      setError(e.message || "Could not start billing setup. Text Matt at (313) 806-4952.");
+      setError(e.message || "Could not start billing setup. Text Matt at (313) 992-1219.");
       setBillingLoading(false);
     }
   }
@@ -154,7 +154,7 @@ export default function DeadLeadIntake() {
 
             <p style={{ color: "#64748b", fontSize: 13 }}>
               Matt has been notified and will review your campaign shortly.
-              Questions? Text (313) 806-4952.
+              Questions? Text (313) 992-1219.
             </p>
           </div>
         </Card>
@@ -294,7 +294,7 @@ function Page({ children }: { children: React.ReactNode }) {
         </div>
         {children}
         <p style={{ color: "#334155", fontSize: 12, textAlign: "center", marginTop: 24 }}>
-          Questions? matt@detroitwebagent.com · (313) 806-4952
+          Questions? matt@detroitwebagent.com · (313) 992-1219
         </p>
       </div>
     </div>

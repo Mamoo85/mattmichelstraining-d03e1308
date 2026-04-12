@@ -60,7 +60,7 @@ export default function WeeklyBusinessDigest() {
             Your first Weekly Business Digest drops this Monday morning. Keep an eye on your inbox — and check your spam folder just in case.
           </p>
           <p className="mt-6 text-sm text-slate-400">
-            Questions? <a href="tel:+13138064952" className="text-cyan-500 hover:underline">(313) 806-4952</a>
+            Questions? <a href="tel:+13139921219" className="text-cyan-500 hover:underline">(313) 992-1219</a>
           </p>
         </div>
       </div>
@@ -244,7 +244,7 @@ export default function WeeklyBusinessDigest() {
           <Users size={18} className="text-cyan-500" />
           <span className="text-slate-400 text-sm">Built by Matt Michels — Grosse Pointe, MI</span>
         </div>
-        <p className="text-slate-500 text-xs">Questions? <a href="tel:+13138064952" className="text-cyan-500 hover:underline">(313) 806-4952</a> · <a href="mailto:matt@mattmichelstraining.com" className="text-cyan-500 hover:underline">matt@mattmichelstraining.com</a></p>
+        <p className="text-slate-500 text-xs">Questions? <a href="tel:+13139921219" className="text-cyan-500 hover:underline">(313) 992-1219</a> · <a href="mailto:matt@mattmichelstraining.com" className="text-cyan-500 hover:underline">matt@mattmichelstraining.com</a></p>
       </section>
     </div>
   );

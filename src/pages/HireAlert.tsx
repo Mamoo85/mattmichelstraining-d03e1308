@@ -82,7 +82,7 @@ export default function HireAlert() {
       {/* Nav */}
       <nav style={{ padding: "16px 24px", borderBottom: "1px solid #1e3a5f", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ color: "#00d4ff", fontWeight: 700, fontSize: 18, letterSpacing: 1 }}>DETROIT WEB AGENCY</span>
-        <a href="tel:3138064952" style={{ color: "#00d4ff", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>(313) 806-4952</a>
+        <a href="tel:3138064952" style={{ color: "#00d4ff", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>(313) 992-1219</a>
       </nav>
 
       {/* Hero */}
@@ -301,7 +301,7 @@ export default function HireAlert() {
           </div>
 
           <p style={{ margin: "16px 0 0", fontSize: 12, color: "#64748b", textAlign: "center" }}>
-            Secure checkout via Stripe · Cancel anytime · Or call Matt: (313) 806-4952
+            Secure checkout via Stripe · Cancel anytime · Or call Matt: (313) 992-1219
           </p>
         </div>
       </section>
@@ -309,7 +309,7 @@ export default function HireAlert() {
       {/* Footer */}
       <footer style={{ borderTop: "1px solid #1e3a5f", padding: "32px 24px", textAlign: "center", color: "#475569", fontSize: 13 }}>
         <p style={{ margin: "0 0 8px", fontWeight: 700, color: "#00d4ff" }}>DETROIT WEB AGENCY</p>
-        <p style={{ margin: 0 }}>Grosse Pointe, MI · (313) 806-4952 · detroitwebagent.com · "We Handle The Tech"</p>
+        <p style={{ margin: 0 }}>Grosse Pointe, MI · (313) 992-1219 · detroitwebagent.com · "We Handle The Tech"</p>
       </footer>
 
     </div>

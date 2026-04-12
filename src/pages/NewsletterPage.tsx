@@ -138,7 +138,7 @@ export default function NewsletterPage() {
 
           <p className="text-[11px] text-muted-foreground text-center mt-6">
             Written by Matt Michels — former competitive athlete, now helping reps get better at the prospecting side of the job.<br />
-            Questions? <a href="mailto:matt@mattmichelstraining.com" className="text-primary">matt@mattmichelstraining.com</a> · <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a>
+            Questions? <a href="mailto:matt@mattmichelstraining.com" className="text-primary">matt@mattmichelstraining.com</a> · <a href="tel:+13139921219" className="text-primary">(313) 992-1219</a>
           </p>
         </div>
       </div>

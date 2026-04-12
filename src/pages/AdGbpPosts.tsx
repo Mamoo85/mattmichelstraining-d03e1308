@@ -75,7 +75,7 @@ export default function AdGbpPosts() {
       if (data?.url) window.location.href = data.url;
       else throw new Error("No checkout URL");
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong. Call/text Matt: (313) 806-4952");
+      toast.error(err.message || "Something went wrong. Call/text Matt: (313) 992-1219");
     } finally {
       setSubmitting(false);
     }
@@ -88,7 +88,7 @@ export default function AdGbpPosts() {
           <CheckCircle size={52} className="mx-auto text-green-400" />
           <h1 className="text-2xl font-black text-white">Posts on the Way</h1>
           <p className="text-slate-300 text-sm">Your 30 Google Business Profile posts will arrive within 2 minutes. Check spam if needed.</p>
-          <p className="text-slate-500 text-xs">Questions? Text Matt: (313) 806-4952</p>
+          <p className="text-slate-500 text-xs">Questions? Text Matt: (313) 992-1219</p>
         </div>
       </div>
     );
@@ -197,7 +197,7 @@ export default function AdGbpPosts() {
           <div className="bg-gradient-to-t from-slate-800 to-transparent h-8 -mt-8 relative pointer-events-none" />
         </div>
         <p className="text-center text-xs text-slate-600 mt-4">
-          Detroit Web Agency · mattmichelstraining.com · (313) 806-4952
+          Detroit Web Agency · mattmichelstraining.com · (313) 992-1219
         </p>
       </div>
     </div>

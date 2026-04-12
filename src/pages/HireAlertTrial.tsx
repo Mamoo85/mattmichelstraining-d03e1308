@@ -75,7 +75,7 @@ export default function HireAlertTrial() {
           </p>
           <p style={{ color: "#475569", fontSize: 14 }}>
             Questions? Text Matt at{" "}
-            <a href="tel:+13138064952" style={{ color: "#00d4ff" }}>(313) 806-4952</a>
+            <a href="tel:+13139921219" style={{ color: "#00d4ff" }}>(313) 992-1219</a>
           </p>
         </div>
       </div>

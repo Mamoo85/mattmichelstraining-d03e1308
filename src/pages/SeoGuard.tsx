@@ -154,7 +154,7 @@ export default function SeoGuard() {
 
       {/* Footer */}
       <footer className="text-center py-8 text-sm text-muted-foreground border-t border-border">
-        <p>Detroit Web Agency · Grosse Pointe, MI · <a href="tel:+13138064952" className="text-cyan-500">(313) 806-4952</a></p>
+        <p>Detroit Web Agency · Grosse Pointe, MI · <a href="tel:+13139921219" className="text-cyan-500">(313) 992-1219</a></p>
       </footer>
     </div>
   );

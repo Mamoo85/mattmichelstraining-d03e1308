@@ -403,7 +403,7 @@ export default function DarkWebMonitor() {
               <img src="/images/matt-boat.jpg" alt="Matt Michels" className="w-10 h-10 rounded-full object-cover border-2 border-[#1e2d4a]" />
               <div className="text-sm">
                 <div className="font-bold text-white">Matt Michels</div>
-                <div className="text-slate-500">Detroit Web Agency · (313) 806-4952</div>
+                <div className="text-slate-500">Detroit Web Agency · (313) 992-1219</div>
               </div>
             </div>
             <div className="flex items-center gap-6 text-xs text-slate-500">

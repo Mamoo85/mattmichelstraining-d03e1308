@@ -139,10 +139,10 @@ export default function Portfolio() {
               </Button>
             </Link>
             <a
-              href="tel:+13138064952"
+              href="tel:+13139921219"
               className="inline-flex items-center justify-center gap-2 border border-border px-6 py-3 rounded-lg font-medium hover:bg-muted/50 transition"
             >
-              <Phone size={14} /> (313) 806-4952
+              <Phone size={14} /> (313) 992-1219
             </a>
           </div>
         </section>

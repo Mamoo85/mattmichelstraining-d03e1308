@@ -57,7 +57,7 @@ export default function ContractorLeads() {
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong. Try calling (313) 806-4952.");
+      toast.error(err.message || "Something went wrong. Try calling (313) 992-1219.");
     } finally {
       setLoading(false);
     }
@@ -72,7 +72,7 @@ export default function ContractorLeads() {
           </div>
           <h1 className="text-2xl font-black text-foreground mb-3">You're locked in!</h1>
           <p className="text-muted-foreground leading-relaxed">Your territory is reserved. Expect a call from Matt within 24 hours to confirm your lead capture page and go-live date.</p>
-          <p className="mt-4 text-sm text-muted-foreground">Questions? Call or text <a href="tel:+13138064952" className="text-primary font-bold">(313) 806-4952</a></p>
+          <p className="mt-4 text-sm text-muted-foreground">Questions? Call or text <a href="tel:+13139921219" className="text-primary font-bold">(313) 992-1219</a></p>
         </div>
       </div>
     );
@@ -93,8 +93,8 @@ export default function ContractorLeads() {
             Every roofing, HVAC, plumbing, and electrical lead generated in your market goes <strong className="text-white">only to you</strong>. No Angi. No shared bids. Flat monthly fee — cancel anytime.
           </p>
           <div className="mt-6">
-            <a href="tel:+13138064952" className="border border-white/30 text-white px-6 py-3 font-bold text-sm hover:bg-white/10 transition-all inline-flex items-center gap-2">
-              <Phone size={14} /> (313) 806-4952
+            <a href="tel:+13139921219" className="border border-white/30 text-white px-6 py-3 font-bold text-sm hover:bg-white/10 transition-all inline-flex items-center gap-2">
+              <Phone size={14} /> (313) 992-1219
             </a>
           </div>
         </div>
@@ -236,8 +236,8 @@ export default function ContractorLeads() {
           {/* Fallback CTA */}
           <div className="mt-8 text-center">
             <p className="text-sm text-muted-foreground mb-2">Prefer to talk first?</p>
-            <a href="tel:+13138064952" className="inline-flex items-center gap-2 text-primary font-bold text-sm hover:underline">
-              <Phone size={14} /> Call or text Matt — (313) 806-4952
+            <a href="tel:+13139921219" className="inline-flex items-center gap-2 text-primary font-bold text-sm hover:underline">
+              <Phone size={14} /> Call or text Matt — (313) 992-1219
             </a>
           </div>
 

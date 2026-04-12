@@ -86,8 +86,8 @@ export default function LeadCapturePage() {
           </div>
           <h1 className="text-2xl font-black text-foreground mb-3">Request received.</h1>
           <p className="text-muted-foreground leading-relaxed">A local {trade} contractor will reach out within the hour. Check your phone and email.</p>
-          <a href="tel:+13138064952" className="mt-6 inline-flex items-center gap-2 text-primary font-bold text-sm">
-            <Phone size={14} /> Call directly: (313) 806-4952
+          <a href="tel:+13139921219" className="mt-6 inline-flex items-center gap-2 text-primary font-bold text-sm">
+            <Phone size={14} /> Call directly: (313) 992-1219
           </a>
         </div>
       </div>
@@ -103,8 +103,8 @@ export default function LeadCapturePage() {
           </div>
           <h1 className="text-2xl font-black text-foreground mb-3">Something went wrong.</h1>
           <p className="text-muted-foreground leading-relaxed mb-6">Our form had a hiccup. The fastest way to reach a local {trade} contractor is to call or text directly — we'll get you taken care of.</p>
-          <a href="tel:+13138064952" className="inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 font-bold text-sm w-full mb-3">
-            <Phone size={14} /> Call (313) 806-4952
+          <a href="tel:+13139921219" className="inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 font-bold text-sm w-full mb-3">
+            <Phone size={14} /> Call (313) 992-1219
           </a>
           <button onClick={() => setFailed(false)} className="text-sm text-muted-foreground underline">
             Try the form again
@@ -196,8 +196,8 @@ export default function LeadCapturePage() {
 
           <div className="mt-6 text-center">
             <p className="text-[12px] text-muted-foreground">Need to talk now?</p>
-            <a href="tel:+13138064952" className="text-primary font-bold text-sm flex items-center justify-center gap-1.5 mt-1">
-              <Phone size={13} /> (313) 806-4952
+            <a href="tel:+13139921219" className="text-primary font-bold text-sm flex items-center justify-center gap-1.5 mt-1">
+              <Phone size={13} /> (313) 992-1219
             </a>
           </div>
         </div>

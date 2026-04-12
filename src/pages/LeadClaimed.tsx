@@ -17,7 +17,7 @@ export default function LeadClaimed() {
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
           <a
-            href="sms:+13138064952"
+            href="sms:+13139921219"
             style={{
               background: "#00d4ff", color: "#0a1628", padding: "13px 28px",
               borderRadius: 8, fontWeight: 800, fontSize: 15, textDecoration: "none",

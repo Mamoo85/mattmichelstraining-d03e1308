@@ -117,8 +117,8 @@ export default function GovContractMonitor() {
               <a href="#signup" className="bg-[#c59b2b] text-[#1e3a5f] px-7 py-3 font-black text-sm hover:bg-yellow-400 transition-all inline-flex items-center gap-2">
                 Start Monitoring <ChevronRight size={14} />
               </a>
-              <a href="tel:+13138064952" className="border border-white/30 text-white px-7 py-3 font-bold text-sm hover:bg-white/10 transition-all">
-                (313) 806-4952
+              <a href="tel:+13139921219" className="border border-white/30 text-white px-7 py-3 font-bold text-sm hover:bg-white/10 transition-all">
+                (313) 992-1219
               </a>
             </div>
           </div>

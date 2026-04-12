@@ -192,8 +192,8 @@ export default function GetStarted() {
           </p>
           <p className="mt-5 text-sm text-muted-foreground">
             Or reach out directly:{" "}
-            <a href="tel:+13138064952" className="text-[#22d3ee] font-semibold">
-              (313) 806-4952
+            <a href="tel:+13139921219" className="text-[#22d3ee] font-semibold">
+              (313) 992-1219
             </a>
           </p>
         </div>
@@ -351,8 +351,8 @@ export default function GetStarted() {
 
             <p className="text-center text-xs text-muted-foreground">
               Or call/text Matt directly:{" "}
-              <a href="tel:+13138064952" className="text-[#22d3ee] font-semibold">
-                (313) 806-4952
+              <a href="tel:+13139921219" className="text-[#22d3ee] font-semibold">
+                (313) 992-1219
               </a>
             </p>
           </form>
