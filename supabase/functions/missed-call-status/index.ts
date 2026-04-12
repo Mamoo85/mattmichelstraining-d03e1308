@@ -13,8 +13,8 @@ const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219
 const MISSED_STATUSES = new Set(["no-answer", "busy", "failed"]);
 
 const TEXT_BODY =
-  "Hey, it's Matt from Detroit Web Agency — sorry I missed your call! " +
-  "What were you calling about? I'll get back to you ASAP. — Matt (313) 992-1219";
+  "Hey, this is Matt with Detroit Web Agency — sorry I missed you! " +
+  "Please text back your name, number, and what you're calling about and I'll get right back to you. — Matt";
 
 serve(async (req) => {
   if (req.method !== "POST") {

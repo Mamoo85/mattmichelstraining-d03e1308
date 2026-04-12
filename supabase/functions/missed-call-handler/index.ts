@@ -58,7 +58,7 @@ serve(async (req) => {
     `<Dial timeout="25" action="${statusUrl}" method="POST">` +
     `<Number>${MATT_PERSONAL}</Number>` +
     `</Dial>` +
-    `<Say voice="alice">You've reached Detroit Web Agency. We just sent you a text — Matt will get back to you shortly. Have a great day.</Say>` +
+    `<Say voice="alice">You've reached Detroit Web Agency. Check your texts — Matt just sent you one. Talk soon.</Say>` +
     `<Hangup/>`
   );
 });
