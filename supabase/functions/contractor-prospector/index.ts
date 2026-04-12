@@ -295,6 +295,18 @@ async function getDailyDeadLeadCount(sb: any): Promise<number> {
   return count || 0;
 }
 
+// ── Check how many senior care TechAlert emails sent today ──
+async function getDailySeniorCareCount(sb: any): Promise<number> {
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+  const { count } = await sb
+    .from("outreach_leads")
+    .select("id", { count: "exact", head: true })
+    .eq("offer_pitched", "techalert_senior_care")
+    .gte("created_at", todayStart.toISOString());
+  return count || 0;
+}
+
 // ── Check how many emails sent today from this domain ──
 async function getDailySendCount(sb: any): Promise<number> {
   const todayStart = new Date();
