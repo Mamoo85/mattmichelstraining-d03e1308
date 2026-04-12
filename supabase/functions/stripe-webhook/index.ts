@@ -5532,6 +5532,12 @@ ${fwdInstructions}`,
       return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
+    // ── Unhandled event types (invoice.finalized, etc.) — acknowledge safely ──
+    if (event.type !== "checkout.session.completed") {
+      console.log(`[WEBHOOK] Unhandled event type: ${event.type} — acknowledging`);
+      return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+    }
+
       // ── CATCH-ALL: any subscription type not explicitly handled above ──────
       // Writes to saas_subscriptions so no paid subscriber is ever lost.
       if (meta.type && meta.type.endsWith("_subscription") && (meta.email || customerEmail)) {
