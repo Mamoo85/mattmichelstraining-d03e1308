@@ -348,6 +348,13 @@ Respond in EXACT JSON (no markdown):
       });
     }
 
+    await supabase.from("agent_heartbeats").upsert({
+      agent_name: "scarlett-autonomous",
+      last_run_at: new Date().toISOString(),
+      last_status: "ok",
+      last_result: JSON.stringify({ service: campaign.service, platform: campaign.platform }),
+    }, { onConflict: "agent_name" }).catch(() => {});
+
     return new Response(JSON.stringify({
       status: "campaign_proposed",
       agent: "scarlett",
