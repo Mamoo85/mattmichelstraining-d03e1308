@@ -64,10 +64,11 @@ serve(async (req) => {
         const negative = contacts.filter((c: any) => c.status === "replied_negative").length;
         const reviewReq = contacts.filter((c: any) => c.status === "review_requested").length;
         const optedOut = contacts.filter((c: any) => c.status === "opted_out").length;
-        const contacted = total - pending;
+        const tcpaExpired = contacts.filter((c: any) => c.status === "tcpa_expired").length;
+        const contacted = total - pending - tcpaExpired; // tcpa_expired never received a text
 
         // ── Step 2: Auto-complete exhausted campaigns ───────────────────────
-        const terminalCount = positive + negative + reviewReq + optedOut + drip3Sent.length;
+        const terminalCount = positive + negative + reviewReq + optedOut + drip3Sent.length + tcpaExpired;
         if (terminalCount === total && drip3Sent.length > 0) {
           const latestDrip3 = drip3Sent
             .map((c: any) => c.drip3_sent_at)
