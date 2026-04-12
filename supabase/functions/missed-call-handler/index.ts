@@ -31,12 +31,16 @@ serve(async (req) => {
     fromNumber = params.get("From") || "";
     toNumber = params.get("To") || "";
 
-    console.log(`[missed-call-handler] Call from=${fromNumber} to=${toNumber}`);
+    // ForwardedFrom is set by AT&T/carriers when a call is forwarded from another number.
+    // If someone called Matt's personal number and AT&T forwarded it to this Twilio number,
+    // we must NOT send a text-back — this is a personal call, not a business inquiry.
+    const forwardedFrom = params.get("ForwardedFrom") || "";
 
-    // Matt's personal number should NEVER trigger automated texts.
-    // If somehow this webhook fires for that number, just ring through normally.
-    if (toNumber === MATT_PERSONAL) {
-      return twiml("<Dial><Number>" + MATT_PERSONAL + "</Number></Dial>");
+    console.log(`[missed-call-handler] Call from=${fromNumber} to=${toNumber} forwardedFrom=${forwardedFrom}`);
+
+    // Skip text-back for any call that originated from or was forwarded from personal phone
+    if (toNumber === MATT_PERSONAL || forwardedFrom === MATT_PERSONAL) {
+      return twiml("<Dial timeout=\"25\"><Number>" + MATT_PERSONAL + "</Number></Dial>");
     }
 
     // No caller ID — hang up silently
