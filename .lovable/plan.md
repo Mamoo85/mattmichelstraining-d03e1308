@@ -1,133 +1,85 @@
 
 
-# Pre-Launch System Audit Report
+# Fixing Findings 5, 7, and 8
 
-## CRITICAL FINDINGS (Production Blockers)
-
-### FINDING 1: Five Missing Database Tables
-The following tables are referenced by edge functions but **do not exist in the database**:
-
-| Missing Table | Used By | Impact |
-|---|---|---|
-| `system_comms_log` | `_shared/twilio.ts` (every SMS send) | All SMS logging silently fails |
-| `sms_opt_outs` | `_shared/twilio.ts` (TCPA compliance) | Opt-out checks fail, TCPA violation risk |
-| `compliance_blocks` | `_shared/twilio.ts` | Compliance audit trail missing |
-| `contractor_lead_purchases` | `stripe-webhook` PPL handler | Payment records lost after purchase |
-| `contractor_lead_views` | `create-contractor-ppl-checkout` FOMO engine | Miss-tracking silently fails |
-
-**Impact**: Every `sendSMS()` call creates a Supabase client, queries `sms_opt_outs` (table doesn't exist — query returns error, but `maybeSingle()` gracefully returns null), then tries to insert into `system_comms_log` (fails silently via `.then().catch()`). SMS still sends but zero logging or compliance protection.
-
-### FINDING 2: Missing Columns on `contractor_leads`
-The `contractor_leads` table has these columns: `id, client_id, created_at, email, message, name, phone, project_type, notified_at, site_id, source, status`.
-
-The PPL checkout and webhook reference these **missing columns**:
-- `checkout_locked_by` — soft lock logic completely broken
-- `lock_expires_at` — soft lock logic completely broken  
-- `payment_session_id` — idempotency check broken (duplicate SMS possible)
-- `paid_by_contractor_id` — purchase attribution lost
-- `payment_amount_cents` — payment amount not recorded
-
-**Impact**: The `create-contractor-ppl-checkout` function will fail when updating `checkout_locked_by` and `lock_expires_at`. The webhook's idempotency guard (`existingLead?.payment_session_id === session.id`) will never match because the column doesn't exist — **duplicate Twilio texts will fire on webhook retries**.
-
-### FINDING 3: `ANTHROPIC_API_KEY` Not in Secrets
-The secrets list does NOT include `ANTHROPIC_API_KEY`. This means:
-- `test-license-vision` will return "ANTHROPIC_API_KEY not set"
-- `license-vision-intake` will fail on every MMS
-- `generate-digital-audit` will fail
-- `handle-dead-lead-reply` AI classification will be skipped
-- `ai-reply-detector` will fail
-
-### FINDING 4: Build Error — `_shared/twilio.ts` PromiseLike
-The `.then().catch()` pattern on Supabase insert calls fails Deno type checking because the Supabase client returns `PromiseLike` (which has `.then()` but not `.catch()`). This is the active build error blocking deployment of **every function that imports `_shared/twilio.ts`** — potentially dozens of functions.
-
-**Fix**: Replace all 5 instances of `.then(() => {}).catch(() => {})` with either `await` or wrap in `Promise.resolve(...).catch(...)`.
+Finding 6 is **already resolved** — the `trg_email_to_comms_log` trigger exists on `email_send_log`, and both `system_comms_log` and `email_send_log` tables are in the database. No action needed.
 
 ---
 
-## MODERATE FINDINGS
+## Finding 5: Add `ADMIN_PHONE` Secret
 
-### FINDING 5: Hardcoded Phone Number Fallback
-Line 16 of `_shared/twilio.ts`: `ADMIN_PHONE = Deno.env.get("ADMIN_PHONE") ?? "+13138064952"`. This is acceptable as a fallback (Matt's number), but `ADMIN_PHONE` is not in the secrets list — it will always use the hardcoded value.
+The hardcoded fallback `+13138064952` is fine as a safety net, but the env var should actually be set so it's configurable without code changes.
 
-### FINDING 6: No DB Trigger for Email-to-Comms-Log Sync
-The query for triggers matching "comms" or "email_send" returned zero results. The `system_comms_log` table doesn't exist (Finding 1), so there's no trigger to audit — but once the table is created, the trigger for syncing `email_send_log` entries also needs to be created.
-
-### FINDING 7: Stripe Session Expiry Timing
-`expires_at: Math.floor(now.getTime() / 1000) + 1800` — This is 30 minutes from `now`, which was captured at the top of the request handler. By the time Stripe processes the request, a few seconds have passed. Stripe requires `expires_at` to be at least 30 minutes in the future from their server time. In rare cases of slow processing this could fail. Low risk but worth noting.
-
-### FINDING 8: PPL Lock Race Condition
-The soft lock in `create-contractor-ppl-checkout` has a TOCTOU (time-of-check-time-of-use) race condition. Between reading the lead status (line 30-34) and updating the lock (line 84-88), another contractor could also read "available" and both acquire the lock. This is a narrow window but real under load. A Postgres advisory lock or `UPDATE ... WHERE status != 'sold'` returning the updated row would be more robust.
+**Action**: Use the `add_secret` tool to set `ADMIN_PHONE` = `+13138064952`. This makes it explicit in the secrets list and changeable later without redeploying code. No code changes needed — the existing `??` fallback pattern is correct.
 
 ---
 
-## CLEAN FINDINGS (No Issues)
+## Finding 7: Stripe `expires_at` Buffer
 
-### TechAlert Cron Schedules
-- Trial conversion: `0 * * * *` (hourly) — correct for 72h trial expiry checks
-- Phantom alert: `30 13 * * *` (1:30pm UTC = 8:30am ET) — correct
-- Both use vault-based URL resolution — correct pattern
+Add a 30-second buffer to prevent edge-case rejections when the Stripe API receives the request slightly after the 30-minute minimum.
 
-### `test-license-vision` Claude API Payload
-The payload structure perfectly matches the Anthropic Messages API:
-- `type: "image"` with `source: { type: "base64", media_type, data }` — correct
-- `model: "claude-haiku-4-5-20251001"` — correct model ID
-- JSON extraction regex `rawText.match(/\{[\s\S]*\}/)` — correct
+**File**: `supabase/functions/create-contractor-ppl-checkout/index.ts`
 
-### AdminSimulationSuite Payloads
-- Vision OCR: sends `{ image_base64, mime_type }` — matches `test-license-vision` input exactly
-- Digital Audit: sends `{ url }` — matches `generate-digital-audit` input
-- AI Classifier: sends parsed JSON with `senderEmail`, `replyBody`, `originalSubject` — matches `ai-reply-detector`
-- Lead Notify: sends mock payload with `_test` flag — correct pattern
-
-### Stripe Webhook Idempotency (Logic)
-The idempotency check logic itself is correct (`status === "sold" && payment_session_id === session.id`). The issue is that the column doesn't exist (Finding 2), not the logic.
-
----
-
-## IMPLEMENTATION PLAN
-
-### Step 1: Fix `_shared/twilio.ts` Build Error (Unblocks all SMS functions)
-Replace all 5 `.then(() => {}).catch(() => {})` chains with `Promise.resolve(...).catch(() => {})` or convert to `await` with try/catch.
-
-### Step 2: Create Missing Tables (Migration)
-```sql
--- sms_opt_outs, compliance_blocks, system_comms_log,
--- contractor_lead_purchases, contractor_lead_views
--- Plus email_send_log → system_comms_log trigger
+Change line 107 from:
+```ts
+expires_at: Math.floor(now.getTime() / 1000) + 1800,
+```
+To:
+```ts
+expires_at: Math.floor(Date.now() / 1000) + 1830, // 30.5 min — buffer for network latency
 ```
 
-### Step 3: Add Missing Columns to `contractor_leads`
-```sql
-ALTER TABLE contractor_leads ADD COLUMN checkout_locked_by TEXT;
-ALTER TABLE contractor_leads ADD COLUMN lock_expires_at TIMESTAMPTZ;
-ALTER TABLE contractor_leads ADD COLUMN payment_session_id TEXT;
-ALTER TABLE contractor_leads ADD COLUMN paid_by_contractor_id TEXT;
-ALTER TABLE contractor_leads ADD COLUMN payment_amount_cents INTEGER;
-```
-
-### Step 4: Add `ANTHROPIC_API_KEY` Secret
-Use the add_secret tool to request Matt inputs the Anthropic API key.
-
-### Step 5: Redeploy All Affected Edge Functions
-After the twilio.ts fix, redeploy all functions that import it.
+Using `Date.now()` instead of the stale `now` variable ensures freshest timestamp. The extra 30 seconds prevents Stripe from rejecting sessions that arrive a few seconds late.
 
 ---
 
-## SELF-VERIFICATION
+## Finding 8: PPL Lock Race Condition
 
-**What I reviewed (actual code, not docs)**:
-- `_shared/twilio.ts` — every line, all 5 fire-and-forget inserts
-- `create-contractor-ppl-checkout/index.ts` — full file, lock logic, Stripe session config
-- `stripe-webhook/index.ts` — lines 1-600 and 2447-2574 (PPL payment handler)
-- `test-license-vision/index.ts` — full file, Claude API payload structure
-- `AdminSimulationSuite.tsx` — full file, all simulation button payloads
-- `license-vision-intake/index.ts` — full file
-- Migration `20260411230000_hire_alert_trial.sql` — cron schedules
-- Database schema queries — verified actual columns/tables exist
+Replace the two-step read-then-update with an atomic `UPDATE ... WHERE` that only succeeds if the lead is still available. This eliminates the TOCTOU window entirely.
 
-**Assumptions you must manually verify**:
-1. Whether `ANTHROPIC_API_KEY` is set under a different name or injected another way (it's not in the secrets list I received)
-2. Whether there are additional migrations that create the missing tables but haven't been applied yet (check if any pending migrations exist)
-3. Whether the `email_send_log` table exists (needed for the comms log sync trigger)
-4. The Stripe webhook endpoint URL is correctly registered in the Stripe dashboard for the PPL `checkout.session.completed` event
+**File**: `supabase/functions/create-contractor-ppl-checkout/index.ts`
+
+Replace the current flow (read lead → check status → separate update) with:
+
+1. First, fetch the lead for display info (trade, city) — keep existing SELECT.
+2. Replace the separate lock-acquisition UPDATE (lines 84-88) with an atomic conditional update:
+
+```ts
+// Atomic lock: only succeeds if lead is still available
+const { data: locked, error: lockErr } = await sb
+  .from("contractor_leads")
+  .update({
+    status: "pending_checkout",
+    checkout_locked_by: contractor_id,
+    lock_expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+  })
+  .eq("id", lead_id)
+  .neq("status", "sold")
+  .or(`checkout_locked_by.is.null,checkout_locked_by.eq.${contractor_id},lock_expires_at.lt.${new Date().toISOString()}`)
+  .select("id")
+  .maybeSingle();
+
+if (!locked) {
+  return new Response(
+    JSON.stringify({ error: "lead_claimed", redirect: "/lead-claimed" }),
+    { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
+```
+
+This ensures only one contractor can acquire the lock — the UPDATE only matches rows that are not sold AND either unlocked, locked by the same contractor, or have an expired lock.
+
+---
+
+## Summary
+
+| Finding | Action | Risk |
+|---------|--------|------|
+| 5 — Hardcoded phone | Add `ADMIN_PHONE` secret | Zero risk |
+| 6 — Email trigger | **Already fixed** — no action | N/A |
+| 7 — Stripe expiry | Use `Date.now()` + 1830s buffer | Zero risk |
+| 8 — Race condition | Atomic conditional UPDATE | Low risk, big safety gain |
+
+### Deploy
+After code changes, redeploy `create-contractor-ppl-checkout`.
 
