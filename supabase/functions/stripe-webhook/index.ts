@@ -739,14 +739,15 @@ serve(async (req) => {
       }
 
       if (meta.type === "hire_alert_subscription") {
+        const email = meta.email || customerEmail;
         try {
-          const email = meta.email || customerEmail;
           if (email) {
             // Parse target_roles from comma-separated string back to array
             const targetRoles = meta.target_roles
               ? meta.target_roles.split(",").map((r: string) => r.trim()).filter(Boolean)
               : ["boiler_operator", "hvac_tech"];
-            await (sb.from as any)("hire_alert_clients").insert({
+            // CRITICAL: if this fails, throw so Stripe retries (return 500 below)
+            const { error: insertErr } = await (sb.from as any)("hire_alert_clients").insert({
               company_name: meta.company_name || email,
               owner_email: email,
               owner_phone: meta.owner_phone || null,
@@ -756,6 +757,7 @@ serve(async (req) => {
               plan: meta.plan || "standalone",
               target_roles: targetRoles,
             });
+            if (insertErr) throw new Error(`hire_alert_clients insert: ${insertErr.message}`);
           }
           if (RESEND_API_KEY && email) {
             const companyGreet = meta.company_name ? ` ${meta.company_name}` : "";
@@ -849,7 +851,14 @@ serve(async (req) => {
               `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Phone: ${meta.owner_phone || "n/a"}<br>Plan: ${meta.plan || "standalone"}</p>`
             );
           }
-        } catch (e) { console.error("[WEBHOOK] hire_alert_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] hire_alert_subscription error:", e);
+          await notifyMatt(
+            `🚨 TechAlert provision FAILED — ${email || "unknown"} paid but not activated`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p><p>Stripe session: ${session.id}</p><p>Manual fix: insert row in hire_alert_clients for ${email}</p>`
+          ).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -2682,7 +2691,6 @@ serve(async (req) => {
       if (meta.type === "dead_lead_billing_setup" && session.mode === "setup") {
         try {
           const dlSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-          // Retrieve setup intent to get the payment method
           const siRes = await fetch(`https://api.stripe.com/v1/setup_intents/${session.setup_intent}`, {
             headers: { Authorization: `Basic ${btoa((Deno.env.get("STRIPE_SECRET_KEY") || "") + ":")}` },
           });
@@ -2690,14 +2698,23 @@ serve(async (req) => {
           const paymentMethodId = si.payment_method;
 
           if (meta.contractor_id && paymentMethodId) {
-            await dlSb.from("contractor_clients" as any).update({
+            // CRITICAL: if this fails, return 500 so Stripe retries
+            const { error: updateErr } = await dlSb.from("contractor_clients" as any).update({
               stripe_customer_id: session.customer as string,
               stripe_payment_method_id: paymentMethodId,
               dead_lead_billing_active: true,
             }).eq("id", meta.contractor_id);
+            if (updateErr) throw new Error(`contractor_clients update: ${updateErr.message}`);
             console.log(`[WEBHOOK] Dead lead billing active for contractor ${meta.contractor_id}, pm=${paymentMethodId}`);
           }
-        } catch (e) { console.error("[WEBHOOK] dead_lead_billing_setup error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] dead_lead_billing_setup error:", e);
+          await notifyMatt(
+            `🚨 Dead Lead billing setup FAILED — contractor ${meta.contractor_id}`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p><p>Stripe session: ${session.id}</p><p>Contractor ID: ${meta.contractor_id} — payment method NOT saved, they cannot be charged.</p>`
+          ).catch(() => {});
+          return new Response(JSON.stringify({ error: "billing setup failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5828,6 +5845,36 @@ ${fwdInstructions}`,
           }
         }
       } catch (e) { console.error("[LUKE] cart_abandonment capture error:", e); }
+      return new Response(JSON.stringify({ received: true }), { status: 200 });
+    }
+
+    // ── Invoice payment failed — deactivate product clients after 3 failures ──
+    if (event.type === "invoice.payment_failed") {
+      try {
+        const invoice = event.data.object as any;
+        const subscriptionId = invoice.subscription as string;
+        const customerEmail = invoice.customer_email as string;
+        const attemptCount = invoice.attempt_count as number || 1;
+        // Only deactivate after 3 failed attempts (Stripe default dunning)
+        if (subscriptionId && attemptCount >= 3) {
+          await Promise.all([
+            sb.from("hire_alert_clients").update({ active: false }).eq("stripe_subscription_id", subscriptionId),
+            sb.from("field_crm_clients").update({ active: false }).eq("stripe_subscription_id", subscriptionId),
+            sb.from("missed_call_clients" as any).update({ active: false }).eq("stripe_subscription_id", subscriptionId),
+          ]);
+          console.log(`[WEBHOOK] Deactivated clients after ${attemptCount} failed payments for sub ${subscriptionId}`);
+          await notifyMatt(
+            `💸 Payment Failed (${attemptCount}x) — ${customerEmail || subscriptionId}`,
+            `<p>Invoice <strong>${invoice.id}</strong> failed ${attemptCount} times.<br>Customer: ${customerEmail || "unknown"}<br>Amount: $${((invoice.amount_due || 0) / 100).toFixed(2)}<br>Subscription: ${subscriptionId}</p><p>Product clients deactivated. Customer needs to update payment method.</p>`
+          ).catch(() => {});
+        } else if (attemptCount === 1) {
+          // First failure — just notify, don't deactivate yet
+          await notifyMatt(
+            `⚠️ Payment Failed (1st attempt) — ${customerEmail || subscriptionId}`,
+            `<p>Invoice ${invoice.id} failed. Stripe will retry automatically. No action needed yet.</p>`
+          ).catch(() => {});
+        }
+      } catch (e) { console.error("[WEBHOOK] invoice.payment_failed error:", e); }
       return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 

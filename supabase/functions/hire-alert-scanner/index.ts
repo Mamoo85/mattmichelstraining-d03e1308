@@ -109,6 +109,63 @@ async function scanMIOSHA(): Promise<RawCandidate[]> {
   }));
 }
 
+// TA-3: Enrich MIOSHA candidates that lack contact info via Apollo /people/match
+// MIOSHA gives us name + license but no email/phone. Apollo can fill in the gap.
+async function enrichMIOSHAWithApollo(candidates: RawCandidate[]): Promise<RawCandidate[]> {
+  if (!APOLLO_API_KEY) return candidates;
+  // Only enrich candidates missing both phone and email — don't burn API credits on complete records
+  const needsEnrichment = candidates.filter((c) => !c.phone && !c.email);
+  if (!needsEnrichment.length) return candidates;
+
+  const enriched = new Map<string, { phone?: string; email?: string }>();
+
+  for (const candidate of needsEnrichment.slice(0, 10)) { // cap at 10 enrichments per run
+    try {
+      const res = await fetch("https://api.apollo.io/api/v1/people/match", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+          "X-Api-Key": APOLLO_API_KEY,
+        },
+        body: JSON.stringify({
+          first_name: candidate.full_name.split(" ")[0] || "",
+          last_name: candidate.full_name.split(" ").slice(1).join(" ") || "",
+          location: candidate.city || "Detroit, Michigan",
+          title: candidate.license_type || "",
+          reveal_personal_emails: true,
+          reveal_phone_number: true,
+        }),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const person = data?.person;
+      if (!person) continue;
+
+      const key = candidate.full_name.toLowerCase();
+      const phone = (person.phone_numbers as Array<{ sanitized_number?: string }>)?.[0]?.sanitized_number;
+      const email = person.email as string | undefined;
+      if (phone || email) {
+        enriched.set(key, { phone, email });
+        console.log(`[hire-alert-scanner] Enriched MIOSHA candidate: ${candidate.full_name} → phone=${!!phone} email=${!!email}`);
+      }
+    } catch (e) {
+      console.warn(`[hire-alert-scanner] Apollo enrichment failed for ${candidate.full_name}:`, e);
+    }
+  }
+
+  return candidates.map((c) => {
+    const data = enriched.get(c.full_name.toLowerCase());
+    if (!data) return c;
+    return {
+      ...c,
+      phone: c.phone || data.phone,
+      email: c.email || data.email,
+      raw_data: { ...(c.raw_data || {}), enriched_via: "apollo_match" },
+    };
+  });
+}
+
 // Source 2: Apollo People Search — tradespeople in Metro Detroit
 // Paginates up to 3 pages per city group (75 results max), extracts phone numbers
 async function scanApollo(): Promise<RawCandidate[]> {
@@ -487,11 +544,14 @@ serve(async (req: Request) => {
 
   // Run all three sources in parallel
   console.log("[hire-alert-scanner] Scanning all sources...");
-  const [mioshaCandidates, apolloCandidates, jobBoardCandidates] = await Promise.all([
+  const [mioshaCandidatesRaw, apolloCandidates, jobBoardCandidates] = await Promise.all([
     scanMIOSHA(),
     scanApollo(),
     scanJobBoards(),
   ]);
+
+  // TA-3: Enrich MIOSHA candidates that lack contact info via Apollo /people/match
+  const mioshaCandidates = await enrichMIOSHAWithApollo(mioshaCandidatesRaw);
 
   const allRaw = [...mioshaCandidates, ...apolloCandidates, ...jobBoardCandidates];
   console.log(`[hire-alert-scanner] Raw candidates: MIOSHA=${mioshaCandidates.length} Apollo=${apolloCandidates.length} JobBoards=${jobBoardCandidates.length}`);
@@ -573,14 +633,40 @@ serve(async (req: Request) => {
     );
   }
 
+  // TA-5: Filter candidates by client's target zip codes (if set)
+  function candidateMatchesZips(candidateZip: string | undefined, candidateCity: string | undefined, targetZips: string[]): boolean {
+    if (!targetZips?.length) return true; // no zip filter = match all
+    if (!candidateZip && !candidateCity) return true; // no location info = include (don't discard)
+    if (candidateZip && targetZips.includes(candidateZip)) return true;
+    // Loose city-based fallback: if candidate city substring matches any zip prefix
+    // (e.g. "Detroit" matches any 482xx zip in target list)
+    const CITY_ZIP_PREFIXES: Record<string, string[]> = {
+      detroit: ["482"], dearborn: ["481"], warren: ["480"], livonia: ["481"],
+      "sterling heights": ["483"], troy: ["480"], "royal oak": ["480"],
+      "farmington hills": ["483"], pontiac: ["483"],
+    };
+    if (candidateCity) {
+      const cityLower = candidateCity.toLowerCase();
+      for (const [city, prefixes] of Object.entries(CITY_ZIP_PREFIXES)) {
+        if (cityLower.includes(city)) {
+          if (targetZips.some((z) => prefixes.some((p) => z.startsWith(p)))) return true;
+        }
+      }
+    }
+    return false;
+  }
+
   let alertsSent = 0;
 
   for (const client of clients) {
     const clientRoles: string[] = client.target_roles || [];
+    const clientZips: string[] = (client as any).target_zip_codes || [];
 
-    // Filter scored candidates to only those matching this client's target roles
+    // Filter scored candidates to only those matching this client's target roles + zips
     const clientAlertWorthy = scored.filter(
-      (c) => c.availability_score >= 5 && candidateMatchesRoles(c.license_type, clientRoles)
+      (c) => c.availability_score >= 5
+        && candidateMatchesRoles(c.license_type, clientRoles)
+        && candidateMatchesZips(c.zip, c.city, clientZips)
     );
     const clientHotCandidates = clientAlertWorthy.filter((c) => c.availability_score >= 7);
 

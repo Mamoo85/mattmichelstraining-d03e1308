@@ -249,6 +249,15 @@ serve(async (req) => {
           `\u267b\ufe0f DEAD LEAD REVIVED: ${contact.name || fromPhone} just replied they still need ${trade} work. Call them now: ${fromPhone}. ${billingNote}`,
           "dead_lead_reactivation"
         );
+        // Separate charge receipt prevents disputes
+        if (chargeSucceeded) {
+          await sendSMS(
+            contractor.phone,
+            TWILIO_PHONE_NUMBER,
+            `DWA Receipt: $50 charged for ${contact.name || fromPhone} (${trade} lead). Questions? Text (313) 806-4952`,
+            "dead_lead_reactivation"
+          );
+        }
       }
 
       // Free trial: send billing CTA after lead info
@@ -279,7 +288,16 @@ serve(async (req) => {
             subject: `\u267b\ufe0f Dead Lead Revived — ${contact.name || fromPhone} (${bizName})`,
             html: `<p><strong>${contact.name || fromPhone}</strong> replied YES to the ${trade} dead lead drip for <strong>${bizName}</strong>.</p><p>Phone: ${fromPhone}</p><p>Reply: "${replyBody}"</p><p>${chargeNote}</p>`,
           }),
-        }).catch((e) => console.error("[handle-dead-lead-reply] Matt email failed:", e));
+        }).catch((e) => {
+          console.error("[handle-dead-lead-reply] Matt email failed:", e);
+          // SMS fallback so revenue events are never silently lost
+          sendSMS(
+            ADMIN_PHONE,
+            TWILIO_PHONE_NUMBER,
+            `DWA: Dead lead email failed for ${contact.name || fromPhone} (${bizName}) — ${chargeSucceeded ? "$50 charged" : chargeAttempted ? "charge FAILED" : "no card"}. Check logs.`,
+            "dead_lead_system"
+          ).catch(() => {});
+        });
       }
     }
 
