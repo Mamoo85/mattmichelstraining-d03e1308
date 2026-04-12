@@ -5827,6 +5827,7 @@ export type Database = {
           ai_drafted_pitch: string | null
           ai_drafted_subject: string | null
           business_name: string
+          channel: string | null
           city: string | null
           company_name: string | null
           created_at: string | null
@@ -5860,6 +5861,7 @@ export type Database = {
           ai_drafted_pitch?: string | null
           ai_drafted_subject?: string | null
           business_name: string
+          channel?: string | null
           city?: string | null
           company_name?: string | null
           created_at?: string | null
@@ -5893,6 +5895,7 @@ export type Database = {
           ai_drafted_pitch?: string | null
           ai_drafted_subject?: string | null
           business_name?: string
+          channel?: string | null
           city?: string | null
           company_name?: string | null
           created_at?: string | null
