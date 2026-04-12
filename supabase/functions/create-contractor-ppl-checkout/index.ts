@@ -49,7 +49,7 @@ serve(async (req) => {
         reason: "sold",
         trade: site?.trade || "",
         city: site?.city || "",
-      }).then(() => {}).catch(() => {});
+      });
       return new Response(
         JSON.stringify({ error: "lead_claimed", redirect: "/lead-claimed" }),
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -73,7 +73,7 @@ serve(async (req) => {
         reason: "locked",
         trade: site?.trade || "",
         city: site?.city || "",
-      }).then(() => {}).catch(() => {});
+      });
       return new Response(
         JSON.stringify({ error: "locked", minutesLeft }),
         { status: 423, headers: { ...corsHeaders, "Content-Type": "application/json" } }

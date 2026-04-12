@@ -15,7 +15,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-async function sendReminderToTrainers(sb: ReturnType<typeof createClient>): Promise<string> {
+async function sendReminderToTrainers(sb: any): Promise<string> {
   const month = new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
   const { data: trainers, error } = await sb
