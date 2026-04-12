@@ -84,11 +84,26 @@ serve(async (req) => {
         if (campaign?.status !== "active") continue;
         const bizName = (campaign as any).contractor_clients?.business_name || "your contractor";
         const trade = campaign?.trade || "service";
+        const firstName = contact.name?.split(" ")[0] || "there";
+
+        const { data: customCopy } = await sb
+          .from("campaign_copy_variants" as any)
+          .select("drip2_copy")
+          .eq("campaign_id", campaign.id)
+          .eq("selected", true)
+          .maybeSingle();
+
+        const body = customCopy?.drip2_copy
+          ? customCopy.drip2_copy
+              .replace("{name}", firstName)
+              .replace("{bizName}", bizName)
+              .replace("{trade}", trade)
+          : `Hey ${firstName} — ${bizName} again. Still available if you need ${trade} help. Just reply YES and we'll get someone out to you.`;
 
         await sendSMS(
           contact.phone,
           TWILIO_PHONE_NUMBER,
-          `Hey ${contact.name?.split(" ")[0] || "there"} — ${bizName} again. Still available if you need ${trade} help. Just reply YES and we'll get someone out to you.`,
+          body,
           "dead_lead_reactivation"
         );
 
