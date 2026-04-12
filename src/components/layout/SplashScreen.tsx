@@ -8,9 +8,11 @@ import { useEffect } from "react";
  */
 const SplashScreen = () => {
   useEffect(() => {
-    // Remove the static hero shell once React has mounted and will render real content
     const shell = document.getElementById("hero-shell");
-    if (shell) shell.remove();
+    if (shell) {
+      shell.style.opacity = "0";
+      setTimeout(() => shell.remove(), 300);
+    }
     window.dispatchEvent(new Event("m2:app-mounted"));
   }, []);
 

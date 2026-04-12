@@ -13,7 +13,16 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
 const SITE_URL = "https://www.detroitwebagent.com";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
 serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   try {
@@ -37,7 +46,7 @@ serve(async (req) => {
       .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
     if (!unnotified || unnotified.length === 0) {
-      return new Response(JSON.stringify({ notified: 0 }), { status: 200 });
+      return new Response(JSON.stringify({ notified: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     let count = 0;
@@ -107,10 +116,10 @@ serve(async (req) => {
     }
 
     console.log(`[LEAD-NOTIFY] Sent ${count} notifications`);
-    return new Response(JSON.stringify({ notified: count }), { status: 200 });
+    return new Response(JSON.stringify({ notified: count }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[LEAD-NOTIFY] Error:", e);
-    return new Response(JSON.stringify({ error: msg }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

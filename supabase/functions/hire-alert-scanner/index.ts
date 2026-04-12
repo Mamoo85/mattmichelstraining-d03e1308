@@ -402,7 +402,16 @@ async function sendAlertEmail(
   });
 }
 
-serve(async () => {
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const dateStr = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const runStart = new Date().toISOString();
@@ -411,7 +420,7 @@ serve(async () => {
   const { data: clients } = await sb.from("hire_alert_clients").select("*").or("active.eq.true,trial_status.eq.active");
   if (!clients?.length) {
     console.log("[hire-alert-scanner] No active clients");
-    return new Response(JSON.stringify({ processed: 0 }), { status: 200 });
+    return new Response(JSON.stringify({ processed: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   // Run all three sources in parallel
@@ -692,6 +701,6 @@ serve(async () => {
       hot_candidates: allHotCandidates.length,
       alerts_sent: alertsSent,
     }),
-    { status: 200 }
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
 });

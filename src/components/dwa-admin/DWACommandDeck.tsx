@@ -80,6 +80,7 @@ export default function DWACommandDeck() {
           name: "Matt Michels",
           company: "Test Company",
           plan,
+          test: true,
         },
       });
       if (error) throw error;
@@ -173,6 +174,7 @@ export default function DWACommandDeck() {
           loading={loadingMap["oracle"] ?? false}
           onClick={runOracle}
         />
+        <p className="col-span-full text-white/30 text-[10px] -mt-2 px-1">Oracle = business health dashboard: MRR, revenue, leads, alerts.</p>
         <ActionButton
           label="Pulse Check"
           icon="📡"
