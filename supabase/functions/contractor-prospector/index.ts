@@ -8,10 +8,15 @@ const log = (step: string, data?: any) =>
 // ── Daily send cap to protect domain reputation ──
 const DAILY_SEND_CAP = 30;
 const DEAD_LEAD_CAP = 5; // separate cap for dead lead reactivation pitches
+const SENIOR_CARE_CAP = 3; // separate cap for senior care TechAlert pitches
 
 // ── Metro Detroit targets only ──
-const TRADES = ["roofer", "HVAC contractor", "plumber", "electrician", "dentist"];
+const TRADES = [
+  "roofer", "HVAC contractor", "plumber", "electrician", "dentist",
+  "assisted living facility", "home health agency", "skilled nursing facility",
+];
 const DEAD_LEAD_TRADES = new Set(["roofer", "HVAC contractor", "plumber", "electrician"]);
+const SENIOR_CARE_TRADES = new Set(["assisted living facility", "home health agency", "skilled nursing facility"]);
 const CITIES = [
   "Grosse Pointe MI", "Detroit MI", "Warren MI", "Sterling Heights MI",
   "Troy MI", "Livonia MI", "Dearborn MI", "Royal Oak MI",
