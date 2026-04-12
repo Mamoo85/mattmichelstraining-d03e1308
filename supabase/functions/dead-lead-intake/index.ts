@@ -97,19 +97,27 @@ serve(async (req) => {
       contractorId = newContractor.id;
     }
 
-    // Parse leads from textarea lines: "phone" or "phone, name"
-    const parsedLeads: { phone: string; name: string | null }[] = [];
+    // Parse leads from textarea lines: "phone", "phone, name", or "phone, name, YYYY-MM-DD"
+    // Leads with a date older than 18 months are scrubbed (TCPA EBR expiry).
+    const now = new Date();
+    const parsedLeads: { phone: string; name: string | null; last_contact_date: string | null }[] = [];
+    let scrubbedCount = 0;
     for (const line of leads) {
       const parts = (line as string).split(",").map((s: string) => s.trim()).filter(Boolean);
       if (!parts[0]) continue;
       const leadPhone = normalizePhone(parts[0]);
       const leadName = parts[1] || null;
-      parsedLeads.push({ phone: leadPhone, name: leadName });
+      const dateStr = parts[2] && /^\d{4}-\d{2}-\d{2}$/.test(parts[2]) ? parts[2] : null;
+      if (isTcpaExpired(dateStr, now)) {
+        scrubbedCount++;
+        continue; // Drop — outside 18-month EBR window
+      }
+      parsedLeads.push({ phone: leadPhone, name: leadName, last_contact_date: dateStr });
     }
 
     if (parsedLeads.length === 0) {
       return new Response(
-        JSON.stringify({ error: "No valid phone numbers found" }),
+        JSON.stringify({ error: scrubbedCount > 0 ? `All ${scrubbedCount} leads are older than 18 months (TCPA). Upload more recent contacts.` : "No valid phone numbers found" }),
         { status: 400, headers: { ...CORS, "Content-Type": "application/json" } }
       );
     }
