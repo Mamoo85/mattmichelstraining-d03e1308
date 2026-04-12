@@ -14,6 +14,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-04-12. Update this section every session.*
 
+### Phase 6 — Dead Lead Prospecting + Monitoring Automation COMPLETE ✅
+All work merged to `main`. Lovable auto-deploys on merge.
+
+**Phase 6 shipped:**
+- `contractor-prospector` — now sends dead lead reactivation pitch to HVAC/plumbing/roofing/electrician contractors (5/day cap, separate from web design pitch). Uses `matt@detroitwebagent.com`, stored as `offer_pitched = "dead_lead_reactivation"`.
+- `dead-lead-outreach-drip` — D4 + D8 follow-up emails for prospected contractors who didn't reply. Runs daily noon ET.
+- `dead-lead-daily-notifier` — 5pm ET daily: SMS Matt if any leads revived, always emails full campaign digest with INVOICE NOW flags.
+- `AdminDeadLeads.tsx` — global stats bar + recent positive replies activity feed across ALL campaigns.
+- Migration: `20260412020000_dead_lead_outreach_crons.sql` — crons for 2 new functions.
+
 ### Phase 5 — Dead Lead Reactivation + ROI Scorecard COMPLETE ✅
 All work merged to `main`. Lovable auto-deploys on merge.
 

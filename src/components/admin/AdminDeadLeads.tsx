@@ -7,9 +7,18 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { RefreshCw, Plus, ChevronDown, ChevronUp, Phone, CheckCircle, XCircle, RotateCcw } from "lucide-react";
+import { RefreshCw, Plus, ChevronDown, ChevronUp } from "lucide-react";
+
+function timeAgo(iso: string | null): string {
+  if (!iso) return "—";
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-slate-700 text-slate-300",
@@ -49,6 +58,28 @@ export default function AdminDeadLeads() {
     },
     refetchInterval: 30000,
   });
+
+  // Global stats across ALL campaigns
+  const { data: allContacts } = useQuery({
+    queryKey: ["dead_lead_contacts_all"],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("dead_lead_contacts")
+        .select("id, status, contractor_notified_at, name, phone, campaign_id, dead_lead_campaigns(name, contractor_clients(business_name))")
+        .order("contractor_notified_at", { ascending: false });
+      return data || [];
+    },
+    refetchInterval: 30000,
+  });
+
+  const globalStats = {
+    total: allContacts?.length || 0,
+    in_drip: allContacts?.filter((c: any) => ["drip1_sent","drip2_sent","drip3_sent"].includes(c.status)).length || 0,
+    positive: allContacts?.filter((c: any) => c.status === "replied_positive").length || 0,
+    campaigns: campaigns?.length || 0,
+  };
+  const recentActivity = allContacts?.filter((c: any) => c.status === "replied_positive").slice(0, 10) || [];
+  const hasRecentActivity = recentActivity.some((c: any) => c.contractor_notified_at && Date.now() - new Date(c.contractor_notified_at).getTime() < 24 * 60 * 60 * 1000);
 
   const { data: contacts } = useQuery({
     queryKey: ["dead_lead_contacts", selectedCampaignId],
@@ -192,6 +223,47 @@ export default function AdminDeadLeads() {
               </Button>
               <Button variant="outline" onClick={() => setShowNewCampaign(false)} style={{ borderColor: "#1e3a5f", color: "#94a3b8" }}>Cancel</Button>
             </div>
+          </div>
+        )}
+
+        {/* Global Stats Bar */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
+          {[
+            { label: "Total Contacts", value: globalStats.total, color: "#94a3b8" },
+            { label: "In Drip", value: globalStats.in_drip, color: "#60a5fa" },
+            { label: "Positive Replies", value: globalStats.positive, color: "#10b981" },
+            { label: "Revenue Est.", value: `$${globalStats.positive * 50}`, color: "#f59e0b" },
+          ].map(s => (
+            <div key={s.label} style={{ background: "#0f2342", border: "1px solid #1e3a5f", borderRadius: 8, padding: "12px 14px" }}>
+              <div style={{ color: s.color, fontSize: 24, fontWeight: 900 }}>{s.value}</div>
+              <div style={{ color: "#64748b", fontSize: 11, fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase", marginTop: 2 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Recent Activity Feed */}
+        {recentActivity.length > 0 && (
+          <div style={{ background: "#0f2342", border: "1px solid #1e3a5f", borderRadius: 10, marginBottom: 16, overflow: "hidden" }}>
+            <div style={{ padding: "10px 14px", borderBottom: "1px solid #1e3a5f", display: "flex", alignItems: "center", gap: 8 }}>
+              {hasRecentActivity && <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", display: "inline-block", animation: "pulse 2s infinite" }} />}
+              <span style={{ color: "#10b981", fontSize: 13, fontWeight: 700 }}>Recent Positive Replies</span>
+              <span style={{ color: "#64748b", fontSize: 12, marginLeft: "auto" }}>Last {recentActivity.length} across all campaigns</span>
+            </div>
+            {recentActivity.map((c: any) => {
+              const biz = c.dead_lead_campaigns?.contractor_clients?.business_name || "Unknown";
+              const camp = c.dead_lead_campaigns?.name || "Unknown campaign";
+              return (
+                <div key={c.id} style={{ padding: "10px 14px", borderTop: "1px solid #1e3a5f", display: "flex", alignItems: "center", gap: 12 }}>
+                  <span style={{ fontSize: 16 }}>♻️</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ color: "#e2e8f0", fontWeight: 600, fontSize: 14 }}>{c.name || c.phone}</span>
+                    <span style={{ color: "#64748b", fontSize: 12, marginLeft: 8 }}>{biz} · {camp}</span>
+                  </div>
+                  <span style={{ color: "#10b981", fontWeight: 700, fontSize: 13, whiteSpace: "nowrap" }}>+$50</span>
+                  <span style={{ color: "#64748b", fontSize: 12, whiteSpace: "nowrap" }}>{timeAgo(c.contractor_notified_at)}</span>
+                </div>
+              );
+            })}
           </div>
         )}
 

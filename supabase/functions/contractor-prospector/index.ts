@@ -7,9 +7,11 @@ const log = (step: string, data?: any) =>
 
 // ── Daily send cap to protect domain reputation ──
 const DAILY_SEND_CAP = 30;
+const DEAD_LEAD_CAP = 5; // separate cap for dead lead reactivation pitches
 
 // ── Metro Detroit targets only ──
 const TRADES = ["roofer", "HVAC contractor", "plumber", "electrician", "dentist"];
+const DEAD_LEAD_TRADES = new Set(["roofer", "HVAC contractor", "plumber", "electrician"]);
 const CITIES = [
   "Grosse Pointe MI", "Detroit MI", "Warren MI", "Sterling Heights MI",
   "Troy MI", "Livonia MI", "Dearborn MI", "Royal Oak MI",
@@ -217,6 +219,77 @@ M2 Development · Grosse Pointe, MI
 </table></td></tr></table></body></html>`;
 }
 
+// ── AGENT 3: SNIPER_DEAD — Dead Lead Reactivation Pitch ──
+async function sniperDeadLeadEmail(
+  businessName: string,
+  trade: string,
+  city: string,
+  reviewCount: number,
+  rating: number,
+): Promise<{ subject: string; body: string }> {
+  const cityShort = city.replace(" MI", "");
+  const tradeClean = trade.replace(" contractor", "");
+  const prompt = `You are writing a 4-sentence cold email from Matt Michels at Detroit Web Agency to the owner of "${businessName}", a ${tradeClean} in ${cityShort}, MI.
+
+The offer: We SMS-drip their OLD dead estimates (homeowners who got a quote but never hired). They only pay $50 when a lead replies YES they still need the work. Zero monthly fee, zero risk.
+
+They have ${reviewCount} Google reviews and a ${rating || "unknown"}-star rating — reference one of these facts to prove you looked them up.
+
+Rules:
+1. EXACTLY 4 sentences
+2. Sentence 1: Prove you looked them up — mention their review count, rating, or city specifically
+3. Sentence 2: "You've got dead estimates in your system that never turned into jobs. We text them for you."
+4. Sentence 3: The deal — $50 only when a lead says YES they still need the work. Zero monthly fee.
+5. Sentence 4: Soft CTA — reply to this email or text (313) 806-4952
+6. Start with "Hey —" (never "Dear" or "Hi [Name]")
+7. Sign off: "— Matt, Detroit Web Agency"
+8. Conversational, blue-collar tone. Not salesy.
+9. Subject line: Under 40 chars, lowercase ok
+
+Format:
+SUBJECT: [subject line]
+BODY:
+[4-sentence email]`;
+
+  const text = await generateText(prompt, 400);
+  const subjectMatch = text.match(/SUBJECT:\s*(.+)/);
+  const bodyMatch = text.match(/BODY:\s*([\s\S]+)/);
+  return {
+    subject: subjectMatch?.[1]?.trim() || `your old ${tradeClean} quotes`,
+    body: bodyMatch?.[1]?.trim() || text,
+  };
+}
+
+function buildDeadLeadEmailHtml(body: string): string {
+  const htmlBody = body.replace(/\n/g, "<br>");
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+<tr><td style="background:#00d4ff;padding:3px 0;"></td></tr>
+<tr><td style="padding:24px;color:#334155;font-size:15px;line-height:1.8;">
+${htmlBody}
+<div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
+<span style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency · (313) 806-4952 · detroitwebagent.com</span>
+</div>
+</td></tr>
+<tr><td style="background:#f8fafc;padding:12px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
+Detroit Web Agency · Grosse Pointe, MI
+</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+// ── Check how many dead lead emails sent today ──
+async function getDailyDeadLeadCount(sb: any): Promise<number> {
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+  const { count } = await sb
+    .from("outreach_leads")
+    .select("id", { count: "exact", head: true })
+    .eq("offer_pitched", "dead_lead_reactivation")
+    .gte("created_at", todayStart.toISOString());
+  return count || 0;
+}
+
 // ── Check how many emails sent today from this domain ──
 async function getDailySendCount(sb: any): Promise<number> {
   const todayStart = new Date();
@@ -246,12 +319,17 @@ serve(async (req) => {
       );
     }
 
+    // Check dead lead daily cap
+    const deadLeadSentToday = await getDailyDeadLeadCount(sb);
+    let deadLeadSent = deadLeadSentToday;
+
     // Optional manual override — allows dashboard to target a specific trade + city
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const manualTrade = body.target_trade as string | undefined;
     const manualCity = body.target_city as string | undefined;
     const combos = (manualTrade && manualCity) ? [{ trade: manualTrade, city: manualCity }] : getTodaysCombos();
     let totalEmailed = 0;
+    let totalDeadLeadEmailed = 0;
     let totalFound = 0;
     let totalSkipped = 0;
     let totalScoutRejected = 0;
@@ -306,6 +384,54 @@ serve(async (req) => {
           if (smsInsertErr) log("SMS lead insert failed", { name, error: smsInsertErr.message });
           totalSkipped++;
           continue;
+        }
+
+        // ── DEAD LEAD PITCH: for trade contractors, send reactivation pitch ──
+        if (DEAD_LEAD_TRADES.has(trade) && deadLeadSent < DEAD_LEAD_CAP) {
+          let dlSubject: string, dlBody: string;
+          try {
+            ({ subject: dlSubject, body: dlBody } = await sniperDeadLeadEmail(name, trade, city, reviewCount, rating));
+          } catch (dlErr) {
+            log("DeadLead sniper failed", { name, error: String(dlErr) });
+            // fall through to regular Scout flow
+            dlSubject = ""; dlBody = "";
+          }
+          if (dlSubject && dlBody) {
+            const dlHtml = buildDeadLeadEmailHtml(dlBody);
+            const dlRes = await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@detroitwebagent.com>",
+                to: [email],
+                bcc: ["matt@detroitwebagent.com"],
+                subject: dlSubject,
+                html: dlHtml,
+              }),
+            });
+            if (dlRes.ok) {
+              await sb.from("outreach_leads").insert({
+                business_name: name,
+                city: city.replace(" MI", ""),
+                industry: trade.charAt(0).toUpperCase() + trade.slice(1).replace(" contractor", ""),
+                phone, email, website: website || null,
+                status: "emailed", channel: "email",
+                offer_pitched: "dead_lead_reactivation",
+                last_contact_date: new Date().toISOString().split("T")[0],
+                drip_campaign_status: { d0_sent: true, d0_sent_at: new Date().toISOString() },
+                notes: `Dead lead pitch. Reviews: ${reviewCount}, Rating: ${rating}`,
+              });
+              await sb.from("email_send_log" as any).insert({
+                recipient_email: email, template_name: "contractor_dead_lead_d0",
+                status: "sent", message_id: `dl_d0_${Date.now()}_${email}`,
+              });
+              deadLeadSent++;
+              totalDeadLeadEmailed++;
+              log("Dead lead pitch sent", { name, email, city });
+              await new Promise(r => setTimeout(r, 500));
+              continue; // skip regular SNIPER flow for this contractor
+            }
+          }
         }
 
         // ── SCOUT: AI lead qualification (score 1-10) ──
@@ -413,6 +539,7 @@ serve(async (req) => {
         ok: true,
         found: totalFound,
         emailed: totalEmailed,
+        deadLeadEmailed: totalDeadLeadEmailed,
         skipped: totalSkipped,
         scoutRejected: totalScoutRejected,
         dailySentBefore: dailySent,

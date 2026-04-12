@@ -1512,3 +1512,9 @@ verify_jwt = false
 
 [functions.contractor-roi-report]
 verify_jwt = false
+
+[functions.dead-lead-outreach-drip]
+verify_jwt = false
+
+[functions.dead-lead-daily-notifier]
+verify_jwt = false
