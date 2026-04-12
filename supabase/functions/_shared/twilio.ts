@@ -53,18 +53,17 @@ export async function sendSMS(
     if (optOut) {
       console.log(`[SMS] ${to} is opted out — skipping`);
       if (product) {
-        sb.from("compliance_blocks").insert({ phone: to, product, reason: "sms_opt_out" })
-          .then(() => {}).catch(() => {});
+        Promise.resolve(sb.from("compliance_blocks").insert({ phone: to, product, reason: "sms_opt_out" })).catch(() => {});
       }
       // Log skip to comms log (fire-and-forget)
-      sb.from("system_comms_log").insert({
+      Promise.resolve(sb.from("system_comms_log").insert({
         channel: "sms",
         product: product ?? null,
         recipient: to,
         body_preview: body.slice(0, 200),
         status: "skipped",
         error_message: "sms_opt_out",
-      }).then(() => {}).catch(() => {});
+      })).catch(() => {});
       return { success: false, skipped: true };
     }
   }
