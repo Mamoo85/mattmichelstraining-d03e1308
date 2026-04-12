@@ -18,9 +18,10 @@ interface AutomationCardProps {
   stats: { label: string; value: string | number }[];
   actions: { label: string; onClick: () => void; loading?: boolean; variant?: "default" | "outline" }[];
   badge?: string;
+  links?: { label: string; href: string }[];
 }
 
-function AutomationCard({ icon: Icon, title, description, status, stats, actions, badge }: AutomationCardProps) {
+function AutomationCard({ icon: Icon, title, description, status, stats, actions, badge, links }: AutomationCardProps) {
   const statusColor = status === "active" ? "text-green-500" : status === "running" ? "text-primary" : "text-muted-foreground";
   const statusLabel = status === "active" ? "Active" : status === "running" ? "Running..." : "Idle";
 
@@ -57,19 +58,22 @@ function AutomationCard({ icon: Icon, title, description, status, stats, actions
         </div>
         <div className="flex gap-2">
           {actions.map(action => (
-            <Button
-              key={action.label}
-              onClick={action.onClick}
-              disabled={action.loading}
-              variant={action.variant || "default"}
-              size="sm"
-              className="flex-1 text-xs font-bold"
-            >
+            <Button key={action.label} onClick={action.onClick} disabled={action.loading} variant={action.variant || "default"} size="sm" className="flex-1 text-xs font-bold">
               {action.loading ? <Loader2 size={11} className="animate-spin mr-1" /> : null}
               {action.label}
             </Button>
           ))}
         </div>
+        {links && links.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {links.map(link => (
+              <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer"
+                className="text-[10px] font-semibold text-primary hover:underline flex items-center gap-1">
+                {link.label} →
+              </a>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
