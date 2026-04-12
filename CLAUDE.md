@@ -14,6 +14,48 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-04-12. Update this section every session.*
 
+### Phase 11 — Sandbox Audit + Product Revival + 3 New Landing Pages COMPLETE ✅
+Work on `claude/opusplan-setup-nmyYS`. **Needs merge to main to deploy.**
+
+**Product Filter Rule (established this session — enforce going forward):**
+Only build/sell products that FAIL this test: "Can a non-technical person replicate this with free ChatGPT in an hour?" Products that pass = automation infrastructure (Twilio 10DLC, cron scheduling, government data pipelines). Products that fail = content generation (LinkedIn posts, blog writing, collection letters, sermon prep, HOA letters, etc.). Kill or deprioritize anything that's just a wrapper around a prompt.
+
+**AdminSandbox cleanup (`src/components/admin/AdminSandbox.tsx`):**
+- Added search bar — filters all sections live
+- Added missing Detroit Web Agency section — FieldDesk + TechAlert were in PRODUCTS array but never rendered (invisible)
+- Added PRODUCT_FIELDS for `field_service_subscription` + `hire_alert_subscription`
+- Removed 2 duplicates: `regulatory_monitor_v2_subscription` + `competitor_pricing_subscription`
+- Sections auto-hide during search; product counts on each section header
+
+**Three dormant products activated (all had complete backends, just needed pages/fixes):**
+- `/holiday-sms` — $39/mo, 8 AI-written holiday SMS blasts/year. Already fully implemented. Added to sandbox.
+- `/appointment-reminders` — $39/mo, 24hr+1hr reminders. Fixed critical bug: form sent `business_name` (snake_case) but checkout expected `businessName` (camelCase) — was silently breaking every signup. Fixed dark theme inconsistency. Added to sandbox.
+- `/warranty-reminders` — $29/mo, auto-texts customers 30 days before warranty expires → books service calls. Added to sandbox.
+- All three added to sandbox PRODUCTS + PRODUCT_FIELDS with test defaults.
+
+**Domain confirmed:** `detroitwebagent.com` + `www.detroitwebagent.com` are ALREADY connected as custom domains in Lovable pointing at the same project. All DWA pages are accessible at `detroitwebagent.com/*` — no code changes needed.
+
+**Tom outreach drafted for new products:**
+- Warm upsell email (existing FieldDesk clients) — bundle pitch $68/mo for both reminders
+- Cold email (contractors not on DWA) — leads with no-show pain point
+- SMS script for warm contacts
+- Use these to pitch existing DWA contractor clients immediately on merge.
+
+**Insurance Lead Drip — decided NOT to pursue:**
+- TCPA landmine: FCC 1:1 consent rule (Jan 2024) makes insurance leads from aggregators untextable
+- Wrong domain (was on mattmichelstraining.com)
+- Price too low ($149 when agents make $800-2000/policy)
+- `insurance_drip_subscription` still in codebase/sandbox for reference but do not market
+
+**DWA brand images:**
+- Repo has 19 DWA images at `public/images/dwa/` (hero-1/2/3, portrait-1/2/3/4, scene-1-7, banner-1-4, main-banner, matt.jpg)
+- Matt has new images to add (hat+medallion portrait, Secure Digital Defense wide, command center with Detroit map, holographic display portrait, walking city agent, two-agent coin banner, illustrated agent). Matt adding manually tomorrow.
+
+**Product audit findings (90+ dormant checkout functions):**
+- Next revival candidates (complete backends, just need landing pages): Payment Chaser SMS, Warranty Reminder (done), Holiday SMS (done), Appointment Reminder (done)
+- Skip: Speed-to-Lead (stub only), Voicemail (stub only), Thank-You SMS (doesn't exist)
+- Large category to kill: content generation products (LinkedIn ghostwriting, blog posts, church newsletters, HOA letters, etc.) — all fail the product filter
+
 ### Phase 10 — Senior Care Vertical + Multi-State TechAlert COMPLETE ✅
 Work on `claude/opusplan-setup-nmyYS`. Merge to main to deploy.
 
