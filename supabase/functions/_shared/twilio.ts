@@ -88,7 +88,7 @@ export async function sendSMS(
       console.error(`[SMS] Twilio error ${res.status}: ${JSON.stringify(data)}`);
       // Log failure (fire-and-forget)
       if (sb) {
-        sb.from("system_comms_log").insert({
+        Promise.resolve(sb.from("system_comms_log").insert({
           channel: "sms",
           product: product ?? null,
           recipient: to,
@@ -96,7 +96,7 @@ export async function sendSMS(
           status: "failed",
           error_message: data?.message || `HTTP ${res.status}`,
           metadata: { twilio_code: data?.code },
-        }).then(() => {}).catch(() => {});
+        })).catch(() => {});
       }
       return { success: false, error: data?.message || "Twilio error" };
     }
@@ -104,7 +104,7 @@ export async function sendSMS(
     console.log(`[SMS] Sent to ${to} — SID: ${data.sid}`);
     // Log success (fire-and-forget)
     if (sb) {
-      sb.from("system_comms_log").insert({
+      Promise.resolve(sb.from("system_comms_log").insert({
         channel: "sms",
         product: product ?? null,
         recipient: to,
@@ -112,7 +112,7 @@ export async function sendSMS(
         status: "sent",
         provider_id: data.sid,
         metadata: { from },
-      }).then(() => {}).catch(() => {});
+      })).catch(() => {});
     }
     return { success: true, sid: data.sid };
   } catch (e) {
@@ -120,14 +120,14 @@ export async function sendSMS(
     console.error(`[SMS] Exception: ${msg}`);
     // Log exception (fire-and-forget)
     if (sb) {
-      sb.from("system_comms_log").insert({
+      Promise.resolve(sb.from("system_comms_log").insert({
         channel: "sms",
         product: product ?? null,
         recipient: to,
         body_preview: body.slice(0, 200),
         status: "failed",
         error_message: msg,
-      }).then(() => {}).catch(() => {});
+      })).catch(() => {});
     }
     return { success: false, error: msg };
   }
