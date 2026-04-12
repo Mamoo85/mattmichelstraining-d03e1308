@@ -32,7 +32,7 @@ serve(async (req) => {
 
     const [{ data: lead }, { data: contractor }] = await Promise.all([
       sb.from("contractor_leads")
-        .select("id, status, project_type, contractor_lead_sites(trade, city, state)")
+        .select("id, status, aged_tier, project_type, contractor_lead_sites(trade, city, state)")
         .eq("id", lead_id)
         .single(),
       sb.from("contractor_clients")
