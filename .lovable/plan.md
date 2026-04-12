@@ -1,85 +1,79 @@
 
 
-# Fixing Findings 5, 7, and 8
+# Build Error Fix Plan
 
-Finding 6 is **already resolved** — the `trg_email_to_comms_log` trigger exists on `email_send_log`, and both `system_comms_log` and `email_send_log` tables are in the database. No action needed.
-
----
-
-## Finding 5: Add `ADMIN_PHONE` Secret
-
-The hardcoded fallback `+13138064952` is fine as a safety net, but the env var should actually be set so it's configurable without code changes.
-
-**Action**: Use the `add_secret` tool to set `ADMIN_PHONE` = `+13138064952`. This makes it explicit in the secrets list and changeable later without redeploying code. No code changes needed — the existing `??` fallback pattern is correct.
+All errors fall into 5 patterns. Here's the fix for each.
 
 ---
 
-## Finding 7: Stripe `expires_at` Buffer
+## Error Pattern 1: `.then().catch()` on PromiseLike (2 files)
 
-Add a 30-second buffer to prevent edge-case rejections when the Stripe API receives the request slightly after the 30-minute minimum.
+**File**: `create-contractor-ppl-checkout/index.ts` — lines 52 and 76
 
-**File**: `supabase/functions/create-contractor-ppl-checkout/index.ts`
+Same bug we fixed in `_shared/twilio.ts`. Wrap in `Promise.resolve()`.
 
-Change line 107 from:
 ```ts
-expires_at: Math.floor(now.getTime() / 1000) + 1800,
-```
-To:
-```ts
-expires_at: Math.floor(Date.now() / 1000) + 1830, // 30.5 min — buffer for network latency
+// Before
+}).then(() => {}).catch(() => {});
+// After  
+}); // fire-and-forget, no .then/.catch needed — just drop the chain
 ```
 
-Using `Date.now()` instead of the stale `now` variable ensures freshest timestamp. The extra 30 seconds prevents Stripe from rejecting sessions that arrive a few seconds late.
+Actually the simplest fix: just remove `.then(() => {}).catch(() => {})` entirely since these are fire-and-forget inserts where we don't care about the result.
 
 ---
 
-## Finding 8: PPL Lock Race Condition
+## Error Pattern 2: Duplicate `bcc` property (4 files)
 
-Replace the two-step read-then-update with an atomic `UPDATE ... WHERE` that only succeeds if the lead is still available. This eliminates the TOCTOU window entirely.
+**Files**: `financial-advisor-content-sender`, `franchise-ops-sender`, `grant-finder-sender`, `handbook-sender`
 
-**File**: `supabase/functions/create-contractor-ppl-checkout/index.ts`
-
-Replace the current flow (read lead → check status → separate update) with:
-
-1. First, fetch the lead for display info (trade, city) — keep existing SELECT.
-2. Replace the separate lock-acquisition UPDATE (lines 84-88) with an atomic conditional update:
-
+All have the same bug — two `bcc` keys in the same object literal:
 ```ts
-// Atomic lock: only succeeds if lead is still available
-const { data: locked, error: lockErr } = await sb
-  .from("contractor_leads")
-  .update({
-    status: "pending_checkout",
-    checkout_locked_by: contractor_id,
-    lock_expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
-  })
-  .eq("id", lead_id)
-  .neq("status", "sold")
-  .or(`checkout_locked_by.is.null,checkout_locked_by.eq.${contractor_id},lock_expires_at.lt.${new Date().toISOString()}`)
-  .select("id")
-  .maybeSingle();
-
-if (!locked) {
-  return new Response(
-    JSON.stringify({ error: "lead_claimed", redirect: "/lead-claimed" }),
-    { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-  );
-}
+to: [client.email], bcc: ["matthewmichels4@gmail.com"],
+subject: `...`,
+bcc: ["matthewmichels@gmail.com"],  // DUPLICATE — delete this line
 ```
 
-This ensures only one contractor can acquire the lock — the UPDATE only matches rows that are not sold AND either unlocked, locked by the same contractor, or have an expired lock.
+Fix: Remove the duplicate `bcc` line in each file, keep the first one (`matthewmichels4@gmail.com`).
+
+---
+
+## Error Pattern 3: `fitness-report-generator` type errors (1 file)
+
+The function signature `sendReminderToTrainers(sb: ReturnType<typeof createClient>)` causes a type mismatch because the generic `createClient()` call at line 93 produces `SupabaseClient<any, "public", ...>` while the function expects the bare return type.
+
+Fix: Change the parameter type to `sb: any` (these are internal service functions, not public APIs — strict typing adds no value here). This resolves all 7 errors in one change.
+
+---
+
+## Error Pattern 4: `free-report-drip` unknown error type (1 file)
+
+Line 246: `e.message` used after `catch (e: unknown)` but then accessing `.message` without narrowing.
+
+Fix: Change `e.message` to `msg` (the `msg` variable is already declared on line 245 as `const msg = e instanceof Error ? e.message : String(e)`).
+
+---
+
+## Error Pattern 5: `han-upsell` SupabaseClient type mismatch (1 file)
+
+Same pattern as fitness-report-generator. Functions `isSubscriber` and `alreadyInSequence` use `ReturnType<typeof createClient>` which doesn't match the actual client instance.
+
+Fix: Change both function signatures to accept `sb: any`.
 
 ---
 
 ## Summary
 
-| Finding | Action | Risk |
-|---------|--------|------|
-| 5 — Hardcoded phone | Add `ADMIN_PHONE` secret | Zero risk |
-| 6 — Email trigger | **Already fixed** — no action | N/A |
-| 7 — Stripe expiry | Use `Date.now()` + 1830s buffer | Zero risk |
-| 8 — Race condition | Atomic conditional UPDATE | Low risk, big safety gain |
+| File | Fix |
+|------|-----|
+| `create-contractor-ppl-checkout/index.ts` | Remove `.then().catch()` on 2 fire-and-forget inserts |
+| `financial-advisor-content-sender/index.ts` | Delete duplicate `bcc` line |
+| `franchise-ops-sender/index.ts` | Delete duplicate `bcc` line |
+| `grant-finder-sender/index.ts` | Delete duplicate `bcc` line |
+| `handbook-sender/index.ts` | Delete duplicate `bcc` line |
+| `fitness-report-generator/index.ts` | Change param type to `any` |
+| `free-report-drip/index.ts` | Use `msg` instead of `e.message` |
+| `han-upsell/index.ts` | Change param types to `any` |
 
-### Deploy
-After code changes, redeploy `create-contractor-ppl-checkout`.
+8 files, all one-line fixes. No logic changes — purely type/syntax corrections.
 
