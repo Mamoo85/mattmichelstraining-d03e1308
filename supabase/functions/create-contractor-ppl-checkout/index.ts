@@ -80,12 +80,26 @@ serve(async (req) => {
       );
     }
 
-    // Acquire soft lock (10-minute window)
-    await sb.from("contractor_leads").update({
-      status: "pending_checkout",
-      checkout_locked_by: contractor_id,
-      lock_expires_at: new Date(now.getTime() + 10 * 60 * 1000).toISOString(),
-    }).eq("id", lead_id);
+    // Atomic lock: only succeeds if lead is still available (eliminates TOCTOU race)
+    const { data: locked } = await sb
+      .from("contractor_leads")
+      .update({
+        status: "pending_checkout",
+        checkout_locked_by: contractor_id,
+        lock_expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      })
+      .eq("id", lead_id)
+      .neq("status", "sold")
+      .or(`checkout_locked_by.is.null,checkout_locked_by.eq.${contractor_id},lock_expires_at.lt.${new Date().toISOString()}`)
+      .select("id")
+      .maybeSingle();
+
+    if (!locked) {
+      return new Response(
+        JSON.stringify({ error: "lead_claimed", redirect: "/lead-claimed" }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const site = (lead as any).contractor_lead_sites;
     const rawOrigin = req.headers.get("origin") || "https://www.detroitwebagent.com";
@@ -104,7 +118,7 @@ serve(async (req) => {
       mode: "payment",
       payment_method_types: ["card"],
       customer_email: contractor_email,
-      expires_at: Math.floor(now.getTime() / 1000) + 1800, // 30 minutes
+      expires_at: Math.floor(Date.now() / 1000) + 1830, // 30.5 min — buffer for network latency
       line_items: [{
         price_data: {
           currency: "usd",
