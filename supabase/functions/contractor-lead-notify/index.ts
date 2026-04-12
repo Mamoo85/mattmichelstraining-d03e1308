@@ -94,7 +94,7 @@ serve(async (req) => {
         }
 
         if (contractor.phone) {
-          const smsBody = `🔥 New ${site?.trade || "service"} lead!\n${lead.name} — ${lead.phone}${lead.project_type ? `\nProject: ${lead.project_type}` : ""}\nEXCLUSIVE to you. Call now!\n— Detroit Web Agency`;
+          const smsBody = `New ${site?.trade || "service"} lead for you: ${lead.name} — ${lead.phone}${lead.project_type ? ` (${lead.project_type})` : ""}. Exclusive — call now. — Matt (313) 806-4952`;
           await sendSMS(contractor.phone, TWILIO_PHONE, smsBody, "contractor_leads");
         }
       } else {

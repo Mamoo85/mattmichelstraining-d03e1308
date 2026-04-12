@@ -263,7 +263,7 @@ RULES:
       await sendSMS(
         ADMIN_PHONE,
         TWILIO_PHONE_NUMBER,
-        `DWA-CLOSER: Queued pitch to ${prospect.business_name} (${prospect.email}). Sends in ${GHOST_DELAY_MINUTES}min.\nPreview: "${preview}..."`,
+        `Pitch queued: ${prospect.business_name} (${prospect.email}). Sends in ${GHOST_DELAY_MINUTES}min. Preview: "${preview}..."`,
         "dwa_closer"
       );
 

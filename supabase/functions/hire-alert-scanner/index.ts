@@ -535,8 +535,8 @@ serve(async (req: Request) => {
       if (client.notify_sms && client.owner_phone && clientHotCandidates.length) {
         const top = clientHotCandidates[0];
         const smsBody = clientHotCandidates.length === 1
-          ? `🔥 TechAlert: Licensed ${top.license_type || "tech"} just spotted in ${top.city || "Metro Detroit"}!\n\n${top.full_name} — Score ${top.availability_score}/10\n${top.email ? `Email: ${top.email}\n` : ""}${top.phone ? `Phone: ${top.phone}\n` : ""}\nYou're the ONLY company getting this alert. Move fast.\n\nFull details in your email. Reply STOP to opt out.\n— Detroit Web Agency`
-          : `🔥 TechAlert: ${clientHotCandidates.length} licensed techs just spotted in Metro Detroit!\n\nTop match: ${top.full_name} — ${top.license_type || "tradesperson"} in ${top.city || "local"} (${top.availability_score}/10)\n\nYour competitors don't have this intel. Check your email NOW.\n\nReply STOP to opt out.\n— Detroit Web Agency`;
+          ? `TechAlert: ${top.full_name} (${top.license_type || "licensed tech"}, ${top.city || "Metro Detroit"}) — score ${top.availability_score}/10. You're the only one seeing this. Check your email. Reply STOP to opt out.`
+          : `TechAlert: ${clientHotCandidates.length} licensed techs found in Metro Detroit. Top: ${top.full_name} (${top.license_type || "tradesperson"}, ${top.availability_score}/10). Check your email. Reply STOP to opt out.`;
         await sendSMS(client.owner_phone, TWILIO_PHONE_NUMBER, smsBody, "hire_alert");
       }
     } catch (e) {

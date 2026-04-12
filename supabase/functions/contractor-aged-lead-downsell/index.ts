@@ -72,7 +72,7 @@ serve(async (req) => {
           await sendSMS(
             contractor.phone,
             TWILIO_PHONE_NUMBER,
-            `Cold Lead: Homeowner in ${city} requested a ${trade} quote 2 days ago. Unclaimed. $15 unlocks their contact info: ${checkoutUrl}&cid=${contractor.id}`,
+            `Lead in ${city}: homeowner still needs a ${trade} quote — been sitting 48h unclaimed. $15 gets you their contact info: ${checkoutUrl}&cid=${contractor.id}`,
             "contractor_leads"
           );
         }

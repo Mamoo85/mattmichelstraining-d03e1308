@@ -182,7 +182,7 @@ async function processClient(client: any): Promise<{ opportunities: number; prop
   }
 
   if (urgentCount > 0 && client.phone) {
-    await sendSMS(client.phone, TWILIO_PHONE, `BID ALERT: ${urgentCount} bid(s) due within 72 hours. Check your email for details. — M² Bid Intelligence`, "bid_intel_monitor");
+    await sendSMS(client.phone, TWILIO_PHONE, `${urgentCount} bid${urgentCount > 1 ? "s" : ""} due within 72 hours. Details in your email. — Matt (313) 806-4952`, "bid_intel_monitor");
   }
 
   await supabase.from("bid_intel_clients").update({ last_scan_at: new Date().toISOString() }).eq("id", client.id);
