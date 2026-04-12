@@ -82,6 +82,22 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
     { key: "custom_message", label: "Auto-Reply Message (160 chars max)", default: "" },
   ],
   // SMS Products
+  holiday_sms_subscription: [
+    { key: "businessName", label: "Business Name", default: "M2 Development" },
+    { key: "industry", label: "Industry", default: "HVAC" },
+    { key: "name", label: "Owner Name", default: "Matt Michels" },
+  ],
+  appointment_reminder_subscription: [
+    { key: "businessName", label: "Business Name", default: "M2 Development" },
+    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "name", label: "Owner Name", default: "Matt Michels" },
+  ],
+  warranty_reminder_subscription: [
+    { key: "businessName", label: "Business Name", default: "M2 Development" },
+    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "industry", label: "Industry", default: "HVAC" },
+    { key: "name", label: "Owner Name", default: "Matt Michels" },
+  ],
   review_monitor_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "phone", label: "Phone", default: "+13138064952" },
