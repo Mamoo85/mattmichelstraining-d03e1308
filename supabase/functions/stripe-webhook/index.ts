@@ -5506,38 +5506,6 @@ ${fwdInstructions}`,
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
-    // ── LUKE — Capture abandoned checkouts for recovery emails ────────────────
-    if (event.type === "checkout.session.expired") {
-      try {
-        const expiredSession = event.data.object as Record<string, unknown>;
-        const expMeta = (expiredSession.metadata as Record<string, string>) || {};
-        const expEmail = expMeta.email || (expiredSession.customer_details as Record<string, string>)?.email || null;
-        const instantProductTypes = ["website_audit", "gbp_post_pack", "competitor_report"];
-        if (expMeta.type && instantProductTypes.includes(expMeta.type) && expEmail) {
-          const { count: exists } = await sb.from("cart_abandonments")
-            .select("*", { count: "exact", head: true })
-            .eq("stripe_session_id", expiredSession.id as string);
-          if (!exists) {
-            await sb.from("cart_abandonments").insert({
-              email: expEmail,
-              product_type: expMeta.type,
-              stripe_session_id: expiredSession.id as string,
-              cart_value: expMeta.price ? parseFloat(expMeta.price) : 49,
-              metadata: expMeta,
-            });
-            console.log(`[LUKE] Cart abandonment captured: ${expEmail} — ${expMeta.type}`);
-          }
-        }
-      } catch (e) { console.error("[LUKE] cart_abandonment capture error:", e); }
-      return new Response(JSON.stringify({ received: true }), { status: 200 });
-    }
-
-    // ── Unhandled event types (invoice.finalized, etc.) — acknowledge safely ──
-    if (event.type !== "checkout.session.completed") {
-      console.log(`[WEBHOOK] Unhandled event type: ${event.type} — acknowledging`);
-      return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
-    }
-
       // ── CATCH-ALL: any subscription type not explicitly handled above ──────
       // Writes to saas_subscriptions so no paid subscriber is ever lost.
       if (meta.type && meta.type.endsWith("_subscription") && (meta.email || customerEmail)) {
@@ -5586,6 +5554,7 @@ ${fwdInstructions}`,
       // ── Revenue Suite Bundle ──────────────────────────────────────────
       if (meta.type === "bundle_revenue_suite") {
         try {
+          const email = meta.email || customerEmail;
           const tables = [
             "review_monitor_clients", "sms_blast_clients", "noshow_clients",
             "estimate_drip_clients", "invoice_chaser_clients", "afterjob_drip_clients",
@@ -5624,6 +5593,39 @@ ${fwdInstructions}`,
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // Unmatched checkout.session.completed — log and acknowledge
+      console.log(`[WEBHOOK] checkout.session.completed with unhandled meta.type: ${meta.type || "none"}`);
+      return new Response(JSON.stringify({ received: true }), { status: 200 });
+    
+
+    // ── LUKE — Capture abandoned checkouts for recovery emails ────────────────
+    if (event.type === "checkout.session.expired") {
+      try {
+        const expiredSession = event.data.object as Record<string, unknown>;
+        const expMeta = (expiredSession.metadata as Record<string, string>) || {};
+        const expEmail = expMeta.email || (expiredSession.customer_details as Record<string, string>)?.email || null;
+        const instantProductTypes = ["website_audit", "gbp_post_pack", "competitor_report"];
+        if (expMeta.type && instantProductTypes.includes(expMeta.type) && expEmail) {
+          const { count: exists } = await sb.from("cart_abandonments")
+            .select("*", { count: "exact", head: true })
+            .eq("stripe_session_id", expiredSession.id as string);
+          if (!exists) {
+            await sb.from("cart_abandonments").insert({
+              email: expEmail,
+              product_type: expMeta.type,
+              stripe_session_id: expiredSession.id as string,
+              cart_value: expMeta.price ? parseFloat(expMeta.price) : 49,
+              metadata: expMeta,
+            });
+            console.log(`[LUKE] Cart abandonment captured: ${expEmail} — ${expMeta.type}`);
+          }
+        }
+      } catch (e) { console.error("[LUKE] cart_abandonment capture error:", e); }
+      return new Response(JSON.stringify({ received: true }), { status: 200 });
+    }
+
+    // ── Unhandled event types (invoice.finalized, etc.) — acknowledge safely ──
+    console.log(`[WEBHOOK] Unhandled event type: ${event.type} — acknowledging`);
     return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
