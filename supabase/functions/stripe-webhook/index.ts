@@ -2443,7 +2443,6 @@ serve(async (req) => {
           html: emailHtml,
         }),
       });
-    }
 
       // ── CONTRACTOR LEAD PPL PAYMENT ($50/lead) ───────────────────────────
       if (meta.type === "contractor_lead_payment") {
@@ -5596,7 +5595,7 @@ ${fwdInstructions}`,
       // Unmatched checkout.session.completed — log and acknowledge
       console.log(`[WEBHOOK] checkout.session.completed with unhandled meta.type: ${meta.type || "none"}`);
       return new Response(JSON.stringify({ received: true }), { status: 200 });
-    
+    }
 
     // ── LUKE — Capture abandoned checkouts for recovery emails ────────────────
     if (event.type === "checkout.session.expired") {
