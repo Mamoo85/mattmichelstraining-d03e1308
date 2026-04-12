@@ -307,6 +307,73 @@ async function getDailySeniorCareCount(sb: any): Promise<number> {
   return count || 0;
 }
 
+// ── AGENT 4: SNIPER_SENIOR — TechAlert pitch for senior care facilities ──
+// Pitch: We monitor when licensed CNAs/LPNs/RNs enter your market. Instant SMS alert.
+async function sniperSeniorCareEmail(
+  businessName: string,
+  trade: string,
+  city: string,
+  reviewCount: number,
+  rating: number,
+): Promise<{ subject: string; body: string }> {
+  const cityShort = city.replace(" MI", "");
+  const roleMap: Record<string, string> = {
+    "assisted living facility": "CNA or home health aide",
+    "home health agency": "CNA or LPN",
+    "skilled nursing facility": "CNA, LPN, or RN",
+  };
+  const role = roleMap[trade] || "CNA or LPN";
+
+  const prompt = `You are writing a 4-sentence cold email from Matt Michels at Detroit Web Agency to the owner/administrator of "${businessName}", a ${trade} in ${cityShort}, MI.
+
+The offer: TechAlert — we monitor Michigan's state nurse aide and professional license registry daily. The moment a new ${role} license is issued in your area, we text you their name and license number instantly. $99/mo.
+
+They have ${reviewCount} Google reviews${rating ? ` and a ${rating}-star rating` : ""} — reference one of these facts to prove you looked them up.
+
+Rules:
+1. EXACTLY 4 sentences
+2. Sentence 1: Prove you looked them up — mention their facility type, review count, or city
+3. Sentence 2: The problem — finding qualified ${role}s is the #1 operating headache for senior care facilities
+4. Sentence 3: The fix — TechAlert texts you the moment a new ${role} license is issued in Metro Detroit. $99/mo.
+5. Sentence 4: Soft CTA — reply or text (313) 806-4952
+6. Start with "Hey —" (never "Dear" or "Hi [Name]")
+7. Sign off: "— Matt, Detroit Web Agency"
+8. Warm, professional tone. Not salesy. Speak like you understand their staffing nightmare.
+9. NO buzzwords (leverage, synergy, streamline, revolutionize, etc.)
+10. Subject line: Under 40 chars, lowercase ok, references staffing
+
+Format:
+SUBJECT: [subject line]
+BODY:
+[4-sentence email]`;
+
+  const text = await generateText(prompt, 400);
+  const subjectMatch = text.match(/SUBJECT:\s*(.+)/);
+  const bodyMatch = text.match(/BODY:\s*([\s\S]+)/);
+  return {
+    subject: subjectMatch?.[1]?.trim() || `new ${role} alert for ${cityShort}`,
+    body: bodyMatch?.[1]?.trim() || text,
+  };
+}
+
+function buildSeniorCareEmailHtml(body: string): string {
+  const htmlBody = body.replace(/\n/g, "<br>");
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+<tr><td style="background:#00d4ff;padding:3px 0;"></td></tr>
+<tr><td style="padding:24px;color:#334155;font-size:15px;line-height:1.8;">
+${htmlBody}
+<div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
+<span style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency · (313) 806-4952 · detroitwebagent.com</span>
+</div>
+</td></tr>
+<tr><td style="background:#0a1628;padding:12px 24px;border-top:1px solid #00d4ff33;font-size:11px;color:#00d4ff;">
+Detroit Web Agency · Grosse Pointe, MI · TechAlert License Monitoring
+</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
 // ── Check how many emails sent today from this domain ──
 async function getDailySendCount(sb: any): Promise<number> {
   const todayStart = new Date();
@@ -340,6 +407,10 @@ serve(async (req) => {
     const deadLeadSentToday = await getDailyDeadLeadCount(sb);
     let deadLeadSent = deadLeadSentToday;
 
+    // Check senior care daily cap
+    const seniorCareSentToday = await getDailySeniorCareCount(sb);
+    let seniorCareSent = seniorCareSentToday;
+
     // Optional manual override — allows dashboard to target a specific trade + city
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const manualTrade = body.target_trade as string | undefined;
@@ -347,6 +418,7 @@ serve(async (req) => {
     const combos = (manualTrade && manualCity) ? [{ trade: manualTrade, city: manualCity }] : getTodaysCombos();
     let totalEmailed = 0;
     let totalDeadLeadEmailed = 0;
+    let totalSeniorCareEmailed = 0;
     let totalFound = 0;
     let totalSkipped = 0;
     let totalScoutRejected = 0;
@@ -447,6 +519,53 @@ serve(async (req) => {
               log("Dead lead pitch sent", { name, email, city });
               await new Promise(r => setTimeout(r, 500));
               continue; // skip regular SNIPER flow for this contractor
+            }
+          }
+        }
+
+        // ── SENIOR CARE: TechAlert CNA/LPN/RN license monitoring pitch ──
+        if (SENIOR_CARE_TRADES.has(trade) && seniorCareSent < SENIOR_CARE_CAP) {
+          let scSubject: string, scBody: string;
+          try {
+            ({ subject: scSubject, body: scBody } = await sniperSeniorCareEmail(name, trade, city, reviewCount, rating));
+          } catch (scErr) {
+            log("SeniorCare sniper failed", { name, error: String(scErr) });
+            scSubject = ""; scBody = "";
+          }
+          if (scSubject && scBody) {
+            const scHtml = buildSeniorCareEmailHtml(scBody);
+            const scRes = await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@detroitwebagent.com>",
+                to: [email],
+                bcc: ["matt@detroitwebagent.com"],
+                subject: scSubject,
+                html: scHtml,
+              }),
+            });
+            if (scRes.ok) {
+              await sb.from("outreach_leads").insert({
+                business_name: name,
+                city: city.replace(" MI", ""),
+                industry: trade.charAt(0).toUpperCase() + trade.slice(1),
+                phone, email, website: website || null,
+                status: "emailed", channel: "email",
+                offer_pitched: "techalert_senior_care",
+                last_contact_date: new Date().toISOString().split("T")[0],
+                drip_campaign_status: { d0_sent: true, d0_sent_at: new Date().toISOString() },
+                notes: `TechAlert senior care pitch. Reviews: ${reviewCount}, Rating: ${rating}`,
+              });
+              await sb.from("email_send_log" as any).insert({
+                recipient_email: email, template_name: "contractor_techalert_senior_care_d0",
+                status: "sent", message_id: `sc_d0_${Date.now()}_${email}`,
+              });
+              seniorCareSent++;
+              totalSeniorCareEmailed++;
+              log("Senior care TechAlert pitch sent", { name, email, city });
+              await new Promise(r => setTimeout(r, 500));
+              continue; // skip Scout/Sniper flow
             }
           }
         }
@@ -557,6 +676,7 @@ serve(async (req) => {
         found: totalFound,
         emailed: totalEmailed,
         deadLeadEmailed: totalDeadLeadEmailed,
+        seniorCareEmailed: totalSeniorCareEmailed,
         skipped: totalSkipped,
         scoutRejected: totalScoutRejected,
         dailySentBefore: dailySent,
