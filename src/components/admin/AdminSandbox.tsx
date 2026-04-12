@@ -257,6 +257,18 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
     { key: "keywords", label: "Keywords (comma separated)", default: "personal training grosse pointe, fitness coach detroit" },
     { key: "phone", label: "Phone", default: "+13138064952" },
   ],
+  field_service_subscription: [
+    { key: "company_name", label: "Company Name", default: "D.J. Conley Associates" },
+    { key: "owner_name", label: "Owner Name", default: "Pat Michels" },
+    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "plan", label: "Plan (standard/pro)", default: "standard" },
+  ],
+  hire_alert_subscription: [
+    { key: "company_name", label: "Company Name", default: "D.J. Conley Associates" },
+    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "plan", label: "Plan (standalone/bundle)", default: "standalone" },
+    { key: "target_roles", label: "Target Roles (comma separated)", default: "boiler_operator,hvac_tech,plumber" },
+  ],
 };
 
 const PRODUCTS: Product[] = [
