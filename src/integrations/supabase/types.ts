@@ -1874,6 +1874,30 @@ export type Database = {
         }
         Relationships: []
       }
+      compliance_blocks: {
+        Row: {
+          created_at: string
+          id: string
+          phone: string
+          product: string | null
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          phone: string
+          product?: string | null
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          phone?: string
+          product?: string | null
+          reason?: string
+        }
+        Relationships: []
+      }
       content_queue: {
         Row: {
           caption: string
@@ -1961,6 +1985,50 @@ export type Database = {
         }
         Relationships: []
       }
+      contractor_lead_purchases: {
+        Row: {
+          amount_cents: number
+          city: string | null
+          contractor_email: string | null
+          contractor_id: string
+          created_at: string
+          id: string
+          lead_id: string | null
+          stripe_session_id: string | null
+          trade: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          city?: string | null
+          contractor_email?: string | null
+          contractor_id: string
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          stripe_session_id?: string | null
+          trade?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          city?: string | null
+          contractor_email?: string | null
+          contractor_id?: string
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          stripe_session_id?: string | null
+          trade?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contractor_lead_purchases_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contractor_lead_sites: {
         Row: {
           active: boolean | null
@@ -2005,15 +2073,59 @@ export type Database = {
           },
         ]
       }
+      contractor_lead_views: {
+        Row: {
+          city: string | null
+          contractor_id: string
+          created_at: string
+          id: string
+          lead_id: string | null
+          reason: string | null
+          trade: string | null
+        }
+        Insert: {
+          city?: string | null
+          contractor_id: string
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          reason?: string | null
+          trade?: string | null
+        }
+        Update: {
+          city?: string | null
+          contractor_id?: string
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          reason?: string | null
+          trade?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contractor_lead_views_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contractor_leads: {
         Row: {
+          checkout_locked_by: string | null
           client_id: string | null
           created_at: string | null
           email: string | null
           id: string
+          is_aged: boolean
+          lock_expires_at: string | null
           message: string | null
           name: string
           notified_at: string | null
+          paid_by_contractor_id: string | null
+          payment_amount_cents: number | null
+          payment_session_id: string | null
           phone: string
           project_type: string | null
           site_id: string | null
@@ -2021,13 +2133,19 @@ export type Database = {
           status: string | null
         }
         Insert: {
+          checkout_locked_by?: string | null
           client_id?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
+          is_aged?: boolean
+          lock_expires_at?: string | null
           message?: string | null
           name: string
           notified_at?: string | null
+          paid_by_contractor_id?: string | null
+          payment_amount_cents?: number | null
+          payment_session_id?: string | null
           phone: string
           project_type?: string | null
           site_id?: string | null
@@ -2035,13 +2153,19 @@ export type Database = {
           status?: string | null
         }
         Update: {
+          checkout_locked_by?: string | null
           client_id?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
+          is_aged?: boolean
+          lock_expires_at?: string | null
           message?: string | null
           name?: string
           notified_at?: string | null
+          paid_by_contractor_id?: string | null
+          payment_amount_cents?: number | null
+          payment_session_id?: string | null
           phone?: string
           project_type?: string | null
           site_id?: string | null
@@ -9056,6 +9180,27 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_opt_outs: {
+        Row: {
+          id: string
+          opted_out_at: string
+          phone: string
+          source: string | null
+        }
+        Insert: {
+          id?: string
+          opted_out_at?: string
+          phone: string
+          source?: string | null
+        }
+        Update: {
+          id?: string
+          opted_out_at?: string
+          phone?: string
+          source?: string | null
+        }
+        Relationships: []
+      }
       social_caption_clients: {
         Row: {
           active: boolean | null
@@ -9527,6 +9672,45 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      system_comms_log: {
+        Row: {
+          body_preview: string | null
+          channel: string
+          created_at: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          product: string | null
+          provider_id: string | null
+          recipient: string
+          status: string
+        }
+        Insert: {
+          body_preview?: string | null
+          channel?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          product?: string | null
+          provider_id?: string | null
+          recipient: string
+          status?: string
+        }
+        Update: {
+          body_preview?: string | null
+          channel?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          product?: string | null
+          provider_id?: string | null
+          recipient?: string
+          status?: string
         }
         Relationships: []
       }
