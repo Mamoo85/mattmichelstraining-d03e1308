@@ -64,6 +64,7 @@ serve(async (req) => {
       customer_email: email,
       subscription_data: { trial_period_days: 7 },
       line_items: [{
+        quantity: 1,
         price_data: {
           currency: "usd",
           unit_amount: monthlyPrice,
@@ -73,7 +74,6 @@ serve(async (req) => {
             description: `Exclusive territory. Every ${tradeLabel.toLowerCase()} lead in ${city} goes only to you. SMS + email delivery within minutes.`,
           },
         },
-        quantity: 1,
       }],
       metadata: {
         type: "contractor_lead_subscription",

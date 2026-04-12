@@ -5505,6 +5505,214 @@ ${fwdInstructions}`,
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+    // ── LUKE — Capture abandoned checkouts for recovery emails ────────────────
+    if (event.type === "checkout.session.expired") {
+      try {
+        const expiredSession = event.data.object as Record<string, unknown>;
+        const expMeta = (expiredSession.metadata as Record<string, string>) || {};
+        const expEmail = expMeta.email || (expiredSession.customer_details as Record<string, string>)?.email || null;
+        const instantProductTypes = ["website_audit", "gbp_post_pack", "competitor_report"];
+        if (expMeta.type && instantProductTypes.includes(expMeta.type) && expEmail) {
+          const { count: exists } = await sb.from("cart_abandonments")
+            .select("*", { count: "exact", head: true })
+            .eq("stripe_session_id", expiredSession.id as string);
+          if (!exists) {
+            await sb.from("cart_abandonments").insert({
+              email: expEmail,
+              product_type: expMeta.type,
+              stripe_session_id: expiredSession.id as string,
+              cart_value: expMeta.price ? parseFloat(expMeta.price) : 49,
+              metadata: expMeta,
+            });
+            console.log(`[LUKE] Cart abandonment captured: ${expEmail} — ${expMeta.type}`);
+          }
+        }
+      } catch (e) { console.error("[LUKE] cart_abandonment capture error:", e); }
+      return new Response(JSON.stringify({ received: true }), { status: 200 });
+    }
+
+      // ── WAVE 4: STORM DAMAGE LEAD BLASTER ──────────────────────────────────
+      if (meta.type === "storm_lead_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("storm_lead_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || meta.name || email,
+              phone: meta.phone || null,
+              zip_codes: meta.zip_codes ? meta.zip_codes.split(",").map((z: string) => z.trim()) : [],
+              trade: meta.trade || null,
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            await Promise.all([
+              supabase.functions.invoke("auto-onboard", { body: { email, type: "storm_lead_subscription", name: meta.business_name || meta.name } }),
+              notifyMatt(
+                `💰 New Storm Damage Leads client — ${meta.business_name || email} ($29/mo)`,
+                `<p><strong>${meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>Trade: ${meta.trade || "—"} | Zips: ${meta.zip_codes || "—"}</p>`
+              ),
+            ]);
+          }
+        } catch (e) { console.error("[WEBHOOK] storm_lead_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── WAVE 4: RECALL ALERT SERVICE ────────────────────────────────────────
+      if (meta.type === "recall_alert_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("recall_alert_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || meta.name || email,
+              phone: meta.phone || null,
+              industry: meta.industry || null,
+              product_categories: meta.product_categories ? meta.product_categories.split(",").map((c: string) => c.trim()) : [],
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            await Promise.all([
+              supabase.functions.invoke("auto-onboard", { body: { email, type: "recall_alert_subscription", name: meta.business_name || meta.name } }),
+              notifyMatt(
+                `💰 New Recall Alert client — ${meta.business_name || email} ($19/mo)`,
+                `<p><strong>${meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>Industry: ${meta.industry || "—"}</p>`
+              ),
+            ]);
+          }
+        } catch (e) { console.error("[WEBHOOK] recall_alert_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── WAVE 4: PERMIT WATCH ─────────────────────────────────────────────────
+      if (meta.type === "permit_watch_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("permit_watch_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || meta.name || email,
+              phone: meta.phone || null,
+              city: meta.city || "Grosse Pointe",
+              state: meta.state || "MI",
+              trades: meta.trades ? meta.trades.split(",").map((t: string) => t.trim()) : [],
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            await Promise.all([
+              supabase.functions.invoke("auto-onboard", { body: { email, type: "permit_watch_subscription", name: meta.business_name || meta.name } }),
+              notifyMatt(
+                `💰 New Permit Watch client — ${meta.business_name || email} ($29/mo)`,
+                `<p><strong>${meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>Location: ${meta.city || "—"}, ${meta.state || "MI"} | Trades: ${meta.trades || "—"}</p>`
+              ),
+            ]);
+          }
+        } catch (e) { console.error("[WEBHOOK] permit_watch_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── WAVE 4: WEBSITE SPEED AUDIT ──────────────────────────────────────────
+      if (meta.type === "speed_audit_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("speed_audit_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || meta.name || email,
+              website_url: meta.website_url || "",
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            await Promise.all([
+              supabase.functions.invoke("auto-onboard", { body: { email, type: "speed_audit_subscription", name: meta.business_name || meta.name } }),
+              notifyMatt(
+                `💰 New Website Speed Audit client — ${meta.business_name || email} ($29/mo)`,
+                `<p><strong>${meta.business_name || email}</strong><br>${email}<br>URL: ${meta.website_url || "—"}</p>`
+              ),
+            ]);
+          }
+        } catch (e) { console.error("[WEBHOOK] speed_audit_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── WAVE 4: AI BEDTIME STORIES ───────────────────────────────────────────
+      if (meta.type === "bedtime_story_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("bedtime_story_clients" as any).upsert({
+              parent_email: email,
+              child_name: meta.child_name || "your child",
+              child_age: meta.child_age ? parseInt(meta.child_age) : 5,
+              interests: meta.interests ? meta.interests.split(",").map((i: string) => i.trim()) : [],
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "parent_email" });
+            await Promise.all([
+              supabase.functions.invoke("auto-onboard", { body: { email, type: "bedtime_story_subscription", name: meta.child_name || "your child" } }),
+              notifyMatt(
+                `💰 New AI Bedtime Stories subscriber — ${email} ($4.99/mo)`,
+                `<p>${email}<br>Child: ${meta.child_name || "—"}, age ${meta.child_age || "5"}<br>Interests: ${meta.interests || "—"}</p>`
+              ),
+            ]);
+          }
+        } catch (e) { console.error("[WEBHOOK] bedtime_story_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── WAVE 4: NEIGHBORHOOD CRIME DIGEST ───────────────────────────────────
+      if (meta.type === "crime_digest_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("crime_digest_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || meta.name || null,
+              phone: meta.phone || null,
+              zip_code: meta.zip_code || "48236",
+              city: meta.city || null,
+              state: meta.state || "MI",
+              client_type: meta.client_type || "property_manager",
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            await Promise.all([
+              supabase.functions.invoke("auto-onboard", { body: { email, type: "crime_digest_subscription", name: meta.business_name || meta.name } }),
+              notifyMatt(
+                `💰 New Crime Digest subscriber — ${meta.business_name || email} ($19/mo)`,
+                `<p><strong>${meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>Zip: ${meta.zip_code || "—"} | ${meta.city || "—"}, ${meta.state || "MI"}</p>`
+              ),
+            ]);
+          }
+        } catch (e) { console.error("[WEBHOOK] crime_digest_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── WAVE 4: BUSINESS LICENSE MONITOR ────────────────────────────────────
+      if (meta.type === "license_monitor_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("license_monitor_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || meta.name || email,
+              phone: meta.phone || null,
+              state: meta.state || "MI",
+              license_types: meta.license_types ? meta.license_types.split(",").map((l: string) => l.trim()) : [],
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            await Promise.all([
+              supabase.functions.invoke("auto-onboard", { body: { email, type: "license_monitor_subscription", name: meta.business_name || meta.name } }),
+              notifyMatt(
+                `💰 New License Monitor client — ${meta.business_name || email} ($25/mo)`,
+                `<p><strong>${meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>State: ${meta.state || "MI"} | License types: ${meta.license_types || "—"}</p>`
+              ),
+            ]);
+          }
+        } catch (e) { console.error("[WEBHOOK] license_monitor_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── CATCH-ALL: any subscription type not explicitly handled above ──────
       // Writes to saas_subscriptions so no paid subscriber is ever lost.
       if (meta.type && meta.type.endsWith("_subscription") && (meta.email || customerEmail)) {

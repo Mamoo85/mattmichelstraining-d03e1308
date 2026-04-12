@@ -262,7 +262,7 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - **Database**: Supabase Postgres (RLS enforced on all tables)
 - **Payments**: Stripe (inline `price_data`, no pre-created prices)
 - **Email**: Resend API (from: `matt@mattmichelstraining.com`)
-- **AI**: Claude Haiku (`claude-haiku-4-5-20251001`) via Anthropic API
+- **AI**: Claude Haiku (`claude-haiku-4-5` / `claude-haiku-4-5-20251001`) via Anthropic API
 - **Domain**: mattmichelstraining.com
 - **Repo**: `mamoo85/m2training` (GitHub)
 - **Supabase Project**: Managed by Lovable (primary — starts with 'e'). Secondary ref `zmyczlfuufhngzovkjdh` exists for GitHub Actions but migrations deploy automatically via Lovable on merge to main. Do NOT apply migrations manually via MCP to the secondary project.
@@ -464,7 +464,7 @@ TanStack Query v5 with localStorage persistence via `PersistQueryClientProvider`
 - 539 functions in `supabase/functions/[name]/index.ts` — navigate by product name
 - Shared utilities: `supabase/functions/_shared/ai.ts` (generateText, generateJSON), `_shared/twilio.ts` (sendSMS with TCPA), `_shared/email-templates/`, `_shared/transactional-email-templates/`
 - Autonomous scheduled functions: `tom-autonomous`, `oz-autonomous`, `scarlett-autonomous`, `selma-autonomous`, `ops-autonomous`
-- AI calls: Claude Haiku only (`claude-haiku-4-5-20251001`), `max_tokens` 800–1200
+- AI calls: Claude Haiku only (`claude-haiku-4-5`), `max_tokens` 800–1200
 - Stripe: always inline `price_data`, always set `metadata.type` for webhook routing
 - SMS: query `sms_opt_outs` (by E.164 phone) before every Twilio send — TCPA compliance
 - New functions inherit secrets automatically via GitHub Actions on next merge to main
@@ -565,7 +565,7 @@ All secrets below are already set in Lovable Cloud and working. Do NOT add secre
 - Never build features requiring ongoing manual operation
 - All new tables get RLS enabled + service_role policy
 - Stripe: always inline price_data, always set metadata.type for webhook routing
-- AI calls: Claude Haiku only (cost-efficient), max_tokens 800-1200
+- AI calls: Claude Haiku only (`claude-haiku-4-5`), max_tokens 800-1200
 - Always use project ref `zmyczlfuufhngzovkjdh`
 - **"Create an agent"** always means: create a `.md` file at `/home/user/m2training/.claude/agents/[name].md`
 - SMS sends: always query `sms_opt_outs` table (E.164 phone format) before sending — TCPA requires immediate opt-out honoring; failures logged to `compliance_blocks`
@@ -575,8 +575,11 @@ All secrets below are already set in Lovable Cloud and working. Do NOT add secre
 - **stripe-webhook**: Always use `${SUPABASE_URL}/functions/v1/...` for function URLs — never hardcode the project ref in URLs
 - **Edge functions**: Read env vars at top-level (module scope), not inside request handlers
 - **Edge functions**: Parallelize independent async ops with `Promise.all()` — especially email sends
+- **Edge functions**: AI model in `_shared/ai.ts` is `claude-haiku-4-5` (equivalent to `claude-haiku-4-5-20251001`)
 - **Twilio**: ALWAYS use `import { sendSMS } from "../_shared/twilio.ts"` for SMS sends — NEVER define a local sendSMS function. The shared version checks `sms_opt_outs` before every send (TCPA compliance). Signature: `sendSMS(to, from, body, product?)`
 - **No dead code**: Delete unused imports, variables, and functions — don't comment them out
 - **Auto-onboard**: When adding new products, add a welcome email template to `supabase/functions/auto-onboard/index.ts` TEMPLATES dict
 - **Admin dashboards**: When adding new products, add entries to BOTH `AdminOpsCenter.tsx` ALL_SERVICES array AND `AdminClientHealth.tsx` SERVICE_TABLES array
 - **JWT verification**: Most edge functions have `verify_jwt = false` in `supabase/config.toml` — this is intentional for public checkout/webhook endpoints. Internal auth is handled within functions. Exception: `process-email-queue` uses `verify_jwt = true`.
+- **RLS security**: Anonymous insert policies on sensitive tables must be removed — use service_role via edge functions instead. Recent migrations (20260406+) tightened RLS on `contractor_leads`, `training_programs`, and `newsletter_subscribers`.
+- **Supabase URL**: The vite.config.ts fallback URL (`eauvubfpanpeuxsrqesu.supabase.co`) is the Lovable-hosted project. The secondary GitHub Actions project ref is `zmyczlfuufhngzovkjdh`. In edge functions always use `Deno.env.get("SUPABASE_URL")` — never hardcode either URL.

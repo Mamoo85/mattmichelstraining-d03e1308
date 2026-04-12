@@ -141,6 +141,13 @@ const AdminCommandCenter      = lazyRetry(() => import("@/components/admin/Admin
 const AdminNotificationCenter = lazyRetry(() => import("@/components/admin/AdminNotificationCenter"));
 const AdminScoutingDashboard  = lazyRetry(() => import("@/components/admin/AdminScoutingDashboard"));
 
+// Previously unregistered components
+const AdminAiCommandCenter    = lazyRetry(() => import("@/components/admin/AdminAiCommandCenter"));
+const AdminAiCopilot          = lazyRetry(() => import("@/components/admin/AdminAiCopilot"));
+const AdminProtocols          = lazyRetry(() => import("@/components/admin/AdminProtocols"));
+const AdminProductManager     = lazyRetry(() => import("@/components/admin/AdminProductManager"));
+const AdminPinnedNotes        = lazyRetry(() => import("@/components/admin/AdminPinnedNotes"));
+
 /* ── Types ──────────────────────────────────────────────────────────────────── */
 interface Tool {
   key: string;
@@ -329,6 +336,9 @@ const Admin = () => {
         { key: "custom-req", label: "Custom Requests", component: <AdminCustomRequests />, badge: b.custom },
         { key: "lift-videos", label: "Lift Videos", component: <AdminLiftVideoReview />, badge: b.liftVideos },
         { key: "prove-it", label: "Prove It", component: <AdminProveItReview />, badge: b.proveIt },
+        { key: "protocols", label: "Protocols", component: <AdminProtocols /> },
+        { key: "ai-copilot", label: "AI Copilot", component: <AdminAiCopilot /> },
+        { key: "ai-hub", label: "⚡ AI Hub", component: <AdminAiCommandCenter /> },
       ],
     },
     {
@@ -397,6 +407,8 @@ const Admin = () => {
         { key: "email-log", label: "📧 Email Log", component: <AdminEmailLog /> },
         { key: "system", label: "System & Refs", component: <AdminSystemSettings /> },
         { key: "trash", label: "🗑 Trash", component: <AdminTrash />, badge: b.trash },
+        { key: "product-manager", label: "Product Manager", component: <AdminProductManager /> },
+        { key: "pinned-notes", label: "📌 Notes", component: <AdminPinnedNotes /> },
       ],
     },
     {
