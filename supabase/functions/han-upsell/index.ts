@@ -55,7 +55,7 @@ const UPSELL_MAP: Record<string, { product: string; headline: string; pitch: str
 const TEST_EMAILS = ["matt@mattmichelstraining.com", "matthewmichels@gmail.com", "matthewmichels4@gmail.com"];
 
 // Check if this email is already a subscriber (don't upsell subscribers)
-async function isSubscriber(sb: ReturnType<typeof createClient>, email: string): Promise<boolean> {
+async function isSubscriber(sb: any, email: string): Promise<boolean> {
   const checks = await Promise.all([
     sb.from("gbp_saas_clients").select("id", { count: "exact", head: true }).eq("email", email),
     sb.from("social_media_clients").select("id", { count: "exact", head: true }).eq("email", email),
@@ -65,7 +65,7 @@ async function isSubscriber(sb: ReturnType<typeof createClient>, email: string):
 }
 
 // Check if already in upsell sequence for this product combo
-async function alreadyInSequence(sb: ReturnType<typeof createClient>, email: string, productBought: string): Promise<boolean> {
+async function alreadyInSequence(sb: any, email: string, productBought: string): Promise<boolean> {
   const { count } = await sb
     .from("upsell_sequences")
     .select("*", { count: "exact", head: true })

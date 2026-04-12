@@ -243,7 +243,7 @@ Deno.serve(async (req) => {
         // Small delay between sends
         await new Promise((r) => setTimeout(r, 300));
       } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
-        errors.push(`${lead.email}: ${e.message}`);
+        errors.push(`${lead.email}: ${msg}`);
       }
     }
 
