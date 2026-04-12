@@ -33,6 +33,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function AdminDeadLeads() {
   const qc = useQueryClient();
+  const [tab, setTab] = useState<"campaigns" | "pipeline">("campaigns");
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [showNewCampaign, setShowNewCampaign] = useState(false);
   const [newForm, setNewForm] = useState({ contractor_id: "", name: "", trade: "", contacts: "" });
@@ -112,6 +113,43 @@ export default function AdminDeadLeads() {
 
   const autoRevenue = charges?.filter((c: any) => c.status === "succeeded").reduce((s: number, c: any) => s + (c.amount_cents || 0), 0) || 0;
   const needsManualInvoice = allContacts?.filter((c: any) => c.status === "replied_positive").length || 0;
+
+  // Prospecting pipeline — contractors we cold-emailed about dead lead service
+  const [prospecting, setProspecting] = useState(false);
+  const { data: pipeline, refetch: refetchPipeline } = useQuery({
+    queryKey: ["dead_lead_pipeline"],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("outreach_leads")
+        .select("id, business_name, city, industry, email, phone, status, drip_campaign_status, created_at, first_name")
+        .eq("offer_pitched", "dead_lead_reactivation")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      return data || [];
+    },
+    refetchInterval: 60000,
+  });
+
+  const pipelineStats = {
+    total: pipeline?.length || 0,
+    responded: pipeline?.filter((r: any) => r.status === "Responded").length || 0,
+    active: pipeline?.filter((r: any) => r.status === "emailed" && !(r.drip_campaign_status?.d8_sent)).length || 0,
+    complete: pipeline?.filter((r: any) => r.drip_campaign_status?.d8_sent || r.status === "closed" || r.status === "unsubscribed").length || 0,
+  };
+
+  const handleRunProspector = async () => {
+    setProspecting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("contractor-prospector", { body: {} });
+      if (error) throw error;
+      toast.success(`Prospector ran — ${data?.totalDeadLeadEmailed ?? 0} dead lead emails sent today`);
+      refetchPipeline();
+    } catch (e: any) {
+      toast.error(e.message || "Prospector failed");
+    } finally {
+      setProspecting(false);
+    }
+  };
 
   const { data: contacts } = useQuery({
     queryKey: ["dead_lead_contacts", selectedCampaignId],
@@ -193,7 +231,7 @@ export default function AdminDeadLeads() {
     <div style={{ background: "#0a1628", minHeight: "100vh", padding: "24px", color: "#e2e8f0", fontFamily: "sans-serif" }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div>
             <h2 style={{ color: "#fff", fontSize: 22, fontWeight: 800, margin: 0 }}>♻️ Dead Lead Reactivation</h2>
             <p style={{ color: "#64748b", fontSize: 13, margin: "4px 0 0" }}>
@@ -201,18 +239,40 @@ export default function AdminDeadLeads() {
             </p>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <Button size="sm" variant="outline" onClick={handleRunDrip} disabled={running}
-              style={{ borderColor: "#1e3a5f", color: "#94a3b8" }}>
-              {running ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} /> : <RefreshCw size={14} />}
-              <span style={{ marginLeft: 6 }}>Run Drip Now</span>
-            </Button>
-            <Button size="sm" onClick={() => setShowNewCampaign(!showNewCampaign)}
-              style={{ background: "#00d4ff", color: "#0a1628", fontWeight: 700 }}>
-              <Plus size={14} /><span style={{ marginLeft: 6 }}>New Campaign</span>
-            </Button>
+            {tab === "campaigns" && <>
+              <Button size="sm" variant="outline" onClick={handleRunDrip} disabled={running}
+                style={{ borderColor: "#1e3a5f", color: "#94a3b8" }}>
+                {running ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} /> : <RefreshCw size={14} />}
+                <span style={{ marginLeft: 6 }}>Run Drip Now</span>
+              </Button>
+              <Button size="sm" onClick={() => setShowNewCampaign(!showNewCampaign)}
+                style={{ background: "#00d4ff", color: "#0a1628", fontWeight: 700 }}>
+                <Plus size={14} /><span style={{ marginLeft: 6 }}>New Campaign</span>
+              </Button>
+            </>}
+            {tab === "pipeline" && (
+              <Button size="sm" onClick={handleRunProspector} disabled={prospecting}
+                style={{ background: "#00d4ff", color: "#0a1628", fontWeight: 700 }}>
+                {prospecting ? <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} /> : <RefreshCw size={14} />}
+                <span style={{ marginLeft: 6 }}>{prospecting ? "Finding…" : "Find Prospects Now"}</span>
+              </Button>
+            )}
           </div>
         </div>
 
+        {/* Tab switcher */}
+        <div style={{ display: "flex", gap: 4, marginBottom: 20, background: "#0a1628", borderRadius: 8, padding: 4, width: "fit-content" }}>
+          {(["campaigns", "pipeline"] as const).map(t => (
+            <button key={t} onClick={() => setTab(t)}
+              style={{ padding: "6px 16px", borderRadius: 6, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
+                background: tab === t ? "#00d4ff" : "transparent",
+                color: tab === t ? "#0a1628" : "#64748b" }}>
+              {t === "campaigns" ? "♻️ Campaigns" : "🔍 Prospecting Pipeline"}
+            </button>
+          ))}
+        </div>
+
+        {tab === "campaigns" && <>
         {/* New Campaign Form */}
         {showNewCampaign && (
           <div style={{ background: "#0f2342", border: "1px solid #1e3a5f", borderRadius: 10, padding: 20, marginBottom: 20 }}>
@@ -391,7 +451,6 @@ export default function AdminDeadLeads() {
         {/* Contact detail table */}
         {selectedCampaignId && contacts && (
           <div style={{ background: "#0f2342", border: "1px solid #1e3a5f", borderRadius: 10, overflow: "hidden" }}>
-            {/* Stats row */}
             <div style={{ padding: "12px 16px", borderBottom: "1px solid #1e3a5f", display: "flex", gap: 16, flexWrap: "wrap" }}>
               <span style={{ color: "#64748b", fontSize: 13 }}>Pending: <strong style={{ color: "#fff" }}>{stats.pending}</strong></span>
               <span style={{ color: "#64748b", fontSize: 13 }}>In drip: <strong style={{ color: "#60a5fa" }}>{stats.in_drip}</strong></span>
@@ -430,6 +489,74 @@ export default function AdminDeadLeads() {
             </table>
           </div>
         )}
+        </>}
+
+        {/* ── PROSPECTING PIPELINE TAB ─────────────────────────────── */}
+        {tab === "pipeline" && <>
+          {/* Pipeline stats */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
+            {[
+              { label: "Total Emailed", value: pipelineStats.total, color: "#94a3b8" },
+              { label: "Replied Interested", value: pipelineStats.responded, color: "#10b981" },
+              { label: "Still In Drip", value: pipelineStats.active, color: "#60a5fa" },
+              { label: "Drip Complete", value: pipelineStats.complete, color: "#64748b" },
+            ].map(s => (
+              <div key={s.label} style={{ background: "#0f2342", border: "1px solid #1e3a5f", borderRadius: 8, padding: "12px 14px" }}>
+                <div style={{ color: s.color, fontSize: 24, fontWeight: 900 }}>{s.value}</div>
+                <div style={{ color: "#64748b", fontSize: 11, fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase", marginTop: 2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pipeline table */}
+          <div style={{ background: "#0f2342", border: "1px solid #1e3a5f", borderRadius: 10, overflow: "hidden" }}>
+            <div style={{ padding: "10px 14px", borderBottom: "1px solid #1e3a5f" }}>
+              <span style={{ color: "#64748b", fontSize: 12, fontWeight: 600, letterSpacing: "0.5px" }}>
+                CONTRACTORS PITCHED — DEAD LEAD REACTIVATION
+              </span>
+              <span style={{ color: "#475569", fontSize: 11, marginLeft: 8 }}>prospector runs daily 11am ET · D4+D8 follow-ups automatic</span>
+            </div>
+            {!pipeline?.length ? (
+              <div style={{ padding: 32, textAlign: "center", color: "#64748b", fontSize: 13 }}>
+                No contractors emailed yet. Click "Find Prospects Now" to run the prospector.
+              </div>
+            ) : (
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ background: "#0a1628" }}>
+                    {["Business", "Trade / City", "Email", "Status", "Drip Stage", "Emailed"].map(h => (
+                      <th key={h} style={{ padding: "9px 12px", textAlign: "left", color: "#64748b", fontSize: 11, fontWeight: 600, letterSpacing: 0.5 }}>{h.toUpperCase()}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {pipeline.map((r: any) => {
+                    const ds = r.drip_campaign_status || {};
+                    const stage = ds.d8_sent ? "D8 ✓" : ds.d4_sent ? "D4 ✓" : ds.d0_sent ? "D0 sent" : "—";
+                    const stageColor = ds.d8_sent ? "#64748b" : ds.d4_sent ? "#60a5fa" : "#00d4ff";
+                    const statusColor = r.status === "Responded" ? "#10b981" : r.status === "closed" ? "#64748b" : "#f59e0b";
+                    return (
+                      <tr key={r.id} style={{ borderTop: "1px solid #1e3a5f" }}>
+                        <td style={{ padding: "9px 12px", color: "#e2e8f0", fontSize: 13, fontWeight: 600 }}>{r.business_name || "—"}</td>
+                        <td style={{ padding: "9px 12px", color: "#64748b", fontSize: 12 }}>{r.industry || "—"} · {r.city || "—"}</td>
+                        <td style={{ padding: "9px 12px", color: "#94a3b8", fontSize: 12 }}>{r.email || "—"}</td>
+                        <td style={{ padding: "9px 12px" }}>
+                          <span style={{ color: statusColor, fontSize: 12, fontWeight: 600 }}>{r.status || "emailed"}</span>
+                        </td>
+                        <td style={{ padding: "9px 12px" }}>
+                          <span style={{ color: stageColor, fontSize: 12, fontWeight: 700 }}>{stage}</span>
+                        </td>
+                        <td style={{ padding: "9px 12px", color: "#475569", fontSize: 11 }}>
+                          {r.created_at ? new Date(r.created_at).toLocaleDateString() : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </>}
       </div>
     </div>
   );
