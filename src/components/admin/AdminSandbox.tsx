@@ -314,8 +314,6 @@ const PRODUCTS: Product[] = [
   { id: "dark_web_monitor_subscription", name: "Dark Web Monitor", price: "$49/mo", description: "Weekly HIBP credential scan.", type: "subscription", category: "Autonomous Products" },
   { id: "gov_contract_monitor_subscription", name: "Gov Contract Monitor", price: "$299/mo", description: "Daily SAM.gov opportunity matching.", type: "subscription", category: "Autonomous Products" },
   { id: "podcast_revenue_subscription", name: "Podcast-to-Revenue Machine", price: "$199/mo", description: "Blog, LinkedIn, email, YouTube per episode.", type: "subscription", category: "Autonomous Products" },
-  { id: "regulatory_monitor_v2_subscription", name: "Regulatory Change Monitor", price: "$197/mo", description: "Weekly Federal Register digest.", type: "subscription", category: "Autonomous Products" },
-  { id: "competitor_pricing_subscription", name: "Competitor Pricing Intel", price: "$149/mo", description: "Weekly price change detection.", type: "subscription", category: "Autonomous Products" },
   { id: "re_newsletter_subscription", name: "Real Estate Newsletter", price: "$79/mo", description: "Weekly branded market report.", type: "subscription", category: "Autonomous Products" },
   { id: "trademark_watch_subscription", name: "Trademark Watch Service", price: "$49/mo", description: "Weekly USPTO similarity scan.", type: "subscription", category: "Autonomous Products" },
   { id: "employee_credential_audit", name: "Employee Credential Audit", price: "$149 one-time", description: "HIBP breach report for employees.", type: "instant", category: "One-Time" },
