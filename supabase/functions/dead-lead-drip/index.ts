@@ -157,6 +157,18 @@ serve(async (req) => {
       try {
         const campaign = (contact as any).dead_lead_campaigns;
         if (campaign?.status !== "active") continue;
+
+        const refDate3 = contact.last_contact_date
+          ? new Date(contact.last_contact_date)
+          : new Date(contact.created_at);
+        if (refDate3 < tcpaCutoff) {
+          await sb.from("dead_lead_contacts" as any)
+            .update({ status: "tcpa_expired" })
+            .eq("id", contact.id);
+          tcpaSkipped++;
+          continue;
+        }
+
         const bizName = (campaign as any).contractor_clients?.business_name || "your contractor";
         const trade = campaign?.trade || "service";
         const firstName = contact.name?.split(" ")[0] || "there";
