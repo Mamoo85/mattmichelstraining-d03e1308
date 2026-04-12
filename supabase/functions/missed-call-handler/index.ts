@@ -52,9 +52,13 @@ serve(async (req) => {
   // The action URL fires when the <Dial> completes (answered or missed).
   const statusUrl = `${SUPABASE_URL}/functions/v1/missed-call-status`;
 
+  // After <Dial> completes (answered or timed out), the action URL fires.
+  // If missed, the caller hears this message before hanging up.
   return twiml(
     `<Dial timeout="25" action="${statusUrl}" method="POST">` +
     `<Number>${MATT_PERSONAL}</Number>` +
-    `</Dial>`
+    `</Dial>` +
+    `<Say voice="alice">You've reached Detroit Web Agency. We just sent you a text — Matt will get back to you shortly. Have a great day.</Say>` +
+    `<Hangup/>`
   );
 });
