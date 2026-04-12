@@ -1,32 +1,43 @@
 
 
-# Fix: "meta is not defined" Fatal Webhook Error
+# Fix: Dead Lead Reactivation "Failed to send a request to the Edge Function"
 
 ## Root Cause
 
-The `stripe-webhook/index.ts` file (5671 lines) has a scoping bug:
+Two issues found:
 
-1. `meta` is defined on **line 449** inside `if (event.type === "checkout.session.completed") {`
-2. That `if` block closes around **line 5507**
-3. The "catch-all" code on **lines 5541-5625** references `meta`, `session`, `customerEmail`, and `email` — but these variables are **out of scope** because the checkout block already closed
-4. The early-return guard on line 5536 correctly blocks non-checkout events, but for `checkout.session.completed` events that don't match any specific handler inside the block, execution falls through to line 5543 where `meta` doesn't exist → crash → SMS alert
+### 1. Missing CORS headers (causes the browser error)
+Both `contractor-prospector/index.ts` and `dead-lead-drip/index.ts` have **zero CORS headers**. When the admin dashboard calls `supabase.functions.invoke()`, the browser sends a preflight OPTIONS request. Without CORS headers in the response, the browser blocks the request entirely — producing the toast error you see.
 
-## The Fix (one structural change)
+- `contractor-prospector` — no OPTIONS handler, no CORS headers on any response (557 lines, no mention of "cors" or "OPTIONS")
+- `dead-lead-drip` — has a bare-bones OPTIONS handler (line 15-17) that only returns `Access-Control-Allow-Origin: *` but is missing `Access-Control-Allow-Headers` (which blocks the `authorization` and `apikey` headers the Supabase client sends)
 
-Move the catch-all block and Revenue Suite block (lines 5541-5625) **back inside** the `checkout.session.completed` block — specifically before the closing `}` at line ~5507.
+### 2. Missing `channel` column on `outreach_leads` (secondary — causes silent insert failures)
+The prospector logs show repeated errors: `Could not find the 'channel' column of 'outreach_leads' in the schema cache`. Migration `20260330000007` adds this column, but it appears not applied to the live database. Every SMS-only lead insert fails silently.
 
-This means inserting them after line 5506 (the `new_hire_breach_check` return) and before the checkout block's closing brace, then removing the orphaned copies at lines 5541-5625.
+## Fix Plan
 
-The early-return guard on line 5536 stays as a safety net for any truly unhandled event types.
+### Fix 1: Add full CORS headers to `contractor-prospector/index.ts`
+- Add standard `corsHeaders` object at top of file
+- Add OPTIONS preflight handler returning 200 with CORS headers
+- Add `...corsHeaders` to the success response (line 550) and error response (line 555)
 
-## Files Changed
+### Fix 2: Fix CORS headers on `dead-lead-drip/index.ts`
+- Replace bare `Access-Control-Allow-Origin` with full `corsHeaders` object
+- Add `...corsHeaders` to the success response (line 166) and error response (line 171)
+
+### Fix 3: Add `channel` column to `outreach_leads` via migration
+- `ALTER TABLE public.outreach_leads ADD COLUMN IF NOT EXISTS channel TEXT DEFAULT 'email';`
+- This is idempotent — safe even if it was previously applied.
+
+### Files Changed
 
 | File | Change |
 |------|--------|
-| `supabase/functions/stripe-webhook/index.ts` | Move catch-all + Revenue Suite blocks inside checkout scope |
+| `supabase/functions/contractor-prospector/index.ts` | Add CORS headers + OPTIONS handler |
+| `supabase/functions/dead-lead-drip/index.ts` | Fix incomplete CORS headers |
+| New migration | Add `channel` column to `outreach_leads` |
 
-## What This Fixes
-- `invoice.finalized` and other non-checkout events already return 200 via the guard (line 5536) — no change needed there
-- `checkout.session.completed` events that don't match any specific handler will now correctly reach the catch-all with `meta` in scope
-- No more "meta is not defined" crashes or FATAL SMS alerts
+### Deploy
+Both edge functions redeployed + migration applied. The "Find Prospects Now" and "Run Drip Now" buttons will work immediately after.
 
