@@ -435,7 +435,16 @@ export default function AdminHireAlertClients() {
                 ))}
               </tbody>
             </table>
-          </div>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-amber-500/20 bg-amber-500/5 p-8 text-center">
+          <Clock size={28} className="text-amber-400/40 mx-auto mb-3" />
+          <p className="text-white/60 text-sm font-semibold mb-1">No scanner runs yet</p>
+          <p className="text-white/30 text-xs mb-4">Click "Run Scanner" above to trigger the first scan. Results will appear here.</p>
+          <Button size="sm" onClick={invokeScanner} disabled={invoking}
+            className="bg-amber-500 hover:bg-amber-600 text-white">
+            <Play size={13} className="mr-1" /> {invoking ? "Running..." : "Run First Scan"}
+          </Button>
         </div>
       )}
 
