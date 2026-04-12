@@ -27,7 +27,7 @@ serve(async (req) => {
     // ── DRIP 1: pending contacts in active campaigns ──────────────────────
     const { data: drip1Contacts } = await sb
       .from("dead_lead_contacts" as any)
-      .select("*, dead_lead_campaigns(trade, contractor_id, contractor_clients(business_name, phone))")
+      .select("*, dead_lead_campaigns(id, trade, status, contractor_id, contractor_clients(business_name, phone))")
       .eq("status", "pending")
       .limit(50);
 
