@@ -5506,8 +5506,127 @@ ${fwdInstructions}`,
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── CATCH-ALL: any subscription type not explicitly handled above ──────
+      // Writes to saas_subscriptions so no paid subscriber is ever lost.
+      if (meta.type && meta.type.endsWith("_subscription") && (meta.email || customerEmail)) {
+        try {
+          const email = meta.email || customerEmail;
+          await sb.from("saas_subscriptions" as any).upsert({
+            email,
+            product_type: meta.type,
+            business_name: meta.business_name || null,
+            name: meta.name || null,
+            phone: meta.phone || null,
+            city: meta.city || null,
+            state: meta.state || "MI",
+            active: true,
+            stripe_customer_id: session.customer as string || null,
+            stripe_session_id: session.id,
+            metadata: meta,
+          }, { onConflict: "email,product_type" });
+          await sendM2Email(
+            email,
+            "You're in — we're setting things up for you",
+            m2Email({
+              greeting: `Hi ${meta.name || "there"},`,
+              headline: "Your subscription is confirmed",
+              body: `<p>Thanks for subscribing! We've received your payment and <strong>${meta.business_name ? meta.business_name + " is" : "you are"} all set</strong>.</p>
+<p>Matt will reach out within 24 hours to complete your onboarding and make sure everything is running smoothly.</p>
+<p>Questions in the meantime? Text or call anytime.</p>`,
+              cta: { text: "Text Matt Now", url: "sms:+13138064952" },
+            })
+          );
+          await notifyMatt(
+            `💰 New subscriber — ${meta.type.replace(/_/g, " ")} — ${meta.business_name || email}`,
+            `<p><strong>Product:</strong> ${meta.type}<br>
+<strong>Email:</strong> ${email}<br>
+<strong>Business:</strong> ${meta.business_name || "n/a"}<br>
+<strong>Name:</strong> ${meta.name || "n/a"}<br>
+<strong>Phone:</strong> ${meta.phone || "n/a"}<br>
+<strong>City:</strong> ${meta.city || "n/a"}</p>
+<p><em>This was handled by the catch-all handler — this product may need a dedicated webhook block.</em></p>`
+          );
+          console.log(`[WEBHOOK] catch-all: handled ${meta.type} for ${email}`);
+        } catch (e) { console.error("[WEBHOOK] catch-all subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── Revenue Suite Bundle ──────────────────────────────────────────
+      if (meta.type === "bundle_revenue_suite") {
+        try {
+          const email = meta.email || customerEmail;
+          const tables = [
+            "review_monitor_clients", "sms_blast_clients", "noshow_clients",
+            "estimate_drip_clients", "invoice_chaser_clients", "afterjob_drip_clients",
+            "promo_blaster_clients", "slow_day_clients",
+          ];
+          await Promise.all(
+            tables.map((t) =>
+              sb.from(t).upsert(
+                { email, business_name: meta.business_name || "", phone: meta.phone || "", active: true },
+                { onConflict: "email" }
+              )
+            )
+          );
+          await sendM2Email(
+            email,
+            "Welcome to the Revenue Suite — All 8 Tools Are Live",
+            m2Email({
+              greeting: `Hey ${meta.business_name ? meta.business_name : "there"},`,
+              headline: "Your Revenue Suite is active",
+              body: `<p>All 8 automated revenue tools are now live for your business:</p>
+<ul style="padding-left:20px;margin:12px 0">
+<li>Review Monitor</li><li>Weekly SMS Blast</li><li>No-Show Re-Booker</li>
+<li>Estimate Follow-Up Drip</li><li>Invoice Chaser</li><li>After-Job Drip</li>
+<li>Seasonal Promo Blaster</li><li>Slow Day SMS</li>
+</ul>
+<p>I'll reach out within 24 hours to get everything configured for your business. In the meantime, feel free to text me anytime.</p>`,
+              cta: { text: "Text Matt Now", url: "sms:+13138064952" },
+            })
+          );
+          await notifyMatt(
+            `🔥 Revenue Suite sold — ${meta.business_name || email}`,
+            `<p><strong>Revenue Suite ($299/mo)</strong> purchased!<br>Email: ${email}<br>Business: ${meta.business_name || "n/a"}<br>Phone: ${meta.phone || "n/a"}<br>City: ${meta.city || "n/a"}</p><p>All 8 tables upserted. Welcome email sent.</p>`
+          );
+          console.log(`[WEBHOOK] Revenue Suite: ${email} — all 8 products activated`);
+        } catch (e) { console.error("[WEBHOOK] Revenue Suite error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // Unmatched checkout.session.completed — log and acknowledge
+      console.log(`[WEBHOOK] checkout.session.completed with unhandled meta.type: ${meta.type || "none"}`);
+      return new Response(JSON.stringify({ received: true }), { status: 200 });
+    } // ── END checkout.session.completed block ──
+
     // ── LUKE — Capture abandoned checkouts for recovery emails ────────────────
     if (event.type === "checkout.session.expired") {
+      try {
+        const expiredSession = event.data.object as Record<string, unknown>;
+        const expMeta = (expiredSession.metadata as Record<string, string>) || {};
+        const expEmail = expMeta.email || (expiredSession.customer_details as Record<string, string>)?.email || null;
+        const instantProductTypes = ["website_audit", "gbp_post_pack", "competitor_report"];
+        if (expMeta.type && instantProductTypes.includes(expMeta.type) && expEmail) {
+          const { count: exists } = await sb.from("cart_abandonments")
+            .select("*", { count: "exact", head: true })
+            .eq("stripe_session_id", expiredSession.id as string);
+          if (!exists) {
+            await sb.from("cart_abandonments").insert({
+              email: expEmail,
+              product_type: expMeta.type,
+              stripe_session_id: expiredSession.id as string,
+              cart_value: expMeta.price ? parseFloat(expMeta.price) : 49,
+              metadata: expMeta,
+            });
+            console.log(`[LUKE] Cart abandonment captured: ${expEmail} — ${expMeta.type}`);
+          }
+        }
+      } catch (e) { console.error("[LUKE] cart_abandonment capture error:", e); }
+      return new Response(JSON.stringify({ received: true }), { status: 200 });
+    }
+
+    // ── Unhandled event types (invoice.finalized, etc.) — acknowledge safely ──
+    console.log(`[WEBHOOK] Unhandled event type: ${event.type} — acknowledging`);
+    return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
       try {
         const expiredSession = event.data.object as Record<string, unknown>;
         const expMeta = (expiredSession.metadata as Record<string, string>) || {};
