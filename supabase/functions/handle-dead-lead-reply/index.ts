@@ -137,7 +137,7 @@ serve(async (req) => {
     // Find the most recent active drip contact with this phone
     const { data: contact } = await sb
       .from("dead_lead_contacts" as any)
-      .select("*, dead_lead_campaigns(trade, contractor_id, contractor_clients(id, business_name, phone, email, google_review_link, stripe_customer_id, stripe_payment_method_id, dead_lead_billing_active))")
+      .select("*, dead_lead_campaigns(trade, contractor_id, is_free_trial, contractor_clients(id, business_name, phone, email, google_review_link, stripe_customer_id, stripe_payment_method_id, dead_lead_billing_active))")
       .eq("phone", fromPhone)
       .in("status", ["drip1_sent", "drip2_sent", "drip3_sent"])
       .order("created_at", { ascending: false })
@@ -207,10 +207,13 @@ serve(async (req) => {
         contractor_notified_at: new Date().toISOString(),
       }).eq("id", contact.id);
 
+      const isFreeTrial = (campaign as any)?.is_free_trial === true;
       const billingActive = (contractor as any)?.dead_lead_billing_active;
       const stripeCustomerId = (contractor as any)?.stripe_customer_id;
       const paymentMethodId = (contractor as any)?.stripe_payment_method_id;
-      const billingNote = billingActive ? "($50 charged automatically.)" : "($50 added to your tab.)";
+      const billingNote = isFreeTrial
+        ? "(Free trial lead — set up billing to keep getting notified.)"
+        : billingActive ? "($50 charged automatically.)" : "($50 added to your tab.)";
 
       // SMS contractor immediately — remove Matt from the loop
       if (contractor?.phone) {
@@ -222,8 +225,19 @@ serve(async (req) => {
         );
       }
 
-      // Auto-charge $50 if card is saved
-      if (billingActive && stripeCustomerId && paymentMethodId && STRIPE_SECRET_KEY) {
+      // If free trial: send billing CTA to contractor instead of charging
+      if (isFreeTrial && contractor?.phone) {
+        const SITE_URL = Deno.env.get("SITE_URL") || "https://detroitwebagent.com";
+        await sendSMS(
+          contractor.phone,
+          TWILIO_PHONE_NUMBER,
+          `Your free trial worked — a dead lead just replied YES! To keep getting notified at $50/reply (no monthly fee), add your card here: ${SITE_URL}/dead-lead-intake?billing=1`,
+          "dead_lead_reactivation"
+        );
+      }
+
+      // Auto-charge $50 if card is saved (paid customers only)
+      if (!isFreeTrial && billingActive && stripeCustomerId && paymentMethodId && STRIPE_SECRET_KEY) {
         chargeContractor(sb, contact.id, campaign.contractor_id, stripeCustomerId, paymentMethodId, contact.name || fromPhone)
           .catch((e) => console.error("[handle-dead-lead-reply] charge failed:", e));
       }
@@ -237,7 +251,7 @@ serve(async (req) => {
             from: "DWA System <matt@detroitwebagent.com>",
             to: ["matt@detroitwebagent.com"],
             subject: `\u267b\ufe0f Dead Lead Revived — ${contact.name || fromPhone} (${bizName})`,
-            html: `<p><strong>${contact.name || fromPhone}</strong> replied YES to the ${trade} dead lead drip for <strong>${bizName}</strong>.</p><p>Phone: ${fromPhone}</p><p>Reply: "${replyBody}"</p><p>${billingActive ? "✅ <strong>$50 auto-charged</strong> to their saved card." : "⚠️ No card on file — invoice manually $50."}</p>`,
+            html: `<p><strong>${contact.name || fromPhone}</strong> replied YES to the ${trade} dead lead drip for <strong>${bizName}</strong>.</p><p>Phone: ${fromPhone}</p><p>Reply: "${replyBody}"</p><p>${isFreeTrial ? "🆓 <strong>Free trial lead</strong> — billing CTA sent to contractor." : billingActive ? "✅ <strong>$50 auto-charged</strong> to their saved card." : "⚠️ No card on file — invoice manually $50."}</p>`,
           }),
         }).catch(() => {});
       }

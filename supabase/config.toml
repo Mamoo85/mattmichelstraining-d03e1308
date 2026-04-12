@@ -129,6 +129,9 @@ verify_jwt = false
 [functions.hire-alert-trial-convert]
 verify_jwt = false
 
+[functions.miosha-license-scraper]
+verify_jwt = false
+
 [functions.license-vision-intake]
 verify_jwt = false
 

@@ -10,6 +10,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 const SITE_URL = Deno.env.get("SITE_URL") || "https://detroitwebagent.com";
+const FREE_TIER_LIMIT = 2; // max contacts allowed on the free trial
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -53,14 +54,19 @@ serve(async (req) => {
 
     // Find or create contractor_clients record
     let contractorId: string;
+    let freeTierUsed = false;
+    let billingActive = false;
+
     const { data: existing } = await sb
       .from("contractor_clients" as any)
-      .select("id")
+      .select("id, free_tier_used, dead_lead_billing_active")
       .eq("email", email.toLowerCase().trim())
       .maybeSingle();
 
     if (existing?.id) {
       contractorId = existing.id;
+      freeTierUsed = existing.free_tier_used ?? false;
+      billingActive = existing.dead_lead_billing_active ?? false;
       // Update name/phone/biz in case they changed
       await sb.from("contractor_clients" as any).update({
         business_name,
@@ -81,12 +87,27 @@ serve(async (req) => {
           state: "MI",
           active: false,
         })
-        .select("id")
+        .select("id, free_tier_used, dead_lead_billing_active")
         .single();
       if (insertErr || !newContractor) {
         throw new Error(`contractor insert: ${insertErr?.message}`);
       }
       contractorId = newContractor.id;
+      freeTierUsed = false;
+      billingActive = false;
+    }
+
+    // Gate: if free trial already used and no billing, reject with CTA
+    if (freeTierUsed && !billingActive) {
+      const billingUrl = `${SITE_URL}/dead-lead-intake?billing=1&cid=${contractorId}`;
+      return new Response(
+        JSON.stringify({
+          error: "free_tier_exhausted",
+          message: `Your free trial (${FREE_TIER_LIMIT} leads) has been used. Add a card to continue — you only pay $50 when a lead replies YES.`,
+          billing_url: billingUrl,
+        }),
+        { status: 402, headers: { ...CORS, "Content-Type": "application/json" } }
+      );
     }
 
     // Parse leads from textarea lines: "phone" or "phone, name"
@@ -106,6 +127,10 @@ serve(async (req) => {
       );
     }
 
+    // On free trial: cap at FREE_TIER_LIMIT leads
+    const isFreeTrial = !freeTierUsed && !billingActive;
+    const effectiveLeads = isFreeTrial ? parsedLeads.slice(0, FREE_TIER_LIMIT) : parsedLeads;
+
     // Create campaign
     const campName = campaign_name || `${business_name} — ${new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" })}`;
     const { data: campaign, error: campErr } = await sb
@@ -115,6 +140,7 @@ serve(async (req) => {
         name: campName,
         trade,
         status: "active",
+        is_free_trial: isFreeTrial,
       })
       .select("id")
       .single();
@@ -122,8 +148,8 @@ serve(async (req) => {
       throw new Error(`campaign insert: ${campErr?.message}`);
     }
 
-    // Bulk insert contacts
-    const contactRows = parsedLeads.map((l) => ({
+    // Bulk insert contacts (capped if free trial)
+    const contactRows = effectiveLeads.map((l) => ({
       campaign_id: campaign.id,
       contractor_id: contractorId,
       phone: l.phone,
@@ -137,22 +163,33 @@ serve(async (req) => {
       throw new Error(`contacts insert: ${contactErr.message}`);
     }
 
+    // Mark free tier as used so next submission requires billing
+    if (isFreeTrial) {
+      await sb.from("contractor_clients" as any)
+        .update({ free_tier_used: true })
+        .eq("id", contractorId);
+    }
+
     // SMS Matt
+    const trialNote = isFreeTrial ? ` (FREE TRIAL — ${effectiveLeads.length}/${parsedLeads.length} leads loaded)` : "";
     await sendSMS(
       ADMIN_PHONE,
       TWILIO_PHONE,
-      `♻️ New dead lead campaign submitted!\n${business_name} (${trade})\n${parsedLeads.length} contacts ready to drip.\nApprove: ${SITE_URL}/admin`,
+      `♻️ New dead lead campaign submitted!\n${business_name} (${trade})\n${effectiveLeads.length} contacts ready to drip.${trialNote}\nApprove: ${SITE_URL}/admin`,
       "dead_lead_reactivation"
     );
 
-    console.log(`[dead-lead-intake] contractor=${contractorId} campaign=${campaign.id} contacts=${parsedLeads.length}`);
+    console.log(`[dead-lead-intake] contractor=${contractorId} campaign=${campaign.id} contacts=${effectiveLeads.length} free_trial=${isFreeTrial}`);
 
     return new Response(
       JSON.stringify({
         ok: true,
         campaign_id: campaign.id,
         contractor_id: contractorId,
-        contacts_added: parsedLeads.length,
+        contacts_added: effectiveLeads.length,
+        is_free_trial: isFreeTrial,
+        leads_submitted: parsedLeads.length,
+        free_tier_limit: FREE_TIER_LIMIT,
       }),
       { status: 200, headers: { ...CORS, "Content-Type": "application/json" } }
     );

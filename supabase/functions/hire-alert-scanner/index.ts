@@ -62,38 +62,51 @@ interface ScoredCandidate extends RawCandidate {
   score_reason: string;
 }
 
-// Source 1: MIOSHA Public License Database (Michigan boiler operators — public records)
+// Source 1: MIOSHA Public License Database — delegates to miosha-license-scraper
+// That function scrapes actual LARA VAL pages directly (not web search).
+// Any new candidates inserted by the scraper are picked up here.
 async function scanMIOSHA(): Promise<RawCandidate[]> {
-  const results = await firecrawlSearch(
-    'site:michigan.gov "boiler operator" OR "steam engineer" "licensed" Michigan 2025 OR 2026'
-  );
-  if (!results.length) return [];
+  try {
+    // Trigger the dedicated scraper so it upserts fresh records
+    const scraperUrl = `${SUPABASE_URL}/functions/v1/miosha-license-scraper`;
+    const res = await fetch(scraperUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+        "Content-Type": "application/json",
+      },
+    });
+    if (!res.ok) {
+      console.warn(`[hire-alert-scanner] miosha-license-scraper returned ${res.status}`);
+    } else {
+      const result = await res.json();
+      console.log(`[hire-alert-scanner] miosha-scraper: new=${result.new} updated=${result.updated}`);
+    }
+  } catch (e) {
+    console.warn("[hire-alert-scanner] miosha-scraper call failed:", e);
+  }
 
-  const context = results
-    .slice(0, 5)
-    .map((r) => `Title: ${r.title}\nURL: ${r.url}\nContent: ${r.markdown?.slice(0, 600)}`)
-    .join("\n\n---\n\n");
+  // Return candidates that the scraper just inserted/updated (status='new', source='miosha')
+  const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+  const since = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(); // last 25h
+  const { data } = await sb
+    .from("hire_alert_candidates")
+    .select("full_name, phone, email, license_type, license_number, license_expiry, city, zip, source, raw_data")
+    .eq("source", "miosha")
+    .gte("first_seen_at", since);
 
-  const candidates = await generateJSON<RawCandidate[]>(
-    `Extract licensed boiler operators and steam engineers from these Michigan MIOSHA/LARA public records search results.
-
-Content:
-${context}
-
-For each licensed individual found, extract:
-- full_name: their name
-- license_type: "1st Class Boiler Operator", "2nd Class Boiler Operator", "Steam Engineer", or "Pressure Vessel Inspector"
-- license_number: their license number if visible
-- license_expiry: expiry date as YYYY-MM-DD if visible
-- city: city in Michigan
-- source: always "miosha"
-
-Return a JSON array of objects. If no individuals found, return [].`,
-    [],
-    1000
-  );
-
-  return (candidates || []).map((c) => ({ ...c, source: "miosha" as const }));
+  return (data || []).map((r) => ({
+    full_name: r.full_name,
+    phone: r.phone ?? undefined,
+    email: r.email ?? undefined,
+    license_type: r.license_type ?? undefined,
+    license_number: r.license_number ?? undefined,
+    license_expiry: r.license_expiry ?? undefined,
+    city: r.city ?? undefined,
+    zip: r.zip ?? undefined,
+    source: "miosha" as const,
+    raw_data: r.raw_data as Record<string, unknown> | undefined,
+  }));
 }
 
 // Source 2: Apollo People Search — tradespeople in Metro Detroit
