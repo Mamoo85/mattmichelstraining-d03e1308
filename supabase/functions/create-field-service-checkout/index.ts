@@ -19,18 +19,21 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { email, name, company, plan, industry } = await req.json() as {
+    const { email, name, company, plan, industry, test } = await req.json() as {
       email: string;
       name?: string;
       company?: string;
       plan: "standalone" | "bundle";
       industry?: string;
+      test?: boolean;
     };
 
     const origin = req.headers.get("origin") ?? "https://mattmichelstraining.com";
 
     const isBundle = plan === "bundle";
-    const unitAmount = isBundle ? 19900 : 29900;
+    // $0 test mode — only allowed for Matt's email
+    const isTest = test === true && email === "matt@mattmichelstraining.com";
+    const unitAmount = isTest ? 0 : (isBundle ? 19900 : 29900);
     const productName = isBundle
       ? "Detroit Web Agency — Field Service Platform (Website Bundle)"
       : "Detroit Web Agency — Field Service Platform (Standalone)";

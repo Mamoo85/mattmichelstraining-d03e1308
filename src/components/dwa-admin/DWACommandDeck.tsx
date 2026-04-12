@@ -80,6 +80,7 @@ export default function DWACommandDeck() {
           name: "Matt Michels",
           company: "Test Company",
           plan,
+          test: true,
         },
       });
       if (error) throw error;

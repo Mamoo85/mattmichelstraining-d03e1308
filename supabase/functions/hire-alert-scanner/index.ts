@@ -402,7 +402,16 @@ async function sendAlertEmail(
   });
 }
 
-serve(async () => {
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const dateStr = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const runStart = new Date().toISOString();
