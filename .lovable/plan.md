@@ -1,79 +1,32 @@
 
 
-# Build Error Fix Plan
+# Fix: "meta is not defined" Fatal Webhook Error
 
-All errors fall into 5 patterns. Here's the fix for each.
+## Root Cause
 
----
+The `stripe-webhook/index.ts` file (5671 lines) has a scoping bug:
 
-## Error Pattern 1: `.then().catch()` on PromiseLike (2 files)
+1. `meta` is defined on **line 449** inside `if (event.type === "checkout.session.completed") {`
+2. That `if` block closes around **line 5507**
+3. The "catch-all" code on **lines 5541-5625** references `meta`, `session`, `customerEmail`, and `email` — but these variables are **out of scope** because the checkout block already closed
+4. The early-return guard on line 5536 correctly blocks non-checkout events, but for `checkout.session.completed` events that don't match any specific handler inside the block, execution falls through to line 5543 where `meta` doesn't exist → crash → SMS alert
 
-**File**: `create-contractor-ppl-checkout/index.ts` — lines 52 and 76
+## The Fix (one structural change)
 
-Same bug we fixed in `_shared/twilio.ts`. Wrap in `Promise.resolve()`.
+Move the catch-all block and Revenue Suite block (lines 5541-5625) **back inside** the `checkout.session.completed` block — specifically before the closing `}` at line ~5507.
 
-```ts
-// Before
-}).then(() => {}).catch(() => {});
-// After  
-}); // fire-and-forget, no .then/.catch needed — just drop the chain
-```
+This means inserting them after line 5506 (the `new_hire_breach_check` return) and before the checkout block's closing brace, then removing the orphaned copies at lines 5541-5625.
 
-Actually the simplest fix: just remove `.then(() => {}).catch(() => {})` entirely since these are fire-and-forget inserts where we don't care about the result.
+The early-return guard on line 5536 stays as a safety net for any truly unhandled event types.
 
----
+## Files Changed
 
-## Error Pattern 2: Duplicate `bcc` property (4 files)
+| File | Change |
+|------|--------|
+| `supabase/functions/stripe-webhook/index.ts` | Move catch-all + Revenue Suite blocks inside checkout scope |
 
-**Files**: `financial-advisor-content-sender`, `franchise-ops-sender`, `grant-finder-sender`, `handbook-sender`
-
-All have the same bug — two `bcc` keys in the same object literal:
-```ts
-to: [client.email], bcc: ["matthewmichels4@gmail.com"],
-subject: `...`,
-bcc: ["matthewmichels@gmail.com"],  // DUPLICATE — delete this line
-```
-
-Fix: Remove the duplicate `bcc` line in each file, keep the first one (`matthewmichels4@gmail.com`).
-
----
-
-## Error Pattern 3: `fitness-report-generator` type errors (1 file)
-
-The function signature `sendReminderToTrainers(sb: ReturnType<typeof createClient>)` causes a type mismatch because the generic `createClient()` call at line 93 produces `SupabaseClient<any, "public", ...>` while the function expects the bare return type.
-
-Fix: Change the parameter type to `sb: any` (these are internal service functions, not public APIs — strict typing adds no value here). This resolves all 7 errors in one change.
-
----
-
-## Error Pattern 4: `free-report-drip` unknown error type (1 file)
-
-Line 246: `e.message` used after `catch (e: unknown)` but then accessing `.message` without narrowing.
-
-Fix: Change `e.message` to `msg` (the `msg` variable is already declared on line 245 as `const msg = e instanceof Error ? e.message : String(e)`).
-
----
-
-## Error Pattern 5: `han-upsell` SupabaseClient type mismatch (1 file)
-
-Same pattern as fitness-report-generator. Functions `isSubscriber` and `alreadyInSequence` use `ReturnType<typeof createClient>` which doesn't match the actual client instance.
-
-Fix: Change both function signatures to accept `sb: any`.
-
----
-
-## Summary
-
-| File | Fix |
-|------|-----|
-| `create-contractor-ppl-checkout/index.ts` | Remove `.then().catch()` on 2 fire-and-forget inserts |
-| `financial-advisor-content-sender/index.ts` | Delete duplicate `bcc` line |
-| `franchise-ops-sender/index.ts` | Delete duplicate `bcc` line |
-| `grant-finder-sender/index.ts` | Delete duplicate `bcc` line |
-| `handbook-sender/index.ts` | Delete duplicate `bcc` line |
-| `fitness-report-generator/index.ts` | Change param type to `any` |
-| `free-report-drip/index.ts` | Use `msg` instead of `e.message` |
-| `han-upsell/index.ts` | Change param types to `any` |
-
-8 files, all one-line fixes. No logic changes — purely type/syntax corrections.
+## What This Fixes
+- `invoice.finalized` and other non-checkout events already return 200 via the guard (line 5536) — no change needed there
+- `checkout.session.completed` events that don't match any specific handler will now correctly reach the catch-all with `meta` in scope
+- No more "meta is not defined" crashes or FATAL SMS alerts
 
