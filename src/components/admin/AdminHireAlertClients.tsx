@@ -401,7 +401,7 @@ export default function AdminHireAlertClients() {
       )}
 
       {/* Scanner runs */}
-      {runs.length > 0 && (
+      {runs.length > 0 ? (
         <div>
           <p className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
             <Clock size={12} /> Recent Scanner Runs
