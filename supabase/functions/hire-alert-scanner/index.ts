@@ -546,7 +546,7 @@ async function sendAlertEmail(
       Hey${client.company_name ? ` ${client.company_name} team` : ""} —
     </p>
     <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 24px;">
-      We scanned Michigan's MIOSHA license database, Apollo, and job boards this morning. ${hotCount > 0 ? `<strong>${hotCount} high-scoring ${hotCount === 1 ? "candidate" : "candidates"}</strong> — act fast before someone else does.` : "Here's what we found near you."}
+      We scanned multiple hiring intelligence sources this morning. ${hotCount > 0 ? `<strong>${hotCount} high-scoring ${hotCount === 1 ? "candidate" : "candidates"}</strong> — act fast before someone else does.` : "Here's what we found near you."}
     </p>
 
     <!-- CANDIDATE CARDS -->
@@ -560,10 +560,10 @@ async function sendAlertEmail(
     <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;">How Scoring Works</p>
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
-        <td style="padding:4px 0;font-size:12px;color:#475569;">🔥 <strong>8-10</strong> — Active job seeker, fresh license, local, has contact info</td>
+        <td style="padding:4px 0;font-size:12px;color:#475569;">🔥 <strong>8-10</strong> — High availability: actively seeking work, local, contactable</td>
       </tr>
       <tr>
-        <td style="padding:4px 0;font-size:12px;color:#475569;">⚡ <strong>7</strong> — Likely available: recent license or appeared on job board</td>
+        <td style="padding:4px 0;font-size:12px;color:#475569;">⚡ <strong>7</strong> — Likely available: recently licensed or appeared in hiring channels</td>
       </tr>
       <tr>
         <td style="padding:4px 0;font-size:12px;color:#475569;">📋 <strong>5-6</strong> — Possibly available: professional profile matches your criteria</td>
