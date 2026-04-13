@@ -337,7 +337,7 @@ export default function AdminHireAlertClients() {
       {editClient && <ClientModal existing={editClient} onClose={() => setEditClient(undefined)} onSaved={load} />}
 
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="space-y-3">
         <div>
           <h2 className="text-white text-xl font-black flex items-center gap-2">
             <Bell size={20} className="text-amber-400" />
@@ -345,7 +345,7 @@ export default function AdminHireAlertClients() {
           </h2>
           <p className="text-white/40 text-sm mt-0.5">Manage subscribers and monitor scanner runs.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={load} className="border-white/15 text-white/60 hover:text-white">
             <RefreshCw size={13} className="mr-1" /> Refresh
           </Button>
