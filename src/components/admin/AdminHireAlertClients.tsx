@@ -296,7 +296,7 @@ export default function AdminHireAlertClients() {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [editClient, setEditClient] = useState<HireAlertClient | undefined>();
-  const [invoking, setInvoking] = useState(false);
+  const [sectorFilter, setSectorFilter] = useState<"all" | "trades" | "healthcare">("all");
 
   const load = async () => {
     setLoading(true);
@@ -321,7 +321,12 @@ export default function AdminHireAlertClients() {
 
   useEffect(() => { load(); }, []);
 
-  const activeClients = clients.filter(c => c.active);
+  const filteredClients = clients.filter(c => {
+    if (sectorFilter === "all") return true;
+    const hasHealthcare = (c.target_roles || []).some(r => HEALTHCARE_ROLES.includes(r));
+    return sectorFilter === "healthcare" ? hasHealthcare : !hasHealthcare;
+  });
+  const activeClients = filteredClients.filter(c => c.active);
   const mrr = activeClients.reduce((s, c) => s + (c.plan === "bundle" ? 4900 : 9900), 0);
 
   const invokeScanner = async () => {
@@ -364,7 +369,15 @@ export default function AdminHireAlertClients() {
             <Plus size={13} className="mr-1" /> Add Client
           </Button>
         </div>
-      </div>
+        {/* Sector filter */}
+        <div className="flex items-center gap-1 ml-auto">
+          {(["all", "trades", "healthcare"] as const).map(f => (
+            <button key={f} onClick={() => setSectorFilter(f)}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${sectorFilter === f ? "bg-amber-500 text-white" : "bg-white/5 text-white/40 hover:text-white hover:bg-white/10"}`}>
+              {f === "all" ? "All" : f === "trades" ? "🔧 Trades" : "🏥 Healthcare"}
+            </button>
+          ))}
+        </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
