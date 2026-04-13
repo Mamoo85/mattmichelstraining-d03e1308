@@ -56,6 +56,7 @@ const MyTeam = lazyRetry(() => import("./pages/MyTeam"));
 const JoinTeam = lazyRetry(() => import("./pages/JoinTeam"));
 const Shop = lazyRetry(() => import("./pages/Shop"));
 const ForParents = lazyRetry(() => import("./pages/ForParents"));
+const ForNurses = lazyRetry(() => import("./pages/ForNurses"));
 const Welcome = lazyRetry(() => import("./pages/Welcome"));
 const Auth = lazyRetry(() => import("./pages/Auth"));
 const Admin = lazyRetry(() => import("./pages/Admin"));
@@ -452,6 +453,7 @@ const App = () => (
                     <Route path="/welcome" element={<Welcome />} />
                     <Route path="/shop" element={<Shop />} />
                     <Route path="/for-parents" element={<ForParents />} />
+                    <Route path="/for-nurses" element={<ForNurses />} />
                     <Route path="/pricing" element={<Pricing />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/schedule" element={<Schedule />} />

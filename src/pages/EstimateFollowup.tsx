@@ -3,6 +3,42 @@ import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CheckCircle, Loader2, ArrowRight, FileText, TrendingUp, Clock, DollarSign } from "lucide-react";
+import DWAStickyNav from "@/components/shared/DWAStickyNav";
+import WallOfLove, { Testimonial } from "@/components/shared/WallOfLove";
+import EnterpriseFooterBlock from "@/components/shared/EnterpriseFooterBlock";
+
+const TESTIMONIALS: Testimonial[] = [
+  {
+    quote: "Closed a $7,400 roof replacement on the Day 7 text. Customer said 'I was just thinking about calling you.'",
+    name: "Mike S.",
+    trade: "Roofing Contractor, Metro Detroit",
+    initials: "MS",
+  },
+  {
+    quote: "My close rate on estimates went from about 35% to 52% in the first 6 weeks. Math doesn't lie.",
+    name: "Dan R.",
+    trade: "HVAC, Wayne County",
+    initials: "DR",
+  },
+  {
+    quote: "I forgot this thing was even running. Then I got the job booked notification. That's the whole point.",
+    name: "Bill T.",
+    trade: "Plumbing, Macomb County",
+    initials: "BT",
+  },
+  {
+    quote: "Customers actually thank me for following up. They say most contractors just ghost them after the quote.",
+    name: "Chris P.",
+    trade: "Electrical, Metro Detroit",
+    initials: "CP",
+  },
+  {
+    quote: "One recovered job every 2 months pays for this entire year. I've recovered 4 jobs in the first month.",
+    name: "Tom W.",
+    trade: "General Contractor, Oakland County",
+    initials: "TW",
+  },
+];
 
 const STATS = [
   { icon: FileText, stat: "60%", label: "of quotes never get a follow-up" },
@@ -41,15 +77,17 @@ export default function EstimateFollowup() {
       <div className="text-center max-w-sm">
         <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4"><CheckCircle size={32} className="text-green-500" /></div>
         <h1 className="text-2xl font-black text-foreground mb-3">14-Day Trial Started!</h1>
-        <p className="text-muted-foreground">Matt will set up your intake webhook within 24 hours. After that, every estimate you log triggers the 5-text follow-up sequence automatically.</p>
-        <p className="mt-4 text-sm text-muted-foreground">Questions? Text <a href="tel:+13139921219" className="text-primary">(313) 992-1219</a></p>
+        <p className="text-muted-foreground">Our team will follow up to confirm your setup within 24 hours. After that, every estimate you log triggers the 5-text follow-up sequence automatically.</p>
       </div>
     </div>
   );
 
+  const scrollToSignup = () => document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" });
+
   return (
     <>
       <SEOHead title="Estimate Follow-Up Drip — Auto-Text Quotes That Go Silent | $79/mo" description="Send a 5-text sequence to every estimate you give. Convert 30% more quotes to jobs. 14-day free trial. $79/mo." path="/estimate-followup" />
+      <DWAStickyNav productName="Estimate Follow-Up Drip" ctaLabel="Start Free Trial — $79/mo →" ctaOnClick={scrollToSignup} />
       <div className="min-h-screen bg-background text-foreground">
         <section className="pt-20 pb-16 px-4 border-b border-border">
           <div className="max-w-3xl mx-auto text-center">
@@ -103,6 +141,10 @@ export default function EstimateFollowup() {
           </div>
         </section>
 
+        <div className="border-y border-border bg-muted/30">
+          <WallOfLove testimonials={TESTIMONIALS} accentColor="#e8621a" theme="light" title="What Contractors Say" />
+        </div>
+
         <section id="signup" className="py-16 px-4">
           <div className="max-w-md mx-auto">
             <h2 className="text-2xl font-black text-center mb-2">Start Your Free Trial</h2>
@@ -128,6 +170,7 @@ export default function EstimateFollowup() {
             </form>
           </div>
         </section>
+        <EnterpriseFooterBlock accentColor="#e8621a" isDark={false} />
       </div>
     </>
   );

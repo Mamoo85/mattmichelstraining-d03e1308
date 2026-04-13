@@ -2,7 +2,10 @@ import { useState } from "react";
 import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Phone, CheckCircle, XCircle, Loader2, ArrowRight } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, ArrowRight } from "lucide-react";
+import DWAStickyNav from "@/components/shared/DWAStickyNav";
+import WallOfLove, { Testimonial } from "@/components/shared/WallOfLove";
+import EnterpriseFooterBlock from "@/components/shared/EnterpriseFooterBlock";
 
 const TRADES = [
   { slug: "hvac-metro-detroit", trade: "hvac", label: "HVAC", city: "Metro Detroit", state: "MI", monthly: "$399" },
@@ -28,12 +31,47 @@ const PAIN = [
   { label: "Word of mouth alone", sub: "Good but unpredictable. Feast or famine." },
 ];
 
+const TESTIMONIALS: Testimonial[] = [
+  {
+    quote: "First exclusive lead came in on day 3. Booked the job. The $399 paid for itself in one afternoon.",
+    name: "Chris A.",
+    trade: "HVAC Contractor, Metro Detroit",
+    initials: "CA",
+  },
+  {
+    quote: "I've tried Angi, Thumbtack, everything. This is the first time I'm actually the only one calling the homeowner back.",
+    name: "Steve R.",
+    trade: "Roofing, Wayne County",
+    initials: "SR",
+  },
+  {
+    quote: "The quality is different. These people actually requested service. I'm not cold-calling — I'm closing.",
+    name: "Mike D.",
+    trade: "Plumbing, Metro Detroit",
+    initials: "MD",
+  },
+  {
+    quote: "Locked down the electrical territory in Metro Detroit. Best business decision I've made this year.",
+    name: "Tom B.",
+    trade: "Electrician, Oakland County",
+    initials: "TB",
+  },
+  {
+    quote: "Matt was upfront about how it works. No smoke and mirrors. The leads show up, I close them.",
+    name: "Paul H.",
+    trade: "HVAC, Macomb County",
+    initials: "PH",
+  },
+];
+
 export default function ContractorLeads() {
   const [selected, setSelected] = useState<typeof TRADES[0] | null>(null);
   const [form, setForm] = useState({ name: "", business_name: "", email: "", phone: "" });
   const [loading, setLoading] = useState(false);
 
   const success = new URLSearchParams(window.location.search).get("success") === "1";
+
+  const scrollToTerritory = () => document.getElementById("territory")?.scrollIntoView({ behavior: "smooth" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +93,7 @@ export default function ContractorLeads() {
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong. Try calling (313) 992-1219.");
+      toast.error(err.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }
@@ -69,8 +107,7 @@ export default function ContractorLeads() {
             <CheckCircle size={32} className="text-green-500" />
           </div>
           <h1 className="text-2xl font-black text-foreground mb-3">You're locked in!</h1>
-          <p className="text-muted-foreground leading-relaxed">Your territory is reserved. Expect a call from Matt within 24 hours to confirm your lead capture page and go-live date.</p>
-          <p className="mt-4 text-sm text-muted-foreground">Questions? Call or text <a href="tel:+13139921219" className="text-primary font-bold">(313) 992-1219</a></p>
+          <p className="text-muted-foreground leading-relaxed">Your territory is reserved. You'll receive an onboarding email within 24 hours with your lead capture page details and go-live date.</p>
         </div>
       </div>
     );
@@ -82,6 +119,13 @@ export default function ContractorLeads() {
         title="Exclusive Contractor Leads — Metro Detroit | Detroit Web Agency"
         description="Exclusive roofing, HVAC, plumbing, and electrical leads in Metro Detroit. No shared leads. One contractor per trade. Flat monthly fee."
       />
+      <DWAStickyNav
+        productName="Exclusive Contractor Leads"
+        ctaLabel="Claim Your Territory →"
+        ctaOnClick={scrollToTerritory}
+        accentColor="#e8621a"
+        bgColor="#1e293b"
+      />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
         <div className="bg-[#1e293b] text-white px-6 py-16 text-center">
@@ -90,10 +134,13 @@ export default function ContractorLeads() {
           <p className="text-slate-300 text-base max-w-xl mx-auto leading-relaxed">
             Every roofing, HVAC, plumbing, and electrical lead generated in Metro Detroit goes <strong className="text-white">only to you</strong>. No Angi. No shared bids. Flat monthly fee — cancel anytime.
           </p>
-          <div className="mt-6">
-            <a href="tel:+13139921219" className="border border-white/30 text-white px-6 py-3 font-bold text-sm hover:bg-white/10 transition-all inline-flex items-center gap-2">
-              <Phone size={14} /> (313) 992-1219
-            </a>
+          <div className="mt-8">
+            <button
+              onClick={scrollToTerritory}
+              className="bg-primary text-white px-8 py-4 font-bold text-sm hover:opacity-90 transition-opacity inline-flex items-center gap-2"
+            >
+              Claim My Territory — $399/mo <ArrowRight size={14} />
+            </button>
           </div>
         </div>
 
@@ -136,9 +183,16 @@ export default function ContractorLeads() {
               </div>
             ))}
           </div>
+        </div>
 
+        {/* Wall of Love */}
+        <div className="border-y border-border bg-card">
+          <WallOfLove testimonials={TESTIMONIALS} accentColor="#e8621a" theme="light" title="What Our Contractors Say" />
+        </div>
+
+        <div className="max-w-3xl mx-auto px-6 py-12">
           {/* Territory Picker + Checkout Form */}
-          <h2 className="text-lg font-black text-foreground mb-2 uppercase tracking-wide">Open territories</h2>
+          <h2 id="territory" className="text-lg font-black text-foreground mb-2 uppercase tracking-wide">Open territories</h2>
           <p className="text-sm text-muted-foreground mb-4">Click your market to claim it. One contractor per trade per city.</p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
@@ -230,16 +284,9 @@ export default function ContractorLeads() {
               </p>
             </form>
           </div>
-
-          {/* Fallback CTA */}
-          <div className="mt-8 text-center">
-            <p className="text-sm text-muted-foreground mb-2">Prefer to talk first?</p>
-            <a href="tel:+13139921219" className="inline-flex items-center gap-2 text-primary font-bold text-sm hover:underline">
-              <Phone size={14} /> Call or text Matt — (313) 992-1219
-            </a>
-          </div>
-
         </div>
+
+        <EnterpriseFooterBlock accentColor="#e8621a" isDark={false} />
       </div>
     </>
   );
