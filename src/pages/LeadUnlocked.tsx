@@ -146,6 +146,12 @@ export default function LeadUnlocked() {
                     <p style={{ color: "#e2e8f0", fontSize: 15, margin: 0 }}>{lead.project_type}</p>
                   </div>
                 )}
+                {lead?.contact_preference && (
+                  <div>
+                    <p style={{ color: "#64748b", fontSize: 12, margin: "0 0 4px", fontWeight: 600, letterSpacing: 0.5 }}>PREFERRED CONTACT</p>
+                    <p style={{ color: "#00d4ff", fontSize: 15, fontWeight: 700, margin: 0 }}>{lead.contact_preference}</p>
+                  </div>
+                )}
                 {lead?.message && (
                   <div>
                     <p style={{ color: "#64748b", fontSize: 12, margin: "0 0 4px", fontWeight: 600, letterSpacing: 0.5 }}>NOTES</p>
