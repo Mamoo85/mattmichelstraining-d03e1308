@@ -273,6 +273,7 @@ const RecallAlertService = lazyRetry(() => import("./pages/RecallAlertService"))
 const PermitWatch = lazyRetry(() => import("./pages/PermitWatch"));
 const HireAlert = lazyRetry(() => import("./pages/HireAlert"));
 const HireAlertTrial = lazyRetry(() => import("./pages/HireAlertTrial"));
+const HealthcareHireAlert = lazyRetry(() => import("./pages/HealthcareHireAlert"));
 const WebsiteSpeedAudits = lazyRetry(() => import("./pages/WebsiteSpeedAudits"));
 const CrimeDigest = lazyRetry(() => import("./pages/CrimeDigest"));
 const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
@@ -688,6 +689,7 @@ const App = () => (
                     <Route path="/permit-watch" element={<PermitWatch />} />
                     <Route path="/hire-alert" element={<HireAlert />} />
                     <Route path="/hire-alert-trial" element={<HireAlertTrial />} />
+                    <Route path="/hire-alert-healthcare" element={<HealthcareHireAlert />} />
                     <Route path="/website-speed-audit" element={<WebsiteSpeedAudits />} />
                     <Route path="/crime-digest" element={<CrimeDigest />} />
                     <Route path="/license-monitor" element={<LicenseMonitor />} />

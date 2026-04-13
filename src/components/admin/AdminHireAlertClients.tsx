@@ -54,7 +54,14 @@ const ROLE_LABELS: Record<string, string> = {
   steam_engineer: "Steam Eng",
   refrigeration_tech: "Refrigeration",
   fire_suppression: "Fire Suppression",
+  cna: "CNA",
+  rn: "RN",
+  lpn: "LPN",
+  director_of_nursing: "DON",
+  home_health_aide: "Home Health",
 };
+
+const HEALTHCARE_ROLES = ["cna", "rn", "lpn", "director_of_nursing", "home_health_aide"];
 
 // ── Add/Edit Modal ─────────────────────────────────────────────────────────────
 
@@ -290,6 +297,7 @@ export default function AdminHireAlertClients() {
   const [showAdd, setShowAdd] = useState(false);
   const [editClient, setEditClient] = useState<HireAlertClient | undefined>();
   const [invoking, setInvoking] = useState(false);
+  const [sectorFilter, setSectorFilter] = useState<"all" | "trades" | "healthcare">("all");
 
   const load = async () => {
     setLoading(true);
@@ -314,7 +322,12 @@ export default function AdminHireAlertClients() {
 
   useEffect(() => { load(); }, []);
 
-  const activeClients = clients.filter(c => c.active);
+  const filteredClients = clients.filter(c => {
+    if (sectorFilter === "all") return true;
+    const hasHealthcare = (c.target_roles || []).some(r => HEALTHCARE_ROLES.includes(r));
+    return sectorFilter === "healthcare" ? hasHealthcare : !hasHealthcare;
+  });
+  const activeClients = filteredClients.filter(c => c.active);
   const mrr = activeClients.reduce((s, c) => s + (c.plan === "bundle" ? 4900 : 9900), 0);
 
   const invokeScanner = async () => {
@@ -357,6 +370,15 @@ export default function AdminHireAlertClients() {
             <Plus size={13} className="mr-1" /> Add Client
           </Button>
         </div>
+        {/* Sector filter */}
+        <div className="flex items-center gap-1 ml-auto">
+          {(["all", "trades", "healthcare"] as const).map(f => (
+            <button key={f} onClick={() => setSectorFilter(f)}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${sectorFilter === f ? "bg-amber-500 text-white" : "bg-white/5 text-white/40 hover:text-white hover:bg-white/10"}`}>
+              {f === "all" ? "All" : f === "trades" ? "🔧 Trades" : "🏥 Healthcare"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Stats */}
@@ -379,10 +401,10 @@ export default function AdminHireAlertClients() {
         <div className="flex items-center justify-center h-32">
           <div className="w-8 h-8 rounded-full border-2 border-amber-500/30 border-t-amber-500 animate-spin" />
         </div>
-      ) : clients.length === 0 ? (
+      ) : filteredClients.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/10 p-16 text-center">
           <Bell size={40} className="text-white/15 mx-auto mb-4" />
-          <p className="text-white/40 text-sm">No TechAlert clients yet.</p>
+          <p className="text-white/40 text-sm">{sectorFilter === "all" ? "No TechAlert clients yet." : `No ${sectorFilter} clients found.`}</p>
           <p className="text-white/25 text-xs mt-1">Run a $0 test checkout from the DWA Overview tab to seed one.</p>
           <Button onClick={() => setShowAdd(true)} className="mt-5 bg-orange-500 hover:bg-orange-600 text-white">
             <Plus size={14} className="mr-1.5" /> Add First Client
@@ -391,7 +413,7 @@ export default function AdminHireAlertClients() {
       ) : (
         <AnimatePresence>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {clients.map(c => (
+            {filteredClients.map(c => (
               <ClientCard key={c.id} client={c}
                 onEdit={() => setEditClient(c)}
                 onDelete={() => deleteClient(c.id, c.company_name)} />
