@@ -455,7 +455,7 @@ export default function MyTechAlert() {
                 <div>
                   <p className="text-white font-bold text-sm mb-1">Need Exclusive Inbound Leads?</p>
                   <p className="text-slate-400 text-xs mb-3">Get homeowner leads delivered directly to you — pay per lead, no contracts.</p>
-                  <a href="https://detroitwebagency.com/contractor-leads" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors">
+                  <a href="https://www.detroitwebagent.com/contractor-leads" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors">
                     <ExternalLink className="h-3.5 w-3.5" /> Learn More
                   </a>
                 </div>

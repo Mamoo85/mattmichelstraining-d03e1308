@@ -83,7 +83,7 @@ isHealthcare = client.target_roles.some(r => HEALTHCARE_ROLES.includes(r))
    - Action buttons: "Mark as Contacted" / "Mark as Hired"
 3. **Filters** — By score range, date range
 4. **Upsell Card** — Sidebar/footer card
-   - Trades: "Need Exclusive Inbound Leads? → detroitwebagency.com/contractor-leads"
+   - Trades: "Need Exclusive Inbound Leads? → detroitwebagent.com/contractor-leads"
    - Healthcare: "Refer a Partner Facility — Get 1 Month Free → mailto:matt@detroitwebagent.com"
 
 **ROI Capture Toast:**
