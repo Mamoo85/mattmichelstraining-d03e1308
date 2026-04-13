@@ -11,7 +11,7 @@ import {
   Stethoscope, Heart, Building2, Wrench, Zap, HardHat,
   UserCheck, ThumbsUp, Loader2
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+
 
 const HEALTHCARE_ROLES = ["cna", "rn", "lpn", "director_of_nursing", "home_health_aide"];
 
