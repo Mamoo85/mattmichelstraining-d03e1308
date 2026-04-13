@@ -35,7 +35,7 @@ serve(async (req) => {
     // Find leads created in last 24h that haven't been notified
     const { data: unnotified } = await sb
       .from("contractor_leads")
-      .select("id, name, phone, email, message, project_type, created_at, site_id")
+      .select("id, name, phone, email, message, project_type, contact_preference, created_at, site_id")
       .eq("status", "new")
       .is("notified_at", null)
       .not("site_id", "is", null)
@@ -116,7 +116,13 @@ serve(async (req) => {
     <p style="margin:5px 0 0;font-size:11px"><a href="https://detroitwebagent.com" style="color:#00d4ff;text-decoration:none">detroitwebagent.com</a></p>
   </div>
 </div></body></html>`;
-          const smsBody = `New ${tradeLabel} lead for you: ${lead.name} — ${lead.phone}${lead.project_type ? ` (${lead.project_type})` : ""}. Exclusive — call now. — Matt (313) 992-1219`;
+          const pref = (lead as any).contact_preference || "call";
+          const project = lead.project_type ? ` (${lead.project_type})` : "";
+          const smsBody = pref === "email"
+            ? `LEAD UNLOCKED: ${lead.name} prefers EMAIL at ${lead.email || "no email given"}${project}. Email them — follow up within 24 hours. — DWA Lead Engine`
+            : pref === "text"
+            ? `LEAD UNLOCKED: ${lead.name} — ${lead.phone}. Prefers TEXT${project}. Reach out now. — DWA Lead Engine`
+            : `LEAD UNLOCKED: ${lead.name} — ${lead.phone}${project}. CALL THEM NOW — exclusive to you. — DWA Lead Engine`;
           await Promise.all([
             fetch("https://api.resend.com/emails", {
               method: "POST",

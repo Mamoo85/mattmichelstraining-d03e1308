@@ -162,14 +162,17 @@ Respond with ONLY a JSON object: {"category": "...", "summary": "one sentence su
         send_after: sendAfter,
       }).select("id").single();
 
-      // SMS Matt with cancel option
-      const cancelUrl = `${SUPABASE_URL}/functions/v1/cancel-reply-draft?id=${draft?.id}`;
+      // SMS Matt with cancel option (guard null draft ID)
+      const cancelUrl = draft?.id
+        ? `${SUPABASE_URL}/functions/v1/cancel-reply-draft?id=${draft.id}`
+        : null;
+      const cancelNote = cancelUrl ? `\n\nCancel: ${cancelUrl}` : "";
       const preview = draftBody.slice(0, 100).replace(/\n/g, " ");
 
       await sendSMS(
         MATT_CELL,
         TWILIO_PHONE_NUMBER,
-        `Draft ready for ${senderEmail} (${category.replace("OBJECTION_", "")}):\n\n"${preview}..."\n\nAuto-sends in 10 min. Cancel: ${cancelUrl}`,
+        `Draft ready for ${senderEmail} (${category.replace("OBJECTION_", "")}):\n\n"${preview}..."${draft?.id ? `\n\nAuto-sends in 10 min.${cancelNote}` : "\n\n⚠️ Draft save failed — reply manually."}`,
         "contractor_leads"
       );
 
