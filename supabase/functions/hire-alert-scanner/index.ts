@@ -432,7 +432,7 @@ Return JSON: { "score": number, "reason": "one sentence citing the top 1-2 signa
 
 // Send alert email to a client — premium design
 async function sendAlertEmail(
-  client: { owner_email: string; company_name: string },
+  client: { owner_email: string; company_name: string; dashboard_token?: string },
   candidates: ScoredCandidate[],
   dateStr: string
 ) {
