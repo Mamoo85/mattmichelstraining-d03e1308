@@ -612,7 +612,7 @@ serve(async (req: Request) => {
   const runStart = new Date().toISOString();
 
   // Fetch active paid clients + active trial clients
-  const { data: clients } = await sb.from("hire_alert_clients").select("*").eq("active", true);
+  const { data: clients } = await sb.from("hire_alert_clients").select("*").or("active.eq.true,trial_status.eq.active");
   if (!clients?.length) {
     console.log("[hire-alert-scanner] No active clients");
     return new Response(JSON.stringify({ processed: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -936,12 +936,11 @@ serve(async (req: Request) => {
 </body></html>`
   );
 
-  await sb.from("agent_heartbeats" as any).upsert({
+  await sb.from("agent_heartbeats").upsert({
     agent_name: "hire-alert-scanner",
-    last_run_at: new Date().toISOString(),
-    last_status: "ok",
-    last_result: JSON.stringify({ candidates_found: allRaw.length, new_candidates: newCandidates.length, hot_candidates: allHotCandidates.length, alerts_sent: alertsSent }),
-  }, { onConflict: "agent_name" }).catch(() => {});
+    last_beat: new Date().toISOString(),
+    metadata: { candidates_found: allRaw.length, new_candidates: newCandidates.length, hot_candidates: allHotCandidates.length, alerts_sent: alertsSent },
+  }, { onConflict: "agent_name" });
 
   return new Response(
     JSON.stringify({
