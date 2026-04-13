@@ -440,12 +440,8 @@ async function sendAlertEmail(
 
   const hotCount = candidates.filter((c) => c.availability_score >= 7).length;
 
-  // Generic labels for client emails — never reveal our sources
-  const sourceLabel = (s: string) =>
-    s === "miosha" ? "State License Database" : s === "apollo" ? "Professional Network" : "Job Market";
-
-  const sourceIcon = (s: string) =>
-    s === "miosha" ? "🏛️" : s === "apollo" ? "🔍" : "📋";
+  // Source labels REMOVED from client emails — Black Box approach
+  // sourceLabel and sourceIcon kept only for founder report (Matt-only)
 
   const scoreBg = (s: number) =>
     s >= 8 ? "#dc2626" : s >= 7 ? "#e8621a" : s >= 5 ? "#f59e0b" : "#94a3b8";
