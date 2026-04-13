@@ -2512,6 +2512,7 @@ export type Database = {
           contractor_id: string
           created_at: string
           id: string
+          is_free_trial: boolean
           name: string
           pause_reason: string | null
           paused_at: string | null
@@ -2519,6 +2520,7 @@ export type Database = {
           replied_count: number
           status: string
           total_contacts: number
+          trade: string | null
           updated_at: string
         }
         Insert: {
@@ -2527,6 +2529,7 @@ export type Database = {
           contractor_id: string
           created_at?: string
           id?: string
+          is_free_trial?: boolean
           name?: string
           pause_reason?: string | null
           paused_at?: string | null
@@ -2534,6 +2537,7 @@ export type Database = {
           replied_count?: number
           status?: string
           total_contacts?: number
+          trade?: string | null
           updated_at?: string
         }
         Update: {
@@ -2542,6 +2546,7 @@ export type Database = {
           contractor_id?: string
           created_at?: string
           id?: string
+          is_free_trial?: boolean
           name?: string
           pause_reason?: string | null
           paused_at?: string | null
@@ -2549,6 +2554,7 @@ export type Database = {
           replied_count?: number
           status?: string
           total_contacts?: number
+          trade?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2619,10 +2625,14 @@ export type Database = {
       dead_lead_contacts: {
         Row: {
           campaign_id: string
+          contractor_notified_at: string | null
           created_at: string
           drip1_sent: boolean
+          drip1_sent_at: string | null
           drip2_sent: boolean
+          drip2_sent_at: string | null
           drip3_sent: boolean
+          drip3_sent_at: string | null
           email: string | null
           id: string
           name: string
@@ -2635,10 +2645,14 @@ export type Database = {
         }
         Insert: {
           campaign_id: string
+          contractor_notified_at?: string | null
           created_at?: string
           drip1_sent?: boolean
+          drip1_sent_at?: string | null
           drip2_sent?: boolean
+          drip2_sent_at?: string | null
           drip3_sent?: boolean
+          drip3_sent_at?: string | null
           email?: string | null
           id?: string
           name: string
@@ -2651,10 +2665,14 @@ export type Database = {
         }
         Update: {
           campaign_id?: string
+          contractor_notified_at?: string | null
           created_at?: string
           drip1_sent?: boolean
+          drip1_sent_at?: string | null
           drip2_sent?: boolean
+          drip2_sent_at?: string | null
           drip3_sent?: boolean
+          drip3_sent_at?: string | null
           email?: string | null
           id?: string
           name?: string
@@ -4305,6 +4323,7 @@ export type Database = {
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           target_roles: string[] | null
+          target_zip_codes: string[] | null
         }
         Insert: {
           active?: boolean | null
@@ -4319,6 +4338,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           target_roles?: string[] | null
+          target_zip_codes?: string[] | null
         }
         Update: {
           active?: boolean | null
@@ -4333,6 +4353,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           target_roles?: string[] | null
+          target_zip_codes?: string[] | null
         }
         Relationships: []
       }
