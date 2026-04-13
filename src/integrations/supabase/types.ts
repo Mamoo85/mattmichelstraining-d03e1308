@@ -4258,6 +4258,8 @@ export type Database = {
           company_name: string
           created_at: string | null
           id: string
+          notify_email: boolean | null
+          notify_sms: boolean | null
           owner_email: string
           owner_phone: string | null
           plan: string | null
@@ -4270,6 +4272,8 @@ export type Database = {
           company_name: string
           created_at?: string | null
           id?: string
+          notify_email?: boolean | null
+          notify_sms?: boolean | null
           owner_email: string
           owner_phone?: string | null
           plan?: string | null
@@ -4282,6 +4286,8 @@ export type Database = {
           company_name?: string
           created_at?: string | null
           id?: string
+          notify_email?: boolean | null
+          notify_sms?: boolean | null
           owner_email?: string
           owner_phone?: string | null
           plan?: string | null
