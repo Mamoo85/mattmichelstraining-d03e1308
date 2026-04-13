@@ -1,6 +1,7 @@
 // hire-alert-scanner — daily 7am ET
-// Scans MIOSHA license DB, Apollo people search, and job boards for available licensed tradespeople.
-// Alerts field service clients when new candidates appear.
+// Scans MIOSHA license DB and job boards for available licensed tradespeople.
+// Enriches top candidates via Sonar OSINT before sending alerts.
+// Alerts field service clients when new actionable candidates appear.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -11,8 +12,10 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
-const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
+const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 async function notifyMatt(subject: string, html: string) {
   if (!RESEND_API_KEY) return;
@@ -53,14 +56,13 @@ interface RawCandidate {
   license_expiry?: string;
   city?: string;
   zip?: string;
-  source: "miosha" | "apollo" | "firecrawl";
+  source: "miosha" | "firecrawl";
   raw_data?: Record<string, unknown>;
 }
 
 interface ScoredCandidate extends RawCandidate {
   availability_score: number;
   score_reason: string;
-  // Enrichment fields (populated by candidate-deep-enrich, read from DB for returning candidates)
   linkedin_url?: string;
   facebook_url?: string;
   current_employer?: string;
@@ -72,11 +74,8 @@ interface ScoredCandidate extends RawCandidate {
 }
 
 // Source 1: MIOSHA Public License Database — delegates to miosha-license-scraper
-// That function scrapes actual LARA VAL pages directly (not web search).
-// Any new candidates inserted by the scraper are picked up here.
 async function scanMIOSHA(): Promise<RawCandidate[]> {
   try {
-    // Trigger the dedicated scraper so it upserts fresh records
     const scraperUrl = `${SUPABASE_URL}/functions/v1/miosha-license-scraper`;
     const res = await fetch(scraperUrl, {
       method: "POST",
@@ -95,9 +94,8 @@ async function scanMIOSHA(): Promise<RawCandidate[]> {
     console.warn("[hire-alert-scanner] miosha-scraper call failed:", e);
   }
 
-  // Return candidates that the scraper just inserted/updated (status='new', source='miosha')
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-  const since = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(); // last 25h
+  const since = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
   const { data } = await sb
     .from("hire_alert_candidates")
     .select("full_name, name, phone, email, license_type, license_number, license_expiry, city, zip, source, raw_data, linkedin_url, facebook_url, current_employer, current_title, years_experience, qualifications_summary, hiring_recommendation, social_profiles, enrichment_status")
@@ -118,169 +116,15 @@ async function scanMIOSHA(): Promise<RawCandidate[]> {
   }));
 }
 
-// TA-3: Enrich MIOSHA candidates that lack contact info via Apollo /people/match
-// MIOSHA gives us name + license but no email/phone. Apollo can fill in the gap.
-async function enrichMIOSHAWithApollo(candidates: RawCandidate[]): Promise<RawCandidate[]> {
-  if (!APOLLO_API_KEY) return candidates;
-  // Only enrich candidates missing both phone and email — don't burn API credits on complete records
-  const needsEnrichment = candidates.filter((c) => !c.phone && !c.email);
-  if (!needsEnrichment.length) return candidates;
-
-  const enriched = new Map<string, { phone?: string; email?: string }>();
-
-  for (const candidate of needsEnrichment.slice(0, 10)) { // cap at 10 enrichments per run
-    try {
-      const res = await fetch("https://api.apollo.io/api/v1/people/match", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache",
-          "X-Api-Key": APOLLO_API_KEY,
-        },
-        body: JSON.stringify({
-          first_name: candidate.full_name.split(" ")[0] || "",
-          last_name: candidate.full_name.split(" ").slice(1).join(" ") || "",
-          location: candidate.city || "Detroit, Michigan",
-          title: candidate.license_type || "",
-          reveal_personal_emails: true,
-          reveal_phone_number: true,
-        }),
-      });
-      if (!res.ok) continue;
-      const data = await res.json();
-      const person = data?.person;
-      if (!person) continue;
-
-      const key = candidate.full_name.toLowerCase();
-      const phone = (person.phone_numbers as Array<{ sanitized_number?: string }>)?.[0]?.sanitized_number;
-      const email = person.email as string | undefined;
-      if (phone || email) {
-        enriched.set(key, { phone, email });
-        console.log(`[hire-alert-scanner] Enriched MIOSHA candidate: ${candidate.full_name} → phone=${!!phone} email=${!!email}`);
-      }
-    } catch (e) {
-      console.warn(`[hire-alert-scanner] Apollo enrichment failed for ${candidate.full_name}:`, e);
-    }
-  }
-
-  return candidates.map((c) => {
-    const data = enriched.get(c.full_name.toLowerCase());
-    if (!data) return c;
-    return {
-      ...c,
-      phone: c.phone || data.phone,
-      email: c.email || data.email,
-      raw_data: { ...(c.raw_data || {}), enriched_via: "apollo_match" },
-    };
-  });
-}
-
-// Source 2: Apollo People Search — tradespeople in Metro Detroit
-// Paginates up to 3 pages per city group (75 results max), extracts phone numbers
-async function scanApollo(): Promise<RawCandidate[]> {
-  if (!APOLLO_API_KEY) return [];
-
-  // Split into batches so pagination is more targeted
-  const locationBatches = [
-    ["Detroit, Michigan", "Dearborn, Michigan", "Livonia, Michigan"],
-    ["Warren, Michigan", "Sterling Heights, Michigan", "Troy, Michigan"],
-    ["Farmington Hills, Michigan", "Royal Oak, Michigan"],
-  ];
-
-  const tradeTitles = [
-    "Boiler Operator",
-    "HVAC Technician",
-    "Plumber",
-    "Pipefitter",
-    "Steamfitter",
-    "Electrical Technician",
-    "Steam Engineer",
-    "Industrial Mechanic",
-    "Certified Nursing Assistant",
-    "CNA",
-    "Registered Nurse",
-    "LPN",
-    "Licensed Practical Nurse",
-    "Home Health Aide",
-  ];
-
-  const allPeople: RawCandidate[] = [];
-  const seenIds = new Set<string>();
-
-  for (const locations of locationBatches) {
-    // Paginate up to 3 pages per city batch
-    for (let page = 1; page <= 3; page++) {
-      try {
-        const res = await fetch("https://api.apollo.io/api/v1/people/search", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache",
-            "X-Api-Key": APOLLO_API_KEY,
-          },
-          body: JSON.stringify({
-            person_titles: tradeTitles,
-            person_locations: locations,
-            page,
-            per_page: 25,
-          }),
-        });
-
-        if (!res.ok) {
-          console.warn(`[hire-alert-scanner] Apollo HTTP ${res.status} (batch page ${page})`);
-          break;
-        }
-
-        const data = await res.json();
-        const people: Record<string, unknown>[] = data?.people || [];
-
-        if (!people.length) break; // No more results for this batch
-
-        for (const p of people) {
-          const id = p.id as string;
-          if (!id || seenIds.has(id)) continue;
-          seenIds.add(id);
-
-          const phoneNumbers = p.phone_numbers as Array<{ sanitized_number?: string }> | undefined;
-          const phone = phoneNumbers?.[0]?.sanitized_number || undefined;
-
-          allPeople.push({
-            full_name: `${p.first_name || ""} ${p.last_name || ""}`.trim(),
-            phone,
-            email: (p.email as string) || undefined,
-            license_type: (p.title as string) || undefined,
-            city: (p.city as string) || (p.state as string) || undefined,
-            source: "apollo" as const,
-            raw_data: { apollo_id: id, linkedin_url: p.linkedin_url, organization: p.organization },
-          });
-        }
-      } catch (e) {
-        console.warn(`[hire-alert-scanner] Apollo error (batch page ${page}):`, e);
-        break;
-      }
-    }
-  }
-
-  console.log(`[hire-alert-scanner] Apollo: found ${allPeople.length} candidates`);
-  return allPeople;
-}
-
-// Source 3: Job board search via OpenRouter (perplexity/sonar-pro for live web search)
-// Fallback chain: Indeed API → Indeed RSS → OpenRouter web search → Firecrawl
+// Source 2: Job board search via OpenRouter (perplexity/sonar-pro for live web search)
 async function scanJobBoards(): Promise<RawCandidate[]> {
-  // Primary: OpenRouter with perplexity/sonar-pro (live web search, always works)
-  const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
-  
   if (OPENROUTER_API_KEY) {
     const results = await scanJobBoardsViaOpenRouter(OPENROUTER_API_KEY);
     if (results.length > 0) return results;
   }
-
-  // Fallback: Firecrawl web search
   return scanJobBoardsFallback();
 }
 
-// OpenRouter + perplexity/sonar-pro: live web search for tradespeople hiring/available
 async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[]> {
   const searches = [
     "Find current job postings for boiler operators, HVAC technicians, plumbers, pipefitters, and electricians in Metro Detroit Michigan. For each posting, extract: company name, job title, city. Focus on postings from the last 7 days.",
@@ -320,13 +164,11 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
 
       const data = await res.json();
       const text = data?.choices?.[0]?.message?.content || "";
-      
-      // Extract JSON from response (may be wrapped in markdown code block)
       const jsonMatch = text.match(/\[[\s\S]*?\]/);
       if (!jsonMatch) continue;
 
       const parsed = JSON.parse(jsonMatch[0]) as Array<{ name: string; trade: string; city: string; type?: string }>;
-      
+
       for (const item of parsed) {
         if (!item.name || !item.trade) continue;
         const key = `${item.name.toLowerCase()}-${item.trade.toLowerCase()}`;
@@ -350,7 +192,6 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
   return allResults;
 }
 
-// Firecrawl fallback if OpenRouter unavailable
 async function scanJobBoardsFallback(): Promise<RawCandidate[]> {
   const queries = [
     '"boiler operator" "looking for work" OR "seeking position" Michigan',
@@ -372,20 +213,161 @@ async function scanJobBoardsFallback(): Promise<RawCandidate[]> {
   return allResults;
 }
 
+// ===== SONAR OSINT ENRICHMENT ENGINE =====
+// Uses perplexity/sonar-pro to find LinkedIn, Facebook, email, phone, employer
+// NEVER reveals sources to clients — proprietary intelligence method
+
+function extractJSON(text: string): Record<string, unknown> | null {
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try {
+    return JSON.parse(match[0]);
+  } catch {
+    return null;
+  }
+}
+
+async function enrichViaSonar(candidate: RawCandidate): Promise<Record<string, unknown>> {
+  if (!OPENROUTER_API_KEY) return {};
+
+  const tradeLabel = candidate.license_type || "tradesperson";
+  const locationLabel = candidate.city ? `${candidate.city}, Michigan` : "Michigan";
+
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "perplexity/sonar-pro",
+        messages: [
+          {
+            role: "system",
+            content: "You are a professional research assistant. Return ONLY valid JSON, no markdown, no explanation, no commentary.",
+          },
+          {
+            role: "user",
+            content: `Perform a web search to find the LinkedIn profile URL and Facebook profile URL for "${candidate.full_name}", who works as a ${tradeLabel} in or around ${locationLabel}. Also search for any associated public email addresses or phone numbers, their current employer, current job title, and estimated years of experience.
+
+Return ONLY a JSON object with these keys:
+{
+  "linkedin_url": "full URL or null",
+  "facebook_url": "full URL or null",
+  "email": "email or null",
+  "phone": "phone or null",
+  "current_employer": "company name or null",
+  "current_title": "job title or null",
+  "years_experience": number or null
+}`,
+          },
+        ],
+        max_tokens: 800,
+        temperature: 0.1,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!res.ok) {
+      console.warn(`[hire-alert-scanner] Sonar enrichment HTTP ${res.status} for ${candidate.full_name}`);
+      return {};
+    }
+
+    const data = await res.json();
+    const text = data?.choices?.[0]?.message?.content || "";
+    const parsed = extractJSON(text);
+    if (!parsed) {
+      console.warn(`[hire-alert-scanner] Sonar JSON parse failed for ${candidate.full_name}`);
+      return {};
+    }
+
+    console.log(`[hire-alert-scanner] Sonar enriched: ${candidate.full_name} → linkedin=${!!parsed.linkedin_url} fb=${!!parsed.facebook_url} phone=${!!parsed.phone} email=${!!parsed.email}`);
+    return parsed;
+  } catch (e) {
+    console.warn(`[hire-alert-scanner] Sonar enrichment error for ${candidate.full_name}:`, e instanceof Error ? e.message : String(e));
+    return {};
+  }
+}
+
+// AI Synthesis via Lovable AI Gateway (free) — generates qualifications + recommendation
+// NEVER mentions AI, algorithms, data sources, or methodology
+async function synthesizeViaAI(
+  candidate: RawCandidate,
+  sonarData: Record<string, unknown>
+): Promise<{ qualifications_summary: string; hiring_recommendation: string }> {
+  if (!LOVABLE_API_KEY) return { qualifications_summary: "", hiring_recommendation: "" };
+
+  const prompt = `You are an experienced hiring researcher writing a brief dossier. Based on the following candidate data, write two things:
+
+1. QUALIFICATIONS SUMMARY (2-3 sentences): Their trade expertise, years of experience, license status, and current situation.
+2. HIRING RECOMMENDATION (2-3 sentences): Whether an employer should reach out, how urgently, and the best approach.
+
+CANDIDATE:
+- Name: ${candidate.full_name}
+- Trade/License: ${candidate.license_type || "Unknown"}
+- License Number: ${candidate.license_number || "Not found"}
+- License Expiry: ${candidate.license_expiry || "Unknown"}
+- Location: ${candidate.city || "Michigan"}
+
+RESEARCH FINDINGS:
+- Employer: ${sonarData.current_employer || "Not found"}
+- Title: ${sonarData.current_title || "Not found"}
+- Experience: ${sonarData.years_experience || "Unknown"} years
+- LinkedIn: ${sonarData.linkedin_url ? "Found" : "Not found"}
+- Phone: ${sonarData.phone ? "Found" : "Not found"}
+- Email: ${sonarData.email ? "Found" : "Not found"}
+
+CRITICAL RULES:
+- Do NOT mention AI, algorithms, databases, data sources, web scraping, or any methodology.
+- Write as a human hiring researcher would.
+- Be specific and actionable.
+
+Return JSON: { "qualifications_summary": "...", "hiring_recommendation": "..." }`;
+
+  try {
+    const res = await fetch(GATEWAY_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        max_tokens: 600,
+        messages: [{ role: "user", content: prompt }],
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!res.ok) return { qualifications_summary: "", hiring_recommendation: "" };
+
+    const data = await res.json();
+    const text = data?.choices?.[0]?.message?.content?.trim() || "";
+    const parsed = extractJSON(text);
+    if (!parsed) return { qualifications_summary: "", hiring_recommendation: "" };
+
+    return {
+      qualifications_summary: (parsed.qualifications_summary as string) || "",
+      hiring_recommendation: (parsed.hiring_recommendation as string) || "",
+    };
+  } catch {
+    return { qualifications_summary: "", hiring_recommendation: "" };
+  }
+}
+
 // Score candidate availability via AI with real signals
 async function scoreCandidate(candidate: RawCandidate): Promise<{ score: number; reason: string }> {
-  // Compute signals before sending to AI
   const hasPhone = !!candidate.phone;
   const hasEmail = !!candidate.email;
   const hasLicenseNumber = !!candidate.license_number;
   const isFromJobBoard = candidate.source === "firecrawl";
 
-  // License recency signal: if expiry is 2+ years out, license was recently issued
   let licenseRecent = false;
   if (candidate.license_expiry) {
     const expiry = new Date(candidate.license_expiry);
     const monthsUntilExpiry = (expiry.getTime() - Date.now()) / (30 * 24 * 60 * 60 * 1000);
-    licenseRecent = monthsUntilExpiry > 20; // new licenses typically expire in 2+ years
+    licenseRecent = monthsUntilExpiry > 20;
   }
 
   const result = await generateJSON<{ score: number; reason: string }>(
@@ -394,7 +376,6 @@ async function scoreCandidate(candidate: RawCandidate): Promise<{ score: number;
 Candidate:
 Name: ${candidate.full_name}
 Trade/License: ${candidate.license_type || "unknown"}
-Source: ${candidate.source}${isFromJobBoard ? " (JOB BOARD — actively seeking work)" : ""}
 City: ${candidate.city || "unknown"}
 License Number: ${hasLicenseNumber ? candidate.license_number : "none"}${licenseRecent ? " (RECENTLY ISSUED — new to market)" : ""}
 License Expiry: ${candidate.license_expiry || "unknown"}
@@ -412,25 +393,55 @@ Scoring rules (apply ALL that match, then sum):
 - Cap at 10, floor at 1
 
 Return JSON: { "score": number, "reason": "one sentence citing the top 1-2 signals" }`,
-    null, // no default — derive score from signals if AI fails
+    null,
     400
   );
 
-  // If AI fails, compute a rule-based score from signals
   if (!result || typeof result.score !== "number") {
-    let score = 4; // base for having a trade title
+    let score = 4;
     if (isFromJobBoard) score += 3;
     if (hasLicenseNumber && licenseRecent) score += 2;
     if (hasPhone) score += 1;
     if (hasEmail) score += 1;
     score = Math.min(10, Math.max(1, score));
-    return { score, reason: `Rule-based: source=${candidate.source}, phone=${hasPhone}, license=${hasLicenseNumber}` };
+    return { score, reason: `Verified trade professional, ${hasPhone ? "contactable" : "contact info pending"}, ${candidate.city || "Michigan"} area` };
   }
 
   return result;
 }
 
-// Send alert email to a client — premium design
+// ===== ACTION BUTTON EMAIL TEMPLATE =====
+// Every candidate card has prominent clickable buttons — no dead ends
+
+function buildActionButtons(c: ScoredCandidate): string {
+  const buttons: string[] = [];
+
+  if (c.linkedin_url) {
+    buttons.push(`<a href="${c.linkedin_url}" target="_blank" style="display:inline-block;background:#0a66c2;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">🔗 Message on LinkedIn</a>`);
+  }
+  if (c.facebook_url) {
+    buttons.push(`<a href="${c.facebook_url}" target="_blank" style="display:inline-block;background:#1877f2;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">👤 View Facebook</a>`);
+  }
+  if (c.email) {
+    buttons.push(`<a href="mailto:${c.email}" style="display:inline-block;background:#0891b2;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">✉️ Send Email</a>`);
+  }
+  if (c.phone) {
+    buttons.push(`<a href="tel:${c.phone}" style="display:inline-block;background:#e8621a;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">📞 Call ${c.phone}</a>`);
+  }
+  if (c.license_number) {
+    buttons.push(`<a href="https://aca-prod.accela.com/LARA/GeneralProperty/PropertyLookUp.aspx?isLicensee=Y" target="_blank" style="display:inline-block;background:#059669;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">📜 Verify State License</a>`);
+  }
+
+  if (!buttons.length) return "";
+
+  return `<tr><td style="padding:12px 0 4px;">
+    <table cellpadding="0" cellspacing="0"><tr><td>
+      ${buttons.join("\n      ")}
+    </td></tr></table>
+  </td></tr>`;
+}
+
+// Send alert email to a client — premium design with action buttons
 async function sendAlertEmail(
   client: { owner_email: string; company_name: string; dashboard_token?: string },
   candidates: ScoredCandidate[],
@@ -439,9 +450,6 @@ async function sendAlertEmail(
   if (!RESEND_API_KEY || !client.owner_email) return;
 
   const hotCount = candidates.filter((c) => c.availability_score >= 7).length;
-
-  // Source labels REMOVED from client emails — Black Box approach
-  // sourceLabel and sourceIcon kept only for founder report (Matt-only)
 
   const scoreBg = (s: number) =>
     s >= 8 ? "#dc2626" : s >= 7 ? "#e8621a" : s >= 5 ? "#f59e0b" : "#94a3b8";
@@ -482,18 +490,14 @@ async function sendAlertEmail(
             </tr>
             ${c.current_employer ? `<tr><td style="padding:4px 0;font-size:13px;color:#475569;">🏢 <strong>${c.current_employer}</strong>${c.current_title ? ` · ${c.current_title}` : ""}</td></tr>` : ""}
             ${c.license_number ? `<tr><td style="padding:4px 0;font-size:13px;color:#475569;">🪪 License: <strong>${c.license_number}</strong>${c.license_expiry ? ` · Exp: <strong>${c.license_expiry}</strong>` : ""} · <span style="color:#059669;font-weight:700;">Active</span></td></tr>` : ""}
-            ${c.email ? `<tr><td style="padding:4px 0;font-size:13px;"><a href="mailto:${c.email}" style="color:#0891b2;text-decoration:none;font-weight:600;">✉️ ${c.email}</a></td></tr>` : ""}
-            ${c.phone ? `<tr><td style="padding:4px 0;font-size:13px;"><a href="tel:${c.phone}" style="color:#e8621a;text-decoration:none;font-weight:700;font-size:15px;">📞 ${c.phone}</a></td></tr>` : ""}
-            ${c.linkedin_url ? `<tr><td style="padding:4px 0;font-size:13px;"><a href="${c.linkedin_url}" style="color:#0a66c2;text-decoration:none;font-weight:600;">🔗 LinkedIn Profile</a>${c.facebook_url ? ` &nbsp;·&nbsp; <a href="${c.facebook_url}" style="color:#1877f2;text-decoration:none;font-weight:600;">📘 Facebook</a>` : ""}</td></tr>` : (c.facebook_url ? `<tr><td style="padding:4px 0;font-size:13px;"><a href="${c.facebook_url}" style="color:#1877f2;text-decoration:none;font-weight:600;">📘 Facebook Profile</a></td></tr>` : "")}
             ${c.qualifications_summary ? `<tr><td style="padding:8px 0 4px;">
               <p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#f0fdf4;padding:10px 12px;border-radius:8px;border-left:3px solid #059669;"><strong>📋 Qualifications:</strong> ${c.qualifications_summary}</p>
             </td></tr>` : ""}
             ${c.hiring_recommendation ? `<tr><td style="padding:4px 0;">
               <p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#eff6ff;padding:10px 12px;border-radius:8px;border-left:3px solid #3b82f6;"><strong>💡 Recommendation:</strong> ${c.hiring_recommendation}</p>
             </td></tr>` : ""}
-            <tr><td style="padding:8px 0 0;">
-              <p style="margin:0;font-size:12px;color:#64748b;line-height:1.5;font-style:italic;background:#f8fafc;padding:8px 12px;border-radius:8px;border-left:3px solid ${scoreBg(c.availability_score)};">${c.score_reason}</p>
-            </td></tr>
+            <!-- ACTION BUTTONS -->
+            ${buildActionButtons(c)}
           </table>
         </td></tr>
       </table>
@@ -552,7 +556,7 @@ async function sendAlertEmail(
       Hey${client.company_name ? ` ${client.company_name} team` : ""} —
     </p>
     <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 24px;">
-      We scanned multiple hiring intelligence sources this morning. ${hotCount > 0 ? `<strong>${hotCount} high-scoring ${hotCount === 1 ? "candidate" : "candidates"}</strong> — act fast before someone else does.` : "Here's what we found near you."}
+      Our hiring intelligence engine scanned the market this morning. ${hotCount > 0 ? `<strong>${hotCount} high-scoring ${hotCount === 1 ? "candidate" : "candidates"}</strong> — tap the buttons below to reach out before someone else does.` : "Here's what we found near you. Tap any button to take action instantly."}
     </p>
 
     <!-- CANDIDATE CARDS -->
@@ -579,8 +583,8 @@ async function sendAlertEmail(
 
   <!-- DASHBOARD CTA -->
   ${client.dashboard_token ? `<tr><td style="background:#0a1628;padding:20px 28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;text-align:center;">
-    <a href="https://m2training.lovable.app/my-techalert?token=${client.dashboard_token}" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 32px;border-radius:10px;font-size:14px;font-weight:800;text-decoration:none;letter-spacing:0.5px;">📊 View All Candidates in Your Dashboard</a>
-    <p style="margin:10px 0 0;font-size:11px;color:#64748b;">Click to browse, filter, and track all your candidates</p>
+    <a href="https://m2training.lovable.app/my-techalert?token=${client.dashboard_token}" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 32px;border-radius:10px;font-size:14px;font-weight:800;text-decoration:none;letter-spacing:0.5px;">📊 View Full Dossiers in Your Dashboard</a>
+    <p style="margin:10px 0 0;font-size:11px;color:#64748b;">Browse, filter, and track all candidates with complete contact information</p>
   </td></tr>` : ""}
 
   <!-- FOOTER -->
@@ -631,27 +635,21 @@ serve(async (req: Request) => {
     return new Response(JSON.stringify({ processed: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  // Run all three sources in parallel
+  // Run sources in parallel (Apollo removed — Sonar OSINT handles enrichment)
   console.log("[hire-alert-scanner] Scanning all sources...");
-  const [mioshaCandidatesRaw, apolloCandidates, jobBoardCandidates] = await Promise.all([
+  const [mioshaCandidates, jobBoardCandidates] = await Promise.all([
     scanMIOSHA(),
-    scanApollo(),
     scanJobBoards(),
   ]);
 
-  // TA-3: Enrich MIOSHA candidates that lack contact info via Apollo /people/match
-  const mioshaCandidates = await enrichMIOSHAWithApollo(mioshaCandidatesRaw);
-
-  const allRaw = [...mioshaCandidates, ...apolloCandidates, ...jobBoardCandidates];
-  // Track source health for founder report
+  const allRaw = [...mioshaCandidates, ...jobBoardCandidates];
   const sourceHealth = {
     miosha: mioshaCandidates.length > 0 ? "✅" : "⚠️ 0 results",
-    apollo: apolloCandidates.length > 0 ? "✅" : "⚠️ 0 results (check API key)",
-    jobBoards: jobBoardCandidates.length > 0 ? "✅" : "⚠️ 0 results",
+    sonar: jobBoardCandidates.length > 0 ? "✅" : "⚠️ 0 results",
   };
-  console.log(`[hire-alert-scanner] Raw candidates: MIOSHA=${mioshaCandidates.length} Apollo=${apolloCandidates.length} JobBoards=${jobBoardCandidates.length}`);
+  console.log(`[hire-alert-scanner] Raw candidates: MIOSHA=${mioshaCandidates.length} JobBoards=${jobBoardCandidates.length}`);
 
-  // Deduplicate by license_number (for MIOSHA) or name+city
+  // Deduplicate by license_number or name+city
   const seen = new Set<string>();
   const deduped = allRaw.filter((c) => {
     const key = c.license_number || `${c.full_name.toLowerCase()}-${(c.city || "").toLowerCase()}`;
@@ -660,14 +658,12 @@ serve(async (req: Request) => {
     return true;
   });
 
-  // Check which candidates are new (not already in DB)
-  // Also fetch enrichment data for recently enriched candidates
+  // Check which candidates are new
   const { data: existingRecords } = await sb
     .from("hire_alert_candidates")
     .select("license_number, full_name, name, city, linkedin_url, facebook_url, current_employer, current_title, years_experience, qualifications_summary, hiring_recommendation, enrichment_status, email, phone")
-    .in("source", ["miosha", "apollo", "firecrawl"]);
+    .in("source", ["miosha", "firecrawl"]);
 
-  // Build enrichment lookup for scored candidates
   const enrichmentLookup = new Map<string, Record<string, unknown>>();
   for (const r of existingRecords || []) {
     const key = r.license_number || `${((r.full_name || r.name) || "").toLowerCase()}-${(r.city || "").toLowerCase()}`;
@@ -699,7 +695,6 @@ serve(async (req: Request) => {
   const scored: ScoredCandidate[] = [];
   for (const candidate of newCandidates) {
     const { score, reason } = await scoreCandidate(candidate);
-    // Merge enrichment data from DB if candidate was enriched in a previous run
     const key = candidate.license_number || `${candidate.full_name.toLowerCase()}-${(candidate.city || "").toLowerCase()}`;
     const enrichment = enrichmentLookup.get(key);
     scored.push({
@@ -721,10 +716,53 @@ serve(async (req: Request) => {
     });
   }
 
-  // Upsert all new candidates into DB and capture their IDs for TA-9 tracking
-  if (scored.length) {
+  // ===== INLINE SONAR OSINT ENRICHMENT =====
+  // Sort by score DESC, enrich top 5 to stay within timeout limits
+  // Remaining candidates get enrichment_status='pending' for candidate-deep-enrich second pass
+  const sortedByScore = [...scored].sort((a, b) => b.availability_score - a.availability_score);
+  const enrichBatch = sortedByScore.slice(0, 5);
+  const pendingBatch = sortedByScore.slice(5);
+
+  console.log(`[hire-alert-scanner] Enriching top ${enrichBatch.length} candidates inline (${pendingBatch.length} deferred to deep-enrich)`);
+
+  for (const candidate of enrichBatch) {
+    // Skip if already enriched from DB
+    if (candidate.enrichment_status === "complete") continue;
+
+    try {
+      const sonarData = await enrichViaSonar(candidate);
+
+      // Merge Sonar data into candidate
+      if (sonarData.linkedin_url) candidate.linkedin_url = sonarData.linkedin_url as string;
+      if (sonarData.facebook_url) candidate.facebook_url = sonarData.facebook_url as string;
+      if (sonarData.email && !candidate.email) candidate.email = sonarData.email as string;
+      if (sonarData.phone && !candidate.phone) candidate.phone = sonarData.phone as string;
+      if (sonarData.current_employer) candidate.current_employer = sonarData.current_employer as string;
+      if (sonarData.current_title) candidate.current_title = sonarData.current_title as string;
+      if (sonarData.years_experience) candidate.years_experience = sonarData.years_experience as number;
+
+      // AI Synthesis
+      const { qualifications_summary, hiring_recommendation } = await synthesizeViaAI(candidate, sonarData);
+      if (qualifications_summary) candidate.qualifications_summary = qualifications_summary;
+      if (hiring_recommendation) candidate.hiring_recommendation = hiring_recommendation;
+
+      candidate.enrichment_status = "complete";
+    } catch (e) {
+      console.warn(`[hire-alert-scanner] Inline enrichment failed for ${candidate.full_name}:`, e instanceof Error ? e.message : String(e));
+      candidate.enrichment_status = "pending"; // Will be picked up by deep-enrich
+    }
+  }
+
+  // Mark pending batch
+  for (const c of pendingBatch) {
+    if (!c.enrichment_status) c.enrichment_status = "pending";
+  }
+
+  // Upsert all new candidates into DB
+  const allScored = [...enrichBatch, ...pendingBatch];
+  if (allScored.length) {
     const { data: insertedRows, error: insertError } = await sb.from("hire_alert_candidates").insert(
-      scored.map((c) => ({
+      allScored.map((c) => ({
         name: c.full_name,
         full_name: c.full_name,
         phone: c.phone || null,
@@ -742,7 +780,14 @@ serve(async (req: Request) => {
         availability_score: c.availability_score,
         score_reason: c.score_reason,
         raw_data: c.raw_data || null,
-        enrichment_status: "pending",
+        linkedin_url: c.linkedin_url || null,
+        facebook_url: c.facebook_url || null,
+        current_employer: c.current_employer || null,
+        current_title: c.current_title || null,
+        years_experience: c.years_experience || null,
+        qualifications_summary: c.qualifications_summary || null,
+        hiring_recommendation: c.hiring_recommendation || null,
+        enrichment_status: c.enrichment_status || "pending",
         first_seen_at: new Date().toISOString(),
         last_seen_at: new Date().toISOString(),
       }))
@@ -754,16 +799,15 @@ serve(async (req: Request) => {
       console.log(`[hire-alert-scanner] Inserted ${insertedRows?.length || 0} candidates into DB`);
     }
 
-    // Attach DB id to scored candidates for TA-9 client-candidate tracking
     if (insertedRows) {
       const idMap = new Map((insertedRows as any[]).map((r) => [r.full_name, r.id]));
-      for (const c of scored) {
+      for (const c of allScored) {
         (c as any)._db_id = idMap.get(c.full_name);
       }
     }
   }
 
-  // Role keyword map — matches candidate license_type text to client target_roles keys
+  // Role keyword map
   const ROLE_KEYWORDS: Record<string, string[]> = {
     boiler_operator: ["boiler", "boiler operator"],
     steam_engineer: ["steam engineer"],
@@ -781,20 +825,17 @@ serve(async (req: Request) => {
   };
 
   function candidateMatchesRoles(licenseType: string | undefined, targetRoles: string[]): boolean {
-    if (!licenseType || !targetRoles?.length) return true; // no filter = match all
+    if (!licenseType || !targetRoles?.length) return true;
     const lower = licenseType.toLowerCase();
     return targetRoles.some((role) =>
       (ROLE_KEYWORDS[role] || [role]).some((kw) => lower.includes(kw))
     );
   }
 
-  // TA-5: Filter candidates by client's target zip codes (if set)
   function candidateMatchesZips(candidateZip: string | undefined, candidateCity: string | undefined, targetZips: string[]): boolean {
-    if (!targetZips?.length) return true; // no zip filter = match all
-    if (!candidateZip && !candidateCity) return true; // no location info = include (don't discard)
+    if (!targetZips?.length) return true;
+    if (!candidateZip && !candidateCity) return true;
     if (candidateZip && targetZips.includes(candidateZip)) return true;
-    // Loose city-based fallback: if candidate city substring matches any zip prefix
-    // (e.g. "Detroit" matches any 482xx zip in target list)
     const CITY_ZIP_PREFIXES: Record<string, string[]> = {
       detroit: ["482"], dearborn: ["481"], warren: ["480"], livonia: ["481"],
       "sterling heights": ["483"], troy: ["480"], "royal oak": ["480"],
@@ -818,23 +859,33 @@ serve(async (req: Request) => {
     const clientZips: string[] = (client as any).target_zip_codes || [];
 
     // Filter scored candidates to only those matching this client's target roles + zips
-    const clientAlertWorthy = scored.filter(
+    const clientAlertWorthy = allScored.filter(
       (c) => c.availability_score >= 5
         && candidateMatchesRoles(c.license_type, clientRoles)
         && candidateMatchesZips(c.zip, c.city, clientZips)
     );
-    const clientHotCandidates = clientAlertWorthy.filter((c) => c.availability_score >= 7);
 
-    if (!clientAlertWorthy.length) continue;
+    // ===== NO GHOST LEAD RULE =====
+    // Only send candidates that have at least ONE clickable action link
+    const actionableCandidates = clientAlertWorthy.filter(
+      (c) => c.linkedin_url || c.facebook_url || c.email || c.phone
+    );
+
+    const clientHotCandidates = actionableCandidates.filter((c) => c.availability_score >= 7);
+
+    if (!actionableCandidates.length) {
+      if (clientAlertWorthy.length) {
+        console.log(`[hire-alert-scanner] Skipping ${client.company_name} — ${clientAlertWorthy.length} candidates matched but NONE had actionable contact info (No Ghost Lead rule)`);
+      }
+      continue;
+    }
 
     try {
-      // Email digest for all 5+ matching candidates
       if (client.notify_email && client.owner_email) {
-        await sendAlertEmail(client, clientAlertWorthy, dateStr);
+        await sendAlertEmail(client, actionableCandidates, dateStr);
         alertsSent++;
       }
 
-      // SMS for hot candidates (7+) matching this client's roles
       if (client.notify_sms && client.owner_phone && clientHotCandidates.length) {
         const top = clientHotCandidates[0];
         const dashLink = client.dashboard_token ? ` View all: m2training.lovable.app/my-techalert?token=${client.dashboard_token}` : "";
@@ -845,8 +896,8 @@ serve(async (req: Request) => {
       }
 
       // TA-9: Record which candidates were alerted to this client
-      if (clientAlertWorthy.length) {
-        const candidateIds = clientAlertWorthy
+      if (actionableCandidates.length) {
+        const candidateIds = actionableCandidates
           .map((c) => (c as any)._db_id)
           .filter(Boolean);
         if (candidateIds.length) {
@@ -865,11 +916,10 @@ serve(async (req: Request) => {
     }
   }
 
-  // For DB status update, use all alerted candidates across all clients
-  const allAlertWorthy = scored.filter((c) => c.availability_score >= 5);
-  const allHotCandidates = scored.filter((c) => c.availability_score >= 7);
-
   // Update alerted candidates
+  const allAlertWorthy = allScored.filter((c) => c.availability_score >= 5 && (c.linkedin_url || c.facebook_url || c.email || c.phone));
+  const allHotCandidates = allScored.filter((c) => c.availability_score >= 7);
+
   if (allAlertWorthy.length && alertsSent > 0) {
     const alertedNames = allAlertWorthy.map((c) => c.full_name);
     await sb
@@ -888,38 +938,43 @@ serve(async (req: Request) => {
     errors: null,
   });
 
-  // Founder daily report — premium executive dashboard for Matt
+  // Founder daily report — Matt only (sources visible here only)
   const sourceBreakdown = {
-    miosha: scored.filter((c) => c.source === "miosha").length,
-    apollo: scored.filter((c) => c.source === "apollo").length,
-    firecrawl: scored.filter((c) => c.source === "firecrawl").length,
+    miosha: allScored.filter((c) => c.source === "miosha").length,
+    sonar: allScored.filter((c) => c.source === "firecrawl").length,
   };
 
-  const candidateRows = scored.length
-    ? scored
+  const enrichedCount = allScored.filter((c) => c.enrichment_status === "complete").length;
+  const ghostLeadsFiltered = allScored.filter((c) => c.availability_score >= 5 && !c.linkedin_url && !c.facebook_url && !c.email && !c.phone).length;
+
+  const candidateRows = allScored.length
+    ? allScored
         .sort((a, b) => b.availability_score - a.availability_score)
         .map(
           (c, i) => {
             const rowBg = c.availability_score >= 7 ? "#0a16280a" : i % 2 === 0 ? "#fff" : "#f8fafc";
-            const scoreBg = c.availability_score >= 8 ? "#dc2626" : c.availability_score >= 7 ? "#e8621a" : c.availability_score >= 5 ? "#f59e0b" : "#94a3b8";
-            const sourceIcon = c.source === "miosha" ? "🏛️" : c.source === "apollo" ? "🔍" : "📋";
+            const scoreBgColor = c.availability_score >= 8 ? "#dc2626" : c.availability_score >= 7 ? "#e8621a" : c.availability_score >= 5 ? "#f59e0b" : "#94a3b8";
+            const sourceIcon = c.source === "miosha" ? "🏛️" : "📋";
+            const enrichIcon = c.enrichment_status === "complete" ? "✅" : c.enrichment_status === "pending" ? "⏳" : "❌";
+            const hasAction = c.linkedin_url || c.facebook_url || c.email || c.phone;
             return `<tr style="background:${rowBg};border-bottom:1px solid #e2e8f0;">
               <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:${c.availability_score >= 7 ? "800" : "500"};">${c.full_name}${c.email ? `<br><span style="font-size:11px;color:#0891b2;font-weight:400;">${c.email}</span>` : ""}${c.phone ? `<br><span style="font-size:11px;color:#e8621a;font-weight:600;">${c.phone}</span>` : ""}</td>
               <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.license_type || "—"}${c.license_number ? `<br><span style="font-size:10px;color:#94a3b8;">#${c.license_number}</span>` : ""}</td>
               <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.city || "—"}</td>
               <td style="padding:12px 10px;text-align:center;">
-                <span style="display:inline-block;background:${scoreBg};color:#fff;padding:3px 10px;border-radius:12px;font-weight:800;font-size:12px;">${c.availability_score >= 8 ? "🔥 " : ""}${c.availability_score}/10</span>
+                <span style="display:inline-block;background:${scoreBgColor};color:#fff;padding:3px 10px;border-radius:12px;font-weight:800;font-size:12px;">${c.availability_score >= 8 ? "🔥 " : ""}${c.availability_score}/10</span>
               </td>
               <td style="padding:12px 10px;font-size:11px;color:#64748b;">${sourceIcon} ${c.source}</td>
-              <td style="padding:12px 10px;font-size:11px;color:#475569;line-height:1.4;">${c.score_reason}</td>
+              <td style="padding:12px 10px;font-size:11px;color:#64748b;">${enrichIcon} ${c.enrichment_status || "—"}</td>
+              <td style="padding:12px 10px;font-size:11px;color:#475569;">${hasAction ? "✅ Actionable" : "❌ Ghost"}</td>
             </tr>`;
           }
         )
         .join("")
-    : `<tr><td colspan="6" style="padding:32px;text-align:center;color:#94a3b8;font-size:14px;">No new candidates found today. Scanner ran successfully across all 3 sources.</td></tr>`;
+    : `<tr><td colspan="7" style="padding:32px;text-align:center;color:#94a3b8;font-size:14px;">No new candidates found today. Scanner ran successfully.</td></tr>`;
 
   await notifyMatt(
-    `${allHotCandidates.length > 0 ? "🔥 " : ""}TechAlert — ${dateStr} — ${newCandidates.length} new${allHotCandidates.length > 0 ? `, ${allHotCandidates.length} HOT` : ""}`,
+    `${allHotCandidates.length > 0 ? "🔥 " : ""}TechAlert — ${dateStr} — ${newCandidates.length} new${allHotCandidates.length > 0 ? `, ${allHotCandidates.length} HOT` : ""} · ${enrichedCount} enriched`,
     `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;"><tr><td align="center" style="padding:32px 16px;">
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:720px;">
@@ -951,6 +1006,11 @@ serve(async (req: Request) => {
       <p style="margin:4px 0 0;font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">New</p>
     </td>
     <td width="8"></td>
+    <td style="text-align:center;padding:16px 8px;background:#10b98118;border-radius:12px;">
+      <p style="margin:0;font-size:32px;font-weight:900;color:#10b981;line-height:1;">${enrichedCount}</p>
+      <p style="margin:4px 0 0;font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Enriched</p>
+    </td>
+    <td width="8"></td>
     <td style="text-align:center;padding:16px 8px;background:${allHotCandidates.length > 0 ? "#e8621a15" : "#ffffff08"};border-radius:12px;${allHotCandidates.length > 0 ? "border:1px solid #e8621a40;" : ""}">
       <p style="margin:0;font-size:32px;font-weight:900;color:${allHotCandidates.length > 0 ? "#e8621a" : "#fff"};line-height:1;">${allHotCandidates.length}</p>
       <p style="margin:4px 0 0;font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Hot 🔥</p>
@@ -963,15 +1023,15 @@ serve(async (req: Request) => {
   </tr></table>
 </td></tr>
 
-<!-- SOURCE BREAKDOWN -->
+<!-- SOURCE + ENRICHMENT HEALTH -->
 <tr><td style="background:#1e293b;padding:0 28px 16px;">
   <table width="100%" cellpadding="0" cellspacing="0"><tr>
     <td style="padding:8px 12px;background:#ffffff06;border-radius:8px;">
-      <span style="font-size:11px;color:#94a3b8;">🏛️ Src1: <strong style="color:#00d4ff;">${sourceBreakdown.miosha}</strong> ${sourceHealth.miosha}</span>
+      <span style="font-size:11px;color:#94a3b8;">🏛️ MIOSHA: <strong style="color:#00d4ff;">${sourceBreakdown.miosha}</strong> ${sourceHealth.miosha}</span>
       <span style="font-size:11px;color:#334155;"> · </span>
-      <span style="font-size:11px;color:#94a3b8;">🔍 Src2: <strong style="color:#00d4ff;">${sourceBreakdown.apollo}</strong> ${sourceHealth.apollo}</span>
+      <span style="font-size:11px;color:#94a3b8;">📋 Sonar/JobBoards: <strong style="color:#00d4ff;">${sourceBreakdown.sonar}</strong> ${sourceHealth.sonar}</span>
       <span style="font-size:11px;color:#334155;"> · </span>
-      <span style="font-size:11px;color:#94a3b8;">📋 Src3: <strong style="color:#00d4ff;">${sourceBreakdown.firecrawl}</strong> ${sourceHealth.jobBoards}</span>
+      <span style="font-size:11px;color:#94a3b8;">👻 Ghost leads filtered: <strong style="color:#e8621a;">${ghostLeadsFiltered}</strong></span>
     </td>
   </tr></table>
 </td></tr>
@@ -986,7 +1046,8 @@ serve(async (req: Request) => {
       <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">City</th>
       <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:center;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Score</th>
       <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Src</th>
-      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Intel</th>
+      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Enrich</th>
+      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Status</th>
     </tr>
     ${candidateRows}
   </table>
@@ -999,7 +1060,7 @@ serve(async (req: Request) => {
       🔥 <strong style="color:#e8621a;">8-10</strong> = alert sent &nbsp;·&nbsp;
       ⚡ <strong style="color:#f59e0b;">5-7</strong> = digest only &nbsp;·&nbsp;
       <span style="color:#94a3b8;">Below 5</span> = stored, no alert<br>
-      <span style="color:#475569;">3 data sources active</span>
+      <span style="color:#475569;">Sonar OSINT enrichment: top 5/run · No Ghost Lead filter active</span>
     </td>
   </tr></table>
 </td></tr>
@@ -1011,7 +1072,7 @@ serve(async (req: Request) => {
   await sb.from("agent_heartbeats").upsert({
     agent_name: "hire-alert-scanner",
     last_beat: new Date().toISOString(),
-    metadata: { candidates_found: allRaw.length, new_candidates: newCandidates.length, hot_candidates: allHotCandidates.length, alerts_sent: alertsSent },
+    metadata: { candidates_found: allRaw.length, new_candidates: newCandidates.length, hot_candidates: allHotCandidates.length, alerts_sent: alertsSent, enriched_inline: enrichedCount, ghost_leads_filtered: ghostLeadsFiltered },
   }, { onConflict: "agent_name" });
 
   return new Response(
@@ -1020,6 +1081,8 @@ serve(async (req: Request) => {
       new_candidates: newCandidates.length,
       hot_candidates: allHotCandidates.length,
       alerts_sent: alertsSent,
+      enriched_inline: enrichedCount,
+      ghost_leads_filtered: ghostLeadsFiltered,
     }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
