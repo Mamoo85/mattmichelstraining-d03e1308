@@ -50,10 +50,7 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
         <p style="margin:0 0 12px;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:12px;padding:2px 8px;border-radius:4px;margin-right:10px">24 HRS</span>I set up call forwarding on your number — 5 minutes total.</p>
         <p style="margin:0;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:12px;padding:2px 8px;border-radius:4px;margin-right:10px">GO LIVE</span>Every missed call triggers an instant text-back automatically. Zero effort.</p>
       </div>
-      <div style="border-top:1px solid #1e3a5f;padding-top:20px">
-        <p style="color:#e2e8f0;font-size:14px;margin:0">— Matt Michels</p>
-        <p style="color:#4a6fa5;font-size:12px;margin:5px 0 0">Detroit Web Agency &nbsp;·&nbsp; (313) 992-1219 &nbsp;·&nbsp; <a href="mailto:matt@detroitwebagent.com" style="color:#00d4ff;text-decoration:none">matt@detroitwebagent.com</a></p>
-      </div>`,
+      ${DWA_SIG}`,
   },
   social_media_subscription: {
     subject: "Welcome to Social Media AI — Let's Connect Your Accounts",
@@ -103,10 +100,7 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
         <p style="color:#ffffff;font-weight:700;font-size:13px;margin:0 0 8px">WHAT MAKES THIS DIFFERENT:</p>
         <p style="color:#94a3b8;font-size:13px;margin:0">Unlike Angi or Thumbtack, every lead is exclusive to you. No bidding wars. No shared contact. One trade per city — period.</p>
       </div>
-      <div style="border-top:1px solid #1e3a5f;padding-top:20px">
-        <p style="color:#e2e8f0;font-size:14px;margin:0">— Matt Michels</p>
-        <p style="color:#4a6fa5;font-size:12px;margin:5px 0 0">Detroit Web Agency &nbsp;·&nbsp; (313) 992-1219 &nbsp;·&nbsp; <a href="mailto:matt@detroitwebagent.com" style="color:#00d4ff;text-decoration:none">matt@detroitwebagent.com</a></p>
-      </div>`,
+      ${DWA_SIG}`,
   },
   storm_lead_subscription: {
     subject: "Welcome to Storm Damage Leads — You're All Set!",
@@ -435,6 +429,11 @@ const DWA_PRODUCTS = new Set([
   "hire_alert_subscription",
   "missed_call_subscription",
 ]);
+
+const DWA_SIG = `<div style="border-top:1px solid #1e3a5f;padding-top:20px">
+  <p style="color:#e2e8f0;font-size:14px;margin:0">— Matt Michels</p>
+  <p style="color:#4a6fa5;font-size:12px;margin:5px 0 0">Detroit Web Agency &nbsp;·&nbsp; (313) 992-1219 &nbsp;·&nbsp; <a href="mailto:matt@detroitwebagent.com" style="color:#00d4ff;text-decoration:none">matt@detroitwebagent.com</a></p>
+</div>`;
 
 function getTemplate(serviceType: string): OnboardTemplate | null {
   if (TEMPLATES[serviceType]) return TEMPLATES[serviceType];

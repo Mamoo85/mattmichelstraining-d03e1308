@@ -79,6 +79,7 @@ serve(async (req) => {
         // ── SUBSCRIPTION CONTRACTOR: full contact info ──────────────────────
         if (contractor.email && RESEND_API_KEY) {
           const tradeLabel = site?.trade || "service";
+          const firstName = lead.name?.split(" ")[0]?.toUpperCase() || "THEM";
           const messageBlock = lead.message
             ? `<div style="background:#0d1f3c;border-left:3px solid #00d4ff;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:24px">
                 <p style="color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:2px;margin:0 0 8px;text-transform:uppercase">Message from homeowner</p>
@@ -106,7 +107,7 @@ serve(async (req) => {
     <div style="background:#0d1f3c;border:1px solid #00d4ff33;border-radius:10px;padding:20px 24px;margin-bottom:24px;text-align:center">
       <p style="margin:0 0 6px;color:#e2e8f0;font-size:14px;font-weight:700">This lead is exclusive — they haven't been contacted by anyone else.</p>
       <p style="margin:0 0 18px;color:#64748b;font-size:13px">Speed wins jobs. Call now.</p>
-      <a href="tel:${lead.phone}" style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:900;font-size:14px;padding:12px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.5px">CALL ${lead.name.split(" ")[0].toUpperCase()} NOW →</a>
+      <a href="tel:${lead.phone}" style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:900;font-size:14px;padding:12px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.5px">CALL ${firstName} NOW →</a>
     </div>
     ${messageBlock}
   </div>
@@ -115,22 +116,23 @@ serve(async (req) => {
     <p style="margin:5px 0 0;font-size:11px"><a href="https://detroitwebagent.com" style="color:#00d4ff;text-decoration:none">detroitwebagent.com</a></p>
   </div>
 </div></body></html>`;
-          await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              from: "Detroit Web Agency <matt@detroitwebagent.com>",
-              to: [contractor.email],
-              bcc: ["matt@detroitwebagent.com"],
-              subject: `🔥 New ${tradeLabel} lead — ${lead.name} (exclusive)`,
-              html: leadHtml,
+          const smsBody = `New ${tradeLabel} lead for you: ${lead.name} — ${lead.phone}${lead.project_type ? ` (${lead.project_type})` : ""}. Exclusive — call now. — Matt (313) 992-1219`;
+          await Promise.all([
+            fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Detroit Web Agency <matt@detroitwebagent.com>",
+                to: [contractor.email],
+                bcc: ["matt@detroitwebagent.com"],
+                subject: `🔥 New ${tradeLabel} lead — ${lead.name} (exclusive)`,
+                html: leadHtml,
+              }),
             }),
-          });
-        }
-
-        if (contractor.phone) {
-          const smsBody = `New ${site?.trade || "service"} lead for you: ${lead.name} — ${lead.phone}${lead.project_type ? ` (${lead.project_type})` : ""}. Exclusive — call now. — Matt (313) 992-1219`;
-          await sendSMS(contractor.phone, TWILIO_PHONE, smsBody, "contractor_leads");
+            contractor.phone
+              ? sendSMS(contractor.phone, TWILIO_PHONE, smsBody, "contractor_leads")
+              : Promise.resolve(),
+          ]);
         }
       } else {
         // ── PPL CONTRACTOR: FOMO teaser — no contact info until paid ─────────
