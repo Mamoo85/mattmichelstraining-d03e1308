@@ -148,6 +148,19 @@ export default function GetStarted() {
     setForm(prev => ({ ...prev, source }));
   }, []);
 
+  // M² Visitor Intel tracking
+  useEffect(() => {
+    fetch("https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/visitor-identify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        script_key: "b5a20a39-8970-4d65-8c0e-52936f7d15f6",
+        page: window.location.href,
+        referrer: document.referrer,
+      }),
+    }).catch(() => {});
+  }, []);
+
   const set = (field: keyof FormState) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => setForm(prev => ({ ...prev, [field]: e.target.value }));
