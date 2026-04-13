@@ -928,7 +928,7 @@ serve(async (req: Request) => {
       🔥 <strong style="color:#e8621a;">8-10</strong> = alert sent &nbsp;·&nbsp;
       ⚡ <strong style="color:#f59e0b;">5-7</strong> = digest only &nbsp;·&nbsp;
       <span style="color:#94a3b8;">Below 5</span> = stored, no alert<br>
-      Sources: MIOSHA public license DB · Apollo · Indeed/ZipRecruiter
+      <span style="color:#475569;">3 data sources active</span>
     </td>
   </tr></table>
 </td></tr>
