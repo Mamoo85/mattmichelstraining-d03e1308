@@ -228,17 +228,17 @@ export default function AdminDeadLeads() {
   };
 
   return (
-    <div style={{ background: "#0a1628", minHeight: "100vh", padding: "24px", color: "#e2e8f0", fontFamily: "sans-serif" }}>
+    <div style={{ background: "#0a1628", minHeight: "100vh", padding: "16px", color: "#e2e8f0", fontFamily: "sans-serif" }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div>
-            <h2 style={{ color: "#fff", fontSize: 22, fontWeight: 800, margin: 0 }}>♻️ Dead Lead Reactivation</h2>
-            <p style={{ color: "#64748b", fontSize: 13, margin: "4px 0 0" }}>
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 12 }}>
+            <h2 style={{ color: "#fff", fontSize: 20, fontWeight: 800, margin: 0 }}>♻️ Dead Lead Reactivation</h2>
+            <p style={{ color: "#64748b", fontSize: 12, margin: "4px 0 0" }}>
               Upload contractor's old leads → 3-msg SMS drip → $50 per YES reply
             </p>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {tab === "campaigns" && <>
               <Button size="sm" variant="outline" onClick={handleRunDrip} disabled={running}
                 style={{ borderColor: "#1e3a5f", color: "#94a3b8" }}>
@@ -277,7 +277,7 @@ export default function AdminDeadLeads() {
         {showNewCampaign && (
           <div style={{ background: "#0f2342", border: "1px solid #1e3a5f", borderRadius: 10, padding: 20, marginBottom: 20 }}>
             <h3 style={{ color: "#00d4ff", fontSize: 15, fontWeight: 700, margin: "0 0 16px" }}>New Campaign</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 12 }}>
               <div>
                 <label style={{ color: "#64748b", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>CONTRACTOR *</label>
                 <select value={newForm.contractor_id} onChange={e => setNewForm(f => ({ ...f, contractor_id: e.target.value }))}
@@ -319,7 +319,7 @@ export default function AdminDeadLeads() {
         )}
 
         {/* Global Stats Bar */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10, marginBottom: 16 }}>
           {[
             { label: "Total Contacts", value: globalStats.total, color: "#94a3b8" },
             { label: "In Drip", value: globalStats.in_drip, color: "#60a5fa" },
@@ -459,7 +459,7 @@ export default function AdminDeadLeads() {
               <span style={{ color: "#64748b", fontSize: 13 }}>Opted out: <strong style={{ color: "#94a3b8" }}>{stats.opted_out}</strong></span>
               <span style={{ color: "#64748b", fontSize: 13 }}>Revenue est: <strong style={{ color: "#10b981" }}>${stats.positive * 50}</strong></span>
             </div>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <div style={{ width: "100%", overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", minWidth: 500 }}>
               <thead>
                 <tr style={{ background: "#0a1628" }}>
                   {["Name", "Phone", "Status", "Reply", "Sent"].map(h => (
@@ -486,7 +486,7 @@ export default function AdminDeadLeads() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </div>
         )}
         </>}
@@ -494,7 +494,7 @@ export default function AdminDeadLeads() {
         {/* ── PROSPECTING PIPELINE TAB ─────────────────────────────── */}
         {tab === "pipeline" && <>
           {/* Pipeline stats */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10, marginBottom: 16 }}>
             {[
               { label: "Total Emailed", value: pipelineStats.total, color: "#94a3b8" },
               { label: "Replied Interested", value: pipelineStats.responded, color: "#10b981" },
@@ -521,7 +521,7 @@ export default function AdminDeadLeads() {
                 No contractors emailed yet. Click "Find Prospects Now" to run the prospector.
               </div>
             ) : (
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <div style={{ width: "100%", overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", minWidth: 600 }}>
                 <thead>
                   <tr style={{ background: "#0a1628" }}>
                     {["Business", "Trade / City", "Email", "Status", "Drip Stage", "Emailed"].map(h => (
@@ -553,7 +553,7 @@ export default function AdminDeadLeads() {
                     );
                   })}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </div>
         </>}
