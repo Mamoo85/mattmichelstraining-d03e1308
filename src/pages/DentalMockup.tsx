@@ -93,7 +93,7 @@ export default function DentalMockup() {
           Matt Michels Web Design
         </Link>
         <span style={{ opacity: 0.6 }}>·</span>
-        <a href="tel:3139921219" style={{ color: WHITE, textDecoration: "none", fontWeight: 700 }}>313.992.1219</a>
+        <a href="tel:3138064952" style={{ color: WHITE, textDecoration: "none", fontWeight: 700 }}>313.806.4952</a>
       </div>
 
       {/* ── Header ── */}
@@ -513,7 +513,7 @@ export default function DentalMockup() {
           </div>
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 24, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
             <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>© 2026 Stewart Dental Group. All rights reserved.</span>
-            <a href="/manufacturing-web-design" style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, textDecoration: "none" }}>Site by M2 Web Design</a>
+            <a href="/manufacturing-web-design" style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, textDecoration: "none" }}>Site by M² Web Design</a>
           </div>
         </div>
       </footer>
