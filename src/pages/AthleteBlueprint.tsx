@@ -15,9 +15,9 @@ export default function AthleteBlueprint() {
         <div className="text-2xl font-black tracking-tighter text-white">
           M<span className="text-[#e8621a]">²</span>
         </div>
-        <a href="sms:3138064952" className="text-sm font-bold text-slate-300 hover:text-white transition-colors flex items-center gap-2">
+        <a href="sms:3139921219" className="text-sm font-bold text-slate-300 hover:text-white transition-colors flex items-center gap-2">
           <MessageCircle size={16} className="text-[#e8621a]" />
-          Text Matt: 313-806-4952
+          Text Matt: 313-992-1219
         </a>
       </header>
 
@@ -39,7 +39,7 @@ export default function AthleteBlueprint() {
             <Calendar size={20} />
             Book the First Session — $40
           </a>
-          <a href="sms:3138064952" className="border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white font-bold py-4 px-8 rounded-lg text-lg transition-colors text-center">
+          <a href="sms:3139921219" className="border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white font-bold py-4 px-8 rounded-lg text-lg transition-colors text-center">
             Text Matt a Question
           </a>
         </div>
@@ -167,7 +167,7 @@ export default function AthleteBlueprint() {
               {
                 step: "01",
                 title: "Text Matt",
-                desc: "Send a text to 313-806-4952. Tell him your kid's sport, age, and goals. He'll respond personally."
+                desc: "Send a text to 313-992-1219. Tell him your kid's sport, age, and goals. He'll respond personally."
               },
               {
                 step: "02",
@@ -203,7 +203,7 @@ export default function AthleteBlueprint() {
             <a href="/schedule" className="bg-[#e8621a] hover:bg-[#d4570f] text-white font-black py-4 px-10 rounded-lg text-lg transition-colors">
               Book the First Session — $40
             </a>
-            <a href="sms:3138064952" className="border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white font-bold py-4 px-10 rounded-lg text-lg transition-colors">
+            <a href="sms:3139921219" className="border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white font-bold py-4 px-10 rounded-lg text-lg transition-colors">
               Text Matt First
             </a>
           </div>
@@ -231,7 +231,7 @@ export default function AthleteBlueprint() {
 
       {/* Footer */}
       <footer className="text-center py-12 text-slate-600 text-sm border-t border-white/5 mt-12">
-        <p>© {new Date().getFullYear()} M2 Training · Grosse Pointe, MI · mattmichelstraining.com · 313-806-4952</p>
+        <p>© {new Date().getFullYear()} M2 Training · Grosse Pointe, MI · mattmichelstraining.com · 313-992-1219</p>
       </footer>
     </div>
   );

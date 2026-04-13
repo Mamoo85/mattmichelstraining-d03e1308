@@ -18,7 +18,7 @@ export default function AIPhoneAnswering() {
             Your 7-day free trial has started. Matt will reach out within 24 hours to set up your
             custom greeting and get your calls routing through the system.
           </p>
-          <p className="mt-4 text-sm" style={{ color: "#64748b" }}>Questions? Text (313) 806-4952</p>
+          <p className="mt-4 text-sm" style={{ color: "#64748b" }}>Questions? Text (313) 992-1219</p>
         </div>
       </div>
     );

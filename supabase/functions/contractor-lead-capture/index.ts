@@ -90,7 +90,7 @@ serve(async (req) => {
 <div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
         <div style="font-size:13px;color:#94a3b8;">
-          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952
+          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 992-1219
         </div>
         <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M² Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
       </div></div>
@@ -130,12 +130,12 @@ serve(async (req) => {
     ${project_type ? `<p><strong>Project type:</strong> ${project_type}</p>` : ""}
     ${message ? `<p><strong>Notes:</strong> ${message}</p>` : ""}
     <p style="margin-top:20px;font-size:13px;color:#64748b;">Received ${new Date().toLocaleString("en-US", { timeZone: "America/New_York" })} ET</p>
-    <p style="font-size:13px;color:#64748b;">Questions? Email <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
+    <p style="font-size:13px;color:#64748b;">Questions? Email <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> or text <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a>.</p>
   </div>
 <div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
         <div style="font-size:13px;color:#94a3b8;">
-          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952
+          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 992-1219
         </div>
         <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M² Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
       </div></div>

@@ -147,7 +147,7 @@ const M2_SERVICES = [
       business_type: "AI automation & web development agency",
       contact_name: "Matt Michels",
       email: MATT_EMAIL,
-      phone: "3138064952",
+      phone: "3139921219",
       city: "Grosse Pointe",
       state: "MI",
       plan: "pro",

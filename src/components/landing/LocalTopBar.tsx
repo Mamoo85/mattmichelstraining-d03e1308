@@ -40,8 +40,8 @@ const LocalTopBar = () => {
           Grosse Pointe Park, MI
         </span>
         <span className="hidden sm:inline">·</span>
-        <a href="tel:3138064952" className="underline underline-offset-2 hover:opacity-80">
-          (313) 806-4952
+        <a href="tel:3139921219" className="underline underline-offset-2 hover:opacity-80">
+          (313) 992-1219
         </a>
         <span>·</span>
         <Link to="/schedule" className="underline underline-offset-2 hover:opacity-80">

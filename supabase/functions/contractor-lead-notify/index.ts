@@ -94,7 +94,7 @@ serve(async (req) => {
     </table>
     <p style="color:#64748b;font-size:13px;">Call them fast — speed wins jobs.</p>
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:13px;color:#334155;">
-      <strong>Matt Michels</strong> · Detroit Web Agency · (313) 806-4952
+      <strong>Matt Michels</strong> · Detroit Web Agency · (313) 992-1219
     </div>
   </div>
 </div></body></html>`,
@@ -103,7 +103,7 @@ serve(async (req) => {
         }
 
         if (contractor.phone) {
-          const smsBody = `New ${site?.trade || "service"} lead for you: ${lead.name} — ${lead.phone}${lead.project_type ? ` (${lead.project_type})` : ""}. Exclusive — call now. — Matt (313) 806-4952`;
+          const smsBody = `New ${site?.trade || "service"} lead for you: ${lead.name} — ${lead.phone}${lead.project_type ? ` (${lead.project_type})` : ""}. Exclusive — call now. — Matt (313) 992-1219`;
           await sendSMS(contractor.phone, TWILIO_PHONE, smsBody, "contractor_leads");
         }
       } else {

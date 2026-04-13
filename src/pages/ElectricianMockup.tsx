@@ -88,7 +88,7 @@ const ElectricianMockup = () => {
         <span className="opacity-60">·</span>
         <Link to="/detroit-web-design" className="underline underline-offset-2">Matt Michels Web Design</Link>
         <span className="opacity-60">·</span>
-        <a href="tel:3138064952">313.806.4952</a>
+        <a href="tel:3139921219">313.992.1219</a>
       </div>
 
       {/* Sticky Header */}

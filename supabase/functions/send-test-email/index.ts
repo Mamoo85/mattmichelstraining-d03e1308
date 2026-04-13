@@ -23,7 +23,7 @@ serve(async () => {
           <p>If you're seeing this at <strong>matthewmichels@gmail.com</strong>, BCC is confirmed working on all 51 sender functions.</p>
           <p>Every email your AI agents send to leads and clients will now silently copy you.</p>
           <hr style="border-color:#334155;margin:24px 0;">
-          <p style="color:#94a3b8;font-size:13px;">&mdash; M&sup2; Automated System<br>matt@mattmichelstraining.com &middot; (313) 806-4952</p>
+          <p style="color:#94a3b8;font-size:13px;">&mdash; M&sup2; Automated System<br>matt@mattmichelstraining.com &middot; (313) 992-1219</p>
         </div>
       `,
     }),

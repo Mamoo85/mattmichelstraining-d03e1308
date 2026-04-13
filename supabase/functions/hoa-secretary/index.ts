@@ -201,7 +201,7 @@ Be thorough, professional, and accurate to the raw notes. If information is miss
   <tr><td style="padding:16px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;">
     <div style="display:flex;align-items:center;gap:12px;">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M² HOA Secretary · (313) 806-4952</div>
+      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M² HOA Secretary · (313) 992-1219</div>
     </div>
   </td></tr>
 

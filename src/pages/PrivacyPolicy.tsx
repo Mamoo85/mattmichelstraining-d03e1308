@@ -7,7 +7,7 @@ export default function PrivacyPolicy() {
       <section className="mb-8">
         <h2 className="text-xl font-bold mb-3">1. Who We Are</h2>
         <p className="leading-relaxed text-slate-700">
-          Matt Michels Training (fitness and coaching services) and M2 Development (web design, marketing, and business automation) — collectively "we," "us," or "our" — operate mattmichelstraining.com and related services. Owner: Matt Michels, Grosse Pointe, MI. Contact: matt@mattmichelstraining.com | (313) 806-4952.
+          Matt Michels Training (fitness and coaching services) and M2 Development (web design, marketing, and business automation) — collectively "we," "us," or "our" — operate mattmichelstraining.com and related services. Owner: Matt Michels, Grosse Pointe, MI. Contact: matt@mattmichelstraining.com | (313) 992-1219.
         </p>
       </section>
 
@@ -94,7 +94,7 @@ export default function PrivacyPolicy() {
           Matt Michels — Matt Michels Training / M2 Development<br />
           Grosse Pointe, MI<br />
           matt@mattmichelstraining.com<br />
-          (313) 806-4952
+          (313) 992-1219
         </p>
       </section>
     </div>

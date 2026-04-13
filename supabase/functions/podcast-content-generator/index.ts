@@ -195,7 +195,7 @@ function buildContentEmail(
       <strong style="color:#94a3b8;">Matt Michels</strong> · M² Development · Grosse Pointe, MI
     </p>
     <p style="color:#334155;font-size:11px;margin:0;">
-      Questions? Reply to this email or text <a href="tel:+13138064952" style="color:${accent};">(313) 806-4952</a>
+      Questions? Reply to this email or text <a href="tel:+13139921219" style="color:${accent};">(313) 992-1219</a>
     </p>
     <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:32px;height:32px;margin-top:12px;object-fit:contain;opacity:.7;" />
   </div>

@@ -185,7 +185,7 @@ SNIPER RULES:
 2. Sentence 1: Call out a SPECIFIC flaw you found (not generic — reference their actual data)
 3. Sentence 2: Agitate — what this flaw is costing them in real dollars or lost jobs
 4. Sentence 3: Present the fix in one line — what Matt does and the price
-5. Sentence 4: Soft CTA — reply or text (313) 806-4952
+5. Sentence 4: Soft CTA — reply or text (313) 992-1219
 6. Start with "Hey —" (never "Dear" or "Hi [Name]")
 7. Sign off "— Matt, Grosse Pointe"
 8. Blue-collar tone. Like a text from a buddy who happens to know marketing.
@@ -217,7 +217,7 @@ function buildEmailHtml(body: string): string {
 ${htmlBody}
 <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
 <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;vertical-align:middle;" alt="Matt">
-<span style="margin-left:12px;font-size:13px;color:#334155;vertical-align:middle;"><strong>Matt Michels</strong> · Grosse Pointe, MI · (313) 806-4952</span>
+<span style="margin-left:12px;font-size:13px;color:#334155;vertical-align:middle;"><strong>Matt Michels</strong> · Grosse Pointe, MI · (313) 992-1219</span>
 </div>
 </td></tr>
 <tr><td style="background:#f8fafc;padding:12px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
@@ -247,7 +247,7 @@ Rules:
 2. Sentence 1: Prove you looked them up — mention their review count, rating, or city specifically
 3. Sentence 2: "You've got dead estimates in your system that never turned into jobs. We text them for you."
 4. Sentence 3: The deal — $50 only when a lead says YES they still need the work. Zero monthly fee.
-5. Sentence 4: Soft CTA — reply to this email or text (313) 806-4952
+5. Sentence 4: Soft CTA — reply to this email or text (313) 992-1219
 6. Start with "Hey —" (never "Dear" or "Hi [Name]")
 7. Sign off: "— Matt, Detroit Web Agency"
 8. Conversational, blue-collar tone. Not salesy.
@@ -276,7 +276,7 @@ function buildDeadLeadEmailHtml(body: string): string {
 <tr><td style="padding:24px;color:#334155;font-size:15px;line-height:1.8;">
 ${htmlBody}
 <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
-<span style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency · (313) 806-4952 · detroitwebagent.com</span>
+<span style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency · (313) 992-1219 · detroitwebagent.com</span>
 </div>
 </td></tr>
 <tr><td style="background:#f8fafc;padding:12px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
@@ -358,7 +358,7 @@ Rules:
 2. Sentence 1: Prove you found them specifically — mention their review count, trade, or city
 3. Sentence 2: Mention hiring pain — good licensed ${tradeClean} techs are hard to find, and by the time you hear about one, they're already gone
 4. Sentence 3: TechAlert scans Michigan's MIOSHA license DB daily — when a new tech gets licensed in your area, you get a text first. Free trial, no card.
-5. Sentence 4: Soft CTA — reply to claim their trial or text (313) 806-4952
+5. Sentence 4: Soft CTA — reply to claim their trial or text (313) 992-1219
 6. Start with "Hey —"
 7. Sign off: "— Matt, Detroit Web Agency"
 8. Conversational, direct. Not salesy.
@@ -390,7 +390,7 @@ function buildTechAlertEmailHtml(body: string): string {
 <tr><td style="padding:16px 24px 24px;color:#e2e8f0;font-size:15px;line-height:1.8;background:#0f172a;">
 ${htmlBody}
 <div style="margin-top:20px;padding-top:16px;border-top:1px solid #1e3a5f;">
-<span style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13138064952" style="color:#00d4ff;text-decoration:none;">(313) 806-4952</a> · <a href="https://detroitwebagent.com" style="color:#00d4ff;text-decoration:none;">detroitwebagent.com</a></span>
+<span style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;text-decoration:none;">(313) 992-1219</a> · <a href="https://detroitwebagent.com" style="color:#00d4ff;text-decoration:none;">detroitwebagent.com</a></span>
 </div>
 </td></tr>
 <tr><td style="background:#0a1628;padding:12px 24px;border-top:1px solid #1e3a5f;font-size:11px;color:#475569;">
@@ -418,7 +418,7 @@ Rules:
 2. Sentence 1: Prove you found them specifically — mention their review count, trade, or city
 3. Sentence 2: Every missed call is a job they're handing to a competitor. While they're on a job, a homeowner calls, gets voicemail, and calls the next plumber.
 4. Sentence 3: For $99/mo we text every missed caller back in 60 seconds — "Thanks for calling ${businessName}, we'll call you right back." They stop calling around.
-5. Sentence 4: Soft CTA — takes 5 minutes to set up, reply or text (313) 806-4952
+5. Sentence 4: Soft CTA — takes 5 minutes to set up, reply or text (313) 992-1219
 6. Start with "Hey —"
 7. Sign off: "— Matt, Detroit Web Agency"
 8. Conversational, direct. Not salesy.
@@ -450,7 +450,7 @@ function buildMissedCallEmailHtml(body: string): string {
 <tr><td style="padding:16px 24px 24px;color:#334155;font-size:15px;line-height:1.8;">
 ${htmlBody}
 <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
-<span style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13138064952" style="color:#e8621a;text-decoration:none;">(313) 806-4952</a> · <a href="https://detroitwebagent.com" style="color:#e8621a;text-decoration:none;">detroitwebagent.com</a></span>
+<span style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13139921219" style="color:#e8621a;text-decoration:none;">(313) 992-1219</a> · <a href="https://detroitwebagent.com" style="color:#e8621a;text-decoration:none;">detroitwebagent.com</a></span>
 </div>
 </td></tr>
 <tr><td style="background:#f8fafc;padding:12px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">

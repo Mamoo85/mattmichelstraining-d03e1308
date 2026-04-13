@@ -78,7 +78,7 @@ serve(async (req) => {
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
       <img src="https://www.detroitwebagent.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
       <div style="font-size:13px;color:#94a3b8;">
-        <strong style="color:#1e293b;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952
+        <strong style="color:#1e293b;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 992-1219
       </div>
     </div>
   </div>
@@ -101,7 +101,7 @@ serve(async (req) => {
 <p>Got your referral for <strong>${friend_business || friend_email}</strong>. I'm reaching out to them now with a free consultation offer.</p>
 <p>If they purchase any web design package ($499+), you'll get <strong>$50 cash</strong> — paid via Venmo, PayPal, or check within 7 days of their purchase.</p>
 <p>Thanks for spreading the word!</p>
-<p>— Matt<br>(313) 806-4952</p>`,
+<p>— Matt<br>(313) 992-1219</p>`,
         }),
       });
     }

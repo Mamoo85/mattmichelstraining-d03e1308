@@ -8,7 +8,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
-const MATT_CELL = "+13138064952";
+const MATT_CELL = "+13138064952"; // Matt's personal cell — used to detect AT&T call-forwarding origin
 const FROM_EMAIL = "Matt Michels <matt@detroitwebagent.com>";
 const REPLY_TO = "matt@detroitwebagent.com";
 
@@ -92,10 +92,10 @@ Respond with ONLY a JSON object: {"category": "...", "summary": "one sentence su
       let mattSms: string;
 
       if (isDeadLead) {
-        replyBody2 = `Hey ${firstName} — great timing. Paste your dead lead list here and we'll start the drip today:\n\ndetroitwebagent.com/dead-lead-intake\n\nTakes 2 minutes. No charge until a lead replies YES.\n\n— Matt\n(313) 806-4952`;
+        replyBody2 = `Hey ${firstName} — great timing. Paste your dead lead list here and we'll start the drip today:\n\ndetroitwebagent.com/dead-lead-intake\n\nTakes 2 minutes. No charge until a lead replies YES.\n\n— Matt\n(313) 992-1219`;
         mattSms = `♻️ DEAD LEAD PITCH HIT: ${bizName} replied YES. Intake link sent automatically. Check Resend.`;
       } else {
-        replyBody2 = `Hey ${firstName} — awesome, let's do it.\n\nI'm going to text you the next 3 exclusive leads for free so you can see the quality before spending a dime. What's the best cell number to reach you?\n\n— Matt\n(313) 806-4952`;
+        replyBody2 = `Hey ${firstName} — awesome, let's do it.\n\nI'm going to text you the next 3 exclusive leads for free so you can see the quality before spending a dime. What's the best cell number to reach you?\n\n— Matt\n(313) 992-1219`;
         mattSms = `🔥 HOT LEAD: ${senderEmail} said YES to free leads.\n\nThey replied: "${replyBody.slice(0, 120)}"\n\nAuto-reply sent asking for their cell. CALL THEM NOW.`;
       }
 
@@ -110,7 +110,7 @@ Respond with ONLY a JSON object: {"category": "...", "summary": "one sentence su
           html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;line-height:1.8;color:#1e293b;max-width:520px;margin:0 auto;padding:24px 0;">
 <p>${replyBody2.replace(/\n/g, "<br>")}</p>
 <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;">
-  <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Detroit Web Agency · Grosse Pointe, MI<br>(313) 806-4952</div>
+  <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Detroit Web Agency · Grosse Pointe, MI<br>(313) 992-1219</div>
 </div>
 </div>`,
         }),
@@ -138,18 +138,18 @@ Respond with ONLY a JSON object: {"category": "...", "summary": "one sentence su
 
       if (isDeadLeadObj) {
         if (category === "OBJECTION_BUSY") {
-          draftBody = `Hey ${firstName} — no problem at all.\n\nWhen you get a sec, you can paste your old leads in 2 minutes here: detroitwebagent.com/dead-lead-intake\n\nThe drip runs itself after that. Zero time from you.\n\n— Matt\n(313) 806-4952`;
+          draftBody = `Hey ${firstName} — no problem at all.\n\nWhen you get a sec, you can paste your old leads in 2 minutes here: detroitwebagent.com/dead-lead-intake\n\nThe drip runs itself after that. Zero time from you.\n\n— Matt\n(313) 992-1219`;
         } else if (category === "OBJECTION_HAVE_SOMEONE") {
-          draftBody = `Hey ${firstName} — totally fair. This is different from what most people are running.\n\nWe're not replacing anything — we just SMS your dead estimates (the quotes that never went anywhere) and see who's still interested. You pay $50 only when one replies YES.\n\n— Matt\n(313) 806-4952`;
+          draftBody = `Hey ${firstName} — totally fair. This is different from what most people are running.\n\nWe're not replacing anything — we just SMS your dead estimates (the quotes that never went anywhere) and see who's still interested. You pay $50 only when one replies YES.\n\n— Matt\n(313) 992-1219`;
         } else if (category === "OBJECTION_PRICE") {
-          draftBody = `Hey ${firstName} — there's no upfront cost. You pay $50 only when a dead lead replies YES they still need the work.\n\nIf none reply, you pay nothing. Worth a try: detroitwebagent.com/dead-lead-intake\n\n— Matt\n(313) 806-4952`;
+          draftBody = `Hey ${firstName} — there's no upfront cost. You pay $50 only when a dead lead replies YES they still need the work.\n\nIf none reply, you pay nothing. Worth a try: detroitwebagent.com/dead-lead-intake\n\n— Matt\n(313) 992-1219`;
         }
       } else if (category === "OBJECTION_BUSY") {
-        draftBody = `Hey ${firstName} — totally get it, busy is good.\n\nThat's exactly why this works: once it's set up, the whole thing runs on its own. No more chasing. Takes 20 minutes to go live.\n\nWorth a look when you get a breather?\n\n— Matt\n(313) 806-4952`;
+        draftBody = `Hey ${firstName} — totally get it, busy is good.\n\nThat's exactly why this works: once it's set up, the whole thing runs on its own. No more chasing. Takes 20 minutes to go live.\n\nWorth a look when you get a breather?\n\n— Matt\n(313) 992-1219`;
       } else if (category === "OBJECTION_HAVE_SOMEONE") {
-        draftBody = `Hey ${firstName} — good to hear, having someone on it is the right call.\n\nMost of the companies I work with kept their current setup and just added our lead system on top for extra volume. Two streams are better than one.\n\nHappy to show you the math if you're curious — no pressure.\n\n— Matt\n(313) 806-4952`;
+        draftBody = `Hey ${firstName} — good to hear, having someone on it is the right call.\n\nMost of the companies I work with kept their current setup and just added our lead system on top for extra volume. Two streams are better than one.\n\nHappy to show you the math if you're curious — no pressure.\n\n— Matt\n(313) 992-1219`;
       } else if (category === "OBJECTION_PRICE") {
-        draftBody = `Hey ${firstName} — fair point, budget has to make sense.\n\nOur Missed-Call Text-Back is $99/mo and usually pays for itself after one captured lead. Most guys see ROI in the first 30 days.\n\nIf it doesn't pay for itself in 60 days, I'll refund you. That's how confident I am.\n\n— Matt\n(313) 806-4952`;
+        draftBody = `Hey ${firstName} — fair point, budget has to make sense.\n\nOur Missed-Call Text-Back is $99/mo and usually pays for itself after one captured lead. Most guys see ROI in the first 30 days.\n\nIf it doesn't pay for itself in 60 days, I'll refund you. That's how confident I am.\n\n— Matt\n(313) 992-1219`;
       }
 
       // Save to ghost delay queue

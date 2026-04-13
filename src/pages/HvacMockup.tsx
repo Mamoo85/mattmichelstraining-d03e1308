@@ -211,7 +211,7 @@ const HvacMockup = () => {
           Matt Michels Web Design
         </Link>
         <span className="opacity-60">·</span>
-        <a href="tel:3138064952">313.806.4952</a>
+        <a href="tel:3139921219">313.992.1219</a>
       </div>
 
       {/* Emergency Banner */}

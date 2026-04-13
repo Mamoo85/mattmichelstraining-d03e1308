@@ -65,7 +65,7 @@ function buildRecovery1Email(productType: string, email: string): { subject: str
     <hr style="border:1px solid #e2e8f0;margin:20px 0;">
     <div style="display:flex;align-items:center;gap:10px;">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br><a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a></div>
+      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br><a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a></div>
     </div>
   </td></tr>
 </table></td></tr></table>
@@ -97,7 +97,7 @@ function buildRecovery2Email(productType: string): { subject: string; html: stri
     <hr style="border:1px solid #e2e8f0;margin:20px 0;">
     <div style="display:flex;align-items:center;gap:10px;">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br><a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a></div>
+      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br><a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a></div>
     </div>
   </td></tr>
 </table></td></tr></table>

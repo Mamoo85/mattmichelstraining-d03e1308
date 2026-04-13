@@ -60,7 +60,7 @@ serve(async (req) => {
             html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;line-height:1.8;color:#1e293b;max-width:520px;margin:0 auto;padding:24px 0;">
 <p>${draft.draft_body.replace(/\n/g, "<br>")}</p>
 <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;">
-  <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Detroit Web Agency · Grosse Pointe, MI<br>(313) 806-4952</div>
+  <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Detroit Web Agency · Grosse Pointe, MI<br>(313) 992-1219</div>
 </div>
 </div>`,
           }),

@@ -89,7 +89,7 @@ serve(async (req) => {
     </a>
     <p style="color:#64748b;font-size:13px;margin:0;">7-day free trial. Cancel anytime. The next lead in your area is either yours or it goes to someone who locked it.</p>
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:13px;color:#334155;">
-      <strong>Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13138064952" style="color:#00d4ff;">(313) 806-4952</a>
+      <strong>Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a>
     </div>
   </div>
 </div></body></html>`;

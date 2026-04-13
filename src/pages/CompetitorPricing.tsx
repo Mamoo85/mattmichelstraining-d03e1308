@@ -295,7 +295,7 @@ export default function CompetitorPricing() {
               <p className="font-bold text-foreground">Matt Michels</p>
               <p className="text-xs text-muted-foreground mb-3">Founder, M2 Development · Grosse Pointe, MI</p>
               <p className="text-sm text-foreground leading-relaxed">
-                "I built this because I got tired of finding out a competitor changed their prices by accident — a client mentioned it, or I stumbled on it myself weeks later. Now I know the same week it happens. Questions? Text me at (313) 806-4952."
+                "I built this because I got tired of finding out a competitor changed their prices by accident — a client mentioned it, or I stumbled on it myself weeks later. Now I know the same week it happens. Questions? Text me at (313) 992-1219."
               </p>
             </div>
           </div>

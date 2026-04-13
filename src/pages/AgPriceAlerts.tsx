@@ -76,7 +76,7 @@ export default function AgPriceAlerts() {
           Your price targets are set. The moment a commodity crosses your threshold, you'll get a text. Your first morning brief arrives tomorrow before markets open.
         </p>
         <p className="mt-4 text-sm text-muted-foreground">
-          Questions? <a href="tel:+13138064952" className="text-primary font-medium">(313) 806-4952</a>
+          Questions? <a href="tel:+13139921219" className="text-primary font-medium">(313) 992-1219</a>
         </p>
       </div>
     </div>

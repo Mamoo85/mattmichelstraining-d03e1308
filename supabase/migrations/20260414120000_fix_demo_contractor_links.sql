@@ -15,7 +15,7 @@ BEGIN
   WHERE trade = 'hvac' AND email = 'matt@detroitwebagent.com' LIMIT 1;
   IF v_id IS NULL THEN
     INSERT INTO contractor_clients (name, business_name, email, phone, trade, city, state, active, onboarded_at)
-    VALUES ('John Murphy', 'Metro Detroit HVAC LLC', 'matt@detroitwebagent.com', '+13138064952', 'hvac', 'Detroit', 'MI', true, now())
+    VALUES ('John Murphy', 'Metro Detroit HVAC LLC', 'matt@detroitwebagent.com', '+13139921219', 'hvac', 'Detroit', 'MI', true, now())
     RETURNING id INTO v_id;
   END IF;
   UPDATE contractor_lead_sites SET active_contractor_id = v_id WHERE LOWER(trade) = 'hvac';
@@ -25,7 +25,7 @@ BEGIN
   WHERE trade = 'plumbing' AND email = 'matt@detroitwebagent.com' LIMIT 1;
   IF v_id IS NULL THEN
     INSERT INTO contractor_clients (name, business_name, email, phone, trade, city, state, active, onboarded_at)
-    VALUES ('Dave Kowalski', 'Great Lakes Plumbing Co', 'matt@detroitwebagent.com', '+13138064952', 'plumbing', 'Detroit', 'MI', true, now())
+    VALUES ('Dave Kowalski', 'Great Lakes Plumbing Co', 'matt@detroitwebagent.com', '+13139921219', 'plumbing', 'Detroit', 'MI', true, now())
     RETURNING id INTO v_id;
   END IF;
   UPDATE contractor_lead_sites SET active_contractor_id = v_id WHERE LOWER(trade) = 'plumbing';
@@ -35,7 +35,7 @@ BEGIN
   WHERE trade = 'roofing' AND email = 'matt@detroitwebagent.com' LIMIT 1;
   IF v_id IS NULL THEN
     INSERT INTO contractor_clients (name, business_name, email, phone, trade, city, state, active, onboarded_at)
-    VALUES ('Mike Szczepanski', 'Detroit Roofing Pros', 'matt@detroitwebagent.com', '+13138064952', 'roofing', 'Detroit', 'MI', true, now())
+    VALUES ('Mike Szczepanski', 'Detroit Roofing Pros', 'matt@detroitwebagent.com', '+13139921219', 'roofing', 'Detroit', 'MI', true, now())
     RETURNING id INTO v_id;
   END IF;
   UPDATE contractor_lead_sites SET active_contractor_id = v_id WHERE LOWER(trade) = 'roofing';
@@ -45,7 +45,7 @@ BEGIN
   WHERE trade = 'electrical' AND email = 'matt@detroitwebagent.com' LIMIT 1;
   IF v_id IS NULL THEN
     INSERT INTO contractor_clients (name, business_name, email, phone, trade, city, state, active, onboarded_at)
-    VALUES ('Tom Ostrowski', 'Motor City Electric Inc', 'matt@detroitwebagent.com', '+13138064952', 'electrical', 'Detroit', 'MI', true, now())
+    VALUES ('Tom Ostrowski', 'Motor City Electric Inc', 'matt@detroitwebagent.com', '+13139921219', 'electrical', 'Detroit', 'MI', true, now())
     RETURNING id INTO v_id;
   END IF;
   UPDATE contractor_lead_sites SET active_contractor_id = v_id WHERE LOWER(trade) = 'electrical';
@@ -55,7 +55,7 @@ BEGIN
   WHERE trade = 'boiler' AND email = 'matt@detroitwebagent.com' LIMIT 1;
   IF v_id IS NULL THEN
     INSERT INTO contractor_clients (name, business_name, email, phone, trade, city, state, active, onboarded_at)
-    VALUES ('Steve Grzelak', 'Michigan Boiler Works', 'matt@detroitwebagent.com', '+13138064952', 'boiler', 'Detroit', 'MI', true, now())
+    VALUES ('Steve Grzelak', 'Michigan Boiler Works', 'matt@detroitwebagent.com', '+13139921219', 'boiler', 'Detroit', 'MI', true, now())
     RETURNING id INTO v_id;
   END IF;
   UPDATE contractor_lead_sites SET active_contractor_id = v_id WHERE LOWER(trade) = 'boiler';

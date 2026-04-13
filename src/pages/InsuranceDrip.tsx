@@ -72,7 +72,7 @@ export default function InsuranceDrip() {
           Matt will send you a secure CSV upload link within 24 hours. Once your prospect list is in, the AI sequences launch automatically.
         </p>
         <p className="mt-4 text-sm text-muted-foreground">
-          Questions? <a href="tel:+13138064952" className="text-primary font-medium">(313) 806-4952</a>
+          Questions? <a href="tel:+13139921219" className="text-primary font-medium">(313) 992-1219</a>
         </p>
       </div>
     </div>

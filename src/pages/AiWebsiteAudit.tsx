@@ -37,7 +37,7 @@ export default function AiWebsiteAudit() {
             Check your inbox — your full website audit report will arrive within 60 seconds. Check your spam folder if you don't see it.
           </p>
           <p className="text-sm text-muted-foreground">
-            Questions? <a href="tel:3138064952" className="text-primary font-semibold">(313) 992-1219</a> — Matt responds personally.
+            Questions? <a href="tel:3139921219" className="text-primary font-semibold">(313) 992-1219</a> — Matt responds personally.
           </p>
           <a href="/ai-website-audit" className="mt-6 inline-block text-sm text-muted-foreground underline">Run another audit</a>
         </div>
@@ -154,7 +154,7 @@ export default function AiWebsiteAudit() {
 
             <div className="mt-8 p-4 bg-muted/40 rounded-lg border border-border">
               <p className="text-sm font-semibold text-foreground mb-1">Want help fixing what the audit finds?</p>
-              <p className="text-xs text-muted-foreground">Check out our <a href="/digital-foundation" className="text-primary font-semibold">Digital Foundation package</a> or call Matt: <a href="tel:3138064952" className="text-primary font-semibold">(313) 992-1219</a></p>
+              <p className="text-xs text-muted-foreground">Check out our <a href="/digital-foundation" className="text-primary font-semibold">Digital Foundation package</a> or call Matt: <a href="tel:3139921219" className="text-primary font-semibold">(313) 992-1219</a></p>
             </div>
           </div>
 
@@ -209,7 +209,7 @@ export default function AiWebsiteAudit() {
               Get My Audit <ArrowRight size={16} />
             </a>
             <p className="mt-4 text-xs text-muted-foreground">
-              Or call Matt: <a href="tel:3138064952" className="font-semibold text-primary">(313) 992-1219</a>
+              Or call Matt: <a href="tel:3139921219" className="font-semibold text-primary">(313) 992-1219</a>
             </p>
           </div>
         </section>

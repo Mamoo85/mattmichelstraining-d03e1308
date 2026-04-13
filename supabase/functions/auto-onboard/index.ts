@@ -419,7 +419,7 @@ function m2Email(bodyHtml: string): string {
     <h1 style="margin:0;color:#e8621a;font-size:18px;font-weight:800">M² Development</h1>
   </div>
   <div style="padding:24px 28px;color:#334155;font-size:14px;line-height:1.7">${bodyHtml}
-    <p style="margin-top:20px">Best,<br><strong>Matt Michels</strong><br><span style="color:#94a3b8;font-size:12px">M² Development · (313) 806-4952</span></p>
+    <p style="margin-top:20px">Best,<br><strong>Matt Michels</strong><br><span style="color:#94a3b8;font-size:12px">M² Development · (313) 992-1219</span></p>
   </div>
   <div style="padding:12px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center">
     <p style="margin:0;color:#94a3b8;font-size:11px">M² Development · Grosse Pointe, MI 48230</p>
@@ -438,7 +438,7 @@ function dwaEmail(bodyHtml: string): string {
   </div>
   <div style="padding:32px;color:#e2e8f0;font-size:15px;line-height:1.8">${bodyHtml}</div>
   <div style="padding:20px 32px;border-top:1px solid #1e3a5f;text-align:center">
-    <p style="margin:0;color:#4a6fa5;font-size:12px">Detroit Web Agency · Grosse Pointe Park, MI · (313) 806-4952</p>
+    <p style="margin:0;color:#4a6fa5;font-size:12px">Detroit Web Agency · Grosse Pointe Park, MI · (313) 992-1219</p>
     <p style="margin:6px 0 0;font-size:11px"><a href="https://detroitwebagent.com" style="color:#00d4ff;text-decoration:none">detroitwebagent.com</a>&nbsp;·&nbsp;<a href="mailto:matt@mattmichelstraining.com?subject=Unsubscribe" style="color:#4a6fa5;text-decoration:none">Unsubscribe</a></p>
   </div>
 </div></body></html>`;
@@ -485,7 +485,7 @@ function buildFieldServiceBody(
 
     <div style="border-top:1px solid #1e3a5f;padding-top:20px">
       <p style="color:#e2e8f0;font-size:14px;margin:0">— Matt Michels</p>
-      <p style="color:#4a6fa5;font-size:12px;margin:5px 0 0">Detroit Web Agency &nbsp;·&nbsp; (313) 806-4952 &nbsp;·&nbsp; <a href="mailto:matt@detroitwebagent.com" style="color:#00d4ff;text-decoration:none">matt@detroitwebagent.com</a></p>
+      <p style="color:#4a6fa5;font-size:12px;margin:5px 0 0">Detroit Web Agency &nbsp;·&nbsp; (313) 992-1219 &nbsp;·&nbsp; <a href="mailto:matt@detroitwebagent.com" style="color:#00d4ff;text-decoration:none">matt@detroitwebagent.com</a></p>
     </div>`;
 }
 

@@ -295,7 +295,7 @@ function buildDigestEmail(
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt" style="width:40px;height:40px;border-radius:50%;object-fit:cover" />
       <div style="font-size:12px;color:#64748b">
         <strong style="color:#1e293b">Matt Michels</strong> · M² Development<br>
-        Grosse Pointe, MI · <a href="tel:+13138064952" style="color:#1d4ed8">(313) 806-4952</a>
+        Grosse Pointe, MI · <a href="tel:+13139921219" style="color:#1d4ed8">(313) 992-1219</a>
       </div>
     </div>
     <p style="margin:10px 0 0;font-size:11px;color:#94a3b8">You're receiving this because you subscribed to the Government Contract Opportunity Monitor. Reply to adjust your filters.</p>
@@ -344,7 +344,7 @@ function buildDeadlineAlertEmail(
     </table>
   </div>
   <div style="padding:16px 28px;background:#fef2f2;border-top:1px solid #fca5a5">
-    <p style="margin:0;font-size:12px;color:#7f1d1d">M² Development Government Contract Monitor · <a href="tel:+13138064952" style="color:#dc2626">(313) 806-4952</a></p>
+    <p style="margin:0;font-size:12px;color:#7f1d1d">M² Development Government Contract Monitor · <a href="tel:+13139921219" style="color:#dc2626">(313) 992-1219</a></p>
   </div>
 </div>
 </body></html>`;

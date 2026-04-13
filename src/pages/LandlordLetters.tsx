@@ -86,7 +86,7 @@ export default function LandlordLetters() {
           Matt will send you access within 24 hours. Your first letter can be ready in 90 seconds — just describe the situation and the AI handles the rest.
         </p>
         <p className="mt-4 text-sm text-muted-foreground">
-          Questions? <a href="tel:+13138064952" className="text-primary font-medium">(313) 806-4952</a>
+          Questions? <a href="tel:+13139921219" className="text-primary font-medium">(313) 992-1219</a>
         </p>
       </div>
     </div>

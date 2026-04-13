@@ -12,7 +12,7 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
-const MATT_CELL = "+13138064952";
+const MATT_CELL = "+13139921219";
 const FROM_EMAIL = "TechAlert <matt@detroitwebagent.com>";
 
 const corsHeaders = {
@@ -69,7 +69,7 @@ serve(async (req) => {
 <p style="color:#94a3b8;font-size:15px;line-height:1.7;margin:0 0 20px;">For the next 72 hours, TechAlert will scan Michigan MIOSHA license records, Apollo, and live job boards every morning for available ${(target_roles || ["tradespeople"])[0]}s in your area.</p>
 <p style="color:#94a3b8;font-size:15px;line-height:1.7;margin:0 0 20px;">When we find a score 7+ candidate, you'll get an email instantly. Score 5-6 goes in the daily digest.</p>
 <p style="color:#e2e8f0;font-size:15px;margin:0 0 24px;"><strong>Trial ends:</strong> ${new Date(trialEndsAt).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })} at ${new Date(trialEndsAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Detroit" })} ET</p>
-<p style="color:#64748b;font-size:13px;margin:0;">Questions? Text Matt: (313) 806-4952</p>
+<p style="color:#64748b;font-size:13px;margin:0;">Questions? Text Matt: (313) 992-1219</p>
 </div>`,
         }),
       });
@@ -80,7 +80,7 @@ serve(async (req) => {
       await sendSMS(
         phone,
         TWILIO_PHONE_NUMBER,
-        `Hey ${firstName} — your TechAlert 3-day trial is live. We'll text you when we find a solid candidate. Trial runs 72 hours. — Matt (313) 806-4952`,
+        `Hey ${firstName} — your TechAlert 3-day trial is live. We'll text you when we find a solid candidate. Trial runs 72 hours. — Matt (313) 992-1219`,
         "hire_alert"
       );
     }

@@ -76,17 +76,17 @@ function buildAgreementEmail(lead: any): string {
 
       <div style="background:#f8f8f8;border-left:3px solid #f97316;padding:16px 20px;margin:24px 0;">
         <p style="margin:0;color:#1a1a2e;font-size:14px;font-weight:bold;">Ready to move forward?</p>
-        <p style="margin:8px 0 0;color:#666;font-size:13px;">Reply to this email or call/text (313) 806-4952 and I'll send a payment link for the deposit.</p>
+        <p style="margin:8px 0 0;color:#666;font-size:13px;">Reply to this email or call/text (313) 992-1219 and I'll send a payment link for the deposit.</p>
       </div>
 
       <p style="color:#1a1a2e;font-size:13px;margin-top:24px;">Looking forward to working with you,</p>
       <p style="color:#f97316;font-size:14px;font-weight:bold;margin-top:4px;">— Matt Michels</p>
-      <p style="color:#888;font-size:12px;">(313) 806-4952 · matt@mattmichelstraining.com · mattmichelstraining.com</p>
+      <p style="color:#888;font-size:12px;">(313) 992-1219 · matt@mattmichelstraining.com · mattmichelstraining.com</p>
     </td></tr>
   </table>
 </td></tr>
 </table>
-<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>
+<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 992-1219</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>
 </body>
 </html>`;
 }

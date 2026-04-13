@@ -6,7 +6,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
-const MATT_PERSONAL = "+13138064952";
+const MATT_PERSONAL = "+13139921219";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 
 const TWIML_HEADERS = { "Content-Type": "text/xml" };

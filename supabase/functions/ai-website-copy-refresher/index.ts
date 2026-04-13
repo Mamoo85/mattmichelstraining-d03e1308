@@ -116,7 +116,7 @@ function buildClientEmail(client: CopyClient, copyHtml: string, month: string): 
             alt="Matt Michels" width="48" height="48"
             style="border-radius:50%;vertical-align:middle;margin-right:12px;">
           <span style="font-size:13px;color:#475569;vertical-align:middle;">
-            Matt Michels · matt@mattmichelstraining.com · (313) 806-4952
+            Matt Michels · matt@mattmichelstraining.com · (313) 992-1219
           </span>
         </td>
       </tr>

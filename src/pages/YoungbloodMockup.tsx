@@ -96,7 +96,7 @@ const YoungbloodMockup = () => {
 
       {/* ── Demo Banner ── */}
       <div className="fixed top-0 left-0 right-0 z-[150] text-center py-2 px-4 text-xs font-bold tracking-widest" style={{ background: "#0ea5e9", color: "#0a0f1a" }}>
-        REDESIGN CONCEPT · Matt Michels Web Design · 313.806.4952
+        REDESIGN CONCEPT · Matt Michels Web Design · 313.992.1219
       </div>
 
       {/* ── Alt Design Switcher ── */}
@@ -123,7 +123,7 @@ const YoungbloodMockup = () => {
             ))}
           </div>
           <div className="px-4 py-2.5 border-t" style={{ borderColor: "rgba(255,255,255,.07)" }}>
-            <a href="tel:3138064952" className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,.3)" }}>Matt — (313) 806-4952</a>
+            <a href="tel:3139921219" className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,.3)" }}>Matt — (313) 992-1219</a>
           </div>
         </div>
       </div>

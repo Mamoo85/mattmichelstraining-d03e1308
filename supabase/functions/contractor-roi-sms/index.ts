@@ -79,7 +79,7 @@ serve(async (req) => {
       await sendSMS(
         contractor.phone,
         TWILIO_PHONE_NUMBER,
-        `Your weekly results: ${highlights.join(", ")}. Full report: ${reportUrl} — Matt (313) 806-4952`,
+        `Your weekly results: ${highlights.join(", ")}. Full report: ${reportUrl} — Matt (313) 992-1219`,
         "roi_scorecard"
       );
 

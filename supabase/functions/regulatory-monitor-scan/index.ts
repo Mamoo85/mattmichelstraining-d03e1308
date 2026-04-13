@@ -240,7 +240,7 @@ function buildDigestEmail(opts: {
         </p>
         <p style="margin:0;font-size:13px;color:#64748b">
           Questions? Reply to this email or text Matt at
-          <a href="tel:+13138064952" style="color:#c9a227">(313) 806-4952</a>.
+          <a href="tel:+13139921219" style="color:#c9a227">(313) 992-1219</a>.
         </p>
       </td></tr>
     </table>
@@ -252,7 +252,7 @@ function buildDigestEmail(opts: {
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:44px;height:44px;border-radius:50%;object-fit:cover">
       <div style="font-size:13px;color:#475569">
         <strong style="color:#1a2744">Matt Michels</strong><br>
-        Grosse Pointe, MI · <a href="tel:+13138064952" style="color:#c9a227">(313) 806-4952</a>
+        Grosse Pointe, MI · <a href="tel:+13139921219" style="color:#c9a227">(313) 992-1219</a>
       </div>
       <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M² Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain">
     </div>

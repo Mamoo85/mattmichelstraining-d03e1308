@@ -51,7 +51,7 @@ serve(async (req) => {
       <p style="font-size:14px;color:#666;">Book at <a href="https://www.mattmichelstraining.com/schedule" style="color:#e8621a;">mattmichelstraining.com/schedule</a></p>
     </div>
     <div style="padding:16px;background:#f8fafc;text-align:center;font-size:12px;color:#94a3b8;">
-      Grosse Pointe, MI · (313) 806-4952 · matt@mattmichelstraining.com
+      Grosse Pointe, MI · (313) 992-1219 · matt@mattmichelstraining.com
     </div>
   </div>
 </body>

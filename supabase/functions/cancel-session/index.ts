@@ -11,7 +11,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 
 
-const EMAIL_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>`;
+const EMAIL_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 992-1219</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>`;
 
 async function sendEmail(to: string, subject: string, html: string) {
   if (!RESEND_API_KEY) return;
@@ -118,7 +118,7 @@ serve(async (req) => {
           <p>Your training session on <strong>${dateStr}</strong> at <strong>${timeStr}</strong> has been cancelled by Coach Matt.</p>
           <p>A <strong>full refund of $${(booking.amount_cents / 100).toFixed(0)}</strong> has been issued to your original payment method. It may take 5-10 business days to appear.</p>
           <p>We apologize for the inconvenience. Feel free to book another session at your convenience.</p>
-          <p style="color:#666;font-size:12px;margin-top:20px;">M² Training · (313) 806-4952</p>
+          <p style="color:#666;font-size:12px;margin-top:20px;">M² Training · (313) 992-1219</p>
         </div>`
       );
 

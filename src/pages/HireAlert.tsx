@@ -82,7 +82,7 @@ export default function HireAlert() {
       {/* Nav */}
       <nav style={{ padding: "16px 24px", borderBottom: "1px solid #1e3a5f", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ color: "#00d4ff", fontWeight: 700, fontSize: 18, letterSpacing: 1 }}>DETROIT WEB AGENCY</span>
-        <a href="tel:3138064952" style={{ color: "#00d4ff", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>(313) 992-1219</a>
+        <a href="tel:3139921219" style={{ color: "#00d4ff", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>(313) 992-1219</a>
       </nav>
 
       {/* Hero */}
@@ -105,7 +105,7 @@ export default function HireAlert() {
           <a href="#checkout" style={{ background: "#00d4ff", color: "#0a1628", padding: "14px 32px", borderRadius: 8, fontWeight: 800, fontSize: 16, textDecoration: "none" }}>
             Start Getting Alerts →
           </a>
-          <a href="tel:3138064952" style={{ background: "transparent", border: "2px solid #00d4ff", color: "#00d4ff", padding: "14px 32px", borderRadius: 8, fontWeight: 700, fontSize: 16, textDecoration: "none" }}>
+          <a href="tel:3139921219" style={{ background: "transparent", border: "2px solid #00d4ff", color: "#00d4ff", padding: "14px 32px", borderRadius: 8, fontWeight: 700, fontSize: 16, textDecoration: "none" }}>
             Call Matt
           </a>
         </div>

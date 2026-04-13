@@ -91,7 +91,7 @@ ${candidateCount > 0
 }
 <p style="color:#94a3b8;font-size:15px;line-height:1.7;margin:0 0 24px;">Keep TechAlert running for $99/mo — cancel anytime. No setup fees.</p>
 <a href="${checkoutUrl}" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 28px;border-radius:8px;font-weight:800;font-size:15px;text-decoration:none;">Upgrade to $99/mo →</a>
-<p style="color:#475569;font-size:13px;margin:24px 0 0;">Questions? Text me: (313) 806-4952</p>
+<p style="color:#475569;font-size:13px;margin:24px 0 0;">Questions? Text me: (313) 992-1219</p>
 </div>`,
             }),
           });

@@ -497,7 +497,7 @@ const WebDesignAgency = () => {
                 </div>
                 <h2 className="text-2xl font-bold mb-3">Got it. I'll call you today.</h2>
                 <p className="text-muted-foreground mb-4">I personally review every inquiry. You'll hear from me within a few hours — usually within the hour during business days.</p>
-                <p className="text-sm font-semibold">Can't wait? Call or text me directly: <a href="tel:3138064952" className="text-primary hover:underline">{PHONE}</a></p>
+                <p className="text-sm font-semibold">Can't wait? Call or text me directly: <a href="tel:3139921219" className="text-primary hover:underline">{PHONE}</a></p>
               </div>
             ) : (
               <>

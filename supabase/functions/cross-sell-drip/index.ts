@@ -56,7 +56,7 @@ serve(async (req) => {
                 <li>24/7 automated call routing so you never miss a customer</li>
               </ul>
               <p><a href="https://www.detroitwebagent.com/ai-website-audit">Get Your Free Diagnostic →</a></p>
-              <p>— Matt Michels, Lead Web Agent<br/>Detroit Web Agency | Grosse Pointe, MI | (313) 806-4952</p>`,
+              <p>— Matt Michels, Lead Web Agent<br/>Detroit Web Agency | Grosse Pointe, MI | (313) 992-1219</p>`,
           }),
         });
 

@@ -160,7 +160,7 @@ serve(async (req) => {
                 html: `<div style="font-family:sans-serif;max-width:600px;margin:auto;padding:24px;">
                   <p>Hey ${client.business_name ? client.business_name.split(' ')[0] : 'there'},</p>
                   <p>I noticed your ${product.name} service hasn't sent its first delivery yet. I want to make sure everything is set up right.</p>
-                  <p>Can you reply to this email or call me at (313) 806-4952? I'll personally make sure you're getting value from day one.</p>
+                  <p>Can you reply to this email or call me at (313) 992-1219? I'll personally make sure you're getting value from day one.</p>
                   <p>— Matt</p>
                 </div>`,
               }),

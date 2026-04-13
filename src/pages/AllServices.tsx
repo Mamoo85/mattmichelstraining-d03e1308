@@ -114,7 +114,7 @@ export default function AllServices() {
             Every service below is fully automated — set it up once and it works around the clock. No ongoing work required on your end.
           </p>
           <a
-            href="tel:3138064952"
+            href="tel:3139921219"
             className="inline-flex items-center gap-2 font-semibold px-6 py-3 rounded-lg text-base transition-all duration-300"
             style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 30px rgba(6,182,212,0.3)" }}
           >
@@ -176,7 +176,7 @@ export default function AllServices() {
             Text Matt directly and he'll point you to the right service for your business.
           </p>
           <a
-            href="sms:3138064952"
+            href="sms:3139921219"
             className="inline-flex items-center gap-2 font-bold px-8 py-3 rounded-lg text-lg transition-all duration-300"
             style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 30px rgba(6,182,212,0.3)" }}
           >

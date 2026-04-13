@@ -87,7 +87,7 @@ serve(async (req) => {
                       <p>This means they're getting the calls and leads that should be yours.</p>
                       <h3>Fix This Now</h3>
                       <p><a href="https://www.detroitwebagent.com/seo-guard">Upgrade to SEO Sprint →</a></p>
-                      <p>— Matt Michels, Lead Web Agent<br/>Detroit Web Agency | (313) 806-4952</p>`,
+                      <p>— Matt Michels, Lead Web Agent<br/>Detroit Web Agency | (313) 992-1219</p>`,
                   }),
                 });
                 alertsSent++;

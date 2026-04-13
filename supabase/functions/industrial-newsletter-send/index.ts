@@ -143,7 +143,7 @@ ${briefingHtml
     </div>
 
     <hr style="border:1px solid #e2e8f0;margin:24px 0;">
-    <p style="font-size:13px;color:#64748b;line-height:1.7;">See a trend worth covering? Reply to this email or text Matt at <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
+    <p style="font-size:13px;color:#64748b;line-height:1.7;">See a trend worth covering? Reply to this email or text Matt at <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a>.</p>
 
   </td></tr>
 
@@ -151,7 +151,7 @@ ${briefingHtml
   <tr><td style="padding:16px 28px;border:1px solid #e2e8f0;border-top:none;">
     <div style="display:flex;align-items:center;gap:12px;">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 806-4952</div>
+      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 992-1219</div>
         <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
     </div>
   </td></tr>

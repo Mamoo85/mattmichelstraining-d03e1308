@@ -49,7 +49,7 @@ export const GUIDES: Record<string, ProductGuide> = {
         description: "Ask customer to add matt@mattmichelstraining.com as a Manager on their Google Business Profile.",
         action: "send_email",
         emailSubject: "Action needed: Add me to your Google Business Profile",
-        emailBody: `Hey [NAME],\n\nYour GBP posting service is set up on my end. To start pushing posts to your Google Business Profile I just need you to add my Google account as a Manager.\n\nHere's how (takes 2 minutes):\n1. Go to business.google.com\n2. Click your business\n3. Business Profile settings → Managers → Add\n4. Enter: matt@mattmichelstraining.com\n5. Set role to Manager → Invite\n\nI'll take it from there.\n\n— Matt\n(313) 806-4952`,
+        emailBody: `Hey [NAME],\n\nYour GBP posting service is set up on my end. To start pushing posts to your Google Business Profile I just need you to add my Google account as a Manager.\n\nHere's how (takes 2 minutes):\n1. Go to business.google.com\n2. Click your business\n3. Business Profile settings → Managers → Add\n4. Enter: matt@mattmichelstraining.com\n5. Set role to Manager → Invite\n\nI'll take it from there.\n\n— Matt\n(313) 992-1219`,
         nextStage: "📧 Awaiting GBP Access",
       },
       {
@@ -95,7 +95,7 @@ export const GUIDES: Record<string, ProductGuide> = {
         description: "Email customer the link to connect their Facebook, Instagram, and LinkedIn accounts.",
         action: "send_email",
         emailSubject: "Connect your social accounts — 2 minutes",
-        emailBody: `Hey [NAME],\n\nYour Social Media AI service is active! To start posting automatically I need you to connect your accounts.\n\nConnect here:\nhttps://mattmichelstraining.com/social-connect\n\nYou'll link Facebook, Instagram, and LinkedIn in one quick flow. Once connected I'll post 3x per week automatically — Mon, Wed, Fri.\n\n— Matt\n(313) 806-4952`,
+        emailBody: `Hey [NAME],\n\nYour Social Media AI service is active! To start posting automatically I need you to connect your accounts.\n\nConnect here:\nhttps://mattmichelstraining.com/social-connect\n\nYou'll link Facebook, Instagram, and LinkedIn in one quick flow. Once connected I'll post 3x per week automatically — Mon, Wed, Fri.\n\n— Matt\n(313) 992-1219`,
         nextStage: "📧 Awaiting Account Connection",
       },
       {
@@ -133,7 +133,7 @@ export const GUIDES: Record<string, ProductGuide> = {
         description: "Email the customer asking for the phone number customers call.",
         action: "send_email",
         emailSubject: "Quick question — Missed Call SMS setup",
-        emailBody: `Hey [NAME],\n\nYour Missed Call Text-Back is ready. I just need one thing:\n\nWhat's your main business phone number — the one customers call?\n\nReply here or text me at (313) 806-4952 and I'll have it live same day.\n\n— Matt`,
+        emailBody: `Hey [NAME],\n\nYour Missed Call Text-Back is ready. I just need one thing:\n\nWhat's your main business phone number — the one customers call?\n\nReply here or text me at (313) 992-1219 and I'll have it live same day.\n\n— Matt`,
         nextStage: "📧 Awaiting Phone Number",
       },
       {
@@ -157,7 +157,7 @@ export const GUIDES: Record<string, ProductGuide> = {
         description: "Let the customer know it's live and working.",
         action: "send_email",
         emailSubject: "Your Missed Call SMS is live ✓",
-        emailBody: `Hey [NAME],\n\nYou're all set — Missed Call Text-Back is live.\n\nAnytime someone calls and you don't answer, they'll automatically get a text within 60 seconds.\n\nLet me know if you have any questions.\n\n— Matt\n(313) 806-4952`,
+        emailBody: `Hey [NAME],\n\nYou're all set — Missed Call Text-Back is live.\n\nAnytime someone calls and you don't answer, they'll automatically get a text within 60 seconds.\n\nLet me know if you have any questions.\n\n— Matt\n(313) 992-1219`,
         nextStage: "✅ Active",
       },
     ],
@@ -217,7 +217,7 @@ export const GUIDES: Record<string, ProductGuide> = {
         description: "Email the client to collect brand details, goals, content, and assets.",
         action: "send_email",
         emailSubject: "Let's build your website — quick intake inside",
-        emailBody: `Hey [NAME],\n\nExcited to get started! Before I dive in, I need a few things:\n\n1. Business name and tagline\n2. Primary service(s) or product(s)\n3. Top 3 competitors\n4. Logo (attach or link)\n5. Brand colors (or preferred scheme)\n6. 2-3 websites you like the look of\n7. #1 goal of the site (book calls, generate leads, sell products)\n8. Any photos (attach or link)\n\nOnce I have these I'll move fast.\n\n— Matt\n(313) 806-4952`,
+        emailBody: `Hey [NAME],\n\nExcited to get started! Before I dive in, I need a few things:\n\n1. Business name and tagline\n2. Primary service(s) or product(s)\n3. Top 3 competitors\n4. Logo (attach or link)\n5. Brand colors (or preferred scheme)\n6. 2-3 websites you like the look of\n7. #1 goal of the site (book calls, generate leads, sell products)\n8. Any photos (attach or link)\n\nOnce I have these I'll move fast.\n\n— Matt\n(313) 992-1219`,
         nextStage: "📋 Awaiting Intake",
       },
       {
@@ -239,7 +239,7 @@ export const GUIDES: Record<string, ProductGuide> = {
         description: "Send the client a link to review before launch.",
         action: "send_email",
         emailSubject: "Your website preview is ready",
-        emailBody: `Hey [NAME],\n\nYour site is ready for review!\n\nPreview: [PASTE PREVIEW URL]\n\nLet me know any changes within 48 hours. I'll do up to 2 rounds of revisions then we launch.\n\n— Matt\n(313) 806-4952`,
+        emailBody: `Hey [NAME],\n\nYour site is ready for review!\n\nPreview: [PASTE PREVIEW URL]\n\nLet me know any changes within 48 hours. I'll do up to 2 rounds of revisions then we launch.\n\n— Matt\n(313) 992-1219`,
         nextStage: "📝 Revisions",
       },
       {
@@ -254,7 +254,7 @@ export const GUIDES: Record<string, ProductGuide> = {
         description: "Point their domain live, then email asking for a Google review.",
         action: "send_email",
         emailSubject: "Your website is live! One small favor...",
-        emailBody: `Hey [NAME],\n\nYour site is live!\n\nIf you're happy with it, I'd really appreciate a quick Google review:\nhttps://g.page/r/[YOUR_REVIEW_LINK]\n\nTakes 30 seconds and helps other local businesses find me.\n\nThanks for trusting me with your online presence.\n\n— Matt\n(313) 806-4952`,
+        emailBody: `Hey [NAME],\n\nYour site is live!\n\nIf you're happy with it, I'd really appreciate a quick Google review:\nhttps://g.page/r/[YOUR_REVIEW_LINK]\n\nTakes 30 seconds and helps other local businesses find me.\n\nThanks for trusting me with your online presence.\n\n— Matt\n(313) 992-1219`,
         nextStage: "✅ Active",
       },
     ],
@@ -284,7 +284,7 @@ export const GUIDES: Record<string, ProductGuide> = {
         description: "Set expectations: leads will arrive via email/SMS as they come in.",
         action: "send_email",
         emailSubject: "Your contractor lead service is active",
-        emailBody: `Hey [NAME],\n\nYour exclusive contractor lead service is active.\n\nHere's how it works:\n• When a new lead comes in for your trade in your area, you'll get an instant email and/or text\n• You'll have the lead's name, phone, and job description\n• Call or text them immediately — speed to lead wins the job\n\nFirst leads should start arriving within 48 hours.\n\n— Matt\n(313) 806-4952`,
+        emailBody: `Hey [NAME],\n\nYour exclusive contractor lead service is active.\n\nHere's how it works:\n• When a new lead comes in for your trade in your area, you'll get an instant email and/or text\n• You'll have the lead's name, phone, and job description\n• Call or text them immediately — speed to lead wins the job\n\nFirst leads should start arriving within 48 hours.\n\n— Matt\n(313) 992-1219`,
         nextStage: "✅ Active",
       },
     ],
@@ -308,7 +308,7 @@ export const GUIDES: Record<string, ProductGuide> = {
         description: "Email the customer asking for their contact list and business details.",
         action: "send_email",
         emailSubject: "Quick setup — just need your contact list",
-        emailBody: `Hey [NAME],\n\nYour SMS service is ready to go. I just need:\n\n1. Your customer phone list (spreadsheet or CSV)\n2. Your business name as you want it to appear in texts\n3. Your business hours\n\nReply with these and I'll have everything running within 24 hours.\n\n— Matt\n(313) 806-4952`,
+        emailBody: `Hey [NAME],\n\nYour SMS service is ready to go. I just need:\n\n1. Your customer phone list (spreadsheet or CSV)\n2. Your business name as you want it to appear in texts\n3. Your business hours\n\nReply with these and I'll have everything running within 24 hours.\n\n— Matt\n(313) 992-1219`,
         nextStage: "📧 Awaiting Info",
       },
       {
@@ -340,7 +340,7 @@ export const GUIDES: Record<string, ProductGuide> = {
         description: "Collect brand info, goals, content, and assets for the website build.",
         action: "send_email",
         emailSubject: "Let's build your digital foundation — quick intake",
-        emailBody: `Hey [NAME],\n\nExcited to get started on your Digital Foundation package! This includes your website, Google Business Profile posting, and Missed Call Text-Back.\n\nFirst, I need a few things for the website:\n\n1. Business name and tagline\n2. Primary services\n3. Logo and brand colors\n4. Photos of your work/team\n5. Your main business phone number\n6. Google Business Profile login (I'll help if you don't have one)\n\nOnce I have these I'll move fast.\n\n— Matt\n(313) 806-4952`,
+        emailBody: `Hey [NAME],\n\nExcited to get started on your Digital Foundation package! This includes your website, Google Business Profile posting, and Missed Call Text-Back.\n\nFirst, I need a few things for the website:\n\n1. Business name and tagline\n2. Primary services\n3. Logo and brand colors\n4. Photos of your work/team\n5. Your main business phone number\n6. Google Business Profile login (I'll help if you don't have one)\n\nOnce I have these I'll move fast.\n\n— Matt\n(313) 992-1219`,
         nextStage: "📋 Awaiting Intake",
       },
       {
@@ -392,7 +392,7 @@ export const DEFAULT_GUIDE: ProductGuide = {
       description: "Email the customer confirming their purchase and explaining what happens next.",
       action: "send_email",
       emailSubject: "Your service is being set up",
-      emailBody: `Hey [NAME],\n\nThanks for signing up! I'm setting up your service now and will be in touch within 24 hours with next steps.\n\nQuestions? Reply here or text (313) 806-4952.\n\n— Matt`,
+      emailBody: `Hey [NAME],\n\nThanks for signing up! I'm setting up your service now and will be in touch within 24 hours with next steps.\n\nQuestions? Reply here or text (313) 992-1219.\n\n— Matt`,
       nextStage: "📧 Contacted",
     },
     {

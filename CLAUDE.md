@@ -311,8 +311,12 @@ git fetch origin main && git checkout origin/main -- knowledge/
 - `knowledge/TechAlert_Value_Proposition.md` — TechAlert pitch angles, objection handling, ROI math, market gap analysis, legal status
 
 ## Owner
-**Matt Michels** — Grosse Pointe, MI | matt@mattmichelstraining.com | (313) 806-4952
+**Matt Michels** — Grosse Pointe, MI | matt@mattmichelstraining.com | (313) 806-4952 (personal)
 Family: wife + young son. Local guy. 10+ years B2B field sales background.
+
+## Phone Numbers — IMPORTANT
+- **DWA Work number**: (313) 992-1219 / `+13139921219` — Twilio A2P registered. Use in ALL customer-facing content: email signatures, SMS bodies shown to contractors/homeowners, product pages, website copy.
+- **Matt personal**: (313) 806-4952 / `+13138064952` — internal use only. Configured as `ADMIN_PHONE` env var (internal alerts TO Matt). Also used as `MATT_CELL` in `ai-reply-detector` for AT&T call-forwarding detection. NEVER show this in customer-facing content.
 
 ## The Goal
 $10k+/mo fully automated income. Matt's only job: return calls, texts, and emails. Everything else runs itself.

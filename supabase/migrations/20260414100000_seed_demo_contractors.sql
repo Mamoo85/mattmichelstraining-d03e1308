@@ -14,11 +14,11 @@ BEGIN
   -- ── Fake contractor clients ────────────────────────────────────────────────
   INSERT INTO contractor_clients (id, name, business_name, email, phone, trade, city, state, active, onboarded_at)
   VALUES
-    (hvac_id,       'John Murphy',     'Metro Detroit HVAC LLC',     'matt@detroitwebagent.com', '+13138064952', 'hvac',        'Detroit', 'MI', true, now()),
-    (plumbing_id,   'Dave Kowalski',   'Great Lakes Plumbing Co',    'matt@detroitwebagent.com', '+13138064952', 'plumbing',    'Detroit', 'MI', true, now()),
-    (roofing_id,    'Mike Szczepanski','Detroit Roofing Pros',        'matt@detroitwebagent.com', '+13138064952', 'roofing',     'Detroit', 'MI', true, now()),
-    (electrical_id, 'Tom Ostrowski',   'Motor City Electric Inc',     'matt@detroitwebagent.com', '+13138064952', 'electrical',  'Detroit', 'MI', true, now()),
-    (boiler_id,     'Steve Grzelak',   'Michigan Boiler Works',       'matt@detroitwebagent.com', '+13138064952', 'boiler',      'Detroit', 'MI', true, now())
+    (hvac_id,       'John Murphy',     'Metro Detroit HVAC LLC',     'matt@detroitwebagent.com', '+13139921219', 'hvac',        'Detroit', 'MI', true, now()),
+    (plumbing_id,   'Dave Kowalski',   'Great Lakes Plumbing Co',    'matt@detroitwebagent.com', '+13139921219', 'plumbing',    'Detroit', 'MI', true, now()),
+    (roofing_id,    'Mike Szczepanski','Detroit Roofing Pros',        'matt@detroitwebagent.com', '+13139921219', 'roofing',     'Detroit', 'MI', true, now()),
+    (electrical_id, 'Tom Ostrowski',   'Motor City Electric Inc',     'matt@detroitwebagent.com', '+13139921219', 'electrical',  'Detroit', 'MI', true, now()),
+    (boiler_id,     'Steve Grzelak',   'Michigan Boiler Works',       'matt@detroitwebagent.com', '+13139921219', 'boiler',      'Detroit', 'MI', true, now())
   ON CONFLICT DO NOTHING;
 
   -- ── Lead sites — Metro Detroit territories ────────────────────────────────

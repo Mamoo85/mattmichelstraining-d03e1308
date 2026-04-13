@@ -110,7 +110,7 @@ serve(async (req) => {
   <p style="color:#64748b;font-size:13px;margin:0;">Contact info locked — upgrade to unlock</p>
 </div>
 <a href="${checkoutUrl}" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 28px;border-radius:8px;font-weight:800;font-size:15px;text-decoration:none;">Unlock for $99/mo →</a>
-<p style="color:#475569;font-size:13px;margin:24px 0 0;">Cancel anytime. No contracts. Text Matt: (313) 806-4952</p>
+<p style="color:#475569;font-size:13px;margin:24px 0 0;">Cancel anytime. No contracts. Text Matt: (313) 992-1219</p>
 </div>`,
             }),
           });

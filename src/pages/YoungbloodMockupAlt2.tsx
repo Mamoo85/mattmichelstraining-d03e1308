@@ -84,7 +84,7 @@ export default function YoungbloodMockupAlt2() {
 
       {/* Demo banner */}
       <div className="fixed top-0 left-0 right-0 z-[150] text-center py-2 px-4 text-xs font-bold tracking-widest" style={{ background: BLUE, color: WHITE }}>
-        REDESIGN CONCEPT · Matt Michels Web Design · 313.806.4952
+        REDESIGN CONCEPT · Matt Michels Web Design · 313.992.1219
       </div>
 
       {/* Header */}

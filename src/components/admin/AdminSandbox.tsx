@@ -84,61 +84,61 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
   // SMS Products
   review_monitor_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   sms_blast_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "business_type", label: "Business Type", default: "fitness training" },
     { key: "city", label: "City", default: "Grosse Pointe" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   noshow_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "booking_url", label: "Booking URL", default: "https://www.mattmichelstraining.com/schedule" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   estimate_drip_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "business_type", label: "Business Type", default: "fitness training" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   invoice_chaser_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   afterjob_drip_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "business_type", label: "Business Type", default: "fitness training" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   promo_blaster_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "business_type", label: "Business Type", default: "fitness training" },
     { key: "city", label: "City", default: "Grosse Pointe" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   referral_program_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "business_type", label: "Business Type", default: "fitness training" },
     { key: "reward_description", label: "Reward Description", default: "$25 off next session for both of you" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   slow_day_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "business_type", label: "Business Type", default: "fitness training" },
     { key: "promo_offer", label: "Promo Offer Text", default: "First session free this week only" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   homeowner_campaign_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "business_type", label: "Business Type", default: "fitness training" },
     { key: "service_area", label: "Service Area (zip codes)", default: "48236, 48230, 48224, Grosse Pointe area" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   // Autonomous products
   obituary_service_subscription: [
     { key: "funeralHomeName", label: "Funeral Home Name", default: "M2 Test Funeral Home" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   sermon_prep_subscription: [
     { key: "churchName", label: "Church Name", default: "M2 Test Church" },
@@ -255,19 +255,19 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
   seo_guard_subscription: [
     { key: "website_url", label: "Website URL", default: "https://mattmichelstraining.com" },
     { key: "keywords", label: "Keywords (comma separated)", default: "personal training grosse pointe, fitness coach detroit" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   // Wave 4
   storm_lead_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Test Roofing" },
     { key: "trade", label: "Trade (roofing, HVAC, etc.)", default: "roofing" },
     { key: "zip_codes", label: "Zip Codes to Monitor (comma separated)", default: "48236, 48230, 48224" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   recall_alert_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "product_categories", label: "Product Categories (food/vehicle/consumer)", default: "food, vehicle" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   permit_watch_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
@@ -286,7 +286,7 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
   crime_digest_subscription: [
     { key: "address", label: "Home Address", default: "123 Main St, Grosse Pointe, MI 48236" },
     { key: "radius_miles", label: "Radius (miles)", default: "2" },
-    { key: "phone", label: "Phone (optional)", default: "+13138064952" },
+    { key: "phone", label: "Phone (optional)", default: "+13139921219" },
   ],
   license_monitor_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development LLC" },

@@ -93,7 +93,7 @@ export default function DentalMockup() {
           Matt Michels Web Design
         </Link>
         <span style={{ opacity: 0.6 }}>·</span>
-        <a href="tel:3138064952" style={{ color: WHITE, textDecoration: "none", fontWeight: 700 }}>313.806.4952</a>
+        <a href="tel:3139921219" style={{ color: WHITE, textDecoration: "none", fontWeight: 700 }}>313.992.1219</a>
       </div>
 
       {/* ── Header ── */}

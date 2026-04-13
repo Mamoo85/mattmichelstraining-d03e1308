@@ -33,7 +33,7 @@ Worth a quick call this week?
 
 Matt Michels
 Detroit Web Agency
-(313) 806-4952`,
+(313) 992-1219`,
 
   (p: { business_name: string; city?: string; trade?: string; industry?: string }) => `Hi,
 
@@ -47,7 +47,7 @@ Happy to send a short demo — just reply here.
 
 Matt Michels
 Detroit Web Agency
-(313) 806-4952`,
+(313) 992-1219`,
 
   (p: { business_name: string; city?: string; trade?: string; industry?: string }) => `Hi,
 
@@ -57,7 +57,7 @@ Not sure which fits ${p.business_name || "your business"} best — could be all 
 
 Matt Michels
 Detroit Web Agency
-(313) 806-4952`,
+(313) 992-1219`,
 ];
 
 // ── Firecrawl with 5-second timeout (Zone 1 fix) ───────────────────────────
@@ -227,7 +227,7 @@ RULES:
 3. One specific observation about their business based on the website intel or trade
 4. Lead with the most compelling offer angle for their situation
 5. End with a soft CTA (quick call, reply to this email)
-6. Sign as: Matt Michels / Detroit Web Agency / (313) 806-4952
+6. Sign as: Matt Michels / Detroit Web Agency / (313) 992-1219
 7. Do NOT reference prior contact unless history shows a specific reply from them
 8. CRITICAL: Never use the words "AI", "artificial intelligence", "machine learning", or "algorithm" — use "system", "process", or "matching engine" instead
 9. Sound like a real person, not a mass email`;

@@ -578,7 +578,7 @@ async function sendAlertEmail(
           <td style="vertical-align:middle;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt"></td>
           <td style="padding-left:12px;vertical-align:middle;">
             <p style="margin:0;font-size:14px;font-weight:700;color:#fff;">Matt Michels</p>
-            <p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">Detroit Web Agency · <a href="tel:+13138064952" style="color:#00d4ff;text-decoration:none;">(313) 806-4952</a></p>
+            <p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;text-decoration:none;">(313) 992-1219</a></p>
           </td>
         </tr></table>
       </td>

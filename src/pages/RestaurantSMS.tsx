@@ -42,7 +42,7 @@ export default function RestaurantSMS() {
         <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4"><CheckCircle size={32} className="text-green-500" /></div>
         <h1 className="text-2xl font-black text-foreground mb-3">You're in!</h1>
         <p className="text-muted-foreground">Reply to your welcome email with your customer list (name + phone as a spreadsheet or CSV) and we'll get your first text out this Tuesday.</p>
-        <p className="mt-4 text-sm text-muted-foreground">Questions? Text Matt at <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a></p>
+        <p className="mt-4 text-sm text-muted-foreground">Questions? Text Matt at <a href="tel:+13139921219" className="text-primary">(313) 992-1219</a></p>
       </div>
     </div>
   );
@@ -74,8 +74,8 @@ export default function RestaurantSMS() {
                 className="inline-flex items-center gap-2 bg-primary text-white px-8 py-4 font-bold text-sm uppercase tracking-widest hover:opacity-90">
                 Get Started <ArrowRight size={14} />
               </button>
-              <a href="tel:+13138064952" className="inline-flex items-center gap-2 border border-border text-foreground px-8 py-4 font-bold text-sm uppercase tracking-widest hover:bg-card">
-                <Phone size={14} /> (313) 806-4952
+              <a href="tel:+13139921219" className="inline-flex items-center gap-2 border border-border text-foreground px-8 py-4 font-bold text-sm uppercase tracking-widest hover:bg-card">
+                <Phone size={14} /> (313) 992-1219
               </a>
             </div>
           </div>
@@ -198,8 +198,8 @@ export default function RestaurantSMS() {
         <section className="py-12 px-4">
           <div className="max-w-2xl mx-auto text-center">
             <p className="text-sm text-muted-foreground mb-2">Questions? Want to see it in action first?</p>
-            <a href="tel:+13138064952" className="text-primary font-bold text-sm hover:underline inline-flex items-center gap-1">
-              <Phone size={14} /> Call Matt — (313) 806-4952
+            <a href="tel:+13139921219" className="text-primary font-bold text-sm hover:underline inline-flex items-center gap-1">
+              <Phone size={14} /> Call Matt — (313) 992-1219
             </a>
           </div>
         </section>

@@ -16,7 +16,7 @@ function buildHtml(body: string): string {
 <tr><td style="background:#00d4ff;padding:3px 0;"></td></tr>
 <tr><td style="padding:24px;color:#334155;font-size:15px;line-height:1.8;">${body.replace(/\n/g, "<br>")}
 <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
-<span style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency · (313) 806-4952</span>
+<span style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency · (313) 992-1219</span>
 </div></td></tr>
 <tr><td style="background:#f8fafc;padding:12px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
 Detroit Web Agency · Grosse Pointe, MI · detroitwebagent.com
@@ -50,7 +50,7 @@ serve(async () => {
 
 Most ${tradeClean}s I talk to have 50–150 dead estimates in their CRM that never turned into jobs. We SMS them on your behalf — you pay $50 only if one replies YES they still need the work. Zero monthly fee, zero risk.
 
-Worth a 5-minute call? Reply here or text me: (313) 806-4952.
+Worth a 5-minute call? Reply here or text me: (313) 992-1219.
 
 — Matt, Detroit Web Agency`;
 
@@ -81,7 +81,7 @@ Worth a 5-minute call? Reply here or text me: (313) 806-4952.
 
 I ran a free test batch for an HVAC contractor in Warren a few months back — got 3 YES replies in 5 days from his dead leads. That's $150 he'd have left on the table otherwise.
 
-If you ever want to try it with your own dead estimates: matt@detroitwebagent.com or (313) 806-4952.
+If you ever want to try it with your own dead estimates: matt@detroitwebagent.com or (313) 992-1219.
 
 — Matt, Detroit Web Agency`;
 

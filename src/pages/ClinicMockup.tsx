@@ -7,7 +7,7 @@ import { RevealSection } from "@/hooks/useInView";
 const heroImg = "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1600&q=80";
 const BRAND = "[NAME]";
 const GOLD = "#b8a064";
-const PHONE = "(313) 806-4952";
+const PHONE = "(313) 992-1219";
 
 const services = [
   { title: "IV Hydration Therapy", desc: "Customized vitamin & nutrient infusions administered in a private suite—because wellness should feel like a retreat.", Icon: Droplets, price: "$150–$350" },
@@ -76,7 +76,7 @@ const ClinicMockup = () => {
         <span className="opacity-60">·</span>
         <Link to="/detroit-web-design" className="underline underline-offset-2">Matt Michels Web Design</Link>
         <span className="opacity-60">·</span>
-        <a href="tel:3138064952">313.806.4952</a>
+        <a href="tel:3139921219">313.992.1219</a>
       </div>
 
       {/* Announcement + Header */}

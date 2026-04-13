@@ -36,7 +36,7 @@ export default function AppointmentReminders() {
           </div>
           <h1 className="text-2xl font-black text-foreground mb-3">You're all set.</h1>
           <p className="text-muted-foreground leading-relaxed">Matt will reach out within 24 hours to connect your scheduling and get reminders running.</p>
-          <p className="mt-4 text-sm text-muted-foreground">Questions? <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a></p>
+          <p className="mt-4 text-sm text-muted-foreground">Questions? <a href="tel:+13139921219" className="text-primary">(313) 992-1219</a></p>
         </div>
       </div>
     );
@@ -171,7 +171,7 @@ export default function AppointmentReminders() {
         </div>
 
         <p className="text-[12px] text-muted-foreground text-center">
-          Questions? Email <a href="mailto:matt@mattmichelstraining.com" className="text-primary">matt@mattmichelstraining.com</a> or text <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a>
+          Questions? Email <a href="mailto:matt@mattmichelstraining.com" className="text-primary">matt@mattmichelstraining.com</a> or text <a href="tel:+13139921219" className="text-primary">(313) 992-1219</a>
         </p>
       </div>
     </div>

@@ -37,7 +37,7 @@ export default function AiGbpPostPack() {
             Want us to post automatically every week for you? Our <a href="/local-marketing" className="text-primary font-semibold">GBP Autopilot is $49/month</a>.
           </p>
           <p className="text-xs text-muted-foreground">
-            Questions? <a href="tel:3138064952" className="text-primary font-semibold">(313) 806-4952</a>
+            Questions? <a href="tel:3139921219" className="text-primary font-semibold">(313) 992-1219</a>
           </p>
         </div>
       </div>
@@ -65,7 +65,7 @@ export default function AiGbpPostPack() {
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong. Try again or call (313) 806-4952.");
+      toast.error(err.message || "Something went wrong. Try again or call (313) 992-1219.");
     } finally {
       setSubmitting(false);
     }
@@ -225,7 +225,7 @@ export default function AiGbpPostPack() {
               Get My Posts <ArrowRight size={16} />
             </a>
             <p className="mt-4 text-xs text-muted-foreground">
-              Questions? <a href="tel:3138064952" className="font-semibold text-primary">(313) 806-4952</a> — Matt picks up.
+              Questions? <a href="tel:3139921219" className="font-semibold text-primary">(313) 992-1219</a> — Matt picks up.
             </p>
           </div>
         </section>

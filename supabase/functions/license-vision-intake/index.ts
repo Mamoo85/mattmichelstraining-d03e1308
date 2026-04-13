@@ -51,7 +51,7 @@ serve(async (req) => {
     .single();
 
   if (!client) {
-    return twiml("Hi! We couldn't find an account for this number. Visit detroitwebagent.com/license-monitor to sign up, or text Matt at (313) 806-4952.");
+    return twiml("Hi! We couldn't find an account for this number. Visit detroitwebagent.com/license-monitor to sign up, or text Matt at (313) 992-1219.");
   }
 
   // Pass image to Claude Vision
@@ -103,7 +103,7 @@ If a field is not visible, omit it. Return only valid JSON, no explanation.`,
     licenseData = JSON.parse(cleaned);
   } catch (e) {
     console.error("[license-vision-intake] Vision extraction failed:", e);
-    return twiml("We received your photo but had trouble reading it. Please send a clearer image of the license card, or text Matt at (313) 806-4952.");
+    return twiml("We received your photo but had trouble reading it. Please send a clearer image of the license card, or text Matt at (313) 992-1219.");
   }
 
   if (!licenseData.license_name && !licenseData.license_number) {
@@ -125,7 +125,7 @@ If a field is not visible, omit it. Return only valid JSON, no explanation.`,
 
   if (insertError) {
     console.error("[license-vision-intake] Insert error:", insertError);
-    return twiml("Got your photo! There was an error saving it. Text Matt at (313) 806-4952 and we'll fix it.");
+    return twiml("Got your photo! There was an error saving it. Text Matt at (313) 992-1219 and we'll fix it.");
   }
 
   const expiryStr = licenseData.expiry_date

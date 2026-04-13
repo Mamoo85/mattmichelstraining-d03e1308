@@ -27,7 +27,7 @@ interface CaptionsClient {
 }
 
 
-const EMAIL_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>`;
+const EMAIL_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 992-1219</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div>`;
 
 async function generateCaptions(client: CaptionsClient): Promise<string> {
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -104,7 +104,7 @@ function buildClientEmail(client: CaptionsClient, captions: string, month: strin
 
   <tr><td style="background:#f1f5f9;padding:16px 28px;border-radius:0 0 10px 10px;border:1px solid #e2e8f0;border-top:none;">
     <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
-      M2 Development · matt@mattmichelstraining.com · (313) 806-4952
+      M2 Development · matt@mattmichelstraining.com · (313) 992-1219
     </p>
   </td></tr>
 

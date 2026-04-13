@@ -45,7 +45,7 @@ const LocalLane = () => (
           Schedule a Session
         </Link>
         <a
-          href="sms:3138064952"
+          href="sms:3139921219"
           className="inline-flex items-center gap-2 border border-primary text-primary px-5 py-3 text-xs font-bold uppercase tracking-widest hover:bg-primary/10 transition-all"
         >
           <MessageSquare size={16} />
@@ -107,8 +107,8 @@ const LocalLane = () => (
       className="grid grid-cols-4 gap-2 mb-8"
     >
       {[
-        { icon: Phone, label: "Call", href: "tel:3138064952" },
-        { icon: MessageSquare, label: "Text", href: "sms:3138064952" },
+        { icon: Phone, label: "Call", href: "tel:3139921219" },
+        { icon: MessageSquare, label: "Text", href: "sms:3139921219" },
         { icon: Mail, label: "Email", href: "mailto:matthewmichels4@gmail.com" },
         { icon: Calendar, label: "Schedule", href: "/schedule", isLink: true },
       ].map((b) =>

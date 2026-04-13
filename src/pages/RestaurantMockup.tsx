@@ -6,7 +6,7 @@ import { RevealSection } from "@/hooks/useInView";
 
 const heroImg = "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&q=80";
 const BRAND = "Pier 47 Kitchen + Bar";
-const PHONE = "(313) 806-4952";
+const PHONE = "(313) 992-1219";
 const AMBER = "#92400e";
 const AMBER_LIGHT = "#d97706";
 const AMBER_TEXT = "#fbbf24";
@@ -101,7 +101,7 @@ const RestaurantMockup = () => {
   return (
     <div style={{ fontFamily: "'Georgia', 'Times New Roman', serif", color: "#e2d8cc", background: "#1a0f07" }}>
       <div style={{background:"#1e40af",color:"white",textAlign:"center",padding:"8px",fontSize:"11px",fontWeight:"700",letterSpacing:"0.1em",fontFamily:"system-ui,sans-serif"}}>
-        SAMPLE WEBSITE — Built by Matt Michels Web Design · (313) 806-4952
+        SAMPLE WEBSITE — Built by Matt Michels Web Design · (313) 992-1219
       </div>
 
       <style>{`
@@ -164,7 +164,7 @@ const RestaurantMockup = () => {
           Matt Michels Web Design
         </Link>
         <span className="opacity-60">·</span>
-        <a href="tel:3138064952">313.806.4952</a>
+        <a href="tel:3139921219">313.992.1219</a>
       </div>
 
       {/* Sticky Header */}

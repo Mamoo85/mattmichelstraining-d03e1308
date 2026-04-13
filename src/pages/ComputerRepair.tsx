@@ -31,7 +31,7 @@ const ComputerRepair = () => (
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button asChild size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 text-base font-bold">
-            <a href="tel:3138064952">Call (313) 806-4952 <Phone className="ml-2 h-4 w-4" /></a>
+            <a href="tel:3139921219">Call (313) 992-1219 <Phone className="ml-2 h-4 w-4" /></a>
           </Button>
           <Button asChild variant="outline" size="lg" className="border-slate-600 text-slate-200 hover:bg-slate-800 px-8 text-base">
             <Link to="/tech-support">Book Online</Link>
@@ -81,7 +81,7 @@ const ComputerRepair = () => (
       <h2 className="text-2xl font-black mb-4">Computer Acting Up?</h2>
       <p className="text-muted-foreground mb-6">Call or text — we usually respond within 15 minutes.</p>
       <Button asChild size="lg" className="bg-green-600 hover:bg-green-700 text-white px-10 text-base font-bold">
-        <a href="tel:3138064952">Call Now <ArrowRight className="ml-2 h-4 w-4" /></a>
+        <a href="tel:3139921219">Call Now <ArrowRight className="ml-2 h-4 w-4" /></a>
       </Button>
     </section>
   </div>

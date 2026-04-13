@@ -254,7 +254,7 @@ serve(async (req) => {
           await sendSMS(
             contractor.phone,
             TWILIO_PHONE_NUMBER,
-            `DWA Receipt: $50 charged for ${contact.name || fromPhone} (${trade} lead). Questions? Text (313) 806-4952`,
+            `DWA Receipt: $50 charged for ${contact.name || fromPhone} (${trade} lead). Questions? Text (313) 992-1219`,
             "dead_lead_reactivation"
           );
         }

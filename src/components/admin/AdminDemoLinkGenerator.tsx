@@ -106,7 +106,7 @@ function genText(demo: DemoEntry, name: string, bizName: string, baseUrl: string
   const who = name ? name.split(" ")[0] : "Hey";
   const biz = bizName || `your ${demo.industry}`;
   const url = `${baseUrl}${demo.path}`;
-  return `${name ? `${who} —` : "Hey —"} I put together a quick website mockup for a ${demo.industry} like ${biz}. Worth a 30-second look: ${url} — Matt (313) 806-4952`;
+  return `${name ? `${who} —` : "Hey —"} I put together a quick website mockup for a ${demo.industry} like ${biz}. Worth a 30-second look: ${url} — Matt (313) 992-1219`;
 }
 
 function genEmail(demo: DemoEntry, name: string, bizName: string, baseUrl: string): { subject: string; body: string } {
@@ -125,7 +125,7 @@ Not a pitch — if it's not the right fit, I've got other styles too. But I figu
 ${demo.priceRange} to get started, includes everything.
 
 Matt
-(313) 806-4952
+(313) 992-1219
 matt@mattmichelstraining.com`;
   return { subject, body };
 }
