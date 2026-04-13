@@ -1,62 +1,95 @@
 
 
-# Corrected Plan: TechAlert Fix + Visitor Drill-Down + SMS Audit
+# Launch QA Fix: 5 Surgical Changes
 
-## What changed from the previous plan
+## Verified Facts (from live DB + code)
 
-The user's strategic advisor correctly identified three fatal flaws in the original Step C (SMS rewrite):
-1. **contractor-lead-notify "Call Now" is correct** — it means call the *homeowner*, not the agency. Speed-to-lead is everything. Do NOT touch this copy.
-2. **"Reply RESCHEDULE" is a phantom feature** — no webhook exists to handle that keyword. Don't write copy for features that don't exist.
-3. **Admin Outbox audit layer is unnecessary bloat** — fix templates directly, don't build a linter UI.
+| Claim | Verified | Action |
+|-------|----------|--------|
+| `email_reply_drafts` table missing | **TRUE** — query returns empty | CREATE TABLE migration |
+| `chargeContractor()` missing `res.ok` | **FALSE** — line 44 already has it | SKIP |
+| `release-pending-replies` missing | **FALSE** — file exists in repo | SKIP |
+| `hire-alert-scanner` wrong FROM email | **TRUE** — 26 occurrences of `mattmichelstraining` | FIX |
+| `contact_preference` column missing | **TRUE** — column doesn't exist | ADD |
+| `ai-reply-detector` cancel URL `id=undefined` | **TRUE** — no null guard at line 166 | FIX |
 
-## Implementation
+---
 
-### A. TechAlert Schema Fix (database)
-Migration: `ALTER TABLE hire_alert_clients ADD COLUMN IF NOT EXISTS notify_email boolean DEFAULT true; ALTER TABLE hire_alert_clients ADD COLUMN IF NOT EXISTS notify_sms boolean DEFAULT true;`
+## Changes
 
-The admin form already sends these fields — the table just needs the columns.
+### 1. Migration: Create `email_reply_drafts` + add `contact_preference`
 
-### B. Visitor Intelligence Drill-Down
-In `VisitorIntelFeed.tsx`, make each visitor row clickable. Opens a slide-out panel showing:
-- Company name, org, city/region
-- All pages visited, visit count, first/last seen timestamps
-- Whether a lead was auto-created (with link to prospect pipeline if `pipeline_lead_id` exists)
-- Link to the client's website
+```sql
+-- email_reply_drafts (ghost delay queue)
+CREATE TABLE IF NOT EXISTS email_reply_drafts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_email text NOT NULL,
+  draft_subject text,
+  draft_body text NOT NULL,
+  category text,
+  send_after timestamptz NOT NULL,
+  sent boolean DEFAULT false,
+  cancelled boolean DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE email_reply_drafts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "service_role_all" ON email_reply_drafts FOR ALL TO service_role USING (true);
 
-**NEW: "1-Click Enrich" button** in the panel. When clicked, calls a new `enrich-visitor` edge function that:
-1. Takes `company_name` + `city` as input
-2. Uses Firecrawl to scrape the company website (Google search → scrape contact page)
-3. Extracts owner name + email + phone via regex + LLM fallback
-4. Returns enriched data to the UI panel
-5. Optionally creates/updates a prospect_pipeline entry with the enriched contact info
+-- contact_preference on contractor_leads
+ALTER TABLE contractor_leads
+  ADD COLUMN IF NOT EXISTS contact_preference text NOT NULL DEFAULT 'call';
+```
 
-### C. SMS Copy Audit (surgical, no UI changes)
-Only fix copy where it references features that don't exist or where "call" is ambiguous:
+### 2. Fix `hire-alert-scanner` FROM addresses
 
-| Function | Current Copy | Fix |
-|----------|-------------|-----|
-| `contractor-lead-notify` | "Exclusive — call now" | **DO NOT CHANGE.** This correctly tells the contractor to call the homeowner. |
-| `appointment-reminder-sender` (24h) | "Reply CONFIRM to confirm or call us to reschedule" | Change to: "Reply CONFIRM to confirm. Need to reschedule? Call us at {phone}." — removes ambiguous "or" phrasing, keeps it honest since CONFIRM reply IS handled |
-| `appointment-reminder-sender` (1h) | "See you soon!" | **No change needed** — simple, correct. |
-| `warranty-reminder-sender` | "Reply YES to book or call us" | **No change needed** — simple, correct. "Reply YES" is a reasonable keyword even without a full handler (it goes to inbox). |
-| `slow-day-trigger` | AI-generated promo copy | Ensure the AI prompt says "end with a reply-based or link-based CTA" instead of defaulting to "call now!" in the fallback. Only the fallback string needs updating. |
+Replace all 26 occurrences of `mattmichelstraining.com` with `detroitwebagent.com`:
+- Line 23: `from` → `matt@detroitwebagent.com`
+- Line 24: `to` → `matt@detroitwebagent.com`
+- Line 506: `from` → `matt@detroitwebagent.com`
+- Line 578/864: image URLs → `detroitwebagent.com/images/matt-boat.jpg`
+- Line 587: unsubscribe mailto → `matt@detroitwebagent.com`
 
-### D. Kill Admin Outbox audit layer
-No changes to `AdminGlobalOutbox.tsx`. The outbox stays as a timeline log.
+### 3. Update `GetQuote.tsx` — add contact preference
 
-## Files to Change
+Add a `contact_preference` field (default "call") with 3 styled radio buttons: Call Me / Text Me / Email Me. Pass it in the `contractor_leads` insert.
+
+### 4. Rewrite `contractor-lead-notify` SMS copy
+
+Add `contact_preference` to the select query (line 38). Branch SMS copy:
+
+- **call**: `"LEAD UNLOCKED: [Name] — [Phone]. [Project]. CALL THEM NOW — exclusive to you. — DWA Lead Engine"`
+- **text**: `"LEAD UNLOCKED: [Name] — [Phone]. Prefers TEXT. [Project]. Reach out now. — DWA Lead Engine"`
+- **email**: `"LEAD UNLOCKED: [Name] prefers EMAIL at [email]. [Project]. Email them — follow up within 24 hours. — DWA Lead Engine"`
+
+Remove `"— Matt (313) 992-1219"` sign-off. This is an automated dispatch system.
+
+### 5. Guard null draft ID in `ai-reply-detector`
+
+At line 166, wrap the cancel URL:
+```typescript
+const cancelUrl = draft?.id
+  ? `${SUPABASE_URL}/functions/v1/cancel-reply-draft?id=${draft.id}`
+  : null;
+const cancelNote = cancelUrl ? ` Cancel: ${cancelUrl}` : "";
+```
+
+Use `cancelNote` in the SMS body instead of always including the URL.
+
+---
+
+## Files Changed
 
 | File | Change |
 |------|--------|
-| New migration | Add `notify_email`, `notify_sms` to `hire_alert_clients` |
-| `src/components/admin/VisitorIntelFeed.tsx` | Clickable rows + slide-out detail panel + "1-Click Enrich" button |
-| New: `supabase/functions/enrich-visitor/index.ts` | Firecrawl + LLM enrichment from company name |
-| `supabase/functions/appointment-reminder-sender/index.ts` | Minor 24h copy tweak (remove ambiguous "or" phrasing) |
-| `supabase/functions/slow-day-trigger/index.ts` | Fix fallback promo string CTA only |
+| New migration | Create `email_reply_drafts` table + add `contact_preference` column |
+| `supabase/functions/hire-alert-scanner/index.ts` | Replace 26 `mattmichelstraining` → `detroitwebagent` |
+| `src/pages/GetQuote.tsx` | Add contact preference radio buttons |
+| `supabase/functions/contractor-lead-notify/index.ts` | Preference-branched SMS, add `contact_preference` to select, remove personal sign-off |
+| `supabase/functions/ai-reply-detector/index.ts` | Guard null `draft.id` before building cancel URL |
 
-## What we are NOT changing
-- `contractor-lead-notify` SMS/email copy (speed-to-lead is correct)
-- `warranty-reminder-sender` copy (already fine)
-- `AdminGlobalOutbox.tsx` (no audit layer)
-- No "Reply RESCHEDULE" or any phantom feature copy
+## What We Are NOT Changing
+- `chargeContractor()` — already has `res.ok` guard (line 44)
+- `release-pending-replies` — already exists and is cron-wired
+- `hire-alert-phantom-alert` / `hire-alert-trial-convert` — both exist
+- FieldDesk welcome email — already using `matt@detroitwebagent.com`
 
