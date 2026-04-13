@@ -12,9 +12,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-04-12. Update this section every session.*
+*Last updated: 2026-04-13. Update this section every session.*
 
-### Phase 11 — Sandbox Audit + Product Revival + 3 New Landing Pages COMPLETE ✅
+### Top 4 Products — 100% Launch Ready ✅
+Commit `25287d19` — merged to main, Lovable deploying now.
+
+**Contractor Leads ($399/mo):**
+- stripe-webhook `contractor_lead_subscription`: now returns 500 in catch (Stripe retries DB failures)
+- Welcome email upgraded to DWA dark teal/navy branding (was M2 Training orange)
+
+**Missed Call Catch ($99/mo) — Multi-tenant architecture fixed:**
+- `missed-call-handler`: looks up `missed_call_clients` by `To` number. Customer numbers forward to `business_phone`, use `business_name` in voice message. Falls back to Matt's DWA logic for +13139921219.
+- `missed-call-status`: looks up client by `Called` number. Texts caller with `response_message` or `"Hey! This is {business_name}..."`. Falls back to DWA text for Matt's number.
+- Welcome email switched to DWA dark branding (was M2 Training)
+
+**TechAlert ($99/mo):** `dwaEmail` unsubscribe footer fixed to `matt@detroitwebagent.com`
+
+**FieldDesk ($199/mo):** Was already 100% — no changes needed
+
+**Phase 11 — Sandbox Audit + Product Revival + 3 New Landing Pages COMPLETE ✅**
 Work on `claude/opusplan-setup-nmyYS`. Merged to main.
 
 **Product Filter Rule (established this session — enforce going forward):**
