@@ -4247,57 +4247,108 @@ export type Database = {
       hire_alert_candidates: {
         Row: {
           alerted_at: string | null
+          availability_score: number | null
           city: string | null
           client_id: string | null
           created_at: string | null
+          current_employer: string | null
+          current_title: string | null
           email: string | null
+          enriched_at: string | null
+          enrichment_status: string | null
+          facebook_url: string | null
+          first_seen_at: string | null
+          full_name: string | null
+          hiring_recommendation: string | null
           id: string
+          last_seen_at: string | null
+          license_expiry: string | null
           license_number: string | null
           license_type: string | null
+          linkedin_url: string | null
           name: string
           phone: string | null
+          qualifications_summary: string | null
           raw_data: Json | null
           score: number | null
+          score_reason: string | null
+          social_profiles: Json | null
           source: string | null
           state: string | null
           status: string | null
           trade: string | null
+          years_experience: number | null
+          zip: string | null
         }
         Insert: {
           alerted_at?: string | null
+          availability_score?: number | null
           city?: string | null
           client_id?: string | null
           created_at?: string | null
+          current_employer?: string | null
+          current_title?: string | null
           email?: string | null
+          enriched_at?: string | null
+          enrichment_status?: string | null
+          facebook_url?: string | null
+          first_seen_at?: string | null
+          full_name?: string | null
+          hiring_recommendation?: string | null
           id?: string
+          last_seen_at?: string | null
+          license_expiry?: string | null
           license_number?: string | null
           license_type?: string | null
+          linkedin_url?: string | null
           name: string
           phone?: string | null
+          qualifications_summary?: string | null
           raw_data?: Json | null
           score?: number | null
+          score_reason?: string | null
+          social_profiles?: Json | null
           source?: string | null
           state?: string | null
           status?: string | null
           trade?: string | null
+          years_experience?: number | null
+          zip?: string | null
         }
         Update: {
           alerted_at?: string | null
+          availability_score?: number | null
           city?: string | null
           client_id?: string | null
           created_at?: string | null
+          current_employer?: string | null
+          current_title?: string | null
           email?: string | null
+          enriched_at?: string | null
+          enrichment_status?: string | null
+          facebook_url?: string | null
+          first_seen_at?: string | null
+          full_name?: string | null
+          hiring_recommendation?: string | null
           id?: string
+          last_seen_at?: string | null
+          license_expiry?: string | null
           license_number?: string | null
           license_type?: string | null
+          linkedin_url?: string | null
           name?: string
           phone?: string | null
+          qualifications_summary?: string | null
           raw_data?: Json | null
           score?: number | null
+          score_reason?: string | null
+          social_profiles?: Json | null
           source?: string | null
           state?: string | null
           status?: string | null
           trade?: string | null
+          years_experience?: number | null
+          zip?: string | null
         }
         Relationships: [
           {
