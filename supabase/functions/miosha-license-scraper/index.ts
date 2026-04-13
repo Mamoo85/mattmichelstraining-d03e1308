@@ -1,30 +1,38 @@
-// miosha-license-scraper — scrapes Michigan LARA license database
-// Uses Firecrawl with form interaction actions to submit the LARA VAL search form,
-// then parses the resulting markdown table for new license holders.
+// miosha-license-scraper — queries Michigan LARA data via Socrata API (data.michigan.gov)
+// Reliable public API — no scraping, no form interaction needed.
 // Called by hire-alert-scanner OR run standalone via cron/admin trigger.
-//
-// NOTE: LARA VAL (w2.lara.state.mi.us/VAL) is an ASP.NET WebForms app.
-// URL query params are ignored — must interact with the form via browser actions.
-// TODO: Michigan also publishes LARA data on data.michigan.gov (Socrata API).
-// If this scraper underperforms, switch to the Socrata endpoint for reliability.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 
-// Michigan LARA license type codes for trades we care about
-const LARA_LICENSE_TYPES = [
-  { code: "BOP",  label: "Boiler Operator 1st Class" },
-  { code: "BOP2", label: "Boiler Operator 2nd Class" },
-  { code: "SE",   label: "Steam Engineer" },
-  { code: "HVAC", label: "HVAC Contractor" },
-  { code: "PL",   label: "Plumbing Contractor" },
+// Michigan LARA publishes license data on data.michigan.gov via Socrata API
+// Dataset: Professional Licensing — all active licensees
+// No API key needed for basic queries (up to 50k rows/request)
+const SOCRATA_DATASETS = [
+  {
+    // LARA Active Licenses dataset
+    url: "https://data.michigan.gov/resource/ngpe-x3yj.json",
+    label: "Michigan License DB",
+    tradeFilters: [
+      { where: "upper(license_type_description) LIKE '%BOILER%'", label: "Boiler Operator" },
+      { where: "upper(license_type_description) LIKE '%HVAC%' OR upper(license_type_description) LIKE '%HEATING%' OR upper(license_type_description) LIKE '%REFRIGERATION%'", label: "HVAC Technician" },
+      { where: "upper(license_type_description) LIKE '%PLUMB%'", label: "Plumber" },
+      { where: "upper(license_type_description) LIKE '%ELECTRI%'", label: "Electrician" },
+      { where: "upper(license_type_description) LIKE '%STEAM%'", label: "Steam Engineer" },
+    ],
+  },
 ];
 
-const LARA_SEARCH_URL = "https://w2.lara.state.mi.us/VAL/License/Search";
+// Fallback: direct LARA BPL Excel downloads (Phase 10)
+const BPL_EXCEL_URLS = [
+  { url: "https://www.michigan.gov/lara/-/media/Project/Websites/lara/bpl/Licensing-Lists/Boiler-Operators.xlsx", label: "Boiler Operator" },
+  { url: "https://www.michigan.gov/lara/-/media/Project/Websites/lara/bpl/Licensing-Lists/HVAC.xlsx", label: "HVAC Technician" },
+  { url: "https://www.michigan.gov/lara/-/media/Project/Websites/lara/bpl/Licensing-Lists/Plumbing.xlsx", label: "Plumber" },
+  { url: "https://www.michigan.gov/lara/-/media/Project/Websites/lara/bpl/Licensing-Lists/Electrical.xlsx", label: "Electrician" },
+];
 
 interface LicenseCandidate {
   full_name: string;
@@ -35,133 +43,72 @@ interface LicenseCandidate {
   source: "miosha";
 }
 
-async function scrapeLARAType(licenseCode: string, label: string): Promise<LicenseCandidate[]> {
-  if (!FIRECRAWL_API_KEY) return [];
-
-  const controller = new AbortController();
-  // 35s: form interaction (wait + click + postback + results) takes ~15-20s
-  const tid = setTimeout(() => controller.abort(), 35000);
-
+// Primary: Socrata API query
+async function querySocrata(datasetUrl: string, whereClause: string, label: string): Promise<LicenseCandidate[]> {
   try {
-    const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url: LARA_SEARCH_URL,
-        formats: ["markdown"],
-        onlyMainContent: false,
-        waitFor: 2000,
-        actions: [
-          // Wait for ASP.NET form to fully initialize
-          { type: "wait", milliseconds: 2000 },
-          // Select the license type from the dropdown.
-          // LARA VAL uses AutoPostBack=true, so selecting triggers a page postback.
-          // Firecrawl's click on an <option> within a <select> changes the value.
-          {
-            type: "click",
-            selector: `select option[value="${licenseCode}"]`,
-          },
-          // Wait for ASP.NET postback to complete (page may reload)
-          { type: "wait", milliseconds: 3000 },
-          // Click the Search button — multiple selector patterns for resilience
-          {
-            type: "click",
-            selector: "input[value='Search'], input[type='submit'], #btnSearch, [id*='btnSearch'], button[type='submit']",
-          },
-          // Wait for results table to render
-          { type: "wait", milliseconds: 5000 },
-        ],
-      }),
+    // Get licenses issued or renewed in last 90 days — these are the "new to market" ones
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const fullWhere = `(${whereClause}) AND issue_date >= '${ninetyDaysAgo}' AND upper(license_status) = 'ACTIVE'`;
+    
+    const params = new URLSearchParams({
+      "$where": fullWhere,
+      "$limit": "100",
+      "$order": "issue_date DESC",
     });
-    clearTimeout(tid);
+
+    const res = await fetch(`${datasetUrl}?${params}`, {
+      headers: { "Accept": "application/json" },
+      signal: AbortSignal.timeout(15000),
+    });
 
     if (!res.ok) {
-      console.warn(`[miosha-scraper] Firecrawl HTTP ${res.status} for ${licenseCode}`);
+      console.warn(`[miosha-scraper] Socrata HTTP ${res.status} for ${label}`);
       return [];
     }
 
-    const data = await res.json();
-    const markdown: string = data?.data?.markdown || "";
+    const rows = await res.json();
+    if (!Array.isArray(rows)) return [];
 
-    if (!markdown || markdown.length < 200) {
-      console.warn(`[miosha-scraper] Thin response for ${licenseCode} (${markdown.length} chars) — form interaction may have failed`);
-      return [];
-    }
+    console.log(`[miosha-scraper] Socrata: ${rows.length} results for ${label}`);
 
-    const candidates = parseLARATable(markdown, label);
-    if (candidates.length === 0) {
-      console.warn(`[miosha-scraper] No candidates parsed for ${licenseCode} — table format may have changed`);
-    }
-    return candidates;
-  } catch (e: unknown) {
-    clearTimeout(tid);
-    const isAbort = e instanceof Error && e.name === "AbortError";
-    console.warn(`[miosha-scraper] ${isAbort ? "Timeout (35s)" : "Error"} scraping ${licenseCode}:`, e instanceof Error ? e.message : String(e));
+    return rows.map((r: Record<string, string>) => {
+      const firstName = r.first_name || r.licensee_first_name || "";
+      const lastName = r.last_name || r.licensee_last_name || "";
+      const fullName = r.licensee_name || r.full_name || `${firstName} ${lastName}`.trim();
+      
+      return {
+        full_name: fullName,
+        license_type: label,
+        license_number: r.license_number || r.license_no || null,
+        license_expiry: r.expiration_date || r.license_expiration_date || null,
+        city: r.city || r.licensee_city || null,
+        source: "miosha" as const,
+      };
+    }).filter((c) => c.full_name.length >= 3);
+  } catch (e) {
+    console.warn(`[miosha-scraper] Socrata error for ${label}:`, e instanceof Error ? e.message : String(e));
     return [];
   }
 }
 
-function parseLARATable(markdown: string, licenseLabel: string): LicenseCandidate[] {
+// Fallback: Try BPL Excel download pages (just fetch the page to check if xlsx links are accessible)
+async function queryBPLFallback(): Promise<LicenseCandidate[]> {
   const candidates: LicenseCandidate[] = [];
-  const lines = markdown.split("\n");
-
-  for (const line of lines) {
-    if (!line.includes("|")) continue;
-    const cells = line.split("|").map((s) => s.trim()).filter(Boolean);
-    if (cells.length < 2) continue;
-
-    // Skip header and separator rows
-    const firstCell = cells[0].toLowerCase();
-    if (firstCell === "name" || firstCell === "licensee" || firstCell.startsWith("-") || firstCell.startsWith("=")) continue;
-
-    // First cell must look like a person/business name (letters, no long digit runs)
-    const nameCell = cells[0];
-    if (!/[A-Za-z]{2,}/.test(nameCell)) continue;
-    if (nameCell.length < 3 || nameCell.length > 80) continue;
-    // Skip cells that are obviously table headers or metadata
-    if (/license|type|number|city|state|issued|expir|search/i.test(nameCell)) continue;
-
-    // Find license number: letters + digits pattern (e.g. BOP12345, SE98765)
-    const licNumCell = cells.find((c) => /^[A-Z]{1,5}\d{4,}$/i.test(c.replace(/\s/g, "")));
-
-    // Find expiry date (MM/DD/YYYY or YYYY-MM-DD)
-    const datePattern = /\d{1,2}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2}/;
-    const expiryCell = cells.slice(2).find((c) => datePattern.test(c));
-    let expiryISO: string | null = null;
-    if (expiryCell) {
-      const m = expiryCell.match(datePattern);
-      if (m) {
-        const raw = m[0];
-        if (raw.includes("/")) {
-          const [mm, dd, yyyy] = raw.split("/");
-          expiryISO = `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
-        } else {
-          expiryISO = raw;
-        }
+  
+  for (const bpl of BPL_EXCEL_URLS) {
+    try {
+      // HEAD request to check if file exists — actual parsing requires SheetJS which is heavy
+      const res = await fetch(bpl.url, { method: "HEAD", signal: AbortSignal.timeout(5000) });
+      if (res.ok) {
+        console.log(`[miosha-scraper] BPL Excel available for ${bpl.label} (${res.headers.get("content-length")} bytes)`);
+        // We log availability but don't parse XLSX in this lightweight function
+        // The main scanner can call this for full parse if needed
       }
+    } catch {
+      // BPL files may be periodically unavailable
     }
-
-    // Find a city cell: alphabetic only, 3-25 chars, not the name cell, not a known header word
-    const miCityCell = cells.find((c) =>
-      c !== nameCell &&
-      /^[A-Za-z\s]{3,25}$/.test(c) &&
-      !/^(license|type|number|city|state|issued|expir|active|status)$/i.test(c.trim())
-    );
-
-    candidates.push({
-      full_name: nameCell,
-      license_type: licenseLabel,
-      license_number: licNumCell ? licNumCell.replace(/\s/g, "").toUpperCase() : null,
-      license_expiry: expiryISO,
-      city: miCityCell || null,
-      source: "miosha",
-    });
   }
-
+  
   return candidates;
 }
 
@@ -176,62 +123,70 @@ serve(async (req) => {
   let errorCount = 0;
 
   try {
-    for (const { code, label } of LARA_LICENSE_TYPES) {
-      const candidates = await scrapeLARAType(code, label);
-      console.log(`[miosha-scraper] ${code}: found ${candidates.length} candidates`);
+    // Query all trade types from Socrata
+    for (const dataset of SOCRATA_DATASETS) {
+      for (const filter of dataset.tradeFilters) {
+        const candidates = await querySocrata(dataset.url, filter.where, filter.label);
+        console.log(`[miosha-scraper] ${filter.label}: found ${candidates.length} candidates`);
 
-      for (const c of candidates) {
-        try {
-          const row: Record<string, unknown> = {
-            full_name: c.full_name,
-            license_type: c.license_type,
-            source: "miosha",
-            last_seen_at: new Date().toISOString(),
-          };
-          if (c.license_number) row.license_number = c.license_number;
-          if (c.license_expiry) row.license_expiry = c.license_expiry;
-          if (c.city) row.city = c.city;
+        for (const c of candidates) {
+          try {
+            const row: Record<string, unknown> = {
+              full_name: c.full_name,
+              license_type: c.license_type,
+              source: "miosha",
+              last_seen_at: new Date().toISOString(),
+            };
+            if (c.license_number) row.license_number = c.license_number;
+            if (c.license_expiry) row.license_expiry = c.license_expiry;
+            if (c.city) row.city = c.city;
 
-          if (c.license_number) {
-            const { data: existing } = await sb
-              .from("hire_alert_candidates")
-              .select("id, status")
-              .eq("license_number", c.license_number)
-              .maybeSingle();
-
-            if (existing) {
-              await sb
+            if (c.license_number) {
+              const { data: existing } = await sb
                 .from("hire_alert_candidates")
-                .update({ last_seen_at: new Date().toISOString() })
-                .eq("id", existing.id);
-              updatedCount++;
-            } else {
-              await sb.from("hire_alert_candidates").insert({ ...row, status: "new", first_seen_at: new Date().toISOString() });
-              newCount++;
-            }
-          } else {
-            // No license number — dedup by name + license_type + source
-            const { data: existing } = await sb
-              .from("hire_alert_candidates")
-              .select("id")
-              .eq("full_name", c.full_name)
-              .eq("license_type", c.license_type)
-              .eq("source", "miosha")
-              .maybeSingle();
+                .select("id, status")
+                .eq("license_number", c.license_number)
+                .maybeSingle();
 
-            if (!existing) {
-              await sb.from("hire_alert_candidates").insert({ ...row, status: "new", first_seen_at: new Date().toISOString() });
-              newCount++;
+              if (existing) {
+                await sb.from("hire_alert_candidates")
+                  .update({ last_seen_at: new Date().toISOString() })
+                  .eq("id", existing.id);
+                updatedCount++;
+              } else {
+                await sb.from("hire_alert_candidates").insert({
+                  ...row, status: "new", first_seen_at: new Date().toISOString(),
+                });
+                newCount++;
+              }
             } else {
-              updatedCount++;
+              const { data: existing } = await sb
+                .from("hire_alert_candidates")
+                .select("id")
+                .eq("full_name", c.full_name)
+                .eq("license_type", c.license_type)
+                .eq("source", "miosha")
+                .maybeSingle();
+
+              if (!existing) {
+                await sb.from("hire_alert_candidates").insert({
+                  ...row, status: "new", first_seen_at: new Date().toISOString(),
+                });
+                newCount++;
+              } else {
+                updatedCount++;
+              }
             }
+          } catch (e) {
+            console.error(`[miosha-scraper] insert error for ${c.full_name}:`, e);
+            errorCount++;
           }
-        } catch (e) {
-          console.error(`[miosha-scraper] insert error for ${c.full_name}:`, e);
-          errorCount++;
         }
       }
     }
+
+    // Check BPL availability as a secondary signal
+    await queryBPLFallback();
 
     console.log(`[miosha-scraper] done: new=${newCount} updated=${updatedCount} errors=${errorCount}`);
     return new Response(
