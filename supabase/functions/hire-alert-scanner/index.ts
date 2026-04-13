@@ -439,8 +439,9 @@ async function sendAlertEmail(
 
   const hotCount = candidates.filter((c) => c.availability_score >= 7).length;
 
+  // Generic labels for client emails — never reveal our sources
   const sourceLabel = (s: string) =>
-    s === "miosha" ? "MIOSHA License DB" : s === "apollo" ? "Apollo" : "Job Board";
+    s === "miosha" ? "State License Database" : s === "apollo" ? "Professional Network" : "Job Market";
 
   const sourceIcon = (s: string) =>
     s === "miosha" ? "🏛️" : s === "apollo" ? "🔍" : "📋";
