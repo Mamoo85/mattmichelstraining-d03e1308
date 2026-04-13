@@ -12,7 +12,47 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-04-14. Update this section every session.*
+*Last updated: 2026-04-12. Update this section every session.*
+
+### DWA Email Overhaul — COMPLETE ✅
+Commits: `8735ce32`, `cc134fff`
+
+All DWA product welcome emails and the contractor lead notification email upgraded to premium dark brand design.
+
+**`supabase/functions/contractor-lead-notify/index.ts`:**
+- Full premium dark DWA email: `#0a1628` bg, teal accent banner "🔥 NEW HVAC LEAD — EXCLUSIVE TO YOU", lead details table, "CALL [NAME] NOW →" CTA button, optional homeowner message block
+- Subject: `🔥 New hvac lead — John Smith (exclusive)`
+- Email + SMS now fire concurrently via `Promise.all()` (was sequential — removed ~500ms latency per lead)
+- `firstName` extracted with empty-string guard: `lead.name?.split(" ")[0]?.toUpperCase() || "THEM"`
+
+**`supabase/functions/auto-onboard/index.ts`:**
+- `contractor_leads`, `hire_alert_subscription`, `missed_call_subscription` — switched from `m2Email()` to `dwaEmail()` wrapper + `from: matt@detroitwebagent.com`
+- All three templates upgraded to step-box HTML (matching FieldDesk welcome quality)
+- `hire_alert_subscription` body: removed MIOSHA/Apollo/job board source names (black-box approach)
+- `DWA_PRODUCTS` Set controls which products get DWA branding vs M2 Training branding
+- `DWA_SIG` constant extracted (was repeated 3× inline) — shared footer signature block
+
+**Email wrapper routing:**
+- DWA products → `dwaEmail()` + `matt@detroitwebagent.com`
+- M2/all others → `m2Email()` + `matt@mattmichelstraining.com`
+- DWA products list: `contractor_leads`, `hire_alert_subscription`, `missed_call_subscription`
+
+### CRO Black Box Overhaul + Nurse Landing Page — COMPLETE ✅
+Committed previous session.
+
+- `src/components/shared/WallOfLove.tsx` — testimonial wall (props: testimonials[], accentColor?, theme?, title?)
+- `src/components/shared/DWAStickyNav.tsx` — fixed top nav, appears after 200px scroll, ONE CTA only, no phone
+- `src/components/shared/EnterpriseFooterBlock.tsx` — ONLY place (313) 992-1219 appears on DWA pages
+- `src/pages/HireAlert.tsx` — black-box copy (MIOSHA/Apollo removed), WallOfLove, DWAStickyNav, no "Call Matt" CTA
+- `src/pages/ContractorLeads.tsx` — hero CTA changed to checkout (not phone), WallOfLove, DWAStickyNav
+- `src/pages/MissedCallSaaS.tsx` — DWAStickyNav, WallOfLove added
+- `src/pages/EstimateFollowup.tsx` — DWAStickyNav, WallOfLove added
+- `src/pages/ForNurses.tsx` — new nurse fitness landing page at `/for-nurses`, lead capture → newsletter_subscribers
+
+### Phone Number Canonical Reference
+- DWA work: (313) 992-1219 / `+13139921219` — all customer-facing content
+- Matt personal: (313) 806-4952 / `+13138064952` — ADMIN_PHONE (internal alerts) + MATT_CELL (AT&T call-forwarding detection in ai-reply-detector) ONLY
+- M2 Training fitness pages (AthleteBlueprint, ForParents, Results) — use personal number intentionally
 
 ### 20-Item TechAlert + Contractor Leads Overhaul — COMPLETE ✅
 Commits: `ce621aa2`, `f390b12f`, `40b48002`, `daf04014`
