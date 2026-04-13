@@ -1,6 +1,7 @@
 // candidate-deep-enrich — Deep enrichment pipeline for TechAlert/HireAlert candidates
 // Runs every 30 minutes. Picks up candidates with enrichment_status='pending'.
-// Pipeline: Perplexity (social/employer) → Apollo (phone/email) → AI Synthesis (summary)
+// Pipeline: Sonar OSINT (social/employer/contact) → AI Synthesis (summary)
+// Apollo removed — Sonar handles all enrichment.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -8,7 +9,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
-const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
@@ -24,6 +24,7 @@ interface CandidateRow {
   name: string;
   license_type: string | null;
   license_number: string | null;
+  license_expiry: string | null;
   city: string | null;
   state: string | null;
   email: string | null;
@@ -32,21 +33,23 @@ interface CandidateRow {
   raw_data: Record<string, unknown> | null;
 }
 
-// Phase 1: Perplexity web search for social profiles, employer, experience
-async function enrichViaPerplexity(candidate: CandidateRow): Promise<Record<string, unknown>> {
+function extractJSON(text: string): Record<string, unknown> | null {
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try {
+    return JSON.parse(match[0]);
+  } catch {
+    return null;
+  }
+}
+
+// Sonar OSINT enrichment — finds LinkedIn, Facebook, email, phone, employer
+// NEVER reveals sources or methodology to clients
+async function enrichViaSonar(candidate: CandidateRow): Promise<Record<string, unknown>> {
   if (!OPENROUTER_API_KEY) return {};
 
-  const query = `Find publicly available information about "${candidate.full_name}" who is a ${candidate.license_type || "tradesperson"} in ${candidate.city || "Michigan"}. 
-Look for:
-1. LinkedIn profile URL
-2. Facebook profile URL  
-3. Current employer/company name
-4. Current job title
-5. Estimated years of experience in the trade
-6. Any other professional social media profiles
-7. License status if available from Michigan LARA
-
-Return ONLY valid JSON: { "linkedin_url": "url or null", "facebook_url": "url or null", "current_employer": "name or null", "current_title": "title or null", "years_experience": number or null, "other_profiles": [] }`;
+  const tradeLabel = candidate.license_type || "tradesperson";
+  const locationLabel = candidate.city ? `${candidate.city}, Michigan` : "Michigan";
 
   try {
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -58,99 +61,58 @@ Return ONLY valid JSON: { "linkedin_url": "url or null", "facebook_url": "url or
       body: JSON.stringify({
         model: "perplexity/sonar-pro",
         messages: [
-          { role: "system", content: "You are a professional research assistant. Return ONLY valid JSON, no markdown, no explanation." },
-          { role: "user", content: query },
+          { role: "system", content: "You are a professional research assistant. Return ONLY valid JSON, no markdown, no explanation, no commentary." },
+          {
+            role: "user",
+            content: `Perform a web search to find the LinkedIn profile URL and Facebook profile URL for "${candidate.full_name || candidate.name}", who works as a ${tradeLabel} in or around ${locationLabel}. Also search for any associated public email addresses or phone numbers, their current employer, current job title, and estimated years of experience.
+
+Return ONLY a JSON object with these keys:
+{
+  "linkedin_url": "full URL or null",
+  "facebook_url": "full URL or null",
+  "email": "email or null",
+  "phone": "phone or null",
+  "current_employer": "company name or null",
+  "current_title": "job title or null",
+  "years_experience": number or null
+}`,
+          },
         ],
-        max_tokens: 1500,
+        max_tokens: 800,
         temperature: 0.1,
       }),
-      signal: AbortSignal.timeout(25000),
+      signal: AbortSignal.timeout(20000),
     });
 
     if (!res.ok) {
-      console.warn(`[deep-enrich] Perplexity HTTP ${res.status} for ${candidate.full_name}`);
+      console.warn(`[deep-enrich] Sonar HTTP ${res.status} for ${candidate.full_name || candidate.name}`);
       return {};
     }
 
     const data = await res.json();
     const text = data?.choices?.[0]?.message?.content || "";
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return {};
-
-    return JSON.parse(jsonMatch[0]);
-  } catch (e) {
-    console.warn(`[deep-enrich] Perplexity error for ${candidate.full_name}:`, e instanceof Error ? e.message : String(e));
-    return {};
-  }
-}
-
-// Phase 2: Apollo people/match for verified contact info
-async function enrichViaApollo(candidate: CandidateRow): Promise<Record<string, unknown>> {
-  if (!APOLLO_API_KEY) return {};
-
-  const nameParts = (candidate.full_name || candidate.name || "").split(" ");
-  const firstName = nameParts[0] || "";
-  const lastName = nameParts.slice(1).join(" ") || "";
-
-  if (!firstName) return {};
-
-  try {
-    const res = await fetch("https://api.apollo.io/api/v1/people/match", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-cache",
-        "X-Api-Key": APOLLO_API_KEY,
-      },
-      body: JSON.stringify({
-        first_name: firstName,
-        last_name: lastName,
-        location: candidate.city || "Michigan",
-        title: candidate.license_type || "",
-        reveal_personal_emails: true,
-        reveal_phone_number: true,
-      }),
-    });
-
-    if (!res.ok) {
-      console.warn(`[deep-enrich] Apollo HTTP ${res.status} for ${candidate.full_name}`);
+    const parsed = extractJSON(text);
+    if (!parsed) {
+      console.warn(`[deep-enrich] Sonar JSON parse failed for ${candidate.full_name || candidate.name}`);
       return {};
     }
 
-    const data = await res.json();
-    const person = data?.person;
-    if (!person) return {};
-
-    const phoneNumbers = person.phone_numbers as Array<{ sanitized_number?: string; type?: string }> | undefined;
-    const allPhones = (phoneNumbers || []).map((p) => ({ number: p.sanitized_number, type: p.type })).filter((p) => p.number);
-
-    return {
-      apollo_email: person.email || null,
-      apollo_phone: phoneNumbers?.[0]?.sanitized_number || null,
-      apollo_all_phones: allPhones,
-      apollo_linkedin: person.linkedin_url || null,
-      apollo_title: person.title || null,
-      apollo_company: person.organization?.name || null,
-      apollo_headline: person.headline || null,
-      apollo_city: person.city || null,
-      apollo_state: person.state || null,
-      apollo_seniority: person.seniority || null,
-    };
+    return parsed;
   } catch (e) {
-    console.warn(`[deep-enrich] Apollo error for ${candidate.full_name}:`, e instanceof Error ? e.message : String(e));
+    console.warn(`[deep-enrich] Sonar error for ${candidate.full_name || candidate.name}:`, e instanceof Error ? e.message : String(e));
     return {};
   }
 }
 
-// Phase 3: AI Synthesis — combine all data into actionable summary
+// AI Synthesis — combine all data into actionable summary
+// NEVER mentions AI, algorithms, data sources, or methodology
 async function synthesize(
   candidate: CandidateRow,
-  perplexityData: Record<string, unknown>,
-  apolloData: Record<string, unknown>
+  sonarData: Record<string, unknown>
 ): Promise<{ qualifications_summary: string; hiring_recommendation: string }> {
   if (!LOVABLE_API_KEY) return { qualifications_summary: "", hiring_recommendation: "" };
 
-  const prompt = `You are a hiring intelligence analyst. Based on the following data about a tradesperson candidate, write two things:
+  const prompt = `You are an experienced hiring researcher writing a brief dossier. Based on the following data about a tradesperson candidate, write two things:
 
 1. QUALIFICATIONS SUMMARY (2-3 sentences): Their trade expertise, years of experience, license status, and current situation.
 2. HIRING RECOMMENDATION (2-3 sentences): Whether an employer should reach out, how urgently, and the best approach.
@@ -159,17 +121,18 @@ CANDIDATE DATA:
 - Name: ${candidate.full_name || candidate.name}
 - Trade/License: ${candidate.license_type || "Unknown"}
 - License Number: ${candidate.license_number || "Not found"}
+- License Expiry: ${candidate.license_expiry || "Unknown"}
 - Location: ${candidate.city || "Michigan"}, ${candidate.state || "MI"}
-- Source: ${candidate.source}
 
-PERPLEXITY RESEARCH:
-${JSON.stringify(perplexityData, null, 2)}
+RESEARCH FINDINGS:
+${JSON.stringify(sonarData, null, 2)}
 
-APOLLO PROFESSIONAL DATA:
-${JSON.stringify(apolloData, null, 2)}
+CRITICAL RULES:
+- Do NOT mention AI, algorithms, databases, data sources, web scraping, or any methodology.
+- Write as a human hiring researcher would.
+- Be specific and actionable.
 
-Return JSON: { "qualifications_summary": "...", "hiring_recommendation": "..." }
-Do NOT mention AI, algorithms, or data sources. Write as a human hiring researcher would.`;
+Return JSON: { "qualifications_summary": "...", "hiring_recommendation": "..." }`;
 
   try {
     const res = await fetch(GATEWAY_URL, {
@@ -183,19 +146,19 @@ Do NOT mention AI, algorithms, or data sources. Write as a human hiring research
         max_tokens: 600,
         messages: [{ role: "user", content: prompt }],
       }),
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!res.ok) return { qualifications_summary: "", hiring_recommendation: "" };
 
     const data = await res.json();
     const text = data?.choices?.[0]?.message?.content?.trim() || "";
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return { qualifications_summary: "", hiring_recommendation: "" };
+    const parsed = extractJSON(text);
+    if (!parsed) return { qualifications_summary: "", hiring_recommendation: "" };
 
-    const parsed = JSON.parse(jsonMatch[0]);
     return {
-      qualifications_summary: parsed.qualifications_summary || "",
-      hiring_recommendation: parsed.hiring_recommendation || "",
+      qualifications_summary: (parsed.qualifications_summary as string) || "",
+      hiring_recommendation: (parsed.hiring_recommendation as string) || "",
     };
   } catch {
     return { qualifications_summary: "", hiring_recommendation: "" };
@@ -209,13 +172,13 @@ serve(async (req: Request) => {
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-  // Get up to 15 pending candidates per run
+  // Get up to 10 pending candidates per run (already-complete skipped by query)
   const { data: candidates, error: fetchErr } = await sb
     .from("hire_alert_candidates")
-    .select("id, full_name, name, license_type, license_number, city, state, email, phone, source, raw_data")
+    .select("id, full_name, name, license_type, license_number, license_expiry, city, state, email, phone, source, raw_data")
     .eq("enrichment_status", "pending")
     .order("created_at", { ascending: true })
-    .limit(15);
+    .limit(10);
 
   if (fetchErr) {
     console.error("[deep-enrich] Fetch error:", fetchErr.message);
@@ -237,14 +200,11 @@ serve(async (req: Request) => {
       // Mark as in-progress
       await sb.from("hire_alert_candidates").update({ enrichment_status: "enriching" }).eq("id", candidate.id);
 
-      // Run Perplexity + Apollo in parallel
-      const [perplexityData, apolloData] = await Promise.all([
-        enrichViaPerplexity(candidate),
-        enrichViaApollo(candidate),
-      ]);
+      // Sonar OSINT enrichment
+      const sonarData = await enrichViaSonar(candidate);
 
       // AI Synthesis
-      const { qualifications_summary, hiring_recommendation } = await synthesize(candidate, perplexityData, apolloData);
+      const { qualifications_summary, hiring_recommendation } = await synthesize(candidate, sonarData);
 
       // Build update object
       const update: Record<string, unknown> = {
@@ -252,27 +212,19 @@ serve(async (req: Request) => {
         enriched_at: new Date().toISOString(),
       };
 
-      // Merge Perplexity data
-      if (perplexityData.linkedin_url) update.linkedin_url = perplexityData.linkedin_url;
-      if (perplexityData.facebook_url) update.facebook_url = perplexityData.facebook_url;
-      if (perplexityData.current_employer) update.current_employer = perplexityData.current_employer;
-      if (perplexityData.current_title) update.current_title = perplexityData.current_title;
-      if (perplexityData.years_experience) update.years_experience = perplexityData.years_experience;
-
-      // Merge Apollo data (prefer Apollo for contact info — more reliable)
-      if (apolloData.apollo_email && !candidate.email) update.email = apolloData.apollo_email;
-      if (apolloData.apollo_phone && !candidate.phone) update.phone = apolloData.apollo_phone;
-      if (apolloData.apollo_linkedin) update.linkedin_url = apolloData.apollo_linkedin; // Apollo LinkedIn is usually more accurate
-      if (apolloData.apollo_company) update.current_employer = apolloData.apollo_company;
-      if (apolloData.apollo_title) update.current_title = apolloData.apollo_title;
+      // Merge Sonar data
+      if (sonarData.linkedin_url) update.linkedin_url = sonarData.linkedin_url;
+      if (sonarData.facebook_url) update.facebook_url = sonarData.facebook_url;
+      if (sonarData.current_employer) update.current_employer = sonarData.current_employer;
+      if (sonarData.current_title) update.current_title = sonarData.current_title;
+      if (sonarData.years_experience) update.years_experience = sonarData.years_experience;
+      if (sonarData.email && !candidate.email) update.email = sonarData.email;
+      if (sonarData.phone && !candidate.phone) update.phone = sonarData.phone;
 
       // Social profiles aggregate
       const socialProfiles: Record<string, unknown> = {};
-      if (update.linkedin_url || perplexityData.linkedin_url) socialProfiles.linkedin = update.linkedin_url || perplexityData.linkedin_url;
-      if (update.facebook_url || perplexityData.facebook_url) socialProfiles.facebook = update.facebook_url || perplexityData.facebook_url;
-      if (perplexityData.other_profiles) socialProfiles.other = perplexityData.other_profiles;
-      if (apolloData.apollo_all_phones) socialProfiles.all_phones = apolloData.apollo_all_phones;
-      if (apolloData.apollo_headline) socialProfiles.headline = apolloData.apollo_headline;
+      if (sonarData.linkedin_url) socialProfiles.linkedin = sonarData.linkedin_url;
+      if (sonarData.facebook_url) socialProfiles.facebook = sonarData.facebook_url;
       if (Object.keys(socialProfiles).length) update.social_profiles = socialProfiles;
 
       // AI summaries
