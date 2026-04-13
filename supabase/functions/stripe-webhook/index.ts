@@ -819,7 +819,7 @@ serve(async (req) => {
       </tr>
     </table>
 
-    <p style="color:#475569;font-size:15px;line-height:1.8;margin:0 0 8px;">Each candidate alert includes their <strong>name, trade, city, license info, contact details</strong> (when available), and our AI availability score.</p>
+    <p style="color:#475569;font-size:15px;line-height:1.8;margin:0 0 8px;">Each candidate alert includes their <strong>name, trade, city, license info, contact details</strong> (when available), and our proprietary availability score.</p>
     <p style="color:#475569;font-size:14px;line-height:1.8;margin:0;">Want to adjust your target roles or zip codes? Just reply to this email.</p>
   </td></tr>
 
@@ -828,7 +828,7 @@ serve(async (req) => {
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td>
         <table cellpadding="0" cellspacing="0"><tr>
-          <td style="vertical-align:middle;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt"></td>
+          <td style="vertical-align:middle;"><img src="https://www.detroitwebagent.com/images/matt-boat.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt"></td>
           <td style="padding-left:12px;vertical-align:middle;">
             <p style="margin:0;font-size:14px;font-weight:700;color:#fff;">Matt Michels</p>
             <p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;text-decoration:none;">(313) 992-1219</a></p>
@@ -836,7 +836,7 @@ serve(async (req) => {
         </tr></table>
       </td>
       <td style="text-align:right;vertical-align:middle;">
-        <p style="margin:0;font-size:10px;color:#64748b;"><a href="mailto:matt@mattmichelstraining.com?subject=Unsubscribe%20TechAlert" style="color:#64748b;text-decoration:none;">Unsubscribe</a></p>
+        <p style="margin:0;font-size:10px;color:#64748b;"><a href="mailto:matt@detroitwebagent.com?subject=Unsubscribe%20TechAlert" style="color:#64748b;text-decoration:none;">Unsubscribe</a></p>
       </td>
     </tr></table>
   </td></tr>
@@ -845,7 +845,7 @@ serve(async (req) => {
 </td></tr>
 </table>
 </body></html>`;
-            await sendM2Email(email, `⚡ TechAlert is Live — Your Hiring Advantage Starts Tomorrow`, welcomeHtml);
+            await dwaEmail(email, `⚡ TechAlert is Live — Your Hiring Advantage Starts Tomorrow`, welcomeHtml);
             await notifyMatt(
               `💰 New TechAlert Client — ${meta.company_name || email} ($${meta.plan === "bundle" ? "49" : "99"}/mo)`,
               `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Phone: ${meta.owner_phone || "n/a"}<br>Plan: ${meta.plan || "standalone"}</p>`
@@ -3085,7 +3085,14 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
               body: JSON.stringify({ service_type: "field_service_subscription", client_email: email, business_name: company || name || email, company: company, plan: plan || "standalone" }),
             }).catch((e: unknown) => console.error("[WEBHOOK] auto-onboard field_service error:", e)),
           ]);
-        } catch (e) { console.error("[WEBHOOK] field_service_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] field_service_subscription error:", e);
+          await notifyMatt(
+            `🚨 FieldDesk provision FAILED — ${meta.email || customerEmail || "unknown"} paid but not activated`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p><p>Stripe session: ${session.id}</p><p>Manual fix: insert row in field_crm_clients for ${meta.email || customerEmail}</p>`
+          ).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3906,7 +3913,7 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
                     headers: { Authorization: `Basic ${twilioAuth}`, "Content-Type": "application/x-www-form-urlencoded" },
                     body: new URLSearchParams({
                       PhoneNumber: available,
-                      FriendlyName: `M2 - ${meta.businessName || email}`,
+                      FriendlyName: `DWA - ${meta.businessName || email}`,
                       StatusCallback: MISSED_CALL_HANDLER_URL,
                       StatusCallbackMethod: "POST",
                       VoiceUrl: MISSED_CALL_HANDLER_URL,
@@ -3988,7 +3995,14 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Twilio #: ${twilioNumber || "NOT PROVISIONED — provision manually"}</p>`,
             ),
           ]);
-        } catch (e) { console.error("[WEBHOOK] missed_call_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] missed_call_subscription error:", e);
+          await notifyMatt(
+            `🚨 Missed Call provision FAILED — ${meta.businessName || email || "unknown"} paid but not activated`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p><p>Stripe session: ${session.id}</p><p>Manual fix: insert row in missed_call_clients for ${email}</p>`
+          ).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 

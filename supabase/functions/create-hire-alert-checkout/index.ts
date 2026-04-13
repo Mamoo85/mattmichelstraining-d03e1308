@@ -28,7 +28,7 @@ serve(async (req) => {
     const unitAmount = resolvedPlan === "bundle" ? 4900 : 9900;
     const planLabel = resolvedPlan === "bundle" ? "TechAlert + Field CRM Bundle" : "TechAlert Hiring Monitor";
 
-    const origin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
+    const origin = req.headers.get("origin") || "https://www.detroitwebagent.com";
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
