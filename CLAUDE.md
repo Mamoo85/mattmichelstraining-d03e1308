@@ -88,7 +88,6 @@ All 20 strategic improvements executed across TechAlert and Contractor Leads:
 - missed-call-handler: ForwardedFrom guard deployed to secondary project (commit `ce621aa2`)
 
 **Pending Matt actions:**
-- Disable AT&T call forwarding: iPhone Settings → Phone → Call Forwarding → Off (or dial `*73`)
 - Resend failed Stripe checkout events in Stripe Dashboard → vibrant-glow → Event deliveries → Failed
 
 ### Documentation Sync — 2026-04-12 ✅
