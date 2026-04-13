@@ -4389,6 +4389,7 @@ export type Database = {
           active: boolean | null
           company_name: string
           created_at: string | null
+          dashboard_token: string | null
           id: string
           notify_email: boolean | null
           notify_sms: boolean | null
@@ -4408,6 +4409,7 @@ export type Database = {
           active?: boolean | null
           company_name: string
           created_at?: string | null
+          dashboard_token?: string | null
           id?: string
           notify_email?: boolean | null
           notify_sms?: boolean | null
@@ -4427,6 +4429,7 @@ export type Database = {
           active?: boolean | null
           company_name?: string
           created_at?: string | null
+          dashboard_token?: string | null
           id?: string
           notify_email?: boolean | null
           notify_sms?: boolean | null
