@@ -612,7 +612,7 @@ serve(async (req: Request) => {
   const runStart = new Date().toISOString();
 
   // Fetch active paid clients + active trial clients
-  const { data: clients } = await sb.from("hire_alert_clients").select("*").or("active.eq.true,trial_status.eq.active");
+  const { data: clients } = await sb.from("hire_alert_clients").select("*").eq("active", true);
   if (!clients?.length) {
     console.log("[hire-alert-scanner] No active clients");
     return new Response(JSON.stringify({ processed: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
