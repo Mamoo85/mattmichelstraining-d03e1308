@@ -66,6 +66,23 @@ serve(async (req) => {
     }
 
     // ── DWA MODE: Matt's number ────────────────────────────────────────────
+    // Guard: don't text the same caller twice within 10 minutes (prevents forwarding loops)
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const { data: recentTexts } = await sb
+      .from("system_comms_log")
+      .select("id")
+      .eq("channel", "sms")
+      .eq("product", "missed_call")
+      .eq("recipient", callerPhone)
+      .gte("created_at", tenMinAgo)
+      .limit(1);
+
+    if (recentTexts && recentTexts.length > 0) {
+      console.log(`[missed-call-status] Skipping duplicate text to ${callerPhone} — already texted within 10 min`);
+      return new Response(TWIML_EMPTY, { headers: { "Content-Type": "text/xml" } });
+    }
+
     const result = await sendSMS(callerPhone, TWILIO_PHONE_NUMBER, DWA_TEXT_BODY, "missed_call");
     if (result.success) {
       console.log(`[missed-call-status] DWA text-back sent to ${callerPhone} — SID: ${result.sid}`);
