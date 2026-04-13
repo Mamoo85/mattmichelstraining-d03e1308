@@ -2470,6 +2470,10 @@ serve(async (req) => {
 
       // ── CONTRACTOR LEAD PPL PAYMENT ($50/lead) ───────────────────────────
       if (meta.type === "contractor_lead_payment") {
+        if (!meta.lead_id || !meta.contractor_id) {
+          console.error("[WEBHOOK] Missing PPL metadata", session.id);
+          return new Response(JSON.stringify({ error: "missing metadata" }), { status: 400 });
+        }
         try {
           const pplSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
