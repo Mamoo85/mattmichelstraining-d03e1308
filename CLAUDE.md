@@ -129,7 +129,7 @@ Commit `9b6f92c3` — all merged to main and deployed.
 - **AdminClientHealth** — added seo_guard_clients + missed_call_clients + tech_support_tickets
 - **App.tsx** — /dwa-admin now uses AgencyAdminRoute (proper admin guard)
 - **auto-onboard** — SMS_TYPES now includes _subscription variants so webhook-keyed types resolve to SMS welcome template
-- **AnnouncementBanner** — hidden on detroitwebagency.com domain
+- **AnnouncementBanner** — hidden on detroitwebagent.com domain
 - **SEOHead** — added to HireAlert, HireAlertTrial, SeoGuard, AllServices, DeadLeadIntake
 - **GetStarted.tsx** — SEO title fixed to "Detroit Web Agency" (was "M2 Training")
 - **DarkWebMonitor.tsx** — checkout now uses `supabase.functions.invoke()` (was raw `fetch()`)
@@ -489,7 +489,7 @@ Products: Commercial Lease Abstractor, Patent Watch Intelligence, PE/Investor Se
 
 ### Detroit Web Agency Products (April 2026 — `20260410300000_hire_alert_tables.sql`)
 
-**Brand**: Detroit Web Agency — "We Handle The Tech." Dark teal (`#00d4ff`) on near-black (`#0a1628`). Domain: detroitwebagency.com
+**Brand**: Detroit Web Agency — "We Handle The Tech." Dark teal (`#00d4ff`) on near-black (`#0a1628`). Domain: detroitwebagent.com
 
 **Named Product Suite (3 products + add-ons):**
 

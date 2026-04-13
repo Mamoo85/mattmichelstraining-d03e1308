@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Megaphone } from "lucide-react";
 
 const IS_AGENCY = typeof window !== "undefined" &&
-  ["detroitwebagency.com", "www.detroitwebagency.com"].includes(window.location.hostname);
+  ["detroitwebagent.com", "www.detroitwebagent.com"].includes(window.location.hostname);
 
 const AnnouncementBanner = () => {
   if (IS_AGENCY) return null;

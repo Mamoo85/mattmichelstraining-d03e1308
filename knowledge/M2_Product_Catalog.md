@@ -329,7 +329,7 @@ Free (revenue from affiliate commissions)
 ---
 
 # Detroit Web Agency Product Suite {#dwa-products}
-## Brand: Detroit Web Agency — "We Handle The Tech" | detroitwebagency.com
+## Brand: Detroit Web Agency — "We Handle The Tech" | detroitwebagent.com
 ## Colors: Teal `#00d4ff` on near-black `#0a1628`
 ## Target: HVAC, plumbing, boiler, electrical companies 3–15 techs, Metro Detroit
 
