@@ -1,41 +1,65 @@
 
-# Sonar OSINT Enrichment Engine — DEPLOYED ✅
+# Enterprise Healthcare OSINT Pipeline v4.0 — IN PROGRESS
 
-## What Changed (April 13, 2026)
+## What's Deployed
 
-### Apollo REMOVED — Sonar OSINT is now the sole enrichment engine.
+### Phase 1: `test-data-pipeline` Edge Function ✅
+**File:** `supabase/functions/test-data-pipeline/index.ts`
+- Full enrichment chain: NPI → Nursys (stub) → Sonar Deep Dork → PDL (stub) → JSON Regex Stripper → No Ghost Lead
+- Each API has its own `AbortSignal.timeout()` (NPI: 10s, Nursys: 10s, Sonar: 15s, PDL: 10s)
+- NPI + Nursys run in parallel via `Promise.all()`
+- Hardcoded test candidate: "Sarah Johnson, RN, Detroit MI"
+- Returns full pipeline results + timing breakdown + API status
+- **NEVER on any cron job** — manual invoke only
 
-**hire-alert-scanner/index.ts:**
-- ❌ Deleted `scanApollo()` (180 lines of dead Apollo people/search code)
-- ❌ Deleted `enrichMIOSHAWithApollo()` (Apollo people/match enrichment)
-- ❌ Deleted `APOLLO_API_KEY` reference
-- ✅ Added `enrichViaSonar()` — Perplexity sonar-pro via OpenRouter for LinkedIn, Facebook, email, phone, employer
-- ✅ Added `synthesizeViaAI()` — Lovable AI Gateway (free) for qualifications + hiring recommendation
-- ✅ Added `extractJSON()` — regex JSON stripper to handle LLM markdown hallucinations
-- ✅ **Timeout Guard**: Sorts by score DESC, enriches only top 5 candidates inline (75s worst case)
-- ✅ **No Ghost Lead Rule**: Candidates without ≥1 clickable link (LinkedIn/Facebook/email/phone) are EXCLUDED from client alerts
-- ✅ **Action Button Email Cards**: Prominent clickable buttons — Message on LinkedIn, View Facebook, Send Email, Call, Verify State License
-- ✅ **Founder Report Enhanced**: Shows enrichment status + ghost lead filter count (Matt-only)
-- ✅ Sources NEVER revealed to clients — Black Box methodology preserved
+### Phase 5: Medicare Client Intel ✅
+**Files:**
+- `supabase/functions/medicare-staffing-intel/index.ts` — CMS Medicare Care Compare API
+- `src/components/admin/AdminMedicareIntel.tsx` — Admin UI
+- `src/pages/DWAAdmin.tsx` — "🏥 Client Intel" tab added
 
-**candidate-deep-enrich/index.ts:**
-- ❌ Deleted all Apollo logic (`enrichViaApollo()`)
-- ✅ Now Sonar-only second pass for stragglers (enrichment_status='pending')
-- ✅ Skips already-complete candidates via DB query filter
-- ✅ JSON safety: `extractJSON()` regex stripper
-- ✅ AI synthesis: NEVER mentions AI, algorithms, or data sources
+Queries federal CMS API for Metro Detroit nursing homes (zip 480xx-483xx) with 1-2 star staffing ratings. Admin panel shows facility table with staffing/overall ratings, bed count, phone, and "TechAlert Pitch" email button.
 
-## Architecture: Enrich-Then-Alert
+## API Key Status
+- ✅ `OPENROUTER_API_KEY` — set (Sonar Deep Dork)
+- ✅ `LOVABLE_API_KEY` — set (AI synthesis)
+- ⏳ `NURSYS_API_KEY` + `NURSYS_BASE_URL` — **NOT SET** (Matt will add when available). Code stubs gracefully.
+- ⏳ `PDL_API_KEY` — **NOT SET** (placeholder). Code stubs gracefully.
+- ✅ NPI API — free, no key needed
+- ✅ CMS Medicare API — free, no key needed
 
+## Remaining Phases
+
+### Phase 2: NPI + Nursys in Production (after test-data-pipeline validates)
+- Add `enrichViaNPI()` to `hire-alert-scanner` inline enrichment loop
+- Add Nursys lookup for healthcare candidates (when key is ready)
+- Upgrade Sonar prompt with boolean `site:` operators
+
+### Phase 3: PDL Integration (when PDL_API_KEY is set)
+- Add `enrichWithPDL()` after Sonar in production pipeline
+- Mobile phone + personal email append
+
+### Phase 4: Email UI Action Buttons (after Phase 2 validates)
+- Redesign candidate cards with conditional action buttons
+- Add NPI business phone as separate `📞 Business Line` button
+- Add taxonomy badge
+
+### Phase 6: Production Fallback
+- Update `candidate-deep-enrich` with NPI + PDL second-pass
+
+## Architecture: Enrichment Waterfall (per candidate)
 ```text
-scan MIOSHA + job boards → score → sort by score DESC
-  → enrich top 5 via Sonar OSINT (15s timeout each)
-  → synthesize via Lovable AI (qualifications + recommendation)
-  → insert ALL candidates to DB (top 5 as 'complete', rest as 'pending')
-  → No Ghost Lead filter (≥1 clickable link required)
-  → send email with action buttons to matching clients
-  → candidate-deep-enrich picks up 'pending' stragglers every 30 min
+1. NPI API (healthcare only) — ~1-2s, free
+2. Nursys e-Notify (async POST/GET) — ~3-5s (when key available)
+3. Sonar Deep Dork (boolean operators) — ~5-8s
+4. PDL skip-trace (if LinkedIn found) — ~2-3s (when key available)
+5. AI Synthesis (Lovable Gateway, free) — ~3-5s
+Total: ~15-23s/candidate. Top 5 cap = 115s worst case.
 ```
 
 ## Cost
-~$0.003/candidate. 5/run × 1 run/day = $0.45/month.
+- NPI: Free
+- Medicare: Free
+- Sonar: ~$0.003/candidate
+- PDL: ~$0.10/enrichment (only when active)
+- Nursys: TBD (institutional subscription)
