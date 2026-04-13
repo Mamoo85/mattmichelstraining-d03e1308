@@ -617,6 +617,12 @@ serve(async (req: Request) => {
   const mioshaCandidates = await enrichMIOSHAWithApollo(mioshaCandidatesRaw);
 
   const allRaw = [...mioshaCandidates, ...apolloCandidates, ...jobBoardCandidates];
+  // Track source health for founder report
+  const sourceHealth = {
+    miosha: mioshaCandidates.length > 0 ? "✅" : "⚠️ 0 results",
+    apollo: apolloCandidates.length > 0 ? "✅" : "⚠️ 0 results (check API key)",
+    jobBoards: jobBoardCandidates.length > 0 ? "✅" : "⚠️ 0 results",
+  };
   console.log(`[hire-alert-scanner] Raw candidates: MIOSHA=${mioshaCandidates.length} Apollo=${apolloCandidates.length} JobBoards=${jobBoardCandidates.length}`);
 
   // Deduplicate by license_number (for MIOSHA) or name+city
