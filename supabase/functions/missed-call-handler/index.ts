@@ -6,7 +6,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
-const MATT_PERSONAL = "+13139921219";
+const MATT_PERSONAL = Deno.env.get("MATT_PERSONAL_PHONE") || "+13138064952";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 
 const TWIML_HEADERS = { "Content-Type": "text/xml" };
@@ -23,25 +23,13 @@ serve(async (req) => {
   }
 
   let fromNumber = "";
-  let toNumber = "";
 
   try {
     const text = await req.text();
     const params = new URLSearchParams(text);
     fromNumber = params.get("From") || "";
-    toNumber = params.get("To") || "";
 
-    // ForwardedFrom is set by AT&T/carriers when a call is forwarded from another number.
-    // If someone called Matt's personal number and AT&T forwarded it to this Twilio number,
-    // we must NOT send a text-back — this is a personal call, not a business inquiry.
-    const forwardedFrom = params.get("ForwardedFrom") || "";
-
-    console.log(`[missed-call-handler] Call from=${fromNumber} to=${toNumber} forwardedFrom=${forwardedFrom}`);
-
-    // Skip text-back for any call that originated from or was forwarded from personal phone
-    if (toNumber === MATT_PERSONAL || forwardedFrom === MATT_PERSONAL) {
-      return twiml("<Dial timeout=\"25\"><Number>" + MATT_PERSONAL + "</Number></Dial>");
-    }
+    console.log(`[missed-call-handler] Call from=${fromNumber}`);
 
     // No caller ID — hang up silently
     if (!fromNumber) {
