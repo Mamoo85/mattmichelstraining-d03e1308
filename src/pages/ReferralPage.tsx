@@ -123,7 +123,7 @@ export default function ReferralPage() {
       setSubmitted(true);
       setForm(EMPTY_FORM);
     } catch {
-      setError("Something went wrong. Please try again or text Matt at (313) 806-4952.");
+      setError("Something went wrong. Please try again or text Matt at (313) 992-1219.");
     } finally {
       setSubmitting(false);
     }
@@ -356,8 +356,8 @@ export default function ReferralPage() {
         {/* Bottom note */}
         <p className="text-center text-slate-500 text-sm pb-4">
           Questions? Text Matt directly at{" "}
-          <a href="sms:3138064952" className="text-cyan-400 hover:text-cyan-300">
-            (313) 806-4952
+          <a href="sms:3139921219" className="text-cyan-400 hover:text-cyan-300">
+            (313) 992-1219
           </a>
         </p>
       </main>

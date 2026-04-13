@@ -114,7 +114,7 @@ const SelfPostureAnalysis = memo(({ open, onClose }: SelfPostureAnalysisProps) =
 <div>${(analysis || "").replace(/\n/g, "<br>").replace(/## /g, "</div><h2>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/- /g, "• ")}</div>
 <div class="cta"><a href="https://mattmichelstraining.lovable.app/shop">Ready to fix these issues? Browse M2 Training Programs →</a></div>
 <div style="text-align:center;margin-top:16px;font-size:11px;color:#94a3b8;">
-  mattmichelstraining.com | matt@mattmichelstraining.com | (313) 806-4952
+  mattmichelstraining.com | matt@mattmichelstraining.com | (313) 992-1219
 </div>
 </body></html>`;
   };

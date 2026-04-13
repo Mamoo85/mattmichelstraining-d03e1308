@@ -2,7 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Megaphone } from "lucide-react";
 
+const IS_AGENCY = typeof window !== "undefined" &&
+  ["detroitwebagency.com", "www.detroitwebagency.com"].includes(window.location.hostname);
+
 const AnnouncementBanner = () => {
+  if (IS_AGENCY) return null;
   const { data } = useQuery({
     queryKey: ["announcement-banner"],
     queryFn: async () => {

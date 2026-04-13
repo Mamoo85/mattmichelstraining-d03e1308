@@ -2,21 +2,23 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { generateText } from "../_shared/ai.ts";
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 const log = (step: string, data?: any) =>
   console.log(`[CONTRACTOR-PROSPECTOR] ${step}${data ? " — " + JSON.stringify(data) : ""}`);
 
 // ── Daily send cap to protect domain reputation ──
 const DAILY_SEND_CAP = 30;
-const DEAD_LEAD_CAP = 5; // separate cap for dead lead reactivation pitches
-const SENIOR_CARE_CAP = 3; // separate cap for senior care TechAlert pitches
+const DEAD_LEAD_CAP = 5;      // dead lead reactivation pitches/day
+const TECH_ALERT_CAP = 5;     // TechAlert trial pitches/day
+const MISSED_CALL_CAP = 5;    // Missed-Call Text-Back pitches/day
 
 // ── Metro Detroit targets only ──
-const TRADES = [
-  "roofer", "HVAC contractor", "plumber", "electrician", "dentist",
-  "assisted living facility", "home health agency", "skilled nursing facility",
-];
+const TRADES = ["roofer", "HVAC contractor", "plumber", "electrician", "dentist"];
 const DEAD_LEAD_TRADES = new Set(["roofer", "HVAC contractor", "plumber", "electrician"]);
-const SENIOR_CARE_TRADES = new Set(["assisted living facility", "home health agency", "skilled nursing facility"]);
 const CITIES = [
   "Grosse Pointe MI", "Detroit MI", "Warren MI", "Sterling Heights MI",
   "Troy MI", "Livonia MI", "Dearborn MI", "Royal Oak MI",
@@ -183,7 +185,7 @@ SNIPER RULES:
 2. Sentence 1: Call out a SPECIFIC flaw you found (not generic — reference their actual data)
 3. Sentence 2: Agitate — what this flaw is costing them in real dollars or lost jobs
 4. Sentence 3: Present the fix in one line — what Matt does and the price
-5. Sentence 4: Soft CTA — reply or text (313) 806-4952
+5. Sentence 4: Soft CTA — reply or text (313) 992-1219
 6. Start with "Hey —" (never "Dear" or "Hi [Name]")
 7. Sign off "— Matt, Grosse Pointe"
 8. Blue-collar tone. Like a text from a buddy who happens to know marketing.
@@ -215,7 +217,7 @@ function buildEmailHtml(body: string): string {
 ${htmlBody}
 <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
 <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;vertical-align:middle;" alt="Matt">
-<span style="margin-left:12px;font-size:13px;color:#334155;vertical-align:middle;"><strong>Matt Michels</strong> · Grosse Pointe, MI · (313) 806-4952</span>
+<span style="margin-left:12px;font-size:13px;color:#334155;vertical-align:middle;"><strong>Matt Michels</strong> · Grosse Pointe, MI · (313) 992-1219</span>
 </div>
 </td></tr>
 <tr><td style="background:#f8fafc;padding:12px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
@@ -245,7 +247,7 @@ Rules:
 2. Sentence 1: Prove you looked them up — mention their review count, rating, or city specifically
 3. Sentence 2: "You've got dead estimates in your system that never turned into jobs. We text them for you."
 4. Sentence 3: The deal — $50 only when a lead says YES they still need the work. Zero monthly fee.
-5. Sentence 4: Soft CTA — reply to this email or text (313) 806-4952
+5. Sentence 4: Soft CTA — reply to this email or text (313) 992-1219
 6. Start with "Hey —" (never "Dear" or "Hi [Name]")
 7. Sign off: "— Matt, Detroit Web Agency"
 8. Conversational, blue-collar tone. Not salesy.
@@ -274,7 +276,7 @@ function buildDeadLeadEmailHtml(body: string): string {
 <tr><td style="padding:24px;color:#334155;font-size:15px;line-height:1.8;">
 ${htmlBody}
 <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
-<span style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency · (313) 806-4952 · detroitwebagent.com</span>
+<span style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency · (313) 992-1219 · detroitwebagent.com</span>
 </div>
 </td></tr>
 <tr><td style="background:#f8fafc;padding:12px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
@@ -295,52 +297,72 @@ async function getDailyDeadLeadCount(sb: any): Promise<number> {
   return count || 0;
 }
 
-// ── Check how many senior care TechAlert emails sent today ──
-async function getDailySeniorCareCount(sb: any): Promise<number> {
+// ── Check how many Missed-Call pitches sent today ──
+async function getDailyMissedCallCount(sb: any): Promise<number> {
   const todayStart = new Date();
   todayStart.setUTCHours(0, 0, 0, 0);
   const { count } = await sb
     .from("outreach_leads")
     .select("id", { count: "exact", head: true })
-    .eq("offer_pitched", "techalert_senior_care")
+    .eq("offer_pitched", "missed_call")
     .gte("created_at", todayStart.toISOString());
   return count || 0;
 }
 
-// ── AGENT 4: SNIPER_SENIOR — TechAlert pitch for senior care facilities ──
-// Pitch: We monitor when licensed CNAs/LPNs/RNs enter your market. Instant SMS alert.
-async function sniperSeniorCareEmail(
+// ── Check how many TechAlert pitches sent today ──
+async function getDailyTechAlertCount(sb: any): Promise<number> {
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+  const { count } = await sb
+    .from("outreach_leads")
+    .select("id", { count: "exact", head: true })
+    .eq("offer_pitched", "tech_alert")
+    .gte("created_at", todayStart.toISOString());
+  return count || 0;
+}
+
+// Pitch rotation by day-of-year: 0=dead lead, 1=tech alert, 2=missed call, 3=web design
+function getTodayPitchRotation(): "dead_lead" | "tech_alert" | "missed_call" | "web_design" {
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+  const r = dayOfYear % 4;
+  return r === 0 ? "dead_lead" : r === 1 ? "tech_alert" : r === 2 ? "missed_call" : "web_design";
+}
+
+// Map trade → TechAlert target_roles
+function getTargetRolesForTrade(trade: string): string[] {
+  const t = trade.toLowerCase();
+  if (t.includes("hvac")) return ["hvac_tech", "pipefitter"];
+  if (t.includes("plumb")) return ["plumber", "pipefitter"];
+  if (t.includes("electric")) return ["electrician"];
+  if (t.includes("boiler") || t.includes("steam") || t.includes("mechanical")) return ["boiler_operator", "steam_engineer"];
+  return [];
+}
+
+// ── AGENT 4: SNIPER_TECH — TechAlert cold pitch ──
+async function sniperTechAlertEmail(
   businessName: string,
   trade: string,
   city: string,
   reviewCount: number,
-  rating: number,
 ): Promise<{ subject: string; body: string }> {
   const cityShort = city.replace(" MI", "");
-  const roleMap: Record<string, string> = {
-    "assisted living facility": "CNA or home health aide",
-    "home health agency": "CNA or LPN",
-    "skilled nursing facility": "CNA, LPN, or RN",
-  };
-  const role = roleMap[trade] || "CNA or LPN";
+  const tradeClean = trade.replace(" contractor", "");
+  const prompt = `You are writing a 4-sentence cold email from Matt Michels at Detroit Web Agency to the owner of "${businessName}", a ${tradeClean} in ${cityShort}, MI.
 
-  const prompt = `You are writing a 4-sentence cold email from Matt Michels at Detroit Web Agency to the owner/administrator of "${businessName}", a ${trade} in ${cityShort}, MI.
+The offer: TechAlert — a service that monitors Michigan's MIOSHA license database daily and texts them the moment a licensed ${tradeClean} technician becomes available in their area. $99/mo, cancel anytime. They're getting a free trial today — no card required.
 
-The offer: TechAlert — we monitor Michigan's state nurse aide and professional license registry daily. The moment a new ${role} license is issued in your area, we text you their name and license number instantly. $99/mo.
-
-They have ${reviewCount} Google reviews${rating ? ` and a ${rating}-star rating` : ""} — reference one of these facts to prove you looked them up.
+They have ${reviewCount} Google reviews — reference this to prove you looked them up.
 
 Rules:
 1. EXACTLY 4 sentences
-2. Sentence 1: Prove you looked them up — mention their facility type, review count, or city
-3. Sentence 2: The problem — finding qualified ${role}s is the #1 operating headache for senior care facilities
-4. Sentence 3: The fix — TechAlert texts you the moment a new ${role} license is issued in Metro Detroit. $99/mo.
-5. Sentence 4: Soft CTA — reply or text (313) 806-4952
-6. Start with "Hey —" (never "Dear" or "Hi [Name]")
+2. Sentence 1: Prove you found them specifically — mention their review count, trade, or city
+3. Sentence 2: Mention hiring pain — good licensed ${tradeClean} techs are hard to find, and by the time you hear about one, they're already gone
+4. Sentence 3: TechAlert scans Michigan's MIOSHA license DB daily — when a new tech gets licensed in your area, you get a text first. Free trial, no card.
+5. Sentence 4: Soft CTA — reply to claim their trial or text (313) 992-1219
+6. Start with "Hey —"
 7. Sign off: "— Matt, Detroit Web Agency"
-8. Warm, professional tone. Not salesy. Speak like you understand their staffing nightmare.
-9. NO buzzwords (leverage, synergy, streamline, revolutionize, etc.)
-10. Subject line: Under 40 chars, lowercase ok, references staffing
+8. Conversational, direct. Not salesy.
+9. Subject line: Under 40 chars
 
 Format:
 SUBJECT: [subject line]
@@ -351,25 +373,88 @@ BODY:
   const subjectMatch = text.match(/SUBJECT:\s*(.+)/);
   const bodyMatch = text.match(/BODY:\s*([\s\S]+)/);
   return {
-    subject: subjectMatch?.[1]?.trim() || `new ${role} alert for ${cityShort}`,
+    subject: subjectMatch?.[1]?.trim() || `finding ${tradeClean} techs in ${cityShort}`,
     body: bodyMatch?.[1]?.trim() || text,
   };
 }
 
-function buildSeniorCareEmailHtml(body: string): string {
+function buildTechAlertEmailHtml(body: string): string {
+  const htmlBody = body.replace(/\n/g, "<br>");
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a1628;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#0f172a;border:1px solid #00d4ff30;border-radius:8px;overflow:hidden;">
+<tr><td style="background:#00d4ff;padding:3px 0;"></td></tr>
+<tr><td style="padding:8px 24px 4px;background:#0a1628;">
+  <span style="font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#00d4ff;">⚡ TechAlert by Detroit Web Agency</span>
+</td></tr>
+<tr><td style="padding:16px 24px 24px;color:#e2e8f0;font-size:15px;line-height:1.8;background:#0f172a;">
+${htmlBody}
+<div style="margin-top:20px;padding-top:16px;border-top:1px solid #1e3a5f;">
+<span style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;text-decoration:none;">(313) 992-1219</a> · <a href="https://detroitwebagent.com" style="color:#00d4ff;text-decoration:none;">detroitwebagent.com</a></span>
+</div>
+</td></tr>
+<tr><td style="background:#0a1628;padding:12px 24px;border-top:1px solid #1e3a5f;font-size:11px;color:#475569;">
+Detroit Web Agency · Grosse Pointe, MI
+</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+async function sniperMissedCallEmail(
+  businessName: string,
+  trade: string,
+  city: string,
+  reviewCount: number,
+): Promise<{ subject: string; body: string }> {
+  const cityShort = city.replace(" MI", "");
+  const tradeClean = trade.replace(" contractor", "");
+  const prompt = `You are writing a 4-sentence cold email from Matt Michels at Detroit Web Agency to the owner of "${businessName}", a ${tradeClean} in ${cityShort}, MI.
+
+The offer: Missed-Call Text-Back — when a homeowner calls and the contractor misses it, we automatically text them back within 60 seconds so they don't call the next guy. $99/mo, cancel anytime.
+
+They have ${reviewCount} Google reviews — reference this to prove you looked them up.
+
+Rules:
+1. EXACTLY 4 sentences
+2. Sentence 1: Prove you found them specifically — mention their review count, trade, or city
+3. Sentence 2: Every missed call is a job they're handing to a competitor. While they're on a job, a homeowner calls, gets voicemail, and calls the next plumber.
+4. Sentence 3: For $99/mo we text every missed caller back in 60 seconds — "Thanks for calling ${businessName}, we'll call you right back." They stop calling around.
+5. Sentence 4: Soft CTA — takes 5 minutes to set up, reply or text (313) 992-1219
+6. Start with "Hey —"
+7. Sign off: "— Matt, Detroit Web Agency"
+8. Conversational, direct. Not salesy.
+9. Subject line: Under 40 chars
+
+Format:
+SUBJECT: [subject line]
+BODY:
+[4-sentence email]`;
+
+  const text = await generateText(prompt, 400);
+  const subjectMatch = text.match(/SUBJECT:\s*(.+)/);
+  const bodyMatch = text.match(/BODY:\s*([\s\S]+)/);
+  return {
+    subject: subjectMatch?.[1]?.trim() || `missed calls costing ${tradeClean}s in ${cityShort}`,
+    body: bodyMatch?.[1]?.trim() || text,
+  };
+}
+
+function buildMissedCallEmailHtml(body: string): string {
   const htmlBody = body.replace(/\n/g, "<br>");
   return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
-<tr><td style="background:#00d4ff;padding:3px 0;"></td></tr>
-<tr><td style="padding:24px;color:#334155;font-size:15px;line-height:1.8;">
+<tr><td style="background:#e8621a;padding:3px 0;"></td></tr>
+<tr><td style="padding:8px 24px 4px;background:#fff3ec;">
+  <span style="font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#e8621a;">📞 Missed-Call Text-Back · Detroit Web Agency</span>
+</td></tr>
+<tr><td style="padding:16px 24px 24px;color:#334155;font-size:15px;line-height:1.8;">
 ${htmlBody}
 <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
-<span style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency · (313) 806-4952 · detroitwebagent.com</span>
+<span style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13139921219" style="color:#e8621a;text-decoration:none;">(313) 992-1219</a> · <a href="https://detroitwebagent.com" style="color:#e8621a;text-decoration:none;">detroitwebagent.com</a></span>
 </div>
 </td></tr>
-<tr><td style="background:#0a1628;padding:12px 24px;border-top:1px solid #00d4ff33;font-size:11px;color:#00d4ff;">
-Detroit Web Agency · Grosse Pointe, MI · TechAlert License Monitoring
+<tr><td style="background:#f8fafc;padding:12px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
+Detroit Web Agency · Grosse Pointe, MI
 </td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -387,6 +472,9 @@ async function getDailySendCount(sb: any): Promise<number> {
 }
 
 serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response('ok', { headers: corsHeaders });
+  }
   try {
     const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY")!;
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
@@ -403,13 +491,15 @@ serve(async (req) => {
       );
     }
 
-    // Check dead lead daily cap
+    // Check dead lead, TechAlert, and Missed-Call daily caps
     const deadLeadSentToday = await getDailyDeadLeadCount(sb);
+    const techAlertSentToday = await getDailyTechAlertCount(sb);
+    const missedCallSentToday = await getDailyMissedCallCount(sb);
     let deadLeadSent = deadLeadSentToday;
-
-    // Check senior care daily cap
-    const seniorCareSentToday = await getDailySeniorCareCount(sb);
-    let seniorCareSent = seniorCareSentToday;
+    let techAlertSent = techAlertSentToday;
+    let missedCallSent = missedCallSentToday;
+    const pitchRotation = getTodayPitchRotation();
+    log("Pitch rotation today", { pitchRotation, deadLeadSent, techAlertSent, missedCallSent });
 
     // Optional manual override — allows dashboard to target a specific trade + city
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
@@ -418,7 +508,6 @@ serve(async (req) => {
     const combos = (manualTrade && manualCity) ? [{ trade: manualTrade, city: manualCity }] : getTodaysCombos();
     let totalEmailed = 0;
     let totalDeadLeadEmailed = 0;
-    let totalSeniorCareEmailed = 0;
     let totalFound = 0;
     let totalSkipped = 0;
     let totalScoutRejected = 0;
@@ -475,8 +564,125 @@ serve(async (req) => {
           continue;
         }
 
+        // ── TECH ALERT PITCH: day 2 of 3-day rotation for trade contractors ──
+        if (DEAD_LEAD_TRADES.has(trade) && pitchRotation === "tech_alert" && techAlertSent < TECH_ALERT_CAP) {
+          let taSubject: string, taBody: string;
+          try {
+            ({ subject: taSubject, body: taBody } = await sniperTechAlertEmail(name, trade, city, reviewCount));
+          } catch (taErr) {
+            log("TechAlert sniper failed", { name, error: String(taErr) });
+            taSubject = ""; taBody = "";
+          }
+          if (taSubject && taBody) {
+            const taHtml = buildTechAlertEmailHtml(taBody);
+            const taRes = await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@detroitwebagent.com>",
+                to: [email],
+                bcc: ["matt@detroitwebagent.com"],
+                subject: taSubject,
+                html: taHtml,
+              }),
+            });
+            if (taRes.ok) {
+              // Log the outreach
+              await sb.from("outreach_leads").insert({
+                business_name: name,
+                city: city.replace(" MI", ""),
+                industry: trade.charAt(0).toUpperCase() + trade.slice(1).replace(" contractor", ""),
+                phone, email, website: website || null,
+                status: "emailed", channel: "email",
+                offer_pitched: "tech_alert",
+                last_contact_date: new Date().toISOString().split("T")[0],
+                drip_campaign_status: { d0_sent: true, d0_sent_at: new Date().toISOString() },
+                notes: `TechAlert pitch. Reviews: ${reviewCount}, Rating: ${rating}`,
+              });
+              await sb.from("email_send_log" as any).insert({
+                recipient_email: email, template_name: "contractor_tech_alert_d0",
+                status: "sent", message_id: `ta_d0_${Date.now()}_${email}`,
+              });
+
+              // Auto-enroll as TechAlert trial — prospect gets a real alert tomorrow morning
+              // They never see a paywall until their 72h trial expires
+              const targetRoles = getTargetRolesForTrade(trade);
+              const { data: existingTrial } = await sb
+                .from("hire_alert_clients")
+                .select("id")
+                .eq("owner_email", email)
+                .maybeSingle();
+              if (!existingTrial) {
+                await sb.from("hire_alert_clients").insert({
+                  company_name: name,
+                  owner_email: email,
+                  owner_phone: phone || null,
+                  target_roles: targetRoles,
+                  active: false,
+                  trial_status: "active",
+                  trial_started_at: new Date().toISOString(),
+                  notify_email: true,
+                  notify_sms: false,
+                });
+                log("TechAlert trial auto-enrolled", { name, email, targetRoles });
+              }
+
+              techAlertSent++;
+              log("TechAlert pitch sent", { name, email, city });
+              await new Promise(r => setTimeout(r, 500));
+              continue;
+            }
+          }
+        }
+
+        // ── MISSED-CALL PITCH: day 3 of 4-day rotation ──
+        if (DEAD_LEAD_TRADES.has(trade) && pitchRotation === "missed_call" && missedCallSent < MISSED_CALL_CAP) {
+          let mcSubject: string, mcBody: string;
+          try {
+            ({ subject: mcSubject, body: mcBody } = await sniperMissedCallEmail(name, trade, city, reviewCount));
+          } catch (mcErr) {
+            log("MissedCall sniper failed", { name, error: String(mcErr) });
+            mcSubject = ""; mcBody = "";
+          }
+          if (mcSubject && mcBody) {
+            const mcHtml = buildMissedCallEmailHtml(mcBody);
+            const mcRes = await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@detroitwebagent.com>",
+                to: [email],
+                bcc: ["matt@detroitwebagent.com"],
+                subject: mcSubject,
+                html: mcHtml,
+              }),
+            });
+            if (mcRes.ok) {
+              await sb.from("outreach_leads").insert({
+                business_name: name,
+                city: city.replace(" MI", ""),
+                industry: trade.charAt(0).toUpperCase() + trade.slice(1).replace(" contractor", ""),
+                phone, email, website: website || null,
+                status: "emailed", channel: "email",
+                offer_pitched: "missed_call",
+                last_contact_date: new Date().toISOString().split("T")[0],
+                drip_campaign_status: { d0_sent: true, d0_sent_at: new Date().toISOString() },
+                notes: `Missed-Call pitch. Reviews: ${reviewCount}, Rating: ${rating}`,
+              });
+              await sb.from("email_send_log" as any).insert({
+                recipient_email: email, template_name: "contractor_missed_call_d0",
+                status: "sent", message_id: `mc_d0_${Date.now()}_${email}`,
+              });
+              missedCallSent++;
+              log("Missed-Call pitch sent", { name, email, city });
+              await new Promise(r => setTimeout(r, 500));
+              continue;
+            }
+          }
+        }
+
         // ── DEAD LEAD PITCH: for trade contractors, send reactivation pitch ──
-        if (DEAD_LEAD_TRADES.has(trade) && deadLeadSent < DEAD_LEAD_CAP) {
+        if (DEAD_LEAD_TRADES.has(trade) && (pitchRotation === "dead_lead" || techAlertSent >= TECH_ALERT_CAP) && deadLeadSent < DEAD_LEAD_CAP) {
           let dlSubject: string, dlBody: string;
           try {
             ({ subject: dlSubject, body: dlBody } = await sniperDeadLeadEmail(name, trade, city, reviewCount, rating));
@@ -519,53 +725,6 @@ serve(async (req) => {
               log("Dead lead pitch sent", { name, email, city });
               await new Promise(r => setTimeout(r, 500));
               continue; // skip regular SNIPER flow for this contractor
-            }
-          }
-        }
-
-        // ── SENIOR CARE: TechAlert CNA/LPN/RN license monitoring pitch ──
-        if (SENIOR_CARE_TRADES.has(trade) && seniorCareSent < SENIOR_CARE_CAP) {
-          let scSubject: string, scBody: string;
-          try {
-            ({ subject: scSubject, body: scBody } = await sniperSeniorCareEmail(name, trade, city, reviewCount, rating));
-          } catch (scErr) {
-            log("SeniorCare sniper failed", { name, error: String(scErr) });
-            scSubject = ""; scBody = "";
-          }
-          if (scSubject && scBody) {
-            const scHtml = buildSeniorCareEmailHtml(scBody);
-            const scRes = await fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({
-                from: "Matt Michels <matt@detroitwebagent.com>",
-                to: [email],
-                bcc: ["matt@detroitwebagent.com"],
-                subject: scSubject,
-                html: scHtml,
-              }),
-            });
-            if (scRes.ok) {
-              await sb.from("outreach_leads").insert({
-                business_name: name,
-                city: city.replace(" MI", ""),
-                industry: trade.charAt(0).toUpperCase() + trade.slice(1),
-                phone, email, website: website || null,
-                status: "emailed", channel: "email",
-                offer_pitched: "techalert_senior_care",
-                last_contact_date: new Date().toISOString().split("T")[0],
-                drip_campaign_status: { d0_sent: true, d0_sent_at: new Date().toISOString() },
-                notes: `TechAlert senior care pitch. Reviews: ${reviewCount}, Rating: ${rating}`,
-              });
-              await sb.from("email_send_log" as any).insert({
-                recipient_email: email, template_name: "contractor_techalert_senior_care_d0",
-                status: "sent", message_id: `sc_d0_${Date.now()}_${email}`,
-              });
-              seniorCareSent++;
-              totalSeniorCareEmailed++;
-              log("Senior care TechAlert pitch sent", { name, email, city });
-              await new Promise(r => setTimeout(r, 500));
-              continue; // skip Scout/Sniper flow
             }
           }
         }
@@ -676,19 +835,20 @@ serve(async (req) => {
         found: totalFound,
         emailed: totalEmailed,
         deadLeadEmailed: totalDeadLeadEmailed,
-        seniorCareEmailed: totalSeniorCareEmailed,
+        techAlertEmailed: techAlertSent - techAlertSentToday,
         skipped: totalSkipped,
         scoutRejected: totalScoutRejected,
+        pitchRotation,
         dailySentBefore: dailySent,
         dailySentAfter: dailySent + totalEmailed,
         cap: DAILY_SEND_CAP,
         combos,
       }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     log("ERROR", { msg });
-    return new Response(JSON.stringify({ error: msg }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

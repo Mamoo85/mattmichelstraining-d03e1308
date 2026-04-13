@@ -20,8 +20,8 @@ async function notifyMatt(subject: string, html: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Detroit Web Agency <matt@mattmichelstraining.com>",
-      to: ["matt@mattmichelstraining.com"],
+      from: "Detroit Web Agency <matt@detroitwebagent.com>",
+      to: ["matt@detroitwebagent.com"],
       subject,
       html,
     }),
@@ -53,7 +53,7 @@ interface RawCandidate {
   license_expiry?: string;
   city?: string;
   zip?: string;
-  source: "bpl" | "apollo" | "firecrawl" | "florida_dbpr";
+  source: "miosha" | "apollo" | "firecrawl";
   raw_data?: Record<string, unknown>;
 }
 
@@ -62,103 +62,120 @@ interface ScoredCandidate extends RawCandidate {
   score_reason: string;
 }
 
-// Source 1: Michigan BPL FOIA Excel Downloads — direct government data, no API key needed
-// Downloads official LARA/BPL license lists, filters for recent (30-day) issuances
-async function scanBPL(): Promise<RawCandidate[]> {
-  const BPL_INDEX = "https://www.michigan.gov/lara/bureau-list/bpl/license-lists-and-reports";
-  const TRADE_KEYWORDS = ["boiler", "steam", "electri", "plumb", "hvac", "mechanic", "nursing", "nurse", "lpn", "cna"];
-
-  let indexHtml = "";
+// Source 1: MIOSHA Public License Database — delegates to miosha-license-scraper
+// That function scrapes actual LARA VAL pages directly (not web search).
+// Any new candidates inserted by the scraper are picked up here.
+async function scanMIOSHA(): Promise<RawCandidate[]> {
   try {
-    const ctl = new AbortController();
-    setTimeout(() => ctl.abort(), 10_000);
-    const r = await fetch(BPL_INDEX, { signal: ctl.signal, headers: { "User-Agent": "Mozilla/5.0" } });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    indexHtml = await r.text();
-  } catch (e) {
-    console.error("[hire-alert-scanner] BPL index fetch failed:", e);
-    return [];
-  }
-
-  // Extract .xlsx download URLs that match trade keywords
-  const xlsxUrls: string[] = [];
-  for (const m of indexHtml.matchAll(/href="([^"]*\.xlsx[^"]*)"/gi)) {
-    const href = m[1];
-    const url = href.startsWith("http") ? href : `https://www.michigan.gov${href}`;
-    if (TRADE_KEYWORDS.some(kw => url.toLowerCase().includes(kw))) xlsxUrls.push(url);
-  }
-  // Fallback: take first 3 xlsx links if none matched keywords
-  if (!xlsxUrls.length) {
-    for (const m of indexHtml.matchAll(/href="([^"]*\.xlsx[^"]*)"/gi)) {
-      const href = m[1];
-      xlsxUrls.push(href.startsWith("http") ? href : `https://www.michigan.gov${href}`);
-      if (xlsxUrls.length >= 3) break;
+    // Trigger the dedicated scraper so it upserts fresh records
+    const scraperUrl = `${SUPABASE_URL}/functions/v1/miosha-license-scraper`;
+    const res = await fetch(scraperUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+        "Content-Type": "application/json",
+      },
+    });
+    if (!res.ok) {
+      console.warn(`[hire-alert-scanner] miosha-license-scraper returned ${res.status}`);
+    } else {
+      const result = await res.json();
+      console.log(`[hire-alert-scanner] miosha-scraper: new=${result.new} updated=${result.updated}`);
     }
-  }
-  if (!xlsxUrls.length) {
-    console.log("[hire-alert-scanner] No BPL xlsx links found on page");
-    return [];
+  } catch (e) {
+    console.warn("[hire-alert-scanner] miosha-scraper call failed:", e);
   }
 
-  const candidates: RawCandidate[] = [];
-  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  // Return candidates that the scraper just inserted/updated (status='new', source='miosha')
+  const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+  const since = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(); // last 25h
+  const { data } = await sb
+    .from("hire_alert_candidates")
+    .select("full_name, phone, email, license_type, license_number, license_expiry, city, zip, source, raw_data")
+    .eq("source", "miosha")
+    .gte("first_seen_at", since);
 
-  for (const url of xlsxUrls.slice(0, 4)) {
+  return (data || []).map((r) => ({
+    full_name: r.full_name,
+    phone: r.phone ?? undefined,
+    email: r.email ?? undefined,
+    license_type: r.license_type ?? undefined,
+    license_number: r.license_number ?? undefined,
+    license_expiry: r.license_expiry ?? undefined,
+    city: r.city ?? undefined,
+    zip: r.zip ?? undefined,
+    source: "miosha" as const,
+    raw_data: r.raw_data as Record<string, unknown> | undefined,
+  }));
+}
+
+// TA-3: Enrich MIOSHA candidates that lack contact info via Apollo /people/match
+// MIOSHA gives us name + license but no email/phone. Apollo can fill in the gap.
+async function enrichMIOSHAWithApollo(candidates: RawCandidate[]): Promise<RawCandidate[]> {
+  if (!APOLLO_API_KEY) return candidates;
+  // Only enrich candidates missing both phone and email — don't burn API credits on complete records
+  const needsEnrichment = candidates.filter((c) => !c.phone && !c.email);
+  if (!needsEnrichment.length) return candidates;
+
+  const enriched = new Map<string, { phone?: string; email?: string }>();
+
+  for (const candidate of needsEnrichment.slice(0, 10)) { // cap at 10 enrichments per run
     try {
-      const ctl = new AbortController();
-      setTimeout(() => ctl.abort(), 20_000);
-      const res = await fetch(url, { signal: ctl.signal });
+      const res = await fetch("https://api.apollo.io/api/v1/people/match", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+          "X-Api-Key": APOLLO_API_KEY,
+        },
+        body: JSON.stringify({
+          first_name: candidate.full_name.split(" ")[0] || "",
+          last_name: candidate.full_name.split(" ").slice(1).join(" ") || "",
+          location: candidate.city || "Detroit, Michigan",
+          title: candidate.license_type || "",
+          reveal_personal_emails: true,
+          reveal_phone_number: true,
+        }),
+      });
       if (!res.ok) continue;
-      const buf = await res.arrayBuffer();
-      if (buf.byteLength > 10_000_000) {
-        console.log(`[hire-alert-scanner] BPL file too large (${buf.byteLength}b), skipping`);
-        continue;
-      }
-      const { read, utils } = await import("https://esm.sh/xlsx@0.18.5");
-      const wb = read(new Uint8Array(buf), { type: "array", sheetRows: 3000 });
-      const rows: Record<string, string>[] = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
+      const data = await res.json();
+      const person = data?.person;
+      if (!person) continue;
 
-      for (const row of rows) {
-        const name = String(row["Name"] || row["Licensee Name"] || row["Full Name"] || row["FULL_NAME"] || "").trim();
-        if (!name || name.length < 3) continue;
-        // Skip if no recent issue date
-        const issueDateStr = String(row["Issue Date"] || row["Effective Date"] || row["License Date"] || "").trim();
-        if (issueDateStr) {
-          const dt = new Date(issueDateStr).getTime();
-          if (!isNaN(dt) && dt < thirtyDaysAgo) continue;
-        }
-        candidates.push({
-          full_name: name,
-          license_type: String(row["License Type"] || row["Type"] || row["License Description"] || "").trim() || undefined,
-          license_number: String(row["License Number"] || row["License #"] || row["LICENSE_NO"] || "").trim() || undefined,
-          license_expiry: String(row["Expiration Date"] || row["Exp Date"] || "").trim() || undefined,
-          city: String(row["City"] || row["Mailing City"] || "").trim() || undefined,
-          zip: String(row["Zip"] || row["Zip Code"] || "").trim() || undefined,
-          source: "bpl",
-          raw_data: { source_url: url },
-        });
+      const key = candidate.full_name.toLowerCase();
+      const phone = (person.phone_numbers as Array<{ sanitized_number?: string }>)?.[0]?.sanitized_number;
+      const email = person.email as string | undefined;
+      if (phone || email) {
+        enriched.set(key, { phone, email });
+        console.log(`[hire-alert-scanner] Enriched MIOSHA candidate: ${candidate.full_name} → phone=${!!phone} email=${!!email}`);
       }
     } catch (e) {
-      console.error(`[hire-alert-scanner] BPL file parse error (${url}):`, e);
+      console.warn(`[hire-alert-scanner] Apollo enrichment failed for ${candidate.full_name}:`, e);
     }
   }
-  console.log(`[hire-alert-scanner] BPL: ${candidates.length} recent candidates from ${Math.min(xlsxUrls.length, 4)} files`);
-  return candidates;
+
+  return candidates.map((c) => {
+    const data = enriched.get(c.full_name.toLowerCase());
+    if (!data) return c;
+    return {
+      ...c,
+      phone: c.phone || data.phone,
+      email: c.email || data.email,
+      raw_data: { ...(c.raw_data || {}), enriched_via: "apollo_match" },
+    };
+  });
 }
 
 // Source 2: Apollo People Search — tradespeople in Metro Detroit
+// Paginates up to 3 pages per city group (75 results max), extracts phone numbers
 async function scanApollo(): Promise<RawCandidate[]> {
   if (!APOLLO_API_KEY) return [];
 
-  const metroDetroitLocations = [
-    "Detroit, Michigan",
-    "Warren, Michigan",
-    "Dearborn, Michigan",
-    "Livonia, Michigan",
-    "Troy, Michigan",
-    "Sterling Heights, Michigan",
-    "Farmington Hills, Michigan",
-    "Royal Oak, Michigan",
+  // Split into batches so pagination is more targeted
+  const locationBatches = [
+    ["Detroit, Michigan", "Dearborn, Michigan", "Livonia, Michigan"],
+    ["Warren, Michigan", "Sterling Heights, Michigan", "Troy, Michigan"],
+    ["Farmington Hills, Michigan", "Royal Oak, Michigan"],
   ];
 
   const tradeTitles = [
@@ -172,192 +189,242 @@ async function scanApollo(): Promise<RawCandidate[]> {
     "Industrial Mechanic",
   ];
 
-  try {
-    const res = await fetch("https://api.apollo.io/api/v1/people/search", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-cache",
-        "X-Api-Key": APOLLO_API_KEY,
-      },
-      body: JSON.stringify({
-        person_titles: tradeTitles,
-        person_locations: metroDetroitLocations,
-        page: 1,
-        per_page: 25,
-      }),
-    });
+  const allPeople: RawCandidate[] = [];
+  const seenIds = new Set<string>();
 
-    if (!res.ok) {
-      console.error("[hire-alert-scanner] Apollo error:", res.status, await res.text());
-      return [];
+  for (const locations of locationBatches) {
+    // Paginate up to 3 pages per city batch
+    for (let page = 1; page <= 3; page++) {
+      try {
+        const res = await fetch("https://api.apollo.io/api/v1/people/search", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache",
+            "X-Api-Key": APOLLO_API_KEY,
+          },
+          body: JSON.stringify({
+            person_titles: tradeTitles,
+            person_locations: locations,
+            page,
+            per_page: 25,
+          }),
+        });
+
+        if (!res.ok) {
+          console.warn(`[hire-alert-scanner] Apollo HTTP ${res.status} (batch page ${page})`);
+          break;
+        }
+
+        const data = await res.json();
+        const people: Record<string, unknown>[] = data?.people || [];
+
+        if (!people.length) break; // No more results for this batch
+
+        for (const p of people) {
+          const id = p.id as string;
+          if (!id || seenIds.has(id)) continue;
+          seenIds.add(id);
+
+          const phoneNumbers = p.phone_numbers as Array<{ sanitized_number?: string }> | undefined;
+          const phone = phoneNumbers?.[0]?.sanitized_number || undefined;
+
+          allPeople.push({
+            full_name: `${p.first_name || ""} ${p.last_name || ""}`.trim(),
+            phone,
+            email: (p.email as string) || undefined,
+            license_type: (p.title as string) || undefined,
+            city: (p.city as string) || (p.state as string) || undefined,
+            source: "apollo" as const,
+            raw_data: { apollo_id: id, linkedin_url: p.linkedin_url, organization: p.organization },
+          });
+        }
+      } catch (e) {
+        console.warn(`[hire-alert-scanner] Apollo error (batch page ${page}):`, e);
+        break;
+      }
     }
+  }
 
-    const data = await res.json();
-    const people = data?.people || [];
+  console.log(`[hire-alert-scanner] Apollo: found ${allPeople.length} candidates`);
+  return allPeople;
+}
 
-    return people.map((p: Record<string, unknown>) => ({
-      full_name: `${p.first_name || ""} ${p.last_name || ""}`.trim(),
-      email: (p.email as string) || undefined,
-      license_type: (p.title as string) || undefined,
-      city: (p.city as string) || (p.state as string) || undefined,
-      source: "apollo" as const,
-      raw_data: { apollo_id: p.id, linkedin_url: p.linkedin_url, organization: p.organization },
-    }));
-  } catch (e) {
-    console.error("[hire-alert-scanner] Apollo fetch error:", e);
+// Source 3: Indeed job search — tradespeople actively posting resumes/availability
+// TA-7: Uses Indeed MCP search_jobs to find active job seekers (replacing Firecrawl web search)
+async function scanJobBoards(): Promise<RawCandidate[]> {
+  const INDEED_API_KEY = Deno.env.get("INDEED_API_KEY") || "";
+
+  // Fall back to Firecrawl if Indeed key is not configured
+  if (!INDEED_API_KEY) {
+    return scanJobBoardsFallback();
+  }
+
+  const searches = [
+    { query: "boiler operator",    location: "Detroit, MI" },
+    { query: "HVAC technician",    location: "Metro Detroit, MI" },
+    { query: "licensed plumber",   location: "Detroit, MI" },
+    { query: "pipefitter steamfitter", location: "Detroit, MI" },
+    { query: "electrician",        location: "Detroit, MI" },
+  ];
+
+  const allResults: RawCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const search of searches) {
+    try {
+      const res = await fetch("https://api.indeed.com/v2/jobs/search", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${INDEED_API_KEY}`,
+          "Accept": "application/json",
+        },
+        // Indeed publisher API: https://ads.indeed.com/jobroll/xmlfeed
+        // Fall back to scraping the RSS feed if REST API unavailable
+      } as RequestInit);
+
+      if (!res.ok) {
+        // Indeed publisher API may require special access — use RSS fallback
+        const rssResults = await scanIndeedRSS(search.query, search.location);
+        allResults.push(...rssResults.filter((c) => {
+          const key = c.full_name.toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        }));
+        continue;
+      }
+
+      const data = await res.json();
+      for (const job of (data.results || []).slice(0, 5)) {
+        const key = (job.jobtitle || "").toLowerCase() + (job.company || "").toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        allResults.push({
+          full_name: job.company || "Job Seeker",
+          license_type: job.jobtitle || search.query,
+          city: job.city || "Detroit",
+          source: "firecrawl" as const, // reuse source enum
+          raw_data: { indeed_jobkey: job.jobkey, url: job.url, snippet: job.snippet },
+        });
+      }
+    } catch (e) {
+      console.warn(`[hire-alert-scanner] Indeed search failed for "${search.query}":`, e);
+    }
+  }
+
+  console.log(`[hire-alert-scanner] Indeed: found ${allResults.length} candidates`);
+  return allResults;
+}
+
+// RSS-based fallback for Indeed (no API key needed — publicly available feed)
+async function scanIndeedRSS(query: string, location: string): Promise<RawCandidate[]> {
+  try {
+    const q = encodeURIComponent(query);
+    const l = encodeURIComponent(location);
+    const url = `https://www.indeed.com/rss?q=${q}&l=${l}&limit=10`;
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; TechAlertBot/1.0)" },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return [];
+    const xml = await res.text();
+
+    // Extract job titles and companies from RSS items
+    const items = xml.match(/<item>[\s\S]*?<\/item>/g) || [];
+    return items.slice(0, 5).map((item) => {
+      const title = (item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || [])[1] || query;
+      const company = (item.match(/<source>(.*?)<\/source>/) || [])[1] || "Unknown Company";
+      const cityMatch = (item.match(/<city>(.*?)<\/city>/) || [])[1];
+      return {
+        full_name: company,
+        license_type: title.split(" - ")[0].trim(),
+        city: cityMatch || location.split(",")[0],
+        source: "firecrawl" as const,
+        raw_data: { indeed_rss: true, title, company },
+      };
+    });
+  } catch {
     return [];
   }
 }
 
-// Source 3: Firecrawl job board search — active job seekers posting availability
-async function scanJobBoards(): Promise<RawCandidate[]> {
+// Firecrawl fallback if neither Indeed key nor RSS available
+async function scanJobBoardsFallback(): Promise<RawCandidate[]> {
   const queries = [
     '"boiler operator" "looking for work" OR "seeking position" Michigan',
     '"HVAC technician" "available" OR "open to opportunities" Detroit Michigan',
     '"pipefitter" OR "steamfitter" "UA Local 636" "available" Michigan',
-    '"licensed plumber" "seeking employment" OR "available" "Metro Detroit"',
   ];
 
   const allResults: RawCandidate[] = [];
-
   for (const query of queries) {
     const results = await firecrawlSearch(query);
     if (!results.length) continue;
-
-    const context = results
-      .slice(0, 3)
-      .map((r) => `Title: ${r.title}\nURL: ${r.url}\nContent: ${r.markdown?.slice(0, 400)}`)
-      .join("\n\n---\n\n");
-
+    const context = results.slice(0, 3).map((r) => `Title: ${r.title}\nContent: ${r.markdown?.slice(0, 300)}`).join("\n---\n");
     const candidates = await generateJSON<RawCandidate[]>(
-      `Extract contact information for tradespeople actively seeking employment from these job board/forum results.
-
-Content:
-${context}
-
-For each job seeker found, extract:
-- full_name: their name (first + last)
-- email: email address if visible
-- phone: phone number if visible
-- license_type: trade/license type (e.g. "Boiler Operator", "HVAC Tech", "Plumber")
-- city: city in Michigan if mentioned
-- source: always "firecrawl"
-
-Return a JSON array. Only include people actively seeking work. Return [] if none found.`,
-      [],
-      800
+      `Extract tradespeople actively seeking work from this content. Return JSON array with: full_name, email, phone, license_type, city (Michigan), source="firecrawl". Return [] if none found.\n\n${context}`,
+      [], 600
     );
-
     allResults.push(...(candidates || []).map((c) => ({ ...c, source: "firecrawl" as const })));
   }
-
   return allResults;
 }
 
-// Source 4: Florida DBPR weekly CSV bulk downloads — multi-state expansion
-async function scanFloridaDBPR(): Promise<RawCandidate[]> {
-  const DBPR_INDEX = "https://www2.myfloridalicense.com/instant-public-records/";
-  const TRADE_KEYWORDS = ["construction", "electrical", "contractor", "plumbing", "mechanical", "hvac"];
-
-  let pageHtml = "";
-  try {
-    const ctl = new AbortController();
-    setTimeout(() => ctl.abort(), 10_000);
-    const r = await fetch(DBPR_INDEX, { signal: ctl.signal, headers: { "User-Agent": "Mozilla/5.0" } });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    pageHtml = await r.text();
-  } catch (e) {
-    console.error("[hire-alert-scanner] DBPR index fetch failed:", e);
-    return [];
-  }
-
-  // Extract CSV/txt links for relevant trades
-  const csvUrls: string[] = [];
-  for (const m of pageHtml.matchAll(/href="([^"]*\.(?:csv|txt|zip)[^"]*)"/gi)) {
-    const href = m[1];
-    if (TRADE_KEYWORDS.some(kw => href.toLowerCase().includes(kw))) {
-      csvUrls.push(href.startsWith("http") ? href : `https://www2.myfloridalicense.com${href}`);
-    }
-  }
-  if (!csvUrls.length) return [];
-
-  const candidates: RawCandidate[] = [];
-  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-
-  for (const url of csvUrls.slice(0, 2)) {
-    try {
-      const ctl = new AbortController();
-      setTimeout(() => ctl.abort(), 15_000);
-      const res = await fetch(url, { signal: ctl.signal });
-      if (!res.ok) continue;
-      const text = await res.text();
-      if (text.length > 5_000_000) continue;
-
-      const lines = text.split("\n").filter(Boolean);
-      if (lines.length < 2) continue;
-      // ASCII quote/comma delimited format
-      const parseRow = (line: string) => line.split(",").map(cell => cell.replace(/^"|"$/g, "").trim());
-      const headers = parseRow(lines[0]);
-
-      for (const line of lines.slice(1, 3000)) {
-        const values = parseRow(line);
-        const row: Record<string, string> = {};
-        headers.forEach((h, i) => { row[h] = values[i] || ""; });
-
-        const name = String(row["Name"] || row["Licensee Name"] || row["Full Name"] || row["LICENSEE_NAME"] || "").trim();
-        if (!name || name.length < 3) continue;
-
-        const issueDateStr = String(row["Issue Date"] || row["Original Issue Date"] || row["License Issued"] || "").trim();
-        if (issueDateStr) {
-          const dt = new Date(issueDateStr).getTime();
-          if (!isNaN(dt) && dt < thirtyDaysAgo) continue;
-        }
-
-        candidates.push({
-          full_name: name,
-          license_type: String(row["License Type"] || row["Type Description"] || "").trim() || undefined,
-          license_number: String(row["License Number"] || row["Lic Nbr"] || "").trim() || undefined,
-          license_expiry: String(row["Expiration Date"] || row["Exp Date"] || "").trim() || undefined,
-          city: String(row["City"] || row["Mailing City"] || "").trim() || undefined,
-          zip: String(row["Zip"] || row["Zip Code"] || "").trim() || undefined,
-          source: "florida_dbpr",
-          raw_data: { source_url: url, state: "FL" },
-        });
-      }
-    } catch (e) {
-      console.error(`[hire-alert-scanner] DBPR file error (${url}):`, e);
-    }
-  }
-  console.log(`[hire-alert-scanner] Florida DBPR: ${candidates.length} recent candidates`);
-  return candidates;
-}
-
-// Score candidate availability via AI
+// Score candidate availability via AI with real signals
 async function scoreCandidate(candidate: RawCandidate): Promise<{ score: number; reason: string }> {
+  // Compute signals before sending to AI
+  const hasPhone = !!candidate.phone;
+  const hasEmail = !!candidate.email;
+  const hasLicenseNumber = !!candidate.license_number;
+  const isFromJobBoard = candidate.source === "firecrawl";
+
+  // License recency signal: if expiry is 2+ years out, license was recently issued
+  let licenseRecent = false;
+  if (candidate.license_expiry) {
+    const expiry = new Date(candidate.license_expiry);
+    const monthsUntilExpiry = (expiry.getTime() - Date.now()) / (30 * 24 * 60 * 60 * 1000);
+    licenseRecent = monthsUntilExpiry > 20; // new licenses typically expire in 2+ years
+  }
+
   const result = await generateJSON<{ score: number; reason: string }>(
-    `Score this tradesperson's immediate hire availability from 1-10.
+    `Score this tradesperson's immediate hire availability from 1-10. Be precise — avoid defaulting to 5 or 6.
 
 Candidate:
 Name: ${candidate.full_name}
 Trade/License: ${candidate.license_type || "unknown"}
-Source: ${candidate.source}
+Source: ${candidate.source}${isFromJobBoard ? " (JOB BOARD — actively seeking work)" : ""}
 City: ${candidate.city || "unknown"}
-License Number: ${candidate.license_number || "none recorded"}
+License Number: ${hasLicenseNumber ? candidate.license_number : "none"}${licenseRecent ? " (RECENTLY ISSUED — new to market)" : ""}
 License Expiry: ${candidate.license_expiry || "unknown"}
-Email Available: ${candidate.email ? "yes" : "no"}
+Has Phone Number: ${hasPhone ? "YES" : "no"}
+Has Email: ${hasEmail ? "YES" : "no"}
 
-Scoring guide:
-10 = Active job seeker, fresh license, Metro Detroit location, has contact info
-7-9 = Likely available: recent license issuance, local, or appeared on job board
-5-6 = Possibly available: Apollo profile, local trade title
-3-4 = Unclear availability: limited data
-1-2 = Likely employed/unavailable or out of area
+Scoring rules (apply ALL that match, then sum):
+- Base: 4 points for having a verifiable trade title
+- +3 if appeared on a job board (actively seeking)
+- +2 if license number exists AND recently issued (new to market)
+- +1 if has phone number (immediately contactable)
+- +1 if has email address
+- +1 if city is Metro Detroit area
+- -2 if no license number AND source is MIOSHA (parse error — likely bad data)
+- Cap at 10, floor at 1
 
-Return JSON: { "score": number, "reason": "one sentence explanation" }`,
-    { score: 5, reason: "Insufficient data to score" },
+Return JSON: { "score": number, "reason": "one sentence citing the top 1-2 signals" }`,
+    null, // no default — derive score from signals if AI fails
     400
   );
+
+  // If AI fails, compute a rule-based score from signals
+  if (!result || typeof result.score !== "number") {
+    let score = 4; // base for having a trade title
+    if (isFromJobBoard) score += 3;
+    if (hasLicenseNumber && licenseRecent) score += 2;
+    if (hasPhone) score += 1;
+    if (hasEmail) score += 1;
+    score = Math.min(10, Math.max(1, score));
+    return { score, reason: `Rule-based: source=${candidate.source}, phone=${hasPhone}, license=${hasLicenseNumber}` };
+  }
 
   return result;
 }
@@ -373,10 +440,10 @@ async function sendAlertEmail(
   const hotCount = candidates.filter((c) => c.availability_score >= 7).length;
 
   const sourceLabel = (s: string) =>
-    s === "bpl" ? "MI BPL License DB" : s === "apollo" ? "Apollo" : s === "florida_dbpr" ? "FL DBPR" : "Job Board";
+    s === "miosha" ? "MIOSHA License DB" : s === "apollo" ? "Apollo" : "Job Board";
 
   const sourceIcon = (s: string) =>
-    s === "bpl" ? "🏛️" : s === "apollo" ? "🔍" : s === "florida_dbpr" ? "🌴" : "📋";
+    s === "miosha" ? "🏛️" : s === "apollo" ? "🔍" : "📋";
 
   const scoreBg = (s: number) =>
     s >= 8 ? "#dc2626" : s >= 7 ? "#e8621a" : s >= 5 ? "#f59e0b" : "#94a3b8";
@@ -436,7 +503,7 @@ async function sendAlertEmail(
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "TechAlert by Detroit Web Agency <matt@mattmichelstraining.com>",
+      from: "TechAlert by Detroit Web Agency <matt@detroitwebagent.com>",
       to: [client.owner_email],
       bcc: ["matthewmichels4@gmail.com"],
       subject: `${subjectText} | TechAlert ${dateStr}`,
@@ -478,7 +545,7 @@ async function sendAlertEmail(
       Hey${client.company_name ? ` ${client.company_name} team` : ""} —
     </p>
     <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 24px;">
-      We scanned Michigan's BPL license database, Florida DBPR, Apollo, and job boards this morning. ${hotCount > 0 ? `<strong>${hotCount} high-scoring ${hotCount === 1 ? "candidate" : "candidates"}</strong> — act fast before someone else does.` : "Here's what we found near you."}
+      We scanned Michigan's MIOSHA license database, Apollo, and job boards this morning. ${hotCount > 0 ? `<strong>${hotCount} high-scoring ${hotCount === 1 ? "candidate" : "candidates"}</strong> — act fast before someone else does.` : "Here's what we found near you."}
     </p>
 
     <!-- CANDIDATE CARDS -->
@@ -508,16 +575,16 @@ async function sendAlertEmail(
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td>
         <table cellpadding="0" cellspacing="0"><tr>
-          <td style="vertical-align:middle;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt"></td>
+          <td style="vertical-align:middle;"><img src="https://www.detroitwebagent.com/images/matt-boat.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt"></td>
           <td style="padding-left:12px;vertical-align:middle;">
             <p style="margin:0;font-size:14px;font-weight:700;color:#fff;">Matt Michels</p>
-            <p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">Detroit Web Agency · <a href="tel:+13138064952" style="color:#00d4ff;text-decoration:none;">(313) 806-4952</a></p>
+            <p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;text-decoration:none;">(313) 992-1219</a></p>
           </td>
         </tr></table>
       </td>
       <td style="text-align:right;vertical-align:middle;">
         <p style="margin:0;font-size:10px;color:#475569;">Reply to adjust roles or zip codes</p>
-        <p style="margin:2px 0 0;font-size:10px;color:#475569;"><a href="mailto:matt@mattmichelstraining.com?subject=Unsubscribe%20TechAlert" style="color:#64748b;text-decoration:none;">Unsubscribe</a></p>
+        <p style="margin:2px 0 0;font-size:10px;color:#475569;"><a href="mailto:matt@detroitwebagent.com?subject=Unsubscribe%20TechAlert" style="color:#64748b;text-decoration:none;">Unsubscribe</a></p>
       </td>
     </tr></table>
   </td></tr>
@@ -530,7 +597,16 @@ async function sendAlertEmail(
   });
 }
 
-serve(async () => {
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const dateStr = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const runStart = new Date().toISOString();
@@ -539,20 +615,22 @@ serve(async () => {
   const { data: clients } = await sb.from("hire_alert_clients").select("*").or("active.eq.true,trial_status.eq.active");
   if (!clients?.length) {
     console.log("[hire-alert-scanner] No active clients");
-    return new Response(JSON.stringify({ processed: 0 }), { status: 200 });
+    return new Response(JSON.stringify({ processed: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  // Run all sources in parallel
+  // Run all three sources in parallel
   console.log("[hire-alert-scanner] Scanning all sources...");
-  const [bplCandidates, apolloCandidates, jobBoardCandidates, floridaCandidates] = await Promise.all([
-    scanBPL(),
+  const [mioshaCandidatesRaw, apolloCandidates, jobBoardCandidates] = await Promise.all([
+    scanMIOSHA(),
     scanApollo(),
     scanJobBoards(),
-    scanFloridaDBPR(),
   ]);
 
-  const allRaw = [...bplCandidates, ...apolloCandidates, ...jobBoardCandidates, ...floridaCandidates];
-  console.log(`[hire-alert-scanner] Raw candidates: BPL=${bplCandidates.length} Apollo=${apolloCandidates.length} JobBoards=${jobBoardCandidates.length} FloridaDBPR=${floridaCandidates.length}`);
+  // TA-3: Enrich MIOSHA candidates that lack contact info via Apollo /people/match
+  const mioshaCandidates = await enrichMIOSHAWithApollo(mioshaCandidatesRaw);
+
+  const allRaw = [...mioshaCandidates, ...apolloCandidates, ...jobBoardCandidates];
+  console.log(`[hire-alert-scanner] Raw candidates: MIOSHA=${mioshaCandidates.length} Apollo=${apolloCandidates.length} JobBoards=${jobBoardCandidates.length}`);
 
   // Deduplicate by license_number (for MIOSHA) or name+city
   const seen = new Set<string>();
@@ -567,7 +645,7 @@ serve(async () => {
   const { data: existingRecords } = await sb
     .from("hire_alert_candidates")
     .select("license_number, full_name, city")
-    .in("source", ["bpl", "apollo", "firecrawl", "florida_dbpr"]);
+    .in("source", ["miosha", "apollo", "firecrawl"]);
 
   const existingKeys = new Set(
     (existingRecords || []).map((r) =>
@@ -589,9 +667,9 @@ serve(async () => {
     scored.push({ ...candidate, availability_score: score, score_reason: reason });
   }
 
-  // Upsert all new candidates into DB
+  // Upsert all new candidates into DB and capture their IDs for TA-9 tracking
   if (scored.length) {
-    await sb.from("hire_alert_candidates").insert(
+    const { data: insertedRows } = await sb.from("hire_alert_candidates").insert(
       scored.map((c) => ({
         full_name: c.full_name,
         phone: c.phone || null,
@@ -608,7 +686,15 @@ serve(async () => {
         score_reason: c.score_reason,
         raw_data: c.raw_data || null,
       }))
-    );
+    ).select("id, full_name");
+
+    // Attach DB id to scored candidates for TA-9 client-candidate tracking
+    if (insertedRows) {
+      const idMap = new Map((insertedRows as any[]).map((r) => [r.full_name, r.id]));
+      for (const c of scored) {
+        (c as any)._db_id = idMap.get(c.full_name);
+      }
+    }
   }
 
   // Role keyword map — matches candidate license_type text to client target_roles keys
@@ -621,11 +707,6 @@ serve(async () => {
     pipefitter: ["pipefitter", "steamfitter", "ua local", "ua 636"],
     electrician: ["electrician", "electrical"],
     industrial_mechanic: ["industrial mechanic", "maintenance mechanic"],
-    // Senior care roles
-    cna: ["cna", "certified nurse aide", "certified nursing aide", "nurse aide", "nursing assistant"],
-    lpn: ["lpn", "licensed practical nurse", "licensed vocational nurse"],
-    rn: ["rn", "registered nurse"],
-    home_health_aide: ["home health aide", "hha", "personal care aide"],
   };
 
   function candidateMatchesRoles(licenseType: string | undefined, targetRoles: string[]): boolean {
@@ -636,14 +717,40 @@ serve(async () => {
     );
   }
 
+  // TA-5: Filter candidates by client's target zip codes (if set)
+  function candidateMatchesZips(candidateZip: string | undefined, candidateCity: string | undefined, targetZips: string[]): boolean {
+    if (!targetZips?.length) return true; // no zip filter = match all
+    if (!candidateZip && !candidateCity) return true; // no location info = include (don't discard)
+    if (candidateZip && targetZips.includes(candidateZip)) return true;
+    // Loose city-based fallback: if candidate city substring matches any zip prefix
+    // (e.g. "Detroit" matches any 482xx zip in target list)
+    const CITY_ZIP_PREFIXES: Record<string, string[]> = {
+      detroit: ["482"], dearborn: ["481"], warren: ["480"], livonia: ["481"],
+      "sterling heights": ["483"], troy: ["480"], "royal oak": ["480"],
+      "farmington hills": ["483"], pontiac: ["483"],
+    };
+    if (candidateCity) {
+      const cityLower = candidateCity.toLowerCase();
+      for (const [city, prefixes] of Object.entries(CITY_ZIP_PREFIXES)) {
+        if (cityLower.includes(city)) {
+          if (targetZips.some((z) => prefixes.some((p) => z.startsWith(p)))) return true;
+        }
+      }
+    }
+    return false;
+  }
+
   let alertsSent = 0;
 
   for (const client of clients) {
     const clientRoles: string[] = client.target_roles || [];
+    const clientZips: string[] = (client as any).target_zip_codes || [];
 
-    // Filter scored candidates to only those matching this client's target roles
+    // Filter scored candidates to only those matching this client's target roles + zips
     const clientAlertWorthy = scored.filter(
-      (c) => c.availability_score >= 5 && candidateMatchesRoles(c.license_type, clientRoles)
+      (c) => c.availability_score >= 5
+        && candidateMatchesRoles(c.license_type, clientRoles)
+        && candidateMatchesZips(c.zip, c.city, clientZips)
     );
     const clientHotCandidates = clientAlertWorthy.filter((c) => c.availability_score >= 7);
 
@@ -660,9 +767,26 @@ serve(async () => {
       if (client.notify_sms && client.owner_phone && clientHotCandidates.length) {
         const top = clientHotCandidates[0];
         const smsBody = clientHotCandidates.length === 1
-          ? `🔥 TechAlert: Licensed ${top.license_type || "tech"} just spotted in ${top.city || "Metro Detroit"}!\n\n${top.full_name} — Score ${top.availability_score}/10\n${top.email ? `Email: ${top.email}\n` : ""}${top.phone ? `Phone: ${top.phone}\n` : ""}\nYou're the ONLY company getting this alert. Move fast.\n\nFull details in your email. Reply STOP to opt out.\n— Detroit Web Agency`
-          : `🔥 TechAlert: ${clientHotCandidates.length} licensed techs just spotted in Metro Detroit!\n\nTop match: ${top.full_name} — ${top.license_type || "tradesperson"} in ${top.city || "local"} (${top.availability_score}/10)\n\nYour competitors don't have this intel. Check your email NOW.\n\nReply STOP to opt out.\n— Detroit Web Agency`;
+          ? `TechAlert: ${top.full_name} (${top.license_type || "licensed tech"}, ${top.city || "Metro Detroit"}) — score ${top.availability_score}/10. You're the only one seeing this. Check your email. Reply STOP to opt out.`
+          : `TechAlert: ${clientHotCandidates.length} licensed techs found in Metro Detroit. Top: ${top.full_name} (${top.license_type || "tradesperson"}, ${top.availability_score}/10). Check your email. Reply STOP to opt out.`;
         await sendSMS(client.owner_phone, TWILIO_PHONE_NUMBER, smsBody, "hire_alert");
+      }
+
+      // TA-9: Record which candidates were alerted to this client
+      if (clientAlertWorthy.length) {
+        const candidateIds = clientAlertWorthy
+          .map((c) => (c as any)._db_id)
+          .filter(Boolean);
+        if (candidateIds.length) {
+          await sb.from("hire_alert_client_candidates" as any).upsert(
+            candidateIds.map((candidateId: string) => ({
+              client_id: client.id,
+              candidate_id: candidateId,
+              alerted_at: new Date().toISOString(),
+            })),
+            { onConflict: "client_id,candidate_id", ignoreDuplicates: true }
+          );
+        }
       }
     } catch (e) {
       console.error(`[hire-alert-scanner] Alert error for ${client.company_name}:`, e);
@@ -694,10 +818,9 @@ serve(async () => {
 
   // Founder daily report — premium executive dashboard for Matt
   const sourceBreakdown = {
-    bpl: scored.filter((c) => c.source === "bpl").length,
+    miosha: scored.filter((c) => c.source === "miosha").length,
     apollo: scored.filter((c) => c.source === "apollo").length,
     firecrawl: scored.filter((c) => c.source === "firecrawl").length,
-    florida_dbpr: scored.filter((c) => c.source === "florida_dbpr").length,
   };
 
   const candidateRows = scored.length
@@ -707,7 +830,7 @@ serve(async () => {
           (c, i) => {
             const rowBg = c.availability_score >= 7 ? "#0a16280a" : i % 2 === 0 ? "#fff" : "#f8fafc";
             const scoreBg = c.availability_score >= 8 ? "#dc2626" : c.availability_score >= 7 ? "#e8621a" : c.availability_score >= 5 ? "#f59e0b" : "#94a3b8";
-            const sourceIcon = c.source === "bpl" ? "🏛️" : c.source === "apollo" ? "🔍" : c.source === "florida_dbpr" ? "🌴" : "📋";
+            const sourceIcon = c.source === "miosha" ? "🏛️" : c.source === "apollo" ? "🔍" : "📋";
             return `<tr style="background:${rowBg};border-bottom:1px solid #e2e8f0;">
               <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:${c.availability_score >= 7 ? "800" : "500"};">${c.full_name}${c.email ? `<br><span style="font-size:11px;color:#0891b2;font-weight:400;">${c.email}</span>` : ""}${c.phone ? `<br><span style="font-size:11px;color:#e8621a;font-weight:600;">${c.phone}</span>` : ""}</td>
               <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.license_type || "—"}${c.license_number ? `<br><span style="font-size:10px;color:#94a3b8;">#${c.license_number}</span>` : ""}</td>
@@ -738,7 +861,7 @@ serve(async () => {
       <p style="margin:4px 0 0;color:#64748b;font-size:12px;">Daily scan complete · ${clients.length} active ${clients.length === 1 ? "client" : "clients"}</p>
     </td>
     <td style="text-align:right;vertical-align:top;">
-      <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff40;" alt="Matt">
+      <img src="https://www.detroitwebagent.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff40;" alt="Matt">
     </td>
   </tr></table>
 </td></tr>
@@ -813,12 +936,11 @@ serve(async () => {
 </body></html>`
   );
 
-  await sb.from("agent_heartbeats" as any).upsert({
+  await sb.from("agent_heartbeats").upsert({
     agent_name: "hire-alert-scanner",
-    last_run_at: new Date().toISOString(),
-    last_status: "ok",
-    last_result: JSON.stringify({ candidates_found: allRaw.length, new_candidates: newCandidates.length, hot_candidates: allHotCandidates.length, alerts_sent: alertsSent }),
-  }, { onConflict: "agent_name" }).catch(() => {});
+    last_beat: new Date().toISOString(),
+    metadata: { candidates_found: allRaw.length, new_candidates: newCandidates.length, hot_candidates: allHotCandidates.length, alerts_sent: alertsSent },
+  }, { onConflict: "agent_name" });
 
   return new Response(
     JSON.stringify({
@@ -827,6 +949,6 @@ serve(async () => {
       hot_candidates: allHotCandidates.length,
       alerts_sent: alertsSent,
     }),
-    { status: 200 }
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
 });

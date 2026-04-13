@@ -135,7 +135,7 @@ const AgencyHome = () => {
           name: "Detroit Web Agency",
           description: "Websites & automated lead systems for Michigan contractors.",
           url: "https://www.detroitwebagent.com",
-          telephone: "+13138064952",
+          telephone: "+13139921219",
           email: "matt@detroitwebagent.com",
           address: { "@type": "PostalAddress", addressLocality: "Grosse Pointe Park", addressRegion: "MI" },
         }}
@@ -184,8 +184,8 @@ const AgencyHome = () => {
               Get a Custom Quote <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
             <Button asChild variant="outline" size="lg" className="w-full sm:w-auto px-10 py-6 text-base font-semibold rounded-lg hover:bg-white/5" style={{ background: "transparent", border: "1px solid rgba(148,163,184,0.25)", color: "#e2e8f0" }}>
-              <a href="tel:+13138064952">
-                <Phone className="mr-2 h-4 w-4" /> (313) 806-4952
+              <a href="tel:+13139921219">
+                <Phone className="mr-2 h-4 w-4" /> (313) 992-1219
               </a>
             </Button>
           </div>
@@ -393,8 +393,8 @@ const AgencyHome = () => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
             <Button asChild size="lg" className="w-full sm:w-auto px-12 py-7 text-lg font-bold rounded-lg uppercase tracking-wide"
               style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 60px rgba(6,182,212,0.4), 0 4px 24px rgba(0,0,0,0.5)" }}>
-              <a href="tel:+13138064952">
-                <Phone className="mr-2 h-5 w-5" /> Call (313) 806-4952
+              <a href="tel:+13139921219">
+                <Phone className="mr-2 h-5 w-5" /> Call (313) 992-1219
               </a>
             </Button>
           </div>
@@ -445,8 +445,8 @@ const AgencyHome = () => {
               <p className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: "#475569" }}>Contact</p>
               <ul className="space-y-2.5">
                 <li>
-                  <a href="tel:+13138064952" className="text-xs flex items-center gap-2 hover:text-cyan-400" style={{ color: "#64748b" }}>
-                    <Phone className="h-3.5 w-3.5 shrink-0" style={{ color: "#22d3ee" }} /> (313) 806-4952
+                  <a href="tel:+13139921219" className="text-xs flex items-center gap-2 hover:text-cyan-400" style={{ color: "#64748b" }}>
+                    <Phone className="h-3.5 w-3.5 shrink-0" style={{ color: "#22d3ee" }} /> (313) 992-1219
                   </a>
                 </li>
                 <li>

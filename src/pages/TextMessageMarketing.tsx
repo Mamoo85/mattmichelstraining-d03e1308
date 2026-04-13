@@ -14,7 +14,7 @@ export default function TextMessageMarketing() {
             Your 7-day free trial has started. Matt will reach out within 24 hours to set up
             your dedicated SMS number and get your first contact list imported.
           </p>
-          <p className="text-slate-400 mt-4 text-sm">Questions? Text (313) 806-4952</p>
+          <p className="text-slate-400 mt-4 text-sm">Questions? Text (313) 992-1219</p>
         </div>
       </div>
     );

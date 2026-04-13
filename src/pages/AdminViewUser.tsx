@@ -1,13 +1,16 @@
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import AppNavbar from "@/components/layout/AppNavbar";
-import { ArrowLeft, Loader2, User, Dumbbell, TrendingUp, BookOpen, Eye, EyeOff, Shield, Activity, MessageSquarePlus } from "lucide-react";
+import { ArrowLeft, Loader2, User, Dumbbell, TrendingUp, BookOpen, Eye, EyeOff, Shield, Activity, MessageSquarePlus, Library, Edit } from "lucide-react";
 import UserActivityFeed from "@/components/admin/UserActivityFeed";
+import { lazyRetry } from "@/lib/lazyRetry";
 
-const ProgressCharts = lazy(() => import("@/components/features/ProgressCharts"));
-const QuickActivityLog = lazy(() => import("@/components/dashboard/QuickActivityLog"));
+const ProgressCharts = lazyRetry(() => import("@/components/features/ProgressCharts"));
+const QuickActivityLog = lazyRetry(() => import("@/components/dashboard/QuickActivityLog"));
+const AdminUserLibrary = lazyRetry(() => import("@/components/admin/AdminUserLibrary"));
+const AdminProfileEditor = lazyRetry(() => import("@/components/admin/AdminProfileEditor"));
 
 const TabLoader = () => (
   <div className="flex justify-center py-12">
@@ -32,7 +35,7 @@ const AdminViewUser = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"progress" | "programs" | "activity">("progress");
+  const [activeTab, setActiveTab] = useState<"progress" | "programs" | "activity" | "library" | "edit">("progress");
   const [showQuickLog, setShowQuickLog] = useState(false);
   const [workouts, setWorkouts] = useState<any[]>([]);
   const [activePrograms, setActivePrograms] = useState<any[]>([]);
@@ -95,6 +98,8 @@ const AdminViewUser = () => {
     { key: "progress" as const, label: "Progress", icon: TrendingUp },
     { key: "programs" as const, label: "Programs", icon: BookOpen },
     { key: "activity" as const, label: "Activity", icon: Activity },
+    { key: "library" as const, label: "Library", icon: Library },
+    { key: "edit" as const, label: "Edit", icon: Edit },
   ];
 
   const privacyFields: { key: keyof PrivacySettings; label: string }[] = [
@@ -258,6 +263,15 @@ const AdminViewUser = () => {
           )}
           {activeTab === "activity" && userId && (
             <UserActivityFeed targetUserId={userId} />
+          )}
+          {activeTab === "library" && userId && (
+            <AdminUserLibrary userId={userId} />
+          )}
+          {activeTab === "edit" && profile && (
+            <AdminProfileEditor
+              profile={profile}
+              onUpdate={(updated) => setProfile((prev: any) => ({ ...prev, ...updated }))}
+            />
           )}
         </Suspense>
 

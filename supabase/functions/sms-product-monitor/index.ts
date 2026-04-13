@@ -4,7 +4,7 @@
 //   1. Unconfigured accounts (active but missing setup >48h)
 //   2. Stuck sequences (next_send_at overdue)
 //   3. Silent active accounts (paying but never received service)
-// Texts Matt at (313) 806-4952 with a summary ONLY if issues found.
+// Texts Matt at (313) 992-1219 with a summary ONLY if issues found.
 // Zero noise when everything is healthy.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -14,7 +14,7 @@ import { sendSMS } from "../_shared/twilio.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
-const MATT_PHONE = Deno.env.get("ADMIN_PHONE_NUMBER") || "+13138064952";
+const MATT_PHONE = Deno.env.get("ADMIN_PHONE_NUMBER") || "+13139921219";
 
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 

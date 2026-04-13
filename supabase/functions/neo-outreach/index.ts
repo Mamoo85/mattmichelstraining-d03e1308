@@ -133,7 +133,7 @@ async function writePersonalizedEmail(business: {
   if (!LOVABLE_API_KEY) {
     return {
       subject: `Quick question about ${business.business_name}`,
-      body: `Hey, my name's Matt Michels — I'm based out of Grosse Pointe and I do web work for local businesses.\n\nI was looking at your Google listing for ${business.business_name} and had a quick question — are you happy with the leads your website is currently bringing in?\n\nIf not, I can do ${business.pitch.cta} for ${business.pitch.price}.${demoLine}\n\n— Matt\n(313) 806-4952`,
+      body: `Hey, my name's Matt Michels — I'm based out of Grosse Pointe and I do web work for local businesses.\n\nI was looking at your Google listing for ${business.business_name} and had a quick question — are you happy with the leads your website is currently bringing in?\n\nIf not, I can do ${business.pitch.cta} for ${business.pitch.price}.${demoLine}\n\n— Matt\n(313) 992-1219`,
     };
   }
 
@@ -170,7 +170,7 @@ Rules:
 - Opens with "Hey, my name's Matt Michels"
 - References their specific business/industry naturally
 - Pitches the product in one sentence, makes it sound easy${demoInstruction}
-- Ends with "— Matt" and his phone number: (313) 806-4952
+- Ends with "— Matt" and his phone number: (313) 992-1219
 - Total: 4-6 sentences max
 
 Return JSON: { "subject": "...", "body": "..." }
@@ -187,7 +187,7 @@ Subject should be under 45 chars, conversational, not salesy.`,
   } catch {
     return {
       subject: `Quick question about ${business.business_name}`,
-      body: `Hey, my name's Matt Michels — based in Grosse Pointe, I work with ${business.industry || "local"} businesses across the Detroit metro.\n\nSaw your listing and wanted to reach out — I can do ${business.pitch.cta} for ${business.pitch.price}.${demoLine}\n\n— Matt\n(313) 806-4952`,
+      body: `Hey, my name's Matt Michels — based in Grosse Pointe, I work with ${business.industry || "local"} businesses across the Detroit metro.\n\nSaw your listing and wanted to reach out — I can do ${business.pitch.cta} for ${business.pitch.price}.${demoLine}\n\n— Matt\n(313) 992-1219`,
     };
   }
 }
@@ -271,7 +271,7 @@ serve(async (req) => {
         ${emailBody.split("\n").map(line => line ? `<p style="margin:0 0 12px;">${line}</p>` : "<br>").join("")}
         <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;">
           <img src="https://www.detroitwebagent.com/images/matt-boat.jpg" style="width:40px;height:40px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:10px;">
-          <span style="font-size:13px;color:#64748b;">Matt Michels · Detroit Web Agency · Grosse Pointe, MI · (313) 806-4952</span>
+          <span style="font-size:13px;color:#64748b;">Matt Michels · Detroit Web Agency · Grosse Pointe, MI · (313) 992-1219</span>
         </div>
       </div>`;
 
@@ -341,7 +341,7 @@ serve(async (req) => {
         <p style="margin:0 0 12px;">Hey, just following up on my note from a few days ago.</p>
         <p style="margin:0 0 12px;">Still happy to take a look at ${f.business_name}'s web presence — takes me about 20 minutes and you'll know exactly what to fix.</p>
         <p style="margin:0 0 12px;">If the timing's off, no worries at all. Just reply and I'll leave you alone.</p>
-        <p style="margin:0 0 12px;">— Matt<br>(313) 806-4952</p>
+        <p style="margin:0 0 12px;">— Matt<br>(313) 992-1219</p>
       </div>`;
       if (!dryRun && RESEND_API_KEY) {
         await fetch("https://api.resend.com/emails", {
@@ -385,7 +385,7 @@ serve(async (req) => {
         <p style="margin:0 0 12px;">Hey — just wanted to close the loop. I reached out a couple times about ${f.business_name}'s web presence.</p>
         <p style="margin:0 0 12px;">Totally get it if the timing's not right. I'll stop bugging you.</p>${leadMagnetLine}
         <p style="margin:0 0 12px;">If anything changes down the road, you've got my number.</p>
-        <p style="margin:0 0 12px;">— Matt<br>(313) 806-4952</p>
+        <p style="margin:0 0 12px;">— Matt<br>(313) 992-1219</p>
       </div>`;
 
       if (!dryRun && RESEND_API_KEY) {

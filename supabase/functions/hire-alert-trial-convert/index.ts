@@ -14,9 +14,14 @@ const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 const SITE_URL = "https://detroitwebagent.com";
 const FROM_EMAIL = "TechAlert <matt@detroitwebagent.com>";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: { "Access-Control-Allow-Origin": "*" } });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -31,7 +36,7 @@ serve(async (req) => {
       .limit(20);
 
     if (!expiredTrials?.length) {
-      return new Response(JSON.stringify({ ok: true, converted: 0 }), { status: 200 });
+      return new Response(JSON.stringify({ ok: true, converted: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     console.log(`[hire-alert-trial-convert] Processing ${expiredTrials.length} expired trials`);
@@ -86,7 +91,7 @@ ${candidateCount > 0
 }
 <p style="color:#94a3b8;font-size:15px;line-height:1.7;margin:0 0 24px;">Keep TechAlert running for $99/mo — cancel anytime. No setup fees.</p>
 <a href="${checkoutUrl}" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 28px;border-radius:8px;font-weight:800;font-size:15px;text-decoration:none;">Upgrade to $99/mo →</a>
-<p style="color:#475569;font-size:13px;margin:24px 0 0;">Questions? Text me: (313) 806-4952</p>
+<p style="color:#475569;font-size:13px;margin:24px 0 0;">Questions? Text me: (313) 992-1219</p>
 </div>`,
             }),
           });
@@ -100,11 +105,11 @@ ${candidateCount > 0
 
     return new Response(
       JSON.stringify({ ok: true, converted: expiredTrials.length }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[hire-alert-trial-convert] Error:", e);
-    return new Response(JSON.stringify({ error: msg }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

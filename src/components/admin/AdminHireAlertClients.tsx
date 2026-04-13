@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   Bell, Plus, RefreshCw, Users, DollarSign, Trash2, Pencil,
-  Mail, Phone, CheckCircle, XCircle, Clock,
+  Mail, Phone, CheckCircle, XCircle, Clock, Play,
 } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -289,6 +289,7 @@ export default function AdminHireAlertClients() {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [editClient, setEditClient] = useState<HireAlertClient | undefined>();
+  const [invoking, setInvoking] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -316,6 +317,20 @@ export default function AdminHireAlertClients() {
   const activeClients = clients.filter(c => c.active);
   const mrr = activeClients.reduce((s, c) => s + (c.plan === "bundle" ? 4900 : 9900), 0);
 
+  const invokeScanner = async () => {
+    setInvoking(true);
+    try {
+      const { error } = await supabase.functions.invoke("hire-alert-scanner");
+      if (error) throw error;
+      toast.success("Scanner running — check email in ~60s");
+      setTimeout(load, 5000);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Scanner failed");
+    } finally {
+      setInvoking(false);
+    }
+  };
+
   return (
     <div className="space-y-6 p-1">
       {showAdd && <ClientModal onClose={() => setShowAdd(false)} onSaved={load} />}
@@ -333,6 +348,10 @@ export default function AdminHireAlertClients() {
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={load} className="border-white/15 text-white/60 hover:text-white">
             <RefreshCw size={13} className="mr-1" /> Refresh
+          </Button>
+          <Button size="sm" onClick={invokeScanner} disabled={invoking}
+            className="bg-amber-500 hover:bg-amber-600 text-white">
+            <Play size={13} className="mr-1" /> {invoking ? "Running..." : "Run Scanner"}
           </Button>
           <Button size="sm" onClick={() => setShowAdd(true)} className="bg-orange-500 hover:bg-orange-600 text-white">
             <Plus size={13} className="mr-1" /> Add Client
@@ -382,7 +401,7 @@ export default function AdminHireAlertClients() {
       )}
 
       {/* Scanner runs */}
-      {runs.length > 0 && (
+      {runs.length > 0 ? (
         <div>
           <p className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
             <Clock size={12} /> Recent Scanner Runs
@@ -417,6 +436,16 @@ export default function AdminHireAlertClients() {
               </tbody>
             </table>
           </div>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-amber-500/20 bg-amber-500/5 p-8 text-center">
+          <Clock size={28} className="text-amber-400/40 mx-auto mb-3" />
+          <p className="text-white/60 text-sm font-semibold mb-1">No scanner runs yet</p>
+          <p className="text-white/30 text-xs mb-4">Click "Run Scanner" above to trigger the first scan. Results will appear here.</p>
+          <Button size="sm" onClick={invokeScanner} disabled={invoking}
+            className="bg-amber-500 hover:bg-amber-600 text-white">
+            <Play size={13} className="mr-1" /> {invoking ? "Running..." : "Run First Scan"}
+          </Button>
         </div>
       )}
 

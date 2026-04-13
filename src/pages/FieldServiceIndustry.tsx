@@ -49,7 +49,7 @@ const INDUSTRY_CONFIGS: Record<string, IndustryConfig> = {
     testimonialHook: "Our dispatch used to take 20 minutes per tech per day. Now it's 90 seconds.",
     seoTitle: "HVAC Software Detroit — $249/mo for Your Whole Crew | Detroit Web Agency",
     seoDesc:
-      "Replace ServiceTitan for $249/mo. Equipment history, seasonal contracts, auto-SMS, QuickBooks sync. Built for Metro Detroit HVAC companies. Call (313) 806-4952.",
+      "Replace ServiceTitan for $249/mo. Equipment history, seasonal contracts, auto-SMS, QuickBooks sync. Built for Metro Detroit HVAC companies. Call (313) 992-1219.",
     localMarkets: [
       "Oakland County",
       "Macomb County",
@@ -86,7 +86,7 @@ const INDUSTRY_CONFIGS: Record<string, IndustryConfig> = {
       "I invoiced 3 jobs from my truck before I got back to the shop. That's never happened before.",
     seoTitle: "Plumbing Software Detroit — $199/mo for Your Whole Crew | Detroit Web Agency",
     seoDesc:
-      "Replace Jobber for $199/mo. Emergency dispatch, in-field invoicing, estimate follow-up. Built for Detroit-area plumbing companies. Call (313) 806-4952.",
+      "Replace Jobber for $199/mo. Emergency dispatch, in-field invoicing, estimate follow-up. Built for Detroit-area plumbing companies. Call (313) 992-1219.",
     localMarkets: [
       "Detroit",
       "Warren",
@@ -124,7 +124,7 @@ const INDUSTRY_CONFIGS: Record<string, IndustryConfig> = {
     seoTitle:
       "Electrical Contractor Software Detroit — $199/mo Unlimited | Detroit Web Agency",
     seoDesc:
-      "Replace ServiceTitan for $199/mo. Permit tracking, recurring inspections, field invoicing. Built for Southeast Michigan electrical contractors. Call (313) 806-4952.",
+      "Replace ServiceTitan for $199/mo. Permit tracking, recurring inspections, field invoicing. Built for Southeast Michigan electrical contractors. Call (313) 992-1219.",
     localMarkets: [
       "Oakland County",
       "Macomb County",
@@ -160,7 +160,7 @@ const INDUSTRY_CONFIGS: Record<string, IndustryConfig> = {
     seoTitle:
       "Pest Control Software Detroit — $219/mo for Your Whole Crew | Detroit Web Agency",
     seoDesc:
-      "Replace GorillaDesk for $219/mo. Recurring routes, treatment logs, auto-SMS reminders. Built for Southeast Michigan pest control companies. Call (313) 806-4952.",
+      "Replace GorillaDesk for $219/mo. Recurring routes, treatment logs, auto-SMS reminders. Built for Southeast Michigan pest control companies. Call (313) 992-1219.",
     localMarkets: [
       "Macomb County",
       "Oakland County",
@@ -195,7 +195,7 @@ const INDUSTRY_CONFIGS: Record<string, IndustryConfig> = {
     seoTitle:
       "Landscaping Software Detroit — $229/mo for Your Whole Crew | Detroit Web Agency",
     seoDesc:
-      "Replace Jobber/LMN for $229/mo. Seasonal contracts, crew dispatch, auto-invoicing. Built for Southeast Michigan landscaping companies. Call (313) 806-4952.",
+      "Replace Jobber/LMN for $229/mo. Seasonal contracts, crew dispatch, auto-invoicing. Built for Southeast Michigan landscaping companies. Call (313) 992-1219.",
     localMarkets: [
       "Oakland County",
       "Bloomfield Hills",
@@ -230,7 +230,7 @@ const INDUSTRY_CONFIGS: Record<string, IndustryConfig> = {
     seoTitle:
       "Boiler Service Software Detroit — $199/mo for Your Whole Crew | Detroit Web Agency",
     seoDesc:
-      "Replace FieldServio for $199/mo. Asset history per unit, service contracts, mobile app. Built for Warren, MI and Southeast Michigan boiler/industrial contractors. (313) 806-4952.",
+      "Replace FieldServio for $199/mo. Asset history per unit, service contracts, mobile app. Built for Warren, MI and Southeast Michigan boiler/industrial contractors. (313) 992-1219.",
     localMarkets: [
       "Warren",
       "Sterling Heights",
@@ -285,10 +285,10 @@ export default function FieldServiceIndustry() {
             <span className="text-[#00d4ff] font-black text-lg tracking-tight"> WEB AGENCY</span>
           </a>
           <a
-            href="tel:+13138064952"
+            href="tel:+13139921219"
             className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors"
           >
-            <Phone size={14} /> (313) 806-4952
+            <Phone size={14} /> (313) 992-1219
           </a>
         </div>
 
@@ -320,7 +320,7 @@ export default function FieldServiceIndustry() {
               See Our {config.name} Package →
             </a>
             <a
-              href="tel:+13138064952"
+              href="tel:+13139921219"
               className="border border-white/30 text-white px-8 py-3 font-bold text-sm hover:bg-white/5 transition-colors flex items-center gap-2"
             >
               <Phone size={14} /> Call Matt
@@ -362,7 +362,7 @@ export default function FieldServiceIndustry() {
                 <li className="flex items-center gap-2"><CheckCircle size={10} className="text-[#00d4ff] flex-shrink-0" />Flat monthly — unlimited users</li>
                 <li className="flex items-center gap-2"><CheckCircle size={10} className="text-[#00d4ff] flex-shrink-0" />Cancel anytime, no contracts</li>
                 <li className="flex items-center gap-2"><CheckCircle size={10} className="text-[#00d4ff] flex-shrink-0" />Built for crews like yours</li>
-                <li className="flex items-center gap-2"><CheckCircle size={10} className="text-[#00d4ff] flex-shrink-0" />Call Matt directly: (313) 806-4952</li>
+                <li className="flex items-center gap-2"><CheckCircle size={10} className="text-[#00d4ff] flex-shrink-0" />Call Matt directly: (313) 992-1219</li>
               </ul>
             </div>
           </div>
@@ -536,10 +536,10 @@ export default function FieldServiceIndustry() {
               ))}
             </div>
             <a
-              href="tel:+13138064952"
+              href="tel:+13139921219"
               className="inline-flex items-center gap-2 border border-[#00d4ff]/40 text-[#00d4ff] font-black px-6 py-2.5 text-sm hover:bg-[#00d4ff]/10 transition-colors"
             >
-              <Phone size={14} /> Detroit Web Agency — (313) 806-4952
+              <Phone size={14} /> Detroit Web Agency — (313) 992-1219
             </a>
           </div>
         </div>
@@ -553,10 +553,10 @@ export default function FieldServiceIndustry() {
             Call Matt. We'll have your {config.name} crew live in 48 hours.
           </h2>
           <a
-            href="tel:+13138064952"
+            href="tel:+13139921219"
             className="inline-flex items-center gap-2 bg-[#00d4ff] text-[#0a1628] font-black px-8 py-3 text-sm uppercase tracking-wide hover:bg-[#00d4ff]/90 transition-colors"
           >
-            <Phone size={14} /> (313) 806-4952
+            <Phone size={14} /> (313) 992-1219
           </a>
           <p className="text-white/30 text-xs mt-4">Detroit Web Agency — Grosse Pointe, MI</p>
         </div>

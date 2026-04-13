@@ -35,7 +35,7 @@ interface FieldCRMClient {
 
 // ── Snippet Generator ──────────────────────────────────────────────────────────
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? "https://zmyczlfuufhngzovkjdh.supabase.co";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? "https://eauvubfpanpeuxsrqesu.supabase.co";
 
 function buildSnippet(scriptKey: string): string {
   return `<!-- M² Field CRM by Detroit Web Agency -->
@@ -271,7 +271,8 @@ function ClientCard({ client, onSnippet, onEdit, onDelete }: {
 
   return (
     <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-white/8 bg-white/3 p-5 hover:border-white/15 transition-all">
+      className="rounded-2xl border border-white/8 bg-white/3 p-5 hover:border-white/15 transition-all cursor-pointer"
+      onClick={onSnippet}>
       {/* Header */}
       <div className="flex items-start justify-between gap-2 mb-4">
         <div className="min-w-0">

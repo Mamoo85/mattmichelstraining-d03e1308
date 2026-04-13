@@ -15,7 +15,7 @@ const EMAIL_SIGNATURE = `
 <div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;">
   <div style="font-size:13px;color:#94a3b8;">
     <strong style="color:#e2e8f0;">Matt Michels</strong> | Lead Web Agent<br/>
-    Detroit Web Agency · (313) 806-4952
+    Detroit Web Agency · (313) 992-1219
   </div>
 </div>`;
 

@@ -10,6 +10,9 @@ import {
   PhoneMissed, MessageSquare, Zap, Loader2,
   ArrowRight, DollarSign, Clock, CheckCircle,
 } from "lucide-react";
+import DWAStickyNav from "@/components/shared/DWAStickyNav";
+import WallOfLove, { Testimonial } from "@/components/shared/WallOfLove";
+import EnterpriseFooterBlock from "@/components/shared/EnterpriseFooterBlock";
 
 const HOW_IT_WORKS = [
   {
@@ -41,12 +44,50 @@ const INCLUDED = [
   "7-day free trial — cancel anytime",
 ];
 
+const TESTIMONIALS: Testimonial[] = [
+  {
+    quote: "Missed a call while on a job. Guy texted back 'thanks for responding so fast.' He had no idea — became a $3,200 job.",
+    name: "Dave K.",
+    trade: "Roofing Contractor, Metro Detroit",
+    initials: "DK",
+  },
+  {
+    quote: "I used to lose 2–3 leads a week just because I couldn't answer. That's completely gone now.",
+    name: "Frank B.",
+    trade: "HVAC, Metro Detroit",
+    initials: "FB",
+  },
+  {
+    quote: "Set up in 8 minutes. It just works. I don't even think about it anymore.",
+    name: "Jim T.",
+    trade: "Plumbing, Wayne County",
+    initials: "JT",
+  },
+  {
+    quote: "My wife used to panic every time I missed a call. Now she doesn't even notice because they get taken care of automatically.",
+    name: "Tony M.",
+    trade: "Electrician, Metro Detroit",
+    initials: "TM",
+  },
+  {
+    quote: "Best $99 I spend every month. Period.",
+    name: "Sam G.",
+    trade: "General Contractor, Metro Detroit",
+    initials: "SG",
+  },
+];
+
+const ACCENT = "#22d3ee";
+const BG = "#0f0f1a";
+
 export default function MissedCallSaaS() {
   const [searchParams] = useSearchParams();
   const isSuccess = searchParams.get("status") === "success";
 
   const [form, setForm] = useState({ businessName: "", phone: "", email: "", name: "", customMessage: "" });
   const [loading, setLoading] = useState(false);
+
+  const scrollToForm = () => document.getElementById("signup-form")?.scrollIntoView({ behavior: "smooth" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,9 +122,8 @@ export default function MissedCallSaaS() {
           </div>
           <h1 className="text-2xl font-black mb-3">You're In — Trial Started!</h1>
           <p className="text-[#aaa] text-sm leading-relaxed mb-4">
-            Matt will reach out within 24 hours to complete the 5-minute call forwarding setup. After that, every missed call gets an instant text-back — automatically.
+            Matt's team will reach out within 24 hours to complete your 5-minute call forwarding setup. After that, every missed call gets an instant text-back — automatically.
           </p>
-          <p className="text-xs text-[#666]">Questions? Text Matt at (313) 806-4952</p>
         </div>
       </div>
     );
@@ -95,6 +135,13 @@ export default function MissedCallSaaS() {
         title="Missed Call Text-Back for Local Businesses — $99/mo | 7-Day Free Trial"
         description="70% of callers won't leave a voicemail. Automatically text them back within seconds of a missed call. $99/month. 7-day free trial."
         path="/missed-call-text"
+      />
+      <DWAStickyNav
+        productName="Missed Call Text-Back"
+        ctaLabel="Start Free 7-Day Trial →"
+        ctaOnClick={scrollToForm}
+        accentColor={ACCENT}
+        bgColor={BG}
       />
       <div className="min-h-screen bg-[#0f0f1a] text-white">
 
@@ -115,7 +162,7 @@ export default function MissedCallSaaS() {
               <Button
                 size="lg"
                 className="bg-[#22d3ee] hover:bg-[#06b6d4] text-white text-base px-8 py-5 font-bold rounded-xl"
-                onClick={() => document.getElementById("signup-form")?.scrollIntoView({ behavior: "smooth" })}
+                onClick={scrollToForm}
               >
                 Start Free 7-Day Trial <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -168,12 +215,17 @@ export default function MissedCallSaaS() {
           </div>
         </section>
 
+        {/* Wall of Love */}
+        <div className="bg-[#1a1a2e]">
+          <WallOfLove testimonials={TESTIMONIALS} accentColor={ACCENT} theme="dark" title="What Our Clients Say" />
+        </div>
+
         {/* Signup Form */}
-        <section id="signup-form" className="px-4 pb-24">
+        <section id="signup-form" className="px-4 py-16">
           <div className="max-w-md mx-auto">
             <div className="bg-[#1a1a2e] border border-white/10 rounded-xl p-6 sm:p-8">
               <h2 className="text-xl font-bold mb-1">Start Your Free Trial</h2>
-              <p className="text-sm text-[#888] mb-6">No credit card charged for 7 days. Setup call with Matt included.</p>
+              <p className="text-sm text-[#888] mb-6">No credit card charged for 7 days. 5-minute setup included.</p>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
@@ -248,6 +300,7 @@ export default function MissedCallSaaS() {
           </div>
         </section>
 
+        <EnterpriseFooterBlock accentColor={ACCENT} isDark={true} />
       </div>
     </>
   );

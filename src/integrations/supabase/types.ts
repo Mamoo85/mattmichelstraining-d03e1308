@@ -1931,7 +1931,9 @@ export type Database = {
           business_name: string
           city: string | null
           created_at: string | null
+          dead_lead_billing_active: boolean | null
           email: string
+          google_review_link: string | null
           id: string
           industry: string | null
           last_lead_at: string | null
@@ -1939,9 +1941,11 @@ export type Database = {
           name: string | null
           onboarded_at: string | null
           phone: string | null
+          roi_token: string | null
           service_area: string | null
           state: string | null
           stripe_customer_id: string | null
+          stripe_payment_method_id: string | null
           stripe_subscription_id: string | null
           trade: string | null
         }
@@ -1950,7 +1954,9 @@ export type Database = {
           business_name: string
           city?: string | null
           created_at?: string | null
+          dead_lead_billing_active?: boolean | null
           email: string
+          google_review_link?: string | null
           id?: string
           industry?: string | null
           last_lead_at?: string | null
@@ -1958,9 +1964,11 @@ export type Database = {
           name?: string | null
           onboarded_at?: string | null
           phone?: string | null
+          roi_token?: string | null
           service_area?: string | null
           state?: string | null
           stripe_customer_id?: string | null
+          stripe_payment_method_id?: string | null
           stripe_subscription_id?: string | null
           trade?: string | null
         }
@@ -1969,7 +1977,9 @@ export type Database = {
           business_name?: string
           city?: string | null
           created_at?: string | null
+          dead_lead_billing_active?: boolean | null
           email?: string
+          google_review_link?: string | null
           id?: string
           industry?: string | null
           last_lead_at?: string | null
@@ -1977,9 +1987,11 @@ export type Database = {
           name?: string | null
           onboarded_at?: string | null
           phone?: string | null
+          roi_token?: string | null
           service_area?: string | null
           state?: string | null
           stripe_customer_id?: string | null
+          stripe_payment_method_id?: string | null
           stripe_subscription_id?: string | null
           trade?: string | null
         }
@@ -2115,6 +2127,7 @@ export type Database = {
         Row: {
           checkout_locked_by: string | null
           client_id: string | null
+          contact_preference: string
           created_at: string | null
           email: string | null
           id: string
@@ -2135,6 +2148,7 @@ export type Database = {
         Insert: {
           checkout_locked_by?: string | null
           client_id?: string | null
+          contact_preference?: string
           created_at?: string | null
           email?: string | null
           id?: string
@@ -2155,6 +2169,7 @@ export type Database = {
         Update: {
           checkout_locked_by?: string | null
           client_id?: string | null
+          contact_preference?: string
           created_at?: string | null
           email?: string | null
           id?: string
@@ -2490,6 +2505,194 @@ export type Database = {
           },
         ]
       }
+      dead_lead_campaigns: {
+        Row: {
+          campaign_copy_variants: Json | null
+          completed_at: string | null
+          contractor_id: string
+          created_at: string
+          id: string
+          is_free_trial: boolean
+          name: string
+          pause_reason: string | null
+          paused_at: string | null
+          positive_count: number
+          replied_count: number
+          status: string
+          total_contacts: number
+          trade: string | null
+          updated_at: string
+        }
+        Insert: {
+          campaign_copy_variants?: Json | null
+          completed_at?: string | null
+          contractor_id: string
+          created_at?: string
+          id?: string
+          is_free_trial?: boolean
+          name?: string
+          pause_reason?: string | null
+          paused_at?: string | null
+          positive_count?: number
+          replied_count?: number
+          status?: string
+          total_contacts?: number
+          trade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          campaign_copy_variants?: Json | null
+          completed_at?: string | null
+          contractor_id?: string
+          created_at?: string
+          id?: string
+          is_free_trial?: boolean
+          name?: string
+          pause_reason?: string | null
+          paused_at?: string | null
+          positive_count?: number
+          replied_count?: number
+          status?: string
+          total_contacts?: number
+          trade?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dead_lead_campaigns_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dead_lead_charges: {
+        Row: {
+          amount_cents: number
+          campaign_id: string | null
+          contact_id: string | null
+          contractor_id: string
+          created_at: string
+          id: string
+          status: string
+          stripe_payment_intent_id: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          campaign_id?: string | null
+          contact_id?: string | null
+          contractor_id: string
+          created_at?: string
+          id?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          campaign_id?: string | null
+          contact_id?: string | null
+          contractor_id?: string
+          created_at?: string
+          id?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dead_lead_charges_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "dead_lead_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dead_lead_charges_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "dead_lead_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dead_lead_charges_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dead_lead_contacts: {
+        Row: {
+          campaign_id: string
+          contractor_notified_at: string | null
+          created_at: string
+          drip1_sent: boolean
+          drip1_sent_at: string | null
+          drip2_sent: boolean
+          drip2_sent_at: string | null
+          drip3_sent: boolean
+          drip3_sent_at: string | null
+          email: string | null
+          id: string
+          name: string
+          original_service: string | null
+          phone: string
+          replied_at: string | null
+          reply_sentiment: string | null
+          reply_text: string | null
+          status: string
+        }
+        Insert: {
+          campaign_id: string
+          contractor_notified_at?: string | null
+          created_at?: string
+          drip1_sent?: boolean
+          drip1_sent_at?: string | null
+          drip2_sent?: boolean
+          drip2_sent_at?: string | null
+          drip3_sent?: boolean
+          drip3_sent_at?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          original_service?: string | null
+          phone: string
+          replied_at?: string | null
+          reply_sentiment?: string | null
+          reply_text?: string | null
+          status?: string
+        }
+        Update: {
+          campaign_id?: string
+          contractor_notified_at?: string | null
+          created_at?: string
+          drip1_sent?: boolean
+          drip1_sent_at?: string | null
+          drip2_sent?: boolean
+          drip2_sent_at?: string | null
+          drip3_sent?: boolean
+          drip3_sent_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          original_service?: string | null
+          phone?: string
+          replied_at?: string | null
+          reply_sentiment?: string | null
+          reply_text?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dead_lead_contacts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "dead_lead_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_failures: {
         Row: {
           created_at: string | null
@@ -2637,6 +2840,42 @@ export type Database = {
           service_interested?: string | null
           source?: string | null
           stripe_checkout_completed?: boolean | null
+        }
+        Relationships: []
+      }
+      email_reply_drafts: {
+        Row: {
+          cancelled: boolean | null
+          category: string | null
+          created_at: string | null
+          draft_body: string
+          draft_subject: string | null
+          id: string
+          lead_email: string
+          send_after: string
+          sent: boolean | null
+        }
+        Insert: {
+          cancelled?: boolean | null
+          category?: string | null
+          created_at?: string | null
+          draft_body: string
+          draft_subject?: string | null
+          id?: string
+          lead_email: string
+          send_after: string
+          sent?: boolean | null
+        }
+        Update: {
+          cancelled?: boolean | null
+          category?: string | null
+          created_at?: string | null
+          draft_body?: string
+          draft_subject?: string | null
+          id?: string
+          lead_email?: string
+          send_after?: string
+          sent?: boolean | null
         }
         Relationships: []
       }
@@ -4076,36 +4315,57 @@ export type Database = {
           company_name: string
           created_at: string | null
           id: string
+          notify_email: boolean | null
+          notify_sms: boolean | null
           owner_email: string
+          owner_name: string | null
           owner_phone: string | null
           plan: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           target_roles: string[] | null
+          target_zip_codes: string[] | null
+          trial_ends_at: string | null
+          trial_started_at: string | null
+          trial_status: string | null
         }
         Insert: {
           active?: boolean | null
           company_name: string
           created_at?: string | null
           id?: string
+          notify_email?: boolean | null
+          notify_sms?: boolean | null
           owner_email: string
+          owner_name?: string | null
           owner_phone?: string | null
           plan?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           target_roles?: string[] | null
+          target_zip_codes?: string[] | null
+          trial_ends_at?: string | null
+          trial_started_at?: string | null
+          trial_status?: string | null
         }
         Update: {
           active?: boolean | null
           company_name?: string
           created_at?: string | null
           id?: string
+          notify_email?: boolean | null
+          notify_sms?: boolean | null
           owner_email?: string
+          owner_name?: string | null
           owner_phone?: string | null
           plan?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           target_roles?: string[] | null
+          target_zip_codes?: string[] | null
+          trial_ends_at?: string | null
+          trial_started_at?: string | null
+          trial_status?: string | null
         }
         Relationships: []
       }
@@ -5827,6 +6087,7 @@ export type Database = {
           ai_drafted_pitch: string | null
           ai_drafted_subject: string | null
           business_name: string
+          channel: string | null
           city: string | null
           company_name: string | null
           created_at: string | null
@@ -5860,6 +6121,7 @@ export type Database = {
           ai_drafted_pitch?: string | null
           ai_drafted_subject?: string | null
           business_name: string
+          channel?: string | null
           city?: string | null
           company_name?: string | null
           created_at?: string | null
@@ -5893,6 +6155,7 @@ export type Database = {
           ai_drafted_pitch?: string | null
           ai_drafted_subject?: string | null
           business_name?: string
+          channel?: string | null
           city?: string | null
           company_name?: string | null
           created_at?: string | null

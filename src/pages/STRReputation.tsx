@@ -72,7 +72,7 @@ export default function STRReputation() {
           Matt will activate monitoring on your listings within 24 hours. The next time a review hits, you'll know within 2 hours — with a response ready to post.
         </p>
         <p className="mt-4 text-sm text-muted-foreground">
-          Questions? <a href="tel:+13138064952" className="text-primary font-medium">(313) 806-4952</a>
+          Questions? <a href="tel:+13139921219" className="text-primary font-medium">(313) 992-1219</a>
         </p>
       </div>
     </div>

@@ -65,7 +65,7 @@ export default function BidIntelligence() {
           </div>
           <h1 className="text-2xl font-black text-foreground mb-3">You're all set!</h1>
           <p className="text-muted-foreground leading-relaxed">Your Bid Intelligence monitor is now active. You'll receive your first bid report within 24 hours.</p>
-          <p className="mt-4 text-sm text-muted-foreground">Questions? Text Matt at <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a></p>
+          <p className="mt-4 text-sm text-muted-foreground">Questions? Text Matt at <a href="tel:+13139921219" className="text-primary">(313) 992-1219</a></p>
         </div>
       </div>
     );
@@ -167,7 +167,7 @@ export default function BidIntelligence() {
                 {loading ? <><Loader2 size={14} className="animate-spin" /> Processing...</> : <>Get Started <ArrowRight size={14} /></>}
               </button>
             </form>
-            <p className="text-center text-xs text-muted-foreground mt-4">Powered by Stripe. Cancel anytime. Questions? <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a></p>
+            <p className="text-center text-xs text-muted-foreground mt-4">Powered by Stripe. Cancel anytime. Questions? <a href="tel:+13139921219" className="text-primary">(313) 992-1219</a></p>
           </div>
         </section>
 

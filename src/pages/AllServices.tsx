@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Phone } from "lucide-react";
+import SEOHead from "@/components/layout/SEOHead";
 
 interface Service {
   name: string;
@@ -97,6 +98,7 @@ const TOTAL_SERVICES = CATEGORIES.reduce((sum, cat) => sum + cat.services.length
 export default function AllServices() {
   return (
     <div className="min-h-screen text-white" style={{ background: "#0a0a0f" }}>
+      <SEOHead title="All Services — Detroit Web Agency" description="The full Detroit Web Agency service stack: FieldDesk CRM, TechAlert hiring monitor, SiteRadar visitor intel, SEO Guard, dead lead reactivation, and more." path="/all-services" />
       {/* Hero */}
       <section className="relative py-16 px-4 text-center overflow-hidden" style={{ borderBottom: "1px solid rgba(148,163,184,0.08)" }}>
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, #22d3ee 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
@@ -112,12 +114,12 @@ export default function AllServices() {
             Every service below is fully automated — set it up once and it works around the clock. No ongoing work required on your end.
           </p>
           <a
-            href="tel:3138064952"
+            href="tel:3139921219"
             className="inline-flex items-center gap-2 font-semibold px-6 py-3 rounded-lg text-base transition-all duration-300"
             style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 30px rgba(6,182,212,0.3)" }}
           >
             <Phone className="w-4 h-4" />
-            (313) 806-4952 — Text or call Matt
+            (313) 992-1219 — Text or call Matt
           </a>
         </div>
       </section>
@@ -174,12 +176,12 @@ export default function AllServices() {
             Text Matt directly and he'll point you to the right service for your business.
           </p>
           <a
-            href="sms:3138064952"
+            href="sms:3139921219"
             className="inline-flex items-center gap-2 font-bold px-8 py-3 rounded-lg text-lg transition-all duration-300"
             style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 30px rgba(6,182,212,0.3)" }}
           >
             <Phone className="w-5 h-5" />
-            Text Matt at (313) 806-4952
+            Text Matt at (313) 992-1219
           </a>
         </div>
       </section>

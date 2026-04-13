@@ -80,6 +80,14 @@ jobs:
         run: |
           supabase functions deploy missed-call-handler --project-ref $SUPABASE_PROJECT_REF --no-verify-jwt
 
+      - name: Deploy missed-call-status edge function
+        run: |
+          supabase functions deploy missed-call-status --project-ref $SUPABASE_PROJECT_REF --no-verify-jwt
+
+      - name: Deploy inbound-sms-relay edge function
+        run: |
+          supabase functions deploy inbound-sms-relay --project-ref $SUPABASE_PROJECT_REF --no-verify-jwt
+
       - name: Sync secrets to Supabase
         run: |
           supabase secrets set --project-ref $SUPABASE_PROJECT_REF \

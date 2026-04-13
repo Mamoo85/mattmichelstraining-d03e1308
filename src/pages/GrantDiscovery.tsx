@@ -76,7 +76,7 @@ export default function GrantDiscovery() {
           Your organization profile is set. Every Monday morning you'll receive a ranked list of funding opportunities matched to your mission — with fit scores, award amounts, deadlines, and direct links.
         </p>
         <p className="mt-4 text-sm text-muted-foreground">
-          Questions? <a href="tel:+13138064952" className="text-primary font-medium">(313) 806-4952</a>
+          Questions? <a href="tel:+13139921219" className="text-primary font-medium">(313) 992-1219</a>
         </p>
       </div>
     </div>

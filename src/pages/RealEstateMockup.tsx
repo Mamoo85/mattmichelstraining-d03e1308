@@ -6,7 +6,7 @@ import { RevealSection } from "@/hooks/useInView";
 
 const heroImg = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600&q=80";
 const BRAND = "Sarah Kovacs Real Estate";
-const PHONE = "(313) 806-4952";
+const PHONE = "(313) 992-1219";
 const NAVY = "#1e3a5f";
 const GOLD = "#b8972a";
 
@@ -54,7 +54,7 @@ const RealEstateMockup = () => {
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", color: "#1e293b", background: "#f8fafc" }}>
       <div style={{ background: "#1e40af", color: "white", textAlign: "center", padding: "8px", fontSize: "11px", fontWeight: "700", letterSpacing: "0.1em" }}>
-        SAMPLE WEBSITE — Built by Matt Michels Web Design · (313) 806-4952
+        SAMPLE WEBSITE — Built by Matt Michels Web Design · (313) 992-1219
       </div>
 
       <Helmet>
@@ -69,7 +69,7 @@ const RealEstateMockup = () => {
         <span className="opacity-60">·</span>
         <Link to="/detroit-web-design" className="underline underline-offset-2">Matt Michels Web Design</Link>
         <span className="opacity-60">·</span>
-        <a href="tel:3138064952">313.806.4952</a>
+        <a href="tel:3139921219">313.992.1219</a>
       </div>
 
       {/* Sticky Header */}

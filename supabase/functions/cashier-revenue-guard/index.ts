@@ -103,7 +103,7 @@ serve(async (req) => {
               html: `<div style="font-family:sans-serif;max-width:600px;margin:auto;padding:24px;">
                 <h2>Your subscription payment failed</h2>
                 <p>We tried to process your payment but it was declined. Please update your payment method to keep your service active.</p>
-                <p>If you have questions, reply to this email or call Matt at (313) 806-4952.</p>
+                <p>If you have questions, reply to this email or call Matt at (313) 992-1219.</p>
                 <p style="margin-top:16px;">— Matt Michels, M² Development</p>
               </div>`,
             }),

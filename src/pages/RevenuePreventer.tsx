@@ -241,7 +241,7 @@ export default function RevenuePreventer() {
         {/* Footer */}
         <footer className="py-8 px-4 border-t border-white/10 text-center">
           <p className="text-gray-500 text-sm">
-            Detroit Web Agency · Grosse Pointe, MI · <a href="mailto:matt@mattmichelstraining.com" className="text-[#22d3ee]">matt@mattmichelstraining.com</a> · (313) 806-4952
+            Detroit Web Agency · Grosse Pointe, MI · <a href="mailto:matt@mattmichelstraining.com" className="text-[#22d3ee]">matt@mattmichelstraining.com</a> · (313) 992-1219
           </p>
         </footer>
       </div>

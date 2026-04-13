@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, ArrowRight, Phone, CheckCircle, AlertTriangle, XCircle, Loader2, TrendingUp } from "lucide-react";
 
-const PHONE = "(313) 806-4952";
+const PHONE = "(313) 992-1219";
 
 type Step = "search" | "email" | "loading" | "result";
 

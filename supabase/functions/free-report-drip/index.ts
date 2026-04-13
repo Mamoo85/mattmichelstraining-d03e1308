@@ -139,7 +139,7 @@ function emailStep3(name: string, svc: typeof DEFAULT_SERVICE) {
     Start Now — ${svc.price} →
   </a>
   <p style="font-size:13px;color:#999;margin-top:24px;">
-    — Matt Michels<br/>M² Development · Grosse Pointe, MI<br/>(313) 806-4952
+    — Matt Michels<br/>M² Development · Grosse Pointe, MI<br/>(313) 992-1219
   </p>
   <hr style="border:none;border-top:1px solid #eee;margin:24px 0;"/>
   <p style="font-size:11px;color:#bbb;">You received this because you downloaded a free report from mattmichelstraining.com. <a href="https://www.mattmichelstraining.com" style="color:#bbb;">Unsubscribe</a></p>

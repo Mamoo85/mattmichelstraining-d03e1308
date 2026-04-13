@@ -6,7 +6,7 @@ import { RevealSection } from "@/hooks/useInView";
 
 const heroImg = "https://images.unsplash.com/photo-1558904541-efa843a96f01?w=1600&q=80";
 const BRAND = "[BUSINESS NAME]";
-const PHONE = "(313) 806-4952";
+const PHONE = "(313) 992-1219";
 const GREEN = "#16a34a";
 
 const seasons = [
@@ -77,7 +77,7 @@ const LandscapeMockup = () => {
         <span className="opacity-60">·</span>
         <Link to="/detroit-web-design" className="underline underline-offset-2">Matt Michels Web Design</Link>
         <span className="opacity-60">·</span>
-        <a href="tel:3138064952">313.806.4952</a>
+        <a href="tel:3139921219">313.992.1219</a>
       </div>
 
       {/* Sticky Header */}

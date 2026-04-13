@@ -12,12 +12,12 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
 async function generatePromo(businessName: string, businessType: string, promoOffer: string): Promise<string> {
   if (!promoOffer) {
-    return `${businessName} here — we have an opening TODAY and want to take care of you. ${promoOffer || "Call us now to book!"} Reply STOP to unsubscribe.`;
+    return `${businessName} here — we have an opening TODAY and want to take care of you. ${promoOffer || "Reply YES to grab this spot!"} Reply STOP to unsubscribe.`;
   }
 
   const prompt = `Write a short SMS promo for ${businessName} (${businessType}). The offer is: "${promoOffer}".
 
-Rules: 1-2 sentences, urgent but friendly, ends with a call-to-action. Under 140 characters total (not including the STOP notice). Sound like a real local business owner.
+Rules: 1-2 sentences, urgent but friendly, ends with a reply-based or link-based CTA (like "Reply YES" or "Tap here to book"). Under 140 characters total (not including the STOP notice). Sound like a real local business owner. Do NOT use "call now" as the CTA.
 
 Just write the SMS text, nothing else.`;
 
@@ -34,7 +34,7 @@ Just write the SMS text, nothing else.`;
     const msg = data?.choices?.[0]?.message?.content?.trim() || `${businessName}: ${promoOffer} — call now!`;
     return `${msg}\n\nReply STOP to unsubscribe.`;
   } catch {
-    return `${businessName} here — we have an opening TODAY and want to take care of you. ${promoOffer} Reply STOP to unsubscribe.`;
+    return `${businessName} here — we have an opening TODAY and want to take care of you. ${promoOffer} Reply YES to grab this spot! Reply STOP to unsubscribe.`;
   }
 }
 

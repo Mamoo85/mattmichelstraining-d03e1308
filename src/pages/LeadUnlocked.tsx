@@ -106,7 +106,7 @@ export default function LeadUnlocked() {
             Your payment went through. We texted the lead's contact info to your phone. Check your messages.
           </p>
           <p style={{ color: "#64748b", fontSize: 14 }}>
-            Need help? Text Matt at <a href="tel:+13138064952" style={{ color: "#00d4ff" }}>(313) 806-4952</a>
+            Need help? Text Matt at <a href="tel:+13139921219" style={{ color: "#00d4ff" }}>(313) 992-1219</a>
           </p>
         </div>
       </div>

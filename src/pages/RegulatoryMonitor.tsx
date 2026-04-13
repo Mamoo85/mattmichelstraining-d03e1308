@@ -424,7 +424,7 @@ export default function RegulatoryMonitor() {
               <p className="font-bold text-sm text-foreground mb-1">Matt Michels · M2 Development</p>
               <p className="text-[13px] text-muted-foreground leading-relaxed">
                 "Business owners shouldn't need a law degree to stay compliant. This monitor
-                does the reading so you can focus on running your business." — Grosse Pointe, MI · (313) 806-4952
+                does the reading so you can focus on running your business." — Grosse Pointe, MI · (313) 992-1219
               </p>
             </div>
           </div>

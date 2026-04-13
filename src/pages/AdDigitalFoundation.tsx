@@ -31,8 +31,8 @@ export default function AdDigitalFoundation() {
           <p className="text-slate-300 mb-6">
             Matt will reach out today to start building your site. 7-day free trial — no charge until day 8.
           </p>
-          <a href="tel:+13138064952" className="inline-flex items-center gap-2 text-[#22d3ee] font-bold text-lg">
-            <Phone size={18} /> (313) 806-4952
+          <a href="tel:+13139921219" className="inline-flex items-center gap-2 text-[#22d3ee] font-bold text-lg">
+            <Phone size={18} /> (313) 992-1219
           </a>
         </div>
       </div>
@@ -53,7 +53,7 @@ export default function AdDigitalFoundation() {
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
     } catch (e: any) {
-      toast.error(e.message || "Something went wrong. Call (313) 806-4952");
+      toast.error(e.message || "Something went wrong. Call (313) 992-1219");
     } finally {
       setSubmitting(false);
     }
@@ -72,8 +72,8 @@ export default function AdDigitalFoundation() {
         {/* Floating header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
           <p className="text-[#22d3ee] font-black text-sm tracking-wider uppercase">Detroit Web Agency</p>
-          <a href="tel:+13138064952" className="text-white/70 text-sm flex items-center gap-1.5 hover:text-white">
-            <Phone size={12} /> (313) 806-4952
+          <a href="tel:+13139921219" className="text-white/70 text-sm flex items-center gap-1.5 hover:text-white">
+            <Phone size={12} /> (313) 992-1219
           </a>
         </div>
 
@@ -161,7 +161,7 @@ export default function AdDigitalFoundation() {
 
             <div className="mt-6 pt-4 border-t border-slate-100 text-center">
               <p className="text-xs text-slate-500">
-                Or call now: <a href="tel:+13138064952" className="font-bold text-[#22d3ee]">(313) 806-4952</a>
+                Or call now: <a href="tel:+13139921219" className="font-bold text-[#22d3ee]">(313) 992-1219</a>
               </p>
             </div>
           </div>

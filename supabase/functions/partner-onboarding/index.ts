@@ -66,11 +66,11 @@ function buildWelcomeKitEmail(name: string, business: string, email: string): st
         <p style="margin:0;font-size:13px;color:#444;"><strong>Best referral targets:</strong> Any local business with no website, a bad website, or a site that hasn't been updated in 3+ years. If they show up on Yelp with no site link — they're a perfect lead.</p>
       </div>
 
-      <p style="color:#555;font-size:13px;line-height:1.7;">Questions? Just reply to this email or text me at (313) 806-4952.</p>
+      <p style="color:#555;font-size:13px;line-height:1.7;">Questions? Just reply to this email or text me at (313) 992-1219.</p>
       <p style="color:#1a1a2e;font-size:14px;font-weight:bold;margin-top:20px;">— Matt</p>
     </td></tr>
     <tr><td style="background:#f8f8f8;padding:14px;text-align:center;border-top:1px solid #eee;">
-      <p style="color:#aaa;font-size:11px;margin:0;">Matt Michels Web Design · (313) 806-4952 · Grosse Pointe, MI</p>
+      <p style="color:#aaa;font-size:11px;margin:0;">Matt Michels Web Design · (313) 992-1219 · Grosse Pointe, MI</p>
     </td></tr>
   </table>
 </td></tr>
@@ -137,7 +137,7 @@ serve(async (req) => {
         from: "M² Site <matt@mattmichelstraining.com>",
         to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
         subject: `New Partner Signup: ${name} (${business || "no business"})`,
-        html: `<p>New referral partner: <strong>${name}</strong> — ${email} — ${phone || "no phone"} — ${business || "no business"}</p><p>How heard: ${how_they_heard || "not specified"}<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI \u00b7 (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>`,
+        html: `<p>New referral partner: <strong>${name}</strong> — ${email} — ${phone || "no phone"} — ${business || "no business"}</p><p>How heard: ${how_they_heard || "not specified"}<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI \u00b7 (313) 992-1219</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>`,
       }),
     });
 

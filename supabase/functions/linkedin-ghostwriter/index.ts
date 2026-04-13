@@ -9,7 +9,7 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
-const DWA_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.detroitwebagent.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Lead Web Agent · Detroit Web Agency<br/>Grosse Pointe, MI · (313) 806-4952</div></div>`;
+const DWA_SIGNATURE = `<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.detroitwebagent.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Lead Web Agent · Detroit Web Agency<br/>Grosse Pointe, MI · (313) 992-1219</div></div>`;
 
 serve(async (req) => {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -153,7 +153,7 @@ function buildEmailTemplate(name: string, posts: string[]): string {
 
     <div style="margin-top: 30px; padding: 20px; background: #1e293b; color: #fff; text-align: center; border-radius: 8px;">
       <p style="margin: 0 0 10px; font-size: 14px;">Not quite right? Reply to this email with feedback and we'll adjust future posts.</p>
-      <p style="margin: 0; font-size: 12px; color: #94a3b8;">Questions? Text Matt: <a href="tel:+13138064952" style="color: #22d3ee;">(313) 806-4952</a></p>
+      <p style="margin: 0; font-size: 12px; color: #94a3b8;">Questions? Text Matt: <a href="tel:+13139921219" style="color: #22d3ee;">(313) 992-1219</a></p>
     </div>
   </div>
 </body>

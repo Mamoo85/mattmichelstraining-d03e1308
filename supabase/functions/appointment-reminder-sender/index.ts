@@ -42,7 +42,7 @@ serve(async (req) => {
         hour: "numeric", minute: "2-digit", timeZone: "America/Detroit",
       });
 
-      const message = `Hi ${reminder.contact_name}! This is a reminder from ${client.business_name}: you have an appointment tomorrow at ${apptTime}. Reply CONFIRM to confirm or call us to reschedule.`;
+      const message = `Hi ${reminder.contact_name}! This is a reminder from ${client.business_name}: you have an appointment tomorrow at ${apptTime}. Reply CONFIRM to confirm. Need to reschedule? Call us at ${client.twilio_number}.`;
 
       await sendSMS(reminder.contact_phone, client.twilio_number, message, "appointment_reminder");
       await supabase.from("appointment_reminders").update({ reminded_24h: true }).eq("id", reminder.id);

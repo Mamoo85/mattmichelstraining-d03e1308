@@ -106,7 +106,7 @@ serve(async (req) => {
       <p style="color:#94a3b8;font-size:12px;margin-top:8px;">Cancel anytime. No contracts.</p>
     </div>
 
-    <p style="font-size:14px;color:#64748b;">Questions? Just reply to this email or text me at <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
+    <p style="font-size:14px;color:#64748b;">Questions? Just reply to this email or text me at <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a>.</p>
     
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
       <img src="${SITE}/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />

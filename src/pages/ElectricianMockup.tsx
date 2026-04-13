@@ -6,7 +6,7 @@ import { RevealSection } from "@/hooks/useInView";
 
 const heroImg = "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=1600&q=80";
 const BRAND = "Great Lakes Electric";
-const PHONE = "(313) 806-4952";
+const PHONE = "(313) 992-1219";
 const YELLOW = "#facc15";
 
 const services = [
@@ -58,7 +58,7 @@ const ElectricianMockup = () => {
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", color: "#e2e8f0", background: "#1e1e24" }}>
       <div style={{background:"#1e40af",color:"white",textAlign:"center",padding:"8px",fontSize:"11px",fontWeight:"700",letterSpacing:"0.1em"}}>
-        SAMPLE WEBSITE — Built by Matt Michels Web Design · (313) 806-4952
+        SAMPLE WEBSITE — Built by Matt Michels Web Design · (313) 992-1219
       </div>
       <style>{`
         @keyframes elec-crawl { 0%{background-position:0 0} 100%{background-position:28px 0} }
@@ -88,7 +88,7 @@ const ElectricianMockup = () => {
         <span className="opacity-60">·</span>
         <Link to="/detroit-web-design" className="underline underline-offset-2">Matt Michels Web Design</Link>
         <span className="opacity-60">·</span>
-        <a href="tel:3138064952">313.806.4952</a>
+        <a href="tel:3139921219">313.992.1219</a>
       </div>
 
       {/* Sticky Header */}

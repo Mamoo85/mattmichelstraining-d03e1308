@@ -63,13 +63,13 @@ function buildEmailHtml(
       </div>` : ""}
 
       <p style="color:#64748b;font-size:13px;">Payments are processed securely through Stripe. I'll get an alert the moment you pay and reach out within a few hours to kick things off.</p>
-      <p>Questions before you pay? Email me at <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a> — whichever works best for you.</p>
+      <p>Questions before you pay? Email me at <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> or text <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a> — whichever works best for you.</p>
       <p>— Matt Michels</p>
     </td></tr>
     <tr><td style="background:#f8fafc;padding:16px 32px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;">
       Matt Michels Web Design · Grosse Pointe, MI ·
       <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> ·
-      <a href="tel:+13138064952" style="color:#94a3b8;">(313) 806-4952</a>
+      <a href="tel:+13139921219" style="color:#94a3b8;">(313) 992-1219</a>
     </td></tr>
   </table>
 </td></tr>
@@ -221,7 +221,7 @@ serve(async (req) => {
         html: `<p>Payment link(s) sent to <strong>${clientEmail}</strong> for <strong>${business}</strong>.<br>
           ${buildUrl ? `Build ($499): <a href="${buildUrl}">${buildUrl}</a><br>` : ""}
           ${retainerUrl ? `Retainer ($49/mo): <a href="${retainerUrl}">${retainerUrl}</a>` : ""}
-        <div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI \u00b7 (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>`,
+        <div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI \u00b7 (313) 992-1219</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>`,
       }),
     });
 

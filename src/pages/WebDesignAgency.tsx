@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 /* ── Hard data that makes the page feel real ─────── */
-const PHONE = "(313) 806-4952";
+const PHONE = "(313) 992-1219";
 
 const RESULTS = [
   { before: "No website", after: "Ranked #1 on Google Maps within 6 weeks", industry: "Plumber · Eastpointe" },
@@ -159,7 +159,7 @@ const WebDesignAgency = () => {
       });
       setSent(true);
     } catch {
-      toast.error("Something went wrong. Call me directly — (313) 806-4952");
+      toast.error("Something went wrong. Call me directly — (313) 992-1219");
     } finally {
       setSending(false);
     }
@@ -497,7 +497,7 @@ const WebDesignAgency = () => {
                 </div>
                 <h2 className="text-2xl font-bold mb-3">Got it. I'll call you today.</h2>
                 <p className="text-muted-foreground mb-4">I personally review every inquiry. You'll hear from me within a few hours — usually within the hour during business days.</p>
-                <p className="text-sm font-semibold">Can't wait? Call or text me directly: <a href="tel:3138064952" className="text-primary hover:underline">{PHONE}</a></p>
+                <p className="text-sm font-semibold">Can't wait? Call or text me directly: <a href="tel:3139921219" className="text-primary hover:underline">{PHONE}</a></p>
               </div>
             ) : (
               <>

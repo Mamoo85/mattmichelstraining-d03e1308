@@ -70,7 +70,7 @@ export default function TechSupportServices() {
         <h1 className="text-2xl font-black text-foreground mb-3">Got it!</h1>
         <p className="text-muted-foreground">
           Matt will reach out within 24 hours to schedule your session. If it's urgent, call{" "}
-          <a href="tel:+13138064952" className="text-primary font-bold">(313) 806-4952</a>.
+          <a href="tel:+13139921219" className="text-primary font-bold">(313) 992-1219</a>.
         </p>
       </div>
     </div>
@@ -96,10 +96,10 @@ export default function TechSupportServices() {
               Computer problems? Matt's got you. Remote support for when technology isn't cooperating — from a real person, not a call center.
             </p>
             <a
-              href="tel:+13138064952"
+              href="tel:+13139921219"
               className="inline-flex items-center gap-2 text-primary font-black text-2xl mb-8 hover:opacity-80"
             >
-              <Phone size={20} /> (313) 806-4952
+              <Phone size={20} /> (313) 992-1219
             </a>
             <p className="text-sm text-muted-foreground">Or pick a plan below — Matt responds within 24 hours.</p>
           </div>
@@ -162,7 +162,7 @@ export default function TechSupportServices() {
               {form.tier === "monthly" ? "Monthly Plan — $29/mo" : form.tier === "one_time" ? "One-Time Session — $49" : "Select a plan above, then fill this out."}
             </p>
             <p className="text-center text-sm font-bold text-primary mb-8">
-              Urgent? Call Matt directly: <a href="tel:+13138064952" className="underline">(313) 806-4952</a>
+              Urgent? Call Matt directly: <a href="tel:+13139921219" className="underline">(313) 992-1219</a>
             </p>
             <form onSubmit={handleSubmit} className="space-y-3">
               {form.tier && (

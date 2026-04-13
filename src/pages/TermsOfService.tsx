@@ -137,7 +137,7 @@ export default function TermsOfService() {
           Matt Michels — Matt Michels Training / M2 Development<br />
           Grosse Pointe, MI<br />
           matt@mattmichelstraining.com<br />
-          (313) 806-4952
+          (313) 992-1219
         </p>
       </section>
     </div>

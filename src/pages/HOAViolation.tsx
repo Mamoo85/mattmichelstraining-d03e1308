@@ -79,7 +79,7 @@ export default function HOAViolation() {
         </p>
         <p className="mt-6 text-sm text-muted-foreground">
           Questions? Call or text{" "}
-          <a href="tel:+13138064952" className="text-primary font-bold">(313) 806-4952</a>
+          <a href="tel:+13139921219" className="text-primary font-bold">(313) 992-1219</a>
         </p>
       </div>
     </div>

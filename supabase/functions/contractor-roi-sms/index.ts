@@ -79,7 +79,7 @@ serve(async (req) => {
       await sendSMS(
         contractor.phone,
         TWILIO_PHONE_NUMBER,
-        `${contractor.business_name || "Your"} weekly report from Detroit Web Agency: ${highlights.join(", ")}. Full report: ${reportUrl}`,
+        `Your weekly results: ${highlights.join(", ")}. Full report: ${reportUrl} — Matt (313) 992-1219`,
         "roi_scorecard"
       );
 

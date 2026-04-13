@@ -82,7 +82,7 @@ export default function ClaimLead() {
           <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.7, margin: "0 0 32px" }}>
             Another contractor got there first. We'll text you the next one as soon as it drops.
           </p>
-          <p style={{ color: "#64748b", fontSize: 14 }}>Questions? Text Matt at (313) 806-4952</p>
+          <p style={{ color: "#64748b", fontSize: 14 }}>Questions? Text Matt at (313) 992-1219</p>
         </div>
       </div>
     );
@@ -98,7 +98,7 @@ export default function ClaimLead() {
             Another contractor is reviewing this lead right now. If they don't claim it,
             it'll unlock in approximately <strong style={{ color: "#00d4ff" }}>{minutesLeft} minute{minutesLeft !== 1 ? "s" : ""}</strong>.
           </p>
-          <p style={{ color: "#64748b", fontSize: 14 }}>Check back soon or text Matt at (313) 806-4952.</p>
+          <p style={{ color: "#64748b", fontSize: 14 }}>Check back soon or text Matt at (313) 992-1219.</p>
         </div>
       </div>
     );
@@ -154,7 +154,7 @@ export default function ClaimLead() {
 
             {status === "error" && (
               <p style={{ color: "#ef4444", fontSize: 13, textAlign: "center", marginTop: 12 }}>
-                Something went wrong. Text Matt at (313) 806-4952.
+                Something went wrong. Text Matt at (313) 992-1219.
               </p>
             )}
 

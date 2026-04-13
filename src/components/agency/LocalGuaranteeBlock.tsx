@@ -29,8 +29,8 @@ const LocalGuaranteeBlock = () => (
             </div>
 
             <div className="flex flex-wrap gap-4">
-              <a href="tel:+13138064952" className="inline-flex items-center gap-2 text-xs font-medium" style={{ color: "#22d3ee" }}>
-                <Phone className="h-3.5 w-3.5" /> (313) 806-4952
+              <a href="tel:+13139921219" className="inline-flex items-center gap-2 text-xs font-medium" style={{ color: "#22d3ee" }}>
+                <Phone className="h-3.5 w-3.5" /> (313) 992-1219
               </a>
               <a href="mailto:matt@detroitwebagent.com" className="inline-flex items-center gap-2 text-xs font-medium" style={{ color: "#22d3ee" }}>
                 <Mail className="h-3.5 w-3.5" /> matt@detroitwebagent.com

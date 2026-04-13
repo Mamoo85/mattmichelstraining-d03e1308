@@ -130,7 +130,7 @@ async function sendPostsEmail(email: string, businessName: string, postsText: st
       <div style="margin-top:24px;padding:20px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0">
         <p style="margin:0 0 8px;font-weight:700;color:#1e293b;font-family:sans-serif">Questions?</p>
         <p style="margin:0;color:#475569;font-size:14px;font-family:sans-serif">
-          Call or text Matt: <a href="tel:3138064952" style="color:#e8621a;font-weight:700">(313) 806-4952</a>
+          Call or text Matt: <a href="tel:3138064952" style="color:#e8621a;font-weight:700">(313) 992-1219</a>
           &nbsp;·&nbsp; <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a">matt@mattmichelstraining.com</a>
         </p>
       </div>

@@ -137,7 +137,7 @@ serve(async (req) => {
     // Find the most recent active drip contact with this phone
     const { data: contact } = await sb
       .from("dead_lead_contacts" as any)
-      .select("*, dead_lead_campaigns(trade, contractor_id, contractor_clients(id, business_name, phone, email, google_review_link, stripe_customer_id, stripe_payment_method_id, dead_lead_billing_active))")
+      .select("*, dead_lead_campaigns(trade, contractor_id, is_free_trial, contractor_clients(id, business_name, phone, email, google_review_link, stripe_customer_id, stripe_payment_method_id, dead_lead_billing_active))")
       .eq("phone", fromPhone)
       .in("status", ["drip1_sent", "drip2_sent", "drip3_sent"])
       .order("created_at", { ascending: false })
@@ -199,36 +199,85 @@ serve(async (req) => {
       }
     }
 
-    // ── POSITIVE REPLY → instant contractor notification + auto-charge ───────
+    // ── POSITIVE REPLY → charge first, then notify contractor ───────────────
     if (classification === "POSITIVE") {
-      await sb.from("dead_lead_contacts" as any).update({
-        status: "replied_positive",
-        reply_text: replyBody,
-        contractor_notified_at: new Date().toISOString(),
-      }).eq("id", contact.id);
-
+      const isFreeTrial = (campaign as any)?.is_free_trial === true;
       const billingActive = (contractor as any)?.dead_lead_billing_active;
       const stripeCustomerId = (contractor as any)?.stripe_customer_id;
       const paymentMethodId = (contractor as any)?.stripe_payment_method_id;
-      const billingNote = billingActive ? "($50 charged automatically.)" : "($50 added to your tab.)";
+      const SITE_URL = Deno.env.get("SITE_URL") || "https://detroitwebagent.com";
 
-      // SMS contractor immediately — remove Matt from the loop
-      if (contractor?.phone) {
+      let chargeAttempted = false;
+      let chargeSucceeded = false;
+
+      // Attempt charge BEFORE revealing contact info — failed charge = free lead otherwise
+      if (!isFreeTrial && billingActive && stripeCustomerId && paymentMethodId && STRIPE_SECRET_KEY) {
+        chargeAttempted = true;
+        try {
+          await chargeContractor(sb, contact.id, campaign.contractor_id, stripeCustomerId, paymentMethodId, contact.name || fromPhone);
+          chargeSucceeded = true;
+        } catch (e) {
+          console.error("[handle-dead-lead-reply] charge failed:", e);
+          // Card declined — notify contractor to update billing, withhold contact info
+          if (contractor?.phone) {
+            await sendSMS(
+              contractor.phone,
+              TWILIO_PHONE_NUMBER,
+              `A dead lead replied YES but your card was declined. Update your billing to get the contact: ${SITE_URL}/dead-lead-intake?billing=1`,
+              "dead_lead_reactivation"
+            );
+          }
+        }
+      }
+
+      // Update DB status — only mark contractor_notified if we're actually notifying them
+      const notifying = chargeSucceeded || isFreeTrial || !chargeAttempted;
+      await sb.from("dead_lead_contacts" as any).update({
+        status: "replied_positive",
+        reply_text: replyBody,
+        contractor_notified_at: notifying ? new Date().toISOString() : null,
+      }).eq("id", contact.id);
+
+      // Send lead info SMS only if charge succeeded, free trial, or no billing configured
+      if (notifying && contractor?.phone) {
+        const billingNote = isFreeTrial
+          ? "(Free trial lead — set up billing to keep getting notified.)"
+          : chargeSucceeded ? "($50 charged automatically.)" : "($50 added to your tab.)";
         await sendSMS(
           contractor.phone,
           TWILIO_PHONE_NUMBER,
           `\u267b\ufe0f DEAD LEAD REVIVED: ${contact.name || fromPhone} just replied they still need ${trade} work. Call them now: ${fromPhone}. ${billingNote}`,
           "dead_lead_reactivation"
         );
+        // Separate charge receipt prevents disputes
+        if (chargeSucceeded) {
+          await sendSMS(
+            contractor.phone,
+            TWILIO_PHONE_NUMBER,
+            `DWA Receipt: $50 charged for ${contact.name || fromPhone} (${trade} lead). Questions? Text (313) 992-1219`,
+            "dead_lead_reactivation"
+          );
+        }
       }
 
-      // Auto-charge $50 if card is saved
-      if (billingActive && stripeCustomerId && paymentMethodId && STRIPE_SECRET_KEY) {
-        chargeContractor(sb, contact.id, campaign.contractor_id, stripeCustomerId, paymentMethodId, contact.name || fromPhone)
-          .catch((e) => console.error("[handle-dead-lead-reply] charge failed:", e));
+      // Free trial: send billing CTA after lead info
+      if (isFreeTrial && contractor?.phone) {
+        await sendSMS(
+          contractor.phone,
+          TWILIO_PHONE_NUMBER,
+          `Your free trial worked — a dead lead just replied YES! To keep getting notified at $50/reply (no monthly fee), add your card here: ${SITE_URL}/dead-lead-intake?billing=1`,
+          "dead_lead_reactivation"
+        );
       }
 
-      // Email Matt — note auto-charged vs manual
+      // Email Matt
+      const chargeNote = isFreeTrial
+        ? "🆓 <strong>Free trial lead</strong> — billing CTA sent to contractor."
+        : chargeAttempted && chargeSucceeded
+          ? "✅ <strong>$50 auto-charged</strong> to their saved card."
+          : chargeAttempted && !chargeSucceeded
+            ? "❌ <strong>Charge FAILED</strong> — card declined. Contractor notified to update billing."
+            : "⚠️ No card on file — invoice manually $50.";
       if (RESEND_API_KEY) {
         fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -237,9 +286,18 @@ serve(async (req) => {
             from: "DWA System <matt@detroitwebagent.com>",
             to: ["matt@detroitwebagent.com"],
             subject: `\u267b\ufe0f Dead Lead Revived — ${contact.name || fromPhone} (${bizName})`,
-            html: `<p><strong>${contact.name || fromPhone}</strong> replied YES to the ${trade} dead lead drip for <strong>${bizName}</strong>.</p><p>Phone: ${fromPhone}</p><p>Reply: "${replyBody}"</p><p>${billingActive ? "✅ <strong>$50 auto-charged</strong> to their saved card." : "⚠️ No card on file — invoice manually $50."}</p>`,
+            html: `<p><strong>${contact.name || fromPhone}</strong> replied YES to the ${trade} dead lead drip for <strong>${bizName}</strong>.</p><p>Phone: ${fromPhone}</p><p>Reply: "${replyBody}"</p><p>${chargeNote}</p>`,
           }),
-        }).catch(() => {});
+        }).catch((e) => {
+          console.error("[handle-dead-lead-reply] Matt email failed:", e);
+          // SMS fallback so revenue events are never silently lost
+          sendSMS(
+            ADMIN_PHONE,
+            TWILIO_PHONE_NUMBER,
+            `DWA: Dead lead email failed for ${contact.name || fromPhone} (${bizName}) — ${chargeSucceeded ? "$50 charged" : chargeAttempted ? "charge FAILED" : "no card"}. Check logs.`,
+            "dead_lead_system"
+          ).catch(() => {});
+        });
       }
     }
 

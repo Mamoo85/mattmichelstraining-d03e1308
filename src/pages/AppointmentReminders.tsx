@@ -34,9 +34,9 @@ export default function AppointmentReminders() {
           <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={32} className="text-green-500" />
           </div>
-          <h1 className="text-2xl font-black text-white mb-3">You're all set.</h1>
-          <p className="text-slate-400 leading-relaxed">Matt will reach out within 24 hours to connect your scheduling and get reminders running.</p>
-          <p className="mt-4 text-sm text-slate-500">Questions? <a href="tel:+13138064952" className="text-cyan-500">(313) 806-4952</a></p>
+          <h1 className="text-2xl font-black text-foreground mb-3">You're all set.</h1>
+          <p className="text-muted-foreground leading-relaxed">Matt will reach out within 24 hours to connect your scheduling and get reminders running.</p>
+          <p className="mt-4 text-sm text-muted-foreground">Questions? <a href="tel:+13139921219" className="text-primary">(313) 992-1219</a></p>
         </div>
       </div>
     );
@@ -170,8 +170,8 @@ export default function AppointmentReminders() {
           </p>
         </div>
 
-        <p className="text-[12px] text-slate-500 text-center">
-          Questions? Email <a href="mailto:matt@mattmichelstraining.com" className="text-cyan-500">matt@mattmichelstraining.com</a> or text <a href="tel:+13138064952" className="text-cyan-500">(313) 806-4952</a>
+        <p className="text-[12px] text-muted-foreground text-center">
+          Questions? Email <a href="mailto:matt@mattmichelstraining.com" className="text-primary">matt@mattmichelstraining.com</a> or text <a href="tel:+13139921219" className="text-primary">(313) 992-1219</a>
         </p>
       </div>
     </div>

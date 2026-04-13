@@ -32,7 +32,7 @@ serve(async (req) => {
     // Fetch active permit watch clients
     const { data: clients, error: clientErr } = await (sb as any)
       .from("permit_watch_clients")
-      .select("id, email, name, city, state, trades")
+      .select("id, email, business_name, city, state, trades")
       .eq("active", true);
 
     if (clientErr) {
@@ -132,7 +132,7 @@ serve(async (req) => {
             <p style="color:#fde8d8;margin:4px 0 0;font-size:14px;">${matchedPermits.length} new permit${matchedPermits.length !== 1 ? "s" : ""} in ${city}, ${state}</p>
           </div>
           <div style="background:#fff;padding:24px;border:1px solid #e2e8f0;border-top:none;">
-            <p style="color:#334155;margin:0 0 20px;">Hi ${client.name || "there"}, here are the latest building permits matching your trades in ${city}, ${state}:</p>
+            <p style="color:#334155;margin:0 0 20px;">Hi ${client.business_name || "there"}, here are the latest building permits matching your trades in ${city}, ${state}:</p>
             <table style="width:100%;border-collapse:collapse;">
               <thead>
                 <tr style="background:#f8fafc;">

@@ -99,7 +99,7 @@ serve(async (req) => {
     // Fetch active recall alert clients
     const { data: clients, error: clientErr } = await (sb as any)
       .from("recall_alert_clients")
-      .select("id, email, name, product_categories")
+      .select("id, email, business_name, product_categories")
       .eq("active", true);
 
     if (clientErr) {
@@ -146,7 +146,7 @@ serve(async (req) => {
             <p style="color:#fde8d8;margin:4px 0 0;font-size:14px;">${matched.length} recall${matched.length !== 1 ? "s" : ""} matching your product categories</p>
           </div>
           <div style="background:#fff;padding:24px;border:1px solid #e2e8f0;border-top:none;">
-            <p style="color:#334155;margin:0 0 20px;">Hi ${client.name || "there"}, here are the latest product recalls relevant to your business:</p>
+            <p style="color:#334155;margin:0 0 20px;">Hi ${client.business_name || "there"}, here are the latest product recalls relevant to your business:</p>
             ${recallCards}
           </div>
           <div style="background:#f8fafc;padding:16px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;font-size:12px;color:#94a3b8;text-align:center;">

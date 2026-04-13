@@ -130,7 +130,7 @@ function buildEmailHtml(opts: {
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #1e2d4a" />
       <div style="font-size:12px;color:#475569">
         <strong style="color:#94a3b8">Matt Michels · M² Development</strong><br>
-        Grosse Pointe, MI · <a href="tel:+13138064952" style="color:#00d4ff;text-decoration:none">(313) 806-4952</a>
+        Grosse Pointe, MI · <a href="tel:+13139921219" style="color:#00d4ff;text-decoration:none">(313) 992-1219</a>
       </div>
       <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2" style="width:32px;height:32px;margin-left:auto;object-fit:contain" />
     </div>

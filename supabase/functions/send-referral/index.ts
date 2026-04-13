@@ -96,7 +96,7 @@ function friendEmailHtml(p: ReferralPayload): string {
       <p style="color:#374151;font-size:15px;margin:0 0 24px;">
         Check out all my services at
         <a href="https://mattmichelstraining.com/all-services" style="color:#e8621a;font-weight:600;">mattmichelstraining.com/all-services</a>
-        — or just text me at <strong>(313) 806-4952</strong> and I'll walk you through it.
+        — or just text me at <strong>(313) 992-1219</strong> and I'll walk you through it.
       </p>
 
       <p style="color:#374151;font-size:15px;margin:0 0 8px;">— Matt</p>
@@ -109,7 +109,7 @@ function friendEmailHtml(p: ReferralPayload): string {
     </div>
 
     <div style="text-align:center;padding:16px;">
-      <div style="color:#94a3b8;font-size:12px;">mattmichelstraining.com &nbsp;|&nbsp; (313) 806-4952 &nbsp;|&nbsp; matt@mattmichelstraining.com</div>
+      <div style="color:#94a3b8;font-size:12px;">mattmichelstraining.com &nbsp;|&nbsp; (313) 992-1219 &nbsp;|&nbsp; matt@mattmichelstraining.com</div>
     </div>
   </div>
 </body>
@@ -210,7 +210,7 @@ function referrerEmailHtml(p: ReferralPayload): string {
 
     <div style="text-align:center;padding:16px;">
       <div style="color:#94a3b8;font-size:12px;">
-        mattmichelstraining.com &nbsp;|&nbsp; (313) 806-4952 &nbsp;|&nbsp; matt@mattmichelstraining.com
+        mattmichelstraining.com &nbsp;|&nbsp; (313) 992-1219 &nbsp;|&nbsp; matt@mattmichelstraining.com
       </div>
     </div>
   </div>

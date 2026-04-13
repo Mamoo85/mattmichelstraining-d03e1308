@@ -57,7 +57,7 @@ function getDay3Email(product: string, businessName: string): { subject: string;
         <p>Any questions at all — just reply to this email. I read every one.</p>
         <p>— Matt</p>
         <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0" />
-        <p style="color:#94a3b8;font-size:12px">M² Development · matt@mattmichelstraining.com · (313) 806-4952<br>
+        <p style="color:#94a3b8;font-size:12px">M² Development · matt@mattmichelstraining.com · (313) 992-1219<br>
         <a href="https://mattmichelstraining.com/unsubscribe" style="color:#94a3b8">Unsubscribe</a></p>
       </div>`,
   };
@@ -81,7 +81,7 @@ function getDay7Email(product: string, businessName: string): { subject: string;
         <p>Here's to a strong second week. 🤝</p>
         <p>— Matt</p>
         <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0" />
-        <p style="color:#94a3b8;font-size:12px">M² Development · matt@mattmichelstraining.com · (313) 806-4952<br>
+        <p style="color:#94a3b8;font-size:12px">M² Development · matt@mattmichelstraining.com · (313) 992-1219<br>
         <a href="https://mattmichelstraining.com/unsubscribe" style="color:#94a3b8">Unsubscribe</a></p>
       </div>`,
   };

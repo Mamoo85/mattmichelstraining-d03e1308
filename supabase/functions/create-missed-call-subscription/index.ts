@@ -51,9 +51,9 @@ serve(async (req) => {
         price_data: {
           currency: "usd",
           recurring: { interval: "month" },
-          unit_amount: 2500,
+          unit_amount: 9900,
           product_data: {
-            name: "Missed Call Text-Back — $25/month",
+            name: "Missed Call Text-Back — $99/month",
             description: "Automatically texts callers back within seconds of a missed call. Never lose a lead again.",
           },
         },

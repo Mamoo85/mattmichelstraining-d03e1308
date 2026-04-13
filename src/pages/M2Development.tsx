@@ -8,7 +8,7 @@ import {
   RefreshCw, TrendingUp, MapPin, Star
 } from "lucide-react";
 
-const PHONE = "(313) 806-4952";
+const PHONE = "(313) 992-1219";
 const EMAIL = "matt@mattmichelstraining.com";
 
 /* ── Web Design packages (the core 80%) ── */

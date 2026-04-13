@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Loader2, CheckCircle, Clock, Wrench, Eye, Rocket, ExternalLink, Phone } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 
-const PHONE = "(313) 806-4952";
+const PHONE = "(313) 992-1219";
 
 const STATUS_STEPS = [
   { key: "prospect", label: "Received", icon: Clock },

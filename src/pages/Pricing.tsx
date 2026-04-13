@@ -273,14 +273,14 @@ const Pricing = () => {
                 Email
               </a>
               <a
-                href="tel:3138064952"
+                href="tel:3139921219"
                 className="inline-flex items-center gap-2 border border-primary/40 text-primary px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
               >
                 <Phone className="w-3.5 h-3.5" />
                 Call
               </a>
               <a
-                href="sms:3138064952"
+                href="sms:3139921219"
                 className="inline-flex items-center gap-2 border border-primary/40 text-primary px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 transition-m2"
               >
                 <MessageSquare className="w-3.5 h-3.5" />

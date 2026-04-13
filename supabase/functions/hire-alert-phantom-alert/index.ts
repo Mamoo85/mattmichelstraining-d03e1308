@@ -16,9 +16,14 @@ const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 const SITE_URL = "https://detroitwebagent.com";
 const FROM_EMAIL = "TechAlert <matt@detroitwebagent.com>";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: { "Access-Control-Allow-Origin": "*" } });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -39,7 +44,7 @@ serve(async (req) => {
       .limit(20);
 
     if (!phantomClients?.length) {
-      return new Response(JSON.stringify({ ok: true, sent: 0 }), { status: 200 });
+      return new Response(JSON.stringify({ ok: true, sent: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Find 1 fresh high-score candidate from last 24h
@@ -105,7 +110,7 @@ serve(async (req) => {
   <p style="color:#64748b;font-size:13px;margin:0;">Contact info locked — upgrade to unlock</p>
 </div>
 <a href="${checkoutUrl}" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 28px;border-radius:8px;font-weight:800;font-size:15px;text-decoration:none;">Unlock for $99/mo →</a>
-<p style="color:#475569;font-size:13px;margin:24px 0 0;">Cancel anytime. No contracts. Text Matt: (313) 806-4952</p>
+<p style="color:#475569;font-size:13px;margin:24px 0 0;">Cancel anytime. No contracts. Text Matt: (313) 992-1219</p>
 </div>`,
             }),
           });
@@ -120,11 +125,11 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ ok: true, sent: sentCount }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[hire-alert-phantom-alert] Error:", e);
-    return new Response(JSON.stringify({ error: msg }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

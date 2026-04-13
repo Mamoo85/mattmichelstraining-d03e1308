@@ -88,7 +88,7 @@ const EMAIL_SIGNATURE = `
     </td>
     <td style="vertical-align:top;font-size:13px;color:#94a3b8;font-family:Arial,sans-serif;">
       <strong style="color:#22d3ee;">Matt Michels</strong> | Lead Web Agent<br/>
-      <span style="color:#64748b;">Detroit Web Agency · (313) 806-4952</span><br/>
+      <span style="color:#64748b;">Detroit Web Agency · (313) 992-1219</span><br/>
       <a href="https://detroitwebagent.com" style="color:#22d3ee;text-decoration:none;font-size:12px;">detroitwebagent.com</a>
     </td>
   </tr></table>

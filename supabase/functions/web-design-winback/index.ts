@@ -52,7 +52,7 @@ function buildWinbackEmail(lead: any): string {
       <a href="https://www.detroitwebagent.com/detroit-web-design" style="display:inline-block;background:#22d3ee;color:#0a0a0f;padding:12px 24px;text-decoration:none;font-size:13px;font-weight:900;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px;">See Recent Work</a>
 
       <p style="color:#1a1a2e;font-size:14px;font-weight:bold;margin-top:16px;">— Matt</p>
-      <p style="color:#888;font-size:12px;">(313) 806-4952 · matt@detroitwebagent.com</p>
+      <p style="color:#888;font-size:12px;">(313) 992-1219 · matt@detroitwebagent.com</p>
     </td></tr>
     <tr><td style="background:#f8f8f8;padding:12px;text-align:center;border-top:1px solid #eee;">
       <p style="color:#aaa;font-size:11px;margin:0;">Detroit Web Agency · Grosse Pointe, MI</p>
@@ -60,7 +60,7 @@ function buildWinbackEmail(lead: any): string {
   </table>
 </td></tr>
 </table>
-<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.detroitwebagent.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Detroit Web Agency · Grosse Pointe, MI · (313) 806-4952</div></div>
+<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.detroitwebagent.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Detroit Web Agency · Grosse Pointe, MI · (313) 992-1219</div></div>
 </body>
 </html>`;
 }

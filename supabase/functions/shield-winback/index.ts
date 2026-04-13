@@ -92,7 +92,7 @@ async function processSequences() {
             <img src="https://mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;margin-bottom:16px" />
             ${body}
             <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0" />
-            <p style="color:#94a3b8;font-size:12px">M² Development · matt@mattmichelstraining.com · (313) 806-4952<br>
+            <p style="color:#94a3b8;font-size:12px">M² Development · matt@mattmichelstraining.com · (313) 992-1219<br>
             <a href="https://mattmichelstraining.com/unsubscribe?email=${encodeURIComponent(seq.customer_email)}" style="color:#94a3b8">Unsubscribe</a></p>
           </div>`,
       }),

@@ -77,7 +77,7 @@ export default function AdminDWAOverview() {
     { label: "Dispatcher Board", href: "/field-service/dispatch", color: "#10b981" },
     { label: "Tech Mobile App", href: "/field-service/tech", color: "#8b5cf6" },
     { label: "DWA Admin", href: "/dwa-admin", color: "#e8621a" },
-    { label: "DJ Conley Demo", href: "/demo-djconley-v2", color: "#ec4899" },
+    { label: "DJ Conley Demo", href: "/demo-djconley-2", color: "#ec4899" },
   ];
 
   const STAT_CARDS = [

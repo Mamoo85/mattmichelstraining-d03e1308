@@ -76,7 +76,7 @@ Rules:
     // Fallback if JSON parse fails
     return {
       facebook: [
-        { headline: `${service.name} — ${service.price}`, primaryText: `Automate your ${service.name.toLowerCase()} starting today. Built for ${service.target}. Text Matt: (313) 806-4952` },
+        { headline: `${service.name} — ${service.price}`, primaryText: `Automate your ${service.name.toLowerCase()} starting today. Built for ${service.target}. Text Matt: (313) 992-1219` },
         { headline: `Stop losing money on ${service.name.toLowerCase()}`, primaryText: `Local businesses in Metro Detroit trust us to handle it automatically. Try free for 7 days.` },
         { headline: `${service.price}/mo — No contracts`, primaryText: `${service.name} done for you. Perfect for ${service.target}. See it at mattmichelstraining.com` },
       ],
@@ -156,7 +156,7 @@ async function sendEmail(html: string, date: string): Promise<void> {
     ${html}
 
     <div style="background:#1e293b;border-radius:8px;padding:20px 24px;text-align:center;">
-      <div style="color:#94a3b8;font-size:13px;">mattmichelstraining.com &nbsp;|&nbsp; (313) 806-4952 &nbsp;|&nbsp; matt@mattmichelstraining.com</div>
+      <div style="color:#94a3b8;font-size:13px;">mattmichelstraining.com &nbsp;|&nbsp; (313) 992-1219 &nbsp;|&nbsp; matt@mattmichelstraining.com</div>
     </div>
 
   </div>

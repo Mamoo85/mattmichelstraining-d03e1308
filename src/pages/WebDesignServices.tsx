@@ -14,7 +14,7 @@ import {
   Calendar, Users, Mail, Globe, Wrench
 } from "lucide-react";
 
-const PHONE = "(313) 806-4952";
+const PHONE = "(313) 992-1219";
 
 const ADD_ONS = [
   {
@@ -179,7 +179,7 @@ const WebDesignServices = () => {
       if (error) throw error;
       setPartnerSent(true);
     } catch {
-      toast.error("Something went wrong. Text me directly at (313) 806-4952");
+      toast.error("Something went wrong. Text me directly at (313) 992-1219");
     } finally {
       setPartnerSending(false);
     }
@@ -206,7 +206,7 @@ const WebDesignServices = () => {
       });
       setSent(true);
     } catch {
-      toast.error("Something went wrong. Call me directly — (313) 806-4952");
+      toast.error("Something went wrong. Call me directly — (313) 992-1219");
     } finally {
       setSending(false);
     }

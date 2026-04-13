@@ -116,7 +116,7 @@ serve(async (req) => {
             await sendSMS(
               ADMIN_PHONE,
               TWILIO_PHONE_NUMBER,
-              `DWA-OP ALERT: Paused "${bizName}" (${trade}) — ${Math.round(optOutRate * 100)}% opt-out rate (${optedOut}/${contacted}). Audience quality issue. Review before restarting.`,
+              `Paused "${bizName}" (${trade}) — ${Math.round(optOutRate * 100)}% opt-out rate (${optedOut}/${contacted} texts). Check audience before restarting.`,
               "dwa_operator"
             );
             continue;
@@ -185,7 +185,7 @@ Respond with JSON only:
           await sendSMS(
             ADMIN_PHONE,
             TWILIO_PHONE_NUMBER,
-            `DWA-OP: Paused "${bizName}" (${trade}) — ${contacted} texts, 0 replies.\nAI says: ${diagnosis}\nA: "${aPreview}..."\nB: "${bPreview}..."\nReply A or B to resume.`,
+            `Paused "${bizName}" (${trade}) — ${contacted} texts, 0 replies. ${diagnosis}\nA: "${aPreview}..."\nB: "${bPreview}..."\nReply A or B to resume.`,
             "dwa_operator"
           );
         }
@@ -215,7 +215,7 @@ Respond with JSON only:
       await sendSMS(
         ADMIN_PHONE,
         TWILIO_PHONE_NUMBER,
-        `DWA-OP BILLING: ${billingIssues} contractor(s) got YES replies in last 24h but have no card on file: ${[...noCardContractors].join(", ")}. Invoice manually.`,
+        `Billing: ${billingIssues} contractor${billingIssues > 1 ? "s" : ""} got YES replies but no card on file: ${[...noCardContractors].join(", ")}. Invoice manually.`,
         "dwa_operator"
       );
     }

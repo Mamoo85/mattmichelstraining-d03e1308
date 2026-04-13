@@ -53,7 +53,7 @@ const ContractorSeoPage = () => {
   }
 
   const d = page.page_data;
-  const phoneNumber = "(313) 806-4952";
+  const phoneNumber = "(313) 992-1219";
   const emailAddress = "matt@mattmichelstraining.com";
   const category = (page as any).category || "contractor";
 

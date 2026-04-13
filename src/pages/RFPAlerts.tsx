@@ -79,7 +79,7 @@ export default function RFPAlerts() {
           Your service profile is being built now. First alerts arrive within 24 hours. You'll get an email when the first scan runs and how many opportunities were found in your category.
         </p>
         <p className="mt-6 text-sm text-muted-foreground">
-          Questions? <a href="tel:+13138064952" className="text-primary font-bold">(313) 806-4952</a>
+          Questions? <a href="tel:+13139921219" className="text-primary font-bold">(313) 992-1219</a>
         </p>
       </div>
     </div>

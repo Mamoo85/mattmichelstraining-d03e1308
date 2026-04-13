@@ -52,7 +52,7 @@ export default function AiCompetitorReport() {
             Want us to track competitors automatically? Ask Matt about our <a href="/competitor-watch" className="text-primary font-semibold">weekly competitor tracking service</a>.
           </p>
           <p className="text-xs text-muted-foreground">
-            Questions? <a href="tel:3138064952" className="text-primary font-semibold">(313) 806-4952</a> — Matt picks up.
+            Questions? <a href="tel:3139921219" className="text-primary font-semibold">(313) 992-1219</a> — Matt picks up.
           </p>
         </div>
       </div>
@@ -79,7 +79,7 @@ export default function AiCompetitorReport() {
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong. Try again or call (313) 806-4952.");
+      toast.error(err.message || "Something went wrong. Try again or call (313) 992-1219.");
     } finally {
       setSubmitting(false);
     }
@@ -236,7 +236,7 @@ export default function AiCompetitorReport() {
               Get My Report <ArrowRight size={16} />
             </a>
             <p className="mt-4 text-xs text-muted-foreground">
-              Or call Matt: <a href="tel:3138064952" className="font-semibold text-primary">(313) 806-4952</a>
+              Or call Matt: <a href="tel:3139921219" className="font-semibold text-primary">(313) 992-1219</a>
             </p>
           </div>
         </section>

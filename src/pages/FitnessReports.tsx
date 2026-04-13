@@ -82,7 +82,7 @@ export default function FitnessReports() {
         </div>
         <h1 className="text-2xl font-black text-foreground mb-3">Your clients are going to love this.</h1>
         <p className="text-muted-foreground">Matt will reach out within 24 hours to get your client roster set up. Your first batch of reports goes out on the 1st of next month — to every single client.</p>
-        <p className="mt-4 text-sm text-muted-foreground">Questions? <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a></p>
+        <p className="mt-4 text-sm text-muted-foreground">Questions? <a href="tel:+13139921219" className="text-primary">(313) 992-1219</a></p>
       </div>
     </div>
   );

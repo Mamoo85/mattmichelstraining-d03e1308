@@ -6,7 +6,7 @@ import { RevealSection } from "@/hooks/useInView";
 
 const heroImg = "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=1600&q=80";
 const NAME = "[NAME]";
-const PHONE = "(313) 806-4952";
+const PHONE = "(313) 992-1219";
 const GOLD = "#c9a84c";
 
 const practices = [
@@ -74,7 +74,7 @@ const LawyerMockup = () => {
         <span className="opacity-60">·</span>
         <Link to="/detroit-web-design" className="underline underline-offset-2" style={{ fontFamily: "'Inter', sans-serif" }}>Matt Michels Web Design</Link>
         <span className="opacity-60">·</span>
-        <a href="tel:3138064952">313.806.4952</a>
+        <a href="tel:3139921219">313.992.1219</a>
       </div>
 
       {/* Sticky Header */}

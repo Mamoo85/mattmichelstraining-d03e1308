@@ -56,6 +56,7 @@ const MyTeam = lazyRetry(() => import("./pages/MyTeam"));
 const JoinTeam = lazyRetry(() => import("./pages/JoinTeam"));
 const Shop = lazyRetry(() => import("./pages/Shop"));
 const ForParents = lazyRetry(() => import("./pages/ForParents"));
+const ForNurses = lazyRetry(() => import("./pages/ForNurses"));
 const Welcome = lazyRetry(() => import("./pages/Welcome"));
 const Auth = lazyRetry(() => import("./pages/Auth"));
 const Admin = lazyRetry(() => import("./pages/Admin"));
@@ -125,6 +126,7 @@ const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
 const ContractorROIReport = lazyRetry(() => import("./pages/ContractorROIReport"));
 const DeadLeadIntake = lazyRetry(() => import("./pages/DeadLeadIntake"));
+const GetQuote = lazyRetry(() => import("./pages/GetQuote"));
 const ContractorTerritory = lazyRetry(() => import("./pages/ContractorTerritory"));
 const ClaimLead = lazyRetry(() => import("./pages/ClaimLead"));
 const LeadUnlocked = lazyRetry(() => import("./pages/LeadUnlocked"));
@@ -451,6 +453,7 @@ const App = () => (
                     <Route path="/welcome" element={<Welcome />} />
                     <Route path="/shop" element={<Shop />} />
                     <Route path="/for-parents" element={<ForParents />} />
+                    <Route path="/for-nurses" element={<ForNurses />} />
                     <Route path="/pricing" element={<Pricing />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/schedule" element={<Schedule />} />
@@ -537,6 +540,8 @@ const App = () => (
                     <Route path="/contractor-leads" element={<ContractorLeads />} />
                     <Route path="/roi" element={<ContractorROIReport />} />
                     <Route path="/dead-lead-intake" element={<DeadLeadIntake />} />
+                    <Route path="/get-quote/:trade/:city" element={<GetQuote />} />
+                    <Route path="/get-quote/:trade" element={<GetQuote />} />
                     <Route path="/contractors/:slug" element={<ContractorTerritory />} />
                     <Route path="/claim-lead" element={<ClaimLead />} />
                     <Route path="/lead-unlocked" element={<LeadUnlocked />} />
@@ -719,7 +724,7 @@ const App = () => (
                      <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
                      <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
                      <Route path="/admin" element={<AgencyAdminRoute><Admin /></AgencyAdminRoute>} />
-                     <Route path="/dwa-admin" element={<ProtectedRoute><DWAAdmin /></ProtectedRoute>} />
+                     <Route path="/dwa-admin" element={<AgencyAdminRoute><DWAAdmin /></AgencyAdminRoute>} />
                      <Route path="/admin/view-user/:userId" element={<ProtectedRoute><AdminViewUser /></ProtectedRoute>} />
                      <Route path="/comms-center" element={<ProtectedRoute><CommunicationsCenter /></ProtectedRoute>} />
                      <Route path="/dashboard" element={<ZoneDashboard />} />

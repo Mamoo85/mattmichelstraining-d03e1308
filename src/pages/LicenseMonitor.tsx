@@ -53,7 +53,7 @@ export default function LicenseMonitor() {
           After checkout, reply to your welcome email with your license details (name, number, expiry date) and we'll set up your reminder schedule.
         </p>
         <p className="mt-4 text-sm text-muted-foreground">
-          Questions? Text <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a>
+          Questions? Text <a href="tel:+13139921219" className="text-primary">(313) 992-1219</a>
         </p>
       </div>
     </div>

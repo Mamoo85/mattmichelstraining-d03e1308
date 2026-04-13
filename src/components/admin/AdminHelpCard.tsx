@@ -242,4 +242,15 @@ export const TAB_HELP: Record<string, Omit<AdminHelpCardProps, "id">> = {
       "Demo Links: create shareable demo URLs for client mockups",
     ],
   },
+  dwa: {
+    title: "Detroit Web Agency — Your Revenue Machine",
+    body: "Command center for all DWA products: Dead Lead Reactivation, Contractor Leads, FieldDesk, TechAlert, and more. This is where autonomous agent money gets made.",
+    tips: [
+      "Dead Leads: upload a contractor's old quotes — 3-msg SMS drip runs daily at 10am, auto-charges $50 on YES reply",
+      "TechAlert: daily MIOSHA + Apollo scan alerts clients to available licensed tradespeople",
+      "FieldDesk: dispatch board + GPS tech map + mobile app for HVAC/plumbing/boiler companies",
+      "Ghost Delay: review AI-drafted outreach emails before they send — approve or edit",
+    ],
+    color: "border-cyan-500/30 bg-cyan-500/5",
+  },
 };
