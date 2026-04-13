@@ -4318,6 +4318,7 @@ export type Database = {
           notify_email: boolean | null
           notify_sms: boolean | null
           owner_email: string
+          owner_name: string | null
           owner_phone: string | null
           plan: string | null
           stripe_customer_id: string | null
@@ -4333,6 +4334,7 @@ export type Database = {
           notify_email?: boolean | null
           notify_sms?: boolean | null
           owner_email: string
+          owner_name?: string | null
           owner_phone?: string | null
           plan?: string | null
           stripe_customer_id?: string | null
@@ -4348,6 +4350,7 @@ export type Database = {
           notify_email?: boolean | null
           notify_sms?: boolean | null
           owner_email?: string
+          owner_name?: string | null
           owner_phone?: string | null
           plan?: string | null
           stripe_customer_id?: string | null
