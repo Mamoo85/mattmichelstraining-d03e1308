@@ -42,10 +42,10 @@ serve(async (req) => {
     const { data: client, error } = await sb.from("hire_alert_clients").insert({
       owner_name: name || business_name || "",
       owner_email: email,
-      phone: phone || null,
+      owner_phone: phone || null,
       company_name: business_name || "",
       target_roles: target_roles || ["Boiler Operator", "HVAC Technician", "Plumber"],
-      active: false, // not a paid subscriber yet
+      active: true, // trial clients get alerts too
       trial_status: "active",
       trial_started_at: new Date().toISOString(),
       trial_ends_at: trialEndsAt,
