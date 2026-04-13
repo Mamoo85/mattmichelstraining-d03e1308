@@ -38,8 +38,7 @@ serve(async (req) => {
       .select(`
         id, name, phone, email, message, project_type, created_at,
         site_id,
-        contractor_lead_sites (trade, city, state, slug, active_contractor_id),
-        contractor_clients (id, name, business_name, email, phone, active)
+        contractor_lead_sites (trade, city, state, slug, active_contractor_id)
       `)
       .eq("status", "new")
       .is("notified_at", null)
@@ -52,10 +51,20 @@ serve(async (req) => {
     let count = 0;
     for (const lead of unnotified) {
       const site = (lead as any).contractor_lead_sites;
-      const contractor = (lead as any).contractor_clients;
+
+      if (!site?.active_contractor_id) {
+        console.log(`[LEAD-NOTIFY] No active contractor for lead ${lead.id}, skipping`);
+        continue;
+      }
+
+      const { data: contractor } = await sb
+        .from("contractor_clients")
+        .select("id, name, business_name, email, phone, active")
+        .eq("id", site.active_contractor_id)
+        .maybeSingle();
 
       if (!contractor) {
-        console.log(`[LEAD-NOTIFY] No contractor for lead ${lead.id}, skipping`);
+        console.log(`[LEAD-NOTIFY] Contractor ${site.active_contractor_id} not found for lead ${lead.id}, skipping`);
         continue;
       }
 
