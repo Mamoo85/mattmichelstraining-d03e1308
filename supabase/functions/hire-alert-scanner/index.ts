@@ -456,7 +456,7 @@ async function sendAlertEmail(
           <table width="100%" cellpadding="0" cellspacing="0"><tr>
             <td>
               <p style="margin:0;font-size:16px;font-weight:800;color:${c.availability_score >= 7 ? "#fff" : "#1e293b"};letter-spacing:-0.3px;">${c.full_name}</p>
-              <p style="margin:3px 0 0;font-size:12px;color:${c.availability_score >= 7 ? "#94a3b8" : "#64748b"};">${sourceIcon(c.source)} ${sourceLabel(c.source)}</p>
+              <p style="margin:3px 0 0;font-size:12px;color:${c.availability_score >= 7 ? "#94a3b8" : "#64748b"};">Detected ${dateStr}</p>
             </td>
             <td style="text-align:right;vertical-align:top;">
               <table cellpadding="0" cellspacing="0"><tr>
