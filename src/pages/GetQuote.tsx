@@ -47,11 +47,21 @@ export default function GetQuote() {
     setState("submitting");
 
     try {
-      // Find the matching lead site for this trade + city
+      // Normalize trade slug → canonical DB trade value
+      const TRADE_NORMALIZE: Record<string, string> = {
+        plumber: "plumbing", plumbing: "plumbing",
+        hvac: "hvac",
+        roofing: "roofing", roof: "roofing",
+        electrician: "electrical", electrical: "electrical",
+        boiler: "boiler",
+      };
+      const normalizedTrade = TRADE_NORMALIZE[trade.toLowerCase()] || trade.toLowerCase();
+
+      // Find the matching lead site for this trade + city (ilike = case-insensitive exact match)
       const { data: site } = await (supabase as any)
         .from("contractor_lead_sites")
         .select("id")
-        .ilike("trade", `%${trade}%`)
+        .ilike("trade", normalizedTrade)
         .ilike("city", `%${city.replace("-", " ")}%`)
         .limit(1)
         .maybeSingle();
