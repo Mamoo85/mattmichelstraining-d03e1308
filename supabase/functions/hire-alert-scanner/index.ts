@@ -653,14 +653,30 @@ serve(async (req: Request) => {
   });
 
   // Check which candidates are new (not already in DB)
+  // Also fetch enrichment data for recently enriched candidates
   const { data: existingRecords } = await sb
     .from("hire_alert_candidates")
-    .select("license_number, full_name, city")
+    .select("license_number, full_name, name, city, linkedin_url, facebook_url, current_employer, current_title, years_experience, qualifications_summary, hiring_recommendation, enrichment_status, email, phone")
     .in("source", ["miosha", "apollo", "firecrawl"]);
+
+  // Build enrichment lookup for scored candidates
+  const enrichmentLookup = new Map<string, Record<string, unknown>>();
+  for (const r of existingRecords || []) {
+    const key = r.license_number || `${((r.full_name || r.name) || "").toLowerCase()}-${(r.city || "").toLowerCase()}`;
+    if (r.enrichment_status === "complete") {
+      enrichmentLookup.set(key, {
+        linkedin_url: r.linkedin_url, facebook_url: r.facebook_url,
+        current_employer: r.current_employer, current_title: r.current_title,
+        years_experience: r.years_experience, qualifications_summary: r.qualifications_summary,
+        hiring_recommendation: r.hiring_recommendation, enrichment_status: r.enrichment_status,
+        email: r.email, phone: r.phone,
+      });
+    }
+  }
 
   const existingKeys = new Set(
     (existingRecords || []).map((r) =>
-      r.license_number || `${(r.full_name || "").toLowerCase()}-${(r.city || "").toLowerCase()}`
+      r.license_number || `${((r.full_name || r.name) || "").toLowerCase()}-${(r.city || "").toLowerCase()}`
     )
   );
 
