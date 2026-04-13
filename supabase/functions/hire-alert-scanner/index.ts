@@ -577,6 +577,12 @@ async function sendAlertEmail(
     </table>
   </td></tr>
 
+  <!-- DASHBOARD CTA -->
+  ${client.dashboard_token ? `<tr><td style="background:#0a1628;padding:20px 28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;text-align:center;">
+    <a href="https://m2training.lovable.app/my-techalert?token=${client.dashboard_token}" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 32px;border-radius:10px;font-size:14px;font-weight:800;text-decoration:none;letter-spacing:0.5px;">📊 View All Candidates in Your Dashboard</a>
+    <p style="margin:10px 0 0;font-size:11px;color:#64748b;">Click to browse, filter, and track all your candidates</p>
+  </td></tr>` : ""}
+
   <!-- FOOTER -->
   <tr><td style="padding:20px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 16px 16px;background:#0a1628;">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
