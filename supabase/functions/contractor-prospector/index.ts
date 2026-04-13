@@ -14,6 +14,7 @@ const log = (step: string, data?: any) =>
 const DAILY_SEND_CAP = 30;
 const DEAD_LEAD_CAP = 5;      // dead lead reactivation pitches/day
 const TECH_ALERT_CAP = 5;     // TechAlert trial pitches/day
+const MISSED_CALL_CAP = 5;    // Missed-Call Text-Back pitches/day
 
 // ── Metro Detroit targets only ──
 const TRADES = ["roofer", "HVAC contractor", "plumber", "electrician", "dentist"];
@@ -296,6 +297,18 @@ async function getDailyDeadLeadCount(sb: any): Promise<number> {
   return count || 0;
 }
 
+// ── Check how many Missed-Call pitches sent today ──
+async function getDailyMissedCallCount(sb: any): Promise<number> {
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+  const { count } = await sb
+    .from("outreach_leads")
+    .select("id", { count: "exact", head: true })
+    .eq("offer_pitched", "missed_call")
+    .gte("created_at", todayStart.toISOString());
+  return count || 0;
+}
+
 // ── Check how many TechAlert pitches sent today ──
 async function getDailyTechAlertCount(sb: any): Promise<number> {
   const todayStart = new Date();
@@ -308,11 +321,11 @@ async function getDailyTechAlertCount(sb: any): Promise<number> {
   return count || 0;
 }
 
-// Pitch rotation by day-of-year: 0=dead lead, 1=tech alert, 2=web design
-function getTodayPitchRotation(): "dead_lead" | "tech_alert" | "web_design" {
+// Pitch rotation by day-of-year: 0=dead lead, 1=tech alert, 2=missed call, 3=web design
+function getTodayPitchRotation(): "dead_lead" | "tech_alert" | "missed_call" | "web_design" {
   const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-  const r = dayOfYear % 3;
-  return r === 0 ? "dead_lead" : r === 1 ? "tech_alert" : "web_design";
+  const r = dayOfYear % 4;
+  return r === 0 ? "dead_lead" : r === 1 ? "tech_alert" : r === 2 ? "missed_call" : "web_design";
 }
 
 // Map trade → TechAlert target_roles
@@ -386,6 +399,66 @@ Detroit Web Agency · Grosse Pointe, MI
 </table></td></tr></table></body></html>`;
 }
 
+async function sniperMissedCallEmail(
+  businessName: string,
+  trade: string,
+  city: string,
+  reviewCount: number,
+): Promise<{ subject: string; body: string }> {
+  const cityShort = city.replace(" MI", "");
+  const tradeClean = trade.replace(" contractor", "");
+  const prompt = `You are writing a 4-sentence cold email from Matt Michels at Detroit Web Agency to the owner of "${businessName}", a ${tradeClean} in ${cityShort}, MI.
+
+The offer: Missed-Call Text-Back — when a homeowner calls and the contractor misses it, we automatically text them back within 60 seconds so they don't call the next guy. $99/mo, cancel anytime.
+
+They have ${reviewCount} Google reviews — reference this to prove you looked them up.
+
+Rules:
+1. EXACTLY 4 sentences
+2. Sentence 1: Prove you found them specifically — mention their review count, trade, or city
+3. Sentence 2: Every missed call is a job they're handing to a competitor. While they're on a job, a homeowner calls, gets voicemail, and calls the next plumber.
+4. Sentence 3: For $99/mo we text every missed caller back in 60 seconds — "Thanks for calling ${businessName}, we'll call you right back." They stop calling around.
+5. Sentence 4: Soft CTA — takes 5 minutes to set up, reply or text (313) 806-4952
+6. Start with "Hey —"
+7. Sign off: "— Matt, Detroit Web Agency"
+8. Conversational, direct. Not salesy.
+9. Subject line: Under 40 chars
+
+Format:
+SUBJECT: [subject line]
+BODY:
+[4-sentence email]`;
+
+  const text = await generateText(prompt, 400);
+  const subjectMatch = text.match(/SUBJECT:\s*(.+)/);
+  const bodyMatch = text.match(/BODY:\s*([\s\S]+)/);
+  return {
+    subject: subjectMatch?.[1]?.trim() || `missed calls costing ${tradeClean}s in ${cityShort}`,
+    body: bodyMatch?.[1]?.trim() || text,
+  };
+}
+
+function buildMissedCallEmailHtml(body: string): string {
+  const htmlBody = body.replace(/\n/g, "<br>");
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+<tr><td style="background:#e8621a;padding:3px 0;"></td></tr>
+<tr><td style="padding:8px 24px 4px;background:#fff3ec;">
+  <span style="font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#e8621a;">📞 Missed-Call Text-Back · Detroit Web Agency</span>
+</td></tr>
+<tr><td style="padding:16px 24px 24px;color:#334155;font-size:15px;line-height:1.8;">
+${htmlBody}
+<div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
+<span style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13138064952" style="color:#e8621a;text-decoration:none;">(313) 806-4952</a> · <a href="https://detroitwebagent.com" style="color:#e8621a;text-decoration:none;">detroitwebagent.com</a></span>
+</div>
+</td></tr>
+<tr><td style="background:#f8fafc;padding:12px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
+Detroit Web Agency · Grosse Pointe, MI
+</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
 // ── Check how many emails sent today from this domain ──
 async function getDailySendCount(sb: any): Promise<number> {
   const todayStart = new Date();
@@ -418,13 +491,15 @@ serve(async (req) => {
       );
     }
 
-    // Check dead lead and TechAlert daily caps
+    // Check dead lead, TechAlert, and Missed-Call daily caps
     const deadLeadSentToday = await getDailyDeadLeadCount(sb);
     const techAlertSentToday = await getDailyTechAlertCount(sb);
+    const missedCallSentToday = await getDailyMissedCallCount(sb);
     let deadLeadSent = deadLeadSentToday;
     let techAlertSent = techAlertSentToday;
+    let missedCallSent = missedCallSentToday;
     const pitchRotation = getTodayPitchRotation();
-    log("Pitch rotation today", { pitchRotation, deadLeadSent, techAlertSent });
+    log("Pitch rotation today", { pitchRotation, deadLeadSent, techAlertSent, missedCallSent });
 
     // Optional manual override — allows dashboard to target a specific trade + city
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
@@ -554,6 +629,52 @@ serve(async (req) => {
 
               techAlertSent++;
               log("TechAlert pitch sent", { name, email, city });
+              await new Promise(r => setTimeout(r, 500));
+              continue;
+            }
+          }
+        }
+
+        // ── MISSED-CALL PITCH: day 3 of 4-day rotation ──
+        if (DEAD_LEAD_TRADES.has(trade) && pitchRotation === "missed_call" && missedCallSent < MISSED_CALL_CAP) {
+          let mcSubject: string, mcBody: string;
+          try {
+            ({ subject: mcSubject, body: mcBody } = await sniperMissedCallEmail(name, trade, city, reviewCount));
+          } catch (mcErr) {
+            log("MissedCall sniper failed", { name, error: String(mcErr) });
+            mcSubject = ""; mcBody = "";
+          }
+          if (mcSubject && mcBody) {
+            const mcHtml = buildMissedCallEmailHtml(mcBody);
+            const mcRes = await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels <matt@detroitwebagent.com>",
+                to: [email],
+                bcc: ["matt@detroitwebagent.com"],
+                subject: mcSubject,
+                html: mcHtml,
+              }),
+            });
+            if (mcRes.ok) {
+              await sb.from("outreach_leads").insert({
+                business_name: name,
+                city: city.replace(" MI", ""),
+                industry: trade.charAt(0).toUpperCase() + trade.slice(1).replace(" contractor", ""),
+                phone, email, website: website || null,
+                status: "emailed", channel: "email",
+                offer_pitched: "missed_call",
+                last_contact_date: new Date().toISOString().split("T")[0],
+                drip_campaign_status: { d0_sent: true, d0_sent_at: new Date().toISOString() },
+                notes: `Missed-Call pitch. Reviews: ${reviewCount}, Rating: ${rating}`,
+              });
+              await sb.from("email_send_log" as any).insert({
+                recipient_email: email, template_name: "contractor_missed_call_d0",
+                status: "sent", message_id: `mc_d0_${Date.now()}_${email}`,
+              });
+              missedCallSent++;
+              log("Missed-Call pitch sent", { name, email, city });
               await new Promise(r => setTimeout(r, 500));
               continue;
             }

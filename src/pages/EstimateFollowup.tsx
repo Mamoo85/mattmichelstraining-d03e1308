@@ -49,7 +49,7 @@ export default function EstimateFollowup() {
 
   return (
     <>
-      <SEOHead title="Estimate Follow-Up Drip — Auto-Text Quotes That Go Silent | $49/mo" description="Send a 5-text sequence to every estimate you give. Convert 30% more quotes to jobs. 14-day free trial. $49/mo." path="/estimate-followup" />
+      <SEOHead title="Estimate Follow-Up Drip — Auto-Text Quotes That Go Silent | $79/mo" description="Send a 5-text sequence to every estimate you give. Convert 30% more quotes to jobs. 14-day free trial. $79/mo." path="/estimate-followup" />
       <div className="min-h-screen bg-background text-foreground">
         <section className="pt-20 pb-16 px-4 border-b border-border">
           <div className="max-w-3xl mx-auto text-center">
@@ -62,7 +62,7 @@ export default function EstimateFollowup() {
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
               You give an estimate. They say "we'll think about it." Then nothing. A 5-text sequence sent automatically over 2 weeks converts 30%+ more quotes into paying jobs — without you lifting a finger.
             </p>
-            <div className="text-4xl font-black text-primary mb-1">$39<span className="text-xl text-muted-foreground font-normal">/mo</span></div>
+            <div className="text-4xl font-black text-primary mb-1">$79<span className="text-xl text-muted-foreground font-normal">/mo</span></div>
             <p className="text-sm text-muted-foreground mb-2">14-day free trial · Cancel anytime</p>
             <p className="text-xs text-muted-foreground mb-8">One recovered job = months of subscription paid for</p>
             <button onClick={() => document.getElementById("signup")?.scrollIntoView({ behavior: "smooth" })}
@@ -106,7 +106,7 @@ export default function EstimateFollowup() {
         <section id="signup" className="py-16 px-4">
           <div className="max-w-md mx-auto">
             <h2 className="text-2xl font-black text-center mb-2">Start Your Free Trial</h2>
-            <p className="text-center text-muted-foreground text-sm mb-8">14 days free. $39/mo after. Cancel anytime.</p>
+            <p className="text-center text-muted-foreground text-sm mb-8">14 days free. $79/mo after. Cancel anytime.</p>
             <form onSubmit={handleSubmit} className="space-y-3">
               {[
                 { key: "businessName", label: "Business Name *", placeholder: "Apex Roofing & Gutters" },
@@ -123,7 +123,7 @@ export default function EstimateFollowup() {
               ))}
               <button type="submit" disabled={loading} className="w-full bg-primary text-white py-3 font-bold text-sm uppercase tracking-widest hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 mt-2">
                 {loading ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} />}
-                {loading ? "Redirecting…" : "Start Free Trial — $39/mo After"}
+                {loading ? "Redirecting…" : "Start Free Trial — $79/mo After"}
               </button>
             </form>
           </div>
