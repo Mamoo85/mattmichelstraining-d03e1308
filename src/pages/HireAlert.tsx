@@ -18,6 +18,10 @@ const ROLE_OPTIONS = [
   { key: "pipefitter", label: "Pipefitter / Steamfitter (UA 636)" },
   { key: "electrician", label: "Electrician" },
   { key: "industrial_mechanic", label: "Industrial Mechanic" },
+  { key: "cna", label: "CNA (Certified Nursing Assistant)" },
+  { key: "rn", label: "RN (Registered Nurse)" },
+  { key: "lpn", label: "LPN (Licensed Practical Nurse)" },
+  { key: "director_of_nursing", label: "Director of Nursing" },
 ];
 
 const TESTIMONIALS: Testimonial[] = [

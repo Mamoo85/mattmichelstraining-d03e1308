@@ -54,7 +54,14 @@ const ROLE_LABELS: Record<string, string> = {
   steam_engineer: "Steam Eng",
   refrigeration_tech: "Refrigeration",
   fire_suppression: "Fire Suppression",
+  cna: "CNA",
+  rn: "RN",
+  lpn: "LPN",
+  director_of_nursing: "DON",
+  home_health_aide: "Home Health",
 };
+
+const HEALTHCARE_ROLES = ["cna", "rn", "lpn", "director_of_nursing", "home_health_aide"];
 
 // ── Add/Edit Modal ─────────────────────────────────────────────────────────────
 

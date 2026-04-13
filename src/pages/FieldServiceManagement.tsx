@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Phone, CheckCircle, XCircle, Zap, MapPin, MessageSquare, FileText, Calendar, Camera, Star } from "lucide-react";
 import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,11 +57,31 @@ const ADDONS = [
 ];
 
 export default function FieldServiceManagement() {
+  const [searchParams] = useSearchParams();
+  const isSuccess = searchParams.get("success") === "1";
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [industry, setIndustry] = useState("hvac");
   const [loading, setLoading] = useState(false);
+
+  if (isSuccess) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
+        <div style={{ maxWidth: 520, textAlign: "center" }}>
+          <div style={{ fontSize: 64, marginBottom: 24 }}>🚀</div>
+          <h1 style={{ color: "#fff", fontSize: 32, fontWeight: 800, margin: "0 0 12px" }}>FieldDesk is Live!</h1>
+          <p style={{ color: "#00d4ff", fontSize: 18, fontWeight: 700, margin: "0 0 20px" }}>Your dispatch platform is being provisioned now.</p>
+          <p style={{ color: "#94a3b8", fontSize: 15, lineHeight: 1.7, margin: "0 0 32px" }}>
+            Check your email — we're setting up your dispatch board, tech app, and customer portal. You'll receive login credentials and a quick-start guide within the hour.
+          </p>
+          <a href="/" style={{ background: "#00d4ff", color: "#0a1628", padding: "14px 32px", borderRadius: 8, fontWeight: 800, fontSize: 16, textDecoration: "none", display: "inline-block" }}>
+            Back to Home
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   async function handleCheckout(plan: "standalone" | "bundle") {
     if (!email) { toast.error("Enter your email to continue"); return; }
