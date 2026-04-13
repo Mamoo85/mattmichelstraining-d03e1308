@@ -662,24 +662,36 @@ serve(async (req: Request) => {
 
   // Upsert all new candidates into DB and capture their IDs for TA-9 tracking
   if (scored.length) {
-    const { data: insertedRows } = await sb.from("hire_alert_candidates").insert(
+    const { data: insertedRows, error: insertError } = await sb.from("hire_alert_candidates").insert(
       scored.map((c) => ({
+        name: c.full_name,
         full_name: c.full_name,
         phone: c.phone || null,
         email: c.email || null,
+        trade: c.license_type || null,
         license_type: c.license_type || null,
         license_number: c.license_number || null,
-        license_state: "MI",
+        state: "MI",
         license_expiry: c.license_expiry || null,
         city: c.city || null,
         zip: c.zip || null,
         source: c.source,
         status: "new",
+        score: c.availability_score,
         availability_score: c.availability_score,
         score_reason: c.score_reason,
         raw_data: c.raw_data || null,
+        enrichment_status: "pending",
+        first_seen_at: new Date().toISOString(),
+        last_seen_at: new Date().toISOString(),
       }))
     ).select("id, full_name");
+
+    if (insertError) {
+      console.error("[hire-alert-scanner] DB INSERT ERROR:", insertError.message, insertError.details);
+    } else {
+      console.log(`[hire-alert-scanner] Inserted ${insertedRows?.length || 0} candidates into DB`);
+    }
 
     // Attach DB id to scored candidates for TA-9 client-candidate tracking
     if (insertedRows) {
