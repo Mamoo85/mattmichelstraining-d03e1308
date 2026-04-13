@@ -125,6 +125,7 @@ const NewsletterSponsor = lazyRetry(() => import("./pages/NewsletterSponsor"));
 const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
 const ContractorROIReport = lazyRetry(() => import("./pages/ContractorROIReport"));
+const MyTechAlert = lazyRetry(() => import("./pages/MyTechAlert"));
 const DeadLeadIntake = lazyRetry(() => import("./pages/DeadLeadIntake"));
 const GetQuote = lazyRetry(() => import("./pages/GetQuote"));
 const ContractorTerritory = lazyRetry(() => import("./pages/ContractorTerritory"));
@@ -540,6 +541,7 @@ const App = () => (
                     <Route path="/sponsor" element={<NewsletterSponsor />} />
                     <Route path="/contractor-leads" element={<ContractorLeads />} />
                     <Route path="/roi" element={<ContractorROIReport />} />
+                    <Route path="/my-techalert" element={<MyTechAlert />} />
                     <Route path="/dead-lead-intake" element={<DeadLeadIntake />} />
                     <Route path="/get-quote/:trade/:city" element={<GetQuote />} />
                     <Route path="/get-quote/:trade" element={<GetQuote />} />

@@ -432,7 +432,7 @@ Return JSON: { "score": number, "reason": "one sentence citing the top 1-2 signa
 
 // Send alert email to a client — premium design
 async function sendAlertEmail(
-  client: { owner_email: string; company_name: string },
+  client: { owner_email: string; company_name: string; dashboard_token?: string },
   candidates: ScoredCandidate[],
   dateStr: string
 ) {
@@ -440,12 +440,8 @@ async function sendAlertEmail(
 
   const hotCount = candidates.filter((c) => c.availability_score >= 7).length;
 
-  // Generic labels for client emails — never reveal our sources
-  const sourceLabel = (s: string) =>
-    s === "miosha" ? "State License Database" : s === "apollo" ? "Professional Network" : "Job Market";
-
-  const sourceIcon = (s: string) =>
-    s === "miosha" ? "🏛️" : s === "apollo" ? "🔍" : "📋";
+  // Source labels REMOVED from client emails — Black Box approach
+  // sourceLabel and sourceIcon kept only for founder report (Matt-only)
 
   const scoreBg = (s: number) =>
     s >= 8 ? "#dc2626" : s >= 7 ? "#e8621a" : s >= 5 ? "#f59e0b" : "#94a3b8";
@@ -460,7 +456,7 @@ async function sendAlertEmail(
           <table width="100%" cellpadding="0" cellspacing="0"><tr>
             <td>
               <p style="margin:0;font-size:16px;font-weight:800;color:${c.availability_score >= 7 ? "#fff" : "#1e293b"};letter-spacing:-0.3px;">${c.full_name}</p>
-              <p style="margin:3px 0 0;font-size:12px;color:${c.availability_score >= 7 ? "#94a3b8" : "#64748b"};">${sourceIcon(c.source)} ${sourceLabel(c.source)}</p>
+              <p style="margin:3px 0 0;font-size:12px;color:${c.availability_score >= 7 ? "#94a3b8" : "#64748b"};">Detected ${dateStr}</p>
             </td>
             <td style="text-align:right;vertical-align:top;">
               <table cellpadding="0" cellspacing="0"><tr>
@@ -580,6 +576,12 @@ async function sendAlertEmail(
       </tr>
     </table>
   </td></tr>
+
+  <!-- DASHBOARD CTA -->
+  ${client.dashboard_token ? `<tr><td style="background:#0a1628;padding:20px 28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;text-align:center;">
+    <a href="https://m2training.lovable.app/my-techalert?token=${client.dashboard_token}" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 32px;border-radius:10px;font-size:14px;font-weight:800;text-decoration:none;letter-spacing:0.5px;">📊 View All Candidates in Your Dashboard</a>
+    <p style="margin:10px 0 0;font-size:11px;color:#64748b;">Click to browse, filter, and track all your candidates</p>
+  </td></tr>` : ""}
 
   <!-- FOOTER -->
   <tr><td style="padding:20px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 16px 16px;background:#0a1628;">
@@ -835,9 +837,10 @@ serve(async (req: Request) => {
       // SMS for hot candidates (7+) matching this client's roles
       if (client.notify_sms && client.owner_phone && clientHotCandidates.length) {
         const top = clientHotCandidates[0];
+        const dashLink = client.dashboard_token ? ` View all: m2training.lovable.app/my-techalert?token=${client.dashboard_token}` : "";
         const smsBody = clientHotCandidates.length === 1
-          ? `TechAlert: ${top.full_name} (${top.license_type || "licensed tech"}, ${top.city || "Metro Detroit"}) — score ${top.availability_score}/10. You're the only one seeing this. Check your email. Reply STOP to opt out.`
-          : `TechAlert: ${clientHotCandidates.length} licensed techs found in Metro Detroit. Top: ${top.full_name} (${top.license_type || "tradesperson"}, ${top.availability_score}/10). Check your email. Reply STOP to opt out.`;
+          ? `TechAlert: ${top.full_name} (${top.license_type || "licensed tech"}, ${top.city || "Metro Detroit"}) — score ${top.availability_score}/10. You're the only one seeing this.${dashLink} Reply STOP to opt out.`
+          : `TechAlert: ${clientHotCandidates.length} licensed techs found. Top: ${top.full_name} (${top.license_type || "tradesperson"}, ${top.availability_score}/10).${dashLink} Reply STOP to opt out.`;
         await sendSMS(client.owner_phone, TWILIO_PHONE_NUMBER, smsBody, "hire_alert");
       }
 
