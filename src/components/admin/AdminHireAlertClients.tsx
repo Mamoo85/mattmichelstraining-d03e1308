@@ -59,6 +59,8 @@ const ROLE_LABELS: Record<string, string> = {
   lpn: "LPN",
   director_of_nursing: "DON",
   home_health_aide: "Home Health",
+  pressure_vessel: "PVI",
+  industrial_mechanic: "Ind. Mech",
 };
 
 const HEALTHCARE_ROLES = ["cna", "rn", "lpn", "director_of_nursing", "home_health_aide"];
