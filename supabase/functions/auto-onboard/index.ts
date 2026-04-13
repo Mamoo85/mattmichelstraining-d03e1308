@@ -468,7 +468,7 @@ function dwaEmail(bodyHtml: string): string {
   <div style="padding:32px;color:#e2e8f0;font-size:15px;line-height:1.8">${bodyHtml}</div>
   <div style="padding:20px 32px;border-top:1px solid #1e3a5f;text-align:center">
     <p style="margin:0;color:#4a6fa5;font-size:12px">Detroit Web Agency · Grosse Pointe Park, MI · (313) 992-1219</p>
-    <p style="margin:6px 0 0;font-size:11px"><a href="https://detroitwebagent.com" style="color:#00d4ff;text-decoration:none">detroitwebagent.com</a>&nbsp;·&nbsp;<a href="mailto:matt@mattmichelstraining.com?subject=Unsubscribe" style="color:#4a6fa5;text-decoration:none">Unsubscribe</a></p>
+    <p style="margin:6px 0 0;font-size:11px"><a href="https://detroitwebagent.com" style="color:#00d4ff;text-decoration:none">detroitwebagent.com</a>&nbsp;·&nbsp;<a href="mailto:matt@detroitwebagent.com?subject=Unsubscribe" style="color:#4a6fa5;text-decoration:none">Unsubscribe</a></p>
   </div>
 </div></body></html>`;
 }

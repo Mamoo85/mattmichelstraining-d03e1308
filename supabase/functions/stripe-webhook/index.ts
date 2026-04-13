@@ -2724,7 +2724,7 @@ serve(async (req) => {
           const wdSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
           // Activate contractor client
           if (meta.contractor_id) {
-            await wdSb.from("contractor_clients" as any)
+            const { error: clientErr } = await wdSb.from("contractor_clients" as any)
               .update({
                 active: true,
                 stripe_customer_id: session.customer as string,
@@ -2732,6 +2732,7 @@ serve(async (req) => {
                 onboarded_at: new Date().toISOString(),
               })
               .eq("id", meta.contractor_id);
+            if (clientErr) throw new Error(`contractor_clients update failed: ${clientErr.message}`);
 
             // Assign contractor to the matching lead site
             const { data: site } = await wdSb
@@ -2751,51 +2752,49 @@ serve(async (req) => {
 
           if (RESEND_API_KEY && customerEmail) {
             const tradeLabel = (meta.trade || "service").charAt(0).toUpperCase() + (meta.trade || "service").slice(1);
-            // Welcome email to contractor
-            await fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({
-                from: "Matt Michels <matt@mattmichelstraining.com>",
-                to: [customerEmail], bcc: ["matthewmichels4@gmail.com"],
-                subject: `You're locked in — exclusive ${tradeLabel} leads in ${meta.city || "your area"}`,
-                html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
-<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
-  <div style="background:#e8621a;height:4px;"></div>
-  <div style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.9;">
-    <p>Hey ${meta.business_name || "there"} —</p>
-    <p><strong>You're in.</strong> Every exclusive ${tradeLabel.toLowerCase()} lead that comes through ${meta.city || "your area"} goes directly to you. No sharing, no competing bids.</p>
-    <p>When a lead comes in, you'll get an email immediately with their name, phone, and project details. Call them fast — speed wins jobs.</p>
-    <p>Questions? Reply to this email or text me directly at <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a>.</p>
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
-      <img src="https://www.mattmichelstraining.com/images/matt-family-cornfield.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 992-1219</div>
+            await Promise.all([
+              // Welcome email to contractor — DWA branding
+              fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  from: "Matt Michels — Detroit Web Agency <matt@detroitwebagent.com>",
+                  to: [customerEmail], bcc: ["matt@detroitwebagent.com"],
+                  subject: `You're locked in — exclusive ${tradeLabel} leads in ${meta.city || "your area"}`,
+                  html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a1628;font-family:'Helvetica Neue',sans-serif;">
+<div style="max-width:560px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#00d4ff,#0099cc);padding:24px 32px;">
+      <p style="margin:0;color:#0a1628;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase">Detroit Lead Network</p>
+      <h1 style="margin:8px 0 0;color:#0a1628;font-size:22px;font-weight:900">You're locked in. Leads are coming.</h1>
+    </div>
+    <div style="padding:28px 32px;color:#e2e8f0;font-size:15px;line-height:1.8;">
+      <p style="margin:0 0 16px">Hey ${meta.business_name || "there"} —</p>
+      <p style="margin:0 0 16px"><strong style="color:#00d4ff">Every exclusive ${tradeLabel.toLowerCase()} lead in ${meta.city || "your area"} now goes directly to you.</strong> No sharing. No competing bids. You're the only contractor getting these.</p>
+      <p style="margin:0 0 16px">When a lead comes in, you'll get an email + text immediately with their name, phone, and project. <strong>Call them fast — the first contractor to call wins the job.</strong></p>
+      <p style="margin:0 0 24px">Questions? Text me at <a href="tel:+13139921219" style="color:#00d4ff">(313) 992-1219</a>.</p>
+      <div style="border-top:1px solid #1e3a5f;padding-top:20px;display:flex;align-items:center;gap:12px;">
+        <img src="https://www.detroitwebagent.com/images/dwa/matt.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt">
+        <div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br>Detroit Web Agency · (313) 992-1219</div>
+      </div>
     </div>
   </div>
-<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
-        <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
-        <div style="font-size:13px;color:#94a3b8;">
-          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 992-1219
-        </div>
-        <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M² Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
-      </div></div>
-</body></html>`,
+</div></body></html>`,
+                }),
               }),
-            });
-            // Notify Matt
-            await fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({
-                from: "M² System <matt@mattmichelstraining.com>",
-                to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
-                subject: `💰 New contractor client — ${meta.business_name || customerEmail}`,
-                html: `<p>New contractor lead subscription:<br><strong>${meta.business_name}</strong> — ${customerEmail}<br>Trade: ${meta.trade} | City: ${meta.city}, ${meta.state || "MI"}<br>Subscription: ${session.subscription || "n/a"}</p>`,
-              }),
-            });
+              // Notify Matt
+              notifyMatt(
+                `💰 New contractor client — ${meta.business_name || customerEmail}`,
+                `<p><strong>${meta.business_name}</strong> — ${customerEmail}<br>Trade: ${meta.trade} | City: ${meta.city}, ${meta.state || "MI"}<br>Subscription: ${session.subscription || "n/a"}</p>`,
+              ),
+            ]);
           }
-        } catch (e) { console.error("[WEBHOOK] contractor_lead_subscription error:", e); }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+          return new Response(JSON.stringify({ received: true }), { status: 200 });
+        } catch (e) {
+          console.error("[WEBHOOK] contractor_lead_subscription error:", e);
+          notifyMatt("⚠️ Contractor lead webhook DB failure", `<p>${String(e)}</p>`).catch(() => {});
+          return new Response(JSON.stringify({ error: String(e) }), { status: 500 });
+        }
       }
 
       // ── B2B DATABASE SUBSCRIPTION ─────────────────────────────────────────
@@ -3939,33 +3938,51 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
           const fwdInstructions = twilioNumber
             ? `<p style="margin:0 0 8px"><strong>Your dedicated text-back number: ${twilioNumber}</strong></p>
 <p style="margin:0 0 8px"><strong>Setup (2 minutes on your phone):</strong></p>
-<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
-<li>On your iPhone: Settings → Phone → Call Forwarding → turn ON → enter <strong>${twilioNumber}</strong></li>
-<li>On Android: Phone app → Settings → Call Forwarding → Forward when unanswered → enter <strong>${twilioNumber}</strong></li>
+<ol style="margin:0 0 16px;padding-left:20px;color:#94a3b8">
+<li>On your iPhone: Settings → Phone → Call Forwarding → turn ON → enter <strong style="color:#00d4ff">${twilioNumber}</strong></li>
+<li>On Android: Phone app → Settings → Call Forwarding → Forward when unanswered → enter <strong style="color:#00d4ff">${twilioNumber}</strong></li>
 <li>That's it — missed calls now trigger an instant text to the caller</li>
 </ol>
-<p style="margin:0 0 8px">Reply to this email if you need help with the forwarding setup.</p>`
-            : `<p style="margin:0 0 8px"><strong>Setup (5 minutes):</strong></p>
-<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
+<p style="margin:0 0 8px">Reply to this email or text <a href="tel:+13139921219" style="color:#00d4ff">(313) 992-1219</a> if you need help with the setup.</p>`
+            : `<p style="margin:0 0 8px"><strong>What happens next:</strong></p>
+<ol style="margin:0 0 16px;padding-left:20px;color:#94a3b8">
 <li>Matt will contact you within a few hours with your dedicated number</li>
-<li>You forward missed calls to that number</li>
-<li>That's it — missed calls now get instant texts, automatically</li>
+<li>You forward missed calls to that number — takes 2 minutes</li>
+<li>Every missed call triggers an instant text to the caller, automatically</li>
 </ol>`;
 
           await Promise.all([
-            sendM2Email(
-              email,
-              twilioNumber ? "Your Missed Call Text-Back number is ready" : "Your Missed Call Text-Back is being set up",
-              m2Email({
-                greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
-                headline: twilioNumber ? "Your Text-Back Number Is Ready" : "Your Missed Call Text-Back is Being Set Up",
-                body: `<p style="margin:0 0 12px"><strong>Every missed call is a potential customer walking away. Not anymore.</strong></p>
-<p style="margin:0 0 8px">⚡ <strong>Instant response</strong> — text fires within seconds of the missed call</p>
-<p style="margin:0 0 8px">🔄 <strong>24/7 coverage</strong> — works nights, weekends, holidays</p>
-<p style="margin:0 0 16px">✨ <strong>7-day free trial</strong> — your trial has started</p>
-${fwdInstructions}`,
+            // Welcome email — DWA branding
+            fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels — Detroit Web Agency <matt@detroitwebagent.com>",
+                to: [email], bcc: ["matt@detroitwebagent.com"],
+                subject: twilioNumber ? `Your Missed Call Text-Back number is ready — ${twilioNumber}` : "Your Missed Call Text-Back is being set up",
+                html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a1628;font-family:'Helvetica Neue',sans-serif;">
+<div style="max-width:560px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#00d4ff,#0099cc);padding:24px 32px;">
+      <p style="margin:0;color:#0a1628;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase">Missed Call Text-Back</p>
+      <h1 style="margin:8px 0 0;color:#0a1628;font-size:22px;font-weight:900">${twilioNumber ? "You're live. Callers get texts now." : "Almost set up — one more step."}</h1>
+    </div>
+    <div style="padding:28px 32px;color:#e2e8f0;font-size:15px;line-height:1.8;">
+      <p style="margin:0 0 16px">Hey${meta.name ? " " + meta.name : ""} —</p>
+      <p style="margin:0 0 16px"><strong style="color:#00d4ff">Every missed call is a potential customer walking away. Not anymore.</strong></p>
+      <p style="margin:0 0 8px">⚡ Texts fire within seconds of a missed call</p>
+      <p style="margin:0 0 8px">🔄 Works 24/7 — nights, weekends, holidays</p>
+      <p style="margin:0 0 24px">✨ 7-day free trial started</p>
+      ${fwdInstructions}
+      <div style="border-top:1px solid #1e3a5f;padding-top:20px;display:flex;align-items:center;gap:12px;">
+        <img src="https://www.detroitwebagent.com/images/dwa/matt.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt">
+        <div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br>Detroit Web Agency · (313) 992-1219</div>
+      </div>
+    </div>
+  </div>
+</div></body></html>`,
               }),
-            ),
+            }),
             notifyMatt(
               `${twilioNumber ? "✅ AUTO-SETUP COMPLETE" : "🔔 NEEDS SETUP"} — Missed Call SMS: ${meta.businessName || email}`,
               `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Twilio #: ${twilioNumber || "NOT PROVISIONED — provision manually"}</p>`,

@@ -1,13 +1,15 @@
-// missed-call-handler — Twilio VoiceUrl for +13139921219 (DWA work number)
-// Forwards the call to Matt's personal phone. Does NOT send any SMS.
-// A separate "missed-call-status" function handles post-call status
-// and schedules the 5-minute delayed text-back if Matt didn't answer.
+// missed-call-handler — Twilio VoiceUrl webhook
+// Multi-tenant: serves both Matt's DWA number AND customer subscription numbers.
+// For customer numbers: looks up missed_call_clients, forwards to their business phone.
+// For Matt's DWA number (+13139921219): forwards to Matt's personal Google Fi.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
 const MATT_PERSONAL = Deno.env.get("MATT_PERSONAL_PHONE") || "+13138064952";
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 
 const TWIML_HEADERS = { "Content-Type": "text/xml" };
 
@@ -22,35 +24,62 @@ serve(async (req) => {
     return twiml("<Hangup/>");
   }
 
-  let fromNumber = "";
-
   try {
     const text = await req.text();
     const params = new URLSearchParams(text);
-    fromNumber = params.get("From") || "";
+    const fromNumber = params.get("From") || "";
+    const toNumber = params.get("To") || "";
 
-    console.log(`[missed-call-handler] Call from=${fromNumber}`);
+    console.log(`[missed-call-handler] Call from=${fromNumber} to=${toNumber}`);
 
-    // No caller ID — hang up silently
     if (!fromNumber) {
       return twiml("<Hangup/>");
     }
+
+    const statusUrl = `${SUPABASE_URL}/functions/v1/missed-call-status`;
+
+    // ── MULTI-TENANT: check if this is a customer subscription number ──────
+    if (toNumber && SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+      const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+      const { data: client } = await sb
+        .from("missed_call_clients")
+        .select("business_phone, business_name")
+        .eq("twilio_number", toNumber)
+        .maybeSingle();
+
+      if (client) {
+        const bizName = (client as any).business_name || "us";
+        const bizPhone = (client as any).business_phone;
+
+        if (!bizPhone) {
+          // No forwarding phone stored — play message, status callback will text caller
+          return twiml(
+            `<Say voice="alice">You've reached ${bizName}. We're sorry we missed your call — we'll text you right back shortly.</Say>` +
+            `<Hangup/>`
+          );
+        }
+
+        // Forward to the business owner's phone; action URL fires when dial completes
+        return twiml(
+          `<Dial timeout="25" action="${statusUrl}" method="POST">` +
+          `<Number>${bizPhone}</Number>` +
+          `</Dial>` +
+          `<Say voice="alice">You've reached ${bizName}. We'll text you right back.</Say>` +
+          `<Hangup/>`
+        );
+      }
+    }
+
+    // ── DWA MODE: Matt's personal number (+13139921219) ────────────────────
+    return twiml(
+      `<Dial timeout="25" action="${statusUrl}" method="POST">` +
+      `<Number>${MATT_PERSONAL}</Number>` +
+      `</Dial>` +
+      `<Say voice="alice">You've reached Detroit Web Agency. Check your texts — Matt just sent you one. Talk soon.</Say>` +
+      `<Hangup/>`
+    );
   } catch (e: unknown) {
-    console.error("[missed-call-handler] Error parsing request:", e instanceof Error ? e.message : String(e));
+    console.error("[missed-call-handler] Error:", e instanceof Error ? e.message : String(e));
     return twiml("<Hangup/>");
   }
-
-  // Forward the call to Matt's personal phone for 25 seconds.
-  // The action URL fires when the <Dial> completes (answered or missed).
-  const statusUrl = `${SUPABASE_URL}/functions/v1/missed-call-status`;
-
-  // After <Dial> completes (answered or timed out), the action URL fires.
-  // If missed, the caller hears this message before hanging up.
-  return twiml(
-    `<Dial timeout="25" action="${statusUrl}" method="POST">` +
-    `<Number>${MATT_PERSONAL}</Number>` +
-    `</Dial>` +
-    `<Say voice="alice">You've reached Detroit Web Agency. Check your texts — Matt just sent you one. Talk soon.</Say>` +
-    `<Hangup/>`
-  );
 });
