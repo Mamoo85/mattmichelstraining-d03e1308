@@ -936,12 +936,11 @@ serve(async (req: Request) => {
 </body></html>`
   );
 
-  await sb.from("agent_heartbeats" as any).upsert({
+  await sb.from("agent_heartbeats").upsert({
     agent_name: "hire-alert-scanner",
-    last_run_at: new Date().toISOString(),
-    last_status: "ok",
-    last_result: JSON.stringify({ candidates_found: allRaw.length, new_candidates: newCandidates.length, hot_candidates: allHotCandidates.length, alerts_sent: alertsSent }),
-  }, { onConflict: "agent_name" }).catch(() => {});
+    last_beat: new Date().toISOString(),
+    metadata: { candidates_found: allRaw.length, new_candidates: newCandidates.length, hot_candidates: allHotCandidates.length, alerts_sent: alertsSent },
+  }, { onConflict: "agent_name" });
 
   return new Response(
     JSON.stringify({
