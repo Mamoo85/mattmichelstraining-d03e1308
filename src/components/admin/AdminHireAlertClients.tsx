@@ -378,6 +378,7 @@ export default function AdminHireAlertClients() {
             </button>
           ))}
         </div>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
