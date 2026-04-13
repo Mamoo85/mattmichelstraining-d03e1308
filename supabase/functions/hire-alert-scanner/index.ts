@@ -896,11 +896,11 @@ serve(async (req: Request) => {
 <tr><td style="background:#1e293b;padding:0 28px 16px;">
   <table width="100%" cellpadding="0" cellspacing="0"><tr>
     <td style="padding:8px 12px;background:#ffffff06;border-radius:8px;">
-      <span style="font-size:11px;color:#94a3b8;">🏛️ MIOSHA: <strong style="color:#00d4ff;">${sourceBreakdown.miosha}</strong></span>
+      <span style="font-size:11px;color:#94a3b8;">🏛️ Src1: <strong style="color:#00d4ff;">${sourceBreakdown.miosha}</strong></span>
       <span style="font-size:11px;color:#334155;"> · </span>
-      <span style="font-size:11px;color:#94a3b8;">🔍 Apollo: <strong style="color:#00d4ff;">${sourceBreakdown.apollo}</strong></span>
+      <span style="font-size:11px;color:#94a3b8;">🔍 Src2: <strong style="color:#00d4ff;">${sourceBreakdown.apollo}</strong></span>
       <span style="font-size:11px;color:#334155;"> · </span>
-      <span style="font-size:11px;color:#94a3b8;">📋 Job Boards: <strong style="color:#00d4ff;">${sourceBreakdown.firecrawl}</strong></span>
+      <span style="font-size:11px;color:#94a3b8;">📋 Src3: <strong style="color:#00d4ff;">${sourceBreakdown.firecrawl}</strong></span>
     </td>
   </tr></table>
 </td></tr>
