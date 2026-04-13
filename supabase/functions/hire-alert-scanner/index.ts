@@ -691,7 +691,26 @@ serve(async (req: Request) => {
   const scored: ScoredCandidate[] = [];
   for (const candidate of newCandidates) {
     const { score, reason } = await scoreCandidate(candidate);
-    scored.push({ ...candidate, availability_score: score, score_reason: reason });
+    // Merge enrichment data from DB if candidate was enriched in a previous run
+    const key = candidate.license_number || `${candidate.full_name.toLowerCase()}-${(candidate.city || "").toLowerCase()}`;
+    const enrichment = enrichmentLookup.get(key);
+    scored.push({
+      ...candidate,
+      availability_score: score,
+      score_reason: reason,
+      ...(enrichment ? {
+        linkedin_url: enrichment.linkedin_url as string | undefined,
+        facebook_url: enrichment.facebook_url as string | undefined,
+        current_employer: enrichment.current_employer as string | undefined,
+        current_title: enrichment.current_title as string | undefined,
+        years_experience: enrichment.years_experience as number | undefined,
+        qualifications_summary: enrichment.qualifications_summary as string | undefined,
+        hiring_recommendation: enrichment.hiring_recommendation as string | undefined,
+        enrichment_status: enrichment.enrichment_status as string | undefined,
+        email: candidate.email || enrichment.email as string | undefined,
+        phone: candidate.phone || enrichment.phone as string | undefined,
+      } : {}),
+    });
   }
 
   // Upsert all new candidates into DB and capture their IDs for TA-9 tracking
