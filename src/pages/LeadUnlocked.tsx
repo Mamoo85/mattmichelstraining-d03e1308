@@ -5,7 +5,6 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 
 interface LeadData {
   name: string;
@@ -36,18 +35,13 @@ export default function LeadUnlocked() {
 
   const fetchLead = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke("get-lead-by-session", {
-        body: null,
-        headers: {},
-      });
-
       // get-lead-by-session is a GET endpoint — use fetch directly
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-lead-by-session?session_id=${encodeURIComponent(session_id)}`,
         {
           headers: {
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
         }
       );
