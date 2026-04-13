@@ -474,12 +474,21 @@ async function sendAlertEmail(
                   <td style="background:#00d4ff18;color:#0891b2;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">${c.license_type || "Field Technician"}</td>
                   <td width="8"></td>
                   <td style="background:#f1f5f9;color:#64748b;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;">📍 ${c.city || "Metro Detroit"}</td>
+                  ${c.years_experience ? `<td width="8"></td><td style="background:#10b98118;color:#059669;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">${c.years_experience}+ yrs exp</td>` : ""}
                 </tr></table>
               </td>
             </tr>
-            ${c.license_number ? `<tr><td style="padding:4px 0;font-size:13px;color:#475569;">🪪 License: <strong>${c.license_number}</strong>${c.license_expiry ? ` · Exp: ${c.license_expiry}` : ""}</td></tr>` : ""}
+            ${c.current_employer ? `<tr><td style="padding:4px 0;font-size:13px;color:#475569;">🏢 <strong>${c.current_employer}</strong>${c.current_title ? ` · ${c.current_title}` : ""}</td></tr>` : ""}
+            ${c.license_number ? `<tr><td style="padding:4px 0;font-size:13px;color:#475569;">🪪 License: <strong>${c.license_number}</strong>${c.license_expiry ? ` · Exp: <strong>${c.license_expiry}</strong>` : ""} · <span style="color:#059669;font-weight:700;">Active</span></td></tr>` : ""}
             ${c.email ? `<tr><td style="padding:4px 0;font-size:13px;"><a href="mailto:${c.email}" style="color:#0891b2;text-decoration:none;font-weight:600;">✉️ ${c.email}</a></td></tr>` : ""}
             ${c.phone ? `<tr><td style="padding:4px 0;font-size:13px;"><a href="tel:${c.phone}" style="color:#e8621a;text-decoration:none;font-weight:700;font-size:15px;">📞 ${c.phone}</a></td></tr>` : ""}
+            ${c.linkedin_url ? `<tr><td style="padding:4px 0;font-size:13px;"><a href="${c.linkedin_url}" style="color:#0a66c2;text-decoration:none;font-weight:600;">🔗 LinkedIn Profile</a>${c.facebook_url ? ` &nbsp;·&nbsp; <a href="${c.facebook_url}" style="color:#1877f2;text-decoration:none;font-weight:600;">📘 Facebook</a>` : ""}</td></tr>` : (c.facebook_url ? `<tr><td style="padding:4px 0;font-size:13px;"><a href="${c.facebook_url}" style="color:#1877f2;text-decoration:none;font-weight:600;">📘 Facebook Profile</a></td></tr>` : "")}
+            ${c.qualifications_summary ? `<tr><td style="padding:8px 0 4px;">
+              <p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#f0fdf4;padding:10px 12px;border-radius:8px;border-left:3px solid #059669;"><strong>📋 Qualifications:</strong> ${c.qualifications_summary}</p>
+            </td></tr>` : ""}
+            ${c.hiring_recommendation ? `<tr><td style="padding:4px 0;">
+              <p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#eff6ff;padding:10px 12px;border-radius:8px;border-left:3px solid #3b82f6;"><strong>💡 Recommendation:</strong> ${c.hiring_recommendation}</p>
+            </td></tr>` : ""}
             <tr><td style="padding:8px 0 0;">
               <p style="margin:0;font-size:12px;color:#64748b;line-height:1.5;font-style:italic;background:#f8fafc;padding:8px 12px;border-radius:8px;border-left:3px solid ${scoreBg(c.availability_score)};">${c.score_reason}</p>
             </td></tr>
