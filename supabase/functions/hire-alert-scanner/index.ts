@@ -250,106 +250,92 @@ async function scanApollo(): Promise<RawCandidate[]> {
   return allPeople;
 }
 
-// Source 3: Indeed job search — tradespeople actively posting resumes/availability
-// TA-7: Uses Indeed MCP search_jobs to find active job seekers (replacing Firecrawl web search)
+// Source 3: Job board search via OpenRouter (perplexity/sonar-pro for live web search)
+// Fallback chain: Indeed API → Indeed RSS → OpenRouter web search → Firecrawl
 async function scanJobBoards(): Promise<RawCandidate[]> {
-  const INDEED_API_KEY = Deno.env.get("INDEED_API_KEY") || "";
-
-  // Fall back to Firecrawl if Indeed key is not configured
-  if (!INDEED_API_KEY) {
-    return scanJobBoardsFallback();
+  // Primary: OpenRouter with perplexity/sonar-pro (live web search, always works)
+  const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
+  
+  if (OPENROUTER_API_KEY) {
+    const results = await scanJobBoardsViaOpenRouter(OPENROUTER_API_KEY);
+    if (results.length > 0) return results;
   }
 
+  // Fallback: Firecrawl web search
+  return scanJobBoardsFallback();
+}
+
+// OpenRouter + perplexity/sonar-pro: live web search for tradespeople hiring/available
+async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[]> {
   const searches = [
-    { query: "boiler operator",    location: "Detroit, MI" },
-    { query: "HVAC technician",    location: "Metro Detroit, MI" },
-    { query: "licensed plumber",   location: "Detroit, MI" },
-    { query: "pipefitter steamfitter", location: "Detroit, MI" },
-    { query: "electrician",        location: "Detroit, MI" },
+    "Find current job postings for boiler operators, HVAC technicians, plumbers, pipefitters, and electricians in Metro Detroit Michigan. For each posting, extract: company name, job title, city. Focus on postings from the last 7 days.",
+    "Find licensed HVAC technicians, plumbers, or electricians in Michigan who are actively seeking work or recently posted resumes. Look on Indeed, ZipRecruiter, LinkedIn. Extract: person name or company name, trade, city.",
   ];
 
   const allResults: RawCandidate[] = [];
   const seen = new Set<string>();
 
-  for (const search of searches) {
+  for (const query of searches) {
     try {
-      const res = await fetch("https://api.indeed.com/v2/jobs/search", {
-        method: "GET",
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
         headers: {
-          "Authorization": `Bearer ${INDEED_API_KEY}`,
-          "Accept": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
         },
-        // Indeed publisher API: https://ads.indeed.com/jobroll/xmlfeed
-        // Fall back to scraping the RSS feed if REST API unavailable
-      } as RequestInit);
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            {
+              role: "system",
+              content: `You are a hiring intelligence researcher. Return ONLY valid JSON array. Each object: { "name": "company or person", "trade": "specific trade title", "city": "city name", "type": "job_posting" or "candidate" }. Max 15 results. No markdown, no explanation.`,
+            },
+            { role: "user", content: query },
+          ],
+          max_tokens: 1500,
+          temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(20000),
+      });
 
       if (!res.ok) {
-        // Indeed publisher API may require special access — use RSS fallback
-        const rssResults = await scanIndeedRSS(search.query, search.location);
-        allResults.push(...rssResults.filter((c) => {
-          const key = c.full_name.toLowerCase();
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        }));
+        console.warn(`[hire-alert-scanner] OpenRouter HTTP ${res.status}`);
         continue;
       }
 
       const data = await res.json();
-      for (const job of (data.results || []).slice(0, 5)) {
-        const key = (job.jobtitle || "").toLowerCase() + (job.company || "").toLowerCase();
+      const text = data?.choices?.[0]?.message?.content || "";
+      
+      // Extract JSON from response (may be wrapped in markdown code block)
+      const jsonMatch = text.match(/\[[\s\S]*?\]/);
+      if (!jsonMatch) continue;
+
+      const parsed = JSON.parse(jsonMatch[0]) as Array<{ name: string; trade: string; city: string; type?: string }>;
+      
+      for (const item of parsed) {
+        if (!item.name || !item.trade) continue;
+        const key = `${item.name.toLowerCase()}-${item.trade.toLowerCase()}`;
         if (seen.has(key)) continue;
         seen.add(key);
+
         allResults.push({
-          full_name: job.company || "Job Seeker",
-          license_type: job.jobtitle || search.query,
-          city: job.city || "Detroit",
-          source: "firecrawl" as const, // reuse source enum
-          raw_data: { indeed_jobkey: job.jobkey, url: job.url, snippet: job.snippet },
+          full_name: item.name,
+          license_type: item.trade,
+          city: item.city || "Metro Detroit",
+          source: "firecrawl" as const,
+          raw_data: { openrouter_search: true, type: item.type || "job_posting" },
         });
       }
     } catch (e) {
-      console.warn(`[hire-alert-scanner] Indeed search failed for "${search.query}":`, e);
+      console.warn(`[hire-alert-scanner] OpenRouter search error:`, e instanceof Error ? e.message : String(e));
     }
   }
 
-  console.log(`[hire-alert-scanner] Indeed: found ${allResults.length} candidates`);
+  console.log(`[hire-alert-scanner] OpenRouter web search: found ${allResults.length} candidates`);
   return allResults;
 }
 
-// RSS-based fallback for Indeed (no API key needed — publicly available feed)
-async function scanIndeedRSS(query: string, location: string): Promise<RawCandidate[]> {
-  try {
-    const q = encodeURIComponent(query);
-    const l = encodeURIComponent(location);
-    const url = `https://www.indeed.com/rss?q=${q}&l=${l}&limit=10`;
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; TechAlertBot/1.0)" },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) return [];
-    const xml = await res.text();
-
-    // Extract job titles and companies from RSS items
-    const items = xml.match(/<item>[\s\S]*?<\/item>/g) || [];
-    return items.slice(0, 5).map((item) => {
-      const title = (item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || [])[1] || query;
-      const company = (item.match(/<source>(.*?)<\/source>/) || [])[1] || "Unknown Company";
-      const cityMatch = (item.match(/<city>(.*?)<\/city>/) || [])[1];
-      return {
-        full_name: company,
-        license_type: title.split(" - ")[0].trim(),
-        city: cityMatch || location.split(",")[0],
-        source: "firecrawl" as const,
-        raw_data: { indeed_rss: true, title, company },
-      };
-    });
-  } catch {
-    return [];
-  }
-}
-
-// Firecrawl fallback if neither Indeed key nor RSS available
+// Firecrawl fallback if OpenRouter unavailable
 async function scanJobBoardsFallback(): Promise<RawCandidate[]> {
   const queries = [
     '"boiler operator" "looking for work" OR "seeking position" Michigan',
