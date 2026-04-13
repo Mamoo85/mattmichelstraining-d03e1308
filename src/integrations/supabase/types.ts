@@ -4360,6 +4360,30 @@ export type Database = {
           },
         ]
       }
+      hire_alert_client_candidates: {
+        Row: {
+          alert_type: string
+          alerted_at: string
+          candidate_id: string
+          client_id: string
+          id: string
+        }
+        Insert: {
+          alert_type?: string
+          alerted_at?: string
+          candidate_id: string
+          client_id: string
+          id?: string
+        }
+        Update: {
+          alert_type?: string
+          alerted_at?: string
+          candidate_id?: string
+          client_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
       hire_alert_clients: {
         Row: {
           active: boolean | null
