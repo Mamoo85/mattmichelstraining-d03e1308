@@ -77,6 +77,21 @@ async function sendM2Email(to: string, subject: string, html: string, bcc?: stri
   });
 }
 
+async function dwaEmail(to: string, subject: string, html: string, bcc?: string): Promise<void> {
+  if (!RESEND_API_KEY) return;
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "Matt Michels — Detroit Web Agency <matt@detroitwebagent.com>",
+      to: Array.isArray(to) ? to : [to],
+      bcc: [bcc || "matthewmichels4@gmail.com"],
+      subject,
+      html,
+    }),
+  });
+}
+
 async function notifyMatt(subject: string, html: string): Promise<void> {
   if (!RESEND_API_KEY) return;
   await fetch("https://api.resend.com/emails", {
