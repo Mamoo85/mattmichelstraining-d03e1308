@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LeadData {
   name: string;
@@ -15,6 +16,7 @@ interface LeadData {
   trade: string;
   city: string;
   state: string;
+  contact_preference: string;
 }
 
 export default function LeadUnlocked() {
@@ -35,7 +37,6 @@ export default function LeadUnlocked() {
 
   const fetchLead = async () => {
     try {
-      // get-lead-by-session is a GET endpoint — use fetch directly
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-lead-by-session?session_id=${encodeURIComponent(session_id)}`,
         {
@@ -143,6 +144,12 @@ export default function LeadUnlocked() {
                   <div>
                     <p style={{ color: "#64748b", fontSize: 12, margin: "0 0 4px", fontWeight: 600, letterSpacing: 0.5 }}>PROJECT</p>
                     <p style={{ color: "#e2e8f0", fontSize: 15, margin: 0 }}>{lead.project_type}</p>
+                  </div>
+                )}
+                {lead?.contact_preference && (
+                  <div>
+                    <p style={{ color: "#64748b", fontSize: 12, margin: "0 0 4px", fontWeight: 600, letterSpacing: 0.5 }}>PREFERRED CONTACT</p>
+                    <p style={{ color: "#00d4ff", fontSize: 15, fontWeight: 700, margin: 0 }}>{lead.contact_preference}</p>
                   </div>
                 )}
                 {lead?.message && (
