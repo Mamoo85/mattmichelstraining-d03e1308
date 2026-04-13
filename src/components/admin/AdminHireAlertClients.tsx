@@ -296,6 +296,7 @@ export default function AdminHireAlertClients() {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [editClient, setEditClient] = useState<HireAlertClient | undefined>();
+  const [invoking, setInvoking] = useState(false);
   const [sectorFilter, setSectorFilter] = useState<"all" | "trades" | "healthcare">("all");
 
   const load = async () => {
