@@ -70,6 +70,14 @@ serve(async (req) => {
       }
     }
 
+    // ── SELF-CALL DETECTION: skip forwarding when Matt calls his own line ──
+    if (fromNumber === MATT_PERSONAL) {
+      return twiml(
+        `<Say voice="alice">You've reached Detroit Web Agency. We missed your call but we'll text you right back shortly.</Say>` +
+        `<Hangup/>`
+      );
+    }
+
     // ── DWA MODE: Matt's personal number (+13139921219) ────────────────────
     return twiml(
       `<Dial timeout="25" action="${statusUrl}" method="POST">` +
