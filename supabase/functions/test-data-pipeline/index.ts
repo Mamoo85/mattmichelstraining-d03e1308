@@ -1,6 +1,8 @@
 // test-data-pipeline — standalone validation sandbox
-// Manually invoke to test full enrichment chain:
-// NPI API → Nursys (stub) → Sonar Deep Dork → PDL (stub) → JSON stripper → No Ghost Lead
+// Manually invoke to test full enrichment chain.
+// Accepts { "industry_type": "healthcare" | "industrial_trades" }
+// Healthcare: NPI → Nursys (stub) → Sonar → PDL (stub) → No Ghost Lead
+// Industrial: Michigan LARA (stub) → Sonar → PDL (stub) → No Ghost Lead
 // NEVER added to any cron job.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -10,29 +12,59 @@ const NURSYS_API_KEY = Deno.env.get("NURSYS_API_KEY") || "";
 const NURSYS_BASE_URL = Deno.env.get("NURSYS_BASE_URL") || "";
 const PDL_API_KEY = Deno.env.get("PDL_API_KEY") || "";
 
+type IndustryType = "healthcare" | "industrial_trades";
+
+interface TestCandidate {
+  first_name: string;
+  last_name: string;
+  title: string;
+  city: string;
+  state: string;
+  license_number?: string;
+}
+
+const HEALTHCARE_CANDIDATE: TestCandidate = {
+  first_name: "Sarah",
+  last_name: "Johnson",
+  title: "Registered Nurse",
+  city: "Detroit",
+  state: "MI",
+  license_number: "4301999999",
+};
+
+const INDUSTRIAL_CANDIDATE: TestCandidate = {
+  first_name: "Mike",
+  last_name: "Thompson",
+  title: "High-Pressure Boiler Operator",
+  city: "Dearborn",
+  state: "MI",
+  license_number: "BP-2024-00001",
+};
+
 // ─── JSON Regex Stripper ───────────────────────────────────────
-// Sonar/LLMs wrap JSON in markdown (```json ... ```). This strips it.
 function extractJSON(raw: string): string {
-  // Remove markdown code fences
   let cleaned = raw.replace(/```(?:json)?\s*/gi, "").replace(/```/g, "");
-  // Find the first { ... } or [ ... ] block
   const match = cleaned.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
   return match ? match[1] : cleaned.trim();
 }
 
-// ─── NPI Registry API (Free, No Auth) ──────────────────────────
-interface NPIResult {
-  npi: string | null;
+// ─── Normalized Government Data Result ─────────────────────────
+// Both NPI and LARA return this shape so downstream doesn't care about source
+interface GovDataResult {
+  source: string;
+  license_id: string | null;
   business_phone: string | null;
-  taxonomy_code: string | null;
-  taxonomy_desc: string | null;
+  license_type: string | null;
+  license_desc: string | null;
   practice_address: string | null;
   elapsed_ms: number;
+  skipped_reason: string | null;
 }
 
-async function enrichViaNPI(firstName: string, lastName: string, state: string): Promise<NPIResult> {
+// ─── NPI Registry API (Free, No Auth) ──────────────────────────
+async function enrichViaNPI(firstName: string, lastName: string, state: string): Promise<GovDataResult> {
   const start = Date.now();
-  const empty: NPIResult = { npi: null, business_phone: null, taxonomy_code: null, taxonomy_desc: null, practice_address: null, elapsed_ms: 0 };
+  const empty: GovDataResult = { source: "NPI", license_id: null, business_phone: null, license_type: null, license_desc: null, practice_address: null, elapsed_ms: 0, skipped_reason: null };
   try {
     const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}&state=${encodeURIComponent(state)}&enumeration_type=NPI-1&limit=3`;
     const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
@@ -46,23 +78,48 @@ async function enrichViaNPI(firstName: string, lastName: string, state: string):
     const taxonomy = r.taxonomies?.[0];
 
     return {
-      npi: r.number?.toString() || null,
+      source: "NPI",
+      license_id: r.number?.toString() || null,
       business_phone: practiceAddr?.telephone_number || null,
-      taxonomy_code: taxonomy?.code || null,
-      taxonomy_desc: taxonomy?.desc || null,
+      license_type: taxonomy?.code || null,
+      license_desc: taxonomy?.desc || null,
       practice_address: practiceAddr
         ? `${practiceAddr.address_1 || ""}, ${practiceAddr.city || ""}, ${practiceAddr.state || ""} ${practiceAddr.postal_code || ""}`.trim()
         : null,
       elapsed_ms: Date.now() - start,
+      skipped_reason: null,
     };
   } catch (e) {
     console.error("[NPI] Error:", e);
-    return { ...empty, elapsed_ms: Date.now() - start };
+    return { ...empty, elapsed_ms: Date.now() - start, skipped_reason: e instanceof Error ? e.message : String(e) };
   }
 }
 
+// ─── Michigan LARA GIS Open Data API (Stub) ────────────────────
+// Targets DTMB GIS Open Data portal for licensed tradesmen:
+// Master Plumbers, HVAC Contractors, Electricians, High-Pressure Boiler Operators
+// Also checks MIOSHA Boiler Division records
+async function queryMichiganLARA(firstName: string, lastName: string, _state: string): Promise<GovDataResult> {
+  const start = Date.now();
+  // TODO: Replace with real Michigan LARA GIS Open Data REST API call
+  // Endpoint pattern: https://gis.michigan.opendata.arcgis.com/api/...
+  // Also check MIOSHA Boiler Division: https://www.michigan.gov/leo/bureaus-agencies/miosha
+  console.log(`[LARA] Stub lookup for ${firstName} ${lastName} — will hit Michigan GIS Open Data API when integrated`);
+
+  // Return stub data shaped identically to NPI result
+  return {
+    source: "LARA_MIOSHA",
+    license_id: null,
+    business_phone: null,
+    license_type: null,
+    license_desc: null,
+    practice_address: null,
+    elapsed_ms: Date.now() - start,
+    skipped_reason: "LARA GIS integration pending — stub mode",
+  };
+}
+
 // ─── Nursys e-Notify API (Async POST/GET per v3.1.5 spec) ─────
-// Placeholder — will gracefully no-op until NURSYS_API_KEY is set.
 interface NursysResult {
   license_status: string | null;
   multistate: boolean | null;
@@ -78,10 +135,7 @@ async function nursysPostLookup(licenseNumber: string): Promise<{ transactionId:
   try {
     const res = await fetch(`${NURSYS_BASE_URL}/nurselookup`, {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${NURSYS_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "Authorization": `Bearer ${NURSYS_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({ LicenseNumber: licenseNumber }),
       signal: AbortSignal.timeout(10_000),
     });
@@ -97,10 +151,9 @@ async function nursysGetLookup(transactionId: string): Promise<NursysResult> {
   const start = Date.now();
   const empty: NursysResult = { license_status: null, multistate: null, discipline: null, elapsed_ms: 0, skipped_reason: null };
   if (!NURSYS_API_KEY || !NURSYS_BASE_URL) {
-    return { ...empty, elapsed_ms: 0, skipped_reason: "Not configured" };
+    return { ...empty, skipped_reason: "Not configured" };
   }
   try {
-    // Nursys async pattern: poll GET with transactionId
     const res = await fetch(`${NURSYS_BASE_URL}/nurselookup/${transactionId}`, {
       headers: { "Authorization": `Bearer ${NURSYS_API_KEY}` },
       signal: AbortSignal.timeout(10_000),
@@ -129,7 +182,6 @@ async function enrichViaNursys(licenseNumber: string): Promise<NursysResult> {
   if (!post.transactionId) {
     return { license_status: null, multistate: null, discipline: null, elapsed_ms: Date.now() - start, skipped_reason: post.error };
   }
-  // Wait 2s for async processing, then poll
   await new Promise(r => setTimeout(r, 2000));
   return nursysGetLookup(post.transactionId);
 }
@@ -169,15 +221,8 @@ Respond ONLY with a JSON object (no markdown, no explanation):
   try {
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "perplexity/sonar-pro",
-        max_tokens: 512,
-        messages: [{ role: "user", content: prompt }],
-      }),
+      headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "perplexity/sonar-pro", max_tokens: 512, messages: [{ role: "user", content: prompt }] }),
       signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok) { await res.text(); return { ...empty, elapsed_ms: Date.now() - start }; }
@@ -200,7 +245,6 @@ Respond ONLY with a JSON object (no markdown, no explanation):
 }
 
 // ─── People Data Labs (PDL) — Identity Resolution ──────────────
-// Placeholder — graceful no-op until PDL_API_KEY is set.
 interface PDLResult {
   mobile_phone: string | null;
   personal_email: string | null;
@@ -215,15 +259,13 @@ async function enrichWithPDL(name: string, location: string, linkedinUrl: string
   const start = Date.now();
   const empty: PDLResult = { mobile_phone: null, personal_email: null, work_email: null, job_title: null, company: null, elapsed_ms: 0, skipped_reason: null };
   if (!PDL_API_KEY) {
-    return { ...empty, elapsed_ms: 0, skipped_reason: "PDL_API_KEY not set — stub mode" };
+    return { ...empty, skipped_reason: "PDL_API_KEY not set — stub mode" };
   }
   try {
     const params: Record<string, string> = { api_key: PDL_API_KEY, name, location };
     if (linkedinUrl) params.profile = linkedinUrl;
     const qs = new URLSearchParams(params).toString();
-    const res = await fetch(`https://api.peopledatalabs.com/v5/person/enrich?${qs}`, {
-      signal: AbortSignal.timeout(10_000),
-    });
+    const res = await fetch(`https://api.peopledatalabs.com/v5/person/enrich?${qs}`, { signal: AbortSignal.timeout(10_000) });
     if (!res.ok) { const t = await res.text(); return { ...empty, elapsed_ms: Date.now() - start, skipped_reason: `PDL ${res.status}: ${t.slice(0, 200)}` }; }
     const data = await res.json();
     return {
@@ -241,7 +283,7 @@ async function enrichWithPDL(name: string, location: string, linkedinUrl: string
 }
 
 // ─── No Ghost Lead Validation ──────────────────────────────────
-function hasActionableContact(data: { linkedin_url?: string | null; facebook_url?: string | null; email?: string | null; phone?: string | null; business_phone?: string | null; mobile_phone?: string | null; personal_email?: string | null }): boolean {
+function hasActionableContact(data: Record<string, any>): boolean {
   return !!(data.linkedin_url || data.facebook_url || data.email || data.phone || data.business_phone || data.mobile_phone || data.personal_email);
 }
 
@@ -255,59 +297,75 @@ serve(async (req) => {
 
   const totalStart = Date.now();
 
-  // Hardcoded test candidate — a Michigan RN
-  const testCandidate = {
-    first_name: "Sarah",
-    last_name: "Johnson",
-    title: "Registered Nurse",
-    city: "Detroit",
-    state: "MI",
-    license_number: "4301999999", // placeholder
-  };
+  // Parse industry_type from body (defaults to healthcare)
+  let industryType: IndustryType = "healthcare";
+  try {
+    const body = await req.json();
+    if (body?.industry_type === "industrial_trades") industryType = "industrial_trades";
+  } catch {
+    // No body or invalid JSON — use default
+  }
 
-  console.log(`[test-data-pipeline] Starting full pipeline for ${testCandidate.first_name} ${testCandidate.last_name}...`);
+  const candidate = industryType === "healthcare" ? HEALTHCARE_CANDIDATE : INDUSTRIAL_CANDIDATE;
+  console.log(`[test-data-pipeline] Industry: ${industryType} | Candidate: ${candidate.first_name} ${candidate.last_name} (${candidate.title})`);
 
-  // Run NPI and Nursys in parallel (independent APIs)
-  const [npiResult, nursysResult] = await Promise.all([
-    enrichViaNPI(testCandidate.first_name, testCandidate.last_name, testCandidate.state),
-    enrichViaNursys(testCandidate.license_number),
-  ]);
+  // ─── Phase 1: Government Database (industry-routed) ────────
+  let govResult: GovDataResult;
+  let nursysResult: NursysResult | null = null;
 
-  console.log(`[NPI] ${npiResult.elapsed_ms}ms — NPI: ${npiResult.npi}, Phone: ${npiResult.business_phone}`);
-  console.log(`[Nursys] ${nursysResult.elapsed_ms}ms — ${nursysResult.skipped_reason || nursysResult.license_status}`);
+  if (industryType === "healthcare") {
+    // Healthcare: NPI + Nursys in parallel
+    const [npi, nursys] = await Promise.all([
+      enrichViaNPI(candidate.first_name, candidate.last_name, candidate.state),
+      enrichViaNursys(candidate.license_number || ""),
+    ]);
+    govResult = npi;
+    nursysResult = nursys;
+    console.log(`[NPI] ${govResult.elapsed_ms}ms — ID: ${govResult.license_id}, Phone: ${govResult.business_phone}`);
+    console.log(`[Nursys] ${nursysResult.elapsed_ms}ms — ${nursysResult.skipped_reason || nursysResult.license_status}`);
+  } else {
+    // Industrial: Michigan LARA/MIOSHA
+    govResult = await queryMichiganLARA(candidate.first_name, candidate.last_name, candidate.state);
+    console.log(`[LARA] ${govResult.elapsed_ms}ms — ${govResult.skipped_reason || govResult.license_id}`);
+  }
 
-  // Sonar Deep Dork
+  // ─── Phase 2: Sonar Deep Dork (universal) ──────────────────
   const sonarResult = await enrichViaSonar(
-    `${testCandidate.first_name} ${testCandidate.last_name}`,
-    testCandidate.title,
-    testCandidate.city,
+    `${candidate.first_name} ${candidate.last_name}`,
+    candidate.title,
+    candidate.city,
   );
   console.log(`[Sonar] ${sonarResult.elapsed_ms}ms — LinkedIn: ${sonarResult.linkedin_url}, Email: ${sonarResult.email}`);
 
-  // PDL skip-trace (only if Sonar found LinkedIn or we have a name)
+  // ─── Phase 3: PDL Skip-Trace (universal) ───────────────────
   const pdlResult = await enrichWithPDL(
-    `${testCandidate.first_name} ${testCandidate.last_name}`,
-    `${testCandidate.city}, ${testCandidate.state}`,
+    `${candidate.first_name} ${candidate.last_name}`,
+    `${candidate.city}, ${candidate.state}`,
     sonarResult.linkedin_url,
   );
   console.log(`[PDL] ${pdlResult.elapsed_ms}ms — ${pdlResult.skipped_reason || `Mobile: ${pdlResult.mobile_phone}`}`);
 
-  // Merge all data
-  const merged = {
-    name: `${testCandidate.first_name} ${testCandidate.last_name}`,
-    title: testCandidate.title,
-    city: testCandidate.city,
-    // NPI
-    npi: npiResult.npi,
-    business_phone: npiResult.business_phone,
-    taxonomy_code: npiResult.taxonomy_code,
-    taxonomy_desc: npiResult.taxonomy_desc,
-    practice_address: npiResult.practice_address,
-    // Nursys
-    license_status: nursysResult.license_status,
-    multistate: nursysResult.multistate,
-    discipline: nursysResult.discipline,
-    nursys_skipped: nursysResult.skipped_reason,
+  // ─── Merge all data ────────────────────────────────────────
+  const merged: Record<string, any> = {
+    name: `${candidate.first_name} ${candidate.last_name}`,
+    title: candidate.title,
+    city: candidate.city,
+    industry_type: industryType,
+    // Government data (normalized)
+    gov_source: govResult.source,
+    license_id: govResult.license_id,
+    business_phone: govResult.business_phone,
+    license_type: govResult.license_type,
+    license_desc: govResult.license_desc,
+    practice_address: govResult.practice_address,
+    gov_skipped: govResult.skipped_reason,
+    // Nursys (healthcare only)
+    ...(nursysResult ? {
+      license_status: nursysResult.license_status,
+      multistate: nursysResult.multistate,
+      discipline: nursysResult.discipline,
+      nursys_skipped: nursysResult.skipped_reason,
+    } : {}),
     // Sonar
     linkedin_url: sonarResult.linkedin_url,
     facebook_url: sonarResult.facebook_url,
@@ -323,29 +381,31 @@ serve(async (req) => {
     pdl_skipped: pdlResult.skipped_reason,
   };
 
-  // No Ghost Lead check
   const isActionable = hasActionableContact(merged);
 
   const result = {
+    industry_type: industryType,
     candidate: merged,
     is_actionable: isActionable,
     ghost_lead_dropped: !isActionable,
     timing: {
-      npi_ms: npiResult.elapsed_ms,
-      nursys_ms: nursysResult.elapsed_ms,
+      gov_ms: govResult.elapsed_ms,
+      ...(nursysResult ? { nursys_ms: nursysResult.elapsed_ms } : {}),
       sonar_ms: sonarResult.elapsed_ms,
       pdl_ms: pdlResult.elapsed_ms,
       total_ms: Date.now() - totalStart,
     },
     api_status: {
-      npi: npiResult.npi ? "✅ Found" : "❌ No match",
-      nursys: nursysResult.skipped_reason ? `⏭ ${nursysResult.skipped_reason}` : (nursysResult.license_status ? "✅ Found" : "❌ No match"),
+      gov_database: govResult.skipped_reason ? `⏭ ${govResult.skipped_reason}` : (govResult.license_id ? "✅ Found" : "❌ No match"),
+      ...(nursysResult ? {
+        nursys: nursysResult.skipped_reason ? `⏭ ${nursysResult.skipped_reason}` : (nursysResult.license_status ? "✅ Found" : "❌ No match"),
+      } : {}),
       sonar: sonarResult.linkedin_url || sonarResult.email ? "✅ Found data" : "❌ No matches",
       pdl: pdlResult.skipped_reason ? `⏭ ${pdlResult.skipped_reason}` : (pdlResult.mobile_phone ? "✅ Found" : "❌ No match"),
     },
   };
 
-  console.log(`[test-data-pipeline] Complete in ${result.timing.total_ms}ms. Actionable: ${isActionable}`);
+  console.log(`[test-data-pipeline] Complete in ${result.timing.total_ms}ms. Industry: ${industryType}. Actionable: ${isActionable}`);
 
   return new Response(JSON.stringify(result, null, 2), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
