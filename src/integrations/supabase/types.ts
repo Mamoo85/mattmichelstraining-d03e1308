@@ -4325,6 +4325,9 @@ export type Database = {
           stripe_subscription_id: string | null
           target_roles: string[] | null
           target_zip_codes: string[] | null
+          trial_ends_at: string | null
+          trial_started_at: string | null
+          trial_status: string | null
         }
         Insert: {
           active?: boolean | null
@@ -4341,6 +4344,9 @@ export type Database = {
           stripe_subscription_id?: string | null
           target_roles?: string[] | null
           target_zip_codes?: string[] | null
+          trial_ends_at?: string | null
+          trial_started_at?: string | null
+          trial_status?: string | null
         }
         Update: {
           active?: boolean | null
@@ -4357,6 +4363,9 @@ export type Database = {
           stripe_subscription_id?: string | null
           target_roles?: string[] | null
           target_zip_codes?: string[] | null
+          trial_ends_at?: string | null
+          trial_started_at?: string | null
+          trial_status?: string | null
         }
         Relationships: []
       }
