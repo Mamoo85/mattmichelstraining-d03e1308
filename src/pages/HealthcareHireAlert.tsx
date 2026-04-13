@@ -117,7 +117,7 @@ export default function HealthcareHireAlert() {
         title="Healthcare Staffing Monitor | Stop Paying Staffing Agencies"
         description="Get texted the moment a new CNA, RN, or LPN clears their state license in your county. Hire directly — skip the $80/hr staffing agency markup."
       />
-      <DWAStickyNav />
+      <DWAStickyNav ctaLabel="Start Monitoring" ctaHref="#signup" />
 
       {/* Hero */}
       <section style={{ background: BG, padding: "100px 24px 60px", textAlign: "center" }}>

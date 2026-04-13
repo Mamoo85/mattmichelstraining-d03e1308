@@ -273,6 +273,7 @@ const RecallAlertService = lazyRetry(() => import("./pages/RecallAlertService"))
 const PermitWatch = lazyRetry(() => import("./pages/PermitWatch"));
 const HireAlert = lazyRetry(() => import("./pages/HireAlert"));
 const HireAlertTrial = lazyRetry(() => import("./pages/HireAlertTrial"));
+const HealthcareHireAlert = lazyRetry(() => import("./pages/HealthcareHireAlert"));
 const WebsiteSpeedAudits = lazyRetry(() => import("./pages/WebsiteSpeedAudits"));
 const CrimeDigest = lazyRetry(() => import("./pages/CrimeDigest"));
 const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
