@@ -406,8 +406,8 @@ export default function AdminHireAlertClients() {
           <p className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
             <Clock size={12} /> Recent Scanner Runs
           </p>
-          <div className="rounded-2xl border border-white/8 overflow-hidden">
-            <table className="w-full text-xs">
+          <div className="rounded-2xl border border-white/8 overflow-x-auto">
+            <table className="w-full text-xs" style={{ minWidth: 500 }}>
               <thead>
                 <tr className="border-b border-white/8 bg-white/3">
                   <th className="text-left px-4 py-3 text-white/40 font-semibold">Run At</th>
@@ -455,8 +455,8 @@ export default function AdminHireAlertClients() {
           <p className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
             <Users size={12} /> Recent Candidates
           </p>
-          <div className="rounded-2xl border border-white/8 overflow-hidden">
-            <table className="w-full text-xs">
+          <div className="rounded-2xl border border-white/8 overflow-x-auto">
+            <table className="w-full text-xs" style={{ minWidth: 500 }}>
               <thead>
                 <tr className="border-b border-white/8 bg-white/3">
                   <th className="text-left px-4 py-3 text-white/40 font-semibold">Name</th>
