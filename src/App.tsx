@@ -125,6 +125,7 @@ const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
 const ContractorROIReport = lazyRetry(() => import("./pages/ContractorROIReport"));
 const DeadLeadIntake = lazyRetry(() => import("./pages/DeadLeadIntake"));
+const GetQuote = lazyRetry(() => import("./pages/GetQuote"));
 const ContractorTerritory = lazyRetry(() => import("./pages/ContractorTerritory"));
 const ClaimLead = lazyRetry(() => import("./pages/ClaimLead"));
 const LeadUnlocked = lazyRetry(() => import("./pages/LeadUnlocked"));
@@ -537,6 +538,8 @@ const App = () => (
                     <Route path="/contractor-leads" element={<ContractorLeads />} />
                     <Route path="/roi" element={<ContractorROIReport />} />
                     <Route path="/dead-lead-intake" element={<DeadLeadIntake />} />
+                    <Route path="/get-quote/:trade/:city" element={<GetQuote />} />
+                    <Route path="/get-quote/:trade" element={<GetQuote />} />
                     <Route path="/contractors/:slug" element={<ContractorTerritory />} />
                     <Route path="/claim-lead" element={<ClaimLead />} />
                     <Route path="/lead-unlocked" element={<LeadUnlocked />} />

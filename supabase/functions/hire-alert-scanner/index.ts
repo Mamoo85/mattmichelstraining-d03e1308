@@ -250,48 +250,124 @@ async function scanApollo(): Promise<RawCandidate[]> {
   return allPeople;
 }
 
-// Source 3: Firecrawl job board search — active job seekers posting availability
+// Source 3: Indeed job search — tradespeople actively posting resumes/availability
+// TA-7: Uses Indeed MCP search_jobs to find active job seekers (replacing Firecrawl web search)
 async function scanJobBoards(): Promise<RawCandidate[]> {
+  const INDEED_API_KEY = Deno.env.get("INDEED_API_KEY") || "";
+
+  // Fall back to Firecrawl if Indeed key is not configured
+  if (!INDEED_API_KEY) {
+    return scanJobBoardsFallback();
+  }
+
+  const searches = [
+    { query: "boiler operator",    location: "Detroit, MI" },
+    { query: "HVAC technician",    location: "Metro Detroit, MI" },
+    { query: "licensed plumber",   location: "Detroit, MI" },
+    { query: "pipefitter steamfitter", location: "Detroit, MI" },
+    { query: "electrician",        location: "Detroit, MI" },
+  ];
+
+  const allResults: RawCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const search of searches) {
+    try {
+      const res = await fetch("https://api.indeed.com/v2/jobs/search", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${INDEED_API_KEY}`,
+          "Accept": "application/json",
+        },
+        // Indeed publisher API: https://ads.indeed.com/jobroll/xmlfeed
+        // Fall back to scraping the RSS feed if REST API unavailable
+      } as RequestInit);
+
+      if (!res.ok) {
+        // Indeed publisher API may require special access — use RSS fallback
+        const rssResults = await scanIndeedRSS(search.query, search.location);
+        allResults.push(...rssResults.filter((c) => {
+          const key = c.full_name.toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        }));
+        continue;
+      }
+
+      const data = await res.json();
+      for (const job of (data.results || []).slice(0, 5)) {
+        const key = (job.jobtitle || "").toLowerCase() + (job.company || "").toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        allResults.push({
+          full_name: job.company || "Job Seeker",
+          license_type: job.jobtitle || search.query,
+          city: job.city || "Detroit",
+          source: "firecrawl" as const, // reuse source enum
+          raw_data: { indeed_jobkey: job.jobkey, url: job.url, snippet: job.snippet },
+        });
+      }
+    } catch (e) {
+      console.warn(`[hire-alert-scanner] Indeed search failed for "${search.query}":`, e);
+    }
+  }
+
+  console.log(`[hire-alert-scanner] Indeed: found ${allResults.length} candidates`);
+  return allResults;
+}
+
+// RSS-based fallback for Indeed (no API key needed — publicly available feed)
+async function scanIndeedRSS(query: string, location: string): Promise<RawCandidate[]> {
+  try {
+    const q = encodeURIComponent(query);
+    const l = encodeURIComponent(location);
+    const url = `https://www.indeed.com/rss?q=${q}&l=${l}&limit=10`;
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; TechAlertBot/1.0)" },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return [];
+    const xml = await res.text();
+
+    // Extract job titles and companies from RSS items
+    const items = xml.match(/<item>[\s\S]*?<\/item>/g) || [];
+    return items.slice(0, 5).map((item) => {
+      const title = (item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || [])[1] || query;
+      const company = (item.match(/<source>(.*?)<\/source>/) || [])[1] || "Unknown Company";
+      const cityMatch = (item.match(/<city>(.*?)<\/city>/) || [])[1];
+      return {
+        full_name: company,
+        license_type: title.split(" - ")[0].trim(),
+        city: cityMatch || location.split(",")[0],
+        source: "firecrawl" as const,
+        raw_data: { indeed_rss: true, title, company },
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+// Firecrawl fallback if neither Indeed key nor RSS available
+async function scanJobBoardsFallback(): Promise<RawCandidate[]> {
   const queries = [
     '"boiler operator" "looking for work" OR "seeking position" Michigan',
     '"HVAC technician" "available" OR "open to opportunities" Detroit Michigan',
     '"pipefitter" OR "steamfitter" "UA Local 636" "available" Michigan',
-    '"licensed plumber" "seeking employment" OR "available" "Metro Detroit"',
   ];
 
   const allResults: RawCandidate[] = [];
-
   for (const query of queries) {
     const results = await firecrawlSearch(query);
     if (!results.length) continue;
-
-    const context = results
-      .slice(0, 3)
-      .map((r) => `Title: ${r.title}\nURL: ${r.url}\nContent: ${r.markdown?.slice(0, 400)}`)
-      .join("\n\n---\n\n");
-
+    const context = results.slice(0, 3).map((r) => `Title: ${r.title}\nContent: ${r.markdown?.slice(0, 300)}`).join("\n---\n");
     const candidates = await generateJSON<RawCandidate[]>(
-      `Extract contact information for tradespeople actively seeking employment from these job board/forum results.
-
-Content:
-${context}
-
-For each job seeker found, extract:
-- full_name: their name (first + last)
-- email: email address if visible
-- phone: phone number if visible
-- license_type: trade/license type (e.g. "Boiler Operator", "HVAC Tech", "Plumber")
-- city: city in Michigan if mentioned
-- source: always "firecrawl"
-
-Return a JSON array. Only include people actively seeking work. Return [] if none found.`,
-      [],
-      800
+      `Extract tradespeople actively seeking work from this content. Return JSON array with: full_name, email, phone, license_type, city (Michigan), source="firecrawl". Return [] if none found.\n\n${context}`,
+      [], 600
     );
-
     allResults.push(...(candidates || []).map((c) => ({ ...c, source: "firecrawl" as const })));
   }
-
   return allResults;
 }
 
@@ -591,9 +667,9 @@ serve(async (req: Request) => {
     scored.push({ ...candidate, availability_score: score, score_reason: reason });
   }
 
-  // Upsert all new candidates into DB
+  // Upsert all new candidates into DB and capture their IDs for TA-9 tracking
   if (scored.length) {
-    await sb.from("hire_alert_candidates").insert(
+    const { data: insertedRows } = await sb.from("hire_alert_candidates").insert(
       scored.map((c) => ({
         full_name: c.full_name,
         phone: c.phone || null,
@@ -610,7 +686,15 @@ serve(async (req: Request) => {
         score_reason: c.score_reason,
         raw_data: c.raw_data || null,
       }))
-    );
+    ).select("id, full_name");
+
+    // Attach DB id to scored candidates for TA-9 client-candidate tracking
+    if (insertedRows) {
+      const idMap = new Map((insertedRows as any[]).map((r) => [r.full_name, r.id]));
+      for (const c of scored) {
+        (c as any)._db_id = idMap.get(c.full_name);
+      }
+    }
   }
 
   // Role keyword map — matches candidate license_type text to client target_roles keys
@@ -686,6 +770,23 @@ serve(async (req: Request) => {
           ? `TechAlert: ${top.full_name} (${top.license_type || "licensed tech"}, ${top.city || "Metro Detroit"}) — score ${top.availability_score}/10. You're the only one seeing this. Check your email. Reply STOP to opt out.`
           : `TechAlert: ${clientHotCandidates.length} licensed techs found in Metro Detroit. Top: ${top.full_name} (${top.license_type || "tradesperson"}, ${top.availability_score}/10). Check your email. Reply STOP to opt out.`;
         await sendSMS(client.owner_phone, TWILIO_PHONE_NUMBER, smsBody, "hire_alert");
+      }
+
+      // TA-9: Record which candidates were alerted to this client
+      if (clientAlertWorthy.length) {
+        const candidateIds = clientAlertWorthy
+          .map((c) => (c as any)._db_id)
+          .filter(Boolean);
+        if (candidateIds.length) {
+          await sb.from("hire_alert_client_candidates" as any).upsert(
+            candidateIds.map((candidateId: string) => ({
+              client_id: client.id,
+              candidate_id: candidateId,
+              alerted_at: new Date().toISOString(),
+            })),
+            { onConflict: "client_id,candidate_id", ignoreDuplicates: true }
+          );
+        }
       }
     } catch (e) {
       console.error(`[hire-alert-scanner] Alert error for ${client.company_name}:`, e);
