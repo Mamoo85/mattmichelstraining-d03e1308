@@ -108,14 +108,14 @@ export default function AdminSimulationSuite() {
     s === "ok" ? "#22c55e" : s === "error" ? "#ef4444" : "#f59e0b";
 
   return (
-    <div style={{ padding: "28px 0", color: "#e2e8f0" }}>
+    <div style={{ padding: "20px 12px", color: "#e2e8f0" }}>
       <p style={{ color: "#00d4ff", fontSize: 11, fontWeight: 800, letterSpacing: 3, textTransform: "uppercase", margin: "0 0 6px" }}>
         ADMIN TOOLS
       </p>
       <h2 style={{ color: "#fff", fontSize: 22, fontWeight: 800, margin: "0 0 28px" }}>Simulation Suite</h2>
 
       {/* Section A — Cron Triggers */}
-      <div style={{ background: "#0f2342", border: "1px solid #1e3a5f", borderRadius: 10, padding: "22px 24px", marginBottom: 20 }}>
+      <div style={{ background: "#0f2342", border: "1px solid #1e3a5f", borderRadius: 10, padding: "18px 16px", marginBottom: 20 }}>
         <p style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", margin: "0 0 16px" }}>
           CRON TRIGGERS
         </p>
@@ -144,7 +144,7 @@ export default function AdminSimulationSuite() {
       </div>
 
       {/* Section B — Pipe Tests */}
-      <div style={{ background: "#0f2342", border: "1px solid #1e3a5f", borderRadius: 10, padding: "22px 24px", marginBottom: 20 }}>
+      <div style={{ background: "#0f2342", border: "1px solid #1e3a5f", borderRadius: 10, padding: "18px 16px", marginBottom: 20 }}>
         <p style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", margin: "0 0 16px" }}>
           PIPE TESTS
         </p>

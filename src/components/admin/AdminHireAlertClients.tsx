@@ -337,7 +337,7 @@ export default function AdminHireAlertClients() {
       {editClient && <ClientModal existing={editClient} onClose={() => setEditClient(undefined)} onSaved={load} />}
 
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="space-y-3">
         <div>
           <h2 className="text-white text-xl font-black flex items-center gap-2">
             <Bell size={20} className="text-amber-400" />
@@ -345,7 +345,7 @@ export default function AdminHireAlertClients() {
           </h2>
           <p className="text-white/40 text-sm mt-0.5">Manage subscribers and monitor scanner runs.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={load} className="border-white/15 text-white/60 hover:text-white">
             <RefreshCw size={13} className="mr-1" /> Refresh
           </Button>
@@ -406,8 +406,8 @@ export default function AdminHireAlertClients() {
           <p className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
             <Clock size={12} /> Recent Scanner Runs
           </p>
-          <div className="rounded-2xl border border-white/8 overflow-hidden">
-            <table className="w-full text-xs">
+          <div className="rounded-2xl border border-white/8 overflow-x-auto">
+            <table className="w-full text-xs" style={{ minWidth: 500 }}>
               <thead>
                 <tr className="border-b border-white/8 bg-white/3">
                   <th className="text-left px-4 py-3 text-white/40 font-semibold">Run At</th>
@@ -455,8 +455,8 @@ export default function AdminHireAlertClients() {
           <p className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
             <Users size={12} /> Recent Candidates
           </p>
-          <div className="rounded-2xl border border-white/8 overflow-hidden">
-            <table className="w-full text-xs">
+          <div className="rounded-2xl border border-white/8 overflow-x-auto">
+            <table className="w-full text-xs" style={{ minWidth: 500 }}>
               <thead>
                 <tr className="border-b border-white/8 bg-white/3">
                   <th className="text-left px-4 py-3 text-white/40 font-semibold">Name</th>

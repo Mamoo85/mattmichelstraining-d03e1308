@@ -89,15 +89,59 @@ async function scrapeEmail(websiteUrl: string): Promise<string | null> {
     const res = await fetch(websiteUrl, { signal: controller.signal, headers: { "User-Agent": "Mozilla/5.0" } });
     if (!res.ok) return null;
     const html = await res.text();
+
+    // Extract the website's own domain for preference matching
+    let siteDomain = "";
+    try { siteDomain = new URL(websiteUrl).hostname.replace(/^www\./, "").toLowerCase(); } catch {}
+
+    const BLOCKLIST = [
+      "example.com","google.com","facebook.com","wix.com","squarespace.com","sentry.io","w3.org",
+      "wixpress.com","sentry-next","domain.com","yoursite.com","yourdomain.com","test.com",
+      "placeholder","wordpress.com","wordpress.org","github.com","jsdelivr","googleapis.com",
+      "gstatic.com","cloudflare","schema.org","gravatar.com","fontawesome","astigmatic.com",
+      "impallari","googleusercontent.com","creativecommons.org","mozilla.org","apple.com",
+      "microsoft.com","twitter.com","instagram.com","linkedin.com","youtube.com","tiktok.com",
+      "pinterest.com","yelp.com","bbb.org","angieslist.com","homeadvisor.com","thumbtack.com",
+    ];
+
+    const BLOCKED_PREFIXES = [
+      "user@","admin@","test@","noreply@","no-reply@","webmaster@","postmaster@","info@example",
+      "support@example","name@","email@","someone@","nobody@","null@","root@","daemon@",
+    ];
+
     const emails = (html.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g) || [])
       .filter(e => {
         const l = e.toLowerCase();
-        return !["example.com","google.com","facebook.com","wix.com","squarespace.com","sentry.io","w3.org"].some(d => l.includes(d))
-          && !/\.(png|jpg|svg|js|css)$/i.test(l)
-          && l.length < 60 && l.length > 5
-          && /\.(com|net|org|biz|us)$/.test(l);
+        // Block known junk domains
+        if (BLOCKLIST.some(d => l.includes(d))) return false;
+        // Block file extensions
+        if (/\.(png|jpg|svg|js|css|gif|webp|woff|ttf|eot)$/i.test(l)) return false;
+        // Block unreasonable length
+        if (l.length > 60 || l.length < 6) return false;
+        // Block hash-like local parts (tracking pixels, CSS fonts)
+        const localPart = l.split("@")[0];
+        if (localPart.length > 20 && /[0-9a-f]{8,}/.test(localPart)) return false;
+        // Block generic prefixes
+        if (BLOCKED_PREFIXES.some(p => l.startsWith(p))) return false;
+        // Must end with common TLD
+        if (!/\.(com|net|org|biz|us|co|io|info|email)$/.test(l)) return false;
+        return true;
       });
-    return emails[0] || null;
+
+    if (!emails.length) return null;
+
+    // Prefer emails matching the website's own domain
+    if (siteDomain) {
+      const domainMatch = emails.find(e => e.toLowerCase().endsWith(`@${siteDomain}`));
+      if (domainMatch) return domainMatch;
+    }
+
+    // Prefer common business prefixes
+    const businessPrefixes = ["info@","contact@","office@","hello@","sales@","service@","mail@"];
+    const bizMatch = emails.find(e => businessPrefixes.some(p => e.toLowerCase().startsWith(p)));
+    if (bizMatch) return bizMatch;
+
+    return emails[0];
   } catch { return null; }
 }
 
@@ -781,16 +825,17 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "Matt Michels <matt@notify.m2training.com>",
+            from: "Matt Michels <matt@detroitwebagent.com>",
             to: [email],
-            bcc: ["matthewmichels@gmail.com", "matthewmichels4@gmail.com"],
+            bcc: ["matthewmichels4@gmail.com"],
             subject,
             html,
           }),
         });
 
         if (!emailRes.ok) {
-          log("Email send failed", { name, email });
+          const errBody = await emailRes.text().catch(() => "no body");
+          log("Email send failed", { name, email, status: emailRes.status, error: errBody });
           continue;
         }
 
