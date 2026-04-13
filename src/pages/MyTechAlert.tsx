@@ -83,12 +83,6 @@ export default function MyTechAlert() {
   async function fetchData() {
     setLoading(true);
     try {
-      const { data: result, error: fnErr } = await supabase.functions.invoke("get-my-techalert", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        body: undefined,
-      });
-      // Edge functions via invoke don't support GET query params well, use fetch directly
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-my-techalert?token=${token}`;
       const res = await fetch(url, {
         headers: { "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
