@@ -25,7 +25,7 @@ const SPORTS_SCHEMA = {
     addressRegion: "MI",
     postalCode: "48230",
   },
-  telephone: "313-992-1219",
+  telephone: "313-806-4952",
   url: "https://mattmichelstraining.com",
   sport: ["Strength Training", "Youth Athletic Development", "Sports Performance"],
 };

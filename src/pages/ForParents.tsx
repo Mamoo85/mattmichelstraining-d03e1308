@@ -26,7 +26,7 @@ const LOCAL_BUSINESS_SCHEMA = {
     addressRegion: "MI",
     postalCode: "48230",
   },
-  telephone: "313-992-1219",
+  telephone: "313-806-4952",
   priceRange: "$19.99 - $149/mo",
   url: "https://mattmichelstraining.com",
   serviceType: "Youth Athletic Training",
@@ -94,7 +94,7 @@ const ForParents = () => (
             </Link>
           </Button>
           <Button variant="outline" asChild>
-            <a href="sms:3139921219" className="gap-2">
+            <a href="sms:3138064952" className="gap-2">
               <MessageSquare size={14} /> Text Matt
             </a>
           </Button>
@@ -210,10 +210,10 @@ const ForParents = () => (
           Schedule a free 15-minute call to discuss your athlete's goals, sport, and current training history.
         </p>
         <div className="flex flex-wrap justify-center gap-3">
-          <a href="tel:3139921219" className="inline-flex items-center gap-1.5 border border-border px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-foreground hover:border-primary/40 transition-all">
+          <a href="tel:3138064952" className="inline-flex items-center gap-1.5 border border-border px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-foreground hover:border-primary/40 transition-all">
             <Phone size={12} /> Call
           </a>
-          <a href="sms:3139921219" className="inline-flex items-center gap-1.5 border border-border px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-foreground hover:border-primary/40 transition-all">
+          <a href="sms:3138064952" className="inline-flex items-center gap-1.5 border border-border px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-foreground hover:border-primary/40 transition-all">
             <MessageSquare size={12} /> Text
           </a>
           <a href="mailto:matthewmichels4@gmail.com?subject=Youth%20Athlete%20Inquiry" className="inline-flex items-center gap-1.5 border border-border px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-foreground hover:border-primary/40 transition-all">
