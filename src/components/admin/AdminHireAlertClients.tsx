@@ -401,10 +401,10 @@ export default function AdminHireAlertClients() {
         <div className="flex items-center justify-center h-32">
           <div className="w-8 h-8 rounded-full border-2 border-amber-500/30 border-t-amber-500 animate-spin" />
         </div>
-      ) : clients.length === 0 ? (
+      ) : filteredClients.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/10 p-16 text-center">
           <Bell size={40} className="text-white/15 mx-auto mb-4" />
-          <p className="text-white/40 text-sm">No TechAlert clients yet.</p>
+          <p className="text-white/40 text-sm">{sectorFilter === "all" ? "No TechAlert clients yet." : `No ${sectorFilter} clients found.`}</p>
           <p className="text-white/25 text-xs mt-1">Run a $0 test checkout from the DWA Overview tab to seed one.</p>
           <Button onClick={() => setShowAdd(true)} className="mt-5 bg-orange-500 hover:bg-orange-600 text-white">
             <Plus size={14} className="mr-1.5" /> Add First Client
@@ -413,7 +413,7 @@ export default function AdminHireAlertClients() {
       ) : (
         <AnimatePresence>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {clients.map(c => (
+            {filteredClients.map(c => (
               <ClientCard key={c.id} client={c}
                 onEdit={() => setEditClient(c)}
                 onDelete={() => deleteClient(c.id, c.company_name)} />
