@@ -35,25 +35,30 @@ serve(async (req) => {
     // Find leads created in last 24h that haven't been notified
     const { data: unnotified } = await sb
       .from("contractor_leads")
-      .select(`
-        id, name, phone, email, message, project_type, created_at,
-        site_id,
-        contractor_lead_sites (trade, city, state, slug, active_contractor_id)
-      `)
+      .select("id, name, phone, email, message, project_type, created_at, site_id")
       .eq("status", "new")
       .is("notified_at", null)
+      .not("site_id", "is", null)
       .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
     if (!unnotified || unnotified.length === 0) {
+      console.log("[LEAD-NOTIFY] No unnotified leads with site_id found");
       return new Response(JSON.stringify({ notified: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    console.log(`[LEAD-NOTIFY] Found ${unnotified.length} unnotified leads`);
+
     let count = 0;
     for (const lead of unnotified) {
-      const site = (lead as any).contractor_lead_sites;
+      // Fetch site separately — nested joins don't resolve reliably
+      const { data: site } = await sb
+        .from("contractor_lead_sites")
+        .select("id, trade, city, state, slug, active_contractor_id")
+        .eq("id", lead.site_id)
+        .maybeSingle();
 
       if (!site?.active_contractor_id) {
-        console.log(`[LEAD-NOTIFY] No active contractor for lead ${lead.id}, skipping`);
+        console.log(`[LEAD-NOTIFY] No active contractor for site ${lead.site_id} on lead ${lead.id}, skipping`);
         continue;
       }
 
