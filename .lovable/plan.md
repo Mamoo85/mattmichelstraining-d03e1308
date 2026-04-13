@@ -1,86 +1,76 @@
 
 
-# FULL-STACK AUDIT + HEALTHCARE HIREALERT EXPANSION
+# Healthcare License Scanning — Gap Analysis & Fix Plan
 
-This plan covers three mandates in one pass: (1) the Golden Path re-trace, (2) the Nuclear 5-Layer audit, and (3) the Healthcare HireAlert strategic pivot.
+## What's Working ✅
+1. **Frontend** — `HireAlert.tsx` has CNA, RN, LPN, Director of Nursing in `ROLE_OPTIONS`
+2. **Healthcare Landing Page** — `HealthcareHireAlert.tsx` has CNA, RN, LPN, DON, Home Health Aide
+3. **Admin** — `AdminHireAlertClients.tsx` has all 5 healthcare roles in `ROLE_LABELS` + `HEALTHCARE_ROLES` filter
+4. **Database** — `hire_alert_clients.target_roles` is `text[]`, accepts any string — no migration needed
 
----
+## What's Broken 🔴
 
-## GOLDEN PATH + NUCLEAR AUDIT RESULTS
+### Gap 1: Scanner ROLE_KEYWORDS missing ALL healthcare roles
+**File:** `supabase/functions/hire-alert-scanner/index.ts`, line 759-768
 
-### PATH 1: Homeowner Quote (GetQuote.tsx) — TRACE SUCCESSFUL
-- All inputs exist: name, phone, email, message, contact_preference (call/text/email)
-- `contact_preference` properly captured and inserted to DB (line 76)
-- Submit button has `disabled={state === "submitting"}` + shows "Sending..." text (line 229)
-- Clear Success UI at line 90-108 (full-screen confirmation)
-- Error state renders with phone number fallback (line 220-222)
-- No null-reference risks — all state properly initialized
+The `ROLE_KEYWORDS` map only has trades (boiler, HVAC, plumber, etc.). Healthcare roles `cna`, `rn`, `lpn`, `director_of_nursing`, `home_health_aide` are completely missing.
 
-### PATH 2: Contractor Lead Unlock (PPL) — TRACE SUCCESSFUL
-- `ClaimLead.tsx`: proper loading/locked/claimed/error states, `disabled={loading}` on button (line 138)
-- Stripe checkout via `create-contractor-ppl-checkout`, redirects via `window.location.href` (line 59)
-- `LeadUnlocked.tsx`: uses correct `VITE_SUPABASE_PUBLISHABLE_KEY` (lines 44-45) — FIXED in prior session
-- `get-lead-by-session` edge function: includes `contact_preference` in SELECT (line 50) and response (line 72) — FIXED in prior session
-- Polling logic works: up to 10 polls every 3s, graceful fallback to "Check Your SMS" on timeout
-- Webhook returns 500 on DB failure (line 2601) with `notifyMatt()` — FIXED in prior session
-- RLS on `contractor_lead_purchases`: locked to `service_role` + admin SELECT — FIXED in prior session
+**Impact:** When a healthcare client subscribes with `target_roles: ["cna", "rn"]`, the `candidateMatchesRoles()` function falls back to `(ROLE_KEYWORDS[role] || [role])` — meaning it tries to match the literal string `"cna"` against candidate `license_type`. This *might* partially work if the scraped `license_type` contains "cna", but it won't match "Certified Nursing Assistant", "Nurse Aide", etc.
 
-### PATH 3: TechAlert Signup (HireAlert.tsx) — TRACE SUCCESSFUL
-- Email + role validation before checkout (lines 95-102)
-- `disabled={loading}` implicit via `setLoading(true)` before invoke (line 103)
-- Success URL: `/hire-alert?success=1` — handled by `isSuccess` branch (line 62-86)
-- Success UI: clean confirmation screen with "Your hiring advantage starts tomorrow at 7am"
-- No data fetch needed on success — static confirmation
+**Fix:** Add healthcare entries to `ROLE_KEYWORDS`:
+```
+cna: ["cna", "certified nursing assistant", "nurse aide", "nursing assistant"]
+rn: ["rn", "registered nurse"]
+lpn: ["lpn", "licensed practical nurse", "practical nurse"]
+director_of_nursing: ["director of nursing", "don", "nursing director"]
+home_health_aide: ["home health aide", "home health", "hha"]
+```
 
-### PATH 4: Admin Dashboard — TRACE SUCCESSFUL
-- Sidebar uses Shadcn components with proper routing
-- VisitorIntelFeed reads from `crm_visitor_events` — tables exist, RLS proper
+### Gap 2: Apollo search titles missing healthcare roles
+**File:** `supabase/functions/hire-alert-scanner/index.ts`, line 190-199
 
----
+`tradeTitles` array only has trades — no CNA, RN, LPN, etc. Apollo will never find healthcare candidates.
 
-## CRITICAL VULNERABILITY FOUND
+**Fix:** Add healthcare titles to `tradeTitles`:
+```
+"Certified Nursing Assistant", "CNA", "Registered Nurse", "LPN", "Licensed Practical Nurse", "Home Health Aide"
+```
 
-### FieldDesk Missing Success Confirmation — SEVERITY: HIGH
+### Gap 3: MIOSHA scraper has zero healthcare queries
+**File:** `supabase/functions/miosha-license-scraper/index.ts`, lines 22-41
 
-**File:** `src/pages/FieldServiceManagement.tsx`
-**Failure:** Stripe checkout `success_url` is `/field-service?success=1` (confirmed in `create-field-service-checkout/index.ts` line 75). But `FieldServiceManagement.tsx` never imports `useSearchParams` and has zero handling for the `success=1` parameter. The contractor pays $199/mo, gets redirected, and sees the same marketing page with no confirmation — they think payment failed.
+`TRADE_QUERIES` only has Boiler/HVAC/Plumber/Electrician. No nursing license queries.
 
-**Fix:** Add `useSearchParams` import, read `success` param, render a confirmation screen (matching the pattern in `HireAlert.tsx` and `MissedCallSaaS.tsx`).
+**Fix:** Add 2 healthcare queries:
+- "Search Michigan LARA licensing database for recently licensed CNAs and certified nursing assistants..."
+- "Search Michigan LARA licensing database for recently licensed RNs and LPNs..."
 
----
+### Gap 4: `home_health_aide` missing from HireAlert.tsx ROLE_OPTIONS
+The healthcare landing page has it, but the main TechAlert signup at `/hire-alert` does NOT offer `home_health_aide` as a selectable role. A healthcare client going through the main page can't select it.
 
-## HEALTHCARE HIREALERT EXPANSION
+**Fix:** Add `{ key: "home_health_aide", label: "Home Health Aide" }` to `ROLE_OPTIONS` in `HireAlert.tsx`.
 
-### Phase 1: Backend — No Migration Needed
-The `hire_alert_clients.target_roles` column is already `text[]` and can accept any role string. The scanner already has `CNA`, `LPN`, `RN`, and `home_health_aide` in `ROLE_KEYWORDS` (confirmed in code). The BPL scanner already downloads nursing license data. No new tables or columns required.
+### Gap 5: `pressure_vessel` and `industrial_mechanic` missing from Admin ROLE_LABELS
+Minor — these trade roles exist in the frontend signup but not in the admin label map. Admin would show raw keys.
 
-### Phase 2: Admin Panel
-Add a healthcare filter/view within the existing `AdminHireAlertClients.tsx` — a toggle or tab to filter clients by healthcare roles (`CNA`, `RN`, `LPN`, `Director of Nursing`). No new route needed — it fits inside the existing TechAlert admin.
+**Fix:** Add `pressure_vessel: "PVI"` and `industrial_mechanic: "Ind. Mech"` to `ROLE_LABELS`.
 
-### Phase 3: Healthcare Landing Page
-Create `/hire-alert-healthcare` — a dedicated landing page targeting nursing home administrators and senior care facility managers. Anti-agency pitch: "Stop paying $80/hr to staffing agencies." Uses the same `create-hire-alert-checkout` edge function with healthcare-specific role presets.
+## Summary
 
-### Phase 4: No SMS rewrite needed
-The existing TechAlert SMS templates are role-agnostic — they include the candidate's name, trade/role, and city. "New CNA License cleared in Wayne County" will flow naturally from the existing template when the role is `CNA`.
+| Component | Trades | Healthcare | Status |
+|-----------|--------|------------|--------|
+| HireAlert.tsx (signup) | ✅ 8 roles | ⚠️ 4/5 (missing home_health_aide) | Fix |
+| HealthcareHireAlert.tsx | N/A | ✅ 5/5 | Good |
+| Admin ROLE_LABELS | ⚠️ missing 2 | ✅ 5/5 | Fix |
+| Scanner ROLE_KEYWORDS | ✅ 8 roles | ❌ 0/5 | **Critical** |
+| Apollo tradeTitles | ✅ 8 titles | ❌ 0/5 | **Critical** |
+| MIOSHA TRADE_QUERIES | ✅ 4 queries | ❌ 0 queries | **Critical** |
+| Database tables | ✅ | ✅ | Good |
 
----
+## Implementation (4 file edits)
 
-## IMPLEMENTATION PLAN
-
-### Step 1: Fix FieldDesk success void
-- Edit `src/pages/FieldServiceManagement.tsx`: add `useSearchParams`, check for `success=1`, render confirmation UI block before the marketing page
-
-### Step 2: Add healthcare roles to HireAlert role selector
-- Edit `src/pages/HireAlert.tsx`: add CNA, RN, LPN, Director of Nursing to `ROLE_OPTIONS` array
-
-### Step 3: Create Healthcare HireAlert landing page
-- Create `src/pages/HealthcareHireAlert.tsx` at route `/hire-alert-healthcare`
-- Anti-agency pitch copy, nursing home testimonials, premium Wall of Love section
-- Checkout calls same `create-hire-alert-checkout` with healthcare role presets
-- Add route to `App.tsx`
-
-### Step 4: Admin healthcare filter
-- Edit `AdminHireAlertClients.tsx`: add a healthcare/trades toggle filter on the client list
-
-**All prior audit fixes are confirmed deployed and correct. No regressions found. The only remaining issue is the FieldDesk success void.**
+1. **`hire-alert-scanner/index.ts`** — Add 5 healthcare entries to `ROLE_KEYWORDS` + add 6 healthcare titles to `tradeTitles`
+2. **`miosha-license-scraper/index.ts`** — Add 2 nursing license queries to `TRADE_QUERIES`
+3. **`HireAlert.tsx`** — Add `home_health_aide` to `ROLE_OPTIONS`
+4. **`AdminHireAlertClients.tsx`** — Add `pressure_vessel` and `industrial_mechanic` to `ROLE_LABELS`
 
