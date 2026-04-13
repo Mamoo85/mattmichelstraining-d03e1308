@@ -45,7 +45,7 @@ export default function YoungbloodMockupAlt1() {
 
       {/* Demo banner */}
       <div className="fixed top-0 left-0 right-0 z-[150] text-center py-2 px-4 text-xs font-bold tracking-widest" style={{ background:R, color:W }}>
-        REDESIGN CONCEPT · Matt Michels Web Design · 313.992.1219
+        REDESIGN CONCEPT · Matt Michels Web Design · 313.806.4952
       </div>
 
       {/* Design switcher */}
@@ -56,7 +56,7 @@ export default function YoungbloodMockupAlt1() {
             {a?`▶ ${l} — CURRENT`:l}
           </Link>
         ))}
-        <div style={{ color:"rgba(255,255,255,.3)", fontSize:10, marginTop:10 }}>Matt (313) 992-1219</div>
+        <div style={{ color:"rgba(255,255,255,.3)", fontSize:10, marginTop:10 }}>Matt (313) 806-4952</div>
       </div>
 
       {/* Header */}

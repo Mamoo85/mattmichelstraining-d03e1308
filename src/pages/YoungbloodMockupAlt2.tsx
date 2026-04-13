@@ -84,7 +84,7 @@ export default function YoungbloodMockupAlt2() {
 
       {/* Demo banner */}
       <div className="fixed top-0 left-0 right-0 z-[150] text-center py-2 px-4 text-xs font-bold tracking-widest" style={{ background: BLUE, color: WHITE }}>
-        REDESIGN CONCEPT · Matt Michels Web Design · 313.992.1219
+        REDESIGN CONCEPT · Matt Michels Web Design · 313.806.4952
       </div>
 
       {/* Header */}
@@ -440,7 +440,7 @@ export default function YoungbloodMockupAlt2() {
         <div style={{ maxWidth: 1200, margin: "40px auto 0", paddingTop: 24, borderTop: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ color: STEEL, fontSize: 12 }}>© 2026 Youngblood Automation Solutions. All rights reserved.</span>
           <a href="/manufacturing-web-design" style={{ color: STEEL, fontSize: 11, textDecoration: "none", letterSpacing: "0.06em" }}>
-            Site by M2 Web Design
+            Site by M² Web Design
           </a>
         </div>
       </section>

@@ -15,7 +15,7 @@ import { RevealSection } from "@/hooks/useInView";
 const solutions = [
   { icon: Wind, title: "Pneumatics", text: "Custom manifolds and electro-pneumatic panels featuring Emerson and SMC technology.", color: "#0ea5e9" },
   { icon: Droplets, title: "Hydraulics", text: "Mobile and industrial power units designed by H&P Technologies' core engineering team.", color: "#0ea5e9" },
-  { icon: Cpu, title: "Robotics", text: "Certified Universal Robots integrator specializing in machine tending and end-of-arm tooling.", color: "#22d3ee" },
+  { icon: Cpu, title: "Robotics", text: "Certified Universal Robots integrator specializing in machine tending and end-of-arm tooling.", color: "#f97316" },
   { icon: Eye, title: "Sensing", text: "Advanced vision and safety systems powered by SICK Sensor Intelligence.", color: "#0ea5e9" },
 ];
 
@@ -52,7 +52,7 @@ const stats = [
   { value: "60+", label: "Manufacturer Lines" },
 ];
 
-const glassCard = "bg-[#0a0a0f]/40 backdrop-blur-md border border-white/10";
+const glassCard = "bg-slate-900/40 backdrop-blur-md border border-white/10";
 
 /* ------------------------------------------------------------------ */
 /*  COMPONENT                                                          */
@@ -76,11 +76,11 @@ const YoungbloodMockup = () => {
   return (
     <div className="min-h-screen text-[#f1f5f9] antialiased" style={{ background: "#0a0f1a", fontFamily: "'Inter', sans-serif" }}>
       <Helmet>
-        <title>Youngblood Automation Redesign Concept | M2 Web Design Detroit</title>
-        <meta name="description" content="See how an industrial automation distributor website looks when redesigned by M2 Web Design. Enterprise-grade demo for Youngblood Automation." />
+        <title>Youngblood Automation Redesign Concept | M² Web Design Detroit</title>
+        <meta name="description" content="See how an industrial automation distributor website looks when redesigned by M² Web Design. Enterprise-grade demo for Youngblood Automation." />
         <link rel="canonical" href="https://www.mattmichelstraining.com/demo-youngblood" />
-        <meta property="og:title" content="Youngblood Automation Redesign | M2 Web Design Detroit" />
-        <meta property="og:description" content="Enterprise automation website redesign concept by M2 Web Design. Precision engineering meets modern web design." />
+        <meta property="og:title" content="Youngblood Automation Redesign | M² Web Design Detroit" />
+        <meta property="og:description" content="Enterprise automation website redesign concept by M² Web Design. Precision engineering meets modern web design." />
         <meta property="og:url" content="https://www.mattmichelstraining.com/demo-youngblood" />
         <meta property="og:type" content="website" />
       </Helmet>
@@ -96,7 +96,7 @@ const YoungbloodMockup = () => {
 
       {/* ── Demo Banner ── */}
       <div className="fixed top-0 left-0 right-0 z-[150] text-center py-2 px-4 text-xs font-bold tracking-widest" style={{ background: "#0ea5e9", color: "#0a0f1a" }}>
-        REDESIGN CONCEPT · Matt Michels Web Design · 313.992.1219
+        REDESIGN CONCEPT · Matt Michels Web Design · 313.806.4952
       </div>
 
       {/* ── Alt Design Switcher ── */}
@@ -115,15 +115,15 @@ const YoungbloodMockup = () => {
                 key={d.to}
                 to={d.to}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors w-full"
-                style={{ background: d.active ? "rgba(249,115,22,.15)" : "transparent", color: d.active ? "#22d3ee" : "rgba(255,255,255,.5)" }}
+                style={{ background: d.active ? "rgba(249,115,22,.15)" : "transparent", color: d.active ? "#f97316" : "rgba(255,255,255,.5)" }}
               >
-                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: d.active ? "#22d3ee" : "rgba(255,255,255,.2)" }} />
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: d.active ? "#f97316" : "rgba(255,255,255,.2)" }} />
                 {d.label}
               </Link>
             ))}
           </div>
           <div className="px-4 py-2.5 border-t" style={{ borderColor: "rgba(255,255,255,.07)" }}>
-            <a href="tel:3139921219" className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,.3)" }}>Matt — (313) 992-1219</a>
+            <a href="tel:3138064952" className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,.3)" }}>Matt — (313) 806-4952</a>
           </div>
         </div>
       </div>
@@ -161,7 +161,7 @@ const YoungbloodMockup = () => {
             <a href="tel:5867550200" className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold uppercase tracking-widest border rounded text-[#94a3b8] hover:text-white hover:border-white/30 transition-colors" style={{ borderColor: "rgba(255,255,255,.15)" }}>
               <Phone size={14} /> (586) 755-0200
             </a>
-            <a href="#contact" className="px-5 py-2 text-xs font-bold uppercase tracking-widest rounded transition-colors" style={{ background: "#22d3ee", color: "#0a0f1a" }}>
+            <a href="#contact" className="px-5 py-2 text-xs font-bold uppercase tracking-widest rounded transition-colors" style={{ background: "#f97316", color: "#0a0f1a" }}>
               Request a Quote
             </a>
           </div>
@@ -221,7 +221,7 @@ const YoungbloodMockup = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <a href="#solutions" className="px-8 py-4 text-sm font-bold uppercase tracking-widest rounded text-center transition-colors" style={{ background: "#22d3ee", color: "#0a0f1a" }}>
+              <a href="#solutions" className="px-8 py-4 text-sm font-bold uppercase tracking-widest rounded text-center transition-colors" style={{ background: "#f97316", color: "#0a0f1a" }}>
                 Explore Our Solutions
               </a>
               <a href="#contact" className="px-8 py-4 text-sm font-bold uppercase tracking-widest rounded text-center transition-colors border" style={{ borderColor: "#0ea5e9", color: "#0ea5e9" }}>
@@ -410,9 +410,9 @@ const YoungbloodMockup = () => {
       {/* ════════════════════════════════════════════════════════════ */}
       {/*  8. CASE STUDY TEASER                                       */}
       {/* ════════════════════════════════════════════════════════════ */}
-      <RevealSection className="py-28 px-6 bg-[#0a0a0f]/40">
+      <RevealSection className="py-28 px-6 bg-slate-900/40">
         <div className="max-w-5xl mx-auto text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] mb-6" style={{ color: "#22d3ee" }}>Case Study</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] mb-6" style={{ color: "#f97316" }}>Case Study</p>
           <blockquote className="yb-heading text-2xl sm:text-3xl lg:text-4xl leading-snug mb-12 text-white">
             "Youngblood replaced three separate vendor relationships with a single integrated pneumatic and hydraulic package — cutting our procurement cycle in half."
           </blockquote>
@@ -433,7 +433,7 @@ const YoungbloodMockup = () => {
       <RevealSection id="contact" className="py-28 px-6" style={{ borderTop: "1px solid rgba(255,255,255,.04)" }}>
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] mb-2" style={{ color: "#22d3ee" }}>Request a Quote</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] mb-2" style={{ color: "#f97316" }}>Request a Quote</p>
             <h2 className="yb-heading text-3xl sm:text-4xl mb-3 text-white">Talk to an Application Engineer</h2>
             <p className="text-sm mb-8" style={{ color: "#94a3b8" }}>Describe your application below and our engineering team will respond within one business day with sizing recommendations and pricing.</p>
             <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
@@ -492,7 +492,7 @@ const YoungbloodMockup = () => {
                 <label className="block text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#64748b" }}>Application Description</label>
                 <textarea placeholder="Describe your application, existing equipment, operating conditions, pressure/flow requirements, or any specs we should know…" rows={4} className="w-full rounded px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none resize-none bg-white/[0.04] border border-white/10 focus:border-[#0ea5e9]/40 transition-colors" />
               </div>
-              <button type="submit" className="w-full sm:w-auto px-10 py-4 text-sm font-bold uppercase tracking-widest rounded transition-opacity hover:opacity-90" style={{ background: "#22d3ee", color: "#0a0f1a" }}>
+              <button type="submit" className="w-full sm:w-auto px-10 py-4 text-sm font-bold uppercase tracking-widest rounded transition-opacity hover:opacity-90" style={{ background: "#f97316", color: "#0a0f1a" }}>
                 Submit RFQ
               </button>
             </form>
@@ -508,7 +508,7 @@ const YoungbloodMockup = () => {
               </div>
             </div>
             <div className={`p-6 rounded-xl ${glassCard}`}>
-              <p className="text-xs font-bold uppercase tracking-[0.15em] mb-2" style={{ color: "#22d3ee" }}>Legacy Portal</p>
+              <p className="text-xs font-bold uppercase tracking-[0.15em] mb-2" style={{ color: "#f97316" }}>Legacy Portal</p>
               <p className="text-sm mb-4" style={{ color: "#94a3b8" }}>Access 10,000+ parts, download 3D CAD models, and manage your account.</p>
               <a href="#" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest hover:gap-3 transition-all" style={{ color: "#0ea5e9" }}>
                 Enter Portal <ArrowRight size={14} />
