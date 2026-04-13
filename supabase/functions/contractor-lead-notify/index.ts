@@ -78,6 +78,43 @@ serve(async (req) => {
       if (isActiveSubscriber) {
         // ── SUBSCRIPTION CONTRACTOR: full contact info ──────────────────────
         if (contractor.email && RESEND_API_KEY) {
+          const tradeLabel = site?.trade || "service";
+          const messageBlock = lead.message
+            ? `<div style="background:#0d1f3c;border-left:3px solid #00d4ff;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:24px">
+                <p style="color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:2px;margin:0 0 8px;text-transform:uppercase">Message from homeowner</p>
+                <p style="color:#e2e8f0;font-size:14px;margin:0;line-height:1.6;font-style:italic">"${lead.message}"</p>
+               </div>`
+            : "";
+          const leadHtml = `<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#0a1628;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<div style="max-width:580px;margin:0 auto;background:#0a1628">
+  <div style="padding:22px 32px 16px;border-bottom:2px solid #00d4ff;text-align:center">
+    <div style="color:#ffffff;font-size:17px;font-weight:900;letter-spacing:2px">DETROIT <span style="color:#00d4ff">WEB AGENCY</span></div>
+    <div style="color:#00d4ff;font-size:9px;letter-spacing:4px;margin-top:4px;font-weight:600">EXCLUSIVE LEAD NOTIFICATION</div>
+  </div>
+  <div style="background:#00d4ff;padding:14px 32px;text-align:center">
+    <p style="margin:0;color:#0a1628;font-size:17px;font-weight:900;letter-spacing:0.5px">🔥 NEW ${tradeLabel.toUpperCase()} LEAD — EXCLUSIVE TO YOU</p>
+  </div>
+  <div style="padding:28px 32px">
+    <p style="color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:3px;margin:0 0 16px;text-transform:uppercase">Lead Details</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
+      <tr><td style="padding:10px 0;border-bottom:1px solid #1e3a5f;color:#64748b;font-size:13px;width:90px">Name</td><td style="padding:10px 0;border-bottom:1px solid #1e3a5f;color:#ffffff;font-weight:700;font-size:16px">${lead.name}</td></tr>
+      <tr><td style="padding:10px 0;border-bottom:1px solid #1e3a5f;color:#64748b;font-size:13px">Phone</td><td style="padding:10px 0;border-bottom:1px solid #1e3a5f"><a href="tel:${lead.phone}" style="color:#00d4ff;font-weight:700;font-size:16px;text-decoration:none">${lead.phone}</a></td></tr>
+      <tr><td style="padding:10px 0;border-bottom:1px solid #1e3a5f;color:#64748b;font-size:13px">Email</td><td style="padding:10px 0;border-bottom:1px solid #1e3a5f;color:#e2e8f0;font-size:14px">${lead.email || "—"}</td></tr>
+      <tr><td style="padding:10px 0;color:#64748b;font-size:13px">Project</td><td style="padding:10px 0;color:#e2e8f0;font-size:14px">${lead.project_type || "—"}</td></tr>
+    </table>
+    <div style="background:#0d1f3c;border:1px solid #00d4ff33;border-radius:10px;padding:20px 24px;margin-bottom:24px;text-align:center">
+      <p style="margin:0 0 6px;color:#e2e8f0;font-size:14px;font-weight:700">This lead is exclusive — they haven't been contacted by anyone else.</p>
+      <p style="margin:0 0 18px;color:#64748b;font-size:13px">Speed wins jobs. Call now.</p>
+      <a href="tel:${lead.phone}" style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:900;font-size:14px;padding:12px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.5px">CALL ${lead.name.split(" ")[0].toUpperCase()} NOW →</a>
+    </div>
+    ${messageBlock}
+  </div>
+  <div style="padding:18px 32px;border-top:1px solid #1e3a5f;text-align:center">
+    <p style="margin:0;color:#4a6fa5;font-size:12px">Detroit Web Agency · Grosse Pointe Park, MI · (313) 992-1219</p>
+    <p style="margin:5px 0 0;font-size:11px"><a href="https://detroitwebagent.com" style="color:#00d4ff;text-decoration:none">detroitwebagent.com</a></p>
+  </div>
+</div></body></html>`;
           await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
@@ -85,24 +122,8 @@ serve(async (req) => {
               from: "Detroit Web Agency <matt@detroitwebagent.com>",
               to: [contractor.email],
               bcc: ["matt@detroitwebagent.com"],
-              subject: `New ${site?.trade || "service"} lead — ${lead.name}`,
-              html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
-<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
-  <div style="background:#00d4ff;height:4px;"></div>
-  <div style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.9;">
-    <p><strong>🔥 New ${site?.trade || "service"} lead — exclusive to you.</strong></p>
-    <table style="border-collapse:collapse;width:100%;margin:16px 0;">
-      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Name</td><td style="padding:8px 0;font-weight:600;">${lead.name}</td></tr>
-      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Phone</td><td style="padding:8px 0;font-weight:600;"><a href="tel:${lead.phone}" style="color:#00d4ff;">${lead.phone}</a></td></tr>
-      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Email</td><td style="padding:8px 0;">${lead.email || "—"}</td></tr>
-      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Project</td><td style="padding:8px 0;">${lead.project_type || "—"}</td></tr>
-    </table>
-    <p style="color:#64748b;font-size:13px;">Call them fast — speed wins jobs.</p>
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:13px;color:#334155;">
-      <strong>Matt Michels</strong> · Detroit Web Agency · (313) 992-1219
-    </div>
-  </div>
-</div></body></html>`,
+              subject: `🔥 New ${tradeLabel} lead — ${lead.name} (exclusive)`,
+              html: leadHtml,
             }),
           });
         }
