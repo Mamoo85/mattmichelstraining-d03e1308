@@ -22,6 +22,7 @@ const ROLE_OPTIONS = [
   { key: "rn", label: "RN (Registered Nurse)" },
   { key: "lpn", label: "LPN (Licensed Practical Nurse)" },
   { key: "director_of_nursing", label: "Director of Nursing" },
+  { key: "home_health_aide", label: "Home Health Aide" },
 ];
 
 const TESTIMONIALS: Testimonial[] = [

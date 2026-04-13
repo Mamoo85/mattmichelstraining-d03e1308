@@ -38,6 +38,14 @@ const TRADE_QUERIES = [
     query: "Search Michigan LARA licensing database for recently licensed electricians and electrical contractors in Michigan. Find specific names, license numbers, cities.",
     label: "Electrician",
   },
+  {
+    query: "Search Michigan LARA licensing database for recently licensed certified nursing assistants (CNAs) and nurse aides in Michigan. Find specific names, license numbers, cities. Focus on new certifications issued in the last 90 days.",
+    label: "CNA",
+  },
+  {
+    query: "Search Michigan LARA licensing database for recently licensed registered nurses (RN) and licensed practical nurses (LPN) in Michigan. Find specific names, license numbers, cities. Focus on new licenses issued in the last 90 days.",
+    label: "RN/LPN",
+  },
 ];
 
 async function searchLicenses(query: string, label: string): Promise<LicenseCandidate[]> {

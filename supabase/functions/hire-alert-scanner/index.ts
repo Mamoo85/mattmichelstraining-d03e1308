@@ -196,6 +196,12 @@ async function scanApollo(): Promise<RawCandidate[]> {
     "Electrical Technician",
     "Steam Engineer",
     "Industrial Mechanic",
+    "Certified Nursing Assistant",
+    "CNA",
+    "Registered Nurse",
+    "LPN",
+    "Licensed Practical Nurse",
+    "Home Health Aide",
   ];
 
   const allPeople: RawCandidate[] = [];
@@ -765,6 +771,11 @@ serve(async (req: Request) => {
     pipefitter: ["pipefitter", "steamfitter", "ua local", "ua 636"],
     electrician: ["electrician", "electrical"],
     industrial_mechanic: ["industrial mechanic", "maintenance mechanic"],
+    cna: ["cna", "certified nursing assistant", "nurse aide", "nursing assistant"],
+    rn: ["rn", "registered nurse"],
+    lpn: ["lpn", "licensed practical nurse", "practical nurse"],
+    director_of_nursing: ["director of nursing", "don", "nursing director"],
+    home_health_aide: ["home health aide", "home health", "hha"],
   };
 
   function candidateMatchesRoles(licenseType: string | undefined, targetRoles: string[]): boolean {
