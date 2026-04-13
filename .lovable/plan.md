@@ -1,83 +1,35 @@
 
+# Enterprise Healthcare OSINT Pipeline v4.0 — IN PROGRESS
 
-# Multi-Industry Modular Pipeline Expansion
+## What's Deployed
 
-## What We're Doing
+### Phase 1: `test-data-pipeline` Edge Function ✅
+**File:** `supabase/functions/test-data-pipeline/index.ts`
+- **Modular routing**: Accepts `industry_type` parameter (`"healthcare"` | `"industrial_trades"`)
+- Healthcare route: NPI → Nursys (stub) → Sonar Deep Dork → PDL (stub) → No Ghost Lead
+- Industrial route: Michigan LARA/MIOSHA (stub) → Sonar Deep Dork → PDL (stub) → No Ghost Lead
+- Normalized `GovDataResult` interface — both NPI and LARA return same shape
+- Each API has its own `AbortSignal.timeout()` (NPI: 10s, Nursys: 10s, Sonar: 15s, PDL: 10s)
+- Hardcoded test candidates:
+  - Healthcare: "Sarah Johnson, RN, Detroit MI"
+  - Industrial: "Mike Thompson, High-Pressure Boiler Operator, Dearborn MI"
+- **NEVER on any cron job** — manual invoke only
 
-Making the `test-data-pipeline` and overall architecture **industry-agnostic** by adding an `industry_type` parameter that routes candidates through the correct government database while sharing the same Sonar + PDL enrichment engine.
+### Phase 5: Medicare Client Intel ✅
+**Files:**
+- `supabase/functions/medicare-staffing-intel/index.ts` — CMS Medicare Care Compare API
+- `src/components/admin/AdminMedicareIntel.tsx` — Admin UI
+- `src/pages/DWAAdmin.tsx` — "🏥 Client Intel" tab
 
----
+### Industrial Growth Intel ✅
+**Files:**
+- `supabase/functions/industrial-growth-intel/index.ts` — Sonar-powered Metro Detroit manufacturing scanner
+- `src/components/admin/AdminIndustrialIntel.tsx` — Admin UI
+- `src/pages/DWAAdmin.tsx` — "🏭 Industrial Intel" tab
 
-## Changes
+Scans for manufacturing expansions, equipment acquisitions, contract awards, and workforce expansion signals in Metro Detroit. Each lead gets a "TechAlert Pitch" button for instant outreach.
 
-### File 1: `supabase/functions/test-data-pipeline/index.ts` — REWRITE
-
-**Add `industry_type` parameter** (accepts `"healthcare"` or `"industrial_trades"` from request body, defaults to `"healthcare"`).
-
-**Add routing logic:**
-- `healthcare` → runs NPI + Nursys (existing code, unchanged)
-- `industrial_trades` → runs new `queryMichiganLARA()` stub that targets State of Michigan GIS Open Data API for newly licensed Master Plumbers, HVAC Contractors, Electricians, and MIOSHA High-Pressure Boiler Operators
-
-**Add `queryMichiganLARA()` stub:**
-- Placeholder function that returns license type, license number, city from Michigan's public dataset
-- Structured to later hit the DTMB GIS Open Data portal REST API
-- Returns same shape as NPI result (normalized) so downstream Sonar + PDL don't care about the source
-
-**Sonar + PDL stay identical** — the only difference is what `title` and `city` get passed in. A boiler operator and a nurse both flow through `enrichViaSonar()` and `enrichWithPDL()` with zero code changes.
-
-**Add second hardcoded test candidate** for industrial:
-```
-{ first_name: "Mike", last_name: "Thompson", title: "High-Pressure Boiler Operator", city: "Dearborn", state: "MI" }
-```
-
-**Pipeline selection at runtime:**
-```
-POST body: { "industry_type": "industrial_trades" }
-→ skips NPI/Nursys, runs queryMichiganLARA() instead
-→ feeds result into same Sonar → PDL → No Ghost Lead chain
-```
-
-### File 2: `supabase/functions/industrial-growth-intel/index.ts` — NEW
-
-The industrial equivalent of `medicare-staffing-intel`. Uses Sonar (perplexity/sonar-pro) to search for:
-- Recent manufacturing facility expansions in Metro Detroit
-- New plant openings or large commercial HVAC contracts awarded
-- Companies acquiring CNC/industrial machinery (Addy Machinery targets)
-
-Returns a list of companies with name, location, expansion type, and news source. This is the "who needs to hire tradesmen RIGHT NOW" signal for industrial clients.
-
-### File 3: `src/components/admin/AdminIndustrialIntel.tsx` — NEW
-
-Admin panel component (mirrors `AdminMedicareIntel.tsx` structure):
-- Table showing: company name, expansion type, location, news date
-- "Send TechAlert Pitch" button per company
-- Dark DWA branding
-
-### File 4: `src/pages/DWAAdmin.tsx` — EDIT
-
-Add `"industrial"` tab: `{ id: "industrial", label: "🏭 Industrial Intel" }`
-Lazy-load `AdminIndustrialIntel`.
-
-### File 5: `.lovable/plan.md` — UPDATE
-
-Document the modular routing architecture and new industrial data sources.
-
----
-
-## What Does NOT Change
-
-- `hire-alert-scanner/index.ts` — no changes yet. Production stays untouched until test-data-pipeline validates both routes.
-- `candidate-deep-enrich/index.ts` — no changes.
-- `medicare-staffing-intel/index.ts` — stays as-is for healthcare clients.
-- All existing Sonar, PDL, NPI, Nursys functions — code is reused, not duplicated.
-
-## No New Secrets Required
-
-- Michigan LARA GIS Open Data API is free, no auth
-- Industrial Growth Intel uses existing `OPENROUTER_API_KEY`
-- Everything else already configured
-
-## Architecture Diagram
+## Architecture: Modular Routing
 
 ```text
 REQUEST: { industry_type: "healthcare" | "industrial_trades" }
@@ -85,8 +37,8 @@ REQUEST: { industry_type: "healthcare" | "industrial_trades" }
         ┌───────────┴───────────┐
         ▼                       ▼
    HEALTHCARE              INDUSTRIAL
-   ├─ NPI API              ├─ Michigan LARA GIS (stub)
-   ├─ Nursys (stub)        └─ MIOSHA Boiler Records
+   ├─ NPI API (free)       ├─ Michigan LARA GIS (stub)
+   ├─ Nursys (stub)        └─ MIOSHA Boiler Records (stub)
    │                            │
    └────────────┬───────────────┘
                 ▼
@@ -97,3 +49,54 @@ REQUEST: { industry_type: "healthcare" | "industrial_trades" }
          └─ Same Email Action Buttons
 ```
 
+## API Key Status
+- ✅ `OPENROUTER_API_KEY` — set (Sonar Deep Dork)
+- ✅ `LOVABLE_API_KEY` — set (AI synthesis)
+- ✅ `PDL_API_KEY` — set (People Data Labs)
+- ⏳ `NURSYS_API_KEY` + `NURSYS_BASE_URL` — **NOT SET** (Matt will add when available). Code stubs gracefully.
+- ✅ NPI API — free, no key needed
+- ✅ CMS Medicare API — free, no key needed
+- ✅ Michigan LARA GIS — free, no key needed (stub pending integration)
+
+## Remaining Phases
+
+### Phase 2: NPI + Nursys in Production (after test-data-pipeline validates)
+- Add `enrichViaNPI()` to `hire-alert-scanner` inline enrichment loop
+- Add Nursys lookup for healthcare candidates (when key is ready)
+- Upgrade Sonar prompt with boolean `site:` operators
+
+### Phase 3: PDL Integration (when PDL_API_KEY is set)
+- Add `enrichWithPDL()` after Sonar in production pipeline
+- Mobile phone + personal email append
+
+### Phase 4: Email UI Action Buttons (after Phase 2 validates)
+- Redesign candidate cards with conditional action buttons
+- Add NPI business phone as separate `📞 Business Line` button
+- Add taxonomy badge
+
+### Phase 6: Production Fallback
+- Update `candidate-deep-enrich` with NPI + PDL second-pass
+
+### Industrial LARA Integration (when GIS API endpoints confirmed)
+- Replace `queryMichiganLARA()` stub with real DTMB GIS Open Data API calls
+- Add MIOSHA Boiler Division public records query
+- Wire into `hire-alert-scanner` as industrial trade source
+
+## Enrichment Waterfall (per candidate)
+```text
+1. Government DB (NPI or LARA) — ~1-2s, free
+2. Nursys e-Notify (healthcare only, async POST/GET) — ~3-5s (when key available)
+3. Sonar Deep Dork (boolean operators) — ~5-8s
+4. PDL skip-trace (if LinkedIn found) — ~2-3s
+5. AI Synthesis (Lovable Gateway, free) — ~3-5s
+Total: ~15-23s/candidate. Top 5 cap = 115s worst case.
+```
+
+## Cost
+- NPI: Free
+- Medicare: Free
+- Michigan LARA/MIOSHA: Free
+- Industrial Growth Intel: ~$0.003/scan (Sonar)
+- Sonar: ~$0.003/candidate
+- PDL: ~$0.10/enrichment (only when active)
+- Nursys: TBD (institutional subscription)
