@@ -91,9 +91,7 @@ export default function GetQuote() {
     return (
       <div className="min-h-screen bg-[#0a1628] flex items-center justify-center px-4">
         <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="text-green-400" size={32} />
-          </div>
+          <img src="/images/dwa/DWA_Dark_Logo.png" alt="Detroit Web Agency" className="w-20 h-20 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white mb-2">Request Received!</h1>
           <p className="text-slate-400 mb-6">
             A licensed {config.label.toLowerCase()} in {cityLabel} will contact you within 2 hours.
