@@ -2592,7 +2592,14 @@ serve(async (req) => {
             }
           } catch (e) { console.error("[WEBHOOK] 3-lead upsell error:", e); }
         }
-        } catch (e) { console.error("[WEBHOOK] contractor_lead_payment error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] contractor_lead_payment error:", e);
+          await notifyMatt(
+            `🚨 PPL Lead provision FAILED — ${meta.contractor_id} paid $50 but lead ${meta.lead_id} not activated`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p><p>Session: ${session.id}</p>`
+          ).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 

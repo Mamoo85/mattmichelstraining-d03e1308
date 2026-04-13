@@ -47,7 +47,7 @@ serve(async (req) => {
     // Fetch full lead details
     const { data: lead, error: leadErr } = await sb
       .from("contractor_leads")
-      .select("name, phone, email, project_type, message, contractor_lead_sites(trade, city, state)")
+      .select("name, phone, email, project_type, message, contact_preference, contractor_lead_sites(trade, city, state)")
       .eq("id", purchase.lead_id)
       .single();
 
@@ -69,6 +69,7 @@ serve(async (req) => {
           email: lead.email,
           project_type: lead.project_type,
           message: lead.message,
+          contact_preference: (lead as any).contact_preference,
           trade: site?.trade,
           city: site?.city,
           state: site?.state,
