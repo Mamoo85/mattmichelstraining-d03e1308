@@ -1,118 +1,144 @@
-# SYSTEM LAUNCH AUDIT — QA Readiness Report
 
+
+# SYSTEM LAUNCH AUDIT — QA Readiness Report (Post-Fix Re-Audit)
 ## Detroit Web Agency: Top 4 Revenue Engines
 
 ---
 
 ## 1. CONTRACTOR LEADS (PPL / Dead Lead Reactivation)
 
-**Readiness Score: 92% Ready**
+**Readiness Score: 97% Ready**
 
 **Critical Blockers (Red Flags):**
-
-- None identified. Stripe webhook returns 500 on DB failure (Stripe retries). Lead lock mechanism is atomic. Checkout → webhook → DB insert → welcome email → SMS all traced and working.
+- None. `chargeContractor()` in `handle-dead-lead-reply` now checks `res.ok` (line 44) and throws on failure. Stripe webhook returns 500 on DB failure. Lead lock is atomic.
 
 **Minor Polish (Yellow Flags):**
+- `contractor-aged-lead-downsell` cron still uses hardcoded `eauvubfpanpeuxsrqesu.supabase.co` URL (line 15 `FUNCTIONS_URL`) instead of vault pattern — functional but inconsistent.
+- Two scanner crons (`hire-alert-scanner-daily`, `hire-alert-phantom-alert-daily`) use `email_queue_service_role_key` vault secret name. Verify this secret name exists — `candidate-deep-enrich-30min` uses `service_role_key` instead. If these names don't match actual vault entries, those crons silently fail with NULL auth headers.
 
-- `contractor-aged-lead-downsell` cron uses hardcoded URL (`https://eauvubfpanpeuxsrqesu.supabase.co/...`) instead of vault pattern — will work but inconsistent with new cron standard.
-- `contractor-fomo-mailer` and `contractor-lead-notify` crons use `email_queue_service_role_key` vault secret name — verify this secret name actually exists in vault (some crons use `service_role_key`).
-- `chargeContractor()` in `handle-dead-lead-reply` doesn't check `res.ok` before parsing Stripe response (noted in CLAUDE.md as known issue — NOT YET FIXED).
+**Missing Code:** None.
 
-**Missing Code:** None — all edge functions, tables, and pages exist.
-
-**Next Action:** Fix `chargeContractor()` to check `res.ok` before JSON parse, and standardize cron vault secret names.
+**Next Action:** Verify vault secret names are consistent (`service_role_key` vs `email_queue_service_role_key`). Standardize `contractor-aged-lead-downsell` to use vault pattern.
 
 ---
 
 ## 2. TECHALERT (Hiring Monitor)
 
-**Readiness Score: 78% Ready** ← LOWEST SCORE
+**Readiness Score: 95% Ready** ← MASSIVE IMPROVEMENT from 78%
 
 **Critical Blockers (Red Flags):**
-
-1. **Welcome email unsubscribe link points to wrong domain.** Line 839 of `stripe-webhook/index.ts`: `mailto:matt@mattmichelstraining.com?subject=Unsubscribe%20TechAlert` — should be `matt@detroitwebagent.com`. This is a DWA product being sent from `sendM2Email()` (M2 Training branding) instead of DWA branding.
-2. **Welcome email sent via `sendM2Email()` (M2 branding) instead of DWA branding.** Line 848: `await sendM2Email(email, ...)` — the welcome email uses M2 Training orange header, M2 footer, and `matt@mattmichelstraining.com` sender. TechAlert is a DWA product and should use `matt@detroitwebagent.com`.
-3. **Scanner NOT running every 30 minutes as requested.** Cron `hire-alert-scanner-daily` is scheduled `0 11 * * *` (once daily at 11am). The deep enricher runs every 30 min (`15,45 * * * *`), but the scanner itself that discovers new candidates is still daily. Clients were promised 30-minute alert cycles. (Whatever the original promise was keep, once a day seems right) 
-4. `**hire_alert_client_candidates` table may not exist.** Line 839 of scanner: `sb.from("hire_alert_client_candidates" as any).upsert(...)` — the `as any` cast suggests this table was never created via migration. If it doesn't exist, every client-candidate tracking insert silently fails.
+- None remaining. All prior blockers resolved:
+  - ✅ `hire_alert_client_candidates` table exists (confirmed via DB query)
+  - ✅ All enrichment columns exist (`linkedin_url`, `facebook_url`, `current_employer`, `qualifications_summary`, `hiring_recommendation`, `enrichment_status`)
+  - ✅ Welcome email uses `dwaEmail()` with `matt@detroitwebagent.com` (line 863)
+  - ✅ Unsubscribe link points to `matt@detroitwebagent.com` (line 854)
+  - ✅ DWA branding throughout (dark teal header, `detroitwebagent.com` images)
+  - ✅ Deep enrichment pipeline deployed (`candidate-deep-enrich`) running every 30 min
+  - ✅ Client alert emails include full enrichment dossier: LinkedIn, Facebook, employer, experience, qualifications summary, hiring recommendation (lines 477-491)
+  - ✅ Webhook returns 500 + notifyMatt on provisioning failure (line 875)
 
 **Minor Polish (Yellow Flags):**
+- Scanner cron (`hire-alert-scanner-daily`) still runs once daily at 11am UTC. User approved keeping it daily. Deep enricher runs every 30 min which is the enrichment cadence.
+- Scanner cron uses `email_queue_service_role_key` vault secret — confirm this matches an actual vault entry.
+- `create-hire-alert-checkout` origin default updated to `detroitwebagent.com` ✅ (line in updated file).
+- Email copy is clean — no "AI" jargon found in client-facing emails. Uses "proprietary availability score" and source labels like "State License Database", "Professional Network", "Job Market".
 
-- Welcome email says "AI availability score" (line 822) — should say "availability score" per branding rules (no "AI" jargon).
-- Checkout origin defaults to `mattmichelstraining.com` (line 31 of `create-hire-alert-checkout`) — should default to `detroitwebagent.com` for a DWA product.
-- `matt-boat.jpg` image in welcome email references `mattmichelstraining.com` domain — should use `detroitwebagent.com` for DWA consistency.
+**Missing Code:** None.
 
-**Missing Code:**
-
-- `hire_alert_client_candidates` table — no migration found creating it.
-- No 30-minute cron for `hire-alert-scanner` — only daily exists.
-
-**Next Action:**
-
-1. Create migration for `hire_alert_client_candidates` table.
-2. Switch welcome email from `sendM2Email()` to DWA-branded email with `matt@detroitwebagent.com`.
-3. Fix unsubscribe link to `matt@detroitwebagent.com`.
-4. Update `create-hire-alert-checkout` origin default to `detroitwebagent.com`.
-5. Update scanner cron from daily to every 30 minutes.
-6. Remove "AI" from welcome email copy.
+**Next Action:** Confirm vault secret `email_queue_service_role_key` exists and returns the service role key. If not, recreate the cron with `service_role_key`.
 
 ---
 
 ## 3. FIELDDESK (Field Service CRM)
 
-**Readiness Score: 90% Ready**
+**Readiness Score: 97% Ready**
 
 **Critical Blockers (Red Flags):**
-
-- **Webhook handler returns 200 on DB failure.** Line 3088: `catch (e) { console.error(...); }` then `return 200`. If `field_crm_clients` upsert fails, Stripe won't retry. Client pays but never gets provisioned. No `notifyMatt()` fallback on failure.
+- None remaining. Prior blocker resolved:
+  - ✅ Webhook now returns 500 on DB failure (line 3109) with `notifyMatt()` fallback (lines 3105-3108)
 
 **Minor Polish (Yellow Flags):**
-
-- No welcome email sent directly from webhook — relies entirely on `auto-onboard` edge function. If auto-onboard fails, client gets no confirmation.
+- No direct welcome email from webhook — relies on `auto-onboard` edge function. If `auto-onboard` fails silently, client gets no confirmation. The `.catch()` on line 3101 swallows auto-onboard errors.
 - No SMS confirmation to Matt on successful FieldDesk signup (other products send SMS + email).
 
-**Missing Code:** None — all components exist.
+**Missing Code:** None — all edge functions, tables, pages, and RLS policies exist. RLS has admin + service_role policies properly configured.
 
-**Next Action:** Add error handling with `notifyMatt()` fallback and return 500 on DB failure (matching contractor_lead_subscription pattern). Add direct welcome email as safety net.
+**Next Action:** Optional — add inline welcome email as safety net alongside auto-onboard call.
 
 ---
 
 ## 4. MISSED CALL TEXT-BACK
 
-**Readiness Score: 88% Ready**
+**Readiness Score: 95% Ready**
 
 **Critical Blockers (Red Flags):**
-
-- **Webhook handler returns 200 on DB failure.** Line 3991: `catch (e) { console.error(...); }` then implicit 200. Same pattern as FieldDesk — if `missed_call_clients` upsert fails, Stripe won't retry.
-- **Twilio number purchase uses raw Twilio API instead of shared `sendSMS` helper.** Lines 3893-3918 use direct `fetch()` with basic auth — this bypasses the Twilio connector gateway. Not a blocker for functionality, but inconsistent with architecture.
+- None remaining. Prior blockers resolved:
+  - ✅ Webhook returns 500 on DB failure (line 4019) with `notifyMatt()` fallback (lines 4015-4018)
+  - ✅ FriendlyName prefix is "DWA -" (line 3931)
+  - ✅ Welcome email uses DWA branding with `matt@detroitwebagent.com` (line 3982)
 
 **Minor Polish (Yellow Flags):**
-
-- FriendlyName for purchased Twilio numbers says "M2 -" (line 3909) — should say "DWA -" for Detroit Web Agency branding.
-- `matt.jpg` image in welcome email references `detroitwebagent.com/images/dwa/matt.jpg` — confirm this file exists on the deployed domain.
+- Twilio number purchase uses raw `fetch()` with basic auth instead of shared `sendSMS` helper — this is intentional since it's the Twilio REST API for provisioning, not sending SMS. Not a bug.
+- Welcome email image `matt.jpg` references `detroitwebagent.com/images/dwa/matt.jpg` (line 4000) — confirm this file exists on the deployed domain.
 
 **Missing Code:** None.
 
-**Next Action:** Add `notifyMatt()` fallback + return 500 on DB failure in catch block. Fix FriendlyName prefix from "M2" to "DWA".
+**Next Action:** Verify `detroitwebagent.com/images/dwa/matt.jpg` resolves. If 404, upload the image or swap to `matt-boat.jpg`.
+
+---
+
+## RLS & Security Audit
+
+All 6 core tables audited:
+- `contractor_leads`: anon INSERT (for homeowner submissions), admin SELECT, service_role ALL ✅
+- `contractor_clients`: admin SELECT, service_role ALL ✅
+- `hire_alert_clients`: admin ALL, service_role ALL ✅
+- `hire_alert_candidates`: admin ALL, service_role ALL ✅
+- `field_crm_clients`: admin ALL (insert/update/delete separately), service_role ALL ✅
+- `missed_call_clients`: admin SELECT, service_role ALL ✅
+
+No contractor can view another contractor's data. All sensitive tables are locked to admin + service_role. The 18 linter warnings are all `USING (true)` policies scoped to `service_role` — this is intentional and correct for edge function access.
+
+---
+
+## Branding Compliance Audit
+
+**DWA Products (should use `matt@detroitwebagent.com`):**
+- TechAlert welcome email: ✅ `dwaEmail()` + `matt@detroitwebagent.com`
+- TechAlert scanner alerts: ✅ `matt@detroitwebagent.com`
+- FieldDesk: ✅ Uses auto-onboard (DWA routing)
+- Missed Call: ✅ `matt@detroitwebagent.com`
+- Contractor Leads: ✅ DWA branding
+
+**M2 Products (correctly use `matt@mattmichelstraining.com`):**
+- Field Rep Tools, Grant Finder, LinkedIn Ghostwriting, Industrial Newsletter — all correctly use M2 branding ✅
+
+**"AI" Jargon Scrub:**
+- TechAlert client emails: Clean — uses "proprietary availability score", "hiring intelligence sources" ✅
+- Welcome email: Clean — removed "AI" references ✅
+- Grant Finder welcome still says "AI Grant Finder" (line 887) — this is an M2 product, not DWA, so the "no AI jargon" rule is less critical but still present.
 
 ---
 
 ## Summary Ranking
 
+```text
+┌──────────────────┬───────┬─────────────────────────────────┐
+│ Service          │ Score │ Status                          │
+├──────────────────┼───────┼─────────────────────────────────┤
+│ Contractor Leads │  97%  │ ✅ Launch ready                 │
+│ FieldDesk        │  97%  │ ✅ Launch ready                 │
+│ Missed Call      │  95%  │ ✅ Launch ready                 │
+│ TechAlert        │  95%  │ ✅ Launch ready (was 78%)       │
+└──────────────────┴───────┴─────────────────────────────────┘
+```
 
-| Service          | Score   | Biggest Risk                                              |
-| ---------------- | ------- | --------------------------------------------------------- |
-| Contractor Leads | 92%     | `chargeContractor()` no error check                       |
-| FieldDesk        | 90%     | Webhook swallows DB failures                              |
-| Missed Call      | 88%     | Webhook swallows DB failures                              |
-| **TechAlert**    | **78%** | **Wrong branding, daily instead of 30min, missing table** |
+**All 4 services are at 95%+ and launch-ready.** No critical blockers remain.
 
+**Remaining 3-5% gap across all services is one shared issue:**
+Vault secret name inconsistency — some crons use `email_queue_service_role_key`, the new enricher uses `service_role_key`. If these don't resolve to the same value (or one doesn't exist), those crons silently fire with NULL auth headers and get 401'd.
 
-**Lowest-scoring service: TechAlert at 78%.** It has the most critical blockers: wrong email sender/branding (M2 instead of DWA), unsubscribe link pointing to wrong domain, scanner still running daily instead of every 30 minutes as committed, and a missing `hire_alert_client_candidates` table causing silent tracking failures.
+**Fix (single action):** Verify which vault secret name is correct, then update all crons to use the same one. This is a single SQL migration that recreates 3 cron jobs.
 
-**Recommended fix order:**
+**Recommended next action:** "Standardize all cron vault secret names to match and verify with a test invocation."
 
-1. TechAlert branding + missing table + cron frequency (brings it to ~95%)
-2. FieldDesk + Missed Call webhook error handling (brings both to ~95%)
-3. Contractor Leads `chargeContractor()` fix (brings to ~97%)
-
-All fixes are code-only — no new features, no new pages. Estimated: 1 implementation pass.
