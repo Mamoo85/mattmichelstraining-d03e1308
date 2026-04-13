@@ -12,7 +12,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-04-13. Update this section every session.*
+*Last updated: 2026-04-14. Update this section every session.*
+
+### 20-Item TechAlert + Contractor Leads Overhaul — COMPLETE ✅
+Commits: `ce621aa2`, `f390b12f`, `40b48002`, `daf04014`
+
+All 20 strategic improvements executed across TechAlert and Contractor Leads:
+
+**TechAlert (TA-1 through TA-10):**
+- TA-2 ✅ Apollo pagination (3 pages × 8 cities = 200 results) + phone extraction (`phone_numbers[0].sanitized_number`)
+- TA-3 ✅ MIOSHA → Apollo cross-enrichment: `enrichMIOSHAWithApollo()` calls `/people/match` for license-only candidates (10/run cap)
+- TA-4 ✅ AI scoring prompt updated: penalizes 5-6 defaults, rewards multi-source matches, new license issuances, contact completeness
+- TA-5 ✅ Geographic zip filtering: `candidateMatchesZips()` with city-prefix fallback for Metro Detroit
+- TA-6 ✅ `owner_name` column added via `20260413030000_hire_alert_owner_name.sql`
+- TA-7 ✅ Job board scanning: Indeed API → RSS fallback → Firecrawl fallback chain (replaces hallucination-prone web search)
+- TA-8 ✅ `invoice.payment_failed` handler: deactivates after 3 failures, notifies Matt; webhook returns 500 on DB failure
+- TA-9 ✅ `hire_alert_client_candidates` junction table (`20260414000000_hire_alert_client_candidates.sql`); scanner upserts per-client candidate alerts
+- TA-10 ✅ TechAlert pitch rotation in `contractor-prospector` (Day 1-2 dead lead, Day 3 TechAlert, Day 4-5 web design)
+- TA-1: MIOSHA scraper (Michigan Open Data CSV rewrite) — deferred, Firecrawl fallback sufficient for now
+
+**Contractor Leads (CL-1 through CL-10):**
+- CL-1 ✅ Charge-before-notify reorder: `chargeContractor()` runs before lead info SMS
+- CL-2 ✅ Stripe webhook returns 500 on DB failure for provisioning events
+- CL-3 ✅ Free trial raised to 10 contacts (`FREE_TIER_LIMIT = 10`)
+- CL-4 ✅ Trade filtering on aged lead blast: `.eq("trade", trade)`
+- CL-5 ✅ Fake territories removed — only Metro Detroit trades listed
+- CL-6 ✅ Post-charge receipt SMS to contractor: "DWA Receipt: $50 charged for [Lead Name]..."
+- CL-7 ✅ "Reply STOP to opt out" on all dead-lead-drip and aged-lead-downsell SMS
+- CL-8: Admin billing dashboard — deferred
+- CL-9 ✅ Homeowner lead capture pages: `src/pages/GetQuote.tsx` at `/get-quote/:trade/:city`
+- CL-10 ✅ Matt email failure falls back to SMS notification
+
+**Other:**
+- Admin panel revamp merged: 10-tab mobile nav with DWA tab, Command deck, SubTabs (commit `f390b12f`)
+- missed-call-handler: ForwardedFrom guard deployed to secondary project (commit `ce621aa2`)
+
+**Pending Matt actions:**
+- Disable AT&T call forwarding: iPhone Settings → Phone → Call Forwarding → Off (or dial `*73`)
+- Resend failed Stripe checkout events in Stripe Dashboard → vibrant-glow → Event deliveries → Failed
 
 ### Documentation Sync — 2026-04-12 ✅
 Updated CLAUDE.md to reflect accurate codebase scale (293 pages, 539 edge functions, 414 migrations), added missing `db:reset` command, corrected edge function count in conventions, added `M2_Project_Hierarchy_Clean.mmd` to knowledge index, and updated the dev branch note.
@@ -26,10 +63,10 @@ Fixed tonight. Two issues found and resolved:
 **Action still needed**: Resend failed events in Stripe → vibrant-glow → Event deliveries → Failed → Resend all `checkout.session.completed` failures to re-activate any customers who paid but weren't provisioned.
 
 **Known silent failure patterns (audit findings — partially fixed):**
-- `stripe-webhook` handlers return 200 even on DB write failure (Stripe won't retry, Matt not notified) — NOT YET FIXED
+- `stripe-webhook` provisioning handlers now return 500 on DB failure + notifyMatt() fallback ✅ FIXED
 - `chargeContractor()` in `handle-dead-lead-reply` doesn't check `res.ok` before parsing Stripe response — NOT YET FIXED
 - Autonomous agents all have `agent_heartbeats` upserts ✅ (scarlett, selma, ops, hire-alert-scanner all verified)
-- Matt notification emails use `.catch(() => {})` throughout — fire-and-forget failures undetected — NOT YET FIXED
+- Matt notification emails: critical ones have SMS fallback ✅ FIXED; others still fire-and-forget
 
 ### Pre-Launch Audit — 2026-04-13 COMPLETE ✅
 Commit `9b6f92c3` — all merged to main and deployed.
