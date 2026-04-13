@@ -2127,6 +2127,7 @@ export type Database = {
         Row: {
           checkout_locked_by: string | null
           client_id: string | null
+          contact_preference: string
           created_at: string | null
           email: string | null
           id: string
@@ -2147,6 +2148,7 @@ export type Database = {
         Insert: {
           checkout_locked_by?: string | null
           client_id?: string | null
+          contact_preference?: string
           created_at?: string | null
           email?: string | null
           id?: string
@@ -2167,6 +2169,7 @@ export type Database = {
         Update: {
           checkout_locked_by?: string | null
           client_id?: string | null
+          contact_preference?: string
           created_at?: string | null
           email?: string | null
           id?: string
@@ -2819,6 +2822,42 @@ export type Database = {
           service_interested?: string | null
           source?: string | null
           stripe_checkout_completed?: boolean | null
+        }
+        Relationships: []
+      }
+      email_reply_drafts: {
+        Row: {
+          cancelled: boolean | null
+          category: string | null
+          created_at: string | null
+          draft_body: string
+          draft_subject: string | null
+          id: string
+          lead_email: string
+          send_after: string
+          sent: boolean | null
+        }
+        Insert: {
+          cancelled?: boolean | null
+          category?: string | null
+          created_at?: string | null
+          draft_body: string
+          draft_subject?: string | null
+          id?: string
+          lead_email: string
+          send_after: string
+          sent?: boolean | null
+        }
+        Update: {
+          cancelled?: boolean | null
+          category?: string | null
+          created_at?: string | null
+          draft_body?: string
+          draft_subject?: string | null
+          id?: string
+          lead_email?: string
+          send_after?: string
+          sent?: boolean | null
         }
         Relationships: []
       }
