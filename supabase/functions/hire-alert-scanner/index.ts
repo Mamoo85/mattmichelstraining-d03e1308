@@ -60,6 +60,15 @@ interface RawCandidate {
 interface ScoredCandidate extends RawCandidate {
   availability_score: number;
   score_reason: string;
+  // Enrichment fields (populated by candidate-deep-enrich, read from DB for returning candidates)
+  linkedin_url?: string;
+  facebook_url?: string;
+  current_employer?: string;
+  current_title?: string;
+  years_experience?: number;
+  qualifications_summary?: string;
+  hiring_recommendation?: string;
+  enrichment_status?: string;
 }
 
 // Source 1: MIOSHA Public License Database — delegates to miosha-license-scraper
