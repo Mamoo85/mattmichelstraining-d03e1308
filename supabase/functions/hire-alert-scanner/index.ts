@@ -20,8 +20,8 @@ async function notifyMatt(subject: string, html: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "Detroit Web Agency <matt@mattmichelstraining.com>",
-      to: ["matt@mattmichelstraining.com"],
+      from: "Detroit Web Agency <matt@detroitwebagent.com>",
+      to: ["matt@detroitwebagent.com"],
       subject,
       html,
     }),
@@ -503,7 +503,7 @@ async function sendAlertEmail(
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: "TechAlert by Detroit Web Agency <matt@mattmichelstraining.com>",
+      from: "TechAlert by Detroit Web Agency <matt@detroitwebagent.com>",
       to: [client.owner_email],
       bcc: ["matthewmichels4@gmail.com"],
       subject: `${subjectText} | TechAlert ${dateStr}`,
@@ -575,7 +575,7 @@ async function sendAlertEmail(
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td>
         <table cellpadding="0" cellspacing="0"><tr>
-          <td style="vertical-align:middle;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt"></td>
+          <td style="vertical-align:middle;"><img src="https://www.detroitwebagent.com/images/matt-boat.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt"></td>
           <td style="padding-left:12px;vertical-align:middle;">
             <p style="margin:0;font-size:14px;font-weight:700;color:#fff;">Matt Michels</p>
             <p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;text-decoration:none;">(313) 992-1219</a></p>
@@ -584,7 +584,7 @@ async function sendAlertEmail(
       </td>
       <td style="text-align:right;vertical-align:middle;">
         <p style="margin:0;font-size:10px;color:#475569;">Reply to adjust roles or zip codes</p>
-        <p style="margin:2px 0 0;font-size:10px;color:#475569;"><a href="mailto:matt@mattmichelstraining.com?subject=Unsubscribe%20TechAlert" style="color:#64748b;text-decoration:none;">Unsubscribe</a></p>
+        <p style="margin:2px 0 0;font-size:10px;color:#475569;"><a href="mailto:matt@detroitwebagent.com?subject=Unsubscribe%20TechAlert" style="color:#64748b;text-decoration:none;">Unsubscribe</a></p>
       </td>
     </tr></table>
   </td></tr>
@@ -861,7 +861,7 @@ serve(async (req: Request) => {
       <p style="margin:4px 0 0;color:#64748b;font-size:12px;">Daily scan complete · ${clients.length} active ${clients.length === 1 ? "client" : "clients"}</p>
     </td>
     <td style="text-align:right;vertical-align:top;">
-      <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff40;" alt="Matt">
+      <img src="https://www.detroitwebagent.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff40;" alt="Matt">
     </td>
   </tr></table>
 </td></tr>

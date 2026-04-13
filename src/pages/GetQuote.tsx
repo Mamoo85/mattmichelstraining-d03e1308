@@ -38,7 +38,7 @@ export default function GetQuote() {
   const config = TRADE_CONFIG[trade.toLowerCase()] || TRADE_CONFIG.plumber;
   const cityLabel = CITY_CONFIG[city.toLowerCase()] || `${city.charAt(0).toUpperCase() + city.slice(1)}, MI`;
 
-  const [form, setForm] = useState({ name: "", phone: "", email: "", message: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", message: "", contact_preference: "call" as "call" | "text" | "email" });
   const [state, setState] = useState<"idle" | "submitting" | "done" | "error">("idle");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,6 +73,7 @@ export default function GetQuote() {
         email: form.email.trim() || null,
         message: form.message.trim() || null,
         project_type: config.label,
+        contact_preference: form.contact_preference,
         status: "new",
       });
 
@@ -191,6 +192,31 @@ export default function GetQuote() {
               rows={3}
               className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 resize-none"
             />
+          </div>
+
+          {/* Contact preference */}
+          <div>
+            <label className="block text-slate-300 text-sm font-medium mb-2">How should we contact you?</label>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                { value: "call", label: "📞 Call Me", },
+                { value: "text", label: "💬 Text Me", },
+                { value: "email", label: "📧 Email Me", },
+              ] as const).map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setForm({ ...form, contact_preference: value })}
+                  className={`py-2.5 px-3 rounded-lg text-sm font-semibold border transition-all ${
+                    form.contact_preference === value
+                      ? "bg-[#00d4ff]/20 border-[#00d4ff] text-[#00d4ff]"
+                      : "bg-slate-800/50 border-slate-700 text-slate-400 hover:border-slate-500"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {state === "error" && (
