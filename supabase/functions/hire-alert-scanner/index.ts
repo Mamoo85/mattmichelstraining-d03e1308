@@ -91,12 +91,12 @@ async function scanMIOSHA(): Promise<RawCandidate[]> {
   const since = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(); // last 25h
   const { data } = await sb
     .from("hire_alert_candidates")
-    .select("full_name, phone, email, license_type, license_number, license_expiry, city, zip, source, raw_data")
+    .select("full_name, name, phone, email, license_type, license_number, license_expiry, city, zip, source, raw_data, linkedin_url, facebook_url, current_employer, current_title, years_experience, qualifications_summary, hiring_recommendation, social_profiles, enrichment_status")
     .eq("source", "miosha")
     .gte("first_seen_at", since);
 
   return (data || []).map((r) => ({
-    full_name: r.full_name,
+    full_name: r.full_name || r.name,
     phone: r.phone ?? undefined,
     email: r.email ?? undefined,
     license_type: r.license_type ?? undefined,
