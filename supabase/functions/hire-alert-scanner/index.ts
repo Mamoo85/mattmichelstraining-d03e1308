@@ -725,7 +725,7 @@ async function sendAlertEmail(
             <td style="text-align:right;vertical-align:top;">
               <table cellpadding="0" cellspacing="0"><tr>
                 <td style="background:${scoreBg(c.availability_score)};color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:800;font-family:-apple-system,sans-serif;letter-spacing:0.5px;">
-                  ${c.availability_score >= 8 ? "🔥 " : c.availability_score >= 7 ? "⚡ " : ""}${c.availability_score}/10
+                  ${c.availability_score >= 8 ? "🟢 High" : c.availability_score >= 5 ? "🟡 Possible" : "🔵 Monitor"}
                 </td>
               </tr></table>
             </td>
@@ -814,7 +814,7 @@ async function sendAlertEmail(
       Hey${client.company_name ? ` ${client.company_name} team` : ""} —
     </p>
     <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 24px;">
-      Our hiring intelligence engine scanned the market this morning. ${hotCount > 0 ? `<strong>${hotCount} high-scoring ${hotCount === 1 ? "candidate" : "candidates"}</strong> — tap the buttons below to reach out before someone else does.` : "Here's what we found near you. Tap any button to take action instantly."}
+      We identified new licensed professionals near you this morning. ${hotCount > 0 ? `<strong>${hotCount} high-availability ${hotCount === 1 ? "candidate" : "candidates"}</strong> — tap the buttons below to reach out before someone else does.` : "Here's what we found near you. Tap any button to take action instantly."}
     </p>
 
     <!-- CANDIDATE CARDS -->
@@ -823,18 +823,18 @@ async function sendAlertEmail(
     </table>
   </td></tr>
 
-  <!-- HOW SCORING WORKS -->
+  <!-- AVAILABILITY GUIDE -->
   <tr><td style="background:#f8fafc;padding:20px 28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
-    <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;">How Scoring Works</p>
+    <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Availability Tiers</p>
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
-        <td style="padding:4px 0;font-size:12px;color:#475569;">🔥 <strong>8-10</strong> — High availability: actively seeking work, local, contactable</td>
+        <td style="padding:4px 0;font-size:12px;color:#475569;">🟢 <strong>High Availability</strong> — Actively seeking work, local, contactable right now</td>
       </tr>
       <tr>
-        <td style="padding:4px 0;font-size:12px;color:#475569;">⚡ <strong>7</strong> — Likely available: recently licensed or appeared in hiring channels</td>
+        <td style="padding:4px 0;font-size:12px;color:#475569;">🟡 <strong>Possible Availability</strong> — Licensed professional who may be open to opportunities</td>
       </tr>
       <tr>
-        <td style="padding:4px 0;font-size:12px;color:#475569;">📋 <strong>5-6</strong> — Possibly available: professional profile matches your criteria</td>
+        <td style="padding:4px 0;font-size:12px;color:#475569;">🔵 <strong>Monitor</strong> — On our radar — worth reaching out proactively</td>
       </tr>
     </table>
   </td></tr>
@@ -1212,9 +1212,10 @@ serve(async (req: Request) => {
       if (client.notify_sms && client.owner_phone && clientHotCandidates.length) {
         const top = clientHotCandidates[0];
         const dashLink = client.dashboard_token ? ` View all: m2training.lovable.app/my-techalert?token=${client.dashboard_token}` : "";
+        const availLabel = top.availability_score >= 8 ? "High Availability" : top.availability_score >= 5 ? "Possible Availability" : "Monitor";
         const smsBody = clientHotCandidates.length === 1
-          ? `TechAlert: ${top.full_name} (${top.license_type || "licensed tech"}, ${top.city || "Metro Detroit"}) — score ${top.availability_score}/10. You're the only one seeing this.${dashLink} Reply STOP to opt out.`
-          : `TechAlert: ${clientHotCandidates.length} licensed techs found. Top: ${top.full_name} (${top.license_type || "tradesperson"}, ${top.availability_score}/10).${dashLink} Reply STOP to opt out.`;
+          ? `TechAlert: ${top.full_name} (${top.license_type || "licensed tech"}, ${top.city || "Metro Detroit"}) — ${availLabel}. You're the only one seeing this.${dashLink} Reply STOP to opt out.`
+          : `TechAlert: ${clientHotCandidates.length} licensed techs found. Top: ${top.full_name} (${top.license_type || "tradesperson"}, ${availLabel}).${dashLink} Reply STOP to opt out.`;
         await sendSMS(client.owner_phone, TWILIO_PHONE_NUMBER, smsBody, "hire_alert");
       }
 
