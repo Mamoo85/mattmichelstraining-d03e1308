@@ -1,80 +1,59 @@
 
+# TechAlert Enhancement + Industry Pulse — DEPLOYED
 
-# Production Deployment: NPI + PDL + Upgraded Sonar into hire-alert-scanner
+## What Was Built (April 14, 2026)
 
-## What Changes
+### Wave A: Candidate Exclusivity + Outreach (LIVE)
 
-One file modified: `supabase/functions/hire-alert-scanner/index.ts`
+**1. 48-Hour Candidate Claim System**
+- Added `client_action`, `claimed_at`, `claim_expires_at` to `hire_alert_client_candidates`
+- `claim-candidate` edge function with atomic race condition fix (`WHERE claimed_at IS NULL OR claim_expires_at < now()`)
+- Auto-claim via URL: `/my-techalert?token=X&claim=Y&auto=1`
 
-### 1. Add `PDL_API_KEY` env var at top
-Read `PDL_API_KEY` from environment alongside existing secrets.
+**2. AI Outreach Draft Generator**
+- `generate-outreach-draft` edge function using Lovable AI Gateway (Gemini flash-lite)
+- Generates 3-sentence cold text + 5-sentence email per candidate
+- TCPA disclaimer included in every response
+- Hardcoded fallbacks if AI unavailable
 
-### 2. Port `enrichViaNPI()` from test-data-pipeline
-- Free federal API, no auth needed
-- Query: `https://npiregistry.cms.hhs.gov/api/?version=2.1&first_name=X&last_name=Y&state=MI&enumeration_type=NPI-1`
-- Extracts: business phone, taxonomy code, taxonomy description, practice address
-- 10s timeout via `AbortSignal.timeout(10_000)`
-- Only called for healthcare-type candidates (RN, LPN, CNA, DON roles detected via ROLE_KEYWORDS)
+**3. MyTechAlert Dashboard Upgrade**
+- ⚡ "Claim This Candidate" button with 48hr countdown
+- 🔒 "Claimed by you" / "Claimed by another" badges
+- ✍️ "Draft Outreach" button → modal with generated text/email + copy buttons + TCPA notice
+- 🔄 "License Lapsed" badge for expiry-sourced candidates with warning context
+- Fixed: `client_action` column was MISSING — "Mark Contacted" / "Mark Hired" were silently failing
 
-### 3. Port `enrichWithPDL()` from test-data-pipeline
-- Calls `https://api.peopledatalabs.com/v5/person/enrich` with name + location + linkedin_url
-- Extracts: mobile phone, personal email, work email, job title, company
-- 10s timeout, graceful no-op if `PDL_API_KEY` not set
-- PDL_API_KEY is already in your secrets
+### Wave C: Industry Pulse Predictive Engine (LIVE)
 
-### 4. Upgrade `enrichViaSonar()` prompt
-Replace current generic prompt with boolean search operators:
-```
-site:linkedin.com/in/ "[Name]" "[City]"
-AND site:indeed.com/r/ "[Name]"
-AND site:facebook.com "[Name]" "[City]"
-```
-This bypasses Indeed paywalls via Google's cached index.
+**4. Industry Pulse Scanner**
+- `industry-pulse-scanner` edge function
+- Sonar harvests hiring signals across 6 Metro Detroit trade categories
+- Lovable AI Gateway predicts equipment/service needs from hiring patterns
+- Cross-references with existing expansion news for highest-confidence signals
+- Hardcoded fallback mappings (CNC → tooling, Boiler → parts, etc.)
+- Matt email notification for high-confidence signals
 
-### 5. Update `extractJSON()` to strip markdown wrappers
-Add the `\`\`\`json` regex stripping from test-data-pipeline before JSON.parse.
+**5. Growth Signals Admin Tab**
+- `AdminGrowthSignals.tsx` — unified dashboard in DWA Admin
+- Confidence badges (High/Medium/Low + Cross-Referenced gold)
+- Industry filters (HVAC, CNC, Welding, Electrical, Boiler, Plumbing)
+- "Run Pulse Scanner" button for on-demand scans
+- Replaces separate Industrial Intel concept (merged per review feedback)
 
-### 6. Modify inline enrichment loop (lines 728-754)
-For each of the top 5 candidates, the new waterfall is:
-1. **NPI API** (if healthcare role detected) — ~1-2s
-2. **Sonar Deep Dork** (upgraded prompt) — ~5-8s  
-3. **PDL** (if Sonar found LinkedIn URL) — ~2-3s
-4. **AI Synthesis** (existing, unchanged) — ~3-5s
+### Database Changes
+- `hire_alert_client_candidates`: added `client_action`, `claimed_at`, `claim_expires_at`
+- `industry_pulse_signals`: new table (company, hiring, predictions, confidence, cross_referenced)
 
-Total per candidate: ~12-18s. Top 5 cap = 90s worst case. Well within 150s edge function limit.
+### Edge Functions Deployed
+- `claim-candidate` — 48hr exclusivity lock
+- `generate-outreach-draft` — AI cold outreach drafts
+- `industry-pulse-scanner` — predictive demand engine
+- `get-my-techalert` — updated to return claim status + license lapse badge
 
-### 7. Merge NPI + PDL data into candidate record
-- NPI business phone stored as separate field, also used as fallback phone
-- PDL mobile_phone becomes primary phone if no phone exists
-- PDL personal_email becomes email if no email exists
-- NPI taxonomy badge added to candidate card
+### No New Secrets Required
+All existing keys (LOVABLE_API_KEY, OPENROUTER_API_KEY, RESEND_API_KEY) used.
 
-### 8. Update `buildActionButtons()` to show NPI business phone
-Add a separate "📞 Business Line" button (teal) when NPI business phone exists, distinct from the orange personal phone button.
-
-### 9. Update `ScoredCandidate` interface
-Add: `npi_number`, `npi_business_phone`, `npi_taxonomy`, `npi_practice_address`, `pdl_mobile_phone`, `pdl_personal_email`
-
-### 10. Update DB insert to include new fields
-Store NPI and PDL data in `raw_data` JSON field (no migration needed — these are enrichment metadata).
-
-### 11. Update founder report
-Add NPI and PDL columns to the source health section so Matt can see which APIs returned data.
-
-## What Does NOT Change
-- Nursys is **bypassed** (no API key yet)
-- MIOSHA scanner, job board scanner — unchanged
-- Scoring logic — unchanged
-- No Ghost Lead rule — unchanged (now catches MORE candidates since NPI+PDL add more contact info)
-- Email template structure — unchanged (action buttons already exist)
-- Medicare/Industrial intel — untouched
-
-## Timing Safety
-- NPI: free, fast (~1s), no auth
-- PDL: ~2s, only fires when LinkedIn found (saves credits)
-- Sonar: same ~5-8s (prompt slightly longer)
-- Total worst case for 5 candidates: ~90s (well under 150s limit)
-
-## Deploy
-After code update, deploy `hire-alert-scanner` via edge function deployment. Can invoke manually or wait for 7am ET cron.
-
+## Still Pending (Wave B)
+- `scanLicenseExpiries()` in hire-alert-scanner (needs MIOSHA lapsed license data integration)
+- License expiry candidates scored one tier lower per review feedback
+- Claim button in hire-alert-scanner email templates
