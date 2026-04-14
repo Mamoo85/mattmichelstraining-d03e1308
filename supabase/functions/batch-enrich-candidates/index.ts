@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
       .select("id, full_name, license_type, trade, current_employer")
       .or("trade.ilike.%boiler%,license_type.ilike.%boiler%,license_type.ilike.%stationary%")
       .is("current_employer", null)
-      .limit(8); // small batch to avoid timeout
+      .limit(5); // small batch
 
     if (error) throw error;
     if (!candidates?.length) {
@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
       }
       
       // Small delay between requests
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 500));
     }
 
     return new Response(JSON.stringify({ 
