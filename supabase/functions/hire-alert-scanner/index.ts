@@ -579,11 +579,35 @@ async function scoreCandidate(candidate: RawCandidate): Promise<{ score: number;
   const isFromJobBoard = candidate.source === "firecrawl";
 
   let licenseRecent = false;
+  let licenseExpiringSoon = false;
+  let daysUntilExpiry = -1;
   if (candidate.license_expiry) {
     const expiry = new Date(candidate.license_expiry);
     const monthsUntilExpiry = (expiry.getTime() - Date.now()) / (30 * 24 * 60 * 60 * 1000);
     licenseRecent = monthsUntilExpiry > 20;
+    daysUntilExpiry = Math.round((expiry.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+    // LICENSE EXPIRY BOOST: 30-60 days = high mobility signal
+    if (daysUntilExpiry >= 30 && daysUntilExpiry <= 60) {
+      licenseExpiringSoon = true;
+    }
   }
+
+  // PERMIT VELOCITY: check if candidate appears in 3+ cities from permit data
+  let permitVelocityHigh = false;
+  try {
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: permitEntries } = await sb
+      .from("hire_alert_candidates")
+      .select("city")
+      .eq("full_name", candidate.full_name)
+      .gte("last_seen_at", thirtyDaysAgo)
+      .not("city", "is", null);
+    if (permitEntries && permitEntries.length > 0) {
+      const uniqueCities = new Set(permitEntries.map((e: any) => (e.city || "").toLowerCase().trim()).filter(Boolean));
+      if (uniqueCities.size >= 3) permitVelocityHigh = true;
+    }
+  } catch { /* non-critical */ }
 
   const result = await generateJSON<{ score: number; reason: string }>(
     `Score this tradesperson's immediate hire availability from 1-10. Be precise — avoid defaulting to 5 or 6.
@@ -593,14 +617,17 @@ Name: ${candidate.full_name}
 Trade/License: ${candidate.license_type || "unknown"}
 City: ${candidate.city || "unknown"}
 License Number: ${hasLicenseNumber ? candidate.license_number : "none"}${licenseRecent ? " (RECENTLY ISSUED — new to market)" : ""}
-License Expiry: ${candidate.license_expiry || "unknown"}
+License Expiry: ${candidate.license_expiry || "unknown"}${licenseExpiringSoon ? ` (EXPIRES IN ${daysUntilExpiry} DAYS — high mobility signal)` : ""}
 Has Phone Number: ${hasPhone ? "YES" : "no"}
 Has Email: ${hasEmail ? "YES" : "no"}
+Permit Velocity: ${permitVelocityHigh ? "HIGH — active across 3+ municipalities (likely independent contractor)" : "normal"}
 
 Scoring rules (apply ALL that match, then sum):
 - Base: 4 points for having a verifiable trade title
 - +3 if appeared on a job board (actively seeking)
 - +2 if license number exists AND recently issued (new to market)
+- +2 if license expires within 30-60 days (employer likely hasn't renewed — candidate may be available)
+- +1 if permit data shows activity across 3+ municipalities (independent contractor signal)
 - +1 if has phone number (immediately contactable)
 - +1 if has email address
 - +1 if city is Metro Detroit area
@@ -616,10 +643,16 @@ Return JSON: { "score": number, "reason": "one sentence citing the top 1-2 signa
     let score = 4;
     if (isFromJobBoard) score += 3;
     if (hasLicenseNumber && licenseRecent) score += 2;
+    if (licenseExpiringSoon) score += 2;
+    if (permitVelocityHigh) score += 1;
     if (hasPhone) score += 1;
     if (hasEmail) score += 1;
     score = Math.min(10, Math.max(1, score));
-    return { score, reason: `Verified trade professional, ${hasPhone ? "contactable" : "contact info pending"}, ${candidate.city || "Michigan"} area` };
+    const reasons: string[] = [];
+    if (licenseExpiringSoon) reasons.push(`license expires in ${daysUntilExpiry}d`);
+    if (permitVelocityHigh) reasons.push("high permit velocity");
+    reasons.push(hasPhone ? "contactable" : "contact info pending");
+    return { score, reason: `Verified trade professional, ${reasons.join(", ")}, ${candidate.city || "Michigan"} area` };
   }
 
   return result;
