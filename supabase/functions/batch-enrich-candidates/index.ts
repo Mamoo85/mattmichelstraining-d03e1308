@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
       .select("id, full_name, license_type, trade, current_employer")
       .or("trade.ilike.%boiler%,license_type.ilike.%boiler%,license_type.ilike.%stationary%")
       .is("current_employer", null)
-      .limit(25); // batch of 25 to avoid timeout
+      .limit(8); // small batch to avoid timeout
 
     if (error) throw error;
     if (!candidates?.length) {
