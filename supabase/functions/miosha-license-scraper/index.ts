@@ -1,7 +1,8 @@
 // miosha-license-scraper — Michigan trade candidate data
-// TWO data sources:
-// 1. Apollo.io People Search — finds tradespeople by title + location
-// 2. Sonar web search — finds tradespeople from LinkedIn, Indeed, union directories
+// THREE data sources:
+// 1. NPI Registry — free federal API for healthcare workers (CNA, RN, LPN)
+// 2. Sonar web search — finds tradespeople mentioned in news, LinkedIn posts, union directories
+// 3. Gemini prose extraction fallback
 //
 // VALIDATION RULES:
 // - Reject candidates with no license number AND no verifiable city
@@ -15,7 +16,6 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
-const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 interface LicenseCandidate {
@@ -53,104 +53,92 @@ function looksLikeLicenseNumber(num: string): boolean {
   return true;
 }
 
-// ===== SOURCE 1: Apollo.io People Search =====
-// Searches for tradespeople by job title in Michigan
+// ===== SOURCE 1: NPI Registry (Healthcare Workers) =====
+// Free federal API — searches for RN, LPN, CNA by name patterns in Michigan
+// Returns real licensed professionals with NPI numbers
 
-const APOLLO_TRADE_SEARCHES = [
-  { title: "boiler operator", label: "Boiler Operator" },
-  { title: "HVAC technician", label: "HVAC Technician" },
-  { title: "master plumber", label: "Plumber" },
-  { title: "journeyman electrician", label: "Electrician" },
-  { title: "certified nursing assistant", label: "CNA" },
-  { title: "licensed practical nurse", label: "RN/LPN" },
+const NPI_SEARCHES = [
+  { taxonomy: "367H00000X", label: "CNA", desc: "Certified Nursing Assistant" },
+  { taxonomy: "163W00000X", label: "RN", desc: "Registered Nurse" },
+  { taxonomy: "164W00000X", label: "LPN", desc: "Licensed Practical Nurse" },
+  { taxonomy: "372600000X", label: "Home Health Aide", desc: "Home Health Aide" },
 ];
 
-async function searchViaApollo(tradeTitle: string, label: string): Promise<LicenseCandidate[]> {
-  if (!APOLLO_API_KEY) {
-    console.warn("[miosha-scraper] No APOLLO_API_KEY — skipping Apollo search");
-    return [];
-  }
+const MICHIGAN_CITIES = [
+  "Detroit", "Warren", "Sterling Heights", "Dearborn", "Livonia",
+  "Troy", "Southfield", "Pontiac", "Taylor", "Westland",
+  "Roseville", "Royal Oak", "St. Clair Shores", "Macomb", "Clinton Township",
+];
 
-  try {
-    const res = await fetch("https://api.apollo.io/api/v1/mixed_people/api_search", {
-      method: "POST",
-      headers: {
-        "X-Api-Key": APOLLO_API_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        person_titles: [tradeTitle],
-        person_locations: ["Michigan, United States"],
-        per_page: 25,
-        page: 1,
-      }),
-      signal: AbortSignal.timeout(20_000),
-    });
+async function searchNPIRegistry(taxonomy: string, label: string): Promise<LicenseCandidate[]> {
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.warn(`[miosha-scraper] Apollo HTTP ${res.status} for ${label}: ${errText.slice(0, 200)}`);
-      return [];
-    }
-
-    const data = await res.json();
-    const people = data?.people || [];
-    console.log(`[miosha-scraper] Apollo raw results for ${label}: ${people.length}`);
-
-    const candidates: LicenseCandidate[] = [];
-    for (const person of people) {
-      const name = person.name || `${person.first_name || ""} ${person.last_name || ""}`.trim();
-      if (!name || !isPersonName(name)) {
-        console.log(`[miosha-scraper] Apollo: rejected "${name}" — not a person name`);
+  // Search NPI by taxonomy code + state
+  for (const city of MICHIGAN_CITIES.slice(0, 8)) {
+    try {
+      const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&city=${encodeURIComponent(city)}&state=MI&taxonomy_description=${encodeURIComponent(label)}&enumeration_type=NPI-1&limit=10`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+      if (!res.ok) {
+        console.warn(`[miosha-scraper] NPI HTTP ${res.status} for ${label} in ${city}`);
         continue;
       }
+      const data = await res.json();
+      const results = data?.results || [];
 
-      const city = person.city || person.state || null;
+      for (const r of results) {
+        const firstName = r.basic?.first_name || "";
+        const lastName = r.basic?.last_name || "";
+        const fullName = `${firstName} ${lastName}`.trim();
+        if (!fullName || !isPersonName(fullName)) continue;
 
-      candidates.push({
-        full_name: name,
-        license_type: label,
-        license_number: null,
-        license_expiry: null,
-        city: city,
-        source: "miosha" as const,
-      });
+        const key = `${fullName.toLowerCase()}-${r.number}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        const address = r.addresses?.find((a: any) => a.address_purpose === "LOCATION") || r.addresses?.[0];
+
+        candidates.push({
+          full_name: fullName,
+          license_type: label,
+          license_number: r.number?.toString() || null,
+          license_expiry: null,
+          city: address?.city || city,
+          source: "miosha" as const,
+        });
+      }
+    } catch (e) {
+      console.warn(`[miosha-scraper] NPI error for ${label} in ${city}:`, e instanceof Error ? e.message : String(e));
     }
-
-    console.log(`[miosha-scraper] Apollo ${label}: ${people.length} raw → ${candidates.length} validated`);
-    return candidates;
-  } catch (e) {
-    console.warn(`[miosha-scraper] Apollo error for ${label}:`, e instanceof Error ? e.message : String(e));
-    return [];
   }
+
+  console.log(`[miosha-scraper] NPI ${label}: ${candidates.length} licensed professionals found`);
+  return candidates;
 }
 
-// ===== SOURCE 2: Sonar Web Search (Live Web — Finds People on Public Profiles) =====
+// ===== SOURCE 2: Sonar Web Search (Trades — Non-Healthcare) =====
+// Sonar can't find individual resumes (privacy walls) but CAN find:
+// - People mentioned in news articles about trade shortages
+// - LinkedIn posts by tradespeople
+// - Trade union announcements
+// - Apprenticeship completion announcements
 
 const SONAR_QUERIES = [
   {
-    query: `Find LinkedIn profiles, personal websites, or trade union member pages for individual licensed boiler operators in Metro Detroit Michigan who are actively job seeking or open to work. Search LinkedIn "open to work" profiles, Indeed public resumes, UA Local 636 directory. Return real individual people with full names, NOT companies. Include any Michigan boiler license numbers visible on their profiles.`,
+    query: `Find individual boiler operators, stationary engineers, or boiler technicians in Metro Detroit Michigan. Search for: LinkedIn posts by people who work as boiler operators, news articles mentioning specific boiler operators by name, UA Local 636 member spotlights, Michigan LARA license verification results showing individual boiler operator names. Focus on Wayne, Oakland, and Macomb counties. Return real individual person names with their city.`,
     label: "Boiler Operator",
   },
   {
-    query: `Find LinkedIn profiles, Indeed public resumes, or professional association listings for individual licensed HVAC technicians and mechanical contractors in Metro Detroit Michigan who are open to work or recently posted resumes. Include any LARA or EPA license numbers visible on their profiles. Individual people only.`,
+    query: `Find individual HVAC technicians, HVAC installers, or mechanical contractors in Metro Detroit Michigan. Search for: LinkedIn profiles listing HVAC as current job title, Facebook posts by HVAC techs looking for work, local news articles mentioning specific HVAC workers, NATE certification directory listings. Individual people only, not companies.`,
     label: "HVAC Technician",
   },
   {
-    query: `Find LinkedIn profiles, Indeed public resumes, or trade association directories for individual licensed plumbers or master plumbers in Metro Detroit Michigan who are open to work or actively job seeking. Wayne, Oakland, Macomb counties. Return person names and any license numbers from their profiles.`,
+    query: `Find individual licensed plumbers or master plumbers in Metro Detroit Michigan. Search for: LinkedIn profiles of plumbers, local news articles mentioning specific plumbers by name, Michigan plumbing apprenticeship completions, UA Local 98 member spotlights or announcements. Wayne, Oakland, Macomb counties. Return person names with city.`,
     label: "Plumber",
   },
   {
-    query: `Find LinkedIn profiles, Indeed public resumes, or IBEW Local 58 member pages for individual licensed electricians or journeyman electricians in Metro Detroit Michigan who are open to work or seeking new positions. Individual people names only, not companies. Include license numbers if visible on profiles.`,
+    query: `Find individual licensed electricians or journeyman electricians in Metro Detroit Michigan. Search for: LinkedIn profiles of electricians, IBEW Local 58 member spotlights, news articles mentioning specific electricians, Michigan electrical apprenticeship completion announcements. Individual people only.`,
     label: "Electrician",
-  },
-  {
-    query: `Find LinkedIn profiles, Indeed public resumes, or care.com profiles for individual Certified Nursing Assistants (CNA) in Metro Detroit Michigan who are seeking new positions or open to work. Include any certification numbers visible on profiles. Individual people only.`,
-    label: "CNA",
-  },
-  {
-    query: `Find LinkedIn profiles, Indeed public resumes, or NurseFly/Vivian Health profiles for individual registered nurses (RN) and licensed practical nurses (LPN) in Metro Detroit Michigan who are open to new opportunities. Include any Michigan nursing license numbers visible. Individual names only.`,
-    label: "RN/LPN",
   },
 ];
 
@@ -172,21 +160,21 @@ async function searchViaSonar(query: string, label: string): Promise<LicenseCand
         messages: [
           {
             role: "system",
-            content: `You are a recruiting intelligence researcher finding tradespeople who are actively seeking work or recently became available in Michigan.
+            content: `You are a recruiting intelligence researcher finding tradespeople in Michigan.
 
 CRITICAL RULES:
 1. Return ONLY individual people — NEVER company names, LLC, Inc, contractors, organizations
-2. Each result MUST have: a real person's full name (First Last) AND at least one of: license number, specific Michigan city, or current employer
-3. Search LinkedIn "open to work" profiles, Indeed public resumes, trade union directories, and professional association listings
-4. If you find real people but can't verify license numbers, still include them with city
-5. Do NOT fabricate names or license numbers — only include what you actually find in search results
+2. Each result MUST have: a real person's full name (First Last) AND at least one of: specific Michigan city, current employer, or license number
+3. Search sources: LinkedIn profiles, Facebook professional posts, local news articles, trade union directories, apprenticeship completion announcements, professional certification directories
+4. Do NOT fabricate names — only include people you actually find mentioned by name in real sources
+5. It's OK to return fewer results if you can only verify a few real individuals
 
 Return ONLY valid JSON array. Each object: { "full_name": "First Last", "license_number": "number or null", "city": "Michigan city or null", "current_employer": "company or null" }. Max 20 results. No markdown. No explanation. If you truly find nothing, return [].`,
           },
           { role: "user", content: query },
         ],
         max_tokens: 2000,
-        temperature: 0.2,
+        temperature: 0.3,
       }),
       signal: AbortSignal.timeout(30_000),
     });
@@ -202,7 +190,9 @@ Return ONLY valid JSON array. Each object: { "full_name": "First Last", "license
 
     console.log(`[miosha-scraper] Sonar raw response for ${label} (${text.length} chars): ${text.slice(0, 300)}`);
 
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    // Strip markdown code fences
+    const cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+    const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
       console.log(`[miosha-scraper] Sonar ${label}: no JSON array found, trying Gemini extraction`);
       if (text.length > 50 && LOVABLE_API_KEY) {
@@ -366,32 +356,28 @@ serve(async (req) => {
   let updatedCount = 0;
   let errorCount = 0;
 
-  // ===== PHASE 1: Apollo.io People Search =====
-  console.log("[miosha-scraper] Phase 1: Apollo.io people search");
-  if (APOLLO_API_KEY) {
-    const apolloResults = await Promise.allSettled(
-      APOLLO_TRADE_SEARCHES.map(({ title, label }) => searchViaApollo(title, label))
-    );
+  // ===== PHASE 1: NPI Registry (Healthcare Workers) =====
+  console.log("[miosha-scraper] Phase 1: NPI Registry healthcare search");
+  const npiResults = await Promise.allSettled(
+    NPI_SEARCHES.map(({ taxonomy, label }) => searchNPIRegistry(taxonomy, label))
+  );
 
-    for (const result of apolloResults) {
-      if (result.status === "fulfilled") {
-        for (const c of result.value) {
-          const res = await upsertCandidate(sb, c);
-          if (res === "new") newCount++;
-          else if (res === "updated") updatedCount++;
-          else errorCount++;
-        }
-      } else {
-        console.warn("[miosha-scraper] Apollo search failed:", result.reason);
+  for (const result of npiResults) {
+    if (result.status === "fulfilled") {
+      for (const c of result.value) {
+        const res = await upsertCandidate(sb, c);
+        if (res === "new") newCount++;
+        else if (res === "updated") updatedCount++;
+        else errorCount++;
       }
+    } else {
+      console.warn("[miosha-scraper] NPI search failed:", result.reason);
     }
-  } else {
-    console.warn("[miosha-scraper] No APOLLO_API_KEY — skipping Phase 1");
   }
 
-  console.log(`[miosha-scraper] Phase 1 done: new=${newCount} updated=${updatedCount}. Phase 2: Sonar web search`);
+  console.log(`[miosha-scraper] Phase 1 done: new=${newCount} updated=${updatedCount}. Phase 2: Sonar trades search`);
 
-  // ===== PHASE 2: Sonar Web Search (Parallel) =====
+  // ===== PHASE 2: Sonar Web Search (Trades — Parallel) =====
   const sonarResults = await Promise.allSettled(
     SONAR_QUERIES.map(({ query, label }) => searchViaSonar(query, label))
   );
