@@ -1630,6 +1630,77 @@ export type Database = {
         }
         Relationships: []
       }
+      competitor_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          details: Json | null
+          id: string
+          monitor_id: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          monitor_id: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          monitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_alerts_monitor_id_fkey"
+            columns: ["monitor_id"]
+            isOneToOne: false
+            referencedRelation: "competitor_monitors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitor_monitors: {
+        Row: {
+          client_id: string
+          client_table: string
+          competitor_name: string
+          created_at: string
+          google_business_url: string | null
+          id: string
+          last_avg_rating: number | null
+          last_review_count: number | null
+          last_scanned_at: string | null
+          license_number: string | null
+        }
+        Insert: {
+          client_id: string
+          client_table?: string
+          competitor_name: string
+          created_at?: string
+          google_business_url?: string | null
+          id?: string
+          last_avg_rating?: number | null
+          last_review_count?: number | null
+          last_scanned_at?: string | null
+          license_number?: string | null
+        }
+        Update: {
+          client_id?: string
+          client_table?: string
+          competitor_name?: string
+          created_at?: string
+          google_business_url?: string | null
+          id?: string
+          last_avg_rating?: number | null
+          last_review_count?: number | null
+          last_scanned_at?: string | null
+          license_number?: string | null
+        }
+        Relationships: []
+      }
       competitor_pricing_changes: {
         Row: {
           client_id: string | null
@@ -1928,6 +1999,7 @@ export type Database = {
       contractor_clients: {
         Row: {
           active: boolean | null
+          average_ticket_value: number
           business_name: string
           city: string | null
           created_at: string | null
@@ -1951,6 +2023,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          average_ticket_value?: number
           business_name: string
           city?: string | null
           created_at?: string | null
@@ -1974,6 +2047,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          average_ticket_value?: number
           business_name?: string
           city?: string | null
           created_at?: string | null
@@ -2126,6 +2200,8 @@ export type Database = {
       contractor_leads: {
         Row: {
           checkout_locked_by: string | null
+          claimed_at: string | null
+          claimed_by: string | null
           client_id: string | null
           contact_preference: string
           created_at: string | null
@@ -2147,6 +2223,8 @@ export type Database = {
         }
         Insert: {
           checkout_locked_by?: string | null
+          claimed_at?: string | null
+          claimed_by?: string | null
           client_id?: string | null
           contact_preference?: string
           created_at?: string | null
@@ -2168,6 +2246,8 @@ export type Database = {
         }
         Update: {
           checkout_locked_by?: string | null
+          claimed_at?: string | null
+          claimed_by?: string | null
           client_id?: string | null
           contact_preference?: string
           created_at?: string | null
@@ -3406,10 +3486,12 @@ export type Database = {
           completed_at: string | null
           created_at: string
           customer_id: string | null
+          customer_notified_at: string | null
           description: string | null
           id: string
           notes: string | null
           priority: string
+          referral_asked_at: string | null
           scheduled_date: string | null
           scheduled_time: string | null
           started_at: string | null
@@ -3423,10 +3505,12 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           customer_id?: string | null
+          customer_notified_at?: string | null
           description?: string | null
           id?: string
           notes?: string | null
           priority?: string
+          referral_asked_at?: string | null
           scheduled_date?: string | null
           scheduled_time?: string | null
           started_at?: string | null
@@ -3440,10 +3524,12 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           customer_id?: string | null
+          customer_notified_at?: string | null
           description?: string | null
           id?: string
           notes?: string | null
           priority?: string
+          referral_asked_at?: string | null
           scheduled_date?: string | null
           scheduled_time?: string | null
           started_at?: string | null
@@ -4396,6 +4482,7 @@ export type Database = {
       hire_alert_clients: {
         Row: {
           active: boolean | null
+          booking_link: string | null
           company_name: string
           created_at: string | null
           dashboard_token: string | null
@@ -4416,6 +4503,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          booking_link?: string | null
           company_name: string
           created_at?: string | null
           dashboard_token?: string | null
@@ -4436,6 +4524,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          booking_link?: string | null
           company_name?: string
           created_at?: string | null
           dashboard_token?: string | null
