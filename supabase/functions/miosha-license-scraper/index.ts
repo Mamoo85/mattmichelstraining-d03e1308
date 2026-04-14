@@ -453,6 +453,7 @@ async function extractNamesFromProse(prose: string, label: string): Promise<Lice
 async function upsertCandidate(sb: ReturnType<typeof createClient>, c: LicenseCandidate): Promise<"new" | "updated" | "error"> {
   try {
     const row: Record<string, unknown> = {
+      name: c.full_name,
       full_name: c.full_name,
       license_type: c.license_type,
       source: "miosha",
