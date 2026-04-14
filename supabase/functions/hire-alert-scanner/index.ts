@@ -1283,7 +1283,7 @@ serve(async (req: Request) => {
       <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:center;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Score</th>
       <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Src</th>
       <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Enrich</th>
-      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Status</th>
+      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Actions</th>
     </tr>
     ${candidateRows}
   </table>
