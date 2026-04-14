@@ -5,7 +5,7 @@ import { sendSMS } from "../_shared/twilio.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
+const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_DISTANCE_MATRIX_API_KEY") || Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
 const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
 
 const cors = {
