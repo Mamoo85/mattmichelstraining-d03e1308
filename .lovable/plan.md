@@ -1,93 +1,73 @@
 
 
-# TechAlert Data Quality & Source Protection Overhaul
+# Add 8 New Data Sources (S10–S17) to miosha-license-scraper
 
 ## Summary
-Five fixes to protect proprietary intelligence methods from clients, eliminate AI hallucinations, add cross-reference confidence signals, enforce data completeness minimums, and store PDL LinkedIn URLs properly.
+Add 8 new scan functions to the existing `Promise.allSettled()` block in `miosha-license-scraper/index.ts`. Purely additive — no existing logic changes. This takes the scanner from 9 sources to 17.
+
+## New Environment Variable Needed
+- **YELP_API_KEY** — must be added via Lovable secrets before Yelp source will activate
+
+## Sources Being Added
+
+| ID | Source | Method | API Key | Expected Yield |
+|----|--------|--------|---------|---------------|
+| S10 | Michigan VAL License ID Enumeration | Direct HTML fetch + regex parse of `val.apps.lara.state.mi.us/License/Details/{id}` | None | 5–20/run |
+| S11 | Craigslist RSS (sks + trd) | Plain fetch of RSS XML, parse items | None | 2–10/run |
+| S12 | Yelp Fusion API | REST `businesses/search` for contractor categories across 6 Metro Detroit cities | YELP_API_KEY | 10–30/run |
+| S13 | Google Places API | Text search for licensed tradespeople | GOOGLE_MAPS_API_KEY (exists) | 10–25/run |
+| S14 | Nursys Nursing License | Firecrawl scrape of public lookup, extract with Haiku | FIRECRAWL_API_KEY (exists) | 5–15/run |
+| S15 | PHCC Find a Contractor | Firecrawl scrape by Metro Detroit zip codes | FIRECRAWL_API_KEY (exists) | 5–15/run |
+| S16 | JATC Graduation Announcements | Firecrawl scrape of 4 JATC sites (detroiteitc.org, aaejatc.org, wmejatc.org, ua190.org) | FIRECRAWL_API_KEY (exists) | 2–8/run |
+| S17 | Thumbtack Contractor Profiles | Firecrawl scrape of Thumbtack Detroit trade pages | FIRECRAWL_API_KEY (exists) | 5–15/run |
 
 ## Technical Details
 
-### Migration
-**New file**: `supabase/migrations/20260414200000_candidate_quality_columns.sql`
-- Add `cross_referenced boolean DEFAULT false` to `hire_alert_candidates`
-- Add `data_completeness integer DEFAULT 0` to `hire_alert_candidates`
+### File: `supabase/functions/miosha-license-scraper/index.ts`
 
-### FIX 1: Source Protection — Client Views
+**Module scope** (top of file):
+- Add `const YELP_API_KEY = Deno.env.get("YELP_API_KEY") || "";`
+- `GOOGLE_MAPS_API_KEY` is already available via existing secrets
 
-**`src/pages/MyTechAlert.tsx`** (~15 changes):
-- Remove `source` from interface and all references (line 45, 524)
-- Replace numeric score badges (lines 545-554) with availability labels: `🟢 High Availability` (8-10), `🟡 Possible Availability` (5-7), `🔵 Monitor` (1-4)
-- Remove score numbers from profile photo overlay and fallback badge
-- Replace "Hot (7+)" filter label with "🟢 High Availability"
-- Replace "Available (5-6)" filter with "🟡 Possible"
-- Replace `isLapsed` check (was `c.source === "license_expiry"`) with license_expiry date check
-- Add license status label: `Active` / `Expiring Soon` / `Recently Lapsed` based on `license_expiry` date
-- Change "Alerted:" timestamp to "Identified X days ago" using `alerted_at`
-- Filter candidates to only show `data_completeness >= 40` (need to add this field from the API)
-- Sort cross-referenced candidates first
+**8 new async functions**, each returning `Promise<LicenseCandidate[]>`:
 
-**`supabase/functions/get-my-techalert/index.ts`**:
-- Add `cross_referenced` and `data_completeness` to the candidate select
-- Stop returning `source` field entirely (currently returns it for license_expiry badge — replace with license_expiry date logic)
-- Replace numeric `availability_score` with an `availability_label` string
-- Filter out candidates with `data_completeness < 40`
+1. **`scanVALNewLicenses(sb)`** — Reads `last_val_id` from `agent_heartbeats` where `agent_name = 'miosha-scraper'`. Enumerates next 200 IDs via fetch to VAL HTML pages. Regex extracts name/license_type/city/expiry. Writes back updated `last_val_id`. Baseline start: 1928000.
 
-**`supabase/functions/hire-alert-scanner/index.ts`** (email/SMS templates):
-- Line 728: Replace `${c.availability_score}/10` with availability label (🟢/🟡/🔵)
-- Line 817: Change "Our hiring intelligence engine scanned the market" → "We identified new licensed professionals near you"
-- Line 834: Remove "appeared in hiring channels" phrasing
-- Lines 826-840: Replace "How Scoring Works" section with plain availability tier descriptions (no methodology hints)
-- SMS body (lines 1215-1217): Remove raw score number, use availability label instead
+2. **`scanCraigslistRSS()`** — Fetches RSS XML from `detroit.craigslist.org/search/sks?format=rss` and `trd?query=available&format=rss`. Parses XML for `<item>` elements. Extracts trade keywords from title/description. Applies `isPersonName()`.
 
-### FIX 2: Hallucination Guards (Sonar only)
+3. **`scanYelp()`** — Loops through 4 trade search terms × 6 cities. Calls Yelp Fusion `businesses/search`. Extracts person-like names from business names. Stores phone in raw_data.
 
-**`supabase/functions/miosha-license-scraper/index.ts`**:
-- The `isPersonName()` function (line 47) and `looksLikeLicenseNumber()` (line 57) already exist and cover most validation
-- Add additional guards in Sonar result processing: city validation (reject "Michigan"/"MI" as city), require valid license_number OR real city
-- Add company keyword list expansion per the prompt (School, Hospital, University, District already present at line 42-44)
-- These guards apply ONLY to Sonar/AI-sourced candidates, not NPI/PDL/government sources
+4. **`scanGooglePlaces()`** — 4 trade search queries. Calls Places Text Search API. Same owner-operator name extraction pattern as Yelp.
 
-### FIX 3: Cross-Reference Logic
+5. **`scanNursys()`** — Uses Firecrawl to scrape Nursys public lookup for MI RN/LPN. Falls back gracefully if blocked. Extracts names via `extractNamesFromMarkdown()`.
 
-**`supabase/functions/miosha-license-scraper/index.ts`** — in `upsertCandidate()` (line 709):
-- After insert, query for existing row matching `full_name + city + license_type` from different `source`
-- If found: set `cross_referenced = true` on both rows, add +2 to `availability_score`
+6. **`scanPHCC()`** — Firecrawl scrapes PHCC "Find a Contractor" for ~5 Metro Detroit zip codes. Extracts master plumber/HVAC contractor names.
 
-**`src/components/admin/AdminHireAlertClients.tsx`**:
-- Add `⚡ Cross-Referenced` badge on candidate rows
+7. **`scanJATCGraduations()`** — Firecrawl scrapes news/events pages from 4 JATC websites. Extracts newly graduated journeymen names via Haiku.
 
-**`src/pages/MyTechAlert.tsx`**:
-- Sort cross-referenced candidates first in the feed
+8. **`scanThumbtack()`** — Firecrawl scrapes Thumbtack category pages for Detroit HVAC/plumbing/electrical/boiler. Extracts contractor names, license numbers if visible.
 
-### FIX 4: Data Completeness Score
+**Promise.allSettled() block** (line 821):
+- Add all 8 new functions to the array
+- Update `sourceLabels` array to include: `"VAL", "CL-RSS", "Yelp", "GPlaces", "Nursys", "PHCC", "JATC", "Thumbtack"`
 
-**`supabase/functions/miosha-license-scraper/index.ts`** — in `upsertCandidate()`:
-- Calculate: +20 (full_name) +20 (valid city) +20 (license_type) +20 (license_number) +10 (license_expiry) +10 (linkedin_url in raw_data)
-- Store as `data_completeness` on insert/update
+**Header comment**: Update source count from 9 to 17.
 
-**`src/components/admin/AdminHireAlertClients.tsx`**:
-- Add small completeness progress bar on each candidate row
+### Patterns Followed
+- Every function has its own try/catch — one failure never blocks others
+- Every candidate passes through `isPersonName()` validation
+- Every insert includes both `name` and `full_name`
+- Each source tagged with unique `source` value but stored as `"miosha"` per existing LicenseCandidate interface
+- Console logging: `[S10:VAL] Found 12 candidates`
+- AbortSignal.timeout on all external fetches
+- Graceful skip if API key missing (Yelp, Firecrawl sources)
 
-**`src/pages/MyTechAlert.tsx`** / **`get-my-techalert`**:
-- Only show candidates where `data_completeness >= 40`
+### Files Changed
+1. `supabase/functions/miosha-license-scraper/index.ts` — add 8 scan functions + wire into Promise.allSettled
 
-### FIX 5: PDL LinkedIn URL Storage
-
-**`supabase/functions/miosha-license-scraper/index.ts`** — in `scanPDL()`:
-- Ensure `linkedin_url` from PDL response is stored in `raw_data` object
-- In `MyTechAlert.tsx`: render as "View Profile →" link (already partially done — just ensure no source attribution)
-
-## Files Changed
-1. `supabase/migrations/20260414200000_candidate_quality_columns.sql` — new columns
-2. `supabase/functions/miosha-license-scraper/index.ts` — hallucination guards, cross-ref logic, data completeness calc, PDL linkedin storage
-3. `supabase/functions/hire-alert-scanner/index.ts` — sanitize email/SMS templates (remove source refs, replace scores with labels)
-4. `supabase/functions/get-my-techalert/index.ts` — filter by completeness, replace scores with labels, remove source field
-5. `src/pages/MyTechAlert.tsx` — remove source display, replace numeric scores with color labels, filter completeness >= 40, sort cross-referenced first
-6. `src/components/admin/AdminHireAlertClients.tsx` — add completeness bar + cross-referenced badge (admin keeps full visibility)
-
-## What Does NOT Change
-- Scoring logic internals, dedup logic, 8-source parallel architecture
-- NPI/PDL enrichment flows
-- Admin panel full source visibility
-- Existing `hire_alert_candidates` columns
+### No Changes To
+- Database schema (no migration needed)
+- Frontend
+- Other edge functions
+- `supabase/config.toml`
 
