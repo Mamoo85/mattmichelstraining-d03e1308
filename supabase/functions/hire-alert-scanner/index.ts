@@ -232,7 +232,7 @@ async function scanJobBoards(): Promise<RawCandidate[]> {
 }
 
 // Corporate name filter — reject organizations masquerading as people
-const CORPORATE_PATTERN = /\b(LLC|Inc|Corp|School|Casino|Hospital|Health\s+System|University|Energy|Solutions|Administration|Academy|Institute|Staffing|Group\s+Inc|Services\s+Inc|& Sons|Mechanical|Electric\s+Co|Company|Associates|Enterprises|Foundation|Authority|Board|Commission|Department|District|Center|Clinic|Medical|Nursing\s+Home|Assisted\s+Living|Home\s+Care|Senior\s+Living)\b/i;
+const CORPORATE_PATTERN = /\b(LLC|Inc|Corp|School|Casino|Hospital|Health\s*System|University|Energy|Solutions|Administration|Academy|Institute|Staffing|Group|Services|Sons|Mechanical|Electric|Company|Associates|Enterprises|Foundation|Authority|Board|Commission|Department|District|Center|Clinic|Medical|Nursing\s+Home|Assisted\s+Living|Home\s+Care|Senior\s+Living|Public\s+Schools|Community\s+College|Rehabilitation|Management|Consulting|Industries|Manufacturing|Plumbing|Heating|Cooling|Roofing|Construction|Contractors|Builders|Supply|Wholesale|Distributors|Holdings|Properties|Realty|Insurance|Financial|Bank|Credit\s+Union|Transit|Utility|Utilities|Water|Sewer|Electric\s+Co|Power|Township|County|City\s+of|State\s+of|Federal)\b/i;
 
 function isCorporateName(name: string): boolean {
   if (!name) return true;
@@ -240,14 +240,18 @@ function isCorporateName(name: string): boolean {
   // All-caps multi-word names are usually orgs
   if (name === name.toUpperCase() && name.split(/\s+/).length > 3) return true;
   // If it contains "of" + proper noun pattern (e.g., "Academy of Arts & Sciences")
-  if (/\b(of the|of)\b/i.test(name) && name.split(/\s+/).length > 4) return true;
+  if (/\b(of the|of)\b/i.test(name) && name.split(/\s+/).length > 3) return true;
+  // Single word "names" are usually companies (e.g., "Veolia", "CoolSys")
+  if (name.trim().split(/\s+/).length === 1 && name.length > 3) return true;
+  // Names with & in them are usually companies
+  if (/\s&\s/.test(name) && name.split(/\s+/).length > 2) return true;
   return false;
 }
 
 async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[]> {
   const searches = [
-    "Find individual people who are licensed boiler operators, HVAC technicians, plumbers, pipefitters, or electricians in Metro Detroit Michigan who are actively looking for work, posted resumes, or are open to new opportunities. Search Indeed resumes, LinkedIn profiles, and ZipRecruiter. For each PERSON found, extract their personal name, trade, and city. Do NOT return company names or employer names — only individual people's names.",
-    "Find individual licensed tradespeople (CNA, LPN, RN, nurse aide, home health aide) in Michigan who recently posted resumes or are seeking new positions. Search Indeed, ZipRecruiter, LinkedIn. Return each PERSON's full name, license type, and city. Never return a school, hospital, or company name as the person's name.",
+    `Search for individual PEOPLE with resumes on Indeed, LinkedIn, or ZipRecruiter who are licensed boiler operators, HVAC technicians, plumbers, pipefitters, or electricians in Metro Detroit, Michigan. Look for people who recently updated their resume or are marked "Open to Work." For each person, find their FULL PERSONAL NAME (first and last name — NEVER a company/employer), their specific trade license, and their city. Also try to find their Michigan LARA license number if mentioned anywhere. Limit to 8 highly-detailed results.`,
+    `Search for individual PEOPLE who are CNAs, LPNs, RNs, nurse aides, or home health aides in Michigan seeking employment. Look on Indeed resumes, ZipRecruiter profiles, and LinkedIn "Open to Work" profiles. For each person, extract their PERSONAL first and last name (NEVER a hospital, school, or agency name), their license/certification type, city, and any license or NPI number visible on their profile. Limit to 8 results.`,
   ];
 
   const allResults: RawCandidate[] = [];
@@ -266,14 +270,28 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
           messages: [
             {
               role: "system",
-              content: `You are a hiring intelligence researcher finding INDIVIDUAL PEOPLE seeking work. Return ONLY valid JSON array. Each object: { "name": "person's full name (NEVER a company, school, hospital, or organization name)", "trade": "specific trade title", "city": "city name", "type": "candidate" }. Max 15 results. No markdown, no explanation. CRITICAL: The "name" field MUST be a real human person's first and last name. NEVER put an employer, school, hospital, casino, or any organization name in the "name" field.`,
+              content: `You are a hiring intelligence researcher finding INDIVIDUAL PEOPLE who are seeking work. Return ONLY valid JSON array. Each object MUST have:
+{
+  "name": "person's first and last name (NEVER a company, school, hospital, staffing agency, or any organization — ONLY a human being's personal name)",
+  "trade": "specific trade/license title (e.g. 'Boiler Operator', 'Licensed Practical Nurse')",
+  "city": "city name",
+  "license_number": "Michigan LARA license number or nursing license number if found, otherwise null",
+  "license_issuer": "issuing body (e.g. 'Michigan LARA', 'Michigan Board of Nursing') or null",
+  "license_expiry": "expiration date if found, otherwise null",
+  "current_employer": "current or most recent employer name or null",
+  "years_experience": number of years experience if determinable or null
+}
+Max 8 results. No markdown, no explanation. CRITICAL RULES:
+1. The "name" field MUST be a real human first + last name. If you can only find a company name, SKIP that result entirely.
+2. If a result looks like a job posting (employer seeking candidates), SKIP IT — we want the candidate, not the employer.
+3. Prioritize candidates who have license/certification details visible on their profile.`,
             },
             { role: "user", content: query },
           ],
-          max_tokens: 1500,
+          max_tokens: 2000,
           temperature: 0.1,
         }),
-        signal: AbortSignal.timeout(20000),
+        signal: AbortSignal.timeout(30000),
       });
 
       if (!res.ok) {
@@ -286,7 +304,11 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
       const jsonMatch = text.match(/\[[\s\S]*?\]/);
       if (!jsonMatch) continue;
 
-      const parsed = JSON.parse(jsonMatch[0]) as Array<{ name: string; trade: string; city: string; type?: string }>;
+      const parsed = JSON.parse(jsonMatch[0]) as Array<{
+        name: string; trade: string; city: string;
+        license_number?: string; license_issuer?: string; license_expiry?: string;
+        current_employer?: string; years_experience?: number;
+      }>;
 
       for (const item of parsed) {
         if (!item.name || !item.trade) continue;
@@ -302,9 +324,16 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
         allResults.push({
           full_name: item.name,
           license_type: item.trade,
+          license_number: item.license_number || undefined,
+          license_expiry: item.license_expiry || undefined,
           city: item.city || "Metro Detroit",
           source: "firecrawl" as const,
-          raw_data: { openrouter_search: true, type: item.type || "candidate" },
+          raw_data: {
+            openrouter_search: true,
+            license_issuer: item.license_issuer || null,
+            current_employer: item.current_employer || null,
+            years_experience: item.years_experience || null,
+          },
         });
       }
     } catch (e) {
