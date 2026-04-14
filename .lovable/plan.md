@@ -1,67 +1,61 @@
 
 
-# Add 5 Sources (S11 Yelp Fix + S14–S17) to miosha-license-scraper
+# TechAlert Full Click Test + DJ Conley Demo PDF Generator
 
 ## Summary
-Add 5 scan functions to `miosha-license-scraper/index.ts` and wire them into the existing `Promise.allSettled()` block. Fix the Yelp source (S12 per header, called S11 by user) now that `YELP_API_KEY` is available. Add PHCC (S15), JATC (S16), Thumbtack (S17), and Nursys (S14). Purely additive.
+Two deliverables: (1) a thorough end-to-end click test of all TechAlert/HireAlert flows, and (2) a new `generate-demo-report` edge function + admin PDF button that produces a premium intelligence briefing for DJ Conley.
 
-## What Gets Built
+## Part 1: Full Click Test
 
-### 1. `scanYelp()` — Yelp Fusion API (Fix)
-- `YELP_API_KEY` already at module scope (line 35), already reads from env
-- 4 trade search terms × 6 Metro Detroit cities
-- `GET https://api.yelp.com/v3/businesses/search` with Bearer auth
-- Extract owner-operator names from business names (strip trade words, test with `isPersonName()`)
-- Store phone in raw_data-style fields; skip silently if key empty
+Manual verification of every TechAlert/HireAlert touchpoint:
 
-### 2. `scanPHCC()` — PHCC Contractor Directory
-- POST to `phccweb.org/tools-resources/find-a-contractor/` with zip codes
-- 20 Metro Detroit zip codes, 10 per run
-- Parse HTML for contractor names, strip company suffixes, run `isPersonName()`
-- Infer license_type from company keywords
+- `/hire-alert` — product landing page loads, Stripe checkout button works
+- `/my-techalert` — client dashboard loads via `get-my-techalert` edge function, candidates render with availability labels (not numeric scores), no source names visible, completeness filter active
+- Admin `/dwa-admin` → TechAlert tab — clients load, "Run Scanner" button invokes `hire-alert-scanner`, scanner runs table populates, candidates table shows with cross-ref badges and data completeness bars
+- Edge function health checks: `hire-alert-scanner`, `get-my-techalert`, `miosha-license-scraper` — verify deployment status and logs
+- Source protection: confirm no `source` field leaks to client views anywhere
 
-### 3. `scanJATCGraduations()` — JATC News Pages
-- Fetch 4 JATC news URLs (detroiteitc.org, aaejatc.org, ualocal98.org, local80.org)
-- Regex for graduation keywords, extract capitalized name patterns
-- Use `extractNamesFromMarkdown()` via Gemini if raw regex insufficient
-- Each site has 10s timeout, independent try/catch
+## Part 2: Generate Demo Report
 
-### 4. `scanThumbtack()` — Thumbtack Pro Profiles
-- Fetch 5 Thumbtack category pages for Detroit trades
-- Parse JSON-LD (`@type: Person/LocalBusiness`) for names
-- Fallback: regex for profile name patterns in HTML
-- 15s timeout, skip on non-200
+### New file: `supabase/functions/generate-demo-report/index.ts`
+- Queries `hire_alert_candidates` ordered by `availability_score` desc, `first_seen_at` desc, limit 60
+- Filters to candidates with valid 2+ word names and at least one of: license_number, city, license_type
+- Takes top 20 qualified candidates
+- Maps each candidate's `source` to a client-safe signal label via `SOURCE_TO_SIGNAL` map (e.g., `jatc_graduation` → "New to Market", `thumbtack` → "Actively Seeking Work")
+- Returns JSON with: `report_date`, `summary` (total, hot, with_license, with_contact, local, trades breakdown), `candidates` array
+- No source names, no AI/algorithm/scraper/API language anywhere
 
-### 5. `scanNursys()` — Nursys License Lookup
-- GET Nursys public search page for MI RN/LPN
-- Parse response table for name, license number, expiry
-- 20s timeout, return [] silently if not parseable
+### Edit: `supabase/config.toml`
+- Add `[functions.generate-demo-report]` with `verify_jwt = false`
 
-## Technical Details
+### Edit: `src/components/admin/AdminHireAlertClients.tsx`
+- Add `generatingPDF` state + `generateDemoPDF()` function
+- Add teal "📄 Generate Demo PDF" button in the header button row
+- `openPDFWindow()` opens new tab, writes full HTML document
+- `buildPDFHTML()` renders the premium intelligence briefing:
+  - **Cover page**: DWA dark navy (#0a1628) with teal accents (#00d4ff), "Staffing Intelligence Report", "Prepared for: DJ Conley", KPI grid (total candidates, high priority, with contact info, metro detroit), trade breakdown bar chart
+  - **Candidate cards**: Color-coded border (green=high priority, amber=available, slate=monitor), name, license type, license number with "Verify at michigan.gov/lara", city, "WHY NOW" signal box, contact info, employer, experience
+  - **Closing page**: Dark navy pitch page — "This Is Not A Staffing Agency" copy, ROI math ($10k agency placement vs $1,788/year TechAlert), CTA with $149/mo pricing, Matt's contact info
+  - Missing fields silently omitted (no N/A, no empty rows)
+  - Auto-triggers `window.print()` after 900ms
 
-### File: `supabase/functions/miosha-license-scraper/index.ts`
+### Rules enforced
+1. Source names (pdl, sonar, apollo, npi, craigslist) never appear in PDF
+2. Words "AI", "algorithm", "scraper", "API" never appear
+3. License numbers always show "Verify at michigan.gov/lara"
+4. Missing fields silently omitted
+5. PDF opens in new tab with auto print dialog
+6. Button: teal background, spinner while loading
 
-**Insert 5 new functions** between `scanCraigslist()` (ends line 534) and `scanViaSonar()` (line 536). Each function:
-- Returns `Promise<LicenseCandidate[]>`
-- Has its own try/catch
-- Uses `AbortSignal.timeout()` on all fetches
-- Passes all candidates through `isPersonName()`
-- Logs `[S12:Yelp]`, `[S14:Nursys]`, `[S15:PHCC]`, `[S16:JATC]`, `[S17:Thumbtack]` format
+## Part 3: YELP_API_KEY Secret
+- `YELP_API_KEY` is referenced in `miosha-license-scraper` but not configured in secrets
+- Will prompt to add it so the Yelp source activates on next scanner run
 
-**Update `Promise.allSettled()` block** (line 831):
-```
-scanYelp(),              // S12
-scanNursys(),            // S14
-scanPHCC(),              // S15
-scanJATCGraduations(),   // S16
-scanThumbtack(),         // S17
-```
+## Files Changed
+1. `supabase/functions/generate-demo-report/index.ts` — new edge function
+2. `supabase/config.toml` — add verify_jwt block
+3. `src/components/admin/AdminHireAlertClients.tsx` — add PDF button + generator functions
 
-**Update `sourceLabels`** array (line 842) to add: `"Yelp", "Nursys", "PHCC", "JATC", "Thumbtack"`
-
-### No Changes To
-- Database schema
-- Frontend
-- Other edge functions
-- `supabase/config.toml`
+## Files NOT Changed
+- `MyTechAlert.tsx`, `miosha-license-scraper`, database schema — no modifications
 
