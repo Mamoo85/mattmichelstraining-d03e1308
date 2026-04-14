@@ -1,5 +1,8 @@
 project_id = "zmyczlfuufhngzovkjdh"
 
+[functions.boiler-sector-intel]
+verify_jwt = false
+
 [functions.abandoned-cart-sender]
 verify_jwt = false
 
