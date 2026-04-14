@@ -1177,8 +1177,16 @@ serve(async (req: Request) => {
             const hasAction = c.linkedin_url || c.facebook_url || c.email || c.phone || c.npi_business_phone || c.pdl_mobile_phone;
             const npiIcon = c.npi_number ? `<br><span style="font-size:10px;color:#7c3aed;">🏥 NPI#${c.npi_number}</span>` : "";
             const pdlIcon = c.pdl_mobile_phone ? `<br><span style="font-size:10px;color:#ea580c;">📱 PDL: ${c.pdl_mobile_phone}</span>` : "";
+            // Build clickable links for founder report
+            const emailLink = c.email ? `<br><a href="mailto:${c.email}" style="font-size:11px;color:#0891b2;font-weight:400;text-decoration:none;">✉️ ${c.email}</a>` : "";
+            const phoneLink = c.phone ? `<br><a href="tel:${c.phone}" style="font-size:11px;color:#e8621a;font-weight:600;text-decoration:none;">📞 ${c.phone}</a>` : "";
+            const linkedinLink = c.linkedin_url ? `<br><a href="${c.linkedin_url}" target="_blank" style="font-size:11px;color:#0a66c2;font-weight:600;text-decoration:none;">🔗 LinkedIn</a>` : "";
+            const facebookLink = c.facebook_url ? `<br><a href="${c.facebook_url}" target="_blank" style="font-size:11px;color:#1877f2;font-weight:600;text-decoration:none;">👤 Facebook</a>` : "";
+            const npiLink = c.npi_number ? `<br><span style="font-size:10px;color:#7c3aed;">🏥 NPI#${c.npi_number}</span>` : "";
+            const pdlLink = c.pdl_mobile_phone ? `<br><a href="tel:${c.pdl_mobile_phone}" style="font-size:10px;color:#ea580c;text-decoration:none;">📱 PDL: ${c.pdl_mobile_phone}</a>` : "";
+            const npiPhoneLink = c.npi_business_phone && c.npi_business_phone !== c.phone ? `<br><a href="tel:${c.npi_business_phone}" style="font-size:10px;color:#0d9488;text-decoration:none;">📞 Biz: ${c.npi_business_phone}</a>` : "";
             return `<tr style="background:${rowBg};border-bottom:1px solid #e2e8f0;">
-              <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:${c.availability_score >= 7 ? "800" : "500"};">${c.full_name}${c.email ? `<br><span style="font-size:11px;color:#0891b2;font-weight:400;">${c.email}</span>` : ""}${c.phone ? `<br><span style="font-size:11px;color:#e8621a;font-weight:600;">${c.phone}</span>` : ""}${npiIcon}${pdlIcon}</td>
+              <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:${c.availability_score >= 7 ? "800" : "500"};">${c.full_name}${emailLink}${phoneLink}${linkedinLink}${facebookLink}${npiLink}${pdlLink}${npiPhoneLink}</td>
               <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.license_type || "—"}${c.license_number ? `<br><span style="font-size:10px;color:#94a3b8;">#${c.license_number}</span>` : ""}</td>
               <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.city || "—"}</td>
               <td style="padding:12px 10px;text-align:center;">
