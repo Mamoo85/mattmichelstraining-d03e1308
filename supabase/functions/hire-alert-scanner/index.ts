@@ -774,6 +774,10 @@ async function sendAlertEmail(
 ) {
   if (!RESEND_API_KEY || !client.owner_email) return;
 
+  // Split into State-Licensed (BPL + MIOSHA) vs Job Seekers (firecrawl)
+  const stateLicensed = candidates.filter((c) => c.source === "bpl" || c.source === "miosha");
+  const jobSeekers = candidates.filter((c) => c.source === "firecrawl");
+
   const hotCount = candidates.filter((c) => c.availability_score >= 7).length;
 
   const scoreBg = (s: number) =>
@@ -782,9 +786,7 @@ async function sendAlertEmail(
   const sourceLabel = (s: string) =>
     s === "bpl" ? "🏛️ State License DB" : s === "miosha" ? "🏛️ MIOSHA" : "📋 Resume";
 
-  const candidateCards = candidates
-    .map(
-      (c) => `
+  const buildCard = (c: ScoredCandidate) => `
     <tr><td style="padding:0 0 16px;">
       <table width="100%" cellpadding="0" cellspacing="0" style="border-radius:12px;overflow:hidden;border:1px solid ${c.availability_score >= 7 ? "#e8621a40" : "#e2e8f0"};${c.availability_score >= 7 ? "box-shadow:0 2px 8px rgba(232,98,26,0.12);" : ""}">
         <tr><td style="background:${c.availability_score >= 7 ? "linear-gradient(135deg,#0a1628,#1e293b)" : "#f8fafc"};padding:14px 18px;">
@@ -834,14 +836,37 @@ async function sendAlertEmail(
           </table>
         </td></tr>
       </table>
-    </td></tr>`
-    )
-    .join("");
+    </td></tr>`;
+
+  const stateLicensedCards = stateLicensed.map(buildCard).join("");
+  const jobSeekerCards = jobSeekers.map(buildCard).join("");
 
   const subjectEmoji = hotCount >= 3 ? "🔥🔥🔥" : hotCount >= 1 ? "🔥" : "📋";
   const subjectText = hotCount > 0
     ? `${subjectEmoji} ${hotCount} hot ${hotCount === 1 ? "candidate" : "candidates"} — act fast`
     : `${candidates.length} licensed ${candidates.length === 1 ? "tech" : "techs"} spotted nearby`;
+
+  const stateLicensedSection = stateLicensed.length > 0 ? `
+  <tr><td style="background:#fff;padding:24px 20px 8px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr><td style="padding:0 0 16px;">
+        <p style="margin:0;font-size:15px;font-weight:800;color:#1e293b;text-transform:uppercase;letter-spacing:0.5px;">🏛️ State-Licensed Candidates</p>
+        <p style="margin:4px 0 0;font-size:12px;color:#64748b;">Verified through Michigan LARA / MIOSHA state licensing databases</p>
+      </td></tr>
+      ${stateLicensedCards}
+    </table>
+  </td></tr>` : "";
+
+  const jobSeekerSection = jobSeekers.length > 0 ? `
+  <tr><td style="background:#fff;padding:${stateLicensed.length > 0 ? "8px" : "24px"} 20px 8px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr><td style="padding:0 0 16px;border-top:${stateLicensed.length > 0 ? "2px dashed #e2e8f0;padding-top:16px;" : "none"}">
+        <p style="margin:0;font-size:14px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">📋 Supplementary — Job Seekers</p>
+        <p style="margin:4px 0 0;font-size:12px;color:#94a3b8;">Found on job boards/resumes — license verification recommended before outreach</p>
+      </td></tr>
+      ${jobSeekerCards}
+    </table>
+  </td></tr>` : "";
 
   await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -869,8 +894,8 @@ async function sendAlertEmail(
       <td style="text-align:right;vertical-align:top;">
         <table cellpadding="0" cellspacing="0"><tr>
           <td style="background:#00d4ff20;border:1px solid #00d4ff40;padding:12px 16px;border-radius:12px;text-align:center;">
-            <p style="margin:0;font-size:28px;font-weight:900;color:#00d4ff;line-height:1;">${candidates.length}</p>
-            <p style="margin:2px 0 0;font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;font-weight:700;">${candidates.length === 1 ? "Candidate" : "Candidates"}</p>
+            <p style="margin:0;font-size:28px;font-weight:900;color:#00d4ff;line-height:1;">${stateLicensed.length}</p>
+            <p style="margin:2px 0 0;font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;font-weight:700;">State Licensed</p>
           </td>
         </tr></table>
       </td>
@@ -882,12 +907,11 @@ async function sendAlertEmail(
     <p style="margin:0;color:#fff;font-size:14px;font-weight:800;text-align:center;">🔥 ${hotCount} HOT ${hotCount === 1 ? "CANDIDATE" : "CANDIDATES"} — These techs won't last. Reach out today.</p>
   </td></tr>` : ""}
 
-  <!-- CANDIDATES -->
-  <tr><td style="background:#fff;padding:24px 20px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
-    <table width="100%" cellpadding="0" cellspacing="0">
-      ${candidateCards}
-    </table>
-  </td></tr>
+  <!-- STATE-LICENSED CANDIDATES -->
+  ${stateLicensedSection}
+
+  <!-- SUPPLEMENTARY JOB SEEKERS -->
+  ${jobSeekerSection}
 
   <!-- FOOTER -->
   <tr><td style="padding:24px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 16px 16px;background:#0a1628;">
