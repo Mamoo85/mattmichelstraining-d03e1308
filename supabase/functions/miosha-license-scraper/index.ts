@@ -1,5 +1,5 @@
 // miosha-license-scraper — Planetary-Scale Hiring Intelligence Scanner
-// EIGHT data sources running in parallel:
+// NINE data sources running in parallel + Sonar last:
 // S1: NPI Registry — free federal API for healthcare workers
 // S2: Michigan Nurse Aide Registry — state CNA registry
 // S3: Michigan Open Data Portal — Socrata bulk license CSVs
@@ -7,7 +7,8 @@
 // S5: NATE Certified Technician Registry — HVAC certs via Firecrawl
 // S6: Trade Union Directories — UA98/IBEW58/Boilermakers via Firecrawl
 // S7: People Data Labs — people search API
-// S8: Sonar Web Search — LinkedIn open-to-work, union spotlights
+// S8: Sonar Web Search — LinkedIn open-to-work, union spotlights, apprenticeship completions
+// S9: Craigslist Skilled Trades — high-intent tradespeople posting availability
 //
 // VALIDATION RULES:
 // - Reject candidates with no license number AND no verifiable city
