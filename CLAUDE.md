@@ -45,6 +45,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **OSINT Privacy Rule (new — enforce going forward):**
 Sonar OSINT methodology is never disclosed to clients. Intelligence methods are proprietary. AI synthesis outputs never mention algorithms, data sources, or "AI."
 
+**PDL_API_KEY status**: Confirmed live in both Lovable secrets and Supabase secrets. No action needed.
+
+---
+
+### TechAlert Roadmap — Approved for Next Build Cycle
+
+**Pricing decisions (finalized):**
+- TechAlert standalone: raise from $99/mo → **$149/mo** (LinkedIn Recruiter Lite = $170/mo with no MIOSHA monitoring)
+- Bundle with FieldDesk: **$79/mo** (was $49/mo — sharpens bundle discount, keeps FieldDesk sticky)
+- Introductory offer: **$99/mo grandfathered** for first 10 clients only — creates urgency, locks in early adopters
+
+**Three enhancements approved (Lovable build — sequenced):**
+1. **48-hour candidate claim system** — `claim-candidate` edge function + `claimed_at`/`claim_expires_at` columns on `hire_alert_client_candidates`. Atomic SQL: `WHERE claimed_at IS NULL OR claim_expires_at < now()` prevents race condition. Email alert links auto-fire claim via `?auto=1&claim=<id>` mount param.
+2. **One-click outreach draft** — `generate-outreach-draft` edge function calls Gemini via `LOVABLE_API_KEY`. Opens modal with SMS + email draft + copy buttons. MUST include TCPA nudge: "Copy-paste and send from your phone. Do not text numbers on your DNC list." Never fires SMS directly.
+3. **License expiry poaching** — `scanLicenseExpiries()` added to `hire-alert-scanner` parallel scan. Scores lapsed-license candidates one tier lower. Alert copy: "may be available — worth a check" (not "available now"). Badge: 🔄 amber.
+
+**Industry Pulse:**
+- Free for all TechAlert clients for 90 days (retention feature, not separate product)
+- Spin out at **$149/mo** once Matt has 2–3 client testimonials that a signal led to a sale
+- `AdminIndustrialIntel` + `AdminIndustryPulse` tabs: merge into single **"🏭 Growth Signals"** tab with sub-filters (Expansion News / Hiring Patterns / Cross-Referenced). Cross-referenced = highest confidence, shown first.
+
+**Intent-Driven Dashboard UX (approved direction):**
+- Positioning: "Command Center, not Data Viewer"
+- `MyTechAlert.tsx` top fold replaced with Market Signals feed (queries `industry_pulse_signals` where `confidence >= 7`, falls back to `hire_alert_candidates` score >= 8 if empty)
+- Every card gets action buttons: `⚡ Claim Candidate` + `✍️ Draft Outreach`
+- Revenue Recovered ledger in nav: real data from `hire_alert_client_candidates` (hired × $8k avg fee saved) + `dead_lead_charges`. Hidden entirely if value is $0. No animated counter — static with sparkline.
+- Full grounded Lovable prompt saved in `/root/.claude/plans/playful-splashing-barto.md`
+
 ---
 
 ### Top 4 Products — 100% Launch Ready ✅
