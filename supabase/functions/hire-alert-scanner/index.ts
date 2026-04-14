@@ -1192,7 +1192,13 @@ serve(async (req: Request) => {
               </td>
               <td style="padding:12px 10px;font-size:11px;color:#64748b;">${sourceIcon} ${c.source}</td>
               <td style="padding:12px 10px;font-size:11px;color:#64748b;">${enrichIcon} ${c.enrichment_status || "—"}</td>
-              <td style="padding:12px 10px;font-size:11px;color:#475569;">${hasAction ? "✅ Actionable" : "❌ Ghost"}</td>
+              <td style="padding:12px 10px;font-size:11px;color:#475569;">
+                ${c.linkedin_url ? `<a href="${c.linkedin_url}" target="_blank" style="display:inline-block;background:#0a66c2;color:#fff;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;text-decoration:none;margin:2px;">🔗 LI</a>` : ""}
+                ${c.facebook_url ? `<a href="${c.facebook_url}" target="_blank" style="display:inline-block;background:#1877f2;color:#fff;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;text-decoration:none;margin:2px;">👤 FB</a>` : ""}
+                ${c.email ? `<a href="mailto:${c.email}" style="display:inline-block;background:#0891b2;color:#fff;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;text-decoration:none;margin:2px;">✉️</a>` : ""}
+                ${c.phone ? `<a href="tel:${c.phone}" style="display:inline-block;background:#e8621a;color:#fff;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;text-decoration:none;margin:2px;">📞</a>` : ""}
+                ${!hasAction ? "❌ Ghost" : ""}
+              </td>
             </tr>`;
           }
         )
