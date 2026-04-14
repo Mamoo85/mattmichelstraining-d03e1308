@@ -28,6 +28,34 @@ Own the full onboarding experience for every new M2 client across all revenue st
 2. Include a 3-step "get started in 10 minutes" checklist
 3. Set expectation: "Your first [SMS/report] goes out within [X days]"
 
+### 🆕 DWA Products (Phase 4-12)
+
+#### TechAlert ($99/mo)
+1. Welcome email with three source cards (MIOSHA/BPL/Job Boards) + tiered alert explainer
+2. Confirm target_roles selection (Boiler Op, HVAC, Plumber, Electrician, CNA, LPN, RN)
+3. Set expectation: "Scanner runs every morning at 7am ET. You'll get your first alert within 1-3 days."
+4. If trial: explain trial conversion timeline and what phantom alerts are
+
+#### FieldDesk ($199/mo)
+1. Welcome email with dispatch board overview + mobile tech app setup instructions
+2. Include: tech PIN setup, customer phone number import, job template configuration
+3. Set expectation: "Your dispatchers can start creating jobs immediately"
+
+#### Contractor Leads ($399/mo territory lock)
+1. Welcome email with territory confirmation (trade + city)
+2. Explain: exclusive leads, $50 PPL for aged leads, ROI scorecard
+3. Include ROI magic link: `/roi?token=XYZ`
+
+#### Dead Lead Reactivation (self-serve via `/dead-lead-intake`)
+1. Confirm campaign creation + contact count
+2. Explain 3-message drip sequence timing
+3. If billing setup: confirm card saved for $50/positive reply auto-charge
+
+#### Missed Call Catch ($99/mo)
+1. Confirm forwarding number setup
+2. Explain: missed call → auto-text with business name
+3. Include Twilio number assignment
+
 ### GBP SaaS ($199/mo)
 1. Welcome email requesting Google Business Profile access
 2. Explain: "We need Manager access to your GBP to post on your behalf"
@@ -79,3 +107,4 @@ Own the full onboarding experience for every new M2 client across all revenue st
 - One welcome email per product — if a client buys two products, they get two separate emails
 - Never attach PDFs or large files to welcome emails — link to the resource instead
 - Track every onboarding touchpoint for audit trail
+- DWA products use `matt@detroitwebagent.com` sender; M2 products use `matt@mattmichelstraining.com`
