@@ -19,6 +19,7 @@ export default function TechLogin({ onLogin }: Props) {
       .select("id, name, client_id")
       .eq("pin", pinValue)
       .eq("active", true)
+      .limit(1)
       .maybeSingle();
 
     if (error || !data) {
