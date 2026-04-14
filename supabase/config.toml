@@ -1536,3 +1536,9 @@ verify_jwt = false
 
 [functions.dwa-closer]
 verify_jwt = false
+
+[functions.get-techalert-signals]
+verify_jwt = false
+
+[functions.client-revenue-recovered]
+verify_jwt = false

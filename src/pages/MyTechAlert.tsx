@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,8 +10,10 @@ import {
   ExternalLink, Award, MapPin, Briefcase, Shield,
   Stethoscope, Heart, Building2, Wrench, Zap,
   UserCheck, ThumbsUp, Loader2, Lock, Clock,
-  Copy, FileText, AlertTriangle, X, CalendarCheck
+  Copy, FileText, AlertTriangle, X, CalendarCheck,
+  Radio, TrendingUp, Factory, Target
 } from "lucide-react";
+import RevenueRecoveredLedger from "@/components/RevenueRecoveredLedger";
 
 const HEALTHCARE_ROLES = ["cna", "rn", "lpn", "director_of_nursing", "home_health_aide"];
 
@@ -58,6 +61,16 @@ interface OutreachDraft {
   tcpa_notice: string;
 }
 
+interface MarketSignal {
+  id: string;
+  company_name: string;
+  location: string | null;
+  signal_type: "expansion" | "hiring_pattern" | "cross_referenced";
+  confidence: number;
+  recommended_pitch: string | null;
+  detected_at: string;
+}
+
 const ROLE_LABELS: Record<string, string> = {
   hvac: "HVAC", hvac_tech: "HVAC Tech", plumber: "Plumber", electrician: "Electrician",
   boiler_operator: "Boiler Operator", welder: "Welder", pipefitter: "Pipefitter",
@@ -65,6 +78,12 @@ const ROLE_LABELS: Record<string, string> = {
   pressure_vessel: "Pressure Vessel", cna: "CNA", rn: "Registered Nurse",
   lpn: "Licensed Practical Nurse", director_of_nursing: "Director of Nursing",
   home_health_aide: "Home Health Aide",
+};
+
+const SIGNAL_CONFIG: Record<string, { icon: typeof Factory; label: string; color: string; bg: string }> = {
+  expansion: { icon: Factory, label: "Expansion News", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
+  hiring_pattern: { icon: TrendingUp, label: "Hiring Pattern", color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
+  cross_referenced: { icon: Target, label: "Cross-Referenced", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
 };
 
 export default function MyTechAlert() {
@@ -79,7 +98,7 @@ export default function MyTechAlert() {
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
   const [claimingIds, setClaimingIds] = useState<Set<string>>(new Set());
   const [scoreFilter, setScoreFilter] = useState<"all" | "hot" | "medium">("all");
-  const [outreachModal, setOutreachModal] = useState<{ candidateId: string; draft: OutreachDraft } | null>(null);
+  const [outreachModal, setOutreachModal] = useState<{ candidateId: string; draft: OutreachDraft; isPitch?: boolean } | null>(null);
   const [generatingDraft, setGeneratingDraft] = useState<string | null>(null);
   const [fastTrackingId, setFastTrackingId] = useState<string | null>(null);
 
@@ -90,6 +109,18 @@ export default function MyTechAlert() {
 
   const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
   const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+  // Market Signals query
+  const { data: signalsData } = useQuery({
+    queryKey: ["techalert-signals", token],
+    queryFn: async () => {
+      const res = await fetch(`${baseUrl}/get-techalert-signals?token=${token}`, { headers: { apikey } });
+      if (!res.ok) return { type: "empty", items: [] };
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!token,
+  });
 
   useEffect(() => {
     if (!token) {
@@ -110,9 +141,7 @@ export default function MyTechAlert() {
   async function fetchData() {
     setLoading(true);
     try {
-      const res = await fetch(`${baseUrl}/get-my-techalert?token=${token}`, {
-        headers: { apikey },
-      });
+      const res = await fetch(`${baseUrl}/get-my-techalert?token=${token}`, { headers: { apikey } });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || "Failed to load dashboard");
@@ -212,6 +241,20 @@ export default function MyTechAlert() {
     }
   }
 
+  function openPitchModal(signal: MarketSignal) {
+    const pitch = signal.recommended_pitch || `We've identified ${signal.company_name} as a high-growth target in your area.`;
+    setOutreachModal({
+      candidateId: signal.id,
+      isPitch: true,
+      draft: {
+        text_message: `Hi — I noticed ${signal.company_name} in ${signal.location || "your area"} is expanding. We help companies like yours find licensed talent before they hit job boards. Interested in a quick call?`,
+        email_subject: `Staffing intelligence for ${signal.company_name}`,
+        email_body: pitch,
+        tcpa_notice: "Copy-paste and send from your phone. Do not text numbers on your internal do-not-contact list.",
+      },
+    });
+  }
+
   function copyToClipboard(text: string, label: string) {
     navigator.clipboard.writeText(text);
     toast.success(`${label} copied to clipboard`);
@@ -233,7 +276,6 @@ export default function MyTechAlert() {
       }
       if (result.success) {
         toast.success(`⚡ Interview invite sent to ${result.candidate_name}!`);
-        // Update local state to show contacted
         setData((prev) => {
           if (!prev) return prev;
           return {
@@ -273,13 +315,12 @@ export default function MyTechAlert() {
   }, [data, scoreFilter]);
 
   const scoreBadgeColor = (score: number) => {
-    if (score >= 8) return "bg-red-600 text-white";
-    if (score >= 7) return "bg-orange-500 text-white";
+    if (score >= 8) return "bg-emerald-500 text-white";
     if (score >= 5) return "bg-amber-500 text-white";
-    return "bg-slate-400 text-white";
+    return "bg-slate-500 text-white";
   };
 
-  const accentColor = isHealthcare ? "text-blue-500" : "text-cyan-400";
+  const accentColor = isHealthcare ? "text-blue-500" : "text-[#00d4ff]";
   const brandName = isHealthcare ? "HireAlert" : "TechAlert";
   const subtitle = isHealthcare ? "Licensed Healthcare Professionals" : "Licensed Techs in Your Area";
   const IndustryIcon = isHealthcare ? Stethoscope : Wrench;
@@ -299,11 +340,13 @@ export default function MyTechAlert() {
     return `${hours}h ${mins}m`;
   }
 
+  const signals: MarketSignal[] = signalsData?.items || [];
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a1628] flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-cyan-400 mx-auto mb-4" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#00d4ff] mx-auto mb-4" />
           <p className="text-slate-400 text-sm">Loading your dashboard...</p>
         </div>
       </div>
@@ -313,7 +356,7 @@ export default function MyTechAlert() {
   if (error || !data) {
     return (
       <div className="min-h-screen bg-[#0a1628] flex items-center justify-center p-4">
-        <Card className="max-w-md bg-[#1e293b] border-slate-700">
+        <Card className="max-w-md border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e]">
           <CardContent className="pt-6 text-center">
             <Shield className="h-12 w-12 text-red-400 mx-auto mb-4" />
             <h2 className="text-white text-lg font-bold mb-2">Access Denied</h2>
@@ -327,14 +370,16 @@ export default function MyTechAlert() {
   return (
     <div className="min-h-screen bg-[#0a1628]">
       {/* Header */}
-      <div className={`border-b ${isHealthcare ? "border-blue-500/30" : "border-cyan-400/30"}`}
-        style={{ background: "linear-gradient(135deg, #0a1628 0%, #1e293b 100%)" }}>
+      <div className="border-b border-white/5" style={{ background: "linear-gradient(135deg, #0a1628 0%, #0d1f2e 100%)" }}>
         <div className="max-w-5xl mx-auto px-4 py-8">
-          <div className="flex items-center gap-3 mb-2">
-            <IndustryIcon className={`h-6 w-6 ${accentColor}`} />
-            <p className={`text-xs font-extrabold tracking-[3px] uppercase ${accentColor}`}>
-              ⚡ {brandName}
-            </p>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <IndustryIcon className={`h-6 w-6 ${accentColor}`} />
+              <p className={`text-xs font-extrabold tracking-[3px] uppercase ${accentColor}`}>
+                ⚡ {brandName}
+              </p>
+            </div>
+            {token && <RevenueRecoveredLedger token={token} clientType="techalert" />}
           </div>
           <h1 className="text-white text-2xl md:text-3xl font-extrabold tracking-tight mb-1">
             {subtitle}
@@ -356,10 +401,10 @@ export default function MyTechAlert() {
           {[
             { label: "Total Candidates", value: data.kpi.total, icon: Users, color: "text-slate-300" },
             { label: "Hot (7+)", value: data.kpi.hot, icon: Flame, color: "text-orange-400" },
-            { label: "Contacted", value: data.kpi.contacted, icon: ThumbsUp, color: "text-cyan-400" },
+            { label: "Contacted", value: data.kpi.contacted, icon: ThumbsUp, color: "text-[#00d4ff]" },
             { label: "Hired", value: data.kpi.hired, icon: UserCheck, color: "text-emerald-400" },
           ].map((kpi) => (
-            <Card key={kpi.label} className="bg-[#1e293b] border-slate-700/50">
+            <Card key={kpi.label} className="border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e]">
               <CardContent className="p-4 flex items-center gap-3">
                 <kpi.icon className={`h-5 w-5 ${kpi.color} shrink-0`} />
                 <div>
@@ -370,6 +415,63 @@ export default function MyTechAlert() {
             </Card>
           ))}
         </div>
+
+        {/* Market Signals Feed */}
+        {signals.length > 0 ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Radio className="h-4 w-4 text-[#00d4ff] animate-pulse" />
+              <h2 className="text-white font-bold text-sm uppercase tracking-wider">Market Signals</h2>
+              <span className="text-[10px] text-slate-500 ml-auto">{signals.length} active</span>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {signals.map((signal) => {
+                const cfg = SIGNAL_CONFIG[signal.signal_type] || SIGNAL_CONFIG.expansion;
+                const SignalIcon = cfg.icon;
+                return (
+                  <div key={signal.id} className={`rounded-xl border p-4 ${cfg.bg} bg-gradient-to-br from-[#0a1628] to-[#0d1f2e]`}>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div>
+                        <p className="text-white font-bold text-sm">{signal.company_name}</p>
+                        {signal.location && (
+                          <p className="text-slate-400 text-[11px] flex items-center gap-1 mt-0.5">
+                            <MapPin className="h-2.5 w-2.5" /> {signal.location}
+                          </p>
+                        )}
+                      </div>
+                      <Badge variant="outline" className={`text-[10px] px-2 py-0.5 ${cfg.bg} ${cfg.color} border-current/20 shrink-0`}>
+                        <SignalIcon className="h-2.5 w-2.5 mr-1" />
+                        {cfg.label}
+                      </Badge>
+                    </div>
+                    {signal.recommended_pitch && (
+                      <p className="text-slate-300 text-xs leading-relaxed mb-3 line-clamp-2">{signal.recommended_pitch}</p>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[10px] font-bold ${
+                        signal.confidence >= 8 ? "text-emerald-400" : signal.confidence >= 5 ? "text-amber-400" : "text-slate-400"
+                      }`}>
+                        Confidence: {signal.confidence}/10
+                      </span>
+                      <Button
+                        size="sm"
+                        className="h-7 text-[11px] bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-black font-bold"
+                        onClick={() => openPitchModal(signal)}
+                      >
+                        📨 Draft Pitch
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : signalsData?.type === "empty" ? (
+          <div className="rounded-xl border border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e] p-6 text-center">
+            <Radio className="h-8 w-8 text-slate-600 mx-auto mb-2 animate-pulse" />
+            <p className="text-slate-400 text-sm font-medium">Scanner running. First signals appear within 24h.</p>
+          </div>
+        ) : null}
 
         {/* Filters */}
         <div className="flex gap-2 flex-wrap">
@@ -384,8 +486,8 @@ export default function MyTechAlert() {
               variant={scoreFilter === f.key ? "default" : "outline"}
               onClick={() => setScoreFilter(f.key)}
               className={scoreFilter === f.key
-                ? `${isHealthcare ? "bg-blue-600 hover:bg-blue-700" : "bg-cyan-600 hover:bg-cyan-700"} text-white border-0`
-                : "border-slate-600 text-slate-300 hover:bg-slate-800"
+                ? "bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-black font-bold border-0"
+                : "border-white/10 text-slate-300 hover:bg-white/5"
               }
             >
               {f.label} ({f.count})
@@ -395,7 +497,7 @@ export default function MyTechAlert() {
 
         {/* Candidate List */}
         {filteredCandidates.length === 0 ? (
-          <Card className="bg-[#1e293b] border-slate-700/50">
+          <Card className="border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e]">
             <CardContent className="py-12 text-center">
               <IndustryIcon className="h-12 w-12 text-slate-600 mx-auto mb-3" />
               <p className="text-slate-400">{isHealthcare ? "No candidates found yet" : "No techs found yet"}</p>
@@ -412,75 +514,89 @@ export default function MyTechAlert() {
               const isLapsed = c.source === "license_expiry";
 
               return (
-                <Card key={c.id} className={`bg-[#1e293b] border-slate-700/50 overflow-hidden transition-all ${
-                  c.availability_score >= 7 ? "ring-1 ring-orange-500/20" : ""
+                <Card key={c.id} className={`border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e] overflow-hidden transition-all ${
+                  c.availability_score >= 7 ? "ring-1 ring-[#00d4ff]/20" : ""
                 } ${claimStatus === "mine" ? "ring-1 ring-emerald-500/30" : ""}`}>
                   {/* Collapsed header */}
-                  <button
-                    onClick={() => toggleExpand(c.id)}
-                    className="w-full text-left p-4 flex items-center gap-3 hover:bg-slate-800/50 transition-colors"
-                  >
-                    <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-xs font-black ${scoreBadgeColor(c.availability_score)}`}>
-                      {c.availability_score >= 8 ? "🔥" : c.availability_score >= 7 ? "⚡" : ""}{c.availability_score}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-bold text-sm truncate">{c.full_name}</p>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <Badge variant="secondary" className={`text-[10px] px-2 py-0 ${isHealthcare ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"}`}>
-                          {c.license_type || (isHealthcare ? "Healthcare" : "Technician")}
-                        </Badge>
-                        {c.city && (
-                          <span className="text-[10px] text-slate-500 flex items-center gap-0.5">
-                            <MapPin className="h-2.5 w-2.5" /> {c.city}
-                          </span>
-                        )}
-                        {isLapsed && (
-                          <Badge variant="outline" className="text-[10px] px-2 py-0 border-amber-500/40 text-amber-400 bg-amber-500/5">
-                            🔄 License Lapsed
-                          </Badge>
-                        )}
-                        {claimStatus === "mine" && c.claim_expires_at && (
-                          <Badge variant="outline" className="text-[10px] px-2 py-0 border-emerald-500/40 text-emerald-400">
-                            <Lock className="h-2.5 w-2.5 mr-0.5" /> Claimed · {getClaimTimeLeft(c.claim_expires_at)}
-                          </Badge>
-                        )}
-                        {claimStatus === "other" && (
-                          <Badge variant="outline" className="text-[10px] px-2 py-0 border-slate-500/40 text-slate-400">
-                            <Clock className="h-2.5 w-2.5 mr-0.5" /> Claimed by another
-                          </Badge>
-                        )}
-                        {c.client_action && (
-                          <Badge variant="outline" className={`text-[10px] px-2 py-0 ${c.client_action === "hired" ? "border-emerald-500/40 text-emerald-400" : "border-slate-500/40 text-slate-400"}`}>
-                            {c.client_action === "hired" ? "✅ Hired" : c.client_action === "contacted" ? "📞 Contacted" : "👁 Viewed"}
-                          </Badge>
-                        )}
+                  <div className="flex items-center gap-3 p-4">
+                    <button
+                      onClick={() => toggleExpand(c.id)}
+                      className="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
+                    >
+                      <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-xs font-black ${scoreBadgeColor(c.availability_score)}`}>
+                        {c.availability_score >= 8 ? "🔥" : c.availability_score >= 7 ? "⚡" : ""}{c.availability_score}
                       </div>
-                    </div>
-                    <div className="shrink-0 text-slate-500">
-                      {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </div>
-                  </button>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-bold text-sm truncate">{c.full_name}</p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <Badge variant="secondary" className="text-[10px] px-2 py-0 bg-[#00d4ff]/10 text-[#00d4ff] border-[#00d4ff]/20">
+                            {c.license_type || (isHealthcare ? "Healthcare" : "Technician")}
+                          </Badge>
+                          {c.city && (
+                            <span className="text-[10px] text-slate-500 flex items-center gap-0.5">
+                              <MapPin className="h-2.5 w-2.5" /> {c.city}
+                            </span>
+                          )}
+                          {isLapsed && (
+                            <Badge variant="outline" className="text-[10px] px-2 py-0 border-amber-500/40 text-amber-400 bg-amber-500/5">
+                              🔄 License Lapsed
+                            </Badge>
+                          )}
+                          {claimStatus === "mine" && c.claim_expires_at && (
+                            <Badge variant="outline" className="text-[10px] px-2 py-0 border-emerald-500/40 text-emerald-400">
+                              <Lock className="h-2.5 w-2.5 mr-0.5" /> Claimed · {getClaimTimeLeft(c.claim_expires_at)}
+                            </Badge>
+                          )}
+                          {claimStatus === "other" && (
+                            <Badge variant="outline" className="text-[10px] px-2 py-0 border-slate-500/40 text-slate-400">
+                              <Clock className="h-2.5 w-2.5 mr-0.5" /> 1 company claimed — you'll be notified if they pass
+                            </Badge>
+                          )}
+                          {c.client_action && (
+                            <Badge variant="outline" className={`text-[10px] px-2 py-0 ${c.client_action === "hired" ? "border-emerald-500/40 text-emerald-400" : "border-slate-500/40 text-slate-400"}`}>
+                              {c.client_action === "hired" ? "✅ Hired" : c.client_action === "contacted" ? "📞 Contacted" : "👁 Viewed"}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="shrink-0 text-slate-500">
+                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </div>
+                    </button>
+                    {/* Inline action buttons for score >= 7 */}
+                    {c.availability_score >= 7 && claimStatus === "unclaimed" && !isExpanded && (
+                      <Button
+                        size="sm"
+                        onClick={() => claimCandidate(c.id)}
+                        disabled={isClaiming}
+                        className="shrink-0 h-7 text-[11px] bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-black font-bold"
+                      >
+                        {isClaiming ? <Loader2 className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3 mr-0.5" />}
+                        Claim
+                      </Button>
+                    )}
+                  </div>
 
                   {/* Expanded details */}
                   {isExpanded && (
-                    <div className="px-4 pb-4 border-t border-slate-700/50 pt-3 space-y-3">
+                    <div className="px-4 pb-4 border-t border-white/5 pt-3 space-y-3">
                       {/* Lapsed license warning */}
                       {isLapsed && (
                         <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3 flex items-start gap-2">
                           <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
                           <p className="text-[11px] text-amber-300/80">
-                            This candidate's license recently lapsed. They may be available — worth a check. License lapse can mean job change, relocation, or simply late renewal paperwork.
+                            May be available — worth a check. License lapse can mean job change, relocation, or simply late renewal paperwork.
                           </p>
                         </div>
                       )}
 
-                      {/* Claim button (if unclaimed and score 7+) */}
+                      {/* Claim button */}
                       {claimStatus === "unclaimed" && c.availability_score >= 5 && (
                         <Button
                           size="sm"
                           onClick={() => claimCandidate(c.id)}
                           disabled={isClaiming}
-                          className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs"
+                          className="w-full bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-black font-bold text-xs"
                         >
                           {isClaiming ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Zap className="h-3 w-3 mr-1" />}
                           ⚡ Claim This Candidate — 48hr Exclusive
@@ -490,12 +606,12 @@ export default function MyTechAlert() {
                       {/* Contact info */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {c.phone && (
-                          <a href={`tel:${c.phone}`} className="flex items-center gap-2 text-orange-400 hover:text-orange-300 font-bold text-sm bg-orange-500/5 rounded-lg px-3 py-2.5 transition-colors border border-orange-500/10">
+                          <a href={`tel:${c.phone}`} className="flex items-center gap-2 text-[#00d4ff] hover:text-[#00d4ff]/80 font-bold text-sm bg-[#00d4ff]/5 rounded-lg px-3 py-2.5 transition-colors border border-[#00d4ff]/10">
                             <Phone className="h-4 w-4" /> {c.phone}
                           </a>
                         )}
                         {c.email && (
-                          <a href={`mailto:${c.email}`} className={`flex items-center gap-2 ${isHealthcare ? "text-blue-400 hover:text-blue-300 bg-blue-500/5 border-blue-500/10" : "text-cyan-400 hover:text-cyan-300 bg-cyan-500/5 border-cyan-500/10"} font-semibold text-sm rounded-lg px-3 py-2.5 transition-colors border`}>
+                          <a href={`mailto:${c.email}`} className="flex items-center gap-2 text-[#00d4ff] hover:text-[#00d4ff]/80 font-semibold text-sm bg-[#00d4ff]/5 rounded-lg px-3 py-2.5 transition-colors border border-[#00d4ff]/10">
                             <Mail className="h-4 w-4" /> {c.email}
                           </a>
                         )}
@@ -547,8 +663,8 @@ export default function MyTechAlert() {
                         </div>
                       )}
                       {c.hiring_recommendation && (
-                        <div className={`${isHealthcare ? "bg-blue-500/5 border-blue-500/20" : "bg-cyan-500/5 border-cyan-500/20"} border rounded-lg p-3`}>
-                          <p className={`text-[11px] font-bold ${isHealthcare ? "text-blue-400" : "text-cyan-400"} uppercase tracking-wide mb-1`}>Recommendation</p>
+                        <div className="bg-[#00d4ff]/5 border border-[#00d4ff]/20 rounded-lg p-3">
+                          <p className="text-[11px] font-bold text-[#00d4ff] uppercase tracking-wide mb-1">Recommendation</p>
                           <p className="text-slate-300 text-xs leading-relaxed">{c.hiring_recommendation}</p>
                         </div>
                       )}
@@ -559,7 +675,6 @@ export default function MyTechAlert() {
 
                       {/* Action buttons */}
                       <div className="flex gap-2 pt-1 flex-wrap">
-                        {/* Fast-Track Interview */}
                         {c.phone && c.client_action !== "hired" && (
                           <Button
                             size="sm"
@@ -571,8 +686,6 @@ export default function MyTechAlert() {
                             ⚡ Fast-Track Interview
                           </Button>
                         )}
-
-                        {/* Outreach Draft */}
                         <Button
                           size="sm"
                           variant="outline"
@@ -583,12 +696,11 @@ export default function MyTechAlert() {
                           {generatingDraft === c.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <FileText className="h-3 w-3 mr-1" />}
                           ✍️ Draft Outreach
                         </Button>
-
                         {c.client_action !== "contacted" && c.client_action !== "hired" && (
                           <Button
                             size="sm"
                             variant="outline"
-                            className="border-slate-600 text-slate-300 hover:bg-slate-700 text-xs"
+                            className="border-white/10 text-slate-300 hover:bg-white/5 text-xs"
                             disabled={isUpdating}
                             onClick={() => updateAction(c.id, "contacted")}
                           >
@@ -599,7 +711,7 @@ export default function MyTechAlert() {
                         {c.client_action !== "hired" && (
                           <Button
                             size="sm"
-                            className={`text-xs text-white ${isHealthcare ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700"}`}
+                            className="text-xs text-white bg-emerald-600 hover:bg-emerald-700"
                             disabled={isUpdating}
                             onClick={() => updateAction(c.id, "hired")}
                           >
@@ -621,7 +733,7 @@ export default function MyTechAlert() {
         )}
 
         {/* Upsell Card */}
-        <Card className={`${isHealthcare ? "bg-blue-950/30 border-blue-500/20" : "bg-cyan-950/30 border-cyan-500/20"}`}>
+        <Card className="border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e]">
           <CardContent className="p-5">
             {isHealthcare ? (
               <div className="flex items-start gap-3">
@@ -636,11 +748,11 @@ export default function MyTechAlert() {
               </div>
             ) : (
               <div className="flex items-start gap-3">
-                <Zap className="h-6 w-6 text-cyan-400 shrink-0 mt-0.5" />
+                <Zap className="h-6 w-6 text-[#00d4ff] shrink-0 mt-0.5" />
                 <div>
                   <p className="text-white font-bold text-sm mb-1">Need Exclusive Inbound Leads?</p>
                   <p className="text-slate-400 text-xs mb-3">Get homeowner leads delivered directly to you — pay per lead, no contracts.</p>
-                  <a href="https://www.detroitwebagent.com/contractor-leads" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors">
+                  <a href="https://www.detroitwebagent.com/contractor-leads" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-black text-xs font-bold px-4 py-2 rounded-lg transition-colors">
                     <ExternalLink className="h-3.5 w-3.5" /> Learn More
                   </a>
                 </div>
@@ -650,9 +762,9 @@ export default function MyTechAlert() {
         </Card>
 
         {/* Footer */}
-        <div className="text-center py-6 border-t border-slate-800">
+        <div className="text-center py-6 border-t border-white/5">
           <p className="text-slate-600 text-[11px]">
-            Powered by Detroit Web Agency · <a href="tel:+13139921219" className={`${accentColor} hover:underline`}>(313) 992-1219</a>
+            Powered by Detroit Web Agency · <a href="tel:+13139921219" className="text-[#00d4ff] hover:underline">(313) 992-1219</a>
           </p>
           <p className="text-slate-700 text-[10px] mt-1">Reply to any alert email to adjust your target roles or zip codes</p>
         </div>
@@ -661,10 +773,11 @@ export default function MyTechAlert() {
       {/* Outreach Draft Modal */}
       {outreachModal && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setOutreachModal(null)}>
-          <div className="bg-[#1e293b] rounded-xl border border-slate-600 max-w-lg w-full max-h-[90vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-gradient-to-br from-[#0a1628] to-[#0d1f2e] rounded-xl border border-white/10 max-w-lg w-full max-h-[90vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-white font-bold text-sm flex items-center gap-2">
-                <FileText className="h-4 w-4 text-purple-400" /> Outreach Drafts
+                <FileText className="h-4 w-4 text-purple-400" />
+                {outreachModal.isPitch ? "TechAlert Pitch Drafts" : "Outreach Drafts"}
               </h3>
               <button onClick={() => setOutreachModal(null)} className="text-slate-500 hover:text-white">
                 <X className="h-5 w-5" />
@@ -680,7 +793,7 @@ export default function MyTechAlert() {
                   <Copy className="h-3 w-3 mr-1" /> Copy
                 </Button>
               </div>
-              <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
+              <div className="bg-white/5 border border-white/10 rounded-lg p-3">
                 <p className="text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">{outreachModal.draft.text_message}</p>
               </div>
             </div>
@@ -688,33 +801,35 @@ export default function MyTechAlert() {
             {/* Email */}
             <div className="mb-4">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-[11px] font-bold text-cyan-400 uppercase tracking-wide">✉️ Email</p>
+                <p className="text-[11px] font-bold text-[#00d4ff] uppercase tracking-wide">✉️ Email</p>
                 <Button size="sm" variant="ghost" className="text-xs text-slate-400 hover:text-white h-7"
                   onClick={() => copyToClipboard(`Subject: ${outreachModal.draft.email_subject}\n\n${outreachModal.draft.email_body}`, "Email")}>
                   <Copy className="h-3 w-3 mr-1" /> Copy
                 </Button>
               </div>
-              <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
-                <p className="text-cyan-400/80 text-xs font-semibold mb-2">Subject: {outreachModal.draft.email_subject}</p>
+              <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                <p className="text-[#00d4ff]/80 text-xs font-semibold mb-2">Subject: {outreachModal.draft.email_subject}</p>
                 <p className="text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">{outreachModal.draft.email_body}</p>
               </div>
             </div>
 
             {/* Regenerate */}
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-500/10 text-xs mb-3"
-              onClick={() => { setOutreachModal(null); generateOutreach(outreachModal.candidateId); }}
-            >
-              🔄 Regenerate Drafts
-            </Button>
+            {!outreachModal.isPitch && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-500/10 text-xs mb-3"
+                onClick={() => { setOutreachModal(null); generateOutreach(outreachModal.candidateId); }}
+              >
+                🔄 Regenerate Drafts
+              </Button>
+            )}
 
             {/* TCPA Notice */}
             <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3">
               <p className="text-[10px] text-amber-400/80 flex items-start gap-1.5">
                 <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />
-                {outreachModal.draft.tcpa_notice}
+                {outreachModal.draft.tcpa_notice || "Copy-paste and send from your phone. Do not text numbers on your internal do-not-contact list."}
               </p>
             </div>
           </div>
