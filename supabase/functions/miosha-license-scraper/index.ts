@@ -76,10 +76,10 @@ async function searchNPIRegistry(taxonomy: string, label: string): Promise<Licen
   const candidates: LicenseCandidate[] = [];
   const seen = new Set<string>();
 
-  // Search NPI by taxonomy code + state
-  for (const city of MICHIGAN_CITIES.slice(0, 8)) {
+  // Search NPI by taxonomy code + state — use taxonomy_description for broader matches
+  for (const city of MICHIGAN_CITIES) {
     try {
-      const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&city=${encodeURIComponent(city)}&state=MI&taxonomy_description=${encodeURIComponent(label)}&enumeration_type=NPI-1&limit=10`;
+      const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&city=${encodeURIComponent(city)}&state=MI&taxonomy_description=${encodeURIComponent(label)}&enumeration_type=NPI-1&limit=50`;
       const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
       if (!res.ok) {
         console.warn(`[miosha-scraper] NPI HTTP ${res.status} for ${label} in ${city}`);
