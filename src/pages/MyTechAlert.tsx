@@ -1,17 +1,16 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import {
   Users, Flame, Phone, Mail, ChevronDown, ChevronUp,
   ExternalLink, Award, MapPin, Briefcase, Shield,
-  Stethoscope, Heart, Building2, Wrench, Zap, HardHat,
-  UserCheck, ThumbsUp, Loader2
+  Stethoscope, Heart, Building2, Wrench, Zap,
+  UserCheck, ThumbsUp, Loader2, Lock, Clock,
+  Copy, FileText, AlertTriangle, X
 } from "lucide-react";
-
 
 const HEALTHCARE_ROLES = ["cna", "rn", "lpn", "director_of_nursing", "home_health_aide"];
 
@@ -35,6 +34,10 @@ interface Candidate {
   years_experience: string | null;
   alerted_at: string;
   client_action: string | null;
+  claimed_at: string | null;
+  claim_expires_at: string | null;
+  claimed_by_other: boolean;
+  source?: string;
 }
 
 interface DashboardData {
@@ -45,6 +48,13 @@ interface DashboardData {
   };
   candidates: Candidate[];
   kpi: { total: number; hot: number; contacted: number; hired: number };
+}
+
+interface OutreachDraft {
+  text_message: string;
+  email_subject: string;
+  email_body: string;
+  tcpa_notice: string;
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -59,17 +69,25 @@ const ROLE_LABELS: Record<string, string> = {
 export default function MyTechAlert() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
+  const autoClaimId = searchParams.get("claim");
+  const autoMode = searchParams.get("auto");
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
+  const [claimingIds, setClaimingIds] = useState<Set<string>>(new Set());
   const [scoreFilter, setScoreFilter] = useState<"all" | "hot" | "medium">("all");
+  const [outreachModal, setOutreachModal] = useState<{ candidateId: string; draft: OutreachDraft } | null>(null);
+  const [generatingDraft, setGeneratingDraft] = useState<string | null>(null);
 
   const isHealthcare = useMemo(() => {
     if (!data) return false;
     return data.client.target_roles.some((r) => HEALTHCARE_ROLES.includes(r));
   }, [data]);
+
+  const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+  const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
   useEffect(() => {
     if (!token) {
@@ -80,12 +98,18 @@ export default function MyTechAlert() {
     fetchData();
   }, [token]);
 
+  // Auto-claim on mount when ?claim=X&auto=1
+  useEffect(() => {
+    if (autoClaimId && autoMode === "1" && data && token) {
+      claimCandidate(autoClaimId);
+    }
+  }, [autoClaimId, autoMode, data]);
+
   async function fetchData() {
     setLoading(true);
     try {
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-my-techalert?token=${token}`;
-      const res = await fetch(url, {
-        headers: { "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+      const res = await fetch(`${baseUrl}/get-my-techalert?token=${token}`, {
+        headers: { apikey },
       });
       if (!res.ok) {
         const err = await res.json();
@@ -103,13 +127,9 @@ export default function MyTechAlert() {
     if (!token) return;
     setUpdatingIds((prev) => new Set(prev).add(candidateId));
     try {
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-candidate-action`;
-      const res = await fetch(url, {
+      const res = await fetch(`${baseUrl}/update-candidate-action`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        },
+        headers: { "Content-Type": "application/json", apikey },
         body: JSON.stringify({ token, candidate_id: candidateId, action }),
       });
       const result = await res.json();
@@ -128,30 +148,77 @@ export default function MyTechAlert() {
             },
           };
         });
-        if (action === "hired") {
-          toast.success("Congratulations on the hire! This data helps us find even better candidates for you.", {
-            duration: 6000,
-          });
-        } else {
-          toast.success("Marked as contacted");
-        }
+        toast.success(action === "hired"
+          ? "Congratulations on the hire! This helps us find even better candidates."
+          : "Marked as contacted"
+        );
       }
     } catch {
       toast.error("Failed to update — try again");
     } finally {
-      setUpdatingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(candidateId);
-        return next;
-      });
+      setUpdatingIds((prev) => { const n = new Set(prev); n.delete(candidateId); return n; });
     }
+  }
+
+  async function claimCandidate(candidateId: string) {
+    if (!token) return;
+    setClaimingIds((prev) => new Set(prev).add(candidateId));
+    try {
+      const res = await fetch(`${baseUrl}/claim-candidate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey },
+        body: JSON.stringify({ token, candidate_id: candidateId }),
+      });
+      const result = await res.json();
+      if (result.claimed) {
+        setData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            candidates: prev.candidates.map((c) =>
+              c.id === candidateId ? { ...c, claimed_at: new Date().toISOString(), claim_expires_at: result.expires_at, claimed_by_other: false } : c
+            ),
+          };
+        });
+        toast.success("⚡ Claimed! 48-hour exclusivity activated.");
+      } else {
+        toast.info(result.message || "Already claimed by another company.");
+      }
+    } catch {
+      toast.error("Claim failed — try again");
+    } finally {
+      setClaimingIds((prev) => { const n = new Set(prev); n.delete(candidateId); return n; });
+    }
+  }
+
+  async function generateOutreach(candidateId: string) {
+    if (!token) return;
+    setGeneratingDraft(candidateId);
+    try {
+      const res = await fetch(`${baseUrl}/generate-outreach-draft`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey },
+        body: JSON.stringify({ token, candidate_id: candidateId }),
+      });
+      const draft = await res.json();
+      if (draft.error) throw new Error(draft.error);
+      setOutreachModal({ candidateId, draft });
+    } catch {
+      toast.error("Failed to generate draft — try again");
+    } finally {
+      setGeneratingDraft(null);
+    }
+  }
+
+  function copyToClipboard(text: string, label: string) {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied to clipboard`);
   }
 
   const toggleExpand = (id: string) => {
     setExpandedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   };
@@ -171,14 +238,25 @@ export default function MyTechAlert() {
     return "bg-slate-400 text-white";
   };
 
-  // Theme
   const accentColor = isHealthcare ? "text-blue-500" : "text-cyan-400";
-  const accentBg = isHealthcare ? "bg-blue-500" : "bg-cyan-400";
   const brandName = isHealthcare ? "HireAlert" : "TechAlert";
   const subtitle = isHealthcare ? "Licensed Healthcare Professionals" : "Licensed Techs in Your Area";
-  const badgeLabel = isHealthcare ? "License Type" : "Trade";
   const IndustryIcon = isHealthcare ? Stethoscope : Wrench;
-  const emptyText = isHealthcare ? "No candidates found yet" : "No techs found yet";
+
+  function getClaimStatus(c: Candidate): "unclaimed" | "mine" | "other" | "expired" {
+    if (!c.claimed_at) return "unclaimed";
+    if (c.claimed_by_other) return "other";
+    if (c.claim_expires_at && new Date(c.claim_expires_at) < new Date()) return "expired";
+    return "mine";
+  }
+
+  function getClaimTimeLeft(expiresAt: string): string {
+    const diff = new Date(expiresAt).getTime() - Date.now();
+    if (diff <= 0) return "Expired";
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${mins}m`;
+  }
 
   if (loading) {
     return (
@@ -279,7 +357,7 @@ export default function MyTechAlert() {
           <Card className="bg-[#1e293b] border-slate-700/50">
             <CardContent className="py-12 text-center">
               <IndustryIcon className="h-12 w-12 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400">{emptyText}</p>
+              <p className="text-slate-400">{isHealthcare ? "No candidates found yet" : "No techs found yet"}</p>
               <p className="text-slate-500 text-sm mt-1">We scan daily — new matches will appear here automatically.</p>
             </CardContent>
           </Card>
@@ -288,9 +366,14 @@ export default function MyTechAlert() {
             {filteredCandidates.map((c) => {
               const isExpanded = expandedIds.has(c.id);
               const isUpdating = updatingIds.has(c.id);
+              const isClaiming = claimingIds.has(c.id);
+              const claimStatus = getClaimStatus(c);
+              const isLapsed = c.source === "license_expiry";
 
               return (
-                <Card key={c.id} className={`bg-[#1e293b] border-slate-700/50 overflow-hidden transition-all ${c.availability_score >= 7 ? "ring-1 ring-orange-500/20" : ""}`}>
+                <Card key={c.id} className={`bg-[#1e293b] border-slate-700/50 overflow-hidden transition-all ${
+                  c.availability_score >= 7 ? "ring-1 ring-orange-500/20" : ""
+                } ${claimStatus === "mine" ? "ring-1 ring-emerald-500/30" : ""}`}>
                   {/* Collapsed header */}
                   <button
                     onClick={() => toggleExpand(c.id)}
@@ -310,6 +393,21 @@ export default function MyTechAlert() {
                             <MapPin className="h-2.5 w-2.5" /> {c.city}
                           </span>
                         )}
+                        {isLapsed && (
+                          <Badge variant="outline" className="text-[10px] px-2 py-0 border-amber-500/40 text-amber-400 bg-amber-500/5">
+                            🔄 License Lapsed
+                          </Badge>
+                        )}
+                        {claimStatus === "mine" && c.claim_expires_at && (
+                          <Badge variant="outline" className="text-[10px] px-2 py-0 border-emerald-500/40 text-emerald-400">
+                            <Lock className="h-2.5 w-2.5 mr-0.5" /> Claimed · {getClaimTimeLeft(c.claim_expires_at)}
+                          </Badge>
+                        )}
+                        {claimStatus === "other" && (
+                          <Badge variant="outline" className="text-[10px] px-2 py-0 border-slate-500/40 text-slate-400">
+                            <Clock className="h-2.5 w-2.5 mr-0.5" /> Claimed by another
+                          </Badge>
+                        )}
                         {c.client_action && (
                           <Badge variant="outline" className={`text-[10px] px-2 py-0 ${c.client_action === "hired" ? "border-emerald-500/40 text-emerald-400" : "border-slate-500/40 text-slate-400"}`}>
                             {c.client_action === "hired" ? "✅ Hired" : c.client_action === "contacted" ? "📞 Contacted" : "👁 Viewed"}
@@ -325,15 +423,38 @@ export default function MyTechAlert() {
                   {/* Expanded details */}
                   {isExpanded && (
                     <div className="px-4 pb-4 border-t border-slate-700/50 pt-3 space-y-3">
+                      {/* Lapsed license warning */}
+                      {isLapsed && (
+                        <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3 flex items-start gap-2">
+                          <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                          <p className="text-[11px] text-amber-300/80">
+                            This candidate's license recently lapsed. They may be available — worth a check. License lapse can mean job change, relocation, or simply late renewal paperwork.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Claim button (if unclaimed and score 7+) */}
+                      {claimStatus === "unclaimed" && c.availability_score >= 5 && (
+                        <Button
+                          size="sm"
+                          onClick={() => claimCandidate(c.id)}
+                          disabled={isClaiming}
+                          className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs"
+                        >
+                          {isClaiming ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Zap className="h-3 w-3 mr-1" />}
+                          ⚡ Claim This Candidate — 48hr Exclusive
+                        </Button>
+                      )}
+
                       {/* Contact info */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {c.phone && (
-                          <a href={`tel:${c.phone}`} className="flex items-center gap-2 text-orange-400 hover:text-orange-300 font-bold text-sm bg-orange-500/5 rounded-lg px-3 py-2.5 transition-colors">
+                          <a href={`tel:${c.phone}`} className="flex items-center gap-2 text-orange-400 hover:text-orange-300 font-bold text-sm bg-orange-500/5 rounded-lg px-3 py-2.5 transition-colors border border-orange-500/10">
                             <Phone className="h-4 w-4" /> {c.phone}
                           </a>
                         )}
                         {c.email && (
-                          <a href={`mailto:${c.email}`} className={`flex items-center gap-2 ${isHealthcare ? "text-blue-400 hover:text-blue-300 bg-blue-500/5" : "text-cyan-400 hover:text-cyan-300 bg-cyan-500/5"} font-semibold text-sm rounded-lg px-3 py-2.5 transition-colors`}>
+                          <a href={`mailto:${c.email}`} className={`flex items-center gap-2 ${isHealthcare ? "text-blue-400 hover:text-blue-300 bg-blue-500/5 border-blue-500/10" : "text-cyan-400 hover:text-cyan-300 bg-cyan-500/5 border-cyan-500/10"} font-semibold text-sm rounded-lg px-3 py-2.5 transition-colors border`}>
                             <Mail className="h-4 w-4" /> {c.email}
                           </a>
                         )}
@@ -363,14 +484,14 @@ export default function MyTechAlert() {
 
                       {/* Links */}
                       {(c.linkedin_url || c.facebook_url) && (
-                        <div className="flex gap-2">
+                        <div className="flex gap-3">
                           {c.linkedin_url && (
-                            <a href={c.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-[#0a66c2] hover:text-blue-400 text-xs font-semibold flex items-center gap-1">
+                            <a href={c.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-[#0a66c2] hover:text-blue-400 text-xs font-semibold flex items-center gap-1 bg-[#0a66c2]/5 rounded-lg px-3 py-2 border border-[#0a66c2]/10">
                               <ExternalLink className="h-3 w-3" /> LinkedIn
                             </a>
                           )}
                           {c.facebook_url && (
-                            <a href={c.facebook_url} target="_blank" rel="noopener noreferrer" className="text-[#1877f2] hover:text-blue-400 text-xs font-semibold flex items-center gap-1">
+                            <a href={c.facebook_url} target="_blank" rel="noopener noreferrer" className="text-[#1877f2] hover:text-blue-400 text-xs font-semibold flex items-center gap-1 bg-[#1877f2]/5 rounded-lg px-3 py-2 border border-[#1877f2]/10">
                               <ExternalLink className="h-3 w-3" /> Facebook
                             </a>
                           )}
@@ -391,13 +512,24 @@ export default function MyTechAlert() {
                         </div>
                       )}
 
-                      {/* Score reason */}
                       {c.score_reason && (
                         <p className="text-[11px] text-slate-500 italic">{c.score_reason}</p>
                       )}
 
                       {/* Action buttons */}
-                      <div className="flex gap-2 pt-1">
+                      <div className="flex gap-2 pt-1 flex-wrap">
+                        {/* Outreach Draft */}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10 text-xs"
+                          disabled={generatingDraft === c.id}
+                          onClick={() => generateOutreach(c.id)}
+                        >
+                          {generatingDraft === c.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <FileText className="h-3 w-3 mr-1" />}
+                          ✍️ Draft Outreach
+                        </Button>
+
                         {c.client_action !== "contacted" && c.client_action !== "hired" && (
                           <Button
                             size="sm"
@@ -407,7 +539,7 @@ export default function MyTechAlert() {
                             onClick={() => updateAction(c.id, "contacted")}
                           >
                             {isUpdating ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Phone className="h-3 w-3 mr-1" />}
-                            Mark as Contacted
+                            Mark Contacted
                           </Button>
                         )}
                         {c.client_action !== "hired" && (
@@ -418,12 +550,11 @@ export default function MyTechAlert() {
                             onClick={() => updateAction(c.id, "hired")}
                           >
                             {isUpdating ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <UserCheck className="h-3 w-3 mr-1" />}
-                            Mark as Hired
+                            Mark Hired
                           </Button>
                         )}
                       </div>
 
-                      {/* Alert date */}
                       <p className="text-[10px] text-slate-600">
                         Alerted: {new Date(c.alerted_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </p>
@@ -472,6 +603,69 @@ export default function MyTechAlert() {
           <p className="text-slate-700 text-[10px] mt-1">Reply to any alert email to adjust your target roles or zip codes</p>
         </div>
       </div>
+
+      {/* Outreach Draft Modal */}
+      {outreachModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setOutreachModal(null)}>
+          <div className="bg-[#1e293b] rounded-xl border border-slate-600 max-w-lg w-full max-h-[90vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-bold text-sm flex items-center gap-2">
+                <FileText className="h-4 w-4 text-purple-400" /> Outreach Drafts
+              </h3>
+              <button onClick={() => setOutreachModal(null)} className="text-slate-500 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Text Message */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] font-bold text-emerald-400 uppercase tracking-wide">📱 Text Message</p>
+                <Button size="sm" variant="ghost" className="text-xs text-slate-400 hover:text-white h-7"
+                  onClick={() => copyToClipboard(outreachModal.draft.text_message, "Text message")}>
+                  <Copy className="h-3 w-3 mr-1" /> Copy
+                </Button>
+              </div>
+              <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
+                <p className="text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">{outreachModal.draft.text_message}</p>
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] font-bold text-cyan-400 uppercase tracking-wide">✉️ Email</p>
+                <Button size="sm" variant="ghost" className="text-xs text-slate-400 hover:text-white h-7"
+                  onClick={() => copyToClipboard(`Subject: ${outreachModal.draft.email_subject}\n\n${outreachModal.draft.email_body}`, "Email")}>
+                  <Copy className="h-3 w-3 mr-1" /> Copy
+                </Button>
+              </div>
+              <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-3">
+                <p className="text-cyan-400/80 text-xs font-semibold mb-2">Subject: {outreachModal.draft.email_subject}</p>
+                <p className="text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">{outreachModal.draft.email_body}</p>
+              </div>
+            </div>
+
+            {/* Regenerate */}
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-500/10 text-xs mb-3"
+              onClick={() => { setOutreachModal(null); generateOutreach(outreachModal.candidateId); }}
+            >
+              🔄 Regenerate Drafts
+            </Button>
+
+            {/* TCPA Notice */}
+            <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3">
+              <p className="text-[10px] text-amber-400/80 flex items-start gap-1.5">
+                <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />
+                {outreachModal.draft.tcpa_notice}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
