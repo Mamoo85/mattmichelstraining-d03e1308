@@ -320,7 +320,7 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
       }
 
       toast({ title: "Activity logged! 💪", description: summary.ai_summary });
-      if (!prCelebration) onClose();
+      if (!foundPR) onClose();
     } catch (e: any) {
       toast({ title: "Save failed", description: e.message, variant: "destructive" });
     } finally {
