@@ -1,8 +1,8 @@
-// miosha-license-scraper — Michigan LARA license data
+// miosha-license-scraper — Michigan trade candidate data
 // THREE data sources:
-// 1. Michigan LARA Accela portal — ASP.NET session-based license search
-// 2. Sonar web search — finds tradespeople from public profiles, job boards, LinkedIn
-// 3. Lovable AI Gateway (Gemini) — cross-references and validates
+// 1. NPI Registry — free federal API for healthcare workers (CNA, RN, LPN)
+// 2. Sonar web search — finds tradespeople mentioned in news, LinkedIn posts, union directories
+// 3. Gemini prose extraction fallback
 //
 // VALIDATION RULES:
 // - Reject candidates with no license number AND no verifiable city
@@ -42,7 +42,6 @@ function isPersonName(name: string): boolean {
   if (words.length < 2) return false;
   if (COMPANY_SIGNALS.some((s) => lower.includes(s))) return false;
   if (name === name.toUpperCase() && name.length > 8) return false;
-  // Reject if contains "&" (usually a business: "Smith & Sons")
   if (name.includes("&")) return false;
   return true;
 }
@@ -54,243 +53,93 @@ function looksLikeLicenseNumber(num: string): boolean {
   return true;
 }
 
-// ===== SOURCE 1: Michigan LARA Accela Portal (Session-Based) =====
-// The portal is an ASP.NET WebForms app. We:
-// 1. GET the search page to obtain cookies + __VIEWSTATE
-// 2. POST the search form with the trade type
-// 3. Parse the HTML table results
+// ===== SOURCE 1: NPI Registry (Healthcare Workers) =====
+// Free federal API — searches for RN, LPN, CNA by name patterns in Michigan
+// Returns real licensed professionals with NPI numbers
 
-const LARA_BASE = "https://aca-prod.accela.com/LARA";
-const LARA_SEARCH_URL = `${LARA_BASE}/GeneralProperty/PropertyLookUp.aspx?isLicensee=Y`;
-
-interface LaraSession {
-  cookies: string;
-  viewState: string;
-  viewStateGenerator: string;
-  eventValidation: string;
-}
-
-async function getLaraSession(): Promise<LaraSession | null> {
-  try {
-    const res = await fetch(LARA_SEARCH_URL, {
-      method: "GET",
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Accept": "text/html,application/xhtml+xml",
-      },
-      signal: AbortSignal.timeout(15_000),
-    });
-
-    if (!res.ok) {
-      console.warn(`[miosha-scraper] LARA session GET failed: ${res.status}`);
-      return null;
-    }
-
-    // Extract Set-Cookie headers
-    const setCookies = res.headers.getSetCookie?.() || [];
-    const cookieStr = setCookies.map((c: string) => c.split(";")[0]).join("; ");
-
-    const html = await res.text();
-
-    // Extract ASP.NET hidden fields
-    const vsMatch = html.match(/id="__VIEWSTATE"\s+value="([^"]*)"/);
-    const vsgMatch = html.match(/id="__VIEWSTATEGENERATOR"\s+value="([^"]*)"/);
-    const evMatch = html.match(/id="__EVENTVALIDATION"\s+value="([^"]*)"/);
-
-    if (!vsMatch) {
-      console.warn("[miosha-scraper] Could not extract __VIEWSTATE from LARA page");
-      return null;
-    }
-
-    return {
-      cookies: cookieStr,
-      viewState: vsMatch[1],
-      viewStateGenerator: vsgMatch?.[1] || "",
-      eventValidation: evMatch?.[1] || "",
-    };
-  } catch (e) {
-    console.warn(`[miosha-scraper] LARA session error:`, e instanceof Error ? e.message : String(e));
-    return null;
-  }
-}
-
-const LARA_TRADE_SEARCHES = [
-  { searchText: "boiler", label: "Boiler Operator" },
-  { searchText: "mechanical", label: "HVAC Technician" },
-  { searchText: "plumb", label: "Plumber" },
-  { searchText: "electri", label: "Electrician" },
+const NPI_SEARCHES = [
+  { taxonomy: "367H00000X", label: "Nurse Aide" },
+  { taxonomy: "163W00000X", label: "Registered Nurse" },
+  { taxonomy: "164W00000X", label: "Licensed Practical Nurse" },
+  { taxonomy: "372600000X", label: "Home Health Aide" },
+  { taxonomy: "363L00000X", label: "Nurse Practitioner" },
 ];
 
-async function searchLaraPortal(session: LaraSession, searchText: string, label: string): Promise<LicenseCandidate[]> {
-  try {
-    // Build the ASP.NET form POST body
-    const formData = new URLSearchParams();
-    formData.set("__VIEWSTATE", session.viewState);
-    if (session.viewStateGenerator) formData.set("__VIEWSTATEGENERATOR", session.viewStateGenerator);
-    if (session.eventValidation) formData.set("__EVENTVALIDATION", session.eventValidation);
-    // Search by license type/business name field
-    formData.set("ctl00$PlaceHolderMain$generalSearchForm$txtGSBusinessName", searchText);
-    formData.set("ctl00$PlaceHolderMain$generalSearchForm$txtGSState", "MI");
-    formData.set("ctl00$PlaceHolderMain$btnNewSearch", "Search");
+const MICHIGAN_CITIES = [
+  "Detroit", "Warren", "Sterling Heights", "Dearborn", "Livonia",
+  "Troy", "Southfield", "Pontiac", "Taylor", "Westland",
+  "Roseville", "Royal Oak", "St. Clair Shores", "Macomb", "Clinton Township",
+];
 
-    const res = await fetch(LARA_SEARCH_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Cookie": session.cookies,
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Referer": LARA_SEARCH_URL,
-        "Accept": "text/html,application/xhtml+xml",
-      },
-      body: formData.toString(),
-      signal: AbortSignal.timeout(20_000),
-    });
+async function searchNPIRegistry(taxonomy: string, label: string): Promise<LicenseCandidate[]> {
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
 
-    if (!res.ok) {
-      console.warn(`[miosha-scraper] LARA search POST HTTP ${res.status} for ${label}`);
-      return [];
-    }
-
-    const html = await res.text();
-
-    // Parse HTML table results - look for license data in the response
-    // The Accela portal renders results in a table with specific CSS classes
-    const candidates: LicenseCandidate[] = [];
-
-    // Pattern 1: Try to find table rows with license data
-    // Accela renders results like: <td>Name</td><td>License#</td><td>Type</td><td>Status</td><td>City</td>
-    const rowPattern = /<tr[^>]*class="[^"]*ACA_TabRow[^"]*"[^>]*>([\s\S]*?)<\/tr>/gi;
-    let match;
-    while ((match = rowPattern.exec(html)) !== null) {
-      const rowHtml = match[1];
-      const cells = [...rowHtml.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(
-        (m) => m[1].replace(/<[^>]+>/g, "").trim()
-      );
-
-      if (cells.length < 3) continue;
-
-      // Try to identify name, license number, city from cells
-      const possibleName = cells[0] || cells[1] || "";
-      const possibleLicNum = cells.find((c) => looksLikeLicenseNumber(c)) || "";
-      const possibleCity = cells.find((c) =>
-        c.length > 2 && c.length < 30 && !looksLikeLicenseNumber(c) &&
-        c !== possibleName && /^[A-Za-z\s]+$/.test(c)
-      ) || null;
-
-      if (!isPersonName(possibleName)) continue;
-
-      candidates.push({
-        full_name: possibleName,
-        license_type: label,
-        license_number: looksLikeLicenseNumber(possibleLicNum) ? possibleLicNum : null,
-        license_expiry: null,
-        city: possibleCity,
-        source: "miosha" as const,
-      });
-    }
-
-    // Pattern 2: If no table rows found, try to use Gemini to extract from HTML
-    if (candidates.length === 0 && html.length > 5000) {
-      // The page loaded but we couldn't parse the table — try AI extraction
-      const truncatedHtml = html.slice(0, 15000);
-      const hasResultsIndicator = truncatedHtml.includes("ACA_TabRow") ||
-        truncatedHtml.includes("GridViewRow") ||
-        truncatedHtml.includes("resultCount");
-
-      if (hasResultsIndicator) {
-        console.log(`[miosha-scraper] LARA ${label}: results HTML detected but couldn't parse table, trying AI extraction`);
-        const aiCandidates = await extractCandidatesViaGemini(truncatedHtml, label);
-        candidates.push(...aiCandidates);
+  // Search NPI by taxonomy code + state — use taxonomy_description for broader matches
+  for (const city of MICHIGAN_CITIES) {
+    try {
+      const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&city=${encodeURIComponent(city)}&state=MI&taxonomy_description=${encodeURIComponent(label)}&enumeration_type=NPI-1&limit=50`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+      if (!res.ok) {
+        console.warn(`[miosha-scraper] NPI HTTP ${res.status} for ${label} in ${city}`);
+        continue;
       }
+      const data = await res.json();
+      const results = data?.results || [];
+
+      for (const r of results) {
+        const firstName = r.basic?.first_name || "";
+        const lastName = r.basic?.last_name || "";
+        const fullName = `${firstName} ${lastName}`.trim();
+        if (!fullName || !isPersonName(fullName)) continue;
+
+        const key = `${fullName.toLowerCase()}-${r.number}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        const address = r.addresses?.find((a: any) => a.address_purpose === "LOCATION") || r.addresses?.[0];
+
+        candidates.push({
+          full_name: fullName,
+          license_type: label,
+          license_number: r.number?.toString() || null,
+          license_expiry: null,
+          city: address?.city || city,
+          source: "miosha" as const,
+        });
+      }
+    } catch (e) {
+      console.warn(`[miosha-scraper] NPI error for ${label} in ${city}:`, e instanceof Error ? e.message : String(e));
     }
-
-    console.log(`[miosha-scraper] LARA portal: ${label} → ${candidates.length} valid people`);
-    return candidates;
-  } catch (e) {
-    console.warn(`[miosha-scraper] LARA search error for ${label}:`, e instanceof Error ? e.message : String(e));
-    return [];
   }
+
+  console.log(`[miosha-scraper] NPI ${label}: ${candidates.length} licensed professionals found`);
+  return candidates;
 }
 
-async function extractCandidatesViaGemini(html: string, label: string): Promise<LicenseCandidate[]> {
-  if (!LOVABLE_API_KEY) return [];
-  try {
-    const res = await fetch(GATEWAY_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        max_tokens: 2000,
-        messages: [
-          {
-            role: "system",
-            content: `Extract licensed professionals from this Michigan LARA search results HTML. Return ONLY a JSON array of objects: [{"full_name":"First Last","license_number":"XXX","city":"City"}]. Rules: Only include real individual people (not companies). Skip any entry without a clear person name. Max 20 results. No markdown, no explanation.`,
-          },
-          { role: "user", content: `Extract ${label} licensees from this HTML:\n\n${html.slice(0, 12000)}` },
-        ],
-      }),
-      signal: AbortSignal.timeout(15_000),
-    });
-
-    if (!res.ok) return [];
-    const data = await res.json();
-    const text = data?.choices?.[0]?.message?.content || "";
-    const jsonMatch = text.match(/\[[\s\S]*?\]/);
-    if (!jsonMatch) return [];
-
-    const parsed = JSON.parse(jsonMatch[0]) as Array<{
-      full_name: string;
-      license_number?: string;
-      city?: string;
-    }>;
-
-    return parsed
-      .filter((r) => r.full_name && isPersonName(r.full_name))
-      .map((r) => ({
-        full_name: r.full_name,
-        license_type: label,
-        license_number: r.license_number && looksLikeLicenseNumber(r.license_number) ? r.license_number : null,
-        license_expiry: null,
-        city: r.city && r.city.length > 2 ? r.city : null,
-        source: "miosha" as const,
-      }));
-  } catch {
-    return [];
-  }
-}
-
-// ===== SOURCE 2: Sonar Web Search (Live Web — Finds People Seeking Work) =====
-// Instead of trying to query the LARA database (which requires a portal session),
-// Sonar searches the OPEN WEB for licensed tradespeople who are publicly visible:
-// LinkedIn profiles, Indeed resumes, job board postings, union directories
+// ===== SOURCE 2: Sonar Web Search (Trades — Non-Healthcare) =====
+// Sonar can't find individual resumes (privacy walls) but CAN find:
+// - People mentioned in news articles about trade shortages
+// - LinkedIn posts by tradespeople
+// - Trade union announcements
+// - Apprenticeship completion announcements
 
 const SONAR_QUERIES = [
   {
-    query: `Find licensed boiler operators in Michigan who are currently seeking work or recently changed jobs. Search LinkedIn "open to work" profiles, Indeed resumes, ZipRecruiter profiles. Focus on Metro Detroit, Wayne County, Oakland County, Macomb County. Return real individual people with full names, NOT companies. Include any Michigan boiler license numbers visible on their profiles.`,
+    query: `Find individual boiler operators, stationary engineers, or boiler technicians in Metro Detroit Michigan. Search for: LinkedIn posts by people who work as boiler operators, news articles mentioning specific boiler operators by name, UA Local 636 member spotlights, Michigan LARA license verification results showing individual boiler operator names. Focus on Wayne, Oakland, and Macomb counties. Return real individual person names with their city.`,
     label: "Boiler Operator",
   },
   {
-    query: `Find licensed HVAC technicians and mechanical contractors in Michigan who recently posted resumes or are seeking new positions. Search Indeed, LinkedIn, ZipRecruiter. Include any LARA or EPA license numbers visible on their profiles. Metro Detroit area. Individual people only.`,
+    query: `Find individual HVAC technicians, HVAC installers, or mechanical contractors in Metro Detroit Michigan. Search for: LinkedIn profiles listing HVAC as current job title, Facebook posts by HVAC techs looking for work, local news articles mentioning specific HVAC workers, NATE certification directory listings. Individual people only, not companies.`,
     label: "HVAC Technician",
   },
   {
-    query: `Find licensed plumbers or master plumbers in Michigan who posted resumes or are actively job seeking. Check Indeed resumes, LinkedIn profiles with "open to work", ZipRecruiter. Metro Detroit, Wayne, Oakland, Macomb counties. Return person names and any license numbers from their profiles.`,
+    query: `Find individual licensed plumbers or master plumbers in Metro Detroit Michigan. Search for: LinkedIn profiles of plumbers, local news articles mentioning specific plumbers by name, Michigan plumbing apprenticeship completions, UA Local 98 member spotlights or announcements. Wayne, Oakland, Macomb counties. Return person names with city.`,
     label: "Plumber",
   },
   {
-    query: `Find licensed electricians or journeyman electricians in Michigan who are seeking work or recently became available. Search Indeed, LinkedIn open-to-work, ZipRecruiter. Metro Detroit area. Individual people names only, not companies. Include license numbers if visible on profiles.`,
+    query: `Find individual licensed electricians or journeyman electricians in Metro Detroit Michigan. Search for: LinkedIn profiles of electricians, IBEW Local 58 member spotlights, news articles mentioning specific electricians, Michigan electrical apprenticeship completion announcements. Individual people only.`,
     label: "Electrician",
-  },
-  {
-    query: `Find Certified Nursing Assistants (CNA) in Michigan who are seeking new positions or recently posted resumes. Search Indeed, LinkedIn, care.com, nursingjobs.com for Metro Detroit area. Include any certification numbers visible on profiles. Individual people only.`,
-    label: "CNA",
-  },
-  {
-    query: `Find registered nurses (RN) and licensed practical nurses (LPN) in Michigan Metro Detroit area who are open to new opportunities or recently posted resumes. Search LinkedIn, Indeed, NurseFly, Vivian Health. Include any Michigan nursing license numbers visible. Individual names only.`,
-    label: "RN/LPN",
   },
 ];
 
@@ -312,21 +161,21 @@ async function searchViaSonar(query: string, label: string): Promise<LicenseCand
         messages: [
           {
             role: "system",
-            content: `You are a recruiting intelligence researcher finding tradespeople who are actively seeking work or recently became available in Michigan.
+            content: `You are a recruiting intelligence researcher finding tradespeople in Michigan.
 
 CRITICAL RULES:
 1. Return ONLY individual people — NEVER company names, LLC, Inc, contractors, organizations
-2. Each result MUST have: a real person's full name (First Last) AND at least one of: license number, specific Michigan city, or current employer
-3. Search job boards (Indeed, ZipRecruiter, LinkedIn) for people with public resumes or "open to work" status
-4. If you find real people but can't verify license numbers, still include them with city
-5. Do NOT fabricate names or license numbers — only include what you actually find in search results
+2. Each result MUST have: a real person's full name (First Last) AND at least one of: specific Michigan city, current employer, or license number
+3. Search sources: LinkedIn profiles, Facebook professional posts, local news articles, trade union directories, apprenticeship completion announcements, professional certification directories
+4. Do NOT fabricate names — only include people you actually find mentioned by name in real sources
+5. It's OK to return fewer results if you can only verify a few real individuals
 
 Return ONLY valid JSON array. Each object: { "full_name": "First Last", "license_number": "number or null", "city": "Michigan city or null", "current_employer": "company or null" }. Max 20 results. No markdown. No explanation. If you truly find nothing, return [].`,
           },
           { role: "user", content: query },
         ],
         max_tokens: 2000,
-        temperature: 0.2,
+        temperature: 0.3,
       }),
       signal: AbortSignal.timeout(30_000),
     });
@@ -340,13 +189,12 @@ Return ONLY valid JSON array. Each object: { "full_name": "First Last", "license
     const data = await res.json();
     const text = data?.choices?.[0]?.message?.content || "";
 
-    // Log raw response for debugging
     console.log(`[miosha-scraper] Sonar raw response for ${label} (${text.length} chars): ${text.slice(0, 300)}`);
 
-    // Try to extract JSON array
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    // Strip markdown code fences
+    const cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+    const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
-      // Sonar sometimes returns prose instead of JSON — try to extract with Gemini
       console.log(`[miosha-scraper] Sonar ${label}: no JSON array found, trying Gemini extraction`);
       if (text.length > 50 && LOVABLE_API_KEY) {
         return extractNamesFromProse(text, label);
@@ -379,7 +227,6 @@ Return ONLY valid JSON array. Each object: { "full_name": "First Last", "license
       const hasLicNum = r.license_number && looksLikeLicenseNumber(String(r.license_number));
       const hasCity = r.city && r.city.toLowerCase() !== "michigan" && r.city.length > 2;
       const hasEmployer = r.current_employer && r.current_employer.length > 2;
-      // Accept if has license number, specific city, OR employer
       if (!hasLicNum && !hasCity && !hasEmployer) {
         console.log(`[miosha-scraper] Rejected "${r.full_name}" — no license, city, or employer`);
         continue;
@@ -510,28 +357,28 @@ serve(async (req) => {
   let updatedCount = 0;
   let errorCount = 0;
 
-  // ===== PHASE 1: LARA Accela Portal (Session-Based) =====
-  console.log("[miosha-scraper] Phase 1: LARA portal session-based search");
-  const session = await getLaraSession();
-  if (session) {
-    console.log("[miosha-scraper] LARA session acquired, searching trades...");
-    for (const trade of LARA_TRADE_SEARCHES) {
-      const candidates = await searchLaraPortal(session, trade.searchText, trade.label);
-      for (const c of candidates) {
-        const result = await upsertCandidate(sb, c);
-        if (result === "new") newCount++;
-        else if (result === "updated") updatedCount++;
+  // ===== PHASE 1: NPI Registry (Healthcare Workers) =====
+  console.log("[miosha-scraper] Phase 1: NPI Registry healthcare search");
+  const npiResults = await Promise.allSettled(
+    NPI_SEARCHES.map(({ taxonomy, label }) => searchNPIRegistry(taxonomy, label))
+  );
+
+  for (const result of npiResults) {
+    if (result.status === "fulfilled") {
+      for (const c of result.value) {
+        const res = await upsertCandidate(sb, c);
+        if (res === "new") newCount++;
+        else if (res === "updated") updatedCount++;
         else errorCount++;
       }
+    } else {
+      console.warn("[miosha-scraper] NPI search failed:", result.reason);
     }
-  } else {
-    console.warn("[miosha-scraper] LARA session failed — skipping portal search");
   }
 
-  console.log(`[miosha-scraper] Phase 1 done: new=${newCount} updated=${updatedCount}. Phase 2: Sonar web search`);
+  console.log(`[miosha-scraper] Phase 1 done: new=${newCount} updated=${updatedCount}. Phase 2: Sonar trades search`);
 
-  // ===== PHASE 2: Sonar Web Search (Parallel) =====
-  // Search for tradespeople with public profiles, resumes, "open to work" status
+  // ===== PHASE 2: Sonar Web Search (Trades — Parallel) =====
   const sonarResults = await Promise.allSettled(
     SONAR_QUERIES.map(({ query, label }) => searchViaSonar(query, label))
   );

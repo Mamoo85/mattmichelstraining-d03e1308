@@ -246,9 +246,9 @@ function isPersonNameJobBoard(name: string): boolean {
 async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[]> {
   // Search for INDIVIDUAL PEOPLE seeking trade work — not job postings by companies
   const searches = [
-    `Search Indeed.com, ZipRecruiter.com, and LinkedIn for people in Metro Detroit Michigan who have posted public resumes or are marked "open to work" in trades: boiler operator, stationary engineer, HVAC technician, plumber, pipefitter, electrician. Find specific individuals with their names, trade, and city. Do NOT return company job listings — only people seeking work.`,
-    `Search for licensed tradespeople seeking new positions in Michigan. Look for "resume posted" or "open to work" or "seeking opportunities" on Indeed, LinkedIn, CareerBuilder. Trades: HVAC, plumbing, electrical, boiler, pipefitting. Wayne County, Oakland County, Macomb County, Washtenaw County Michigan. Return individual person names.`,
-    `Find Certified Nursing Assistants (CNA), Licensed Practical Nurses (LPN), or Registered Nurses (RN) in Metro Detroit Michigan who are currently job seeking. Search Indeed resumes, LinkedIn "open to work", NurseRecruiter, Vivian Health. Return individual names with their credential type and city.`,
+    `Find LinkedIn profiles, Indeed public resumes, or trade union member pages for individual licensed boiler operators, stationary engineers, HVAC technicians, plumbers, pipefitters, or electricians in Metro Detroit Michigan who are actively job seeking or open to work. Search LinkedIn "open to work" profiles, Indeed public resumes, UA Local 636 directory, IBEW Local 58. Find specific individuals with their names, trade, and city. Do NOT return company job listings — only people seeking work.`,
+    `Find LinkedIn profiles, personal websites, or professional association listings for individual licensed HVAC technicians, plumbers, or electricians in Wayne County, Oakland County, Macomb County, Washtenaw County Michigan who are open to work or recently posted resumes. Search Indeed public resumes, ZipRecruiter profiles, trade association directories. Return individual person names only, not companies.`,
+    `Find LinkedIn profiles, Indeed public resumes, NurseFly profiles, or Vivian Health profiles for individual Certified Nursing Assistants (CNA), Licensed Practical Nurses (LPN), or Registered Nurses (RN) in Metro Detroit Michigan who are currently job seeking or open to work. Include any certification numbers visible on profiles. Individual people only.`,
   ];
 
   const allResults: RawCandidate[] = [];
@@ -267,12 +267,12 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
           messages: [
             {
               role: "system",
-              content: `You are a hiring intelligence researcher. Find INDIVIDUAL PEOPLE seeking trade work — NOT companies hiring.
+              content: `You are a hiring intelligence researcher. Find INDIVIDUAL PEOPLE who are open to work — NOT companies hiring.
 
-CRITICAL: Search job boards (Indeed, ZipRecruiter, LinkedIn) for real people who have:
-- Posted public resumes
-- Set their LinkedIn to "open to work"  
-- Applied to trade positions publicly
+CRITICAL: Search LinkedIn "open to work" profiles, Indeed public resumes, trade union directories (UA Local 636, IBEW Local 58), and professional association listings for real people who are:
+- Publicly visible as "open to work" on LinkedIn
+- Have posted public resumes on Indeed, ZipRecruiter, or CareerBuilder
+- Listed in trade union member directories or professional association pages
 
 Return ONLY valid JSON array. Each object must be a real person:
 { "name": "First Last", "trade": "specific trade title", "city": "Michigan city", "source_url": "URL where you found them or null" }
