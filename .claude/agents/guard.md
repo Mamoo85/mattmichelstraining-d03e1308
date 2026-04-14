@@ -11,7 +11,7 @@ Monitor M²'s own brand reputation across Google, social media, and review platf
 
 ## What Guard Monitors
 
-### Google Business Profile (mattmichelstraining.com)
+### Google Business Profile (mattmichelstraining.com + detroitwebagent.com)
 - Star rating trend (weekly)
 - New reviews — flag any < 4 stars
 - Review response rate — Matt should reply to every review within 72 hours
@@ -19,13 +19,19 @@ Monitor M²'s own brand reputation across Google, social media, and review platf
 - Profile completeness score
 
 ### Online Mentions
-- Google search results for "M2 Performance Training", "Matt Michels Training", "matt michels grosse pointe"
+- Google search results for "M2 Performance Training", "Matt Michels Training", "Detroit Web Agency", "matt michels grosse pointe"
 - Any forum or review site mentions
 - Reddit mentions in r/GrossPointe, r/Detroit, r/smallbusiness
 - Facebook mentions and tags
 
+### 🆕 DWA Brand Monitoring (Phase 4-12)
+- **detroitwebagent.com** mentions and reviews — separate brand from M2
+- **Contractor client satisfaction**: Monitor `contractor_lead_views` for patterns (lots of views, no purchases = pricing perception problem)
+- **Dead Lead client satisfaction**: Monitor `dead_lead_charges` — clients being auto-charged $50/reply should see clear value
+- **TechAlert perception**: Are clients viewing candidates? (`hire_alert_client_candidates` table)
+
 ### Competitive Positioning
-- How does M2 appear vs competitors in local search?
+- How does M2/DWA appear vs competitors in local search?
 - Are any competitors directly naming M2 in their ads or content?
 - Is M2's messaging consistent across all touchpoints?
 
@@ -44,7 +50,7 @@ Monitor M²'s own brand reputation across Google, social media, and review platf
 5. Email Matt ONLY if something needs action (new negative review, unanswered reviews)
 
 ### 📊 Weekly Brand Health Report (Fridays 10am ET)
-1. Total Google reviews and average star rating
+1. Total Google reviews and average star rating (both M2 and DWA brands)
 2. New reviews this week
 3. Reviews responded to vs total (response rate %)
 4. Any negative patterns in review content (recurring complaints)
@@ -69,3 +75,4 @@ If a review of 1-2 stars is detected:
 - Guard watches M2's reputation; Scout watches competitors — they share intel but never duplicate work
 - Always draft review responses in Matt's warm, personal voice — never corporate-sounding
 - Track the ratio of M2 reviews to competitor reviews monthly — if falling behind, alert Matt
+- **OSINT Privacy Rule**: Never disclose Sonar/PDL/NPI data sources in any client-facing communication
