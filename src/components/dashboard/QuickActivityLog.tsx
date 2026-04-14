@@ -248,6 +248,7 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
         }
 
         // PR Detection: check each exercise against progress_logs
+        let foundPR = false;
         for (const ex of summary.workout_sheet) {
           const weightStr = ex.weight?.replace(/[^0-9.]/g, "");
           const weight = weightStr ? parseFloat(weightStr) : 0;
@@ -283,6 +284,7 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
               try { await awardPoints("workout_log", `New PR: ${liftName} ${weight} lbs`); } catch {}
 
               // Show celebration (first PR found)
+              foundPR = true;
               setPrCelebration({
                 exerciseName: liftName,
                 newWeight: weight,
