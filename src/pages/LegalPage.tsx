@@ -20,6 +20,7 @@ const LEGAL_TYPE_MAP: Record<string, { title: string; slug: string }> = {
   "data-processing": { title: "Data Processing Agreement", slug: "data_processing_agreement" },
   "contractor-agreement": { title: "Independent Contractor Agreement", slug: "contractor_agreement" },
   "can-spam": { title: "CAN-SPAM Email Footer", slug: "can_spam_footer" },
+  "techalert-terms": { title: "TechAlert Intelligence Terms", slug: "techalert_terms" },
 };
 
 const LegalPage = () => {
