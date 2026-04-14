@@ -962,7 +962,14 @@ serve(async (req: Request) => {
   }
 
   // Upsert all new candidates into DB
-  const allScored = [...enrichBatch, ...pendingBatch];
+  // Filter out any corporate names that slipped through before DB insert
+  const allScored = [...enrichBatch, ...pendingBatch].filter((c) => {
+    if (isCorporateName(c.full_name)) {
+      console.log(`[hire-alert-scanner] Corporate name blocked from DB: "${c.full_name}"`);
+      return false;
+    }
+    return true;
+  });
   if (allScored.length) {
     const { data: insertedRows, error: insertError } = await sb.from("hire_alert_candidates").insert(
       allScored.map((c) => ({
