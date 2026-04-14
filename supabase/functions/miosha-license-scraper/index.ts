@@ -1158,9 +1158,9 @@ serve(async (req) => {
   let updatedCount = 0;
   let errorCount = 0;
 
-  console.log("[miosha-scraper] 🚀 Planetary-Scale Scanner starting — 8 fast sources + Sonar last");
+  console.log("[miosha-scraper] 🚀 Planetary-Scale Scanner starting — 13 fast sources + Sonar last");
 
-  // Run 8 fast sources in parallel (Sonar removed — runs separately after)
+  // Run 13 fast sources in parallel (Sonar removed — runs separately after)
   const results = await Promise.allSettled([
     scanNPIRegistry(),           // S1
     scanMichiganNurseAide(),     // S2
@@ -1170,9 +1170,14 @@ serve(async (req) => {
     scanTradeUnions(),           // S6
     scanPDL(),                   // S7 — day rotation + city fix
     scanCraigslist(),            // S9 — high-intent tradespeople posting availability
+    scanYelp(),                  // S12 — Yelp Fusion contractor owner-operators
+    scanNursys(),                // S14 — national nursing license lookup
+    scanPHCC(),                  // S15 — PHCC contractor directory
+    scanJATCGraduations(),       // S16 — newly graduated journeymen
+    scanThumbtack(),             // S17 — Thumbtack pro profiles
   ]);
 
-  const sourceLabels = ["NPI", "NAR", "OpenData", "Permits", "NATE", "Unions", "PDL", "Craigslist"];
+  const sourceLabels = ["NPI", "NAR", "OpenData", "Permits", "NATE", "Unions", "PDL", "Craigslist", "Yelp", "Nursys", "PHCC", "JATC", "Thumbtack"];
 
   for (let i = 0; i < results.length; i++) {
     const result = results[i];
