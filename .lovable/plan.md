@@ -1,72 +1,66 @@
 
 
-# Add 8 New Data Sources (S10–S17) to miosha-license-scraper
+# Add 5 Sources (S11 Yelp Fix + S14–S17) to miosha-license-scraper
 
 ## Summary
-Add 8 new scan functions to the existing `Promise.allSettled()` block in `miosha-license-scraper/index.ts`. Purely additive — no existing logic changes. This takes the scanner from 9 sources to 17.
+Add 5 scan functions to `miosha-license-scraper/index.ts` and wire them into the existing `Promise.allSettled()` block. Fix the Yelp source (S12 per header, called S11 by user) now that `YELP_API_KEY` is available. Add PHCC (S15), JATC (S16), Thumbtack (S17), and Nursys (S14). Purely additive.
 
-## New Environment Variable Needed
-- **YELP_API_KEY** — must be added via Lovable secrets before Yelp source will activate
+## What Gets Built
 
-## Sources Being Added
+### 1. `scanYelp()` — Yelp Fusion API (Fix)
+- `YELP_API_KEY` already at module scope (line 35), already reads from env
+- 4 trade search terms × 6 Metro Detroit cities
+- `GET https://api.yelp.com/v3/businesses/search` with Bearer auth
+- Extract owner-operator names from business names (strip trade words, test with `isPersonName()`)
+- Store phone in raw_data-style fields; skip silently if key empty
 
-| ID | Source | Method | API Key | Expected Yield |
-|----|--------|--------|---------|---------------|
-| S10 | Michigan VAL License ID Enumeration | Direct HTML fetch + regex parse of `val.apps.lara.state.mi.us/License/Details/{id}` | None | 5–20/run |
-| S11 | Craigslist RSS (sks + trd) | Plain fetch of RSS XML, parse items | None | 2–10/run |
-| S12 | Yelp Fusion API | REST `businesses/search` for contractor categories across 6 Metro Detroit cities | YELP_API_KEY | 10–30/run |
-| S13 | Google Places API | Text search for licensed tradespeople | GOOGLE_MAPS_API_KEY (exists) | 10–25/run |
-| S14 | Nursys Nursing License | Firecrawl scrape of public lookup, extract with Haiku | FIRECRAWL_API_KEY (exists) | 5–15/run |
-| S15 | PHCC Find a Contractor | Firecrawl scrape by Metro Detroit zip codes | FIRECRAWL_API_KEY (exists) | 5–15/run |
-| S16 | JATC Graduation Announcements | Firecrawl scrape of 4 JATC sites (detroiteitc.org, aaejatc.org, wmejatc.org, ua190.org) | FIRECRAWL_API_KEY (exists) | 2–8/run |
-| S17 | Thumbtack Contractor Profiles | Firecrawl scrape of Thumbtack Detroit trade pages | FIRECRAWL_API_KEY (exists) | 5–15/run |
+### 2. `scanPHCC()` — PHCC Contractor Directory
+- POST to `phccweb.org/tools-resources/find-a-contractor/` with zip codes
+- 20 Metro Detroit zip codes, 10 per run
+- Parse HTML for contractor names, strip company suffixes, run `isPersonName()`
+- Infer license_type from company keywords
+
+### 3. `scanJATCGraduations()` — JATC News Pages
+- Fetch 4 JATC news URLs (detroiteitc.org, aaejatc.org, ualocal98.org, local80.org)
+- Regex for graduation keywords, extract capitalized name patterns
+- Use `extractNamesFromMarkdown()` via Gemini if raw regex insufficient
+- Each site has 10s timeout, independent try/catch
+
+### 4. `scanThumbtack()` — Thumbtack Pro Profiles
+- Fetch 5 Thumbtack category pages for Detroit trades
+- Parse JSON-LD (`@type: Person/LocalBusiness`) for names
+- Fallback: regex for profile name patterns in HTML
+- 15s timeout, skip on non-200
+
+### 5. `scanNursys()` — Nursys License Lookup
+- GET Nursys public search page for MI RN/LPN
+- Parse response table for name, license number, expiry
+- 20s timeout, return [] silently if not parseable
 
 ## Technical Details
 
 ### File: `supabase/functions/miosha-license-scraper/index.ts`
 
-**Module scope** (top of file):
-- Add `const YELP_API_KEY = Deno.env.get("YELP_API_KEY") || "";`
-- `GOOGLE_MAPS_API_KEY` is already available via existing secrets
+**Insert 5 new functions** between `scanCraigslist()` (ends line 534) and `scanViaSonar()` (line 536). Each function:
+- Returns `Promise<LicenseCandidate[]>`
+- Has its own try/catch
+- Uses `AbortSignal.timeout()` on all fetches
+- Passes all candidates through `isPersonName()`
+- Logs `[S12:Yelp]`, `[S14:Nursys]`, `[S15:PHCC]`, `[S16:JATC]`, `[S17:Thumbtack]` format
 
-**8 new async functions**, each returning `Promise<LicenseCandidate[]>`:
+**Update `Promise.allSettled()` block** (line 831):
+```
+scanYelp(),              // S12
+scanNursys(),            // S14
+scanPHCC(),              // S15
+scanJATCGraduations(),   // S16
+scanThumbtack(),         // S17
+```
 
-1. **`scanVALNewLicenses(sb)`** — Reads `last_val_id` from `agent_heartbeats` where `agent_name = 'miosha-scraper'`. Enumerates next 200 IDs via fetch to VAL HTML pages. Regex extracts name/license_type/city/expiry. Writes back updated `last_val_id`. Baseline start: 1928000.
-
-2. **`scanCraigslistRSS()`** — Fetches RSS XML from `detroit.craigslist.org/search/sks?format=rss` and `trd?query=available&format=rss`. Parses XML for `<item>` elements. Extracts trade keywords from title/description. Applies `isPersonName()`.
-
-3. **`scanYelp()`** — Loops through 4 trade search terms × 6 cities. Calls Yelp Fusion `businesses/search`. Extracts person-like names from business names. Stores phone in raw_data.
-
-4. **`scanGooglePlaces()`** — 4 trade search queries. Calls Places Text Search API. Same owner-operator name extraction pattern as Yelp.
-
-5. **`scanNursys()`** — Uses Firecrawl to scrape Nursys public lookup for MI RN/LPN. Falls back gracefully if blocked. Extracts names via `extractNamesFromMarkdown()`.
-
-6. **`scanPHCC()`** — Firecrawl scrapes PHCC "Find a Contractor" for ~5 Metro Detroit zip codes. Extracts master plumber/HVAC contractor names.
-
-7. **`scanJATCGraduations()`** — Firecrawl scrapes news/events pages from 4 JATC websites. Extracts newly graduated journeymen names via Haiku.
-
-8. **`scanThumbtack()`** — Firecrawl scrapes Thumbtack category pages for Detroit HVAC/plumbing/electrical/boiler. Extracts contractor names, license numbers if visible.
-
-**Promise.allSettled() block** (line 821):
-- Add all 8 new functions to the array
-- Update `sourceLabels` array to include: `"VAL", "CL-RSS", "Yelp", "GPlaces", "Nursys", "PHCC", "JATC", "Thumbtack"`
-
-**Header comment**: Update source count from 9 to 17.
-
-### Patterns Followed
-- Every function has its own try/catch — one failure never blocks others
-- Every candidate passes through `isPersonName()` validation
-- Every insert includes both `name` and `full_name`
-- Each source tagged with unique `source` value but stored as `"miosha"` per existing LicenseCandidate interface
-- Console logging: `[S10:VAL] Found 12 candidates`
-- AbortSignal.timeout on all external fetches
-- Graceful skip if API key missing (Yelp, Firecrawl sources)
-
-### Files Changed
-1. `supabase/functions/miosha-license-scraper/index.ts` — add 8 scan functions + wire into Promise.allSettled
+**Update `sourceLabels`** array (line 842) to add: `"Yelp", "Nursys", "PHCC", "JATC", "Thumbtack"`
 
 ### No Changes To
-- Database schema (no migration needed)
+- Database schema
 - Frontend
 - Other edge functions
 - `supabase/config.toml`
