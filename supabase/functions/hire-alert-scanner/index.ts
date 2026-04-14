@@ -1,6 +1,6 @@
 // hire-alert-scanner — daily 7am ET
 // Scans MIOSHA license DB and job boards for available licensed tradespeople.
-// Enriches top candidates via Sonar OSINT before sending alerts.
+// Enriches top candidates via NPI + Sonar OSINT + PDL before sending alerts.
 // Alerts field service clients when new actionable candidates appear.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -15,7 +15,17 @@ const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+const PDL_API_KEY = Deno.env.get("PDL_API_KEY") || "";
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+
+// Healthcare role detection for NPI routing
+const HEALTHCARE_KEYWORDS = ["rn", "registered nurse", "lpn", "licensed practical nurse", "practical nurse", "cna", "certified nursing assistant", "nurse aide", "nursing assistant", "director of nursing", "don", "nursing director", "home health aide", "home health", "hha", "nurse", "nursing"];
+
+function isHealthcareRole(licenseType?: string): boolean {
+  if (!licenseType) return false;
+  const lower = licenseType.toLowerCase();
+  return HEALTHCARE_KEYWORDS.some((kw) => lower.includes(kw));
+}
 
 async function notifyMatt(subject: string, html: string) {
   if (!RESEND_API_KEY) return;
@@ -71,6 +81,102 @@ interface ScoredCandidate extends RawCandidate {
   qualifications_summary?: string;
   hiring_recommendation?: string;
   enrichment_status?: string;
+  // NPI fields
+  npi_number?: string;
+  npi_business_phone?: string;
+  npi_taxonomy?: string;
+  npi_practice_address?: string;
+  // PDL fields
+  pdl_mobile_phone?: string;
+  pdl_personal_email?: string;
+}
+
+// ===== NPI REGISTRY API =====
+// Free federal API, no auth needed. Only for healthcare candidates.
+async function enrichViaNPI(candidate: RawCandidate): Promise<Record<string, unknown>> {
+  const nameParts = candidate.full_name.trim().split(/\s+/);
+  if (nameParts.length < 2) return {};
+
+  const firstName = nameParts[0];
+  const lastName = nameParts[nameParts.length - 1];
+
+  try {
+    const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}&state=MI&enumeration_type=NPI-1&limit=3`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) {
+      console.warn(`[hire-alert-scanner] NPI HTTP ${res.status} for ${candidate.full_name}`);
+      return {};
+    }
+    const data = await res.json();
+    const results = data?.results;
+    if (!results?.length) return {};
+
+    // Take best match (first result)
+    const r = results[0];
+    const taxonomy = r.taxonomies?.find((t: any) => t.primary) || r.taxonomies?.[0];
+    const address = r.addresses?.find((a: any) => a.address_purpose === "LOCATION") || r.addresses?.[0];
+
+    const npiData: Record<string, unknown> = {
+      npi_number: r.number?.toString() || null,
+      npi_business_phone: address?.telephone_number || null,
+      npi_taxonomy: taxonomy ? `${taxonomy.desc || ""} (${taxonomy.code || ""})` : null,
+      npi_practice_address: address ? `${address.address_1 || ""}${address.address_2 ? " " + address.address_2 : ""}, ${address.city || ""}, ${address.state || ""} ${address.postal_code || ""}` : null,
+    };
+
+    console.log(`[hire-alert-scanner] NPI enriched: ${candidate.full_name} → NPI#${npiData.npi_number} phone=${!!npiData.npi_business_phone} taxonomy=${!!npiData.npi_taxonomy}`);
+    return npiData;
+  } catch (e) {
+    console.warn(`[hire-alert-scanner] NPI error for ${candidate.full_name}:`, e instanceof Error ? e.message : String(e));
+    return {};
+  }
+}
+
+// ===== PEOPLE DATA LABS (PDL) ENRICHMENT =====
+// Resolves mobile phone and personal email from name + location + linkedin
+async function enrichWithPDL(candidate: ScoredCandidate): Promise<Record<string, unknown>> {
+  if (!PDL_API_KEY) return {};
+
+  const nameParts = candidate.full_name.trim().split(/\s+/);
+  if (nameParts.length < 2) return {};
+
+  const params: Record<string, string> = {
+    first_name: nameParts[0],
+    last_name: nameParts[nameParts.length - 1],
+  };
+  if (candidate.city) params.location = `${candidate.city}, Michigan`;
+  if (candidate.linkedin_url) params.profile = candidate.linkedin_url;
+
+  try {
+    const qs = new URLSearchParams(params).toString();
+    const res = await fetch(`https://api.peopledatalabs.com/v5/person/enrich?${qs}`, {
+      headers: { "X-Api-Key": PDL_API_KEY },
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.warn(`[hire-alert-scanner] PDL HTTP ${res.status} for ${candidate.full_name}: ${errText.slice(0, 200)}`);
+      return {};
+    }
+
+    const data = await res.json();
+    if (!data || data.status === 404) return {};
+
+    const pdlData: Record<string, unknown> = {
+      pdl_mobile_phone: data.mobile_phone || null,
+      pdl_personal_email: data.personal_emails?.[0] || null,
+      pdl_work_email: data.work_email || null,
+      pdl_job_title: data.job_title || null,
+      pdl_company: data.job_company_name || null,
+      pdl_linkedin_url: data.linkedin_url || null,
+    };
+
+    console.log(`[hire-alert-scanner] PDL enriched: ${candidate.full_name} → mobile=${!!pdlData.pdl_mobile_phone} email=${!!pdlData.pdl_personal_email} company=${!!pdlData.pdl_company}`);
+    return pdlData;
+  } catch (e) {
+    console.warn(`[hire-alert-scanner] PDL error for ${candidate.full_name}:`, e instanceof Error ? e.message : String(e));
+    return {};
+  }
 }
 
 // Source 1: MIOSHA Public License Database — delegates to miosha-license-scraper
@@ -214,11 +320,13 @@ async function scanJobBoardsFallback(): Promise<RawCandidate[]> {
 }
 
 // ===== SONAR OSINT ENRICHMENT ENGINE =====
-// Uses perplexity/sonar-pro to find LinkedIn, Facebook, email, phone, employer
+// Uses perplexity/sonar-pro with boolean search operators for LinkedIn, Facebook, Indeed
 // NEVER reveals sources to clients — proprietary intelligence method
 
 function extractJSON(text: string): Record<string, unknown> | null {
-  const match = text.match(/\{[\s\S]*\}/);
+  // Strip markdown code fences before parsing
+  let cleaned = text.replace(/```(?:json)?\s*/gi, "").replace(/```\s*/g, "");
+  const match = cleaned.match(/\{[\s\S]*\}/);
   if (!match) return null;
   try {
     return JSON.parse(match[0]);
@@ -249,18 +357,24 @@ async function enrichViaSonar(candidate: RawCandidate): Promise<Record<string, u
           },
           {
             role: "user",
-            content: `Perform a web search to find the LinkedIn profile URL and Facebook profile URL for "${candidate.full_name}", who works as a ${tradeLabel} in or around ${locationLabel}. Also search for any associated public email addresses or phone numbers, their current employer, current job title, and estimated years of experience.
+            content: `Search the web using these boolean queries to find contact and professional information for "${candidate.full_name}", a ${tradeLabel} in ${locationLabel}:
 
-Return ONLY a JSON object with these keys:
+1. site:linkedin.com/in/ "${candidate.full_name}" "${candidate.city || "Michigan"}"
+2. site:indeed.com/r/ "${candidate.full_name}"
+3. site:facebook.com "${candidate.full_name}" "${candidate.city || "Michigan"}"
+
+From the search results, extract the following and return as a JSON object:
 {
-  "linkedin_url": "full URL or null",
-  "facebook_url": "full URL or null",
-  "email": "email or null",
-  "phone": "phone or null",
+  "linkedin_url": "full LinkedIn profile URL or null",
+  "facebook_url": "full Facebook profile URL or null",
+  "email": "any public email found or null",
+  "phone": "any public phone found or null",
   "current_employer": "company name or null",
   "current_title": "job title or null",
   "years_experience": number or null
-}`,
+}
+
+Only include data you actually find. Do not fabricate any information.`,
           },
         ],
         max_tokens: 800,
@@ -293,8 +407,10 @@ Return ONLY a JSON object with these keys:
 // AI Synthesis via Lovable AI Gateway (free) — generates qualifications + recommendation
 // NEVER mentions AI, algorithms, data sources, or methodology
 async function synthesizeViaAI(
-  candidate: RawCandidate,
-  sonarData: Record<string, unknown>
+  candidate: ScoredCandidate,
+  sonarData: Record<string, unknown>,
+  npiData: Record<string, unknown>,
+  pdlData: Record<string, unknown>
 ): Promise<{ qualifications_summary: string; hiring_recommendation: string }> {
   if (!LOVABLE_API_KEY) return { qualifications_summary: "", hiring_recommendation: "" };
 
@@ -311,12 +427,14 @@ CANDIDATE:
 - Location: ${candidate.city || "Michigan"}
 
 RESEARCH FINDINGS:
-- Employer: ${sonarData.current_employer || "Not found"}
-- Title: ${sonarData.current_title || "Not found"}
+- Employer: ${sonarData.current_employer || pdlData.pdl_company || "Not found"}
+- Title: ${sonarData.current_title || pdlData.pdl_job_title || "Not found"}
 - Experience: ${sonarData.years_experience || "Unknown"} years
-- LinkedIn: ${sonarData.linkedin_url ? "Found" : "Not found"}
-- Phone: ${sonarData.phone ? "Found" : "Not found"}
-- Email: ${sonarData.email ? "Found" : "Not found"}
+- LinkedIn: ${sonarData.linkedin_url || pdlData.pdl_linkedin_url ? "Found" : "Not found"}
+- Phone: ${sonarData.phone || pdlData.pdl_mobile_phone || candidate.phone ? "Found" : "Not found"}
+- Email: ${sonarData.email || pdlData.pdl_personal_email || candidate.email ? "Found" : "Not found"}
+${npiData.npi_number ? `- NPI Number: ${npiData.npi_number} (verified healthcare professional)` : ""}
+${npiData.npi_taxonomy ? `- Specialty: ${npiData.npi_taxonomy}` : ""}
 
 CRITICAL RULES:
 - Do NOT mention AI, algorithms, databases, data sources, web scraping, or any methodology.
@@ -428,6 +546,14 @@ function buildActionButtons(c: ScoredCandidate): string {
   if (c.phone) {
     buttons.push(`<a href="tel:${c.phone}" style="display:inline-block;background:#e8621a;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">📞 Call ${c.phone}</a>`);
   }
+  // NPI Business Phone — distinct teal button
+  if (c.npi_business_phone && c.npi_business_phone !== c.phone) {
+    buttons.push(`<a href="tel:${c.npi_business_phone}" style="display:inline-block;background:#0d9488;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">📞 Business Line ${c.npi_business_phone}</a>`);
+  }
+  // PDL Mobile — if different from primary phone
+  if (c.pdl_mobile_phone && c.pdl_mobile_phone !== c.phone && c.pdl_mobile_phone !== c.npi_business_phone) {
+    buttons.push(`<a href="tel:${c.pdl_mobile_phone}" style="display:inline-block;background:#ea580c;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">📱 Mobile ${c.pdl_mobile_phone}</a>`);
+  }
   if (c.license_number) {
     buttons.push(`<a href="https://aca-prod.accela.com/LARA/GeneralProperty/PropertyLookUp.aspx?isLicensee=Y" target="_blank" style="display:inline-block;background:#059669;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">📜 Verify State License</a>`);
   }
@@ -485,11 +611,13 @@ async function sendAlertEmail(
                   <td width="8"></td>
                   <td style="background:#f1f5f9;color:#64748b;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;">📍 ${c.city || "Metro Detroit"}</td>
                   ${c.years_experience ? `<td width="8"></td><td style="background:#10b98118;color:#059669;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">${c.years_experience}+ yrs exp</td>` : ""}
+                  ${c.npi_taxonomy ? `<td width="8"></td><td style="background:#7c3aed18;color:#7c3aed;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">🏥 NPI Verified</td>` : ""}
                 </tr></table>
               </td>
             </tr>
             ${c.current_employer ? `<tr><td style="padding:4px 0;font-size:13px;color:#475569;">🏢 <strong>${c.current_employer}</strong>${c.current_title ? ` · ${c.current_title}` : ""}</td></tr>` : ""}
             ${c.license_number ? `<tr><td style="padding:4px 0;font-size:13px;color:#475569;">🪪 License: <strong>${c.license_number}</strong>${c.license_expiry ? ` · Exp: <strong>${c.license_expiry}</strong>` : ""} · <span style="color:#059669;font-weight:700;">Active</span></td></tr>` : ""}
+            ${c.npi_number ? `<tr><td style="padding:4px 0;font-size:13px;color:#7c3aed;">🏥 NPI: <strong>${c.npi_number}</strong>${c.npi_taxonomy ? ` · ${c.npi_taxonomy}` : ""}</td></tr>` : ""}
             ${c.qualifications_summary ? `<tr><td style="padding:8px 0 4px;">
               <p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#f0fdf4;padding:10px 12px;border-radius:8px;border-left:3px solid #059669;"><strong>📋 Qualifications:</strong> ${c.qualifications_summary}</p>
             </td></tr>` : ""}
@@ -635,7 +763,7 @@ serve(async (req: Request) => {
     return new Response(JSON.stringify({ processed: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  // Run sources in parallel (Apollo removed — Sonar OSINT handles enrichment)
+  // Run sources in parallel
   console.log("[hire-alert-scanner] Scanning all sources...");
   const [mioshaCandidates, jobBoardCandidates] = await Promise.all([
     scanMIOSHA(),
@@ -643,9 +771,11 @@ serve(async (req: Request) => {
   ]);
 
   const allRaw = [...mioshaCandidates, ...jobBoardCandidates];
-  const sourceHealth = {
+  const sourceHealth: Record<string, string> = {
     miosha: mioshaCandidates.length > 0 ? "✅" : "⚠️ 0 results",
     sonar: jobBoardCandidates.length > 0 ? "✅" : "⚠️ 0 results",
+    npi: "—",
+    pdl: "—",
   };
   console.log(`[hire-alert-scanner] Raw candidates: MIOSHA=${mioshaCandidates.length} JobBoards=${jobBoardCandidates.length}`);
 
@@ -716,12 +846,15 @@ serve(async (req: Request) => {
     });
   }
 
-  // ===== INLINE SONAR OSINT ENRICHMENT =====
+  // ===== INLINE ENRICHMENT WATERFALL: NPI → Sonar → PDL → AI Synthesis =====
   // Sort by score DESC, enrich top 5 to stay within timeout limits
   // Remaining candidates get enrichment_status='pending' for candidate-deep-enrich second pass
   const sortedByScore = [...scored].sort((a, b) => b.availability_score - a.availability_score);
   const enrichBatch = sortedByScore.slice(0, 5);
   const pendingBatch = sortedByScore.slice(5);
+
+  let npiHits = 0;
+  let pdlHits = 0;
 
   console.log(`[hire-alert-scanner] Enriching top ${enrichBatch.length} candidates inline (${pendingBatch.length} deferred to deep-enrich)`);
 
@@ -730,6 +863,24 @@ serve(async (req: Request) => {
     if (candidate.enrichment_status === "complete") continue;
 
     try {
+      // Phase 1: NPI API (healthcare candidates only)
+      let npiData: Record<string, unknown> = {};
+      if (isHealthcareRole(candidate.license_type)) {
+        npiData = await enrichViaNPI(candidate);
+        if (npiData.npi_number) {
+          npiHits++;
+          candidate.npi_number = npiData.npi_number as string;
+          candidate.npi_business_phone = npiData.npi_business_phone as string | undefined;
+          candidate.npi_taxonomy = npiData.npi_taxonomy as string | undefined;
+          candidate.npi_practice_address = npiData.npi_practice_address as string | undefined;
+          // NPI business phone as fallback phone
+          if (!candidate.phone && candidate.npi_business_phone) {
+            candidate.phone = candidate.npi_business_phone;
+          }
+        }
+      }
+
+      // Phase 2: Sonar Deep Dork (upgraded boolean search)
       const sonarData = await enrichViaSonar(candidate);
 
       // Merge Sonar data into candidate
@@ -741,8 +892,38 @@ serve(async (req: Request) => {
       if (sonarData.current_title) candidate.current_title = sonarData.current_title as string;
       if (sonarData.years_experience) candidate.years_experience = sonarData.years_experience as number;
 
-      // AI Synthesis
-      const { qualifications_summary, hiring_recommendation } = await synthesizeViaAI(candidate, sonarData);
+      // Phase 3: PDL Skip-Trace (only if we have LinkedIn or enough identity data)
+      let pdlData: Record<string, unknown> = {};
+      if (PDL_API_KEY && (candidate.linkedin_url || candidate.city)) {
+        pdlData = await enrichWithPDL(candidate);
+        if (pdlData.pdl_mobile_phone || pdlData.pdl_personal_email) {
+          pdlHits++;
+          candidate.pdl_mobile_phone = pdlData.pdl_mobile_phone as string | undefined;
+          candidate.pdl_personal_email = pdlData.pdl_personal_email as string | undefined;
+          // PDL mobile becomes primary phone if none exists
+          if (!candidate.phone && candidate.pdl_mobile_phone) {
+            candidate.phone = candidate.pdl_mobile_phone;
+          }
+          // PDL email becomes email if none exists
+          if (!candidate.email && candidate.pdl_personal_email) {
+            candidate.email = candidate.pdl_personal_email;
+          }
+          // PDL LinkedIn if Sonar missed it
+          if (!candidate.linkedin_url && pdlData.pdl_linkedin_url) {
+            candidate.linkedin_url = pdlData.pdl_linkedin_url as string;
+          }
+          // PDL employer/title as fallback
+          if (!candidate.current_employer && pdlData.pdl_company) {
+            candidate.current_employer = pdlData.pdl_company as string;
+          }
+          if (!candidate.current_title && pdlData.pdl_job_title) {
+            candidate.current_title = pdlData.pdl_job_title as string;
+          }
+        }
+      }
+
+      // Phase 4: AI Synthesis (now includes NPI + PDL context)
+      const { qualifications_summary, hiring_recommendation } = await synthesizeViaAI(candidate, sonarData, npiData, pdlData);
       if (qualifications_summary) candidate.qualifications_summary = qualifications_summary;
       if (hiring_recommendation) candidate.hiring_recommendation = hiring_recommendation;
 
@@ -752,6 +933,10 @@ serve(async (req: Request) => {
       candidate.enrichment_status = "pending"; // Will be picked up by deep-enrich
     }
   }
+
+  // Update source health with NPI/PDL stats
+  sourceHealth.npi = npiHits > 0 ? `✅ ${npiHits} hits` : "⚠️ 0 hits";
+  sourceHealth.pdl = pdlHits > 0 ? `✅ ${pdlHits} hits` : PDL_API_KEY ? "⚠️ 0 hits" : "⛔ No key";
 
   // Mark pending batch
   for (const c of pendingBatch) {
@@ -779,7 +964,15 @@ serve(async (req: Request) => {
         score: c.availability_score,
         availability_score: c.availability_score,
         score_reason: c.score_reason,
-        raw_data: c.raw_data || null,
+        raw_data: {
+          ...(c.raw_data || {}),
+          npi_number: c.npi_number || null,
+          npi_business_phone: c.npi_business_phone || null,
+          npi_taxonomy: c.npi_taxonomy || null,
+          npi_practice_address: c.npi_practice_address || null,
+          pdl_mobile_phone: c.pdl_mobile_phone || null,
+          pdl_personal_email: c.pdl_personal_email || null,
+        },
         linkedin_url: c.linkedin_url || null,
         facebook_url: c.facebook_url || null,
         current_employer: c.current_employer || null,
@@ -868,7 +1061,7 @@ serve(async (req: Request) => {
     // ===== NO GHOST LEAD RULE =====
     // Only send candidates that have at least ONE clickable action link
     const actionableCandidates = clientAlertWorthy.filter(
-      (c) => c.linkedin_url || c.facebook_url || c.email || c.phone
+      (c) => c.linkedin_url || c.facebook_url || c.email || c.phone || c.npi_business_phone || c.pdl_mobile_phone
     );
 
     const clientHotCandidates = actionableCandidates.filter((c) => c.availability_score >= 7);
@@ -917,7 +1110,7 @@ serve(async (req: Request) => {
   }
 
   // Update alerted candidates
-  const allAlertWorthy = allScored.filter((c) => c.availability_score >= 5 && (c.linkedin_url || c.facebook_url || c.email || c.phone));
+  const allAlertWorthy = allScored.filter((c) => c.availability_score >= 5 && (c.linkedin_url || c.facebook_url || c.email || c.phone || c.npi_business_phone || c.pdl_mobile_phone));
   const allHotCandidates = allScored.filter((c) => c.availability_score >= 7);
 
   if (allAlertWorthy.length && alertsSent > 0) {
@@ -945,7 +1138,7 @@ serve(async (req: Request) => {
   };
 
   const enrichedCount = allScored.filter((c) => c.enrichment_status === "complete").length;
-  const ghostLeadsFiltered = allScored.filter((c) => c.availability_score >= 5 && !c.linkedin_url && !c.facebook_url && !c.email && !c.phone).length;
+  const ghostLeadsFiltered = allScored.filter((c) => c.availability_score >= 5 && !c.linkedin_url && !c.facebook_url && !c.email && !c.phone && !c.npi_business_phone && !c.pdl_mobile_phone).length;
 
   const candidateRows = allScored.length
     ? allScored
@@ -956,9 +1149,11 @@ serve(async (req: Request) => {
             const scoreBgColor = c.availability_score >= 8 ? "#dc2626" : c.availability_score >= 7 ? "#e8621a" : c.availability_score >= 5 ? "#f59e0b" : "#94a3b8";
             const sourceIcon = c.source === "miosha" ? "🏛️" : "📋";
             const enrichIcon = c.enrichment_status === "complete" ? "✅" : c.enrichment_status === "pending" ? "⏳" : "❌";
-            const hasAction = c.linkedin_url || c.facebook_url || c.email || c.phone;
+            const hasAction = c.linkedin_url || c.facebook_url || c.email || c.phone || c.npi_business_phone || c.pdl_mobile_phone;
+            const npiIcon = c.npi_number ? `<br><span style="font-size:10px;color:#7c3aed;">🏥 NPI#${c.npi_number}</span>` : "";
+            const pdlIcon = c.pdl_mobile_phone ? `<br><span style="font-size:10px;color:#ea580c;">📱 PDL: ${c.pdl_mobile_phone}</span>` : "";
             return `<tr style="background:${rowBg};border-bottom:1px solid #e2e8f0;">
-              <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:${c.availability_score >= 7 ? "800" : "500"};">${c.full_name}${c.email ? `<br><span style="font-size:11px;color:#0891b2;font-weight:400;">${c.email}</span>` : ""}${c.phone ? `<br><span style="font-size:11px;color:#e8621a;font-weight:600;">${c.phone}</span>` : ""}</td>
+              <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:${c.availability_score >= 7 ? "800" : "500"};">${c.full_name}${c.email ? `<br><span style="font-size:11px;color:#0891b2;font-weight:400;">${c.email}</span>` : ""}${c.phone ? `<br><span style="font-size:11px;color:#e8621a;font-weight:600;">${c.phone}</span>` : ""}${npiIcon}${pdlIcon}</td>
               <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.license_type || "—"}${c.license_number ? `<br><span style="font-size:10px;color:#94a3b8;">#${c.license_number}</span>` : ""}</td>
               <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.city || "—"}</td>
               <td style="padding:12px 10px;text-align:center;">
@@ -974,7 +1169,7 @@ serve(async (req: Request) => {
     : `<tr><td colspan="7" style="padding:32px;text-align:center;color:#94a3b8;font-size:14px;">No new candidates found today. Scanner ran successfully.</td></tr>`;
 
   await notifyMatt(
-    `${allHotCandidates.length > 0 ? "🔥 " : ""}TechAlert — ${dateStr} — ${newCandidates.length} new${allHotCandidates.length > 0 ? `, ${allHotCandidates.length} HOT` : ""} · ${enrichedCount} enriched`,
+    `${allHotCandidates.length > 0 ? "🔥 " : ""}TechAlert — ${dateStr} — ${newCandidates.length} new${allHotCandidates.length > 0 ? `, ${allHotCandidates.length} HOT` : ""} · ${enrichedCount} enriched · NPI:${npiHits} PDL:${pdlHits}`,
     `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;"><tr><td align="center" style="padding:32px 16px;">
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:720px;">
@@ -1031,6 +1226,10 @@ serve(async (req: Request) => {
       <span style="font-size:11px;color:#334155;"> · </span>
       <span style="font-size:11px;color:#94a3b8;">📋 Sonar/JobBoards: <strong style="color:#00d4ff;">${sourceBreakdown.sonar}</strong> ${sourceHealth.sonar}</span>
       <span style="font-size:11px;color:#334155;"> · </span>
+      <span style="font-size:11px;color:#94a3b8;">🏥 NPI: <strong style="color:#7c3aed;">${npiHits}</strong> ${sourceHealth.npi}</span>
+      <span style="font-size:11px;color:#334155;"> · </span>
+      <span style="font-size:11px;color:#94a3b8;">📱 PDL: <strong style="color:#ea580c;">${pdlHits}</strong> ${sourceHealth.pdl}</span>
+      <span style="font-size:11px;color:#334155;"> · </span>
       <span style="font-size:11px;color:#94a3b8;">👻 Ghost leads filtered: <strong style="color:#e8621a;">${ghostLeadsFiltered}</strong></span>
     </td>
   </tr></table>
@@ -1060,7 +1259,7 @@ serve(async (req: Request) => {
       🔥 <strong style="color:#e8621a;">8-10</strong> = alert sent &nbsp;·&nbsp;
       ⚡ <strong style="color:#f59e0b;">5-7</strong> = digest only &nbsp;·&nbsp;
       <span style="color:#94a3b8;">Below 5</span> = stored, no alert<br>
-      <span style="color:#475569;">Sonar OSINT enrichment: top 5/run · No Ghost Lead filter active</span>
+      <span style="color:#475569;">Enrichment waterfall: NPI → Sonar OSINT → PDL · Top 5/run · No Ghost Lead filter active</span>
     </td>
   </tr></table>
 </td></tr>
@@ -1072,7 +1271,7 @@ serve(async (req: Request) => {
   await sb.from("agent_heartbeats").upsert({
     agent_name: "hire-alert-scanner",
     last_beat: new Date().toISOString(),
-    metadata: { candidates_found: allRaw.length, new_candidates: newCandidates.length, hot_candidates: allHotCandidates.length, alerts_sent: alertsSent, enriched_inline: enrichedCount, ghost_leads_filtered: ghostLeadsFiltered },
+    metadata: { candidates_found: allRaw.length, new_candidates: newCandidates.length, hot_candidates: allHotCandidates.length, alerts_sent: alertsSent, enriched_inline: enrichedCount, ghost_leads_filtered: ghostLeadsFiltered, npi_hits: npiHits, pdl_hits: pdlHits },
   }, { onConflict: "agent_name" });
 
   return new Response(
@@ -1083,6 +1282,8 @@ serve(async (req: Request) => {
       alerts_sent: alertsSent,
       enriched_inline: enrichedCount,
       ghost_leads_filtered: ghostLeadsFiltered,
+      npi_hits: npiHits,
+      pdl_hits: pdlHits,
     }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
