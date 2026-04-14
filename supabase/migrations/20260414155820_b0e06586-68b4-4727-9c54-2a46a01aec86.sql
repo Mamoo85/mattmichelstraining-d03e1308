@@ -1,0 +1,2 @@
+TRUNCATE public.hire_alert_candidates CASCADE;
+TRUNCATE public.hire_alert_client_candidates CASCADE;
