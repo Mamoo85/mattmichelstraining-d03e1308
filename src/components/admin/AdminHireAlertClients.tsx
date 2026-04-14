@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   Bell, Plus, RefreshCw, Users, DollarSign, Trash2, Pencil,
-  Mail, Phone, CheckCircle, XCircle, Clock, Play,
+  Mail, Phone, CheckCircle, XCircle, Clock, Play, FileText, Loader2,
 } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
