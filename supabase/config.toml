@@ -1551,3 +1551,6 @@ verify_jwt = false
 
 [functions.get-contractor-signals]
 verify_jwt = false
+
+[functions.generate-demo-report]
+verify_jwt = false
