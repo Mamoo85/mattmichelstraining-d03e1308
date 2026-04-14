@@ -58,10 +58,12 @@ function looksLikeLicenseNumber(num: string): boolean {
 // Returns real licensed professionals with NPI numbers
 
 const NPI_SEARCHES = [
-  { taxonomy: "367H00000X", label: "CNA", desc: "Certified Nursing Assistant" },
-  { taxonomy: "163W00000X", label: "RN", desc: "Registered Nurse" },
-  { taxonomy: "164W00000X", label: "LPN", desc: "Licensed Practical Nurse" },
-  { taxonomy: "372600000X", label: "Home Health Aide", desc: "Home Health Aide" },
+  { taxonomy: "367H00000X", label: "CNA" },
+  { taxonomy: "163W00000X", label: "RN" },
+  { taxonomy: "164W00000X", label: "LPN" },
+  { taxonomy: "372600000X", label: "Home Health Aide" },
+  { taxonomy: "363L00000X", label: "RN" },
+  { taxonomy: "364S00000X", label: "Clinical Nurse Specialist" },
 ];
 
 const MICHIGAN_CITIES = [
