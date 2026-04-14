@@ -349,6 +349,182 @@ export default function AdminHireAlertClients() {
     }
   };
 
+  // ── PDF Generator ──────────────────────────────────────────────────────────
+  function buildPDFHTML(report: any): string {
+    const { report_date, summary, candidates: cands } = report;
+
+    const tradeRows = Object.entries(summary.trades as Record<string, number>)
+      .sort((a, b) => (b[1] as number) - (a[1] as number))
+      .map(([trade, count]) => {
+        const bars = "█".repeat(Math.min((count as number) * 2, 24));
+        return `<div class="trade-row"><span class="trade-name">${trade}</span><span class="trade-bar">${bars}</span><span class="trade-count">${count}</span></div>`;
+      }).join("");
+
+    const candidateCards = cands.map((c: any) => {
+      const isHigh = c.score >= 8 || c.availability_label === "Newly Licensed" || c.availability_label === "Actively Seeking Work";
+      const isMed = !isHigh && c.score >= 6;
+      const borderColor = isHigh ? "#10b981" : isMed ? "#f59e0b" : "#94a3b8";
+      const priorityLabel = isHigh ? "HIGH PRIORITY" : isMed ? "AVAILABLE" : "MONITOR";
+      const priorityColor = isHigh ? "#10b981" : isMed ? "#f59e0b" : "#94a3b8";
+
+      const contactParts = [
+        c.phone ? `📞 ${c.phone}` : null,
+        c.email ? `✉ ${c.email}` : null,
+        c.linkedin_url ? `<a href="${c.linkedin_url}" style="color:#3b82f6;text-decoration:none;">LinkedIn →</a>` : null,
+      ].filter(Boolean);
+      const contactLine = contactParts.join("&nbsp;&nbsp;&nbsp;");
+
+      return `<div class="candidate-card" style="border-left:4px solid ${borderColor};">
+        <div class="card-header">
+          <span class="priority-label" style="color:${priorityColor};">${priorityLabel}</span>
+          ${c.city ? `<span class="city">📍 ${c.city}, MI</span>` : ""}
+        </div>
+        <div class="candidate-name">${c.full_name}</div>
+        <div class="candidate-trade">${c.license_type}</div>
+        ${c.license_number ? `<div class="license-row">License #: ${c.license_number}${c.license_expiry ? `&nbsp;&nbsp;·&nbsp;&nbsp;Exp: ${c.license_expiry}` : ""}<br/><span class="verify-link">→ Verify at michigan.gov/lara — search by license number</span></div>` : ""}
+        <div class="why-now">WHY NOW: ${c.why_now}</div>
+        ${c.current_employer ? `<div class="detail-row">Currently at: ${c.current_employer}</div>` : ""}
+        ${c.years_experience ? `<div class="detail-row">${c.years_experience}+ years experience</div>` : ""}
+        <div class="card-footer">
+          <span>${contactLine || "Contact info available upon subscription activation"}</span>
+          ${c.first_seen ? `<span class="identified">Identified: ${c.first_seen}</span>` : ""}
+        </div>
+      </div>`;
+    }).join("");
+
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>TechAlert Intelligence Report — DJ Conley</title>
+    <style>
+      @page { size: letter; margin: 0.6in; }
+      @media print { .cover { page-break-after: always; } .closing { page-break-before: always; } .candidate-card { page-break-inside: avoid; } }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: Georgia, serif; color: #1e293b; font-size: 13px; line-height: 1.6; }
+      .cover { background: #0a1628; color: white; padding: 60px; min-height: 100vh; }
+      .cover-brand { color: #00d4ff; font-family: monospace; font-size: 13px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 16px; }
+      .cover-title { font-size: 36px; font-weight: 900; color: white; line-height: 1.1; margin-bottom: 8px; }
+      .cover-sub { color: #00d4ff; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+      .cover-date { color: #64748b; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 40px; }
+      .divider { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 32px 0; }
+      .section-label { color: #00d4ff; font-family: sans-serif; font-size: 10px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 20px; }
+      .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px; }
+      .kpi-box { background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.15); border-radius: 8px; padding: 20px; text-align: center; }
+      .kpi-number { font-size: 40px; font-weight: 900; color: #00d4ff; font-family: sans-serif; line-height: 1; }
+      .kpi-label { color: #64748b; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; font-family: sans-serif; margin-top: 6px; }
+      .trade-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+      .trade-name { color: #94a3b8; font-family: sans-serif; font-size: 11px; width: 160px; flex-shrink: 0; }
+      .trade-bar { color: #00d4ff; font-size: 10px; flex: 1; }
+      .trade-count { color: white; font-family: sans-serif; font-size: 11px; font-weight: 700; width: 30px; text-align: right; }
+      .pitch-block { margin-top: 8px; }
+      .pitch-block p { color: #94a3b8; font-size: 13px; line-height: 1.8; margin-bottom: 12px; }
+      .pitch-block .highlight { color: white; font-weight: 700; }
+      .math-box { background: rgba(0,212,255,0.05); border: 1px solid rgba(0,212,255,0.2); border-radius: 6px; padding: 20px; margin-top: 24px; font-family: monospace; font-size: 13px; color: #94a3b8; line-height: 2; }
+      .math-box .math-total { color: #00d4ff; font-weight: 900; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; margin-top: 4px; }
+      .candidates-section { padding: 40px 0; }
+      .candidate-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; margin-bottom: 20px; }
+      .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+      .priority-label { font-family: sans-serif; font-size: 9px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; }
+      .city { font-family: sans-serif; font-size: 11px; color: #64748b; }
+      .candidate-name { font-size: 22px; font-weight: 900; color: #0f172a; margin-bottom: 2px; }
+      .candidate-trade { font-family: sans-serif; font-size: 12px; color: #00d4ff; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+      .license-row { background: #f8fafc; border-radius: 4px; padding: 10px 14px; margin-bottom: 12px; font-family: monospace; font-size: 12px; color: #1e293b; }
+      .verify-link { color: #64748b; font-size: 10px; font-family: sans-serif; }
+      .why-now { background: #f0fdf4; border-left: 3px solid #10b981; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: #166534; font-style: italic; }
+      .detail-row { font-family: sans-serif; font-size: 11px; color: #64748b; margin-bottom: 4px; }
+      .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 12px; font-family: sans-serif; font-size: 11px; color: #475569; }
+      .identified { color: #94a3b8; font-size: 10px; }
+      .closing { padding: 60px; background: #0a1628; color: white; min-height: 100vh; }
+      .closing-title { font-size: 32px; font-weight: 900; color: white; margin-bottom: 32px; }
+      .closing p { color: #94a3b8; font-size: 14px; line-height: 1.9; margin-bottom: 16px; max-width: 560px; }
+      .closing .em { color: white; font-weight: 700; font-style: normal; }
+      .closing-math { background: rgba(0,212,255,0.05); border: 1px solid rgba(0,212,255,0.2); border-radius: 8px; padding: 24px; margin: 32px 0; font-family: monospace; font-size: 14px; color: #94a3b8; line-height: 2.2; }
+      .closing-math .total-line { color: #00d4ff; font-weight: 900; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px; margin-top: 8px; }
+      .closing-cta { margin-top: 40px; padding-top: 32px; border-top: 1px solid rgba(255,255,255,0.1); }
+      .closing-cta p { color: #64748b; font-size: 12px; margin-bottom: 6px; }
+      .closing-cta .contact { color: #00d4ff; font-size: 15px; font-weight: 700; font-family: sans-serif; }
+      .page-footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-family: sans-serif; font-size: 9px; color: #cbd5e1; letter-spacing: 1px; text-align: center; }
+    </style></head><body>
+
+    <div class="cover">
+      <div class="cover-brand">⚡ TechAlert</div>
+      <div class="cover-title">Staffing Intelligence<br/>Report</div>
+      <div class="cover-sub">Prepared for: DJ Conley</div>
+      <div class="cover-date">${report_date}&nbsp;&nbsp;·&nbsp;&nbsp;Confidential</div>
+      <hr class="divider"/>
+      <div class="section-label">What We Found</div>
+      <div class="kpi-grid">
+        <div class="kpi-box"><div class="kpi-number">${summary.total}</div><div class="kpi-label">Candidates<br/>Identified</div></div>
+        <div class="kpi-box"><div class="kpi-number">${summary.hot}</div><div class="kpi-label">High Priority<br/>Available</div></div>
+        <div class="kpi-box"><div class="kpi-number">${summary.with_contact}</div><div class="kpi-label">Have Contact<br/>Info</div></div>
+        <div class="kpi-box"><div class="kpi-number">${summary.local}</div><div class="kpi-label">In Metro<br/>Detroit</div></div>
+      </div>
+      <div class="section-label">Trades Monitored</div>
+      <div>${tradeRows}</div>
+      <hr class="divider"/>
+      <div class="section-label">The Difference</div>
+      <div class="pitch-block">
+        <p>Staffing agencies find people who are <span class="highlight">already looking</span>. They're interviewing at five companies. You're competing for them the same as everyone else — and paying $10,000 for the privilege.</p>
+        <p><span class="highlight">TechAlert finds people before they start looking.</span></p>
+        <p>The boiler operator who got his license two weeks ago. The journeyman who just finished his apprenticeship. The plumber whose license lapsed — which usually means he just left a job and hasn't landed somewhere yet.</p>
+        <p>You call them first. You stay in control of your own hiring. No agency. No middleman. No finder's fee.</p>
+        <div class="math-box">
+          Staffing agency — one placement:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$8,000–$12,000<br/>
+          TechAlert — full year:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$1,788<br/>
+          <div class="math-total">You break even on the first hire. Every hire after that is pure profit.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="candidates-section">
+      ${candidateCards}
+      <div class="page-footer">TechAlert Intelligence Report&nbsp;&nbsp;·&nbsp;&nbsp;Confidential&nbsp;&nbsp;·&nbsp;&nbsp;Prepared exclusively for DJ Conley&nbsp;&nbsp;·&nbsp;&nbsp;detroitwebagency.com</div>
+    </div>
+
+    <div class="closing">
+      <div class="closing-title">This Is Not<br/>A Staffing Agency.</div>
+      <p>Staffing agencies handle everything — recruiting, screening, onboarding, payroll. That's why they charge $8,000 to $12,000 every time they place someone. And you still end up managing that person yourself.</p>
+      <p><span class="em">TechAlert is something different.</span></p>
+      <p>We don't hire for you. We don't send you résumés from people who are already interviewing at five other companies. We don't take a cut of anyone's salary.</p>
+      <p><span class="em">We give you the first call.</span></p>
+      <p>When a boiler operator passes his Michigan licensing exam, we know about it within 24 hours. When a journeyman electrician finishes his apprenticeship, we find him before he posts a résumé anywhere. When a plumber's license lapses — which usually means he just left a job — we flag him for you.</p>
+      <p>You make the call. You run the interview. You decide. No agency fees. No middleman. No loss of control.</p>
+      <p>You've been hiring tradespeople for years. You know how to evaluate them. The only thing you've been missing is <span class="em">finding them before your competitors do</span>. That's what TechAlert does.</p>
+      <div class="closing-math">
+        One boiler operator via staffing agency:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$10,000<br/>
+        TechAlert for a full year:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$1,788<br/>
+        <div class="total-line">You come out ahead the moment you make one hire.<br/>And every hire after that is pure profit.</div>
+      </div>
+      <div class="closing-cta">
+        <p>$149/month. No contracts. Cancel anytime.</p>
+        <p>The candidates in this report were found in the last 30 days.</p>
+        <p><span class="em" style="color:white;">Your competitors don't have this list.</span></p>
+        <p class="contact">detroitwebagency.com/hire-alert</p>
+        <p class="contact">Matt Michels&nbsp;&nbsp;·&nbsp;&nbsp;(313) 992-1219&nbsp;&nbsp;·&nbsp;&nbsp;matt@detroitwebagent.com</p>
+      </div>
+    </div>
+
+    </body></html>`;
+  }
+
+  function openPDFWindow(report: any) {
+    const win = window.open("", "_blank");
+    if (!win) { toast.error("Allow popups to generate PDF"); return; }
+    win.document.write(buildPDFHTML(report));
+    win.document.close();
+    setTimeout(() => win.print(), 900);
+  }
+
+  async function generateDemoPDF() {
+    setGeneratingPDF(true);
+    try {
+      const res = await supabase.functions.invoke("generate-demo-report");
+      if (res.error || !res.data) throw new Error(res.error?.message || "No data");
+      openPDFWindow(res.data);
+    } catch (e: any) {
+      toast.error(e.message || "Failed — run the scanner first to populate candidates");
+    } finally {
+      setGeneratingPDF(false);
+    }
+  }
+
   return (
     <div className="space-y-6 p-1">
       {showAdd && <ClientModal onClose={() => setShowAdd(false)} onSaved={load} />}
