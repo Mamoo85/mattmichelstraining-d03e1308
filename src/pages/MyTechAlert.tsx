@@ -32,6 +32,7 @@ interface Candidate {
   hiring_recommendation: string | null;
   linkedin_url: string | null;
   facebook_url: string | null;
+  profile_photo_url: string | null;
   current_employer: string | null;
   current_title: string | null;
   years_experience: string | null;
