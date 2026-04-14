@@ -315,7 +315,12 @@ export default function MyTechAlert() {
     let list = data.candidates;
     if (scoreFilter === "hot") list = list.filter((c) => c.availability_score >= 7);
     else if (scoreFilter === "medium") list = list.filter((c) => c.availability_score >= 5 && c.availability_score < 7);
-    return list;
+    // Sort: cross-referenced first, then by score
+    return [...list].sort((a, b) => {
+      if (a.cross_referenced && !b.cross_referenced) return -1;
+      if (!a.cross_referenced && b.cross_referenced) return 1;
+      return (b.availability_score || 0) - (a.availability_score || 0);
+    });
   }, [data, scoreFilter]);
 
   const scoreBadgeColor = (score: number) => {
