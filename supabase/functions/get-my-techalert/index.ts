@@ -29,7 +29,7 @@ serve(async (req) => {
     // Look up client by dashboard_token
     const { data: client, error: clientErr } = await sb
       .from("hire_alert_clients")
-      .select("id, company_name, target_roles, target_zip_codes, active, owner_email")
+      .select("id, company_name, target_roles, target_zip_codes, active, owner_email, booking_link")
       .eq("dashboard_token", token)
       .single();
 
@@ -131,6 +131,7 @@ serve(async (req) => {
         company_name: client.company_name,
         target_roles: client.target_roles || [],
         target_zip_codes: client.target_zip_codes || [],
+        booking_link: client.booking_link || null,
       },
       candidates: merged,
       kpi,
