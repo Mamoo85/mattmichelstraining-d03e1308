@@ -12,7 +12,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-04-13. Update this section every session.*
+*Last updated: 2026-04-14. Update this section every session.*
+
+### Phase 12 — TechAlert Intelligence Expansion COMPLETE ✅
+*2026-04-14 — branch `claude/update-claude-md-K6Mue`*
+
+**Medicare Staffing Intelligence:**
+- New edge function: `medicare-staffing-intel` — queries free CMS Medicare Care Compare API for Metro Detroit nursing homes with 1–2 star staffing ratings; surfaces prospects for TechAlert CNA/LPN/RN pitch
+- New admin component: `AdminMedicareIntel` — added as "Medicare Intel" tab in `/dwa-admin`
+
+**Industrial Growth Intelligence:**
+- New edge function: `industrial-growth-intel` — Sonar OSINT scan for Metro Detroit manufacturing expansion signals (new plants, equipment acquisitions, contract awards, workforce expansion, facility upgrades)
+- New admin component: `AdminIndustrialIntel` — type-colored badges, integrated email pitch generator for TechAlert sales outreach; added as "Industrial Intel" tab in `/dwa-admin`
+
+**Healthcare Candidate Enrichment (NPI + PDL + Sonar waterfall):**
+- Enhanced `hire-alert-scanner`: waterfall enrichment — NPI Registry (free, no auth) → Sonar OSINT (LinkedIn/Facebook/Indeed boolean search) → People Data Labs (mobile phone + personal email resolution)
+- `ScoredCandidate` interface extended: `npi_number`, `npi_business_phone`, `npi_taxonomy`, `npi_practice_address`, `pdl_mobile_phone`, `pdl_personal_email`
+- AI synthesis combines all three sources into qualification summaries via Lovable AI Gateway
+- **New secret needed**: `PDL_API_KEY` (People Data Labs) — add to Lovable secrets
+
+**Modular Industry Pipeline Architecture:**
+- New edge function: `test-data-pipeline` — accepts `{ "industry_type": "healthcare" | "industrial_trades" }` param
+- Healthcare flow: NPI → Nursys → Sonar → PDL. Industrial flow: Michigan LARA → Sonar → PDL
+- Normalized `GovDataResult` interface feeds both paths into identical downstream enrichment
+
+**New Migration**: `20260414000000_hire_alert_client_candidates`
+- Tracks which candidates were shown to which TechAlert clients (enables competitive urgency: "2 other companies saw this candidate")
+- `client_action` enum: `viewed | contacted | hired`
+
+**Bug Fix**: `AnnouncementBanner` — fixed React hooks order violation; conditional domain exclusion moved to after `useQuery` call (was early-returning before hook, causing TypeError)
+
+**OSINT Privacy Rule (new — enforce going forward):**
+Sonar OSINT methodology is never disclosed to clients. Intelligence methods are proprietary. AI synthesis outputs never mention algorithms, data sources, or "AI."
+
+---
 
 ### Top 4 Products — 100% Launch Ready ✅
 Commit `25287d19` — merged to main, Lovable deploying now.
