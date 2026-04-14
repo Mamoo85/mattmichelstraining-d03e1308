@@ -43,6 +43,8 @@ interface Candidate {
   source: string;
   status: string;
   first_seen_at: string;
+  cross_referenced: boolean;
+  data_completeness: number;
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -306,7 +308,7 @@ export default function AdminHireAlertClients() {
     const [{ data: cData }, { data: rData }, { data: candData }] = await Promise.all([
       (supabase as any).from("hire_alert_clients").select("*").order("created_at", { ascending: false }),
       (supabase as any).from("hire_alert_runs").select("*").order("run_at", { ascending: false }).limit(10),
-      (supabase as any).from("hire_alert_candidates").select("id,full_name,license_type,city,source,status,first_seen_at")
+      (supabase as any).from("hire_alert_candidates").select("id,full_name,license_type,city,source,status,first_seen_at,cross_referenced,data_completeness")
         .order("first_seen_at", { ascending: false }).limit(20),
     ]);
     setClients(cData || []);
@@ -487,6 +489,7 @@ export default function AdminHireAlertClients() {
                   <th className="text-left px-4 py-3 text-white/40 font-semibold">License / Role</th>
                   <th className="text-left px-4 py-3 text-white/40 font-semibold">City</th>
                   <th className="text-left px-4 py-3 text-white/40 font-semibold">Source</th>
+                  <th className="text-center px-4 py-3 text-white/40 font-semibold">Data %</th>
                   <th className="text-right px-4 py-3 text-white/40 font-semibold">Status</th>
                 </tr>
               </thead>
@@ -498,10 +501,29 @@ export default function AdminHireAlertClients() {
                   const color = statusColor[c.status] || "#6b7280";
                   return (
                     <tr key={c.id} className="border-b border-white/5 hover:bg-white/3">
-                      <td className="px-4 py-2.5 text-white font-medium">{c.full_name}</td>
+                      <td className="px-4 py-2.5 text-white font-medium">
+                        {c.full_name}
+                        {c.cross_referenced && (
+                          <span className="ml-1.5 text-[10px] text-purple-400 font-bold">⚡ Cross-Ref</span>
+                        )}
+                      </td>
                       <td className="px-4 py-2.5 text-white/60">{c.license_type || "—"}</td>
                       <td className="px-4 py-2.5 text-white/60">{c.city || "—"}</td>
                       <td className="px-4 py-2.5 text-white/60 capitalize">{c.source}</td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all"
+                              style={{
+                                width: `${c.data_completeness || 0}%`,
+                                background: (c.data_completeness || 0) >= 80 ? "#10b981" : (c.data_completeness || 0) >= 40 ? "#f59e0b" : "#ef4444",
+                              }}
+                            />
+                          </div>
+                          <span className="text-[10px] text-white/40 font-mono">{c.data_completeness || 0}%</span>
+                        </div>
+                      </td>
                       <td className="px-4 py-2.5 text-right">
                         <span className="px-2 py-0.5 rounded-md font-semibold capitalize"
                           style={{ background: `${color}20`, color, border: `1px solid ${color}30` }}>

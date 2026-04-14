@@ -1,0 +1,2 @@
+ALTER TABLE public.hire_alert_candidates ADD COLUMN IF NOT EXISTS cross_referenced boolean DEFAULT false;
+ALTER TABLE public.hire_alert_candidates ADD COLUMN IF NOT EXISTS data_completeness integer DEFAULT 0;

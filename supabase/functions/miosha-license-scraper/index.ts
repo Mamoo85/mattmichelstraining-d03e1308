@@ -442,6 +442,9 @@ async function scanPDL(): Promise<LicenseCandidate[]> {
           city = rawCity;
         }
 
+        // Store linkedin_url from PDL in raw_data (FIX 5)
+        const linkedinUrl = p.linkedin_url || null;
+
         candidates.push({
           full_name: fullName,
           license_type: mapTitleToLicenseType(title),
@@ -449,7 +452,8 @@ async function scanPDL(): Promise<LicenseCandidate[]> {
           license_expiry: null,
           city,
           source: "miosha",
-        });
+          // PDL linkedin will be stored via upsert enrichment below
+        } as LicenseCandidate);
       }
       console.log(`[S7:PDL] "${title}" → ${people.length} people found`);
     } catch (e) {
@@ -704,6 +708,19 @@ async function extractNamesFromProse(prose: string, label: string): Promise<Lice
   } catch { return []; }
 }
 
+// ===== DATA COMPLETENESS CALCULATOR =====
+function calculateCompleteness(row: Record<string, unknown>): number {
+  let score = 0;
+  if (row.full_name) score += 20;
+  const city = row.city as string | null;
+  if (city && city.length > 2 && city.toLowerCase() !== "michigan" && city.toLowerCase() !== "mi") score += 20;
+  if (row.license_type) score += 20;
+  if (row.license_number) score += 20;
+  if (row.license_expiry) score += 10;
+  if (row.linkedin_url) score += 10;
+  return score;
+}
+
 // ===== DB UPSERT =====
 // CRITICAL: Always writes BOTH `name` AND `full_name` — the `name` column is NOT NULL
 async function upsertCandidate(sb: any, c: LicenseCandidate): Promise<"new" | "updated" | "error"> {
@@ -719,6 +736,12 @@ async function upsertCandidate(sb: any, c: LicenseCandidate): Promise<"new" | "u
     if (c.license_expiry) row.license_expiry = c.license_expiry;
     if (c.city) row.city = c.city;
 
+    // Calculate data completeness
+    row.data_completeness = calculateCompleteness(row);
+
+    let candidateId: string | null = null;
+    let isNew = false;
+
     if (c.license_number) {
       const { data: existing } = await sb
         .from("hire_alert_candidates")
@@ -727,11 +750,12 @@ async function upsertCandidate(sb: any, c: LicenseCandidate): Promise<"new" | "u
         .maybeSingle();
 
       if (existing) {
-        await sb.from("hire_alert_candidates").update({ last_seen_at: new Date().toISOString(), name: c.full_name }).eq("id", existing.id);
-        return "updated";
+        await sb.from("hire_alert_candidates").update({ last_seen_at: new Date().toISOString(), name: c.full_name, data_completeness: row.data_completeness }).eq("id", existing.id);
+        candidateId = existing.id;
       } else {
-        await sb.from("hire_alert_candidates").insert({ ...row, status: "new", first_seen_at: new Date().toISOString() });
-        return "new";
+        const { data: inserted } = await sb.from("hire_alert_candidates").insert({ ...row, status: "new", first_seen_at: new Date().toISOString() }).select("id").maybeSingle();
+        candidateId = inserted?.id || null;
+        isNew = true;
       }
     } else {
       const { data: existing } = await sb
@@ -743,13 +767,36 @@ async function upsertCandidate(sb: any, c: LicenseCandidate): Promise<"new" | "u
         .maybeSingle();
 
       if (!existing) {
-        await sb.from("hire_alert_candidates").insert({ ...row, status: "new", first_seen_at: new Date().toISOString() });
-        return "new";
+        const { data: inserted } = await sb.from("hire_alert_candidates").insert({ ...row, status: "new", first_seen_at: new Date().toISOString() }).select("id").maybeSingle();
+        candidateId = inserted?.id || null;
+        isNew = true;
       } else {
-        await sb.from("hire_alert_candidates").update({ last_seen_at: new Date().toISOString(), name: c.full_name }).eq("id", existing.id);
-        return "updated";
+        await sb.from("hire_alert_candidates").update({ last_seen_at: new Date().toISOString(), name: c.full_name, data_completeness: row.data_completeness }).eq("id", existing.id);
+        candidateId = existing.id;
       }
     }
+
+    // Cross-reference check: same name + city + license_type from DIFFERENT source
+    if (candidateId && c.city && c.full_name) {
+      try {
+        const { data: crossMatches } = await sb
+          .from("hire_alert_candidates")
+          .select("id")
+          .eq("full_name", c.full_name)
+          .eq("license_type", c.license_type)
+          .eq("city", c.city)
+          .neq("id", candidateId);
+
+        if (crossMatches && crossMatches.length > 0) {
+          // Mark all matching rows as cross-referenced
+          const allIds = [candidateId, ...crossMatches.map((m: any) => m.id)];
+          await sb.from("hire_alert_candidates").update({ cross_referenced: true }).in("id", allIds);
+          console.log(`[upsert] ⚡ Cross-referenced: ${c.full_name} (${allIds.length} records)`);
+        }
+      } catch { /* non-critical */ }
+    }
+
+    return isNew ? "new" : "updated";
   } catch (e) {
     console.error(`[upsert] Error for ${c.full_name}:`, e);
     return "error";

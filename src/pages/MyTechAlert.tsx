@@ -26,8 +26,10 @@ interface Candidate {
   license_type: string | null;
   license_number: string | null;
   license_expiry: string | null;
+  license_status: string;
   city: string | null;
   availability_score: number;
+  availability_label: string;
   score_reason: string | null;
   qualifications_summary: string | null;
   hiring_recommendation: string | null;
@@ -42,7 +44,7 @@ interface Candidate {
   claimed_at: string | null;
   claim_expires_at: string | null;
   claimed_by_other: boolean;
-  source?: string;
+  cross_referenced: boolean;
 }
 
 interface DashboardData {
@@ -313,7 +315,12 @@ export default function MyTechAlert() {
     let list = data.candidates;
     if (scoreFilter === "hot") list = list.filter((c) => c.availability_score >= 7);
     else if (scoreFilter === "medium") list = list.filter((c) => c.availability_score >= 5 && c.availability_score < 7);
-    return list;
+    // Sort: cross-referenced first, then by score
+    return [...list].sort((a, b) => {
+      if (a.cross_referenced && !b.cross_referenced) return -1;
+      if (!a.cross_referenced && b.cross_referenced) return 1;
+      return (b.availability_score || 0) - (a.availability_score || 0);
+    });
   }, [data, scoreFilter]);
 
   const scoreBadgeColor = (score: number) => {
@@ -487,8 +494,8 @@ export default function MyTechAlert() {
         <div className="flex gap-2 flex-wrap">
           {[
             { key: "all" as const, label: "All", count: data.candidates.length },
-            { key: "hot" as const, label: "🔥 Hot (7+)", count: data.kpi.hot },
-            { key: "medium" as const, label: "📋 Available (5-6)", count: data.candidates.filter((c) => c.availability_score >= 5 && c.availability_score < 7).length },
+            { key: "hot" as const, label: "🟢 High Availability", count: data.kpi.hot },
+            { key: "medium" as const, label: "🟡 Possible", count: data.candidates.filter((c) => c.availability_score >= 5 && c.availability_score < 7).length },
           ].map((f) => (
             <Button
               key={f.key}
@@ -521,7 +528,7 @@ export default function MyTechAlert() {
               const isUpdating = updatingIds.has(c.id);
               const isClaiming = claimingIds.has(c.id);
               const claimStatus = getClaimStatus(c);
-              const isLapsed = c.source === "license_expiry";
+              const isLapsed = c.license_status === "Recently Lapsed";
 
               return (
                 <Card key={c.id} className={`border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e] overflow-hidden transition-all ${
@@ -533,7 +540,7 @@ export default function MyTechAlert() {
                       onClick={() => toggleExpand(c.id)}
                       className="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
                     >
-                      {/* Profile photo or score badge */}
+                      {/* Profile photo or availability label */}
                       {c.profile_photo_url ? (
                         <div className="shrink-0 relative">
                           <img
@@ -542,16 +549,16 @@ export default function MyTechAlert() {
                             className="w-10 h-10 rounded-full object-cover border-2 border-white/10"
                             onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden"); }}
                           />
-                          <div className="hidden w-10 h-10 rounded-full flex items-center justify-center text-xs font-black" style={{ background: c.availability_score >= 8 ? "#059669" : c.availability_score >= 5 ? "#d97706" : "#475569" }}>
-                            {c.availability_score}
+                          <div className="hidden w-10 h-10 rounded-full flex items-center justify-center text-[9px] font-black" style={{ background: c.availability_score >= 8 ? "#059669" : c.availability_score >= 5 ? "#d97706" : "#475569" }}>
+                            {c.availability_score >= 8 ? "🟢" : c.availability_score >= 5 ? "🟡" : "🔵"}
                           </div>
-                          <span className={`absolute -bottom-0.5 -right-0.5 text-[9px] font-black rounded-full w-5 h-5 flex items-center justify-center ${scoreBadgeColor(c.availability_score)}`}>
-                            {c.availability_score}
+                          <span className={`absolute -bottom-0.5 -right-0.5 text-[8px] font-black rounded-full w-5 h-5 flex items-center justify-center ${scoreBadgeColor(c.availability_score)}`}>
+                            {c.availability_score >= 8 ? "🟢" : c.availability_score >= 5 ? "🟡" : "🔵"}
                           </span>
                         </div>
                       ) : (
-                        <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-xs font-black ${scoreBadgeColor(c.availability_score)}`}>
-                          {c.availability_score >= 8 ? "🔥" : c.availability_score >= 7 ? "⚡" : ""}{c.availability_score}
+                        <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-black ${scoreBadgeColor(c.availability_score)}`}>
+                          {c.availability_score >= 8 ? "🟢" : c.availability_score >= 5 ? "🟡" : "🔵"}
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
@@ -580,7 +587,17 @@ export default function MyTechAlert() {
                           )}
                           {isLapsed && (
                             <Badge variant="outline" className="text-[10px] px-2 py-0 border-amber-500/40 text-amber-400 bg-amber-500/5">
-                              🔄 License Lapsed
+                              🔄 {c.license_status}
+                            </Badge>
+                          )}
+                          {c.license_status === "Expiring Soon" && (
+                            <Badge variant="outline" className="text-[10px] px-2 py-0 border-yellow-500/40 text-yellow-400 bg-yellow-500/5">
+                              ⚠️ Expiring Soon
+                            </Badge>
+                          )}
+                          {c.cross_referenced && (
+                            <Badge variant="outline" className="text-[10px] px-2 py-0 border-purple-500/40 text-purple-400 bg-purple-500/5">
+                              ⚡ Verified
                             </Badge>
                           )}
                           {claimStatus === "mine" && c.claim_expires_at && (
@@ -763,7 +780,10 @@ export default function MyTechAlert() {
                       </div>
 
                       <p className="text-[10px] text-slate-600">
-                        Alerted: {new Date(c.alerted_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        Identified {(() => {
+                          const days = Math.floor((Date.now() - new Date(c.alerted_at).getTime()) / (1000 * 60 * 60 * 24));
+                          return days === 0 ? "today" : days === 1 ? "1 day ago" : `${days} days ago`;
+                        })()}
                       </p>
                     </div>
                   )}
