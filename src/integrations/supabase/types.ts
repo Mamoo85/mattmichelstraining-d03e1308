@@ -4801,6 +4801,7 @@ export type Database = {
       }
       industry_pulse_signals: {
         Row: {
+          client_tag: string | null
           company_name: string
           confidence: number | null
           created_at: string | null
@@ -4813,9 +4814,12 @@ export type Database = {
           location: string | null
           predicted_needs: string[] | null
           recommended_pitch: string | null
+          sector: string | null
+          signal_type: string | null
           source_urls: string[] | null
         }
         Insert: {
+          client_tag?: string | null
           company_name: string
           confidence?: number | null
           created_at?: string | null
@@ -4828,9 +4832,12 @@ export type Database = {
           location?: string | null
           predicted_needs?: string[] | null
           recommended_pitch?: string | null
+          sector?: string | null
+          signal_type?: string | null
           source_urls?: string[] | null
         }
         Update: {
+          client_tag?: string | null
           company_name?: string
           confidence?: number | null
           created_at?: string | null
@@ -4843,6 +4850,8 @@ export type Database = {
           location?: string | null
           predicted_needs?: string[] | null
           recommended_pitch?: string | null
+          sector?: string | null
+          signal_type?: string | null
           source_urls?: string[] | null
         }
         Relationships: []
