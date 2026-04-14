@@ -146,75 +146,114 @@ async function scanMichiganNurseAide(): Promise<LicenseCandidate[]> {
   return candidates;
 }
 
-// ===== SOURCE 3: Michigan Open Data Portal (Socrata) =====
-// Michigan doesn't publish individual license lists on Socrata — only metrics.
-// Instead, search the LARA BPL verification lookup pages via Firecrawl.
+// ===== SOURCE 3: Michigan Open Data Portal (direct Socrata fetch — NO Firecrawl) =====
+// Queries data.michigan.gov SODA API directly for professional license datasets
 async function scanMichiganOpenData(): Promise<LicenseCandidate[]> {
-  if (!FIRECRAWL_API_KEY) {
-    console.warn("[S3:OpenData] No FIRECRAWL_API_KEY — skipping LARA lookup");
-    return [];
-  }
   const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
 
-  // Try LARA online license verification search pages
-  const laraSearches = [
-    { url: "https://aca-prod.accela.com/LARA/GeneralProperty/PropertyLookUp.aspx?is498=1", label: "Trade Professional" },
+  // Known Socrata dataset IDs on data.michigan.gov for professional licenses
+  const datasets = [
+    { id: "r25e-29bj", label: "Trade Professional", filter: "" },
+    { id: "5gkx-k3qs", label: "Trade Professional", filter: "" },
   ];
 
-  for (const { url, label } of laraSearches) {
+  // Also try generic professional license search
+  const genericUrl = `https://data.michigan.gov/resource/midl-yni7.json?$where=license_status='ACTIVE'&$limit=200&$select=first_name,last_name,license_type,license_number,city,state`;
+
+  const urls = [
+    genericUrl,
+    ...datasets.map(d => `https://data.michigan.gov/resource/${d.id}.json?$limit=200`),
+  ];
+
+  for (const url of urls) {
     try {
-      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 3000 }),
-        signal: AbortSignal.timeout(20_000),
-      });
+      const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
       if (!res.ok) {
-        console.warn(`[S3:OpenData] Firecrawl HTTP ${res.status}`);
+        console.warn(`[S3:OpenData] HTTP ${res.status} for ${url.slice(0, 80)}`);
         continue;
       }
       const data = await res.json();
-      const markdown = data?.data?.markdown || data?.markdown || "";
-      if (markdown.length > 100) {
-        const extracted = await extractNamesFromMarkdown(markdown, label);
-        candidates.push(...extracted);
+      if (!Array.isArray(data)) continue;
+
+      for (const row of data) {
+        // Try multiple field name patterns
+        const firstName = row.first_name || row.firstname || row.FIRST_NAME || "";
+        const lastName = row.last_name || row.lastname || row.LAST_NAME || "";
+        let fullName = row.full_name || row.name || `${firstName} ${lastName}`.trim();
+        if (!fullName || !isPersonName(fullName)) continue;
+
+        const licNum = row.license_number || row.license_no || row.LICENSE_NUMBER || null;
+        const city = row.city || row.CITY || null;
+        const licType = row.license_type || row.LICENSE_TYPE || row.profession || "Trade Professional";
+
+        const key = fullName.toLowerCase() + (licNum || "");
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        let mappedType = "Trade Professional";
+        const lt = (licType || "").toUpperCase();
+        if (lt.includes("ELECTR")) mappedType = "Electrician";
+        else if (lt.includes("PLUMB")) mappedType = "Plumber";
+        else if (lt.includes("HVAC") || lt.includes("MECHANIC")) mappedType = "HVAC Technician";
+        else if (lt.includes("BOILER")) mappedType = "Boiler Operator";
+        else if (lt.includes("NURS")) mappedType = "Licensed Practical Nurse";
+
+        candidates.push({
+          full_name: fullName, license_type: mappedType,
+          license_number: licNum ? String(licNum) : null,
+          license_expiry: null, city: city || null, source: "miosha",
+        });
       }
     } catch (e) {
       console.warn(`[S3:OpenData] Error: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 
-  console.log(`[S3:OpenData] Total: ${candidates.length} candidates`);
+  console.log(`[S3:OpenData] Found ${candidates.length} candidates (direct Socrata, no Firecrawl)`);
   return candidates;
 }
 
 // ===== SOURCE 4: Detroit Building Permits — THE MOAT =====
-// Detroit uses ArcGIS Hub, not Socrata. Search via Firecrawl + ArcGIS REST.
+// Detroit uses ArcGIS Hub. Real service ID: qvkbeam7Wirps6zC
+// Trades Permits has: contact_name, contact_business_name, permit_type
 async function scanBuildingPermits(): Promise<LicenseCandidate[]> {
   const candidates: LicenseCandidate[] = [];
   const seen = new Set<string>();
 
-  // ArcGIS feature service for Detroit building permits
-  const arcgisEndpoints = [
-    `https://services2.arcgis.com/qvkbeam7Wirber6j/arcgis/rest/services/Building_Permits/FeatureServer/0/query?where=1%3D1&outFields=CONTRACTOR_NAME,PERMIT_TYPE,ADDRESS&resultRecordCount=200&f=json`,
-    `https://services2.arcgis.com/qvkbeam7Wirber6j/arcgis/rest/services/Mechanical_Permits/FeatureServer/0/query?where=1%3D1&outFields=CONTRACTOR_NAME,PERMIT_TYPE&resultRecordCount=200&f=json`,
+  // Real Detroit ArcGIS endpoints (discovered from data.detroitmi.gov DCAT feed)
+  const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
+  const dateFilter = `issued_date > TIMESTAMP '${new Date(ninetyDaysAgo).toISOString().split("T")[0]}'`;
+
+  const endpoints = [
+    {
+      url: `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_trades_permits/FeatureServer/0/query?where=${encodeURIComponent(dateFilter)}&outFields=contact_name,contact_business_name,permit_type,address&resultRecordCount=200&f=json&orderByFields=issued_date+DESC`,
+      nameField: "contact_name",
+    },
   ];
 
-  for (const url of arcgisEndpoints) {
+  for (const { url, nameField } of endpoints) {
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
-      if (!res.ok) continue;
+      if (!res.ok) {
+        console.warn(`[S4:Permits] HTTP ${res.status}`);
+        continue;
+      }
       const data = await res.json();
+      if (data.error) {
+        console.warn(`[S4:Permits] ArcGIS error: ${JSON.stringify(data.error).slice(0, 200)}`);
+        continue;
+      }
       const features = data?.features || [];
       for (const f of features) {
         const attrs = f.attributes || {};
-        const name = attrs.CONTRACTOR_NAME || "";
+        const name = attrs[nameField] || "";
         if (!name || !isPersonName(name)) continue;
-        const key = name.toLowerCase();
+        const key = name.toLowerCase().trim();
         if (seen.has(key)) continue;
         seen.add(key);
 
-        const permitType = (attrs.PERMIT_TYPE || "").toUpperCase();
+        const permitType = (attrs.permit_type || "").toUpperCase();
         let licenseType = "Trade Professional";
         if (permitType.includes("MECHANIC") || permitType.includes("HVAC")) licenseType = "HVAC Technician";
         else if (permitType.includes("PLUMB")) licenseType = "Plumber";
@@ -222,17 +261,18 @@ async function scanBuildingPermits(): Promise<LicenseCandidate[]> {
         else if (permitType.includes("BOILER")) licenseType = "Boiler Operator";
 
         candidates.push({
-          full_name: name, license_type: licenseType,
+          full_name: name.trim(), license_type: licenseType,
           license_number: null, license_expiry: null,
           city: "Detroit", source: "miosha",
         });
       }
+      console.log(`[S4:Permits] Processed ${features.length} features → ${candidates.length} people`);
     } catch (e) {
       console.warn(`[S4:Permits] Error: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 
-  console.log(`[S4:Permits] Found ${candidates.length} active tradespeople from permits`);
+  console.log(`[S4:Permits] Found ${candidates.length} active tradespeople from Detroit permits`);
   return candidates;
 }
 
@@ -324,6 +364,7 @@ async function scanTradeUnions(): Promise<LicenseCandidate[]> {
 }
 
 // ===== SOURCE 7: People Data Labs =====
+// ROTATION: splits 10 titles across days to avoid daily credit cap
 async function scanPDL(): Promise<LicenseCandidate[]> {
   if (!PDL_API_KEY) {
     console.warn("[S7:PDL] No PDL_API_KEY — skipping");
@@ -332,14 +373,31 @@ async function scanPDL(): Promise<LicenseCandidate[]> {
 
   const candidates: LicenseCandidate[] = [];
   const seen = new Set<string>();
-  const PDL_TITLES = [
+
+  const ALL_TITLES = [
     "boiler operator", "stationary engineer", "chief engineer",
     "HVAC technician", "master plumber", "journeyman plumber",
     "master electrician", "journeyman electrician",
     "certified nursing assistant", "licensed practical nurse",
   ];
 
-  for (const title of PDL_TITLES) {
+  // Rotate: 3-4 titles per day based on day-of-week (0=Sun..6=Sat)
+  const dayOfWeek = new Date().getDay();
+  const titleGroups = [
+    [0, 1, 2],       // Sun: boiler operator, stationary engineer, chief engineer
+    [3, 4],           // Mon: HVAC technician, master plumber
+    [5, 6],           // Tue: journeyman plumber, master electrician
+    [7, 8, 9],        // Wed: journeyman electrician, CNA, LPN
+    [0, 3, 6],        // Thu: boiler operator, HVAC tech, master electrician
+    [1, 4, 7],        // Fri: stationary engineer, master plumber, journeyman electrician
+    [2, 5, 8, 9],     // Sat: chief engineer, journeyman plumber, CNA, LPN
+  ];
+  const todayIndices = titleGroups[dayOfWeek] || [0, 1, 2];
+  const todayTitles = todayIndices.map(i => ALL_TITLES[i]);
+
+  console.log(`[S7:PDL] Day ${dayOfWeek} — searching: ${todayTitles.join(", ")}`);
+
+  for (const title of todayTitles) {
     try {
       const res = await fetch("https://api.peopledatalabs.com/v5/person/search", {
         method: "POST",
@@ -376,21 +434,29 @@ async function scanPDL(): Promise<LicenseCandidate[]> {
         if (seen.has(key)) continue;
         seen.add(key);
 
+        // FIX: Properly extract city — guard against booleans and invalid values
+        let city: string | null = null;
+        const rawCity = p.location_metro || p.location_locality || p.location_name || null;
+        if (rawCity && typeof rawCity === "string" && rawCity.length > 2 && rawCity !== "true" && rawCity !== "false") {
+          city = rawCity;
+        }
+
         candidates.push({
           full_name: fullName,
           license_type: mapTitleToLicenseType(title),
           license_number: null,
           license_expiry: null,
-          city: p.location_metro || p.location_locality || null,
+          city,
           source: "miosha",
         });
       }
+      console.log(`[S7:PDL] "${title}" → ${people.length} people found`);
     } catch (e) {
       console.warn(`[S7:PDL] Error for "${title}": ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 
-  console.log(`[S7:PDL] Found ${candidates.length} candidates`);
+  console.log(`[S7:PDL] Found ${candidates.length} candidates (${todayTitles.length} titles today)`);
   return candidates;
 }
 
@@ -650,21 +716,20 @@ serve(async (req) => {
   let updatedCount = 0;
   let errorCount = 0;
 
-  console.log("[miosha-scraper] 🚀 Planetary-Scale Scanner starting — 8 sources in parallel");
+  console.log("[miosha-scraper] 🚀 Planetary-Scale Scanner starting — 7 fast sources + Sonar last");
 
-  // Run ALL 8 sources simultaneously
+  // Run 7 fast sources in parallel (Sonar removed — runs separately after)
   const results = await Promise.allSettled([
     scanNPIRegistry(),           // S1
     scanMichiganNurseAide(),     // S2
-    scanMichiganOpenData(),      // S3
-    scanBuildingPermits(),       // S4
+    scanMichiganOpenData(),      // S3 — now direct Socrata fetch, no Firecrawl
+    scanBuildingPermits(),       // S4 — now correct ArcGIS endpoint
     scanNATERegistry(),          // S5
     scanTradeUnions(),           // S6
-    scanPDL(),                   // S7
-    scanViaSonar(),              // S8
+    scanPDL(),                   // S7 — with day rotation + city fix
   ]);
 
-  const sourceLabels = ["NPI", "NAR", "OpenData", "Permits", "NATE", "Unions", "PDL", "Sonar"];
+  const sourceLabels = ["NPI", "NAR", "OpenData", "Permits", "NATE", "Unions", "PDL"];
 
   for (let i = 0; i < results.length; i++) {
     const result = results[i];
@@ -681,6 +746,22 @@ serve(async (req) => {
       sourceCounts[label] = 0;
       console.error(`[miosha-scraper] ${label} FAILED:`, result.reason);
     }
+  }
+
+  // S8: Sonar runs LAST with its own dedicated timeout (not in parallel block)
+  console.log("[miosha-scraper] ⏳ Running Sonar separately (dedicated 30s window)...");
+  try {
+    const sonarCandidates = await scanViaSonar();
+    sourceCounts["Sonar"] = sonarCandidates.length;
+    for (const c of sonarCandidates) {
+      const res = await upsertCandidate(sb, c);
+      if (res === "new") newCount++;
+      else if (res === "updated") updatedCount++;
+      else errorCount++;
+    }
+  } catch (e) {
+    sourceCounts["Sonar"] = 0;
+    console.error(`[miosha-scraper] Sonar FAILED:`, e);
   }
 
   const summary = `✅ Done: new=${newCount} updated=${updatedCount} errors=${errorCount} | ${Object.entries(sourceCounts).map(([k, v]) => `${k}=${v}`).join(" ")}`;
