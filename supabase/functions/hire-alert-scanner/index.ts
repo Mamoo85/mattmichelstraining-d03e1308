@@ -674,7 +674,13 @@ async function sendAlertEmail(
               </td>
             </tr>
             ${c.current_employer ? `<tr><td style="padding:4px 0;font-size:13px;color:#475569;">🏢 <strong>${c.current_employer}</strong>${c.current_title ? ` · ${c.current_title}` : ""}</td></tr>` : ""}
-            ${c.license_number ? `<tr><td style="padding:4px 0;font-size:13px;color:#475569;">🪪 License: <strong>${c.license_number}</strong>${c.license_expiry ? ` · Exp: <strong>${c.license_expiry}</strong>` : ""} · <span style="color:#059669;font-weight:700;">Active</span></td></tr>` : ""}
+            <!-- LICENSE INFO — ALWAYS SHOWN -->
+            <tr><td style="padding:6px 0;">
+              ${c.license_number
+                ? `<p style="margin:0;font-size:13px;color:#1e293b;background:#f0fdf4;padding:8px 12px;border-radius:8px;border-left:3px solid #059669;">🪪 License: <strong>${c.license_number}</strong>${c.license_expiry ? ` · Exp: <strong>${c.license_expiry}</strong>` : ""} · <span style="color:#059669;font-weight:700;">Active</span></p>`
+                : `<p style="margin:0;font-size:13px;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:8px;border-left:3px solid #f59e0b;">⚠️ License not yet verified — <a href="https://aca-prod.accela.com/LARA/GeneralProperty/PropertyLookUp.aspx?isLicensee=Y" target="_blank" style="color:#0891b2;font-weight:700;text-decoration:underline;">manual LARA lookup recommended</a></p>`
+              }
+            </td></tr>
             ${c.npi_number ? `<tr><td style="padding:4px 0;font-size:13px;color:#7c3aed;">🏥 NPI: <strong>${c.npi_number}</strong>${c.npi_taxonomy ? ` · ${c.npi_taxonomy}` : ""}</td></tr>` : ""}
             ${c.qualifications_summary ? `<tr><td style="padding:8px 0 4px;">
               <p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#f0fdf4;padding:10px 12px;border-radius:8px;border-left:3px solid #059669;"><strong>📋 Qualifications:</strong> ${c.qualifications_summary}</p>
