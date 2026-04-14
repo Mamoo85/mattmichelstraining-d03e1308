@@ -1,42 +1,43 @@
 
 
-# Test & Verify TechAlert Scanner — LARA/MIOSHA Primary + Multi-State Analysis
+# Live Test: Clear & Re-Run TechAlert Scanner
 
-## Key Finding: No Multi-State Needed
+## What We Have Now
+- 33 candidates in `hire_alert_candidates` (from Apr 13-14)
+- 93 entries in `hire_alert_client_candidates` (alert history)
+- 0 entries in `hire_alert_runs` and `industry_pulse_signals`
+- 8 active clients configured
 
-Michigan **does not reciprocate** with any other state for trade licensing. From LARA's own documentation: *"The State of Michigan does not reciprocate with any other state for licensing. Therefore, you are required to take and pass an examination to receive a license."*
+## The Plan
 
-This means scanning Ohio, Indiana, Illinois, or Wisconsin databases is **pointless** — those licensees can't legally work in Michigan without a separate Michigan license. The Michigan LARA database is the ONLY database that matters for Michigan-based clients. This is actually a competitive advantage — it makes the LARA moat even stronger.
+### Step 1: Clear Old Data (Migration)
+Run a migration to truncate test data from the three tables:
+```sql
+TRUNCATE hire_alert_candidates CASCADE;
+TRUNCATE hire_alert_client_candidates CASCADE;
+```
+This gives us a clean slate — as if the product just launched.
 
-**Exception**: For nursing (CNA/LPN/RN), the Nurse Licensure Compact (NLC) allows multi-state practice. Michigan joined the NLC, so nurses from compact states CAN work in Michigan. We already search the NPI registry for these, which covers this.
+### Step 2: Deploy & Invoke the Scanner
+- Deploy `hire-alert-scanner` and `miosha-license-scraper` fresh
+- Invoke the scanner via curl to trigger a full run
+- This will execute the real 3-tier scan: **BPL (LARA) → MIOSHA → Job Boards**
 
-## What Needs to Happen
+### Step 3: Review Results
+- Check logs to confirm each source ran and what it found
+- Query the database for newly inserted candidates
+- Verify candidates have real license numbers (BPL/MIOSHA sources)
+- Confirm the scoring and source tagging is correct
+- Check if the founder report email fires with the segmented sections (State-Licensed vs Job Seekers)
 
-### 1. Deploy & Invoke Scanner to Confirm It Works
-- Deploy both `hire-alert-scanner` and `miosha-license-scraper` (no logs found — they may not be deployed after recent edits)
-- Invoke the scanner with curl to trigger a real run
-- Check logs for the source hierarchy: BPL candidates → MIOSHA candidates → Job Board candidates
-- Verify BPL and MIOSHA return real people with license numbers, not companies
-
-### 2. Write & Run Deno Tests
-Create `supabase/functions/hire-alert-scanner/index_test.ts`:
-- Test `isCorporateName()` — confirm it blocks "Detroit Academy of Arts & Sciences", "MotorCity Casino", "Veolia", etc.
-- Test that single-word names are rejected
-- Test that normal 2-word names pass ("Robert Chen", "Angela Peters")
-- Test scoring: BPL source gets +3, MIOSHA w/license gets +1, job board w/o license gets -2
-
-### 3. Add "Job Seekers" as Separate Alert Category
-Per your request, job board candidates should be a separate "bonus" alert — not mixed into the main LARA-sourced alerts. Update the client email to clearly separate:
-- **Section 1**: "State-Licensed Candidates" (BPL + MIOSHA sources)
-- **Section 2**: "Job Seekers" (job board sources — marked as supplementary)
-
-### 4. Verify End-to-End
-- Check that the scanner response JSON shows `source_bpl > 0` and `source_miosha > 0`
-- Confirm the founder report email correctly labels sources
-- Verify no corporate names slip through
+### Step 4: Report Back
+- Show you exactly what the scanner found: how many from each source, sample candidates, confidence scores
+- Identify any issues (corporate names slipping through, missing license data, API failures)
 
 ## Files Changed
-- `supabase/functions/hire-alert-scanner/index.ts` — separate job board alerts into distinct section, minor fixes
-- `supabase/functions/hire-alert-scanner/index_test.ts` — new test file
-- Both functions deployed and invoked for live verification
+- One migration to truncate old data
+- No code changes — this is a live test of existing code
+
+## What You'll See
+A real-world test showing exactly what TechAlert delivers to a paying client on Day 1: which licensed tradespeople it found, from which state databases, with what confidence level.
 
