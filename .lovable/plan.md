@@ -1,144 +1,93 @@
 
-# TechAlert — Planetary-Scale Hiring Intelligence Scanner
 
-*Updated 2026-04-14 — Full multi-source parallel architecture*
+# TechAlert Data Quality & Source Protection Overhaul
 
-## The Vision
+## Summary
+Five fixes to protect proprietary intelligence methods from clients, eliminate AI hallucinations, add cross-reference confidence signals, enforce data completeness minimums, and store PDL LinkedIn URLs properly.
 
-Eight data sources running simultaneously every morning at 7am. No hiring intelligence product on earth does this. By the time a competitor even knows a licensed tradesperson exists, TechAlert clients already got the alert 24 hours ago.
+## Technical Details
 
-## Architecture
+### Migration
+**New file**: `supabase/migrations/20260414200000_candidate_quality_columns.sql`
+- Add `cross_referenced boolean DEFAULT false` to `hire_alert_candidates`
+- Add `data_completeness integer DEFAULT 0` to `hire_alert_candidates`
 
-```
-miosha-license-scraper (invoked by hire-alert-scanner at 7am ET)
-│
-├── Promise.allSettled([
-│     scanNPIRegistry(),           // S1: federal healthcare registry
-│     scanMichiganNurseAide(),     // S2: Michigan CNA gov registry
-│     scanMichiganOpenData(),      // S3: data.michigan.gov bulk CSV
-│     scanBuildingPermits(),       // S4: 🔥 Detroit/Wayne permit APIs
-│     scanNATERegistry(),          // S5: HVAC cert registry (Firecrawl)
-│     scanTradeUnions(),           // S6: UA98 + IBEW58 + Boilermakers (Firecrawl)
-│     scanPDL(),                   // S7: People Data Labs people search
-│     scanViaSonar(),              // S8: LinkedIn open-to-work profiles
-│   ])
-│
-└── dedup → upsert hire_alert_candidates → score (hire-alert-scanner) → alert clients
-```
+### FIX 1: Source Protection — Client Views
 
-All sources run in parallel. One failure doesn't stop the rest.
+**`src/pages/MyTechAlert.tsx`** (~15 changes):
+- Remove `source` from interface and all references (line 45, 524)
+- Replace numeric score badges (lines 545-554) with availability labels: `🟢 High Availability` (8-10), `🟡 Possible Availability` (5-7), `🔵 Monitor` (1-4)
+- Remove score numbers from profile photo overlay and fallback badge
+- Replace "Hot (7+)" filter label with "🟢 High Availability"
+- Replace "Available (5-6)" filter with "🟡 Possible"
+- Replace `isLapsed` check (was `c.source === "license_expiry"`) with license_expiry date check
+- Add license status label: `Active` / `Expiring Soon` / `Recently Lapsed` based on `license_expiry` date
+- Change "Alerted:" timestamp to "Identified X days ago" using `alerted_at`
+- Filter candidates to only show `data_completeness >= 40` (need to add this field from the API)
+- Sort cross-referenced candidates first
 
-## Source Details
+**`supabase/functions/get-my-techalert/index.ts`**:
+- Add `cross_referenced` and `data_completeness` to the candidate select
+- Stop returning `source` field entirely (currently returns it for license_expiry badge — replace with license_expiry date logic)
+- Replace numeric `availability_score` with an `availability_label` string
+- Filter out candidates with `data_completeness < 40`
 
-### S1: NPI Registry (healthcare — already works)
-Free federal API. Searches 15 Metro Detroit cities × 5 taxonomy codes. Expected: 6-8 candidates/run.
+**`supabase/functions/hire-alert-scanner/index.ts`** (email/SMS templates):
+- Line 728: Replace `${c.availability_score}/10` with availability label (🟢/🟡/🔵)
+- Line 817: Change "Our hiring intelligence engine scanned the market" → "We identified new licensed professionals near you"
+- Line 834: Remove "appeared in hiring channels" phrasing
+- Lines 826-840: Replace "How Scoring Works" section with plain availability tier descriptions (no methodology hints)
+- SMS body (lines 1215-1217): Remove raw score number, use availability label instead
 
-### S2: Michigan Nurse Aide Registry
-POST to `https://miidss.state.mi.us/NARSearch.aspx` with county=Wayne/Oakland/Macomb form data.
-Parse HTML table for names + cert numbers. Filter to Active status. Expected: 5-15 CNAs/run.
+### FIX 2: Hallucination Guards (Sonar only)
 
-### S3: Michigan Open Data Portal (data.michigan.gov)
-Socrata SODA API for active trade licenses:
-- Known dataset IDs for electrician, plumber, HVAC
-- Generic professional license search with BOILER/PLUMB/ELECTR/HVAC filters
-Expected: 20-50 if trade CSVs exist.
+**`supabase/functions/miosha-license-scraper/index.ts`**:
+- The `isPersonName()` function (line 47) and `looksLikeLicenseNumber()` (line 57) already exist and cover most validation
+- Add additional guards in Sonar result processing: city validation (reject "Michigan"/"MI" as city), require valid license_number OR real city
+- Add company keyword list expansion per the prompt (School, Hospital, University, District already present at line 42-44)
+- These guards apply ONLY to Sonar/AI-sourced candidates, not NPI/PDL/government sources
 
-### S4: 🔥 Building Permits — THE MOAT
-Detroit Open Data Socrata API for recent mechanical/plumbing/electrical permits.
-`contractor_name` → `full_name`, `contractor_license` → `license_number`.
-These are people ACTIVELY WORKING with verified licenses right now.
-Expected: 10-30 trades actively working.
+### FIX 3: Cross-Reference Logic
 
-### S5: NATE Certified Technician Registry (Firecrawl)
-Firecrawl scrapes `natex.org/site/find-a-technician` with 8 Metro Detroit zip codes.
-Gemini extracts tech names from scraped markdown.
-Expected: 5-20 HVAC certified techs.
+**`supabase/functions/miosha-license-scraper/index.ts`** — in `upsertCandidate()` (line 709):
+- After insert, query for existing row matching `full_name + city + license_type` from different `source`
+- If found: set `cross_referenced = true` on both rows, add +2 to `availability_score`
 
-### S6: Trade Union Directories (Firecrawl)
-Firecrawl scrapes 9 union URLs:
-- `ua98.org/contractors` + `/officers` (Plumber)
-- `ibew58.org` (Electrician)
-- `smwia80.org` (HVAC)
-- `smw80jac.org/about-us` (HVAC apprenticeship)
-- `michiganpipetrades.org/contractors` (Plumber)
-- `boilermakers169.org` (Boiler Operator)
-- `ualocal636.org` (Plumber/Pipefitter)
-- `michiganbuildingtrades.org` (Building Tradesman newspaper)
-Gemini extracts individual names from markdown. Expected: 5-15 union members.
+**`src/components/admin/AdminHireAlertClients.tsx`**:
+- Add `⚡ Cross-Referenced` badge on candidate rows
 
-### S7: People Data Labs (PDL_API_KEY already configured)
-POST `https://api.peopledatalabs.com/v5/person/search` for 10 trade titles:
-boiler operator, stationary engineer, chief engineer, HVAC technician,
-master plumber, journeyman plumber, master electrician, journeyman electrician,
-certified nursing assistant, licensed practical nurse.
-Filter: `location_region: michigan`, size: 25. Expected: 10-25 all trades.
+**`src/pages/MyTechAlert.tsx`**:
+- Sort cross-referenced candidates first in the feed
 
-### S8: Sonar via OpenRouter (KEEP — prompts fixed)
-4 queries targeting LinkedIn "open to work", trade union member spotlights,
-Indeed public resumes, apprenticeship completion announcements,
-Building Tradesman newspaper mentions. Expected: 2-8 public profiles.
+### FIX 4: Data Completeness Score
 
-## Critical Bug Fix — VERIFIED FIXED
-The `name: c.full_name` fix in `upsertCandidate()` is explicitly present in the rebuilt code.
-Both `name` (NOT NULL column) and `full_name` are written on every insert AND every update.
-This was the root cause of silent insert failures.
+**`supabase/functions/miosha-license-scraper/index.ts`** — in `upsertCandidate()`:
+- Calculate: +20 (full_name) +20 (valid city) +20 (license_type) +20 (license_number) +10 (license_expiry) +10 (linkedin_url in raw_data)
+- Store as `data_completeness` on insert/update
+
+**`src/components/admin/AdminHireAlertClients.tsx`**:
+- Add small completeness progress bar on each candidate row
+
+**`src/pages/MyTechAlert.tsx`** / **`get-my-techalert`**:
+- Only show candidates where `data_completeness >= 40`
+
+### FIX 5: PDL LinkedIn URL Storage
+
+**`supabase/functions/miosha-license-scraper/index.ts`** — in `scanPDL()`:
+- Ensure `linkedin_url` from PDL response is stored in `raw_data` object
+- In `MyTechAlert.tsx`: render as "View Profile →" link (already partially done — just ensure no source attribution)
 
 ## Files Changed
-
-### `supabase/functions/miosha-license-scraper/index.ts` — COMPLETE REBUILD ✅
-- Removed old 2-source architecture (NPI + Sonar only)
-- Added 6 new sources (S2-S7)
-- All 8 sources run via `Promise.allSettled()` in parallel
-- `upsertCandidate()` explicitly writes `name: c.full_name` on every insert AND update
-- `extractNamesFromMarkdown()` — new shared Gemini extraction for Firecrawl content
-- `extractNamesFromProse()` — kept for Sonar fallback
-- Per-source logging with counts
-- Response includes `sources` breakdown object
-
-### `supabase/functions/hire-alert-scanner/index.ts` — PROMPT FIXES
-- `scanJobBoardsViaOpenRouter()` prompts already updated (LinkedIn open-to-work targeting)
-- Confirmed `name: c.full_name` present in all inserts
-
-## No New Secrets Needed
-- `FIRECRAWL_API_KEY` — already configured ✅
-- `PDL_API_KEY` — already configured ✅
-- `OPENROUTER_API_KEY` — already configured ✅
-- `LOVABLE_API_KEY` — already configured ✅
-
-## Deduplication Strategy
-1. By `license_number` (strongest — exact government ID)
-2. By `full_name` + `license_type` + `source` (same person, same source)
-3. Cross-source: name+city match within same license_type → update `last_seen_at`
-
-## Expected Output
-
-| Source | Expected/run |
-|--------|-------------|
-| S1: NPI Registry | 6-8 |
-| S2: Michigan NAR | 5-15 |
-| S3: Michigan Open Data | 20-50 |
-| S4: Building Permits | 10-30 |
-| S5: NATE Registry | 5-20 |
-| S6: Trade Unions | 5-15 |
-| S7: PDL | 10-25 |
-| S8: Sonar | 2-8 |
-| **TOTAL** | **63-171** |
+1. `supabase/migrations/20260414200000_candidate_quality_columns.sql` — new columns
+2. `supabase/functions/miosha-license-scraper/index.ts` — hallucination guards, cross-ref logic, data completeness calc, PDL linkedin storage
+3. `supabase/functions/hire-alert-scanner/index.ts` — sanitize email/SMS templates (remove source refs, replace scores with labels)
+4. `supabase/functions/get-my-techalert/index.ts` — filter by completeness, replace scores with labels, remove source field
+5. `src/pages/MyTechAlert.tsx` — remove source display, replace numeric scores with color labels, filter completeness >= 40, sort cross-referenced first
+6. `src/components/admin/AdminHireAlertClients.tsx` — add completeness bar + cross-referenced badge (admin keeps full visibility)
 
 ## What Does NOT Change
-- Scoring, alerting, deduplication, SMS logic in hire-alert-scanner
-- NPI enrichment in hire-alert-scanner (per-candidate enrichment)
-- Sonar OSINT enrichment (per-candidate)
-- PDL enrichment (per-candidate)
-- AI synthesis
-- Nursys integration (wired separately later)
+- Scoring logic internals, dedup logic, 8-source parallel architecture
+- NPI/PDL enrichment flows
+- Admin panel full source visibility
+- Existing `hire_alert_candidates` columns
 
-## Verification
-1. Deploy `miosha-license-scraper` → invoke manually → check logs for per-source counts
-2. Query `hire_alert_candidates` → confirm `name` column populated
-3. Check response JSON `sources` object for per-source attribution
-4. Run `hire-alert-scanner` → confirm `scanMIOSHA()` picks up new candidates
-5. Verify scoring + alerting fires for score >= 7
-
-## Future: Action Items for Matt
-- Submit CSCL license list request at michigan.gov for electrician/plumber/HVAC/boiler xlsx files
-- Once received, build xlsx ingestion pipeline as S9
