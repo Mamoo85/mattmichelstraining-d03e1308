@@ -559,6 +559,19 @@ export default function MyTechAlert() {
 
                       {/* Action buttons */}
                       <div className="flex gap-2 pt-1 flex-wrap">
+                        {/* Fast-Track Interview */}
+                        {c.phone && c.client_action !== "hired" && (
+                          <Button
+                            size="sm"
+                            className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-xs font-bold"
+                            disabled={fastTrackingId === c.id}
+                            onClick={() => fastTrackInterview(c.id)}
+                          >
+                            {fastTrackingId === c.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CalendarCheck className="h-3 w-3 mr-1" />}
+                            ⚡ Fast-Track Interview
+                          </Button>
+                        )}
+
                         {/* Outreach Draft */}
                         <Button
                           size="sm"
