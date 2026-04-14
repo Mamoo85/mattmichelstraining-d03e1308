@@ -1,118 +1,76 @@
 
 
-# Intent-Driven Dashboard Overhaul — Build Plan
+# Fix TechAlert: Restore Direct LARA Database Access as Primary Source
 
-## Scope
+## The Core Problem
 
-Redesign MyTechAlert.tsx (TechAlert client dashboard), AgencyClientPortal.tsx (contractor client portal), and create a shared Revenue Recovered Ledger component. All wired to real backend data, DWA dark teal palette, TCPA-compliant draft-only outreach.
+TechAlert's entire value proposition is: "We monitor state licensing databases so you know about new tradespeople before anyone else." But right now, **neither data source actually queries LARA directly.** Both use Sonar AI web search to *hope* it finds licensing data. That's why results are garbage — company names, no license numbers, no real records.
 
----
+The `scanBPL()` function (which downloads actual LARA Excel files) and `scanFloridaDBPR()` were documented as built in Phase 10 but are **missing from the current codebase**. They need to be rebuilt.
 
-## Section 1 — TechAlert Dashboard (MyTechAlert.tsx)
+## Architecture: Database First, Social Second
 
-### 1A. Market Signals Feed (Top Fold)
+```text
+LAYER 1 — PRIMARY (the product's core value)
+┌──────────────────────────────────────────────┐
+│  Michigan LARA BPL Portal (direct download)  │
+│  → Excel/CSV files with REAL names,          │
+│    license numbers, issue dates, cities      │
+│  → aca-prod.accela.com/LARA portal search    │
+└──────────────────────────────────────────────┘
+           ↓ Real people with verified licenses
+           
+LAYER 2 — ENRICHMENT (enhancement only)
+┌──────────────────────────────────────────────┐
+│  Sonar OSINT → LinkedIn, Facebook, Indeed    │
+│  NPI Registry → Healthcare credentials       │
+│  PDL → Phone, personal email                 │
+└──────────────────────────────────────────────┘
+           ↓ Contact info + social profiles
+           
+LAYER 3 — SUPPLEMENTARY (bonus leads)
+┌──────────────────────────────────────────────┐
+│  Job board search (Indeed/ZipRecruiter)       │
+│  → People actively seeking work              │
+│  → Lower priority, no license verification   │
+└──────────────────────────────────────────────┘
+```
 
-Add a new section between the KPI strip and the candidate list that queries `industry_pulse_signals` (confidence >= 7) joined with the client's `target_roles` via industry matching. Fallback: if no signals exist, query `hire_alert_candidates` where score >= 8 and surfaced in last 48h.
+## The Fix (4 Parts)
 
-Each signal card renders:
-- Company name + location
-- Signal type badge (Expansion / Hiring / Cross-Referenced with color coding)
-- `recommended_pitch` text from `industry_pulse_signals`
-- "Draft TechAlert Pitch" button opening the outreach draft modal pre-filled with pitch copy
+### Part 1: Rebuild `scanBPL()` — Direct LARA Excel Downloads
+- Michigan LARA Bureau of Professional Licensing publishes downloadable Excel/CSV lists at their BPL portal
+- Use SheetJS (xlsx library) to parse the spreadsheets server-side
+- Extract: full name, license number, license type, issue date, expiry date, city/state
+- Target categories: Boiler, Electrical, Plumbing, HVAC/Mechanical, Nursing (CNA/LPN/RN)
+- Filter for recently issued/renewed licenses (last 90 days)
+- This gives us **real names with real license numbers** — the foundation of the product
 
-New edge function needed: **`get-techalert-signals`** — accepts `{ token }`, validates client, queries `industry_pulse_signals` filtered by the client's tracked industries, returns top 10 signals. Falls back to hot candidates if no signals exist.
+### Part 2: Upgrade `miosha-license-scraper` Prompts
+- Current prompts ask Sonar to "search Michigan LARA licensing database" — too vague
+- Rewrite to specifically target the LARA Accela portal (aca-prod.accela.com/LARA) records
+- Add explicit instruction: "Return ONLY individual person names with their Michigan state license numbers. NEVER return employer names, school names, or organization names."
+- Reduce results per query from 20 to 8 for higher quality
 
-Empty state: "Scanner running. First signals appear within 24h."
+### Part 3: Enforce Source Priority in Scanner
+- Rename the scan flow to make the hierarchy explicit:
+  1. `scanBPL()` runs FIRST — direct LARA data (highest trust)
+  2. `scanMIOSHA()` runs second — Sonar search of LARA records (medium trust)
+  3. `scanJobBoards()` runs last — supplementary leads (lowest trust)
+- Scoring: BPL-sourced candidates get +3 bonus (verified license from state DB)
+- MIOSHA-sourced get +1 if they have a license number
+- Job board candidates get no bonus and -2 if no license found
 
-### 1B. Action Buttons (already mostly exist)
-
-The existing Claim and Draft Outreach buttons are already functional. Changes:
-- Move Claim button to be visible in the collapsed card header (not just expanded view) for score >= 7 candidates
-- Add "Draft TechAlert Pitch" button on signal cards (opens same outreach modal with different context)
-- Ensure all buttons have proper loading spinners + disabled states (already implemented)
-
-### 1C. Claim Race Condition Fix
-
-The current `claim-candidate/index.ts` already has the atomic update with `.or('claimed_at.is.null,claim_expires_at.lt.${now}')`. This is functionally correct but uses Supabase JS client syntax. No change needed — the race condition is already handled.
-
-### 1D. Email Auto-Claim Link
-
-Already implemented at lines 103-108 of MyTechAlert.tsx. The `?claim=X&auto=1` params are read on mount and auto-fire `claimCandidate()`. No change needed.
-
-### 1E. License Lapsed Tier
-
-Already implemented. `isLapsed` check on line 412, amber badge on lines 437-441, warning message on lines 468-475. No change needed.
-
-### 1F. Visual Overhaul
-
-Restyle all cards to use `border-white/5 + bg-gradient-to-br from-[#0a1628] to-[#0d1f2e]`. Update accent CTAs to `#00d4ff`. Confidence badges: emerald-500 (>=8), amber-500 (5-7), slate-500 (<5). The current colors are close but need alignment to the spec.
-
----
-
-## Section 2 — Contractor Client Portal (AgencyClientPortal.tsx)
-
-The contractor portal is at `/agency-portal` → `src/pages/AgencyClientPortal.tsx`. Currently shows tenant_leads with search/pagination. This needs to be enhanced:
-
-### 2A. High-Intent Radar
-
-Query `contractor_leads` where `status = 'available'` and `created_at > now() - 24h`, filtered by the contractor's trade/city. Also query `contractor_lead_views` for this contractor to surface FOMO signals (leads they tried to buy but were already sold).
-
-New edge function needed: **`get-contractor-signals`** — accepts auth token (RLS-based, since this portal uses Supabase auth), returns available leads + missed lead count.
-
-### 2B. Action Buttons
-
-- "Claim Lead" button linking to existing contractor lead purchase flow
-- FOMO card for locked leads: "Locked by competitor — upgrade to territory lock for $399/mo" with CTA to `/contractor-leads`
-- No direct SMS buttons — leads delivered via existing cron
-
-### 2C. Visual Overhaul
-
-Same DWA dark teal palette. Replace the current inline `style={}` approach with Tailwind classes matching the spec.
-
----
-
-## Section 3 — Revenue Recovered Ledger
-
-### Existing Component
-
-`src/components/shared/RevenueRecoveredTicker.tsx` already exists with animated counter + `get-client-revenue-stats` edge function integration. Per spec: **no animated counter** — change to static number with sparkline.
-
-### New Component: `RevenueRecoveredLedger.tsx`
-
-Rendered in nav/header area of both dashboards. Uses the existing `get-client-revenue-stats` edge function but with new parameters:
-- TechAlert: sum `hire_alert_client_candidates.client_action = 'hired'` x $8,000
-- Contractor: sum `dead_lead_charges.amount` for this contractor
-
-New edge function: **`client-revenue-recovered`** — accepts `{ token, client_type }`, returns `{ total_recovered_cents, period: '90d' }`.
-
-Hidden entirely if $0. No animation. Static formatted number. React Query with 5-min staleTime.
-
----
+### Part 4: Enrichment Stays Secondary
+- LinkedIn/Facebook/Indeed profile lookups remain in the Sonar OSINT enrichment layer
+- They run AFTER we have a verified name + license from LARA
+- This is the correct order: state database → identity → contact info → social profiles
 
 ## Files Changed
+- `supabase/functions/hire-alert-scanner/index.ts` — add `scanBPL()`, reorder sources, update scoring
+- `supabase/functions/miosha-license-scraper/index.ts` — upgrade prompts for accuracy
+- Both functions redeployed and tested
 
-| File | Action |
-|------|--------|
-| `src/pages/MyTechAlert.tsx` | Add Market Signals section, restyle cards to DWA palette |
-| `src/pages/AgencyClientPortal.tsx` | Add High-Intent Radar, FOMO cards, restyle to DWA palette |
-| `src/components/RevenueRecoveredLedger.tsx` | NEW — static revenue ledger for nav |
-| `supabase/functions/get-techalert-signals/index.ts` | NEW — token-gated signal feed |
-| `supabase/functions/client-revenue-recovered/index.ts` | NEW — 90-day revenue sum |
-| `supabase/config.toml` | Add `verify_jwt = false` for 2 new functions |
-
-## Edge Functions (2 new)
-
-1. **`get-techalert-signals`** — validates dashboard_token, queries industry_pulse_signals by client's industries, falls back to hot candidates. Returns max 10 signals.
-
-2. **`client-revenue-recovered`** — validates token (dashboard_token for TechAlert, roi_token for contractor), sums hired placements x $8,000 for TechAlert clients, sums dead_lead_charges for contractor clients. Returns `{ total_recovered_cents, period }`.
-
-## No New Tables or Migrations
-
-All data sources already exist: `industry_pulse_signals`, `hire_alert_client_candidates`, `contractor_leads`, `contractor_lead_views`, `dead_lead_charges`.
-
-## Build Sequence
-
-1. Wave A: MyTechAlert.tsx + get-techalert-signals (highest impact)
-2. Wave B: RevenueRecoveredLedger + client-revenue-recovered (shared infra)
-3. Wave C: AgencyClientPortal.tsx redesign (depends on Wave B)
+## Why This Matters
+Without direct LARA access, TechAlert is just another AI-powered job board scraper — exactly what competitors do. The LARA database is the moat. Real license numbers from a state government database cannot be replicated by Indeed or LinkedIn. That's what makes this product worth $99/mo.
 
