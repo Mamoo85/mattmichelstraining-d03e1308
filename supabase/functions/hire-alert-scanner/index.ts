@@ -1214,45 +1214,59 @@ serve(async (req: Request) => {
   const enrichedCount = allScored.filter((c) => c.enrichment_status === "complete").length;
   const ghostLeadsFiltered = allScored.filter((c) => c.availability_score >= 5 && !c.linkedin_url && !c.facebook_url && !c.email && !c.phone && !c.npi_business_phone && !c.pdl_mobile_phone).length;
 
-  const candidateRows = allScored.length
+  // Build founder candidate cards (same card layout as client emails)
+  const founderScoreBg = (s: number) =>
+    s >= 8 ? "#dc2626" : s >= 7 ? "#e8621a" : s >= 5 ? "#f59e0b" : "#94a3b8";
+
+  const founderCandidateCards = allScored.length
     ? allScored
         .sort((a, b) => b.availability_score - a.availability_score)
-        .map(
-          (c, i) => {
-            const rowBg = c.availability_score >= 7 ? "#0a16280a" : i % 2 === 0 ? "#fff" : "#f8fafc";
-            const scoreBgColor = c.availability_score >= 8 ? "#dc2626" : c.availability_score >= 7 ? "#e8621a" : c.availability_score >= 5 ? "#f59e0b" : "#94a3b8";
-            const sourceIcon = c.source === "miosha" ? "🏛️" : "📋";
-            const enrichIcon = c.enrichment_status === "complete" ? "✅" : c.enrichment_status === "pending" ? "⏳" : "❌";
-            const hasAction = c.linkedin_url || c.facebook_url || c.email || c.phone || c.npi_business_phone || c.pdl_mobile_phone;
-            // Build clickable links for founder report
-            const emailLink = c.email ? `<br><a href="mailto:${c.email}" style="font-size:11px;color:#0891b2;font-weight:400;text-decoration:none;">✉️ ${c.email}</a>` : "";
-            const phoneLink = c.phone ? `<br><a href="tel:${c.phone}" style="font-size:11px;color:#e8621a;font-weight:600;text-decoration:none;">📞 ${c.phone}</a>` : "";
-            const linkedinLink = c.linkedin_url ? `<br><a href="${c.linkedin_url}" target="_blank" style="font-size:11px;color:#0a66c2;font-weight:600;text-decoration:none;">🔗 LinkedIn</a>` : "";
-            const facebookLink = c.facebook_url ? `<br><a href="${c.facebook_url}" target="_blank" style="font-size:11px;color:#1877f2;font-weight:600;text-decoration:none;">👤 Facebook</a>` : "";
-            const npiLink = c.npi_number ? `<br><span style="font-size:10px;color:#7c3aed;">🏥 NPI#${c.npi_number}</span>` : "";
-            const pdlLink = c.pdl_mobile_phone ? `<br><a href="tel:${c.pdl_mobile_phone}" style="font-size:10px;color:#ea580c;text-decoration:none;">📱 PDL: ${c.pdl_mobile_phone}</a>` : "";
-            const npiPhoneLink = c.npi_business_phone && c.npi_business_phone !== c.phone ? `<br><a href="tel:${c.npi_business_phone}" style="font-size:10px;color:#0d9488;text-decoration:none;">📞 Biz: ${c.npi_business_phone}</a>` : "";
-            return `<tr style="background:${rowBg};border-bottom:1px solid #e2e8f0;">
-              <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:${c.availability_score >= 7 ? "800" : "500"};">${c.full_name}${emailLink}${phoneLink}${linkedinLink}${facebookLink}${npiLink}${pdlLink}${npiPhoneLink}</td>
-              <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.license_type || "—"}${c.license_number ? `<br><span style="font-size:10px;color:#94a3b8;">#${c.license_number}</span>` : ""}</td>
-              <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.city || "—"}</td>
-              <td style="padding:12px 10px;text-align:center;">
-                <span style="display:inline-block;background:${scoreBgColor};color:#fff;padding:3px 10px;border-radius:12px;font-weight:800;font-size:12px;">${c.availability_score >= 8 ? "🔥 " : ""}${c.availability_score}/10</span>
-              </td>
-              <td style="padding:12px 10px;font-size:11px;color:#64748b;">${sourceIcon} ${c.source}</td>
-              <td style="padding:12px 10px;font-size:11px;color:#64748b;">${enrichIcon} ${c.enrichment_status || "—"}</td>
-              <td style="padding:12px 10px;font-size:11px;color:#475569;">
-                ${c.linkedin_url ? `<a href="${c.linkedin_url}" target="_blank" style="display:inline-block;background:#0a66c2;color:#fff;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;text-decoration:none;margin:2px;">🔗 LI</a>` : ""}
-                ${c.facebook_url ? `<a href="${c.facebook_url}" target="_blank" style="display:inline-block;background:#1877f2;color:#fff;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;text-decoration:none;margin:2px;">👤 FB</a>` : ""}
-                ${c.email ? `<a href="mailto:${c.email}" style="display:inline-block;background:#0891b2;color:#fff;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;text-decoration:none;margin:2px;">✉️</a>` : ""}
-                ${c.phone ? `<a href="tel:${c.phone}" style="display:inline-block;background:#e8621a;color:#fff;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;text-decoration:none;margin:2px;">📞</a>` : ""}
-                ${!hasAction ? "❌ Ghost" : ""}
-              </td>
-            </tr>`;
-          }
-        )
-        .join("")
-    : `<tr><td colspan="7" style="padding:32px;text-align:center;color:#94a3b8;font-size:14px;">No new candidates found today. Scanner ran successfully.</td></tr>`;
+        .map((c) => {
+          const sourceIcon = c.source === "miosha" ? "🏛️ MIOSHA" : "📋 Sonar";
+          const enrichIcon = c.enrichment_status === "complete" ? "✅ Enriched" : c.enrichment_status === "pending" ? "⏳ Pending" : "❌ Failed";
+          const licenseRow = c.license_number
+            ? `<tr><td style="padding:6px 0;"><p style="margin:0;font-size:13px;color:#1e293b;background:#f0fdf4;padding:8px 12px;border-radius:8px;border-left:3px solid #059669;">🪪 License: <strong>${c.license_number}</strong>${c.license_expiry ? ` · Exp: <strong>${c.license_expiry}</strong>` : ""} · <span style="color:#059669;font-weight:700;">Active</span></p></td></tr>`
+            : `<tr><td style="padding:6px 0;"><p style="margin:0;font-size:13px;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:8px;border-left:3px solid #f59e0b;">⚠️ License not yet verified — <a href="https://aca-prod.accela.com/LARA/GeneralProperty/PropertyLookUp.aspx?isLicensee=Y" target="_blank" style="color:#0891b2;font-weight:700;text-decoration:underline;">manual LARA lookup recommended</a></p></td></tr>`;
+
+          return `<tr><td style="padding:0 0 16px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-radius:12px;overflow:hidden;border:1px solid ${c.availability_score >= 7 ? "#e8621a40" : "#e2e8f0"};${c.availability_score >= 7 ? "box-shadow:0 2px 8px rgba(232,98,26,0.12);" : ""}">
+        <tr><td style="background:${c.availability_score >= 7 ? "linear-gradient(135deg,#0a1628,#1e293b)" : "#f8fafc"};padding:14px 18px;">
+          <table width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td>
+              <p style="margin:0;font-size:16px;font-weight:800;color:${c.availability_score >= 7 ? "#fff" : "#1e293b"};letter-spacing:-0.3px;">${c.full_name}</p>
+              <p style="margin:3px 0 0;font-size:11px;color:${c.availability_score >= 7 ? "#94a3b8" : "#64748b"};">${sourceIcon} · ${enrichIcon}</p>
+            </td>
+            <td style="text-align:right;vertical-align:top;">
+              <span style="display:inline-block;background:${founderScoreBg(c.availability_score)};color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:800;letter-spacing:0.5px;">
+                ${c.availability_score >= 8 ? "🔥 " : c.availability_score >= 7 ? "⚡ " : ""}${c.availability_score}/10
+              </span>
+            </td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="padding:16px 18px;background:#fff;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr><td style="padding:0 0 8px;">
+              <table cellpadding="0" cellspacing="0"><tr>
+                <td style="background:#00d4ff18;color:#0891b2;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">${c.license_type || "Field Technician"}</td>
+                <td width="8"></td>
+                <td style="background:#f1f5f9;color:#64748b;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;">📍 ${c.city || "Metro Detroit"}</td>
+                ${c.years_experience ? `<td width="8"></td><td style="background:#10b98118;color:#059669;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">${c.years_experience}+ yrs</td>` : ""}
+                ${c.npi_taxonomy ? `<td width="8"></td><td style="background:#7c3aed18;color:#7c3aed;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">🏥 NPI</td>` : ""}
+              </tr></table>
+            </td></tr>
+            ${c.current_employer ? `<tr><td style="padding:4px 0;font-size:13px;color:#475569;">🏢 <strong>${c.current_employer}</strong>${c.current_title ? ` · ${c.current_title}` : ""}</td></tr>` : ""}
+            ${licenseRow}
+            ${c.npi_number ? `<tr><td style="padding:4px 0;font-size:13px;color:#7c3aed;">🏥 NPI: <strong>${c.npi_number}</strong>${c.npi_taxonomy ? ` · ${c.npi_taxonomy}` : ""}</td></tr>` : ""}
+            ${c.qualifications_summary ? `<tr><td style="padding:8px 0 4px;"><p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#f0fdf4;padding:10px 12px;border-radius:8px;border-left:3px solid #059669;"><strong>📋</strong> ${c.qualifications_summary}</p></td></tr>` : ""}
+            ${c.hiring_recommendation ? `<tr><td style="padding:4px 0;"><p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#eff6ff;padding:10px 12px;border-radius:8px;border-left:3px solid #3b82f6;"><strong>💡</strong> ${c.hiring_recommendation}</p></td></tr>` : ""}
+            ${c.score_reason ? `<tr><td style="padding:4px 0;font-size:11px;color:#94a3b8;font-style:italic;">Score reason: ${c.score_reason}</td></tr>` : ""}
+            ${buildActionButtons(c)}
+          </table>
+        </td></tr>
+      </table>
+    </td></tr>`;
+        }).join("")
+    : `<tr><td style="padding:32px;text-align:center;color:#94a3b8;font-size:14px;">No new candidates found today. Scanner ran successfully.</td></tr>`;
 
   await notifyMatt(
     `${allHotCandidates.length > 0 ? "🔥 " : ""}TechAlert — ${dateStr} — ${newCandidates.length} new${allHotCandidates.length > 0 ? `, ${allHotCandidates.length} HOT` : ""} · ${enrichedCount} enriched · NPI:${npiHits} PDL:${pdlHits}`,
