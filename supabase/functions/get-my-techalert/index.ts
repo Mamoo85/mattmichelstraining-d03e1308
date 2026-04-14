@@ -61,11 +61,11 @@ serve(async (req) => {
       });
     }
 
-    // Fetch candidate details — EXCLUDE source field (except for license_expiry badge)
+    // Fetch candidate details — NEVER expose source to clients
     const candidateIds = clientCandidates.map((cc: any) => cc.candidate_id);
     const { data: candidates } = await sb
       .from("hire_alert_candidates")
-      .select("id, full_name, phone, email, license_type, license_number, license_expiry, city, zip, availability_score, score_reason, qualifications_summary, hiring_recommendation, linkedin_url, facebook_url, profile_photo_url, current_employer, current_title, years_experience, source")
+      .select("id, full_name, phone, email, license_type, license_number, license_expiry, city, zip, availability_score, score_reason, qualifications_summary, hiring_recommendation, linkedin_url, facebook_url, profile_photo_url, current_employer, current_title, years_experience, cross_referenced, data_completeness")
       .in("id", candidateIds);
 
     // Check for active claims by OTHER clients on each candidate
@@ -84,12 +84,32 @@ serve(async (req) => {
       }
     }
 
+    // Availability label mapping (no raw scores exposed)
+    const getAvailabilityLabel = (score: number) => {
+      if (score >= 8) return "🟢 High Availability";
+      if (score >= 5) return "🟡 Possible Availability";
+      return "🔵 Monitor";
+    };
+
+    // License status from expiry date
+    const getLicenseStatus = (expiry: string | null) => {
+      if (!expiry) return "Active";
+      const exp = new Date(expiry);
+      const now = new Date();
+      const daysUntil = (exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      if (daysUntil < 0) return "Recently Lapsed";
+      if (daysUntil < 90) return "Expiring Soon";
+      return "Active";
+    };
+
     // Merge candidate details with alert info
     const candidateMap = new Map((candidates || []).map((c: any) => [c.id, c]));
     const merged = clientCandidates
       .map((cc: any) => {
         const c = candidateMap.get(cc.candidate_id);
         if (!c) return null;
+        // Filter: only show candidates with data_completeness >= 40
+        if ((c.data_completeness || 0) < 40) return null;
         return {
           id: c.id,
           full_name: c.full_name,
@@ -98,7 +118,9 @@ serve(async (req) => {
           license_type: c.license_type,
           license_number: c.license_number,
           license_expiry: c.license_expiry,
+          license_status: getLicenseStatus(c.license_expiry),
           city: c.city,
+          availability_label: getAvailabilityLabel(c.availability_score || 0),
           availability_score: c.availability_score,
           score_reason: c.score_reason,
           qualifications_summary: c.qualifications_summary,
@@ -113,7 +135,7 @@ serve(async (req) => {
           claimed_at: cc.claimed_at,
           claim_expires_at: cc.claim_expires_at,
           claimed_by_other: otherClaimMap.has(c.id),
-          source: c.source === "license_expiry" ? "license_expiry" : undefined,
+          cross_referenced: c.cross_referenced || false,
         };
       })
       .filter(Boolean);
