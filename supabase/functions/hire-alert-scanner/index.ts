@@ -557,9 +557,11 @@ Scoring rules (apply ALL that match, then sum):
 - Base: 4 points for having a verifiable trade title
 - +3 if appeared on a job board (actively seeking)
 - +2 if license number exists AND recently issued (new to market)
+- +1 if has license number (verifiable credential)
 - +1 if has phone number (immediately contactable)
 - +1 if has email address
 - +1 if city is Metro Detroit area
+- -2 if no license number at all (unverified — reduces reliability)
 - -2 if no license number AND source is MIOSHA (parse error — likely bad data)
 - Cap at 10, floor at 1
 
@@ -571,11 +573,14 @@ Return JSON: { "score": number, "reason": "one sentence citing the top 1-2 signa
   if (!result || typeof result.score !== "number") {
     let score = 4;
     if (isFromJobBoard) score += 3;
+    if (hasLicenseNumber) score += 1;
     if (hasLicenseNumber && licenseRecent) score += 2;
     if (hasPhone) score += 1;
     if (hasEmail) score += 1;
+    if (!hasLicenseNumber) score -= 2;
     score = Math.min(10, Math.max(1, score));
-    return { score, reason: `Verified trade professional, ${hasPhone ? "contactable" : "contact info pending"}, ${candidate.city || "Michigan"} area` };
+    const licenseNote = hasLicenseNumber ? "" : " · ⚠️ No verifiable license found";
+    return { score, reason: `Verified trade professional, ${hasPhone ? "contactable" : "contact info pending"}, ${candidate.city || "Michigan"} area${licenseNote}` };
   }
 
   return result;
