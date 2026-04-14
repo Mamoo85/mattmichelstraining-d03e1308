@@ -4365,6 +4365,9 @@ export type Database = {
           alert_type: string
           alerted_at: string
           candidate_id: string
+          claim_expires_at: string | null
+          claimed_at: string | null
+          client_action: string | null
           client_id: string
           id: string
         }
@@ -4372,6 +4375,9 @@ export type Database = {
           alert_type?: string
           alerted_at?: string
           candidate_id: string
+          claim_expires_at?: string | null
+          claimed_at?: string | null
+          client_action?: string | null
           client_id: string
           id?: string
         }
@@ -4379,6 +4385,9 @@ export type Database = {
           alert_type?: string
           alerted_at?: string
           candidate_id?: string
+          claim_expires_at?: string | null
+          claimed_at?: string | null
+          client_action?: string | null
           client_id?: string
           id?: string
         }
@@ -4695,6 +4704,54 @@ export type Database = {
           token?: string
           used_at?: string | null
           used_by?: string | null
+        }
+        Relationships: []
+      }
+      industry_pulse_signals: {
+        Row: {
+          company_name: string
+          confidence: number | null
+          created_at: string | null
+          cross_referenced: boolean | null
+          detected_at: string | null
+          hiring_count: number | null
+          hiring_roles: string[] | null
+          id: string
+          industry: string | null
+          location: string | null
+          predicted_needs: string[] | null
+          recommended_pitch: string | null
+          source_urls: string[] | null
+        }
+        Insert: {
+          company_name: string
+          confidence?: number | null
+          created_at?: string | null
+          cross_referenced?: boolean | null
+          detected_at?: string | null
+          hiring_count?: number | null
+          hiring_roles?: string[] | null
+          id?: string
+          industry?: string | null
+          location?: string | null
+          predicted_needs?: string[] | null
+          recommended_pitch?: string | null
+          source_urls?: string[] | null
+        }
+        Update: {
+          company_name?: string
+          confidence?: number | null
+          created_at?: string | null
+          cross_referenced?: boolean | null
+          detected_at?: string | null
+          hiring_count?: number | null
+          hiring_roles?: string[] | null
+          id?: string
+          industry?: string | null
+          location?: string | null
+          predicted_needs?: string[] | null
+          recommended_pitch?: string | null
+          source_urls?: string[] | null
         }
         Relationships: []
       }
