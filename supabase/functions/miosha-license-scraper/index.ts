@@ -533,6 +533,339 @@ async function scanCraigslist(): Promise<LicenseCandidate[]> {
   return candidates;
 }
 
+// ===== SOURCE 12: Yelp Fusion API (contractor business owner-operators) =====
+const YELP_TRADES = ["boiler repair", "hvac contractor", "plumber", "electrician"];
+const YELP_CITIES = ["Detroit", "Warren", "Dearborn", "Troy", "Southfield", "Sterling Heights"];
+
+async function scanYelp(): Promise<LicenseCandidate[]> {
+  if (!YELP_API_KEY) {
+    console.log("[S12:Yelp] No YELP_API_KEY — skipping");
+    return [];
+  }
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  const TRADE_WORDS = /\b(plumbing|hvac|heating|cooling|electric|electrical|mechanical|boiler|services|service|repair|company|co|llc|inc|corp)\b/gi;
+
+  for (const term of YELP_TRADES) {
+    for (const city of YELP_CITIES) {
+      try {
+        const url = `https://api.yelp.com/v3/businesses/search?term=${encodeURIComponent(term)}&location=${encodeURIComponent(city + ", MI")}&limit=10`;
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${YELP_API_KEY}` },
+          signal: AbortSignal.timeout(10_000),
+        });
+        if (!res.ok) continue;
+        const data = await res.json();
+        for (const biz of (data?.businesses || [])) {
+          const rawName = (biz.name || "").trim();
+          // Try to extract person name from business name
+          const stripped = rawName.replace(TRADE_WORDS, "").replace(/['']/g, "'").replace(/\s+/g, " ").trim();
+          if (!stripped || !isPersonName(stripped)) continue;
+          const key = stripped.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+
+          const tradeMap: Record<string, string> = {
+            "boiler repair": "Boiler Operator",
+            "hvac contractor": "HVAC Technician",
+            "plumber": "Plumber",
+            "electrician": "Electrician",
+          };
+          candidates.push({
+            full_name: stripped,
+            license_type: tradeMap[term] || "Trade Professional",
+            license_number: null,
+            license_expiry: null,
+            city: biz.location?.city || city,
+            source: "miosha",
+          });
+        }
+      } catch (e) {
+        console.warn(`[S12:Yelp] Error ${term}/${city}: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+  }
+  console.log(`[S12:Yelp] Found ${candidates.length} candidates`);
+  return candidates;
+}
+
+// ===== SOURCE 14: Nursys — National Nursing License Lookup =====
+async function scanNursys(): Promise<LicenseCandidate[]> {
+  const candidates: LicenseCandidate[] = [];
+  try {
+    const url = "https://www.nursys.com/LQC/LQCSearch.aspx?state=MI";
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; research bot)" },
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!res.ok) {
+      console.log(`[S14:Nursys] HTTP ${res.status} — skipping`);
+      return [];
+    }
+    const html = await res.text();
+    if (!html || html.length < 500) return [];
+
+    // Parse table rows: look for patterns like "Last, First | LIC# | State | Type | Status | Expiry"
+    const rowPattern = /<tr[^>]*>[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>/gi;
+    let match;
+    const seen = new Set<string>();
+    while ((match = rowPattern.exec(html)) !== null) {
+      const rawName = match[1].replace(/<[^>]+>/g, "").trim();
+      const licNum = match[2].replace(/<[^>]+>/g, "").trim();
+      const licType = match[4].replace(/<[^>]+>/g, "").trim();
+      const status = match[5].replace(/<[^>]+>/g, "").trim();
+
+      if (status.toLowerCase() !== "active") continue;
+
+      // Convert "Last, First" to "First Last"
+      let fullName = rawName;
+      if (rawName.includes(",")) {
+        const parts = rawName.split(",").map(p => p.trim());
+        fullName = `${parts[1]} ${parts[0]}`;
+      }
+      if (!isPersonName(fullName)) continue;
+      if (licNum && !looksLikeLicenseNumber(licNum)) continue;
+
+      const key = fullName.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      candidates.push({
+        full_name: fullName,
+        license_type: licType.includes("RN") ? "Registered Nurse" : licType.includes("LPN") ? "Licensed Practical Nurse" : "RN/LPN",
+        license_number: licNum || null,
+        license_expiry: null,
+        city: null,
+        source: "miosha",
+      });
+    }
+  } catch (e) {
+    console.warn(`[S14:Nursys] Error: ${e instanceof Error ? e.message : String(e)}`);
+  }
+  console.log(`[S14:Nursys] Found ${candidates.length} candidates`);
+  return candidates;
+}
+
+// ===== SOURCE 15: PHCC Find a Contractor Directory =====
+const PHCC_ZIP_CODES = [
+  "48201", "48202", "48204", "48205", // Detroit core
+  "48030", "48220", "48237", "48236", // Oak Park, Ferndale, Royal Oak area
+  "48089", "48091", "48092", "48093", // Warren, Sterling Heights
+  "48126", "48124", "48128",           // Dearborn, Dearborn Heights
+  "48301", "48302", "48304",           // Bloomfield
+  "48085", "48083", "48084",           // Troy, Rochester Hills
+];
+
+async function scanPHCC(): Promise<LicenseCandidate[]> {
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  const TRADE_SUFFIXES = /\b(plumbing|hvac|heating|cooling|electric|electrical|mechanical|services|service|llc|inc|corp|co\.?|company|contractors|repair|solutions)\b/gi;
+
+  // Process 10 zip codes per run to stay within limits
+  const zipsThisRun = PHCC_ZIP_CODES.slice(0, 10);
+
+  for (const zip of zipsThisRun) {
+    try {
+      const res = await fetch("https://www.phccweb.org/tools-resources/find-a-contractor/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "User-Agent": "Mozilla/5.0 (compatible; research bot)",
+        },
+        body: `zip=${zip}&radius=10&type=member`,
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (!res.ok) {
+        console.warn(`[S15:PHCC] HTTP ${res.status} for zip ${zip}`);
+        continue;
+      }
+      const html = await res.text();
+      if (!html || html.length < 200) continue;
+
+      // Extract contractor/company names from HTML entries
+      const namePattern = /<(?:h[2-4]|strong|b|div[^>]*class="[^"]*(?:name|title|company)[^"]*")[^>]*>([\s\S]*?)<\/(?:h[2-4]|strong|b|div)>/gi;
+      let nameMatch;
+      while ((nameMatch = namePattern.exec(html)) !== null) {
+        const rawCompany = nameMatch[1].replace(/<[^>]+>/g, "").trim();
+        if (!rawCompany || rawCompany.length < 3) continue;
+
+        // Try to extract person name from company name
+        const stripped = rawCompany.replace(TRADE_SUFFIXES, "").replace(/['']/g, "'").replace(/\s+/g, " ").trim();
+        if (!stripped || !isPersonName(stripped)) continue;
+
+        const key = stripped.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        // Infer trade from company name
+        const lower = rawCompany.toLowerCase();
+        let licType = "Plumber";
+        if (lower.includes("hvac") || lower.includes("heating") || lower.includes("cooling")) {
+          licType = "HVAC Technician";
+        } else if (lower.includes("electric")) {
+          licType = "Electrician";
+        }
+
+        candidates.push({
+          full_name: stripped,
+          license_type: licType,
+          license_number: null,
+          license_expiry: null,
+          city: null,
+          source: "miosha",
+        });
+      }
+    } catch (e) {
+      console.warn(`[S15:PHCC] Error zip ${zip}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  console.log(`[S15:PHCC] Found ${candidates.length} candidates`);
+  return candidates;
+}
+
+// ===== SOURCE 16: JATC Graduation Announcements (newly graduated journeymen) =====
+const JATC_SOURCES = [
+  { url: "https://www.detroiteitc.org/news", trade: "Electrician", city: "Detroit" },
+  { url: "https://www.aaejatc.org/news", trade: "Electrician", city: "Ann Arbor" },
+  { url: "https://ualocal98.org/news", trade: "Plumber", city: "Detroit" },
+  { url: "https://local80.org/news", trade: "HVAC Technician", city: "Detroit" },
+];
+
+async function scanJATCGraduations(): Promise<LicenseCandidate[]> {
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  const GRAD_KEYWORDS = /graduation|graduated|new journeyman|journeyman.*complet|apprentice.*graduat|apprenticeship.*complet|class of 20/i;
+
+  for (const { url, trade, city } of JATC_SOURCES) {
+    try {
+      const res = await fetch(url, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; research bot)" },
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!res.ok) {
+        console.warn(`[S16:JATC] HTTP ${res.status} for ${url}`);
+        continue;
+      }
+      const html = await res.text();
+      if (!html || !GRAD_KEYWORDS.test(html)) {
+        console.log(`[S16:JATC] No graduation keywords at ${url}`);
+        continue;
+      }
+
+      // Extract capitalized name patterns near graduation keywords
+      // Look for sections with graduation content, then extract names
+      const sections = html.split(/graduation|graduated|new journeyman|apprentice.*graduat/i);
+      for (let i = 1; i < sections.length; i++) {
+        const section = sections[i].substring(0, 2000); // Limit search window
+        const cleaned = section.replace(/<[^>]+>/g, " ").replace(/&\w+;/g, " ");
+        // Match "First Last" patterns (capitalized words)
+        const nameMatches = cleaned.match(/\b([A-Z][a-z]+(?:\s+[A-Z]\.?)?\s+[A-Z][a-z]+(?:\s+(?:Jr|Sr|III|IV|II)\.?)?)\b/g);
+        if (!nameMatches) continue;
+
+        for (const name of nameMatches) {
+          const trimmed = name.trim();
+          if (!isPersonName(trimmed)) continue;
+          const key = trimmed.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+
+          candidates.push({
+            full_name: trimmed,
+            license_type: trade,
+            license_number: null,
+            license_expiry: null,
+            city,
+            source: "miosha",
+          });
+        }
+      }
+    } catch (e) {
+      console.warn(`[S16:JATC] Error ${url}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  console.log(`[S16:JATC] Found ${candidates.length} candidates`);
+  return candidates;
+}
+
+// ===== SOURCE 17: Thumbtack Pro Profiles =====
+const THUMBTACK_SEARCHES = [
+  { url: "https://www.thumbtack.com/mi/detroit/boiler-repair/", trade: "Boiler Operator" },
+  { url: "https://www.thumbtack.com/mi/detroit/hvac/", trade: "HVAC Technician" },
+  { url: "https://www.thumbtack.com/mi/detroit/plumbers/", trade: "Plumber" },
+  { url: "https://www.thumbtack.com/mi/detroit/electricians/", trade: "Electrician" },
+  { url: "https://www.thumbtack.com/mi/detroit/cna/", trade: "CNA" },
+];
+
+async function scanThumbtack(): Promise<LicenseCandidate[]> {
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of THUMBTACK_SEARCHES) {
+    try {
+      const res = await fetch(url, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; research bot)" },
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (!res.ok) {
+        console.warn(`[S17:Thumbtack] HTTP ${res.status} for ${url}`);
+        continue;
+      }
+      const html = await res.text();
+      if (!html || html.length < 500) continue;
+
+      // Try JSON-LD first (Thumbtack embeds structured data)
+      const jsonLdPattern = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
+      let jsonMatch;
+      while ((jsonMatch = jsonLdPattern.exec(html)) !== null) {
+        try {
+          const ld = JSON.parse(jsonMatch[1]);
+          const items = Array.isArray(ld) ? ld : [ld];
+          for (const item of items) {
+            if (item["@type"] === "Person" || item["@type"] === "LocalBusiness") {
+              const name = (item.name || "").trim();
+              if (!name || !isPersonName(name)) continue;
+              const key = name.toLowerCase();
+              if (seen.has(key)) continue;
+              seen.add(key);
+              candidates.push({
+                full_name: name,
+                license_type: trade,
+                license_number: null,
+                license_expiry: null,
+                city: item.address?.addressLocality || "Detroit",
+                source: "miosha",
+              });
+            }
+          }
+        } catch { /* invalid JSON-LD, skip */ }
+      }
+
+      // Fallback: regex for profile name patterns
+      const profilePattern = /data-testid="pro-name"[^>]*>([^<]+)</gi;
+      let profileMatch;
+      while ((profileMatch = profilePattern.exec(html)) !== null) {
+        const name = profileMatch[1].trim();
+        if (!isPersonName(name)) continue;
+        const key = name.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        candidates.push({
+          full_name: name,
+          license_type: trade,
+          license_number: null,
+          license_expiry: null,
+          city: "Detroit",
+          source: "miosha",
+        });
+      }
+    } catch (e) {
+      console.warn(`[S17:Thumbtack] Error ${url}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  console.log(`[S17:Thumbtack] Found ${candidates.length} candidates`);
+  return candidates;
+}
+
 // ===== SOURCE 8: Sonar Web Search (LinkedIn open-to-work, union spotlights, apprenticeship completions) =====
 const SONAR_QUERIES = [
   {
@@ -825,9 +1158,9 @@ serve(async (req) => {
   let updatedCount = 0;
   let errorCount = 0;
 
-  console.log("[miosha-scraper] 🚀 Planetary-Scale Scanner starting — 8 fast sources + Sonar last");
+  console.log("[miosha-scraper] 🚀 Planetary-Scale Scanner starting — 13 fast sources + Sonar last");
 
-  // Run 8 fast sources in parallel (Sonar removed — runs separately after)
+  // Run 13 fast sources in parallel (Sonar removed — runs separately after)
   const results = await Promise.allSettled([
     scanNPIRegistry(),           // S1
     scanMichiganNurseAide(),     // S2
@@ -837,9 +1170,14 @@ serve(async (req) => {
     scanTradeUnions(),           // S6
     scanPDL(),                   // S7 — day rotation + city fix
     scanCraigslist(),            // S9 — high-intent tradespeople posting availability
+    scanYelp(),                  // S12 — Yelp Fusion contractor owner-operators
+    scanNursys(),                // S14 — national nursing license lookup
+    scanPHCC(),                  // S15 — PHCC contractor directory
+    scanJATCGraduations(),       // S16 — newly graduated journeymen
+    scanThumbtack(),             // S17 — Thumbtack pro profiles
   ]);
 
-  const sourceLabels = ["NPI", "NAR", "OpenData", "Permits", "NATE", "Unions", "PDL", "Craigslist"];
+  const sourceLabels = ["NPI", "NAR", "OpenData", "Permits", "NATE", "Unions", "PDL", "Craigslist", "Yelp", "Nursys", "PHCC", "JATC", "Thumbtack"];
 
   for (let i = 0; i < results.length; i++) {
     const result = results[i];
