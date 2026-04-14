@@ -111,7 +111,23 @@ async function enrichViaNPI(candidate: RawCandidate): Promise<Record<string, unk
     const results = data?.results;
     if (!results?.length) return {};
 
-    const r = results[0];
+    // NLC compact states that can legally practice nursing in Michigan
+    const NLC_COMPACT_STATES = new Set([
+      "AL","AZ","AR","CO","CT","DE","FL","GA","ID","IN","IA","KS","KY","LA","ME",
+      "MD","MI","MS","MO","MT","NE","NH","NJ","NM","NC","ND","OH","OK","PA","SC",
+      "SD","TN","TX","UT","VT","VA","WV","WI","WY"
+    ]);
+
+    // Prefer MI-based result, then any NLC compact state, then first result
+    const miResult = results.find((r: any) => {
+      const addr = r.addresses?.find((a: any) => a.address_purpose === "LOCATION") || r.addresses?.[0];
+      return addr?.state === "MI";
+    });
+    const compactResult = !miResult ? results.find((r: any) => {
+      const addr = r.addresses?.find((a: any) => a.address_purpose === "LOCATION") || r.addresses?.[0];
+      return addr?.state && NLC_COMPACT_STATES.has(addr.state);
+    }) : null;
+    const r = miResult || compactResult || results[0];
     const taxonomy = r.taxonomies?.find((t: any) => t.primary) || r.taxonomies?.[0];
     const address = r.addresses?.find((a: any) => a.address_purpose === "LOCATION") || r.addresses?.[0];
 
