@@ -267,12 +267,12 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
           messages: [
             {
               role: "system",
-              content: `You are a hiring intelligence researcher. Find INDIVIDUAL PEOPLE seeking trade work — NOT companies hiring.
+              content: `You are a hiring intelligence researcher. Find INDIVIDUAL PEOPLE who are open to work — NOT companies hiring.
 
-CRITICAL: Search job boards (Indeed, ZipRecruiter, LinkedIn) for real people who have:
-- Posted public resumes
-- Set their LinkedIn to "open to work"  
-- Applied to trade positions publicly
+CRITICAL: Search LinkedIn "open to work" profiles, Indeed public resumes, trade union directories (UA Local 636, IBEW Local 58), and professional association listings for real people who are:
+- Publicly visible as "open to work" on LinkedIn
+- Have posted public resumes on Indeed, ZipRecruiter, or CareerBuilder
+- Listed in trade union member directories or professional association pages
 
 Return ONLY valid JSON array. Each object must be a real person:
 { "name": "First Last", "trade": "specific trade title", "city": "Michigan city", "source_url": "URL where you found them or null" }
