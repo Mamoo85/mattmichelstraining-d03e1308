@@ -9,7 +9,7 @@ import {
   ExternalLink, Award, MapPin, Briefcase, Shield,
   Stethoscope, Heart, Building2, Wrench, Zap,
   UserCheck, ThumbsUp, Loader2, Lock, Clock,
-  Copy, FileText, AlertTriangle, X
+  Copy, FileText, AlertTriangle, X, CalendarCheck
 } from "lucide-react";
 
 const HEALTHCARE_ROLES = ["cna", "rn", "lpn", "director_of_nursing", "home_health_aide"];
@@ -45,6 +45,7 @@ interface DashboardData {
     company_name: string;
     target_roles: string[];
     target_zip_codes: string[];
+    booking_link?: string;
   };
   candidates: Candidate[];
   kpi: { total: number; hot: number; contacted: number; hired: number };
@@ -80,6 +81,7 @@ export default function MyTechAlert() {
   const [scoreFilter, setScoreFilter] = useState<"all" | "hot" | "medium">("all");
   const [outreachModal, setOutreachModal] = useState<{ candidateId: string; draft: OutreachDraft } | null>(null);
   const [generatingDraft, setGeneratingDraft] = useState<string | null>(null);
+  const [fastTrackingId, setFastTrackingId] = useState<string | null>(null);
 
   const isHealthcare = useMemo(() => {
     if (!data) return false;
