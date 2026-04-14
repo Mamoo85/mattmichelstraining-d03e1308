@@ -221,7 +221,7 @@ Deno.test("Deduplication prefers BPL over MIOSHA for same person", () => {
   const allRaw = [
     { full_name: "John Smith", city: "Detroit", source: "bpl", license_number: "BL-12345" },
     { full_name: "John Smith", city: "Detroit", source: "miosha", license_number: "BL-12345" },
-    { full_name: "John Smith", city: "Detroit", source: "firecrawl", license_number: null },
+    { full_name: "John Smith", city: "Detroit", source: "firecrawl", license_number: "BL-12345" },
   ];
 
   const seen = new Set<string>();
