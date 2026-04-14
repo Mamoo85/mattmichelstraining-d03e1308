@@ -217,6 +217,45 @@ export default function MyTechAlert() {
     toast.success(`${label} copied to clipboard`);
   }
 
+  async function fastTrackInterview(candidateId: string) {
+    if (!token) return;
+    setFastTrackingId(candidateId);
+    try {
+      const res = await fetch(`${baseUrl}/fast-track-interview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey },
+        body: JSON.stringify({ token, candidate_id: candidateId }),
+      });
+      const result = await res.json();
+      if (result.error === "no_booking_link") {
+        toast.info("Add your scheduling link to enable Fast-Track. Email matt@detroitwebagent.com to set it up.");
+        return;
+      }
+      if (result.success) {
+        toast.success(`⚡ Interview invite sent to ${result.candidate_name}!`);
+        // Update local state to show contacted
+        setData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            candidates: prev.candidates.map((c) =>
+              c.id === candidateId ? { ...c, client_action: "contacted" } : c
+            ),
+            kpi: { ...prev.kpi, contacted: prev.kpi.contacted + 1 },
+          };
+        });
+      } else if (result.skipped) {
+        toast.info("Candidate opted out of SMS — try reaching out via email or LinkedIn.");
+      } else {
+        toast.error(result.error || "Failed to send invite");
+      }
+    } catch {
+      toast.error("Failed to send invite — try again");
+    } finally {
+      setFastTrackingId(null);
+    }
+  }
+
   const toggleExpand = (id: string) => {
     setExpandedIds((prev) => {
       const next = new Set(prev);
