@@ -1,76 +1,42 @@
 
 
-# Fix TechAlert: Restore Direct LARA Database Access as Primary Source
+# Test & Verify TechAlert Scanner — LARA/MIOSHA Primary + Multi-State Analysis
 
-## The Core Problem
+## Key Finding: No Multi-State Needed
 
-TechAlert's entire value proposition is: "We monitor state licensing databases so you know about new tradespeople before anyone else." But right now, **neither data source actually queries LARA directly.** Both use Sonar AI web search to *hope* it finds licensing data. That's why results are garbage — company names, no license numbers, no real records.
+Michigan **does not reciprocate** with any other state for trade licensing. From LARA's own documentation: *"The State of Michigan does not reciprocate with any other state for licensing. Therefore, you are required to take and pass an examination to receive a license."*
 
-The `scanBPL()` function (which downloads actual LARA Excel files) and `scanFloridaDBPR()` were documented as built in Phase 10 but are **missing from the current codebase**. They need to be rebuilt.
+This means scanning Ohio, Indiana, Illinois, or Wisconsin databases is **pointless** — those licensees can't legally work in Michigan without a separate Michigan license. The Michigan LARA database is the ONLY database that matters for Michigan-based clients. This is actually a competitive advantage — it makes the LARA moat even stronger.
 
-## Architecture: Database First, Social Second
+**Exception**: For nursing (CNA/LPN/RN), the Nurse Licensure Compact (NLC) allows multi-state practice. Michigan joined the NLC, so nurses from compact states CAN work in Michigan. We already search the NPI registry for these, which covers this.
 
-```text
-LAYER 1 — PRIMARY (the product's core value)
-┌──────────────────────────────────────────────┐
-│  Michigan LARA BPL Portal (direct download)  │
-│  → Excel/CSV files with REAL names,          │
-│    license numbers, issue dates, cities      │
-│  → aca-prod.accela.com/LARA portal search    │
-└──────────────────────────────────────────────┘
-           ↓ Real people with verified licenses
-           
-LAYER 2 — ENRICHMENT (enhancement only)
-┌──────────────────────────────────────────────┐
-│  Sonar OSINT → LinkedIn, Facebook, Indeed    │
-│  NPI Registry → Healthcare credentials       │
-│  PDL → Phone, personal email                 │
-└──────────────────────────────────────────────┘
-           ↓ Contact info + social profiles
-           
-LAYER 3 — SUPPLEMENTARY (bonus leads)
-┌──────────────────────────────────────────────┐
-│  Job board search (Indeed/ZipRecruiter)       │
-│  → People actively seeking work              │
-│  → Lower priority, no license verification   │
-└──────────────────────────────────────────────┘
-```
+## What Needs to Happen
 
-## The Fix (4 Parts)
+### 1. Deploy & Invoke Scanner to Confirm It Works
+- Deploy both `hire-alert-scanner` and `miosha-license-scraper` (no logs found — they may not be deployed after recent edits)
+- Invoke the scanner with curl to trigger a real run
+- Check logs for the source hierarchy: BPL candidates → MIOSHA candidates → Job Board candidates
+- Verify BPL and MIOSHA return real people with license numbers, not companies
 
-### Part 1: Rebuild `scanBPL()` — Direct LARA Excel Downloads
-- Michigan LARA Bureau of Professional Licensing publishes downloadable Excel/CSV lists at their BPL portal
-- Use SheetJS (xlsx library) to parse the spreadsheets server-side
-- Extract: full name, license number, license type, issue date, expiry date, city/state
-- Target categories: Boiler, Electrical, Plumbing, HVAC/Mechanical, Nursing (CNA/LPN/RN)
-- Filter for recently issued/renewed licenses (last 90 days)
-- This gives us **real names with real license numbers** — the foundation of the product
+### 2. Write & Run Deno Tests
+Create `supabase/functions/hire-alert-scanner/index_test.ts`:
+- Test `isCorporateName()` — confirm it blocks "Detroit Academy of Arts & Sciences", "MotorCity Casino", "Veolia", etc.
+- Test that single-word names are rejected
+- Test that normal 2-word names pass ("Robert Chen", "Angela Peters")
+- Test scoring: BPL source gets +3, MIOSHA w/license gets +1, job board w/o license gets -2
 
-### Part 2: Upgrade `miosha-license-scraper` Prompts
-- Current prompts ask Sonar to "search Michigan LARA licensing database" — too vague
-- Rewrite to specifically target the LARA Accela portal (aca-prod.accela.com/LARA) records
-- Add explicit instruction: "Return ONLY individual person names with their Michigan state license numbers. NEVER return employer names, school names, or organization names."
-- Reduce results per query from 20 to 8 for higher quality
+### 3. Add "Job Seekers" as Separate Alert Category
+Per your request, job board candidates should be a separate "bonus" alert — not mixed into the main LARA-sourced alerts. Update the client email to clearly separate:
+- **Section 1**: "State-Licensed Candidates" (BPL + MIOSHA sources)
+- **Section 2**: "Job Seekers" (job board sources — marked as supplementary)
 
-### Part 3: Enforce Source Priority in Scanner
-- Rename the scan flow to make the hierarchy explicit:
-  1. `scanBPL()` runs FIRST — direct LARA data (highest trust)
-  2. `scanMIOSHA()` runs second — Sonar search of LARA records (medium trust)
-  3. `scanJobBoards()` runs last — supplementary leads (lowest trust)
-- Scoring: BPL-sourced candidates get +3 bonus (verified license from state DB)
-- MIOSHA-sourced get +1 if they have a license number
-- Job board candidates get no bonus and -2 if no license found
-
-### Part 4: Enrichment Stays Secondary
-- LinkedIn/Facebook/Indeed profile lookups remain in the Sonar OSINT enrichment layer
-- They run AFTER we have a verified name + license from LARA
-- This is the correct order: state database → identity → contact info → social profiles
+### 4. Verify End-to-End
+- Check that the scanner response JSON shows `source_bpl > 0` and `source_miosha > 0`
+- Confirm the founder report email correctly labels sources
+- Verify no corporate names slip through
 
 ## Files Changed
-- `supabase/functions/hire-alert-scanner/index.ts` — add `scanBPL()`, reorder sources, update scoring
-- `supabase/functions/miosha-license-scraper/index.ts` — upgrade prompts for accuracy
-- Both functions redeployed and tested
-
-## Why This Matters
-Without direct LARA access, TechAlert is just another AI-powered job board scraper — exactly what competitors do. The LARA database is the moat. Real license numbers from a state government database cannot be replicated by Indeed or LinkedIn. That's what makes this product worth $99/mo.
+- `supabase/functions/hire-alert-scanner/index.ts` — separate job board alerts into distinct section, minor fixes
+- `supabase/functions/hire-alert-scanner/index_test.ts` — new test file
+- Both functions deployed and invoked for live verification
 
