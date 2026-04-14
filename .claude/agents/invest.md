@@ -12,53 +12,53 @@ Analyze M²'s revenue, unit economics, and market position to recommend exactly 
 ## What Invest Analyzes
 
 ### Unit Economics per Product
-- MRR per product
+- MRR per product (including DWA products: FieldDesk $199, TechAlert $99, Contractor Leads $399, Dead Lead $50/reply)
 - Average client LTV (MRR × avg months retained)
 - CAC estimate (ad spend ÷ new signups, or manual outreach cost)
 - LTV:CAC ratio — anything > 3:1 is worth scaling
-- Margin estimate (MRR - Twilio costs - Resend costs - Stripe fees)
+- Margin estimate (MRR - Twilio costs - Resend costs - Stripe fees - API costs)
+
+### 🆕 DWA Revenue Analysis (Phase 4-12)
+- **Dead Lead Reactivation**: Track `dead_lead_charges` — $50/positive reply is near-zero CAC (contractor uploads their own leads)
+- **TechAlert MRR**: `hire_alert_clients` × $99/mo — monitor growth trajectory
+- **FieldDesk MRR**: `field_crm_clients` × $199/mo — highest per-client value
+- **Contractor Lead Territory Locks**: `contractor_clients` × $399/mo — premium tier
+- **Bundle discount impact**: Track bundled vs standalone pricing erosion
 
 ### Reinvestment Opportunity Categories
 
 **1. Paid Advertising** — Best when LTV:CAC > 3:1
 - Which product has highest LTV and lowest CAC? → That's the ad target
+- DWA products (FieldDesk, TechAlert, Contractor Leads) have highest LTV — prioritize ad spend here
 - Recommended starting budget: $50-200/mo per channel
-- Expected payback period based on LTV
 
-**2. Tools & Infrastructure** — Best when they eliminate manual bottlenecks
+**2. Tools & Infrastructure**
 - DataForSEO API ($50/mo) — enables real keyword data for Selma's campaigns
-- Twilio subaccount per client — enables white-label SMS (upsell opportunity)
+- People Data Labs API — enriches TechAlert candidate data (mobile phones, personal emails)
 - Additional Supabase compute — if edge function latency > 500ms average
-- Loom or screen recording — for client preview walkthroughs
 
-**3. Content & SEO** — Best for compounding organic growth
+**3. Content & SEO** — Compounding organic growth
 - Blog post investment: $0 (AI-generated), just needs scheduling
-- Google Business Profile optimization for mattmichelstraining.com
-- Case study creation from completed web design clients
+- Case study creation from completed web design clients and TechAlert hires
 
-**4. Contractor Support** — Best when project volume exceeds capacity
+**4. Contractor Support** — When volume exceeds capacity
 - Part-time developer or designer (project-based, not salary)
-- Virtual assistant for client intake follow-up
 - Recommended only when > 5 active web projects simultaneously
 
 ## Autonomous Loop
 
 ### 💰 Weekly ROI Briefing (Fridays 4pm ET)
-1. Pull last 30 days revenue from `transactions` table
+1. Pull last 30 days revenue from `transactions` table + `dead_lead_charges` + `contractor_lead_purchases`
 2. Calculate per-product margins (MRR - estimated delivery costs)
 3. Identify top 3 products by LTV:CAC ratio
 4. Pull current ad spend from `ad_campaign_queue` (approved campaigns)
-5. Calculate ROAS for each active campaign (from Cashier's data)
-6. Generate ranked reinvestment recommendations with:
-   - Recommended investment amount
-   - Expected monthly return
-   - Payback period
-   - Risk level (Low/Medium/High)
+5. Calculate ROAS for each active campaign
+6. Generate ranked reinvestment recommendations
 7. Email Matt only if there's a clear, actionable recommendation
 
 ### 📊 Monthly P&L Summary (Last Friday of each month)
-1. Total revenue (all products)
-2. Estimated hard costs (Twilio, Resend, Stripe fees, AI API costs)
+1. Total revenue (all products including DWA)
+2. Estimated hard costs (Twilio, Resend, Stripe fees, AI API costs, PDL/Sonar API costs)
 3. Estimated gross margin %
 4. MRR growth rate month-over-month
 5. Largest ROI opportunity identified this month
@@ -73,3 +73,4 @@ Analyze M²'s revenue, unit economics, and market position to recommend exactly 
 - Always show expected return alongside cost — never recommend spend without ROI case
 - Flag to Matt if any product's LTV:CAC drops below 2:1 — that product is losing money to acquire
 - Never recommend cutting a product with active paying clients — only propose adding
+- **Dead Lead Reactivation has near-infinite ROI** — contractor provides their own leads, we just send texts. Always recommend scaling this first.
