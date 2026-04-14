@@ -835,6 +835,7 @@ serve(async (req) => {
     </table>
 
     <p style="color:#475569;font-size:15px;line-height:1.8;margin:0 0 8px;">Each candidate alert includes their <strong>name, trade, city, license info, contact details</strong> (when available), and our proprietary availability score.</p>
+    <p style="color:#475569;font-size:15px;line-height:1.8;margin:0 0 8px;">Candidate profiles include verified phone and email data from industry databases. Staffing alerts use public CMS data to identify hiring opportunities.</p>
     <p style="color:#475569;font-size:14px;line-height:1.8;margin:0;">Want to adjust your target roles or zip codes? Just reply to this email.</p>
   </td></tr>
 

@@ -11,8 +11,9 @@ import {
   Stethoscope, Heart, Building2, Wrench, Zap,
   UserCheck, ThumbsUp, Loader2, Lock, Clock,
   Copy, FileText, AlertTriangle, X, CalendarCheck,
-  Radio, TrendingUp, Factory, Target
+  Radio, TrendingUp, Factory, Target, Info
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import RevenueRecoveredLedger from "@/components/RevenueRecoveredLedger";
 
 const HEALTHCARE_ROLES = ["cna", "rn", "lpn", "director_of_nursing", "home_health_aide"];
@@ -423,6 +424,14 @@ export default function MyTechAlert() {
             <div className="flex items-center gap-2">
               <Radio className="h-4 w-4 text-[#00d4ff] animate-pulse" />
               <h2 className="text-white font-bold text-sm uppercase tracking-wider">Market Signals</h2>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3.5 w-3.5 text-amber-400/70 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-[240px] bg-[#0a1628] border-white/10 text-slate-300 text-xs">
+                  ⚠️ Verify signals using provided sources before outreach.
+                </TooltipContent>
+              </Tooltip>
               <span className="text-[10px] text-slate-500 ml-auto">{signals.length} active</span>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
