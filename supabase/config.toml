@@ -1542,3 +1542,6 @@ verify_jwt = false
 
 [functions.client-revenue-recovered]
 verify_jwt = false
+
+[functions.get-contractor-signals]
+verify_jwt = false
