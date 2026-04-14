@@ -1,5 +1,5 @@
 // get-my-techalert — GET endpoint for /my-techalert?token=XYZ
-// Token-secured dashboard data. Never returns source field.
+// Token-secured dashboard data. Returns claim status for each candidate.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -20,8 +20,7 @@ serve(async (req) => {
     const token = url.searchParams.get("token");
     if (!token) {
       return new Response(JSON.stringify({ error: "token required" }), {
-        status: 400,
-        headers: { ...cors, "Content-Type": "application/json" },
+        status: 400, headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
@@ -36,15 +35,14 @@ serve(async (req) => {
 
     if (clientErr || !client || !client.active) {
       return new Response(JSON.stringify({ error: "not found" }), {
-        status: 404,
-        headers: { ...cors, "Content-Type": "application/json" },
+        status: 404, headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
-    // Get all candidates alerted to this client (joined with candidate details)
+    // Get all candidates alerted to this client (with claim data)
     const { data: clientCandidates } = await sb
       .from("hire_alert_client_candidates")
-      .select("candidate_id, alerted_at, client_action")
+      .select("candidate_id, alerted_at, client_action, claimed_at, claim_expires_at")
       .eq("client_id", client.id)
       .order("alerted_at", { ascending: false })
       .limit(500);
@@ -63,12 +61,28 @@ serve(async (req) => {
       });
     }
 
-    // Fetch candidate details — EXCLUDE source field
+    // Fetch candidate details — EXCLUDE source field (except for license_expiry badge)
     const candidateIds = clientCandidates.map((cc: any) => cc.candidate_id);
     const { data: candidates } = await sb
       .from("hire_alert_candidates")
-      .select("id, full_name, phone, email, license_type, license_number, license_expiry, city, zip, availability_score, score_reason, qualifications_summary, hiring_recommendation, linkedin_url, facebook_url, current_employer, current_title, years_experience")
+      .select("id, full_name, phone, email, license_type, license_number, license_expiry, city, zip, availability_score, score_reason, qualifications_summary, hiring_recommendation, linkedin_url, facebook_url, current_employer, current_title, years_experience, source")
       .in("id", candidateIds);
+
+    // Check for active claims by OTHER clients on each candidate
+    const now = new Date().toISOString();
+    const { data: allClaims } = await sb
+      .from("hire_alert_client_candidates")
+      .select("candidate_id, client_id, claimed_at, claim_expires_at")
+      .in("candidate_id", candidateIds)
+      .not("claimed_at", "is", null)
+      .gt("claim_expires_at", now);
+
+    const otherClaimMap = new Set<string>();
+    for (const claim of (allClaims || [])) {
+      if ((claim as any).client_id !== client.id) {
+        otherClaimMap.add((claim as any).candidate_id);
+      }
+    }
 
     // Merge candidate details with alert info
     const candidateMap = new Map((candidates || []).map((c: any) => [c.id, c]));
@@ -96,6 +110,10 @@ serve(async (req) => {
           years_experience: c.years_experience,
           alerted_at: cc.alerted_at,
           client_action: cc.client_action,
+          claimed_at: cc.claimed_at,
+          claim_expires_at: cc.claim_expires_at,
+          claimed_by_other: otherClaimMap.has(c.id),
+          source: c.source === "license_expiry" ? "license_expiry" : undefined,
         };
       })
       .filter(Boolean);
@@ -122,8 +140,7 @@ serve(async (req) => {
   } catch (e) {
     console.error("[get-my-techalert]", e);
     return new Response(JSON.stringify({ error: "internal error" }), {
-      status: 500,
-      headers: { ...cors, "Content-Type": "application/json" },
+      status: 500, headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 });

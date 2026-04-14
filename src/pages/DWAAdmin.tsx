@@ -211,6 +211,12 @@ export default function DWAAdmin() {
             <AdminIndustrialIntel />
           </Suspense>
         )}
+
+        {activeTab === "growth" && (
+          <Suspense fallback={<div className="text-white/40 text-sm">Loading growth signals…</div>}>
+            <AdminGrowthSignals />
+          </Suspense>
+        )}
       </main>
     </div>
   );
