@@ -72,6 +72,7 @@ const HIDDEN_PATHS = [
   "/detroit-web-design", "/whats-included",
   "/matrix", "/matrix-training", "/matrix-merch",
   "/admin", "/dwa-admin", "/field-service",
+  "/my-techalert", "/roi",
 ];
 
 const BottomTabBar = () => {

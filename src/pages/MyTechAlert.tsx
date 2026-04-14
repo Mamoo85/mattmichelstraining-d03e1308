@@ -58,7 +58,7 @@ interface OutreachDraft {
 }
 
 const ROLE_LABELS: Record<string, string> = {
-  hvac: "HVAC", plumber: "Plumber", electrician: "Electrician",
+  hvac: "HVAC", hvac_tech: "HVAC Tech", plumber: "Plumber", electrician: "Electrician",
   boiler_operator: "Boiler Operator", welder: "Welder", pipefitter: "Pipefitter",
   millwright: "Millwright", industrial_mechanic: "Industrial Mechanic",
   pressure_vessel: "Pressure Vessel", cna: "CNA", rn: "Registered Nurse",
