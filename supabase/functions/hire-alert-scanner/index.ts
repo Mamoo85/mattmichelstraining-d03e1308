@@ -232,7 +232,7 @@ async function scanJobBoards(): Promise<RawCandidate[]> {
 }
 
 // Corporate name filter — reject organizations masquerading as people
-const CORPORATE_PATTERN = /\b(LLC|Inc|Corp|School|Casino|Hospital|Health\s+System|University|Energy|Solutions|Administration|Academy|Institute|Staffing|Group\s+Inc|Services\s+Inc|& Sons|Mechanical|Electric\s+Co|Company|Associates|Enterprises|Foundation|Authority|Board|Commission|Department|District|Center|Clinic|Medical|Nursing\s+Home|Assisted\s+Living|Home\s+Care|Senior\s+Living)\b/i;
+const CORPORATE_PATTERN = /\b(LLC|Inc|Corp|School|Casino|Hospital|Health\s*System|University|Energy|Solutions|Administration|Academy|Institute|Staffing|Group|Services|Sons|Mechanical|Electric|Company|Associates|Enterprises|Foundation|Authority|Board|Commission|Department|District|Center|Clinic|Medical|Nursing\s+Home|Assisted\s+Living|Home\s+Care|Senior\s+Living|Public\s+Schools|Community\s+College|Rehabilitation|Management|Consulting|Industries|Manufacturing|Plumbing|Heating|Cooling|Roofing|Construction|Contractors|Builders|Supply|Wholesale|Distributors|Holdings|Properties|Realty|Insurance|Financial|Bank|Credit\s+Union|Transit|Utility|Utilities|Water|Sewer|Electric\s+Co|Power|Township|County|City\s+of|State\s+of|Federal)\b/i;
 
 function isCorporateName(name: string): boolean {
   if (!name) return true;
@@ -240,14 +240,18 @@ function isCorporateName(name: string): boolean {
   // All-caps multi-word names are usually orgs
   if (name === name.toUpperCase() && name.split(/\s+/).length > 3) return true;
   // If it contains "of" + proper noun pattern (e.g., "Academy of Arts & Sciences")
-  if (/\b(of the|of)\b/i.test(name) && name.split(/\s+/).length > 4) return true;
+  if (/\b(of the|of)\b/i.test(name) && name.split(/\s+/).length > 3) return true;
+  // Single word "names" are usually companies (e.g., "Veolia", "CoolSys")
+  if (name.trim().split(/\s+/).length === 1 && name.length > 3) return true;
+  // Names with & in them are usually companies
+  if (/\s&\s/.test(name) && name.split(/\s+/).length > 2) return true;
   return false;
 }
 
 async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[]> {
   const searches = [
-    "Find individual people who are licensed boiler operators, HVAC technicians, plumbers, pipefitters, or electricians in Metro Detroit Michigan who are actively looking for work, posted resumes, or are open to new opportunities. Search Indeed resumes, LinkedIn profiles, and ZipRecruiter. For each PERSON found, extract their personal name, trade, and city. Do NOT return company names or employer names — only individual people's names.",
-    "Find individual licensed tradespeople (CNA, LPN, RN, nurse aide, home health aide) in Michigan who recently posted resumes or are seeking new positions. Search Indeed, ZipRecruiter, LinkedIn. Return each PERSON's full name, license type, and city. Never return a school, hospital, or company name as the person's name.",
+    `Search for individual PEOPLE with resumes on Indeed, LinkedIn, or ZipRecruiter who are licensed boiler operators, HVAC technicians, plumbers, pipefitters, or electricians in Metro Detroit, Michigan. Look for people who recently updated their resume or are marked "Open to Work." For each person, find their FULL PERSONAL NAME (first and last name — NEVER a company/employer), their specific trade license, and their city. Also try to find their Michigan LARA license number if mentioned anywhere. Limit to 8 highly-detailed results.`,
+    `Search for individual PEOPLE who are CNAs, LPNs, RNs, nurse aides, or home health aides in Michigan seeking employment. Look on Indeed resumes, ZipRecruiter profiles, and LinkedIn "Open to Work" profiles. For each person, extract their PERSONAL first and last name (NEVER a hospital, school, or agency name), their license/certification type, city, and any license or NPI number visible on their profile. Limit to 8 results.`,
   ];
 
   const allResults: RawCandidate[] = [];
@@ -266,14 +270,28 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
           messages: [
             {
               role: "system",
-              content: `You are a hiring intelligence researcher finding INDIVIDUAL PEOPLE seeking work. Return ONLY valid JSON array. Each object: { "name": "person's full name (NEVER a company, school, hospital, or organization name)", "trade": "specific trade title", "city": "city name", "type": "candidate" }. Max 15 results. No markdown, no explanation. CRITICAL: The "name" field MUST be a real human person's first and last name. NEVER put an employer, school, hospital, casino, or any organization name in the "name" field.`,
+              content: `You are a hiring intelligence researcher finding INDIVIDUAL PEOPLE who are seeking work. Return ONLY valid JSON array. Each object MUST have:
+{
+  "name": "person's first and last name (NEVER a company, school, hospital, staffing agency, or any organization — ONLY a human being's personal name)",
+  "trade": "specific trade/license title (e.g. 'Boiler Operator', 'Licensed Practical Nurse')",
+  "city": "city name",
+  "license_number": "Michigan LARA license number or nursing license number if found, otherwise null",
+  "license_issuer": "issuing body (e.g. 'Michigan LARA', 'Michigan Board of Nursing') or null",
+  "license_expiry": "expiration date if found, otherwise null",
+  "current_employer": "current or most recent employer name or null",
+  "years_experience": number of years experience if determinable or null
+}
+Max 8 results. No markdown, no explanation. CRITICAL RULES:
+1. The "name" field MUST be a real human first + last name. If you can only find a company name, SKIP that result entirely.
+2. If a result looks like a job posting (employer seeking candidates), SKIP IT — we want the candidate, not the employer.
+3. Prioritize candidates who have license/certification details visible on their profile.`,
             },
             { role: "user", content: query },
           ],
-          max_tokens: 1500,
+          max_tokens: 2000,
           temperature: 0.1,
         }),
-        signal: AbortSignal.timeout(20000),
+        signal: AbortSignal.timeout(30000),
       });
 
       if (!res.ok) {
@@ -286,7 +304,11 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
       const jsonMatch = text.match(/\[[\s\S]*?\]/);
       if (!jsonMatch) continue;
 
-      const parsed = JSON.parse(jsonMatch[0]) as Array<{ name: string; trade: string; city: string; type?: string }>;
+      const parsed = JSON.parse(jsonMatch[0]) as Array<{
+        name: string; trade: string; city: string;
+        license_number?: string; license_issuer?: string; license_expiry?: string;
+        current_employer?: string; years_experience?: number;
+      }>;
 
       for (const item of parsed) {
         if (!item.name || !item.trade) continue;
@@ -302,9 +324,16 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
         allResults.push({
           full_name: item.name,
           license_type: item.trade,
+          license_number: item.license_number || undefined,
+          license_expiry: item.license_expiry || undefined,
           city: item.city || "Metro Detroit",
           source: "firecrawl" as const,
-          raw_data: { openrouter_search: true, type: item.type || "candidate" },
+          raw_data: {
+            openrouter_search: true,
+            license_issuer: item.license_issuer || null,
+            current_employer: item.current_employer || null,
+            years_experience: item.years_experience || null,
+          },
         });
       }
     } catch (e) {
@@ -375,11 +404,13 @@ async function enrichViaSonar(candidate: RawCandidate): Promise<Record<string, u
           },
           {
             role: "user",
-            content: `Search the web using these boolean queries to find contact and professional information for "${candidate.full_name}", a ${tradeLabel} in ${locationLabel}:
+            content: `Search the web using these boolean queries to find contact, professional, and licensing information for "${candidate.full_name}", a ${tradeLabel} in ${locationLabel}:
 
 1. site:linkedin.com/in/ "${candidate.full_name}" "${candidate.city || "Michigan"}"
 2. site:indeed.com/r/ "${candidate.full_name}"
 3. site:facebook.com "${candidate.full_name}" "${candidate.city || "Michigan"}"
+4. site:michigan.gov/lara "${candidate.full_name}" license
+5. "${candidate.full_name}" "${tradeLabel}" license number certification
 
 From the search results, extract the following and return as a JSON object:
 {
@@ -389,16 +420,20 @@ From the search results, extract the following and return as a JSON object:
   "phone": "any public phone found or null",
   "current_employer": "company name or null",
   "current_title": "job title or null",
-  "years_experience": number or null
+  "years_experience": number or null,
+  "license_number": "any state license number, certification number, or credential ID found or null",
+  "license_issuer": "issuing authority (e.g. Michigan LARA, Michigan Board of Nursing) or null",
+  "license_expiry": "expiration date if found or null",
+  "license_status": "Active, Expired, Pending, or null"
 }
 
 Only include data you actually find. Do not fabricate any information.`,
           },
         ],
-        max_tokens: 800,
+        max_tokens: 1000,
         temperature: 0.1,
       }),
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(20000),
     });
 
     if (!res.ok) {
@@ -414,7 +449,7 @@ Only include data you actually find. Do not fabricate any information.`,
       return {};
     }
 
-    console.log(`[hire-alert-scanner] Sonar enriched: ${candidate.full_name} → linkedin=${!!parsed.linkedin_url} fb=${!!parsed.facebook_url} phone=${!!parsed.phone} email=${!!parsed.email}`);
+    console.log(`[hire-alert-scanner] Sonar enriched: ${candidate.full_name} → linkedin=${!!parsed.linkedin_url} fb=${!!parsed.facebook_url} phone=${!!parsed.phone} email=${!!parsed.email} license=${!!parsed.license_number}`);
     return parsed;
   } catch (e) {
     console.warn(`[hire-alert-scanner] Sonar enrichment error for ${candidate.full_name}:`, e instanceof Error ? e.message : String(e));
@@ -522,9 +557,11 @@ Scoring rules (apply ALL that match, then sum):
 - Base: 4 points for having a verifiable trade title
 - +3 if appeared on a job board (actively seeking)
 - +2 if license number exists AND recently issued (new to market)
+- +1 if has license number (verifiable credential)
 - +1 if has phone number (immediately contactable)
 - +1 if has email address
 - +1 if city is Metro Detroit area
+- -2 if no license number at all (unverified — reduces reliability)
 - -2 if no license number AND source is MIOSHA (parse error — likely bad data)
 - Cap at 10, floor at 1
 
@@ -536,11 +573,14 @@ Return JSON: { "score": number, "reason": "one sentence citing the top 1-2 signa
   if (!result || typeof result.score !== "number") {
     let score = 4;
     if (isFromJobBoard) score += 3;
+    if (hasLicenseNumber) score += 1;
     if (hasLicenseNumber && licenseRecent) score += 2;
     if (hasPhone) score += 1;
     if (hasEmail) score += 1;
+    if (!hasLicenseNumber) score -= 2;
     score = Math.min(10, Math.max(1, score));
-    return { score, reason: `Verified trade professional, ${hasPhone ? "contactable" : "contact info pending"}, ${candidate.city || "Michigan"} area` };
+    const licenseNote = hasLicenseNumber ? "" : " · ⚠️ No verifiable license found";
+    return { score, reason: `Verified trade professional, ${hasPhone ? "contactable" : "contact info pending"}, ${candidate.city || "Michigan"} area${licenseNote}` };
   }
 
   return result;
@@ -634,7 +674,13 @@ async function sendAlertEmail(
               </td>
             </tr>
             ${c.current_employer ? `<tr><td style="padding:4px 0;font-size:13px;color:#475569;">🏢 <strong>${c.current_employer}</strong>${c.current_title ? ` · ${c.current_title}` : ""}</td></tr>` : ""}
-            ${c.license_number ? `<tr><td style="padding:4px 0;font-size:13px;color:#475569;">🪪 License: <strong>${c.license_number}</strong>${c.license_expiry ? ` · Exp: <strong>${c.license_expiry}</strong>` : ""} · <span style="color:#059669;font-weight:700;">Active</span></td></tr>` : ""}
+            <!-- LICENSE INFO — ALWAYS SHOWN -->
+            <tr><td style="padding:6px 0;">
+              ${c.license_number
+                ? `<p style="margin:0;font-size:13px;color:#1e293b;background:#f0fdf4;padding:8px 12px;border-radius:8px;border-left:3px solid #059669;">🪪 License: <strong>${c.license_number}</strong>${c.license_expiry ? ` · Exp: <strong>${c.license_expiry}</strong>` : ""} · <span style="color:#059669;font-weight:700;">Active</span></p>`
+                : `<p style="margin:0;font-size:13px;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:8px;border-left:3px solid #f59e0b;">⚠️ License not yet verified — <a href="https://aca-prod.accela.com/LARA/GeneralProperty/PropertyLookUp.aspx?isLicensee=Y" target="_blank" style="color:#0891b2;font-weight:700;text-decoration:underline;">manual LARA lookup recommended</a></p>`
+              }
+            </td></tr>
             ${c.npi_number ? `<tr><td style="padding:4px 0;font-size:13px;color:#7c3aed;">🏥 NPI: <strong>${c.npi_number}</strong>${c.npi_taxonomy ? ` · ${c.npi_taxonomy}` : ""}</td></tr>` : ""}
             ${c.qualifications_summary ? `<tr><td style="padding:8px 0 4px;">
               <p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#f0fdf4;padding:10px 12px;border-radius:8px;border-left:3px solid #059669;"><strong>📋 Qualifications:</strong> ${c.qualifications_summary}</p>
@@ -909,6 +955,9 @@ serve(async (req: Request) => {
       if (sonarData.current_employer) candidate.current_employer = sonarData.current_employer as string;
       if (sonarData.current_title) candidate.current_title = sonarData.current_title as string;
       if (sonarData.years_experience) candidate.years_experience = sonarData.years_experience as number;
+      // Merge license data from Sonar if not already present
+      if (sonarData.license_number && !candidate.license_number) candidate.license_number = sonarData.license_number as string;
+      if (sonarData.license_expiry && !candidate.license_expiry) candidate.license_expiry = sonarData.license_expiry as string;
 
       // Phase 3: PDL Skip-Trace (only if we have LinkedIn or enough identity data)
       let pdlData: Record<string, unknown> = {};
@@ -1165,45 +1214,59 @@ serve(async (req: Request) => {
   const enrichedCount = allScored.filter((c) => c.enrichment_status === "complete").length;
   const ghostLeadsFiltered = allScored.filter((c) => c.availability_score >= 5 && !c.linkedin_url && !c.facebook_url && !c.email && !c.phone && !c.npi_business_phone && !c.pdl_mobile_phone).length;
 
-  const candidateRows = allScored.length
+  // Build founder candidate cards (same card layout as client emails)
+  const founderScoreBg = (s: number) =>
+    s >= 8 ? "#dc2626" : s >= 7 ? "#e8621a" : s >= 5 ? "#f59e0b" : "#94a3b8";
+
+  const founderCandidateCards = allScored.length
     ? allScored
         .sort((a, b) => b.availability_score - a.availability_score)
-        .map(
-          (c, i) => {
-            const rowBg = c.availability_score >= 7 ? "#0a16280a" : i % 2 === 0 ? "#fff" : "#f8fafc";
-            const scoreBgColor = c.availability_score >= 8 ? "#dc2626" : c.availability_score >= 7 ? "#e8621a" : c.availability_score >= 5 ? "#f59e0b" : "#94a3b8";
-            const sourceIcon = c.source === "miosha" ? "🏛️" : "📋";
-            const enrichIcon = c.enrichment_status === "complete" ? "✅" : c.enrichment_status === "pending" ? "⏳" : "❌";
-            const hasAction = c.linkedin_url || c.facebook_url || c.email || c.phone || c.npi_business_phone || c.pdl_mobile_phone;
-            // Build clickable links for founder report
-            const emailLink = c.email ? `<br><a href="mailto:${c.email}" style="font-size:11px;color:#0891b2;font-weight:400;text-decoration:none;">✉️ ${c.email}</a>` : "";
-            const phoneLink = c.phone ? `<br><a href="tel:${c.phone}" style="font-size:11px;color:#e8621a;font-weight:600;text-decoration:none;">📞 ${c.phone}</a>` : "";
-            const linkedinLink = c.linkedin_url ? `<br><a href="${c.linkedin_url}" target="_blank" style="font-size:11px;color:#0a66c2;font-weight:600;text-decoration:none;">🔗 LinkedIn</a>` : "";
-            const facebookLink = c.facebook_url ? `<br><a href="${c.facebook_url}" target="_blank" style="font-size:11px;color:#1877f2;font-weight:600;text-decoration:none;">👤 Facebook</a>` : "";
-            const npiLink = c.npi_number ? `<br><span style="font-size:10px;color:#7c3aed;">🏥 NPI#${c.npi_number}</span>` : "";
-            const pdlLink = c.pdl_mobile_phone ? `<br><a href="tel:${c.pdl_mobile_phone}" style="font-size:10px;color:#ea580c;text-decoration:none;">📱 PDL: ${c.pdl_mobile_phone}</a>` : "";
-            const npiPhoneLink = c.npi_business_phone && c.npi_business_phone !== c.phone ? `<br><a href="tel:${c.npi_business_phone}" style="font-size:10px;color:#0d9488;text-decoration:none;">📞 Biz: ${c.npi_business_phone}</a>` : "";
-            return `<tr style="background:${rowBg};border-bottom:1px solid #e2e8f0;">
-              <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:${c.availability_score >= 7 ? "800" : "500"};">${c.full_name}${emailLink}${phoneLink}${linkedinLink}${facebookLink}${npiLink}${pdlLink}${npiPhoneLink}</td>
-              <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.license_type || "—"}${c.license_number ? `<br><span style="font-size:10px;color:#94a3b8;">#${c.license_number}</span>` : ""}</td>
-              <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.city || "—"}</td>
-              <td style="padding:12px 10px;text-align:center;">
-                <span style="display:inline-block;background:${scoreBgColor};color:#fff;padding:3px 10px;border-radius:12px;font-weight:800;font-size:12px;">${c.availability_score >= 8 ? "🔥 " : ""}${c.availability_score}/10</span>
-              </td>
-              <td style="padding:12px 10px;font-size:11px;color:#64748b;">${sourceIcon} ${c.source}</td>
-              <td style="padding:12px 10px;font-size:11px;color:#64748b;">${enrichIcon} ${c.enrichment_status || "—"}</td>
-              <td style="padding:12px 10px;font-size:11px;color:#475569;">
-                ${c.linkedin_url ? `<a href="${c.linkedin_url}" target="_blank" style="display:inline-block;background:#0a66c2;color:#fff;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;text-decoration:none;margin:2px;">🔗 LI</a>` : ""}
-                ${c.facebook_url ? `<a href="${c.facebook_url}" target="_blank" style="display:inline-block;background:#1877f2;color:#fff;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;text-decoration:none;margin:2px;">👤 FB</a>` : ""}
-                ${c.email ? `<a href="mailto:${c.email}" style="display:inline-block;background:#0891b2;color:#fff;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;text-decoration:none;margin:2px;">✉️</a>` : ""}
-                ${c.phone ? `<a href="tel:${c.phone}" style="display:inline-block;background:#e8621a;color:#fff;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;text-decoration:none;margin:2px;">📞</a>` : ""}
-                ${!hasAction ? "❌ Ghost" : ""}
-              </td>
-            </tr>`;
-          }
-        )
-        .join("")
-    : `<tr><td colspan="7" style="padding:32px;text-align:center;color:#94a3b8;font-size:14px;">No new candidates found today. Scanner ran successfully.</td></tr>`;
+        .map((c) => {
+          const sourceIcon = c.source === "miosha" ? "🏛️ MIOSHA" : "📋 Sonar";
+          const enrichIcon = c.enrichment_status === "complete" ? "✅ Enriched" : c.enrichment_status === "pending" ? "⏳ Pending" : "❌ Failed";
+          const licenseRow = c.license_number
+            ? `<tr><td style="padding:6px 0;"><p style="margin:0;font-size:13px;color:#1e293b;background:#f0fdf4;padding:8px 12px;border-radius:8px;border-left:3px solid #059669;">🪪 License: <strong>${c.license_number}</strong>${c.license_expiry ? ` · Exp: <strong>${c.license_expiry}</strong>` : ""} · <span style="color:#059669;font-weight:700;">Active</span></p></td></tr>`
+            : `<tr><td style="padding:6px 0;"><p style="margin:0;font-size:13px;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:8px;border-left:3px solid #f59e0b;">⚠️ License not yet verified — <a href="https://aca-prod.accela.com/LARA/GeneralProperty/PropertyLookUp.aspx?isLicensee=Y" target="_blank" style="color:#0891b2;font-weight:700;text-decoration:underline;">manual LARA lookup recommended</a></p></td></tr>`;
+
+          return `<tr><td style="padding:0 0 16px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-radius:12px;overflow:hidden;border:1px solid ${c.availability_score >= 7 ? "#e8621a40" : "#e2e8f0"};${c.availability_score >= 7 ? "box-shadow:0 2px 8px rgba(232,98,26,0.12);" : ""}">
+        <tr><td style="background:${c.availability_score >= 7 ? "linear-gradient(135deg,#0a1628,#1e293b)" : "#f8fafc"};padding:14px 18px;">
+          <table width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td>
+              <p style="margin:0;font-size:16px;font-weight:800;color:${c.availability_score >= 7 ? "#fff" : "#1e293b"};letter-spacing:-0.3px;">${c.full_name}</p>
+              <p style="margin:3px 0 0;font-size:11px;color:${c.availability_score >= 7 ? "#94a3b8" : "#64748b"};">${sourceIcon} · ${enrichIcon}</p>
+            </td>
+            <td style="text-align:right;vertical-align:top;">
+              <span style="display:inline-block;background:${founderScoreBg(c.availability_score)};color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:800;letter-spacing:0.5px;">
+                ${c.availability_score >= 8 ? "🔥 " : c.availability_score >= 7 ? "⚡ " : ""}${c.availability_score}/10
+              </span>
+            </td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="padding:16px 18px;background:#fff;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr><td style="padding:0 0 8px;">
+              <table cellpadding="0" cellspacing="0"><tr>
+                <td style="background:#00d4ff18;color:#0891b2;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">${c.license_type || "Field Technician"}</td>
+                <td width="8"></td>
+                <td style="background:#f1f5f9;color:#64748b;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;">📍 ${c.city || "Metro Detroit"}</td>
+                ${c.years_experience ? `<td width="8"></td><td style="background:#10b98118;color:#059669;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">${c.years_experience}+ yrs</td>` : ""}
+                ${c.npi_taxonomy ? `<td width="8"></td><td style="background:#7c3aed18;color:#7c3aed;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">🏥 NPI</td>` : ""}
+              </tr></table>
+            </td></tr>
+            ${c.current_employer ? `<tr><td style="padding:4px 0;font-size:13px;color:#475569;">🏢 <strong>${c.current_employer}</strong>${c.current_title ? ` · ${c.current_title}` : ""}</td></tr>` : ""}
+            ${licenseRow}
+            ${c.npi_number ? `<tr><td style="padding:4px 0;font-size:13px;color:#7c3aed;">🏥 NPI: <strong>${c.npi_number}</strong>${c.npi_taxonomy ? ` · ${c.npi_taxonomy}` : ""}</td></tr>` : ""}
+            ${c.qualifications_summary ? `<tr><td style="padding:8px 0 4px;"><p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#f0fdf4;padding:10px 12px;border-radius:8px;border-left:3px solid #059669;"><strong>📋</strong> ${c.qualifications_summary}</p></td></tr>` : ""}
+            ${c.hiring_recommendation ? `<tr><td style="padding:4px 0;"><p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#eff6ff;padding:10px 12px;border-radius:8px;border-left:3px solid #3b82f6;"><strong>💡</strong> ${c.hiring_recommendation}</p></td></tr>` : ""}
+            ${c.score_reason ? `<tr><td style="padding:4px 0;font-size:11px;color:#94a3b8;font-style:italic;">Score reason: ${c.score_reason}</td></tr>` : ""}
+            ${buildActionButtons(c)}
+          </table>
+        </td></tr>
+      </table>
+    </td></tr>`;
+        }).join("")
+    : `<tr><td style="padding:32px;text-align:center;color:#94a3b8;font-size:14px;">No new candidates found today. Scanner ran successfully.</td></tr>`;
 
   await notifyMatt(
     `${allHotCandidates.length > 0 ? "🔥 " : ""}TechAlert — ${dateStr} — ${newCandidates.length} new${allHotCandidates.length > 0 ? `, ${allHotCandidates.length} HOT` : ""} · ${enrichedCount} enriched · NPI:${npiHits} PDL:${pdlHits}`,
@@ -1272,20 +1335,11 @@ serve(async (req: Request) => {
   </tr></table>
 </td></tr>
 
-<!-- CANDIDATE TABLE -->
+<!-- CANDIDATE CARDS -->
 <tr><td style="background:#fff;padding:24px 20px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
   <p style="margin:0 0 16px;font-size:14px;font-weight:800;color:#1e293b;text-transform:uppercase;letter-spacing:0.5px;">All Candidates · Sorted by Score</p>
-  <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
-    <tr style="background:#0a1628;">
-      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Name</th>
-      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Trade</th>
-      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">City</th>
-      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:center;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Score</th>
-      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Src</th>
-      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Enrich</th>
-      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Actions</th>
-    </tr>
-    ${candidateRows}
+  <table width="100%" cellpadding="0" cellspacing="0">
+    ${founderCandidateCards}
   </table>
 </td></tr>
 

@@ -81,7 +81,7 @@ serve(async (req) => {
     // Fallback: hot candidates from last 48h
     const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
     const { data: hotCandidates } = await sb.from("hire_alert_candidates")
-      .select("id, full_name, city, license_type, availability_score, qualifications_summary, current_employer, alerted_at")
+      .select("id, full_name, city, license_type, license_number, license_expiry, availability_score, qualifications_summary, current_employer, linkedin_url, facebook_url, email, phone, alerted_at")
       .gte("availability_score", 8)
       .gte("alerted_at", cutoff)
       .order("availability_score", { ascending: false })
@@ -92,11 +92,19 @@ serve(async (req) => {
       items: (hotCandidates || []).map((c: any) => ({
         id: c.id,
         company_name: c.current_employer || c.full_name,
+        full_name: c.full_name,
         location: c.city,
         signal_type: "hiring_pattern",
         confidence: c.availability_score,
         recommended_pitch: c.qualifications_summary,
         detected_at: c.alerted_at,
+        license_number: c.license_number || null,
+        license_type: c.license_type || null,
+        license_expiry: c.license_expiry || null,
+        linkedin_url: c.linkedin_url || null,
+        facebook_url: c.facebook_url || null,
+        email: c.email || null,
+        phone: c.phone || null,
       })),
     }), {
       headers: { ...cors, "Content-Type": "application/json" },
