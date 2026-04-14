@@ -302,6 +302,7 @@ export default function AdminHireAlertClients() {
   const [editClient, setEditClient] = useState<HireAlertClient | undefined>();
   const [invoking, setInvoking] = useState(false);
   const [sectorFilter, setSectorFilter] = useState<"all" | "trades" | "healthcare">("all");
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   const load = async () => {
     setLoading(true);
