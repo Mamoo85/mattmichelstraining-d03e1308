@@ -231,10 +231,23 @@ async function scanJobBoards(): Promise<RawCandidate[]> {
   return scanJobBoardsFallback();
 }
 
+// Corporate name filter — reject organizations masquerading as people
+const CORPORATE_PATTERN = /\b(LLC|Inc|Corp|School|Casino|Hospital|Health\s+System|University|Energy|Solutions|Administration|Academy|Institute|Staffing|Group\s+Inc|Services\s+Inc|& Sons|Mechanical|Electric\s+Co|Company|Associates|Enterprises|Foundation|Authority|Board|Commission|Department|District|Center|Clinic|Medical|Nursing\s+Home|Assisted\s+Living|Home\s+Care|Senior\s+Living)\b/i;
+
+function isCorporateName(name: string): boolean {
+  if (!name) return true;
+  if (CORPORATE_PATTERN.test(name)) return true;
+  // All-caps multi-word names are usually orgs
+  if (name === name.toUpperCase() && name.split(/\s+/).length > 3) return true;
+  // If it contains "of" + proper noun pattern (e.g., "Academy of Arts & Sciences")
+  if (/\b(of the|of)\b/i.test(name) && name.split(/\s+/).length > 4) return true;
+  return false;
+}
+
 async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[]> {
   const searches = [
-    "Find current job postings for boiler operators, HVAC technicians, plumbers, pipefitters, and electricians in Metro Detroit Michigan. For each posting, extract: company name, job title, city. Focus on postings from the last 7 days.",
-    "Find licensed HVAC technicians, plumbers, or electricians in Michigan who are actively seeking work or recently posted resumes. Look on Indeed, ZipRecruiter, LinkedIn. Extract: person name or company name, trade, city.",
+    "Find individual people who are licensed boiler operators, HVAC technicians, plumbers, pipefitters, or electricians in Metro Detroit Michigan who are actively looking for work, posted resumes, or are open to new opportunities. Search Indeed resumes, LinkedIn profiles, and ZipRecruiter. For each PERSON found, extract their personal name, trade, and city. Do NOT return company names or employer names — only individual people's names.",
+    "Find individual licensed tradespeople (CNA, LPN, RN, nurse aide, home health aide) in Michigan who recently posted resumes or are seeking new positions. Search Indeed, ZipRecruiter, LinkedIn. Return each PERSON's full name, license type, and city. Never return a school, hospital, or company name as the person's name.",
   ];
 
   const allResults: RawCandidate[] = [];
@@ -253,7 +266,7 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
           messages: [
             {
               role: "system",
-              content: `You are a hiring intelligence researcher. Return ONLY valid JSON array. Each object: { "name": "company or person", "trade": "specific trade title", "city": "city name", "type": "job_posting" or "candidate" }. Max 15 results. No markdown, no explanation.`,
+              content: `You are a hiring intelligence researcher finding INDIVIDUAL PEOPLE seeking work. Return ONLY valid JSON array. Each object: { "name": "person's full name (NEVER a company, school, hospital, or organization name)", "trade": "specific trade title", "city": "city name", "type": "candidate" }. Max 15 results. No markdown, no explanation. CRITICAL: The "name" field MUST be a real human person's first and last name. NEVER put an employer, school, hospital, casino, or any organization name in the "name" field.`,
             },
             { role: "user", content: query },
           ],
@@ -277,6 +290,11 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
 
       for (const item of parsed) {
         if (!item.name || !item.trade) continue;
+        // CORPORATE FILTER: Skip any result that's an organization, not a person
+        if (isCorporateName(item.name)) {
+          console.log(`[hire-alert-scanner] Corporate name filtered: "${item.name}"`);
+          continue;
+        }
         const key = `${item.name.toLowerCase()}-${item.trade.toLowerCase()}`;
         if (seen.has(key)) continue;
         seen.add(key);
@@ -286,7 +304,7 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
           license_type: item.trade,
           city: item.city || "Metro Detroit",
           source: "firecrawl" as const,
-          raw_data: { openrouter_search: true, type: item.type || "job_posting" },
+          raw_data: { openrouter_search: true, type: item.type || "candidate" },
         });
       }
     } catch (e) {
@@ -294,7 +312,7 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
     }
   }
 
-  console.log(`[hire-alert-scanner] OpenRouter web search: found ${allResults.length} candidates`);
+  console.log(`[hire-alert-scanner] OpenRouter web search: found ${allResults.length} candidates (after corporate filter)`);
   return allResults;
 }
 
@@ -944,7 +962,14 @@ serve(async (req: Request) => {
   }
 
   // Upsert all new candidates into DB
-  const allScored = [...enrichBatch, ...pendingBatch];
+  // Filter out any corporate names that slipped through before DB insert
+  const allScored = [...enrichBatch, ...pendingBatch].filter((c) => {
+    if (isCorporateName(c.full_name)) {
+      console.log(`[hire-alert-scanner] Corporate name blocked from DB: "${c.full_name}"`);
+      return false;
+    }
+    return true;
+  });
   if (allScored.length) {
     const { data: insertedRows, error: insertError } = await sb.from("hire_alert_candidates").insert(
       allScored.map((c) => ({
@@ -1150,10 +1175,16 @@ serve(async (req: Request) => {
             const sourceIcon = c.source === "miosha" ? "🏛️" : "📋";
             const enrichIcon = c.enrichment_status === "complete" ? "✅" : c.enrichment_status === "pending" ? "⏳" : "❌";
             const hasAction = c.linkedin_url || c.facebook_url || c.email || c.phone || c.npi_business_phone || c.pdl_mobile_phone;
-            const npiIcon = c.npi_number ? `<br><span style="font-size:10px;color:#7c3aed;">🏥 NPI#${c.npi_number}</span>` : "";
-            const pdlIcon = c.pdl_mobile_phone ? `<br><span style="font-size:10px;color:#ea580c;">📱 PDL: ${c.pdl_mobile_phone}</span>` : "";
+            // Build clickable links for founder report
+            const emailLink = c.email ? `<br><a href="mailto:${c.email}" style="font-size:11px;color:#0891b2;font-weight:400;text-decoration:none;">✉️ ${c.email}</a>` : "";
+            const phoneLink = c.phone ? `<br><a href="tel:${c.phone}" style="font-size:11px;color:#e8621a;font-weight:600;text-decoration:none;">📞 ${c.phone}</a>` : "";
+            const linkedinLink = c.linkedin_url ? `<br><a href="${c.linkedin_url}" target="_blank" style="font-size:11px;color:#0a66c2;font-weight:600;text-decoration:none;">🔗 LinkedIn</a>` : "";
+            const facebookLink = c.facebook_url ? `<br><a href="${c.facebook_url}" target="_blank" style="font-size:11px;color:#1877f2;font-weight:600;text-decoration:none;">👤 Facebook</a>` : "";
+            const npiLink = c.npi_number ? `<br><span style="font-size:10px;color:#7c3aed;">🏥 NPI#${c.npi_number}</span>` : "";
+            const pdlLink = c.pdl_mobile_phone ? `<br><a href="tel:${c.pdl_mobile_phone}" style="font-size:10px;color:#ea580c;text-decoration:none;">📱 PDL: ${c.pdl_mobile_phone}</a>` : "";
+            const npiPhoneLink = c.npi_business_phone && c.npi_business_phone !== c.phone ? `<br><a href="tel:${c.npi_business_phone}" style="font-size:10px;color:#0d9488;text-decoration:none;">📞 Biz: ${c.npi_business_phone}</a>` : "";
             return `<tr style="background:${rowBg};border-bottom:1px solid #e2e8f0;">
-              <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:${c.availability_score >= 7 ? "800" : "500"};">${c.full_name}${c.email ? `<br><span style="font-size:11px;color:#0891b2;font-weight:400;">${c.email}</span>` : ""}${c.phone ? `<br><span style="font-size:11px;color:#e8621a;font-weight:600;">${c.phone}</span>` : ""}${npiIcon}${pdlIcon}</td>
+              <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:${c.availability_score >= 7 ? "800" : "500"};">${c.full_name}${emailLink}${phoneLink}${linkedinLink}${facebookLink}${npiLink}${pdlLink}${npiPhoneLink}</td>
               <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.license_type || "—"}${c.license_number ? `<br><span style="font-size:10px;color:#94a3b8;">#${c.license_number}</span>` : ""}</td>
               <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.city || "—"}</td>
               <td style="padding:12px 10px;text-align:center;">
@@ -1161,7 +1192,13 @@ serve(async (req: Request) => {
               </td>
               <td style="padding:12px 10px;font-size:11px;color:#64748b;">${sourceIcon} ${c.source}</td>
               <td style="padding:12px 10px;font-size:11px;color:#64748b;">${enrichIcon} ${c.enrichment_status || "—"}</td>
-              <td style="padding:12px 10px;font-size:11px;color:#475569;">${hasAction ? "✅ Actionable" : "❌ Ghost"}</td>
+              <td style="padding:12px 10px;font-size:11px;color:#475569;">
+                ${c.linkedin_url ? `<a href="${c.linkedin_url}" target="_blank" style="display:inline-block;background:#0a66c2;color:#fff;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;text-decoration:none;margin:2px;">🔗 LI</a>` : ""}
+                ${c.facebook_url ? `<a href="${c.facebook_url}" target="_blank" style="display:inline-block;background:#1877f2;color:#fff;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;text-decoration:none;margin:2px;">👤 FB</a>` : ""}
+                ${c.email ? `<a href="mailto:${c.email}" style="display:inline-block;background:#0891b2;color:#fff;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;text-decoration:none;margin:2px;">✉️</a>` : ""}
+                ${c.phone ? `<a href="tel:${c.phone}" style="display:inline-block;background:#e8621a;color:#fff;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;text-decoration:none;margin:2px;">📞</a>` : ""}
+                ${!hasAction ? "❌ Ghost" : ""}
+              </td>
             </tr>`;
           }
         )
@@ -1246,7 +1283,7 @@ serve(async (req: Request) => {
       <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:center;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Score</th>
       <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Src</th>
       <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Enrich</th>
-      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Status</th>
+      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Actions</th>
     </tr>
     ${candidateRows}
   </table>
