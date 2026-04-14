@@ -73,6 +73,9 @@ const HIDDEN_PATHS = [
   "/matrix", "/matrix-training", "/matrix-merch",
   "/admin", "/dwa-admin", "/field-service",
   "/my-techalert", "/roi",
+  "/contractor-leads", "/missed-call-text", "/missed-call-catch",
+  "/hire-alert", "/hire-alert-trial", "/hire-alert-healthcare",
+  "/dead-lead-intake", "/lead-unlocked", "/lead-claimed",
 ];
 
 const BottomTabBar = () => {
