@@ -1,174 +1,118 @@
 
 
-# The "Inescapable Ecosystem" Build — 7 Features
+# Intent-Driven Dashboard Overhaul — Build Plan
 
-This is the build that turns DWA from a software product into infrastructure that clients physically cannot leave without losing superpowers. All 7 features ship as edge functions + minimal frontend, maximizing the existing architecture.
+## Scope
 
----
-
-## Feature 1: Lightning Claim (Reply "CLAIM" to SMS)
-**Product**: Contractor Leads (PPL)
-
-When a contractor gets a lead SMS, they reply **CLAIM** and the system instantly charges their saved Stripe card ($50) and texts back the homeowner's phone number. Zero browser, zero login.
-
-**What gets built:**
-- Modify `handle-dead-lead-reply` edge function to detect "CLAIM" keyword from contractor phones (not homeowner phones — new inbound path)
-- New edge function `handle-contractor-sms-reply` — Twilio webhook for contractor inbound SMS
-  - Matches sender phone to `contractor_clients.phone`
-  - "CLAIM" → finds their most recent unclaimed lead → charges `stripe_payment_method_id` → texts back homeowner contact
-  - "PASS" → marks lead as passed, opens to aged lead pool
-- Migration: add `claimed_at`, `claimed_by` to `contractor_leads` table
-- Update `contractor-lead-notify` to include "Reply CLAIM to buy instantly" in SMS
-
-**Database columns needed**: `contractor_leads.claimed_at`, `contractor_leads.claimed_by`
-**Secrets needed**: None (Stripe + Twilio already configured)
+Redesign MyTechAlert.tsx (TechAlert client dashboard), AgencyClientPortal.tsx (contractor client portal), and create a shared Revenue Recovered Ledger component. All wired to real backend data, DWA dark teal palette, TCPA-compliant draft-only outreach.
 
 ---
 
-## Feature 2: Fast-Track Interview (TechAlert)
-**Product**: TechAlert / HireAlert
+## Section 1 — TechAlert Dashboard (MyTechAlert.tsx)
 
-One-tap "Fast-Track Interview" button on the TechAlert client dashboard. Client clicks it → system texts the candidate an interview invite with the client's booking link.
+### 1A. Market Signals Feed (Top Fold)
 
-**What gets built:**
-- Migration: add `booking_link` (text, nullable) to `hire_alert_clients`
-- New edge function `fast-track-interview` — accepts `candidate_id` + `client_id`, sends templated Twilio SMS to candidate with client's booking link/phone
-- Update `get-my-techalert` to return `booking_link` in client data
-- Update MyTechAlert dashboard component to show "Fast-Track Interview" button on each candidate card (only if `booking_link` is set)
-- If no `booking_link` configured, show prompt: "Add your scheduling link in settings to enable Fast-Track"
+Add a new section between the KPI strip and the candidate list that queries `industry_pulse_signals` (confidence >= 7) joined with the client's `target_roles` via industry matching. Fallback: if no signals exist, query `hire_alert_candidates` where score >= 8 and surfaced in last 48h.
 
-**Database columns needed**: `hire_alert_clients.booking_link`
-**Secrets needed**: None
+Each signal card renders:
+- Company name + location
+- Signal type badge (Expansion / Hiring / Cross-Referenced with color coding)
+- `recommended_pitch` text from `industry_pulse_signals`
+- "Draft TechAlert Pitch" button opening the outreach draft modal pre-filled with pitch copy
 
----
+New edge function needed: **`get-techalert-signals`** — accepts `{ token }`, validates client, queries `industry_pulse_signals` filtered by the client's tracked industries, returns top 10 signals. Falls back to hot candidates if no signals exist.
 
-## Feature 3: Recovered Revenue Ledger
-**Product**: Dead Lead Reactivation + cross-platform
+Empty state: "Scanner running. First signals appear within 24h."
 
-A massive green ticker at the top of every client dashboard: **"Total Revenue Recovered by DWA Systems: $14,500"**
+### 1B. Action Buttons (already mostly exist)
 
-**What gets built:**
-- Migration: add `average_ticket_value` (integer, default 500, in dollars) to `contractor_clients`
-- New edge function `get-client-revenue-stats` — calculates total recovered revenue across all products for a given contractor:
-  - Dead leads revived × `average_ticket_value`
-  - Missed calls caught × `average_ticket_value`
-  - Leads delivered × `average_ticket_value`
-- New React component `RevenueRecoveredTicker.tsx` — animated green counter, pulsing dollar sign, placed at top of ROI report page and any client-facing dashboard
-- Update `contractor-roi-report` to include `total_revenue_recovered` in response
+The existing Claim and Draft Outreach buttons are already functional. Changes:
+- Move Claim button to be visible in the collapsed card header (not just expanded view) for score >= 7 candidates
+- Add "Draft TechAlert Pitch" button on signal cards (opens same outreach modal with different context)
+- Ensure all buttons have proper loading spinners + disabled states (already implemented)
 
-**Database columns needed**: `contractor_clients.average_ticket_value`
-**Secrets needed**: None
+### 1C. Claim Race Condition Fix
 
----
+The current `claim-candidate/index.ts` already has the atomic update with `.or('claimed_at.is.null,claim_expires_at.lt.${now}')`. This is functionally correct but uses Supabase JS client syntax. No change needed — the race condition is already handled.
 
-## Feature 4: En-Route Transparency Engine (Google Distance Matrix)
-**Product**: FieldDesk
+### 1D. Email Auto-Claim Link
 
-When a tech clicks "En Route" in FieldDesk, the system calls the **Google Distance Matrix API** to calculate real drive time, then texts the homeowner: *"Your tech John is en route. Estimated arrival: 18 minutes. Track: [link]"*
+Already implemented at lines 103-108 of MyTechAlert.tsx. The `?claim=X&auto=1` params are read on mount and auto-fire `claimCandidate()`. No change needed.
 
-**What gets built:**
-- New edge function `field-service-en-route` — triggered when tech status changes to `en_route`:
-  1. Gets tech's last known GPS from `tech_locations` table
-  2. Gets customer address from `field_service_customers`
-  3. Calls Google Distance Matrix API (`https://maps.googleapis.com/maps/api/distancematrix/json`) with tech coords → customer address
-  4. Sends Twilio SMS to customer with real ETA + tech name + client business name
-  5. Logs to `system_comms_log`
-- Update `TechJobDetail.tsx` `handleStatusChange` — when status becomes `en_route`, fire the edge function with job ID
-- Migration: add `customer_notified_at` to `field_service_jobs` (prevents duplicate notifications)
-- The SMS is white-labeled: comes from client's business name, not DWA
+### 1E. License Lapsed Tier
 
-**Database columns needed**: `field_service_jobs.customer_notified_at`
-**Secrets needed**: None (GOOGLE_MAPS_API_KEY already configured — Distance Matrix uses the same key)
+Already implemented. `isLapsed` check on line 412, amber badge on lines 437-441, warning message on lines 468-475. No change needed.
+
+### 1F. Visual Overhaul
+
+Restyle all cards to use `border-white/5 + bg-gradient-to-br from-[#0a1628] to-[#0d1f2e]`. Update accent CTAs to `#00d4ff`. Confidence badges: emerald-500 (>=8), amber-500 (5-7), slate-500 (<5). The current colors are close but need alignment to the spec.
 
 ---
 
-## Feature 5: Territory Defense Monitor
-**Product**: TechAlert (cross-platform intelligence add-on)
+## Section 2 — Contractor Client Portal (AgencyClientPortal.tsx)
 
-Clients input up to 3 local competitors. DWA's Sonar engine monitors their Google Reviews and license status. If a competitor drops the ball (bad reviews, license lapse), the client gets an alert: *"Competitor X got 2 one-star reviews this week in Dearborn. Deploy aggressive ads now."*
+The contractor portal is at `/agency-portal` → `src/pages/AgencyClientPortal.tsx`. Currently shows tenant_leads with search/pagination. This needs to be enhanced:
 
-**What gets built:**
-- Migration: new `competitor_monitors` table (`id`, `client_id` FK to `contractor_clients` or `hire_alert_clients`, `competitor_name`, `google_business_url`, `license_number`, `last_scanned_at`, `last_review_count`, `last_avg_rating`, `created_at`)
-- Migration: new `competitor_alerts` table (`id`, `monitor_id`, `alert_type` (review_drop / license_issue / new_negative), `details` jsonb, `created_at`)
-- New edge function `competitor-monitor-scan` — weekly cron:
-  1. For each monitor: Sonar query for "[competitor name] Google reviews [city]"
-  2. Detect review count/rating drops vs last scan
-  3. If 2+ negative reviews in a week OR rating drop > 0.3 → insert alert + SMS client
-- Admin UI: "Competitor Watch" section in client dashboard where they can add/remove competitors
-- Fold into existing TechAlert as premium intelligence, not a separate product
+### 2A. High-Intent Radar
 
-**Database tables needed**: `competitor_monitors`, `competitor_alerts`
-**Secrets needed**: None (Sonar uses LOVABLE_API_KEY, already configured)
+Query `contractor_leads` where `status = 'available'` and `created_at > now() - 24h`, filtered by the contractor's trade/city. Also query `contractor_lead_views` for this contractor to surface FOMO signals (leads they tried to buy but were already sold).
 
----
+New edge function needed: **`get-contractor-signals`** — accepts auth token (RLS-based, since this portal uses Supabase auth), returns available leads + missed lead count.
 
-## Feature 6: Referral Multiplier (Your Addition)
-**Product**: Cross-platform
+### 2B. Action Buttons
 
-48 hours after a job is marked "completed" in FieldDesk, auto-text the homeowner: *"Thanks for choosing [Business Name]! Know someone who needs [trade] work? Reply their name and number and we'll give them $25 off."*
+- "Claim Lead" button linking to existing contractor lead purchase flow
+- FOMO card for locked leads: "Locked by competitor — upgrade to territory lock for $399/mo" with CTA to `/contractor-leads`
+- No direct SMS buttons — leads delivered via existing cron
 
-**What gets built:**
-- New edge function `post-job-referral` — daily cron scans `field_service_jobs` for `completed_at` between 44-52 hours ago (one-shot window):
-  1. Gets customer phone from `field_service_customers`
-  2. Sends referral ask SMS (white-labeled from client business)
-  3. Marks job `referral_asked_at` to prevent duplicates
-- New inbound handler in `handle-dead-lead-reply` or new function `handle-referral-reply` — if someone texts back a name+number, creates a new lead in `contractor_leads` tagged `source = 'referral'`
-- Migration: add `referral_asked_at` to `field_service_jobs`
+### 2C. Visual Overhaul
 
-**Database columns needed**: `field_service_jobs.referral_asked_at`
-**Secrets needed**: None
+Same DWA dark teal palette. Replace the current inline `style={}` approach with Tailwind classes matching the spec.
 
 ---
 
-## Feature 7: Monthly Proof Email (Your Addition)
-**Product**: Cross-platform retention
+## Section 3 — Revenue Recovered Ledger
 
-First of every month, every active client gets a premium HTML email: *"Your DWA Performance Report — March 2026"* showing leads delivered, calls caught, dead leads revived, revenue recovered, candidates surfaced.
+### Existing Component
 
-**What gets built:**
-- New edge function `monthly-proof-email` — cron 1st of month 9am ET:
-  1. For each active client across all product tables (`contractor_clients`, `hire_alert_clients`, `field_crm_clients`, `missed_call_clients`)
-  2. Query last 30 days of activity across all their subscribed products
-  3. Generate premium dark-branded HTML email with stat cards
-  4. Send via Resend from `matt@detroitwebagent.com`
-  5. Include the revenue recovered ticker number prominently
-- No frontend needed — email only
+`src/components/shared/RevenueRecoveredTicker.tsx` already exists with animated counter + `get-client-revenue-stats` edge function integration. Per spec: **no animated counter** — change to static number with sparkline.
 
-**Database needed**: None (reads existing tables)
-**Secrets needed**: None
+### New Component: `RevenueRecoveredLedger.tsx`
+
+Rendered in nav/header area of both dashboards. Uses the existing `get-client-revenue-stats` edge function but with new parameters:
+- TechAlert: sum `hire_alert_client_candidates.client_action = 'hired'` x $8,000
+- Contractor: sum `dead_lead_charges.amount` for this contractor
+
+New edge function: **`client-revenue-recovered`** — accepts `{ token, client_type }`, returns `{ total_recovered_cents, period: '90d' }`.
+
+Hidden entirely if $0. No animation. Static formatted number. React Query with 5-min staleTime.
 
 ---
 
-## Build Order (Recommended)
+## Files Changed
 
-1. **Lightning Claim** — highest revenue impact, simplest build
-2. **En-Route Transparency** — uses your new Distance Matrix API, most impressive demo feature
-3. **Fast-Track Interview** — quick build, high retention for TechAlert
-4. **Recovered Revenue Ledger** — psychological lockdown, moderate build
-5. **Monthly Proof Email** — pure retention, no frontend
-6. **Referral Multiplier** — lead generation flywheel
-7. **Territory Defense** — most complex, highest long-term moat
+| File | Action |
+|------|--------|
+| `src/pages/MyTechAlert.tsx` | Add Market Signals section, restyle cards to DWA palette |
+| `src/pages/AgencyClientPortal.tsx` | Add High-Intent Radar, FOMO cards, restyle to DWA palette |
+| `src/components/RevenueRecoveredLedger.tsx` | NEW — static revenue ledger for nav |
+| `supabase/functions/get-techalert-signals/index.ts` | NEW — token-gated signal feed |
+| `supabase/functions/client-revenue-recovered/index.ts` | NEW — 90-day revenue sum |
+| `supabase/config.toml` | Add `verify_jwt = false` for 2 new functions |
 
-## Migration Summary
+## Edge Functions (2 new)
 
-One migration file covers all schema changes:
-- `contractor_leads`: +`claimed_at`, +`claimed_by`
-- `hire_alert_clients`: +`booking_link`
-- `contractor_clients`: +`average_ticket_value` (default 500)
-- `field_service_jobs`: +`customer_notified_at`, +`referral_asked_at`
-- New table: `competitor_monitors`
-- New table: `competitor_alerts`
-- Cron entries for `competitor-monitor-scan` (weekly), `post-job-referral` (daily), `monthly-proof-email` (monthly 1st)
+1. **`get-techalert-signals`** — validates dashboard_token, queries industry_pulse_signals by client's industries, falls back to hot candidates. Returns max 10 signals.
 
-## New Edge Functions (6 total)
-1. `handle-contractor-sms-reply` — Lightning Claim
-2. `fast-track-interview` — TechAlert
-3. `get-client-revenue-stats` — Revenue Ledger
-4. `field-service-en-route` — En-Route with Distance Matrix
-5. `post-job-referral` — Referral Multiplier
-6. `monthly-proof-email` — Proof Email
+2. **`client-revenue-recovered`** — validates token (dashboard_token for TechAlert, roi_token for contractor), sums hired placements x $8,000 for TechAlert clients, sums dead_lead_charges for contractor clients. Returns `{ total_recovered_cents, period }`.
 
-`competitor-monitor-scan` makes 7 total.
+## No New Tables or Migrations
 
-No new secrets required. Zero new third-party dependencies.
+All data sources already exist: `industry_pulse_signals`, `hire_alert_client_candidates`, `contractor_leads`, `contractor_lead_views`, `dead_lead_charges`.
+
+## Build Sequence
+
+1. Wave A: MyTechAlert.tsx + get-techalert-signals (highest impact)
+2. Wave B: RevenueRecoveredLedger + client-revenue-recovered (shared infra)
+3. Wave C: AgencyClientPortal.tsx redesign (depends on Wave B)
 
