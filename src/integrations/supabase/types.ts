@@ -4337,8 +4337,10 @@ export type Database = {
           city: string | null
           client_id: string | null
           created_at: string | null
+          cross_referenced: boolean | null
           current_employer: string | null
           current_title: string | null
+          data_completeness: number | null
           email: string | null
           enriched_at: string | null
           enrichment_status: string | null
@@ -4373,8 +4375,10 @@ export type Database = {
           city?: string | null
           client_id?: string | null
           created_at?: string | null
+          cross_referenced?: boolean | null
           current_employer?: string | null
           current_title?: string | null
+          data_completeness?: number | null
           email?: string | null
           enriched_at?: string | null
           enrichment_status?: string | null
@@ -4409,8 +4413,10 @@ export type Database = {
           city?: string | null
           client_id?: string | null
           created_at?: string | null
+          cross_referenced?: boolean | null
           current_employer?: string | null
           current_title?: string | null
+          data_completeness?: number | null
           email?: string | null
           enriched_at?: string | null
           enrichment_status?: string | null
