@@ -100,7 +100,8 @@ async function enrichViaNPI(candidate: RawCandidate): Promise<Record<string, unk
   const lastName = nameParts[nameParts.length - 1];
 
   try {
-    const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}&state=MI&enumeration_type=NPI-1&limit=3`;
+    // Search ALL states — NLC compact nurses from 41+ states can legally work in Michigan
+    const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}&enumeration_type=NPI-1&limit=5`;
     const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
     if (!res.ok) {
       console.warn(`[hire-alert-scanner] NPI HTTP ${res.status} for ${candidate.full_name}`);
@@ -208,6 +209,10 @@ const BPL_QUERIES = [
   {
     query: `Search the Michigan LARA licensing records and Michigan Nurse Aide Registry for individual people who recently became Certified Nursing Assistants (CNA) in Michigan. Find their full personal name, certification number, certification date, and city. Focus on new certifications in the last 90 days.`,
     label: "CNA",
+  },
+  {
+    query: `Search the Nursys.com nurse license verification database and state nursing board records for Registered Nurses (RN) and Licensed Practical Nurses (LPN) who hold multi-state compact licenses from NLC (Nurse Licensure Compact) states and are practicing or available in the Michigan / Metro Detroit area. Focus on nurses from Ohio, Indiana, Illinois, Wisconsin, Florida, Texas, Arizona, Georgia, Tennessee, Kentucky, and other compact states. Find their full personal name, license number, compact state of licensure, and any Michigan practice location.`,
+    label: "NLC Compact RN/LPN",
   },
 ];
 
