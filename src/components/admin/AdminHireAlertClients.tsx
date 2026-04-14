@@ -550,6 +550,11 @@ export default function AdminHireAlertClients() {
           <Button size="sm" onClick={() => setShowAdd(true)} className="bg-orange-500 hover:bg-orange-600 text-white">
             <Plus size={13} className="mr-1" /> Add Client
           </Button>
+          <Button size="sm" onClick={generateDemoPDF} disabled={generatingPDF}
+            className="text-white" style={{ background: "#00d4ff", opacity: generatingPDF ? 0.7 : 1 }}>
+            {generatingPDF ? <Loader2 size={13} className="mr-1 animate-spin" /> : <FileText size={13} className="mr-1" />}
+            {generatingPDF ? "Generating..." : "📄 Generate Demo PDF"}
+          </Button>
         </div>
         {/* Sector filter */}
         <div className="flex items-center gap-1 ml-auto">
