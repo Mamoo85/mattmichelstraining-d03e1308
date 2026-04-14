@@ -1175,8 +1175,6 @@ serve(async (req: Request) => {
             const sourceIcon = c.source === "miosha" ? "🏛️" : "📋";
             const enrichIcon = c.enrichment_status === "complete" ? "✅" : c.enrichment_status === "pending" ? "⏳" : "❌";
             const hasAction = c.linkedin_url || c.facebook_url || c.email || c.phone || c.npi_business_phone || c.pdl_mobile_phone;
-            const npiIcon = c.npi_number ? `<br><span style="font-size:10px;color:#7c3aed;">🏥 NPI#${c.npi_number}</span>` : "";
-            const pdlIcon = c.pdl_mobile_phone ? `<br><span style="font-size:10px;color:#ea580c;">📱 PDL: ${c.pdl_mobile_phone}</span>` : "";
             // Build clickable links for founder report
             const emailLink = c.email ? `<br><a href="mailto:${c.email}" style="font-size:11px;color:#0891b2;font-weight:400;text-decoration:none;">✉️ ${c.email}</a>` : "";
             const phoneLink = c.phone ? `<br><a href="tel:${c.phone}" style="font-size:11px;color:#e8621a;font-weight:600;text-decoration:none;">📞 ${c.phone}</a>` : "";
