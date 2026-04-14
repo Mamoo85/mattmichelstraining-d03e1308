@@ -1,8 +1,7 @@
-// miosha-license-scraper — Michigan LARA license data
-// THREE data sources:
-// 1. Michigan LARA Accela portal — ASP.NET session-based license search
-// 2. Sonar web search — finds tradespeople from public profiles, job boards, LinkedIn
-// 3. Lovable AI Gateway (Gemini) — cross-references and validates
+// miosha-license-scraper — Michigan trade candidate data
+// TWO data sources:
+// 1. Apollo.io People Search — finds tradespeople by title + location
+// 2. Sonar web search — finds tradespeople from LinkedIn, Indeed, union directories
 //
 // VALIDATION RULES:
 // - Reject candidates with no license number AND no verifiable city
@@ -16,6 +15,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 interface LicenseCandidate {
@@ -42,7 +42,6 @@ function isPersonName(name: string): boolean {
   if (words.length < 2) return false;
   if (COMPANY_SIGNALS.some((s) => lower.includes(s))) return false;
   if (name === name.toUpperCase() && name.length > 8) return false;
-  // Reject if contains "&" (usually a business: "Smith & Sons")
   if (name.includes("&")) return false;
   return true;
 }
@@ -54,242 +53,103 @@ function looksLikeLicenseNumber(num: string): boolean {
   return true;
 }
 
-// ===== SOURCE 1: Michigan LARA Accela Portal (Session-Based) =====
-// The portal is an ASP.NET WebForms app. We:
-// 1. GET the search page to obtain cookies + __VIEWSTATE
-// 2. POST the search form with the trade type
-// 3. Parse the HTML table results
+// ===== SOURCE 1: Apollo.io People Search =====
+// Searches for tradespeople by job title in Michigan
 
-const LARA_BASE = "https://aca-prod.accela.com/LARA";
-const LARA_SEARCH_URL = `${LARA_BASE}/GeneralProperty/PropertyLookUp.aspx?isLicensee=Y`;
-
-interface LaraSession {
-  cookies: string;
-  viewState: string;
-  viewStateGenerator: string;
-  eventValidation: string;
-}
-
-async function getLaraSession(): Promise<LaraSession | null> {
-  try {
-    const res = await fetch(LARA_SEARCH_URL, {
-      method: "GET",
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Accept": "text/html,application/xhtml+xml",
-      },
-      signal: AbortSignal.timeout(15_000),
-    });
-
-    if (!res.ok) {
-      console.warn(`[miosha-scraper] LARA session GET failed: ${res.status}`);
-      return null;
-    }
-
-    // Extract Set-Cookie headers
-    const setCookies = res.headers.getSetCookie?.() || [];
-    const cookieStr = setCookies.map((c: string) => c.split(";")[0]).join("; ");
-
-    const html = await res.text();
-
-    // Extract ASP.NET hidden fields
-    const vsMatch = html.match(/id="__VIEWSTATE"\s+value="([^"]*)"/);
-    const vsgMatch = html.match(/id="__VIEWSTATEGENERATOR"\s+value="([^"]*)"/);
-    const evMatch = html.match(/id="__EVENTVALIDATION"\s+value="([^"]*)"/);
-
-    if (!vsMatch) {
-      console.warn("[miosha-scraper] Could not extract __VIEWSTATE from LARA page");
-      return null;
-    }
-
-    return {
-      cookies: cookieStr,
-      viewState: vsMatch[1],
-      viewStateGenerator: vsgMatch?.[1] || "",
-      eventValidation: evMatch?.[1] || "",
-    };
-  } catch (e) {
-    console.warn(`[miosha-scraper] LARA session error:`, e instanceof Error ? e.message : String(e));
-    return null;
-  }
-}
-
-const LARA_TRADE_SEARCHES = [
-  { searchText: "boiler", label: "Boiler Operator" },
-  { searchText: "mechanical", label: "HVAC Technician" },
-  { searchText: "plumb", label: "Plumber" },
-  { searchText: "electri", label: "Electrician" },
+const APOLLO_TRADE_SEARCHES = [
+  { title: "boiler operator", label: "Boiler Operator" },
+  { title: "HVAC technician", label: "HVAC Technician" },
+  { title: "master plumber", label: "Plumber" },
+  { title: "journeyman electrician", label: "Electrician" },
+  { title: "certified nursing assistant", label: "CNA" },
+  { title: "licensed practical nurse", label: "RN/LPN" },
 ];
 
-async function searchLaraPortal(session: LaraSession, searchText: string, label: string): Promise<LicenseCandidate[]> {
-  try {
-    // Build the ASP.NET form POST body
-    const formData = new URLSearchParams();
-    formData.set("__VIEWSTATE", session.viewState);
-    if (session.viewStateGenerator) formData.set("__VIEWSTATEGENERATOR", session.viewStateGenerator);
-    if (session.eventValidation) formData.set("__EVENTVALIDATION", session.eventValidation);
-    // Search by license type/business name field
-    formData.set("ctl00$PlaceHolderMain$generalSearchForm$txtGSBusinessName", searchText);
-    formData.set("ctl00$PlaceHolderMain$generalSearchForm$txtGSState", "MI");
-    formData.set("ctl00$PlaceHolderMain$btnNewSearch", "Search");
+async function searchViaApollo(tradeTitle: string, label: string): Promise<LicenseCandidate[]> {
+  if (!APOLLO_API_KEY) {
+    console.warn("[miosha-scraper] No APOLLO_API_KEY — skipping Apollo search");
+    return [];
+  }
 
-    const res = await fetch(LARA_SEARCH_URL, {
+  try {
+    const res = await fetch("https://api.apollo.io/api/v1/mixed_people/search", {
       method: "POST",
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Cookie": session.cookies,
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Referer": LARA_SEARCH_URL,
-        "Accept": "text/html,application/xhtml+xml",
+        "X-Api-Key": APOLLO_API_KEY,
+        "Content-Type": "application/json",
       },
-      body: formData.toString(),
+      body: JSON.stringify({
+        person_titles: [tradeTitle],
+        person_locations: ["Michigan"],
+        page: 1,
+        per_page: 25,
+      }),
       signal: AbortSignal.timeout(20_000),
     });
 
     if (!res.ok) {
-      console.warn(`[miosha-scraper] LARA search POST HTTP ${res.status} for ${label}`);
+      const errText = await res.text();
+      console.warn(`[miosha-scraper] Apollo HTTP ${res.status} for ${label}: ${errText.slice(0, 200)}`);
       return [];
     }
 
-    const html = await res.text();
+    const data = await res.json();
+    const people = data?.people || [];
+    console.log(`[miosha-scraper] Apollo raw results for ${label}: ${people.length}`);
 
-    // Parse HTML table results - look for license data in the response
-    // The Accela portal renders results in a table with specific CSS classes
     const candidates: LicenseCandidate[] = [];
+    for (const person of people) {
+      const name = person.name || `${person.first_name || ""} ${person.last_name || ""}`.trim();
+      if (!name || !isPersonName(name)) {
+        console.log(`[miosha-scraper] Apollo: rejected "${name}" — not a person name`);
+        continue;
+      }
 
-    // Pattern 1: Try to find table rows with license data
-    // Accela renders results like: <td>Name</td><td>License#</td><td>Type</td><td>Status</td><td>City</td>
-    const rowPattern = /<tr[^>]*class="[^"]*ACA_TabRow[^"]*"[^>]*>([\s\S]*?)<\/tr>/gi;
-    let match;
-    while ((match = rowPattern.exec(html)) !== null) {
-      const rowHtml = match[1];
-      const cells = [...rowHtml.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(
-        (m) => m[1].replace(/<[^>]+>/g, "").trim()
-      );
-
-      if (cells.length < 3) continue;
-
-      // Try to identify name, license number, city from cells
-      const possibleName = cells[0] || cells[1] || "";
-      const possibleLicNum = cells.find((c) => looksLikeLicenseNumber(c)) || "";
-      const possibleCity = cells.find((c) =>
-        c.length > 2 && c.length < 30 && !looksLikeLicenseNumber(c) &&
-        c !== possibleName && /^[A-Za-z\s]+$/.test(c)
-      ) || null;
-
-      if (!isPersonName(possibleName)) continue;
+      const city = person.city || person.state || null;
 
       candidates.push({
-        full_name: possibleName,
+        full_name: name,
         license_type: label,
-        license_number: looksLikeLicenseNumber(possibleLicNum) ? possibleLicNum : null,
+        license_number: null,
         license_expiry: null,
-        city: possibleCity,
+        city: city,
         source: "miosha" as const,
       });
     }
 
-    // Pattern 2: If no table rows found, try to use Gemini to extract from HTML
-    if (candidates.length === 0 && html.length > 5000) {
-      // The page loaded but we couldn't parse the table — try AI extraction
-      const truncatedHtml = html.slice(0, 15000);
-      const hasResultsIndicator = truncatedHtml.includes("ACA_TabRow") ||
-        truncatedHtml.includes("GridViewRow") ||
-        truncatedHtml.includes("resultCount");
-
-      if (hasResultsIndicator) {
-        console.log(`[miosha-scraper] LARA ${label}: results HTML detected but couldn't parse table, trying AI extraction`);
-        const aiCandidates = await extractCandidatesViaGemini(truncatedHtml, label);
-        candidates.push(...aiCandidates);
-      }
-    }
-
-    console.log(`[miosha-scraper] LARA portal: ${label} → ${candidates.length} valid people`);
+    console.log(`[miosha-scraper] Apollo ${label}: ${people.length} raw → ${candidates.length} validated`);
     return candidates;
   } catch (e) {
-    console.warn(`[miosha-scraper] LARA search error for ${label}:`, e instanceof Error ? e.message : String(e));
+    console.warn(`[miosha-scraper] Apollo error for ${label}:`, e instanceof Error ? e.message : String(e));
     return [];
   }
 }
 
-async function extractCandidatesViaGemini(html: string, label: string): Promise<LicenseCandidate[]> {
-  if (!LOVABLE_API_KEY) return [];
-  try {
-    const res = await fetch(GATEWAY_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        max_tokens: 2000,
-        messages: [
-          {
-            role: "system",
-            content: `Extract licensed professionals from this Michigan LARA search results HTML. Return ONLY a JSON array of objects: [{"full_name":"First Last","license_number":"XXX","city":"City"}]. Rules: Only include real individual people (not companies). Skip any entry without a clear person name. Max 20 results. No markdown, no explanation.`,
-          },
-          { role: "user", content: `Extract ${label} licensees from this HTML:\n\n${html.slice(0, 12000)}` },
-        ],
-      }),
-      signal: AbortSignal.timeout(15_000),
-    });
-
-    if (!res.ok) return [];
-    const data = await res.json();
-    const text = data?.choices?.[0]?.message?.content || "";
-    const jsonMatch = text.match(/\[[\s\S]*?\]/);
-    if (!jsonMatch) return [];
-
-    const parsed = JSON.parse(jsonMatch[0]) as Array<{
-      full_name: string;
-      license_number?: string;
-      city?: string;
-    }>;
-
-    return parsed
-      .filter((r) => r.full_name && isPersonName(r.full_name))
-      .map((r) => ({
-        full_name: r.full_name,
-        license_type: label,
-        license_number: r.license_number && looksLikeLicenseNumber(r.license_number) ? r.license_number : null,
-        license_expiry: null,
-        city: r.city && r.city.length > 2 ? r.city : null,
-        source: "miosha" as const,
-      }));
-  } catch {
-    return [];
-  }
-}
-
-// ===== SOURCE 2: Sonar Web Search (Live Web — Finds People Seeking Work) =====
-// Instead of trying to query the LARA database (which requires a portal session),
-// Sonar searches the OPEN WEB for licensed tradespeople who are publicly visible:
-// LinkedIn profiles, Indeed resumes, job board postings, union directories
+// ===== SOURCE 2: Sonar Web Search (Live Web — Finds People on Public Profiles) =====
 
 const SONAR_QUERIES = [
   {
-    query: `Find licensed boiler operators in Michigan who are currently seeking work or recently changed jobs. Search LinkedIn "open to work" profiles, Indeed resumes, ZipRecruiter profiles. Focus on Metro Detroit, Wayne County, Oakland County, Macomb County. Return real individual people with full names, NOT companies. Include any Michigan boiler license numbers visible on their profiles.`,
+    query: `Find LinkedIn profiles, personal websites, or trade union member pages for individual licensed boiler operators in Metro Detroit Michigan who are actively job seeking or open to work. Search LinkedIn "open to work" profiles, Indeed public resumes, UA Local 636 directory. Return real individual people with full names, NOT companies. Include any Michigan boiler license numbers visible on their profiles.`,
     label: "Boiler Operator",
   },
   {
-    query: `Find licensed HVAC technicians and mechanical contractors in Michigan who recently posted resumes or are seeking new positions. Search Indeed, LinkedIn, ZipRecruiter. Include any LARA or EPA license numbers visible on their profiles. Metro Detroit area. Individual people only.`,
+    query: `Find LinkedIn profiles, Indeed public resumes, or professional association listings for individual licensed HVAC technicians and mechanical contractors in Metro Detroit Michigan who are open to work or recently posted resumes. Include any LARA or EPA license numbers visible on their profiles. Individual people only.`,
     label: "HVAC Technician",
   },
   {
-    query: `Find licensed plumbers or master plumbers in Michigan who posted resumes or are actively job seeking. Check Indeed resumes, LinkedIn profiles with "open to work", ZipRecruiter. Metro Detroit, Wayne, Oakland, Macomb counties. Return person names and any license numbers from their profiles.`,
+    query: `Find LinkedIn profiles, Indeed public resumes, or trade association directories for individual licensed plumbers or master plumbers in Metro Detroit Michigan who are open to work or actively job seeking. Wayne, Oakland, Macomb counties. Return person names and any license numbers from their profiles.`,
     label: "Plumber",
   },
   {
-    query: `Find licensed electricians or journeyman electricians in Michigan who are seeking work or recently became available. Search Indeed, LinkedIn open-to-work, ZipRecruiter. Metro Detroit area. Individual people names only, not companies. Include license numbers if visible on profiles.`,
+    query: `Find LinkedIn profiles, Indeed public resumes, or IBEW Local 58 member pages for individual licensed electricians or journeyman electricians in Metro Detroit Michigan who are open to work or seeking new positions. Individual people names only, not companies. Include license numbers if visible on profiles.`,
     label: "Electrician",
   },
   {
-    query: `Find Certified Nursing Assistants (CNA) in Michigan who are seeking new positions or recently posted resumes. Search Indeed, LinkedIn, care.com, nursingjobs.com for Metro Detroit area. Include any certification numbers visible on profiles. Individual people only.`,
+    query: `Find LinkedIn profiles, Indeed public resumes, or care.com profiles for individual Certified Nursing Assistants (CNA) in Metro Detroit Michigan who are seeking new positions or open to work. Include any certification numbers visible on profiles. Individual people only.`,
     label: "CNA",
   },
   {
-    query: `Find registered nurses (RN) and licensed practical nurses (LPN) in Michigan Metro Detroit area who are open to new opportunities or recently posted resumes. Search LinkedIn, Indeed, NurseFly, Vivian Health. Include any Michigan nursing license numbers visible. Individual names only.`,
+    query: `Find LinkedIn profiles, Indeed public resumes, or NurseFly/Vivian Health profiles for individual registered nurses (RN) and licensed practical nurses (LPN) in Metro Detroit Michigan who are open to new opportunities. Include any Michigan nursing license numbers visible. Individual names only.`,
     label: "RN/LPN",
   },
 ];
@@ -317,7 +177,7 @@ async function searchViaSonar(query: string, label: string): Promise<LicenseCand
 CRITICAL RULES:
 1. Return ONLY individual people — NEVER company names, LLC, Inc, contractors, organizations
 2. Each result MUST have: a real person's full name (First Last) AND at least one of: license number, specific Michigan city, or current employer
-3. Search job boards (Indeed, ZipRecruiter, LinkedIn) for people with public resumes or "open to work" status
+3. Search LinkedIn "open to work" profiles, Indeed public resumes, trade union directories, and professional association listings
 4. If you find real people but can't verify license numbers, still include them with city
 5. Do NOT fabricate names or license numbers — only include what you actually find in search results
 
@@ -340,13 +200,10 @@ Return ONLY valid JSON array. Each object: { "full_name": "First Last", "license
     const data = await res.json();
     const text = data?.choices?.[0]?.message?.content || "";
 
-    // Log raw response for debugging
     console.log(`[miosha-scraper] Sonar raw response for ${label} (${text.length} chars): ${text.slice(0, 300)}`);
 
-    // Try to extract JSON array
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
-      // Sonar sometimes returns prose instead of JSON — try to extract with Gemini
       console.log(`[miosha-scraper] Sonar ${label}: no JSON array found, trying Gemini extraction`);
       if (text.length > 50 && LOVABLE_API_KEY) {
         return extractNamesFromProse(text, label);
@@ -379,7 +236,6 @@ Return ONLY valid JSON array. Each object: { "full_name": "First Last", "license
       const hasLicNum = r.license_number && looksLikeLicenseNumber(String(r.license_number));
       const hasCity = r.city && r.city.toLowerCase() !== "michigan" && r.city.length > 2;
       const hasEmployer = r.current_employer && r.current_employer.length > 2;
-      // Accept if has license number, specific city, OR employer
       if (!hasLicNum && !hasCity && !hasEmployer) {
         console.log(`[miosha-scraper] Rejected "${r.full_name}" — no license, city, or employer`);
         continue;
@@ -510,28 +366,32 @@ serve(async (req) => {
   let updatedCount = 0;
   let errorCount = 0;
 
-  // ===== PHASE 1: LARA Accela Portal (Session-Based) =====
-  console.log("[miosha-scraper] Phase 1: LARA portal session-based search");
-  const session = await getLaraSession();
-  if (session) {
-    console.log("[miosha-scraper] LARA session acquired, searching trades...");
-    for (const trade of LARA_TRADE_SEARCHES) {
-      const candidates = await searchLaraPortal(session, trade.searchText, trade.label);
-      for (const c of candidates) {
-        const result = await upsertCandidate(sb, c);
-        if (result === "new") newCount++;
-        else if (result === "updated") updatedCount++;
-        else errorCount++;
+  // ===== PHASE 1: Apollo.io People Search =====
+  console.log("[miosha-scraper] Phase 1: Apollo.io people search");
+  if (APOLLO_API_KEY) {
+    const apolloResults = await Promise.allSettled(
+      APOLLO_TRADE_SEARCHES.map(({ title, label }) => searchViaApollo(title, label))
+    );
+
+    for (const result of apolloResults) {
+      if (result.status === "fulfilled") {
+        for (const c of result.value) {
+          const res = await upsertCandidate(sb, c);
+          if (res === "new") newCount++;
+          else if (res === "updated") updatedCount++;
+          else errorCount++;
+        }
+      } else {
+        console.warn("[miosha-scraper] Apollo search failed:", result.reason);
       }
     }
   } else {
-    console.warn("[miosha-scraper] LARA session failed — skipping portal search");
+    console.warn("[miosha-scraper] No APOLLO_API_KEY — skipping Phase 1");
   }
 
   console.log(`[miosha-scraper] Phase 1 done: new=${newCount} updated=${updatedCount}. Phase 2: Sonar web search`);
 
   // ===== PHASE 2: Sonar Web Search (Parallel) =====
-  // Search for tradespeople with public profiles, resumes, "open to work" status
   const sonarResults = await Promise.allSettled(
     SONAR_QUERIES.map(({ query, label }) => searchViaSonar(query, label))
   );
