@@ -471,7 +471,54 @@ function mapTitleToLicenseType(title: string): string {
   return "Trade Professional";
 }
 
-// ===== SOURCE 8: Sonar Web Search (LinkedIn open-to-work, union spotlights) =====
+// ===== SOURCE 9: Craigslist Skilled Trades (Metro Detroit — free, high-intent) =====
+async function scanCraigslist(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) {
+    console.warn("[S9:Craigslist] No FIRECRAWL_API_KEY — skipping");
+    return [];
+  }
+
+  const candidates: LicenseCandidate[] = [];
+  const searches = [
+    { q: "boiler+operator", trade: "Boiler Operator" },
+    { q: "licensed+plumber", trade: "Plumber" },
+    { q: "hvac+technician", trade: "HVAC Technician" },
+    { q: "electrician+licensed", trade: "Electrician" },
+  ];
+
+  for (const { q, trade } of searches) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: `https://detroit.craigslist.org/search/trd?query=${q}`,
+          formats: ["markdown"],
+          waitFor: 3000,
+        }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) {
+        console.warn(`[S9:Craigslist] HTTP ${res.status} for ${trade}`);
+        continue;
+      }
+      const data = await res.json();
+      const markdown = data?.data?.markdown || data?.markdown || "";
+      if (!markdown || markdown.length < 50) continue;
+
+      const extracted = await extractNamesFromMarkdown(markdown, trade);
+      candidates.push(...extracted);
+      console.log(`[S9:Craigslist] ${trade} → ${extracted.length} names`);
+    } catch (e) {
+      console.warn(`[S9:Craigslist] Error for ${trade}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
+  console.log(`[S9:Craigslist] Total: ${candidates.length} high-intent candidates`);
+  return candidates;
+}
+
+// ===== SOURCE 8: Sonar Web Search (LinkedIn open-to-work, union spotlights, apprenticeship completions) =====
 const SONAR_QUERIES = [
   {
     query: `Find individual licensed boiler operators or stationary engineers in Metro Detroit Michigan with public LinkedIn profiles showing "open to work" OR who are listed on UA Local 636 member pages OR mentioned in Michigan Building Tradesman newspaper articles. Search LinkedIn, Manta, YellowPages contractor listings, and trade association member pages. Return only individual people (first + last name) with their city. Max 10 results.`,
@@ -488,6 +535,10 @@ const SONAR_QUERIES = [
   {
     query: `Search LinkedIn for electricians in Michigan with "open to work" status or who recently updated their profile. Also search IBEW Local 58 member spotlights, news articles, and Michigan electrical apprenticeship completion announcements. Include anyone who mentions Michigan journeyman or master electrician license. Return name and city only. Max 10 results.`,
     label: "Electrician",
+  },
+  {
+    query: `Find people who recently completed registered apprenticeships in Michigan for electrical, plumbing, HVAC, pipefitting, or boiler operation. Search: Henry Ford College skilled trades program graduation lists, Macomb Community College HVAC/electrical program completions, Michigan Joint Apprenticeship Committee (JAC) completion ceremony announcements, UA Local 98 apprenticeship graduates, IBEW Local 58 new journeymen announcements, Michigan Building Tradesman newspaper mentions of new journeymen or apprenticeship completions. Return individual names (First Last) with city and trade. Max 15 results.`,
+    label: "Trade Professional",
   },
 ];
 
@@ -716,20 +767,21 @@ serve(async (req) => {
   let updatedCount = 0;
   let errorCount = 0;
 
-  console.log("[miosha-scraper] 🚀 Planetary-Scale Scanner starting — 7 fast sources + Sonar last");
+  console.log("[miosha-scraper] 🚀 Planetary-Scale Scanner starting — 8 fast sources + Sonar last");
 
-  // Run 7 fast sources in parallel (Sonar removed — runs separately after)
+  // Run 8 fast sources in parallel (Sonar removed — runs separately after)
   const results = await Promise.allSettled([
     scanNPIRegistry(),           // S1
     scanMichiganNurseAide(),     // S2
-    scanMichiganOpenData(),      // S3 — now direct Socrata fetch, no Firecrawl
-    scanBuildingPermits(),       // S4 — now correct ArcGIS endpoint
+    scanMichiganOpenData(),      // S3 — direct Socrata fetch, no Firecrawl
+    scanBuildingPermits(),       // S4 — ArcGIS endpoint
     scanNATERegistry(),          // S5
     scanTradeUnions(),           // S6
-    scanPDL(),                   // S7 — with day rotation + city fix
+    scanPDL(),                   // S7 — day rotation + city fix
+    scanCraigslist(),            // S9 — high-intent tradespeople posting availability
   ]);
 
-  const sourceLabels = ["NPI", "NAR", "OpenData", "Permits", "NATE", "Unions", "PDL"];
+  const sourceLabels = ["NPI", "NAR", "OpenData", "Permits", "NATE", "Unions", "PDL", "Craigslist"];
 
   for (let i = 0; i < results.length; i++) {
     const result = results[i];
