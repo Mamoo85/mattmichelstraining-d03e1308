@@ -1,43 +1,48 @@
 
 
-# Live Test: Clear & Re-Run TechAlert Scanner
+# TechAlert Scanner Fix — Real Data Sources
 
-## What We Have Now
-- 33 candidates in `hire_alert_candidates` (from Apr 13-14)
-- 93 entries in `hire_alert_client_candidates` (alert history)
-- 0 entries in `hire_alert_runs` and `industry_pulse_signals`
-- 8 active clients configured
+## Problem
+Both scanners return 0 candidates due to three confirmed failures:
+1. **LARA Accela portal** — session-based, returns 401 server-to-server. Dead end.
+2. **Schema mismatch** — `miosha-license-scraper` already fixed (`name: c.full_name` is present on line 456). This was fixed in the last session.
+3. **Sonar prompts** — asking Sonar to search LARA (not indexed). Prompts need to target public profiles instead.
 
-## The Plan
+## Changes
 
-### Step 1: Clear Old Data (Migration)
-Run a migration to truncate test data from the three tables:
-```sql
-TRUNCATE hire_alert_candidates CASCADE;
-TRUNCATE hire_alert_client_candidates CASCADE;
+### File 1: `supabase/functions/miosha-license-scraper/index.ts`
+
+**Delete** the entire LARA Accela section (lines 57–263): `getLaraSession()`, `searchLaraPortal()`, `extractCandidatesViaGemini()`, `LARA_TRADE_SEARCHES`, `LaraSession` interface, all constants.
+
+**Add** Apollo.io People Search function:
 ```
-This gives us a clean slate — as if the product just launched.
+searchViaApollo(tradeTitle: string) → LicenseCandidate[]
+  POST https://api.apollo.io/api/v1/mixed_people/search
+  Headers: X-Api-Key: APOLLO_API_KEY
+  Body: person_titles: [tradeTitle], person_locations: ["Michigan"], per_page: 25
+  Map: person.name → full_name + name, person.title → license_type, person.city → city
+```
+Read `APOLLO_API_KEY` at module scope.
 
-### Step 2: Deploy & Invoke the Scanner
-- Deploy `hire-alert-scanner` and `miosha-license-scraper` fresh
-- Invoke the scanner via curl to trigger a full run
-- This will execute the real 3-tier scan: **BPL (LARA) → MIOSHA → Job Boards**
+**Update** `serve()` Phase 1 (lines 513–529): Replace LARA session/portal search loop with Apollo search loop over the same 4 trade types + CNA + RN/LPN.
 
-### Step 3: Review Results
-- Check logs to confirm each source ran and what it found
-- Query the database for newly inserted candidates
-- Verify candidates have real license numbers (BPL/MIOSHA sources)
-- Confirm the scoring and source tagging is correct
-- Check if the founder report email fires with the segmented sections (State-Licensed vs Job Seekers)
+**Update** Sonar prompts (lines 270–295): Change from "Find licensed X in Michigan who are seeking work" to "Find LinkedIn profiles, personal websites, or trade union member pages for individual licensed [TRADE] workers in Metro Detroit Michigan who are actively job seeking or open to work."
 
-### Step 4: Report Back
-- Show you exactly what the scanner found: how many from each source, sample candidates, confidence scores
-- Identify any issues (corporate names slipping through, missing license data, API failures)
+### File 2: `supabase/functions/hire-alert-scanner/index.ts`
 
-## Files Changed
-- One migration to truncate old data
-- No code changes — this is a live test of existing code
+**Update** Sonar prompts in `scanJobBoardsViaOpenRouter()` (lines 249–251): Same prompt fix — target public profiles, not LARA database or job postings.
 
-## What You'll See
-A real-world test showing exactly what TechAlert delivers to a paying client on Day 1: which licensed tradespeople it found, from which state databases, with what confidence level.
+System prompt (line 270): Add instruction to search LinkedIn "open to work" profiles, Indeed public resumes, and trade association directories. Remove any reference to LARA or license databases.
+
+## What Does NOT Change
+- Scoring, alerting, deduplication, SMS logic — all confirmed working
+- `upsertCandidate()` — already has `name: c.full_name` (line 456)
+- NPI Registry integration in hire-alert-scanner — already works for healthcare
+- Gemini prose-extraction fallback — keep as-is
+
+## Verification
+1. Deploy both functions
+2. Invoke `miosha-license-scraper` → logs show Apollo returning real people
+3. Check `hire_alert_candidates` table for new rows with `name` populated
+4. Invoke `hire-alert-scanner` → picks up candidates, scores them, alerts fire
 
