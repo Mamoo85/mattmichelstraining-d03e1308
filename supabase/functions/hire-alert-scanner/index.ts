@@ -231,10 +231,23 @@ async function scanJobBoards(): Promise<RawCandidate[]> {
   return scanJobBoardsFallback();
 }
 
+// Corporate name filter — reject organizations masquerading as people
+const CORPORATE_PATTERN = /\b(LLC|Inc|Corp|School|Casino|Hospital|Health\s+System|University|Energy|Solutions|Administration|Academy|Institute|Staffing|Group\s+Inc|Services\s+Inc|& Sons|Mechanical|Electric\s+Co|Company|Associates|Enterprises|Foundation|Authority|Board|Commission|Department|District|Center|Clinic|Medical|Nursing\s+Home|Assisted\s+Living|Home\s+Care|Senior\s+Living)\b/i;
+
+function isCorporateName(name: string): boolean {
+  if (!name) return true;
+  if (CORPORATE_PATTERN.test(name)) return true;
+  // All-caps multi-word names are usually orgs
+  if (name === name.toUpperCase() && name.split(/\s+/).length > 3) return true;
+  // If it contains "of" + proper noun pattern (e.g., "Academy of Arts & Sciences")
+  if (/\b(of the|of)\b/i.test(name) && name.split(/\s+/).length > 4) return true;
+  return false;
+}
+
 async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[]> {
   const searches = [
-    "Find current job postings for boiler operators, HVAC technicians, plumbers, pipefitters, and electricians in Metro Detroit Michigan. For each posting, extract: company name, job title, city. Focus on postings from the last 7 days.",
-    "Find licensed HVAC technicians, plumbers, or electricians in Michigan who are actively seeking work or recently posted resumes. Look on Indeed, ZipRecruiter, LinkedIn. Extract: person name or company name, trade, city.",
+    "Find individual people who are licensed boiler operators, HVAC technicians, plumbers, pipefitters, or electricians in Metro Detroit Michigan who are actively looking for work, posted resumes, or are open to new opportunities. Search Indeed resumes, LinkedIn profiles, and ZipRecruiter. For each PERSON found, extract their personal name, trade, and city. Do NOT return company names or employer names — only individual people's names.",
+    "Find individual licensed tradespeople (CNA, LPN, RN, nurse aide, home health aide) in Michigan who recently posted resumes or are seeking new positions. Search Indeed, ZipRecruiter, LinkedIn. Return each PERSON's full name, license type, and city. Never return a school, hospital, or company name as the person's name.",
   ];
 
   const allResults: RawCandidate[] = [];
@@ -253,7 +266,7 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
           messages: [
             {
               role: "system",
-              content: `You are a hiring intelligence researcher. Return ONLY valid JSON array. Each object: { "name": "company or person", "trade": "specific trade title", "city": "city name", "type": "job_posting" or "candidate" }. Max 15 results. No markdown, no explanation.`,
+              content: `You are a hiring intelligence researcher finding INDIVIDUAL PEOPLE seeking work. Return ONLY valid JSON array. Each object: { "name": "person's full name (NEVER a company, school, hospital, or organization name)", "trade": "specific trade title", "city": "city name", "type": "candidate" }. Max 15 results. No markdown, no explanation. CRITICAL: The "name" field MUST be a real human person's first and last name. NEVER put an employer, school, hospital, casino, or any organization name in the "name" field.`,
             },
             { role: "user", content: query },
           ],
@@ -277,6 +290,11 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
 
       for (const item of parsed) {
         if (!item.name || !item.trade) continue;
+        // CORPORATE FILTER: Skip any result that's an organization, not a person
+        if (isCorporateName(item.name)) {
+          console.log(`[hire-alert-scanner] Corporate name filtered: "${item.name}"`);
+          continue;
+        }
         const key = `${item.name.toLowerCase()}-${item.trade.toLowerCase()}`;
         if (seen.has(key)) continue;
         seen.add(key);
@@ -286,7 +304,7 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
           license_type: item.trade,
           city: item.city || "Metro Detroit",
           source: "firecrawl" as const,
-          raw_data: { openrouter_search: true, type: item.type || "job_posting" },
+          raw_data: { openrouter_search: true, type: item.type || "candidate" },
         });
       }
     } catch (e) {
@@ -294,7 +312,7 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
     }
   }
 
-  console.log(`[hire-alert-scanner] OpenRouter web search: found ${allResults.length} candidates`);
+  console.log(`[hire-alert-scanner] OpenRouter web search: found ${allResults.length} candidates (after corporate filter)`);
   return allResults;
 }
 
