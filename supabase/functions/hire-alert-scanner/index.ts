@@ -1,7 +1,8 @@
 // hire-alert-scanner — daily 7am ET
-// Scans MIOSHA license DB and job boards for available licensed tradespeople.
-// Enriches top candidates via NPI + Sonar OSINT + PDL before sending alerts.
-// Alerts field service clients when new actionable candidates appear.
+// ARCHITECTURE: State licensing databases FIRST → enrichment SECOND → job boards LAST.
+// Layer 1 (PRIMARY): Michigan LARA BPL portal + MIOSHA license scraper — real names + license numbers
+// Layer 2 (ENRICHMENT): NPI → Sonar OSINT → PDL — contact info + social profiles
+// Layer 3 (SUPPLEMENTARY): Job board search — bonus leads, lower priority
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -64,9 +65,10 @@ interface RawCandidate {
   license_type?: string;
   license_number?: string;
   license_expiry?: string;
+  license_issuer?: string;
   city?: string;
   zip?: string;
-  source: "miosha" | "firecrawl";
+  source: "bpl" | "miosha" | "firecrawl";
   raw_data?: Record<string, unknown>;
 }
 
@@ -81,18 +83,15 @@ interface ScoredCandidate extends RawCandidate {
   qualifications_summary?: string;
   hiring_recommendation?: string;
   enrichment_status?: string;
-  // NPI fields
   npi_number?: string;
   npi_business_phone?: string;
   npi_taxonomy?: string;
   npi_practice_address?: string;
-  // PDL fields
   pdl_mobile_phone?: string;
   pdl_personal_email?: string;
 }
 
 // ===== NPI REGISTRY API =====
-// Free federal API, no auth needed. Only for healthcare candidates.
 async function enrichViaNPI(candidate: RawCandidate): Promise<Record<string, unknown>> {
   const nameParts = candidate.full_name.trim().split(/\s+/);
   if (nameParts.length < 2) return {};
@@ -111,7 +110,6 @@ async function enrichViaNPI(candidate: RawCandidate): Promise<Record<string, unk
     const results = data?.results;
     if (!results?.length) return {};
 
-    // Take best match (first result)
     const r = results[0];
     const taxonomy = r.taxonomies?.find((t: any) => t.primary) || r.taxonomies?.[0];
     const address = r.addresses?.find((a: any) => a.address_purpose === "LOCATION") || r.addresses?.[0];
@@ -123,7 +121,7 @@ async function enrichViaNPI(candidate: RawCandidate): Promise<Record<string, unk
       npi_practice_address: address ? `${address.address_1 || ""}${address.address_2 ? " " + address.address_2 : ""}, ${address.city || ""}, ${address.state || ""} ${address.postal_code || ""}` : null,
     };
 
-    console.log(`[hire-alert-scanner] NPI enriched: ${candidate.full_name} → NPI#${npiData.npi_number} phone=${!!npiData.npi_business_phone} taxonomy=${!!npiData.npi_taxonomy}`);
+    console.log(`[hire-alert-scanner] NPI enriched: ${candidate.full_name} → NPI#${npiData.npi_number} phone=${!!npiData.npi_business_phone}`);
     return npiData;
   } catch (e) {
     console.warn(`[hire-alert-scanner] NPI error for ${candidate.full_name}:`, e instanceof Error ? e.message : String(e));
@@ -132,7 +130,6 @@ async function enrichViaNPI(candidate: RawCandidate): Promise<Record<string, unk
 }
 
 // ===== PEOPLE DATA LABS (PDL) ENRICHMENT =====
-// Resolves mobile phone and personal email from name + location + linkedin
 async function enrichWithPDL(candidate: ScoredCandidate): Promise<Record<string, unknown>> {
   if (!PDL_API_KEY) return {};
 
@@ -171,7 +168,7 @@ async function enrichWithPDL(candidate: ScoredCandidate): Promise<Record<string,
       pdl_linkedin_url: data.linkedin_url || null,
     };
 
-    console.log(`[hire-alert-scanner] PDL enriched: ${candidate.full_name} → mobile=${!!pdlData.pdl_mobile_phone} email=${!!pdlData.pdl_personal_email} company=${!!pdlData.pdl_company}`);
+    console.log(`[hire-alert-scanner] PDL enriched: ${candidate.full_name} → mobile=${!!pdlData.pdl_mobile_phone} email=${!!pdlData.pdl_personal_email}`);
     return pdlData;
   } catch (e) {
     console.warn(`[hire-alert-scanner] PDL error for ${candidate.full_name}:`, e instanceof Error ? e.message : String(e));
@@ -179,7 +176,150 @@ async function enrichWithPDL(candidate: ScoredCandidate): Promise<Record<string,
   }
 }
 
-// Source 1: MIOSHA Public License Database — delegates to miosha-license-scraper
+// ========================================================================
+// SOURCE 1 (PRIMARY): Michigan LARA BPL Portal — Direct License Database
+// ========================================================================
+// Michigan LARA publishes license lists via the Accela/MiPLUS portal.
+// The reports are interactive (not direct CSV downloads), so we use Sonar
+// to query the portal for recently issued/renewed licenses by trade.
+// This is the CORE VALUE of TechAlert — real state-issued license records.
+
+const BPL_QUERIES = [
+  {
+    query: `Search the Michigan LARA MiPLUS licensing portal at aca-prod.accela.com/MILARA for individual people who hold active Boiler Operator licenses in Michigan. Look for the licensee's personal full name, their license number, license issue date, license expiry date, and city. Focus on licenses issued or renewed in the last 90 days. Search these URLs specifically: aca-prod.accela.com/MILARA/Report/ReportParameter.aspx and michigan.gov/lara/bureau-list/bpl/license-lists-and-reports`,
+    label: "Boiler Operator",
+  },
+  {
+    query: `Search the Michigan LARA MiPLUS licensing portal at aca-prod.accela.com/MILARA for individual people who hold active Master Electrician or Journeyman Electrician licenses in Michigan. Look for each person's full name (first and last), their specific license number, issue date, expiry date, and city. Focus on new licenses or renewals in the last 90 days.`,
+    label: "Electrician",
+  },
+  {
+    query: `Search the Michigan LARA MiPLUS licensing portal at aca-prod.accela.com/MILARA for individual people who hold active Master Plumber or Journeyman Plumber licenses in Michigan. Look for each person's full name, license number, issue date, expiry date, and city. Focus on new or recently renewed licenses.`,
+    label: "Plumber",
+  },
+  {
+    query: `Search the Michigan LARA MiPLUS licensing portal at aca-prod.accela.com/MILARA for individual people who hold active Mechanical Contractor or HVAC licenses in Michigan. Look for full names, license numbers, issue dates, expiry dates, and cities. Focus on recently issued licenses.`,
+    label: "HVAC Technician",
+  },
+  {
+    query: `Search the Michigan LARA MiPLUS licensing portal and Michigan Board of Nursing records for individual people who recently obtained Registered Nurse (RN) or Licensed Practical Nurse (LPN) licenses in Michigan. Find their full personal name, license number, license issue date, and city. Focus on new licenses issued in the last 90 days.`,
+    label: "RN/LPN",
+  },
+  {
+    query: `Search the Michigan LARA licensing records and Michigan Nurse Aide Registry for individual people who recently became Certified Nursing Assistants (CNA) in Michigan. Find their full personal name, certification number, certification date, and city. Focus on new certifications in the last 90 days.`,
+    label: "CNA",
+  },
+];
+
+async function scanBPL(): Promise<RawCandidate[]> {
+  if (!OPENROUTER_API_KEY) {
+    console.warn("[hire-alert-scanner] No OPENROUTER_API_KEY — skipping BPL scan");
+    return [];
+  }
+
+  const allResults: RawCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { query, label } of BPL_QUERIES) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            {
+              role: "system",
+              content: `You are a state licensing database researcher. Your job is to find INDIVIDUAL PEOPLE with Michigan state licenses. Search the Michigan LARA/MiPLUS portal records.
+
+CRITICAL RULES:
+1. Return ONLY individual person names (first and last name). NEVER return company names, school names, hospital names, staffing agencies, or any organization.
+2. Every result MUST include a license number if at all possible. If you cannot find a license number for a specific person, include them only if you found their name directly on a LARA/state licensing page.
+3. If a search result shows an employer posting a job rather than an individual's license record, SKIP IT entirely.
+
+Return ONLY a valid JSON array. Each object:
+{
+  "full_name": "person's first and last name",
+  "license_number": "state license/certification number or null",
+  "license_expiry": "YYYY-MM-DD or null",
+  "license_issue_date": "YYYY-MM-DD or null",
+  "city": "city name or null",
+  "license_issuer": "Michigan LARA" or "Michigan Board of Nursing" or null
+}
+Max 8 results. No markdown, no explanation text. Return [] if no individual license records found.`,
+            },
+            { role: "user", content: query },
+          ],
+          max_tokens: 2000,
+          temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(25000),
+      });
+
+      if (!res.ok) {
+        console.warn(`[hire-alert-scanner] BPL OpenRouter HTTP ${res.status} for ${label}`);
+        continue;
+      }
+
+      const data = await res.json();
+      const text = data?.choices?.[0]?.message?.content || "";
+      const jsonMatch = text.match(/\[[\s\S]*?\]/);
+      if (!jsonMatch) {
+        console.warn(`[hire-alert-scanner] BPL no JSON array for ${label}`);
+        continue;
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]) as Array<{
+        full_name: string;
+        license_number?: string | null;
+        license_expiry?: string | null;
+        license_issue_date?: string | null;
+        city?: string | null;
+        license_issuer?: string | null;
+      }>;
+
+      for (const item of parsed) {
+        if (!item.full_name || item.full_name.length < 3) continue;
+        if (isCorporateName(item.full_name)) {
+          console.log(`[hire-alert-scanner] BPL corporate filtered: "${item.full_name}"`);
+          continue;
+        }
+        const key = item.license_number || `${item.full_name.toLowerCase()}-${label.toLowerCase()}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        allResults.push({
+          full_name: item.full_name,
+          license_type: label,
+          license_number: item.license_number || undefined,
+          license_expiry: item.license_expiry || undefined,
+          license_issuer: item.license_issuer || "Michigan LARA",
+          city: item.city || undefined,
+          source: "bpl" as const,
+          raw_data: {
+            bpl_portal: true,
+            license_issue_date: item.license_issue_date || null,
+            license_issuer: item.license_issuer || "Michigan LARA",
+          },
+        });
+      }
+
+      console.log(`[hire-alert-scanner] BPL ${label}: ${allResults.length} total after this trade`);
+    } catch (e) {
+      console.warn(`[hire-alert-scanner] BPL error for ${label}:`, e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  console.log(`[hire-alert-scanner] BPL total: ${allResults.length} candidates from state licensing databases`);
+  return allResults;
+}
+
+// ========================================================================
+// SOURCE 2 (SECONDARY): MIOSHA License Scraper — delegates to edge function
+// ========================================================================
 async function scanMIOSHA(): Promise<RawCandidate[]> {
   try {
     const scraperUrl = `${SUPABASE_URL}/functions/v1/miosha-license-scraper`;
@@ -222,7 +362,9 @@ async function scanMIOSHA(): Promise<RawCandidate[]> {
   }));
 }
 
-// Source 2: Job board search via OpenRouter (perplexity/sonar-pro for live web search)
+// ========================================================================
+// SOURCE 3 (SUPPLEMENTARY): Job board search — bonus leads, lowest priority
+// ========================================================================
 async function scanJobBoards(): Promise<RawCandidate[]> {
   if (OPENROUTER_API_KEY) {
     const results = await scanJobBoardsViaOpenRouter(OPENROUTER_API_KEY);
@@ -231,27 +373,23 @@ async function scanJobBoards(): Promise<RawCandidate[]> {
   return scanJobBoardsFallback();
 }
 
-// Corporate name filter — reject organizations masquerading as people
+// Corporate name filter
 const CORPORATE_PATTERN = /\b(LLC|Inc|Corp|School|Casino|Hospital|Health\s*System|University|Energy|Solutions|Administration|Academy|Institute|Staffing|Group|Services|Sons|Mechanical|Electric|Company|Associates|Enterprises|Foundation|Authority|Board|Commission|Department|District|Center|Clinic|Medical|Nursing\s+Home|Assisted\s+Living|Home\s+Care|Senior\s+Living|Public\s+Schools|Community\s+College|Rehabilitation|Management|Consulting|Industries|Manufacturing|Plumbing|Heating|Cooling|Roofing|Construction|Contractors|Builders|Supply|Wholesale|Distributors|Holdings|Properties|Realty|Insurance|Financial|Bank|Credit\s+Union|Transit|Utility|Utilities|Water|Sewer|Electric\s+Co|Power|Township|County|City\s+of|State\s+of|Federal)\b/i;
 
 function isCorporateName(name: string): boolean {
   if (!name) return true;
   if (CORPORATE_PATTERN.test(name)) return true;
-  // All-caps multi-word names are usually orgs
   if (name === name.toUpperCase() && name.split(/\s+/).length > 3) return true;
-  // If it contains "of" + proper noun pattern (e.g., "Academy of Arts & Sciences")
   if (/\b(of the|of)\b/i.test(name) && name.split(/\s+/).length > 3) return true;
-  // Single word "names" are usually companies (e.g., "Veolia", "CoolSys")
   if (name.trim().split(/\s+/).length === 1 && name.length > 3) return true;
-  // Names with & in them are usually companies
   if (/\s&\s/.test(name) && name.split(/\s+/).length > 2) return true;
   return false;
 }
 
 async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[]> {
   const searches = [
-    `Search for individual PEOPLE with resumes on Indeed, LinkedIn, or ZipRecruiter who are licensed boiler operators, HVAC technicians, plumbers, pipefitters, or electricians in Metro Detroit, Michigan. Look for people who recently updated their resume or are marked "Open to Work." For each person, find their FULL PERSONAL NAME (first and last name — NEVER a company/employer), their specific trade license, and their city. Also try to find their Michigan LARA license number if mentioned anywhere. Limit to 8 highly-detailed results.`,
-    `Search for individual PEOPLE who are CNAs, LPNs, RNs, nurse aides, or home health aides in Michigan seeking employment. Look on Indeed resumes, ZipRecruiter profiles, and LinkedIn "Open to Work" profiles. For each person, extract their PERSONAL first and last name (NEVER a hospital, school, or agency name), their license/certification type, city, and any license or NPI number visible on their profile. Limit to 8 results.`,
+    `Search for individual PEOPLE with resumes on Indeed, LinkedIn, or ZipRecruiter who are licensed boiler operators, HVAC technicians, plumbers, pipefitters, or electricians in Metro Detroit, Michigan. Look for people who recently updated their resume or are marked "Open to Work." For each person, find their FULL PERSONAL NAME (first and last name — NEVER a company/employer), their specific trade license, and their city. Also try to find their Michigan LARA license number if mentioned anywhere. Limit to 6 highly-detailed results.`,
+    `Search for individual PEOPLE who are CNAs, LPNs, RNs, nurse aides, or home health aides in Michigan seeking employment. Look on Indeed resumes, ZipRecruiter profiles, and LinkedIn "Open to Work" profiles. For each person, extract their PERSONAL first and last name (NEVER a hospital, school, or agency name), their license/certification type, city, and any license or NPI number visible on their profile. Limit to 6 results.`,
   ];
 
   const allResults: RawCandidate[] = [];
@@ -281,7 +419,7 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
   "current_employer": "current or most recent employer name or null",
   "years_experience": number of years experience if determinable or null
 }
-Max 8 results. No markdown, no explanation. CRITICAL RULES:
+Max 6 results. No markdown, no explanation. CRITICAL RULES:
 1. The "name" field MUST be a real human first + last name. If you can only find a company name, SKIP that result entirely.
 2. If a result looks like a job posting (employer seeking candidates), SKIP IT — we want the candidate, not the employer.
 3. Prioritize candidates who have license/certification details visible on their profile.`,
@@ -312,7 +450,6 @@ Max 8 results. No markdown, no explanation. CRITICAL RULES:
 
       for (const item of parsed) {
         if (!item.name || !item.trade) continue;
-        // CORPORATE FILTER: Skip any result that's an organization, not a person
         if (isCorporateName(item.name)) {
           console.log(`[hire-alert-scanner] Corporate name filtered: "${item.name}"`);
           continue;
@@ -341,7 +478,7 @@ Max 8 results. No markdown, no explanation. CRITICAL RULES:
     }
   }
 
-  console.log(`[hire-alert-scanner] OpenRouter web search: found ${allResults.length} candidates (after corporate filter)`);
+  console.log(`[hire-alert-scanner] Job board search: found ${allResults.length} candidates`);
   return allResults;
 }
 
@@ -349,7 +486,6 @@ async function scanJobBoardsFallback(): Promise<RawCandidate[]> {
   const queries = [
     '"boiler operator" "looking for work" OR "seeking position" Michigan',
     '"HVAC technician" "available" OR "open to opportunities" Detroit Michigan',
-    '"pipefitter" OR "steamfitter" "UA Local 636" "available" Michigan',
   ];
 
   const allResults: RawCandidate[] = [];
@@ -367,11 +503,7 @@ async function scanJobBoardsFallback(): Promise<RawCandidate[]> {
 }
 
 // ===== SONAR OSINT ENRICHMENT ENGINE =====
-// Uses perplexity/sonar-pro with boolean search operators for LinkedIn, Facebook, Indeed
-// NEVER reveals sources to clients — proprietary intelligence method
-
 function extractJSON(text: string): Record<string, unknown> | null {
-  // Strip markdown code fences before parsing
   let cleaned = text.replace(/```(?:json)?\s*/gi, "").replace(/```\s*/g, "");
   const match = cleaned.match(/\{[\s\S]*\}/);
   if (!match) return null;
@@ -457,8 +589,7 @@ Only include data you actually find. Do not fabricate any information.`,
   }
 }
 
-// AI Synthesis via Lovable AI Gateway (free) — generates qualifications + recommendation
-// NEVER mentions AI, algorithms, data sources, or methodology
+// AI Synthesis via Lovable AI Gateway
 async function synthesizeViaAI(
   candidate: ScoredCandidate,
   sonarData: Record<string, unknown>,
@@ -476,8 +607,10 @@ CANDIDATE:
 - Name: ${candidate.full_name}
 - Trade/License: ${candidate.license_type || "Unknown"}
 - License Number: ${candidate.license_number || "Not found"}
+- License Issuer: ${candidate.license_issuer || "Unknown"}
 - License Expiry: ${candidate.license_expiry || "Unknown"}
 - Location: ${candidate.city || "Michigan"}
+- Data Source: ${candidate.source === "bpl" ? "State licensing database (verified)" : candidate.source === "miosha" ? "State licensing records" : "Job board / resume"}
 
 RESEARCH FINDINGS:
 - Employer: ${sonarData.current_employer || pdlData.pdl_company || "Not found"}
@@ -527,12 +660,15 @@ Return JSON: { "qualifications_summary": "...", "hiring_recommendation": "..." }
   }
 }
 
-// Score candidate availability via AI with real signals
+// ===== SCORING with SOURCE PRIORITY =====
+// BPL (state DB) = +3 bonus, MIOSHA = +1 if has license, Job boards = -2 if no license
 async function scoreCandidate(candidate: RawCandidate): Promise<{ score: number; reason: string }> {
   const hasPhone = !!candidate.phone;
   const hasEmail = !!candidate.email;
   const hasLicenseNumber = !!candidate.license_number;
-  const isFromJobBoard = candidate.source === "firecrawl";
+  const isBPL = candidate.source === "bpl";
+  const isMIOSHA = candidate.source === "miosha";
+  const isJobBoard = candidate.source === "firecrawl";
 
   let licenseRecent = false;
   if (candidate.license_expiry) {
@@ -550,19 +686,23 @@ Trade/License: ${candidate.license_type || "unknown"}
 City: ${candidate.city || "unknown"}
 License Number: ${hasLicenseNumber ? candidate.license_number : "none"}${licenseRecent ? " (RECENTLY ISSUED — new to market)" : ""}
 License Expiry: ${candidate.license_expiry || "unknown"}
+License Issuer: ${candidate.license_issuer || "unknown"}
+Data Source: ${isBPL ? "STATE LICENSING DATABASE (highest reliability)" : isMIOSHA ? "State licensing records" : "Job board / resume search"}
 Has Phone Number: ${hasPhone ? "YES" : "no"}
 Has Email: ${hasEmail ? "YES" : "no"}
 
 Scoring rules (apply ALL that match, then sum):
 - Base: 4 points for having a verifiable trade title
-- +3 if appeared on a job board (actively seeking)
+- +3 if from state licensing database (BPL — verified government record)
 - +2 if license number exists AND recently issued (new to market)
 - +1 if has license number (verifiable credential)
+- +1 if from MIOSHA records with license number
+- +1 if appeared on a job board (actively seeking)
 - +1 if has phone number (immediately contactable)
 - +1 if has email address
 - +1 if city is Metro Detroit area
-- -2 if no license number at all (unverified — reduces reliability)
-- -2 if no license number AND source is MIOSHA (parse error — likely bad data)
+- -2 if no license number AND from job board (unverified)
+- -2 if no license number AND from MIOSHA (likely bad parse)
 - Cap at 10, floor at 1
 
 Return JSON: { "score": number, "reason": "one sentence citing the top 1-2 signals" }`,
@@ -571,24 +711,27 @@ Return JSON: { "score": number, "reason": "one sentence citing the top 1-2 signa
   );
 
   if (!result || typeof result.score !== "number") {
+    // Fallback scoring
     let score = 4;
-    if (isFromJobBoard) score += 3;
+    if (isBPL) score += 3;
+    if (isMIOSHA && hasLicenseNumber) score += 1;
+    if (isJobBoard) score += 1;
     if (hasLicenseNumber) score += 1;
     if (hasLicenseNumber && licenseRecent) score += 2;
     if (hasPhone) score += 1;
     if (hasEmail) score += 1;
-    if (!hasLicenseNumber) score -= 2;
+    if (!hasLicenseNumber && isJobBoard) score -= 2;
+    if (!hasLicenseNumber && isMIOSHA) score -= 2;
     score = Math.min(10, Math.max(1, score));
+    const sourceLabel = isBPL ? "State DB verified" : isMIOSHA ? "MIOSHA record" : "Job board";
     const licenseNote = hasLicenseNumber ? "" : " · ⚠️ No verifiable license found";
-    return { score, reason: `Verified trade professional, ${hasPhone ? "contactable" : "contact info pending"}, ${candidate.city || "Michigan"} area${licenseNote}` };
+    return { score, reason: `${sourceLabel}, ${hasPhone ? "contactable" : "contact info pending"}, ${candidate.city || "Michigan"} area${licenseNote}` };
   }
 
   return result;
 }
 
 // ===== ACTION BUTTON EMAIL TEMPLATE =====
-// Every candidate card has prominent clickable buttons — no dead ends
-
 function buildActionButtons(c: ScoredCandidate): string {
   const buttons: string[] = [];
 
@@ -604,11 +747,9 @@ function buildActionButtons(c: ScoredCandidate): string {
   if (c.phone) {
     buttons.push(`<a href="tel:${c.phone}" style="display:inline-block;background:#e8621a;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">📞 Call ${c.phone}</a>`);
   }
-  // NPI Business Phone — distinct teal button
   if (c.npi_business_phone && c.npi_business_phone !== c.phone) {
     buttons.push(`<a href="tel:${c.npi_business_phone}" style="display:inline-block;background:#0d9488;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">📞 Business Line ${c.npi_business_phone}</a>`);
   }
-  // PDL Mobile — if different from primary phone
   if (c.pdl_mobile_phone && c.pdl_mobile_phone !== c.phone && c.pdl_mobile_phone !== c.npi_business_phone) {
     buttons.push(`<a href="tel:${c.pdl_mobile_phone}" style="display:inline-block;background:#ea580c;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">📱 Mobile ${c.pdl_mobile_phone}</a>`);
   }
@@ -625,7 +766,7 @@ function buildActionButtons(c: ScoredCandidate): string {
   </td></tr>`;
 }
 
-// Send alert email to a client — premium design with action buttons
+// Send alert email to a client
 async function sendAlertEmail(
   client: { owner_email: string; company_name: string; dashboard_token?: string },
   candidates: ScoredCandidate[],
@@ -638,17 +779,19 @@ async function sendAlertEmail(
   const scoreBg = (s: number) =>
     s >= 8 ? "#dc2626" : s >= 7 ? "#e8621a" : s >= 5 ? "#f59e0b" : "#94a3b8";
 
+  const sourceLabel = (s: string) =>
+    s === "bpl" ? "🏛️ State License DB" : s === "miosha" ? "🏛️ MIOSHA" : "📋 Resume";
+
   const candidateCards = candidates
     .map(
       (c) => `
     <tr><td style="padding:0 0 16px;">
       <table width="100%" cellpadding="0" cellspacing="0" style="border-radius:12px;overflow:hidden;border:1px solid ${c.availability_score >= 7 ? "#e8621a40" : "#e2e8f0"};${c.availability_score >= 7 ? "box-shadow:0 2px 8px rgba(232,98,26,0.12);" : ""}">
-        <!-- Score bar -->
         <tr><td style="background:${c.availability_score >= 7 ? "linear-gradient(135deg,#0a1628,#1e293b)" : "#f8fafc"};padding:14px 18px;">
           <table width="100%" cellpadding="0" cellspacing="0"><tr>
             <td>
               <p style="margin:0;font-size:16px;font-weight:800;color:${c.availability_score >= 7 ? "#fff" : "#1e293b"};letter-spacing:-0.3px;">${c.full_name}</p>
-              <p style="margin:3px 0 0;font-size:12px;color:${c.availability_score >= 7 ? "#94a3b8" : "#64748b"};">Detected ${dateStr}</p>
+              <p style="margin:3px 0 0;font-size:12px;color:${c.availability_score >= 7 ? "#94a3b8" : "#64748b"};">${sourceLabel(c.source)} · ${dateStr}</p>
             </td>
             <td style="text-align:right;vertical-align:top;">
               <table cellpadding="0" cellspacing="0"><tr>
@@ -659,7 +802,6 @@ async function sendAlertEmail(
             </td>
           </tr></table>
         </td></tr>
-        <!-- Details -->
         <tr><td style="padding:16px 18px;background:#fff;">
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
@@ -677,7 +819,7 @@ async function sendAlertEmail(
             <!-- LICENSE INFO — ALWAYS SHOWN -->
             <tr><td style="padding:6px 0;">
               ${c.license_number
-                ? `<p style="margin:0;font-size:13px;color:#1e293b;background:#f0fdf4;padding:8px 12px;border-radius:8px;border-left:3px solid #059669;">🪪 License: <strong>${c.license_number}</strong>${c.license_expiry ? ` · Exp: <strong>${c.license_expiry}</strong>` : ""} · <span style="color:#059669;font-weight:700;">Active</span></p>`
+                ? `<p style="margin:0;font-size:13px;color:#1e293b;background:#f0fdf4;padding:8px 12px;border-radius:8px;border-left:3px solid #059669;">🪪 License: <strong>${c.license_number}</strong>${c.license_issuer ? ` · <span style="color:#475569;">${c.license_issuer}</span>` : ""}${c.license_expiry ? ` · Exp: <strong>${c.license_expiry}</strong>` : ""} · <span style="color:#059669;font-weight:700;">Active</span></p>`
                 : `<p style="margin:0;font-size:13px;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:8px;border-left:3px solid #f59e0b;">⚠️ License not yet verified — <a href="https://aca-prod.accela.com/LARA/GeneralProperty/PropertyLookUp.aspx?isLicensee=Y" target="_blank" style="color:#0891b2;font-weight:700;text-decoration:underline;">manual LARA lookup recommended</a></p>`
               }
             </td></tr>
@@ -688,7 +830,6 @@ async function sendAlertEmail(
             ${c.hiring_recommendation ? `<tr><td style="padding:4px 0;">
               <p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#eff6ff;padding:10px 12px;border-radius:8px;border-left:3px solid #3b82f6;"><strong>💡 Recommendation:</strong> ${c.hiring_recommendation}</p>
             </td></tr>` : ""}
-            <!-- ACTION BUTTONS -->
             ${buildActionButtons(c)}
           </table>
         </td></tr>
@@ -729,73 +870,31 @@ async function sendAlertEmail(
         <table cellpadding="0" cellspacing="0"><tr>
           <td style="background:#00d4ff20;border:1px solid #00d4ff40;padding:12px 16px;border-radius:12px;text-align:center;">
             <p style="margin:0;font-size:28px;font-weight:900;color:#00d4ff;line-height:1;">${candidates.length}</p>
-            <p style="margin:2px 0 0;font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;font-weight:700;">${candidates.length === 1 ? "Candidate" : "Candidates"}</p>
+            <p style="margin:2px 0 0;font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;font-weight:700;">${candidates.length === 1 ? "Candidate" : "Candidates"}</p>
           </td>
         </tr></table>
       </td>
     </tr></table>
-    <p style="margin:16px 0 0;color:#94a3b8;font-size:13px;">${dateStr}${client.company_name ? ` · for ${client.company_name}` : ""}</p>
   </td></tr>
 
-  <!-- URGENCY BAR (only for hot candidates) -->
-  ${hotCount > 0 ? `<tr><td style="background:#e8621a;padding:12px 28px;">
-    <p style="margin:0;color:#fff;font-size:13px;font-weight:700;text-align:center;">🔥 ${hotCount} high-availability ${hotCount === 1 ? "candidate" : "candidates"} detected — your competitors don't have this intel</p>
+  ${hotCount > 0 ? `
+  <tr><td style="background:#e8621a;padding:14px 28px;">
+    <p style="margin:0;color:#fff;font-size:14px;font-weight:800;text-align:center;">🔥 ${hotCount} HOT ${hotCount === 1 ? "CANDIDATE" : "CANDIDATES"} — These techs won't last. Reach out today.</p>
   </td></tr>` : ""}
 
-  <!-- BODY -->
-  <tr><td style="background:#fff;padding:28px;${hotCount > 0 ? "" : "border-top:1px solid #e2e8f0;"}">
-    <p style="color:#1e293b;font-size:15px;line-height:1.7;margin:0 0 8px;">
-      Hey${client.company_name ? ` ${client.company_name} team` : ""} —
-    </p>
-    <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 24px;">
-      Our hiring intelligence engine scanned the market this morning. ${hotCount > 0 ? `<strong>${hotCount} high-scoring ${hotCount === 1 ? "candidate" : "candidates"}</strong> — tap the buttons below to reach out before someone else does.` : "Here's what we found near you. Tap any button to take action instantly."}
-    </p>
-
-    <!-- CANDIDATE CARDS -->
+  <!-- CANDIDATES -->
+  <tr><td style="background:#fff;padding:24px 20px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
     <table width="100%" cellpadding="0" cellspacing="0">
       ${candidateCards}
     </table>
   </td></tr>
 
-  <!-- HOW SCORING WORKS -->
-  <tr><td style="background:#f8fafc;padding:20px 28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
-    <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;">How Scoring Works</p>
-    <table width="100%" cellpadding="0" cellspacing="0">
-      <tr>
-        <td style="padding:4px 0;font-size:12px;color:#475569;">🔥 <strong>8-10</strong> — High availability: actively seeking work, local, contactable</td>
-      </tr>
-      <tr>
-        <td style="padding:4px 0;font-size:12px;color:#475569;">⚡ <strong>7</strong> — Likely available: recently licensed or appeared in hiring channels</td>
-      </tr>
-      <tr>
-        <td style="padding:4px 0;font-size:12px;color:#475569;">📋 <strong>5-6</strong> — Possibly available: professional profile matches your criteria</td>
-      </tr>
-    </table>
-  </td></tr>
-
-  <!-- DASHBOARD CTA -->
-  ${client.dashboard_token ? `<tr><td style="background:#0a1628;padding:20px 28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;text-align:center;">
-    <a href="https://m2training.lovable.app/my-techalert?token=${client.dashboard_token}" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 32px;border-radius:10px;font-size:14px;font-weight:800;text-decoration:none;letter-spacing:0.5px;">📊 View Full Dossiers in Your Dashboard</a>
-    <p style="margin:10px 0 0;font-size:11px;color:#64748b;">Browse, filter, and track all candidates with complete contact information</p>
-  </td></tr>` : ""}
-
   <!-- FOOTER -->
-  <tr><td style="padding:20px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 16px 16px;background:#0a1628;">
-    <table width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td>
-        <table cellpadding="0" cellspacing="0"><tr>
-          <td style="vertical-align:middle;"><img src="https://www.detroitwebagent.com/images/matt-boat.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt"></td>
-          <td style="padding-left:12px;vertical-align:middle;">
-            <p style="margin:0;font-size:14px;font-weight:700;color:#fff;">Matt Michels</p>
-            <p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;text-decoration:none;">(313) 992-1219</a></p>
-          </td>
-        </tr></table>
-      </td>
-      <td style="text-align:right;vertical-align:middle;">
-        <p style="margin:0;font-size:10px;color:#475569;">Reply to adjust roles or zip codes</p>
-        <p style="margin:2px 0 0;font-size:10px;color:#475569;"><a href="mailto:matt@detroitwebagent.com?subject=Unsubscribe%20TechAlert" style="color:#64748b;text-decoration:none;">Unsubscribe</a></p>
-      </td>
-    </tr></table>
+  <tr><td style="padding:24px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 16px 16px;background:#0a1628;">
+    <p style="margin:0;font-size:11px;color:#64748b;text-align:center;">
+      TechAlert by Detroit Web Agency · Monitoring state licensing databases daily<br>
+      <a href="mailto:matt@detroitwebagent.com" style="color:#00d4ff;">matt@detroitwebagent.com</a> · (313) 992-1219
+    </p>
   </td></tr>
 
 </table>
@@ -820,30 +919,31 @@ serve(async (req: Request) => {
   const dateStr = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const runStart = new Date().toISOString();
 
-  // Fetch active paid clients + active trial clients
   const { data: clients } = await sb.from("hire_alert_clients").select("*").or("active.eq.true,trial_status.eq.active");
   if (!clients?.length) {
     console.log("[hire-alert-scanner] No active clients");
     return new Response(JSON.stringify({ processed: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  // Run sources in parallel
-  console.log("[hire-alert-scanner] Scanning all sources...");
-  const [mioshaCandidates, jobBoardCandidates] = await Promise.all([
+  // ===== SOURCE HIERARCHY: BPL first, MIOSHA second, Job boards last =====
+  console.log("[hire-alert-scanner] Scanning all sources (BPL → MIOSHA → Job Boards)...");
+  const [bplCandidates, mioshaCandidates, jobBoardCandidates] = await Promise.all([
+    scanBPL(),
     scanMIOSHA(),
     scanJobBoards(),
   ]);
 
-  const allRaw = [...mioshaCandidates, ...jobBoardCandidates];
+  const allRaw = [...bplCandidates, ...mioshaCandidates, ...jobBoardCandidates];
   const sourceHealth: Record<string, string> = {
-    miosha: mioshaCandidates.length > 0 ? "✅" : "⚠️ 0 results",
-    sonar: jobBoardCandidates.length > 0 ? "✅" : "⚠️ 0 results",
+    bpl: bplCandidates.length > 0 ? `✅ ${bplCandidates.length}` : "⚠️ 0 results",
+    miosha: mioshaCandidates.length > 0 ? `✅ ${mioshaCandidates.length}` : "⚠️ 0 results",
+    jobboards: jobBoardCandidates.length > 0 ? `✅ ${jobBoardCandidates.length}` : "⚠️ 0 results",
     npi: "—",
     pdl: "—",
   };
-  console.log(`[hire-alert-scanner] Raw candidates: MIOSHA=${mioshaCandidates.length} JobBoards=${jobBoardCandidates.length}`);
+  console.log(`[hire-alert-scanner] Raw candidates: BPL=${bplCandidates.length} MIOSHA=${mioshaCandidates.length} JobBoards=${jobBoardCandidates.length}`);
 
-  // Deduplicate by license_number or name+city
+  // Deduplicate — prefer BPL > MIOSHA > firecrawl (first seen wins)
   const seen = new Set<string>();
   const deduped = allRaw.filter((c) => {
     const key = c.license_number || `${c.full_name.toLowerCase()}-${(c.city || "").toLowerCase()}`;
@@ -852,11 +952,11 @@ serve(async (req: Request) => {
     return true;
   });
 
-  // Check which candidates are new
+  // Check existing candidates
   const { data: existingRecords } = await sb
     .from("hire_alert_candidates")
     .select("license_number, full_name, name, city, linkedin_url, facebook_url, current_employer, current_title, years_experience, qualifications_summary, hiring_recommendation, enrichment_status, email, phone")
-    .in("source", ["miosha", "firecrawl"]);
+    .in("source", ["bpl", "miosha", "firecrawl"]);
 
   const enrichmentLookup = new Map<string, Record<string, unknown>>();
   for (const r of existingRecords || []) {
@@ -911,8 +1011,6 @@ serve(async (req: Request) => {
   }
 
   // ===== INLINE ENRICHMENT WATERFALL: NPI → Sonar → PDL → AI Synthesis =====
-  // Sort by score DESC, enrich top 5 to stay within timeout limits
-  // Remaining candidates get enrichment_status='pending' for candidate-deep-enrich second pass
   const sortedByScore = [...scored].sort((a, b) => b.availability_score - a.availability_score);
   const enrichBatch = sortedByScore.slice(0, 5);
   const pendingBatch = sortedByScore.slice(5);
@@ -920,14 +1018,12 @@ serve(async (req: Request) => {
   let npiHits = 0;
   let pdlHits = 0;
 
-  console.log(`[hire-alert-scanner] Enriching top ${enrichBatch.length} candidates inline (${pendingBatch.length} deferred to deep-enrich)`);
+  console.log(`[hire-alert-scanner] Enriching top ${enrichBatch.length} candidates inline (${pendingBatch.length} deferred)`);
 
   for (const candidate of enrichBatch) {
-    // Skip if already enriched from DB
     if (candidate.enrichment_status === "complete") continue;
 
     try {
-      // Phase 1: NPI API (healthcare candidates only)
       let npiData: Record<string, unknown> = {};
       if (isHealthcareRole(candidate.license_type)) {
         npiData = await enrichViaNPI(candidate);
@@ -937,17 +1033,14 @@ serve(async (req: Request) => {
           candidate.npi_business_phone = npiData.npi_business_phone as string | undefined;
           candidate.npi_taxonomy = npiData.npi_taxonomy as string | undefined;
           candidate.npi_practice_address = npiData.npi_practice_address as string | undefined;
-          // NPI business phone as fallback phone
           if (!candidate.phone && candidate.npi_business_phone) {
             candidate.phone = candidate.npi_business_phone;
           }
         }
       }
 
-      // Phase 2: Sonar Deep Dork (upgraded boolean search)
       const sonarData = await enrichViaSonar(candidate);
 
-      // Merge Sonar data into candidate
       if (sonarData.linkedin_url) candidate.linkedin_url = sonarData.linkedin_url as string;
       if (sonarData.facebook_url) candidate.facebook_url = sonarData.facebook_url as string;
       if (sonarData.email && !candidate.email) candidate.email = sonarData.email as string;
@@ -955,11 +1048,9 @@ serve(async (req: Request) => {
       if (sonarData.current_employer) candidate.current_employer = sonarData.current_employer as string;
       if (sonarData.current_title) candidate.current_title = sonarData.current_title as string;
       if (sonarData.years_experience) candidate.years_experience = sonarData.years_experience as number;
-      // Merge license data from Sonar if not already present
       if (sonarData.license_number && !candidate.license_number) candidate.license_number = sonarData.license_number as string;
       if (sonarData.license_expiry && !candidate.license_expiry) candidate.license_expiry = sonarData.license_expiry as string;
 
-      // Phase 3: PDL Skip-Trace (only if we have LinkedIn or enough identity data)
       let pdlData: Record<string, unknown> = {};
       if (PDL_API_KEY && (candidate.linkedin_url || candidate.city)) {
         pdlData = await enrichWithPDL(candidate);
@@ -967,29 +1058,14 @@ serve(async (req: Request) => {
           pdlHits++;
           candidate.pdl_mobile_phone = pdlData.pdl_mobile_phone as string | undefined;
           candidate.pdl_personal_email = pdlData.pdl_personal_email as string | undefined;
-          // PDL mobile becomes primary phone if none exists
-          if (!candidate.phone && candidate.pdl_mobile_phone) {
-            candidate.phone = candidate.pdl_mobile_phone;
-          }
-          // PDL email becomes email if none exists
-          if (!candidate.email && candidate.pdl_personal_email) {
-            candidate.email = candidate.pdl_personal_email;
-          }
-          // PDL LinkedIn if Sonar missed it
-          if (!candidate.linkedin_url && pdlData.pdl_linkedin_url) {
-            candidate.linkedin_url = pdlData.pdl_linkedin_url as string;
-          }
-          // PDL employer/title as fallback
-          if (!candidate.current_employer && pdlData.pdl_company) {
-            candidate.current_employer = pdlData.pdl_company as string;
-          }
-          if (!candidate.current_title && pdlData.pdl_job_title) {
-            candidate.current_title = pdlData.pdl_job_title as string;
-          }
+          if (!candidate.phone && candidate.pdl_mobile_phone) candidate.phone = candidate.pdl_mobile_phone;
+          if (!candidate.email && candidate.pdl_personal_email) candidate.email = candidate.pdl_personal_email;
+          if (!candidate.linkedin_url && pdlData.pdl_linkedin_url) candidate.linkedin_url = pdlData.pdl_linkedin_url as string;
+          if (!candidate.current_employer && pdlData.pdl_company) candidate.current_employer = pdlData.pdl_company as string;
+          if (!candidate.current_title && pdlData.pdl_job_title) candidate.current_title = pdlData.pdl_job_title as string;
         }
       }
 
-      // Phase 4: AI Synthesis (now includes NPI + PDL context)
       const { qualifications_summary, hiring_recommendation } = await synthesizeViaAI(candidate, sonarData, npiData, pdlData);
       if (qualifications_summary) candidate.qualifications_summary = qualifications_summary;
       if (hiring_recommendation) candidate.hiring_recommendation = hiring_recommendation;
@@ -997,21 +1073,18 @@ serve(async (req: Request) => {
       candidate.enrichment_status = "complete";
     } catch (e) {
       console.warn(`[hire-alert-scanner] Inline enrichment failed for ${candidate.full_name}:`, e instanceof Error ? e.message : String(e));
-      candidate.enrichment_status = "pending"; // Will be picked up by deep-enrich
+      candidate.enrichment_status = "pending";
     }
   }
 
-  // Update source health with NPI/PDL stats
   sourceHealth.npi = npiHits > 0 ? `✅ ${npiHits} hits` : "⚠️ 0 hits";
   sourceHealth.pdl = pdlHits > 0 ? `✅ ${pdlHits} hits` : PDL_API_KEY ? "⚠️ 0 hits" : "⛔ No key";
 
-  // Mark pending batch
   for (const c of pendingBatch) {
     if (!c.enrichment_status) c.enrichment_status = "pending";
   }
 
   // Upsert all new candidates into DB
-  // Filter out any corporate names that slipped through before DB insert
   const allScored = [...enrichBatch, ...pendingBatch].filter((c) => {
     if (isCorporateName(c.full_name)) {
       console.log(`[hire-alert-scanner] Corporate name blocked from DB: "${c.full_name}"`);
@@ -1019,6 +1092,7 @@ serve(async (req: Request) => {
     }
     return true;
   });
+
   if (allScored.length) {
     const { data: insertedRows, error: insertError } = await sb.from("hire_alert_candidates").insert(
       allScored.map((c) => ({
@@ -1040,6 +1114,7 @@ serve(async (req: Request) => {
         score_reason: c.score_reason,
         raw_data: {
           ...(c.raw_data || {}),
+          license_issuer: c.license_issuer || null,
           npi_number: c.npi_number || null,
           npi_business_phone: c.npi_business_phone || null,
           npi_taxonomy: c.npi_taxonomy || null,
@@ -1125,15 +1200,13 @@ serve(async (req: Request) => {
     const clientRoles: string[] = client.target_roles || [];
     const clientZips: string[] = (client as any).target_zip_codes || [];
 
-    // Filter scored candidates to only those matching this client's target roles + zips
     const clientAlertWorthy = allScored.filter(
       (c) => c.availability_score >= 5
         && candidateMatchesRoles(c.license_type, clientRoles)
         && candidateMatchesZips(c.zip, c.city, clientZips)
     );
 
-    // ===== NO GHOST LEAD RULE =====
-    // Only send candidates that have at least ONE clickable action link
+    // NO GHOST LEAD RULE
     const actionableCandidates = clientAlertWorthy.filter(
       (c) => c.linkedin_url || c.facebook_url || c.email || c.phone || c.npi_business_phone || c.pdl_mobile_phone
     );
@@ -1162,7 +1235,6 @@ serve(async (req: Request) => {
         await sendSMS(client.owner_phone, TWILIO_PHONE_NUMBER, smsBody, "hire_alert");
       }
 
-      // TA-9: Record which candidates were alerted to this client
       if (actionableCandidates.length) {
         const candidateIds = actionableCandidates
           .map((c) => (c as any)._db_id)
@@ -1205,28 +1277,31 @@ serve(async (req: Request) => {
     errors: null,
   });
 
-  // Founder daily report — Matt only (sources visible here only)
+  // ===== FOUNDER DAILY REPORT =====
   const sourceBreakdown = {
+    bpl: allScored.filter((c) => c.source === "bpl").length,
     miosha: allScored.filter((c) => c.source === "miosha").length,
-    sonar: allScored.filter((c) => c.source === "firecrawl").length,
+    jobboards: allScored.filter((c) => c.source === "firecrawl").length,
   };
 
   const enrichedCount = allScored.filter((c) => c.enrichment_status === "complete").length;
   const ghostLeadsFiltered = allScored.filter((c) => c.availability_score >= 5 && !c.linkedin_url && !c.facebook_url && !c.email && !c.phone && !c.npi_business_phone && !c.pdl_mobile_phone).length;
+  const withLicenseCount = allScored.filter((c) => !!c.license_number).length;
 
-  // Build founder candidate cards (same card layout as client emails)
   const founderScoreBg = (s: number) =>
     s >= 8 ? "#dc2626" : s >= 7 ? "#e8621a" : s >= 5 ? "#f59e0b" : "#94a3b8";
+
+  const founderSourceLabel = (s: string) =>
+    s === "bpl" ? "🏛️ BPL State DB" : s === "miosha" ? "🏛️ MIOSHA" : "📋 Job Board";
 
   const founderCandidateCards = allScored.length
     ? allScored
         .sort((a, b) => b.availability_score - a.availability_score)
         .map((c) => {
-          const sourceIcon = c.source === "miosha" ? "🏛️ MIOSHA" : "📋 Sonar";
           const enrichIcon = c.enrichment_status === "complete" ? "✅ Enriched" : c.enrichment_status === "pending" ? "⏳ Pending" : "❌ Failed";
           const licenseRow = c.license_number
-            ? `<tr><td style="padding:6px 0;"><p style="margin:0;font-size:13px;color:#1e293b;background:#f0fdf4;padding:8px 12px;border-radius:8px;border-left:3px solid #059669;">🪪 License: <strong>${c.license_number}</strong>${c.license_expiry ? ` · Exp: <strong>${c.license_expiry}</strong>` : ""} · <span style="color:#059669;font-weight:700;">Active</span></p></td></tr>`
-            : `<tr><td style="padding:6px 0;"><p style="margin:0;font-size:13px;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:8px;border-left:3px solid #f59e0b;">⚠️ License not yet verified — <a href="https://aca-prod.accela.com/LARA/GeneralProperty/PropertyLookUp.aspx?isLicensee=Y" target="_blank" style="color:#0891b2;font-weight:700;text-decoration:underline;">manual LARA lookup recommended</a></p></td></tr>`;
+            ? `<tr><td style="padding:6px 0;"><p style="margin:0;font-size:13px;color:#1e293b;background:#f0fdf4;padding:8px 12px;border-radius:8px;border-left:3px solid #059669;">🪪 License: <strong>${c.license_number}</strong>${c.license_issuer ? ` · ${c.license_issuer}` : ""}${c.license_expiry ? ` · Exp: <strong>${c.license_expiry}</strong>` : ""} · <span style="color:#059669;font-weight:700;">Active</span></p></td></tr>`
+            : `<tr><td style="padding:6px 0;"><p style="margin:0;font-size:13px;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:8px;border-left:3px solid #f59e0b;">⚠️ License not yet verified — <a href="https://aca-prod.accela.com/LARA/GeneralProperty/PropertyLookUp.aspx?isLicensee=Y" target="_blank" style="color:#0891b2;font-weight:700;text-decoration:underline;">manual LARA lookup</a></p></td></tr>`;
 
           return `<tr><td style="padding:0 0 16px;">
       <table width="100%" cellpadding="0" cellspacing="0" style="border-radius:12px;overflow:hidden;border:1px solid ${c.availability_score >= 7 ? "#e8621a40" : "#e2e8f0"};${c.availability_score >= 7 ? "box-shadow:0 2px 8px rgba(232,98,26,0.12);" : ""}">
@@ -1234,7 +1309,7 @@ serve(async (req: Request) => {
           <table width="100%" cellpadding="0" cellspacing="0"><tr>
             <td>
               <p style="margin:0;font-size:16px;font-weight:800;color:${c.availability_score >= 7 ? "#fff" : "#1e293b"};letter-spacing:-0.3px;">${c.full_name}</p>
-              <p style="margin:3px 0 0;font-size:11px;color:${c.availability_score >= 7 ? "#94a3b8" : "#64748b"};">${sourceIcon} · ${enrichIcon}</p>
+              <p style="margin:3px 0 0;font-size:11px;color:${c.availability_score >= 7 ? "#94a3b8" : "#64748b"};">${founderSourceLabel(c.source)} · ${enrichIcon}</p>
             </td>
             <td style="text-align:right;vertical-align:top;">
               <span style="display:inline-block;background:${founderScoreBg(c.availability_score)};color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:800;letter-spacing:0.5px;">
@@ -1269,7 +1344,7 @@ serve(async (req: Request) => {
     : `<tr><td style="padding:32px;text-align:center;color:#94a3b8;font-size:14px;">No new candidates found today. Scanner ran successfully.</td></tr>`;
 
   await notifyMatt(
-    `${allHotCandidates.length > 0 ? "🔥 " : ""}TechAlert — ${dateStr} — ${newCandidates.length} new${allHotCandidates.length > 0 ? `, ${allHotCandidates.length} HOT` : ""} · ${enrichedCount} enriched · NPI:${npiHits} PDL:${pdlHits}`,
+    `${allHotCandidates.length > 0 ? "🔥 " : ""}TechAlert — ${dateStr} — ${newCandidates.length} new${allHotCandidates.length > 0 ? `, ${allHotCandidates.length} HOT` : ""} · ${withLicenseCount}/${allScored.length} w/license · BPL:${sourceBreakdown.bpl} MIOSHA:${sourceBreakdown.miosha} Jobs:${sourceBreakdown.jobboards}`,
     `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;"><tr><td align="center" style="padding:32px 16px;">
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:720px;">
@@ -1301,9 +1376,9 @@ serve(async (req: Request) => {
       <p style="margin:4px 0 0;font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">New</p>
     </td>
     <td width="8"></td>
-    <td style="text-align:center;padding:16px 8px;background:#10b98118;border-radius:12px;">
-      <p style="margin:0;font-size:32px;font-weight:900;color:#10b981;line-height:1;">${enrichedCount}</p>
-      <p style="margin:4px 0 0;font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Enriched</p>
+    <td style="text-align:center;padding:16px 8px;background:#059669${withLicenseCount > 0 ? "18" : "08"};border-radius:12px;">
+      <p style="margin:0;font-size:32px;font-weight:900;color:#059669;line-height:1;">${withLicenseCount}</p>
+      <p style="margin:4px 0 0;font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">w/ License</p>
     </td>
     <td width="8"></td>
     <td style="text-align:center;padding:16px 8px;background:${allHotCandidates.length > 0 ? "#e8621a15" : "#ffffff08"};border-radius:12px;${allHotCandidates.length > 0 ? "border:1px solid #e8621a40;" : ""}">
@@ -1318,19 +1393,23 @@ serve(async (req: Request) => {
   </tr></table>
 </td></tr>
 
-<!-- SOURCE + ENRICHMENT HEALTH -->
+<!-- SOURCE HEALTH -->
 <tr><td style="background:#1e293b;padding:0 28px 16px;">
   <table width="100%" cellpadding="0" cellspacing="0"><tr>
     <td style="padding:8px 12px;background:#ffffff06;border-radius:8px;">
+      <span style="font-size:11px;color:#94a3b8;">🏛️ BPL (Primary): <strong style="color:#00d4ff;">${sourceBreakdown.bpl}</strong> ${sourceHealth.bpl}</span>
+      <span style="font-size:11px;color:#334155;"> · </span>
       <span style="font-size:11px;color:#94a3b8;">🏛️ MIOSHA: <strong style="color:#00d4ff;">${sourceBreakdown.miosha}</strong> ${sourceHealth.miosha}</span>
       <span style="font-size:11px;color:#334155;"> · </span>
-      <span style="font-size:11px;color:#94a3b8;">📋 Sonar/JobBoards: <strong style="color:#00d4ff;">${sourceBreakdown.sonar}</strong> ${sourceHealth.sonar}</span>
-      <span style="font-size:11px;color:#334155;"> · </span>
+      <span style="font-size:11px;color:#94a3b8;">📋 Job Boards: <strong style="color:#00d4ff;">${sourceBreakdown.jobboards}</strong> ${sourceHealth.jobboards}</span>
+      <br>
       <span style="font-size:11px;color:#94a3b8;">🏥 NPI: <strong style="color:#7c3aed;">${npiHits}</strong> ${sourceHealth.npi}</span>
       <span style="font-size:11px;color:#334155;"> · </span>
       <span style="font-size:11px;color:#94a3b8;">📱 PDL: <strong style="color:#ea580c;">${pdlHits}</strong> ${sourceHealth.pdl}</span>
       <span style="font-size:11px;color:#334155;"> · </span>
       <span style="font-size:11px;color:#94a3b8;">👻 Ghost leads filtered: <strong style="color:#e8621a;">${ghostLeadsFiltered}</strong></span>
+      <span style="font-size:11px;color:#334155;"> · </span>
+      <span style="font-size:11px;color:#94a3b8;">🪪 License rate: <strong style="color:#059669;">${allScored.length ? Math.round((withLicenseCount / allScored.length) * 100) : 0}%</strong></span>
     </td>
   </tr></table>
 </td></tr>
@@ -1350,7 +1429,8 @@ serve(async (req: Request) => {
       🔥 <strong style="color:#e8621a;">8-10</strong> = alert sent &nbsp;·&nbsp;
       ⚡ <strong style="color:#f59e0b;">5-7</strong> = digest only &nbsp;·&nbsp;
       <span style="color:#94a3b8;">Below 5</span> = stored, no alert<br>
-      <span style="color:#475569;">Enrichment waterfall: NPI → Sonar OSINT → PDL · Top 5/run · No Ghost Lead filter active</span>
+      <span style="color:#475569;">Source hierarchy: BPL State DB (+3) → MIOSHA (+1) → Job Boards (-2 if no license)</span><br>
+      <span style="color:#475569;">Enrichment: NPI → Sonar OSINT → PDL · Top 5/run · No Ghost Lead filter active</span>
     </td>
   </tr></table>
 </td></tr>
@@ -1362,7 +1442,20 @@ serve(async (req: Request) => {
   await sb.from("agent_heartbeats").upsert({
     agent_name: "hire-alert-scanner",
     last_beat: new Date().toISOString(),
-    metadata: { candidates_found: allRaw.length, new_candidates: newCandidates.length, hot_candidates: allHotCandidates.length, alerts_sent: alertsSent, enriched_inline: enrichedCount, ghost_leads_filtered: ghostLeadsFiltered, npi_hits: npiHits, pdl_hits: pdlHits },
+    metadata: {
+      candidates_found: allRaw.length,
+      new_candidates: newCandidates.length,
+      hot_candidates: allHotCandidates.length,
+      alerts_sent: alertsSent,
+      enriched_inline: enrichedCount,
+      ghost_leads_filtered: ghostLeadsFiltered,
+      npi_hits: npiHits,
+      pdl_hits: pdlHits,
+      source_bpl: sourceBreakdown.bpl,
+      source_miosha: sourceBreakdown.miosha,
+      source_jobboards: sourceBreakdown.jobboards,
+      license_rate: allScored.length ? Math.round((withLicenseCount / allScored.length) * 100) : 0,
+    },
   }, { onConflict: "agent_name" });
 
   return new Response(
@@ -1375,6 +1468,10 @@ serve(async (req: Request) => {
       ghost_leads_filtered: ghostLeadsFiltered,
       npi_hits: npiHits,
       pdl_hits: pdlHits,
+      source_bpl: sourceBreakdown.bpl,
+      source_miosha: sourceBreakdown.miosha,
+      source_jobboards: sourceBreakdown.jobboards,
+      license_rate: allScored.length ? Math.round((withLicenseCount / allScored.length) * 100) : 0,
     }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );

@@ -1,9 +1,9 @@
-// miosha-license-scraper — Michigan LARA license data
-// Uses OpenRouter perplexity/sonar-pro for live web search of Michigan license databases.
-// Called by hire-alert-scanner OR run standalone via cron/admin trigger.
+// miosha-license-scraper — Michigan LARA license data (SECONDARY source)
+// Uses OpenRouter perplexity/sonar-pro to search the LARA Accela portal
+// for individual licensees. Targets aca-prod.accela.com/MILARA specifically.
 //
-// Michigan LARA publishes licensing lists at michigan.gov/lara but blocks automated downloads.
-// This scraper uses live web search to find recently licensed tradespeople.
+// IMPORTANT: This scraper searches for INDIVIDUAL PEOPLE with state licenses.
+// It must NEVER return company names, school names, or organization names.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -18,32 +18,46 @@ interface LicenseCandidate {
   license_number: string | null;
   license_expiry: string | null;
   city: string | null;
+  license_issuer: string | null;
   source: "miosha";
+}
+
+// Corporate name filter — must match hire-alert-scanner
+const CORPORATE_PATTERN = /\b(LLC|Inc|Corp|School|Casino|Hospital|Health\s*System|University|Energy|Solutions|Administration|Academy|Institute|Staffing|Group|Services|Sons|Mechanical|Electric|Company|Associates|Enterprises|Foundation|Authority|Board|Commission|Department|District|Center|Clinic|Medical|Nursing\s+Home|Assisted\s+Living|Home\s+Care|Senior\s+Living|Public\s+Schools|Community\s+College|Rehabilitation|Management|Consulting|Industries|Manufacturing|Plumbing|Heating|Cooling|Roofing|Construction|Contractors|Builders|Supply|Wholesale|Distributors|Holdings|Properties|Realty|Insurance|Financial|Bank|Credit\s+Union|Transit|Utility|Utilities|Water|Sewer|Electric\s+Co|Power|Township|County|City\s+of|State\s+of|Federal)\b/i;
+
+function isCorporateName(name: string): boolean {
+  if (!name) return true;
+  if (CORPORATE_PATTERN.test(name)) return true;
+  if (name === name.toUpperCase() && name.split(/\s+/).length > 3) return true;
+  if (/\b(of the|of)\b/i.test(name) && name.split(/\s+/).length > 3) return true;
+  if (name.trim().split(/\s+/).length === 1 && name.length > 3) return true;
+  if (/\s&\s/.test(name) && name.split(/\s+/).length > 2) return true;
+  return false;
 }
 
 const TRADE_QUERIES = [
   {
-    query: "Search Michigan LARA licensing database for recently licensed boiler operators in Michigan. Find specific names, license numbers, cities. Focus on new licenses issued in the last 90 days.",
+    query: `Search the Michigan LARA Accela portal at aca-prod.accela.com/MILARA and michigan.gov/lara for INDIVIDUAL PEOPLE who hold active Boiler Operator licenses in Michigan. Find their personal full name (first and last), Michigan state license number, license expiry date, and city. Look for recently issued or renewed licenses. DO NOT return company names, school names, or employer names.`,
     label: "Boiler Operator",
   },
   {
-    query: "Search Michigan LARA licensing database for recently licensed HVAC contractors and mechanical contractors in Michigan. Find specific names, license numbers, cities.",
+    query: `Search the Michigan LARA Accela portal at aca-prod.accela.com/MILARA for INDIVIDUAL PEOPLE who hold active HVAC or Mechanical Contractor licenses in Michigan. Find each person's full name, Michigan license number, expiry date, and city. Only return individual people, never companies or organizations.`,
     label: "HVAC Technician",
   },
   {
-    query: "Search Michigan LARA licensing database for recently licensed plumbing contractors in Michigan. Find specific names, license numbers, cities.",
+    query: `Search the Michigan LARA Accela portal at aca-prod.accela.com/MILARA for INDIVIDUAL PEOPLE who hold active Master Plumber or Journeyman Plumber licenses in Michigan. Find each person's full name, license number, expiry date, and city. Return only individual person names, not plumbing companies.`,
     label: "Plumber",
   },
   {
-    query: "Search Michigan LARA licensing database for recently licensed electricians and electrical contractors in Michigan. Find specific names, license numbers, cities.",
+    query: `Search the Michigan LARA Accela portal at aca-prod.accela.com/MILARA for INDIVIDUAL PEOPLE who hold active Master Electrician or Journeyman Electrician licenses in Michigan. Find each person's full name, license number, expiry date, and city. Return only individual person names, never electrical companies or contractors.`,
     label: "Electrician",
   },
   {
-    query: "Search Michigan LARA licensing database for recently licensed certified nursing assistants (CNAs) and nurse aides in Michigan. Find specific names, license numbers, cities. Focus on new certifications issued in the last 90 days.",
+    query: `Search Michigan Board of Nursing records and the Michigan LARA portal for INDIVIDUAL PEOPLE who recently obtained CNA (Certified Nursing Assistant) certification in Michigan. Find each person's full name, certification number, certification date, and city. Only return individual person names, never nursing homes, hospitals, or schools.`,
     label: "CNA",
   },
   {
-    query: "Search Michigan LARA licensing database for recently licensed registered nurses (RN) and licensed practical nurses (LPN) in Michigan. Find specific names, license numbers, cities. Focus on new licenses issued in the last 90 days.",
+    query: `Search Michigan Board of Nursing records and the Michigan LARA portal for INDIVIDUAL PEOPLE who recently obtained RN (Registered Nurse) or LPN (Licensed Practical Nurse) licenses in Michigan. Find each person's full name, license number, issue date, and city. Only return individual person names, never hospitals, clinics, or staffing agencies.`,
     label: "RN/LPN",
   },
 ];
@@ -66,7 +80,22 @@ async function searchLicenses(query: string, label: string): Promise<LicenseCand
         messages: [
           {
             role: "system",
-            content: `You are a licensing database researcher. Search for Michigan licensed tradespeople. Return ONLY a valid JSON array. Each object: { "full_name": "string", "license_number": "string or null", "city": "string or null", "license_expiry": "YYYY-MM-DD or null" }. Max 20 results. No markdown formatting, no explanation text. If you cannot find specific license records, return [].`,
+            content: `You are a state licensing database researcher. Search for Michigan licensed INDIVIDUAL PEOPLE from the LARA/MiPLUS portal.
+
+CRITICAL RULES:
+1. Return ONLY individual person names (first and last). NEVER return employer names, school names, hospital names, staffing agencies, utility companies, or ANY organization name.
+2. Each result MUST include the person's state license number if at all possible. If you cannot find a license number, only include the result if you're certain it's an individual person from a licensing record.
+3. If you find a job posting (employer looking for candidates), SKIP IT entirely. We want the LICENSEE, not the employer.
+
+Return ONLY a valid JSON array. Each object:
+{
+  "full_name": "person's first and last name",
+  "license_number": "state license number or null",
+  "city": "city or null",
+  "license_expiry": "YYYY-MM-DD or null",
+  "license_issuer": "Michigan LARA or Michigan Board of Nursing or null"
+}
+Max 8 results. No markdown formatting, no explanation text. If you cannot find specific individual license records, return [].`,
           },
           { role: "user", content: query },
         ],
@@ -95,16 +124,19 @@ async function searchLicenses(query: string, label: string): Promise<LicenseCand
       license_number?: string | null;
       city?: string | null;
       license_expiry?: string | null;
+      license_issuer?: string | null;
     }>;
 
     return parsed
       .filter((r) => r.full_name && r.full_name.length >= 3)
+      .filter((r) => !isCorporateName(r.full_name))
       .map((r) => ({
         full_name: r.full_name,
         license_type: label,
         license_number: r.license_number || null,
         license_expiry: r.license_expiry || null,
         city: r.city || null,
+        license_issuer: r.license_issuer || "Michigan LARA",
         source: "miosha" as const,
       }));
   } catch (e) {
@@ -122,6 +154,7 @@ serve(async (req) => {
   let newCount = 0;
   let updatedCount = 0;
   let errorCount = 0;
+  let corporateFiltered = 0;
 
   try {
     for (const { query, label } of TRADE_QUERIES) {
@@ -155,6 +188,7 @@ serve(async (req) => {
             } else {
               await sb.from("hire_alert_candidates").insert({
                 ...row, status: "new", first_seen_at: new Date().toISOString(),
+                raw_data: { license_issuer: c.license_issuer },
               });
               newCount++;
             }
@@ -170,6 +204,7 @@ serve(async (req) => {
             if (!existing) {
               await sb.from("hire_alert_candidates").insert({
                 ...row, status: "new", first_seen_at: new Date().toISOString(),
+                raw_data: { license_issuer: c.license_issuer },
               });
               newCount++;
             } else {
@@ -183,9 +218,9 @@ serve(async (req) => {
       }
     }
 
-    console.log(`[miosha-scraper] done: new=${newCount} updated=${updatedCount} errors=${errorCount}`);
+    console.log(`[miosha-scraper] done: new=${newCount} updated=${updatedCount} errors=${errorCount} corporate_filtered=${corporateFiltered}`);
     return new Response(
-      JSON.stringify({ ok: true, new: newCount, updated: updatedCount, errors: errorCount }),
+      JSON.stringify({ ok: true, new: newCount, updated: updatedCount, errors: errorCount, corporate_filtered: corporateFiltered }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (e: unknown) {
