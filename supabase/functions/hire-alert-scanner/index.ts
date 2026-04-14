@@ -404,11 +404,13 @@ async function enrichViaSonar(candidate: RawCandidate): Promise<Record<string, u
           },
           {
             role: "user",
-            content: `Search the web using these boolean queries to find contact and professional information for "${candidate.full_name}", a ${tradeLabel} in ${locationLabel}:
+            content: `Search the web using these boolean queries to find contact, professional, and licensing information for "${candidate.full_name}", a ${tradeLabel} in ${locationLabel}:
 
 1. site:linkedin.com/in/ "${candidate.full_name}" "${candidate.city || "Michigan"}"
 2. site:indeed.com/r/ "${candidate.full_name}"
 3. site:facebook.com "${candidate.full_name}" "${candidate.city || "Michigan"}"
+4. site:michigan.gov/lara "${candidate.full_name}" license
+5. "${candidate.full_name}" "${tradeLabel}" license number certification
 
 From the search results, extract the following and return as a JSON object:
 {
@@ -418,16 +420,20 @@ From the search results, extract the following and return as a JSON object:
   "phone": "any public phone found or null",
   "current_employer": "company name or null",
   "current_title": "job title or null",
-  "years_experience": number or null
+  "years_experience": number or null,
+  "license_number": "any state license number, certification number, or credential ID found or null",
+  "license_issuer": "issuing authority (e.g. Michigan LARA, Michigan Board of Nursing) or null",
+  "license_expiry": "expiration date if found or null",
+  "license_status": "Active, Expired, Pending, or null"
 }
 
 Only include data you actually find. Do not fabricate any information.`,
           },
         ],
-        max_tokens: 800,
+        max_tokens: 1000,
         temperature: 0.1,
       }),
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(20000),
     });
 
     if (!res.ok) {
@@ -443,7 +449,7 @@ Only include data you actually find. Do not fabricate any information.`,
       return {};
     }
 
-    console.log(`[hire-alert-scanner] Sonar enriched: ${candidate.full_name} → linkedin=${!!parsed.linkedin_url} fb=${!!parsed.facebook_url} phone=${!!parsed.phone} email=${!!parsed.email}`);
+    console.log(`[hire-alert-scanner] Sonar enriched: ${candidate.full_name} → linkedin=${!!parsed.linkedin_url} fb=${!!parsed.facebook_url} phone=${!!parsed.phone} email=${!!parsed.email} license=${!!parsed.license_number}`);
     return parsed;
   } catch (e) {
     console.warn(`[hire-alert-scanner] Sonar enrichment error for ${candidate.full_name}:`, e instanceof Error ? e.message : String(e));
