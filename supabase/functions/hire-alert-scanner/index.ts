@@ -231,10 +231,23 @@ async function scanJobBoards(): Promise<RawCandidate[]> {
   return scanJobBoardsFallback();
 }
 
+// Company name signals — used to filter out job postings stored as fake candidates
+const COMPANY_NAME_SIGNALS = ["inc", "llc", "corp", "co.", "company", "contractors", "services", "solutions", "group", "enterprises", "associates", "systems", "industries", "construction", "plumbing", "hvac", "mechanical", "electric", "heating", "cooling", "dba"];
+
+function isPersonNameJobBoard(name: string): boolean {
+  const lower = name.toLowerCase().trim();
+  const words = lower.split(/\s+/).filter(Boolean);
+  if (words.length < 2) return false;
+  if (COMPANY_NAME_SIGNALS.some((s) => lower.includes(s))) return false;
+  if (name === name.toUpperCase() && name.length > 8) return false;
+  return true;
+}
+
 async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[]> {
+  // Only search for INDIVIDUAL PEOPLE seeking work — not job postings by companies
   const searches = [
-    "Find current job postings for boiler operators, HVAC technicians, plumbers, pipefitters, and electricians in Metro Detroit Michigan. For each posting, extract: company name, job title, city. Focus on postings from the last 7 days.",
-    "Find licensed HVAC technicians, plumbers, or electricians in Michigan who are actively seeking work or recently posted resumes. Look on Indeed, ZipRecruiter, LinkedIn. Extract: person name or company name, trade, city.",
+    "Find individual licensed tradespeople in Metro Detroit Michigan who are actively seeking work or posted resumes on Indeed, ZipRecruiter, or LinkedIn in the last 30 days. Trades: boiler operators, HVAC technicians, plumbers, pipefitters, electricians. Return only real people's names (First Last), NOT company names.",
+    "Find licensed HVAC technicians, plumbers, or electricians in Michigan who posted public resumes or profiles showing they are open to work. Look on Indeed resume search, LinkedIn open-to-work profiles. Return only individual person names, their trade, and Michigan city.",
   ];
 
   const allResults: RawCandidate[] = [];
@@ -253,7 +266,7 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
           messages: [
             {
               role: "system",
-              content: `You are a hiring intelligence researcher. Return ONLY valid JSON array. Each object: { "name": "company or person", "trade": "specific trade title", "city": "city name", "type": "job_posting" or "candidate" }. Max 15 results. No markdown, no explanation.`,
+              content: `You are a hiring intelligence researcher. Find INDIVIDUAL PEOPLE seeking trade work — NOT companies hiring. Return ONLY valid JSON array. Each object must be a real person: { "name": "First Last", "trade": "specific trade title", "city": "Michigan city", "type": "candidate" }. REJECT any result where name looks like a company (LLC, Inc, Corp, Contractors, Services, etc). Max 15 results. No markdown, no explanation. If you can only find job postings (not candidates), return [].`,
             },
             { role: "user", content: query },
           ],
@@ -277,6 +290,11 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
 
       for (const item of parsed) {
         if (!item.name || !item.trade) continue;
+        // Reject company names stored as candidates
+        if (!isPersonNameJobBoard(item.name)) {
+          console.log(`[hire-alert-scanner] Job board: rejected company name "${item.name}"`);
+          continue;
+        }
         const key = `${item.name.toLowerCase()}-${item.trade.toLowerCase()}`;
         if (seen.has(key)) continue;
         seen.add(key);
@@ -286,7 +304,7 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
           license_type: item.trade,
           city: item.city || "Metro Detroit",
           source: "firecrawl" as const,
-          raw_data: { openrouter_search: true, type: item.type || "job_posting" },
+          raw_data: { openrouter_search: true, type: "candidate" },
         });
       }
     } catch (e) {
@@ -294,7 +312,7 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
     }
   }
 
-  console.log(`[hire-alert-scanner] OpenRouter web search: found ${allResults.length} candidates`);
+  console.log(`[hire-alert-scanner] OpenRouter web search: found ${allResults.length} validated candidates`);
   return allResults;
 }
 
