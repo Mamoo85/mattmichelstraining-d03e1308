@@ -32,6 +32,7 @@ interface Candidate {
   hiring_recommendation: string | null;
   linkedin_url: string | null;
   facebook_url: string | null;
+  profile_photo_url: string | null;
   current_employer: string | null;
   current_title: string | null;
   years_experience: string | null;
@@ -523,11 +524,42 @@ export default function MyTechAlert() {
                       onClick={() => toggleExpand(c.id)}
                       className="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
                     >
-                      <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-xs font-black ${scoreBadgeColor(c.availability_score)}`}>
-                        {c.availability_score >= 8 ? "🔥" : c.availability_score >= 7 ? "⚡" : ""}{c.availability_score}
-                      </div>
+                      {/* Profile photo or score badge */}
+                      {c.profile_photo_url ? (
+                        <div className="shrink-0 relative">
+                          <img
+                            src={c.profile_photo_url}
+                            alt={c.full_name}
+                            className="w-10 h-10 rounded-full object-cover border-2 border-white/10"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden"); }}
+                          />
+                          <div className="hidden w-10 h-10 rounded-full flex items-center justify-center text-xs font-black" style={{ background: c.availability_score >= 8 ? "#059669" : c.availability_score >= 5 ? "#d97706" : "#475569" }}>
+                            {c.availability_score}
+                          </div>
+                          <span className={`absolute -bottom-0.5 -right-0.5 text-[9px] font-black rounded-full w-5 h-5 flex items-center justify-center ${scoreBadgeColor(c.availability_score)}`}>
+                            {c.availability_score}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-xs font-black ${scoreBadgeColor(c.availability_score)}`}>
+                          {c.availability_score >= 8 ? "🔥" : c.availability_score >= 7 ? "⚡" : ""}{c.availability_score}
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-white font-bold text-sm truncate">{c.full_name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-white font-bold text-sm truncate">{c.full_name}</p>
+                          {/* Social links in header */}
+                          {c.linkedin_url && (
+                            <a href={c.linkedin_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="shrink-0 text-[#0a66c2] hover:text-blue-400 transition-colors" title="LinkedIn">
+                              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                            </a>
+                          )}
+                          {c.facebook_url && (
+                            <a href={c.facebook_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="shrink-0 text-[#1877f2] hover:text-blue-400 transition-colors" title="Facebook">
+                              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                            </a>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <Badge variant="secondary" className="text-[10px] px-2 py-0 bg-[#00d4ff]/10 text-[#00d4ff] border-[#00d4ff]/20">
                             {c.license_type || (isHealthcare ? "Healthcare" : "Technician")}

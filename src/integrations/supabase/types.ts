@@ -4354,6 +4354,7 @@ export type Database = {
           linkedin_url: string | null
           name: string
           phone: string | null
+          profile_photo_url: string | null
           qualifications_summary: string | null
           raw_data: Json | null
           score: number | null
@@ -4389,6 +4390,7 @@ export type Database = {
           linkedin_url?: string | null
           name: string
           phone?: string | null
+          profile_photo_url?: string | null
           qualifications_summary?: string | null
           raw_data?: Json | null
           score?: number | null
@@ -4424,6 +4426,7 @@ export type Database = {
           linkedin_url?: string | null
           name?: string
           phone?: string | null
+          profile_photo_url?: string | null
           qualifications_summary?: string | null
           raw_data?: Json | null
           score?: number | null

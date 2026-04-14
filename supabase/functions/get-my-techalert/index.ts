@@ -65,7 +65,7 @@ serve(async (req) => {
     const candidateIds = clientCandidates.map((cc: any) => cc.candidate_id);
     const { data: candidates } = await sb
       .from("hire_alert_candidates")
-      .select("id, full_name, phone, email, license_type, license_number, license_expiry, city, zip, availability_score, score_reason, qualifications_summary, hiring_recommendation, linkedin_url, facebook_url, current_employer, current_title, years_experience, source")
+      .select("id, full_name, phone, email, license_type, license_number, license_expiry, city, zip, availability_score, score_reason, qualifications_summary, hiring_recommendation, linkedin_url, facebook_url, profile_photo_url, current_employer, current_title, years_experience, source")
       .in("id", candidateIds);
 
     // Check for active claims by OTHER clients on each candidate
