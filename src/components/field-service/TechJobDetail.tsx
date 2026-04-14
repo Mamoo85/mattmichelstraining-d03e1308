@@ -83,6 +83,17 @@ const TechJobDetail: React.FC<TechJobDetailProps> = ({ job, techId, onBack, onSt
       setCurrentStatus(next.value);
       if (next.value === "on_site") setOnSiteStart(new Date());
       onStatusChange(job.id, next.value);
+
+      // En-Route: fire ETA SMS to customer
+      if (next.value === "en_route") {
+        try {
+          await supabase.functions.invoke("field-service-en-route", {
+            body: { job_id: job.id },
+          });
+        } catch (enRouteErr) {
+          console.error("En-route notification failed:", enRouteErr);
+        }
+      }
     } catch (err) {
       console.error("Status update failed:", err);
     } finally {
