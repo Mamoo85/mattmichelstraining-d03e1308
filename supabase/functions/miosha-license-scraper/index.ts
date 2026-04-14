@@ -147,110 +147,74 @@ async function scanMichiganNurseAide(): Promise<LicenseCandidate[]> {
 }
 
 // ===== SOURCE 3: Michigan Open Data Portal (Socrata) =====
+// Michigan doesn't publish individual license lists on Socrata — only metrics.
+// Instead, search the LARA BPL verification lookup pages via Firecrawl.
 async function scanMichiganOpenData(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) {
+    console.warn("[S3:OpenData] No FIRECRAWL_API_KEY — skipping LARA lookup");
+    return [];
+  }
   const candidates: LicenseCandidate[] = [];
-  const seen = new Set<string>();
 
-  // Known Socrata dataset IDs for Michigan professional licenses
-  const datasets = [
-    { id: "r28y-bfcc", label: "Electrician", nameField: "licensee_name", typeField: "license_type" },
-    { id: "5keb-vwag", label: "Plumber", nameField: "licensee_name", typeField: "license_type" },
-    { id: "ngb4-zzjm", label: "HVAC Technician", nameField: "licensee_name", typeField: "license_type" },
+  // Try LARA online license verification search pages
+  const laraSearches = [
+    { url: "https://aca-prod.accela.com/LARA/GeneralProperty/PropertyLookUp.aspx?is498=1", label: "Trade Professional" },
   ];
 
-  for (const ds of datasets) {
+  for (const { url, label } of laraSearches) {
     try {
-      const url = `https://data.michigan.gov/resource/${ds.id}.json?$where=status='Active'&$limit=200&$select=licensee_name,license_number,city,expiration_date`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 3000 }),
+        signal: AbortSignal.timeout(20_000),
+      });
       if (!res.ok) {
-        console.warn(`[S3:OpenData] ${ds.label} HTTP ${res.status}`);
+        console.warn(`[S3:OpenData] Firecrawl HTTP ${res.status}`);
         continue;
       }
-      const rows = await res.json();
-      if (!Array.isArray(rows)) continue;
-
-      for (const row of rows) {
-        const name = row.licensee_name || row[ds.nameField] || "";
-        if (!name || !isPersonName(name)) continue;
-        const key = `${name.toLowerCase()}-${row.license_number || ""}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        candidates.push({
-          full_name: name, license_type: ds.label,
-          license_number: row.license_number || null,
-          license_expiry: row.expiration_date || null,
-          city: row.city || null, source: "miosha",
-        });
+      const data = await res.json();
+      const markdown = data?.data?.markdown || data?.markdown || "";
+      if (markdown.length > 100) {
+        const extracted = await extractNamesFromMarkdown(markdown, label);
+        candidates.push(...extracted);
       }
-      console.log(`[S3:OpenData] ${ds.label}: ${rows.length} rows → filtered`);
     } catch (e) {
-      console.warn(`[S3:OpenData] ${ds.label} error: ${e instanceof Error ? e.message : String(e)}`);
+      console.warn(`[S3:OpenData] Error: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
-
-  // Also try generic professional license search
-  try {
-    const genericUrl = `https://data.michigan.gov/resource/b2dh-6nh2.json?$where=contains(upper(profession),'BOILER') OR contains(upper(profession),'PLUMB') OR contains(upper(profession),'ELECTR') OR contains(upper(profession),'HVAC')&$limit=300`;
-    const res = await fetch(genericUrl, { signal: AbortSignal.timeout(15_000) });
-    if (res.ok) {
-      const rows = await res.json();
-      if (Array.isArray(rows)) {
-        for (const row of rows) {
-          const name = row.name || row.licensee_name || row.full_name || "";
-          if (!name || !isPersonName(name)) continue;
-          const key = `${name.toLowerCase()}-${row.license_number || ""}`;
-          if (seen.has(key)) continue;
-          seen.add(key);
-          candidates.push({
-            full_name: name,
-            license_type: row.profession || row.license_type || "Trade Professional",
-            license_number: row.license_number || null,
-            license_expiry: row.expiration_date || null,
-            city: row.city || null, source: "miosha",
-          });
-        }
-      }
-    }
-  } catch { /* skip generic */ }
 
   console.log(`[S3:OpenData] Total: ${candidates.length} candidates`);
   return candidates;
 }
 
 // ===== SOURCE 4: Detroit Building Permits — THE MOAT =====
+// Detroit uses ArcGIS Hub, not Socrata. Search via Firecrawl + ArcGIS REST.
 async function scanBuildingPermits(): Promise<LicenseCandidate[]> {
   const candidates: LicenseCandidate[] = [];
   const seen = new Set<string>();
-  const ninetyDaysAgo = new Date(Date.now() - 90 * 86400000).toISOString().split("T")[0];
 
-  // Detroit Open Data — building permits with contractor info
-  const permitEndpoints = [
-    // Detroit permits
-    `https://data.detroitmi.gov/resource/but4-ky7y.json?$where=permit_issued>='${ninetyDaysAgo}' AND (permit_type='MECHANICAL' OR permit_type='PLUMBING' OR permit_type='ELECTRICAL')&$select=contractor_name,contractor_license_no,permit_type&$limit=200`,
-    // Try alternate Detroit endpoint
-    `https://data.detroitmi.gov/resource/xw2a-a7tf.json?$where=issue_date>='${ninetyDaysAgo}'&$select=contractor_name,contractor_license,work_type&$limit=200`,
+  // ArcGIS feature service for Detroit building permits
+  const arcgisEndpoints = [
+    `https://services2.arcgis.com/qvkbeam7Wirber6j/arcgis/rest/services/Building_Permits/FeatureServer/0/query?where=1%3D1&outFields=CONTRACTOR_NAME,PERMIT_TYPE,ADDRESS&resultRecordCount=200&f=json`,
+    `https://services2.arcgis.com/qvkbeam7Wirber6j/arcgis/rest/services/Mechanical_Permits/FeatureServer/0/query?where=1%3D1&outFields=CONTRACTOR_NAME,PERMIT_TYPE&resultRecordCount=200&f=json`,
   ];
 
-  for (const url of permitEndpoints) {
+  for (const url of arcgisEndpoints) {
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
-      if (!res.ok) {
-        console.warn(`[S4:Permits] HTTP ${res.status} for ${url.slice(0, 80)}`);
-        continue;
-      }
-      const rows = await res.json();
-      if (!Array.isArray(rows)) continue;
-
-      for (const row of rows) {
-        const name = row.contractor_name || "";
+      if (!res.ok) continue;
+      const data = await res.json();
+      const features = data?.features || [];
+      for (const f of features) {
+        const attrs = f.attributes || {};
+        const name = attrs.CONTRACTOR_NAME || "";
         if (!name || !isPersonName(name)) continue;
-        const licNum = row.contractor_license_no || row.contractor_license || null;
-        const key = `${name.toLowerCase()}-${licNum || ""}`;
+        const key = name.toLowerCase();
         if (seen.has(key)) continue;
         seen.add(key);
 
-        // Map permit type to license type
-        const permitType = (row.permit_type || row.work_type || "").toUpperCase();
+        const permitType = (attrs.PERMIT_TYPE || "").toUpperCase();
         let licenseType = "Trade Professional";
         if (permitType.includes("MECHANIC") || permitType.includes("HVAC")) licenseType = "HVAC Technician";
         else if (permitType.includes("PLUMB")) licenseType = "Plumber";
@@ -259,7 +223,7 @@ async function scanBuildingPermits(): Promise<LicenseCandidate[]> {
 
         candidates.push({
           full_name: name, license_type: licenseType,
-          license_number: licNum, license_expiry: null,
+          license_number: null, license_expiry: null,
           city: "Detroit", source: "miosha",
         });
       }
@@ -387,8 +351,8 @@ async function scanPDL(): Promise<LicenseCandidate[]> {
           query: {
             bool: {
               must: [
-                { term: { job_title_clean: title } },
-                { term: { location_region: "michigan" } },
+                { match: { job_title: title } },
+                { match: { location_region: "michigan" } },
               ],
             },
           },
@@ -398,7 +362,8 @@ async function scanPDL(): Promise<LicenseCandidate[]> {
       });
 
       if (!res.ok) {
-        console.warn(`[S7:PDL] HTTP ${res.status} for "${title}"`);
+        const errText = await res.text().catch(() => "");
+        console.warn(`[S7:PDL] HTTP ${res.status} for "${title}": ${errText.slice(0, 200)}`);
         continue;
       }
 
