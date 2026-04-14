@@ -1,5 +1,5 @@
 // miosha-license-scraper — Planetary-Scale Hiring Intelligence Scanner
-// NINE data sources running in parallel + Sonar last:
+// SEVENTEEN data sources running in parallel + Sonar last:
 // S1: NPI Registry — free federal API for healthcare workers
 // S2: Michigan Nurse Aide Registry — state CNA registry
 // S3: Michigan Open Data Portal — Socrata bulk license CSVs
@@ -9,6 +9,14 @@
 // S7: People Data Labs — people search API
 // S8: Sonar Web Search — LinkedIn open-to-work, union spotlights, apprenticeship completions
 // S9: Craigslist Skilled Trades — high-intent tradespeople posting availability
+// S10: Michigan VAL License ID Enumeration — sequential LARA license IDs
+// S11: Craigslist RSS — skilled trades services RSS feeds
+// S12: Yelp Fusion API — contractor business owner-operators
+// S13: Google Places API — contractor business discovery
+// S14: Nursys — national nursing license database
+// S15: PHCC Find a Contractor — plumbing/HVAC contractors
+// S16: JATC Graduation Announcements — newly graduated journeymen
+// S17: Thumbtack — contractor profiles with license numbers
 //
 // VALIDATION RULES:
 // - Reject candidates with no license number AND no verifiable city
@@ -24,6 +32,8 @@ const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 const PDL_API_KEY = Deno.env.get("PDL_API_KEY") || "";
+const YELP_API_KEY = Deno.env.get("YELP_API_KEY") || "";
+const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 interface LicenseCandidate {
