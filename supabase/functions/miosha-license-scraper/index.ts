@@ -72,7 +72,7 @@ async function searchViaApollo(tradeTitle: string, label: string): Promise<Licen
   }
 
   try {
-    const res = await fetch("https://api.apollo.io/api/v1/mixed_people/search", {
+    const res = await fetch("https://api.apollo.io/api/v1/mixed_people/api_search", {
       method: "POST",
       headers: {
         "X-Api-Key": APOLLO_API_KEY,
@@ -80,9 +80,9 @@ async function searchViaApollo(tradeTitle: string, label: string): Promise<Licen
       },
       body: JSON.stringify({
         person_titles: [tradeTitle],
-        person_locations: ["Michigan"],
-        page: 1,
+        person_locations: ["Michigan, United States"],
         per_page: 25,
+        page: 1,
       }),
       signal: AbortSignal.timeout(20_000),
     });
