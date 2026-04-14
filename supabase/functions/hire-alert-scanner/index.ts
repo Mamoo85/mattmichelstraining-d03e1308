@@ -244,10 +244,11 @@ function isPersonNameJobBoard(name: string): boolean {
 }
 
 async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[]> {
-  // Only search for INDIVIDUAL PEOPLE seeking work — not job postings by companies
+  // Search for INDIVIDUAL PEOPLE seeking trade work — not job postings by companies
   const searches = [
-    "Find individual licensed tradespeople in Metro Detroit Michigan who are actively seeking work or posted resumes on Indeed, ZipRecruiter, or LinkedIn in the last 30 days. Trades: boiler operators, HVAC technicians, plumbers, pipefitters, electricians. Return only real people's names (First Last), NOT company names.",
-    "Find licensed HVAC technicians, plumbers, or electricians in Michigan who posted public resumes or profiles showing they are open to work. Look on Indeed resume search, LinkedIn open-to-work profiles. Return only individual person names, their trade, and Michigan city.",
+    `Search Indeed.com, ZipRecruiter.com, and LinkedIn for people in Metro Detroit Michigan who have posted public resumes or are marked "open to work" in trades: boiler operator, stationary engineer, HVAC technician, plumber, pipefitter, electrician. Find specific individuals with their names, trade, and city. Do NOT return company job listings — only people seeking work.`,
+    `Search for licensed tradespeople seeking new positions in Michigan. Look for "resume posted" or "open to work" or "seeking opportunities" on Indeed, LinkedIn, CareerBuilder. Trades: HVAC, plumbing, electrical, boiler, pipefitting. Wayne County, Oakland County, Macomb County, Washtenaw County Michigan. Return individual person names.`,
+    `Find Certified Nursing Assistants (CNA), Licensed Practical Nurses (LPN), or Registered Nurses (RN) in Metro Detroit Michigan who are currently job seeking. Search Indeed resumes, LinkedIn "open to work", NurseRecruiter, Vivian Health. Return individual names with their credential type and city.`,
   ];
 
   const allResults: RawCandidate[] = [];
@@ -266,31 +267,75 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
           messages: [
             {
               role: "system",
-              content: `You are a hiring intelligence researcher. Find INDIVIDUAL PEOPLE seeking trade work — NOT companies hiring. Return ONLY valid JSON array. Each object must be a real person: { "name": "First Last", "trade": "specific trade title", "city": "Michigan city", "type": "candidate" }. REJECT any result where name looks like a company (LLC, Inc, Corp, Contractors, Services, etc). Max 15 results. No markdown, no explanation. If you can only find job postings (not candidates), return [].`,
+              content: `You are a hiring intelligence researcher. Find INDIVIDUAL PEOPLE seeking trade work — NOT companies hiring.
+
+CRITICAL: Search job boards (Indeed, ZipRecruiter, LinkedIn) for real people who have:
+- Posted public resumes
+- Set their LinkedIn to "open to work"  
+- Applied to trade positions publicly
+
+Return ONLY valid JSON array. Each object must be a real person:
+{ "name": "First Last", "trade": "specific trade title", "city": "Michigan city", "source_url": "URL where you found them or null" }
+
+REJECT any result where name looks like a company (LLC, Inc, Corp, Contractors, Services, etc).
+If you genuinely cannot find individual job seekers, return an empty array [].
+Max 15 results. No markdown, no explanation.`,
             },
             { role: "user", content: query },
           ],
-          max_tokens: 1500,
-          temperature: 0.1,
+          max_tokens: 2000,
+          temperature: 0.2,
         }),
-        signal: AbortSignal.timeout(20000),
+        signal: AbortSignal.timeout(30_000),
       });
 
       if (!res.ok) {
-        console.warn(`[hire-alert-scanner] OpenRouter HTTP ${res.status}`);
+        const errText = await res.text();
+        console.warn(`[hire-alert-scanner] OpenRouter HTTP ${res.status}: ${errText.slice(0, 200)}`);
         continue;
       }
 
       const data = await res.json();
       const text = data?.choices?.[0]?.message?.content || "";
-      const jsonMatch = text.match(/\[[\s\S]*?\]/);
-      if (!jsonMatch) continue;
+      
+      // Log raw response for debugging
+      console.log(`[hire-alert-scanner] OpenRouter raw (${text.length} chars): ${text.slice(0, 300)}`);
 
-      const parsed = JSON.parse(jsonMatch[0]) as Array<{ name: string; trade: string; city: string; type?: string }>;
+      // Try JSON extraction
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        // If Sonar returned prose, try to extract names with Gemini
+        if (text.length > 50 && LOVABLE_API_KEY) {
+          console.log(`[hire-alert-scanner] No JSON from Sonar, trying Gemini extraction`);
+          const extracted = await extractJobSeekersFromProse(text);
+          for (const item of extracted) {
+            const key = `${item.name.toLowerCase()}-${item.trade.toLowerCase()}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            allResults.push({
+              full_name: item.name,
+              license_type: item.trade,
+              city: item.city || "Metro Detroit",
+              source: "firecrawl" as const,
+              raw_data: { openrouter_search: true, gemini_extracted: true },
+            });
+          }
+        }
+        continue;
+      }
+
+      let parsed: Array<{ name: string; trade: string; city: string; source_url?: string }>;
+      try {
+        parsed = JSON.parse(jsonMatch[0]);
+      } catch {
+        console.warn(`[hire-alert-scanner] JSON parse failed`);
+        continue;
+      }
+
+      if (!Array.isArray(parsed)) continue;
 
       for (const item of parsed) {
         if (!item.name || !item.trade) continue;
-        // Reject company names stored as candidates
         if (!isPersonNameJobBoard(item.name)) {
           console.log(`[hire-alert-scanner] Job board: rejected company name "${item.name}"`);
           continue;
@@ -304,7 +349,7 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
           license_type: item.trade,
           city: item.city || "Metro Detroit",
           source: "firecrawl" as const,
-          raw_data: { openrouter_search: true, type: "candidate" },
+          raw_data: { openrouter_search: true, source_url: item.source_url || null },
         });
       }
     } catch (e) {
@@ -314,6 +359,40 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
 
   console.log(`[hire-alert-scanner] OpenRouter web search: found ${allResults.length} validated candidates`);
   return allResults;
+}
+
+// Extract job seeker names from Sonar prose via Gemini
+async function extractJobSeekersFromProse(prose: string): Promise<Array<{ name: string; trade: string; city: string }>> {
+  try {
+    const res = await fetch(GATEWAY_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-lite",
+        max_tokens: 1500,
+        messages: [
+          {
+            role: "system",
+            content: `Extract individual people's names from this text about tradespeople seeking work in Michigan. Return ONLY a JSON array: [{"name":"First Last","trade":"trade type","city":"City"}]. Only include real individual people, not companies. No markdown.`,
+          },
+          { role: "user", content: prose },
+        ],
+      }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const text = data?.choices?.[0]?.message?.content || "";
+    const match = text.match(/\[[\s\S]*?\]/);
+    if (!match) return [];
+    const parsed = JSON.parse(match[0]);
+    return Array.isArray(parsed) ? parsed.filter((p: { name: string }) => p.name && isPersonNameJobBoard(p.name)) : [];
+  } catch {
+    return [];
+  }
 }
 
 async function scanJobBoardsFallback(): Promise<RawCandidate[]> {
