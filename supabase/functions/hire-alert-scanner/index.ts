@@ -949,6 +949,9 @@ serve(async (req: Request) => {
       if (sonarData.current_employer) candidate.current_employer = sonarData.current_employer as string;
       if (sonarData.current_title) candidate.current_title = sonarData.current_title as string;
       if (sonarData.years_experience) candidate.years_experience = sonarData.years_experience as number;
+      // Merge license data from Sonar if not already present
+      if (sonarData.license_number && !candidate.license_number) candidate.license_number = sonarData.license_number as string;
+      if (sonarData.license_expiry && !candidate.license_expiry) candidate.license_expiry = sonarData.license_expiry as string;
 
       // Phase 3: PDL Skip-Trace (only if we have LinkedIn or enough identity data)
       let pdlData: Record<string, unknown> = {};
