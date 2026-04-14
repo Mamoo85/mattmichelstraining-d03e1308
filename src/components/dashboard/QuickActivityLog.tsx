@@ -230,6 +230,7 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
       if (error) throw error;
 
       // If AI generated a workout sheet, also save it as a private workout
+      let foundPR = false;
       if (summary.workout_sheet && summary.workout_sheet.length > 0) {
         const today = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
         const { error: wsError } = await supabase.from("community_workouts").insert({
@@ -248,7 +249,6 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
         }
 
         // PR Detection: check each exercise against progress_logs
-        let foundPR = false;
         for (const ex of summary.workout_sheet) {
           const weightStr = ex.weight?.replace(/[^0-9.]/g, "");
           const weight = weightStr ? parseFloat(weightStr) : 0;
