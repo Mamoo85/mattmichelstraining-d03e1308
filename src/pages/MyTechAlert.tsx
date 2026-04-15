@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import RevenueRecoveredLedger from "@/components/RevenueRecoveredLedger";
+import DemoModeBadge, { isDemoMode, DEMO_MASTER_TOKEN } from "@/components/DemoModeBadge";
 
 const HEALTHCARE_ROLES = ["cna", "rn", "lpn", "director_of_nursing", "home_health_aide"];
 
@@ -95,6 +96,7 @@ const SIGNAL_CONFIG: Record<string, { icon: typeof Factory; label: string; color
 export default function MyTechAlert() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
+  const isDemo = isDemoMode(token);
   const autoClaimId = searchParams.get("claim");
   const autoMode = searchParams.get("auto");
   const highlightId = searchParams.get("highlight");
@@ -170,6 +172,27 @@ export default function MyTechAlert() {
   async function fetchData() {
     setLoading(true);
     try {
+      // Demo mode: load mock data without hitting the API
+      if (isDemo) {
+        setData({
+          client: {
+            company_name: "Demo Company",
+            target_roles: ["boiler_operator", "hvac_tech", "plumber", "electrician", "rn"],
+            target_zip_codes: ["48124", "48092", "48034"],
+            booking_link: "https://calendly.com/demo-link",
+          },
+          candidates: [
+            { id: "demo-1", full_name: "John Mitchell", phone: "+13135550101", email: "demo@example.com", license_type: "boiler_operator", license_number: "DEMO-BO-4821", license_expiry: "2027-06-15", license_status: "active", city: "Dearborn", availability_score: 9, availability_label: "High Availability", score_reason: "License renewing soon, updated LinkedIn profile, no current employer listed", qualifications_summary: "12 years boiler operation experience. High-pressure steam certified. Previous: Ford Rouge Complex, Henry Ford Health. ASME Section I qualified.", hiring_recommendation: "Top candidate — actively looking, strong industrial background, available immediately.", linkedin_url: null, facebook_url: null, profile_photo_url: null, current_employer: null, current_title: "Senior Boiler Operator", years_experience: "12", alerted_at: new Date().toISOString(), client_action: null, claimed_at: null, claim_expires_at: null, claimed_by_other: false, cross_referenced: true },
+            { id: "demo-2", full_name: "Sarah Chen", phone: "+13135550102", email: "demo2@example.com", license_type: "hvac_tech", license_number: "DEMO-HV-7293", license_expiry: "2027-09-01", license_status: "active", city: "Warren", availability_score: 8, availability_label: "High Availability", score_reason: "Recently completed additional EPA 608 certification", qualifications_summary: "8 years HVAC residential & commercial. EPA 608 Universal. Carrier & Trane factory trained.", hiring_recommendation: "Strong hire — dual residential/commercial experience rare in this market.", linkedin_url: null, facebook_url: null, profile_photo_url: null, current_employer: "Metro Comfort Systems", current_title: "Lead HVAC Technician", years_experience: "8", alerted_at: new Date().toISOString(), client_action: null, claimed_at: null, claim_expires_at: null, claimed_by_other: false, cross_referenced: false },
+            { id: "demo-3", full_name: "Marcus Williams", phone: "+13135550103", email: "demo3@example.com", license_type: "plumber", license_number: "DEMO-PL-3847", license_expiry: "2026-12-31", license_status: "active", city: "Southfield", availability_score: 7, availability_label: "Possible Availability", score_reason: "License expiring this year — may be exploring options", qualifications_summary: "15 years master plumber. Backflow prevention certified. Medical gas installer (ASSE 6010).", hiring_recommendation: "Worth pursuing — medical gas certification is highly valued.", linkedin_url: null, facebook_url: null, profile_photo_url: null, current_employer: "Great Lakes Plumbing Co", current_title: "Master Plumber", years_experience: "15", alerted_at: new Date().toISOString(), client_action: null, claimed_at: null, claim_expires_at: null, claimed_by_other: false, cross_referenced: false },
+            { id: "demo-4", full_name: "Lisa Rodriguez", phone: "+13135550104", email: "demo4@example.com", license_type: "rn", license_number: "DEMO-RN-6194", license_expiry: "2027-03-15", license_status: "active", city: "Troy", availability_score: 8, availability_label: "High Availability", score_reason: "NPI registry shows recent practice address change — possible job transition", qualifications_summary: "10 years RN. BSN from Wayne State. ICU & med-surg experience. BLS/ACLS current.", hiring_recommendation: "Excellent candidate — ICU background with major health system experience.", linkedin_url: null, facebook_url: null, profile_photo_url: null, current_employer: null, current_title: "Registered Nurse", years_experience: "10", alerted_at: new Date().toISOString(), client_action: null, claimed_at: null, claim_expires_at: null, claimed_by_other: false, cross_referenced: true },
+            { id: "demo-5", full_name: "David Kowalski", phone: "+13135550105", email: "demo5@example.com", license_type: "electrician", license_number: "DEMO-EL-5520", license_expiry: "2027-11-30", license_status: "active", city: "Livonia", availability_score: 6, availability_label: "Monitor", score_reason: "Stable employment but license shows recent continuing education", qualifications_summary: "20 years journeyman electrician. Industrial controls & PLC programming. Allen-Bradley certified.", hiring_recommendation: "Long-shot but high value — industrial controls expertise commands premium rates.", linkedin_url: null, facebook_url: null, profile_photo_url: null, current_employer: "Stellantis (Warren Truck Assembly)", current_title: "Industrial Electrician", years_experience: "20", alerted_at: new Date().toISOString(), client_action: null, claimed_at: null, claim_expires_at: null, claimed_by_other: false, cross_referenced: false },
+          ],
+          kpi: { total: 5, hot: 3, contacted: 0, hired: 0 },
+        });
+        setLoading(false);
+        return;
+      }
       const res = await fetch(`${baseUrl}/get-my-techalert?token=${token}`, { headers: { apikey } });
       if (!res.ok) {
         const err = await res.json();
@@ -229,7 +252,7 @@ export default function MyTechAlert() {
       const res = await fetch(`${baseUrl}/claim-candidate`, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey },
-        body: JSON.stringify({ token, candidate_id: candidateId }),
+        body: JSON.stringify({ token, candidate_id: candidateId, is_demo: isDemo }),
       });
       const result = await res.json();
       if (result.claimed) {
@@ -261,7 +284,7 @@ export default function MyTechAlert() {
       const res = await fetch(`${baseUrl}/generate-outreach-draft`, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey },
-        body: JSON.stringify({ token, candidate_id: candidateId }),
+        body: JSON.stringify({ token, candidate_id: candidateId, is_demo: isDemo }),
       });
       const draft = await res.json();
       if (draft.error) throw new Error(draft.error);
@@ -301,7 +324,7 @@ export default function MyTechAlert() {
       const res = await fetch(`${baseUrl}/fast-track-interview`, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey },
-        body: JSON.stringify({ token, candidate_id: candidateId }),
+        body: JSON.stringify({ token, candidate_id: candidateId, is_demo: isDemo }),
       });
       const result = await res.json();
       if (result.error === "no_booking_link") {
@@ -462,6 +485,7 @@ export default function MyTechAlert() {
 
   return (
     <div className="min-h-screen bg-[#0a1628]">
+      {isDemo && <DemoModeBadge />}
       {/* Header */}
       <div className="border-b border-white/5" style={{ background: "linear-gradient(135deg, #0a1628 0%, #0d1f2e 100%)" }}>
         <div className="max-w-5xl mx-auto px-4 py-8">

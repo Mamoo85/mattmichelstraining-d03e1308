@@ -65,6 +65,34 @@ export default function DWACommandDeck() {
   const setLoading = (key: string, val: boolean) =>
     setLoadingMap((m) => ({ ...m, [key]: val }));
 
+  const seedDemoData = async () => {
+    setLoading("seed", true);
+    try {
+      const { data, error } = await supabase.functions.invoke("seed-demo-environment", {
+        body: { action: "seed" },
+      });
+      if (error) throw error;
+      toast.success(`Demo data seeded! ${data?.counts?.candidates} candidates, ${data?.counts?.leads} leads`);
+    } catch (err: any) {
+      toast.error("Seed failed: " + (err?.message ?? "Unknown error"));
+    } finally { setLoading("seed", false); }
+  };
+
+  const clearDemoData = async () => {
+    setLoading("clear", true);
+    try {
+      const { data, error } = await supabase.functions.invoke("seed-demo-environment", {
+        body: { action: "clear" },
+      });
+      if (error) throw error;
+      toast.success("Demo data cleared!");
+    } catch (err: any) {
+      toast.error("Clear failed: " + (err?.message ?? "Unknown error"));
+    } finally { setLoading("clear", false); }
+  };
+
+
+
   const runCheckout = async (plan: "bundle" | "standalone") => {
     const key = `checkout-${plan}`;
     setLoading(key, true);
@@ -210,6 +238,16 @@ export default function DWACommandDeck() {
           loading={loadingMap["demo"] ?? false}
           onClick={() => setDemoOpen(true)}
         />
+        <ActionButton label="🎭 Seed Demo Data" icon="🎭" loading={loadingMap["seed"] ?? false} onClick={seedDemoData} />
+        <ActionButton label="🧹 Clear Demo Data" icon="🧹" loading={loadingMap["clear"] ?? false} onClick={clearDemoData} />
+      </div>
+
+      <div className="mt-4 bg-[#0f1f35] border border-white/10 rounded-xl p-4">
+        <p className="text-white/30 text-xs uppercase tracking-wide mb-3">Demo Zone Links</p>
+        <div className="flex flex-wrap gap-3">
+          <a href="/my-techalert?token=DWA_DEMO_MASTER" target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg bg-[#00d4ff]/10 text-[#00d4ff]/80 text-xs border border-[#00d4ff]/20 hover:border-[#00d4ff]/50 transition-colors">TechAlert Demo →</a>
+          <a href="/field-service/dispatch?token=DWA_DEMO_MASTER" target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg bg-[#00d4ff]/10 text-[#00d4ff]/80 text-xs border border-[#00d4ff]/20 hover:border-[#00d4ff]/50 transition-colors">FieldDesk Demo →</a>
+        </div>
       </div>
 
       <div className="mt-6 bg-[#0f1f35] border border-white/10 rounded-xl p-4">

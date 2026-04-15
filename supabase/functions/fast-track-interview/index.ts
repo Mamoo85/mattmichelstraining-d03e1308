@@ -1,7 +1,7 @@
 // Fast-Track Interview — sends candidate an SMS invite with client's booking link
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { sendSMS } from "../_shared/twilio.ts";
+import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -16,7 +16,21 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
-    const { token, candidate_id } = await req.json();
+    const { token, candidate_id, is_demo } = await req.json();
+
+    // Demo mode: send SMS to admin phone instead of candidate
+    if (is_demo || token === "DWA_DEMO_MASTER") {
+      const demoBody = `[DEMO] Hi John, this is Demo Company. We're actively hiring boiler operators and want to talk to you. Book a quick phone interview:\nhttps://calendly.com/demo-link\n\nQuestions? Reply to this text.`;
+      const result = await sendSMS(ADMIN_PHONE, TWILIO_PHONE, demoBody, "techalert_fast_track_demo");
+      return new Response(JSON.stringify({
+        success: result.success,
+        candidate_name: "John Mitchell (Demo)",
+        demo: true,
+      }), {
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
     if (!token || !candidate_id) {
       return new Response(JSON.stringify({ error: "token and candidate_id required" }), {
         status: 400, headers: { ...cors, "Content-Type": "application/json" },

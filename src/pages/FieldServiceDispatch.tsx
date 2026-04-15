@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import DispatchBoard from "@/components/field-service/DispatchBoard";
 import TechMap from "@/components/field-service/TechMap";
+import DemoModeBadge, { DEMO_MASTER_TOKEN } from "@/components/DemoModeBadge";
 
 type Tab = "board" | "map";
 
@@ -10,7 +11,9 @@ export default function FieldServiceDispatch() {
 
   const params = new URLSearchParams(window.location.search);
   const rawClient = params.get("client") || "";
-  const clientId = (rawClient === "demo" || params.get("demo") === "1")
+  const rawToken = params.get("token") || "";
+  const isDemo = rawToken === DEMO_MASTER_TOKEN || rawClient === "demo" || params.get("demo") === "1";
+  const clientId = isDemo
     ? "demo"
     : rawClient || "00000000-0000-0000-0000-000000000000";
 
@@ -32,7 +35,7 @@ export default function FieldServiceDispatch() {
 
   return (
     <div className="min-h-screen bg-[#0a1628] text-white flex flex-col">
-      {/* Top Nav */}
+      {isDemo && <DemoModeBadge />}
       <header className="flex items-center justify-between px-5 py-3 border-b border-[#1e3a5f] shrink-0">
         <div>
           <span className="font-black text-sm tracking-tight text-white">DETROIT</span>

@@ -17,7 +17,20 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
-    const { token, candidate_id } = await req.json();
+    const { token, candidate_id, is_demo } = await req.json();
+
+    // Demo mode: return mock success without touching DB
+    if (is_demo || token === "DWA_DEMO_MASTER") {
+      const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+      return new Response(JSON.stringify({
+        claimed: true,
+        expires_at: expiresAt,
+        message: "Claimed! You have 48 hours of exclusivity.",
+        demo: true,
+      }), {
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
 
     if (!token || !candidate_id) {
       return new Response(JSON.stringify({ error: "token and candidate_id required" }), {
