@@ -1287,6 +1287,7 @@ serve(async (req: Request) => {
     new_candidates: newCandidates.length,
     alerts_sent: alertsSent,
     errors: null,
+    lara_status: "not_attempted",
   });
 
   // Founder daily report — Matt only (sources visible here only)
