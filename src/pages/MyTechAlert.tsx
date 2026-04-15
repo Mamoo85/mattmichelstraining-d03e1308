@@ -96,6 +96,7 @@ const SIGNAL_CONFIG: Record<string, { icon: typeof Factory; label: string; color
 export default function MyTechAlert() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
+  const isDemo = isDemoMode(token);
   const autoClaimId = searchParams.get("claim");
   const autoMode = searchParams.get("auto");
   const highlightId = searchParams.get("highlight");
