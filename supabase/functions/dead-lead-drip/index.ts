@@ -16,6 +16,41 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Trade-specific SMS copy — more relevant than generic "{trade}" substitution
+const TRADE_TEMPLATES: Record<string, { d1: string; d2: string; d3: string }> = {
+  hvac: {
+    d1: `Hey {name}, this is the office at {bizName}. Just checking in — is your HVAC system still giving you trouble, or did you find someone to handle it?\nReply STOP to opt out`,
+    d2: `Hey {name} — {bizName} again. A lot of folks are scheduling service before the season peaks and we book up fast. We can usually get out in 2-3 days. Reply YES to lock in a spot.\nReply STOP to opt out`,
+    d3: `Last note from {bizName}. If your heating or cooling ever needs attention, just reply and we'll take care of you. Stay comfortable out there!\nReply STOP to opt out`,
+  },
+  roofing: {
+    d1: `Hey {name}, {bizName} here — following up on that roofing quote from a while back. Did you ever get that taken care of, or are you still looking at it?\nReply STOP to opt out`,
+    d2: `Hey {name} — {bizName} again. Wanted to reach out before the weather turns. A small roof issue now can turn into a major repair after the first freeze. We can get eyes on it this week.\nReply STOP to opt out`,
+    d3: `Last message from {bizName}. Another Michigan winter's coming — if that roof still needs work, reply YES and we'll get you squared away before the snow flies.\nReply STOP to opt out`,
+  },
+  plumbing: {
+    d1: `Hey {name}, this is {bizName} following up. Did that plumbing issue ever get resolved, or is it still something you're dealing with?\nReply STOP to opt out`,
+    d2: `Hey {name} — {bizName} here. Plumbing problems have a way of getting worse when you wait. If it's still bothering you, reply YES and we'll get someone out fast.\nReply STOP to opt out`,
+    d3: `Last follow-up from {bizName}. That leak or drain issue won't fix itself — whenever you're ready, we're a quick reply away. Take care!\nReply STOP to opt out`,
+  },
+  electrical: {
+    d1: `Hey {name}, {bizName} following up. Did you ever get that electrical work taken care of, or is it still on the list? We're booking this week.\nReply STOP to opt out`,
+    d2: `Hey {name} — {bizName} again. Electrical issues are one thing you really don't want to delay. We have openings this week — just reply YES.\nReply STOP to opt out`,
+    d3: `Last check-in from {bizName}. Whenever you're ready to get that electrical sorted, we're here. Stay safe!\nReply STOP to opt out`,
+  },
+  general: {
+    d1: `Hey {name}, this is the dispatch desk following up for {bizName}. Did you ever get that {trade} issue taken care of, or are you still looking for a quote?\nReply STOP to opt out`,
+    d2: `Hey {name} — {bizName} again. Still available if you need {trade} help. Just reply YES and we'll get someone out to you.\nReply STOP to opt out`,
+    d3: `Last follow-up from {bizName} — if you ever need {trade} work in the future, just reply and we'll make it easy. Take care!\nReply STOP to opt out`,
+  },
+};
+
+function getTradeTemplate(trade: string, drip: "d1" | "d2" | "d3"): string {
+  const key = trade.toLowerCase().replace(/[^a-z]/g, "");
+  const tpl = TRADE_TEMPLATES[key] || TRADE_TEMPLATES.general;
+  return tpl[drip];
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response('ok', { headers: corsHeaders });
@@ -59,7 +94,10 @@ serve(async (req) => {
               .replace("{name}", firstName)
               .replace("{bizName}", bizName)
               .replace("{trade}", trade)
-          : `Hey ${firstName}, this is the dispatch desk following up for ${bizName}. Did you ever get that ${trade} issue taken care of, or are you still looking for a quote?\nReply STOP to opt out`;
+          : getTradeTemplate(trade, "d1")
+              .replace("{name}", firstName)
+              .replace("{bizName}", bizName)
+              .replace("{trade}", trade);
 
         await sendSMS(
           contact.phone,
@@ -105,7 +143,10 @@ serve(async (req) => {
               .replace("{name}", firstName)
               .replace("{bizName}", bizName)
               .replace("{trade}", trade)
-          : `Hey ${firstName} — ${bizName} again. Still available if you need ${trade} help. Just reply YES and we'll get someone out to you.\nReply STOP to opt out`;
+          : getTradeTemplate(trade, "d2")
+              .replace("{name}", firstName)
+              .replace("{bizName}", bizName)
+              .replace("{trade}", trade);
 
         await sendSMS(
           contact.phone,
@@ -151,7 +192,10 @@ serve(async (req) => {
               .replace("{name}", firstName)
               .replace("{bizName}", bizName)
               .replace("{trade}", trade)
-          : `Last follow-up from ${bizName} — if you ever need ${trade} work in the future, just reply and we'll make it easy. Take care!\nReply STOP to opt out`;
+          : getTradeTemplate(trade, "d3")
+              .replace("{name}", firstName)
+              .replace("{bizName}", bizName)
+              .replace("{trade}", trade);
 
         await sendSMS(
           contact.phone,
