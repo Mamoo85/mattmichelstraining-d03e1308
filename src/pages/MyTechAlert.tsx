@@ -252,7 +252,7 @@ export default function MyTechAlert() {
       const res = await fetch(`${baseUrl}/claim-candidate`, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey },
-        body: JSON.stringify({ token, candidate_id: candidateId }),
+        body: JSON.stringify({ token, candidate_id: candidateId, is_demo: isDemo }),
       });
       const result = await res.json();
       if (result.claimed) {
