@@ -773,6 +773,17 @@ serve(async (req) => {
               target_roles: targetRoles,
             });
             if (insertErr) throw new Error(`hire_alert_clients insert: ${insertErr.message}`);
+
+            // Track postcard conversion if ref=postcard
+            if (meta.ref === "postcard") {
+              await (sb.from as any)("postcard_conversions").insert({
+                event: "paid",
+                stripe_session_id: session.id,
+                county: meta.county || null,
+                prospect_id: null,
+                campaign_id: null,
+              }).then(() => console.log("[WEBHOOK] Postcard conversion tracked"));
+            }
           }
           if (RESEND_API_KEY && email) {
             const companyGreet = meta.company_name ? ` ${meta.company_name}` : "";
