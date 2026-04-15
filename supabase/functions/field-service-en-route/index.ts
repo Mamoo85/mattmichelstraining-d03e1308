@@ -29,7 +29,7 @@ serve(async (req) => {
     // Get job with customer and tech info
     const { data: job } = await sb
       .from("field_service_jobs")
-      .select("id, client_id, tech_id, customer_id, customer_notified_at")
+      .select("id, client_id, assigned_tech_id, customer_id, customer_notified_at")
       .eq("id", job_id)
       .single();
 
@@ -63,14 +63,14 @@ serve(async (req) => {
     const { data: tech } = await sb
       .from("field_service_techs")
       .select("id, name")
-      .eq("id", job.tech_id)
+      .eq("id", job.assigned_tech_id)
       .single();
 
     // Get tech's last GPS location
     const { data: techLoc } = await sb
       .from("tech_locations")
       .select("lat, lng")
-      .eq("tech_id", job.tech_id)
+      .eq("tech_id", job.assigned_tech_id)
       .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -114,7 +114,7 @@ serve(async (req) => {
         // Continue without ETA
       }
     } else if (!techLoc?.lat) {
-      console.log(`[en-route] No GPS data for tech ${job.tech_id}`);
+      console.log(`[en-route] No GPS data for tech ${job.assigned_tech_id}`);
     }
 
     // Send SMS to customer

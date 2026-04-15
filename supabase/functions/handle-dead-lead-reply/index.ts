@@ -14,6 +14,7 @@ const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY") || "";
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 
 async function chargeContractor(
   sb: any,
@@ -71,15 +72,46 @@ serve(async (req) => {
     return new Response(null, { headers: { "Access-Control-Allow-Origin": "*" } });
   }
 
+  // ── TWILIO SIGNATURE VERIFICATION ─────────────────────────────────────
+  if (TWILIO_AUTH_TOKEN) {
+    const twilioSig = req.headers.get("X-Twilio-Signature") || "";
+    if (!twilioSig) {
+      console.warn("[handle-dead-lead-reply] Missing X-Twilio-Signature — rejecting");
+      return new Response("Forbidden", { status: 403 });
+    }
+    // Validate HMAC-SHA1 signature
+    const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/handle-dead-lead-reply`;
+    const bodyText = await req.text();
+    const params = new URLSearchParams(bodyText);
+    // Sort params alphabetically and concatenate key+value
+    const sortedParams = [...params.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    const dataToSign = url + sortedParams.map(([k, v]) => k + v).join("");
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey("raw", encoder.encode(TWILIO_AUTH_TOKEN), { name: "HMAC", hash: "SHA-1" }, false, ["sign"]);
+    const sigBuf = await crypto.subtle.sign("HMAC", key, encoder.encode(dataToSign));
+    const expectedSig = btoa(String.fromCharCode(...new Uint8Array(sigBuf)));
+    if (expectedSig !== twilioSig) {
+      console.warn("[handle-dead-lead-reply] Invalid Twilio signature — rejecting");
+      return new Response("Forbidden", { status: 403 });
+    }
+    // Parse params from already-read body
+    const fromPhone = params.get("From") || "";
+    const replyBody = (params.get("Body") || "").trim();
+    return await handleReply(fromPhone, replyBody);
+  }
+
+  // Fallback: no auth token configured, accept but warn
+  const text = await req.text();
+  const params = new URLSearchParams(text);
+  const fromPhone = params.get("From") || "";
+  const replyBody = (params.get("Body") || "").trim();
+  return await handleReply(fromPhone, replyBody);
+});
+
+async function handleReply(fromPhone: string, replyBody: string) {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   try {
-    // Twilio sends form-encoded body
-    const text = await req.text();
-    const params = new URLSearchParams(text);
-    const fromPhone = params.get("From") || "";
-    const replyBody = (params.get("Body") || "").trim();
-
     if (!fromPhone || !replyBody) {
       return new Response("<Response/>", { status: 200, headers: { "Content-Type": "text/xml" } });
     }
@@ -335,4 +367,4 @@ serve(async (req) => {
     console.error("[handle-dead-lead-reply]", e);
     return new Response("<Response/>", { status: 200, headers: { "Content-Type": "text/xml" } });
   }
-});
+}

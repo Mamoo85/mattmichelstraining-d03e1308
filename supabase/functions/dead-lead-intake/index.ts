@@ -39,8 +39,9 @@ serve(async (req) => {
       phone,
       email,
       trade,
-      leads,           // string[] — raw lines from textarea
+      leads,
       campaign_name,
+      google_review_link,
     } = body;
 
     if (!business_name || !phone || !email || !trade || !leads?.length) {
@@ -73,6 +74,7 @@ serve(async (req) => {
         name: owner_name || business_name,
         phone: contractorPhone,
         trade,
+        ...(google_review_link ? { google_review_link } : {}),
       }).eq("id", contractorId);
     } else {
       const { data: newContractor, error: insertErr } = await sb
@@ -86,6 +88,7 @@ serve(async (req) => {
           city: "Metro Detroit",
           state: "MI",
           active: false,
+          ...(google_review_link ? { google_review_link } : {}),
         })
         .select("id, free_tier_used, dead_lead_billing_active")
         .single();
