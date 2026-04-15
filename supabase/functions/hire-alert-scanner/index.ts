@@ -1434,4 +1434,9 @@ serve(async (req: Request) => {
     }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[hire-alert-scanner] Unhandled error:", msg);
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
 });

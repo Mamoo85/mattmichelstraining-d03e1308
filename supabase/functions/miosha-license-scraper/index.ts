@@ -1121,6 +1121,7 @@ serve(async (req) => {
     return new Response(null, { headers: { "Access-Control-Allow-Origin": "*" } });
   }
 
+  try {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const sourceCounts: Record<string, number> = {};
   let newCount = 0;
