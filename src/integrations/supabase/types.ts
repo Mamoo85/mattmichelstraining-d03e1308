@@ -2235,6 +2235,7 @@ export type Database = {
           email: string | null
           id: string
           is_aged: boolean
+          is_demo_record: boolean | null
           lock_expires_at: string | null
           message: string | null
           name: string
@@ -2258,6 +2259,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_aged?: boolean
+          is_demo_record?: boolean | null
           lock_expires_at?: string | null
           message?: string | null
           name: string
@@ -2281,6 +2283,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_aged?: boolean
+          is_demo_record?: boolean | null
           lock_expires_at?: string | null
           message?: string | null
           name?: string
@@ -2619,6 +2622,7 @@ export type Database = {
           contractor_id: string
           created_at: string
           id: string
+          is_demo_record: boolean | null
           is_free_trial: boolean
           name: string
           pause_reason: string | null
@@ -2636,6 +2640,7 @@ export type Database = {
           contractor_id: string
           created_at?: string
           id?: string
+          is_demo_record?: boolean | null
           is_free_trial?: boolean
           name?: string
           pause_reason?: string | null
@@ -2653,6 +2658,7 @@ export type Database = {
           contractor_id?: string
           created_at?: string
           id?: string
+          is_demo_record?: boolean | null
           is_free_trial?: boolean
           name?: string
           pause_reason?: string | null
@@ -2742,6 +2748,7 @@ export type Database = {
           drip3_sent_at: string | null
           email: string | null
           id: string
+          is_demo_record: boolean | null
           name: string
           original_service: string | null
           phone: string
@@ -2762,6 +2769,7 @@ export type Database = {
           drip3_sent_at?: string | null
           email?: string | null
           id?: string
+          is_demo_record?: boolean | null
           name: string
           original_service?: string | null
           phone: string
@@ -2782,6 +2790,7 @@ export type Database = {
           drip3_sent_at?: string | null
           email?: string | null
           id?: string
+          is_demo_record?: boolean | null
           name?: string
           original_service?: string | null
           phone?: string
@@ -4386,6 +4395,7 @@ export type Database = {
           hiring_recommendation: string | null
           id: string
           is_company_name: boolean | null
+          is_demo_record: boolean | null
           last_seen_at: string | null
           license_expiry: string | null
           license_number: string | null
@@ -4425,6 +4435,7 @@ export type Database = {
           hiring_recommendation?: string | null
           id?: string
           is_company_name?: boolean | null
+          is_demo_record?: boolean | null
           last_seen_at?: string | null
           license_expiry?: string | null
           license_number?: string | null
@@ -4464,6 +4475,7 @@ export type Database = {
           hiring_recommendation?: string | null
           id?: string
           is_company_name?: boolean | null
+          is_demo_record?: boolean | null
           last_seen_at?: string | null
           license_expiry?: string | null
           license_number?: string | null
