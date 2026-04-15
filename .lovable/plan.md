@@ -1,125 +1,125 @@
 
 
-# 10 FieldDesk Customer Experience Enhancements
+# Trojan Horse Micro-Tools — Rating & Implementation Plan
 
-After a deep review of every FieldDesk component, edge function, and data flow, here are 10 high-impact enhancements ranked by customer value.
+## Ratings (out of 10)
 
----
+| # | Tool | Rating | Verdict |
+|---|------|--------|---------|
+| **1** | Missed-Call Vulnerability Test | **3/10** | **SKIP.** Placing an unsolicited robo-call to a prospect's business line is an FCC/TCPA minefield. Even "after hours" automated test calls to a business you have no relationship with are legally hazardous and brand-damaging. The concept is strong but the execution method is disqualifying. |
+| **2** | Medicare Staffing Threat Assessment | **9/10** | **BUILD.** Medicare Care Compare API is already integrated (`medicare-staffing-intel`). Free, public, no auth. Just need a public-facing page with a facility name input + instant report generation. High-value, zero-risk. |
+| **3** | Competitor Service Gap Scanner | **9/10** | **BUILD.** DataForSEO + Firecrawl are both configured and working. We already have `competitor-report` and `firecrawl-scrape` functions. This is a new composition of existing capabilities into a slick public tool. |
+| **4** | OSHA/Safety Infraction Pull | **7/10** | **BUILD.** Sonar (OpenRouter) is configured. OSHA public data is searchable via Sonar deep search. Not a direct API — relies on Sonar's web intelligence — but that's fine for a free lead magnet. |
+| **5** | "Leaky Bucket" CRM Audit | **10/10** | **BUILD.** Pure React — zero APIs needed. Three sliders, aggressive math visualization, instant PDF-quality report. Fastest to build, highest conversion potential for Dead Lead Reactivation. |
+| **6** | Nursing Compliance Blindspot Check | **6/10** | **BUILD WITH CAVEAT.** Nursys credentials are configured, but the Nursys e-Notify API is async (POST → poll GET) and may not return instant results. LARA/MiPLUS is also available. Build it but set expectations that results may take 30-60 seconds. |
+| **7** | ADA Lawsuit Risk Scanner | **8/10** | **BUILD.** Firecrawl scrapes the site, then we run accessibility checks via Lovable AI (Gemini) analyzing the HTML for WCAG violations. No need for axe-core server-side — the AI can identify critical failures from raw HTML. Smart and scary for prospects. |
+| **8** | Capital Equipment End-of-Life Estimator | **7/10** | **BUILD.** Sonar deep search for municipal building permit records by address. Already have similar logic in `industrial-growth-intel`. Results will vary by municipality data availability, but Metro Detroit has decent public records. |
+| **9** | Zero-Click Search Audit | **9/10** | **BUILD.** DataForSEO Google Maps API is already integrated (`dataforseo-maps-search`). Check Map Pack position + review count + Google Guaranteed status. Pairs perfectly with FieldDesk review automation pitch. |
+| **10** | LinkedIn Employee Churn Tracker | **2/10** | **SKIP.** No Proxycurl API key. LinkedIn aggressively blocks scraping. Sonar can find some signals but not reliable "churn velocity" data. Not worth building — unreliable results destroy credibility. |
 
-## 1. Customer Job Completion SMS with Photo Summary
+## Summary: Build 8, Skip 2
 
-**Problem**: When a tech marks a job "completed," the homeowner/facility manager hears nothing. They have to call the office to confirm.
+**Skip**: #1 (legal risk), #10 (no API)
 
-**Enhancement**: Auto-fire an SMS to the customer on job completion: *"Your service at [address] is complete. Tech: [name]. [photo count] photos attached. Questions? Call [business_phone]."* If photos were uploaded, include a link to a mini gallery page.
-
-**Files**: New edge function `field-service-job-complete-notify`, triggered from `TechJobDetail.tsx` after `completed` status update.
-
----
-
-## 2. Drag-and-Drop Dispatch Board
-
-**Problem**: The dispatch board is view-only columns. Dispatchers can't reassign jobs or change status without opening each job. Every competitor (Jobber, ServiceTitan) has drag-and-drop.
-
-**Enhancement**: Add drag-and-drop between status columns (Open → Assigned, Assigned → En Route, etc.) and a tech assignment dropdown on each card. Use `@dnd-kit/core` for the drag interaction.
-
-**Files**: `DispatchBoard.tsx` — major rework with dnd-kit integration + inline tech assignment.
-
----
-
-## 3. Real-Time Job Status Updates (Realtime)
-
-**Problem**: The dispatch board requires manual "Refresh" clicks. When a tech changes status in the field, the dispatcher doesn't see it until they refresh.
-
-**Enhancement**: Enable Supabase Realtime on `field_service_jobs`. The dispatch board subscribes to `postgres_changes` and updates the board instantly when any tech changes a job status.
-
-**Files**: Migration to add `field_service_jobs` to `supabase_realtime` publication. `DispatchBoard.tsx` — add realtime subscription channel.
+**Build priority** (fastest ROI first):
+1. #5 — Leaky Bucket CRM Audit (pure React, zero API cost)
+2. #2 — Medicare Staffing Threat Assessment (API already built)
+3. #9 — Zero-Click Search Audit (DataForSEO already integrated)
+4. #3 — Competitor Service Gap Scanner (Firecrawl + DataForSEO)
+5. #7 — ADA Lawsuit Risk Scanner (Firecrawl + AI)
+6. #4 — OSHA/Safety Infraction Pull (Sonar)
+7. #8 — Capital Equipment End-of-Life (Sonar)
+8. #6 — Nursing Compliance Blindspot (Nursys — async, slower)
 
 ---
 
-## 4. Tech GPS Check-In on Status Change
+## Implementation Plan
 
-**Problem**: `tech_locations` exists but nothing writes to it. The Live Map tab shows stale or no data for real clients.
+### Shared Infrastructure
+- Add all 8 tools to `/free-tools` hub (`FreeToolsHub.tsx`)
+- Each tool gets its own page at `/free-tools/{slug}`
+- Each tool captures email before showing results (lead capture gate)
+- Results include a branded "Generated by Detroit Web Agency" footer with the specific upsell CTA
+- All edge functions are public (no auth required) — captures prospect email for follow-up
 
-**Enhancement**: When a tech taps "En Route," "On Site," or "Complete," capture `navigator.geolocation` and insert into `tech_locations`. The dispatcher's Live Map then shows real positions without any extra app.
+### Tool 5: Leaky Bucket CRM Audit
+**Files**: `src/pages/FreeLeakyBucketAudit.tsx`
+- 3 sliders: leads/month (5-200), cost/lead ($5-$150), close rate (1%-50%)
+- Calculate: annual spend, wasted spend, recoverable revenue
+- Animated bar chart showing money burned vs recoverable
+- Hard-hitting copy: "You burned $X on dead leads last year"
+- CTA: Dead Lead Reactivation link + email capture
 
-**Files**: `TechJobDetail.tsx` — add `navigator.geolocation.getCurrentPosition()` call inside `handleStatusChange`. Write to `tech_locations` table.
+### Tool 2: Medicare Staffing Threat Assessment
+**Files**: `src/pages/FreeMedicareStaffingCheck.tsx`, `supabase/functions/medicare-staffing-check/index.ts`
+- Input: facility name (autocomplete optional) or city/state
+- Edge function queries CMS API (reuse `medicare-staffing-intel` logic) filtered to single facility
+- Report: staffing star rating, RN hours/resident/day, historical trend, federal fine risk level
+- Red/amber/green severity badges
+- CTA: HireAlert signup with pre-filled facility data
 
----
+### Tool 9: Zero-Click Search Audit
+**Files**: `src/pages/FreeLocalSearchAudit.tsx`, `supabase/functions/local-search-audit/index.ts`
+- Input: business name + city
+- Edge function calls DataForSEO Google Maps SERP for "[business type] [city]"
+- Report: Map Pack position (or "not found"), review count, competitor comparison (top 3)
+- CTA: FieldDesk review automation
 
-## 5. Job History for Techs (Past Jobs Tab)
+### Tool 3: Competitor Service Gap Scanner
+**Files**: `src/pages/FreeServiceGapScanner.tsx`, `supabase/functions/service-gap-scanner/index.ts`
+- Input: prospect's website URL
+- Edge function: Firecrawl scrapes prospect site → DataForSEO finds top 3 local competitors → Firecrawl scrapes those → Gemini AI compares service lists
+- Report: table of services competitors offer that prospect doesn't
+- CTA: DWA website rebuild
 
-**Problem**: Techs only see today's active jobs. They can't look up yesterday's job to check a note, find a part number, or reference a photo they took.
+### Tool 7: ADA Lawsuit Risk Scanner
+**Files**: `src/pages/FreeAdaScanner.tsx`, `supabase/functions/ada-risk-scanner/index.ts`
+- Input: website URL
+- Edge function: Firecrawl scrapes HTML → Gemini analyzes for WCAG 2.1 AA violations (missing alt text, color contrast, form labels, heading hierarchy, keyboard nav)
+- Report: risk score (Critical/High/Medium/Low), specific failures listed, lawsuit probability estimate
+- CTA: DWA compliant rebuild
 
-**Enhancement**: Add a "History" tab to the tech mobile app showing the last 14 days of completed jobs. Tapping a past job opens it read-only with notes, photos, and parts.
+### Tool 4: OSHA/Safety Infraction Pull
+**Files**: `src/pages/FreeOshaCheck.tsx`, `supabase/functions/osha-safety-check/index.ts`
+- Input: company name + state
+- Edge function: Sonar deep search for OSHA/MIOSHA violations, citations, workplace injury reports
+- Report: found violations with dates, penalty amounts, severity
+- CTA: DJ Conley / industrial maintenance partner referral
 
-**Files**: `FieldServiceTechApp.tsx` — add tab toggle (Today / History). New query for completed/invoiced jobs in last 14 days.
+### Tool 8: Capital Equipment End-of-Life Estimator
+**Files**: `src/pages/FreeEquipmentAgeCheck.tsx`, `supabase/functions/equipment-age-check/index.ts`
+- Input: facility address or property name
+- Edge function: Sonar deep search for building permits, HVAC/boiler installation dates
+- Report: estimated equipment age, replacement timeline, efficiency loss estimate
+- CTA: DJ Conley / equipment partner referral
 
----
+### Tool 6: Nursing Compliance Blindspot Check
+**Files**: `src/pages/FreeNursingComplianceCheck.tsx`, `supabase/functions/nursing-compliance-check/index.ts`
+- Input: up to 5 nurse license numbers + state
+- Edge function: Nursys e-Notify API (async POST → poll GET) + LARA MiPLUS fallback
+- Report: license status, expiration dates, any disciplinary flags
+- CTA: HireAlert compliance module
+- Note: async — show loading spinner, poll for results up to 60s
 
-## 6. Dispatcher Notes Visible to Techs
+### Database Migration
+```sql
+CREATE TABLE public.free_tool_leads (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tool_name text NOT NULL,
+  email text,
+  company_name text,
+  input_data jsonb DEFAULT '{}',
+  result_summary text,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE public.free_tool_leads ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role full access" ON public.free_tool_leads 
+  FOR ALL TO service_role USING (true);
+```
 
-**Problem**: The `notes` field on jobs exists but isn't prominently displayed to techs. When a dispatcher adds context ("Gate code: 4521" or "Ask for Dave at loading dock"), it's buried.
+### Route Registration
+Add all 8 routes to `App.tsx` under the free-tools section, and add cards to `FreeToolsHub.tsx`.
 
-**Enhancement**: Show dispatcher notes in a highlighted callout box at the top of `TechJobDetail`, styled differently from tech-added notes. Add a "Dispatcher Notes" section with a yellow/amber accent.
-
-**Files**: `TechJobDetail.tsx` — add dispatcher notes callout. `DispatchBoard.tsx` inline detail panel — add notes editing.
-
----
-
-## 7. Job Estimated Duration + Schedule Conflict Warning
-
-**Problem**: There's no concept of job duration. A dispatcher can schedule two jobs for the same tech at the same time with no warning.
-
-**Enhancement**: Add `estimated_duration_minutes` to `field_service_jobs`. `JobCreateModal` gets a duration picker (30m, 1h, 2h, 4h, 8h). When assigning a tech, check for overlapping time slots and show a warning: "⚠️ Mike Johnson has 'Boiler Tune-Up' at Ford from 10:00–12:00."
-
-**Files**: Migration to add `estimated_duration_minutes` column. `JobCreateModal.tsx` — duration field + conflict check query. `DispatchBoard.tsx` — show duration on cards.
-
----
-
-## 8. Customer Signature Capture on Completion
-
-**Problem**: Techs complete jobs with no proof of customer acknowledgment. Paper sign-off sheets get lost.
-
-**Enhancement**: When a tech taps "Complete Job," show a signature pad (canvas-based). The signature is saved as a PNG to `job-photos` storage and linked to the job. This creates a digital record that the customer approved the work.
-
-**Files**: New `SignaturePad.tsx` component. `TechJobDetail.tsx` — show signature step before final completion. Upload to storage bucket.
-
----
-
-## 9. Daily Job Summary Email to Client Owner
-
-**Problem**: The business owner (FieldDesk client) has no daily visibility into what happened without logging into the dispatch board.
-
-**Enhancement**: Daily 6pm ET cron emails each active `field_crm_client` a summary: jobs completed today, total on-site hours, parts costs, photos taken, any emergency jobs. Clean HTML email matching DWA dark branding.
-
-**Files**: New edge function `field-service-daily-summary`. Migration for cron schedule. Uses existing `dwaEmail()` template pattern.
-
----
-
-## 10. Recurring Job Auto-Generation from Contracts
-
-**Problem**: `ContractManager.tsx` and `field-service-contract-scheduler` exist, but the contract scheduler may not be creating jobs automatically. Clients with PM contracts (quarterly boiler inspections, annual CSD-1 tests) need jobs to appear on the board without manual entry.
-
-**Enhancement**: Verify and harden `field-service-contract-scheduler` to auto-create jobs 7 days before `next_due_date`, auto-assign the contract's tech, and advance `next_due_date` to the next interval. Add a "Next Auto-Job" indicator on the contract card.
-
-**Files**: `field-service-contract-scheduler/index.ts` — verify/fix auto-creation logic. `ContractManager.tsx` — show next auto-generation date.
-
----
-
-## Implementation Priority
-
-| # | Enhancement | Effort | Customer Impact |
-|---|------------|--------|-----------------|
-| 4 | GPS Check-In on Status | Small | Immediate — makes Live Map work |
-| 3 | Realtime Board Updates | Small | High — eliminates manual refresh |
-| 6 | Dispatcher Notes Visible | Small | High — reduces phone calls |
-| 1 | Completion SMS to Customer | Medium | High — professional impression |
-| 5 | Tech Job History | Medium | Medium — daily convenience |
-| 8 | Signature Capture | Medium | High — legal/compliance value |
-| 2 | Drag-and-Drop Dispatch | Large | High — matches competitor UX |
-| 7 | Duration + Conflict Warning | Medium | Medium — prevents scheduling errors |
-| 9 | Daily Summary Email | Medium | Medium — owner peace of mind |
-| 10 | Recurring Job Auto-Gen | Medium | High — eliminates manual PM scheduling |
-
-I'd recommend starting with items 4, 3, and 6 — they're small, high-impact, and immediately make FieldDesk feel like a live, connected system rather than a static tool.
+### No New Secrets Needed
+All APIs are already configured: DataForSEO, Firecrawl, OpenRouter/Sonar, Nursys, Lovable AI, CMS Medicare.
 
