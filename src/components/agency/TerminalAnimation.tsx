@@ -67,7 +67,7 @@ const TerminalAnimation = () => {
             <div className="w-3 h-3 rounded-full" style={{ background: "#ef4444" }} />
             <div className="w-3 h-3 rounded-full" style={{ background: "#eab308" }} />
             <div className="w-3 h-3 rounded-full" style={{ background: "#22c55e" }} />
-            <span className="ml-3 text-xs font-mono" style={{ color: "#475569" }}>detroit-web-agent — gap-analysis v3.2</span>
+            <span className="ml-3 text-xs font-mono" style={{ color: "#475569" }}>detroit-web-agency — gap-analysis v3.2</span>
           </div>
 
           {/* Terminal body */}
