@@ -242,7 +242,7 @@ Respond with JSON only:
       last_run_at: now.toISOString(),
       last_status: "error",
       last_result: JSON.stringify({ error: msg }),
-    }, { onConflict: "agent_name" }).catch(() => {});
+    }, { onConflict: "agent_name" } as any).then(() => {}).catch(() => {});
 
     return new Response(JSON.stringify({ error: msg }), { status: 500 });
   }

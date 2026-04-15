@@ -33,7 +33,7 @@ async function sendReminderToTrainers(sb: any): Promise<string> {
       .eq("trainer_id", trainer.id)
       .eq("active", true);
 
-    const pendingClients = (clients || []).filter((c) => {
+    const pendingClients = (clients || []).filter((c: { last_report_at: string | null }) => {
       if (!c.last_report_at) return true;
       const lastReport = new Date(c.last_report_at);
       const daysSince = (Date.now() - lastReport.getTime()) / (1000 * 60 * 60 * 24);
@@ -43,7 +43,7 @@ async function sendReminderToTrainers(sb: any): Promise<string> {
     if (pendingClients.length === 0) continue;
 
     const clientList = pendingClients
-      .map((c) => `<li>${c.client_name}</li>`)
+      .map((c: { client_name: string }) => `<li>${c.client_name}</li>`)
       .join("");
 
     const html = `
