@@ -1115,6 +1115,87 @@ async function upsertCandidate(sb: any, c: LicenseCandidate): Promise<"new" | "u
   }
 }
 
+// ===== S10: LARA/MiPLUS Adapter with Resilience =====
+const MIPLUS_USER_AGENTS = [
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0",
+  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0",
+];
+
+let laraStatus: "ok" | "blocked" | "down" | "not_attempted" = "not_attempted";
+
+async function scanMiPLUS(): Promise<LicenseCandidate[]> {
+  const candidates: LicenseCandidate[] = [];
+  const maxRetries = 3;
+  const baseDelay = 2000; // 2s, 4s, 8s exponential backoff
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const ua = MIPLUS_USER_AGENTS[Math.floor(Math.random() * MIPLUS_USER_AGENTS.length)];
+    try {
+      // Attempt to query LARA MiPLUS Accela portal for recent boiler/mechanical licenses
+      const res = await fetch("https://aca-prod.accela.com/LARA/Cap/CapHome.aspx?module=Licensing&TabName=Licensing", {
+        headers: {
+          "User-Agent": ua,
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+        signal: AbortSignal.timeout(15_000),
+      });
+
+      if (res.status === 403 || res.status === 429) {
+        console.warn(`[MiPLUS] Blocked (HTTP ${res.status}) — attempt ${attempt + 1}/${maxRetries}`);
+        laraStatus = "blocked";
+        if (attempt < maxRetries - 1) {
+          await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, attempt)));
+          continue;
+        }
+        // All retries exhausted
+        console.error("[MiPLUS] All retries exhausted — LARA blocked. Gracefully degrading.");
+        return [];
+      }
+
+      if (!res.ok) {
+        console.warn(`[MiPLUS] HTTP ${res.status} — attempt ${attempt + 1}`);
+        laraStatus = "down";
+        if (attempt < maxRetries - 1) {
+          await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, attempt)));
+          continue;
+        }
+        return [];
+      }
+
+      // If we get HTML back, LARA is reachable
+      const html = await res.text();
+      laraStatus = "ok";
+
+      // Check for CAPTCHA/Cloudflare challenge
+      if (html.includes("captcha") || html.includes("cf-challenge") || html.includes("Just a moment")) {
+        console.warn("[MiPLUS] CAPTCHA/Cloudflare detected — marking as blocked");
+        laraStatus = "blocked";
+        return [];
+      }
+
+      console.log(`[MiPLUS] ✅ LARA reachable (${html.length} bytes). Direct scraping not yet implemented — using Sonar fallback.`);
+      // NOTE: Direct MiPLUS HTML parsing is not yet implemented.
+      // The resilience layer is in place — when LARA data extraction logic is added,
+      // it will parse the HTML response here and return LicenseCandidates.
+      // For now, this function serves as a health check + future integration point.
+      break;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.warn(`[MiPLUS] Error attempt ${attempt + 1}: ${msg}`);
+      laraStatus = "down";
+      if (attempt < maxRetries - 1) {
+        await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, attempt)));
+      }
+    }
+  }
+
+  return candidates;
+}
+
 // ===== MAIN HANDLER =====
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -1128,7 +1209,7 @@ serve(async (req) => {
   let updatedCount = 0;
   let errorCount = 0;
 
-  console.log("[miosha-scraper] 🚀 Planetary-Scale Scanner starting — 13 fast sources + Sonar last");
+  console.log("[miosha-scraper] 🚀 Planetary-Scale Scanner starting — 14 sources (13 fast + MiPLUS probe + Sonar last)");
 
   // Run 13 fast sources in parallel (Sonar removed — runs separately after)
   const results = await Promise.allSettled([
