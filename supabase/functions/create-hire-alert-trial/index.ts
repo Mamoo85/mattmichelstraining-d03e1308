@@ -45,10 +45,11 @@ serve(async (req) => {
       owner_phone: phone || null,
       company_name: business_name || "",
       target_roles: target_roles || ["Boiler Operator", "HVAC Technician", "Plumber"],
-      active: true, // trial clients get alerts too
+      active: true,
       trial_status: "active",
       trial_started_at: new Date().toISOString(),
       trial_ends_at: trialEndsAt,
+      tos_accepted_at: new Date().toISOString(),
     }).select("id").single();
 
     if (error) throw error;

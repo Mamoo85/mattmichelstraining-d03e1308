@@ -26,13 +26,7 @@ export default function FieldServiceDispatch() {
     }
 
     if (!rawToken) {
-      // No token and not demo — check if rawClient is a UUID (legacy access)
-      if (rawClient && rawClient.length === 36) {
-        setResolvedClientId(rawClient);
-        setAuthState("authorized");
-      } else {
-        setAuthState("denied");
-      }
+      setAuthState("denied");
       return;
     }
 
