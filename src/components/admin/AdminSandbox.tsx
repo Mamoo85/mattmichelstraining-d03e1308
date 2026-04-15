@@ -334,7 +334,7 @@ const PRODUCTS: Product[] = [
   { id: "recall_alert_subscription", name: "Recall Alert Service", price: "$19/mo", description: "FDA/NHTSA recall alerts by SMS.", type: "subscription", category: "Wave 4" },
   { id: "permit_watch_subscription", name: "Permit Watch", price: "$29/mo", description: "Weekly local permit pulling alerts.", type: "subscription", category: "Wave 4" },
   { id: "speed_audit_subscription", name: "Website Speed Audit", price: "$29/mo", description: "Monthly PageSpeed Insights report.", type: "subscription", category: "Wave 4" },
-  { id: "bedtime_story_subscription", name: "AI Bedtime Stories", price: "$4.99/mo", description: "Weekly personalized bedtime stories.", type: "subscription", category: "Wave 4" },
+  
   { id: "crime_digest_subscription", name: "Neighborhood Crime Digest", price: "$19/mo", description: "Weekly local crime summary SMS.", type: "subscription", category: "Wave 4" },
   { id: "license_monitor_subscription", name: "Business License Monitor", price: "$25/mo", description: "License expiry alerts before renewal.", type: "subscription", category: "Wave 4" },
   // Wave 5 High-Ticket
