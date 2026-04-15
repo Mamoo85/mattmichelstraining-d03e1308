@@ -187,6 +187,12 @@ export default function DWACommandDeck() {
           loading={false}
           onClick={openDispatch}
         />
+        <ActionButton
+          label="Send DJ Conley Tease"
+          icon="🎯"
+          loading={loadingMap["tease"] ?? false}
+          onClick={runTease}
+        />
       </div>
 
       <div className="mt-6 bg-[#0f1f35] border border-white/10 rounded-xl p-4">
