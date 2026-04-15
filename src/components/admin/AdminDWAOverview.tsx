@@ -26,12 +26,14 @@ export default function AdminDWAOverview() {
       { data: lastRun },
       { count: candCount },
       { count: hotCount },
+      { data: healthData },
     ] = await Promise.all([
       (supabase as any).from("field_crm_clients").select("id", { count: "exact", head: true }).eq("status", "active"),
       (supabase as any).from("hire_alert_clients").select("id", { count: "exact", head: true }).eq("active", true),
       (supabase as any).from("hire_alert_runs").select("*").order("run_at", { ascending: false }).limit(1),
       (supabase as any).from("hire_alert_candidates").select("id", { count: "exact", head: true }),
       (supabase as any).from("hire_alert_candidates").select("id", { count: "exact", head: true }).eq("status", "alerted"),
+      (supabase as any).from("api_health_checks").select("api_name, status, response_ms, error_message, checked_at").order("checked_at", { ascending: false }).limit(30),
     ]);
     setStats({
       fieldDeskClients: fdCount || 0,
@@ -41,6 +43,16 @@ export default function AdminDWAOverview() {
       totalCandidates: candCount || 0,
       hotCandidates: hotCount || 0,
     });
+    // Deduplicate: show latest check per API
+    if (healthData) {
+      const seen = new Set<string>();
+      const deduped = healthData.filter((h: any) => {
+        if (seen.has(h.api_name)) return false;
+        seen.add(h.api_name);
+        return true;
+      });
+      setHealthChecks(deduped);
+    }
     setLoading(false);
   };
 
