@@ -13,6 +13,7 @@ export default function AdminDWAOverview() {
     totalCandidates: 0,
     hotCandidates: 0,
   });
+  const [healthChecks, setHealthChecks] = useState<Array<{ api_name: string; status: string; response_ms: number; error_message: string | null; checked_at: string }>>([]);
   const [testing, setTesting] = useState<Record<string, boolean>>({});
   const [invoking, setInvoking] = useState(false);
   const [loading, setLoading] = useState(true);
