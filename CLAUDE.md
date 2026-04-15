@@ -14,6 +14,55 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-04-15. Update this section every session.*
 
+### Phase 14 — Product Readiness Sprint COMPLETE ✅
+*2026-04-15 — branch `claude/fix-hire-alert-runs-table-JgJ3Y`*
+
+**6 builds shipped (all committed + pushed to main):**
+
+**Build 1: Multi-trade Dead Lead drip templates**
+- `supabase/functions/dead-lead-drip/index.ts` — `TRADE_TEMPLATES` map added (hvac/roofing/plumbing/electrical/general)
+- Each trade gets 3 drip messages (D1/D2/D3) with trade-specific angles: HVAC=seasonal, roofing=pre-winter, plumbing=escalation risk, electrical=safety
+- Custom copy variants still take priority; `getTradeTemplate(trade, drip)` helper used as fallback
+
+**Build 2: Dead Lead client stats magic link**
+- New edge function: `supabase/functions/dead-lead-stats/index.ts` — GET `?token=X`, returns campaign stats by `roi_token` (total contacts, texts sent, positive replies, opt-outs, revenue recovered)
+- New page: `src/pages/DeadLeadStats.tsx` — `/dead-lead-stats?token=X`, dark DWA branding, revenue hero card, stat grid, how-it-works section
+- Route added to `App.tsx`, `verify_jwt = false` in `config.toml`
+
+**Build 3: TechAlert scanner activity stats**
+- New edge function: `supabase/functions/hire-alert-public-stats/index.ts` — returns last 7 runs + 7-day aggregate (public, no auth)
+- `HireAlert.tsx` — live scanner activity strip below scarcity banner (candidates/new/alerts this week — shows only if data > 0)
+- `MyTechAlert.tsx` — "Scanner Activity" table after KPI strip (last 7 runs, date/scanned/new/alerts columns)
+- `verify_jwt = false` in `config.toml`
+
+**Build 4: FieldDesk invoice generator**
+- New component: `src/components/field-service/InvoiceGenerator.tsx` — modal with line items (qty/rate), client name/address, invoice #, dates, auto-calculates total
+- Generates styled HTML invoice in new tab with `window.print()` auto-triggered — works as browser PDF save
+- `🧾 Invoice` button added to job detail panel in `DispatchBoard.tsx` — ready for DJ Conley demo April 22
+
+**Build 5: DWA Admin quick access button**
+- `src/components/admin/AdminCommandDeck.tsx` — cyan `🏢 DWA ADMIN →` button in Sector F header row
+- One click from M2 admin command deck to `/dwa-admin`
+
+**Build 6: Step-by-step DWA Sales Guide**
+- New component: `src/components/dwa-admin/DWASalesGuide.tsx`
+- New tab "🎯 Sales Guide" in `src/pages/DWAAdmin.tsx`
+- Covers Dead Lead Reactivation, TechAlert, FieldDesk, Contractor Leads — each with: who to target, step-by-step process, copy-paste text scripts, expandable objection handlers
+- Matt's daily selling routine (8am-5pm) at the top
+
+**Lab product security fixes (this session, merged to main earlier):**
+- `deliver-domain-breach-report` + `deliver-keyword-gap-report`: Bearer auth, idempotency, Resend check, HIBP cap
+- `create-domain-breach-checkout` + `create-keyword-gap-checkout`: email/domain validation, session-first DB insert, removes order_id from Stripe metadata
+
+**Industry Pulse pulled from Lovable (do not touch):**
+- `src/pages/IndustryPulse.tsx`, `src/pages/MyIndustryPulse.tsx`
+- `supabase/functions/create-industry-pulse-checkout/index.ts`
+- `supabase/functions/get-industry-pulse-dashboard/index.ts`
+- `supabase/functions/industry-pulse-digest/index.ts`
+- stripe-webhook `industry_pulse_subscription` handler
+
+---
+
 ### Phase 13 — Bug Fix + Business Clarity COMPLETE ✅
 *2026-04-15 — branch `claude/fix-hire-alert-runs-table-JgJ3Y`*
 
