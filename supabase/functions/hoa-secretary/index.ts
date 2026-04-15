@@ -167,10 +167,10 @@ Be thorough, professional, and accurate to the raw notes. If information is miss
     const minutesHtml = minutesText
       .replace(/\n\n/g, "</p><p style='margin:0 0 12px;'>")
       .replace(/\n/g, "<br>")
-      .replace(/\|(.+?)\|/g, (match) => {
+      .replace(/\|(.+?)\|/g, (match: string) => {
         if (match.includes("---")) return match; // skip separator rows
-        const cells = match.split("|").filter((c) => c.trim());
-        return "<tr>" + cells.map((c) => `<td style="padding:8px 12px;border:1px solid #e2e8f0;">${c.trim()}</td>`).join("") + "</tr>";
+        const cells = match.split("|").filter((c: string) => c.trim());
+        return "<tr>" + cells.map((c: string) => `<td style="padding:8px 12px;border:1px solid #e2e8f0;">${c.trim()}</td>`).join("") + "</tr>";
       });
 
     const emailHtml = `<!DOCTYPE html>

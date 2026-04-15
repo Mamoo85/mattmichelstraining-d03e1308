@@ -47,8 +47,7 @@ async function generateHolidayMessage(client: HolidayClient, holiday: string): P
   return text.length <= 160 ? text : text.slice(0, 157) + "...";
 }
 
-async function sendEmail(to: string, subject: string,
-        bcc: ["matthewmichels@gmail.com"], html: string): Promise<void> {
+async function sendEmail(to: string, subject: string, html: string): Promise<void> {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },

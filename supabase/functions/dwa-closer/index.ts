@@ -88,7 +88,7 @@ async function scrapeWebsite(url: string): Promise<string> {
 
 // ── Anti-collision check ────────────────────────────────────────────────────
 async function isOnCooldown(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   email: string
 ): Promise<boolean> {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -101,7 +101,7 @@ async function isOnCooldown(
     .gte("last_contacted_at", sevenDaysAgo)
     .maybeSingle();
 
-  if (cooldown && cooldown.last_agent !== "closer") return true;
+  if (cooldown && (cooldown as any).last_agent !== "closer") return true;
 
   // Belt-and-suspenders: check system_comms_log for any recent sends
   // (catches Tom, prospector, and drip emails logged via DB trigger)
@@ -300,7 +300,7 @@ RULES:
       last_run_at: now.toISOString(),
       last_status: "error",
       last_result: JSON.stringify({ error: msg }),
-    }, { onConflict: "agent_name" }).catch(() => {});
+    }, { onConflict: "agent_name" } as any).then(() => {}).catch(() => {});
 
     return new Response(JSON.stringify({ error: msg }), { status: 500 });
   }

@@ -16,7 +16,7 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY") || "";
 
 async function chargeContractor(
-  sb: ReturnType<typeof createClient>,
+  sb: any,
   contactId: string,
   contractorId: string,
   stripeCustomerId: string,
