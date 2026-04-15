@@ -7,23 +7,12 @@ const REMOTE_CONTROL_SECRET = Deno.env.get("REMOTE_CONTROL_SECRET") ?? "";
 function addFrequency(dateStr: string, frequency: string): string {
   const d = new Date(dateStr + "T00:00:00Z");
   switch (frequency) {
-    case "weekly":
-      d.setUTCDate(d.getUTCDate() + 7);
-      break;
-    case "monthly":
-      d.setUTCMonth(d.getUTCMonth() + 1);
-      break;
-    case "quarterly":
-      d.setUTCMonth(d.getUTCMonth() + 3);
-      break;
-    case "biannual":
-      d.setUTCMonth(d.getUTCMonth() + 6);
-      break;
-    case "annual":
-      d.setUTCFullYear(d.getUTCFullYear() + 1);
-      break;
-    default:
-      d.setUTCMonth(d.getUTCMonth() + 1);
+    case "weekly": d.setUTCDate(d.getUTCDate() + 7); break;
+    case "monthly": d.setUTCMonth(d.getUTCMonth() + 1); break;
+    case "quarterly": d.setUTCMonth(d.getUTCMonth() + 3); break;
+    case "biannual": d.setUTCMonth(d.getUTCMonth() + 6); break;
+    case "annual": d.setUTCFullYear(d.getUTCFullYear() + 1); break;
+    default: d.setUTCMonth(d.getUTCMonth() + 1);
   }
   return d.toISOString().split("T")[0];
 }
@@ -39,9 +28,10 @@ async function processContract(
     assigned_tech_id: contract.assigned_tech_id ?? null,
     title: contract.title as string,
     description: (contract.description as string | null) ?? null,
-    status: "open",
+    status: contract.assigned_tech_id ? "assigned" : "open",
     priority: "normal",
     scheduled_date: contract.next_due_date as string,
+    estimated_duration_minutes: 120,
   });
 
   if (jobError) {
@@ -72,7 +62,6 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Auth check — allow REMOTE_CONTROL_SECRET bearer or no auth header (cron)
   const authHeader = req.headers.get("Authorization") ?? "";
   const token = authHeader.replace("Bearer ", "").trim();
   const isCron = !authHeader;
@@ -89,14 +78,14 @@ Deno.serve(async (req: Request) => {
 
   try {
     let body: Record<string, unknown> = {};
-    try {
-      body = await req.json();
-    } catch {
-      // no body = run all
-    }
+    try { body = await req.json(); } catch { /* no body = run all */ }
 
     const contractId = body?.contract_id as string | undefined;
-    const today = new Date().toISOString().split("T")[0];
+    
+    // Hardened: create jobs 7 days before due date (proactive scheduling)
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setUTCDate(sevenDaysFromNow.getUTCDate() + 7);
+    const lookAheadDate = sevenDaysFromNow.toISOString().split("T")[0];
 
     let contracts: Record<string, unknown>[] = [];
 
@@ -109,19 +98,35 @@ Deno.serve(async (req: Request) => {
       if (error) throw new Error(`Contract not found: ${error.message}`);
       contracts = [data];
     } else {
+      // Fetch contracts due within the next 7 days (proactive)
       const { data, error } = await supabase
         .from("field_service_contracts")
         .select("*")
         .eq("active", true)
-        .lte("next_due_date", today);
+        .lte("next_due_date", lookAheadDate);
       if (error) throw new Error(`Query failed: ${error.message}`);
       contracts = data ?? [];
+    }
+
+    // Deduplicate: don't create a job if one already exists for this contract's due date
+    const filteredContracts: Record<string, unknown>[] = [];
+    for (const contract of contracts) {
+      const { count } = await supabase
+        .from("field_service_jobs")
+        .select("id", { count: "exact", head: true })
+        .eq("client_id", contract.client_id)
+        .eq("scheduled_date", contract.next_due_date)
+        .ilike("title", contract.title as string);
+
+      if (!count || count === 0) {
+        filteredContracts.push(contract);
+      }
     }
 
     const results: { id: string; title: string }[] = [];
     const errors: { id: string; error: string }[] = [];
 
-    for (const contract of contracts) {
+    for (const contract of filteredContracts) {
       try {
         const result = await processContract(supabase, contract);
         results.push(result);
@@ -134,6 +139,7 @@ Deno.serve(async (req: Request) => {
       JSON.stringify({
         created: results.length,
         contracts: results,
+        skipped_duplicates: contracts.length - filteredContracts.length,
         errors: errors.length > 0 ? errors : undefined,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
