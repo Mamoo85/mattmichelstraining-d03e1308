@@ -11,6 +11,9 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DOMAIN_RE = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   try {
@@ -20,14 +23,19 @@ serve(async (req) => {
         status: 400, headers: { ...CORS, "Content-Type": "application/json" },
       });
     }
+    if (!EMAIL_RE.test(customer_email)) {
+      return new Response(JSON.stringify({ error: "Invalid email address" }), {
+        status: 400, headers: { ...CORS, "Content-Type": "application/json" },
+      });
+    }
     const cleanDomain = domain.replace(/^https?:\/\//, "").replace(/\/.*$/, "").toLowerCase().trim();
-    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-    const { data: order } = await sb
-      .from("domain_breach_orders")
-      .insert({ customer_email, domain: cleanDomain })
-      .select("id")
-      .single();
+    if (!DOMAIN_RE.test(cleanDomain)) {
+      return new Response(JSON.stringify({ error: "Invalid domain format" }), {
+        status: 400, headers: { ...CORS, "Content-Type": "application/json" },
+      });
+    }
 
+    // Create Stripe session FIRST so we have session.id for the DB row
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -38,7 +46,7 @@ serve(async (req) => {
           unit_amount: 1900,
           product_data: {
             name: "Business Domain Breach Report",
-            description: `Dark web breach scan for ${cleanDomain}. Every data breach your company domain has appeared in, with AI remediation steps. Delivered instantly.`,
+            description: `Dark web breach scan for ${cleanDomain}. Every breach your company domain appeared in, with AI remediation steps. Delivered instantly.`,
           },
         },
         quantity: 1,
@@ -47,10 +55,17 @@ serve(async (req) => {
         type: "domain_breach_report",
         customer_email,
         domain: cleanDomain,
-        order_id: order?.id || "",
       },
       success_url: `${BASE_URL}/lab/domain-breach?success=1&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${BASE_URL}/lab/domain-breach`,
+    });
+
+    // Insert order with stripe_session_id — used by webhook + deliver function for idempotency
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    await sb.from("domain_breach_orders").insert({
+      customer_email,
+      domain: cleanDomain,
+      stripe_session_id: session.id,
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
