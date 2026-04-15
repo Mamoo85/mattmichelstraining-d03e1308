@@ -69,10 +69,42 @@ export default function ClaimLead() {
     }
   };
 
+  // Missing params error
+  if (hasMissingParams) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
+        <div style={{ maxWidth: 480, textAlign: "center" }}>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>⚠️</div>
+          <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 800, margin: "0 0 12px" }}>Invalid Link</h1>
+          <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.7, margin: "0 0 32px" }}>
+            This link is missing required information. Please use the link from your text message.
+          </p>
+          <p style={{ color: "#64748b", fontSize: 14 }}>Questions? Text Matt at (313) 992-1219</p>
+        </div>
+      </div>
+    );
+  }
+
   if (previewLoading) {
     return (
       <div style={{ minHeight: "100vh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ color: "#00d4ff", fontSize: 18 }}>Loading lead...</div>
+      </div>
+    );
+  }
+
+  // Invalid UUID or lead not found
+  if (!leadPreview) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
+        <div style={{ maxWidth: 480, textAlign: "center" }}>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>🔍</div>
+          <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 800, margin: "0 0 12px" }}>Lead Not Found</h1>
+          <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.7, margin: "0 0 32px" }}>
+            This lead may have expired or the link is incorrect. Check your latest text for a fresh link.
+          </p>
+          <p style={{ color: "#64748b", fontSize: 14 }}>Questions? Text Matt at (313) 992-1219</p>
+        </div>
       </div>
     );
   }
