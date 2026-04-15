@@ -485,6 +485,7 @@ export default function MyTechAlert() {
 
   return (
     <div className="min-h-screen bg-[#0a1628]">
+      {isDemo && <DemoModeBadge />}
       {/* Header */}
       <div className="border-b border-white/5" style={{ background: "linear-gradient(135deg, #0a1628 0%, #0d1f2e 100%)" }}>
         <div className="max-w-5xl mx-auto px-4 py-8">
