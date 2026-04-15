@@ -453,6 +453,14 @@ const App = () => (
                     <Route path="/free-tools/breach-scan" element={<FreeBreachScanner />} />
                     <Route path="/free-tools/rank-check" element={<FreeRankChecker />} />
                     <Route path="/free-tools/meta-tags" element={<FreeMetaAnalyzer />} />
+                    <Route path="/free-tools/leaky-bucket" element={<FreeLeakyBucketAudit />} />
+                    <Route path="/free-tools/medicare-staffing" element={<FreeMedicareStaffingCheck />} />
+                    <Route path="/free-tools/local-search" element={<FreeLocalSearchAudit />} />
+                    <Route path="/free-tools/service-gap" element={<FreeServiceGapScanner />} />
+                    <Route path="/free-tools/ada-scanner" element={<FreeAdaScanner />} />
+                    <Route path="/free-tools/osha-check" element={<FreeOshaCheck />} />
+                    <Route path="/free-tools/equipment-age" element={<FreeEquipmentAgeCheck />} />
+                    <Route path="/free-tools/nursing-compliance" element={<FreeNursingComplianceCheck />} />
                     <Route path="/command-center" element={<ProtectedRoute><ClientCommandCenter /></ProtectedRoute>} />
                     <Route path="/computer-repair" element={<ComputerRepair />} />
                     <Route path="/unsubscribe" element={<Unsubscribe />} />
