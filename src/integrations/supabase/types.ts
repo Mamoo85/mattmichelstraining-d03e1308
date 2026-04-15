@@ -6868,6 +6868,165 @@ export type Database = {
         }
         Relationships: []
       }
+      postcard_campaigns: {
+        Row: {
+          conversion_count: number | null
+          copy_back: string
+          copy_front: string
+          county: string
+          created_at: string
+          id: string
+          lob_batch_id: string | null
+          prospect_count: number | null
+          qr_url: string
+          sent_count: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          conversion_count?: number | null
+          copy_back: string
+          copy_front: string
+          county: string
+          created_at?: string
+          id?: string
+          lob_batch_id?: string | null
+          prospect_count?: number | null
+          qr_url: string
+          sent_count?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          conversion_count?: number | null
+          copy_back?: string
+          copy_front?: string
+          county?: string
+          created_at?: string
+          id?: string
+          lob_batch_id?: string | null
+          prospect_count?: number | null
+          qr_url?: string
+          sent_count?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      postcard_conversions: {
+        Row: {
+          campaign_id: string | null
+          county: string | null
+          created_at: string
+          event: string
+          id: string
+          prospect_id: string | null
+          stripe_session_id: string | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          county?: string | null
+          created_at?: string
+          event?: string
+          id?: string
+          prospect_id?: string | null
+          stripe_session_id?: string | null
+        }
+        Update: {
+          campaign_id?: string | null
+          county?: string | null
+          created_at?: string
+          event?: string
+          id?: string
+          prospect_id?: string | null
+          stripe_session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "postcard_conversions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "postcard_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "postcard_conversions_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "postcard_prospects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      postcard_prospects: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          business_name: string
+          city: string | null
+          converted_at: string | null
+          county: string | null
+          created_at: string
+          email: string | null
+          id: string
+          license_count: number | null
+          license_types: string[] | null
+          newest_license_date: string | null
+          owner_name: string | null
+          phone: string | null
+          postcard_batch_id: string | null
+          postcard_sent_at: string | null
+          source: string | null
+          state: string | null
+          updated_at: string
+          zip: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          business_name: string
+          city?: string | null
+          converted_at?: string | null
+          county?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          license_count?: number | null
+          license_types?: string[] | null
+          newest_license_date?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          postcard_batch_id?: string | null
+          postcard_sent_at?: string | null
+          source?: string | null
+          state?: string | null
+          updated_at?: string
+          zip?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          business_name?: string
+          city?: string | null
+          converted_at?: string | null
+          county?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          license_count?: number | null
+          license_types?: string[] | null
+          newest_license_date?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          postcard_batch_id?: string | null
+          postcard_sent_at?: string | null
+          source?: string | null
+          state?: string | null
+          updated_at?: string
+          zip?: string | null
+        }
+        Relationships: []
+      }
       posture_requests: {
         Row: {
           analysis: string | null
