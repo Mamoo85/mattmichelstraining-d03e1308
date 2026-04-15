@@ -316,6 +316,13 @@ export default function ContractManager({ clientId }: ContractManagerProps) {
                       {isOverdue && (
                         <span className="ml-2 text-xs text-red-400 font-bold">OVERDUE</span>
                       )}
+                      {c.active && !isOverdue && (() => {
+                        const dueDate = new Date(c.next_due_date + "T00:00:00");
+                        const now = new Date();
+                        const daysUntil = Math.ceil((dueDate.getTime() - now.getTime()) / 86400000);
+                        if (daysUntil <= 7) return <span className="block text-xs text-[#00d4ff] mt-0.5">⚡ Auto-job in {daysUntil}d</span>;
+                        return <span className="block text-xs text-white/30 mt-0.5">Auto-job in {daysUntil}d</span>;
+                      })()}
                     </td>
                     <td className="py-3 pr-4">
                       {c.active ? (
