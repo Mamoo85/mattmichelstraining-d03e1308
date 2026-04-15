@@ -138,6 +138,7 @@ const AdminDWARevenueDashboard = lazyRetry(() => import("@/components/admin/Admi
 const AdminSimulationSuite    = lazyRetry(() => import("@/components/admin/AdminSimulationSuite"));
 const AdminGlobalOutbox       = lazyRetry(() => import("@/components/admin/AdminGlobalOutbox"));
 const AdminGhostDelayManager  = lazyRetry(() => import("@/components/admin/AdminGhostDelayManager"));
+const AdminPostcardCampaigns  = lazyRetry(() => import("@/components/admin/AdminPostcardCampaigns"));
 const AdminDeadLeads          = lazyRetry(() => import("@/components/admin/AdminDeadLeads"));
 const AdminFieldCRMClients    = lazyRetry(() => import("@/components/admin/AdminFieldCRMClients"));
 const VisitorIntelFeed        = lazyRetry(() => import("@/components/admin/VisitorIntelFeed"));
@@ -606,6 +607,7 @@ const Admin = () => {
             { key: "outbox",        label: "📨 Outbox",          content: <AdminGlobalOutbox /> },
             { key: "ghost-delay",   label: "👻 Ghost Delay",     content: <AdminGhostDelayManager /> },
             { key: "board-report",  label: "📋 Board Report",    content: <AdminBoardReport /> },
+            { key: "postcards",     label: "📬 Postcards",       content: <AdminPostcardCampaigns /> },
           ]} />
         )}
       </div>
