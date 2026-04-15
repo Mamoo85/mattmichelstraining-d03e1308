@@ -4495,6 +4495,7 @@ export type Database = {
           company_name: string
           created_at: string | null
           dashboard_token: string | null
+          fielddesk_cross_sell_sent: boolean | null
           id: string
           notify_email: boolean | null
           notify_sms: boolean | null
@@ -4502,6 +4503,7 @@ export type Database = {
           owner_name: string | null
           owner_phone: string | null
           plan: string | null
+          pricing_tier: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           target_roles: string[] | null
@@ -4516,6 +4518,7 @@ export type Database = {
           company_name: string
           created_at?: string | null
           dashboard_token?: string | null
+          fielddesk_cross_sell_sent?: boolean | null
           id?: string
           notify_email?: boolean | null
           notify_sms?: boolean | null
@@ -4523,6 +4526,7 @@ export type Database = {
           owner_name?: string | null
           owner_phone?: string | null
           plan?: string | null
+          pricing_tier?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           target_roles?: string[] | null
@@ -4537,6 +4541,7 @@ export type Database = {
           company_name?: string
           created_at?: string | null
           dashboard_token?: string | null
+          fielddesk_cross_sell_sent?: boolean | null
           id?: string
           notify_email?: boolean | null
           notify_sms?: boolean | null
@@ -4544,6 +4549,7 @@ export type Database = {
           owner_name?: string | null
           owner_phone?: string | null
           plan?: string | null
+          pricing_tier?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           target_roles?: string[] | null
