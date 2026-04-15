@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import DOMPurify from "dompurify";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -181,7 +182,7 @@ export default function AdminLegalCompliance() {
             <Button size="sm" variant="ghost" className="h-7 text-[10px]" onClick={() => setPreviewContent(null)}>Close</Button>
           </CardHeader>
           <CardContent>
-            <div className="prose prose-invert prose-sm max-w-none max-h-[500px] overflow-y-auto text-xs" dangerouslySetInnerHTML={{ __html: typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(previewContent) : previewContent }} />
+            <div className="prose prose-invert prose-sm max-w-none max-h-[500px] overflow-y-auto text-xs" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(previewContent) }} />
           </CardContent>
         </Card>
       )}
