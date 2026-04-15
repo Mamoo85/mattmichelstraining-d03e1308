@@ -84,12 +84,12 @@ serve(async (req) => {
     let sent = 0;
 
     for (const client of clients) {
-      const companyName = client.business_name || "your company";
+      const companyName = client.company_name || "your company";
       const emailBody = await generateCrossSellEmail(companyName);
 
       // Build checkout link with coupon param
       const checkoutUrl = `${SUPABASE_URL}/functions/v1/create-field-crm-checkout`;
-      const ctaUrl = `https://www.detroitwebagent.com/field-crm?coupon=TECHALERT50&email=${encodeURIComponent(client.email)}&biz=${encodeURIComponent(companyName)}`;
+      const ctaUrl = `https://www.detroitwebagent.com/field-crm?coupon=TECHALERT50&email=${encodeURIComponent(client.owner_email)}&biz=${encodeURIComponent(companyName)}`;
 
       // Send email via Resend
       const emailRes = await fetch("https://api.resend.com/emails", {
