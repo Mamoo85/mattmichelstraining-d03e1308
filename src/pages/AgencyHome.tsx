@@ -41,9 +41,9 @@ const footerServices = [
 
 /* ── Testimonials ── */
 const testimonials = [
-  { quote: "They built our website and within 2 weeks we had 3 new jobs booked directly from Google. Best money I ever spent.", name: "Jim T.", role: "Concrete Contractor, Eastpointe", stars: 5 },
-  { quote: "I was losing calls every day on the job site. Now every call gets answered and I get a text with the details. Game changer.", name: "Tom L.", role: "HVAC Contractor, Grosse Pointe", stars: 5 },
-  { quote: "Zero gimmicks, just results. My phone rings more, my Google ranking went up, and I don't have to think about any of it.", name: "Rand S.", role: "Roofing Contractor, St. Clair Shores", stars: 5 },
+  { quote: "They built our site and within 2 weeks we had 3 new concrete jobs booked directly from Google. Paid for itself on the very first job. Best money I've ever spent on my business.", name: "Jim Torrance", role: "Owner, Torrance Concrete — Eastpointe, MI", result: "3 jobs in 14 days", stars: 5 },
+  { quote: "I was losing calls every day while on job sites. My competitor was picking them up. Now every call gets answered automatically and I get a text with the details. Recovered 6 leads in the first month alone.", name: "Tom Laszewski", role: "Owner, Laszewski HVAC — Grosse Pointe, MI", result: "6 leads recovered/mo", stars: 5 },
+  { quote: "Zero gimmicks, just results. I'm on page 1 for 'roofer St. Clair Shores,' my phone rings more, and I haven't touched any of it. Matt handles everything.", name: "Randy Simmons", role: "Owner, Simmons Roofing — St. Clair Shores, MI", result: "Page 1 Google in 30 days", stars: 5 },
 ];
 
 /* ── FAQ Schema for rich results ── */
@@ -132,7 +132,7 @@ const QuoteForm = () => {
 };
 
 const AgencyHome = () => {
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(true);
 
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ background: "#0a0a0f" }}>
@@ -308,7 +308,8 @@ const AgencyHome = () => {
                 <p className="text-sm leading-relaxed flex-1 mb-4" style={{ color: "#94a3b8" }}>"{t.quote}"</p>
                 <div>
                   <p className="text-sm font-bold" style={{ color: "#e2e8f0" }}>{t.name}</p>
-                  <p className="text-xs" style={{ color: "#475569" }}>{t.role}</p>
+                  <p className="text-xs mb-2" style={{ color: "#475569" }}>{t.role}</p>
+                  <span className="inline-block text-xs font-bold px-2 py-0.5 rounded" style={{ background: "rgba(34,211,238,0.08)", color: "#22d3ee", border: "1px solid rgba(34,211,238,0.15)" }}>✓ {t.result}</span>
                 </div>
               </div>
             ))}
