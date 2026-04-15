@@ -151,36 +151,11 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
     { key: "service_area", label: "Service Area (zip codes)", default: "48236, 48230, 48224, Grosse Pointe area" },
     { key: "phone", label: "Phone", default: "+13139921219" },
   ],
-  // Autonomous products
-  obituary_service_subscription: [
-    { key: "funeralHomeName", label: "Funeral Home Name", default: "M2 Test Funeral Home" },
-    { key: "phone", label: "Phone", default: "+13139921219" },
-  ],
-  sermon_prep_subscription: [
-    { key: "churchName", label: "Church Name", default: "M2 Test Church" },
-    { key: "denomination", label: "Denomination", default: "Non-denominational" },
-  ],
-  hoa_secretary_subscription: [
-    { key: "hoaName", label: "HOA Name", default: "M2 Test HOA" },
-  ],
-  hoa_violation_subscription: [
-    { key: "hoaName", label: "HOA Name", default: "M2 Test HOA" },
-    { key: "state", label: "State", default: "MI" },
-  ],
+  // Autonomous products (kept)
   rfp_alerts_subscription: [
     { key: "businessName", label: "Business Name", default: "M2 Development" },
     { key: "servicesOffered", label: "Services Offered", default: "Sales training, coaching" },
     { key: "geography", label: "Geography", default: "Michigan" },
-  ],
-  franchise_analyzer_subscription: [
-    { key: "businessName", label: "Business Name", default: "M2 Development" },
-  ],
-  insurance_drip_subscription: [
-    { key: "businessName", label: "Agency Name", default: "M2 Insurance Agency" },
-  ],
-  str_reputation_subscription: [
-    { key: "propertyUrls", label: "Property URLs", default: "https://airbnb.com/rooms/test" },
-    { key: "propertyCount", label: "Property Count", default: "1" },
   ],
   grant_discovery_subscription: [
     { key: "orgName", label: "Organization Name", default: "M2 Foundation" },
@@ -192,17 +167,10 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
     { key: "businessName", label: "Farm / Business Name", default: "M2 Farms" },
     { key: "commodities", label: "Commodities to Track", default: "corn, soybeans" },
   ],
-  landlord_letters_subscription: [
-    { key: "state", label: "State", default: "MI" },
-    { key: "propertyCount", label: "Property Count", default: "3" },
-  ],
   regulatory_monitor_subscription: [
     { key: "businessName", label: "Business Name", default: "M2 Development" },
     { key: "industry", label: "Industry", default: "fitness and wellness" },
     { key: "regulatoryBodies", label: "Regulatory Bodies", default: "FTC, OSHA" },
-  ],
-  trade_show_automation_subscription: [
-    { key: "businessName", label: "Business Name", default: "M2 Development" },
   ],
   price_intelligence_subscription: [
     { key: "businessName", label: "Business Name", default: "M2 Development" },
@@ -212,10 +180,6 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
     { key: "businessName", label: "Business Name", default: "M2 Development" },
     { key: "locationCount", label: "Location Count", default: "1" },
     { key: "primaryAddress", label: "Primary Address", default: "Grosse Pointe, MI" },
-  ],
-  menu_engineering_subscription: [
-    { key: "restaurantName", label: "Restaurant Name", default: "M2 Cafe" },
-    { key: "cuisineType", label: "Cuisine Type", default: "American" },
   ],
   gov_meeting_tracker_subscription: [
     { key: "businessName", label: "Business Name", default: "M2 Development LLC" },
@@ -360,28 +324,16 @@ const PRODUCTS: Product[] = [
   { id: "referral_program_subscription", name: "Referral Program", price: "$39/mo", description: "Auto-tracks referrals + rewards.", type: "subscription", category: "SMS Products" },
   { id: "slow_day_subscription", name: "Slow Day SMS", price: "$25/mo", description: "Keyword trigger → instant promo blast.", type: "subscription", category: "SMS Products" },
   { id: "homeowner_campaign_subscription", name: "New Homeowner Campaign", price: "$59/mo", description: "Monthly new-mover texts.", type: "subscription", category: "SMS Products" },
-  { id: "obituary_service_subscription", name: "AI Obituary Service", price: "$199/mo", description: "Funeral home AI writing.", type: "subscription", category: "Autonomous Products" },
-  { id: "sermon_prep_subscription", name: "Sermon Prep", price: "$79/mo", description: "Weekly AI sermon outlines.", type: "subscription", category: "Autonomous Products" },
-  { id: "hoa_secretary_subscription", name: "HOA Secretary AI", price: "$149/mo", description: "AI meeting minutes.", type: "subscription", category: "Autonomous Products" },
-  { id: "hoa_violation_subscription", name: "HOA Violation Letters", price: "$149/mo", description: "AI violation letters.", type: "subscription", category: "Autonomous Products" },
   { id: "rfp_alerts_subscription", name: "RFP Alert Service", price: "$149/mo", description: "Daily gov contract alerts.", type: "subscription", category: "Autonomous Products" },
-  { id: "franchise_analyzer_subscription", name: "Franchise FDD Analyzer", price: "$299/mo", description: "AI FDD risk analysis.", type: "subscription", category: "Autonomous Products" },
-  { id: "insurance_drip_subscription", name: "Insurance Lead Drip", price: "$149/mo", description: "AI lead follow-up sequences.", type: "subscription", category: "Autonomous Products" },
-  { id: "str_reputation_subscription", name: "STR Reputation Manager", price: "$79/mo", description: "Airbnb review monitor.", type: "subscription", category: "Autonomous Products" },
   { id: "grant_discovery_subscription", name: "Grant Discovery", price: "$199/mo", description: "Weekly nonprofit grants.", type: "subscription", category: "Autonomous Products" },
   { id: "ag_price_alerts_subscription", name: "Ag Price Alerts", price: "$79/mo", description: "Commodity price SMS alerts.", type: "subscription", category: "Autonomous Products" },
-  { id: "landlord_letters_subscription", name: "Landlord-Tenant Letters", price: "$149/mo", description: "AI legal letters.", type: "subscription", category: "Autonomous Products" },
   { id: "regulatory_monitor_subscription", name: "Regulatory Monitor", price: "$299/mo", description: "Weekly compliance alerts.", type: "subscription", category: "Autonomous Products" },
-  { id: "trade_show_automation_subscription", name: "Trade Show Follow-Up", price: "$99/mo", description: "AI badge-scan sequences.", type: "subscription", category: "Autonomous Products" },
   { id: "price_intelligence_subscription", name: "Competitor Price Intel", price: "$199/mo", description: "Daily price monitoring.", type: "subscription", category: "Autonomous Products" },
   { id: "citation_monitor_subscription", name: "Citation Monitor", price: "$99/mo", description: "NAP consistency weekly.", type: "subscription", category: "Autonomous Products" },
-  { id: "menu_engineering_subscription", name: "Menu Engineering", price: "$99/mo", description: "Monthly BCG analysis.", type: "subscription", category: "Autonomous Products" },
   { id: "fitness_reports_subscription", name: "Fitness Progress Reports", price: "$79/mo", description: "Monthly client reports.", type: "subscription", category: "Autonomous Products" },
   { id: "gov_meeting_tracker_subscription", name: "Gov Meeting Tracker", price: "$199/mo", description: "Weekly zoning alerts.", type: "subscription", category: "Autonomous Products" },
-  { id: "pet_memorial_subscription", name: "AI Pet Memorial", price: "$79 one-time", description: "Poem + tribute + hosted memorial.", type: "instant", category: "One-Time" },
   { id: "dark_web_monitor_subscription", name: "Dark Web Monitor", price: "$49/mo", description: "Weekly HIBP credential scan.", type: "subscription", category: "Autonomous Products" },
   { id: "gov_contract_monitor_subscription", name: "Gov Contract Monitor", price: "$299/mo", description: "Daily SAM.gov opportunity matching.", type: "subscription", category: "Autonomous Products" },
-  { id: "podcast_revenue_subscription", name: "Podcast-to-Revenue Machine", price: "$199/mo", description: "Blog, LinkedIn, email, YouTube per episode.", type: "subscription", category: "Autonomous Products" },
   { id: "re_newsletter_subscription", name: "Real Estate Newsletter", price: "$79/mo", description: "Weekly branded market report.", type: "subscription", category: "Autonomous Products" },
   { id: "trademark_watch_subscription", name: "Trademark Watch Service", price: "$49/mo", description: "Weekly USPTO similarity scan.", type: "subscription", category: "Autonomous Products" },
   { id: "employee_credential_audit", name: "Employee Credential Audit", price: "$149 one-time", description: "HIBP breach report for employees.", type: "instant", category: "One-Time" },
