@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DndContext, DragOverlay, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import JobCreateModal from "./JobCreateModal";
+import InvoiceGenerator from "./InvoiceGenerator";
 import { toast } from "sonner";
 
 interface DispatchBoardProps {
@@ -118,6 +119,7 @@ const DispatchBoard: React.FC<DispatchBoardProps> = ({ clientId }) => {
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [showInvoice, setShowInvoice] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -294,9 +296,21 @@ const DispatchBoard: React.FC<DispatchBoardProps> = ({ clientId }) => {
                 )}
               </div>
             </div>
-            <button onClick={() => setSelectedJob(null)} className="text-gray-400 hover:text-white text-2xl leading-none shrink-0">×</button>
+            <div className="shrink-0 flex flex-col gap-2 items-end">
+              <button onClick={() => setSelectedJob(null)} className="text-gray-400 hover:text-white text-2xl leading-none">×</button>
+              <button
+                onClick={() => setShowInvoice(true)}
+                className="px-3 py-1.5 bg-[#00d4ff] text-[#0a1628] text-xs font-bold rounded-lg hover:bg-[#00bce8] transition-colors whitespace-nowrap"
+              >
+                🧾 Invoice
+              </button>
+            </div>
           </div>
         </div>
+      )}
+
+      {showInvoice && selectedJob && (
+        <InvoiceGenerator job={selectedJob} onClose={() => setShowInvoice(false)} />
       )}
 
       {showCreateModal && (
