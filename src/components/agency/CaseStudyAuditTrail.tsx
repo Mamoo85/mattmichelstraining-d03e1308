@@ -1,12 +1,12 @@
 const caseStudies = [
   {
-    industry: "Medical Practice — Stewart Orthopedics",
-    problem: "Outdated site scoring 22/100 on mobile. No click-to-call. Missing from Google Local Pack for 'orthopedic surgeon near me'. Losing patients to newer practices with modern websites.",
-    fix: "Rebuilt mobile-first site with click-to-call CTAs, local SEO optimization, appointment booking widget, and automated review request system.",
+    industry: "Roofing Contractor — Macomb County",
+    problem: "Zero online presence beyond a free Wix page. No Google Business Profile. Competitors running ads while this 20-year company relied entirely on word-of-mouth. Website had no phone number above the fold.",
+    fix: "Built conversion-focused site with click-to-call hero, Google Business Profile setup + weekly posting, automated review requests after every completed job, and local SEO targeting 'roofing contractor Macomb County'.",
     results: [
-      { label: "PageSpeed", before: "22", after: "96" },
-      { label: "Monthly Leads", before: "5", after: "34" },
-      { label: "Google Rank", before: "#38", after: "#3" },
+      { label: "PageSpeed", before: "31", after: "94" },
+      { label: "Monthly Leads", before: "2", after: "27" },
+      { label: "Google Rank", before: "Not ranked", after: "#4" },
     ],
   },
   {
