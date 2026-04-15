@@ -12323,6 +12323,14 @@ export type Database = {
           specific_product_id: string
         }[]
       }
+      verify_tech_pin: {
+        Args: { _pin: string }
+        Returns: {
+          client_id: string
+          id: string
+          name: string
+        }[]
+      }
     }
     Enums: {
       app_role:
