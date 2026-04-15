@@ -725,8 +725,8 @@ serve(async (req) => {
           }
         }
 
-        // ── DEAD LEAD PITCH: for trade contractors, send reactivation pitch ──
-        if (DEAD_LEAD_TRADES.has(trade) && (pitchRotation === "dead_lead" || techAlertSent >= TECH_ALERT_CAP) && deadLeadSent < DEAD_LEAD_CAP) {
+        // ── DEAD LEAD PITCH: fires on dead_lead day OR as fallback when other caps are hit ──
+        if (DEAD_LEAD_TRADES.has(trade) && (pitchRotation === "dead_lead" || techAlertSent >= TECH_ALERT_CAP || missedCallSent >= MISSED_CALL_CAP) && deadLeadSent < DEAD_LEAD_CAP) {
           let dlSubject: string, dlBody: string;
           try {
             ({ subject: dlSubject, body: dlBody } = await sniperDeadLeadEmail(name, trade, city, reviewCount, rating));
