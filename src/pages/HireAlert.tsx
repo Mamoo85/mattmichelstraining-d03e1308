@@ -75,6 +75,7 @@ export default function HireAlert() {
   const [slotsRemaining, setSlotsRemaining] = useState<number | null>(null);
   const [betaFull, setBetaFull] = useState(false);
   const [tosAccepted, setTosAccepted] = useState(false);
+  const [weeklyStats, setWeeklyStats] = useState<{ candidates: number; new_candidates: number; alerts: number } | null>(null);
 
   useEffect(() => {
     supabase
@@ -87,6 +88,14 @@ export default function HireAlert() {
         setSlotsRemaining(remaining);
         setBetaFull(remaining <= 0);
       });
+
+    // Load scanner activity stats for social proof strip
+    fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/hire-alert-public-stats`, {
+      headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+    })
+      .then(r => r.json())
+      .then(data => { if (data.ok) setWeeklyStats(data.weekly); })
+      .catch(() => {});
   }, []);
 
   const standalonePrice = betaFull ? 149 : 99;
@@ -190,6 +199,25 @@ export default function HireAlert() {
               Only {slotsRemaining} of {BETA_LIMIT} beta slots remaining · ${standalonePrice}/mo grandfathered forever
             </p>
           )}
+        </div>
+      )}
+
+      {/* Scanner Activity Strip */}
+      {weeklyStats && weeklyStats.candidates > 0 && (
+        <div style={{ background: "#00d4ff0a", borderBottom: "1px solid #00d4ff1a", padding: "10px 24px" }}>
+          <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", gap: 32, flexWrap: "wrap" }}>
+            <span style={{ color: "#64748b", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.5 }}>Live — Last 7 Days</span>
+            {[
+              { value: weeklyStats.candidates.toLocaleString(), label: "Candidates Scanned" },
+              { value: weeklyStats.new_candidates.toLocaleString(), label: "New This Week" },
+              { value: weeklyStats.alerts.toLocaleString(), label: "Alerts Sent" },
+            ].map(({ value, label }) => (
+              <span key={label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ color: ACCENT, fontWeight: 900, fontSize: 16 }}>{value}</span>
+                <span style={{ color: "#475569", fontSize: 12 }}>{label}</span>
+              </span>
+            ))}
+          </div>
         </div>
       )}
 

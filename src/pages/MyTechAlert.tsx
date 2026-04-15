@@ -125,6 +125,17 @@ export default function MyTechAlert() {
   const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
   const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+  // Scanner run history query
+  const { data: scannerStats } = useQuery({
+    queryKey: ["hire-alert-public-stats"],
+    queryFn: async () => {
+      const res = await fetch(`${baseUrl}/hire-alert-public-stats`, { headers: { apikey } });
+      if (!res.ok) return null;
+      return res.json();
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
   // Market Signals query
   const { data: signalsData } = useQuery({
     queryKey: ["techalert-signals", token],
@@ -532,6 +543,54 @@ export default function MyTechAlert() {
             </Card>
           ))}
         </div>
+
+        {/* Scanner Activity — last 7 runs */}
+        {scannerStats?.runs && scannerStats.runs.length > 0 && (
+          <div className="rounded-xl border border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e] overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-white font-bold text-xs uppercase tracking-wider">Scanner Activity</span>
+              </div>
+              <span className="text-slate-500 text-[11px]">Last {scannerStats.runs.length} runs</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-white/5">
+                    <th className="px-4 py-2 text-left text-slate-500 font-semibold uppercase tracking-wide">Date</th>
+                    <th className="px-4 py-2 text-center text-slate-500 font-semibold uppercase tracking-wide">Scanned</th>
+                    <th className="px-4 py-2 text-center text-slate-500 font-semibold uppercase tracking-wide">New</th>
+                    <th className="px-4 py-2 text-center text-slate-500 font-semibold uppercase tracking-wide">Alerts</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {scannerStats.runs.map((run: { run_at: string; candidates_found: number; new_candidates: number; alerts_sent: number }, i: number) => {
+                    const d = new Date(run.run_at);
+                    const label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                    const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+                    return (
+                      <tr key={i} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]">
+                        <td className="px-4 py-2.5 text-slate-300">{label} <span className="text-slate-600">{time}</span></td>
+                        <td className="px-4 py-2.5 text-center text-slate-300">{run.candidates_found}</td>
+                        <td className="px-4 py-2.5 text-center">
+                          <span className={run.new_candidates > 0 ? "text-emerald-400 font-bold" : "text-slate-500"}>
+                            {run.new_candidates > 0 ? `+${run.new_candidates}` : "—"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 text-center">
+                          <span className={run.alerts_sent > 0 ? "text-[#00d4ff] font-bold" : "text-slate-500"}>
+                            {run.alerts_sent > 0 ? run.alerts_sent : "—"}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Market Signals Feed */}
         {signals.length > 0 ? (
