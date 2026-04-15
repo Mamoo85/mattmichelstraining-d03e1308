@@ -114,7 +114,7 @@ serve(async (req) => {
         // Continue without ETA
       }
     } else if (!techLoc?.lat) {
-      console.log(`[en-route] No GPS data for tech ${job.tech_id}`);
+      console.log(`[en-route] No GPS data for tech ${job.assigned_tech_id}`);
     }
 
     // Send SMS to customer
