@@ -65,6 +65,35 @@ export default function DWACommandDeck() {
   const setLoading = (key: string, val: boolean) =>
     setLoadingMap((m) => ({ ...m, [key]: val }));
 
+  const seedDemoData = async () => {
+    setLoading("seed", true);
+    try {
+      const { data, error } = await supabase.functions.invoke("seed-demo-environment", {
+        body: { action: "seed" },
+      });
+      if (error) throw error;
+      toast.success(`Demo data seeded! ${data?.counts?.candidates} candidates, ${data?.counts?.leads} leads`);
+    } catch (err: any) {
+      toast.error("Seed failed: " + (err?.message ?? "Unknown error"));
+    } finally { setLoading("seed", false); }
+  };
+
+  const clearDemoData = async () => {
+    setLoading("clear", true);
+    try {
+      const { data, error } = await supabase.functions.invoke("seed-demo-environment", {
+        body: { action: "clear" },
+      });
+      if (error) throw error;
+      toast.success("Demo data cleared!");
+    } catch (err: any) {
+      toast.error("Clear failed: " + (err?.message ?? "Unknown error"));
+    } finally { setLoading("clear", false); }
+  };
+
+  const setLoading = (key: string, val: boolean) =>
+    setLoadingMap((m) => ({ ...m, [key]: val }));
+
   const runCheckout = async (plan: "bundle" | "standalone") => {
     const key = `checkout-${plan}`;
     setLoading(key, true);
