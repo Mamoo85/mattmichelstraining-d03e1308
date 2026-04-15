@@ -35,7 +35,12 @@ serve(async (req) => {
 
     const normalizedTrade = normalizeTrade(trade);
     const tradeLabel = normalizedTrade;
-    const monthlyPrice = 39900; // $399/mo flat for all Metro Detroit territories
+    // Trade-specific pricing — Gutters/Siding at $299, all others $399
+    const TRADE_PRICES: Record<string, number> = {
+      Gutters: 29900,
+      Siding: 29900,
+    };
+    const monthlyPrice = TRADE_PRICES[normalizedTrade] || 39900;
 
     const rawOrigin = req.headers.get("origin") || "https://www.mattmichelstraining.com";
     const ALLOWED_ORIGINS = [
@@ -51,10 +56,10 @@ serve(async (req) => {
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    // Insert pending contractor record
+    // Upsert pending contractor record (prevents duplicates on double-submit)
     const { data: contractor } = await sb
       .from("contractor_clients")
-      .insert({ name, business_name, email, phone, trade: normalizedTrade, city, state })
+      .upsert({ name, business_name, email, phone, trade: normalizedTrade, city, state }, { onConflict: "email" })
       .select()
       .single();
 

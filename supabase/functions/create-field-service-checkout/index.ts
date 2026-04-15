@@ -33,7 +33,7 @@ serve(async (req: Request) => {
     const isBundle = plan === "bundle";
     // $0 test mode — only allowed for Matt's email
     const isTest = test === true && email === "matt@mattmichelstraining.com";
-    const unitAmount = isTest ? 0 : (isBundle ? 19900 : 29900);
+    const unitAmount = isTest ? 0 : (isBundle ? 19900 : 19900);
     const productName = isBundle
       ? "Detroit Web Agency — Field Service Platform (Website Bundle)"
       : "Detroit Web Agency — Field Service Platform (Standalone)";

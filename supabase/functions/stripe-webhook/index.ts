@@ -406,12 +406,29 @@ serve(async (req) => {
         }
 
         // Deactivate B2B product clients on cancellation
+        // Get contractor_clients ID before deactivation so we can clear territory
+        const { data: cancelledContractor } = await sb
+          .from("contractor_clients")
+          .select("id")
+          .eq("stripe_subscription_id", subscription.id)
+          .maybeSingle();
+
         await Promise.all([
           sb.from("hire_alert_clients").update({ active: false }).eq("stripe_subscription_id", subscription.id),
           sb.from("field_crm_clients").update({ active: false }).eq("stripe_subscription_id", subscription.id),
           sb.from("social_media_clients").update({ active: false }).eq("stripe_subscription_id", subscription.id),
           sb.from("gbp_saas_clients").update({ active: false }).eq("stripe_subscription_id", subscription.id),
+          sb.from("contractor_clients").update({ active: false, stripe_subscription_id: null }).eq("stripe_subscription_id", subscription.id),
         ]);
+
+        // Clear territory assignment so another contractor can buy it
+        if (cancelledContractor?.id) {
+          await sb.from("contractor_lead_sites")
+            .update({ active_contractor_id: null })
+            .eq("active_contractor_id", cancelledContractor.id);
+          console.log(`[WEBHOOK] Cleared territory for contractor ${cancelledContractor.id}`);
+        }
+
         console.log(`[WEBHOOK] Deactivated B2B clients for subscription ${subscription.id}`);
 
         // Trigger Shield win-back sequence
@@ -762,7 +779,7 @@ serve(async (req) => {
               ? meta.target_roles.split(",").map((r: string) => r.trim()).filter(Boolean)
               : ["boiler_operator", "hvac_tech"];
             // CRITICAL: if this fails, throw so Stripe retries (return 500 below)
-            const { error: insertErr } = await (sb.from as any)("hire_alert_clients").insert({
+            const { data: insertedClient, error: insertErr } = await (sb.from as any)("hire_alert_clients").insert({
               company_name: meta.company_name || email,
               owner_email: email,
               owner_phone: meta.owner_phone || null,
@@ -771,8 +788,10 @@ serve(async (req) => {
               active: true,
               plan: meta.plan || "standalone",
               target_roles: targetRoles,
-            });
+              tos_accepted_at: meta.tos_accepted === "true" ? new Date().toISOString() : null,
+            }).select("dashboard_token").single();
             if (insertErr) throw new Error(`hire_alert_clients insert: ${insertErr.message}`);
+            const dashboardToken = insertedClient?.dashboard_token;
 
             // Track postcard conversion if ref=postcard
             if (meta.ref === "postcard") {
@@ -847,7 +866,8 @@ serve(async (req) => {
 
     <p style="color:#475569;font-size:15px;line-height:1.8;margin:0 0 8px;">Each candidate alert includes their <strong>name, trade, city, license info, contact details</strong> (when available), and our proprietary availability score.</p>
     <p style="color:#475569;font-size:15px;line-height:1.8;margin:0 0 8px;">Candidate profiles include verified phone and email data from industry databases. Staffing alerts use public CMS data to identify hiring opportunities.</p>
-    <p style="color:#475569;font-size:14px;line-height:1.8;margin:0;">Want to adjust your target roles or zip codes? Just reply to this email.</p>
+    <p style="color:#475569;font-size:14px;line-height:1.8;margin:0 0 20px;">Want to adjust your target roles or zip codes? Just reply to this email.</p>
+    ${dashboardToken ? `<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:0 0 8px;"><a href="https://detroitwebagent.com/my-techalert?token=${dashboardToken}" style="display:inline-block;padding:14px 32px;background:#00d4ff;color:#0a1628;font-weight:800;font-size:15px;border-radius:8px;text-decoration:none;letter-spacing:0.3px;">Open Your Dashboard →</a></td></tr></table>` : ""}
   </td></tr>
 
   <!-- FOOTER -->
@@ -3164,7 +3184,7 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
         try {
           const { email, name, company, plan } = meta;
           await sb.from("field_crm_clients").upsert(
-            { email: email, owner_name: name || null, business_name: company || "New Client", plan: plan || "standalone", status: "active", stripe_customer_id: session.customer as string },
+            { email: email, owner_name: name || null, business_name: company || "New Client", plan: plan || "standalone", status: "active", stripe_customer_id: session.customer as string, stripe_subscription_id: session.subscription as string || null },
             { onConflict: "email" }
           );
           await Promise.all([

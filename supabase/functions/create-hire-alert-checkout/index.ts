@@ -88,6 +88,7 @@ serve(async (req) => {
           : "boiler_operator,hvac_tech",
         ref: ref || "direct",
         county: county || "",
+        tos_accepted: "true",
       },
       success_url: `${origin}/hire-alert?success=1`,
       cancel_url: `${origin}/hire-alert`,
