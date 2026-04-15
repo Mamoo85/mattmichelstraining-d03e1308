@@ -130,9 +130,9 @@ serve(async (req) => {
           .eq("id", client.id);
 
         sent++;
-        console.log(`[CROSSSELL] Sent to ${client.email}`);
+        console.log(`[CROSSSELL] Sent to ${client.owner_email}`);
       } else {
-        console.error(`[CROSSSELL] Email failed for ${client.email}: ${await emailRes.text()}`);
+        console.error(`[CROSSSELL] Email failed for ${client.owner_email}: ${await emailRes.text()}`);
       }
     }
 
