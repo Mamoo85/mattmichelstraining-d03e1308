@@ -1,4 +1,6 @@
 import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
+import { getDomainBrand } from "@/lib/domainConfig";
 
 interface SEOHeadProps {
   title: string;
@@ -22,8 +24,26 @@ interface SEOHeadProps {
   noindex?: boolean;
 }
 
-const SITE_URL = "https://www.mattmichelstraining.com";
+const M2_SITE_URL = "https://www.mattmichelstraining.com";
+const DWA_SITE_URL = "https://www.detroitwebagent.com";
 const DEFAULT_OG = "https://www.mattmichelstraining.com/pwa-512x512.png";
+
+// Routes that belong to the DWA brand regardless of domain
+const DWA_ROUTES = [
+  "/agency", "/hire-alert", "/hire-alert-trial", "/hire-alert-healthcare",
+  "/field-service", "/contractor-leads", "/dead-lead-intake", "/dead-lead-stats",
+  "/missed-call-catch", "/missed-call-text", "/my-techalert", "/roi",
+  "/all-services", "/free-tools", "/free-site-scanner", "/web-design-services",
+  "/detroit-web-design", "/get-started", "/seo-guard",
+  "/lead-unlocked", "/lead-claimed", "/ai-phone-answering",
+  "/manufacturing-web-design", "/real-estate-web-design",
+  "/dwa-admin",
+];
+
+function isDWAPage(pathname: string): boolean {
+  if (getDomainBrand() === "agency") return true;
+  return DWA_ROUTES.some(r => pathname.startsWith(r));
+}
 
 const SEOHead = ({
   title,
@@ -36,8 +56,15 @@ const SEOHead = ({
   jsonLd,
   noindex = false,
 }: SEOHeadProps) => {
-  const fullTitle = title.includes("M2") || title.includes("Matt Michels") ? title : `${title} | Matt Michels Training`;
-  const canonical = path ? `${SITE_URL}${path}` : undefined;
+  const location = useLocation();
+  const isDWA = isDWAPage(location.pathname);
+  const brandName = isDWA ? "Detroit Web Agency" : "Matt Michels Training";
+  const siteUrl = isDWA ? DWA_SITE_URL : M2_SITE_URL;
+
+  const fullTitle = title.includes("M2") || title.includes("Matt Michels") || title.includes("Detroit Web Agency")
+    ? title
+    : `${title} | ${brandName}`;
+  const canonical = path ? `${siteUrl}${path}` : undefined;
   const image = ogImage || DEFAULT_OG;
 
   // Build JSON-LD schemas
@@ -52,8 +79,8 @@ const SEOHead = ({
       author: { "@type": "Person", name: article.author },
       publisher: {
         "@type": "Organization",
-        name: "M2 Training",
-        url: SITE_URL,
+        name: brandName,
+        url: siteUrl,
       },
       datePublished: article.publishedTime,
       articleSection: article.category,
@@ -76,7 +103,7 @@ const SEOHead = ({
         availability: product.availability || "https://schema.org/InStock",
         url: canonical,
       },
-      brand: { "@type": "Brand", name: "M2 Training" },
+      brand: { "@type": "Brand", name: brandName },
     });
   }
 
@@ -96,7 +123,7 @@ const SEOHead = ({
       <meta property="og:description" content={description} />
       {canonical && <meta property="og:url" content={canonical} />}
       <meta property="og:image" content={image} />
-      <meta property="og:site_name" content="Matt Michels Training" />
+      <meta property="og:site_name" content={brandName} />
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
