@@ -100,7 +100,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           from: "Matt Michels <matt@detroitwebagent.com>",
-          to: [client.email],
+          to: [client.owner_email],
           subject: `${companyName} — 50% off FieldDesk (TechAlert perk)`,
           html: `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,sans-serif">
