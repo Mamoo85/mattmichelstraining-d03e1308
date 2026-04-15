@@ -500,7 +500,7 @@ export default function MyTechAlert() {
                   <Info className="h-3.5 w-3.5 text-amber-400/70 cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent side="right" className="max-w-[240px] bg-[#0a1628] border-white/10 text-slate-300 text-xs">
-                  ⚠️ Verify signals using provided sources before outreach.
+                  ⚠️ Verify signals independently before outreach.
                 </TooltipContent>
               </Tooltip>
               <span className="text-[10px] text-slate-500 ml-auto">{signals.length} active</span>

@@ -82,9 +82,10 @@ export default function HireAlert() {
           <p style={{ color: "#94a3b8", fontSize: 15, lineHeight: 1.7, margin: "0 0 32px" }}>
             Check your email — we sent your welcome guide with everything you need to know. Our monitoring runs every morning at 7am and alerts you the moment a match appears.
           </p>
-          <a href="/" style={{ background: ACCENT, color: BG, padding: "14px 32px", borderRadius: 8, fontWeight: 800, fontSize: 16, textDecoration: "none", display: "inline-block" }}>
+          <a href="https://detroitwebagent.com" style={{ background: ACCENT, color: BG, padding: "14px 32px", borderRadius: 8, fontWeight: 800, fontSize: 16, textDecoration: "none", display: "inline-block" }}>
             Back to Home
           </a>
+          <p style={{ color: "#94a3b8", fontSize: 13, marginTop: 16 }}>Questions? <a href="sms:+13139921219" style={{ color: ACCENT, fontWeight: 700, textDecoration: "none" }}>Text Matt at (313) 992-1219</a></p>
         </div>
       </div>
     );
@@ -224,7 +225,7 @@ export default function HireAlert() {
           {[
             { icon: "📧", label: "Daily Email Digest", desc: "Every candidate scored 5+ delivered to your inbox each morning" },
             { icon: "📱", label: "SMS Hot Alerts", desc: "Instant text when a candidate scores 7+ — before your competitors call" },
-            { icon: "🏅", label: "AI Availability Score", desc: "Each candidate rated 1–10 on immediate hire likelihood with reason" },
+            { icon: "🏅", label: "Availability Score", desc: "Each candidate rated 1–10 on immediate hire likelihood with reason" },
             { icon: "🔒", label: "License Verification", desc: "License numbers, types, and expiry dates confirmed and included" },
             { icon: "📍", label: "Metro Detroit Focus", desc: "Wayne, Oakland, Macomb counties — where your techs need to live" },
             { icon: "🎯", label: "Trade-Specific", desc: "Target the exact roles you need: HVAC, boiler, plumbing, electrical" },
@@ -265,7 +266,7 @@ export default function HireAlert() {
             <div style={{ fontSize: 48, fontWeight: 800, margin: "0 0 4px" }}>$99<span style={{ fontSize: 18, fontWeight: 400, color: "#94a3b8" }}>/mo</span></div>
             <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 24 }}>For any field service company in Michigan</p>
             <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px" }}>
-              {["Proprietary license monitoring", "Professional network intelligence", "Live availability signal tracking", "AI availability scoring", "Email digest", "SMS hot alerts"].map((f) => (
+              {["Proprietary license monitoring", "Professional network intelligence", "Live availability signal tracking", "Availability scoring", "Email digest", "SMS hot alerts"].map((f) => (
                 <li key={f} style={{ padding: "6px 0", fontSize: 14, color: "#cbd5e1", display: "flex", gap: 8 }}>
                   <span style={{ color: ACCENT }}>✓</span> {f}
                 </li>

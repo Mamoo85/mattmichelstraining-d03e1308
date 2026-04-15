@@ -124,6 +124,7 @@ export default function MissedCallSaaS() {
           <p className="text-[#aaa] text-sm leading-relaxed mb-4">
             Matt's team will reach out within 24 hours to complete your 5-minute call forwarding setup. After that, every missed call gets an instant text-back — automatically.
           </p>
+          <p className="text-sm text-[#888]">Questions? <a href="sms:+13139921219" className="text-[#22d3ee] font-bold hover:underline">Text Matt at (313) 992-1219</a></p>
         </div>
       </div>
     );

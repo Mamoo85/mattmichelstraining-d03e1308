@@ -17,11 +17,11 @@ export default function EnterpriseFooterBlock({
       </p>
       <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
         <a
-          href="tel:+13139921219"
+          href="sms:+13139921219"
           style={{ color: accentColor }}
           className="text-sm font-bold hover:underline"
         >
-          (313) 992-1219
+          Text (313) 992-1219
         </a>
         <span className={`hidden sm:inline text-xs ${isDark ? "text-slate-600" : "text-muted-foreground/50"}`}>·</span>
         <a

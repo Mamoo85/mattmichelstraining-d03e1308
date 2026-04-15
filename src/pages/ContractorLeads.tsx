@@ -107,7 +107,8 @@ export default function ContractorLeads() {
             <CheckCircle size={32} className="text-green-500" />
           </div>
           <h1 className="text-2xl font-black text-foreground mb-3">You're locked in!</h1>
-          <p className="text-muted-foreground leading-relaxed">Your territory is reserved. You'll receive an onboarding email within 24 hours with your lead capture page details and go-live date.</p>
+          <p className="text-muted-foreground leading-relaxed mb-4">Your territory is reserved. You'll receive an onboarding email within 24 hours with your lead capture page details and go-live date.</p>
+          <p className="text-sm text-muted-foreground">Questions? <a href="sms:+13139921219" className="text-primary font-bold hover:underline">Text Matt at (313) 992-1219</a></p>
         </div>
       </div>
     );
@@ -123,12 +124,12 @@ export default function ContractorLeads() {
         productName="Exclusive Contractor Leads"
         ctaLabel="Claim Your Territory →"
         ctaOnClick={scrollToTerritory}
-        accentColor="#e8621a"
-        bgColor="#1e293b"
+        accentColor="#00d4ff"
+        bgColor="#0a1628"
       />
       <div className="min-h-screen bg-background text-foreground">
         {/* Hero */}
-        <div className="bg-[#1e293b] text-white px-6 py-16 text-center">
+        <div className="bg-[#0a1628] text-white px-6 py-16 text-center">
           <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-3">Detroit Web Agency</p>
           <h1 className="text-3xl font-black mb-4 leading-tight">Exclusive contractor leads.<br />Metro Detroit. One company per trade.</h1>
           <p className="text-slate-300 text-base max-w-xl mx-auto leading-relaxed">
@@ -161,7 +162,7 @@ export default function ContractorLeads() {
           </div>
 
           {/* Founder Intro */}
-          <div className="bg-[#1e293b] text-white p-5 mb-10 flex items-center gap-5">
+          <div className="bg-[#0a1628] text-white p-5 mb-10 flex items-center gap-5">
             <img
               src="/images/matt-family-cornfield.jpg"
               alt="Matt Michels"
@@ -187,7 +188,7 @@ export default function ContractorLeads() {
 
         {/* Wall of Love */}
         <div className="border-y border-border bg-card">
-          <WallOfLove testimonials={TESTIMONIALS} accentColor="#e8621a" theme="light" title="What Our Contractors Say" />
+          <WallOfLove testimonials={TESTIMONIALS} accentColor="#00d4ff" theme="light" title="What Our Contractors Say" />
         </div>
 
         <div className="max-w-3xl mx-auto px-6 py-12">
@@ -286,7 +287,7 @@ export default function ContractorLeads() {
           </div>
         </div>
 
-        <EnterpriseFooterBlock accentColor="#e8621a" isDark={false} />
+        <EnterpriseFooterBlock accentColor="#00d4ff" isDark={false} />
       </div>
     </>
   );
