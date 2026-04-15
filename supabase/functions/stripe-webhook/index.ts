@@ -3183,12 +3183,14 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
       if (meta.type === "field_service_subscription") {
         try {
           const { email, name, company, plan } = meta;
-          await sb.from("field_crm_clients").upsert(
+          const { data: fieldClient } = await sb.from("field_crm_clients").upsert(
             { email: email, owner_name: name || null, business_name: company || "New Client", plan: plan || "standalone", status: "active", stripe_customer_id: session.customer as string, stripe_subscription_id: session.subscription as string || null },
             { onConflict: "email" }
-          );
+          ).select("dispatch_token").single();
+          const dispatchToken = (fieldClient as any)?.dispatch_token || "unknown";
+          const dispatchUrl = `https://detroitwebagent.com/field-service/dispatch?token=${dispatchToken}`;
           await Promise.all([
-            notifyMatt(`New Field Service Client: ${company || email}`, `<p>New Detroit Web Agency Field Service signup:<br/>Name: ${name}<br/>Email: ${email}<br/>Company: ${company}<br/>Plan: ${plan}</p>`),
+            notifyMatt(`New Field Service Client: ${company || email}`, `<p>New Detroit Web Agency Field Service signup:<br/>Name: ${name}<br/>Email: ${email}<br/>Company: ${company}<br/>Plan: ${plan}<br/><br/><strong>Dispatch URL:</strong> <a href="${dispatchUrl}">${dispatchUrl}</a></p>`),
             fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, {
               method: "POST",
               headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json" },
