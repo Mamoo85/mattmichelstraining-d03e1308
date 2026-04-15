@@ -148,7 +148,7 @@ export default function AdWebsiteAudit() {
             style={{ background: "#22d3ee" }}
           >
             {submitting ? <Loader2 size={16} className="animate-spin" /> : <Globe size={16} />}
-            {submitting ? "Processing…" : "Get My Website Audit — $9"}
+            {submitting ? "Processing…" : "Get My Website Audit — $29"}
           </button>
           <p className="text-center text-xs text-slate-500">Secure checkout · Report in ~60 sec · No agency fees · One-time</p>
         </form>
