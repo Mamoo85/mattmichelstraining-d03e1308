@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import SEOHead from "@/components/shared/SEOHead";
+import SEOHead from "@/components/layout/SEOHead";
 import {
   TrendingUp, Zap, Target, Shield, Factory,
   CheckCircle, ArrowRight, BarChart3, Eye,

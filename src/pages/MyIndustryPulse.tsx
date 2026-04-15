@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import SEOHead from "@/components/shared/SEOHead";
+import SEOHead from "@/components/layout/SEOHead";
 import {
   TrendingUp, Zap, Target, Factory, Briefcase,
   RefreshCw, Loader2, ArrowUpRight, BarChart3,
