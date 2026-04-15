@@ -765,7 +765,7 @@ async function sendAlertEmail(
               <p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#eff6ff;padding:10px 12px;border-radius:8px;border-left:3px solid #3b82f6;"><strong>💡 Recommendation:</strong> ${c.hiring_recommendation}</p>
             </td></tr>` : ""}
             <!-- ACTION BUTTONS -->
-            ${buildActionButtons(c)}
+            ${buildActionButtons(c, client.dashboard_token)}
           </table>
         </td></tr>
       </table>
