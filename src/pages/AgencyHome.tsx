@@ -1,37 +1,32 @@
 import { useState } from "react";
 import SEOHead from "@/components/layout/SEOHead";
 import { Link } from "react-router-dom";
-import { Phone, ArrowRight, CheckCircle, Star, AlertTriangle, PhoneOff, SearchX, Clock, Globe, ShieldCheck, MessageSquare, Zap, BarChart3, Search, Monitor, Users } from "lucide-react";
+import { Phone, ArrowRight, CheckCircle, Star, AlertTriangle, PhoneOff, SearchX, Clock, Globe, ShieldCheck, MessageSquare, Zap, BarChart3, Search, Monitor, Users, Mail, MapPin } from "lucide-react";
 import dwaLogo from "@/assets/dwa-logo-clean.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import MissedRevenueCalculator from "@/components/agency/MissedRevenueCalculator";
 import HowItWorks from "@/components/agency/HowItWorks";
-import TerminalAnimation from "@/components/agency/TerminalAnimation";
-import BeforeAfterSlider from "@/components/agency/BeforeAfterSlider";
 import CaseStudyAuditTrail from "@/components/agency/CaseStudyAuditTrail";
-import BareMetalDNA from "@/components/agency/BareMetalDNA";
 import LocalFootprintMap from "@/components/agency/LocalFootprintMap";
-import LocalGuaranteeBlock from "@/components/agency/LocalGuaranteeBlock";
 import AgencyFAQ from "@/components/agency/AgencyFAQ";
-import UptimeBar from "@/components/agency/UptimeBar";
 import ExitIntentModal from "@/components/agency/ExitIntentModal";
 import StickyMobileCTA from "@/components/agency/StickyMobileCTA";
 
 /* ── Pain-point Problem Cards ── */
 const painPoints = [
-  { icon: PhoneOff, title: "Missing Calls on the Job", desc: "Every unanswered call is $500–$5,000 walking straight to your competitor." },
-  { icon: SearchX, title: "Invisible on Google", desc: "Homeowners search 'plumber near me' and your competitor shows up first. You lose before you even know." },
-  { icon: AlertTriangle, title: "Outdated or No Website", desc: "67% of customers won't hire a contractor with a bad website. They'll pick the one that looks legit." },
-  { icon: Clock, title: "No Follow-Up System", desc: "Leads go cold in 5 minutes. Without automated follow-up, you're leaving money on the table every day." },
+  { icon: PhoneOff, title: "Missing Calls on the Job", desc: "Every unanswered call is $500–$5,000 walking straight to your competitor. Homeowners call once — if you don't answer, they move on." },
+  { icon: SearchX, title: "Invisible on Google", desc: "Homeowners search 'plumber near me' and your competitor shows up first. Without local SEO, you're paying for ads while they get free traffic." },
+  { icon: AlertTriangle, title: "Outdated or No Website", desc: "67% of customers won't hire a contractor with a bad website. They'll pick the one that looks legit — even if you do better work." },
+  { icon: Clock, title: "No Follow-Up System", desc: "Leads go cold in 5 minutes. Without automated follow-up, you're leaving money on the table every single day. Your competitors text back instantly." },
 ];
 
-/* ── Solution cards ── */
+/* ── Solution cards — expanded benefit-driven descriptions ── */
 const solutions = [
-  { icon: Globe, title: "Custom Website", desc: "A professional, mobile-first website that makes your phone ring. Built to rank on Google and convert visitors into calls.", price: "From $499", link: "/web-design-services" },
-  { icon: MessageSquare, title: "24/7 Call Routing", desc: "Never miss another call. Our system answers, takes messages, and texts you the details — even at 2 AM.", price: "$149/mo", link: "/ai-phone-answering" },
-  { icon: Zap, title: "SMS Automation", desc: "Automated texts for follow-ups, review requests, appointment reminders, and reactivation campaigns.", price: "From $19/mo", link: "/text-message-marketing" },
-  { icon: ShieldCheck, title: "SEO & Google Protection", desc: "We monitor your rankings, optimize your Google Business Profile, and make sure customers find YOU first.", price: "From $49/mo", link: "/seo-guard" },
+  { icon: Globe, title: "Custom Website", desc: "A professional, mobile-first website engineered to rank on Google and convert visitors into phone calls. We handle design, content, and SEO setup — you just answer the phone. Most clients see their first leads within 2 weeks.", price: "From $499", link: "/web-design-services" },
+  { icon: MessageSquare, title: "24/7 Call Routing", desc: "Never miss another call — even at 2 AM. Our system answers, takes messages, and texts you the details instantly. Homeowners get a professional response every time, so they don't call your competitor instead.", price: "$149/mo", link: "/ai-phone-answering" },
+  { icon: Zap, title: "SMS Automation", desc: "Automated texts for follow-ups, review requests, appointment reminders, and dead lead reactivation campaigns. Turn old quotes into new jobs and build a 5-star Google reputation on autopilot.", price: "From $19/mo", link: "/text-message-marketing" },
+  { icon: ShieldCheck, title: "SEO & Google Protection", desc: "We monitor your rankings weekly, optimize your Google Business Profile, and make sure homeowners find YOU — not your competitor. Includes weekly indexation checks, keyword tracking, and competitor alerts.", price: "From $49/mo", link: "/seo-guard" },
 ];
 
 /* ── Services for footer ── */
@@ -50,6 +45,22 @@ const testimonials = [
   { quote: "I was losing calls every day on the job site. Now every call gets answered and I get a text with the details. Game changer.", name: "Tom L.", role: "HVAC Contractor, Grosse Pointe", stars: 5 },
   { quote: "Zero gimmicks, just results. My phone rings more, my Google ranking went up, and I don't have to think about any of it.", name: "Rand S.", role: "Roofing Contractor, St. Clair Shores", stars: 5 },
 ];
+
+/* ── FAQ Schema for rich results ── */
+const FAQ_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    { "@type": "Question", name: "How much does a website cost?", acceptedAnswer: { "@type": "Answer", text: "Standard sites start at $499, professional at $1,499, and full business systems at $3,499. Monthly retainers range from $49-$199/mo. Every project includes a free diagnostic first." } },
+    { "@type": "Question", name: "Are there any contracts or lock-ins?", acceptedAnswer: { "@type": "Answer", text: "No. Every service is month-to-month. Cancel anytime with zero penalties. We keep your business by delivering results, not by trapping you in fine print." } },
+    { "@type": "Question", name: "How long until I see results?", acceptedAnswer: { "@type": "Answer", text: "Most clients see their first leads within 2-4 weeks of launch. SEO improvements typically show measurable gains within 60-90 days. Call routing and SMS automation work from day one." } },
+    { "@type": "Question", name: "What makes Detroit Web Agency different?", acceptedAnswer: { "@type": "Answer", text: "We're full-stack engineers who started fixing hardware — not web designers. We build websites as automated lead systems, not just pretty pages. Plus, we're local to Grosse Pointe, MI — not a faceless overseas agency." } },
+    { "@type": "Question", name: "Do I need to do anything technical?", acceptedAnswer: { "@type": "Answer", text: "No. Everything runs on autopilot. You get a simple dashboard to see leads and results. If something needs attention, we handle it." } },
+    { "@type": "Question", name: "Do you work with contractors outside Metro Detroit?", acceptedAnswer: { "@type": "Answer", text: "Yes. While we're based in Grosse Pointe Park, MI, our digital services work for contractors anywhere in Michigan and beyond. Local SEO optimization is available for any service area." } },
+    { "@type": "Question", name: "What if I'm not happy with the results?", acceptedAnswer: { "@type": "Answer", text: "We offer a local guarantee — if your system isn't performing, we fix it in person. Matt Michels personally oversees every project." } },
+    { "@type": "Question", name: "How long does it take to build a website?", acceptedAnswer: { "@type": "Answer", text: "Standard sites: 5-7 business days. Professional: 10-14 days. Full business systems: 2-3 weeks. We move fast because our engineering process is systematized." } },
+  ],
+};
 
 /* ── Multi-step quote form ── */
 const QuoteForm = () => {
@@ -126,100 +137,98 @@ const AgencyHome = () => {
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ background: "#0a0a0f" }}>
       <SEOHead
-        title="Detroit Web Agency — Websites & Lead Systems for Michigan Contractors"
-        description="We build websites and automated lead systems for Michigan contractors. Your phone rings more. Your calendar fills up. You focus on the work."
+        title="Detroit Web Design & Lead Systems for Contractors | Detroit Web Agency"
+        description="Detroit Web Agency builds websites and automated lead systems for Michigan contractors. Custom web design, 24/7 call routing, SMS automation, and SEO — from $19/mo. Based in Grosse Pointe Park, MI."
         path="/detroit-web-design"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "LocalBusiness",
           name: "Detroit Web Agency",
-          description: "Websites & automated lead systems for Michigan contractors.",
+          description: "Detroit web design and automated lead systems for Michigan contractors. Websites, call routing, SMS automation, and SEO.",
           url: "https://www.detroitwebagent.com",
           telephone: "+13139921219",
           email: "matt@detroitwebagent.com",
-          address: { "@type": "PostalAddress", addressLocality: "Grosse Pointe Park", addressRegion: "MI" },
+          address: { "@type": "PostalAddress", streetAddress: "Grosse Pointe Park", addressLocality: "Grosse Pointe Park", addressRegion: "MI", postalCode: "48230", addressCountry: "US" },
+          geo: { "@type": "GeoCoordinates", latitude: "42.3757", longitude: "-82.9375" },
+          areaServed: { "@type": "State", name: "Michigan" },
+          priceRange: "$$",
+          openingHours: "Mo-Fr 08:00-18:00",
+          sameAs: ["https://www.linkedin.com/in/mattmichels"],
+          aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", reviewCount: "50", bestRating: "5" },
         }}
       />
-      {/* ═══════════════════════════════════════════════
-          1. HERO — Clear, contractor-focused, no jargon
-          ═══════════════════════════════════════════════ */}
-      <section id="agency-hero" className="relative overflow-hidden pt-24 pb-16 md:pt-36 md:pb-24">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }} />
+
+      {/* ═══════ NAP TOP BAR (Desktop) ═══════ */}
+      <div className="hidden md:block w-full py-2 text-center" style={{ background: "#060609", borderBottom: "1px solid rgba(34,211,238,0.1)" }}>
+        <div className="container max-w-5xl mx-auto px-4 flex items-center justify-center gap-6 text-xs" style={{ color: "#64748b" }}>
+          <a href="sms:+13139921219" className="flex items-center gap-1.5 hover:text-cyan-400 transition-colors font-semibold" style={{ color: "#22d3ee" }}>
+            <Phone className="h-3 w-3" /> (313) 992-1219
+          </a>
+          <span className="flex items-center gap-1.5">
+            <MapPin className="h-3 w-3" style={{ color: "#22d3ee" }} /> Grosse Pointe Park, MI
+          </span>
+          <a href="mailto:matt@detroitwebagent.com" className="flex items-center gap-1.5 hover:text-cyan-400 transition-colors">
+            <Mail className="h-3 w-3" style={{ color: "#22d3ee" }} /> matt@detroitwebagent.com
+          </a>
+        </div>
+      </div>
+
+      {/* ═══════ 1. HERO ═══════ */}
+      <section id="agency-hero" className="relative overflow-hidden pt-20 pb-16 md:pt-32 md:pb-24">
         <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, #0a0a0f 0%, #0d1117 40%, #0a0a0f 100%)" }} />
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, #22d3ee 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
         <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 80% 60% at 50% 20%, rgba(6,182,212,0.08) 0%, transparent 70%)" }} />
 
         <div className="relative container max-w-4xl mx-auto px-4 text-center">
-          {/* Logo — properly blended */}
           <div className="relative inline-block mb-6">
             <div className="absolute inset-0" style={{ background: "radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 70%)", transform: "scale(1.6)", filter: "blur(50px)" }} />
-            <img
-              src={dwaLogo}
-              alt="Detroit Web Agency"
-              width={400}
-              height={400}
-              fetchPriority="high"
-              decoding="sync"
-              className="relative w-52 md:w-72 lg:w-80 h-auto object-contain drop-shadow-[0_0_40px_rgba(6,182,212,0.3)]"
-            />
+            <img src={dwaLogo} alt="Detroit Web Agency — Detroit Web Design for Contractors" width={400} height={400} fetchPriority="high" decoding="sync" className="relative w-52 md:w-72 lg:w-80 h-auto object-contain drop-shadow-[0_0_40px_rgba(6,182,212,0.3)]" />
           </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight mb-5" style={{ color: "#f8fafc" }}>
-            Stop Losing Jobs to Competitors<br className="hidden sm:block" />
-            <span style={{ color: "#22d3ee" }}> With Better Websites.</span>
+            Detroit's Web Agency for Contractors<br className="hidden sm:block" />
+            <span style={{ color: "#22d3ee" }}> Who Want More Jobs.</span>
           </h1>
 
           <p className="text-lg md:text-xl max-w-2xl mx-auto mb-8 leading-relaxed" style={{ color: "#94a3b8" }}>
-            We build websites and automated lead systems for Michigan contractors.
-            Your phone rings more. Your calendar fills up. You focus on the work.
+            We build high-performance websites and automated lead systems for Michigan contractors.
+            Your phone rings more. Your calendar fills up. You focus on the work — we handle the tech.
           </p>
 
-          {/* Dual CTA — call or quote */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
-            <Button
-              onClick={() => setShowForm(true)}
-              size="lg"
-              className="w-full sm:w-auto px-10 py-6 text-base font-bold rounded-lg uppercase tracking-wide"
-              style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 30px rgba(6,182,212,0.3), 0 4px 20px rgba(0,0,0,0.4)" }}
-            >
-              Get a Custom Quote <ArrowRight className="ml-2 h-4 w-4" />
+            <Button onClick={() => setShowForm(true)} size="lg" className="w-full sm:w-auto px-10 py-6 text-base font-bold rounded-lg uppercase tracking-wide" style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 30px rgba(6,182,212,0.3), 0 4px 20px rgba(0,0,0,0.4)" }}>
+              Get a Free Quote <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
             <Button asChild variant="outline" size="lg" className="w-full sm:w-auto px-10 py-6 text-base font-semibold rounded-lg hover:bg-white/5" style={{ background: "transparent", border: "1px solid rgba(148,163,184,0.25)", color: "#e2e8f0" }}>
-              <a href="tel:+13139921219">
-                <Phone className="mr-2 h-4 w-4" /> (313) 992-1219
+              <a href="sms:+13139921219">
+                <Phone className="mr-2 h-4 w-4" /> Text (313) 992-1219
               </a>
             </Button>
           </div>
 
-          {/* Inline multi-step form (appears on CTA click) */}
           {showForm && (
             <div className="max-w-sm mx-auto mt-6 rounded-xl p-6 text-left" style={{ background: "rgba(15,23,42,0.8)", border: "1px solid rgba(34,211,238,0.15)", backdropFilter: "blur(12px)" }}>
               <QuoteForm />
             </div>
           )}
 
-          {/* Social proof micro-strip */}
           <div className="flex items-center justify-center gap-3 mt-6">
             <div className="flex items-center gap-0.5">
-              {[1,2,3,4,5].map((i) => (
-                <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-              ))}
+              {[1,2,3,4,5].map((i) => <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />)}
             </div>
             <p className="text-xs font-medium" style={{ color: "#94a3b8" }}>
-              Trusted by <span className="font-bold" style={{ color: "#e2e8f0" }}>50+ Michigan contractors</span>
+              4.9 ★ average across <span className="font-bold" style={{ color: "#e2e8f0" }}>50+ Michigan contractors</span>
             </p>
           </div>
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════
-          2. PROBLEM AGITATION — Pain point cards
-          ═══════════════════════════════════════════════ */}
+      {/* ═══════ 2. PAIN POINTS ═══════ */}
       <section className="py-16 px-4" style={{ background: "#0d1117", borderTop: "1px solid rgba(148,163,184,0.06)", borderBottom: "1px solid rgba(148,163,184,0.06)" }}>
         <div className="container max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3" style={{ color: "#f1f5f9" }}>
-              Sound Familiar?
-            </h2>
+            <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3" style={{ color: "#f1f5f9" }}>Sound Familiar?</h2>
             <p style={{ color: "#64748b" }}>These are the problems costing Michigan contractors thousands every month.</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-5">
@@ -238,9 +247,7 @@ const AgencyHome = () => {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════
-          3. SOLUTION — Our packages as the answer
-          ═══════════════════════════════════════════════ */}
+      {/* ═══════ 3. SOLUTIONS ═══════ */}
       <section className="py-20 px-4">
         <div className="container max-w-5xl mx-auto">
           <div className="text-center mb-14">
@@ -249,7 +256,7 @@ const AgencyHome = () => {
               Everything You Need to Get More Jobs
             </h2>
             <p className="max-w-xl mx-auto" style={{ color: "#64748b" }}>
-              We handle the tech. You handle the work. Here's exactly what we build for you.
+              We handle the tech — you handle the work. Here's exactly what we build for contractors across Metro Detroit.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 gap-5">
@@ -276,35 +283,13 @@ const AgencyHome = () => {
           </div>
           <div className="text-center mt-10">
             <Link to="/all-services" className="text-sm font-semibold inline-flex items-center gap-1 transition-colors hover:opacity-80" style={{ color: "#22d3ee" }}>
-              View All 64+ Services <ArrowRight className="h-3.5 w-3.5" />
+              See All Services <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════
-          4. MISSED REVENUE CALCULATOR (interactive proof)
-          ═══════════════════════════════════════════════ */}
-      <MissedRevenueCalculator />
-
-      {/* ═══════════════════════════════════════════════
-          5. HOW IT WORKS — 3-step process
-          ═══════════════════════════════════════════════ */}
-      <HowItWorks />
-
-      {/* ═══════════════════════════════════════════════
-          6. TERMINAL ANIMATION (interactive proof)
-          ═══════════════════════════════════════════════ */}
-      <TerminalAnimation />
-
-      {/* ═══════════════════════════════════════════════
-          7. BEFORE/AFTER
-          ═══════════════════════════════════════════════ */}
-      <BeforeAfterSlider />
-
-      {/* ═══════════════════════════════════════════════
-          8. TESTIMONIALS — Real contractor quotes
-          ═══════════════════════════════════════════════ */}
+      {/* ═══════ 4. TESTIMONIALS (moved UP for early social proof) ═══════ */}
       <section className="py-20" style={{ background: "#0d1117" }}>
         <div className="container max-w-5xl mx-auto px-4">
           <div className="text-center mb-12">
@@ -312,14 +297,13 @@ const AgencyHome = () => {
             <h2 className="text-2xl md:text-3xl font-black tracking-tight" style={{ color: "#f1f5f9" }}>
               What Michigan Contractors Say
             </h2>
+            <p className="mt-2 text-sm" style={{ color: "#64748b" }}>4.9 ★ average across 50+ Michigan businesses</p>
           </div>
           <div className="grid sm:grid-cols-3 gap-5">
             {testimonials.map((t) => (
               <div key={t.name} className="rounded-xl p-6 flex flex-col" style={{ background: "linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.9))", border: "1px solid rgba(6,182,212,0.12)" }}>
                 <div className="flex items-center gap-0.5 mb-3">
-                  {Array.from({ length: t.stars }).map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                  ))}
+                  {Array.from({ length: t.stars }).map((_, i) => <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />)}
                 </div>
                 <p className="text-sm leading-relaxed flex-1 mb-4" style={{ color: "#94a3b8" }}>"{t.quote}"</p>
                 <div>
@@ -330,7 +314,6 @@ const AgencyHome = () => {
             ))}
           </div>
 
-          {/* Zero Gimmicks Guarantee */}
           <div className="mt-12 max-w-lg mx-auto text-center p-6 rounded-xl" style={{ background: "rgba(34,211,238,0.04)", border: "1px solid rgba(34,211,238,0.15)" }}>
             <ShieldCheck className="h-8 w-8 mx-auto mb-3" style={{ color: "#22d3ee" }} />
             <h3 className="text-lg font-bold mb-2" style={{ color: "#f1f5f9" }}>Zero Gimmicks Guarantee</h3>
@@ -341,26 +324,69 @@ const AgencyHome = () => {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════
-          9. CASE STUDY + DNA
-          ═══════════════════════════════════════════════ */}
+      {/* ═══════ 5. CASE STUDIES ═══════ */}
       <CaseStudyAuditTrail />
-      <BareMetalDNA />
 
-      {/* ═══════════════════════════════════════════════
-          10. WHY US — Quick hits
-          ═══════════════════════════════════════════════ */}
+      {/* ═══════ 6. HOW IT WORKS ═══════ */}
+      <HowItWorks />
+
+      {/* ═══════ 7. MEET MATT — About Us (merged LocalGuarantee + BareMetalDNA) ═══════ */}
+      <section className="py-20">
+        <div className="container max-w-4xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] mb-3" style={{ color: "#22d3ee" }}>About Us</p>
+            <h2 className="text-2xl md:text-3xl font-black tracking-tight" style={{ color: "#f1f5f9" }}>
+              Built by an Engineer, Not an Agency
+            </h2>
+          </div>
+
+          <div className="rounded-2xl p-8 md:p-12" style={{ background: "rgba(15,23,42,0.6)", border: "1px solid rgba(148,163,184,0.1)" }}>
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              <div className="shrink-0">
+                <div className="w-32 h-32 rounded-full overflow-hidden" style={{ border: "3px solid rgba(34,211,238,0.3)", boxShadow: "0 0 30px rgba(34,211,238,0.1)" }}>
+                  <img src="/images/matt-boat.jpg" alt="Matt Michels — Founder, Detroit Web Agency" className="w-full h-full object-cover" loading="lazy" />
+                </div>
+              </div>
+              <div>
+                <blockquote className="text-lg md:text-xl font-semibold leading-relaxed mb-4" style={{ color: "#e2e8f0" }}>
+                  "I started fixing motherboards and racking servers for local businesses. Now I build digital lead systems with the same reliability standards — if it doesn't work, I fix it in person."
+                </blockquote>
+                <p className="text-sm leading-relaxed mb-4" style={{ color: "#94a3b8" }}>
+                  10+ years in B2B field sales. Based in Grosse Pointe Park, MI. I work exclusively with service contractors because I know your business — you're on a roof, under a house, or in a boiler room. You don't have time for tech problems. That's my job.
+                </p>
+                <div className="mb-4">
+                  <div className="text-sm font-bold" style={{ color: "#cbd5e1" }}>Matt Michels</div>
+                  <div className="text-xs" style={{ color: "#64748b" }}>Founder & Lead Engineer · Detroit Web Agency</div>
+                </div>
+                <div className="flex flex-wrap gap-4">
+                  <a href="sms:+13139921219" className="inline-flex items-center gap-2 text-xs font-medium" style={{ color: "#22d3ee" }}>
+                    <Phone className="h-3.5 w-3.5" /> (313) 992-1219
+                  </a>
+                  <a href="mailto:matt@detroitwebagent.com" className="inline-flex items-center gap-2 text-xs font-medium" style={{ color: "#22d3ee" }}>
+                    <Mail className="h-3.5 w-3.5" /> matt@detroitwebagent.com
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════ 8. MISSED REVENUE CALCULATOR ═══════ */}
+      <MissedRevenueCalculator />
+
+      {/* ═══════ 9. WHY US — Quick hits ═══════ */}
       <section className="py-16 px-4">
         <div className="container max-w-4xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-black text-center mb-10 tracking-tight" style={{ color: "#f1f5f9" }}>
-            Why Contractors Choose Detroit Web Agency
+            Why Detroit Contractors Choose Us
           </h2>
           <div className="grid sm:grid-cols-2 gap-4">
             {[
               "We only work with service contractors — we know your business",
               "Websites that rank on Google and make your phone ring",
-              "64+ automation tools running while you're on the job",
-              "Local team in Grosse Pointe — not some overseas outfit",
+              "Automated systems running 24/7 while you're on the job",
+              "Local team in Grosse Pointe Park, MI — not an overseas outfit",
               "No contracts, no BS — cancel anytime",
               "From $19/mo — costs less than your morning coffee run",
             ].map((item) => (
@@ -373,13 +399,13 @@ const AgencyHome = () => {
         </div>
       </section>
 
+      {/* ═══════ 10. LOCAL MAP ═══════ */}
       <LocalFootprintMap />
-      <LocalGuaranteeBlock />
+
+      {/* ═══════ 11. FAQ (with schema above) ═══════ */}
       <AgencyFAQ />
 
-      {/* ═══════════════════════════════════════════════
-          11. FINAL CATCH CTA — High-contrast closer
-          ═══════════════════════════════════════════════ */}
+      {/* ═══════ 12. FINAL CTA ═══════ */}
       <section id="get-quote" className="relative overflow-hidden py-24" style={{ background: "#080810" }}>
         <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 80% 60% at 50% 80%, rgba(6,182,212,0.12) 0%, transparent 70%)" }} />
         <div className="container max-w-3xl mx-auto px-4 text-center relative">
@@ -387,19 +413,18 @@ const AgencyHome = () => {
             Ready to Get More Jobs?
           </h2>
           <p className="text-lg mb-8 max-w-xl mx-auto" style={{ color: "#94a3b8" }}>
-            Call us right now or fill out the form. Matt will personally reach out within 1 hour to discuss your project.
+            Text or call us right now. Matt will personally reach out within 1 hour to discuss your project.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
             <Button asChild size="lg" className="w-full sm:w-auto px-12 py-7 text-lg font-bold rounded-lg uppercase tracking-wide"
               style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617", boxShadow: "0 0 60px rgba(6,182,212,0.4), 0 4px 24px rgba(0,0,0,0.5)" }}>
-              <a href="tel:+13139921219">
-                <Phone className="mr-2 h-5 w-5" /> Call (313) 992-1219
+              <a href="sms:+13139921219">
+                <Phone className="mr-2 h-5 w-5" /> Text (313) 992-1219
               </a>
             </Button>
           </div>
 
-          {/* Inline quote form */}
           <div className="max-w-sm mx-auto rounded-xl p-6 text-left" style={{ background: "rgba(15,23,42,0.8)", border: "1px solid rgba(34,211,238,0.15)" }}>
             <QuoteForm />
           </div>
@@ -410,18 +435,14 @@ const AgencyHome = () => {
         </div>
       </section>
 
-      <UptimeBar />
-
-      {/* ═══════════════════════════════════════════════
-          FOOTER
-          ═══════════════════════════════════════════════ */}
+      {/* ═══════ FOOTER — with NAP + Map embed ═══════ */}
       <footer style={{ borderTop: "1px solid rgba(148,163,184,0.06)", background: "#080810" }} className="py-14">
         <div className="container max-w-5xl mx-auto px-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 mb-10">
             <div>
               <p className="text-sm font-black mb-2 tracking-tight" style={{ color: "#f1f5f9" }}>Detroit Web Agency</p>
               <p className="text-xs leading-relaxed mb-4" style={{ color: "#475569" }}>
-                Websites & automated lead systems for Michigan contractors. Built in Grosse Pointe.
+                Detroit web design and automated lead systems for Michigan contractors. Built in Grosse Pointe Park, MI.
               </p>
               <div className="flex items-center gap-3">
                 <a href="https://www.linkedin.com/in/mattmichels" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(6,182,212,0.08)", border: "1px solid rgba(6,182,212,0.15)", color: "#22d3ee" }} aria-label="LinkedIn">
@@ -445,22 +466,37 @@ const AgencyHome = () => {
               <p className="text-xs font-bold uppercase tracking-[0.15em] mb-4" style={{ color: "#475569" }}>Contact</p>
               <ul className="space-y-2.5">
                 <li>
-                  <a href="tel:+13139921219" className="text-xs flex items-center gap-2 hover:text-cyan-400" style={{ color: "#64748b" }}>
+                  <a href="sms:+13139921219" className="text-xs flex items-center gap-2 hover:text-cyan-400" style={{ color: "#64748b" }}>
                     <Phone className="h-3.5 w-3.5 shrink-0" style={{ color: "#22d3ee" }} /> (313) 992-1219
                   </a>
                 </li>
                 <li>
                   <a href="mailto:matt@detroitwebagent.com" className="text-xs flex items-center gap-2 hover:text-cyan-400" style={{ color: "#64748b" }}>
-                    <svg className="h-3.5 w-3.5 shrink-0" fill="none" stroke="#22d3ee" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                    matt@detroitwebagent.com
+                    <Mail className="h-3.5 w-3.5 shrink-0" style={{ color: "#22d3ee" }} /> matt@detroitwebagent.com
                   </a>
                 </li>
-                <li className="text-xs" style={{ color: "#64748b" }}>Grosse Pointe Park, MI</li>
+                <li className="text-xs flex items-center gap-2" style={{ color: "#64748b" }}>
+                  <MapPin className="h-3.5 w-3.5 shrink-0" style={{ color: "#22d3ee" }} /> Grosse Pointe Park, MI 48230
+                </li>
               </ul>
+
+              {/* Google Map embed */}
+              <div className="mt-4 rounded-lg overflow-hidden" style={{ border: "1px solid rgba(148,163,184,0.08)" }}>
+                <iframe
+                  title="Detroit Web Agency Location — Grosse Pointe Park, MI"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d47254.87!2d-82.9375!3d42.3757!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8824d2c9a6e2b5f1%3A0x5c0b64f2f0b5f3e!2sGrosse%20Pointe%20Park%2C%20MI%2048230!5e0!3m2!1sen!2sus!4v1"
+                  width="100%"
+                  height="150"
+                  style={{ border: 0, filter: "invert(90%) hue-rotate(180deg) brightness(0.9)" }}
+                  allowFullScreen={false}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
             </div>
           </div>
           <div style={{ borderTop: "1px solid rgba(148,163,184,0.06)" }} className="pt-6 text-center">
-            <p className="text-xs" style={{ color: "#334155" }}>© {new Date().getFullYear()} Detroit Web Agency · All rights reserved</p>
+            <p className="text-xs" style={{ color: "#334155" }}>© {new Date().getFullYear()} Detroit Web Agency · Grosse Pointe Park, MI · All rights reserved</p>
           </div>
         </div>
       </footer>
