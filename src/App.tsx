@@ -286,6 +286,8 @@ const TechAlertPostcard = lazyRetry(() => import("./pages/TechAlertPostcard"));
 const HealthcareHireAlert = lazyRetry(() => import("./pages/HealthcareHireAlert"));
 const WebsiteSpeedAudits = lazyRetry(() => import("./pages/WebsiteSpeedAudits"));
 const CrimeDigest = lazyRetry(() => import("./pages/CrimeDigest"));
+const IndustryPulse = lazyRetry(() => import("./pages/IndustryPulse"));
+const MyIndustryPulse = lazyRetry(() => import("./pages/MyIndustryPulse"));
 const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
 const RegulatoryFilingMonitor = lazyRetry(() => import("./pages/RegulatoryFilingMonitor"));
 const BidIntelligence = lazyRetry(() => import("./pages/BidIntelligence"));
@@ -717,6 +719,8 @@ const App = () => (
                     <Route path="/hire-alert-healthcare" element={<HealthcareHireAlert />} />
                     <Route path="/website-speed-audit" element={<WebsiteSpeedAudits />} />
                     <Route path="/crime-digest" element={<CrimeDigest />} />
+                    <Route path="/industry-pulse" element={<IndustryPulse />} />
+                    <Route path="/my-industry-pulse" element={<MyIndustryPulse />} />
                     <Route path="/license-monitor" element={<LicenseMonitor />} />
                     <Route path="/regulatory-filing-monitor" element={<RegulatoryFilingMonitor />} />
                     <Route path="/bid-intelligence" element={<BidIntelligence />} />
