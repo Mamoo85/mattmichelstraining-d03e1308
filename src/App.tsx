@@ -697,6 +697,7 @@ const App = () => (
                     <Route path="/permit-watch" element={<PermitWatch />} />
                     <Route path="/hire-alert" element={<HireAlert />} />
                     <Route path="/hire-alert-trial" element={<HireAlertTrial />} />
+                    <Route path="/techalert-postcard" element={<TechAlertPostcard />} />
                     <Route path="/hire-alert-healthcare" element={<HealthcareHireAlert />} />
                     <Route path="/website-speed-audit" element={<WebsiteSpeedAudits />} />
                     <Route path="/crime-digest" element={<CrimeDigest />} />
