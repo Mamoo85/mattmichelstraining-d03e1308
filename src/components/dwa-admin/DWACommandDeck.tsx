@@ -114,9 +114,8 @@ export default function DWACommandDeck() {
     navigator.clipboard.writeText(text);
     toast.success("Copied to clipboard!");
   };
-  const [demoEmail, setDemoEmail] = useState("");
-  const [demoCompany, setDemoCompany] = useState("");
-  const [demoContact, setDemoContact] = useState("");
+
+
 
   const setLoading = (key: string, val: boolean) =>
     setLoadingMap((m) => ({ ...m, [key]: val }));
