@@ -877,6 +877,9 @@ async function sendAlertEmail(
 </body></html>`,
     }),
   });
+  } catch (e) {
+    console.error("[sendAlerts] email failed:", e instanceof Error ? e.message : String(e));
+  }
 }
 
 const corsHeaders = {
