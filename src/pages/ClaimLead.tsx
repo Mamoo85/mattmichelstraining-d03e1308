@@ -2,7 +2,7 @@
 // Contractor lands here from FOMO teaser SMS.
 // Shows lead preview (trade, city, project type — NO contact info) + $50 claim button.
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,6 +17,23 @@ export default function ClaimLead() {
   const [minutesLeft, setMinutesLeft] = useState(0);
   const [leadPreview, setLeadPreview] = useState<{ trade: string; city: string; project_type: string } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(true);
+  const claimLock = useRef(false);
+
+  // Missing params → skip fetch, show error
+  if (!lead_id || !contractor_id || !contractor_email) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
+        <div style={{ maxWidth: 480, textAlign: "center" }}>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>⚠️</div>
+          <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 800, margin: "0 0 12px" }}>Invalid Link</h1>
+          <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.7, margin: "0 0 32px" }}>
+            This link is missing required information. Please use the link from your text message.
+          </p>
+          <p style={{ color: "#64748b", fontSize: 14 }}>Questions? Text Matt at (313) 992-1219</p>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (!lead_id) return;
@@ -41,7 +58,8 @@ export default function ClaimLead() {
   }, [lead_id]);
 
   const handleClaim = async () => {
-    if (!lead_id || !contractor_id || !contractor_email) return;
+    if (claimLock.current || loading) return;
+    claimLock.current = true;
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-contractor-ppl-checkout", {
@@ -62,6 +80,7 @@ export default function ClaimLead() {
       setStatus("error");
     } finally {
       setLoading(false);
+      claimLock.current = false;
     }
   };
 
