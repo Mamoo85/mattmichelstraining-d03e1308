@@ -2490,6 +2490,48 @@ export type Database = {
           },
         ]
       }
+      daily_text_targets: {
+        Row: {
+          business_name: string
+          city: string | null
+          created_at: string
+          google_reviews: number | null
+          id: string
+          phone: string | null
+          sent_at: string | null
+          status: string
+          suggested_text: string | null
+          trade: string | null
+          website_url: string | null
+        }
+        Insert: {
+          business_name: string
+          city?: string | null
+          created_at?: string
+          google_reviews?: number | null
+          id?: string
+          phone?: string | null
+          sent_at?: string | null
+          status?: string
+          suggested_text?: string | null
+          trade?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          business_name?: string
+          city?: string | null
+          created_at?: string
+          google_reviews?: number | null
+          id?: string
+          phone?: string | null
+          sent_at?: string | null
+          status?: string
+          suggested_text?: string | null
+          trade?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       daily_workouts: {
         Row: {
           created_at: string

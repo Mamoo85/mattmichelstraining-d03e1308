@@ -37,6 +37,7 @@ serve(async (req) => {
     }
 
     const statusUrl = `${SUPABASE_URL}/functions/v1/missed-call-status`;
+    const whisperUrl = `${SUPABASE_URL}/functions/v1/call-whisper`;
 
     // ── MULTI-TENANT: check if this is a customer subscription number ──────
     if (toNumber && SUPABASE_URL && SUPABASE_SERVICE_KEY) {
@@ -61,7 +62,7 @@ serve(async (req) => {
 
         // Forward to the business owner's phone; action URL fires when dial completes
         return twiml(
-          `<Dial timeout="25" action="${statusUrl}" method="POST">` +
+          `<Dial timeout="20" action="${statusUrl}" method="POST">` +
           `<Number>${bizPhone}</Number>` +
           `</Dial>` +
           `<Say voice="alice">You've reached ${bizName}. We'll text you right back.</Say>` +
@@ -80,8 +81,8 @@ serve(async (req) => {
 
     // ── DWA MODE: Matt's personal number (+13139921219) ────────────────────
     return twiml(
-      `<Dial timeout="25" action="${statusUrl}" method="POST">` +
-      `<Number>${MATT_PERSONAL}</Number>` +
+      `<Dial timeout="20" action="${statusUrl}" method="POST">` +
+      `<Number url="${whisperUrl}">${MATT_PERSONAL}</Number>` +
       `</Dial>` +
       `<Say voice="alice">You've reached Detroit Web Agency. Check your texts — Matt just sent you one. Talk soon.</Say>` +
       `<Hangup/>`

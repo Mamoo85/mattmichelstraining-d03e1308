@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -54,6 +54,17 @@ function ActionButton({ label, icon, loading, onClick }: ActionButtonProps) {
   );
 }
 
+interface TextTarget {
+  id: string;
+  business_name: string;
+  phone: string | null;
+  trade: string | null;
+  city: string | null;
+  google_reviews: number | null;
+  suggested_text: string | null;
+  status: string;
+}
+
 export default function DWACommandDeck() {
   const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
   const [modal, setModal] = useState<{ title: string; content: string } | null>(null);
@@ -61,6 +72,50 @@ export default function DWACommandDeck() {
   const [demoEmail, setDemoEmail] = useState("");
   const [demoCompany, setDemoCompany] = useState("");
   const [demoContact, setDemoContact] = useState("");
+  const [textTargets, setTextTargets] = useState<TextTarget[]>([]);
+  const [loadingTargets, setLoadingTargets] = useState(false);
+
+  const fetchTargets = async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const { data } = await supabase
+      .from("daily_text_targets" as any)
+      .select("*")
+      .gte("created_at", `${today}T00:00:00Z`)
+      .eq("status", "pending")
+      .order("created_at", { ascending: true })
+      .limit(10);
+    setTextTargets((data as any as TextTarget[]) || []);
+  };
+
+  useEffect(() => { fetchTargets(); }, []);
+
+  const buildTargets = async () => {
+    setLoadingTargets(true);
+    try {
+      const { error } = await supabase.functions.invoke("build-daily-text-targets", { body: {} });
+      if (error) throw error;
+      toast.success("Today's text list built!");
+      await fetchTargets();
+    } catch (err: any) {
+      toast.error("Failed: " + (err?.message ?? "Unknown"));
+    } finally { setLoadingTargets(false); }
+  };
+
+  const markSent = async (id: string) => {
+    await supabase
+      .from("daily_text_targets" as any)
+      .update({ status: "sent", sent_at: new Date().toISOString() } as any)
+      .eq("id", id);
+    setTextTargets((prev) => prev.filter((t) => t.id !== id));
+    toast.success("Marked sent ✓");
+  };
+
+  const copyText = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Copied to clipboard!");
+  };
+
+
 
   const setLoading = (key: string, val: boolean) =>
     setLoadingMap((m) => ({ ...m, [key]: val }));
@@ -248,6 +303,61 @@ export default function DWACommandDeck() {
           <a href="/my-techalert?token=DWA_DEMO_MASTER" target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg bg-[#00d4ff]/10 text-[#00d4ff]/80 text-xs border border-[#00d4ff]/20 hover:border-[#00d4ff]/50 transition-colors">TechAlert Demo →</a>
           <a href="/field-service/dispatch?token=DWA_DEMO_MASTER" target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg bg-[#00d4ff]/10 text-[#00d4ff]/80 text-xs border border-[#00d4ff]/20 hover:border-[#00d4ff]/50 transition-colors">FieldDesk Demo →</a>
         </div>
+      </div>
+
+      {/* ── 📱 TODAY'S TEXT LIST ──────────────────────────── */}
+      <div className="mt-6 bg-[#0f1f35] border border-white/10 rounded-xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-white/30 text-xs uppercase tracking-wide">📱 Today's Text List</p>
+          <button
+            onClick={buildTargets}
+            disabled={loadingTargets}
+            className="px-3 py-1 rounded-lg bg-[#00d4ff]/10 text-[#00d4ff] text-xs border border-[#00d4ff]/20 hover:border-[#00d4ff]/50 transition-colors disabled:opacity-50"
+          >
+            {loadingTargets ? "Building..." : "🔄 Build Today's List"}
+          </button>
+        </div>
+
+        {textTargets.length === 0 ? (
+          <p className="text-white/20 text-xs text-center py-4">No targets yet — click "Build Today's List" to generate 10 contractors to text.</p>
+        ) : (
+          <div className="space-y-3">
+            {textTargets.map((t) => (
+              <div key={t.id} className="bg-[#0a1628] border border-white/5 rounded-lg p-3">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div>
+                    <p className="text-white text-sm font-medium">{t.business_name}</p>
+                    <p className="text-white/40 text-xs">
+                      {t.trade?.replace(/_/g, " ")} · {t.city}
+                      {t.google_reviews ? ` · ${t.google_reviews} reviews` : ""}
+                      {t.phone ? ` · ${t.phone}` : ""}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => markSent(t.id)}
+                    className="px-2 py-1 rounded bg-green-500/10 text-green-400 text-xs border border-green-500/20 hover:border-green-500/50 transition-colors shrink-0"
+                  >
+                    ✓ Sent
+                  </button>
+                </div>
+                {t.suggested_text && (
+                  <div className="mt-2">
+                    <p className="text-white/50 text-[10px] uppercase tracking-wide mb-1">Copy-Paste Script:</p>
+                    <div className="bg-[#060e1a] border border-white/5 rounded p-2 text-white/60 text-xs leading-relaxed">
+                      {t.suggested_text}
+                    </div>
+                    <button
+                      onClick={() => copyText(t.suggested_text!)}
+                      className="mt-1.5 px-3 py-1 rounded bg-[#00d4ff]/10 text-[#00d4ff] text-xs border border-[#00d4ff]/20 hover:border-[#00d4ff]/50 transition-colors"
+                    >
+                      📋 Copy Script
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="mt-6 bg-[#0f1f35] border border-white/10 rounded-xl p-4">
