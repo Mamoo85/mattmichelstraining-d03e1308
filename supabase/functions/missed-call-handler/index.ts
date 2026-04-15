@@ -37,6 +37,7 @@ serve(async (req) => {
     }
 
     const statusUrl = `${SUPABASE_URL}/functions/v1/missed-call-status`;
+    const whisperUrl = `${SUPABASE_URL}/functions/v1/call-whisper`;
 
     // ── MULTI-TENANT: check if this is a customer subscription number ──────
     if (toNumber && SUPABASE_URL && SUPABASE_SERVICE_KEY) {
