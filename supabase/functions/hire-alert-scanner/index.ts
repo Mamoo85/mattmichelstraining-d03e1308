@@ -666,8 +666,15 @@ Return JSON: { "score": number, "reason": "one sentence citing the top 1-2 signa
 // ===== ACTION BUTTON EMAIL TEMPLATE =====
 // Every candidate card has prominent clickable buttons — no dead ends
 
-function buildActionButtons(c: ScoredCandidate): string {
+function buildActionButtons(c: ScoredCandidate & { id?: string }, clientToken?: string): string {
   const buttons: string[] = [];
+  const dashBase = "https://m2training.lovable.app/my-techalert";
+
+  // Deep-link action buttons (Phase 4)
+  if (clientToken && c.id) {
+    buttons.push(`<a href="${dashBase}?token=${clientToken}&auto=1&claim=${c.id}" style="display:inline-block;background:linear-gradient(135deg,#00d4ff,#0066ff);color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">⚡ Claim This Candidate</a>`);
+    buttons.push(`<a href="${dashBase}?token=${clientToken}&highlight=${c.id}&action=draft" style="display:inline-block;background:#7c3aed;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">✍️ Draft Outreach</a>`);
+  }
 
   if (c.linkedin_url) {
     buttons.push(`<a href="${c.linkedin_url}" target="_blank" style="display:inline-block;background:#0a66c2;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">🔗 Message on LinkedIn</a>`);
@@ -681,11 +688,9 @@ function buildActionButtons(c: ScoredCandidate): string {
   if (c.phone) {
     buttons.push(`<a href="tel:${c.phone}" style="display:inline-block;background:#e8621a;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">📞 Call ${c.phone}</a>`);
   }
-  // NPI Business Phone — distinct teal button
   if (c.npi_business_phone && c.npi_business_phone !== c.phone) {
     buttons.push(`<a href="tel:${c.npi_business_phone}" style="display:inline-block;background:#0d9488;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">📞 Business Line ${c.npi_business_phone}</a>`);
   }
-  // PDL Mobile — if different from primary phone
   if (c.pdl_mobile_phone && c.pdl_mobile_phone !== c.phone && c.pdl_mobile_phone !== c.npi_business_phone) {
     buttons.push(`<a href="tel:${c.pdl_mobile_phone}" style="display:inline-block;background:#ea580c;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">📱 Mobile ${c.pdl_mobile_phone}</a>`);
   }
