@@ -4871,6 +4871,57 @@ export type Database = {
         }
         Relationships: []
       }
+      industry_pulse_clients: {
+        Row: {
+          active: boolean | null
+          company_name: string
+          contact_name: string | null
+          created_at: string | null
+          dashboard_token: string | null
+          email: string
+          id: string
+          phone: string | null
+          pricing_tier: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          target_industries: string[] | null
+          target_roles: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_name: string
+          contact_name?: string | null
+          created_at?: string | null
+          dashboard_token?: string | null
+          email: string
+          id?: string
+          phone?: string | null
+          pricing_tier?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          target_industries?: string[] | null
+          target_roles?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_name?: string
+          contact_name?: string | null
+          created_at?: string | null
+          dashboard_token?: string | null
+          email?: string
+          id?: string
+          phone?: string | null
+          pricing_tier?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          target_industries?: string[] | null
+          target_roles?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       industry_pulse_signals: {
         Row: {
           client_tag: string | null
