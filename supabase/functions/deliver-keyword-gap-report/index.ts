@@ -8,10 +8,14 @@ const DATAFORSEO_LOGIN     = Deno.env.get("DATAFORSEO_LOGIN") || "";
 const DATAFORSEO_PASSWORD  = Deno.env.get("DATAFORSEO_PASSWORD") || "";
 const RESEND_API_KEY       = Deno.env.get("RESEND_API_KEY") || "";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 interface KW { keyword: string; searchVolume: number; difficulty: number; position: number; }
 
 async function fetchRankedKeywords(domain: string): Promise<KW[]> {
-  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return [];
+  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) {
+    throw new Error("DataForSEO credentials not configured — cannot generate report");
+  }
   const credentials = btoa(`${DATAFORSEO_LOGIN}:${DATAFORSEO_PASSWORD}`);
   try {
     const res = await fetch("https://api.dataforseo.com/v3/dataforseo_labs/google/ranked_keywords/live", {
@@ -92,12 +96,38 @@ function buildEmail(yourDomain: string, competitorDomain: string, gaps: KW[], ai
 }
 
 serve(async (req) => {
+  // Auth: only accept calls from service role (webhook invoker)
+  const authHeader = req.headers.get("Authorization") || "";
+  if (!authHeader.startsWith("Bearer ") || authHeader.slice(7) !== SUPABASE_SERVICE_KEY) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
+
   try {
-    const { customer_email, your_domain, competitor_domain, order_id } = await req.json();
+    const { customer_email, your_domain, competitor_domain, stripe_session_id } = await req.json();
     if (!customer_email || !your_domain || !competitor_domain) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), { status: 400 });
     }
+    if (!EMAIL_RE.test(customer_email)) {
+      return new Response(JSON.stringify({ error: "Invalid email" }), { status: 400 });
+    }
+
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+    // Idempotency: look up order by stripe_session_id; skip if already delivered
+    let orderId: string | null = null;
+    if (stripe_session_id) {
+      const { data: order } = await sb
+        .from("keyword_gap_orders")
+        .select("id, report_sent_at")
+        .eq("stripe_session_id", stripe_session_id)
+        .single();
+      if (order?.report_sent_at) {
+        console.log(`[KEYWORD-GAP] Already delivered for session ${stripe_session_id}, skipping`);
+        return new Response(JSON.stringify({ already_sent: true }), { status: 200 });
+      }
+      orderId = order?.id ?? null;
+    }
+
     console.log(`[KEYWORD-GAP] ${your_domain} vs ${competitor_domain} for ${customer_email}`);
 
     const [yourKeywords, competitorKeywords] = await Promise.all([
@@ -130,7 +160,7 @@ serve(async (req) => {
       const subject = gaps.length > 0
         ? `🔍 ${gaps.length} Keyword Gaps Found — ${your_domain} vs ${competitor_domain}`
         : `📊 Keyword Analysis Complete — ${your_domain} vs ${competitor_domain}`;
-      await fetch("https://api.resend.com/emails", {
+      const resendRes = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -141,13 +171,17 @@ serve(async (req) => {
           html: buildEmail(your_domain, competitor_domain, gaps, aiSummary),
         }),
       });
+      if (!resendRes.ok) {
+        const resendErr = await resendRes.json().catch(() => ({}));
+        throw new Error(`Resend failed: ${resendRes.status} ${JSON.stringify(resendErr)}`);
+      }
     }
 
-    if (order_id) {
+    if (orderId) {
       await sb.from("keyword_gap_orders").update({
         gaps_found: gaps.length,
         report_sent_at: new Date().toISOString(),
-      }).eq("id", order_id);
+      }).eq("id", orderId);
     }
 
     console.log(`[KEYWORD-GAP] Done — ${gaps.length} gaps, ${your_domain} vs ${competitor_domain}`);
