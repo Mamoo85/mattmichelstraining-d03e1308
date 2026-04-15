@@ -149,10 +149,10 @@ export default function FieldServiceManagement() {
               See Pricing →
             </a>
             <a
-              href="tel:+13139921219"
+              href="sms:+13139921219"
               className="border border-white/30 text-white px-8 py-3 font-bold text-sm hover:bg-white/5 transition-colors flex items-center gap-2"
             >
-              <Phone size={14} /> Call Matt
+              <MessageSquare size={14} /> Text Matt
             </a>
           </div>
         </div>
@@ -360,7 +360,7 @@ export default function FieldServiceManagement() {
         {/* Add-ons */}
         <div className="bg-[#0f1f35] py-12 px-6">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-center text-base font-black mb-1 uppercase tracking-wide">Power it up with M² add-ons</h2>
+            <h2 className="text-center text-base font-black mb-1 uppercase tracking-wide">Power it up with add-ons</h2>
             <p className="text-center text-white/40 text-xs mb-8">Each add-on runs automatically — no extra work for you or your team.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {ADDONS.map((a) => (
@@ -400,13 +400,13 @@ export default function FieldServiceManagement() {
         <div className="py-16 px-6 text-center">
           <p className="text-white/40 text-xs uppercase tracking-widest mb-3">Ready to make the switch?</p>
           <h2 className="text-2xl font-black mb-4">
-            Call Matt. We'll have you live in 48 hours.
+            Text Matt. We'll have you live in 48 hours.
           </h2>
           <a
-            href="tel:+13139921219"
+            href="sms:+13139921219"
             className="inline-flex items-center gap-2 bg-[#00d4ff] text-[#0a1628] font-black px-8 py-3 text-sm uppercase tracking-wide hover:bg-[#00d4ff]/90 transition-colors"
           >
-            <Phone size={14} /> (313) 992-1219
+            <MessageSquare size={14} /> Text (313) 992-1219
           </a>
           <p className="text-white/30 text-xs mt-4">Detroit Web Agency — We Handle The Tech</p>
         </div>
