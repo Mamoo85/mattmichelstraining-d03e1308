@@ -52,15 +52,23 @@ const COMPANY_SIGNALS = [
   "d/b/a", "academy", "school", "university", "hospital", "clinic", "center",
   "association", "foundation", "institute", "authority", "department", "bureau",
   "commission", "council", "district", "board", "casino", "hotel", "resort",
+  "comfort", "zone", "supreme", "keitz", "marvin", "appliance", "supply",
+  "maintenance", "management", "properties", "realty", "investments",
 ];
+
+// Word-boundary patterns that indicate company names (e.g., "X and Y", "Son")
+const COMPANY_WORD_BOUNDARY = /\b(and|son|sons|brothers|bros)\b/i;
 
 function isPersonName(name: string): boolean {
   const lower = name.toLowerCase().trim();
   const words = lower.split(/\s+/).filter(Boolean);
   if (words.length < 2) return false;
   if (COMPANY_SIGNALS.some((s) => lower.includes(s))) return false;
+  if (COMPANY_WORD_BOUNDARY.test(lower)) return false;
   if (name === name.toUpperCase() && name.length > 8) return false;
   if (name.includes("&")) return false;
+  // Reject names ending with "and" (truncated company names from MIOSHA)
+  if (lower.endsWith(" and")) return false;
   return true;
 }
 

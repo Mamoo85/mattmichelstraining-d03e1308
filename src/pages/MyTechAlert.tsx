@@ -97,6 +97,8 @@ export default function MyTechAlert() {
   const token = searchParams.get("token");
   const autoClaimId = searchParams.get("claim");
   const autoMode = searchParams.get("auto");
+  const highlightId = searchParams.get("highlight");
+  const autoAction = searchParams.get("action"); // "draft" to auto-open outreach modal
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -110,6 +112,8 @@ export default function MyTechAlert() {
   const [outreachModal, setOutreachModal] = useState<{ candidateId: string; draft: OutreachDraft; isPitch?: boolean } | null>(null);
   const [generatingDraft, setGeneratingDraft] = useState<string | null>(null);
   const [fastTrackingId, setFastTrackingId] = useState<string | null>(null);
+  const highlightRef = useRef<HTMLDivElement>(null);
+  const highlightHandled = useRef(false);
 
   const isHealthcare = useMemo(() => {
     if (!data) return false;
@@ -146,6 +150,22 @@ export default function MyTechAlert() {
       claimCandidate(autoClaimId);
     }
   }, [autoClaimId, autoMode, data]);
+
+  // Deep-link: highlight, scroll, expand, and optionally auto-draft
+  useEffect(() => {
+    if (!highlightId || !data || highlightHandled.current) return;
+    highlightHandled.current = true;
+    // Expand the highlighted candidate
+    setExpandedIds((prev) => new Set(prev).add(highlightId));
+    // Scroll after render
+    setTimeout(() => {
+      highlightRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 300);
+    // Auto-open draft outreach modal if action=draft
+    if (autoAction === "draft") {
+      setTimeout(() => generateOutreach(highlightId), 600);
+    }
+  }, [highlightId, data, autoAction]);
 
   async function fetchData() {
     setLoading(true);
@@ -647,10 +667,12 @@ export default function MyTechAlert() {
               const claimStatus = getClaimStatus(c);
               const isLapsed = c.license_status === "Recently Lapsed";
 
+              const isHighlighted = c.id === highlightId;
+
               return (
-                <Card key={c.id} className={`border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e] overflow-hidden transition-all ${
+                <Card key={c.id} ref={isHighlighted ? highlightRef : undefined} className={`border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e] overflow-hidden transition-all ${
                   c.availability_score >= 7 ? "ring-1 ring-[#00d4ff]/20" : ""
-                } ${claimStatus === "mine" ? "ring-1 ring-emerald-500/30" : ""}`}>
+                } ${claimStatus === "mine" ? "ring-1 ring-emerald-500/30" : ""} ${isHighlighted ? "ring-2 ring-[#00d4ff] animate-pulse" : ""}`}>
                   {/* Collapsed header */}
                   <div className="flex items-center gap-3 p-4">
                     <button
