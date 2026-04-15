@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -200,8 +200,10 @@ export default function MyTechAlert() {
     }
   }
 
+  const claimLockRef = useRef<Set<string>>(new Set());
   async function claimCandidate(candidateId: string) {
-    if (!token) return;
+    if (!token || claimLockRef.current.has(candidateId)) return;
+    claimLockRef.current.add(candidateId);
     setClaimingIds((prev) => new Set(prev).add(candidateId));
     try {
       const res = await fetch(`${baseUrl}/claim-candidate`, {
@@ -228,6 +230,7 @@ export default function MyTechAlert() {
       toast.error("Claim failed — try again");
     } finally {
       setClaimingIds((prev) => { const n = new Set(prev); n.delete(candidateId); return n; });
+      claimLockRef.current.delete(candidateId);
     }
   }
 
@@ -269,8 +272,10 @@ export default function MyTechAlert() {
     toast.success(`${label} copied to clipboard`);
   }
 
+  const fastTrackLock = useRef(false);
   async function fastTrackInterview(candidateId: string) {
-    if (!token) return;
+    if (!token || fastTrackLock.current || fastTrackingId === candidateId) return;
+    fastTrackLock.current = true;
     setFastTrackingId(candidateId);
     try {
       const res = await fetch(`${baseUrl}/fast-track-interview`, {
@@ -304,6 +309,7 @@ export default function MyTechAlert() {
       toast.error("Failed to send invite — try again");
     } finally {
       setFastTrackingId(null);
+      fastTrackLock.current = false;
     }
   }
 
