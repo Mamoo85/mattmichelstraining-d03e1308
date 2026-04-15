@@ -898,10 +898,21 @@ serve(async (req: Request) => {
   const runStart = new Date().toISOString();
 
   // Fetch active paid clients + active trial clients
-  const { data: clients } = await sb.from("hire_alert_clients").select("*").or("active.eq.true,trial_status.eq.active");
-  if (!clients?.length) {
+  const { data: allClients } = await sb.from("hire_alert_clients").select("*").or("active.eq.true,trial_status.eq.active");
+  if (!allClients?.length) {
     console.log("[hire-alert-scanner] No active clients");
     return new Response(JSON.stringify({ processed: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  // TOS Compliance Gate — only send alerts to clients who accepted TOS
+  const clients = allClients.filter((c: any) => c.tos_accepted_at);
+  const tosBlockedCount = allClients.length - clients.length;
+  if (tosBlockedCount > 0) {
+    console.log(`[hire-alert-scanner] TOS gate: ${tosBlockedCount} client(s) blocked (TOS not accepted)`);
+  }
+  if (!clients.length) {
+    console.log("[hire-alert-scanner] All clients blocked by TOS gate");
+    return new Response(JSON.stringify({ processed: 0, tos_blocked: tosBlockedCount }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   // Run sources in parallel (allSettled so one failure doesn't cancel the other)
