@@ -38,15 +38,15 @@ export default function FieldServiceDispatch() {
 
     // Verify token
     (async () => {
-      const { data } = await supabase
-        .from("field_crm_clients" as any)
+      const { data } = await (supabase as any)
+        .from("field_crm_clients")
         .select("id")
         .eq("dispatch_token", rawToken)
         .eq("active", true)
         .maybeSingle();
 
       if (data?.id) {
-        setResolvedClientId(data.id);
+        setResolvedClientId(data.id as string);
         setAuthState("authorized");
       } else {
         setAuthState("denied");
