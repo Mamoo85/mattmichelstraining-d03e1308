@@ -49,6 +49,14 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
     { key: "industry", label: "Industry", default: "fitness training" },
     { key: "city", label: "City", default: "Grosse Pointe" },
   ],
+  // Lab Products
+  domain_breach_report: [
+    { key: "domain", label: "Domain to Scan", default: "mattmichelstraining.com" },
+  ],
+  keyword_gap_report: [
+    { key: "your_domain", label: "Your Domain", default: "mattmichelstraining.com" },
+    { key: "competitor_domain", label: "Competitor Domain", default: "detroitwebagent.com" },
+  ],
   // Subscriptions
   gbp_saas_subscription: [
     { key: "businessName", label: "Business Name", default: "M2 Development" },
@@ -340,6 +348,9 @@ const PRODUCTS: Product[] = [
   // Wave 5 High-Ticket
   { id: "reg_filing_monitor_subscription", name: "Regulatory Filing Monitor", price: "$497/mo", description: "Daily reg scan + AI draft filings.", type: "subscription", category: "High-Ticket" },
   { id: "bid_intelligence_subscription", name: "Bid Intelligence", price: "$599/mo", description: "Daily gov bid scan + AI proposal drafts.", type: "subscription", category: "High-Ticket" },
+  // Lab Products
+  { id: "domain_breach_report", name: "Domain Breach Report", price: "$19 one-time", description: "HIBP domain scan finds all breached employee credentials. AI-generated executive risk summary with severity tiers and remediation steps.", type: "instant", category: "Lab" },
+  { id: "keyword_gap_report", name: "Local Keyword Gap Report", price: "$19 one-time", description: "DataForSEO pulls all keywords both domains rank for, then surfaces keywords your competitor ranks for that you don't — sorted by opportunity.", type: "instant", category: "Lab" },
 ];
 
 type TestStatus = "idle" | "loading" | "success" | "error";
@@ -421,6 +432,7 @@ export default function AdminSandbox() {
   const dwaProducts = PRODUCTS.filter(p => p.category === "Detroit Web Agency" && matches(p));
   const wave4Products = PRODUCTS.filter(p => p.category === "Wave 4" && matches(p));
   const highTicketProducts = PRODUCTS.filter(p => p.category === "High-Ticket" && matches(p));
+  const labProducts = PRODUCTS.filter(p => p.category === "Lab" && matches(p));
 
   const StatusIcon = ({ status }: { status: TestStatus }) => {
     if (status === "loading") return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
@@ -762,7 +774,7 @@ export default function AdminSandbox() {
       )}
 
       {/* Empty search state */}
-      {search && instant.length === 0 && subs.length === 0 && smsProducts.length === 0 && autonomousProducts.length === 0 && dwaProducts.length === 0 && (
+      {search && instant.length === 0 && subs.length === 0 && smsProducts.length === 0 && autonomousProducts.length === 0 && dwaProducts.length === 0 && labProducts.length === 0 && (
         <div className="text-center py-12 text-slate-500">
           No products match "<span className="text-slate-300">{search}</span>"
         </div>
@@ -798,6 +810,17 @@ export default function AdminSandbox() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {highTicketProducts.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-amber-500/50" badgeClass="bg-amber-500/20 text-amber-400 border-amber-500/30" btnClass="bg-amber-900/30 hover:bg-amber-800/40 text-amber-300 border border-amber-600/50" />)}
+        </div>
+      </div>
+
+      {/* Lab Products */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <h3 className="text-white font-semibold">🧪 Lab Products</h3>
+          <Badge className="bg-violet-500/20 text-violet-400 border-violet-500/30 text-xs">Direct URL only · Not in nav · Ad-ready</Badge>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {labProducts.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-violet-500/50" badgeClass="bg-violet-500/20 text-violet-400 border-violet-500/30" btnClass="bg-violet-900/30 hover:bg-violet-800/40 text-violet-300 border border-violet-600/50" />)}
         </div>
       </div>
 
