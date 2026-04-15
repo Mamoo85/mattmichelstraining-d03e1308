@@ -90,6 +90,7 @@ const AdminSocialMediaOnboarding = lazyRetry(() => import("@/components/admin/Ad
 const AdminEnrichmentPanel    = lazyRetry(() => import("@/components/admin/AdminEnrichmentPanel"));
 const AdminProductManager     = lazyRetry(() => import("@/components/admin/AdminProductManager"));
 const AdminPinnedNotes        = lazyRetry(() => import("@/components/admin/AdminPinnedNotes"));
+const AdminTestLab            = lazyRetry(() => import("@/components/admin/AdminTestLab"));
 
 // Content
 const AdminFrontPage          = lazyRetry(() => import("@/components/admin/AdminFrontPage"));
@@ -438,6 +439,7 @@ const Admin = () => {
             { key: "fulfillment",  label: "🔔 Fulfillment",    content: <AdminFulfillment /> },
             { key: "overview",     label: "Overview",           content: <AdminBusinessDashboard /> },
             { key: "sandbox",      label: "🧪 Sandbox",         content: <AdminSandbox /> },
+            { key: "testlab",      label: "🔬 Test Lab",        content: <AdminTestLab /> },
             { key: "orders",       label: "📦 Orders",          content: <AdminOrders /> },
             { key: "health",       label: "Client Health",      content: <AdminClientHealth /> },
             { key: "ops",          label: "Ops Center",         content: <AdminOpsCenter /> },
