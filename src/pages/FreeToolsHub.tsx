@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import SEOHead from "@/components/layout/SEOHead";
-import { Search, Shield, BarChart3, Code, Zap } from "lucide-react";
+import { Search, Shield, BarChart3, Code, Zap, TrendingDown, Heart, MapPin, HardHat, Wrench, Stethoscope } from "lucide-react";
 
 const tools = [
   { icon: Zap, title: "Site Speed Audit", desc: "Test your website's load time, performance score, and mobile responsiveness.", path: "/free-site-scanner", color: "from-cyan-400 to-blue-500" },
@@ -8,12 +8,20 @@ const tools = [
   { icon: Shield, title: "Domain Breach Scanner", desc: "Check if your business domain has been exposed in known data breaches.", path: "/free-tools/breach-scan", color: "from-red-400 to-pink-500" },
   { icon: BarChart3, title: "Competitor Rank Checker", desc: "See who ranks in the top 10 for any keyword in any city.", path: "/free-tools/rank-check", color: "from-violet-400 to-purple-500" },
   { icon: Code, title: "Meta Tag Analyzer", desc: "Grade your page's meta tags, Open Graph, canonical, and robots directives.", path: "/free-tools/meta-tags", color: "from-amber-400 to-orange-500" },
+  { icon: TrendingDown, title: "Leaky Bucket CRM Audit", desc: "Calculate how much revenue you lose on dead leads every year — and how much is recoverable.", path: "/free-tools/leaky-bucket", color: "from-red-500 to-orange-500" },
+  { icon: Heart, title: "Medicare Staffing Assessment", desc: "Pull any nursing home's federal staffing rating, fines, and compliance risk from CMS data.", path: "/free-tools/medicare-staffing", color: "from-pink-400 to-red-500" },
+  { icon: MapPin, title: "Local Search Audit", desc: "Check if your business shows up in Google Maps and how you compare to competitors.", path: "/free-tools/local-search", color: "from-indigo-400 to-violet-500" },
+  { icon: Code, title: "Service Gap Scanner", desc: "See which high-margin services your competitors rank for that you're missing.", path: "/free-tools/service-gap", color: "from-emerald-500 to-teal-500" },
+  { icon: Shield, title: "ADA Lawsuit Risk Scanner", desc: "Scan your website for WCAG accessibility violations that make you vulnerable to ADA lawsuits.", path: "/free-tools/ada-scanner", color: "from-amber-500 to-yellow-500" },
+  { icon: HardHat, title: "OSHA Safety Check", desc: "Search public OSHA and MIOSHA databases for safety violations, citations, and fines.", path: "/free-tools/osha-check", color: "from-orange-500 to-red-600" },
+  { icon: Wrench, title: "Equipment Age Estimator", desc: "Estimate when your building's HVAC, boiler, and roof were last replaced using public permits.", path: "/free-tools/equipment-age", color: "from-blue-500 to-cyan-500" },
+  { icon: Stethoscope, title: "Nursing Compliance Check", desc: "Check up to 5 nurse license numbers for expirations, revocations, and disciplinary actions.", path: "/free-tools/nursing-compliance", color: "from-pink-500 to-purple-500" },
 ];
 
 export default function FreeToolsHub() {
   return (
     <>
-      <SEOHead title="Free SEO & Security Tools | Detroit Web Agency" description="Run free scans on your website: speed audit, SEO health check, breach scanner, rank checker, and meta tag analyzer." path="/free-tools" />
+      <SEOHead title="Free SEO, Security & Business Intelligence Tools | Detroit Web Agency" description="Run free scans on your website and business: speed audit, SEO health, breach scanner, OSHA check, ADA scan, Medicare staffing, and more." path="/free-tools" />
       <div className="min-h-screen bg-[#0a0a0f] text-white">
         <div className="max-w-5xl mx-auto px-4 py-20">
           <div className="text-center mb-16">
@@ -21,7 +29,7 @@ export default function FreeToolsHub() {
               <Search size={12} /> Free Diagnostic Tools
             </div>
             <h1 className="text-4xl md:text-5xl font-black mb-4">Free Digital Infrastructure Tools</h1>
-            <p className="text-[#888] max-w-2xl mx-auto">Run instant audits on your website's SEO, security, speed, and visibility. No signup required to start — just enter your URL.</p>
+            <p className="text-[#888] max-w-2xl mx-auto">Run instant audits on your website's SEO, security, compliance, and visibility. No signup required to start — just enter your info.</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
