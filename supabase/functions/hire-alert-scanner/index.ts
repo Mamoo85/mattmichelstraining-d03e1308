@@ -892,6 +892,7 @@ serve(async (req: Request) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  try {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const dateStr = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const runStart = new Date().toISOString();
@@ -903,12 +904,17 @@ serve(async (req: Request) => {
     return new Response(JSON.stringify({ processed: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  // Run sources in parallel
+  // Run sources in parallel (allSettled so one failure doesn't cancel the other)
   console.log("[hire-alert-scanner] Scanning all sources...");
-  const [mioshaCandidates, jobBoardCandidates] = await Promise.all([
+  const results = await Promise.allSettled([
     scanMIOSHA(),
     scanJobBoards(),
   ]);
+
+  const mioshaCandidates = results[0].status === "fulfilled" ? results[0].value : [];
+  const jobBoardCandidates = results[1].status === "fulfilled" ? results[1].value : [];
+  if (results[0].status === "rejected") console.error("[hire-alert-scanner] scanMIOSHA failed:", results[0].reason);
+  if (results[1].status === "rejected") console.error("[hire-alert-scanner] scanJobBoards failed:", results[1].reason);
 
   const allRaw = [...mioshaCandidates, ...jobBoardCandidates];
   const sourceHealth: Record<string, string> = {
