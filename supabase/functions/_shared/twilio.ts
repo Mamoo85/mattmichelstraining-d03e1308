@@ -31,8 +31,16 @@ export async function sendSMS(
   to: string,
   from: string,
   body: string,
-  product?: string
+  product?: string,
+  isDemoMode?: boolean
 ): Promise<SMSResult> {
+  // Demo sinkhole: redirect all SMS to admin phone with [DEMO] prefix
+  if (isDemoMode) {
+    const demoTo = ADMIN_PHONE;
+    const demoBody = `[DEMO] ${body}`;
+    console.log(`[SMS] DEMO MODE — redirecting to ${demoTo}`);
+    return sendSMS(demoTo, from, demoBody, product, false);
+  }
   if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
     console.error("[SMS] TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN not set");
     return { success: false, error: "Missing Twilio credentials" };

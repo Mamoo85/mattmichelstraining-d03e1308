@@ -19,7 +19,20 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
-    const { token, candidate_id } = await req.json();
+    const { token, candidate_id, is_demo } = await req.json();
+
+    // Demo mode: return mock outreach draft without DB lookup
+    if (is_demo || token === "DWA_DEMO_MASTER") {
+      return new Response(JSON.stringify({
+        text_message: "Hey John, this is Matt from Demo Company. We're looking for a licensed boiler operator and your background caught our attention. Would you be open to a quick chat about what we offer?",
+        email_subject: "Boiler Operator opportunity at Demo Company",
+        email_body: "Hi John,\n\nI'm Matt from Demo Company in Metro Detroit. We're growing our team and looking for experienced boiler operator professionals.\n\nWe offer competitive pay, a solid team, and room to grow. I'd love to tell you more about what we have available.\n\nWould you have a few minutes for a quick call this week? Feel free to reach me anytime.\n\nBest,\nMatt",
+        tcpa_notice: "Copy-paste and send from your phone. Do not text numbers on your internal do-not-contact list.",
+        demo: true,
+      }), {
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
 
     if (!token || !candidate_id) {
       return new Response(JSON.stringify({ error: "token and candidate_id required" }), {
