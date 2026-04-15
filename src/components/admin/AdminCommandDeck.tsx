@@ -616,7 +616,15 @@ export default function AdminCommandDeck() {
 
           {/* ═══════ SECTOR F — DWA REVENUE PANELS ═══════ */}
           <div className="lg:col-span-2 space-y-3">
-            <SectorHeader updatedAt={revenueQuery.dataUpdatedAt}>💰 DWA REVENUE PANELS</SectorHeader>
+            <div className="flex items-center justify-between">
+              <SectorHeader updatedAt={revenueQuery.dataUpdatedAt}>💰 DWA REVENUE PANELS</SectorHeader>
+              <a
+                href="/dwa-admin"
+                className="text-[10px] font-mono font-bold px-3 py-1.5 rounded-lg bg-[#00d4ff] text-[#0a1628] hover:bg-[#00bce8] transition-colors whitespace-nowrap -mt-3"
+              >
+                🏢 DWA ADMIN →
+              </a>
+            </div>
             {revenueQuery.isError ? <SensorOffline onRetry={() => revenueQuery.refetch()} /> : (
               <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3">
                 {/* Contractor Leads */}
