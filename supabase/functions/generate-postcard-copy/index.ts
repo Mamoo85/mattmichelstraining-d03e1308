@@ -60,7 +60,7 @@ These numbers are REAL. Do NOT round them or make them up. Use them exactly.`
     const qrUrl = `${origin}/hire-alert-trial?ref=postcard&county=${targetCounty.toLowerCase()}`;
 
     // Generate copy via Lovable AI Gateway (Gemini)
-    const aiRes = await fetch("https://ai.lovable.dev/chat/completions", {
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
