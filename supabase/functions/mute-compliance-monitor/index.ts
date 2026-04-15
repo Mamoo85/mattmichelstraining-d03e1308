@@ -347,11 +347,13 @@ Deno.serve(async () => {
     } as any);
 
     // A compliance monitor going silent is dangerous — alert immediately
-    await sendSMS(
-      ADMIN_PHONE,
-      FROM_PHONE,
-      `🚨 COMPLIANCE ALERT: Mute monitor FAILED: ${msg.slice(0, 120)}. SMS opt-out enforcement may be compromised. Check immediately.`
-    ).catch(() => {});
+    try {
+      await sendSMS(
+        ADMIN_PHONE,
+        FROM_PHONE,
+        `🚨 COMPLIANCE ALERT: Mute monitor FAILED: ${msg.slice(0, 120)}. SMS opt-out enforcement may be compromised. Check immediately.`
+      );
+    } catch (_) { /* best effort */ }
 
     return new Response(JSON.stringify({ ok: false, error: msg }), { status: 500 });
   }
