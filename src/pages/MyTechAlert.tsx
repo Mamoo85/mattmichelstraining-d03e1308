@@ -11,8 +11,10 @@ import {
   Stethoscope, Heart, Building2, Wrench, Zap,
   UserCheck, ThumbsUp, Loader2, Lock, Clock,
   Copy, FileText, AlertTriangle, X, CalendarCheck,
-  Radio, TrendingUp, Factory, Target, Info
+  Radio, TrendingUp, Factory, Target, Info, Download, Search
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import RevenueRecoveredLedger from "@/components/RevenueRecoveredLedger";
 
@@ -102,6 +104,9 @@ export default function MyTechAlert() {
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
   const [claimingIds, setClaimingIds] = useState<Set<string>>(new Set());
   const [scoreFilter, setScoreFilter] = useState<"all" | "hot" | "medium">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [tradeFilter, setTradeFilter] = useState<"all" | "boiler" | "hvac" | "plumber" | "electrician" | "healthcare">("all");
+  const [sortMode, setSortMode] = useState<"score" | "newest" | "license" | "contact">("score");
   const [outreachModal, setOutreachModal] = useState<{ candidateId: string; draft: OutreachDraft; isPitch?: boolean } | null>(null);
   const [generatingDraft, setGeneratingDraft] = useState<string | null>(null);
   const [fastTrackingId, setFastTrackingId] = useState<string | null>(null);
@@ -313,15 +318,68 @@ export default function MyTechAlert() {
   const filteredCandidates = useMemo(() => {
     if (!data) return [];
     let list = data.candidates;
+
+    // Score filter
     if (scoreFilter === "hot") list = list.filter((c) => c.availability_score >= 7);
     else if (scoreFilter === "medium") list = list.filter((c) => c.availability_score >= 5 && c.availability_score < 7);
-    // Sort: cross-referenced first, then by score
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter((c) =>
+        [c.full_name, c.city, c.license_type, c.current_employer].some(
+          (f) => f?.toLowerCase().includes(q)
+        )
+      );
+    }
+
+    // Trade filter
+    if (tradeFilter !== "all") {
+      if (tradeFilter === "healthcare") {
+        list = list.filter((c) => /cna|rn|lpn|nurse/i.test(c.license_type || ""));
+      } else {
+        list = list.filter((c) => c.license_type?.toLowerCase().includes(tradeFilter));
+      }
+    }
+
+    // Sort
     return [...list].sort((a, b) => {
-      if (a.cross_referenced && !b.cross_referenced) return -1;
-      if (!a.cross_referenced && b.cross_referenced) return 1;
-      return (b.availability_score || 0) - (a.availability_score || 0);
+      if (sortMode === "score") {
+        if (a.cross_referenced && !b.cross_referenced) return -1;
+        if (!a.cross_referenced && b.cross_referenced) return 1;
+        return (b.availability_score || 0) - (a.availability_score || 0);
+      }
+      if (sortMode === "newest") {
+        return new Date(b.alerted_at).getTime() - new Date(a.alerted_at).getTime();
+      }
+      if (sortMode === "license") {
+        return (b.license_number ? 1 : 0) - (a.license_number ? 1 : 0);
+      }
+      if (sortMode === "contact") {
+        const aHas = (a.phone || a.email) ? 1 : 0;
+        const bHas = (b.phone || b.email) ? 1 : 0;
+        return bHas - aHas;
+      }
+      return 0;
     });
-  }, [data, scoreFilter]);
+  }, [data, scoreFilter, searchQuery, tradeFilter, sortMode]);
+
+  const exportCSV = useCallback(() => {
+    const headers = ["Name", "License Type", "License Number", "City", "Phone", "Email", "Score", "First Seen"];
+    const rows = filteredCandidates.map((c) => [
+      c.full_name, c.license_type || "", c.license_number || "", c.city || "",
+      c.phone || "", c.email || "", String(c.availability_score), c.alerted_at?.split("T")[0] || "",
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v.replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `techalert-candidates-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${filteredCandidates.length} candidates`);
+  }, [filteredCandidates]);
 
   const scoreBadgeColor = (score: number) => {
     if (score >= 8) return "bg-emerald-500 text-white";
@@ -510,6 +568,59 @@ export default function MyTechAlert() {
               {f.label} ({f.count})
             </Button>
           ))}
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by name, city, or trade…"
+            className="pl-10 bg-[#0a1628] border-white/10 text-white placeholder:text-slate-500 focus-visible:ring-[#00d4ff]/40"
+          />
+        </div>
+
+        {/* Trade Filter Chips */}
+        <div className="flex gap-2 flex-wrap">
+          {([
+            { key: "all", label: "All" },
+            { key: "boiler", label: "Boiler Operator" },
+            { key: "hvac", label: "HVAC" },
+            { key: "plumber", label: "Plumber" },
+            { key: "electrician", label: "Electrician" },
+            { key: "healthcare", label: "Healthcare" },
+          ] as const).map((chip) => (
+            <button
+              key={chip.key}
+              onClick={() => setTradeFilter(chip.key)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                tradeFilter === chip.key
+                  ? "bg-[#00d4ff] text-black"
+                  : "border border-white/10 text-slate-400 hover:bg-white/5"
+              }`}
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Sort + Export Row */}
+        <div className="flex items-center justify-between gap-3">
+          <Select value={sortMode} onValueChange={(v) => setSortMode(v as typeof sortMode)}>
+            <SelectTrigger className="w-[180px] bg-[#0a1628] border-white/10 text-white text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-[#0d1f2e] border-white/10">
+              <SelectItem value="score">Highest Score</SelectItem>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="license">Has License</SelectItem>
+              <SelectItem value="contact">Has Contact</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button size="sm" onClick={exportCSV} className="bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-black font-bold gap-1.5">
+            <Download className="h-3.5 w-3.5" /> Export
+          </Button>
         </div>
 
         {/* Candidate List */}
