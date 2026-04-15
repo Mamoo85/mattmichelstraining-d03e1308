@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email, company_name, phone, plan, target_roles } = await req.json();
+    const { email, company_name, phone, plan, target_roles, ref, county } = await req.json();
 
     if (!email) {
       return new Response(
@@ -55,10 +55,11 @@ serve(async (req) => {
         email,
         company_name: company_name || "",
         owner_phone: phone || "",
-        // Stripe metadata values must be strings — join array as comma-separated
         target_roles: Array.isArray(target_roles) && target_roles.length
           ? target_roles.join(",")
           : "boiler_operator,hvac_tech",
+        ref: ref || "direct",
+        county: county || "",
       },
       success_url: `${origin}/hire-alert?success=1`,
       cancel_url: `${origin}/hire-alert`,
