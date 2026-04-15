@@ -14,8 +14,9 @@ const AdminMedicareIntel = lazy(() => import("@/components/admin/AdminMedicareIn
 const AdminIndustrialIntel = lazy(() => import("@/components/admin/AdminIndustrialIntel"));
 const AdminGrowthSignals = lazy(() => import("@/components/admin/AdminGrowthSignals"));
 const DWALabs = lazy(() => import("@/components/dwa-admin/DWALabs"));
+const DWASalesGuide = lazy(() => import("@/components/dwa-admin/DWASalesGuide"));
 
-type Tab = "overview" | "clients" | "jobs" | "assets" | "contracts" | "import" | "command" | "board" | "playbook" | "strategy" | "medicare" | "industrial" | "growth" | "labs";
+type Tab = "overview" | "clients" | "jobs" | "assets" | "contracts" | "import" | "command" | "board" | "playbook" | "strategy" | "medicare" | "industrial" | "growth" | "labs" | "sales-guide";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -32,6 +33,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "industrial", label: "🏭 Industrial Intel" },
   { id: "growth", label: "🔮 Growth Signals" },
   { id: "labs", label: "🧪 Labs" },
+  { id: "sales-guide", label: "🎯 Sales Guide" },
 ];
 
 function QuickLinks() {
@@ -225,6 +227,12 @@ export default function DWAAdmin() {
         {activeTab === "labs" && (
           <Suspense fallback={<div className="text-white/40 text-sm">Loading labs…</div>}>
             <DWALabs />
+          </Suspense>
+        )}
+
+        {activeTab === "sales-guide" && (
+          <Suspense fallback={<div className="text-white/40 text-sm">Loading sales guide…</div>}>
+            <DWASalesGuide />
           </Suspense>
         )}
       </main>
