@@ -4385,6 +4385,7 @@ export type Database = {
           full_name: string | null
           hiring_recommendation: string | null
           id: string
+          is_company_name: boolean | null
           last_seen_at: string | null
           license_expiry: string | null
           license_number: string | null
@@ -4423,6 +4424,7 @@ export type Database = {
           full_name?: string | null
           hiring_recommendation?: string | null
           id?: string
+          is_company_name?: boolean | null
           last_seen_at?: string | null
           license_expiry?: string | null
           license_number?: string | null
@@ -4461,6 +4463,7 @@ export type Database = {
           full_name?: string | null
           hiring_recommendation?: string | null
           id?: string
+          is_company_name?: boolean | null
           last_seen_at?: string | null
           license_expiry?: string | null
           license_number?: string | null
