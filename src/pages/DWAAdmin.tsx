@@ -124,8 +124,8 @@ export default function DWAAdmin() {
         </div>
       </header>
 
-      {/* Content — padded below fixed header (14 for nav + ~44px for tabs = ~96px) */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-28 pb-12">
+      {/* Content — padded below fixed header */}
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 pt-28 pb-12">
         {activeTab === "overview" && (
           <div className="space-y-6">
             <DWAStats />
