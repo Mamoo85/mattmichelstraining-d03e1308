@@ -50,7 +50,7 @@ interface WeeklyStats {
   topWaitlistProduct: string;
 }
 
-async function gatherDailyReport(sb: ReturnType<typeof createClient>): Promise<DailyReport> {
+async function gatherDailyReport(sb: any): Promise<DailyReport> {
   const now = new Date();
   const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString();

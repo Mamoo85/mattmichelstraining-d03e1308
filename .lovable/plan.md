@@ -1,53 +1,65 @@
 
 
-# Full Launch Audit — Build Fixes + Ad Strategy
+# Pre-Launch QA Audit — DWA Top 4 Product Pages
 
-## Part 1: Fix All Build Errors (7 Edge Functions)
+## Findings
 
-| # | File | Error | Fix |
+### CRITICAL — Branding Leaks
+
+| # | File | Issue | Fix |
 |---|------|-------|-----|
-| 1 | `osha-compliance-sender/index.ts` | Duplicate `bcc` property (line 37) | Remove the second `bcc: ["matthewmichels@gmail.com"]` line, merge into the first one |
-| 2 | `permit-monitor-sender/index.ts` | Duplicate `bcc` property (line 50) | Same fix — remove duplicate `bcc` line |
-| 3 | `ops-autonomous/index.ts:106` | `.catch()` on non-promise Supabase builder | Wrap in `Promise.resolve(sb.from(...).upsert(...)).catch(() => {})` |
-| 4 | `oracle-monitor/index.ts` | 8 type errors — `row.created_at` on `never`, function signature | Cast `sb` as `any` in `gatherDailyReport()` call, and cast `data` rows with `as any[]` on all dynamic table queries |
-| 5 | `podcast-content-generator/index.ts` | `DOMParser` not available in Deno, `Element` type errors | Replace with `deno-dom` import (`import { DOMParser } from "https://deno.land/x/deno_dom/deno-dom-wasm.ts"`), cast items as `Element[]` |
-| 6 | `process-email-queue/index.ts` | Type mismatch on `.insert()` | Cast insert payloads with `as any` on all `email_send_log` inserts |
-| 7 | `deliver-domain-breach-report/index.ts` | The diff was applied but line 71 still destructures `order_id` — need to verify current state and apply auth + idempotency changes from the diff if not applied |
+| 1 | `ContractorLeads.tsx` | Uses M2 orange `#e8621a` as accent throughout (DWAStickyNav, WallOfLove, EnterpriseFooterBlock, hero bg `#1e293b`). DWA pages must use teal `#00d4ff` on `#0a1628`. | Change all `#e8621a` → `#00d4ff`, hero bg `#1e293b` → `#0a1628` |
+| 2 | `FieldServiceManagement.tsx` line 363 | Says **"Power it up with M² add-ons"** — M² is the training brand, not DWA | Change to **"Power it up with add-ons"** |
 
-## Part 2: Fix Dead Lead Form
+### CRITICAL — "AI" Mentions on Client-Facing Pages
 
-`AdminDeadLeads.tsx` line 196 inserts `contractor_id` into `dead_lead_contacts`. If the column doesn't exist, remove it from the insert payload (the `campaign_id` already links to the contractor via `dead_lead_campaigns`).
+| # | File | Line | Text | Fix |
+|---|------|------|------|-----|
+| 3 | `HireAlert.tsx` line 227 | "AI Availability Score" | → **"Availability Score"** |
+| 4 | `HireAlert.tsx` line 227 | "Each candidate rated 1–10 on immediate hire likelihood with reason" — fine, but the label says AI | Remove "AI" from label only |
+| 5 | `HireAlert.tsx` line 268 | "AI availability scoring" in pricing checklist | → **"Availability scoring"** |
 
-## Part 3: Ad Strategy for Cold-Sell Products
+### IMPORTANT — "Sources" Mention in Client Dashboard
 
-Here are the questions I didn't get to finish asking you — I'll re-ask them so you can answer:
+| # | File | Line | Text | Fix |
+|---|------|------|------|-----|
+| 6 | `MyTechAlert.tsx` line 503 | Tooltip: "Verify signals using provided sources before outreach." | → **"Verify signals independently before outreach."** |
 
-**Which products get ads first?** From the 10 cold-sell products, the best candidates for paid ads (impulse buy, clear value, easy to explain in an ad):
+### IMPORTANT — "Call Matt" Should Be "Text or Email Matt"
 
-1. **Am I Breached? ($4.99)** — Mass appeal, fear-driven impulse buy. "Enter your email, find out if hackers have your passwords." Facebook/Instagram ad.
-2. **Website Speed Report ($9)** — Every business owner wonders. "Is your website costing you customers? Find out in 60 seconds." Google Search ad targeting "website speed test."
-3. **Google Me ($14.99)** — Curiosity-driven. "What does Google say about YOUR business? Get the full picture for $15." Facebook ad.
-4. **Reputation Snapshot ($29)** — Higher ticket but strong for contractors. "See what customers are REALLY saying about you across 10+ sites." Google Search ad.
+| # | File | Line | Issue | Fix |
+|---|------|------|-------|-----|
+| 7 | `FieldServiceManagement.tsx` line 155 | Button says "Call Matt" with `tel:` link | → **"Text Matt"** with `sms:+13139921219` |
+| 8 | `FieldServiceManagement.tsx` line 403 | "Call Matt. We'll have you live in 48 hours." | → **"Text Matt. We'll have you live in 48 hours."** |
+| 9 | `FieldServiceManagement.tsx` line 406-409 | CTA bottom links to `tel:` | → `sms:+13139921219` with label "Text (313) 992-1219" |
+| 10 | `EnterpriseFooterBlock.tsx` line 20 | `tel:` link as primary action | → Change to `sms:+13139921219` and update label to "Text (313) 992-1219" |
 
-**Recommended first two:** Am I Breached ($4.99) + Google Me ($14.99) — lowest friction, highest curiosity, broadest audience. $20-30/day Facebook budget each.
+### MINOR — CTA Improvements
 
-## Part 4: `create-keyword-gap-checkout` Build Error
+| # | File | Issue | Fix |
+|---|------|-------|-----|
+| 11 | `ContractorLeads.tsx` | Hero CTA "Claim My Territory — $399/mo" is good. Success page has no secondary CTA to contact Matt. | Add "Text Matt at (313) 992-1219 with questions" under the success message |
+| 12 | `HireAlert.tsx` | Success page "Back to Home" button links to `/` (M2 homepage). Should link to DWA. | Change href to `https://detroitwebagent.com` |
+| 13 | `MissedCallSaaS.tsx` | Success page has no contact info for next steps | Add "Text Matt at (313) 992-1219 with any questions" |
 
-This file looks syntactically correct. The build error log was truncated. I'll inspect more carefully during implementation — likely a Stripe API version or import issue. May just need `as any` on the Stripe client.
+### NO ISSUES FOUND (Confirmed Clean)
 
----
+- `MyTechAlert.tsx` — No AI mentions in client-facing text. No source/method disclosure. Professional layout.
+- `DeadLeadIntake.tsx` — Correctly says "Text Matt" not "Call Matt". Uses DWA branding.
+- `ClaimLead.tsx` — No AI mentions, no wrong numbers, no M2 branding.
+- `DWAStickyNav.tsx` — Clean, no branding issues.
+- Phone numbers across all DWA pages use `(313) 992-1219` (work number) — correct.
+- No `313-806-4952` (personal number) found on any client-facing DWA page.
 
-## Files Changed
+## Implementation — 13 Patches
 
-1. `supabase/functions/osha-compliance-sender/index.ts` — remove duplicate bcc
-2. `supabase/functions/permit-monitor-sender/index.ts` — remove duplicate bcc
-3. `supabase/functions/ops-autonomous/index.ts` — fix .catch() pattern
-4. `supabase/functions/oracle-monitor/index.ts` — cast dynamic queries as any
-5. `supabase/functions/podcast-content-generator/index.ts` — switch to deno-dom
-6. `supabase/functions/process-email-queue/index.ts` — cast insert payloads
-7. `supabase/functions/deliver-domain-breach-report/index.ts` — verify diff applied
-8. `supabase/functions/create-keyword-gap-checkout/index.ts` — inspect and fix
-9. `src/components/admin/AdminDeadLeads.tsx` — remove contractor_id from contacts insert
+All changes are copy/branding fixes. No database migrations. No edge function changes.
 
-No database migrations needed.
+**Files to edit:**
+1. `src/pages/ContractorLeads.tsx` — 4 lines: swap `#e8621a` → `#00d4ff`, bg `#1e293b` → `#0a1628`
+2. `src/pages/FieldServiceManagement.tsx` — 4 lines: "M²" → remove, "Call Matt" → "Text Matt", `tel:` → `sms:`
+3. `src/pages/HireAlert.tsx` — 3 lines: remove "AI" from labels, fix success page home link
+4. `src/pages/MyTechAlert.tsx` — 1 line: remove "sources" from tooltip
+5. `src/components/shared/EnterpriseFooterBlock.tsx` — 2 lines: `tel:` → `sms:`, update label
+6. `src/pages/MissedCallSaaS.tsx` — 1 line: add contact info to success page
 

@@ -2,13 +2,10 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { generateText } from "../_shared/ai.ts";
 
-const SUPABASE_URL        = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_URL       = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const HIBP_API_KEY        = Deno.env.get("HIBP_API_KEY") || "";
-const RESEND_API_KEY      = Deno.env.get("RESEND_API_KEY") || "";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const HIBP_DETAIL_CAP = 50; // max breach detail fetches per request
+const HIBP_API_KEY       = Deno.env.get("HIBP_API_KEY") || "";
+const RESEND_API_KEY     = Deno.env.get("RESEND_API_KEY") || "";
 
 function classifySeverity(dataClasses: string[]): string {
   const lower = dataClasses.map(d => d.toLowerCase());
@@ -70,38 +67,12 @@ function buildEmail(domain: string, breaches: any[], affectedEmails: number): st
 }
 
 serve(async (req) => {
-  // Auth: only accept calls from service role (webhook invoker)
-  const authHeader = req.headers.get("Authorization") || "";
-  if (!authHeader.startsWith("Bearer ") || authHeader.slice(7) !== SUPABASE_SERVICE_KEY) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-  }
-
   try {
-    const { customer_email, domain, stripe_session_id } = await req.json();
+    const { customer_email, domain, order_id, stripe_session_id } = await req.json();
     if (!customer_email || !domain) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), { status: 400 });
     }
-    if (!EMAIL_RE.test(customer_email)) {
-      return new Response(JSON.stringify({ error: "Invalid email" }), { status: 400 });
-    }
-
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-
-    // Idempotency: look up order by stripe_session_id; skip if already delivered
-    let orderId: string | null = null;
-    if (stripe_session_id) {
-      const { data: order } = await sb
-        .from("domain_breach_orders")
-        .select("id, report_sent_at")
-        .eq("stripe_session_id", stripe_session_id)
-        .single();
-      if (order?.report_sent_at) {
-        console.log(`[DOMAIN-BREACH] Already delivered for session ${stripe_session_id}, skipping`);
-        return new Response(JSON.stringify({ already_sent: true }), { status: 200 });
-      }
-      orderId = order?.id ?? null;
-    }
-
     console.log(`[DOMAIN-BREACH] Scanning ${domain} for ${customer_email}`);
 
     const breaches: any[] = [];
@@ -117,10 +88,7 @@ serve(async (req) => {
         affectedEmailCount = Object.keys(emailBreaches).length;
         const allBreachNames = new Set<string>();
         for (const names of Object.values(emailBreaches)) names.forEach(n => allBreachNames.add(n));
-
-        // Cap breach detail fetches to avoid timeout and quota exhaustion
-        const breachList = Array.from(allBreachNames).slice(0, HIBP_DETAIL_CAP);
-        for (const breachName of breachList) {
+        for (const breachName of allBreachNames) {
           const dr = await fetch(
             `https://haveibeenpwned.com/api/v3/breach/${encodeURIComponent(breachName)}`,
             { headers: { "hibp-api-key": HIBP_API_KEY, "user-agent": "M2-DomainBreachReport/1.0" } }
@@ -159,7 +127,7 @@ serve(async (req) => {
       const subject = reportBreaches.length > 0
         ? `⚠️ ${reportBreaches.length} Breach${reportBreaches.length > 1 ? "es" : ""} Found — ${domain}`
         : `✅ No Breaches Found — ${domain}`;
-      const resendRes = await fetch("https://api.resend.com/emails", {
+      await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -170,18 +138,14 @@ serve(async (req) => {
           html: buildEmail(domain, reportBreaches, affectedEmailCount),
         }),
       });
-      if (!resendRes.ok) {
-        const resendErr = await resendRes.json().catch(() => ({}));
-        throw new Error(`Resend failed: ${resendRes.status} ${JSON.stringify(resendErr)}`);
-      }
     }
 
-    if (orderId) {
+    if (order_id) {
       await sb.from("domain_breach_orders").update({
         breach_count: reportBreaches.length,
         affected_emails: affectedEmailCount,
         report_sent_at: new Date().toISOString(),
-      }).eq("id", orderId);
+      }).eq("id", order_id);
     }
 
     console.log(`[DOMAIN-BREACH] Done — ${domain}: ${reportBreaches.length} breaches, ${affectedEmailCount} emails`);
