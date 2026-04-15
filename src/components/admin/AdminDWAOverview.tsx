@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Wrench, Users, Bell, Play, RefreshCw, Zap } from "lucide-react";
+import { ExternalLink, Wrench, Users, Bell, Play, RefreshCw, Zap, Activity } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminDWAOverview() {
