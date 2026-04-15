@@ -889,6 +889,58 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      if (meta.type === "industry_pulse_subscription") {
+        const email = meta.email || customerEmail;
+        try {
+          if (email) {
+            const targetIndustries = meta.target_industries
+              ? meta.target_industries.split(",").map((t: string) => t.trim()).filter(Boolean)
+              : ["boiler", "hvac", "manufacturing"];
+            const { data: inserted, error: insertErr } = await (sb.from as any)("industry_pulse_clients").insert({
+              company_name: meta.company_name || email,
+              email,
+              phone: meta.phone || null,
+              contact_name: meta.contact_name || null,
+              target_industries: targetIndustries,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+              active: true,
+            }).select("dashboard_token").single();
+            if (insertErr) throw new Error(`industry_pulse_clients insert: ${insertErr.message}`);
+
+            // Send welcome email with dashboard link
+            const dashboardUrl = `${SUPABASE_URL.replace('.supabase.co', '')}.detroitwebagent.com/my-industry-pulse?token=${inserted.dashboard_token}`;
+            const siteUrl = "https://detroitwebagent.com";
+            const dashLink = `${siteUrl}/my-industry-pulse?token=${inserted.dashboard_token}`;
+            if (RESEND_API_KEY) {
+              await dwaEmail(email, "📡 Industry Pulse Intelligence is Live — Your Dashboard is Ready", `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#030711;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;text-align:center;">
+    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0;">📡 INDUSTRY PULSE</p>
+    <h1 style="color:#fff;font-size:24px;margin:12px 0 8px;">You're In.</h1>
+    <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Predictive sales signals start flowing today.</p>
+    <a href="${dashLink}" style="display:inline-block;background:#00d4ff;color:#000;font-weight:700;padding:14px 40px;border-radius:8px;text-decoration:none;font-size:15px;">📊 Open Your Dashboard</a>
+    <p style="color:#64748b;font-size:12px;margin:20px 0 0;">Bookmark this link — it's your personal, always-on intelligence feed.</p>
+  </div>
+  <div style="text-align:center;margin-top:24px;">
+    <p style="color:#475569;font-size:12px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p>
+  </div>
+</div></body></html>`);
+              await notifyMatt(
+                `💰 New Industry Pulse Client — ${meta.company_name || email} ($299/mo)`,
+                `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Industries: ${targetIndustries.join(", ")}</p>`
+              );
+            }
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] industry_pulse_subscription error:", e);
+          await notifyMatt(`🚨 Industry Pulse provision FAILED — ${email || "unknown"}`, `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       if (meta.type === "grant_finder_subscription") {
         try {
           const email = meta.email || customerEmail;
