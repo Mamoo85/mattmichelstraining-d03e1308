@@ -5324,7 +5324,7 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             fetch(`${SUPABASE_URL}/functions/v1/deliver-domain-breach-report`, {
               method: "POST",
               headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
-              body: JSON.stringify({ customer_email: email, domain: meta.domain, order_id: meta.order_id || null }),
+              body: JSON.stringify({ customer_email: email, domain: meta.domain, stripe_session_id: session.id }),
             }).catch((e) => console.error("[WEBHOOK] deliver-domain-breach-report failed:", e));
             console.log(`[WEBHOOK] domain_breach_report triggered for ${email} — ${meta.domain}`);
           }
@@ -5340,7 +5340,7 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             fetch(`${SUPABASE_URL}/functions/v1/deliver-keyword-gap-report`, {
               method: "POST",
               headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
-              body: JSON.stringify({ customer_email: email, your_domain: meta.your_domain, competitor_domain: meta.competitor_domain, order_id: meta.order_id || null }),
+              body: JSON.stringify({ customer_email: email, your_domain: meta.your_domain, competitor_domain: meta.competitor_domain, stripe_session_id: session.id }),
             }).catch((e) => console.error("[WEBHOOK] deliver-keyword-gap-report failed:", e));
             console.log(`[WEBHOOK] keyword_gap_report triggered for ${email}`);
           }

@@ -66,13 +66,42 @@ function buildEmail(domain: string, breaches: any[], affectedEmails: number): st
 </table></td></tr></table></body></html>`;
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const HIBP_DETAIL_CAP = 50;
+
 serve(async (req) => {
+  // Auth: only accept calls from service role (webhook invoker)
+  const authHeader = req.headers.get("Authorization") || "";
+  if (!authHeader.startsWith("Bearer ") || authHeader.slice(7) !== SUPABASE_SERVICE_KEY) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
+
   try {
-    const { customer_email, domain, order_id, stripe_session_id } = await req.json();
+    const { customer_email, domain, stripe_session_id } = await req.json();
     if (!customer_email || !domain) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), { status: 400 });
     }
+    if (!EMAIL_RE.test(customer_email)) {
+      return new Response(JSON.stringify({ error: "Invalid email" }), { status: 400 });
+    }
+
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+    // Idempotency: look up order by stripe_session_id; skip if already delivered
+    let orderId: string | null = null;
+    if (stripe_session_id) {
+      const { data: order } = await sb
+        .from("domain_breach_orders")
+        .select("id, report_sent_at")
+        .eq("stripe_session_id", stripe_session_id)
+        .single();
+      if (order?.report_sent_at) {
+        console.log(`[DOMAIN-BREACH] Already delivered for session ${stripe_session_id}, skipping`);
+        return new Response(JSON.stringify({ already_sent: true }), { status: 200 });
+      }
+      orderId = order?.id ?? null;
+    }
+
     console.log(`[DOMAIN-BREACH] Scanning ${domain} for ${customer_email}`);
 
     const breaches: any[] = [];
@@ -88,7 +117,9 @@ serve(async (req) => {
         affectedEmailCount = Object.keys(emailBreaches).length;
         const allBreachNames = new Set<string>();
         for (const names of Object.values(emailBreaches)) names.forEach(n => allBreachNames.add(n));
-        for (const breachName of allBreachNames) {
+        // Cap to avoid timeout/quota exhaustion
+        const breachList = Array.from(allBreachNames).slice(0, HIBP_DETAIL_CAP);
+        for (const breachName of breachList) {
           const dr = await fetch(
             `https://haveibeenpwned.com/api/v3/breach/${encodeURIComponent(breachName)}`,
             { headers: { "hibp-api-key": HIBP_API_KEY, "user-agent": "M2-DomainBreachReport/1.0" } }
@@ -127,7 +158,7 @@ serve(async (req) => {
       const subject = reportBreaches.length > 0
         ? `⚠️ ${reportBreaches.length} Breach${reportBreaches.length > 1 ? "es" : ""} Found — ${domain}`
         : `✅ No Breaches Found — ${domain}`;
-      await fetch("https://api.resend.com/emails", {
+      const resendRes = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -138,14 +169,18 @@ serve(async (req) => {
           html: buildEmail(domain, reportBreaches, affectedEmailCount),
         }),
       });
+      if (!resendRes.ok) {
+        const resendErr = await resendRes.json().catch(() => ({}));
+        throw new Error(`Resend failed: ${resendRes.status} ${JSON.stringify(resendErr)}`);
+      }
     }
 
-    if (order_id) {
+    if (orderId) {
       await sb.from("domain_breach_orders").update({
         breach_count: reportBreaches.length,
         affected_emails: affectedEmailCount,
         report_sent_at: new Date().toISOString(),
-      }).eq("id", order_id);
+      }).eq("id", orderId);
     }
 
     console.log(`[DOMAIN-BREACH] Done — ${domain}: ${reportBreaches.length} breaches, ${affectedEmailCount} emails`);
