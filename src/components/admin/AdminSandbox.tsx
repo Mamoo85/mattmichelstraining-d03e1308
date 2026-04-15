@@ -186,13 +186,6 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
     { key: "targetCities", label: "Target Cities", default: "Grosse Pointe, Detroit" },
     { key: "keywords", label: "Keywords", default: "commercial, zoning, variance" },
   ],
-  pet_memorial_subscription: [
-    { key: "pet_name", label: "Pet Name", default: "Buddy" },
-    { key: "pet_species", label: "Species", default: "Dog" },
-    { key: "pet_breed", label: "Breed", default: "Golden Retriever" },
-    { key: "owner_name", label: "Owner Name", default: "Matt Michels" },
-    { key: "memories", label: "Memories", default: "Loved fetch at the park, always happy, best training buddy", multiline: true },
-  ],
   dark_web_monitor_subscription: [
     { key: "domain", label: "Domain to Monitor", default: "mattmichelstraining.com" },
   ],
@@ -257,11 +250,6 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
   speed_audit_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "website_url", label: "Website URL", default: "https://mattmichelstraining.com" },
-  ],
-  bedtime_story_subscription: [
-    { key: "child_name", label: "Child's Name", default: "Eli" },
-    { key: "child_age", label: "Age", default: "5" },
-    { key: "interests", label: "Favorite Themes", default: "dinosaurs, adventure, outer space" },
   ],
   crime_digest_subscription: [
     { key: "address", label: "Home Address", default: "123 Main St, Grosse Pointe, MI 48236" },
