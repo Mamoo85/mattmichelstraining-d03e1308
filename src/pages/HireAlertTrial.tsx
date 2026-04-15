@@ -68,7 +68,7 @@ export default function HireAlertTrial() {
             Your Trial Is Live
           </h1>
           <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.8, margin: "0 0 16px" }}>
-            TechAlert is scanning Michigan MIOSHA, Apollo, and live job boards for your trades right now.
+            TechAlert is scanning Michigan MIOSHA, professional networks, and live job boards for your trades right now.
           </p>
           <p style={{ color: "#00d4ff", fontSize: 15, margin: "0 0 32px" }}>
             Check your email for confirmation. Trial runs for 72 hours.
@@ -84,7 +84,7 @@ export default function HireAlertTrial() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#0a1628", padding: "48px 24px" }}>
-      <SEOHead title="TechAlert Free Trial — Detroit Web Agency" description="Start your free 3-day TechAlert trial. We'll scan MIOSHA, Apollo, and job boards for available licensed tradespeople and alert you the moment a match appears." path="/hire-alert-trial" />
+      <SEOHead title="TechAlert Free Trial — Detroit Web Agency" description="Start your free 3-day TechAlert trial. We'll scan MIOSHA, professional networks, and job boards for available licensed tradespeople and alert you the moment a match appears." path="/hire-alert-trial" />
       <div style={{ maxWidth: 560, margin: "0 auto" }}>
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
@@ -226,7 +226,7 @@ export default function HireAlertTrial() {
           </p>
           {[
             ["🏛️", "MIOSHA License DB", "Every Michigan boiler operator license issued — we see it the same day"],
-            ["🔍", "Apollo People Search", "Metro Detroit tradespeople who recently changed jobs or updated profiles"],
+            ["🔍", "Professional Networks", "Metro Detroit tradespeople who recently changed jobs or updated profiles"],
             ["📋", "Job Boards", "Active job seekers posting availability in your trades"],
           ].map(([icon, title, desc]) => (
             <div key={title} style={{ display: "flex", gap: 12, marginBottom: 14 }}>

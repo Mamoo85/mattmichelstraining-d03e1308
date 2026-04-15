@@ -70,7 +70,7 @@ serve(async (req) => {
       .select("*, dead_lead_campaigns(id, trade, status, contractor_id, contractor_clients(business_name, phone))")
       .eq("status", "pending")
       .not("dead_lead_campaigns", "is", null)
-      .limit(50);
+      .limit(200);
 
     for (const contact of drip1Contacts || []) {
       try {
@@ -121,7 +121,7 @@ serve(async (req) => {
       .eq("status", "drip1_sent")
       .not("drip1_sent_at", "is", null)
       .lte("drip1_sent_at", twoDaysAgo)
-      .limit(50);
+      .limit(200);
 
     for (const contact of drip2Contacts || []) {
       try {
@@ -170,7 +170,7 @@ serve(async (req) => {
       .eq("status", "drip2_sent")
       .not("drip2_sent_at", "is", null)
       .lte("drip2_sent_at", twoDaysAgo)
-      .limit(50);
+      .limit(200);
 
     for (const contact of drip3Contacts || []) {
       try {

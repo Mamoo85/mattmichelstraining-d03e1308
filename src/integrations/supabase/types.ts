@@ -3319,6 +3319,7 @@ export type Database = {
         Row: {
           business_name: string
           created_at: string | null
+          dispatch_token: string
           email: string | null
           google_review_url: string | null
           id: string
@@ -3336,6 +3337,7 @@ export type Database = {
         Insert: {
           business_name: string
           created_at?: string | null
+          dispatch_token?: string
           email?: string | null
           google_review_url?: string | null
           id?: string
@@ -3353,6 +3355,7 @@ export type Database = {
         Update: {
           business_name?: string
           created_at?: string | null
+          dispatch_token?: string
           email?: string | null
           google_review_url?: string | null
           id?: string
