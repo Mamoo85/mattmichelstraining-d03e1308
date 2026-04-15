@@ -91,8 +91,7 @@ export default function DWACommandDeck() {
     } finally { setLoading("clear", false); }
   };
 
-  const setLoading = (key: string, val: boolean) =>
-    setLoadingMap((m) => ({ ...m, [key]: val }));
+
 
   const runCheckout = async (plan: "bundle" | "standalone") => {
     const key = `checkout-${plan}`;
