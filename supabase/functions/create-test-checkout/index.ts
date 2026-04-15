@@ -68,7 +68,38 @@ const TEST_PRODUCTS: Record<string, ProductConfig> = {
     success_url: `${SITE}/audit-report?test=true`,
   },
 
-  // ── SUBSCRIPTION PRODUCTS ──────────────────────────────────────────────────
+  // ── LAB PRODUCTS (one-time, $19) ────────────────────────────────────────
+  domain_breach_report: {
+    name: "TEST — Domain Breach Report ($19)",
+    description: "HIBP domain scan + AI risk summary delivered to inbox.",
+    mode: "payment",
+    metadata: {
+      type: "domain_breach_report",
+      email: MATT,
+      customer_email: MATT,
+      domain: "mattmichelstraining.com",
+      order_id: "",
+      is_test: "true",
+    },
+    success_url: `https://www.detroitwebagent.com/lab/domain-breach?success=1`,
+  },
+  keyword_gap_report: {
+    name: "TEST — Keyword Gap Report ($19)",
+    description: "DataForSEO ranked keywords for 2 domains → gap analysis email.",
+    mode: "payment",
+    metadata: {
+      type: "keyword_gap_report",
+      email: MATT,
+      customer_email: MATT,
+      your_domain: "mattmichelstraining.com",
+      competitor_domain: "detroitwebagent.com",
+      order_id: "",
+      is_test: "true",
+    },
+    success_url: `https://www.detroitwebagent.com/lab/keyword-gap?success=1`,
+  },
+
+    // ── SUBSCRIPTION PRODUCTS ──────────────────────────────────────────────────
   gbp_saas_subscription: {
     name: "TEST — GBP SaaS ($49/mo)",
     description: "AI posts 3x/week to Google Business Profile. $0 test.",
