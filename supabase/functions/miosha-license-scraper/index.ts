@@ -1189,4 +1189,9 @@ serve(async (req) => {
     JSON.stringify({ ok: true, new: newCount, updated: updatedCount, errors: errorCount, sources: sourceCounts }),
     { status: 200, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
   );
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[miosha-scraper] Unhandled error:", msg);
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
+  }
 });
