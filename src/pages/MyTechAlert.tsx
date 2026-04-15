@@ -284,7 +284,7 @@ export default function MyTechAlert() {
       const res = await fetch(`${baseUrl}/generate-outreach-draft`, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey },
-        body: JSON.stringify({ token, candidate_id: candidateId }),
+        body: JSON.stringify({ token, candidate_id: candidateId, is_demo: isDemo }),
       });
       const draft = await res.json();
       if (draft.error) throw new Error(draft.error);
@@ -324,7 +324,7 @@ export default function MyTechAlert() {
       const res = await fetch(`${baseUrl}/fast-track-interview`, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey },
-        body: JSON.stringify({ token, candidate_id: candidateId }),
+        body: JSON.stringify({ token, candidate_id: candidateId, is_demo: isDemo }),
       });
       const result = await res.json();
       if (result.error === "no_booking_link") {
