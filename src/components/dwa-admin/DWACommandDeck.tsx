@@ -141,6 +141,21 @@ export default function DWACommandDeck() {
     window.open("/field-service/dispatch", "_blank");
   };
 
+  const runTease = async () => {
+    setLoading("tease", true);
+    try {
+      const { data, error } = await supabase.functions.invoke("techalert-tease-conley", {
+        body: { to_email: "matt@mattmichelstraining.com" },
+      });
+      if (error) throw error;
+      toast.success(`Tease email sent! ${data?.total} candidates (${data?.blurred} blurred)`);
+    } catch (err: any) {
+      toast.error("Tease failed: " + (err?.message ?? "Unknown error"));
+    } finally {
+      setLoading("tease", false);
+    }
+  };
+
   return (
     <div>
       {modal && (
