@@ -104,21 +104,23 @@ export default function DWAAdmin() {
           <span className="text-white/40 text-xs hidden sm:block">We Handle The Tech</span>
         </div>
 
-        {/* Tab Bar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex gap-1 pb-0">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.id
-                  ? "border-[#00d4ff] text-[#00d4ff]"
-                  : "border-transparent text-white/50 hover:text-white/70 hover:border-white/20"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        {/* Tab Bar — scrollable on mobile */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 overflow-x-auto scrollbar-hide">
+          <div className="flex gap-1 pb-0 min-w-max">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? "border-[#00d4ff] text-[#00d4ff]"
+                    : "border-transparent text-white/50 hover:text-white/70 hover:border-white/20"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
