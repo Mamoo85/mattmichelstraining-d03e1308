@@ -68,7 +68,7 @@ function buildEmail(domain: string, breaches: any[], affectedEmails: number): st
 
 serve(async (req) => {
   try {
-    const { customer_email, domain, order_id } = await req.json();
+    const { customer_email, domain, order_id, stripe_session_id } = await req.json();
     if (!customer_email || !domain) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), { status: 400 });
     }

@@ -193,7 +193,7 @@ export default function AdminDeadLeads() {
         const parts = line.split(",").map(p => p.trim());
         const phone = parts[0]?.replace(/\D/g, "");
         const e164 = phone?.length === 10 ? `+1${phone}` : phone?.length === 11 ? `+${phone}` : parts[0];
-        return { campaign_id: camp.id, contractor_id: newForm.contractor_id, phone: e164, name: parts[1] || null };
+        return { campaign_id: camp.id, phone: e164, name: parts[1] || null };
       }).filter(r => r.phone);
 
       if (!contactRows.length) throw new Error("No valid phone numbers found");
