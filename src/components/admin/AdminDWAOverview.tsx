@@ -199,6 +199,49 @@ export default function AdminDWAOverview() {
         </div>
       </div>
 
+      {/* Pipeline Health */}
+      <div className="rounded-2xl border border-white/8 bg-white/2 p-5">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-white/50 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+            <Activity size={13} className="text-cyan-400" />
+            Pipeline Health — Data Sources
+          </p>
+          {healthChecks.length > 0 && (
+            <span className="text-xs font-bold" style={{
+              color: healthChecks.every(h => h.status === "ok") ? "#22c55e" : "#f59e0b"
+            }}>
+              {healthChecks.filter(h => h.status === "ok").length}/{healthChecks.length} operational
+            </span>
+          )}
+        </div>
+        {healthChecks.length === 0 ? (
+          <p className="text-white/30 text-xs">No health checks yet. Monitor runs at 6am + 6pm ET daily.</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+            {healthChecks.map((h) => {
+              const color = h.status === "ok" ? "#22c55e" : h.status === "degraded" ? "#f59e0b" : "#ef4444";
+              return (
+                <div key={h.api_name} className="rounded-lg p-3" style={{ background: `${color}08`, border: `1px solid ${color}20` }}>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <div className="w-2 h-2 rounded-full" style={{ background: color }} />
+                    <span className="text-[10px] font-bold text-white/80 truncate">{h.api_name}</span>
+                  </div>
+                  <div className="text-[10px] font-semibold" style={{ color }}>{h.response_ms}ms</div>
+                  {h.error_message && (
+                    <div className="text-[9px] text-red-400/70 truncate mt-0.5">{h.error_message}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {healthChecks.length > 0 && (
+          <p className="text-white/20 text-[10px] mt-3">
+            Last checked: {new Date(healthChecks[0]?.checked_at).toLocaleString()}
+          </p>
+        )}
+      </div>
+
       {/* Product Brief */}
       <div className="rounded-2xl border border-white/8 bg-white/2 p-5">
         <p className="text-white/50 text-xs font-bold uppercase tracking-wider mb-4">DWA Product Suite</p>
