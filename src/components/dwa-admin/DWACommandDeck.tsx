@@ -54,10 +54,66 @@ function ActionButton({ label, icon, loading, onClick }: ActionButtonProps) {
   );
 }
 
+interface TextTarget {
+  id: string;
+  business_name: string;
+  phone: string | null;
+  trade: string | null;
+  city: string | null;
+  google_reviews: number | null;
+  suggested_text: string | null;
+  status: string;
+}
+
 export default function DWACommandDeck() {
   const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
   const [modal, setModal] = useState<{ title: string; content: string } | null>(null);
   const [demoOpen, setDemoOpen] = useState(false);
+  const [demoEmail, setDemoEmail] = useState("");
+  const [demoCompany, setDemoCompany] = useState("");
+  const [demoContact, setDemoContact] = useState("");
+  const [textTargets, setTextTargets] = useState<TextTarget[]>([]);
+  const [loadingTargets, setLoadingTargets] = useState(false);
+
+  const fetchTargets = async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const { data } = await supabase
+      .from("daily_text_targets" as any)
+      .select("*")
+      .gte("created_at", `${today}T00:00:00Z`)
+      .eq("status", "pending")
+      .order("created_at", { ascending: true })
+      .limit(10);
+    setTextTargets((data as any as TextTarget[]) || []);
+  };
+
+  useEffect(() => { fetchTargets(); }, []);
+
+  const buildTargets = async () => {
+    setLoadingTargets(true);
+    try {
+      const { error } = await supabase.functions.invoke("build-daily-text-targets", { body: {} });
+      if (error) throw error;
+      toast.success("Today's text list built!");
+      await fetchTargets();
+    } catch (err: any) {
+      toast.error("Failed: " + (err?.message ?? "Unknown"));
+    } finally { setLoadingTargets(false); }
+  };
+
+  const markSent = async (id: string) => {
+    await supabase
+      .from("daily_text_targets" as any)
+      .update({ status: "sent", sent_at: new Date().toISOString() } as any)
+      .eq("id", id);
+    setTextTargets((prev) => prev.filter((t) => t.id !== id));
+    toast.success("Marked sent ✓");
+  };
+
+  const copyText = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Copied to clipboard!");
+  };
   const [demoEmail, setDemoEmail] = useState("");
   const [demoCompany, setDemoCompany] = useState("");
   const [demoContact, setDemoContact] = useState("");
