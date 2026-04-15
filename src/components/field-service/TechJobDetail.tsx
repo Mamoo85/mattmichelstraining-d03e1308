@@ -87,6 +87,16 @@ const TechJobDetail: React.FC<TechJobDetailProps> = ({ job, techId, onBack, onSt
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [currentStatus, onSiteStart]);
 
+  // Continuous GPS pinging every 30s while en_route
+  useEffect(() => {
+    if (currentStatus !== "en_route" || techId === "demo") return;
+    captureGPS(techId, job.client_id);
+    const gpsInterval = setInterval(() => {
+      captureGPS(techId, job.client_id);
+    }, 30000);
+    return () => clearInterval(gpsInterval);
+  }, [currentStatus, techId, job.client_id]);
+
   const executeStatusChange = async (skipSignature = false) => {
     if (!next || submittingStatus) return;
 
