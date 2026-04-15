@@ -74,6 +74,7 @@ export default function HireAlert() {
   const [loading, setLoading] = useState(false);
   const [slotsRemaining, setSlotsRemaining] = useState<number | null>(null);
   const [betaFull, setBetaFull] = useState(false);
+  const [tosAccepted, setTosAccepted] = useState(false);
 
   useEffect(() => {
     supabase
@@ -125,10 +126,14 @@ export default function HireAlert() {
       toast({ title: "Select at least one trade to monitor", variant: "destructive" });
       return;
     }
+    if (!tosAccepted) {
+      toast({ title: "Please accept the Terms of Service to continue", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-hire-alert-checkout", {
-        body: { email, company_name: company, phone, plan, target_roles: selectedRoles },
+        body: { email, company_name: company, phone, plan, target_roles: selectedRoles, tos_accepted: true },
       });
       if (error || !data?.url) throw new Error(error?.message || "Checkout failed");
       window.location.href = data.url;
@@ -413,10 +418,25 @@ export default function HireAlert() {
                 ))}
               </div>
             </div>
+
+            {/* TOS Compliance Checkbox */}
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "12px 14px", borderRadius: 8, background: tosAccepted ? "#00d4ff08" : "#001a33", border: `1px solid ${tosAccepted ? ACCENT : "#1e3a5f"}`, fontSize: 13, color: "#94a3b8", lineHeight: 1.5 }}>
+              <input
+                type="checkbox"
+                checked={tosAccepted}
+                onChange={(e) => setTosAccepted(e.target.checked)}
+                style={{ accentColor: ACCENT, width: 16, height: 16, flexShrink: 0, marginTop: 2 }}
+              />
+              <span>
+                I agree that TechAlert data is for <strong style={{ color: "#fff" }}>market intelligence only</strong>. Automated bulk contact or spam of candidates is prohibited. Violation results in immediate service termination.{" "}
+                <a href="/legal/terms" target="_blank" style={{ color: ACCENT, textDecoration: "underline" }}>Full Terms</a>
+              </span>
+            </label>
+
             <Button
               onClick={handleCheckout}
-              disabled={loading}
-              style={{ background: ACCENT, color: BG, fontWeight: 800, fontSize: 16, padding: "14px", borderRadius: 8, border: "none" }}
+              disabled={loading || !tosAccepted}
+              style={{ background: tosAccepted ? ACCENT : "#334155", color: tosAccepted ? BG : "#94a3b8", fontWeight: 800, fontSize: 16, padding: "14px", borderRadius: 8, border: "none", opacity: tosAccepted ? 1 : 0.7 }}
             >
               {loading ? "Redirecting..." : betaFull
                 ? `Start for $${plan === "bundle" ? bundlePrice : standalonePrice}/mo →`

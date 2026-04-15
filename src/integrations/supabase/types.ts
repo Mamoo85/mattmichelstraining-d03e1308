@@ -551,6 +551,33 @@ export type Database = {
         }
         Relationships: []
       }
+      api_health_checks: {
+        Row: {
+          api_name: string
+          checked_at: string | null
+          error_message: string | null
+          id: string
+          response_ms: number | null
+          status: string
+        }
+        Insert: {
+          api_name: string
+          checked_at?: string | null
+          error_message?: string | null
+          id?: string
+          response_ms?: number | null
+          status?: string
+        }
+        Update: {
+          api_name?: string
+          checked_at?: string | null
+          error_message?: string | null
+          id?: string
+          response_ms?: number | null
+          status?: string
+        }
+        Relationships: []
+      }
       appointment_reminders: {
         Row: {
           active: boolean | null
@@ -4508,6 +4535,8 @@ export type Database = {
           stripe_subscription_id: string | null
           target_roles: string[] | null
           target_zip_codes: string[] | null
+          tos_accepted_at: string | null
+          tos_version: string | null
           trial_ends_at: string | null
           trial_started_at: string | null
           trial_status: string | null
@@ -4531,6 +4560,8 @@ export type Database = {
           stripe_subscription_id?: string | null
           target_roles?: string[] | null
           target_zip_codes?: string[] | null
+          tos_accepted_at?: string | null
+          tos_version?: string | null
           trial_ends_at?: string | null
           trial_started_at?: string | null
           trial_status?: string | null
@@ -4554,6 +4585,8 @@ export type Database = {
           stripe_subscription_id?: string | null
           target_roles?: string[] | null
           target_zip_codes?: string[] | null
+          tos_accepted_at?: string | null
+          tos_version?: string | null
           trial_ends_at?: string | null
           trial_started_at?: string | null
           trial_status?: string | null
@@ -4568,6 +4601,7 @@ export type Database = {
           created_at: string | null
           error_message: string | null
           id: string
+          lara_status: string | null
           started_at: string | null
           status: string | null
         }
@@ -4578,6 +4612,7 @@ export type Database = {
           created_at?: string | null
           error_message?: string | null
           id?: string
+          lara_status?: string | null
           started_at?: string | null
           status?: string | null
         }
@@ -4588,6 +4623,7 @@ export type Database = {
           created_at?: string | null
           error_message?: string | null
           id?: string
+          lara_status?: string | null
           started_at?: string | null
           status?: string | null
         }
