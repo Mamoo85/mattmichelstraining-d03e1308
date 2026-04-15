@@ -680,7 +680,7 @@ export default function MyTechAlert() {
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="text-white font-bold text-sm truncate">{c.full_name}</p>
+                          <p className="text-white font-bold text-sm truncate max-w-[200px]">{c.full_name}</p>
                           {/* Social links in header */}
                           {c.linkedin_url && (
                             <a href={c.linkedin_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="shrink-0 text-[#0a66c2] hover:text-blue-400 transition-colors" title="LinkedIn">
@@ -797,7 +797,7 @@ export default function MyTechAlert() {
                         {c.current_employer && (
                           <div className="flex items-center gap-2 text-slate-300">
                             <Building2 className="h-3.5 w-3.5 text-slate-500" />
-                            <span><strong>{c.current_employer}</strong>{c.current_title ? ` · ${c.current_title}` : ""}</span>
+                            <span className="truncate"><strong className="truncate max-w-[150px] inline-block align-bottom">{c.current_employer}</strong>{c.current_title ? ` · ${c.current_title}` : ""}</span>
                           </div>
                         )}
                         {c.license_number && (
@@ -834,13 +834,13 @@ export default function MyTechAlert() {
                       {c.qualifications_summary && (
                         <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-3">
                           <p className="text-[11px] font-bold text-emerald-400 uppercase tracking-wide mb-1">Qualifications</p>
-                          <p className="text-slate-300 text-xs leading-relaxed">{c.qualifications_summary}</p>
+                          <p className="text-slate-300 text-xs leading-relaxed line-clamp-6">{c.qualifications_summary}</p>
                         </div>
                       )}
                       {c.hiring_recommendation && (
                         <div className="bg-[#00d4ff]/5 border border-[#00d4ff]/20 rounded-lg p-3">
                           <p className="text-[11px] font-bold text-[#00d4ff] uppercase tracking-wide mb-1">Recommendation</p>
-                          <p className="text-slate-300 text-xs leading-relaxed">{c.hiring_recommendation}</p>
+                          <p className="text-slate-300 text-xs leading-relaxed line-clamp-6">{c.hiring_recommendation}</p>
                         </div>
                       )}
 

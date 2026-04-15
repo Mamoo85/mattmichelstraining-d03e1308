@@ -49,15 +49,19 @@ async function chargeContractor(
   if (pi.error) {
     throw new Error(`Stripe payment intent error: ${pi.error.message}`);
   }
+  // Treat any non-succeeded status (e.g. requires_action for 3D Secure) as failure for off-session charges
+  if (pi.status !== "succeeded") {
+    throw new Error(`Stripe payment not completed: status=${pi.status}. Off-session charges requiring 3D Secure cannot be confirmed.`);
+  }
   await (sb as any).from("dead_lead_charges").insert({
     contact_id: contactId,
     contractor_id: contractorId,
     amount_cents: 5000,
     stripe_payment_intent_id: pi.id,
-    status: pi.status === "succeeded" ? "succeeded" : "pending",
+    status: "succeeded",
     error_message: null,
   });
-  console.log(`[handle-dead-lead-reply] charge ${pi.id} status=${pi.status}`);
+  console.log(`[handle-dead-lead-reply] charge ${pi.id} status=succeeded`);
 }
 
 const OPT_OUT_KEYWORDS = ["stop", "unsubscribe", "cancel", "quit", "end", "remove"];
