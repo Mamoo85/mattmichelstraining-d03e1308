@@ -28,7 +28,7 @@ serve(async (req) => {
     const { data: candidates } = await sb
       .from("hire_alert_candidates")
       .select("name, license_type, license_number, city, source, current_employer, years_experience, score")
-      .or("trade.ilike.%boiler%,license_type.ilike.%boiler%,role_matched.ilike.%boiler%")
+      .or("license_type.ilike.%boiler%,trade.ilike.%boiler%")
       .order("score", { ascending: false })
       .limit(80);
 
