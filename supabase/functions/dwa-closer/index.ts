@@ -300,7 +300,7 @@ RULES:
       last_run_at: now.toISOString(),
       last_status: "error",
       last_result: JSON.stringify({ error: msg }),
-    }, { onConflict: "agent_name" } as any).then(() => {}).catch(() => {});
+    }, { onConflict: "agent_name" } as any);
 
     return new Response(JSON.stringify({ error: msg }), { status: 500 });
   }

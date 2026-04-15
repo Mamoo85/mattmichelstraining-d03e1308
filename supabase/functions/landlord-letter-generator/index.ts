@@ -195,7 +195,7 @@ FORMAT AS JSON:
     const caseId = caseRecord?.id;
 
     // Increment letters_generated
-    await sb.rpc("increment_letters_generated", { client_id: clientId }).catch(() => {
+    await sb.rpc("increment_letters_generated", { client_id: clientId } as any).then(() => {}, () => {
       // RPC may not exist; update directly
       return sb
         .from("landlord_letter_clients")

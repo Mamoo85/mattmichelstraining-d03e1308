@@ -138,7 +138,7 @@ serve(async () => {
       </td></tr>`;
 
     for (const draft of filingDrafts) {
-      const company = draft.reg_filing_clients?.company_name || "Unknown";
+      const company = (draft as any).reg_filing_clients?.company_name || "Unknown";
       const approveUrl = approveLink("reg-filing-approve", draft.id, "approve");
       const dismissUrl = approveLink("reg-filing-approve", draft.id, "dismiss");
 
@@ -168,8 +168,8 @@ serve(async () => {
       </td></tr>`;
 
     for (const proposal of bidProposals) {
-      const company = proposal.bid_intel_clients?.company_name || "Unknown";
-      const oppTitle = proposal.bid_intel_opportunities?.title || "Untitled Opportunity";
+      const company = (proposal as any).bid_intel_clients?.company_name || "Unknown";
+      const oppTitle = (proposal as any).bid_intel_opportunities?.title || "Untitled Opportunity";
       const approveUrl = approveLink("bid-intel-approve", proposal.id, "approve");
       const dismissUrl = approveLink("bid-intel-approve", proposal.id, "dismiss");
 
@@ -199,7 +199,7 @@ serve(async () => {
       </td></tr>`;
 
     for (const dl of deadlines) {
-      const company = dl.reg_filing_clients?.company_name || "Unknown";
+      const company = (dl as any).reg_filing_clients?.company_name || "Unknown";
       sections += `
       <tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0">
         <strong style="color:#1e293b">${dl.title || "Untitled Deadline"}</strong><br>

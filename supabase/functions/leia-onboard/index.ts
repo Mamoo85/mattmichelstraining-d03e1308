@@ -202,7 +202,7 @@ serve(async (req) => {
 
       for (const seq of sequences || []) {
         if (sent >= 50) break;
-        const content = getStepContent(seq.product, seq.step || step);
+        const content = getStepContent(seq.product, (seq as any).step || step);
         if (!content) continue;
 
         const html = buildOnboardingEmail(content, seq.product);

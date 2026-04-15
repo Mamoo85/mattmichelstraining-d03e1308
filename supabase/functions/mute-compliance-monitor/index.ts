@@ -344,7 +344,7 @@ Deno.serve(async () => {
       last_run_at: runStart.toISOString(),
       last_status: "error",
       detail: msg,
-    }).catch(() => {});
+    } as any);
 
     // A compliance monitor going silent is dangerous — alert immediately
     await sendSMS(
