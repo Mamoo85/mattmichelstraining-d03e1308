@@ -13,6 +13,7 @@ export default function DeadLeadIntake() {
   const [contractorId, setContractorId] = useState<string | null>(null);
   const [contactsAdded, setContactsAdded] = useState(0);
   const [error, setError] = useState("");
+  const [billingRedirectUrl, setBillingRedirectUrl] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     business_name: "",
@@ -21,11 +22,12 @@ export default function DeadLeadIntake() {
     email: "",
     trade: "",
     leads: "",
+    google_review_link: "",
   });
 
   const urlParams = new URLSearchParams(window.location.search);
   const billingStatus = urlParams.get("billing");
-
+  const cidFromUrl = urlParams.get("cid");
   // Handle Stripe redirect back
   if (billingStatus === "success" && step === "form") {
     return (
@@ -73,8 +75,17 @@ export default function DeadLeadIntake() {
           email: form.email.trim(),
           trade: form.trade,
           leads: lines,
+          google_review_link: form.google_review_link.trim() || undefined,
         },
       });
+
+      // Handle free tier exhausted — show human message + billing redirect
+      if (data?.error === "free_tier_exhausted") {
+        setBillingRedirectUrl(data.billing_url || null);
+        setError("Your free trial (10 leads) has been used. Add a card to continue — you only pay $50 when a lead replies YES.");
+        setSubmitting(false);
+        return;
+      }
 
       if (fnErr || data?.error) {
         throw new Error(data?.error || fnErr?.message || "Submission failed");
@@ -91,11 +102,12 @@ export default function DeadLeadIntake() {
   }
 
   async function handleSetupBilling() {
-    if (!contractorId) return;
+    const cid = contractorId || cidFromUrl;
+    if (!cid) return;
     setBillingLoading(true);
     try {
       const { data, error: fnErr } = await supabase.functions.invoke("dead-lead-billing-setup", {
-        body: { contractor_id: contractorId },
+        body: { contractor_id: cid },
       });
       if (fnErr || data?.error) throw new Error(data?.error || fnErr?.message);
       if (data?.setup_url) window.location.href = data.setup_url;
@@ -249,8 +261,38 @@ export default function DeadLeadIntake() {
             />
           </Field>
 
+          <Field label="Google Review Link (optional)" hint="We'll ask dead leads who say no to leave you a review instead">
+            <input
+              value={form.google_review_link}
+              onChange={(e) => setForm({ ...form, google_review_link: e.target.value })}
+              placeholder="https://g.page/r/your-business/review"
+              style={inputStyle}
+            />
+          </Field>
+
           {error && (
-            <p style={{ color: "#ef4444", fontSize: 13, margin: 0 }}>{error}</p>
+            <div>
+              <p style={{ color: "#ef4444", fontSize: 13, margin: 0 }}>{error}</p>
+              {billingRedirectUrl && (
+                <button
+                  onClick={() => window.location.href = billingRedirectUrl}
+                  style={{
+                    marginTop: 12,
+                    padding: "12px 24px",
+                    background: "#00d4ff",
+                    color: "#0a1628",
+                    border: "none",
+                    borderRadius: 8,
+                    fontWeight: 700,
+                    fontSize: 14,
+                    cursor: "pointer",
+                    width: "100%",
+                  }}
+                >
+                  Set Up Billing — $50/Revival →
+                </button>
+              )}
+            </div>
           )}
 
           <button
