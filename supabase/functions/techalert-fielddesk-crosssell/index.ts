@@ -67,7 +67,7 @@ serve(async (req) => {
 
     const { data: clients, error } = await sb
       .from("hire_alert_clients")
-      .select("id, email, business_name, phone")
+      .select("id, owner_email, company_name, owner_phone")
       .eq("active", true)
       .eq("fielddesk_cross_sell_sent", false)
       .gte("created_at", thirtyDaysAgo.toISOString())
@@ -84,12 +84,12 @@ serve(async (req) => {
     let sent = 0;
 
     for (const client of clients) {
-      const companyName = client.business_name || "your company";
+      const companyName = client.company_name || "your company";
       const emailBody = await generateCrossSellEmail(companyName);
 
       // Build checkout link with coupon param
       const checkoutUrl = `${SUPABASE_URL}/functions/v1/create-field-crm-checkout`;
-      const ctaUrl = `https://www.detroitwebagent.com/field-crm?coupon=TECHALERT50&email=${encodeURIComponent(client.email)}&biz=${encodeURIComponent(companyName)}`;
+      const ctaUrl = `https://www.detroitwebagent.com/field-crm?coupon=TECHALERT50&email=${encodeURIComponent(client.owner_email)}&biz=${encodeURIComponent(companyName)}`;
 
       // Send email via Resend
       const emailRes = await fetch("https://api.resend.com/emails", {
@@ -100,7 +100,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           from: "Matt Michels <matt@detroitwebagent.com>",
-          to: [client.email],
+          to: [client.owner_email],
           subject: `${companyName} — 50% off FieldDesk (TechAlert perk)`,
           html: `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,sans-serif">
@@ -130,9 +130,9 @@ serve(async (req) => {
           .eq("id", client.id);
 
         sent++;
-        console.log(`[CROSSSELL] Sent to ${client.email}`);
+        console.log(`[CROSSSELL] Sent to ${client.owner_email}`);
       } else {
-        console.error(`[CROSSSELL] Email failed for ${client.email}: ${await emailRes.text()}`);
+        console.error(`[CROSSSELL] Email failed for ${client.owner_email}: ${await emailRes.text()}`);
       }
     }
 
