@@ -45,11 +45,6 @@ export default function MyIndustryPulse() {
     if (!token) { setError("No dashboard token provided"); setLoading(false); return; }
     setLoading(true);
     try {
-      const { data: result, error: err } = await supabase.functions.invoke("get-industry-pulse-dashboard", {
-        body: {},
-        headers: {},
-      });
-      // Use GET with query params
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-industry-pulse-dashboard?token=${token}`;
       const res = await fetch(url, {
         headers: { "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
