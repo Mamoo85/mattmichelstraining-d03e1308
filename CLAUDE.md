@@ -12,7 +12,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-04-14. Update this section every session.*
+*Last updated: 2026-04-15. Update this section every session.*
+
+### Phase 13 — Bug Fix + Business Clarity COMPLETE ✅
+*2026-04-15 — branch `claude/fix-hire-alert-runs-table-JgJ3Y`*
+
+**hire_alert_runs table fix (PR #81 — merged to main):**
+- Root cause: `20260410300000_hire_alert_tables.sql` used `current_setting('app.supabase_url')` inside `cron.schedule()` — this returns NULL in pg_cron context, causing the migration transaction to roll back and leaving `hire_alert_runs` absent from the DB entirely
+- Fix: `20260415030000_fix_hire_alert_runs.sql` — creates `public.hire_alert_runs` with the schema the edge function and admin component actually use: `run_at`, `source`, `candidates_found`, `new_candidates`, `alerts_sent`, `errors` + RLS policies
+- Merged and deployed via Lovable
+
+**Agent Autonomy Audit — Completed this session:**
+- 13 agents are FULLY AUTONOMOUS (have deployed edge functions + crons running 24/7)
+- 17 agents are PROTOCOL-ONLY (have `.claude/agents/*.md` files with instructions but no edge function — they exist as plans/Claude Code subagents only, not running code)
+- See full breakdown in [knowledge/M2_Agent_Roster.md](knowledge/M2_Agent_Roster.md)
+
+**Business overview prompt created:**
+- Full business context document written for feeding into Gemini Deep Think for marketing/customer acquisition strategy
+- Covers: both brands, all flagship products, automation stack, revenue flow, current state, target market
+
+---
 
 ### Phase 12 — TechAlert Intelligence Expansion COMPLETE ✅
 *2026-04-14 — branch `claude/update-claude-md-K6Mue`*
