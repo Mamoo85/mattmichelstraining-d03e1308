@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import RevenueRecoveredLedger from "@/components/RevenueRecoveredLedger";
+import DemoModeBadge, { isDemoMode, DEMO_MASTER_TOKEN } from "@/components/DemoModeBadge";
 
 const HEALTHCARE_ROLES = ["cna", "rn", "lpn", "director_of_nursing", "home_health_aide"];
 
