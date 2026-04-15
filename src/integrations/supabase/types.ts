@@ -3512,15 +3512,18 @@ export type Database = {
           client_id: string
           completed_at: string | null
           created_at: string
+          customer_contact_phone: string | null
           customer_id: string | null
           customer_notified_at: string | null
           description: string | null
+          estimated_duration_minutes: number | null
           id: string
           notes: string | null
           priority: string
           referral_asked_at: string | null
           scheduled_date: string | null
           scheduled_time: string | null
+          signature_url: string | null
           started_at: string | null
           status: string
           title: string
@@ -3531,15 +3534,18 @@ export type Database = {
           client_id: string
           completed_at?: string | null
           created_at?: string
+          customer_contact_phone?: string | null
           customer_id?: string | null
           customer_notified_at?: string | null
           description?: string | null
+          estimated_duration_minutes?: number | null
           id?: string
           notes?: string | null
           priority?: string
           referral_asked_at?: string | null
           scheduled_date?: string | null
           scheduled_time?: string | null
+          signature_url?: string | null
           started_at?: string | null
           status?: string
           title: string
@@ -3550,15 +3556,18 @@ export type Database = {
           client_id?: string
           completed_at?: string | null
           created_at?: string
+          customer_contact_phone?: string | null
           customer_id?: string | null
           customer_notified_at?: string | null
           description?: string | null
+          estimated_duration_minutes?: number | null
           id?: string
           notes?: string | null
           priority?: string
           referral_asked_at?: string | null
           scheduled_date?: string | null
           scheduled_time?: string | null
+          signature_url?: string | null
           started_at?: string | null
           status?: string
           title?: string
