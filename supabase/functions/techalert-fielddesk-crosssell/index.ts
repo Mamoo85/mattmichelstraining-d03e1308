@@ -67,7 +67,7 @@ serve(async (req) => {
 
     const { data: clients, error } = await sb
       .from("hire_alert_clients")
-      .select("id, email, business_name, phone")
+      .select("id, owner_email, company_name, owner_phone")
       .eq("active", true)
       .eq("fielddesk_cross_sell_sent", false)
       .gte("created_at", thirtyDaysAgo.toISOString())
