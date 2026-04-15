@@ -5304,6 +5304,38 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+
+      // ── DOMAIN BREACH REPORT — $19 one-time ──────────────────────────────────
+      if (meta.type === "domain_breach_report") {
+        try {
+          const email = meta.customer_email || meta.email || customerEmail;
+          if (email && meta.domain) {
+            fetch(`${SUPABASE_URL}/functions/v1/deliver-domain-breach-report`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({ customer_email: email, domain: meta.domain, order_id: meta.order_id || null }),
+            }).catch((e) => console.error("[WEBHOOK] deliver-domain-breach-report failed:", e));
+            console.log(`[WEBHOOK] domain_breach_report triggered for ${email} — ${meta.domain}`);
+          }
+        } catch (e) { console.error("[WEBHOOK] domain_breach_report error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── KEYWORD GAP REPORT — $19 one-time ────────────────────────────────────
+      if (meta.type === "keyword_gap_report") {
+        try {
+          const email = meta.customer_email || meta.email || customerEmail;
+          if (email && meta.your_domain && meta.competitor_domain) {
+            fetch(`${SUPABASE_URL}/functions/v1/deliver-keyword-gap-report`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({ customer_email: email, your_domain: meta.your_domain, competitor_domain: meta.competitor_domain, order_id: meta.order_id || null }),
+            }).catch((e) => console.error("[WEBHOOK] deliver-keyword-gap-report failed:", e));
+            console.log(`[WEBHOOK] keyword_gap_report triggered for ${email}`);
+          }
+        } catch (e) { console.error("[WEBHOOK] keyword_gap_report error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
       // ── LUKE — Mark cart as recovered when any instant product purchase completes ──
       const instantProducts = ["website_audit", "gbp_post_pack", "competitor_report"];
       if (instantProducts.includes(meta.type || "") && meta.email) {

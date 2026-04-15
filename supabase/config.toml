@@ -1554,3 +1554,15 @@ verify_jwt = false
 
 [functions.generate-demo-report]
 verify_jwt = false
+
+[functions.create-domain-breach-checkout]
+verify_jwt = false
+
+[functions.deliver-domain-breach-report]
+verify_jwt = false
+
+[functions.create-keyword-gap-checkout]
+verify_jwt = false
+
+[functions.deliver-keyword-gap-report]
+verify_jwt = false

@@ -309,6 +309,8 @@ const AiGbpPostPack = lazyRetry(() => import("./pages/AiGbpPostPack"));
 const AiCompetitorReport = lazyRetry(() => import("./pages/AiCompetitorReport"));
 const AdCompetitorReport = lazyRetry(() => import("./pages/AdCompetitorReport"));
 const AdWebsiteAudit = lazyRetry(() => import("./pages/AdWebsiteAudit"));
+const LabDomainBreach = lazyRetry(() => import("./pages/LabDomainBreach"));
+const LabKeywordGap = lazyRetry(() => import("./pages/LabKeywordGap"));
 const AdGbpPosts = lazyRetry(() => import("./pages/AdGbpPosts"));
 const YoungbloodMockupAlt1 = lazyRetry(() => import("./pages/YoungbloodMockupAlt1"));
 const YoungbloodMockupAlt2 = lazyRetry(() => import("./pages/YoungbloodMockupAlt2"));
@@ -497,6 +499,8 @@ const App = () => (
                     <Route path="/ai-gbp-post-pack" element={<AiGbpPostPack />} />
                     <Route path="/ai-competitor-report" element={<AiCompetitorReport />} />
                     <Route path="/ad/website-audit" element={<AdWebsiteAudit />} />
+                    <Route path="/lab/domain-breach" element={<LabDomainBreach />} />
+                    <Route path="/lab/keyword-gap" element={<LabKeywordGap />} />
                     <Route path="/ad/gbp-posts" element={<AdGbpPosts />} />
                     <Route path="/ad/competitor-report" element={<AdCompetitorReport />} />
                     <Route path="/demo-youngblood-alt1" element={<YoungbloodMockupAlt1 />} />
