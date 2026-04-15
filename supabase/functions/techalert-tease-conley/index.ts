@@ -10,38 +10,112 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-function titleCase(s: string): string {
-  return s.replace(/\b\w/g, (c) => c.toUpperCase());
+const COMPANY_SIGNALS = [
+  "inc", "llc", "corp", "co.", "company", "contractors", "services", "solutions",
+  "group", "enterprises", "associates", "systems", "industries", "construction",
+  "plumbing", "hvac", "mechanical", "electric", "heating", "cooling", "dba",
+  "d/b/a", "comfort", "zone", "supreme", "keitz", "marvin", "appliance",
+  "supply", "maintenance", "management", "properties",
+];
+const COMPANY_WORD_BOUNDARY = /\b(and|son|sons|brothers|bros)\b/i;
+
+function isPersonName(name: string): boolean {
+  const lower = name.toLowerCase().trim();
+  const words = lower.split(/\s+/).filter(Boolean);
+  if (words.length < 2) return false;
+  if (COMPANY_SIGNALS.some((s) => lower.includes(s))) return false;
+  if (COMPANY_WORD_BOUNDARY.test(lower)) return false;
+  if (name === name.toUpperCase() && name.length > 8) return false;
+  if (name.includes("&")) return false;
+  if (lower.endsWith(" and")) return false;
+  return true;
 }
 
-function renderFullCard(c: any, i: number): string {
-  const name = titleCase(c.name || "Unknown");
+function titleCase(s: string): string {
+  return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function scoreBadge(score: number): { emoji: string; label: string; bg: string; color: string } {
+  if (score >= 8) return { emoji: "🟢", label: "High Availability", bg: "#064e3b", color: "#34d399" };
+  if (score >= 5) return { emoji: "🟡", label: "Possible", bg: "#451a03", color: "#fbbf24" };
+  return { emoji: "🔵", label: "Monitor", bg: "#1e3a5f", color: "#60a5fa" };
+}
+
+function renderRichCard(c: any, i: number): string {
+  const name = titleCase(c.full_name || c.name || "Unknown");
   const license = c.license_type || "Boiler Operator";
   const licNum = c.license_number || "On File";
   const city = c.city === "true" || c.city === true ? "Metro Detroit" : (c.city || "Michigan");
-  const source = c.source === "miosha" ? "MIOSHA State License DB" : (c.source || "State Registry");
+  const score = c.score || 5;
+  const badge = scoreBadge(score);
   const employer = c.current_employer || null;
-  const experience = c.years_experience ? `${c.years_experience} yrs` : null;
+  const experience = c.years_experience ? `${c.years_experience}+ yrs` : null;
+  const quals = c.qualifications_summary || null;
+  const recommendation = c.hiring_recommendation || null;
+  const scoreReason = c.score_reason || null;
+  const licenseExpiry = c.license_expiry || null;
+  const checkoutUrl = "https://www.detroitwebagent.com/hire-alert";
 
   return `
-  <tr><td style="padding:8px 0">
+  <tr><td style="padding:10px 0">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#111d2e;border:1px solid rgba(0,212,255,0.2);border-radius:12px;overflow:hidden">
-      <tr><td style="padding:16px 20px">
+      <tr><td style="padding:20px 24px">
         <table width="100%" cellpadding="0" cellspacing="0">
+          <!-- Header Row -->
           <tr>
-            <td style="vertical-align:top;width:36px">
-              <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#00d4ff,#0066ff);color:#fff;font-size:14px;font-weight:700;line-height:36px;text-align:center">${i + 1}</div>
+            <td style="vertical-align:top;width:40px">
+              <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#00d4ff,#0066ff);color:#fff;font-size:16px;font-weight:800;line-height:40px;text-align:center">${i + 1}</div>
             </td>
-            <td style="padding-left:14px;vertical-align:top">
-              <div style="color:#ffffff;font-size:15px;font-weight:700;margin-bottom:4px">${name}</div>
-              <div style="color:#00d4ff;font-size:12px;font-weight:600;margin-bottom:6px">🔧 ${license}</div>
-              <table cellpadding="0" cellspacing="0" style="font-size:12px;color:rgba(255,255,255,0.6)">
-                <tr><td style="padding:2px 0">📍 ${city}</td></tr>
-                <tr><td style="padding:2px 0">📋 License #: ${licNum}</td></tr>
-                <tr><td style="padding:2px 0">🏛️ Source: ${source}</td></tr>
-                ${employer ? `<tr><td style="padding:2px 0">🏢 Current: ${employer}</td></tr>` : ""}
-                ${experience ? `<tr><td style="padding:2px 0">⏱️ Experience: ${experience}</td></tr>` : ""}
+            <td style="padding-left:16px;vertical-align:top">
+              <div style="color:#ffffff;font-size:17px;font-weight:800;margin-bottom:4px">${name}</div>
+              <div style="color:#00d4ff;font-size:13px;font-weight:600;margin-bottom:8px">🔧 ${license}</div>
+              
+              <!-- Availability Badge -->
+              <table cellpadding="0" cellspacing="0" style="margin-bottom:10px">
+                <tr><td style="background:${badge.bg};border-radius:6px;padding:4px 12px">
+                  <span style="color:${badge.color};font-size:11px;font-weight:700">${badge.emoji} ${badge.label} (${score}/10)</span>
+                </td></tr>
               </table>
+              
+              <!-- Details Grid -->
+              <table cellpadding="0" cellspacing="0" style="font-size:12px;color:rgba(255,255,255,0.65);width:100%">
+                <tr><td style="padding:3px 0">📍 ${city}</td></tr>
+                <tr><td style="padding:3px 0">📋 License #: ${licNum}${licenseExpiry ? ` · Exp: ${licenseExpiry}` : ""}</td></tr>
+                ${employer ? `<tr><td style="padding:3px 0">🏢 Current: <strong style="color:#fff">${employer}</strong></td></tr>` : ""}
+                ${experience ? `<tr><td style="padding:3px 0">⏱️ ${experience} experience</td></tr>` : ""}
+              </table>
+            </td>
+          </tr>
+        </table>
+        
+        ${quals ? `
+        <!-- Qualifications Summary -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px">
+          <tr><td style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:12px 16px">
+            <div style="color:#34d399;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">AI QUALIFICATIONS ASSESSMENT</div>
+            <div style="color:rgba(255,255,255,0.75);font-size:12px;line-height:1.6">${quals}</div>
+          </td></tr>
+        </table>` : ""}
+        
+        ${recommendation ? `
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px">
+          <tr><td style="background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.15);border-radius:8px;padding:12px 16px">
+            <div style="color:#00d4ff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">RECOMMENDATION</div>
+            <div style="color:rgba(255,255,255,0.75);font-size:12px;line-height:1.6">${recommendation}</div>
+          </td></tr>
+        </table>` : ""}
+
+        ${scoreReason ? `
+        <div style="color:rgba(255,255,255,0.4);font-size:11px;font-style:italic;margin-top:8px">💡 ${scoreReason}</div>` : ""}
+        
+        <!-- Action Buttons -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:14px">
+          <tr>
+            <td style="width:50%;padding-right:6px">
+              <a href="${checkoutUrl}" style="display:block;background:linear-gradient(135deg,#00d4ff,#0066ff);color:#fff;font-size:12px;font-weight:700;padding:10px 0;border-radius:8px;text-decoration:none;text-align:center">⚡ Unlock All Candidates</a>
+            </td>
+            <td style="width:50%;padding-left:6px">
+              <a href="https://m2training.lovable.app/my-techalert?token=DEMO" style="display:block;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:12px;font-weight:700;padding:10px 0;border-radius:8px;text-decoration:none;text-align:center">📊 See Live Dashboard</a>
             </td>
           </tr>
         </table>
@@ -87,25 +161,34 @@ serve(async (req) => {
 
     const { data: candidates, error } = await sb
       .from("hire_alert_candidates")
-      .select("name, license_type, license_number, city, score, source, current_employer, years_experience, score_reason, created_at")
+      .select("full_name, name, license_type, license_number, license_expiry, city, score, source, current_employer, years_experience, score_reason, qualifications_summary, hiring_recommendation, created_at, status, is_company_name")
       .or("license_type.ilike.%boiler%,trade.ilike.%boiler%")
+      .neq("status", "quarantined")
+      .neq("is_company_name", true)
       .order("score", { ascending: false })
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-    if (!candidates || candidates.length === 0) {
+
+    // Double-check with isPersonName filter
+    const cleanCandidates = (candidates || []).filter((c: any) => {
+      const displayName = c.full_name || c.name || "";
+      return displayName.trim().length > 0 && isPersonName(displayName);
+    });
+
+    if (cleanCandidates.length === 0) {
       return new Response(JSON.stringify({ error: "No boiler candidates found" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const totalCount = candidates.length;
-    const revealed = candidates.slice(0, 10);
-    const blurred = candidates.slice(10);
+    const totalCount = cleanCandidates.length;
+    const revealed = cleanCandidates.slice(0, 10);
+    const blurred = cleanCandidates.slice(10);
     const blurredCount = blurred.length;
 
-    const revealedCards = revealed.map((c, i) => renderFullCard(c, i)).join("");
-    const blurredCards = blurred.map((c) => renderBlurredCard(c)).join("");
+    const revealedCards = revealed.map((c: any, i: number) => renderRichCard(c, i)).join("");
+    const blurredCards = blurred.map((c: any) => renderBlurredCard(c)).join("");
 
     const checkoutUrl = "https://www.detroitwebagent.com/hire-alert";
 
@@ -118,7 +201,7 @@ serve(async (req) => {
     <tr><td style="padding:40px 30px 20px">
       <div style="color:#00d4ff;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px">⚡ TECHALERT INTELLIGENCE REPORT</div>
       <div style="color:#ffffff;font-size:26px;font-weight:800;line-height:1.2;margin-bottom:6px">${totalCount} Licensed Boiler Operators</div>
-      <div style="color:rgba(255,255,255,0.5);font-size:14px">Identified in Metro Detroit — As of ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</div>
+      <div style="color:rgba(255,255,255,0.5);font-size:14px">Identified in Metro Detroit — ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</div>
     </td></tr>
   </table>
 
@@ -129,29 +212,30 @@ serve(async (req) => {
         <tr><td style="padding:20px 24px">
           <div style="color:#00d4ff;font-size:13px;font-weight:700;margin-bottom:10px">🎯 WHAT YOU'RE LOOKING AT</div>
           <div style="color:rgba(255,255,255,0.75);font-size:13px;line-height:1.7">
-            This is a <strong style="color:#fff">live intelligence feed</strong> of every licensed boiler operator we've identified in the Metro Detroit area. These are real professionals pulled from <strong style="color:#fff">Michigan's state licensing database (MIOSHA/LARA)</strong> — the same registry that issues and tracks every boiler operator license in the state.
+            This is a <strong style="color:#fff">live intelligence feed</strong> of every licensed boiler operator we've identified in the Metro Detroit area. These are <strong style="color:#fff">real people</strong> — verified professionals pulled from <strong style="color:#fff">Michigan's state licensing database (MIOSHA/LARA)</strong>.
             <br><br>
-            What makes this powerful:
+            What makes TechAlert powerful:
           </div>
           <table cellpadding="0" cellspacing="0" style="margin-top:12px;font-size:12px;color:rgba(255,255,255,0.7)">
-            <tr><td style="padding:6px 0;vertical-align:top">🆕</td><td style="padding:6px 0 6px 8px"><strong style="color:#fff">Newly Licensed Operators</strong> — We detect the moment a new boiler license is issued. These techs just passed their exam and are entering the workforce. First company to reach out wins.</td></tr>
-            <tr><td style="padding:6px 0;vertical-align:top">🔄</td><td style="padding:6px 0 6px 8px"><strong style="color:#fff">License Status Changes</strong> — Renewals, expirations, and lapses are tracked. An expired license often means a tech is between jobs or considering a move.</td></tr>
-            <tr><td style="padding:6px 0;vertical-align:top">📡</td><td style="padding:6px 0 6px 8px"><strong style="color:#fff">Multi-Source Cross-Reference</strong> — License data is enriched with employment signals from professional networks, job boards, and industry databases to gauge availability.</td></tr>
-            <tr><td style="padding:6px 0;vertical-align:top">⚡</td><td style="padding:6px 0 6px 8px"><strong style="color:#fff">Daily Scanning</strong> — This isn't a static database. TechAlert scans every single day, so you see new candidates before your competitors even know they exist.</td></tr>
+            <tr><td style="padding:6px 0;vertical-align:top">🆕</td><td style="padding:6px 0 6px 8px"><strong style="color:#fff">Newly Licensed Operators</strong> — We detect the moment a new boiler license is issued. First company to reach out wins.</td></tr>
+            <tr><td style="padding:6px 0;vertical-align:top">🔄</td><td style="padding:6px 0 6px 8px"><strong style="color:#fff">License Status Changes</strong> — Renewals, expirations, and lapses are tracked. An expired license often means a tech is between jobs.</td></tr>
+            <tr><td style="padding:6px 0;vertical-align:top">📡</td><td style="padding:6px 0 6px 8px"><strong style="color:#fff">Multi-Source Cross-Reference</strong> — License data is enriched with employment signals from professional networks, job boards, and industry databases.</td></tr>
+            <tr><td style="padding:6px 0;vertical-align:top">🤖</td><td style="padding:6px 0 6px 8px"><strong style="color:#fff">AI Availability Scoring</strong> — Each candidate gets a 1-10 score based on hiring signals. 🟢 High = likely available now. 🟡 Possible = worth checking. 🔵 Monitor = keep on radar.</td></tr>
+            <tr><td style="padding:6px 0;vertical-align:top">⚡</td><td style="padding:6px 0 6px 8px"><strong style="color:#fff">Daily Scanning</strong> — Not a static database. TechAlert scans every single day, so you see new candidates before your competitors.</td></tr>
           </table>
         </td></tr>
       </table>
     </td></tr>
   </table>
 
-  <!-- Why This Matters for DJ Conley -->
+  <!-- Revenue Impact -->
   <table width="100%" cellpadding="0" cellspacing="0">
     <tr><td style="padding:16px 30px 0">
       <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a0a0a;border:1px solid rgba(255,80,80,0.2);border-radius:12px">
         <tr><td style="padding:16px 20px">
-          <div style="color:#ff6b6b;font-size:12px;font-weight:700;margin-bottom:6px">🏭 WHY THIS MATTERS FOR YOUR BUSINESS</div>
+          <div style="color:#ff6b6b;font-size:12px;font-weight:700;margin-bottom:6px">🏭 THE COST OF NOT KNOWING</div>
           <div style="color:rgba(255,255,255,0.7);font-size:12px;line-height:1.6">
-            Every day without a hiring pipeline costs money. A single boiler tech generates <strong style="color:#fff">$150K–$250K/year in revenue</strong>. If you lose one tech to a competitor, or miss a newly-licensed operator who just entered the market — that's real revenue walking out the door. TechAlert makes sure you see them <strong style="color:#fff">first</strong>.
+            A single boiler tech generates <strong style="color:#fff">$150K–$250K/year in revenue</strong>. If you lose one to a competitor — or miss a newly-licensed operator entering the market — that's real revenue gone. TechAlert makes sure you see them <strong style="color:#fff">first</strong>.
           </div>
         </td></tr>
       </table>
@@ -184,6 +268,7 @@ serve(async (req) => {
   <table width="100%" cellpadding="0" cellspacing="0">
     <tr><td style="padding:0 30px 8px">
       <div style="color:#10b981;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase">✅ SAMPLE — 10 OF ${totalCount} CANDIDATES</div>
+      <div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:4px">Each card shows AI-assessed qualifications, availability score, and license details</div>
     </td></tr>
   </table>
 
@@ -203,7 +288,7 @@ serve(async (req) => {
         <tr><td style="padding:20px 24px;text-align:center">
           <div style="color:#f59e0b;font-size:24px;margin-bottom:6px">🔒</div>
           <div style="color:#f59e0b;font-size:16px;font-weight:800;margin-bottom:4px">${blurredCount} More Candidates Locked</div>
-          <div style="color:rgba(255,255,255,0.5);font-size:12px;line-height:1.5">Full names, contact info, license details, and availability signals<br>are available with a TechAlert subscription.</div>
+          <div style="color:rgba(255,255,255,0.5);font-size:12px;line-height:1.5">Full names, contact info, AI qualifications, availability scores,<br>and one-click outreach tools — all available with TechAlert.</div>
         </td></tr>
       </table>
     </td></tr>
@@ -219,9 +304,29 @@ serve(async (req) => {
     </td></tr>
   </table>
 
+  <!-- What You Get Section -->
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td style="padding:24px 30px">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#0d2137,#132d47);border:1px solid rgba(0,212,255,0.15);border-radius:12px">
+        <tr><td style="padding:20px 24px">
+          <div style="color:#00d4ff;font-size:13px;font-weight:700;margin-bottom:12px">🎁 WHAT YOU GET ON DAY 1</div>
+          <table cellpadding="0" cellspacing="0" style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.6">
+            <tr><td style="padding:4px 0;color:#10b981">✓</td><td style="padding:4px 0 4px 8px">Full access to all ${totalCount}+ candidates with names & contact info</td></tr>
+            <tr><td style="padding:4px 0;color:#10b981">✓</td><td style="padding:4px 0 4px 8px">Live dashboard with search, filters, and CSV export</td></tr>
+            <tr><td style="padding:4px 0;color:#10b981">✓</td><td style="padding:4px 0 4px 8px">⚡ 48-hour exclusive claim system — lock a candidate before competitors see them</td></tr>
+            <tr><td style="padding:4px 0;color:#10b981">✓</td><td style="padding:4px 0 4px 8px">✍️ AI-generated outreach drafts (SMS + email) with one click</td></tr>
+            <tr><td style="padding:4px 0;color:#10b981">✓</td><td style="padding:4px 0 4px 8px">🗓️ Fast-Track Interview — send booking link to a candidate via SMS instantly</td></tr>
+            <tr><td style="padding:4px 0;color:#10b981">✓</td><td style="padding:4px 0 4px 8px">Daily alerts when new high-scoring candidates appear</td></tr>
+            <tr><td style="padding:4px 0;color:#10b981">✓</td><td style="padding:4px 0 4px 8px">Market signals feed showing local hiring patterns & expansion news</td></tr>
+          </table>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+
   <!-- CTA -->
   <table width="100%" cellpadding="0" cellspacing="0">
-    <tr><td style="padding:32px 30px;text-align:center">
+    <tr><td style="padding:8px 30px 32px;text-align:center">
       <div style="color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:16px">Stop losing techs to companies who find them first.</div>
       <a href="${checkoutUrl}" style="display:inline-block;background:linear-gradient(135deg,#00d4ff,#0066ff);color:#fff;font-size:16px;font-weight:800;padding:16px 40px;border-radius:10px;text-decoration:none;letter-spacing:0.5px">Unlock All ${totalCount} Candidates →</a>
       <div style="color:rgba(255,255,255,0.35);font-size:11px;margin-top:12px">Starting at $99/mo · Cancel anytime · First 10 clients get grandfathered pricing</div>
@@ -237,8 +342,9 @@ serve(async (req) => {
           <table cellpadding="0" cellspacing="0" style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.6">
             <tr><td style="padding:4px 0;vertical-align:top;color:#00d4ff;font-weight:700;width:20px">1.</td><td style="padding:4px 0">We scan Michigan's MIOSHA/LARA licensing database <strong style="color:#fff">every day</strong></td></tr>
             <tr><td style="padding:4px 0;vertical-align:top;color:#00d4ff;font-weight:700">2.</td><td style="padding:4px 0">New licenses, renewals, expirations, and status changes are flagged</td></tr>
-            <tr><td style="padding:4px 0;vertical-align:top;color:#00d4ff;font-weight:700">3.</td><td style="padding:4px 0">Candidates are enriched with employment & availability signals</td></tr>
-            <tr><td style="padding:4px 0;vertical-align:top;color:#00d4ff;font-weight:700">4.</td><td style="padding:4px 0">You get <strong style="color:#fff">instant alerts</strong> when a high-value candidate appears — before any recruiter or competitor sees them</td></tr>
+            <tr><td style="padding:4px 0;vertical-align:top;color:#00d4ff;font-weight:700">3.</td><td style="padding:4px 0">AI assesses each candidate's availability and generates qualifications summary</td></tr>
+            <tr><td style="padding:4px 0;vertical-align:top;color:#00d4ff;font-weight:700">4.</td><td style="padding:4px 0">You get <strong style="color:#fff">instant alerts</strong> when a high-value candidate appears — before any recruiter sees them</td></tr>
+            <tr><td style="padding:4px 0;vertical-align:top;color:#00d4ff;font-weight:700">5.</td><td style="padding:4px 0">Claim, draft outreach, or fast-track an interview — all from your dashboard</td></tr>
           </table>
         </td></tr>
       </table>
