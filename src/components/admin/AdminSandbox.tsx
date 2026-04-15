@@ -353,7 +353,7 @@ export default function AdminSandbox() {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
 
-  const PREVIEWABLE = ["pet_memorial_subscription", "employee_credential_audit"];
+  const PREVIEWABLE = ["employee_credential_audit"];
 
   const runPreview = async (product: Product, overrides?: Record<string, string>) => {
     setModalProduct(null);
