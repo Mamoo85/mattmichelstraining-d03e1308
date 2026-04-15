@@ -667,10 +667,12 @@ export default function MyTechAlert() {
               const claimStatus = getClaimStatus(c);
               const isLapsed = c.license_status === "Recently Lapsed";
 
+              const isHighlighted = c.id === highlightId;
+
               return (
-                <Card key={c.id} className={`border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e] overflow-hidden transition-all ${
+                <Card key={c.id} ref={isHighlighted ? highlightRef : undefined} className={`border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e] overflow-hidden transition-all ${
                   c.availability_score >= 7 ? "ring-1 ring-[#00d4ff]/20" : ""
-                } ${claimStatus === "mine" ? "ring-1 ring-emerald-500/30" : ""}`}>
+                } ${claimStatus === "mine" ? "ring-1 ring-emerald-500/30" : ""} ${isHighlighted ? "ring-2 ring-[#00d4ff] animate-pulse" : ""}`}>
                   {/* Collapsed header */}
                   <div className="flex items-center gap-3 p-4">
                     <button
