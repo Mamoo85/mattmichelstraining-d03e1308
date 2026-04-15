@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import SEOHead from "@/components/layout/SEOHead";
 import { Button } from "@/components/ui/button";
@@ -60,6 +60,7 @@ const TESTIMONIALS: Testimonial[] = [
 
 const ACCENT = "#00d4ff";
 const BG = "#0a1628";
+const BETA_LIMIT = 10;
 
 export default function HireAlert() {
   const { toast } = useToast();
@@ -71,6 +72,24 @@ export default function HireAlert() {
   const [plan, setPlan] = useState<"standalone" | "bundle">("standalone");
   const [selectedRoles, setSelectedRoles] = useState<string[]>(["boiler_operator", "hvac_tech"]);
   const [loading, setLoading] = useState(false);
+  const [slotsRemaining, setSlotsRemaining] = useState<number | null>(null);
+  const [betaFull, setBetaFull] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from("hire_alert_clients")
+      .select("id", { count: "exact", head: true })
+      .eq("active", true)
+      .then(({ count }) => {
+        const taken = count ?? 0;
+        const remaining = Math.max(0, BETA_LIMIT - taken);
+        setSlotsRemaining(remaining);
+        setBetaFull(remaining <= 0);
+      });
+  }, []);
+
+  const standalonePrice = betaFull ? 149 : 99;
+  const bundlePrice = betaFull ? 79 : 49;
 
   if (isSuccess) {
     return (
@@ -126,13 +145,13 @@ export default function HireAlert() {
     <div style={{ background: BG, minHeight: "100vh", color: "#fff", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <SEOHead
         title="TechAlert — Licensed Tradesperson Hiring Monitor | Detroit Web Agency"
-        description="Get exclusive first-access alerts when licensed boiler operators, HVAC techs, plumbers, and electricians become available in Metro Detroit. Proprietary daily monitoring. $99/mo."
+        description="Get exclusive first-access alerts when licensed boiler operators, HVAC techs, plumbers, and electricians become available in Metro Detroit. Proprietary daily monitoring."
         path="/hire-alert"
       />
 
       <DWAStickyNav
         productName="TechAlert"
-        ctaLabel="Start for $99/mo →"
+        ctaLabel={betaFull ? "Join Waitlist — $149/mo →" : `Start for $${standalonePrice}/mo →`}
         ctaOnClick={scrollToCheckout}
         accentColor={ACCENT}
         bgColor={BG}
@@ -143,6 +162,31 @@ export default function HireAlert() {
         <span style={{ color: ACCENT, fontWeight: 700, fontSize: 18, letterSpacing: 1 }}>DETROIT WEB AGENCY</span>
         <a href="https://detroitwebagent.com" style={{ color: ACCENT, textDecoration: "none", fontSize: 14, fontWeight: 600 }}>detroitwebagent.com</a>
       </nav>
+
+      {/* Scarcity Banner */}
+      {slotsRemaining !== null && (
+        <div style={{
+          background: betaFull ? "#7f1d1d" : `linear-gradient(90deg, #00d4ff22, #00d4ff11)`,
+          borderBottom: `1px solid ${betaFull ? "#dc2626" : ACCENT}`,
+          padding: "12px 24px",
+          textAlign: "center",
+        }}>
+          {betaFull ? (
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#fca5a5" }}>
+              ⚠️ Beta is full (10/10 slots claimed). New subscriptions are $149/mo.
+            </p>
+          ) : (
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: ACCENT }}>
+              <span style={{
+                display: "inline-block",
+                width: 8, height: 8, borderRadius: "50%", background: "#22c55e",
+                marginRight: 8, animation: "pulse 2s infinite",
+              }} />
+              Only {slotsRemaining} of {BETA_LIMIT} beta slots remaining · ${standalonePrice}/mo grandfathered forever
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Hero */}
       <section style={{ maxWidth: 900, margin: "0 auto", padding: "80px 24px 60px", textAlign: "center" }}>
@@ -164,8 +208,14 @@ export default function HireAlert() {
           onClick={scrollToCheckout}
           style={{ background: ACCENT, color: BG, padding: "16px 40px", borderRadius: 8, fontWeight: 800, fontSize: 17, border: "none", cursor: "pointer" }}
         >
-          Start Getting Alerts — $99/mo →
+          {betaFull ? `Join at $${standalonePrice}/mo →` : `Claim Beta Slot — $${standalonePrice}/mo →`}
         </button>
+
+        {!betaFull && slotsRemaining !== null && slotsRemaining <= 3 && (
+          <p style={{ marginTop: 12, fontSize: 13, color: "#f97316", fontWeight: 700 }}>
+            🔥 {slotsRemaining} slot{slotsRemaining === 1 ? "" : "s"} left — price jumps to $149/mo when full
+          </p>
+        )}
       </section>
 
       {/* Unfair Advantage Callout */}
@@ -263,7 +313,14 @@ export default function HireAlert() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
           <div style={{ background: "#0d2137", border: "1px solid #1e3a5f", borderRadius: 14, padding: 32 }}>
             <p style={{ margin: "0 0 8px", color: "#94a3b8", fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>Standalone</p>
-            <div style={{ fontSize: 48, fontWeight: 800, margin: "0 0 4px" }}>$99<span style={{ fontSize: 18, fontWeight: 400, color: "#94a3b8" }}>/mo</span></div>
+            <div style={{ fontSize: 48, fontWeight: 800, margin: "0 0 4px" }}>
+              ${standalonePrice}<span style={{ fontSize: 18, fontWeight: 400, color: "#94a3b8" }}>/mo</span>
+            </div>
+            {!betaFull && (
+              <p style={{ color: "#22c55e", fontSize: 13, fontWeight: 700, margin: "0 0 4px" }}>
+                🔒 Beta price — grandfathered forever
+              </p>
+            )}
             <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 24 }}>For any field service company in Michigan</p>
             <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px" }}>
               {["Proprietary license monitoring", "Professional network intelligence", "Live availability signal tracking", "Availability scoring", "Email digest", "SMS hot alerts"].map((f) => (
@@ -276,7 +333,7 @@ export default function HireAlert() {
               onClick={() => { setPlan("standalone"); scrollToCheckout(); }}
               style={{ width: "100%", background: "#1e3a5f", border: `1px solid ${ACCENT}`, color: ACCENT, padding: "12px", borderRadius: 8, fontWeight: 700, fontSize: 15, cursor: "pointer" }}
             >
-              Get Started — $99/mo
+              Get Started — ${standalonePrice}/mo
             </button>
           </div>
 
@@ -285,10 +342,10 @@ export default function HireAlert() {
               BEST VALUE — WITH FIELD CRM
             </div>
             <p style={{ margin: "0 0 8px", color: ACCENT, fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>Field CRM Bundle</p>
-            <div style={{ fontSize: 48, fontWeight: 800, margin: "0 0 4px" }}>$49<span style={{ fontSize: 18, fontWeight: 400, color: "#94a3b8" }}>/mo</span></div>
+            <div style={{ fontSize: 48, fontWeight: 800, margin: "0 0 4px" }}>${bundlePrice}<span style={{ fontSize: 18, fontWeight: 400, color: "#94a3b8" }}>/mo</span></div>
             <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 24 }}>Add-on for Detroit Web Agency Field CRM clients</p>
             <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px" }}>
-              {["Everything in standalone", "Integrated with your Field CRM", "Candidates pre-matched to your roles", "Priority SMS alerts", "50% savings vs standalone"].map((f) => (
+              {["Everything in standalone", "Integrated with your Field CRM", "Candidates pre-matched to your roles", "Priority SMS alerts", `Save $${standalonePrice - bundlePrice}/mo vs standalone`].map((f) => (
                 <li key={f} style={{ padding: "6px 0", fontSize: 14, color: "#cbd5e1", display: "flex", gap: 8 }}>
                   <span style={{ color: ACCENT }}>✓</span> {f}
                 </li>
@@ -298,7 +355,7 @@ export default function HireAlert() {
               onClick={() => { setPlan("bundle"); scrollToCheckout(); }}
               style={{ width: "100%", background: ACCENT, border: "none", color: BG, padding: "12px", borderRadius: 8, fontWeight: 800, fontSize: 15, cursor: "pointer" }}
             >
-              Add to Field CRM — $49/mo
+              Add to Field CRM — ${bundlePrice}/mo
             </button>
           </div>
         </div>
@@ -307,12 +364,14 @@ export default function HireAlert() {
       {/* Checkout Form */}
       <section id="checkout" style={{ maxWidth: 520, margin: "0 auto 60px", padding: "0 24px" }}>
         <div style={{ background: "#0d2137", border: "1px solid #1e3a5f", borderRadius: 14, padding: 40 }}>
-          <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 800 }}>Start Getting Alerts</h2>
+          <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 800 }}>
+            {betaFull ? "Join TechAlert" : "Claim Your Beta Slot"}
+          </h2>
           <p style={{ margin: "0 0 28px", color: "#94a3b8", fontSize: 14 }}>
-            {plan === "bundle" ? "$49/mo — Field CRM Bundle" : "$99/mo — Standalone"}
+            {plan === "bundle" ? `$${bundlePrice}/mo — Field CRM Bundle` : `$${standalonePrice}/mo — Standalone`}
             &nbsp;·&nbsp;
             <button onClick={() => setPlan(plan === "bundle" ? "standalone" : "bundle")} style={{ background: "none", border: "none", color: ACCENT, cursor: "pointer", fontSize: 13, padding: 0, textDecoration: "underline" }}>
-              Switch to {plan === "bundle" ? "standalone ($99)" : "bundle ($49)"}
+              Switch to {plan === "bundle" ? `standalone ($${standalonePrice})` : `bundle ($${bundlePrice})`}
             </button>
           </p>
 
@@ -359,12 +418,15 @@ export default function HireAlert() {
               disabled={loading}
               style={{ background: ACCENT, color: BG, fontWeight: 800, fontSize: 16, padding: "14px", borderRadius: 8, border: "none" }}
             >
-              {loading ? "Redirecting..." : `Start for ${plan === "bundle" ? "$49" : "$99"}/mo →`}
+              {loading ? "Redirecting..." : betaFull
+                ? `Start for $${plan === "bundle" ? bundlePrice : standalonePrice}/mo →`
+                : `Claim Beta Slot — $${plan === "bundle" ? bundlePrice : standalonePrice}/mo →`}
             </Button>
           </div>
 
           <p style={{ margin: "16px 0 0", fontSize: 12, color: "#64748b", textAlign: "center" }}>
             Secure checkout via Stripe · Cancel anytime
+            {!betaFull && " · Beta price locked forever"}
           </p>
         </div>
       </section>
@@ -375,6 +437,13 @@ export default function HireAlert() {
         <p style={{ margin: 0 }}>Grosse Pointe, MI · detroitwebagent.com · "We Handle The Tech"</p>
       </footer>
       <EnterpriseFooterBlock accentColor={ACCENT} isDark={true} />
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+      `}</style>
     </div>
   );
 }
