@@ -15,11 +15,7 @@ export default function TechLogin({ onLogin }: Props) {
     if (pinValue.length !== 4) { toast.error("Enter your 4-digit PIN"); return; }
     setLoading(true);
     const { data, error } = await supabase
-      .from("field_service_techs")
-      .select("id, name, client_id")
-      .eq("pin", pinValue)
-      .eq("active", true)
-      .limit(1)
+      .rpc("verify_tech_pin", { _pin: pinValue })
       .maybeSingle();
 
     if (error || !data) {
