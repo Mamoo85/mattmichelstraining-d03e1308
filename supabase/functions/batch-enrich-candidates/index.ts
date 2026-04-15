@@ -24,6 +24,7 @@ async function sonarEnrich(fullName: string, trade: string): Promise<Record<stri
         messages: [{ role: "user", content: query }],
         max_tokens: 500,
       }),
+      signal: AbortSignal.timeout(30_000),
     });
 
     if (!res.ok) {

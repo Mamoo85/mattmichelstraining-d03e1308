@@ -29,16 +29,21 @@ function isHealthcareRole(licenseType?: string): boolean {
 
 async function notifyMatt(subject: string, html: string) {
   if (!RESEND_API_KEY) return;
-  await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: "Detroit Web Agency <matt@detroitwebagent.com>",
-      to: ["matt@detroitwebagent.com"],
-      subject,
-      html,
-    }),
-  });
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(10_000),
+      body: JSON.stringify({
+        from: "Detroit Web Agency <matt@detroitwebagent.com>",
+        to: ["matt@detroitwebagent.com"],
+        subject,
+        html,
+      }),
+    });
+  } catch (e) {
+    console.error("[notifyMatt] email failed:", e instanceof Error ? e.message : String(e));
+  }
 }
 
 async function firecrawlSearch(query: string): Promise<Array<{ url: string; markdown: string; title: string }>> {
@@ -768,9 +773,11 @@ async function sendAlertEmail(
     ? `${subjectEmoji} ${hotCount} hot ${hotCount === 1 ? "candidate" : "candidates"} — act fast`
     : `${candidates.length} licensed ${candidates.length === 1 ? "tech" : "techs"} spotted nearby`;
 
+  try {
   await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(10_000),
     body: JSON.stringify({
       from: "TechAlert by Detroit Web Agency <matt@detroitwebagent.com>",
       to: [client.owner_email],

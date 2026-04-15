@@ -257,9 +257,9 @@ export default function HireAlert() {
       </section>
 
       {/* Pricing */}
-      <section style={{ maxWidth: 800, margin: "0 auto 80px", padding: "0 24px" }}>
+      <section style={{ maxWidth: 800, margin: "0 auto 80px", padding: "0 16px" }}>
         <h2 style={{ textAlign: "center", fontSize: 32, fontWeight: 800, marginBottom: 48 }}>Simple Pricing</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
           <div style={{ background: "#0d2137", border: "1px solid #1e3a5f", borderRadius: 14, padding: 32 }}>
             <p style={{ margin: "0 0 8px", color: "#94a3b8", fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>Standalone</p>
             <div style={{ fontSize: 48, fontWeight: 800, margin: "0 0 4px" }}>$99<span style={{ fontSize: 18, fontWeight: 400, color: "#94a3b8" }}>/mo</span></div>

@@ -568,7 +568,7 @@ export default function AdminHireAlertClients() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
           { icon: Users, label: "Active Clients", value: activeClients.length, color: "#10b981" },
           { icon: DollarSign, label: "Monthly Revenue", value: `$${(mrr / 100).toLocaleString()}`, color: "#e8621a" },
@@ -615,11 +615,11 @@ export default function AdminHireAlertClients() {
             <Clock size={12} /> Recent Scanner Runs
           </p>
           <div className="rounded-2xl border border-white/8 overflow-x-auto">
-            <table className="w-full text-xs" style={{ minWidth: 500 }}>
+            <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-white/8 bg-white/3">
                   <th className="text-left px-4 py-3 text-white/40 font-semibold">Run At</th>
-                  <th className="text-left px-4 py-3 text-white/40 font-semibold">Source</th>
+                  <th className="text-left px-4 py-3 text-white/40 font-semibold hidden sm:table-cell">Source</th>
                   <th className="text-right px-4 py-3 text-white/40 font-semibold">Found</th>
                   <th className="text-right px-4 py-3 text-white/40 font-semibold">Alerts Sent</th>
                   <th className="text-right px-4 py-3 text-white/40 font-semibold">Status</th>
@@ -629,7 +629,7 @@ export default function AdminHireAlertClients() {
                 {runs.map(r => (
                   <tr key={r.id} className="border-b border-white/5 hover:bg-white/3">
                     <td className="px-4 py-2.5 text-white/60">{new Date(r.run_at).toLocaleString()}</td>
-                    <td className="px-4 py-2.5 text-white/60 capitalize">{r.source || "all"}</td>
+                    <td className="px-4 py-2.5 text-white/60 capitalize hidden sm:table-cell">{r.source || "all"}</td>
                     <td className="px-4 py-2.5 text-right text-white font-semibold">{r.candidates_found}</td>
                     <td className="px-4 py-2.5 text-right text-emerald-400 font-semibold">{r.alerts_sent}</td>
                     <td className="px-4 py-2.5 text-right">
@@ -664,14 +664,14 @@ export default function AdminHireAlertClients() {
             <Users size={12} /> Recent Candidates
           </p>
           <div className="rounded-2xl border border-white/8 overflow-x-auto">
-            <table className="w-full text-xs" style={{ minWidth: 500 }}>
+            <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-white/8 bg-white/3">
                   <th className="text-left px-4 py-3 text-white/40 font-semibold">Name</th>
                   <th className="text-left px-4 py-3 text-white/40 font-semibold">License / Role</th>
                   <th className="text-left px-4 py-3 text-white/40 font-semibold">City</th>
-                  <th className="text-left px-4 py-3 text-white/40 font-semibold">Source</th>
-                  <th className="text-center px-4 py-3 text-white/40 font-semibold">Data %</th>
+                  <th className="text-left px-4 py-3 text-white/40 font-semibold hidden sm:table-cell">Source</th>
+                  <th className="text-center px-4 py-3 text-white/40 font-semibold hidden sm:table-cell">Data %</th>
                   <th className="text-right px-4 py-3 text-white/40 font-semibold">Status</th>
                 </tr>
               </thead>
@@ -691,8 +691,8 @@ export default function AdminHireAlertClients() {
                       </td>
                       <td className="px-4 py-2.5 text-white/60">{c.license_type || "—"}</td>
                       <td className="px-4 py-2.5 text-white/60">{c.city || "—"}</td>
-                      <td className="px-4 py-2.5 text-white/60 capitalize">{c.source}</td>
-                      <td className="px-4 py-2.5">
+                      <td className="px-4 py-2.5 text-white/60 capitalize hidden sm:table-cell">{c.source}</td>
+                      <td className="px-4 py-2.5 hidden sm:table-cell">
                         <div className="flex items-center gap-2">
                           <div className="w-16 h-1.5 rounded-full bg-white/10 overflow-hidden">
                             <div

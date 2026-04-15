@@ -28,6 +28,7 @@ export async function generateText(
         max_tokens: maxTokens,
         messages: [{ role: "user", content: prompt }],
       }),
+      signal: AbortSignal.timeout(15_000),
     });
 
     if (!res.ok) {

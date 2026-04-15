@@ -79,6 +79,7 @@ export async function sendSMS(
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({ To: to, From: from, Body: body }),
+        signal: AbortSignal.timeout(15_000),
       }
     );
 
