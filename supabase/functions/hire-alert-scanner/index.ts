@@ -640,7 +640,7 @@ Scoring rules (apply ALL that match, then sum):
 - Cap at 10, floor at 1
 
 Return JSON: { "score": number, "reason": "one sentence citing the top 1-2 signals" }`,
-    null,
+    null as any,
     400
   );
 
