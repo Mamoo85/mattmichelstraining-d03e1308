@@ -1,54 +1,115 @@
+# DWA Intelligence Platform — Final Build Plan
 
+## Talent Signal + Demand Radar + Multi-Vertical Predictive Sales
 
-## Plan
+---
 
-### Part 1 — Kill the duplicate-key spam (root cause + cleanup)
+## Strategic Overview
 
-**Root cause:** `hire_alert_clients.owner_email` has a UNIQUE constraint, but `stripe-webhook` line 782 uses `.insert()`. Every repeat checkout by the same email throws `duplicate key value violates unique constraint "hire_alert_clients_owner_email_key"` → triggers the failure email at line 903.
+Two products, one engine, multiple buyer personas:
 
-**Fixes:**
-1. **`supabase/functions/stripe-webhook/index.ts` (~line 782):** Change `.insert({...})` to `.upsert({...}, { onConflict: "owner_email" })`. Repeat purchases now update `target_roles`, plan, stripe IDs, and re-activate instead of failing. (Same fix should be applied to other webhooks with unique-email tables — but scoped to TechAlert only for this pass to keep the change tight.)
-2. **DB cleanup migration:** Delete the 7 broken/duplicate test rows (including the two where `owner_email` got populated with the person's NAME like "Matthew Michels" — those are corrupt) and consolidate into ONE canonical test client:
-   - Email: `matt@mattmichelstraining.com`
-   - Company: `M2 Test Co`
-   - `target_roles`: ALL 14 roles (every trade + healthcare profession the scanner supports) so any candidate matches
-   - `plan: 'standalone'`, `active: true`
+| Product | Buyer | Price | Signal |
+|---|---|---|---|
+| **DWA Talent Signal** | Staffing agencies | $250/interview or $3,500/mo | Who is available to hire |
+| **Demand Radar** | Equipment/supply reps, contractors, sales teams | $99–$499/mo | Who is expanding and will need supplies / who's a hot sales lead |
+| **Territory Lock bundle** | Agencies who want both | $3,500/mo | Both feeds, exclusive by county |
 
-### Part 2 — Naming decision
+**Demand Radar is sold as BOTH:**
+1. **Sales lead intelligence** for B2B sellers (Ameristeel reps, Ferguson account managers, equipment distributors) — "which companies are about to need what you sell"
+2. **Hiring expansion signal** bundled into Talent Signal Territory Lock for agencies — "which companies are about to need who you place"
 
-Plan called it "Detroit Talent Signal" / "Michigan Pre-Market Talent Feed." Both are fine but "Detroit Talent Signal" is already wired into `TalentIntelligence.tsx`. Two questions before I touch naming:
+Same engine, different framing per buyer. Marketing copy on `/demand-radar` leads with the **sales lead** angle (bigger TAM); agency bundle is a secondary use case.
 
-I'll ask you below — no rename happens without your pick.
+**The "Perfect Storm" play:** Demand Radar detects Company X is expanding → Talent Signal has a candidate in the same vertical + county → combined card in agency portal: "They're hiring AND we have someone. Fast-Track for $250."
 
-### Part 3 — Finish the agency pivot (Lovable's plan, audited)
+**The Ameristeel play:** Steel service center reps guess which fab shops to call. Demand Radar tells them which ones just won contracts and are tooling up. "$149/mo — your reps stop cold-calling blind."
 
-What's already done that the plan said was missing (verified just now):
-- ✅ `config.toml` — all 5 agency function entries already exist (lines 1576–1591), plus a 6th (`agency-proof-drop-followup`). **GAP 1 is closed.**
+---
 
-What's actually still missing:
-- ❌ **GAP 2 — Stripe webhook handler for `agency_interview_charge`.** Confirmed: zero matches in `stripe-webhook/index.ts`. Charges fire from `agency-fast-track-interview` but `charged_at`/`stripe_charge_id` are written inline in that function already (line 65-66 of fast-track), so the webhook handler is a **belt-and-suspenders sync** for off-session charges that succeed asynchronously (e.g. 3DS retries). Still worth adding — listen on `payment_intent.succeeded` with `metadata.type === "agency_interview_charge"` and update the assignment row.
-- ❌ **GAP 3 — Language scrub.** The plan lists 7 client-facing strings. I'll fix exactly those 7 (Stripe product description, HireAlert.tsx ×2, HireAlertTrial.tsx, HealthcareHireAlert.tsx ×2, hire-alert-scanner email badge). Internal scanner code/comments stay untouched — agencies never see them and renaming them risks breaking the actual scrapers.
-- ❌ **Improvement #7 — Delivery jitter** in `agency-distribute-candidates` (0–2hr randomized delay so the 7am pattern isn't detectable).
-- ❌ **Improvement #10 — SMS to Matt** from `agency-monthly-flip` so flip-ready alerts don't get buried in email.
+## PHASE 0 — Health Check (Do This First)
 
-### Part 4 — Skipping (with reasoning)
+**0a. Audit `boiler-sector-intel`** — last cron run, signals to DJ in past 30d, last SMS sent.
+**0b. Audit `industrial-growth-intel`** — currently manual-invoke only; check last run + signal quality + errors.
+**0c. Audit `medicare-staffing-intel`** — confirm cron + signals reaching admin panel.
+**0d. Output:** SMS to ADMIN_PHONE per engine: "[Engine]: OK/DEAD, last run [date], [N] signals in 7 days". If any dead → stop and fix before Phase 1.
 
-- **Improvement #2 ROI calculator, #3 territory scarcity copy, #4 48-hr Proof Drop follow-up, #5 case study block** — these are marketing copy iterations, not blockers. Better done after the first 1–2 agency conversations so the copy reflects real objections heard. Flagging for a later sprint.
-- **Improvement #8 passive-candidate mixing** — needs a "passive pool" data source we don't have yet (would require new Sonar prompts + storage). Punt to a v2 sprint after first agency goes live.
-- **Improvement #9 rate-limit `/agency-portal`** — defensive hardening. Add when agency #2 signs (premature optimization for zero customers).
+---
 
-### Build order (~45 min total)
+## PHASE 1 — Finish Talent Signal (90 min)
 
-1. Migration: cleanup test rows + insert canonical test client
-2. `stripe-webhook` insert→upsert fix
-3. `stripe-webhook` add `agency_interview_charge` handler on `payment_intent.succeeded`
-4. 7-line language scrub across 5 files
-5. Jitter in `agency-distribute-candidates`
-6. SMS in `agency-monthly-flip`
+### 3 Original Gaps
+- **A1.** `supabase/config.toml` — add 5 agency function entries with `verify_jwt = false`
+- **A2.** `stripe-webhook` — handler on `payment_intent.succeeded` where `metadata.type === "agency_interview_charge"`. Update `agency_candidate_assignments.charged_at` + `stripe_charge_id`. `notifyMatt()` if assignment not found.
+- **A3.** Language scrub — 7 violations (MIOSHA / LARA / Apollo / NPI / LinkedIn → generic terms). See file:line table in conversation.
 
-### Verification
-- Re-trigger a TechAlert checkout for `matt@mattmichelstraining.com` → no failure email, row updates in place
-- DB query: exactly ONE `hire_alert_clients` row for any of Matt's emails
-- Grep 5 client-facing files: zero MIOSHA / LARA / Apollo / "NPI Verified" / LinkedIn matches
-- `agency-fast-track-interview` test charge → assignment row gets `charged_at` from webhook
+### 10 Improvements
+1. **Master test account sinkhole** — `is_test_account` boolean on `staffing_agency_clients`; route comms to `system_comms_log` with `status='sinkhole'`. Seed one test agency covering all verticals.
+2. **Collision lock** — atomic `UPDATE ... WHERE id=$1 AND status='delivered' RETURNING id`. Zero rows = "already claimed."
+3. **Ghosting credit** — `fast_track_credits` on agency, `ghosted_at` on assignment, "Mark No-Show" button + `agency-mark-ghosted` function. `agency-fast-track-interview` burns credit before Stripe charge.
+4. **CSV export** — client-side blob; opaque `verification_id`, signal_strength, vertical, county, interview_booked_at. No source/scores.
+5. **TCPA opt-out** — append "Reply STOP to opt out" to all candidate SMS; STOP webhook sets `do_not_contact = true`; checked before send.
+6. **Demo token** — `/agency-portal?token=DWA_DEMO_MASTER` loads 4 hardcoded demo candidates with DEMO badge, no DB.
+7. **agency-monthly-flip SMS** — `sendSMS(ADMIN_PHONE, ...)` alongside email.
+8. **Stripe reconciliation cron** — `agency-payment-reconcile`, daily 11pm ET, Stripe→DB diff, SMS Matt on discrepancy.
+9. **Behavioral scoring** — out-of-state license = +1 (relocation); lapsed-then-renewed = +1 (recommitment). Drop arbitrary tenure floor.
+10. **Naming scrub (agency-facing only)** — "TechAlert" → "DWA Talent Signal" in `AgencyPortal.tsx`, `TalentIntelligence.tsx`, `AdminAgencyOutreach.tsx`, agency edge functions. Internal `hire_alert_*` table names stay.
 
+---
+
+## PHASE 2 — Demand Radar Production-Ready (90 min)
+
+11. **Automate `industrial-growth-intel`** — `config.toml` cron daily 6am ET, write to `industry_pulse_signals`. Gate: skip Sonar call if zero active subscribers; log skip to `system_comms_log`.
+12. **Schema decision** — check `industry_pulse_subscribers` first. If it has vertical + territory + plan → just add `buyer_type` column (`recruiter | supplier | contractor | sales_rep`). Else create `demand_radar_clients`.
+13. **Demand Radar admin tab** in `/dwa-admin` — live signal feed, color-coded confidence badges (green ≥8, yellow 6-7, gray <6), company/expansion/county/source, "Manual Enrich" button, SMS alert log.
+14. **DWA dark theme on `DemandRadar.tsx`** — `#00d4ff` on `#0a1628`, matches `/talent-intelligence` visually. **Marketing copy leads with sales-lead angle**: "Know which companies are about to buy from you, 30-90 days before they call." Hiring/agency angle is secondary.
+15. **"Perfect Storm" cross-signal card** — `agency-distribute-candidates` queries `industry_pulse_signals` for territory + vertical match, `confidence >= 8`, past 48h. Prepends to morning briefing. Logs match.
+16. **Territory Lock includes Demand Radar** — `demand_radar_access` boolean on `staffing_agency_clients`, "📡 Market Signals" tab in `/agency-portal`, feature line on Territory Lock pricing card.
+17. **Demand Radar standalone email digest** — daily 7am to active subscribers, dark DWA branding, top 5 signals by confidence for their territory.
+
+---
+
+## PHASE 3 — Multi-Vertical Predictive Sales (120 min)
+
+*Build the engine + portal. Skip vertical landing pages until first prospect conversation demands one.*
+
+18. **Extend `industrial-growth-intel`** — accept `vertical` param. Templates per vertical:
+    - `steel`, `plumbing_supply`, `roofing_supply`, `hvac_supply`, `electrical_supply`, `concrete`, `lumber`, `industrial_general` (existing)
+19. **Buyer portal: `/demand-radar-portal?id={client_id}`** — mirrors `/agency-portal` (today's signals, confidence badges, "Mark Contacted", CSV export). Steel demo: `?token=STEEL_DEMO` loads 3 hardcoded Wayne County manufacturer expansion signals with DEMO badge.
+20. **Stripe checkout** — extend `create-industry-pulse-checkout` (or new `create-demand-radar-checkout`). Tiers: $99/mo (1 vertical, 1 territory), $499/mo (all verticals, 5-county). Webhook handler: `demand_radar_subscription`.
+21. **`AdminDemandRadarOutreach`** — new `/dwa-admin` tab. Pulls high-confidence signals + target supplier list (Ameristeel, Alro, Ferguson, ABC Supply). "Generate Pitch" → `agency-outreach-draft` with `buyer_type=supplier`. Copy button only, no auto-send.
+22. **Tom agent extension** — `Tom.agent.md` section for supplier outreach. Personas: outside sales reps at steel/plumbing/roofing/HVAC distributors. Hook: "Your reps are guessing which shops to call. I have something that tells them 30 days in advance." Pricing: $149/rep, $499/5-rep bundle. First target: Ameristeel.
+
+---
+
+## PHASE 4 — Verification
+
+- [ ] Phase 0: all 3 engines confirmed alive via SMS
+- [ ] `/talent-intelligence`: zero forbidden words, Demand Radar on Territory Lock card
+- [ ] `/demand-radar`: dark brand, **sales-lead-first copy** (not hiring-only)
+- [ ] `/agency-portal?token=DWA_DEMO_MASTER`: demo cards, no DB
+- [ ] `/demand-radar-portal?token=STEEL_DEMO`: 3 demo signals, no DB
+- [ ] Collision lock: A claims → B's feed loses candidate
+- [ ] Ghosting: No-Show grants credit → next Fast-Track burns it (no Stripe charge)
+- [ ] CSV export: opaque IDs, no source fields
+- [ ] Master test account: comms sinkholed to `system_comms_log`
+- [ ] Stripe webhook handles `agency_interview_charge`
+- [ ] `agency-monthly-flip` texts AND emails Matt
+- [ ] `agency-payment-reconcile` cron + SMS on discrepancy
+- [ ] Demand Radar 6am cron + skip when no subscribers
+- [ ] `/dwa-admin` Demand Radar tab live
+- [ ] Territory Lock → "Market Signals" tab visible in `/agency-portal`
+- [ ] "Perfect Storm" card on confidence ≥ 8 morning briefings
+- [ ] `AdminDemandRadarOutreach` generates Opus pitch with signal sample
+- [ ] Grep scrubbed files for MIOSHA/LARA/Apollo/NPI/LinkedIn → zero
+- [ ] Schema decision documented (extended `industry_pulse_subscribers` vs new `demand_radar_clients`)
+
+---
+
+## Session Plan
+
+| Session | Work | Time |
+|---|---|---|
+| 1 | Phase 0 health check + Phase 1 (finish Talent Signal) | 90 min |
+| 2 | Phase 2 (Demand Radar production-ready + Perfect Storm) | 90 min |
+| 3 | Phase 3 (multi-vertical engine + buyer portal + Tom) | 120 min |
+| 4 | Phase 4 polish + full verification | 30 min |
