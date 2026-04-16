@@ -547,6 +547,7 @@ const App = () => (
                     <Route path="/demo-restaurant/*" element={<RestaurantMockup />} />
                     <Route path="/whats-included" element={<WebDesignIncluded />} />
                     <Route path="/web-design-services" element={<WebDesignServices />} />
+                    <Route path="/web-design" element={<Navigate to="/web-design-services" replace />} />
                     <Route path="/refer-web-design" element={<ReferWebDesign />} />
                     <Route path="/demo-auto-repair" element={<AutoRepairMockup />} />
                     <Route path="/demo-auto-repair/*" element={<AutoRepairMockup />} />
