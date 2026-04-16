@@ -602,8 +602,8 @@ const App = () => (
                     <Route path="/seo-reports" element={<SeoAuditService />} />
                     <Route path="/contractor-chatbot" element={<ContractorChatbot />} />
                     <Route path="/industrial-newsletter" element={<IndustrialNewsletter />} />
-                    <Route path="/missed-call-text" element={<MissedCallSaaS />} />
-                    <Route path="/missed-call-catch" element={<MissedCallSaaS />} />
+                    <Route path="/missed-call-text" element={<DWARouteGuard><MissedCallSaaS /></DWARouteGuard>} />
+                    <Route path="/missed-call-catch" element={<DWARouteGuard><MissedCallSaaS /></DWARouteGuard>} />
                     <Route path="/review-monitor" element={<ReviewMonitor />} />
                     <Route path="/weekly-sms-blast" element={<WeeklySMSBlast />} />
                     <Route path="/no-show-rebooker" element={<NoShowRebooker />} />
