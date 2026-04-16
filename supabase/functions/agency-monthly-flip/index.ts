@@ -74,6 +74,28 @@ serve(async (req) => {
         html,
       }),
     });
+
+    // Parallel SMS to Matt — flip alerts can't get buried in email
+    const adminPhone = Deno.env.get("ADMIN_PHONE");
+    const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID");
+    const twilioAuth = Deno.env.get("TWILIO_AUTH_TOKEN");
+    const twilioFrom = Deno.env.get("TWILIO_PHONE_NUMBER");
+    if (adminPhone && twilioSid && twilioAuth && twilioFrom) {
+      const top = flips.sort((a, b) => b.total - a.total)[0];
+      const msg = flips.length === 1
+        ? `🎯 FLIP READY: ${top.agency.agency_name} hit $${(top.total / 100).toFixed(0)} last month. Pitch $3,500/mo or $25K/yr lock.`
+        : `🎯 ${flips.length} flip-ready agencies. Top: ${top.agency.agency_name} ($${(top.total / 100).toFixed(0)}). Check email for full list.`;
+      try {
+        await fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`, {
+          method: "POST",
+          headers: {
+            Authorization: "Basic " + btoa(`${twilioSid}:${twilioAuth}`),
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({ To: adminPhone, From: twilioFrom, Body: msg }),
+        });
+      } catch (e) { console.error("[agency-monthly-flip] SMS failed:", e); }
+    }
   }
 
   return new Response(JSON.stringify({ ok: true, flips_found: flips.length }), {
