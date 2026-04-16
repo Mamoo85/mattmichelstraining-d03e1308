@@ -130,7 +130,7 @@ export default function HealthcareHireAlert() {
             Stop Paying <span style={{ color: "#ef4444" }}>$80/hr</span> to Staffing Agencies
           </h1>
           <p style={{ color: "#94a3b8", fontSize: 18, lineHeight: 1.7, maxWidth: 600, margin: "0 auto 32px" }}>
-            Our proprietary Licensing Monitor scans Michigan state registries daily. We text you the second a local CNA or RN clears their license — <strong style={{ color: "#fff" }}>hire them directly before the agencies grab them.</strong>
+            Our proprietary Licensing Monitor surfaces newly credentialed local talent daily. We text you the moment a Metro Detroit CNA or RN becomes available — <strong style={{ color: "#fff" }}>hire them directly before the agencies grab them.</strong>
           </p>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
             <a href="#signup" style={{ background: ACCENT, color: BG, padding: "16px 36px", borderRadius: 8, fontWeight: 800, fontSize: 18, textDecoration: "none" }}>
