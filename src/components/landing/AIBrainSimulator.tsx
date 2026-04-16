@@ -191,15 +191,15 @@ const AIBrainSimulator = () => {
       {/* Tabs */}
       <div className="flex border-b border-border">
         {([
-          { key: "fixit" as Tab, label: "The Fix It Engine", icon: Wrench, color: "synth-pink" },
-          { key: "garage" as Tab, label: "The Smart Garage Gym", icon: Dumbbell, color: "synth-orange" },
+          { key: "fixit" as Tab, label: "The Fix It Engine", icon: Wrench, activeText: "text-[hsl(var(--synth-pink))]", activeBorder: "border-[hsl(var(--synth-pink))]", activeBg: "bg-[hsl(var(--synth-pink))]/5" },
+          { key: "garage" as Tab, label: "The Smart Garage Gym", icon: Dumbbell, activeText: "text-[hsl(var(--synth-orange))]", activeBorder: "border-[hsl(var(--synth-orange))]", activeBg: "bg-[hsl(var(--synth-orange))]/5" },
         ]).map((t) => (
           <button
             key={t.key}
             onClick={() => switchTab(t.key)}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all ${
               tab === t.key
-                ? `text-[hsl(var(--${t.color}))] border-b-2 border-[hsl(var(--${t.color}))] bg-[hsl(var(--${t.color}))]/5`
+                ? `${t.activeText} border-b-2 ${t.activeBorder} ${t.activeBg}`
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
