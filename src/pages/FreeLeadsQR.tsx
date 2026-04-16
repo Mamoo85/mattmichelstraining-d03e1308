@@ -50,7 +50,7 @@ export default function FreeLeadsQR() {
     try {
       // Save lead to free_tool_leads
       await supabase.from("free_tool_leads").insert({
-        tool: "free-leads-qr",
+        tool_used: "free-leads-qr",
         email,
         company_name: company || null,
         phone: phone || null,

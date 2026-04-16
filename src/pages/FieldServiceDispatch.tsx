@@ -579,7 +579,7 @@ export default function FieldServiceDispatch() {
                   {activeTab === "pipeline" && <TalentPipeline token={dashboardToken} clientId={resolvedClientId} />}
                   {activeTab === "board" && (hasFieldDesk ? <Suspense fallback={<Loader />}><DispatchBoard clientId={resolvedClientId} /></Suspense> : <LockedFeatureTab feature="dispatch" />)}
                   {activeTab === "map" && (hasFieldDesk ? <Suspense fallback={<Loader />}><TechMap clientId={resolvedClientId} /></Suspense> : <LockedFeatureTab feature="map" />)}
-                  {activeTab === "invoicing" && (hasFieldDesk ? <Suspense fallback={<Loader />}><InvoiceGenerator clientId={resolvedClientId} /></Suspense> : <LockedFeatureTab feature="invoicing" />)}
+                  {activeTab === "invoicing" && (hasFieldDesk ? <Suspense fallback={<Loader />}><InvoiceGenerator job={{ id: "new", title: "New Invoice", field_service_customers: null, field_service_techs: null, scheduled_date: null }} onClose={() => {}} /></Suspense> : <LockedFeatureTab feature="invoicing" />)}
                   {activeTab === "assets" && (hasFieldDesk ? <Suspense fallback={<Loader />}><AssetManager clientId={resolvedClientId} /></Suspense> : <LockedFeatureTab feature="assets" />)}
                   {activeTab === "contracts" && (hasFieldDesk ? <Suspense fallback={<Loader />}><ContractManager clientId={resolvedClientId} /></Suspense> : <LockedFeatureTab feature="contracts" />)}
                 </>

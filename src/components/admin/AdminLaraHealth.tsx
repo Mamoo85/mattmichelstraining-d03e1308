@@ -28,7 +28,7 @@ export default function AdminLaraHealth() {
   const { data: entries, isLoading } = useQuery({
     queryKey: ["lara-health"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("lara_health_log")
         .select("*")
         .order("checked_at", { ascending: false })

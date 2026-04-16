@@ -4609,6 +4609,7 @@ export type Database = {
           owner_phone: string | null
           plan: string | null
           pricing_tier: string | null
+          referral_code: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           target_roles: string[] | null
@@ -4634,6 +4635,7 @@ export type Database = {
           owner_phone?: string | null
           plan?: string | null
           pricing_tier?: string | null
+          referral_code?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           target_roles?: string[] | null
@@ -4659,6 +4661,7 @@ export type Database = {
           owner_phone?: string | null
           plan?: string | null
           pricing_tier?: string | null
+          referral_code?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           target_roles?: string[] | null
@@ -7197,6 +7200,62 @@ export type Database = {
           zip?: string | null
         }
         Relationships: []
+      }
+      postcard_send_log: {
+        Row: {
+          address_line1: string | null
+          business_name: string | null
+          campaign_id: string | null
+          city: string | null
+          cost_cents: number | null
+          delivery_status: string | null
+          id: string
+          lob_id: string | null
+          prospect_id: string | null
+          sent_at: string | null
+          state: string | null
+          status: string | null
+          zip: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          business_name?: string | null
+          campaign_id?: string | null
+          city?: string | null
+          cost_cents?: number | null
+          delivery_status?: string | null
+          id?: string
+          lob_id?: string | null
+          prospect_id?: string | null
+          sent_at?: string | null
+          state?: string | null
+          status?: string | null
+          zip?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          business_name?: string | null
+          campaign_id?: string | null
+          city?: string | null
+          cost_cents?: number | null
+          delivery_status?: string | null
+          id?: string
+          lob_id?: string | null
+          prospect_id?: string | null
+          sent_at?: string | null
+          state?: string | null
+          status?: string | null
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "postcard_send_log_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "postcard_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       posture_requests: {
         Row: {
@@ -10827,6 +10886,53 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "field_crm_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      techalert_referrals: {
+        Row: {
+          created_at: string | null
+          credit_amount_cents: number | null
+          credited_at: string | null
+          id: string
+          referral_code: string
+          referred_email: string
+          referrer_client_id: string | null
+          referrer_email: string
+          status: string | null
+          stripe_coupon_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          credit_amount_cents?: number | null
+          credited_at?: string | null
+          id?: string
+          referral_code: string
+          referred_email: string
+          referrer_client_id?: string | null
+          referrer_email: string
+          status?: string | null
+          stripe_coupon_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          credit_amount_cents?: number | null
+          credited_at?: string | null
+          id?: string
+          referral_code?: string
+          referred_email?: string
+          referrer_client_id?: string | null
+          referrer_email?: string
+          status?: string | null
+          stripe_coupon_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "techalert_referrals_referrer_client_id_fkey"
+            columns: ["referrer_client_id"]
+            isOneToOne: false
+            referencedRelation: "hire_alert_clients"
             referencedColumns: ["id"]
           },
         ]

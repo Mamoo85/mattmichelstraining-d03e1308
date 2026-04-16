@@ -24,7 +24,7 @@ interface LiveFormTrackerProps {
 const LiveFormTracker = ({ exerciseTitle, onClose }: LiveFormTrackerProps) => {
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const detectorRef = useRef<poseDetection.PoseDetector | null>(null);
+  const detectorRef = useRef<any>(null);
   const rafRef = useRef<number | null>(null);
   const pathRef = useRef<PathPoint[]>([]);
   const startXRef = useRef<number | null>(null);
