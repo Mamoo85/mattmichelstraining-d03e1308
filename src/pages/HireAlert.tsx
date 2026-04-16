@@ -99,7 +99,26 @@ export default function HireAlert() {
   }, []);
 
   const standalonePrice = betaFull ? 149 : 99;
-  const bundlePrice = betaFull ? 79 : 49;
+  const bundlePrice = betaFull ? 199 : 149;
+
+  const [alaCarteLoading, setAlaCarteLoading] = useState(false);
+  const handleAlaCarte = async () => {
+    if (!email) {
+      toast({ title: "Enter your email first", variant: "destructive" });
+      return;
+    }
+    setAlaCarteLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-hire-alert-one-time", {
+        body: { email, company_name: company, phone, target_roles: selectedRoles },
+      });
+      if (error || !data?.url) throw new Error(error?.message || "Checkout failed");
+      window.location.href = data.url;
+    } catch (e: unknown) {
+      toast({ title: e instanceof Error ? e.message : "Something went wrong", variant: "destructive" });
+      setAlaCarteLoading(false);
+    }
+  };
 
   if (isSuccess) {
     return (
