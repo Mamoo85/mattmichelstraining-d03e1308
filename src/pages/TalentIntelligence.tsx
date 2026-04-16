@@ -232,9 +232,20 @@ export default function TalentIntelligence() {
           </div>
         </section>
 
-        <footer className="text-center py-8 text-slate-600 text-xs border-t border-white/5">
+        <footer className="text-center py-8 pb-28 md:pb-8 text-slate-600 text-xs border-t border-white/5">
           Detroit Web Agency · Proprietary Talent Signal Engine · matt@detroitwebagent.com
         </footer>
+
+        {/* Sticky mobile CTA bar */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a1628]/95 backdrop-blur-lg border-t border-[#00d4ff]/30 px-4 py-3 flex gap-2">
+          <a href="#request-form" className="flex-1 text-center py-3 rounded-lg border border-[#00d4ff]/40 text-[#00d4ff] text-xs font-bold uppercase tracking-wider">Free Candidate</a>
+          <button
+            onClick={() => { setForm(f => ({ ...f, pricing_model: "performance" })); document.getElementById("request-form")?.scrollIntoView({ behavior: "smooth" }); }}
+            className="flex-1 py-3 rounded-lg bg-[#00d4ff] text-[#0a1628] text-xs font-bold uppercase tracking-wider"
+          >
+            Start $250/Interview
+          </button>
+        </div>
       </div>
     </>
   );
