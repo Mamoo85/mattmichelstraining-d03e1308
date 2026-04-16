@@ -474,6 +474,25 @@ serve(async (req) => {
       console.log(`[WEBHOOK] Charge refunded: ${charge.id} — $${(refundedAmount / 100).toFixed(2)}`);
     }
 
+    // Belt-and-suspenders: sync agency interview charges that succeed asynchronously
+    // (e.g. 3DS retries). Inline write happens in agency-fast-track-interview, but
+    // off-session intents can confirm later — this catches that case.
+    if (event.type === "payment_intent.succeeded") {
+      try {
+        const intent = event.data.object as Stripe.PaymentIntent;
+        const meta = intent.metadata || {};
+        if (meta.type === "agency_interview_charge" && meta.assignment_id) {
+          await sb.from("agency_candidate_assignments").update({
+            charged_at: new Date().toISOString(),
+            stripe_charge_id: intent.id,
+            charge_amount_cents: intent.amount,
+          }).eq("id", meta.assignment_id);
+          console.log(`[WEBHOOK] agency_interview_charge synced: assignment=${meta.assignment_id} intent=${intent.id}`);
+        }
+      } catch (e) {
+        console.error("[WEBHOOK] agency_interview_charge sync error:", e);
+      }
+    }
 
     // Handle guide purchases (existing logic)
     if (event.type === "checkout.session.completed") {
