@@ -1590,3 +1590,9 @@ verify_jwt = false
 
 [functions.agency-proof-drop-followup]
 verify_jwt = false
+
+[functions.agency-mark-ghosted]
+verify_jwt = false
+
+[functions.agency-payment-reconcile]
+verify_jwt = false

@@ -73,8 +73,20 @@ serve(async (req) => {
     }
 
     // Send SMS to candidate
+    // TCPA: check candidate-level do_not_contact flag before sending
+    const { data: candidateDnc } = await sb
+      .from("hire_alert_candidates")
+      .select("do_not_contact")
+      .eq("id", candidate_id)
+      .maybeSingle();
+    if (candidateDnc?.do_not_contact) {
+      return new Response(JSON.stringify({ error: "do_not_contact", message: "Candidate has opted out of all communications." }), {
+        status: 403, headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
     const roleLabel = candidate.license_type || "technician";
-    const smsBody = `${client.company_name} is actively hiring ${roleLabel}s and wants to talk to you. Book a quick phone interview at your convenience:\n${client.booking_link}\n\nQuestions? Reply to this text.`;
+    const smsBody = `${client.company_name} is actively hiring ${roleLabel}s and wants to talk to you. Book a quick phone interview at your convenience:\n${client.booking_link}\n\nQuestions? Reply to this text.\n\nReply STOP to opt out.`;
 
     const result = await sendSMS(candidate.phone, TWILIO_PHONE, smsBody, "techalert_fast_track");
 
