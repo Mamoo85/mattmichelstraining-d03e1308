@@ -7044,6 +7044,7 @@ export type Database = {
       }
       postcard_campaigns: {
         Row: {
+          audience_type: string | null
           conversion_count: number | null
           copy_back: string
           copy_front: string
@@ -7058,6 +7059,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          audience_type?: string | null
           conversion_count?: number | null
           copy_back: string
           copy_front: string
@@ -7072,6 +7074,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          audience_type?: string | null
           conversion_count?: number | null
           copy_back?: string
           copy_front?: string
