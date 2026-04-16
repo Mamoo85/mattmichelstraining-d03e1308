@@ -1,289 +1,195 @@
-/* Fonts loaded via index.html link tags to avoid render-blocking @import */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Lora:ital,wght@0,400..700;1,400..700&family=IBM+Plex+Mono:ital,wght@0,100..700;1,100..700&display=swap');
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Blink UI Theme CSS
+   REQUIRED for @blinkdotnew/ui components to render correctly.
+   BlinkUIProvider adds .theme-{name} + .dark/.light to <html>,
+   activating the matching CSS variable set below.
+   ───────────────────────────────────────────────────────────────────────────── */
+@import '@blinkdotnew/ui/styles';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  html {
-    font-size: 20px; /* bumped from default 16px → +4px site-wide */
-  }
-  :root {
-    --background: 0 0% 6%;
-    --foreground: 0 0% 95%;
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 95%;
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 18 82% 58%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 0 0% 16%;
-    --muted-foreground: 0 0% 55%;
-    --accent: 0 0% 95%;
-    --accent-foreground: 0 0% 5%;
-    --destructive: 0 70% 50%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 18 82% 42%;
-    --radius: 0.75rem;
-
-    --sidebar-background: 0 0% 5%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 18 82% 42%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 12%;
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 18 82% 50%;
-
-    /* M2 Custom tokens */
-    --m2-surface: 0 0% 8%;
-    --m2-surface-alt: 0 0% 12%;
-    --m2-surface-hover: 0 0% 15%;
-    --m2-dim: 0 0% 40%;
-    --m2-text-dim: 0 0% 65%;
-    --foreground-soft: 0 0% 82%;
-    --m2-rust: 18 82% 42%;
-
-    /* Synthwave / Lift Tracker tokens */
-    --synth-bg: 240 15% 4%;
-    --synth-card: 240 12% 7%;
-    --synth-cyan: 185 100% 48%;
-    --synth-pink: 300 100% 46%;
-    --synth-orange: 14 100% 57%;
-    --synth-glow-cyan: 0 0 12px hsl(185 100% 48% / 0.5);
-    --synth-glow-pink: 0 0 12px hsl(300 100% 46% / 0.4);
-    --synth-glow-orange: 0 0 12px hsl(14 100% 57% / 0.4);
-
-    /* Glass tokens */
-    --glass-bg: 0 0% 100% / 0.04;
-    --glass-border: 0 0% 100% / 0.08;
-    --glass-blur: 20px;
-  }
-}
-
-@layer base {
   * {
     @apply border-border;
   }
+
+  /* Full viewport chain so AppShell / Sidebar h-full + flex-1 SidebarContent work */
   html {
-    overflow-x: hidden;
-  }
-  body {
-    @apply bg-background text-foreground;
-    font-family: 'DM Sans', 'Inter', system-ui, -apple-system, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
-
-  /* Prevent iOS Safari zoom on input focus — enforce 16px minimum */
-  input[type="text"],
-  input[type="number"],
-  input[type="email"],
-  input[type="url"],
-  input[type="tel"],
-  input[type="password"],
-  input[type="search"],
-  textarea,
-  select {
-    font-size: 16px !important;
-  }
-
-  @media (min-width: 768px) {
-    input[type="text"],
-    input[type="number"],
-    input[type="email"],
-    input[type="url"],
-    input[type="tel"],
-    input[type="password"],
-    input[type="search"],
-    textarea,
-    select {
-      font-size: inherit !important;
-    }
-  }
-
-  /* Broken image fallback */
-  img {
-    min-height: 1px;
-  }
-  img::after {
-    content: '';
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
     height: 100%;
-    background: hsl(var(--muted));
   }
-}
 
-@layer utilities {
-  .font-mono {
-    font-family: 'Geist Mono', 'SF Mono', 'Fira Code', monospace;
-    font-feature-settings: "tnum";
-  }
-  .font-brand {
-    font-family: 'Oswald', Impact, 'Arial Black', sans-serif;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  .font-display {
-    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
-    font-weight: 800;
-  }
-  .font-industrial {
-    font-family: 'Rajdhani', 'Plus Jakarta Sans', system-ui, sans-serif;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-  }
-  .shadow-m2 {
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 2px 4px rgba(0,0,0,0.3);
-  }
-  .shadow-m2-hover {
-    box-shadow: 0 0 0 1px rgba(232,98,26,0.25), 0 4px 8px rgba(0,0,0,0.4);
-  }
-  .tracking-display {
-    letter-spacing: -0.03em;
-  }
-  .text-balance {
-    text-wrap: pretty;
-  }
-  .transition-m2 {
-    transition: all 150ms cubic-bezier(0.2, 0, 0, 1);
-  }
-  .pb-safe {
-    padding-bottom: max(1rem, env(safe-area-inset-bottom));
-  }
-  .pb-bottom-nav {
-    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
-  }
-  .mb-safe {
-    margin-bottom: env(safe-area-inset-bottom);
-  }
-  .min-h-dvh {
+  #root {
+    min-height: 100%;
     min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
   }
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-}
 
-@layer utilities {
-  @keyframes log-success {
-    0%, 100% { background-color: hsl(var(--primary)); }
-    50% { background-color: hsl(145 80% 50%); }
-  }
-  .animate-log-success {
-    animation: log-success 0.5s ease-in-out;
+  body {
+    min-height: 100%;
+    min-height: 100dvh;
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    letter-spacing: var(--tracking-normal);
   }
 }
 
-/* ── Glassmorphism Cards ───────────────────────────────── */
-.glass-card {
-  background: hsla(var(--glass-bg));
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid hsla(var(--glass-border));
-  border-radius: var(--radius);
+/* ── App palette (unlayered, after utilities) ─────────────────────────────────
+   Overrides @blinkdotnew/ui theme colors. @layer base loses specificity to UI themes.
+   Dark mode uses :root.dark + .theme-*.dark to match BlinkUIProvider.
+   ⚠️ AGENT MUST REPLACE placeholder values with a custom palette.
+   ──────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* ⚠️ AGENT MUST REPLACE: These are placeholder colors. You MUST define a custom palette before writing components. */
+  /* The template uses distinctive placeholder colors to force customization - do NOT use these in production! */
+
+  /*
+   * EXAMPLE PALETTES (use as inspiration, replace with your own):
+   *
+   * Modern SaaS (Business/Enterprise):
+   * --primary: 220 10% 20%;        (Charcoal #2D3748)
+   * --accent: 220 10% 30%;         (Lighter charcoal #4A5568)
+   *
+   * Bold Tech (Startups/Developer Tools):
+   * --primary: 348 83% 47%;        (Crimson #DA1E37)
+   * --accent: 348 83% 57%;         (Lighter crimson #F0213E)
+   *
+   * Quantum Rose (Creative/Design):
+   * --primary: 330 81% 50%;        (Pink #E6067A)
+   * --accent: 330 81% 70%;         (Lighter pink #F472B6)
+   *
+   * Rich Forest (Calm/Professional):
+   * --primary: 151 55% 25%;        (Pine #1C6340)
+   * --accent: 151 55% 35%;         (Lighter pine #288C5A)
+   *
+   * Sunset Warmth (Friendly/Welcoming):
+   * --primary: 24 95% 53%;         (Orange #F97316)
+   * --accent: 24 95% 63%;          (Lighter orange #FB923C)
+   */
+
+  /* Colors - REPLACE ALL VALUES BELOW with your custom palette */
+  --background: 208 100% 97.0588%;
+  --foreground: 216.9231 19.1176% 26.6667%;
+  --card: 0 0% 100%;
+  --card-foreground: 216.9231 19.1176% 26.6667%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 216.9231 19.1176% 26.6667%;
+  /* ⚠️ PLACEHOLDER: Replace with your custom primary color (NOT generic teal, NOT blue) */
+  --primary: 330 81% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 204 93.75% 93.7255%;
+  --secondary-foreground: 215 13.7931% 34.1176%;
+  --muted: 220 14.2857% 95.8824%;
+  --muted-foreground: 220 8.9362% 46.0784%;
+  /* ⚠️ PLACEHOLDER: Replace with your custom accent color */
+  --accent: 330 81% 65%;
+  --accent-foreground: 216.9231 19.1176% 26.6667%;
+  --destructive: 0 84.2365% 60.1961%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 13.0435% 90.9804%;
+  --input: 220 13.0435% 90.9804%;
+  /* ⚠️ PLACEHOLDER: Replace with your custom ring color (usually matches primary) */
+  --ring: 330 81% 50%;
+
+  /* Charts - ⚠️ PLACEHOLDER: Replace with your custom chart colors */
+  --chart-1: 348 83% 47%;
+  --chart-2: 24 95% 53%;
+  --chart-3: 47 96% 53%;
+  --chart-4: 151 55% 35%;
+  --chart-5: 262 52% 47%;
+
+  /* Sidebar - ⚠️ PLACEHOLDER: Replace with your custom sidebar colors */
+  --sidebar: 204 93.75% 93.7255%;
+  --sidebar-foreground: 216.9231 19.1176% 26.6667%;
+  --sidebar-primary: 330 81% 50%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 330 81% 65%;
+  --sidebar-accent-foreground: 216.9231 19.1176% 26.6667%;
+  --sidebar-border: 220 13.0435% 90.9804%;
+  --sidebar-ring: 330 81% 50%;
+
+  /* Fonts */
+  --font-sans: DM Sans, sans-serif;
+  --font-serif: Lora, serif;
+  --font-mono: IBM Plex Mono, monospace;
+
+  /* Shadows */
+  --shadow-2xs: 0px 4px 8px -1px hsl(0 0% 0% / 0.05);
+  --shadow-xs: 0px 4px 8px -1px hsl(0 0% 0% / 0.05);
+  --shadow-sm: 0px 4px 8px -1px hsl(0 0% 0% / 0.10), 0px 1px 2px -2px hsl(0 0% 0% / 0.10);
+  --shadow: 0px 4px 8px -1px hsl(0 0% 0% / 0.10), 0px 1px 2px -2px hsl(0 0% 0% / 0.10);
+  --shadow-md: 0px 4px 8px -1px hsl(0 0% 0% / 0.10), 0px 2px 4px -2px hsl(0 0% 0% / 0.10);
+  --shadow-lg: 0px 4px 8px -1px hsl(0 0% 0% / 0.10), 0px 4px 6px -2px hsl(0 0% 0% / 0.10);
+  --shadow-xl: 0px 4px 8px -1px hsl(0 0% 0% / 0.10), 0px 8px 10px -2px hsl(0 0% 0% / 0.10);
+  --shadow-2xl: 0px 4px 8px -1px hsl(0 0% 0% / 0.25);
+
+  /* Misc */
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+  --radius: 0.5rem;
 }
 
-/* ── Scroll Reveal ─────────────────────────────────────── */
-[data-reveal] {
-  opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-[data-reveal].revealed {
-  opacity: 1;
-  transform: translateY(0);
+:root.dark,
+.theme-linear.dark,
+.theme-glass.dark,
+.theme-midnight.dark,
+.theme-minimal.dark {
+  /* ⚠️ AGENT MUST REPLACE: Dark mode colors - replace with your custom dark palette */
+  --background: 222.2222 47.3684% 11.1765%;
+  --foreground: 216 12.1951% 83.9216%;
+  --card: 217.2414 32.5843% 17.451%;
+  --card-foreground: 216 12.1951% 83.9216%;
+  --popover: 217.2414 32.5843% 17.451%;
+  --popover-foreground: 216 12.1951% 83.9216%;
+  /* ⚠️ PLACEHOLDER: Replace with your custom dark mode primary color */
+  --primary: 330 81% 75%;
+  --primary-foreground: 222.2222 47.3684% 11.1765%;
+  --secondary: 217.7778 23.0769% 22.9412%;
+  --secondary-foreground: 240 5.0279% 64.902%;
+  --muted: 217.2414 32.5843% 17.451%;
+  --muted-foreground: 220 8.9362% 46.0784%;
+  --accent: 216.9231 19.1176% 26.6667%;
+  --accent-foreground: 240 5.0279% 64.902%;
+  --destructive: 0 84.2365% 60.1961%;
+  --destructive-foreground: 222.2222 47.3684% 11.1765%;
+  --border: 215 13.7931% 34.1176%;
+  --input: 215 13.7931% 34.1176%;
+  --ring: 330 81% 75%;
+
+  /* ⚠️ PLACEHOLDER: Replace with your custom dark mode chart colors */
+  --chart-1: 348 83% 65%;
+  --chart-2: 24 95% 63%;
+  --chart-3: 47 96% 65%;
+  --chart-4: 151 55% 55%;
+  --chart-5: 262 52% 65%;
+
+  /* ⚠️ PLACEHOLDER: Replace with your custom dark mode sidebar colors */
+  --sidebar: 217.2414 32.5843% 17.451%;
+  --sidebar-foreground: 216 12.1951% 83.9216%;
+  --sidebar-primary: 330 81% 75%;
+  --sidebar-primary-foreground: 222.2222 47.3684% 11.1765%;
+  --sidebar-accent: 216.9231 19.1176% 26.6667%;
+  --sidebar-accent-foreground: 240 5.0279% 64.902%;
+  --sidebar-border: 215 13.7931% 34.1176%;
+  --sidebar-ring: 330 81% 75%;
 }
 
-/* ── Zone Theme Utilities ──────────────────────────────── */
-.zone-glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 0.75rem;
-}
-.zone-glow-orange {
-  box-shadow: 0 0 20px rgba(249, 115, 22, 0.08), inset 0 1px 0 rgba(249, 115, 22, 0.06);
-}
-.zone-glow-orange:hover {
-  box-shadow: 0 0 30px rgba(249, 115, 22, 0.15), inset 0 1px 0 rgba(249, 115, 22, 0.1);
-}
-.zone-glow-purple {
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.08), inset 0 1px 0 rgba(168, 85, 247, 0.06);
-}
-.zone-glow-purple:hover {
-  box-shadow: 0 0 30px rgba(168, 85, 247, 0.15), inset 0 1px 0 rgba(168, 85, 247, 0.1);
-}
-.zone-glow-cyan {
-  box-shadow: 0 0 20px rgba(0, 240, 255, 0.06), inset 0 1px 0 rgba(0, 240, 255, 0.04);
-}
-.zone-glow-cyan:hover {
-  box-shadow: 0 0 30px rgba(0, 240, 255, 0.12), inset 0 1px 0 rgba(0, 240, 255, 0.08);
-}
-.zone-glow-sweep {
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.06), rgba(0, 240, 255, 0.04), rgba(168, 85, 247, 0.04));
-  border: 1px solid rgba(249, 115, 22, 0.12);
-  box-shadow: 0 0 30px rgba(249, 115, 22, 0.06);
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-/* Shimmer animation for Run Search button */
-@keyframes shimmer-btn {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-.animate-shimmer-btn {
-  animation: shimmer-btn 2.5s ease-in-out infinite;
-}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
 
-/* Subtle shimmer for status badges */
-@keyframes shimmer-badge {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-.animate-shimmer-badge {
-  animation: shimmer-badge 2s ease-in-out infinite;
-}
-
-/* DWA Command Center Print Styles */
-@media print {
-  .print\:block { display: block !important; }
-  .print\:hidden { display: none !important; }
-  header, nav, aside, .print-hide { display: none !important; }
-  body, html { background: #fff !important; color: #000 !important; }
-  .print\:text-black { color: #000 !important; }
-  .print\:bg-white { background: #fff !important; }
-  .print\:border-gray-300 { border-color: #d1d5db !important; }
-  .print\:bg-gray-50 { background: #f9fafb !important; }
-  .print\:bg-gray-200 { background: #e5e7eb !important; }
-  .print\:text-gray-500 { color: #6b7280 !important; }
-  .print\:text-gray-600 { color: #4b5563 !important; }
-  .print\:bg-blue-100 { background: #dbeafe !important; }
-  .print\:text-blue-800 { color: #1e40af !important; }
-  .print\:border-blue-200 { border-color: #bfdbfe !important; }
-  .print\:bg-blue-50 { background: #eff6ff !important; }
-  .print\:text-red-700 { color: #b91c1c !important; }
-  .print\:bg-blue-500 { background: #3b82f6 !important; }
-  .print\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
-  @page { margin: 1.5cm; }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

@@ -1,73 +1,59 @@
-# Welcome to your Lovable project
+# Enhanced Vite React TypeScript Template
 
-## Project info
+This template includes built-in detection for missing CSS variables between your Tailwind config and CSS files.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Features
 
-## How can I edit this code?
+- **CSS Variable Detection**: Automatically detects if CSS variables referenced in `tailwind.config.cjs` are defined in `src/index.css`
+- **Enhanced Linting**: Includes ESLint, Stylelint, and custom CSS variable validation
+- **Shadcn/ui**: Pre-configured with all Shadcn components
+- **Modern Stack**: Vite + React + TypeScript + Tailwind CSS
 
-There are several ways of editing your application.
+## Available Scripts
 
-**Use Lovable**
+```bash
+# Run all linting (includes CSS variable check)
+npm run lint
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+# Check only CSS variables
+npm run check:css-vars
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+# Individual linting
+npm run lint:js    # ESLint
+npm run lint:css   # Stylelint
 ```
 
-**Edit a file directly in GitHub**
+## CSS Variable Detection
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+The template includes a custom script that:
 
-**Use GitHub Codespaces**
+1. **Parses `tailwind.config.cjs`** to find all `var(--variable)` references
+2. **Parses `src/index.css`** to find all defined CSS variables (`--variable:`)
+3. **Cross-references** them to find missing definitions
+4. **Reports undefined variables** with clear error messages
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Example Output
 
-## What technologies are used for this project?
+When CSS variables are missing:
+```
+❌ Undefined CSS variables found in tailwind.config.cjs:
+   --sidebar-background
+   --sidebar-foreground
+   --sidebar-primary
 
-This project is built with:
+Add these variables to src/index.css
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+When all variables are defined:
+```
+✅ All CSS variables in tailwind.config.cjs are defined
+```
 
-## How can I deploy this project?
+## How It Works
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+The detection happens during the `npm run lint` command, which will:
+- Exit with error code 1 if undefined variables are found
+- Show exactly which variables need to be added to your CSS file
+- Integrate seamlessly with your development workflow
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+This prevents runtime CSS issues where Tailwind classes reference undefined CSS variables.

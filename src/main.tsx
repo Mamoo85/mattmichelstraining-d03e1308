@@ -1,99 +1,21 @@
-import { createRoot } from "react-dom/client";
-import { HelmetProvider } from "react-helmet-async";
-import App from "./App.tsx";
-import "./index.css";
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { BlinkUIProvider, Toaster } from '@blinkdotnew/ui'
+import App from './App'
+import './index.css'
 
-const isInIframe = (() => {
-  if (typeof window === "undefined") return false;
-  try {
-    return window.self !== window.top;
-  } catch {
-    return true;
-  }
-})();
+const queryClient = new QueryClient()
 
-const isPreviewHost = typeof window !== "undefined" && (
-  window.location.hostname.includes("id-preview--") ||
-  window.location.hostname.includes("lovableproject.com")
-);
-
-const cleanupServiceWorkers = async () => {
-  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
-
-  try {
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    await Promise.all(registrations.map((registration) => registration.unregister()));
-
-    if ("caches" in window) {
-      const cacheKeys = await caches.keys();
-      await Promise.all(cacheKeys.map((key) => caches.delete(key)));
-    }
-  } catch {
-    // Ignore cleanup failures and let the app continue
-  }
-};
-
-// Defer print stylesheet — inject as <link media="print"> to avoid JS→CSS dependency chain
-if (typeof window !== "undefined") {
-  window.addEventListener("load", () => {
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "/print.css";
-    link.media = "print";
-    document.head.appendChild(link);
-  }, { once: true });
-}
-
-// Polyfill crypto.randomUUID for Safari < 15.4 and insecure contexts
-if (typeof globalThis.crypto !== "undefined" && typeof globalThis.crypto.randomUUID !== "function") {
-  (globalThis.crypto as any).randomUUID = () =>
-    "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c: string) =>
-      (+c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (+c / 4)))).toString(16)
-    );
-}
-
-// Global broken-image fallback: replaces broken <img> with branded placeholder
-document.addEventListener("error", (e) => {
-  const target = e.target as HTMLElement;
-  if (target.tagName === "IMG") {
-    const img = target as HTMLImageElement;
-    if (img.dataset.fallback) return;
-    img.dataset.fallback = "true";
-    img.src = "/placeholder.svg";
-    img.style.objectFit = "contain";
-    img.style.background = "hsl(0 0% 16%)";
-    img.style.padding = "1rem";
-  }
-}, true);
-
-createRoot(document.getElementById("root")!).render(
-  <HelmetProvider>
-    <App />
-  </HelmetProvider>
-);
-
-// Clear stale service worker caches, then register fresh SW
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    // Purge old caches so stale chunks don't block the app
-    if ("caches" in window) {
-      caches.keys().then((names) => {
-        for (const name of names) {
-          if (name.includes("workbox") || name.includes("precache")) {
-            caches.delete(name);
-          }
-        }
-      }).catch(() => {});
-    }
-    try {
-      if (isPreviewHost || isInIframe) {
-        void cleanupServiceWorkers();
-        return;
-      }
-
-      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
-    } catch {
-      // Privacy browsers may block SW registration entirely
-    }
-  });
-}
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <BlinkUIProvider theme="linear" darkMode="system">
+          <Toaster />
+          <div className="flex w-full flex-1 flex-col min-h-0">
+            <App />
+          </div>
+        </BlinkUIProvider>
+      </QueryClientProvider>
+  </React.StrictMode>,
+)
