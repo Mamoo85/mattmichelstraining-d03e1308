@@ -14,25 +14,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-04-16. Update this section every session.*
 
-### Phase 15 — DWA Branding & Security Hardening IN PROGRESS 🔄
-*2026-04-16 — branch `claude/update-claude-md-89INK`*
+### Phase 16 — Documentation Refresh COMPLETE ✅
+*2026-04-16 — branch `claude/add-claude-documentation-3yz9v`*
 
 **Work completed this session:**
+- Updated CLAUDE.md with accurate codebase scale (311 pages, 598 functions, 461 migrations, 338 routes)
+- Added `AgencyAdminRoute` to route guards section
+- Added new component directories (`agency/`, `dwa-admin/`, `field-service/`) and standalone components
+- Added new hooks (`useAgencyRole.tsx`, `useScrollReveal.ts`) to hooks inventory
+- Updated dev branch reference and knowledge file agent count
+- Phase 15 status corrected to COMPLETE
+
+**Known status:**
+- All services operational; no breaking changes since Phase 15
+- Phase 15 work fully merged to main
+
+**Next actions:**
+- Merge `claude/add-claude-documentation-3yz9v` to main
+- Monitor TechAlert candidate alerts for data formatting issues
+- Fix `chargeContractor()` res.ok check in `handle-dead-lead-reply` (known open item)
+
+---
+
+### Phase 15 — DWA Branding & Security Hardening COMPLETE ✅
+*2026-04-16 — branch `claude/update-claude-md-89INK`*
+
+**Work completed:**
 - **DWA branding fixes** (`1c79c23`) — Fixed detroitwebagent.com domain routing and CSS branding consistency across all DWA product pages
 - **Full DWA click audit** (`0584c10`) — Verified all UI elements route correctly to intended pages (demo links, product CTAs, admin tabs)
 - **RLS policy hardening** (`42d6837`) — Restricted direct anonymous access to `system_comms_log` and `job-photos`; all reads now flow through edge functions
 - **Security issues from scan** (`543f75f`) — Fixed XSS vectors, input validation, and authentication gaps identified in code scan
 - **TechAlert field fixes** (`b41e95b`) — Corrected field validation and data serialization in candidate scoring
-
-**Known status:**
-- Main branch (`0928835`) includes tightened RLS policies and security improvements
-- Current branch `claude/update-claude-md-89INK` adds DWA click audit verification and branding consistency
-- No breaking changes; all services remain operational
-
-**Next actions:**
-- Merge `claude/update-claude-md-89INK` to main
-- Verify all DWA admin tabs load correctly in production
-- Monitor TechAlert candidate alerts for any data formatting issues
 
 ---
 
@@ -502,7 +514,7 @@ At the start of any session referencing agents, products, or admin tools, pull t
 git fetch origin main && git checkout origin/main -- knowledge/
 ```
 
-- `knowledge/M2_Agent_Roster.md` — All 30 agents, status, schedules, improvement roadmap
+- `knowledge/M2_Agent_Roster.md` — All 31 agents, status, schedules, improvement roadmap
 - `knowledge/M2_Admin_Controls_Guide.md` — Every admin tool with step-by-step guides and enhancements
 - `knowledge/M2_Product_Catalog.md` — All 36 products, pricing, margins, edge functions, flows
 - `knowledge/M2_Ad_Strategy_Action_Plan.md` — Paid ads roadmap and campaign blueprints
@@ -531,7 +543,7 @@ $10k+/mo fully automated income. Matt's only job: return calls, texts, and email
 - **Domain**: mattmichelstraining.com
 - **Repo**: `mamoo85/m2training` (GitHub)
 - **Supabase Project**: Managed by Lovable (primary — starts with 'e'). Secondary ref `zmyczlfuufhngzovkjdh` exists for GitHub Actions but migrations deploy automatically via Lovable on merge to main. Do NOT apply migrations manually via MCP to the secondary project.
-- **Dev branch**: `claude/add-claude-documentation-agjzt` (current) — previous branches archived in session state below
+- **Dev branch**: `claude/add-claude-documentation-3yz9v` (current) — previous branches archived in session state below
 
 ## Brand
 - Primary orange: `#e8621a`
@@ -682,12 +694,12 @@ Products: Commercial Lease Abstractor, Patent Watch Intelligence, PE/Investor Se
 **Key marketing brief**: `knowledge/field-service-brief.md` — cold email angles, bundle math, eWay replacement talking points, MIOSHA hook, Pat demo sequence
 
 ## Codebase Scale
-- **293** frontend pages in `src/pages/`
-- **539** Supabase Edge Functions in `supabase/functions/`
-- **414** migration files (all dated 2026)
+- **311** frontend pages in `src/pages/`
+- **598** Supabase Edge Functions in `supabase/functions/`
+- **461** migration files (all dated 2026)
 - **31** AI agents in `.claude/agents/`
 - **67+** product lines across 5 waves + DWA suite
-- **298** routes in `src/App.tsx`
+- **338** routes in `src/App.tsx`
 
 This is a large codebase. Navigate by product name patterns in this document — don't scan all files. New product checklist: 1 migration, 1–2 edge functions, 1 page, 1 admin CRM entry (AdminOpsCenter + AdminClientHealth).
 
@@ -705,15 +717,18 @@ All pages use `lazyRetry()` — a custom wrapper around `React.lazy()` that retr
 - `ProtectedRoute` — requires authentication
 - `SubscriptionGuard` — requires active subscription
 - `BlurGate` — blurs content without subscription
+- `AgencyAdminRoute` — requires admin role; wraps `/admin` and `/dwa-admin`
 
 ### Component Directories (`src/components/`)
-`admin/`, `auth/`, `billing/`, `checkout/`, `dashboard/`, `exercise/`, `features/`, `gamification/`, `generator/`, `landing/`, `layout/`, `marketing/`, `nutrition/`, `pricing/`, `profile/`, `programs/`, `progress/`, `sessions/`, `shared/`, `store/`, `teams/`, `ui/`, `workout/`, `zone/`
+`admin/`, `agency/`, `auth/`, `billing/`, `checkout/`, `dashboard/`, `dwa-admin/`, `exercise/`, `features/`, `field-service/`, `gamification/`, `generator/`, `landing/`, `layout/`, `marketing/`, `nutrition/`, `pricing/`, `profile/`, `programs/`, `progress/`, `sessions/`, `shared/`, `store/`, `teams/`, `ui/`, `workout/`, `zone/`
+
+**Standalone components** (root of `src/components/`): `DemoModeBadge.tsx`, `RevenueRecoveredLedger.tsx`, `WaitlistGate.tsx`
 
 ### Utilities (`src/lib/`)
 `addons.ts`, `admin-guides.ts`, `browserStorage.ts`, `fbpixel.ts`, `fulfillment-guides.ts`, `gtag.ts`, `jwtErrors.ts`, `lazyRetry.ts`, `queryClient.ts`, `siteTemplates.ts`, `utils.ts`
 
 ### Hooks (`src/hooks/`)
-`use-mobile.tsx`, `use-toast.ts`, `useAiStream.tsx`, `useAuth.tsx`, `useBrowserNotifications.tsx`, `useExerciseCount.tsx`, `useFamilyUserIds.tsx`, `useGeoState.tsx`, `useInView.tsx`, `useIsAdmin.tsx`, `useOfflineSync.tsx`, `usePoints.tsx`, `useReferral.tsx`, `useSiteContent.tsx`, `useTierAccess.tsx`, `useTimer.tsx`, `useTrialStatus.tsx`, `useWorkoutSave.tsx`
+`use-mobile.tsx`, `use-toast.ts`, `useAgencyRole.tsx`, `useAiStream.tsx`, `useAuth.tsx`, `useBrowserNotifications.tsx`, `useExerciseCount.tsx`, `useFamilyUserIds.tsx`, `useGeoState.tsx`, `useInView.tsx`, `useIsAdmin.tsx`, `useOfflineSync.tsx`, `usePoints.tsx`, `useReferral.tsx`, `useScrollReveal.ts`, `useSiteContent.tsx`, `useTierAccess.tsx`, `useTimer.tsx`, `useTrialStatus.tsx`, `useWorkoutSave.tsx`
 
 ### Data Fetching
 TanStack Query v5 with localStorage persistence via `PersistQueryClientProvider`.
@@ -726,7 +741,7 @@ TanStack Query v5 with localStorage persistence via `PersistQueryClientProvider`
 - Required env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 
 ## Edge Function Conventions
-- 539 functions in `supabase/functions/[name]/index.ts` — navigate by product name
+- 598 functions in `supabase/functions/[name]/index.ts` — navigate by product name
 - Shared utilities: `supabase/functions/_shared/ai.ts` (generateText, generateJSON), `_shared/twilio.ts` (sendSMS with TCPA), `_shared/email-templates/`, `_shared/transactional-email-templates/`
 - Autonomous scheduled functions: `tom-autonomous`, `oz-autonomous`, `scarlett-autonomous`, `selma-autonomous`, `ops-autonomous`
 - AI calls: Claude Haiku only (`claude-haiku-4-5`), `max_tokens` 800–1200
