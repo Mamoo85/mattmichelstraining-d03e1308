@@ -20,7 +20,7 @@ export default function AdminTrojanHorseLog() {
   const { data: entries, isLoading } = useQuery({
     queryKey: ["trojan-horse-log"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("trojan_horse_log")
         .select("*")
         .order("sent_at", { ascending: false })
