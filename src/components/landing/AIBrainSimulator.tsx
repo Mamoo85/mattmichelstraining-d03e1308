@@ -34,9 +34,9 @@ const FixItOutput = () => (
       <p className="text-[10px] text-muted-foreground">4 Weeks · 3 Phases · Progressive Loading</p>
     </div>
     {[
-      { phase: "Phase 1 — Tissue Release", color: "synth-pink", exercises: ["Lacrosse Ball Pec Minor — 90s each side", "Thoracic Foam Roll — 2×15 passes", "Cross-Body Lat Stretch — 30s hold"] },
-      { phase: "Phase 2 — Mobility", color: "synth-orange", exercises: ["Band Pull-Apart — 3×15", "Wall Slide — 3×10 (slow tempo)", "Open Book Rotation — 2×8 each side"] },
-      { phase: "Phase 3 — Isometric Loading", color: "synth-cyan", exercises: ["Side-Lying External Rotation Hold — 3×20s", "High Plank Protraction — 3×12", "Face Pull ISO — 3×15s hold at peak"] },
+      { phase: "Phase 1 — Tissue Release", colorClass: "text-[hsl(var(--synth-pink))]", exercises: ["Lacrosse Ball Pec Minor — 90s each side", "Thoracic Foam Roll — 2×15 passes", "Cross-Body Lat Stretch — 30s hold"] },
+      { phase: "Phase 2 — Mobility", colorClass: "text-[hsl(var(--synth-orange))]", exercises: ["Band Pull-Apart — 3×15", "Wall Slide — 3×10 (slow tempo)", "Open Book Rotation — 2×8 each side"] },
+      { phase: "Phase 3 — Isometric Loading", colorClass: "text-[hsl(var(--synth-cyan))]", exercises: ["Side-Lying External Rotation Hold — 3×20s", "High Plank Protraction — 3×12", "Face Pull ISO — 3×15s hold at peak"] },
     ].map((p) => (
       <motion.div
         key={p.phase}
@@ -45,7 +45,7 @@ const FixItOutput = () => (
         transition={{ duration: 0.3, delay: 0.1 }}
         className="border border-border bg-card/50 p-3"
       >
-        <p className={`text-[9px] uppercase tracking-widest font-bold text-[hsl(var(--${p.color}))] mb-1.5`}>{p.phase}</p>
+        <p className={`text-[9px] uppercase tracking-widest font-bold ${p.colorClass} mb-1.5`}>{p.phase}</p>
         <ul className="space-y-1">
           {p.exercises.map((e) => (
             <li key={e} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
