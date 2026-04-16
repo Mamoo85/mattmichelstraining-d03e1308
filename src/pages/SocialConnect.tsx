@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle, Loader2, Facebook, Linkedin } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
+import { Facebook, Linkedin } from "@/components/ui/social-icons";
 
 interface ClientInfo {
   business_name: string;

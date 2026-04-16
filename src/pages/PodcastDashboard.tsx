@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Mic, FileText, Linkedin, Mail, Youtube, Twitter, Copy, Check, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import { Mic, FileText, Mail, Copy, Check, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import { Linkedin, Youtube, Twitter } from "@/components/ui/social-icons";
 
 interface PodcastEpisode {
   id: string;
