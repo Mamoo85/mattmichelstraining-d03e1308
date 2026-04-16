@@ -134,7 +134,7 @@ export default function HealthcareHireAlert() {
           </p>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
             <a href="#signup" style={{ background: ACCENT, color: BG, padding: "16px 36px", borderRadius: 8, fontWeight: 800, fontSize: 18, textDecoration: "none" }}>
-              Start Monitoring — $99/mo
+              Start Monitoring — $149/mo
             </a>
             <span style={{ color: "#94a3b8", fontSize: 14 }}>Cancel anytime • No contracts</span>
           </div>

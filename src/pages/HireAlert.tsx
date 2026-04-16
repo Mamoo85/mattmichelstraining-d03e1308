@@ -51,7 +51,7 @@ const TESTIMONIALS: Testimonial[] = [
     initials: "MT",
   },
   {
-    quote: "Worth every dollar of the $99. One good hire pays for years of this service.",
+    quote: "Worth every dollar of the $149. One good hire pays for years of this service.",
     name: "Joe M.",
     trade: "Boiler Services, Metro Detroit",
     initials: "JM",
@@ -514,6 +514,20 @@ export default function HireAlert() {
                 ? `Start for $${plan === "bundle" ? bundlePrice : standalonePrice}/mo →`
                 : `Claim Beta Slot — $${plan === "bundle" ? bundlePrice : standalonePrice}/mo →`}
             </Button>
+
+            {/* À la carte option */}
+            <div style={{ borderTop: "1px solid #1e3a5f", paddingTop: 14, marginTop: 4 }}>
+              <button
+                onClick={handleAlaCarte}
+                disabled={alaCarteLoading || !tosAccepted}
+                style={{ width: "100%", background: "transparent", border: "1px solid #f97316", color: "#f97316", fontWeight: 700, fontSize: 14, padding: "12px", borderRadius: 8, cursor: "pointer", opacity: tosAccepted ? 1 : 0.5 }}
+              >
+                {alaCarteLoading ? "Redirecting..." : "Or: Get 10 Names Now — $50 (one-time)"}
+              </button>
+              <p style={{ margin: "8px 0 0", fontSize: 11, color: "#64748b", textAlign: "center" }}>
+                No subscription · $5 refund per name if &lt; 10 available
+              </p>
+            </div>
           </div>
 
           <p style={{ margin: "16px 0 0", fontSize: 12, color: "#64748b", textAlign: "center" }}>
