@@ -564,21 +564,21 @@ const App = () => (
                     <Route path="/audit-report" element={<AuditReport />} />
                     <Route path="/gbp-management" element={<GbpManagement />} />
                     <Route path="/sponsor" element={<NewsletterSponsor />} />
-                    <Route path="/contractor-leads" element={<ContractorLeads />} />
-                    <Route path="/roi" element={<ContractorROIReport />} />
-                    <Route path="/dead-lead-stats" element={<DeadLeadStats />} />
-                    <Route path="/my-techalert" element={<MyTechAlert />} />
-                    <Route path="/dead-lead-intake" element={<DeadLeadIntake />} />
-                    <Route path="/get-quote/:trade/:city" element={<GetQuote />} />
-                    <Route path="/get-quote/:trade" element={<GetQuote />} />
-                    <Route path="/contractors/:slug" element={<ContractorTerritory />} />
-                    <Route path="/claim-lead" element={<ClaimLead />} />
-                    <Route path="/lead-unlocked" element={<LeadUnlocked />} />
-                    <Route path="/lead-claimed" element={<LeadClaimed />} />
-                    <Route path="/field-service" element={<FieldServiceManagement />} />
-                    <Route path="/field-service/dispatch" element={<FieldServiceDispatch />} />
-                    <Route path="/field-service/tech" element={<FieldServiceTechApp />} />
-                    <Route path="/field-service/:industry" element={<FieldServiceIndustry />} />
+                    <Route path="/contractor-leads" element={<DWARouteGuard><ContractorLeads /></DWARouteGuard>} />
+                    <Route path="/roi" element={<DWARouteGuard><ContractorROIReport /></DWARouteGuard>} />
+                    <Route path="/dead-lead-stats" element={<DWARouteGuard><DeadLeadStats /></DWARouteGuard>} />
+                    <Route path="/my-techalert" element={<DWARouteGuard><MyTechAlert /></DWARouteGuard>} />
+                    <Route path="/dead-lead-intake" element={<DWARouteGuard><DeadLeadIntake /></DWARouteGuard>} />
+                    <Route path="/get-quote/:trade/:city" element={<DWARouteGuard><GetQuote /></DWARouteGuard>} />
+                    <Route path="/get-quote/:trade" element={<DWARouteGuard><GetQuote /></DWARouteGuard>} />
+                    <Route path="/contractors/:slug" element={<DWARouteGuard><ContractorTerritory /></DWARouteGuard>} />
+                    <Route path="/claim-lead" element={<DWARouteGuard><ClaimLead /></DWARouteGuard>} />
+                    <Route path="/lead-unlocked" element={<DWARouteGuard><LeadUnlocked /></DWARouteGuard>} />
+                    <Route path="/lead-claimed" element={<DWARouteGuard><LeadClaimed /></DWARouteGuard>} />
+                    <Route path="/field-service" element={<DWARouteGuard><FieldServiceManagement /></DWARouteGuard>} />
+                    <Route path="/field-service/dispatch" element={<DWARouteGuard><FieldServiceDispatch /></DWARouteGuard>} />
+                    <Route path="/field-service/tech" element={<DWARouteGuard><FieldServiceTechApp /></DWARouteGuard>} />
+                    <Route path="/field-service/:industry" element={<DWARouteGuard><FieldServiceIndustry /></DWARouteGuard>} />
                     <Route path="/leads/:slug" element={<LeadCapturePage />} />
                     <Route path="/b2b-leads" element={<B2BLeads />} />
                     <Route path="/industrial-database" element={<IndustrialDatabase />} />
