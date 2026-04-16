@@ -383,6 +383,116 @@ export type Database = {
         }
         Relationships: []
       }
+      agency_candidate_assignments: {
+        Row: {
+          agency_id: string
+          candidate_id: string
+          charge_amount_cents: number | null
+          charged_at: string | null
+          delivered_at: string
+          id: string
+          interview_booked_at: string | null
+          notes: string | null
+          pitch_summary: string | null
+          placed_at: string | null
+          signal_strength: string | null
+          status: string
+          stripe_charge_id: string | null
+          verification_id: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          agency_id: string
+          candidate_id: string
+          charge_amount_cents?: number | null
+          charged_at?: string | null
+          delivered_at?: string
+          id?: string
+          interview_booked_at?: string | null
+          notes?: string | null
+          pitch_summary?: string | null
+          placed_at?: string | null
+          signal_strength?: string | null
+          status?: string
+          stripe_charge_id?: string | null
+          verification_id?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          agency_id?: string
+          candidate_id?: string
+          charge_amount_cents?: number | null
+          charged_at?: string | null
+          delivered_at?: string
+          id?: string
+          interview_booked_at?: string | null
+          notes?: string | null
+          pitch_summary?: string | null
+          placed_at?: string | null
+          signal_strength?: string | null
+          status?: string
+          stripe_charge_id?: string | null
+          verification_id?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_candidate_assignments_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "staffing_agency_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_candidate_assignments_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "hire_alert_candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agency_territory_locks: {
+        Row: {
+          active: boolean
+          agency_id: string
+          county: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          starts_at: string
+          vertical: string
+        }
+        Insert: {
+          active?: boolean
+          agency_id: string
+          county: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          starts_at?: string
+          vertical: string
+        }
+        Update: {
+          active?: boolean
+          agency_id?: string
+          county?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          starts_at?: string
+          vertical?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_territory_locks_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "staffing_agency_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_heartbeats: {
         Row: {
           agent_name: string
@@ -10475,6 +10585,69 @@ export type Database = {
           last_sent_at?: string | null
           send_count?: number | null
           stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      staffing_agency_clients: {
+        Row: {
+          active: boolean
+          agency_name: string
+          annual_prepay_cents: number | null
+          contact_email: string
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          monthly_retainer_cents: number | null
+          notes: string | null
+          per_interview_fee_cents: number
+          pricing_model: string
+          stripe_customer_id: string | null
+          stripe_payment_method_id: string | null
+          territory_counties: string[] | null
+          territory_exclusive: boolean
+          updated_at: string
+          vertical: string
+        }
+        Insert: {
+          active?: boolean
+          agency_name: string
+          annual_prepay_cents?: number | null
+          contact_email: string
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          monthly_retainer_cents?: number | null
+          notes?: string | null
+          per_interview_fee_cents?: number
+          pricing_model?: string
+          stripe_customer_id?: string | null
+          stripe_payment_method_id?: string | null
+          territory_counties?: string[] | null
+          territory_exclusive?: boolean
+          updated_at?: string
+          vertical?: string
+        }
+        Update: {
+          active?: boolean
+          agency_name?: string
+          annual_prepay_cents?: number | null
+          contact_email?: string
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          monthly_retainer_cents?: number | null
+          notes?: string | null
+          per_interview_fee_cents?: number
+          pricing_model?: string
+          stripe_customer_id?: string | null
+          stripe_payment_method_id?: string | null
+          territory_counties?: string[] | null
+          territory_exclusive?: boolean
+          updated_at?: string
+          vertical?: string
         }
         Relationships: []
       }
