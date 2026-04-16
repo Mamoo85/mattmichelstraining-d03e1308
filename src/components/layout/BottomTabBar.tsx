@@ -2,9 +2,10 @@ import { memo, useState, useCallback, lazy, Suspense } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Home, Dumbbell, ShoppingBag, CalendarClock, MoreHorizontal,
-  User, LogIn, LogOut, Shield, Timer, Instagram, Facebook,
+  User, LogIn, LogOut, Shield, Timer,
   Trophy, CreditCard, Sparkles, ShoppingCart, Users, Building2, Globe,
 } from "lucide-react";
+import { Instagram, Facebook } from "@/components/ui/social-icons";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useTimer } from "@/hooks/useTimer";

@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, Loader2, Facebook, Linkedin, RefreshCw } from "lucide-react";
+import { CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, Loader2, RefreshCw } from "lucide-react";
+import { Facebook, Linkedin } from "@/components/ui/social-icons";
 
 interface SocialClient {
   id: string;
