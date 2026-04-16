@@ -31,6 +31,8 @@ export default function AdminPostcardCampaigns() {
   const [conversions, setConversions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [scraping, setScraping] = useState(false);
+  const [enrichingAddr, setEnrichingAddr] = useState(false);
+  const [deepScraping, setDeepScraping] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
   const [selectedCounty, setSelectedCounty] = useState("Wayne");
@@ -58,6 +60,28 @@ export default function AdminPostcardCampaigns() {
     setScraping(false);
     if (error) { toast.error("Scraper failed: " + error.message); }
     else { toast.success(`${data?.new_prospects || 0} new prospects found`); loadData(); }
+  };
+
+  const enrichAddresses = async () => {
+    setEnrichingAddr(true);
+    toast.info("Enriching addresses for existing prospects...");
+    const { data, error } = await supabase.functions.invoke("enrich-postcard-addresses", {
+      body: { limit: 20 },
+    });
+    setEnrichingAddr(false);
+    if (error) { toast.error("Enrichment failed: " + error.message); }
+    else { toast.success(`${data?.enriched || 0}/${data?.total || 0} addresses found (${data?.hit_rate || "0%"})`); loadData(); }
+  };
+
+  const runDeepScraper = async () => {
+    setDeepScraping(true);
+    toast.info("Running LARA deep scrape (verified addresses only)...");
+    const { data, error } = await supabase.functions.invoke("lara-accela-scraper", {
+      body: { county: selectedCounty.toLowerCase() },
+    });
+    setDeepScraping(false);
+    if (error) { toast.error("Deep scrape failed: " + error.message); }
+    else { toast.success(`${data?.new_prospects || 0} new + ${data?.addresses_added_to_existing || 0} addresses added`); loadData(); }
   };
 
   const generateCopy = async () => {
@@ -147,14 +171,20 @@ export default function AdminPostcardCampaigns() {
           <Button onClick={runScraper} disabled={scraping} size="sm" className="bg-[#00d4ff]/20 text-[#00d4ff] border border-[#00d4ff]/30 hover:bg-[#00d4ff]/30">
             <RefreshCw className={`w-3 h-3 mr-1 ${scraping ? "animate-spin" : ""}`} /> {scraping ? "Scraping..." : "Run Scraper"}
           </Button>
+          <Button onClick={runDeepScraper} disabled={deepScraping} size="sm" className="bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30">
+            <RefreshCw className={`w-3 h-3 mr-1 ${deepScraping ? "animate-spin" : ""}`} /> {deepScraping ? "Deep scraping..." : "Deep Scrape (verified addr)"}
+          </Button>
+          <Button onClick={enrichAddresses} disabled={enrichingAddr} size="sm" className="bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30">
+            <MapPin className={`w-3 h-3 mr-1 ${enrichingAddr ? "animate-pulse" : ""}`} /> {enrichingAddr ? "Enriching..." : "Enrich Addresses"}
+          </Button>
           <Button onClick={generateCopy} disabled={generating} size="sm" className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30">
             <FileText className="w-3 h-3 mr-1" /> {generating ? "Generating..." : "Generate Copy"}
           </Button>
         </div>
         <p className="text-white/20 text-[10px]">
-          {unsentByCounty(selectedCounty).length} prospects ready to mail in {selectedCounty} County
-          &middot; Design: Matt's photo + "I'll call you personally" + QR to /staffing
-          &middot; Powered by Lob API
+          {prospects.filter((p: any) => p.address_line1).length}/{prospects.length} prospects have addresses
+          &middot; {unsentByCounty(selectedCounty).length} ready to mail in {selectedCounty} County
+          &middot; Lob API
         </p>
       </div>
 
