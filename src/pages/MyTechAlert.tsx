@@ -218,7 +218,7 @@ export default function MyTechAlert() {
     }
   }
 
-  async function updateAction(candidateId: string, action: "contacted" | "hired") {
+  async function updateAction(candidateId: string, action: "contacted" | "interviewed" | "hired") {
     if (!token) return;
     setUpdatingIds((prev) => new Set(prev).add(candidateId));
     try {
