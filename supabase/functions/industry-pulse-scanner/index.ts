@@ -162,6 +162,11 @@ serve(async (req) => {
         for (const co of companies.slice(0, 5)) {
           if (!co.company || !co.roles?.length) continue;
 
+          // Filter out job board names and aggregator junk
+          const junkNames = ["indeed", "ziprecruiter", "linkedin", "multiple employers", "various", "confidential", "staffing agency", "temp agency"];
+          if (junkNames.some(j => co.company.toLowerCase().includes(j))) continue;
+          if (co.company.length < 3 || co.company.length > 100) continue;
+
           const prediction = await predictNeeds(
             co.company,
             co.roles,

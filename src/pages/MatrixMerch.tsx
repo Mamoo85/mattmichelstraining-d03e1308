@@ -21,14 +21,14 @@ const MATRIX_CHARS = "アイウエオカキクケコサシスセソタチツテ�
 const BONFIRE_STORE = "https://www.bonfire.com/store/m2-training/";
 
 const ALL_PRODUCTS = [
-  { name: "Premium Pullover Hoodie", price: "$66.49", img: merchHoodie, url: "https://www.bonfire.com/m2-classics/?productType=79372160-4724-45ba-b119-518d097bfbe3", tag: "Best Seller", category: "Tops" },
-  { name: "Premium Unisex Tee", price: "$28.49", img: merchTee, url: "https://www.bonfire.com/m2-classics/?productType=bacf6cd6-b53d-469c-ab96-02afe5b15f71", tag: "Classic", category: "Tops" },
-  { name: "Crewneck Sweatshirt", price: "$38.49", img: merchCrewneck, url: "https://www.bonfire.com/m2-classics/?productType=b2ffe678-62bc-415a-be70-acc2e9b75bbc", tag: "New", category: "Tops" },
-  { name: "Long Sleeve Tee", price: "$33.49", img: merchLongSleeve, url: "https://www.bonfire.com/m2-classics/?productType=b65f9374-447d-40a6-a17c-ecbc2c823eda", category: "Tops" },
-  { name: "Cotton Tank", price: "$29.49", img: merchTank, url: "https://www.bonfire.com/m2-classics/?productType=440c2166-9c34-4487-abf4-fcb388e889cb", category: "Tops" },
-  { name: "Youth Hoodie", price: "$39.99", img: merchYouthHoodie, url: "https://www.bonfire.com/m2-classics/?productType=02f7d820-80e5-4fc5-9292-f4eeccd35b55", tag: "Youth", category: "Tops" },
-  { name: "Snapback Hat", price: "$28.49", img: merchSnapback, url: "https://www.bonfire.com/m2-hats/?productType=24b76e56-b4e7-4478-babe-7e5cad23dbb9", category: "Accessories" },
-  { name: "Cuffed Beanie", price: "$26.49", img: merchBeanie, url: "https://www.bonfire.com/m2-hats/?productType=f612e17e-71da-49e5-aa7f-f547c501e167", category: "Accessories" },
+  { name: "Premium Pullover Hoodie", price: "$66.49", img: merchHoodie, url: "https://www.bonfire.com/m2-classics/?productType=docs-claude-v2", tag: "Best Seller", category: "Tops" },
+  { name: "Premium Unisex Tee", price: "$28.49", img: merchTee, url: "https://www.bonfire.com/m2-classics/?productType=docs-claude-v2", tag: "Classic", category: "Tops" },
+  { name: "Crewneck Sweatshirt", price: "$38.49", img: merchCrewneck, url: "https://www.bonfire.com/m2-classics/?productType=docs-claude-v2", tag: "New", category: "Tops" },
+  { name: "Long Sleeve Tee", price: "$33.49", img: merchLongSleeve, url: "https://www.bonfire.com/m2-classics/?productType=docs-claude-v2", category: "Tops" },
+  { name: "Cotton Tank", price: "$29.49", img: merchTank, url: "https://www.bonfire.com/m2-classics/?productType=docs-claude-v2", category: "Tops" },
+  { name: "Youth Hoodie", price: "$39.99", img: merchYouthHoodie, url: "https://www.bonfire.com/m2-classics/?productType=docs-claude-v2", tag: "Youth", category: "Tops" },
+  { name: "Snapback Hat", price: "$28.49", img: merchSnapback, url: "https://www.bonfire.com/m2-hats/?productType=docs-claude-v2", category: "Accessories" },
+  { name: "Cuffed Beanie", price: "$26.49", img: merchBeanie, url: "https://www.bonfire.com/m2-hats/?productType=docs-claude-v2", category: "Accessories" },
 ];
 
 const SIZE_CHART = [

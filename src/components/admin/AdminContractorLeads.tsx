@@ -5,9 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   DollarSign, Users, TrendingUp, Zap, CheckCircle, AlertTriangle,
   Phone, Clock, RefreshCw, ChevronDown, ChevronUp, Lock, Unlock,
-  Copy, Globe, Wrench, Activity, Send,
+  Copy, Facebook, Globe, Wrench, Activity, Send,
 } from "lucide-react";
-import { Facebook } from "@/components/ui/social-icons";
 import { toast } from "sonner";
 
 // ── Priority territories for first Facebook/prospector push ──────────────────

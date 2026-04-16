@@ -2,10 +2,9 @@ import { memo, useState, useCallback, useRef, useEffect, lazy, Suspense } from "
 import { Link, useLocation } from "react-router-dom";
 import {
   Dumbbell, ShoppingBag, Home, LogIn, LogOut, Shield,
-  CalendarClock, ChevronDown, User, Download, Timer,
+  CalendarClock, ChevronDown, User, Download, Timer, Instagram, Facebook,
   Globe, Search, Wrench,
 } from "lucide-react";
-import { Instagram, Facebook } from "@/components/ui/social-icons";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useTimer } from "@/hooks/useTimer";

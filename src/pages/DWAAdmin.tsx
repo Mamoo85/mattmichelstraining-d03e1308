@@ -15,8 +15,11 @@ const AdminIndustrialIntel = lazy(() => import("@/components/admin/AdminIndustri
 const AdminGrowthSignals = lazy(() => import("@/components/admin/AdminGrowthSignals"));
 const DWALabs = lazy(() => import("@/components/dwa-admin/DWALabs"));
 const DWASalesGuide = lazy(() => import("@/components/dwa-admin/DWASalesGuide"));
+const AdminLaraHealth = lazy(() => import("@/components/admin/AdminLaraHealth"));
+const AdminTrojanHorseLog = lazy(() => import("@/components/admin/AdminTrojanHorseLog"));
+const AdminPostcardOps = lazy(() => import("@/components/admin/AdminPostcardCampaigns"));
 
-type Tab = "overview" | "clients" | "jobs" | "assets" | "contracts" | "import" | "command" | "board" | "playbook" | "strategy" | "medicare" | "industrial" | "growth" | "labs" | "sales-guide";
+type Tab = "overview" | "clients" | "jobs" | "assets" | "contracts" | "import" | "command" | "board" | "playbook" | "strategy" | "medicare" | "industrial" | "growth" | "labs" | "sales-guide" | "lara-health" | "cross-sell" | "postcards";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -34,6 +37,9 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "growth", label: "🔮 Growth Signals" },
   { id: "labs", label: "🧪 Labs" },
   { id: "sales-guide", label: "🎯 Sales Guide" },
+  { id: "lara-health", label: "🛡️ LARA Health" },
+  { id: "cross-sell", label: "🎯 Cross-Sell" },
+  { id: "postcards", label: "📬 Postcards" },
 ];
 
 function QuickLinks() {
@@ -233,6 +239,23 @@ export default function DWAAdmin() {
         {activeTab === "sales-guide" && (
           <Suspense fallback={<div className="text-white/40 text-sm">Loading sales guide…</div>}>
             <DWASalesGuide />
+          </Suspense>
+        )}
+
+        {activeTab === "lara-health" && (
+          <Suspense fallback={<div className="text-white/40 text-sm">Loading LARA health…</div>}>
+            <AdminLaraHealth />
+          </Suspense>
+        )}
+
+        {activeTab === "cross-sell" && (
+          <Suspense fallback={<div className="text-white/40 text-sm">Loading cross-sell log...</div>}>
+            <AdminTrojanHorseLog />
+          </Suspense>
+        )}
+        {activeTab === "postcards" && (
+          <Suspense fallback={<div className="text-white/40 text-sm">Loading postcard ops...</div>}>
+            <AdminPostcardOps />
           </Suspense>
         )}
       </main>

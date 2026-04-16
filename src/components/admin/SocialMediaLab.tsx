@@ -8,8 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Wand2, Send, RefreshCw, CheckCircle, AlertCircle, Copy, Edit3, Megaphone, Newspaper, Globe, PenTool, TrendingUp } from "lucide-react";
-import { Linkedin, Facebook } from "@/components/ui/social-icons";
+import { Loader2, Wand2, Send, RefreshCw, Linkedin, Facebook, CheckCircle, AlertCircle, Copy, Edit3, Megaphone, Newspaper, Globe, PenTool, TrendingUp } from "lucide-react";
 
 type ContentType = "social_post" | "gbp_post" | "newsletter_excerpt" | "blog_teaser" | "ad_copy" | "email_outreach";
 type Platform = "linkedin" | "facebook";

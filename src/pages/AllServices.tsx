@@ -32,7 +32,7 @@ const CATEGORIES: Category[] = [
   {
     label: "SMS & Phone",
     services: [
-      { name: "Missed Call Text-Back", price: "$99/mo", desc: "Instantly texts anyone who calls and gets no answer — never lose a lead again.", url: "/missed-call-catch" },
+      { name: "Missed Call Text-Back", price: "$99/mo", desc: "Instantly texts anyone who calls and gets no answer — never lose a lead again.", url: "/missed-call-saas" },
       { name: "24/7 Call Routing Engine", price: "$149/mo", desc: "An automated voice system answers your phone 24/7 and captures caller information.", url: "/ai-phone-answering" },
       { name: "Text Message Marketing", price: "$79/mo", desc: "Automated SMS campaigns that drive repeat business and referrals.", url: "/text-message-marketing" },
       { name: "Review Request SMS", price: "$39/mo", desc: "Auto-sends a friendly text after every job asking customers for a Google review.", url: "/review-request-sms" },

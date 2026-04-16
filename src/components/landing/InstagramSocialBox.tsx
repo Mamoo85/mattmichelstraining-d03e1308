@@ -1,5 +1,4 @@
-import { ExternalLink, Heart, MessageCircle, Play } from "lucide-react";
-import { Instagram, Facebook } from "@/components/ui/social-icons";
+import { Instagram, Facebook, ExternalLink, Heart, MessageCircle, Play } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import athleteFootball from "@/assets/athlete-football.webp";

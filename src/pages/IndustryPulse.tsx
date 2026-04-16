@@ -100,7 +100,7 @@ export default function IndustryPulse() {
                   disabled={loading}
                   className="w-full bg-[#00d4ff] text-black font-bold hover:bg-[#00b8d9] h-12 text-base"
                 >
-                  {loading ? "Loading..." : "Start Getting Signals — $299/mo"}
+                  {loading ? "Loading..." : "Start Getting Signals — $99/mo"}
                   {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
                 </Button>
                 <p className="text-[11px] text-white/30 text-center">Cancel anytime. No contracts. Signals start same day.</p>
@@ -153,8 +153,8 @@ export default function IndustryPulse() {
         <section className="py-16 px-4">
           <div className="max-w-md mx-auto bg-[#0a1628] border border-[#00d4ff]/20 rounded-2xl p-8 text-center">
             <p className="text-[#00d4ff] text-xs font-semibold tracking-wider mb-2">INDUSTRY PULSE INTELLIGENCE</p>
-            <p className="text-5xl font-black text-white mb-1">$299<span className="text-lg text-white/40">/mo</span></p>
-            <p className="text-white/40 text-sm mb-6">First 60 days: pilot pricing. Lock in this rate.</p>
+            <p className="text-5xl font-black text-white mb-1">$99<span className="text-lg text-white/40">/mo</span></p>
+            <p className="text-white/40 text-sm mb-6">Early-mover pricing. Lock in this rate.</p>
             <ul className="text-left space-y-3 mb-8">
               {[
                 "Daily predictive signals dashboard",

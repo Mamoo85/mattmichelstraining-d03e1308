@@ -57,14 +57,14 @@ function asyncCss(): Plugin {
   };
 }
 
-// @ts-ignore - rollup type mismatch with manualChunks
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
 
   return {
     server: {
       host: "::",
-      port: 8080,
+      port: 3000,
+      allowedHosts: true,
       hmr: {
         overlay: false,
       },
@@ -123,6 +123,13 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@": path.resolve(__dirname, "./src"),
       },
+    },
+    optimizeDeps: {
+      exclude: [
+        "@mediapipe/pose",
+        "@tensorflow/tfjs-backend-webgpu",
+        "@tensorflow-models/pose-detection",
+      ],
     },
     define: {
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(

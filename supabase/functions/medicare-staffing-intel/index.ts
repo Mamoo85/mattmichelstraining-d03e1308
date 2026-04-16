@@ -9,7 +9,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Metro Detroit zip prefixes (Wayne, Oakland, Macomb, Washtenaw)
+// Metro Detroit zip prefixes
 const METRO_DETROIT_ZIPS = ["480", "481", "482", "483"];
 
 interface FacilityResult {
@@ -30,8 +30,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // CMS Nursing Home Provider Info dataset — 4pq5-n9py
-    // The correct field names from the actual API response
+    // CMS Nursing Home Provider Info dataset
+    // Using the data.cms.gov CKAN API
     const cmsUrl = "https://data.cms.gov/provider-data/api/1/datastore/query/4pq5-n9py/0";
 
     const body = {
@@ -40,7 +40,7 @@ serve(async (req) => {
       ],
       limit: 500,
       offset: 0,
-      sort: [{ property: "staffing_rating", order: "ASC" }],
+      sort: [{ property: "overall_rating", order: "ASC" }],
     };
 
     const res = await fetch(cmsUrl, {
@@ -56,41 +56,39 @@ serve(async (req) => {
       const data = await res.json();
       const rows = data?.results || [];
 
-      console.log(`[medicare] Got ${rows.length} total MI nursing homes from CMS`);
-
       facilities = rows
         .filter((r: any) => {
-          // Correct field names from actual CMS API
-          const zip = (r.zip_code || "").toString();
+          const zip = (r.zip || r.provider_zip_code || "").toString();
           const isMetroDetroit = METRO_DETROIT_ZIPS.some(prefix => zip.startsWith(prefix));
-          const staffingRating = parseInt(r.staffing_rating || "0", 10);
+          const staffingRating = parseInt(r.staffing_rating || r.staff_rating || "0", 10);
           return isMetroDetroit && staffingRating >= 1 && staffingRating <= 2;
         })
         .map((r: any) => ({
-          provider_name: r.provider_name || "Unknown",
-          address: r.provider_address || "",
-          city: r.citytown || "",
-          state: r.state || "MI",
-          zip: (r.zip_code || "").toString(),
-          phone: r.telephone_number || "",
+          provider_name: r.provider_name || r.facility_name || "Unknown",
+          address: r.provider_address || r.address || "",
+          city: r.provider_city || r.city || "",
+          state: r.provider_state || r.state || "MI",
+          zip: (r.provider_zip_code || r.zip || "").toString(),
+          phone: r.provider_phone_number || r.phone || "",
           overall_rating: parseInt(r.overall_rating || "0", 10) || null,
-          staffing_rating: parseInt(r.staffing_rating || "0", 10) || null,
-          rn_staffing_hours: parseFloat(r.reported_rn_staffing_hours_per_resident_per_day || "0") || null,
+          staffing_rating: parseInt(r.staffing_rating || r.staff_rating || "0", 10) || null,
+          rn_staffing_hours: parseFloat(r.reported_nurse_aide_staffing_hours_per_resident_per_day || "0") || null,
           ownership_type: r.ownership_type || null,
           number_of_beds: parseInt(r.number_of_certified_beds || "0", 10) || null,
         }));
-
-      console.log(`[medicare] Filtered to ${facilities.length} Metro Detroit facilities with 1-2 star staffing`);
     } else {
-      const errText = await res.text();
-      console.error(`[medicare] CMS API returned ${res.status}: ${errText.slice(0, 300)}`);
+      // Fallback: try the alternative API endpoint
+      const altUrl = `https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items/4pq5-n9py?show-reference-ids=false`;
+      const altRes = await fetch(altUrl, { signal: AbortSignal.timeout(10_000) });
+      const altText = await altRes.text();
+      console.log("[medicare] Primary API failed, alt metadata:", altText.slice(0, 500));
     }
 
     // Sort by staffing rating ASC (worst first), then by overall rating ASC
     facilities.sort((a, b) => {
       const sa = a.staffing_rating || 99;
-      const sbb = b.staffing_rating || 99;
-      if (sa !== sbb) return sa - sbb;
+      const sb = b.staffing_rating || 99;
+      if (sa !== sb) return sa - sb;
       return (a.overall_rating || 99) - (b.overall_rating || 99);
     });
 
@@ -99,7 +97,7 @@ serve(async (req) => {
       metro_area: "Metro Detroit",
       filter: "Staffing Rating 1-2 Stars",
       facilities,
-    }), {
+    }, null, 2), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

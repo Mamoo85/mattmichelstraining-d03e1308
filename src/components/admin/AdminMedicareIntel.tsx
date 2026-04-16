@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { X, Copy, Mail, ExternalLink, Info, Trash2, CheckCircle2 } from "lucide-react";
 
 interface Facility {
   provider_name: string;
@@ -16,10 +17,22 @@ interface Facility {
   number_of_beds: number | null;
 }
 
+const SAVED_KEY = "dwa_medicare_saved_facilities";
+
+function getSaved(): string[] {
+  try { return JSON.parse(localStorage.getItem(SAVED_KEY) || "[]"); } catch { return []; }
+}
+function setSaved(names: string[]) {
+  localStorage.setItem(SAVED_KEY, JSON.stringify(names));
+}
+
 export default function AdminMedicareIntel() {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
+  const [pitchTarget, setPitchTarget] = useState<Facility | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [savedNames, setSavedNames] = useState<string[]>(getSaved);
   const { toast } = useToast();
 
   async function fetchData() {
@@ -27,14 +40,27 @@ export default function AdminMedicareIntel() {
     try {
       const { data, error } = await supabase.functions.invoke("medicare-staffing-intel");
       if (error) throw error;
-      setFacilities(data?.facilities || []);
+      const fetched: Facility[] = data?.facilities || [];
+      setFacilities(fetched);
       setTotal(data?.total || 0);
+      // auto-save all fetched facility names
+      const names = [...new Set([...savedNames, ...fetched.map(f => f.provider_name)])];
+      setSavedNames(names);
+      setSaved(names);
       toast({ title: `Found ${data?.total || 0} understaffed facilities` });
     } catch (e) {
       toast({ title: "Error fetching Medicare data", description: String(e), variant: "destructive" });
     } finally {
       setLoading(false);
     }
+  }
+
+  function removeFacility(name: string) {
+    const updated = savedNames.filter(n => n !== name);
+    setSavedNames(updated);
+    setSaved(updated);
+    setFacilities(prev => prev.filter(f => f.provider_name !== name));
+    toast({ title: `Removed "${name}" from your list` });
   }
 
   function ratingBadge(rating: number | null) {
@@ -53,12 +79,62 @@ export default function AdminMedicareIntel() {
     );
   }
 
-  function pitchEmail(f: Facility) {
+  function whyFlagged(f: Facility): string {
+    const reasons: string[] = [];
+    if (f.staffing_rating && f.staffing_rating <= 2) {
+      reasons.push(`${f.staffing_rating}-star staffing rating means they're critically understaffed — actively need nurses/CNAs`);
+    }
+    if (f.overall_rating && f.overall_rating <= 2) {
+      reasons.push(`${f.overall_rating}-star overall CMS rating signals operational struggles, often tied to staffing shortages`);
+    }
+    if (f.number_of_beds && f.number_of_beds >= 100) {
+      reasons.push(`${f.number_of_beds} beds = large facility with high staffing demand`);
+    }
+    if (f.rn_staffing_hours && f.rn_staffing_hours < 0.5) {
+      reasons.push(`Low RN hours per resident/day (${f.rn_staffing_hours}) — below federal recommendation`);
+    }
+    return reasons.length > 0 ? reasons.join(". ") + "." : "Flagged by CMS Medicare Care Compare as a facility with staffing concerns.";
+  }
+
+  function generatePitch(f: Facility): string {
+    return `Hi,
+
+I noticed ${f.provider_name} (${f.city}, ${f.state}) currently has a ${f.staffing_rating || "low"}-star staffing rating on CMS Medicare Care Compare.${f.number_of_beds ? ` With ${f.number_of_beds} beds, staffing gaps can compound quickly.` : ""}
+
+We specialize in connecting Michigan healthcare facilities with licensed CNAs, LPNs, and RNs who are actively seeking positions.
+
+Our TechAlert system monitors new license issuances from LARA daily and delivers verified, actionable candidate profiles directly to your inbox — complete with contact information and license verification.
+
+We've helped facilities like yours fill critical positions within 48 hours of alert delivery.
+
+Would you have 10 minutes this week for a quick call?
+
+Best,
+Matt Michels
+Detroit Web Agency
+(313) 992-1219
+detroitwebagent.com`;
+  }
+
+  function copyPitch(text: string) {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    toast({ title: "Pitch copied to clipboard" });
+  }
+
+  function openEmail(f: Facility) {
     const subject = encodeURIComponent(`Staffing Support for ${f.provider_name}`);
-    const body = encodeURIComponent(
-      `Hi,\n\nI noticed ${f.provider_name} may be looking for qualified nursing staff. We specialize in connecting Michigan healthcare facilities with licensed CNAs, LPNs, and RNs who are actively seeking positions.\n\nOur TechAlert system monitors new license issuances daily and delivers verified, actionable candidate profiles directly to your inbox — complete with contact information and license verification.\n\nWould you have 10 minutes this week for a quick call?\n\nBest,\nMatt Michels\nDetroit Web Agency\n(313) 992-1219\ndetroitwebagent.com`
-    );
-    window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
+    const body = encodeURIComponent(generatePitch(f));
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  }
+
+  function googleSearch(name: string, city: string) {
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(name + " " + city + " nursing home")}`, "_blank");
+  }
+
+  function cmsLink(f: Facility) {
+    window.open(`https://www.medicare.gov/care-compare/?providerType=NursingHome&redirect=true&searchCriteria=name&q=${encodeURIComponent(f.provider_name)}&state=${f.state}`, "_blank");
   }
 
   return (
@@ -69,13 +145,16 @@ export default function AdminMedicareIntel() {
           <p className="text-white/60 text-sm">
             Nursing homes with 1-2 Star Staffing Ratings in Metro Detroit — prime TechAlert prospects.
           </p>
+          <p className="text-white/30 text-xs mt-1 flex items-center gap-1">
+            <Info className="w-3 h-3" /> Facilities stay on your list until you remove them.
+          </p>
         </div>
         <button
           onClick={fetchData}
           disabled={loading}
           className="px-4 py-2 rounded-lg bg-[#00d4ff]/20 text-[#00d4ff] border border-[#00d4ff]/30 hover:bg-[#00d4ff]/30 transition-colors text-sm font-medium disabled:opacity-50"
         >
-          {loading ? "Scanning CMS…" : total > 0 ? "Refresh Data" : "🔍 Scan Medicare API"}
+          {loading ? "Scanning CMS..." : total > 0 ? "Refresh Data" : "Scan Medicare API"}
         </button>
       </div>
 
@@ -118,13 +197,31 @@ export default function AdminMedicareIntel() {
             </thead>
             <tbody>
               {facilities.map((f, i) => (
-                <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
                   <td className="py-2.5 px-3">
-                    <p className="text-white font-medium text-sm">{f.provider_name}</p>
+                    <button
+                      onClick={() => googleSearch(f.provider_name, f.city)}
+                      className="text-white font-medium text-sm hover:text-[#00d4ff] transition-colors text-left cursor-pointer flex items-center gap-1"
+                      title="Search on Google"
+                    >
+                      {f.provider_name}
+                      <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+                    </button>
                     <p className="text-white/40 text-xs">{f.address}</p>
+                    <button
+                      onClick={() => cmsLink(f)}
+                      className="text-[#00d4ff]/50 text-[10px] hover:text-[#00d4ff] transition-colors mt-0.5"
+                    >
+                      View on Medicare.gov →
+                    </button>
                   </td>
                   <td className="py-2.5 px-3 text-white/60">{f.city}</td>
-                  <td className="py-2.5 px-3 text-center">{ratingBadge(f.staffing_rating)}</td>
+                  <td className="py-2.5 px-3 text-center">
+                    <div>{ratingBadge(f.staffing_rating)}</div>
+                    {f.staffing_rating && f.staffing_rating <= 2 && (
+                      <span className="text-[9px] text-red-400/60 block mt-0.5">Understaffed</span>
+                    )}
+                  </td>
                   <td className="py-2.5 px-3 text-center">{ratingBadge(f.overall_rating)}</td>
                   <td className="py-2.5 px-3 text-center text-white/60">{f.number_of_beds || "—"}</td>
                   <td className="py-2.5 px-3">
@@ -137,17 +234,40 @@ export default function AdminMedicareIntel() {
                     )}
                   </td>
                   <td className="py-2.5 px-3 text-right">
-                    <button
-                      onClick={() => pitchEmail(f)}
-                      className="px-3 py-1.5 rounded bg-[#00d4ff]/10 text-[#00d4ff] text-xs font-medium hover:bg-[#00d4ff]/20 transition-colors border border-[#00d4ff]/20"
-                    >
-                      📧 TechAlert Pitch
-                    </button>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button
+                        onClick={() => setPitchTarget(f)}
+                        className="px-3 py-1.5 rounded bg-[#00d4ff]/10 text-[#00d4ff] text-xs font-medium hover:bg-[#00d4ff]/20 transition-colors border border-[#00d4ff]/20"
+                        data-testid={`pitch-btn-${i}`}
+                      >
+                        TechAlert Pitch
+                      </button>
+                      <button
+                        onClick={() => removeFacility(f.provider_name)}
+                        className="p-1.5 rounded text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        title="Remove from list"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+
+          {/* WHY THESE FACILITIES — explanation bar */}
+          <div className="mt-4 bg-[#0f1f35] border border-white/10 rounded-lg p-4">
+            <div className="flex items-start gap-2">
+              <Info className="w-4 h-4 text-[#00d4ff] shrink-0 mt-0.5" />
+              <div>
+                <p className="text-white/70 text-xs font-semibold mb-1">Why are these facilities on this list?</p>
+                <p className="text-white/40 text-xs leading-relaxed">
+                  These nursing homes have <strong className="text-red-400">1-2 star staffing ratings</strong> on CMS Medicare Care Compare — a federal database tracking every nursing home in the US. Low staffing ratings mean they're <strong className="text-white/60">critically short on nurses and CNAs</strong>, making them ideal prospects for TechAlert's licensed healthcare candidate alerts. Facilities with more beds and lower ratings are the highest-priority targets.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -155,6 +275,54 @@ export default function AdminMedicareIntel() {
         <div className="bg-[#0f1f35] border border-white/10 rounded-xl p-8 text-center">
           <p className="text-white/40 text-sm">Click "Scan Medicare API" to find understaffed nursing homes in Metro Detroit.</p>
           <p className="text-white/30 text-xs mt-2">Data source: CMS Medicare Care Compare (free, public, federal)</p>
+        </div>
+      )}
+
+      {/* ── PITCH MODAL ─────────────────────────────────────────────── */}
+      {pitchTarget && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setPitchTarget(null)}>
+          <div
+            className="bg-[#0f1f35] border border-white/10 rounded-xl max-w-lg w-full max-h-[80vh] overflow-auto shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <div>
+                <h3 className="text-white font-bold text-sm">TechAlert Pitch</h3>
+                <p className="text-white/40 text-xs">{pitchTarget.provider_name}</p>
+              </div>
+              <button onClick={() => setPitchTarget(null)} className="text-white/30 hover:text-white p-1">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Why this facility */}
+            <div className="px-4 pt-3 pb-2">
+              <p className="text-[10px] text-white/30 uppercase tracking-wide font-semibold mb-1">Why pitch this facility</p>
+              <p className="text-white/50 text-xs leading-relaxed">{whyFlagged(pitchTarget)}</p>
+            </div>
+
+            <div className="p-4">
+              <pre className="text-white/70 text-xs leading-relaxed whitespace-pre-wrap font-sans bg-black/20 rounded-lg p-4 border border-white/5">
+                {generatePitch(pitchTarget)}
+              </pre>
+            </div>
+
+            <div className="flex items-center gap-2 p-4 border-t border-white/10">
+              <button
+                onClick={() => copyPitch(generatePitch(pitchTarget))}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#00d4ff]/20 text-[#00d4ff] border border-[#00d4ff]/30 hover:bg-[#00d4ff]/30 transition-colors text-sm font-medium"
+              >
+                {copied ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied ? "Copied!" : "Copy Pitch"}
+              </button>
+              <button
+                onClick={() => openEmail(pitchTarget)}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 transition-colors text-sm font-medium"
+              >
+                <Mail className="w-4 h-4" /> Open in Email
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

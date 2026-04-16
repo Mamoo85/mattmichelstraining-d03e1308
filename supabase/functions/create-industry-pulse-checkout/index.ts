@@ -30,7 +30,7 @@ serve(async (req) => {
         quantity: 1,
         price_data: {
           currency: "usd",
-          unit_amount: 29900, // $299/mo
+          unit_amount: 9900, // $99/mo
           recurring: { interval: "month" },
           product_data: {
             name: "Industry Pulse Intelligence",

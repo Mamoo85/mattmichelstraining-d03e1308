@@ -37,15 +37,13 @@ serve(async (req) => {
 
   const prompt = `Search for recent news about Metro Detroit area manufacturing and industrial activity from the past 90 days. Find companies that are:
 
-1. Expanding manufacturing facilities or opening new plants — classify as "New Plant"
-2. Acquiring new CNC machinery, industrial equipment, or production lines — classify as "Equipment Acquisition"
-3. Awarded large commercial HVAC, plumbing, or boiler contracts — classify as "Contract Award"
-4. Hiring for skilled trades positions (welders, machinists, boiler operators, electricians) — classify as "Workforce Expansion"
-5. Upgrading existing facilities with new infrastructure — classify as "Facility Upgrade"
+1. Expanding manufacturing facilities or opening new plants
+2. Acquiring new CNC machinery, industrial equipment, or production lines
+3. Awarded large commercial HVAC, plumbing, or boiler contracts
+4. Hiring for skilled trades positions (welders, machinists, boiler operators, electricians)
+5. Receiving government contracts requiring industrial workforce expansion
 
 Focus on Wayne County, Oakland County, Macomb County, and Washtenaw County Michigan.
-
-IMPORTANT: Use the EXACT expansion_type labels listed above. Do NOT default everything to "Facility Upgrade" — differentiate based on what the company is actually doing. A new building is "New Plant", buying machinery is "Equipment Acquisition", winning a bid is "Contract Award", posting jobs is "Workforce Expansion".
 
 Return ONLY a JSON array (no markdown, no explanation) of up to 15 results:
 [

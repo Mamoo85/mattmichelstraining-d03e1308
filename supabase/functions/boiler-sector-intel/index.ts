@@ -364,6 +364,12 @@ serve(async (req) => {
         funding_secured: allSignals.filter(s => s.signal_type === "funding_secured").length,
         expansion_hiring: allSignals.filter(s => s.signal_type === "expansion_hiring").length,
       },
+      diagnostics: {
+        compliance_scan: complianceResult.status === "fulfilled" ? `OK (${complianceResult.value.length} found)` : `FAILED: ${complianceResult.reason}`,
+        funding_scan: fundingResult.status === "fulfilled" ? `OK (${fundingResult.value.length} found)` : `FAILED: ${fundingResult.reason}`,
+        hiring_scan: hiringResult.status === "fulfilled" ? `OK (${hiringResult.value.length} found)` : `FAILED: ${hiringResult.reason}`,
+        ai_key_configured: !!LOVABLE_API_KEY,
+      },
       scanned_at: new Date().toISOString(),
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

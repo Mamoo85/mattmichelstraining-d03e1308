@@ -4,6 +4,7 @@ import { Phone, CheckCircle, XCircle, Zap, MapPin, MessageSquare, FileText, Cale
 import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import TechTaxCalculator from "@/components/field-service/TechTaxCalculator";
 
 const COMPARE = [
   { name: "FieldServio", price: "$1,400/mo", users: "10 users", note: "Built for forklift rental companies", bad: true },
@@ -186,6 +187,9 @@ export default function FieldServiceManagement() {
             <p className="text-white/60 text-sm mt-1">$16,800/yr saved every year after that.</p>
           </div>
         </div>
+
+        {/* Tech-Tax Calculator */}
+        <TechTaxCalculator />
 
         {/* Features */}
         <div className="bg-[#0f1f35] py-16 px-6">

@@ -112,7 +112,7 @@ export default function TechMap({ clientId }: TechMapProps) {
     );
   }
 
-  if (!mapsApiKey && !isDemo) {
+  if (!mapsApiKey) {
     return (
       <div className="px-4 py-6">
         <div className="bg-[#0f1f35] border border-[#1e3a5f] rounded-2xl p-8 text-center">
@@ -133,34 +133,6 @@ export default function TechMap({ clientId }: TechMapProps) {
           <p className="text-white font-semibold text-lg mb-2">No tech locations available</p>
           <p className="text-gray-400 text-sm">Locations will appear here once techs start checking in.</p>
         </div>
-      </div>
-    );
-  }
-
-  // Demo mode: use static map image (no API key needed) or embed with key
-  if (isDemo) {
-    const center = `${locations[0].lat},${locations[0].lng}`;
-    const markerStr = locations.map(loc => `${loc.lat},${loc.lng}`).join("|");
-    return (
-      <div className="px-4 py-4 space-y-4">
-        <div className="rounded-2xl overflow-hidden border border-[#1e3a5f] bg-[#0f1f35]">
-          <div className="relative w-full h-[400px] flex items-center justify-center">
-            <div className="text-center p-8">
-              <div className="text-5xl mb-4">📍</div>
-              <p className="text-white font-semibold text-lg mb-2">Live Tech Locations</p>
-              <p className="text-gray-400 text-sm mb-4">Metro Detroit Coverage Area</p>
-              <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
-                {locations.map(loc => (
-                  <div key={loc.tech_id} className="bg-[#0a1628] border border-[#1e3a5f] rounded-lg p-2 text-left">
-                    <p className="text-[#00d4ff] text-xs font-bold">{loc.tech_name}</p>
-                    <p className="text-gray-500 text-[10px]">{loc.lat.toFixed(3)}, {loc.lng.toFixed(3)}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-        <TechList locations={locations} formatRelativeTime={formatRelativeTime} />
       </div>
     );
   }

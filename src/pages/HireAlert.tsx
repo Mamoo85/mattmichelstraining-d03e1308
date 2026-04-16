@@ -51,7 +51,7 @@ const TESTIMONIALS: Testimonial[] = [
     initials: "MT",
   },
   {
-    quote: "Worth every dollar of the $149. One good hire pays for years of this service.",
+    quote: "Worth every dollar of the $99. One good hire pays for years of this service.",
     name: "Joe M.",
     trade: "Boiler Services, Metro Detroit",
     initials: "JM",
@@ -99,26 +99,7 @@ export default function HireAlert() {
   }, []);
 
   const standalonePrice = betaFull ? 149 : 99;
-  const bundlePrice = betaFull ? 199 : 149;
-
-  const [alaCarteLoading, setAlaCarteLoading] = useState(false);
-  const handleAlaCarte = async () => {
-    if (!email) {
-      toast({ title: "Enter your email first", variant: "destructive" });
-      return;
-    }
-    setAlaCarteLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-hire-alert-one-time", {
-        body: { email, company_name: company, phone, target_roles: selectedRoles },
-      });
-      if (error || !data?.url) throw new Error(error?.message || "Checkout failed");
-      window.location.href = data.url;
-    } catch (e: unknown) {
-      toast({ title: e instanceof Error ? e.message : "Something went wrong", variant: "destructive" });
-      setAlaCarteLoading(false);
-    }
-  };
+  const bundlePrice = betaFull ? 79 : 49;
 
   if (isSuccess) {
     return (
@@ -243,17 +224,22 @@ export default function HireAlert() {
       {/* Hero */}
       <section style={{ maxWidth: 900, margin: "0 auto", padding: "80px 24px 60px", textAlign: "center" }}>
         <div style={{ display: "inline-block", background: "#00d4ff22", border: `1px solid #00d4ff55`, borderRadius: 20, padding: "6px 18px", fontSize: 12, fontWeight: 700, letterSpacing: 2, color: ACCENT, textTransform: "uppercase", marginBottom: 24 }}>
-          TechAlert Hiring Monitor
+          First-Strike Talent Radar
         </div>
 
         <h1 style={{ fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 24px" }}>
-          Be First When a Licensed Tech<br />
-          <span style={{ color: ACCENT }}>Goes Available in Metro Detroit</span>
+          Your Competitors Are Hiring<br />
+          <span style={{ color: ACCENT }}>From the Same Shrinking Pool.</span>
         </h1>
 
-        <p style={{ fontSize: 20, color: "#94a3b8", lineHeight: 1.7, maxWidth: 700, margin: "0 auto 40px" }}>
-          Our proprietary monitoring network tracks license activity and professional movement across Metro Detroit every single day.
-          You get the alert. <strong style={{ color: "#fff" }}>Your competitors don't.</strong>
+        <p style={{ fontSize: 20, color: "#94a3b8", lineHeight: 1.7, maxWidth: 700, margin: "0 auto 16px" }}>
+          Licensed boiler operators, HVAC techs, plumbers, and electricians don't post on job boards.
+          Our proprietary monitoring captures availability signals the day they happen.{" "}
+          <strong style={{ color: "#fff" }}>You call first. You hire first.</strong>
+        </p>
+
+        <p style={{ fontSize: 15, color: "#f97316", fontWeight: 700, margin: "0 auto 40px", maxWidth: 600 }}>
+          Limited to 3 companies per trade per county — geographic exclusivity built in.
         </p>
 
         <button
@@ -268,6 +254,32 @@ export default function HireAlert() {
             🔥 {slotsRemaining} slot{slotsRemaining === 1 ? "" : "s"} left — price jumps to $149/mo when full
           </p>
         )}
+      </section>
+
+      {/* Geographic Exclusivity Callout */}
+      <section style={{ maxWidth: 900, margin: "0 auto 40px", padding: "0 24px" }}>
+        <div style={{ background: "linear-gradient(135deg, #001a33, #0d2137)", border: "1px solid #f9731640", borderRadius: 12, padding: "28px 32px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 24, alignItems: "center" }}>
+          <div>
+            <p style={{ margin: "0 0 4px", color: "#f97316", fontWeight: 700, fontSize: 12, letterSpacing: 2, textTransform: "uppercase" }}>Territory Lock</p>
+            <h3 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 800 }}>Only 3 Per Trade Per County</h3>
+            <p style={{ margin: 0, color: "#94a3b8", fontSize: 14, lineHeight: 1.6 }}>
+              We limit TechAlert to 3 companies per trade in each county. Once Wayne County HVAC is full, it's closed. Your competitors can't buy the same intelligence.
+            </p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            {[
+              { county: "Wayne", trade: "HVAC", status: "2 of 3" },
+              { county: "Oakland", trade: "HVAC", status: "Open" },
+              { county: "Macomb", trade: "Boiler", status: "1 of 3" },
+              { county: "Wayne", trade: "Plumbing", status: "Open" },
+            ].map((slot) => (
+              <div key={`${slot.county}-${slot.trade}`} style={{ background: "#001a33", border: "1px solid #1e3a5f", borderRadius: 8, padding: "8px 12px" }}>
+                <div style={{ fontSize: 10, color: "#64748b", fontWeight: 600 }}>{slot.county} · {slot.trade}</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: slot.status === "Open" ? "#22c55e" : "#f97316" }}>{slot.status}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* Unfair Advantage Callout */}
@@ -346,6 +358,96 @@ export default function HireAlert() {
         <WallOfLove testimonials={TESTIMONIALS} accentColor={ACCENT} theme="dark" title="What TechAlert Partners Say" />
       </div>
 
+      {/* Competitive Comparison — TechAlert vs Alternatives */}
+      <section style={{ maxWidth: 900, margin: "0 auto", padding: "80px 24px 60px" }}>
+        <h2 style={{ textAlign: "center", fontSize: 28, fontWeight: 800, marginBottom: 12 }}>
+          What Hiring <span style={{ color: ACCENT }}>Actually</span> Costs
+        </h2>
+        <p style={{ textAlign: "center", color: "#94a3b8", fontSize: 15, marginBottom: 48, maxWidth: 600, margin: "0 auto 48px" }}>
+          Compare TechAlert against every other way to find licensed tradespeople.
+        </p>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
+          {[
+            {
+              name: "Staffing Agency",
+              price: "$12K–18K",
+              unit: "per hire",
+              items: ["20–30% of first year salary", "No exclusivity", "Same candidates sent to 5 companies", "3–6 week lead time"],
+              bad: true,
+            },
+            {
+              name: "LinkedIn Recruiter Lite",
+              price: "$170",
+              unit: "/mo",
+              items: ["Generic keyword search", "No license verification", "No availability scoring", "You do all the sourcing work"],
+              bad: true,
+            },
+            {
+              name: "Indeed / ZipRecruiter",
+              price: "$300–500",
+              unit: "/mo per posting",
+              items: ["Licensed techs rarely post here", "Pay per click model adds up fast", "No proactive monitoring", "Competing with every employer"],
+              bad: true,
+            },
+            {
+              name: "TechAlert",
+              price: `$${standalonePrice}`,
+              unit: "/mo",
+              items: ["Proprietary license monitoring", "Daily candidate alerts + scoring", "Geographic territory exclusivity", "One hire pays for years of service"],
+              bad: false,
+            },
+          ].map((c) => (
+            <div key={c.name} style={{
+              background: c.bad ? "#0d213766" : "#001a33",
+              border: c.bad ? "1px solid #1e3a5f" : `2px solid ${ACCENT}`,
+              borderRadius: 12,
+              padding: 24,
+              position: "relative",
+            }}>
+              {!c.bad && (
+                <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: ACCENT, color: BG, padding: "3px 14px", borderRadius: 20, fontSize: 10, fontWeight: 800, whiteSpace: "nowrap" }}>
+                  BEST VALUE
+                </div>
+              )}
+              <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 700, color: c.bad ? "#94a3b8" : "#fff" }}>{c.name}</h3>
+              <div style={{ fontSize: 32, fontWeight: 800, color: c.bad ? "#ef4444" : ACCENT, margin: "0 0 2px" }}>
+                {c.price}<span style={{ fontSize: 14, fontWeight: 400, color: "#64748b" }}>{c.unit}</span>
+              </div>
+              <ul style={{ listStyle: "none", padding: 0, margin: "16px 0 0" }}>
+                {c.items.map((item) => (
+                  <li key={item} style={{ padding: "4px 0", fontSize: 13, color: "#94a3b8", display: "flex", gap: 8, alignItems: "flex-start" }}>
+                    <span style={{ color: c.bad ? "#ef4444" : ACCENT, flexShrink: 0 }}>{c.bad ? "✗" : "✓"}</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        {/* ROI Math */}
+        <div style={{
+          marginTop: 32,
+          background: "linear-gradient(135deg, #00d4ff10, #00d4ff05)",
+          border: `2px solid ${ACCENT}30`,
+          borderRadius: 12,
+          padding: "28px 32px",
+          textAlign: "center",
+        }}>
+          <p style={{ margin: "0 0 4px", color: ACCENT, fontWeight: 700, fontSize: 12, letterSpacing: 2, textTransform: "uppercase" }}>The Math</p>
+          <h3 style={{ margin: "0 0 12px", fontSize: 24, fontWeight: 800 }}>
+            One Hire Pays for a <span style={{ color: ACCENT }}>Lifetime</span> of TechAlert
+          </h3>
+          <p style={{ margin: 0, color: "#94a3b8", fontSize: 15, lineHeight: 1.7, maxWidth: 600, marginLeft: "auto", marginRight: "auto" }}>
+            A single licensed HVAC tech generates <strong style={{ color: "#fff" }}>$80K–120K/year</strong> in billable service revenue.
+            At <strong style={{ color: "#fff" }}>${standalonePrice}/mo</strong>, TechAlert pays for itself with your first hire —
+            then keeps delivering candidates every single day.
+            A staffing agency charges <strong style={{ color: "#fff" }}>$12K–18K</strong> for the same hire. Once.
+          </p>
+        </div>
+      </section>
+
       {/* Target Roles */}
       <section style={{ background: "#0d2137", padding: "60px 24px", marginBottom: 80 }}>
         <div style={{ maxWidth: 700, margin: "0 auto", textAlign: "center" }}>
@@ -360,38 +462,11 @@ export default function HireAlert() {
       </section>
 
       {/* Pricing */}
-      <section style={{ maxWidth: 900, margin: "0 auto 80px", padding: "0 16px" }}>
+      <section style={{ maxWidth: 800, margin: "0 auto 80px", padding: "0 16px" }}>
         <h2 style={{ textAlign: "center", fontSize: 32, fontWeight: 800, marginBottom: 48 }}>Simple Pricing</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
-
-          {/* À La Carte */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
           <div style={{ background: "#0d2137", border: "1px solid #1e3a5f", borderRadius: 14, padding: 32 }}>
-            <p style={{ margin: "0 0 8px", color: "#f97316", fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>On-Demand</p>
-            <div style={{ fontSize: 48, fontWeight: 800, margin: "0 0 4px" }}>
-              $50<span style={{ fontSize: 18, fontWeight: 400, color: "#94a3b8" }}> one-time</span>
-            </div>
-            <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 24 }}>10 licensed names delivered instantly</p>
-            <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px" }}>
-              {["10 verified licensed candidates", "Names + license types + areas", "No subscription required", "$5 refund per name if < 10 available", "Perfect for one-time hiring pushes"].map((f) => (
-                <li key={f} style={{ padding: "6px 0", fontSize: 14, color: "#cbd5e1", display: "flex", gap: 8 }}>
-                  <span style={{ color: "#f97316" }}>✓</span> {f}
-                </li>
-              ))}
-            </ul>
-            <button
-              onClick={() => { scrollToCheckout(); }}
-              style={{ width: "100%", background: "#1e3a5f", border: "1px solid #f97316", color: "#f97316", padding: "12px", borderRadius: 8, fontWeight: 700, fontSize: 15, cursor: "pointer" }}
-            >
-              Get 10 Names — $50
-            </button>
-          </div>
-
-          {/* Membership */}
-          <div style={{ background: "#001a33", border: `2px solid ${ACCENT}`, borderRadius: 14, padding: 32, position: "relative" }}>
-            <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: ACCENT, color: BG, padding: "4px 16px", borderRadius: 20, fontSize: 12, fontWeight: 800, whiteSpace: "nowrap" }}>
-              MOST POPULAR
-            </div>
-            <p style={{ margin: "0 0 8px", color: ACCENT, fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>Membership</p>
+            <p style={{ margin: "0 0 8px", color: "#94a3b8", fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>Standalone</p>
             <div style={{ fontSize: 48, fontWeight: 800, margin: "0 0 4px" }}>
               ${standalonePrice}<span style={{ fontSize: 18, fontWeight: 400, color: "#94a3b8" }}>/mo</span>
             </div>
@@ -400,9 +475,9 @@ export default function HireAlert() {
                 🔒 Beta price — grandfathered forever
               </p>
             )}
-            <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 24 }}>Unlimited daily alerts + full dashboard</p>
+            <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 24 }}>For any field service company in Michigan</p>
             <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px" }}>
-              {["Unlimited daily candidate alerts", "Proprietary license monitoring", "SMS hot alerts (score 7+)", "Full dashboard access", "Candidate claiming", "Outreach draft generator"].map((f) => (
+              {["Proprietary license monitoring", "Professional network intelligence", "Live availability signal tracking", "Availability scoring", "Email digest", "SMS hot alerts"].map((f) => (
                 <li key={f} style={{ padding: "6px 0", fontSize: 14, color: "#cbd5e1", display: "flex", gap: 8 }}>
                   <span style={{ color: ACCENT }}>✓</span> {f}
                 </li>
@@ -410,19 +485,21 @@ export default function HireAlert() {
             </ul>
             <button
               onClick={() => { setPlan("standalone"); scrollToCheckout(); }}
-              style={{ width: "100%", background: ACCENT, border: "none", color: BG, padding: "12px", borderRadius: 8, fontWeight: 800, fontSize: 15, cursor: "pointer" }}
+              style={{ width: "100%", background: "#1e3a5f", border: `1px solid ${ACCENT}`, color: ACCENT, padding: "12px", borderRadius: 8, fontWeight: 700, fontSize: 15, cursor: "pointer" }}
             >
-              Start Membership — ${standalonePrice}/mo
+              Get Started — ${standalonePrice}/mo
             </button>
           </div>
 
-          {/* Bundle */}
-          <div style={{ background: "#0d2137", border: "1px solid #1e3a5f", borderRadius: 14, padding: 32 }}>
-            <p style={{ margin: "0 0 8px", color: "#94a3b8", fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>HireAlert + FieldDesk Bundle</p>
+          <div style={{ background: "#001a33", border: `2px solid ${ACCENT}`, borderRadius: 14, padding: 32, position: "relative" }}>
+            <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: ACCENT, color: BG, padding: "4px 16px", borderRadius: 20, fontSize: 12, fontWeight: 800, whiteSpace: "nowrap" }}>
+              BEST VALUE — WITH FIELD CRM
+            </div>
+            <p style={{ margin: "0 0 8px", color: ACCENT, fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>Field CRM Bundle</p>
             <div style={{ fontSize: 48, fontWeight: 800, margin: "0 0 4px" }}>${bundlePrice}<span style={{ fontSize: 18, fontWeight: 400, color: "#94a3b8" }}>/mo</span></div>
-            <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 24 }}>Both products — save vs buying separately</p>
+            <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 24 }}>Add-on for Detroit Web Agency Field CRM clients</p>
             <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px" }}>
-              {["Everything in Membership", "FieldDesk Field CRM included", "Dispatch board + mobile tech app", "GPS tracking + invoicing", `Save $${(standalonePrice + 199) - bundlePrice}/mo vs separate`].map((f) => (
+              {["Everything in standalone", "Integrated with your Field CRM", "Candidates pre-matched to your roles", "Priority SMS alerts", `Save $${standalonePrice - bundlePrice}/mo vs standalone`].map((f) => (
                 <li key={f} style={{ padding: "6px 0", fontSize: 14, color: "#cbd5e1", display: "flex", gap: 8 }}>
                   <span style={{ color: ACCENT }}>✓</span> {f}
                 </li>
@@ -430,9 +507,9 @@ export default function HireAlert() {
             </ul>
             <button
               onClick={() => { setPlan("bundle"); scrollToCheckout(); }}
-              style={{ width: "100%", background: "#1e3a5f", border: `1px solid ${ACCENT}`, color: ACCENT, padding: "12px", borderRadius: 8, fontWeight: 700, fontSize: 15, cursor: "pointer" }}
+              style={{ width: "100%", background: ACCENT, border: "none", color: BG, padding: "12px", borderRadius: 8, fontWeight: 800, fontSize: 15, cursor: "pointer" }}
             >
-              Get the Bundle — ${bundlePrice}/mo
+              Add to Field CRM — ${bundlePrice}/mo
             </button>
           </div>
         </div>
@@ -514,20 +591,6 @@ export default function HireAlert() {
                 ? `Start for $${plan === "bundle" ? bundlePrice : standalonePrice}/mo →`
                 : `Claim Beta Slot — $${plan === "bundle" ? bundlePrice : standalonePrice}/mo →`}
             </Button>
-
-            {/* À la carte option */}
-            <div style={{ borderTop: "1px solid #1e3a5f", paddingTop: 14, marginTop: 4 }}>
-              <button
-                onClick={handleAlaCarte}
-                disabled={alaCarteLoading || !tosAccepted}
-                style={{ width: "100%", background: "transparent", border: "1px solid #f97316", color: "#f97316", fontWeight: 700, fontSize: 14, padding: "12px", borderRadius: 8, cursor: "pointer", opacity: tosAccepted ? 1 : 0.5 }}
-              >
-                {alaCarteLoading ? "Redirecting..." : "Or: Get 10 Names Now — $50 (one-time)"}
-              </button>
-              <p style={{ margin: "8px 0 0", fontSize: 11, color: "#64748b", textAlign: "center" }}>
-                No subscription · $5 refund per name if &lt; 10 available
-              </p>
-            </div>
           </div>
 
           <p style={{ margin: "16px 0 0", fontSize: 12, color: "#64748b", textAlign: "center" }}>

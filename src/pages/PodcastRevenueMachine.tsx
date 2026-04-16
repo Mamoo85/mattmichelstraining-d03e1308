@@ -1,7 +1,6 @@
 import { useState } from "react";
 import SEOHead from "@/components/layout/SEOHead";
-import { Mic, FileText, Mail, ArrowRight, CheckCircle, Zap, Clock, DollarSign } from "lucide-react";
-import { Linkedin, Youtube, Twitter } from "@/components/ui/social-icons";
+import { Mic, FileText, Linkedin, Mail, Youtube, Twitter, ArrowRight, CheckCircle, Zap, Clock, DollarSign } from "lucide-react";
 
 const CONTENT_TYPES = [
   {

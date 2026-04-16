@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Copy, ExternalLink, Check, Link2, MessageSquare, Mail, ChevronDown, ChevronUp, Smartphone } from "lucide-react";
-import { Linkedin } from "@/components/ui/social-icons";
+import { Copy, ExternalLink, Check, Link2, MessageSquare, Mail, Linkedin, ChevronDown, ChevronUp, Smartphone } from "lucide-react";
 
 /* ─────────────────────────────────────────────
    Demo catalog
