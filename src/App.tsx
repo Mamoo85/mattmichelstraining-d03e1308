@@ -294,6 +294,8 @@ const MyIndustryPulse = lazyRetry(() => import("./pages/MyIndustryPulse"));
 const DemandRadar = lazyRetry(() => import("./pages/DemandRadar"));
 const TechAlertJobs = lazyRetry(() => import("./pages/TechAlertJobs"));
 const StaffingAgency = lazyRetry(() => import("./pages/StaffingAgency"));
+const TalentIntelligence = lazyRetry(() => import("./pages/TalentIntelligence"));
+const AgencyPortal = lazyRetry(() => import("./pages/AgencyPortal"));
 const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
 const RegulatoryFilingMonitor = lazyRetry(() => import("./pages/RegulatoryFilingMonitor"));
 const BidIntelligence = lazyRetry(() => import("./pages/BidIntelligence"));
@@ -734,6 +736,8 @@ const App = () => (
                     <Route path="/demand-radar" element={<DemandRadar />} />
                     <Route path="/jobs" element={<TechAlertJobs />} />
                     <Route path="/staffing" element={<StaffingAgency />} />
+                    <Route path="/talent-intelligence" element={<TalentIntelligence />} />
+                    <Route path="/agency-portal" element={<AgencyPortal />} />
                     <Route path="/license-monitor" element={<LicenseMonitor />} />
                     <Route path="/regulatory-filing-monitor" element={<RegulatoryFilingMonitor />} />
                     <Route path="/bid-intelligence" element={<BidIntelligence />} />
