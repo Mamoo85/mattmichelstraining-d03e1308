@@ -3,6 +3,7 @@
  * Generates 3 postcard copy variants using real TechAlert stats from the database.
  * Uses Gemini via Lovable AI Gateway.
  * Supports audience_type for industry-specific copy.
+ * v2 — 2026-04-16 redeploy to ensure audience_type persists.
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
