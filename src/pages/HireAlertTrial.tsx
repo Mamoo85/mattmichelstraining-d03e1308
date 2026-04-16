@@ -68,7 +68,7 @@ export default function HireAlertTrial() {
             Your Trial Is Live
           </h1>
           <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.8, margin: "0 0 16px" }}>
-            TechAlert is scanning Michigan MIOSHA, professional networks, and live job boards for your trades right now.
+            Our intelligence engine is scanning Metro Detroit for available licensed tradespeople in your trades right now.
           </p>
           <p style={{ color: "#00d4ff", fontSize: 15, margin: "0 0 32px" }}>
             Check your email for confirmation. Trial runs for 72 hours.
@@ -84,7 +84,7 @@ export default function HireAlertTrial() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#0a1628", padding: "48px 24px" }}>
-      <SEOHead title="TechAlert Free Trial — Detroit Web Agency" description="Start your free 3-day TechAlert trial. We'll scan MIOSHA, professional networks, and job boards for available licensed tradespeople and alert you the moment a match appears." path="/hire-alert-trial" />
+      <SEOHead title="TechAlert Free Trial — Detroit Web Agency" description="Start your free 3-day TechAlert trial. Our intelligence engine surfaces available licensed tradespeople across Metro Detroit and alerts you the moment a match appears." path="/hire-alert-trial" />
       <div style={{ maxWidth: 560, margin: "0 auto" }}>
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
@@ -225,9 +225,9 @@ export default function HireAlertTrial() {
             HOW IT WORKS
           </p>
           {[
-            ["🏛️", "MIOSHA License DB", "Every Michigan boiler operator license issued — we see it the same day"],
-            ["🔍", "Professional Networks", "Metro Detroit tradespeople who recently changed jobs or updated profiles"],
-            ["📋", "Job Boards", "Active job seekers posting availability in your trades"],
+            ["🏛️", "Verified Credentials", "We confirm every candidate's licensing status the same day it changes"],
+            ["🔍", "Mobility Signals", "Metro Detroit tradespeople showing signs of being open to new opportunities"],
+            ["📋", "Active Availability", "Professionals actively signaling they're ready for their next role"],
           ].map(([icon, title, desc]) => (
             <div key={title} style={{ display: "flex", gap: 12, marginBottom: 14 }}>
               <span style={{ fontSize: 18, flexShrink: 0 }}>{icon}</span>
