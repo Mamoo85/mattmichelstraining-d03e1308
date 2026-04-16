@@ -5992,6 +5992,89 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── AGENCY ANNUAL PREPAY ($25K Territory Lock) ───────────────────────
+      if (meta.type === "agency_annual_prepay" && meta.agency_id) {
+        try {
+          const { data: agency } = await sb
+            .from("staffing_agency_clients")
+            .select("id, agency_name, contact_email, vertical, territory_counties")
+            .eq("id", meta.agency_id)
+            .maybeSingle();
+
+          await sb
+            .from("staffing_agency_clients")
+            .update({
+              pricing_model: "territory_lock",
+              territory_exclusive: true,
+              annual_prepay_cents: 2500000,
+            })
+            .eq("id", meta.agency_id);
+
+          // Create territory locks for each county (12 months)
+          if (agency?.territory_counties?.length && agency?.vertical) {
+            const expiresAt = new Date(Date.now() + 365 * 86400 * 1000).toISOString();
+            for (const county of agency.territory_counties) {
+              await sb.from("agency_territory_locks").insert({
+                agency_id: agency.id,
+                vertical: agency.vertical,
+                county,
+                active: true,
+                expires_at: expiresAt,
+              });
+            }
+          }
+
+          await notifyMatt(
+            `🎯 TERRITORY LOCK SOLD — $25K — ${agency?.agency_name || "agency"}`,
+            `<p><strong>$25,000 annual prepay received!</strong></p><p>Agency: ${agency?.agency_name}<br>Vertical: ${agency?.vertical}<br>Counties: ${agency?.territory_counties?.join(", ") || "n/a"}<br>Email: ${agency?.contact_email}</p><p>Territory locks created for 12 months. Their feed is now exclusive.</p>`
+          );
+          console.log(`[WEBHOOK] Agency annual prepay: ${meta.agency_id}`);
+        } catch (e) {
+          console.error("[WEBHOOK] Agency annual prepay error:", e);
+          return new Response(JSON.stringify({ error: "agency_annual_prepay processing failed" }), { status: 500 });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── AGENCY PERFORMANCE SETUP (card saved, no upfront charge) ─────────
+      if (meta.type === "agency_performance_setup" && meta.agency_id) {
+        try {
+          const setupSession = session as any;
+          const setupIntentId = setupSession.setup_intent as string | null;
+          let paymentMethodId: string | null = null;
+
+          if (setupIntentId) {
+            try {
+              const setupIntent = await stripe.setupIntents.retrieve(setupIntentId);
+              paymentMethodId = setupIntent.payment_method as string | null;
+            } catch (e) { console.error("[WEBHOOK] Failed to retrieve SetupIntent:", e); }
+          }
+
+          if (paymentMethodId) {
+            await sb
+              .from("staffing_agency_clients")
+              .update({ stripe_payment_method_id: paymentMethodId })
+              .eq("id", meta.agency_id);
+          }
+
+          const { data: agency } = await sb
+            .from("staffing_agency_clients")
+            .select("agency_name, contact_email, vertical")
+            .eq("id", meta.agency_id)
+            .maybeSingle();
+
+          await notifyMatt(
+            `💳 Agency card saved — ${agency?.agency_name || "agency"}`,
+            `<p><strong>Performance Feed activated.</strong></p><p>Agency: ${agency?.agency_name}<br>Email: ${agency?.contact_email}<br>Vertical: ${agency?.vertical}</p><p>Card saved. Will auto-charge $250 per booked interview via Fast-Track button.</p>`
+          );
+          console.log(`[WEBHOOK] Agency card saved: ${meta.agency_id}`);
+        } catch (e) {
+          console.error("[WEBHOOK] Agency performance setup error:", e);
+          return new Response(JSON.stringify({ error: "agency_performance_setup processing failed" }), { status: 500 });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // Unmatched checkout.session.completed — log and acknowledge
       console.log(`[WEBHOOK] checkout.session.completed with unhandled meta.type: ${meta.type || "none"}`);
       return new Response(JSON.stringify({ received: true }), { status: 200 });

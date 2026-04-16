@@ -1572,3 +1572,21 @@ verify_jwt = false
 
 [functions.deliver-keyword-gap-report]
 verify_jwt = false
+
+[functions.agency-distribute-candidates]
+verify_jwt = false
+
+[functions.agency-fast-track-interview]
+verify_jwt = false
+
+[functions.create-agency-checkout]
+verify_jwt = false
+
+[functions.agency-outreach-draft]
+verify_jwt = false
+
+[functions.agency-monthly-flip]
+verify_jwt = false
+
+[functions.agency-proof-drop-followup]
+verify_jwt = false

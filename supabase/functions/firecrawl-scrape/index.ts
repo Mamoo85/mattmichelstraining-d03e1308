@@ -57,21 +57,48 @@ Deno.serve(async (req) => {
       formattedUrl = `https://${formattedUrl}`;
     }
 
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    // Stealth defaults: stealth proxy + auto-retry on bot blocks (defeats anti-scraping tech)
+    const requestBody: Record<string, unknown> = {
+      url: formattedUrl,
+      formats: options?.formats || ['markdown'],
+      onlyMainContent: options?.onlyMainContent ?? true,
+      waitFor: options?.waitFor ?? 2000,
+      proxy: options?.proxy ?? 'stealth',
+      mobile: options?.mobile ?? false,
+      timeout: options?.timeout ?? 60000,
+      blockAds: true,
+      removeBase64Images: true,
+    };
+    if (options?.location) requestBody.location = options.location;
+    if (options?.actions) requestBody.actions = options.actions;
+
+    let response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        url: formattedUrl,
-        formats: options?.formats || ['markdown'],
-        onlyMainContent: options?.onlyMainContent ?? true,
-        waitFor: options?.waitFor,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
-    const data = await response.json();
+    let data = await response.json();
+
+    // Auto-retry once with stealth + longer waitFor if blocked or timed out
+    if (!response.ok && (response.status === 403 || response.status === 408 || response.status === 429 || /block|forbidden|timeout|captcha/i.test(JSON.stringify(data)))) {
+      console.log('[firecrawl-scrape] First attempt blocked/timed out, retrying with stealth + 6s wait');
+      requestBody.proxy = 'stealth';
+      requestBody.waitFor = 6000;
+      requestBody.timeout = 90000;
+      response = await fetch('https://api.firecrawl.dev/v2/scrape', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+      data = await response.json();
+    }
 
     if (!response.ok) {
       return new Response(

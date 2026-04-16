@@ -751,13 +751,13 @@ async function sendAlertEmail(
                   <td width="8"></td>
                   <td style="background:#f1f5f9;color:#64748b;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;">📍 ${c.city || "Metro Detroit"}</td>
                   ${c.years_experience ? `<td width="8"></td><td style="background:#10b98118;color:#059669;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">${c.years_experience}+ yrs exp</td>` : ""}
-                  ${c.npi_taxonomy ? `<td width="8"></td><td style="background:#7c3aed18;color:#7c3aed;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">🏥 NPI Verified</td>` : ""}
+                  ${c.npi_taxonomy ? `<td width="8"></td><td style="background:#7c3aed18;color:#7c3aed;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;">✅ License Verified</td>` : ""}
                 </tr></table>
               </td>
             </tr>
             ${c.current_employer ? `<tr><td style="padding:4px 0;font-size:13px;color:#475569;">🏢 <strong>${c.current_employer}</strong>${c.current_title ? ` · ${c.current_title}` : ""}</td></tr>` : ""}
             ${c.license_number ? `<tr><td style="padding:4px 0;font-size:13px;color:#475569;">🪪 License: <strong>${c.license_number}</strong>${c.license_expiry ? ` · Exp: <strong>${c.license_expiry}</strong>` : ""} · <span style="color:#059669;font-weight:700;">Active</span></td></tr>` : ""}
-            ${c.npi_number ? `<tr><td style="padding:4px 0;font-size:13px;color:#7c3aed;">🏥 NPI: <strong>${c.npi_number}</strong>${c.npi_taxonomy ? ` · ${c.npi_taxonomy}` : ""}</td></tr>` : ""}
+            ${c.npi_number ? `<tr><td style="padding:4px 0;font-size:13px;color:#7c3aed;">✅ Licensed Professional${c.npi_taxonomy ? ` · ${c.npi_taxonomy}` : ""}</td></tr>` : ""}
             ${c.qualifications_summary ? `<tr><td style="padding:8px 0 4px;">
               <p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#f0fdf4;padding:10px 12px;border-radius:8px;border-left:3px solid #059669;"><strong>📋 Qualifications:</strong> ${c.qualifications_summary}</p>
             </td></tr>` : ""}

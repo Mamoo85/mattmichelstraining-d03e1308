@@ -15,13 +15,34 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
  * Daily 7am ET cron — assigns new candidates to active agencies based on
  * vertical + territory_counties, respecting agency_territory_locks (exclusivity).
  *
- * Output to agencies is fully sanitized (no source attribution).
+ * Defenses:
+ * - Random jitter (0–2hr) before sending to defeat 7am-pattern inference
+ * - Passive pool mix-in (1 in every 5 picks from candidates 1–3yr old) to
+ *   defeat "newly licensed = just scraped" inference
+ * - Rate limit: max 50 deliveries per agency per 24h window
+ * - Output is fully sanitized via shared scrubber (no source attribution)
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // Skip jitter on manual invocations (admin testing) — only delay scheduled cron runs
+  const body = await req.json().catch(() => ({}));
+  const isCron = body?.trigger === "cron" || req.headers.get("x-cron-trigger") === "1";
+  if (isCron) {
+    const jitterMs = Math.floor(Math.random() * 2 * 3600 * 1000); // 0–2hr
+    console.log(`[agency-distribute] Jitter: sleeping ${Math.round(jitterMs / 60000)}min before run`);
+    await new Promise((r) => setTimeout(r, jitterMs));
+  }
+
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
-  const stats = { agencies_processed: 0, candidates_distributed: 0, emails_sent: 0, errors: [] as string[] };
+  const stats = {
+    agencies_processed: 0,
+    candidates_distributed: 0,
+    emails_sent: 0,
+    rate_limited: 0,
+    passive_mixed: 0,
+    errors: [] as string[],
+  };
 
   try {
     const { data: agencies = [] } = await supabase
@@ -29,8 +50,9 @@ serve(async (req) => {
       .select("*")
       .eq("active", true);
 
+    // Fresh pool: last 36h, score >= 6
     const sinceISO = new Date(Date.now() - 36 * 3600 * 1000).toISOString();
-    const { data: candidates = [] } = await supabase
+    const { data: freshCandidates = [] } = await supabase
       .from("hire_alert_candidates")
       .select("*")
       .gte("created_at", sinceISO)
@@ -38,7 +60,19 @@ serve(async (req) => {
       .order("score", { ascending: false })
       .limit(200);
 
-    if (!candidates?.length) {
+    // Passive pool: licensed 1–3 years ago with score >= 5 (defeats "just scraped" inference)
+    const passiveSince = new Date(Date.now() - 3 * 365 * 86400 * 1000).toISOString();
+    const passiveBefore = new Date(Date.now() - 365 * 86400 * 1000).toISOString();
+    const { data: passivePool = [] } = await supabase
+      .from("hire_alert_candidates")
+      .select("*")
+      .gte("created_at", passiveSince)
+      .lt("created_at", passiveBefore)
+      .gte("score", 5)
+      .order("score", { ascending: false })
+      .limit(50);
+
+    if (!freshCandidates?.length) {
       return new Response(JSON.stringify({ ok: true, message: "No new candidates", stats }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -54,32 +88,56 @@ serve(async (req) => {
 
     for (const agency of agencies || []) {
       stats.agencies_processed++;
-      const matches: any[] = [];
 
-      for (const c of candidates) {
+      // Rate limit: 50 deliveries per agency per 24h
+      const last24h = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+      const { count: recentCount = 0 } = await supabase
+        .from("agency_candidate_assignments")
+        .select("id", { count: "exact", head: true })
+        .eq("agency_id", agency.id)
+        .gte("delivered_at", last24h);
+      if ((recentCount ?? 0) >= 50) {
+        stats.rate_limited++;
+        console.log(`[agency-distribute] Rate-limited: ${agency.agency_name} (${recentCount} in last 24h)`);
+        continue;
+      }
+
+      const matchAgency = (c: any): boolean => {
         const candCounty = (c.county || c.location || "").trim();
-        if (!candCounty) continue;
-        if (agency.territory_counties && !agency.territory_counties.includes(candCounty)) continue;
-
-        // Vertical match (best-effort — role string check)
+        if (!candCounty) return false;
+        if (agency.territory_counties && !agency.territory_counties.includes(candCounty)) return false;
         const role = (c.role || "").toLowerCase();
         const isHealthcare = /\b(rn|lpn|cna|nurse|home\s*health|aide)\b/.test(role);
         const isIndustrial = /\b(boiler|hvac|electric|plumb|stationary|engineer|machinist)\b/.test(role);
-        if (agency.vertical === "healthcare" && !isHealthcare) continue;
-        if (agency.vertical === "industrial" && !isIndustrial) continue;
-
-        // Territory exclusivity check
+        if (agency.vertical === "healthcare" && !isHealthcare) return false;
+        if (agency.vertical === "industrial" && !isIndustrial) return false;
         const lockKey = `${agency.vertical}:${candCounty}`;
         const lockedTo = lockMap.get(lockKey);
-        if (lockedTo && lockedTo !== agency.id) continue;
+        if (lockedTo && lockedTo !== agency.id) return false;
+        return true;
+      };
 
-        matches.push(c);
+      const freshMatches = freshCandidates.filter(matchAgency);
+      const passiveMatches = passivePool.filter(matchAgency);
+
+      if (!freshMatches.length && !passiveMatches.length) continue;
+
+      // Pattern-break mix-in: every 5th slot pulls from passive pool when available
+      const blended: any[] = [];
+      const cap = Math.min(10, Math.max(0, 50 - (recentCount ?? 0)));
+      for (let i = 0; blended.length < cap && (freshMatches.length || passiveMatches.length); i++) {
+        if (i % 5 === 4 && passiveMatches.length) {
+          blended.push(passiveMatches.shift());
+          stats.passive_mixed++;
+        } else if (freshMatches.length) {
+          blended.push(freshMatches.shift());
+        } else if (passiveMatches.length) {
+          blended.push(passiveMatches.shift());
+        }
       }
 
-      if (!matches.length) continue;
-
-      // Insert assignments (skip duplicates)
-      for (const c of matches.slice(0, 10)) {
+      // Insert assignments (skip duplicates via unique constraint)
+      for (const c of blended) {
         const { error } = await supabase.from("agency_candidate_assignments").insert({
           agency_id: agency.id,
           candidate_id: c.id,
@@ -89,9 +147,9 @@ serve(async (req) => {
         if (!error) stats.candidates_distributed++;
       }
 
-      // Email the agency
-      if (RESEND_API_KEY && agency.contact_email) {
-        const sanitized = sanitizeBatch(matches.slice(0, 10));
+      // Email the agency (sanitized output only)
+      if (RESEND_API_KEY && agency.contact_email && blended.length) {
+        const sanitized = sanitizeBatch(blended);
         const portalUrl = `https://www.detroitwebagent.com/agency-portal?id=${agency.id}`;
         const html = buildAgencyEmail(agency.agency_name, sanitized, portalUrl);
         try {
