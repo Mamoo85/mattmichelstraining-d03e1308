@@ -38,7 +38,7 @@ const TESTIMONIALS: Testimonial[] = [
     initials: "LT",
   },
   {
-    quote: "We canceled our $4,000/month staffing contract. This $99 service finds us the same candidates — we just reach them first.",
+    quote: "We canceled our $4,000/month staffing contract. This $149 service finds us the same candidates — we just reach them first.",
     name: "James W.",
     trade: "Owner, Home Health Agency",
     initials: "JW",
@@ -202,7 +202,7 @@ export default function HealthcareHireAlert() {
             Start Your Healthcare Staffing Monitor
           </h2>
           <p style={{ color: "#94a3b8", fontSize: 14, textAlign: "center", margin: "0 0 32px" }}>
-            $99/mo • Cancel anytime • Alerts start tomorrow at 7am
+            $149/mo • Cancel anytime • Alerts start tomorrow at 7am
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -259,7 +259,7 @@ export default function HealthcareHireAlert() {
               className="w-full h-14 text-lg font-black mt-4"
               style={{ background: ACCENT, color: BG }}
             >
-              {loading ? "Redirecting to checkout..." : "Start Monitoring — $99/mo"}
+              {loading ? "Redirecting to checkout..." : "Start Monitoring — $149/mo"}
             </Button>
 
             <p style={{ color: "#475569", fontSize: 12, textAlign: "center", marginTop: 8 }}>
@@ -273,7 +273,7 @@ export default function HealthcareHireAlert() {
       <section style={{ background: "#0f172a", padding: "60px 24px", textAlign: "center" }}>
         <div style={{ maxWidth: 600, margin: "0 auto" }}>
           <h2 style={{ color: "#fff", fontSize: 24, fontWeight: 800, margin: "0 0 12px" }}>
-            Your Staffing Agency Charges $80/hr.<br />We Charge $99/month.
+            Your Staffing Agency Charges $80/hr.<br />We Charge $149/month.
           </h2>
           <p style={{ color: "#94a3b8", fontSize: 15, lineHeight: 1.7, margin: "0 0 24px" }}>
             Same candidates. Same license boards. You just reach them first — before the agencies add their 300% markup.
