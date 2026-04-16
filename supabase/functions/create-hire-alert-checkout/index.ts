@@ -44,7 +44,7 @@ serve(async (req) => {
     let pricingTier: string;
 
     if (resolvedPlan === "bundle") {
-      unitAmount = isBeta ? 4900 : 7900; // $49 beta, $79 standard
+      unitAmount = isBeta ? 14900 : 19900; // $149 beta, $199 standard
       pricingTier = isBeta ? "beta_grandfathered" : "standard";
     } else {
       unitAmount = isBeta ? 9900 : 14900; // $99 beta, $149 standard
@@ -52,8 +52,8 @@ serve(async (req) => {
     }
 
     const planLabel = resolvedPlan === "bundle"
-      ? "TechAlert + Field CRM Bundle"
-      : `TechAlert Hiring Monitor${isBeta ? " (Beta)" : ""}`;
+      ? "HireAlert + FieldDesk Bundle"
+      : `HireAlert Membership${isBeta ? " (Beta)" : ""}`;
 
     const origin = req.headers.get("origin") || "https://www.detroitwebagent.com";
 
