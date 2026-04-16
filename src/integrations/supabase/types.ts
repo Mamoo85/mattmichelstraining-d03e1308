@@ -10593,6 +10593,9 @@ export type Database = {
           active: boolean
           agency_name: string
           annual_prepay_cents: number | null
+          annual_prepay_expires_at: string | null
+          annual_prepay_paid_at: string | null
+          card_saved_at: string | null
           contact_email: string
           contact_name: string | null
           contact_phone: string | null
@@ -10613,6 +10616,9 @@ export type Database = {
           active?: boolean
           agency_name: string
           annual_prepay_cents?: number | null
+          annual_prepay_expires_at?: string | null
+          annual_prepay_paid_at?: string | null
+          card_saved_at?: string | null
           contact_email: string
           contact_name?: string | null
           contact_phone?: string | null
@@ -10633,6 +10639,9 @@ export type Database = {
           active?: boolean
           agency_name?: string
           annual_prepay_cents?: number | null
+          annual_prepay_expires_at?: string | null
+          annual_prepay_paid_at?: string | null
+          card_saved_at?: string | null
           contact_email?: string
           contact_name?: string | null
           contact_phone?: string | null
