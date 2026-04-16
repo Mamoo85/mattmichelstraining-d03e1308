@@ -290,20 +290,23 @@ export default function AdminIndustrialIntel() {
                     <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                       <td className="py-2.5 px-3">
                         <p className="text-white font-medium text-sm">{lead.company_name}</p>
-                        {lead.source_url && (
+                        {lead.source_url ? (
                           <a href={lead.source_url} target="_blank" rel="noreferrer" className="text-[#00d4ff]/60 text-xs hover:text-[#00d4ff] transition-colors">
                             Source →
                           </a>
+                        ) : (
+                          <span className="text-white/20 text-xs">No source link</span>
                         )}
                       </td>
                       <td className="py-2.5 px-3 text-white/60">{lead.location}</td>
                       <td className="py-2.5 px-3 text-center">{typeBadge(lead.expansion_type)}</td>
-                      <td className="py-2.5 px-3 text-white/50 text-xs max-w-xs truncate">{lead.details}</td>
+                      <td className="py-2.5 px-3 text-white/50 text-xs max-w-xs truncate" title={lead.details}>{lead.details}</td>
                       <td className="py-2.5 px-3 text-center text-white/40 text-xs">{lead.news_date || "—"}</td>
                       <td className="py-2.5 px-3 text-right">
                         <button
                           onClick={() => pitchEmail(lead)}
                           className="px-3 py-1.5 rounded bg-[#00d4ff]/10 text-[#00d4ff] text-xs font-medium hover:bg-[#00d4ff]/20 transition-colors border border-[#00d4ff]/20"
+                          title="Opens email draft with TechAlert pitch"
                         >
                           📧 TechAlert Pitch
                         </button>
