@@ -25,7 +25,7 @@ interface VelocityTrackerProps {
 const VelocityTracker = ({ exerciseTitle, onClose }: VelocityTrackerProps) => {
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const detectorRef = useRef<poseDetection.PoseDetector | null>(null);
+  const detectorRef = useRef<any>(null);
   const rafRef = useRef<number | null>(null);
   const pointsRef = useRef<VelocityPoint[]>([]);
   const repVelocitiesRef = useRef<number[]>([]);
