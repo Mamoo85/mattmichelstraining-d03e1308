@@ -12,7 +12,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-04-15. Update this section every session.*
+*Last updated: 2026-04-16. Update this section every session.*
+
+### Phase 15 — DWA Branding & Security Hardening IN PROGRESS 🔄
+*2026-04-16 — branch `claude/update-claude-md-89INK`*
+
+**Work completed this session:**
+- **DWA branding fixes** (`1c79c23`) — Fixed detroitwebagent.com domain routing and CSS branding consistency across all DWA product pages
+- **Full DWA click audit** (`0584c10`) — Verified all UI elements route correctly to intended pages (demo links, product CTAs, admin tabs)
+- **RLS policy hardening** (`42d6837`) — Restricted direct anonymous access to `system_comms_log` and `job-photos`; all reads now flow through edge functions
+- **Security issues from scan** (`543f75f`) — Fixed XSS vectors, input validation, and authentication gaps identified in code scan
+- **TechAlert field fixes** (`b41e95b`) — Corrected field validation and data serialization in candidate scoring
+
+**Known status:**
+- Main branch (`0928835`) includes tightened RLS policies and security improvements
+- Current branch `claude/update-claude-md-89INK` adds DWA click audit verification and branding consistency
+- No breaking changes; all services remain operational
+
+**Next actions:**
+- Merge `claude/update-claude-md-89INK` to main
+- Verify all DWA admin tabs load correctly in production
+- Monitor TechAlert candidate alerts for any data formatting issues
+
+---
 
 ### Phase 14 — Product Readiness Sprint COMPLETE ✅
 *2026-04-15 — branch `claude/fix-hire-alert-runs-table-JgJ3Y`*
