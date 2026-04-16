@@ -451,20 +451,20 @@ const App = () => (
                     <Routes>
                     <Route path="/" element={getDomainBrand() === "agency" ? <AgencyHome /> : <Index />} />
                     <Route path="/agency" element={<AgencyHome />} />
-                    <Route path="/free-site-scanner" element={<FreeSiteScanner />} />
-                    <Route path="/free-tools" element={<FreeToolsHub />} />
-                    <Route path="/free-tools/seo-health" element={<FreeSeoHealth />} />
-                    <Route path="/free-tools/breach-scan" element={<FreeBreachScanner />} />
-                    <Route path="/free-tools/rank-check" element={<FreeRankChecker />} />
-                    <Route path="/free-tools/meta-tags" element={<FreeMetaAnalyzer />} />
-                    <Route path="/free-tools/leaky-bucket" element={<FreeLeakyBucketAudit />} />
-                    <Route path="/free-tools/medicare-staffing" element={<FreeMedicareStaffingCheck />} />
-                    <Route path="/free-tools/local-search" element={<FreeLocalSearchAudit />} />
-                    <Route path="/free-tools/service-gap" element={<FreeServiceGapScanner />} />
-                    <Route path="/free-tools/ada-scanner" element={<FreeAdaScanner />} />
-                    <Route path="/free-tools/osha-check" element={<FreeOshaCheck />} />
-                    <Route path="/free-tools/equipment-age" element={<FreeEquipmentAgeCheck />} />
-                    <Route path="/free-tools/nursing-compliance" element={<FreeNursingComplianceCheck />} />
+                    <Route path="/free-site-scanner" element={<DWARouteGuard><FreeSiteScanner /></DWARouteGuard>} />
+                    <Route path="/free-tools" element={<DWARouteGuard><FreeToolsHub /></DWARouteGuard>} />
+                    <Route path="/free-tools/seo-health" element={<DWARouteGuard><FreeSeoHealth /></DWARouteGuard>} />
+                    <Route path="/free-tools/breach-scan" element={<DWARouteGuard><FreeBreachScanner /></DWARouteGuard>} />
+                    <Route path="/free-tools/rank-check" element={<DWARouteGuard><FreeRankChecker /></DWARouteGuard>} />
+                    <Route path="/free-tools/meta-tags" element={<DWARouteGuard><FreeMetaAnalyzer /></DWARouteGuard>} />
+                    <Route path="/free-tools/leaky-bucket" element={<DWARouteGuard><FreeLeakyBucketAudit /></DWARouteGuard>} />
+                    <Route path="/free-tools/medicare-staffing" element={<DWARouteGuard><FreeMedicareStaffingCheck /></DWARouteGuard>} />
+                    <Route path="/free-tools/local-search" element={<DWARouteGuard><FreeLocalSearchAudit /></DWARouteGuard>} />
+                    <Route path="/free-tools/service-gap" element={<DWARouteGuard><FreeServiceGapScanner /></DWARouteGuard>} />
+                    <Route path="/free-tools/ada-scanner" element={<DWARouteGuard><FreeAdaScanner /></DWARouteGuard>} />
+                    <Route path="/free-tools/osha-check" element={<DWARouteGuard><FreeOshaCheck /></DWARouteGuard>} />
+                    <Route path="/free-tools/equipment-age" element={<DWARouteGuard><FreeEquipmentAgeCheck /></DWARouteGuard>} />
+                    <Route path="/free-tools/nursing-compliance" element={<DWARouteGuard><FreeNursingComplianceCheck /></DWARouteGuard>} />
                     <Route path="/command-center" element={<ProtectedRoute><ClientCommandCenter /></ProtectedRoute>} />
                     <Route path="/computer-repair" element={<ComputerRepair />} />
                     <Route path="/unsubscribe" element={<Unsubscribe />} />
@@ -493,7 +493,7 @@ const App = () => (
                     <Route path="/training/:slug" element={<SEOLandingPage />} />
                     <Route path="/services/:slug" element={<ContractorSeoPage />} />
                     <Route path="/sitemap.xml" element={<DynamicSitemap />} />
-                    <Route path="/detroit-web-design" element={<WebDesignAgency />} />
+                    <Route path="/detroit-web-design" element={<DWARouteGuard><WebDesignAgency /></DWARouteGuard>} />
                     <Route path="/demo-landscaping" element={<LandscapeMockup />} />
                     <Route path="/demo-landscaping/*" element={<LandscapeMockup />} />
                     <Route path="/demo-plumber" element={<PlumberMockup />} />
@@ -520,21 +520,21 @@ const App = () => (
                     <Route path="/ai-gbp-post-pack" element={<AiGbpPostPack />} />
                     <Route path="/ai-competitor-report" element={<AiCompetitorReport />} />
                     <Route path="/ad/website-audit" element={<AdWebsiteAudit />} />
-                    <Route path="/lab/domain-breach" element={<LabDomainBreach />} />
-                    <Route path="/lab/keyword-gap" element={<LabKeywordGap />} />
-                    <Route path="/ad/gbp-posts" element={<AdGbpPosts />} />
-                    <Route path="/ad/competitor-report" element={<AdCompetitorReport />} />
-                    <Route path="/demo-youngblood-alt1" element={<YoungbloodMockupAlt1 />} />
-                    <Route path="/demo-youngblood-alt1/*" element={<YoungbloodMockupAlt1 />} />
-                    <Route path="/demo-dental-alt1" element={<DentalMockupAlt1 />} />
-                    <Route path="/demo-dental-alt1/*" element={<DentalMockupAlt1 />} />
-                    <Route path="/stewart-dental" element={<StewartDentalProduction />} />
-                    <Route path="/stewart-dental/privacy" element={<StewartDentalPrivacy />} />
-                    <Route path="/demo-dental-alt2" element={<DentalMockupAlt2 />} />
-                    <Route path="/demo-dental-alt2/*" element={<DentalMockupAlt2 />} />
-                    <Route path="/demo-djconley-1" element={<DJConleyDemo1 />} />
-                    <Route path="/demo-djconley-1/*" element={<DJConleyDemo1 />} />
-                    <Route path="/demo-djconley-2" element={<DJConleyDemo2 />} />
+                    <Route path="/lab/domain-breach" element={<DWARouteGuard><LabDomainBreach /></DWARouteGuard>} />
+                    <Route path="/lab/keyword-gap" element={<DWARouteGuard><LabKeywordGap /></DWARouteGuard>} />
+                    <Route path="/ad/gbp-posts" element={<DWARouteGuard><AdGbpPosts /></DWARouteGuard>} />
+                    <Route path="/ad/competitor-report" element={<DWARouteGuard><AdCompetitorReport /></DWARouteGuard>} />
+                    <Route path="/demo-youngblood-alt1" element={<DWARouteGuard><YoungbloodMockupAlt1 /></DWARouteGuard>} />
+                    <Route path="/demo-youngblood-alt1/*" element={<DWARouteGuard><YoungbloodMockupAlt1 /></DWARouteGuard>} />
+                    <Route path="/demo-dental-alt1" element={<DWARouteGuard><DentalMockupAlt1 /></DWARouteGuard>} />
+                    <Route path="/demo-dental-alt1/*" element={<DWARouteGuard><DentalMockupAlt1 /></DWARouteGuard>} />
+                    <Route path="/stewart-dental" element={<DWARouteGuard><StewartDentalProduction /></DWARouteGuard>} />
+                    <Route path="/stewart-dental/privacy" element={<DWARouteGuard><StewartDentalPrivacy /></DWARouteGuard>} />
+                    <Route path="/demo-dental-alt2" element={<DWARouteGuard><DentalMockupAlt2 /></DWARouteGuard>} />
+                    <Route path="/demo-dental-alt2/*" element={<DWARouteGuard><DentalMockupAlt2 /></DWARouteGuard>} />
+                    <Route path="/demo-djconley-1" element={<DWARouteGuard><DJConleyDemo1 /></DWARouteGuard>} />
+                    <Route path="/demo-djconley-1/*" element={<DWARouteGuard><DJConleyDemo1 /></DWARouteGuard>} />
+                    <Route path="/demo-djconley-2" element={<DWARouteGuard><DJConleyDemo2 /></DWARouteGuard>} />
                     <Route path="/demo-youngblood-alt2" element={<YoungbloodMockupAlt2 />} />
                     <Route path="/demo-youngblood-alt2/*" element={<YoungbloodMockupAlt2 />} />
                     <Route path="/demo-hvac" element={<HvacMockup />} />
@@ -596,7 +596,7 @@ const App = () => (
                     <Route path="/restaurant-sms" element={<RestaurantSMS />} />
                     <Route path="/social-media-ai" element={<SocialMediaAI />} />
                     <Route path="/trainer-social-ai" element={<TrainerSocialAI />} />
-                    <Route path="/get-started" element={<GetStarted />} />
+                    <Route path="/get-started" element={<DWARouteGuard><GetStarted /></DWARouteGuard>} />
                     <Route path="/social-connect" element={<SocialConnect />} />
                     <Route path="/review-responder" element={<ReviewResponder />} />
                     <Route path="/seo-reports" element={<SeoAuditService />} />
@@ -678,7 +678,7 @@ const App = () => (
                     <Route path="/warranty-reminders" element={<WarrantyReminders />} />
                     <Route path="/hiring-assistant" element={<HiringAssistant />} />
                     <Route path="/kpi-email" element={<KPIEmail />} />
-                    <Route path="/all-services" element={<AllServices />} />
+                    <Route path="/all-services" element={<DWARouteGuard><AllServices /></DWARouteGuard>} />
                     <Route path="/revenue-suite" element={<BundleRevenueSuite />} />
                     <Route path="/refer" element={<ReferralPage />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -702,7 +702,7 @@ const App = () => (
                     <Route path="/ai-inventory-alerts" element={<AIInventoryAlerts />} />
                     <Route path="/ai-birthday-campaign" element={<AIBirthdayCampaign />} />
                     <Route path="/linkedin-outreach" element={<LinkedInOutreach />} />
-                    <Route path="/abandoned-cart-recovery" element={<AbandonedCartRecovery />} />
+                    <Route path="/abandoned-cart-recovery" element={<DWARouteGuard><AbandonedCartRecovery /></DWARouteGuard>} />
                     <Route path="/client-report-generator" element={<ClientReportGenerator />} />
                     <Route path="/restaurant-menu-copy" element={<RestaurantMenuCopy />} />
                     <Route path="/insurance-follow-up-drip" element={<InsuranceFollowUpDrip />} />
