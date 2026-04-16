@@ -19,6 +19,9 @@ export default function AdminAgencyOutreach() {
   const [loadingCands, setLoadingCands] = useState(true);
   const [drafting, setDrafting] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  // Cherry-pick: agency.name -> candidate.id
+  const [pickedFor, setPickedFor] = useState<Record<string, string | null>>({});
+  const [showPicker, setShowPicker] = useState<string | null>(null);
 
   useEffect(() => { loadCandidates(); }, []);
 
@@ -30,28 +33,34 @@ export default function AdminAgencyOutreach() {
       .select("id, name, role, county, score, created_at")
       .gte("created_at", since)
       .order("score", { ascending: false })
-      .limit(10);
+      .limit(20);
     setCandidates(data || []);
     setLoadingCands(false);
   };
 
+  const matchingCandidatesFor = (vertical: "industrial" | "healthcare") =>
+    candidates.filter(c => {
+      const r = (c.role || "").toLowerCase();
+      const isHC = /\b(rn|lpn|cna|nurse|home\s*health|aide)\b/.test(r);
+      const isInd = /\b(boiler|hvac|electric|plumb|stationary|engineer|machinist)\b/.test(r);
+      return vertical === "healthcare" ? isHC : isInd;
+    });
+
   const draftEmail = async (agency: typeof METRO_DETROIT_AGENCIES[0]) => {
     setDrafting(agency.name);
     try {
-      const matchingCands = candidates
-        .filter(c => {
-          const r = (c.role || "").toLowerCase();
-          const isHC = /\b(rn|lpn|cna|nurse|home\s*health|aide)\b/.test(r);
-          const isInd = /\b(boiler|hvac|electric|plumb|stationary|engineer|machinist)\b/.test(r);
-          return agency.vertical === "healthcare" ? isHC : isInd;
-        })
-        .slice(0, 3)
-        .map(c => ({
-          name: c.name,
-          licensed_role: c.role,
-          county: c.county,
-          signal_strength: c.score >= 8 ? "exceptional" : c.score >= 6 ? "strong" : "moderate",
-        }));
+      const pickedId = pickedFor[agency.name];
+      const matchPool = matchingCandidatesFor(agency.vertical as any);
+      const cherryPicked = pickedId ? matchPool.filter(c => c.id === pickedId) : [];
+      const restMatches = matchPool.filter(c => c.id !== pickedId).slice(0, 2);
+      const finalList = [...cherryPicked, ...restMatches].slice(0, 3);
+
+      const matchingCands = finalList.map(c => ({
+        name: c.name,
+        licensed_role: c.role,
+        county: c.county,
+        signal_strength: c.score >= 8 ? "exceptional" : c.score >= 6 ? "strong" : "moderate",
+      }));
 
       const { data, error } = await supabase.functions.invoke("agency-outreach-draft", {
         body: {
@@ -59,10 +68,12 @@ export default function AdminAgencyOutreach() {
           contact_name: agency.contact,
           vertical: agency.vertical,
           recent_candidates: matchingCands,
+          cherry_picked: !!pickedId,
         },
       });
       if (error) throw error;
       setDrafts(d => ({ ...d, [agency.name]: data?.draft || "" }));
+      toast.success(pickedId ? "Cherry-picked draft ready" : "Draft ready");
     } catch (e: any) {
       toast.error(e?.message || "Draft failed");
     } finally {
