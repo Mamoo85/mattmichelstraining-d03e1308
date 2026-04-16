@@ -71,7 +71,7 @@ serve(async (req) => {
             product_data: {
               name: planLabel,
               description:
-                "Daily alerts when licensed tradespeople become available in Metro Detroit. Scans MIOSHA license DB, Apollo, and job boards.",
+                "Daily alerts when licensed tradespeople become available in Metro Detroit. Proprietary multi-source talent signal monitoring.",
             },
           },
         },

@@ -67,7 +67,7 @@ export default function HealthcareHireAlert() {
           <h1 style={{ color: "#fff", fontSize: 32, fontWeight: 800, margin: "0 0 12px" }}>Healthcare HireAlert is Live</h1>
           <p style={{ color: ACCENT, fontSize: 18, fontWeight: 700, margin: "0 0 20px" }}>Your staffing advantage starts tomorrow at 7am.</p>
           <p style={{ color: "#94a3b8", fontSize: 15, lineHeight: 1.7, margin: "0 0 32px" }}>
-            Check your email — we sent your welcome guide. Our Licensing Monitor scans state registries every morning at 7am and texts you the moment a new CNA, RN, or LPN clears their license in your area.
+            Check your email — we sent your welcome guide. Our Licensing Monitor scans professional licensing records every morning at 7am and texts you the moment a new CNA, RN, or LPN clears their license in your area.
           </p>
           <a href="/" style={{ background: ACCENT, color: BG, padding: "14px 32px", borderRadius: 8, fontWeight: 800, fontSize: 16, textDecoration: "none", display: "inline-block" }}>
             Back to Home
@@ -172,7 +172,7 @@ export default function HealthcareHireAlert() {
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             {[
-              { step: "1", title: "We Scan State Registries Daily", desc: "Every morning at 7am, our Automated Ingestion Engine downloads the latest licensing data from Michigan LARA — CNAs, RNs, LPNs, and more." },
+              { step: "1", title: "We Scan Licensing Records Daily", desc: "Every morning at 7am, our Automated Ingestion Engine ingests the latest licensing data from Michigan's professional licensing authority — CNAs, RNs, LPNs, and more." },
               { step: "2", title: "New Licenses Are Flagged Instantly", desc: "When a new healthcare professional clears their license in your county, our system scores them on availability signals — job boards, LinkedIn, and license type." },
               { step: "3", title: "You Get a Text Before Anyone Else", desc: "High-scoring candidates trigger an immediate SMS + email alert with their name, license type, city, and contact info. You call them before the agencies even know they exist." },
             ].map(({ step, title, desc }) => (
