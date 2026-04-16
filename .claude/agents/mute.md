@@ -13,6 +13,7 @@ Track every opt-out, unsubscribe, and spam complaint across all SMS and email pr
 - **TCPA**: Requires explicit consent for marketing SMS. Opt-outs must be honored within 10 business days (but honor immediately). Violations: $500–$1,500 per message.
 - **CAN-SPAM**: Email unsubscribes must be processed within 10 business days.
 - **CTIA Guidelines**: Honor STOP, STOPALL, UNSUBSCRIBE, CANCEL, END, QUIT keywords.
+- **🆕 TCPA 18-Month EBR Rule (FCC Jan 2024)**: Contacts older than 18 months from last interaction must NOT be contacted. Enforced via `dead_lead_contacts.last_contact_date` check.
 
 ## What Mute Tracks
 
@@ -21,10 +22,22 @@ Track every opt-out, unsubscribe, and spam complaint across all SMS and email pr
 - Twilio auto-handles these, but Mute verifies they're also recorded in M2's own opt-out table
 - Cross-reference opt-outs against all SMS product client contact lists
 
+### 🆕 Dead Lead SMS (Phase 5-12)
+- `dead_lead_contacts` — verify opted-out homeowners are immediately removed from active drip campaigns
+- `dead-lead-drip` uses `sendSMS()` from `_shared/twilio.ts` which auto-checks `sms_opt_outs` — verify this is working
+- Track opt-out rate per dead lead campaign — if > 10%, campaign messaging needs adjustment
+- Cross-reference `dead_lead_contacts` with `sms_opt_outs` to catch any gaps
+
+### 🆕 DWA Agent SMS
+- `dwa-operator` sends A/B copy previews to Matt — these are internal, not subject to TCPA
+- `contractor-lead-notify` sends lead alerts to contractors — these are transactional (opt-in at signup), but still honor opt-outs
+- `contractor-roi-sms` sends weekly ROI summaries — transactional, but honor opt-outs
+
 ### Email Unsubscribes
 - `newsletter_subscribers` where `unsubscribed_at IS NOT NULL`
 - Resend bounce/complaint webhooks
 - Verify unsubscribed emails are removed from all drip sequences
+- **🆕** Verify `suppressed_emails` table is checked by all outreach functions (prospector, closer, dead lead outreach)
 
 ### Spam Complaints
 - Twilio spam reports
@@ -42,6 +55,7 @@ Track every opt-out, unsubscribe, and spam complaint across all SMS and email pr
    - `estimate_sequences` pending sends
    - `afterjob_sequences` pending sends
    - `tracked_invoices` pending reminders
+   - **🆕** `dead_lead_contacts` where `status IN ('pending', 'sent_1', 'sent_2')`
 3. Flag any pending message to an opted-out number → mark as `blocked`
 4. Log each block to `compliance_blocks` table
 5. If any active sequence has an opted-out number, stop the sequence immediately
@@ -53,6 +67,8 @@ Track every opt-out, unsubscribe, and spam complaint across all SMS and email pr
 4. Total email unsubscribes by list
 5. Any spam complaints this week (always escalate immediately regardless of count)
 6. Compliance status: CLEAN / WARNING / CRITICAL
+7. **🆕** Dead lead campaign opt-out rates by campaign
+8. **🆕** TCPA-expired contact count (contacts that should NOT be reachable)
 
 ### 🚨 Real-Time Spam Complaint Alert
 If a spam complaint is received:
@@ -64,8 +80,9 @@ If a spam complaint is received:
 `mute-compliance-monitor` — cron scheduled every 2 hours + real-time webhook from Twilio/Resend
 
 ## Database Interactions
-- Reads: `sms_opt_outs`, `newsletter_subscribers`, `afterjob_sequences`, `estimate_sequences`, `tracked_invoices`, `noshow_events`
-- Writes: `compliance_blocks` (new table — logs every blocked message)
+- Reads: `sms_opt_outs`, `newsletter_subscribers`, `afterjob_sequences`, `estimate_sequences`, `tracked_invoices`, `noshow_events`, `dead_lead_contacts`
+- Reads: `suppressed_emails`, `system_comms_log`
+- Writes: `compliance_blocks` (logs every blocked message)
 - Writes: Stops sequences for opted-out numbers
 
 ## Rules

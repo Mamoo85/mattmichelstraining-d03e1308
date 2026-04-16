@@ -382,7 +382,7 @@ export default function PodcastRevenueMachine() {
             />
             <div>
               <p className="text-white font-bold text-sm">Matt Michels</p>
-              <p className="text-slate-500 text-xs">Grosse Pointe, MI · <a href="tel:+13138064952" className="text-[#FF6B35]">(313) 806-4952</a> · M2 Development</p>
+              <p className="text-slate-500 text-xs">Grosse Pointe, MI · <a href="tel:+13139921219" className="text-[#FF6B35]">(313) 992-1219</a> · M2 Development</p>
             </div>
           </div>
         </div>

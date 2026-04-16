@@ -75,7 +75,7 @@ export default function FranchiseAnalyzer() {
           Matt will send you login details and instructions within 24 hours. Your first FDD analysis is included — submit it anytime after setup.
         </p>
         <p className="mt-6 text-sm text-muted-foreground">
-          Questions? <a href="tel:+13138064952" className="text-primary font-bold">(313) 806-4952</a>
+          Questions? <a href="tel:+13139921219" className="text-primary font-bold">(313) 992-1219</a>
         </p>
       </div>
     </div>

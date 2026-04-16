@@ -72,6 +72,13 @@ const HIDDEN_PATHS = [
   "/detroit-web-design", "/whats-included",
   "/matrix", "/matrix-training", "/matrix-merch",
   "/admin", "/dwa-admin", "/field-service",
+  "/my-techalert", "/roi",
+  "/contractor-leads", "/missed-call-text", "/missed-call-catch",
+  "/hire-alert", "/hire-alert-trial", "/hire-alert-healthcare",
+  "/dead-lead-intake", "/dead-lead-stats", "/lead-unlocked", "/lead-claimed",
+  "/agency", "/all-services", "/free-tools", "/free-site-scanner",
+  "/web-design-services", "/get-started", "/seo-guard",
+  "/ai-phone-answering", "/manufacturing-web-design", "/real-estate-web-design",
 ];
 
 const BottomTabBar = () => {

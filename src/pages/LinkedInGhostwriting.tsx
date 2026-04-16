@@ -196,7 +196,7 @@ export default function LinkedInGhostwriting() {
 
             <p className="text-[11px] text-muted-foreground text-center mt-3">
               Questions? <a href="mailto:matt@mattmichelstraining.com" className="text-primary">matt@mattmichelstraining.com</a> or text{" "}
-              <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a>
+              <a href="tel:+13139921219" className="text-primary">(313) 992-1219</a>
             </p>
           </div>
 

@@ -1,23 +1,76 @@
 import React, { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import DispatchBoard from "@/components/field-service/DispatchBoard";
 import TechMap from "@/components/field-service/TechMap";
+import DemoModeBadge, { DEMO_MASTER_TOKEN } from "@/components/DemoModeBadge";
 
 type Tab = "board" | "map";
 
 export default function FieldServiceDispatch() {
   const [activeTab, setActiveTab] = useState<Tab>("board");
   const [now, setNow] = useState(new Date());
+  const [authState, setAuthState] = useState<"loading" | "authorized" | "denied">("loading");
+  const [resolvedClientId, setResolvedClientId] = useState<string>("");
 
   const params = new URLSearchParams(window.location.search);
   const rawClient = params.get("client") || "";
-  const clientId = (rawClient === "demo" || params.get("demo") === "1")
-    ? "demo"
-    : rawClient || "00000000-0000-0000-0000-000000000000";
+  const rawToken = params.get("token") || "";
+  const isDemo = rawToken === DEMO_MASTER_TOKEN || rawClient === "demo" || params.get("demo") === "1";
+
+  // Verify dispatch token against DB
+  useEffect(() => {
+    if (isDemo) {
+      setResolvedClientId("demo");
+      setAuthState("authorized");
+      return;
+    }
+
+    if (!rawToken) {
+      setAuthState("denied");
+      return;
+    }
+
+    // Verify token
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("field_crm_clients")
+        .select("id")
+        .eq("dispatch_token", rawToken)
+        .eq("active", true)
+        .maybeSingle();
+
+      if (data?.id) {
+        setResolvedClientId(data.id as string);
+        setAuthState("authorized");
+      } else {
+        setAuthState("denied");
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
+
+  if (authState === "loading") {
+    return (
+      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center">
+        <div className="text-[#00d4ff] text-lg animate-pulse">Verifying access...</div>
+      </div>
+    );
+  }
+
+  if (authState === "denied") {
+    return (
+      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center flex-col gap-4">
+        <div className="text-red-400 text-xl font-bold">Access Denied</div>
+        <p className="text-gray-400 text-sm max-w-md text-center">
+          Invalid or expired dispatch token. Contact your account manager for access.
+        </p>
+      </div>
+    );
+  }
 
   const formattedDate = now.toLocaleDateString("en-US", {
     weekday: "short",
@@ -32,7 +85,7 @@ export default function FieldServiceDispatch() {
 
   return (
     <div className="min-h-screen bg-[#0a1628] text-white flex flex-col">
-      {/* Top Nav */}
+      {isDemo && <DemoModeBadge />}
       <header className="flex items-center justify-between px-5 py-3 border-b border-[#1e3a5f] shrink-0">
         <div>
           <span className="font-black text-sm tracking-tight text-white">DETROIT</span>
@@ -72,9 +125,9 @@ export default function FieldServiceDispatch() {
       {/* Tab Content */}
       <div className="flex-1 overflow-auto">
         {activeTab === "board" ? (
-          <DispatchBoard clientId={clientId} />
+          <DispatchBoard clientId={resolvedClientId} />
         ) : (
-          <TechMap clientId={clientId} />
+          <TechMap clientId={resolvedClientId} />
         )}
       </div>
     </div>

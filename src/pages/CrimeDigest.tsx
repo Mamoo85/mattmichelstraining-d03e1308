@@ -48,7 +48,7 @@ export default function CrimeDigest() {
           Your first weekly report arrives next Monday at 7am. Stay informed, stay ahead.
         </p>
         <p className="mt-4 text-sm text-muted-foreground">
-          Questions? Text <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a>
+          Questions? Text <a href="tel:+13139921219" className="text-primary">(313) 992-1219</a>
         </p>
       </div>
     </div>

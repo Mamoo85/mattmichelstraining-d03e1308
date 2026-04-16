@@ -114,7 +114,7 @@ serve(async (req) => {
             <h3>Top Issues Found:</h3>
             <ul>${issues.map((i: string) => `<li>${i}</li>`).join("")}</ul>
             <p><a href="https://www.detroitwebagent.com/ai-website-audit">Get a full professional audit →</a></p>
-            <p>— Matt Michels, Lead Web Agent<br/>Detroit Web Agency | (313) 806-4952</p>`,
+            <p>— Matt Michels, Lead Web Agent<br/>Detroit Web Agency | (313) 992-1219</p>`,
         }),
       });
     }

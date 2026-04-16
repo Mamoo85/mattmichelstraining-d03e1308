@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Phone, CheckCircle, XCircle, Zap, MapPin, MessageSquare, FileText, Calendar, Camera, Star } from "lucide-react";
 import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,11 +57,31 @@ const ADDONS = [
 ];
 
 export default function FieldServiceManagement() {
+  const [searchParams] = useSearchParams();
+  const isSuccess = searchParams.get("success") === "1";
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [industry, setIndustry] = useState("hvac");
   const [loading, setLoading] = useState(false);
+
+  if (isSuccess) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
+        <div style={{ maxWidth: 520, textAlign: "center" }}>
+          <div style={{ fontSize: 64, marginBottom: 24 }}>🚀</div>
+          <h1 style={{ color: "#fff", fontSize: 32, fontWeight: 800, margin: "0 0 12px" }}>FieldDesk is Live!</h1>
+          <p style={{ color: "#00d4ff", fontSize: 18, fontWeight: 700, margin: "0 0 20px" }}>Your dispatch platform is being provisioned now.</p>
+          <p style={{ color: "#94a3b8", fontSize: 15, lineHeight: 1.7, margin: "0 0 32px" }}>
+            Check your email — we're setting up your dispatch board, tech app, and customer portal. You'll receive login credentials and a quick-start guide within the hour.
+          </p>
+          <a href="/" style={{ background: "#00d4ff", color: "#0a1628", padding: "14px 32px", borderRadius: 8, fontWeight: 800, fontSize: 16, textDecoration: "none", display: "inline-block" }}>
+            Back to Home
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   async function handleCheckout(plan: "standalone" | "bundle") {
     if (!email) { toast.error("Enter your email to continue"); return; }
@@ -91,8 +112,8 @@ export default function FieldServiceManagement() {
             <span className="font-black text-lg tracking-tight">DETROIT</span>
             <span className="text-[#00d4ff] font-black text-lg tracking-tight"> WEB AGENCY</span>
           </div>
-          <a href="tel:+13138064952" className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors">
-            <Phone size={14} /> (313) 806-4952
+          <a href="tel:+13139921219" className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors">
+            <Phone size={14} /> (313) 992-1219
           </a>
         </div>
 
@@ -128,10 +149,10 @@ export default function FieldServiceManagement() {
               See Pricing →
             </a>
             <a
-              href="tel:+13138064952"
+              href="sms:+13139921219"
               className="border border-white/30 text-white px-8 py-3 font-bold text-sm hover:bg-white/5 transition-colors flex items-center gap-2"
             >
-              <Phone size={14} /> Call Matt
+              <MessageSquare size={14} /> Text Matt
             </a>
           </div>
         </div>
@@ -339,7 +360,7 @@ export default function FieldServiceManagement() {
         {/* Add-ons */}
         <div className="bg-[#0f1f35] py-12 px-6">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-center text-base font-black mb-1 uppercase tracking-wide">Power it up with M² add-ons</h2>
+            <h2 className="text-center text-base font-black mb-1 uppercase tracking-wide">Power it up with add-ons</h2>
             <p className="text-center text-white/40 text-xs mb-8">Each add-on runs automatically — no extra work for you or your team.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {ADDONS.map((a) => (
@@ -370,7 +391,7 @@ export default function FieldServiceManagement() {
               Wayne County · Oakland County · Macomb County · Grosse Pointe · Warren · Sterling Heights · Troy · Livonia · Dearborn · Birmingham · Royal Oak
             </p>
             <p className="text-white/40 text-sm">
-              Detroit Web Agency — Grosse Pointe, MI · (313) 806-4952
+              Detroit Web Agency — Grosse Pointe, MI · (313) 992-1219
             </p>
           </div>
         </div>
@@ -379,13 +400,13 @@ export default function FieldServiceManagement() {
         <div className="py-16 px-6 text-center">
           <p className="text-white/40 text-xs uppercase tracking-widest mb-3">Ready to make the switch?</p>
           <h2 className="text-2xl font-black mb-4">
-            Call Matt. We'll have you live in 48 hours.
+            Text Matt. We'll have you live in 48 hours.
           </h2>
           <a
-            href="tel:+13138064952"
+            href="sms:+13139921219"
             className="inline-flex items-center gap-2 bg-[#00d4ff] text-[#0a1628] font-black px-8 py-3 text-sm uppercase tracking-wide hover:bg-[#00d4ff]/90 transition-colors"
           >
-            <Phone size={14} /> (313) 806-4952
+            <MessageSquare size={14} /> Text (313) 992-1219
           </a>
           <p className="text-white/30 text-xs mt-4">Detroit Web Agency — We Handle The Tech</p>
         </div>

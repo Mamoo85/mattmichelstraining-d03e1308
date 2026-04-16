@@ -49,6 +49,14 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
     { key: "industry", label: "Industry", default: "fitness training" },
     { key: "city", label: "City", default: "Grosse Pointe" },
   ],
+  // Lab Products
+  domain_breach_report: [
+    { key: "domain", label: "Domain to Scan", default: "mattmichelstraining.com" },
+  ],
+  keyword_gap_report: [
+    { key: "your_domain", label: "Your Domain", default: "mattmichelstraining.com" },
+    { key: "competitor_domain", label: "Competitor Domain", default: "detroitwebagent.com" },
+  ],
   // Subscriptions
   gbp_saas_subscription: [
     { key: "businessName", label: "Business Name", default: "M2 Development" },
@@ -82,89 +90,80 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
     { key: "custom_message", label: "Auto-Reply Message (160 chars max)", default: "" },
   ],
   // SMS Products
+  holiday_sms_subscription: [
+    { key: "businessName", label: "Business Name", default: "M2 Development" },
+    { key: "industry", label: "Industry", default: "HVAC" },
+    { key: "name", label: "Owner Name", default: "Matt Michels" },
+  ],
+  appointment_reminder_subscription: [
+    { key: "businessName", label: "Business Name", default: "M2 Development" },
+    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "name", label: "Owner Name", default: "Matt Michels" },
+  ],
+  warranty_reminder_subscription: [
+    { key: "businessName", label: "Business Name", default: "M2 Development" },
+    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "industry", label: "Industry", default: "HVAC" },
+    { key: "name", label: "Owner Name", default: "Matt Michels" },
+  ],
   review_monitor_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   sms_blast_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "business_type", label: "Business Type", default: "fitness training" },
     { key: "city", label: "City", default: "Grosse Pointe" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   noshow_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "booking_url", label: "Booking URL", default: "https://www.mattmichelstraining.com/schedule" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   estimate_drip_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "business_type", label: "Business Type", default: "fitness training" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   invoice_chaser_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   afterjob_drip_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "business_type", label: "Business Type", default: "fitness training" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   promo_blaster_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "business_type", label: "Business Type", default: "fitness training" },
     { key: "city", label: "City", default: "Grosse Pointe" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   referral_program_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "business_type", label: "Business Type", default: "fitness training" },
     { key: "reward_description", label: "Reward Description", default: "$25 off next session for both of you" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   slow_day_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "business_type", label: "Business Type", default: "fitness training" },
     { key: "promo_offer", label: "Promo Offer Text", default: "First session free this week only" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
   homeowner_campaign_subscription: [
     { key: "business_name", label: "Business Name", default: "M2 Development" },
     { key: "business_type", label: "Business Type", default: "fitness training" },
     { key: "service_area", label: "Service Area (zip codes)", default: "48236, 48230, 48224, Grosse Pointe area" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
   ],
-  // Autonomous products
-  obituary_service_subscription: [
-    { key: "funeralHomeName", label: "Funeral Home Name", default: "M2 Test Funeral Home" },
-    { key: "phone", label: "Phone", default: "+13138064952" },
-  ],
-  sermon_prep_subscription: [
-    { key: "churchName", label: "Church Name", default: "M2 Test Church" },
-    { key: "denomination", label: "Denomination", default: "Non-denominational" },
-  ],
-  hoa_secretary_subscription: [
-    { key: "hoaName", label: "HOA Name", default: "M2 Test HOA" },
-  ],
-  hoa_violation_subscription: [
-    { key: "hoaName", label: "HOA Name", default: "M2 Test HOA" },
-    { key: "state", label: "State", default: "MI" },
-  ],
+  // Autonomous products (kept)
   rfp_alerts_subscription: [
     { key: "businessName", label: "Business Name", default: "M2 Development" },
     { key: "servicesOffered", label: "Services Offered", default: "Sales training, coaching" },
     { key: "geography", label: "Geography", default: "Michigan" },
-  ],
-  franchise_analyzer_subscription: [
-    { key: "businessName", label: "Business Name", default: "M2 Development" },
-  ],
-  insurance_drip_subscription: [
-    { key: "businessName", label: "Agency Name", default: "M2 Insurance Agency" },
-  ],
-  str_reputation_subscription: [
-    { key: "propertyUrls", label: "Property URLs", default: "https://airbnb.com/rooms/test" },
-    { key: "propertyCount", label: "Property Count", default: "1" },
   ],
   grant_discovery_subscription: [
     { key: "orgName", label: "Organization Name", default: "M2 Foundation" },
@@ -176,17 +175,10 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
     { key: "businessName", label: "Farm / Business Name", default: "M2 Farms" },
     { key: "commodities", label: "Commodities to Track", default: "corn, soybeans" },
   ],
-  landlord_letters_subscription: [
-    { key: "state", label: "State", default: "MI" },
-    { key: "propertyCount", label: "Property Count", default: "3" },
-  ],
   regulatory_monitor_subscription: [
     { key: "businessName", label: "Business Name", default: "M2 Development" },
     { key: "industry", label: "Industry", default: "fitness and wellness" },
     { key: "regulatoryBodies", label: "Regulatory Bodies", default: "FTC, OSHA" },
-  ],
-  trade_show_automation_subscription: [
-    { key: "businessName", label: "Business Name", default: "M2 Development" },
   ],
   price_intelligence_subscription: [
     { key: "businessName", label: "Business Name", default: "M2 Development" },
@@ -197,21 +189,10 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
     { key: "locationCount", label: "Location Count", default: "1" },
     { key: "primaryAddress", label: "Primary Address", default: "Grosse Pointe, MI" },
   ],
-  menu_engineering_subscription: [
-    { key: "restaurantName", label: "Restaurant Name", default: "M2 Cafe" },
-    { key: "cuisineType", label: "Cuisine Type", default: "American" },
-  ],
   gov_meeting_tracker_subscription: [
     { key: "businessName", label: "Business Name", default: "M2 Development LLC" },
     { key: "targetCities", label: "Target Cities", default: "Grosse Pointe, Detroit" },
     { key: "keywords", label: "Keywords", default: "commercial, zoning, variance" },
-  ],
-  pet_memorial_subscription: [
-    { key: "pet_name", label: "Pet Name", default: "Buddy" },
-    { key: "pet_species", label: "Species", default: "Dog" },
-    { key: "pet_breed", label: "Breed", default: "Golden Retriever" },
-    { key: "owner_name", label: "Owner Name", default: "Matt Michels" },
-    { key: "memories", label: "Memories", default: "Loved fetch at the park, always happy, best training buddy", multiline: true },
   ],
   dark_web_monitor_subscription: [
     { key: "domain", label: "Domain to Monitor", default: "mattmichelstraining.com" },
@@ -255,7 +236,63 @@ const PRODUCT_FIELDS: Record<string, CustomField[]> = {
   seo_guard_subscription: [
     { key: "website_url", label: "Website URL", default: "https://mattmichelstraining.com" },
     { key: "keywords", label: "Keywords (comma separated)", default: "personal training grosse pointe, fitness coach detroit" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
+  ],
+  // Wave 4
+  storm_lead_subscription: [
+    { key: "business_name", label: "Business Name", default: "M2 Test Roofing" },
+    { key: "trade", label: "Trade (roofing, HVAC, etc.)", default: "roofing" },
+    { key: "zip_codes", label: "Zip Codes to Monitor (comma separated)", default: "48236, 48230, 48224" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
+  ],
+  recall_alert_subscription: [
+    { key: "business_name", label: "Business Name", default: "M2 Development" },
+    { key: "product_categories", label: "Product Categories (food/vehicle/consumer)", default: "food, vehicle" },
+    { key: "phone", label: "Phone", default: "+13139921219" },
+  ],
+  permit_watch_subscription: [
+    { key: "business_name", label: "Business Name", default: "M2 Development" },
+    { key: "city", label: "City", default: "Grosse Pointe" },
+    { key: "trades", label: "Trades to Watch", default: "commercial, residential renovation" },
+  ],
+  speed_audit_subscription: [
+    { key: "business_name", label: "Business Name", default: "M2 Development" },
+    { key: "website_url", label: "Website URL", default: "https://mattmichelstraining.com" },
+  ],
+  crime_digest_subscription: [
+    { key: "address", label: "Home Address", default: "123 Main St, Grosse Pointe, MI 48236" },
+    { key: "radius_miles", label: "Radius (miles)", default: "2" },
+    { key: "phone", label: "Phone (optional)", default: "+13139921219" },
+  ],
+  license_monitor_subscription: [
+    { key: "business_name", label: "Business Name", default: "M2 Development LLC" },
+    { key: "license_type", label: "License Type", default: "business, contractor" },
+    { key: "state", label: "State", default: "MI" },
+  ],
+  // Wave 5 High-Ticket
+  reg_filing_monitor_subscription: [
+    { key: "businessName", label: "Business Name", default: "M2 Development LLC" },
+    { key: "industry", label: "Industry / Sector", default: "fitness and wellness" },
+    { key: "jurisdiction", label: "Jurisdiction", default: "federal, Michigan" },
+    { key: "regulatoryBodies", label: "Regulatory Bodies", default: "FTC, OSHA, IRS" },
+  ],
+  bid_intelligence_subscription: [
+    { key: "businessName", label: "Business Name", default: "M2 Development LLC" },
+    { key: "naics_codes", label: "NAICS Codes", default: "611430, 541611" },
+    { key: "capabilities", label: "Core Capabilities", default: "Sales training, leadership coaching, business development", multiline: true },
+    { key: "geography", label: "Target Geography", default: "Michigan, Midwest" },
+  ],
+  field_service_subscription: [
+    { key: "company_name", label: "Company Name", default: "D.J. Conley Associates" },
+    { key: "owner_name", label: "Owner Name", default: "Pat Michels" },
     { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "plan", label: "Plan (standard/pro)", default: "standard" },
+  ],
+  hire_alert_subscription: [
+    { key: "company_name", label: "Company Name", default: "D.J. Conley Associates" },
+    { key: "phone", label: "Phone", default: "+13138064952" },
+    { key: "plan", label: "Plan (standalone/bundle)", default: "standalone" },
+    { key: "target_roles", label: "Target Roles (comma separated)", default: "boiler_operator,hvac_tech,plumber" },
   ],
 };
 
@@ -270,6 +307,9 @@ const PRODUCTS: Product[] = [
   { id: "review_responder_subscription", name: "Review Responder", price: "$79/mo", description: "AI responds to Google reviews automatically.", type: "subscription", category: "Subscription" },
   { id: "seo_report_subscription", name: "SEO Reports", price: "$99/mo", description: "Monthly SEO audit reports.", type: "subscription", category: "Subscription" },
   { id: "missed_call_subscription", name: "Missed Call Text", price: "$99/mo", description: "Auto-texts back missed calls.", type: "subscription", category: "Subscription" },
+  { id: "holiday_sms_subscription", name: "Holiday SMS Blast", price: "$39/mo", description: "8 AI-written holiday texts/year sent to your customer list automatically.", type: "subscription", category: "SMS Products" },
+  { id: "appointment_reminder_subscription", name: "Appointment Reminder SMS", price: "$39/mo", description: "24hr + 1hr automated reminders. Reduces no-shows by 80%.", type: "subscription", category: "SMS Products" },
+  { id: "warranty_reminder_subscription", name: "Warranty Reminder SMS", price: "$29/mo", description: "Auto-texts customers 30 days before warranty expires. Books service calls.", type: "subscription", category: "SMS Products" },
   { id: "review_monitor_subscription", name: "Review Monitor", price: "$25/mo", description: "Monitors Google reviews every 6h.", type: "subscription", category: "SMS Products" },
   { id: "sms_blast_subscription", name: "Weekly SMS Blast", price: "$19/mo", description: "AI text to customer list every Tuesday.", type: "subscription", category: "SMS Products" },
   { id: "noshow_subscription", name: "No-Show Re-Booker", price: "$25/mo", description: "Re-books via SMS 30 min after no-show.", type: "subscription", category: "SMS Products" },
@@ -280,30 +320,16 @@ const PRODUCTS: Product[] = [
   { id: "referral_program_subscription", name: "Referral Program", price: "$39/mo", description: "Auto-tracks referrals + rewards.", type: "subscription", category: "SMS Products" },
   { id: "slow_day_subscription", name: "Slow Day SMS", price: "$25/mo", description: "Keyword trigger → instant promo blast.", type: "subscription", category: "SMS Products" },
   { id: "homeowner_campaign_subscription", name: "New Homeowner Campaign", price: "$59/mo", description: "Monthly new-mover texts.", type: "subscription", category: "SMS Products" },
-  { id: "obituary_service_subscription", name: "AI Obituary Service", price: "$199/mo", description: "Funeral home AI writing.", type: "subscription", category: "Autonomous Products" },
-  { id: "sermon_prep_subscription", name: "Sermon Prep", price: "$79/mo", description: "Weekly AI sermon outlines.", type: "subscription", category: "Autonomous Products" },
-  { id: "hoa_secretary_subscription", name: "HOA Secretary AI", price: "$149/mo", description: "AI meeting minutes.", type: "subscription", category: "Autonomous Products" },
-  { id: "hoa_violation_subscription", name: "HOA Violation Letters", price: "$149/mo", description: "AI violation letters.", type: "subscription", category: "Autonomous Products" },
   { id: "rfp_alerts_subscription", name: "RFP Alert Service", price: "$149/mo", description: "Daily gov contract alerts.", type: "subscription", category: "Autonomous Products" },
-  { id: "franchise_analyzer_subscription", name: "Franchise FDD Analyzer", price: "$299/mo", description: "AI FDD risk analysis.", type: "subscription", category: "Autonomous Products" },
-  { id: "insurance_drip_subscription", name: "Insurance Lead Drip", price: "$149/mo", description: "AI lead follow-up sequences.", type: "subscription", category: "Autonomous Products" },
-  { id: "str_reputation_subscription", name: "STR Reputation Manager", price: "$79/mo", description: "Airbnb review monitor.", type: "subscription", category: "Autonomous Products" },
   { id: "grant_discovery_subscription", name: "Grant Discovery", price: "$199/mo", description: "Weekly nonprofit grants.", type: "subscription", category: "Autonomous Products" },
   { id: "ag_price_alerts_subscription", name: "Ag Price Alerts", price: "$79/mo", description: "Commodity price SMS alerts.", type: "subscription", category: "Autonomous Products" },
-  { id: "landlord_letters_subscription", name: "Landlord-Tenant Letters", price: "$149/mo", description: "AI legal letters.", type: "subscription", category: "Autonomous Products" },
   { id: "regulatory_monitor_subscription", name: "Regulatory Monitor", price: "$299/mo", description: "Weekly compliance alerts.", type: "subscription", category: "Autonomous Products" },
-  { id: "trade_show_automation_subscription", name: "Trade Show Follow-Up", price: "$99/mo", description: "AI badge-scan sequences.", type: "subscription", category: "Autonomous Products" },
   { id: "price_intelligence_subscription", name: "Competitor Price Intel", price: "$199/mo", description: "Daily price monitoring.", type: "subscription", category: "Autonomous Products" },
   { id: "citation_monitor_subscription", name: "Citation Monitor", price: "$99/mo", description: "NAP consistency weekly.", type: "subscription", category: "Autonomous Products" },
-  { id: "menu_engineering_subscription", name: "Menu Engineering", price: "$99/mo", description: "Monthly BCG analysis.", type: "subscription", category: "Autonomous Products" },
   { id: "fitness_reports_subscription", name: "Fitness Progress Reports", price: "$79/mo", description: "Monthly client reports.", type: "subscription", category: "Autonomous Products" },
   { id: "gov_meeting_tracker_subscription", name: "Gov Meeting Tracker", price: "$199/mo", description: "Weekly zoning alerts.", type: "subscription", category: "Autonomous Products" },
-  { id: "pet_memorial_subscription", name: "AI Pet Memorial", price: "$79 one-time", description: "Poem + tribute + hosted memorial.", type: "instant", category: "One-Time" },
   { id: "dark_web_monitor_subscription", name: "Dark Web Monitor", price: "$49/mo", description: "Weekly HIBP credential scan.", type: "subscription", category: "Autonomous Products" },
   { id: "gov_contract_monitor_subscription", name: "Gov Contract Monitor", price: "$299/mo", description: "Daily SAM.gov opportunity matching.", type: "subscription", category: "Autonomous Products" },
-  { id: "podcast_revenue_subscription", name: "Podcast-to-Revenue Machine", price: "$199/mo", description: "Blog, LinkedIn, email, YouTube per episode.", type: "subscription", category: "Autonomous Products" },
-  { id: "regulatory_monitor_v2_subscription", name: "Regulatory Change Monitor", price: "$197/mo", description: "Weekly Federal Register digest.", type: "subscription", category: "Autonomous Products" },
-  { id: "competitor_pricing_subscription", name: "Competitor Pricing Intel", price: "$149/mo", description: "Weekly price change detection.", type: "subscription", category: "Autonomous Products" },
   { id: "re_newsletter_subscription", name: "Real Estate Newsletter", price: "$79/mo", description: "Weekly branded market report.", type: "subscription", category: "Autonomous Products" },
   { id: "trademark_watch_subscription", name: "Trademark Watch Service", price: "$49/mo", description: "Weekly USPTO similarity scan.", type: "subscription", category: "Autonomous Products" },
   { id: "employee_credential_audit", name: "Employee Credential Audit", price: "$149 one-time", description: "HIBP breach report for employees.", type: "instant", category: "One-Time" },
@@ -311,6 +337,20 @@ const PRODUCTS: Product[] = [
   { id: "seo_guard_subscription", name: "SEO Guard", price: "$29/mo (7-day trial)", description: "Weekly JS visibility, keyword rank tracking, citation health, SMS alerts.", type: "subscription", category: "Subscription" },
   { id: "field_service_subscription", name: "Field Service Management", price: "$199-299/mo", description: "Detroit Web Agency dispatch board, mobile tech app, GPS, auto-SMS, QuickBooks sync.", type: "subscription", category: "Detroit Web Agency" },
   { id: "hire_alert_subscription", name: "TechAlert Hiring Monitor", price: "$49-99/mo", description: "Daily MIOSHA license DB + Apollo + job board scan for available licensed tradespeople.", type: "subscription", category: "Detroit Web Agency" },
+  // Wave 4
+  { id: "storm_lead_subscription", name: "Storm Damage Leads", price: "$29/mo", description: "NOAA storm alerts → contractor lead blasts.", type: "subscription", category: "Wave 4" },
+  { id: "recall_alert_subscription", name: "Recall Alert Service", price: "$19/mo", description: "FDA/NHTSA recall alerts by SMS.", type: "subscription", category: "Wave 4" },
+  { id: "permit_watch_subscription", name: "Permit Watch", price: "$29/mo", description: "Weekly local permit pulling alerts.", type: "subscription", category: "Wave 4" },
+  { id: "speed_audit_subscription", name: "Website Speed Audit", price: "$29/mo", description: "Monthly PageSpeed Insights report.", type: "subscription", category: "Wave 4" },
+  
+  { id: "crime_digest_subscription", name: "Neighborhood Crime Digest", price: "$19/mo", description: "Weekly local crime summary SMS.", type: "subscription", category: "Wave 4" },
+  { id: "license_monitor_subscription", name: "Business License Monitor", price: "$25/mo", description: "License expiry alerts before renewal.", type: "subscription", category: "Wave 4" },
+  // Wave 5 High-Ticket
+  { id: "reg_filing_monitor_subscription", name: "Regulatory Filing Monitor", price: "$497/mo", description: "Daily reg scan + AI draft filings.", type: "subscription", category: "High-Ticket" },
+  { id: "bid_intelligence_subscription", name: "Bid Intelligence", price: "$599/mo", description: "Daily gov bid scan + AI proposal drafts.", type: "subscription", category: "High-Ticket" },
+  // Lab Products
+  { id: "domain_breach_report", name: "Domain Breach Report", price: "$19 one-time", description: "HIBP domain scan finds all breached employee credentials. AI-generated executive risk summary with severity tiers and remediation steps.", type: "instant", category: "Lab" },
+  { id: "keyword_gap_report", name: "Local Keyword Gap Report", price: "$19 one-time", description: "DataForSEO pulls all keywords both domains rank for, then surfaces keywords your competitor ranks for that you don't — sorted by opportunity.", type: "instant", category: "Lab" },
 ];
 
 type TestStatus = "idle" | "loading" | "success" | "error";
@@ -322,8 +362,9 @@ export default function AdminSandbox() {
   const [previewData, setPreviewData] = useState<any>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const { toast } = useToast();
+  const [search, setSearch] = useState("");
 
-  const PREVIEWABLE = ["pet_memorial_subscription", "employee_credential_audit"];
+  const PREVIEWABLE = ["employee_credential_audit"];
 
   const runPreview = async (product: Product, overrides?: Record<string, string>) => {
     setModalProduct(null);
@@ -382,10 +423,16 @@ export default function AdminSandbox() {
 
   const resetStatus = (id: string) => setStatuses(s => ({ ...s, [id]: "idle" }));
 
-  const instant = PRODUCTS.filter(p => p.type === "instant");
-  const subs = PRODUCTS.filter(p => p.type === "subscription" && p.category === "Subscription");
-  const smsProducts = PRODUCTS.filter(p => p.category === "SMS Products");
-  const autonomousProducts = PRODUCTS.filter(p => p.category === "Autonomous Products");
+  const q = search.toLowerCase();
+  const matches = (p: Product) => !q || p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q);
+  const instant = PRODUCTS.filter(p => p.type === "instant" && matches(p));
+  const subs = PRODUCTS.filter(p => p.type === "subscription" && p.category === "Subscription" && matches(p));
+  const smsProducts = PRODUCTS.filter(p => p.category === "SMS Products" && matches(p));
+  const autonomousProducts = PRODUCTS.filter(p => p.category === "Autonomous Products" && matches(p));
+  const dwaProducts = PRODUCTS.filter(p => p.category === "Detroit Web Agency" && matches(p));
+  const wave4Products = PRODUCTS.filter(p => p.category === "Wave 4" && matches(p));
+  const highTicketProducts = PRODUCTS.filter(p => p.category === "High-Ticket" && matches(p));
+  const labProducts = PRODUCTS.filter(p => p.category === "Lab" && matches(p));
 
   const StatusIcon = ({ status }: { status: TestStatus }) => {
     if (status === "loading") return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
@@ -630,9 +677,9 @@ export default function AdminSandbox() {
         </DialogContent>
       </Dialog>
 
-      {/* Header */}
+      {/* Header + Search */}
       <div className="bg-slate-900 rounded-lg p-5 border border-orange-500/20">
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3 mb-4">
           <Zap className="h-5 w-5 text-orange-500 mt-0.5 shrink-0" />
           <div>
             <h2 className="text-white font-bold text-lg">Product Sandbox</h2>
@@ -645,52 +692,135 @@ export default function AdminSandbox() {
             </p>
           </div>
         </div>
+        <Input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search products..."
+          className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 h-9"
+        />
       </div>
 
       {/* Instant Delivery */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <h3 className="text-white font-semibold">Instant Delivery</h3>
-          <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Fires in seconds</Badge>
+      {instant.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-white font-semibold">Instant Delivery</h3>
+            <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Fires in seconds</Badge>
+            <span className="text-slate-500 text-xs ml-auto">{instant.length} products</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {instant.map(p => <ProductCard key={p.id} p={p} badgeClass="bg-orange-500/20 text-orange-400 border-orange-500/30" btnClass="bg-orange-500 hover:bg-orange-600 text-white" />)}
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {instant.map(p => <ProductCard key={p.id} p={p} badgeClass="bg-orange-500/20 text-orange-400 border-orange-500/30" btnClass="bg-orange-500 hover:bg-orange-600 text-white" />)}
-        </div>
-      </div>
+      )}
 
       {/* Subscriptions */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <h3 className="text-white font-semibold">Subscriptions</h3>
-          <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs">Welcome email + DB record</Badge>
+      {subs.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-white font-semibold">Subscriptions</h3>
+            <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs">Welcome email + DB record</Badge>
+            <span className="text-slate-500 text-xs ml-auto">{subs.length} products</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {subs.map(p => <ProductCard key={p.id} p={p} badgeClass="bg-slate-600 text-slate-300 border-slate-500" btnClass="bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600" />)}
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {subs.map(p => <ProductCard key={p.id} p={p} badgeClass="bg-slate-600 text-slate-300 border-slate-500" btnClass="bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600" />)}
-        </div>
-      </div>
+      )}
 
       {/* Social Media Lab */}
-      <SocialMediaLab />
+      {!search && <SocialMediaLab />}
 
       {/* SMS Products */}
+      {smsProducts.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-white font-semibold">SMS &amp; Monitoring Products</h3>
+            <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs">Welcome email + DB record + Twilio</Badge>
+            <span className="text-slate-500 text-xs ml-auto">{smsProducts.length} products</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {smsProducts.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-purple-500/50" badgeClass="bg-purple-500/20 text-purple-400 border-purple-500/30" btnClass="bg-purple-900/30 hover:bg-purple-800/40 text-purple-300 border border-purple-600/50" />)}
+          </div>
+        </div>
+      )}
+
+      {/* Autonomous Products */}
+      {autonomousProducts.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-white font-semibold">Autonomous Products</h3>
+            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">Welcome email + DB record + AI automation</Badge>
+            <span className="text-slate-500 text-xs ml-auto">{autonomousProducts.length} products</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {autonomousProducts.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-emerald-500/50" badgeClass="bg-emerald-500/20 text-emerald-400 border-emerald-500/30" btnClass="bg-emerald-900/30 hover:bg-emerald-800/40 text-emerald-300 border border-emerald-600/50" />)}
+          </div>
+        </div>
+      )}
+
+      {/* Detroit Web Agency */}
+      {dwaProducts.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-white font-semibold">Detroit Web Agency</h3>
+            <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 text-xs">FieldDesk · TechAlert · SiteRadar</Badge>
+            <span className="text-slate-500 text-xs ml-auto">{dwaProducts.length} products</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {dwaProducts.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-cyan-500/50" badgeClass="bg-cyan-500/20 text-cyan-400 border-cyan-500/30" btnClass="bg-cyan-900/30 hover:bg-cyan-800/40 text-cyan-300 border border-cyan-600/50" />)}
+          </div>
+        </div>
+      )}
+
+      {/* Empty search state */}
+      {search && instant.length === 0 && subs.length === 0 && smsProducts.length === 0 && autonomousProducts.length === 0 && dwaProducts.length === 0 && labProducts.length === 0 && (
+        <div className="text-center py-12 text-slate-500">
+          No products match "<span className="text-slate-300">{search}</span>"
+        </div>
+      )}
+
+      {/* Detroit Web Agency Products */}
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <h3 className="text-white font-semibold">SMS &amp; Monitoring Products</h3>
-          <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs">Welcome email + DB record + Twilio</Badge>
+          <h3 className="text-white font-semibold">Detroit Web Agency</h3>
+          <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 text-xs">FieldDesk · TechAlert · SiteRadar</Badge>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {smsProducts.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-purple-500/50" badgeClass="bg-purple-500/20 text-purple-400 border-purple-500/30" btnClass="bg-purple-900/30 hover:bg-purple-800/40 text-purple-300 border border-purple-600/50" />)}
+          {dwaProducts.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-cyan-500/50" badgeClass="bg-cyan-500/20 text-cyan-400 border-cyan-500/30" btnClass="bg-cyan-900/30 hover:bg-cyan-800/40 text-cyan-300 border border-cyan-600/50" />)}
         </div>
       </div>
 
-      {/* Autonomous Products */}
+      {/* Wave 4 Products */}
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <h3 className="text-white font-semibold">Autonomous Products</h3>
-          <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">Welcome email + DB record + AI automation</Badge>
+          <h3 className="text-white font-semibold">Wave 4 Products</h3>
+          <Badge className="bg-sky-500/20 text-sky-400 border-sky-500/30 text-xs">Storm, recalls, permits, speed, stories, crime, licenses</Badge>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {autonomousProducts.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-emerald-500/50" badgeClass="bg-emerald-500/20 text-emerald-400 border-emerald-500/30" btnClass="bg-emerald-900/30 hover:bg-emerald-800/40 text-emerald-300 border border-emerald-600/50" />)}
+          {wave4Products.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-sky-500/50" badgeClass="bg-sky-500/20 text-sky-400 border-sky-500/30" btnClass="bg-sky-900/30 hover:bg-sky-800/40 text-sky-300 border border-sky-600/50" />)}
+        </div>
+      </div>
+
+      {/* High-Ticket Products */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <h3 className="text-white font-semibold">High-Ticket Products</h3>
+          <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">$497–$599/mo • Reg Filing + Bid Intelligence</Badge>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {highTicketProducts.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-amber-500/50" badgeClass="bg-amber-500/20 text-amber-400 border-amber-500/30" btnClass="bg-amber-900/30 hover:bg-amber-800/40 text-amber-300 border border-amber-600/50" />)}
+        </div>
+      </div>
+
+      {/* Lab Products */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <h3 className="text-white font-semibold">🧪 Lab Products</h3>
+          <Badge className="bg-violet-500/20 text-violet-400 border-violet-500/30 text-xs">Direct URL only · Not in nav · Ad-ready</Badge>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {labProducts.map(p => <ProductCard key={p.id} p={p} borderClass="border-l-2 border-l-violet-500/50" badgeClass="bg-violet-500/20 text-violet-400 border-violet-500/30" btnClass="bg-violet-900/30 hover:bg-violet-800/40 text-violet-300 border border-violet-600/50" />)}
         </div>
       </div>
 

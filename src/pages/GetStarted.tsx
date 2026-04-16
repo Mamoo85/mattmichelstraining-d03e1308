@@ -148,6 +148,19 @@ export default function GetStarted() {
     setForm(prev => ({ ...prev, source }));
   }, []);
 
+  // M² Visitor Intel tracking
+  useEffect(() => {
+    fetch("https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/visitor-identify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        script_key: "b5a20a39-8970-4d65-8c0e-52936f7d15f6",
+        page: window.location.href,
+        referrer: document.referrer,
+      }),
+    }).catch(() => {});
+  }, []);
+
   const set = (field: keyof FormState) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => setForm(prev => ({ ...prev, [field]: e.target.value }));
@@ -192,8 +205,8 @@ export default function GetStarted() {
           </p>
           <p className="mt-5 text-sm text-muted-foreground">
             Or reach out directly:{" "}
-            <a href="tel:+13138064952" className="text-[#22d3ee] font-semibold">
-              (313) 806-4952
+            <a href="tel:+13139921219" className="text-[#22d3ee] font-semibold">
+              (313) 992-1219
             </a>
           </p>
         </div>
@@ -204,8 +217,8 @@ export default function GetStarted() {
   return (
     <>
       <SEOHead
-        title="Get Started | M2 Training"
-        description="Book a free consultation with Matt Michels. No sales pitch, no pressure — just a quick conversation about what you need."
+        title="Get Started — Detroit Web Agency"
+        description="Pick one tool to grow your business. No sales pitch, no pressure — just a quick conversation about what you need. We handle the tech."
         path="/get-started"
       />
       <div className="min-h-screen bg-background text-foreground">
@@ -351,8 +364,8 @@ export default function GetStarted() {
 
             <p className="text-center text-xs text-muted-foreground">
               Or call/text Matt directly:{" "}
-              <a href="tel:+13138064952" className="text-[#22d3ee] font-semibold">
-                (313) 806-4952
+              <a href="tel:+13139921219" className="text-[#22d3ee] font-semibold">
+                (313) 992-1219
               </a>
             </p>
           </form>

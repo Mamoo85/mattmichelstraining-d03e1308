@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2025-08-27.basil",
@@ -50,7 +51,7 @@ function m2Email(opts: { greeting: string; headline: string; body: string; cta?:
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt" style="width:44px;height:44px;border-radius:50%;object-fit:cover" />
       <div style="font-size:13px;color:#64748b">
-        <strong style="color:#1e293b">${opts.signature || "Matt Michels"}</strong><br>Grosse Pointe, MI · <a href="tel:+13138064952" style="color:#e8621a">(313) 806-4952</a>
+        <strong style="color:#1e293b">${opts.signature || "Matt Michels"}</strong><br>Grosse Pointe, MI · <a href="tel:+13139921219" style="color:#e8621a">(313) 992-1219</a>
       </div>
     </div>
   </div>
@@ -68,6 +69,21 @@ async function sendM2Email(to: string, subject: string, html: string, bcc?: stri
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       from: "Matt Michels <matt@mattmichelstraining.com>",
+      to: Array.isArray(to) ? to : [to],
+      bcc: [bcc || "matthewmichels4@gmail.com"],
+      subject,
+      html,
+    }),
+  });
+}
+
+async function dwaEmail(to: string, subject: string, html: string, bcc?: string): Promise<void> {
+  if (!RESEND_API_KEY) return;
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "Matt Michels — Detroit Web Agency <matt@detroitwebagent.com>",
       to: Array.isArray(to) ? to : [to],
       bcc: [bcc || "matthewmichels4@gmail.com"],
       subject,
@@ -254,7 +270,7 @@ serve(async (req) => {
       console.error("Missing STRIPE_WEBHOOK_SECRET or stripe-signature header");
       return new Response("Webhook signature verification failed", { status: 400 });
     }
-    const event: Stripe.Event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+    const event: Stripe.Event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -390,12 +406,29 @@ serve(async (req) => {
         }
 
         // Deactivate B2B product clients on cancellation
+        // Get contractor_clients ID before deactivation so we can clear territory
+        const { data: cancelledContractor } = await sb
+          .from("contractor_clients")
+          .select("id")
+          .eq("stripe_subscription_id", subscription.id)
+          .maybeSingle();
+
         await Promise.all([
           sb.from("hire_alert_clients").update({ active: false }).eq("stripe_subscription_id", subscription.id),
           sb.from("field_crm_clients").update({ active: false }).eq("stripe_subscription_id", subscription.id),
           sb.from("social_media_clients").update({ active: false }).eq("stripe_subscription_id", subscription.id),
           sb.from("gbp_saas_clients").update({ active: false }).eq("stripe_subscription_id", subscription.id),
+          sb.from("contractor_clients").update({ active: false, stripe_subscription_id: null }).eq("stripe_subscription_id", subscription.id),
         ]);
+
+        // Clear territory assignment so another contractor can buy it
+        if (cancelledContractor?.id) {
+          await sb.from("contractor_lead_sites")
+            .update({ active_contractor_id: null })
+            .eq("active_contractor_id", cancelledContractor.id);
+          console.log(`[WEBHOOK] Cleared territory for contractor ${cancelledContractor.id}`);
+        }
+
         console.log(`[WEBHOOK] Deactivated B2B clients for subscription ${subscription.id}`);
 
         // Trigger Shield win-back sequence
@@ -624,7 +657,7 @@ serve(async (req) => {
       const customerEmail = session.customer_details?.email || session.customer_email;
       const customerName = session.customer_details?.name || null;
       const userId = customerEmail ? await getUserIdByEmail(sb, customerEmail) : null;
-      const guide = priceId ? GUIDE_MAP[priceId] : null;
+      let guide = priceId ? GUIDE_MAP[priceId] : null;
       const txItemName = guide?.title || meta.item_name || "Purchase";
       const txItemType = meta.type === "gift_card" ? "gift_card" : guide ? "pdf" : (meta.item_type || "purchase");
 
@@ -689,7 +722,7 @@ serve(async (req) => {
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [customerEmail], bcc: ["matthewmichels4@gmail.com"],
                 subject: `Add-On Activated: ${meta.service_name || meta.service_key}`,
-                html: `<p>Your add-on service <strong>${meta.service_name}</strong> is now active. I'll be in touch within 24 hours to get everything set up.</p><p>— Matt, M² Development<br>(313) 806-4952</p>`,
+                html: `<p>Your add-on service <strong>${meta.service_name}</strong> is now active. I'll be in touch within 24 hours to get everything set up.</p><p>— Matt, M² Development<br>(313) 992-1219</p>`,
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -738,14 +771,15 @@ serve(async (req) => {
       }
 
       if (meta.type === "hire_alert_subscription") {
+        const email = meta.email || customerEmail;
         try {
-          const email = meta.email || customerEmail;
           if (email) {
             // Parse target_roles from comma-separated string back to array
             const targetRoles = meta.target_roles
               ? meta.target_roles.split(",").map((r: string) => r.trim()).filter(Boolean)
               : ["boiler_operator", "hvac_tech"];
-            await (sb.from as any)("hire_alert_clients").insert({
+            // CRITICAL: if this fails, throw so Stripe retries (return 500 below)
+            const { data: insertedClient, error: insertErr } = await (sb.from as any)("hire_alert_clients").insert({
               company_name: meta.company_name || email,
               owner_email: email,
               owner_phone: meta.owner_phone || null,
@@ -754,7 +788,21 @@ serve(async (req) => {
               active: true,
               plan: meta.plan || "standalone",
               target_roles: targetRoles,
-            });
+              tos_accepted_at: meta.tos_accepted === "true" ? new Date().toISOString() : null,
+            }).select("dashboard_token").single();
+            if (insertErr) throw new Error(`hire_alert_clients insert: ${insertErr.message}`);
+            const dashboardToken = insertedClient?.dashboard_token;
+
+            // Track postcard conversion if ref=postcard
+            if (meta.ref === "postcard") {
+              await (sb.from as any)("postcard_conversions").insert({
+                event: "paid",
+                stripe_session_id: session.id,
+                county: meta.county || null,
+                prospect_id: null,
+                campaign_id: null,
+              }).then(() => console.log("[WEBHOOK] Postcard conversion tracked"));
+            }
           }
           if (RESEND_API_KEY && email) {
             const companyGreet = meta.company_name ? ` ${meta.company_name}` : "";
@@ -816,8 +864,10 @@ serve(async (req) => {
       </tr>
     </table>
 
-    <p style="color:#475569;font-size:15px;line-height:1.8;margin:0 0 8px;">Each candidate alert includes their <strong>name, trade, city, license info, contact details</strong> (when available), and our AI availability score.</p>
-    <p style="color:#475569;font-size:14px;line-height:1.8;margin:0;">Want to adjust your target roles or zip codes? Just reply to this email.</p>
+    <p style="color:#475569;font-size:15px;line-height:1.8;margin:0 0 8px;">Each candidate alert includes their <strong>name, trade, city, license info, contact details</strong> (when available), and our proprietary availability score.</p>
+    <p style="color:#475569;font-size:15px;line-height:1.8;margin:0 0 8px;">Candidate profiles include verified phone and email data from industry databases. Staffing alerts use public CMS data to identify hiring opportunities.</p>
+    <p style="color:#475569;font-size:14px;line-height:1.8;margin:0 0 20px;">Want to adjust your target roles or zip codes? Just reply to this email.</p>
+    ${dashboardToken ? `<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:0 0 8px;"><a href="https://detroitwebagent.com/my-techalert?token=${dashboardToken}" style="display:inline-block;padding:14px 32px;background:#00d4ff;color:#0a1628;font-weight:800;font-size:15px;border-radius:8px;text-decoration:none;letter-spacing:0.3px;">Open Your Dashboard →</a></td></tr></table>` : ""}
   </td></tr>
 
   <!-- FOOTER -->
@@ -825,15 +875,15 @@ serve(async (req) => {
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td>
         <table cellpadding="0" cellspacing="0"><tr>
-          <td style="vertical-align:middle;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt"></td>
+          <td style="vertical-align:middle;"><img src="https://www.detroitwebagent.com/images/matt-boat.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt"></td>
           <td style="padding-left:12px;vertical-align:middle;">
             <p style="margin:0;font-size:14px;font-weight:700;color:#fff;">Matt Michels</p>
-            <p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">Detroit Web Agency · <a href="tel:+13138064952" style="color:#00d4ff;text-decoration:none;">(313) 806-4952</a></p>
+            <p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;text-decoration:none;">(313) 992-1219</a></p>
           </td>
         </tr></table>
       </td>
       <td style="text-align:right;vertical-align:middle;">
-        <p style="margin:0;font-size:10px;color:#64748b;"><a href="mailto:matt@mattmichelstraining.com?subject=Unsubscribe%20TechAlert" style="color:#64748b;text-decoration:none;">Unsubscribe</a></p>
+        <p style="margin:0;font-size:10px;color:#64748b;"><a href="mailto:matt@detroitwebagent.com?subject=Unsubscribe%20TechAlert" style="color:#64748b;text-decoration:none;">Unsubscribe</a></p>
       </td>
     </tr></table>
   </td></tr>
@@ -842,13 +892,72 @@ serve(async (req) => {
 </td></tr>
 </table>
 </body></html>`;
-            await sendM2Email(email, `⚡ TechAlert is Live — Your Hiring Advantage Starts Tomorrow`, welcomeHtml);
+            await dwaEmail(email, `⚡ TechAlert is Live — Your Hiring Advantage Starts Tomorrow`, welcomeHtml);
             await notifyMatt(
               `💰 New TechAlert Client — ${meta.company_name || email} ($${meta.plan === "bundle" ? "49" : "99"}/mo)`,
               `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Phone: ${meta.owner_phone || "n/a"}<br>Plan: ${meta.plan || "standalone"}</p>`
             );
           }
-        } catch (e) { console.error("[WEBHOOK] hire_alert_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] hire_alert_subscription error:", e);
+          await notifyMatt(
+            `🚨 TechAlert provision FAILED — ${email || "unknown"} paid but not activated`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p><p>Stripe session: ${session.id}</p><p>Manual fix: insert row in hire_alert_clients for ${email}</p>`
+          ).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      if (meta.type === "industry_pulse_subscription") {
+        const email = meta.email || customerEmail;
+        try {
+          if (email) {
+            const targetIndustries = meta.target_industries
+              ? meta.target_industries.split(",").map((t: string) => t.trim()).filter(Boolean)
+              : ["boiler", "hvac", "manufacturing"];
+            const { data: inserted, error: insertErr } = await (sb.from as any)("industry_pulse_clients").insert({
+              company_name: meta.company_name || email,
+              email,
+              phone: meta.phone || null,
+              contact_name: meta.contact_name || null,
+              target_industries: targetIndustries,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+              active: true,
+            }).select("dashboard_token").single();
+            if (insertErr) throw new Error(`industry_pulse_clients insert: ${insertErr.message}`);
+
+            // Send welcome email with dashboard link
+            const dashboardUrl = `${SUPABASE_URL.replace('.supabase.co', '')}.detroitwebagent.com/my-industry-pulse?token=${inserted.dashboard_token}`;
+            const siteUrl = "https://detroitwebagent.com";
+            const dashLink = `${siteUrl}/my-industry-pulse?token=${inserted.dashboard_token}`;
+            if (RESEND_API_KEY) {
+              await dwaEmail(email, "📡 Industry Pulse Intelligence is Live — Your Dashboard is Ready", `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#030711;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;text-align:center;">
+    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0;">📡 INDUSTRY PULSE</p>
+    <h1 style="color:#fff;font-size:24px;margin:12px 0 8px;">You're In.</h1>
+    <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Predictive sales signals start flowing today.</p>
+    <a href="${dashLink}" style="display:inline-block;background:#00d4ff;color:#000;font-weight:700;padding:14px 40px;border-radius:8px;text-decoration:none;font-size:15px;">📊 Open Your Dashboard</a>
+    <p style="color:#64748b;font-size:12px;margin:20px 0 0;">Bookmark this link — it's your personal, always-on intelligence feed.</p>
+  </div>
+  <div style="text-align:center;margin-top:24px;">
+    <p style="color:#475569;font-size:12px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p>
+  </div>
+</div></body></html>`);
+              await notifyMatt(
+                `💰 New Industry Pulse Client — ${meta.company_name || email} ($299/mo)`,
+                `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Industries: ${targetIndustries.join(", ")}</p>`
+              );
+            }
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] industry_pulse_subscription error:", e);
+          await notifyMatt(`🚨 Industry Pulse provision FAILED — ${email || "unknown"}`, `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -890,7 +999,7 @@ serve(async (req) => {
 <p style="margin:0 0 8px">✍️ <strong>AI-crafted responses</strong> — professional, on-brand replies generated automatically</p>
 <p style="margin:0 0 8px">📧 <strong>Daily digest</strong> — new reviews + suggested responses delivered to your inbox</p>
 <p style="margin:0 0 16px">🎯 <strong>Brand voice</strong> — responses match your business tone, not generic AI</p>
-<p style="margin:0 0 8px"><strong>Next step:</strong> Reply to this email with your Google Business Profile URL so we can start monitoring. Or text Matt at (313) 806-4952.</p>`,
+<p style="margin:0 0 8px"><strong>Next step:</strong> Reply to this email with your Google Business Profile URL so we can start monitoring. Or text Matt at (313) 992-1219.</p>`,
             }) }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Review Response Client — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
@@ -1212,7 +1321,7 @@ serve(async (req) => {
     <div style="text-align:center;margin:24px 0"><a href="https://www.mattmichelstraining.com/trademark-watch/dashboard" style="display:inline-block;background:#0f2547;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px">View Your Dashboard</a></div>
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt" style="width:44px;height:44px;border-radius:50%;object-fit:cover" />
-      <div style="font-size:13px;color:#64748b"><strong style="color:#1e293b">Matt Michels</strong><br>Grosse Pointe, MI · <a href="tel:+13138064952" style="color:#c9a227">(313) 806-4952</a></div>
+      <div style="font-size:13px;color:#64748b"><strong style="color:#1e293b">Matt Michels</strong><br>Grosse Pointe, MI · <a href="tel:+13139921219" style="color:#c9a227">(313) 992-1219</a></div>
     </div>
   </div>
   <div style="padding:12px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center">
@@ -1412,7 +1521,7 @@ serve(async (req) => {
 
 <p style="margin:0 0 8px"><strong>Step 2 — Log into your dashboard</strong></p>
 <p style="margin:0 0 16px;color:#475569;font-size:14px">Once your snippet is installed, visitors will start appearing in your Visitor Intel feed within minutes. I'll send your dashboard login separately.</p>
-<p style="margin:0;color:#64748b;font-size:13px">Stuck on the install? Reply to this email or text me at (313) 806-4952 — I'll walk you through it in 5 minutes.</p>`,
+<p style="margin:0;color:#64748b;font-size:13px">Stuck on the install? Reply to this email or text me at (313) 992-1219 — I'll walk you through it in 5 minutes.</p>`,
               cta: { text: "View My Dashboard", url: "https://www.detroitwebagent.com/admin" },
             })
           );
@@ -1785,7 +1894,7 @@ serve(async (req) => {
     </div>
     <p style="margin:0 0 16px;font-size:14px;color:#64748b;">You don't need to do anything. Just keep recording. We'll handle the repurposing.</p>
     <p style="margin:0 0 4px;">— Matt</p>
-    <p style="margin:0;font-size:13px;color:#64748b;">M² Development · (313) 806-4952</p>
+    <p style="margin:0;font-size:13px;color:#64748b;">M² Development · (313) 992-1219</p>
   </div>
   <div style="padding:12px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
     <p style="margin:0;color:#94a3b8;font-size:11px;">M² Development · mattmichelstraining.com · Grosse Pointe, MI</p>
@@ -1818,6 +1927,60 @@ serve(async (req) => {
           }
 
         } catch (e) { console.error("[WEBHOOK] podcast_revenue_machine error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── LICENSE MONITOR — welcome SMS with MMS Vision intake instructions ──
+      if (meta.type === "license_monitor_subscription" && customerEmail) {
+        try {
+          const lmSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          const clientPhone = meta.phone || null;
+          const businessName = meta.business_name || meta.businessName || customerName || customerEmail;
+          const ownerName = meta.name || meta.ownerName || customerName || null;
+          const firstName = ownerName?.split(" ")[0] || businessName || "there";
+
+          await (lmSb.from as any)("license_monitor_clients").insert({
+            business_name: businessName,
+            owner_name: ownerName,
+            owner_email: customerEmail,
+            phone: clientPhone,
+            stripe_customer_id: session.customer as string || null,
+            stripe_subscription_id: session.subscription as string || null,
+            active: true,
+          });
+
+          // Welcome SMS with MMS Vision instructions
+          if (clientPhone) {
+            await sendSMS(
+              clientPhone,
+              Deno.env.get("TWILIO_PHONE_NUMBER") || "",
+              `Welcome to License Monitor, ${firstName}! Reply to this text with a photo of each license card you want us to track. We'll extract the details automatically and remind you before expiry.\n\n— Matt (313) 992-1219`,
+              "license_monitor"
+            );
+          }
+
+          // Welcome email
+          if (RESEND_API_KEY) {
+            await sendM2Email(
+              customerEmail,
+              "License Monitor is Active — Text Us Your License Cards",
+              m2Email({
+                greeting: `Hey ${firstName} —`,
+                headline: "License Monitor is Live",
+                body: `<p style="margin:0 0 12px">Your Business License Monitor is active. Here's how to get started:</p>
+<p style="margin:0 0 8px"><strong>📱 Text a photo of each license card</strong> to <strong>(313) 992-1219</strong>. We'll extract the details automatically using AI vision.</p>
+<p style="margin:0 0 8px"><strong>🔔 You'll get reminders</strong> at 90, 60, 30, 14, and 7 days before each expiry date — SMS + email.</p>
+<p style="margin:0 0 16px"><strong>Works for any license</strong> in any state — contractor licenses, business licenses, professional certifications, and more.</p>
+<p style="margin:0;color:#64748b;font-size:13px">Questions? Reply to this email or text me. I read every message.</p>`,
+              })
+            );
+          }
+
+          await notifyMatt(
+            `💰 New License Monitor Client — ${businessName} ($25/mo)`,
+            `<p><strong>${businessName}</strong><br>Email: ${customerEmail}<br>Phone: ${clientPhone || "n/a"}</p>`
+          );
+        } catch (e) { console.error("[WEBHOOK] license_monitor_subscription error:", e); }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -2096,13 +2259,13 @@ serve(async (req) => {
                       <p><strong>Payment received. We're officially locked in.</strong></p>
                       <p>I'll be in touch within a few hours to kick things off. You'll get a quick intake form from me — takes about 5 minutes — so I can build exactly what you need.</p>
                       <p>Timeline: site live in 7 days from when I get your info back.</p>
-                      <p>Questions? Email <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a> — whichever works best.</p>
+                      <p>Questions? Email <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> or text <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a> — whichever works best.</p>
                       <p>— Matt Michels</p>
                     </div>
                   <div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
         <div style="font-size:13px;color:#94a3b8;">
-          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952
+          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 992-1219
         </div>
         <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M² Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
       </div></div>
@@ -2178,7 +2341,7 @@ serve(async (req) => {
                       html: `<p>Hey ${(refRow as any).referrer_name || "there"} —</p>
 <p>Your referral just signed up for web design! Your <strong>$50 cash bonus</strong> will be sent within 7 days.</p>
 <p>Keep referring — there's no limit. Every web design signup = another $50.</p>
-<p>— Matt<br>(313) 806-4952</p>`,
+<p>— Matt<br>(313) 992-1219</p>`,
                     }),
                   });
                 }
@@ -2219,7 +2382,7 @@ serve(async (req) => {
 <p style="margin:0 0 8px">💾 <strong>Daily backups</strong> — your site is backed up every day, restorable anytime</p>
 <p style="margin:0 0 8px">🔧 <strong>Content updates</strong> — need text changed, photos swapped, or a new section? Just text me</p>
 <p style="margin:0 0 8px">📈 <strong>Uptime monitoring</strong> — if your site goes down, I know before you do</p>
-<p style="margin:0 0 16px">📱 <strong>Direct access</strong> — text (313) 806-4952 or email anytime for changes</p>
+<p style="margin:0 0 16px">📱 <strong>Direct access</strong> — text (313) 992-1219 or email anytime for changes</p>
 <p style="margin:0;color:#64748b;font-size:13px">Your site stays live, fast, and looking good. That's the deal.</p>`,
             }),
               }),
@@ -2260,7 +2423,7 @@ serve(async (req) => {
               <h3 style="color:#1e293b;">9. Reverse Lunge</h3><p><strong>Sets/Reps:</strong> 3×8 each leg | <strong>Why:</strong> Safer than forward lunge at this age. Builds single-leg strength and hip flexor flexibility simultaneously.</p>
               <h3 style="color:#1e293b;">10. Plank (With Breathing)</h3><p><strong>Sets/Reps:</strong> 3×30s | <strong>Why:</strong> Core brace under time tension. The breath cue — exhale fully at the top — teaches intra-abdominal pressure that carries into all lifting.</p>
               <hr style="border:1px solid #e2e8f0;margin:24px 0;">
-              <p style="font-size:13px;color:#64748b;">Run this 2–3x/week before sport practice or as a standalone session. Master the movement quality before adding load. Questions? Email matt@mattmichelstraining.com or text (313) 806-4952.</p>
+              <p style="font-size:13px;color:#64748b;">Run this 2–3x/week before sport practice or as a standalone session. Master the movement quality before adding load. Questions? Email matt@mattmichelstraining.com or text (313) 992-1219.</p>
             `,
           },
           "high-school-armor": {
@@ -2281,7 +2444,7 @@ serve(async (req) => {
               <h3 style="color:#1e293b;">9. Face Pull</h3><p><strong>Sets/Reps:</strong> 3×15 | <strong>Why:</strong> Rear delt and external rotator health. Counters the internal rotation stress of throwing, swimming, and racket sports.</p>
               <h3 style="color:#1e293b;">10. Box Jump (Stick Landing)</h3><p><strong>Sets/Reps:</strong> 4×4 | <strong>Why:</strong> Rate of force development AND landing mechanics. The stick-landing cue trains the deceleration control that prevents ACL injuries.</p>
               <hr style="border:1px solid #e2e8f0;margin:24px 0;">
-              <p style="font-size:13px;color:#64748b;">Run 2–3x/week. In-season: reduce volume by 30%, keep intensity. Off-season: push progressive overload on the big lifts (RDL, Split Squat, Trap Bar). Questions? Email matt@mattmichelstraining.com or text (313) 806-4952.</p>
+              <p style="font-size:13px;color:#64748b;">Run 2–3x/week. In-season: reduce volume by 30%, keep intensity. Off-season: push progressive overload on the big lifts (RDL, Split Squat, Trap Bar). Questions? Email matt@mattmichelstraining.com or text (313) 992-1219.</p>
             `,
           },
           "road-warrior": {
@@ -2302,7 +2465,7 @@ serve(async (req) => {
               <h3 style="color:#1e293b;">9. Calf Raise + Ankle Circle</h3><p><strong>Sets/Reps:</strong> 3×15 each direction | <strong>Why:</strong> Achilles and ankle health after travel compression. Athletes who skip this are one landing away from a sprain on tournament day.</p>
               <h3 style="color:#1e293b;">10. Foam Roll or Tennis Ball — Feet, Calves, T-Spine</h3><p><strong>Sets/Reps:</strong> 60s each area | <strong>Why:</strong> Tissue quality maintenance. Travel compresses fascia. Roll what aches before it becomes what doesn't work.</p>
               <hr style="border:1px solid #e2e8f0;margin:24px 0;">
-              <p style="font-size:13px;color:#64748b;"><strong>Travel-day warmup protocol:</strong> 90/90 → World's Greatest → Wall Rotation → Glute Bridge March → done. Takes 8 minutes. Do it before competing or after a long drive. Questions? Email matt@mattmichelstraining.com or text (313) 806-4952.</p>
+              <p style="font-size:13px;color:#64748b;"><strong>Travel-day warmup protocol:</strong> 90/90 → World's Greatest → Wall Rotation → Glute Bridge March → done. Takes 8 minutes. Do it before competing or after a long drive. Questions? Email matt@mattmichelstraining.com or text (313) 992-1219.</p>
             `,
           },
         };
@@ -2321,11 +2484,11 @@ serve(async (req) => {
       <p>Hey —</p>
       <p>Your guide is below. This is the exact blueprint I use with my athletes. Print it, save it, or screenshot it — it's yours forever.</p>
       ${guideContent.html}
-      <p style="margin-top:24px;">Questions on any of these? Email me at <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
+      <p style="margin-top:24px;">Questions on any of these? Email me at <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> or text <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a>.</p>
       <p>— Matt Michels</p>
     </td></tr>
     <tr><td style="background:#f8fafc;padding:16px 32px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;">
-      M2 Development · <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> · <a href="tel:+13138064952" style="color:#94a3b8;">(313) 806-4952</a>
+      M2 Development · <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> · <a href="tel:+13139921219" style="color:#94a3b8;">(313) 992-1219</a>
     </td></tr>
   </table>
 </td></tr>
@@ -2351,7 +2514,7 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
-      const guide = GUIDE_MAP[priceId];
+      guide = GUIDE_MAP[priceId];
 
       if (!RESEND_API_KEY) {
         console.error("[WEBHOOK] RESEND_API_KEY not set");
@@ -2388,7 +2551,282 @@ serve(async (req) => {
           html: emailHtml,
         }),
       });
-    }
+
+      // ── CONTRACTOR LEAD PPL PAYMENT ($50/lead) ───────────────────────────
+      if (meta.type === "contractor_lead_payment") {
+        if (!meta.lead_id || !meta.contractor_id) {
+          console.error("[WEBHOOK] Missing PPL metadata", session.id);
+          return new Response(JSON.stringify({ error: "missing metadata" }), { status: 400 });
+        }
+        try {
+          const pplSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+          // Idempotency: if already sold with this exact session, return 200 early
+          const { data: existingLead } = await pplSb
+            .from("contractor_leads")
+            .select("status, payment_session_id")
+            .eq("id", meta.lead_id)
+            .single();
+
+          if (existingLead?.status === "sold" && existingLead?.payment_session_id === session.id) {
+            return new Response(JSON.stringify({ received: true }), { status: 200 });
+          }
+
+          // Atomic: record purchase + mark lead sold in parallel
+          await Promise.all([
+            pplSb.from("contractor_lead_purchases").insert({
+              contractor_id: meta.contractor_id,
+              lead_id: meta.lead_id,
+              amount_cents: session.amount_total || 5000,
+              stripe_session_id: session.id,
+            }),
+            pplSb.from("contractor_leads").update({
+              status: "sold",
+              paid_by_contractor_id: meta.contractor_id,
+              payment_amount_cents: session.amount_total || 5000,
+              payment_session_id: session.id,
+              checkout_locked_by: null,
+              lock_expires_at: null,
+            }).eq("id", meta.lead_id),
+          ]);
+
+          // Fetch lead + contractor details for notifications
+          const [{ data: lead }, { data: contractor }] = await Promise.all([
+            pplSb.from("contractor_leads")
+              .select("name, phone, email, project_type, contractor_lead_sites(trade, city)")
+              .eq("id", meta.lead_id)
+              .single(),
+            pplSb.from("contractor_clients")
+              .select("name, business_name, phone, email")
+              .eq("id", meta.contractor_id)
+              .single(),
+          ]);
+
+          const site = (lead as any)?.contractor_lead_sites;
+          const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+
+          // Send SMS receipt + Matt notification in parallel
+          await Promise.all([
+            // SMS receipt to contractor
+            contractor?.phone
+              ? sendSMS(
+                  contractor.phone,
+                  TWILIO_PHONE,
+                  `LEAD PURCHASED ✓\n${lead?.name}\n📞 ${lead?.phone}${lead?.email ? `\n📧 ${lead.email}` : ""}\nProject: ${lead?.project_type || "Service request"}\nCall them NOW — exclusive to you.\n— Detroit Web Agency`,
+                  "contractor_leads"
+                )
+              : Promise.resolve(),
+            // Email receipt to contractor
+            RESEND_API_KEY && customerEmail
+              ? fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    from: "Detroit Web Agency <matt@detroitwebagent.com>",
+                    to: [customerEmail],
+                    bcc: ["matt@detroitwebagent.com"],
+                    subject: `Lead Unlocked — ${lead?.name || "New Lead"} (${site?.trade || "Service"} in ${site?.city || "Metro Detroit"})`,
+                    html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
+  <div style="background:#00d4ff;height:4px;"></div>
+  <div style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.9;">
+    <p><strong>✅ Lead Purchased — Call them now.</strong></p>
+    <table style="border-collapse:collapse;width:100%;margin:16px 0;">
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Name</td><td style="padding:8px 0;font-weight:600;">${lead?.name || "—"}</td></tr>
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Phone</td><td style="padding:8px 0;font-weight:600;"><a href="tel:${lead?.phone}" style="color:#00d4ff;">${lead?.phone || "—"}</a></td></tr>
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Email</td><td style="padding:8px 0;">${lead?.email || "—"}</td></tr>
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Project</td><td style="padding:8px 0;">${lead?.project_type || "—"}</td></tr>
+    </table>
+    <p style="color:#64748b;font-size:13px;">This lead is exclusive to you. No other contractor received this contact info.</p>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:13px;color:#334155;">
+      <strong>Matt Michels</strong> · Detroit Web Agency · (313) 992-1219
+    </div>
+  </div>
+</div></body></html>`,
+                  }),
+                })
+              : Promise.resolve(),
+            // Notify Matt
+            RESEND_API_KEY
+              ? fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    from: "DWA System <matt@detroitwebagent.com>",
+                    to: ["matt@detroitwebagent.com"],
+                    subject: `💰 PPL Sale $50 — ${contractor?.business_name || customerEmail}`,
+                    html: `<p><strong>${contractor?.business_name || "Contractor"}</strong> bought a ${site?.trade || "service"} lead in ${site?.city || "Metro Detroit"} for $50.<br>Lead: ${lead?.name} — ${lead?.phone}<br>Contractor email: ${customerEmail}</p>`,
+                  }),
+                })
+              : Promise.resolve(),
+          ]);
+        // 3-lead territory lock upsell — fires when contractor hits 3 paid leads this week
+        if (meta.contractor_id && contractor?.phone) {
+          try {
+            const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+            const { count: weekCount } = await pplSb
+              .from("contractor_lead_purchases")
+              .select("id", { count: "exact", head: true })
+              .eq("contractor_id", meta.contractor_id)
+              .gte("purchased_at", sevenDaysAgo);
+            if (weekCount === 3) {
+              const upgradeUrl = `https://detroitwebagent.com/contractor-leads?upgrade=1&prefilled_email=${encodeURIComponent(customerEmail || "")}`;
+              await sendSMS(
+                contractor.phone,
+                Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219",
+                `You've grabbed 3 leads this week — clearly closing them. Stop paying per lead. Lock your territory for a flat $399/mo and get all future leads automatically. Upgrade: ${upgradeUrl}`,
+                "contractor_leads"
+              );
+            }
+          } catch (e) { console.error("[WEBHOOK] 3-lead upsell error:", e); }
+        }
+        } catch (e) {
+          console.error("[WEBHOOK] contractor_lead_payment error:", e);
+          await notifyMatt(
+            `🚨 PPL Lead provision FAILED — ${meta.contractor_id} paid $50 but lead ${meta.lead_id} not activated`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p><p>Session: ${session.id}</p>`
+          ).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── AGED LEAD PPL PAYMENT ($15/lead downsell) ────────────────────────
+      if (meta.type === "aged_ppl_lead") {
+        try {
+          const agedSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+
+          // Idempotency guard
+          const { data: existingLead } = await agedSb
+            .from("contractor_leads")
+            .select("status, payment_session_id")
+            .eq("id", meta.lead_id)
+            .single();
+
+          if (existingLead?.status === "sold" && existingLead?.payment_session_id === session.id) {
+            return new Response(JSON.stringify({ received: true }), { status: 200 });
+          }
+
+          // Record purchase + mark lead sold atomically
+          await Promise.all([
+            agedSb.from("contractor_lead_purchases").insert({
+              contractor_id: meta.contractor_id,
+              lead_id: meta.lead_id,
+              amount_cents: session.amount_total || 1500,
+              stripe_session_id: session.id,
+            }),
+            agedSb.from("contractor_leads").update({
+              status: "sold",
+              paid_by_contractor_id: meta.contractor_id,
+              payment_amount_cents: session.amount_total || 1500,
+              payment_session_id: session.id,
+            }).eq("id", meta.lead_id),
+          ]);
+
+          // Fetch lead + contractor for delivery
+          const [{ data: lead }, { data: contractor }] = await Promise.all([
+            agedSb.from("contractor_leads")
+              .select("name, phone, email, project_type, contractor_lead_sites(trade, city)")
+              .eq("id", meta.lead_id)
+              .single(),
+            agedSb.from("contractor_clients")
+              .select("name, business_name, phone, email")
+              .eq("id", meta.contractor_id)
+              .single(),
+          ]);
+
+          const site = (lead as any)?.contractor_lead_sites;
+
+          await Promise.all([
+            // SMS: deliver contact info
+            contractor?.phone
+              ? sendSMS(
+                  contractor.phone,
+                  TWILIO_PHONE,
+                  `COLD LEAD UNLOCKED ✓\n${lead?.name}\n📞 ${lead?.phone}${lead?.email ? `\n📧 ${lead.email}` : ""}\nProject: ${lead?.project_type || "Service request"}\n— Detroit Web Agency`,
+                  "contractor_leads"
+                )
+              : Promise.resolve(),
+            // Email receipt
+            RESEND_API_KEY && customerEmail
+              ? fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    from: "Detroit Web Agency <matt@detroitwebagent.com>",
+                    to: [customerEmail],
+                    bcc: ["matt@detroitwebagent.com"],
+                    subject: `Cold Lead Unlocked — ${lead?.name || "New Lead"} (${site?.trade || "Service"} in ${site?.city || "Metro Detroit"})`,
+                    html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
+  <div style="background:#00d4ff;height:4px;"></div>
+  <div style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.9;">
+    <p><strong>✅ Cold Lead Unlocked — $15</strong></p>
+    <p style="color:#64748b;font-size:13px;">This lead was unclaimed for 48+ hours and purchased at the cold-lead rate.</p>
+    <table style="border-collapse:collapse;width:100%;margin:16px 0;">
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Name</td><td style="padding:8px 0;font-weight:600;">${lead?.name || "—"}</td></tr>
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Phone</td><td style="padding:8px 0;font-weight:600;"><a href="tel:${lead?.phone}" style="color:#00d4ff;">${lead?.phone || "—"}</a></td></tr>
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Email</td><td style="padding:8px 0;">${lead?.email || "—"}</td></tr>
+      <tr><td style="padding:8px 0;color:#64748b;font-size:13px;">Project</td><td style="padding:8px 0;">${lead?.project_type || "—"}</td></tr>
+    </table>
+    <p style="color:#64748b;font-size:13px;">Contact is still exclusive to you — no other contractor received this info.</p>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:13px;color:#334155;">
+      <strong>Matt Michels</strong> · Detroit Web Agency · (313) 992-1219
+    </div>
+  </div>
+</div></body></html>`,
+                  }),
+                })
+              : Promise.resolve(),
+            // Notify Matt
+            RESEND_API_KEY
+              ? fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    from: "DWA System <matt@detroitwebagent.com>",
+                    to: ["matt@detroitwebagent.com"],
+                    subject: `💰 Aged Lead Sale $15 — ${contractor?.business_name || customerEmail}`,
+                    html: `<p><strong>${contractor?.business_name || "Contractor"}</strong> bought an aged ${site?.trade || "service"} lead in ${site?.city || "Metro Detroit"} for $15.<br>Lead: ${lead?.name} — ${lead?.phone}</p>`,
+                  }),
+                })
+              : Promise.resolve(),
+          ]);
+        } catch (e) { console.error("[WEBHOOK] aged_ppl_lead error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── DEAD LEAD BILLING SETUP (card saved via Stripe setup mode) ──────────
+      if (meta.type === "dead_lead_billing_setup" && session.mode === "setup") {
+        try {
+          const dlSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          const siRes = await fetch(`https://api.stripe.com/v1/setup_intents/${session.setup_intent}`, {
+            headers: { Authorization: `Basic ${btoa((Deno.env.get("STRIPE_SECRET_KEY") || "") + ":")}` },
+          });
+          const si = await siRes.json();
+          const paymentMethodId = si.payment_method;
+
+          if (meta.contractor_id && paymentMethodId) {
+            // CRITICAL: if this fails, return 500 so Stripe retries
+            const { error: updateErr } = await dlSb.from("contractor_clients" as any).update({
+              stripe_customer_id: session.customer as string,
+              stripe_payment_method_id: paymentMethodId,
+              dead_lead_billing_active: true,
+            }).eq("id", meta.contractor_id);
+            if (updateErr) throw new Error(`contractor_clients update: ${updateErr.message}`);
+            console.log(`[WEBHOOK] Dead lead billing active for contractor ${meta.contractor_id}, pm=${paymentMethodId}`);
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] dead_lead_billing_setup error:", e);
+          await notifyMatt(
+            `🚨 Dead Lead billing setup FAILED — contractor ${meta.contractor_id}`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p><p>Stripe session: ${session.id}</p><p>Contractor ID: ${meta.contractor_id} — payment method NOT saved, they cannot be charged.</p>`
+          ).catch(() => {});
+          return new Response(JSON.stringify({ error: "billing setup failed" }), { status: 500 });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
 
       // ── CONTRACTOR LEAD SUBSCRIPTION ─────────────────────────────────────
       if (meta.type === "contractor_lead_subscription") {
@@ -2396,7 +2834,7 @@ serve(async (req) => {
           const wdSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
           // Activate contractor client
           if (meta.contractor_id) {
-            await wdSb.from("contractor_clients" as any)
+            const { error: clientErr } = await wdSb.from("contractor_clients" as any)
               .update({
                 active: true,
                 stripe_customer_id: session.customer as string,
@@ -2404,6 +2842,7 @@ serve(async (req) => {
                 onboarded_at: new Date().toISOString(),
               })
               .eq("id", meta.contractor_id);
+            if (clientErr) throw new Error(`contractor_clients update failed: ${clientErr.message}`);
 
             // Assign contractor to the matching lead site
             const { data: site } = await wdSb
@@ -2423,51 +2862,49 @@ serve(async (req) => {
 
           if (RESEND_API_KEY && customerEmail) {
             const tradeLabel = (meta.trade || "service").charAt(0).toUpperCase() + (meta.trade || "service").slice(1);
-            // Welcome email to contractor
-            await fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({
-                from: "Matt Michels <matt@mattmichelstraining.com>",
-                to: [customerEmail], bcc: ["matthewmichels4@gmail.com"],
-                subject: `You're locked in — exclusive ${tradeLabel} leads in ${meta.city || "your area"}`,
-                html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
-<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
-  <div style="background:#e8621a;height:4px;"></div>
-  <div style="padding:28px 32px;color:#1e293b;font-size:15px;line-height:1.9;">
-    <p>Hey ${meta.business_name || "there"} —</p>
-    <p><strong>You're in.</strong> Every exclusive ${tradeLabel.toLowerCase()} lead that comes through ${meta.city || "your area"} goes directly to you. No sharing, no competing bids.</p>
-    <p>When a lead comes in, you'll get an email immediately with their name, phone, and project details. Call them fast — speed wins jobs.</p>
-    <p>Questions? Reply to this email or text me directly at <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
-      <img src="https://www.mattmichelstraining.com/images/matt-family-cornfield.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 806-4952</div>
+            await Promise.all([
+              // Welcome email to contractor — DWA branding
+              fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  from: "Matt Michels — Detroit Web Agency <matt@detroitwebagent.com>",
+                  to: [customerEmail], bcc: ["matt@detroitwebagent.com"],
+                  subject: `You're locked in — exclusive ${tradeLabel} leads in ${meta.city || "your area"}`,
+                  html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a1628;font-family:'Helvetica Neue',sans-serif;">
+<div style="max-width:560px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#00d4ff,#0099cc);padding:24px 32px;">
+      <p style="margin:0;color:#0a1628;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase">Detroit Lead Network</p>
+      <h1 style="margin:8px 0 0;color:#0a1628;font-size:22px;font-weight:900">You're locked in. Leads are coming.</h1>
+    </div>
+    <div style="padding:28px 32px;color:#e2e8f0;font-size:15px;line-height:1.8;">
+      <p style="margin:0 0 16px">Hey ${meta.business_name || "there"} —</p>
+      <p style="margin:0 0 16px"><strong style="color:#00d4ff">Every exclusive ${tradeLabel.toLowerCase()} lead in ${meta.city || "your area"} now goes directly to you.</strong> No sharing. No competing bids. You're the only contractor getting these.</p>
+      <p style="margin:0 0 16px">When a lead comes in, you'll get an email + text immediately with their name, phone, and project. <strong>Call them fast — the first contractor to call wins the job.</strong></p>
+      <p style="margin:0 0 24px">Questions? Text me at <a href="tel:+13139921219" style="color:#00d4ff">(313) 992-1219</a>.</p>
+      <div style="border-top:1px solid #1e3a5f;padding-top:20px;display:flex;align-items:center;gap:12px;">
+        <img src="https://www.detroitwebagent.com/images/dwa/matt.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt">
+        <div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br>Detroit Web Agency · (313) 992-1219</div>
+      </div>
     </div>
   </div>
-<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
-        <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
-        <div style="font-size:13px;color:#94a3b8;">
-          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952
-        </div>
-        <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M² Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
-      </div></div>
-</body></html>`,
+</div></body></html>`,
+                }),
               }),
-            });
-            // Notify Matt
-            await fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({
-                from: "M² System <matt@mattmichelstraining.com>",
-                to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
-                subject: `💰 New contractor client — ${meta.business_name || customerEmail}`,
-                html: `<p>New contractor lead subscription:<br><strong>${meta.business_name}</strong> — ${customerEmail}<br>Trade: ${meta.trade} | City: ${meta.city}, ${meta.state || "MI"}<br>Subscription: ${session.subscription || "n/a"}</p>`,
-              }),
-            });
+              // Notify Matt
+              notifyMatt(
+                `💰 New contractor client — ${meta.business_name || customerEmail}`,
+                `<p><strong>${meta.business_name}</strong> — ${customerEmail}<br>Trade: ${meta.trade} | City: ${meta.city}, ${meta.state || "MI"}<br>Subscription: ${session.subscription || "n/a"}</p>`,
+              ),
+            ]);
           }
-        } catch (e) { console.error("[WEBHOOK] contractor_lead_subscription error:", e); }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+          return new Response(JSON.stringify({ received: true }), { status: 200 });
+        } catch (e) {
+          console.error("[WEBHOOK] contractor_lead_subscription error:", e);
+          notifyMatt("⚠️ Contractor lead webhook DB failure", `<p>${String(e)}</p>`).catch(() => {});
+          return new Response(JSON.stringify({ error: String(e) }), { status: 500 });
+        }
       }
 
       // ── B2B DATABASE SUBSCRIPTION ─────────────────────────────────────────
@@ -2509,13 +2946,13 @@ serve(async (req) => {
     <p>Hey —</p>
     <p>You now have access to the <strong>${nicheLabel}</strong> database. Browse, filter by state/city, and export to CSV anytime.</p>
     <p><a href="https://www.mattmichelstraining.com/b2b-leads" style="background:#e8621a;color:#fff;padding:10px 22px;border-radius:6px;text-decoration:none;font-weight:700;font-size:14px;">Access Your Database →</a></p>
-    <p>The database updates daily. You'll always have the freshest contacts. Questions? Email <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
+    <p>The database updates daily. You'll always have the freshest contacts. Questions? Email <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a> or text <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a>.</p>
     <p>— Matt Michels</p>
   </div>
 <div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
         <div style="font-size:13px;color:#94a3b8;">
-          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952
+          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 992-1219
         </div>
         <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M² Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
       </div></div>
@@ -2666,7 +3103,7 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
 <p style="margin:0 0 8px"><strong>⚡ One step to get started:</strong></p>
 <p style="margin:0 0 4px">I need to connect your Google Business Profile. Takes 5 minutes. Two options:</p>
 <ul style="margin:8px 0 16px;padding-left:20px;color:#475569">
-<li>Text me at <a href="tel:+13138064952" style="color:#e8621a">(313) 806-4952</a> and I'll send you the connection link</li>
+<li>Text me at <a href="tel:+13139921219" style="color:#e8621a">(313) 992-1219</a> and I'll send you the connection link</li>
 <li>Or reply to this email — I'll get it set up same day</li>
 </ul>
 <p style="margin:0;background:#f0fdf4;padding:12px;border-radius:6px;border:1px solid #bbf7d0;font-size:13px;color:#166534">✅ Your first post will go live within 24 hours of connecting your profile. You won't have to do anything after that.</p>`,
@@ -2746,19 +3183,28 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
       if (meta.type === "field_service_subscription") {
         try {
           const { email, name, company, plan } = meta;
-          await sb.from("field_service_clients").upsert(
-            { owner_email: email, owner_name: name || null, company_name: company || "New Client", plan: plan || "standalone", active: true, stripe_customer_id: session.customer as string },
-            { onConflict: "owner_email" }
-          );
+          const { data: fieldClient } = await sb.from("field_crm_clients").upsert(
+            { email: email, owner_name: name || null, business_name: company || "New Client", plan: plan || "standalone", status: "active", stripe_customer_id: session.customer as string, stripe_subscription_id: session.subscription as string || null },
+            { onConflict: "email" }
+          ).select("dispatch_token").single();
+          const dispatchToken = (fieldClient as any)?.dispatch_token || "unknown";
+          const dispatchUrl = `https://detroitwebagent.com/field-service/dispatch?token=${dispatchToken}`;
           await Promise.all([
-            notifyMatt(`New Field Service Client: ${company || email}`, `<p>New Detroit Web Agency Field Service signup:<br/>Name: ${name}<br/>Email: ${email}<br/>Company: ${company}<br/>Plan: ${plan}</p>`),
+            notifyMatt(`New Field Service Client: ${company || email}`, `<p>New Detroit Web Agency Field Service signup:<br/>Name: ${name}<br/>Email: ${email}<br/>Company: ${company}<br/>Plan: ${plan}<br/><br/><strong>Dispatch URL:</strong> <a href="${dispatchUrl}">${dispatchUrl}</a></p>`),
             fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, {
               method: "POST",
               headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json" },
               body: JSON.stringify({ service_type: "field_service_subscription", client_email: email, business_name: company || name || email, company: company, plan: plan || "standalone" }),
             }).catch((e: unknown) => console.error("[WEBHOOK] auto-onboard field_service error:", e)),
           ]);
-        } catch (e) { console.error("[WEBHOOK] field_service_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] field_service_subscription error:", e);
+          await notifyMatt(
+            `🚨 FieldDesk provision FAILED — ${meta.email || customerEmail || "unknown"} paid but not activated`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p><p>Stripe session: ${session.id}</p><p>Manual fix: insert row in field_crm_clients for ${meta.email || customerEmail}</p>`
+          ).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -2787,7 +3233,7 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
 <p>You're all set. Every Monday morning, you'll get 5 LinkedIn posts written in your voice and customized to your industry.</p>
 <p>Your first batch goes out this Monday. Just copy, paste, and post throughout the week.</p>
 <p>Not quite right? Reply to any weekly email with feedback and we'll adjust.</p>
-<p>— Matt<br>(313) 806-4952</p>`,
+<p>— Matt<br>(313) 992-1219</p>`,
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -2900,7 +3346,7 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
 <p style="margin:0 0 8px">📊 <strong>Protects your reputation</strong> — fast responses show potential customers you're engaged and care. Google also rewards it with better local rankings.</p>
 <p style="margin:0 0 20px">💬 <strong>Negative reviews handled carefully</strong> — AI de-escalates professionally, invites offline resolution, and never argues</p>
 <p style="margin:0 0 8px"><strong>⚡ One step needed — connect your Google Business Profile:</strong></p>
-<p style="margin:0 0 16px;color:#475569">Text Matt at <a href="tel:+13138064952" style="color:#e8621a">(313) 806-4952</a> or reply to this email — he'll send you the Google connection link within the hour. Setup takes 3 minutes.</p>
+<p style="margin:0 0 16px;color:#475569">Text Matt at <a href="tel:+13139921219" style="color:#e8621a">(313) 992-1219</a> or reply to this email — he'll send you the Google connection link within the hour. Setup takes 3 minutes.</p>
 <p style="margin:0;background:#f0fdf4;padding:12px;border-radius:6px;border:1px solid #bbf7d0;font-size:13px;color:#166534">✅ Once connected, every new review gets responded to automatically — you never have to think about it again.</p>`,
             }),
               }),
@@ -3060,7 +3506,7 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
   <li>Ready-to-post AI response (sounds personal, takes 10 seconds)</li>
 </ul>
 <p>Questions? Text or call anytime.</p>`,
-                cta: { text: "Text Matt to Expedite Setup", url: "sms:+13138064952" },
+                cta: { text: "Text Matt to Expedite Setup", url: "sms:+13139921219" },
               })
             );
             await notifyMatt(`💰 New Review Monitor client — ${meta.business_name || email} ($29/mo)`,
@@ -3579,7 +4025,7 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
                     headers: { Authorization: `Basic ${twilioAuth}`, "Content-Type": "application/x-www-form-urlencoded" },
                     body: new URLSearchParams({
                       PhoneNumber: available,
-                      FriendlyName: `M2 - ${meta.businessName || email}`,
+                      FriendlyName: `DWA - ${meta.businessName || email}`,
                       StatusCallback: MISSED_CALL_HANDLER_URL,
                       StatusCallbackMethod: "POST",
                       VoiceUrl: MISSED_CALL_HANDLER_URL,
@@ -3611,39 +4057,64 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
           const fwdInstructions = twilioNumber
             ? `<p style="margin:0 0 8px"><strong>Your dedicated text-back number: ${twilioNumber}</strong></p>
 <p style="margin:0 0 8px"><strong>Setup (2 minutes on your phone):</strong></p>
-<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
-<li>On your iPhone: Settings → Phone → Call Forwarding → turn ON → enter <strong>${twilioNumber}</strong></li>
-<li>On Android: Phone app → Settings → Call Forwarding → Forward when unanswered → enter <strong>${twilioNumber}</strong></li>
+<ol style="margin:0 0 16px;padding-left:20px;color:#94a3b8">
+<li>On your iPhone: Settings → Phone → Call Forwarding → turn ON → enter <strong style="color:#00d4ff">${twilioNumber}</strong></li>
+<li>On Android: Phone app → Settings → Call Forwarding → Forward when unanswered → enter <strong style="color:#00d4ff">${twilioNumber}</strong></li>
 <li>That's it — missed calls now trigger an instant text to the caller</li>
 </ol>
-<p style="margin:0 0 8px">Reply to this email if you need help with the forwarding setup.</p>`
-            : `<p style="margin:0 0 8px"><strong>Setup (5 minutes):</strong></p>
-<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
+<p style="margin:0 0 8px">Reply to this email or text <a href="tel:+13139921219" style="color:#00d4ff">(313) 992-1219</a> if you need help with the setup.</p>`
+            : `<p style="margin:0 0 8px"><strong>What happens next:</strong></p>
+<ol style="margin:0 0 16px;padding-left:20px;color:#94a3b8">
 <li>Matt will contact you within a few hours with your dedicated number</li>
-<li>You forward missed calls to that number</li>
-<li>That's it — missed calls now get instant texts, automatically</li>
+<li>You forward missed calls to that number — takes 2 minutes</li>
+<li>Every missed call triggers an instant text to the caller, automatically</li>
 </ol>`;
 
           await Promise.all([
-            sendM2Email(
-              email,
-              twilioNumber ? "Your Missed Call Text-Back number is ready" : "Your Missed Call Text-Back is being set up",
-              m2Email({
-                greeting: `Hey${meta.name ? " " + meta.name : ""} —`,
-                headline: twilioNumber ? "Your Text-Back Number Is Ready" : "Your Missed Call Text-Back is Being Set Up",
-                body: `<p style="margin:0 0 12px"><strong>Every missed call is a potential customer walking away. Not anymore.</strong></p>
-<p style="margin:0 0 8px">⚡ <strong>Instant response</strong> — text fires within seconds of the missed call</p>
-<p style="margin:0 0 8px">🔄 <strong>24/7 coverage</strong> — works nights, weekends, holidays</p>
-<p style="margin:0 0 16px">✨ <strong>7-day free trial</strong> — your trial has started</p>
-${fwdInstructions}`,
+            // Welcome email — DWA branding
+            fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Matt Michels — Detroit Web Agency <matt@detroitwebagent.com>",
+                to: [email], bcc: ["matt@detroitwebagent.com"],
+                subject: twilioNumber ? `Your Missed Call Text-Back number is ready — ${twilioNumber}` : "Your Missed Call Text-Back is being set up",
+                html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a1628;font-family:'Helvetica Neue',sans-serif;">
+<div style="max-width:560px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#00d4ff,#0099cc);padding:24px 32px;">
+      <p style="margin:0;color:#0a1628;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase">Missed Call Text-Back</p>
+      <h1 style="margin:8px 0 0;color:#0a1628;font-size:22px;font-weight:900">${twilioNumber ? "You're live. Callers get texts now." : "Almost set up — one more step."}</h1>
+    </div>
+    <div style="padding:28px 32px;color:#e2e8f0;font-size:15px;line-height:1.8;">
+      <p style="margin:0 0 16px">Hey${meta.name ? " " + meta.name : ""} —</p>
+      <p style="margin:0 0 16px"><strong style="color:#00d4ff">Every missed call is a potential customer walking away. Not anymore.</strong></p>
+      <p style="margin:0 0 8px">⚡ Texts fire within seconds of a missed call</p>
+      <p style="margin:0 0 8px">🔄 Works 24/7 — nights, weekends, holidays</p>
+      <p style="margin:0 0 24px">✨ 7-day free trial started</p>
+      ${fwdInstructions}
+      <div style="border-top:1px solid #1e3a5f;padding-top:20px;display:flex;align-items:center;gap:12px;">
+        <img src="https://www.detroitwebagent.com/images/dwa/matt.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt">
+        <div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br>Detroit Web Agency · (313) 992-1219</div>
+      </div>
+    </div>
+  </div>
+</div></body></html>`,
               }),
-            ),
+            }),
             notifyMatt(
               `${twilioNumber ? "✅ AUTO-SETUP COMPLETE" : "🔔 NEEDS SETUP"} — Missed Call SMS: ${meta.businessName || email}`,
               `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Twilio #: ${twilioNumber || "NOT PROVISIONED — provision manually"}</p>`,
             ),
           ]);
-        } catch (e) { console.error("[WEBHOOK] missed_call_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] missed_call_subscription error:", e);
+          await notifyMatt(
+            `🚨 Missed Call provision FAILED — ${meta.businessName || email || "unknown"} paid but not activated`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p><p>Stripe session: ${session.id}</p><p>Manual fix: insert row in missed_call_clients for ${email}</p>`
+          ).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3724,7 +4195,7 @@ ${fwdInstructions}`,
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
                 subject: "Your AI Reputation Dashboard is being set up",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for the AI Reputation Dashboard ($79/mo). Your 7-day free trial has started.</p><p>Within 24 hours you'll receive your first weekly report covering your Google, Yelp, Facebook, and BBB reviews — with AI-generated response suggestions for anything that needs attention.</p><p>Questions? Reply here or text (313) 806-4952.</p><p>— Matt</p>`,
+                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for the AI Reputation Dashboard ($79/mo). Your 7-day free trial has started.</p><p>Within 24 hours you'll receive your first weekly report covering your Google, Yelp, Facebook, and BBB reviews — with AI-generated response suggestions for anything that needs attention.</p><p>Questions? Reply here or text (313) 992-1219.</p><p>— Matt</p>`,
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -3765,7 +4236,7 @@ ${fwdInstructions}`,
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
                 subject: "Your AI Google Ads Copy is being generated",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Google Ads Copy Generator ($39/mo). Your 7-day free trial has started.</p><p>Within 24 hours you'll receive your first batch of 10 AI-generated Google Ads copy variations for <strong>${meta.businessName || "your business"}</strong> in ${meta.city || "your area"} — ready to paste straight into Google Ads.</p><p>Questions? Reply here or text (313) 806-4952.</p><p>— Matt</p>`,
+                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Google Ads Copy Generator ($39/mo). Your 7-day free trial has started.</p><p>Within 24 hours you'll receive your first batch of 10 AI-generated Google Ads copy variations for <strong>${meta.businessName || "your business"}</strong> in ${meta.city || "your area"} — ready to paste straight into Google Ads.</p><p>Questions? Reply here or text (313) 992-1219.</p><p>— Matt</p>`,
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -3805,7 +4276,7 @@ ${fwdInstructions}`,
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
                 subject: "Your AI Voicemail Transcription is being set up",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Voicemail Transcription ($49/mo). Your 7-day free trial has started.</p><p>Matt will reach out within 24 hours to complete the setup — it takes about 10 minutes. After that, every voicemail left on your business line gets instantly transcribed and summarized via text and email.</p><p>Questions? Reply here or text (313) 806-4952.</p><p>— Matt</p>`,
+                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Voicemail Transcription ($49/mo). Your 7-day free trial has started.</p><p>Matt will reach out within 24 hours to complete the setup — it takes about 10 minutes. After that, every voicemail left on your business line gets instantly transcribed and summarized via text and email.</p><p>Questions? Reply here or text (313) 992-1219.</p><p>— Matt</p>`,
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -3845,7 +4316,7 @@ ${fwdInstructions}`,
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
                 subject: "Your Automated Invoicing is ready",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Automated Contractor Invoicing ($29/mo). Your 7-day free trial has started.</p><p>Matt will reach out within 24 hours to get your first invoice template set up. After that, creating and sending a professional invoice with a Stripe payment link takes about 30 seconds.</p><p>Questions? Reply here or text (313) 806-4952.</p><p>— Matt</p>`,
+                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Automated Contractor Invoicing ($29/mo). Your 7-day free trial has started.</p><p>Matt will reach out within 24 hours to get your first invoice template set up. After that, creating and sending a professional invoice with a Stripe payment link takes about 30 seconds.</p><p>Questions? Reply here or text (313) 992-1219.</p><p>— Matt</p>`,
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -3885,7 +4356,7 @@ ${fwdInstructions}`,
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
                 subject: "Your AI Phone Answering service is being set up",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Phone Answering ($149/mo). Your 7-day free trial has started.</p><p>Matt will reach out within 24 hours to get your custom greeting and call script set up. After that, every call to your business number gets answered by AI — 24/7, never misses a lead.</p><p>Questions? Reply here or text (313) 806-4952.</p><p>— Matt</p>`,
+                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Phone Answering ($149/mo). Your 7-day free trial has started.</p><p>Matt will reach out within 24 hours to get your custom greeting and call script set up. After that, every call to your business number gets answered by AI — 24/7, never misses a lead.</p><p>Questions? Reply here or text (313) 992-1219.</p><p>— Matt</p>`,
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -3926,7 +4397,7 @@ ${fwdInstructions}`,
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email], bcc: ["matthewmichels4@gmail.com"],
                 subject: "Your Text Message Marketing is being set up",
-                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Text Message Marketing ($79/mo). Your 7-day free trial has started.</p><p>Matt will reach out within 24 hours to set up your dedicated SMS number and import your first contact list. Your first AI-written campaign will go out within the week.</p><p>Questions? Reply here or text (313) 806-4952.</p><p>— Matt</p>`,
+                html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Text Message Marketing ($79/mo). Your 7-day free trial has started.</p><p>Matt will reach out within 24 hours to set up your dedicated SMS number and import your first contact list. Your first AI-written campaign will go out within the week.</p><p>Questions? Reply here or text (313) 992-1219.</p><p>— Matt</p>`,
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -4831,7 +5302,7 @@ ${fwdInstructions}`,
                 from: "Matt Michels <matt@mattmichelstraining.com>",
                 to: [email],
                 subject: `Welcome to ${label}`,
-                html: `<p>Hey${meta.contactName || meta.name ? " " + (meta.contactName || meta.name) : ""},</p><p>You're all set with <strong>${label}</strong> (${price}). We'll be in touch shortly to get everything running.</p><p>— Matt<br>(313) 806-4952</p>`,
+                html: `<p>Hey${meta.contactName || meta.name ? " " + (meta.contactName || meta.name) : ""},</p><p>You're all set with <strong>${label}</strong> (${price}). We'll be in touch shortly to get everything running.</p><p>— Matt<br>(313) 992-1219</p>`,
               }),
             });
             await fetch("https://api.resend.com/emails", {
@@ -4918,6 +5389,38 @@ ${fwdInstructions}`,
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+
+      // ── DOMAIN BREACH REPORT — $19 one-time ──────────────────────────────────
+      if (meta.type === "domain_breach_report") {
+        try {
+          const email = meta.customer_email || meta.email || customerEmail;
+          if (email && meta.domain) {
+            fetch(`${SUPABASE_URL}/functions/v1/deliver-domain-breach-report`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({ customer_email: email, domain: meta.domain, stripe_session_id: session.id }),
+            }).catch((e) => console.error("[WEBHOOK] deliver-domain-breach-report failed:", e));
+            console.log(`[WEBHOOK] domain_breach_report triggered for ${email} — ${meta.domain}`);
+          }
+        } catch (e) { console.error("[WEBHOOK] domain_breach_report error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── KEYWORD GAP REPORT — $19 one-time ────────────────────────────────────
+      if (meta.type === "keyword_gap_report") {
+        try {
+          const email = meta.customer_email || meta.email || customerEmail;
+          if (email && meta.your_domain && meta.competitor_domain) {
+            fetch(`${SUPABASE_URL}/functions/v1/deliver-keyword-gap-report`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({ customer_email: email, your_domain: meta.your_domain, competitor_domain: meta.competitor_domain, stripe_session_id: session.id }),
+            }).catch((e) => console.error("[WEBHOOK] deliver-keyword-gap-report failed:", e));
+            console.log(`[WEBHOOK] keyword_gap_report triggered for ${email}`);
+          }
+        } catch (e) { console.error("[WEBHOOK] keyword_gap_report error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
       // ── LUKE — Mark cart as recovered when any instant product purchase completes ──
       const instantProducts = ["website_audit", "gbp_post_pack", "competitor_report"];
       if (instantProducts.includes(meta.type || "") && meta.email) {
@@ -5106,7 +5609,7 @@ ${fwdInstructions}`,
 <p style="margin:0 0 8px">🤖 <strong>Monthly AI audit</strong> — plain-English summary of your biggest issues + fixes</p>
 <p style="margin:0 0 16px">🆓 <strong>7-day free trial</strong> — your first bill is in 7 days</p>
 <p style="margin:0;color:#64748b;font-size:13px">Your first report will arrive next Monday morning.</p>`,
-              cta: { text: "Text Matt With Questions", url: "sms:+13138064952" },
+              cta: { text: "Text Matt With Questions", url: "sms:+13139921219" },
             }));
             await notifyMatt(
               `💰 New SEO Guard — ${meta.business_name || email} ($29/mo trial)`,
@@ -5220,6 +5723,188 @@ ${fwdInstructions}`,
       return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
+      // ── WAVE 4: STORM DAMAGE LEAD BLASTER ──────────────────────────────────
+      if (meta.type === "storm_lead_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("storm_lead_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || meta.name || email,
+              phone: meta.phone || null,
+              zip_codes: meta.zip_codes ? meta.zip_codes.split(",").map((z: string) => z.trim()) : [],
+              trade: meta.trade || null,
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            await Promise.all([
+              supabase.functions.invoke("auto-onboard", { body: { email, type: "storm_lead_subscription", name: meta.business_name || meta.name } }),
+              notifyMatt(
+                `💰 New Storm Damage Leads client — ${meta.business_name || email} ($29/mo)`,
+                `<p><strong>${meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>Trade: ${meta.trade || "—"} | Zips: ${meta.zip_codes || "—"}</p>`
+              ),
+            ]);
+          }
+        } catch (e) { console.error("[WEBHOOK] storm_lead_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── WAVE 4: RECALL ALERT SERVICE ────────────────────────────────────────
+      if (meta.type === "recall_alert_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("recall_alert_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || meta.name || email,
+              phone: meta.phone || null,
+              industry: meta.industry || null,
+              product_categories: meta.product_categories ? meta.product_categories.split(",").map((c: string) => c.trim()) : [],
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            await Promise.all([
+              supabase.functions.invoke("auto-onboard", { body: { email, type: "recall_alert_subscription", name: meta.business_name || meta.name } }),
+              notifyMatt(
+                `💰 New Recall Alert client — ${meta.business_name || email} ($19/mo)`,
+                `<p><strong>${meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>Industry: ${meta.industry || "—"}</p>`
+              ),
+            ]);
+          }
+        } catch (e) { console.error("[WEBHOOK] recall_alert_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── WAVE 4: PERMIT WATCH ─────────────────────────────────────────────────
+      if (meta.type === "permit_watch_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("permit_watch_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || meta.name || email,
+              phone: meta.phone || null,
+              city: meta.city || "Grosse Pointe",
+              state: meta.state || "MI",
+              trades: meta.trades ? meta.trades.split(",").map((t: string) => t.trim()) : [],
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            await Promise.all([
+              supabase.functions.invoke("auto-onboard", { body: { email, type: "permit_watch_subscription", name: meta.business_name || meta.name } }),
+              notifyMatt(
+                `💰 New Permit Watch client — ${meta.business_name || email} ($29/mo)`,
+                `<p><strong>${meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>Location: ${meta.city || "—"}, ${meta.state || "MI"} | Trades: ${meta.trades || "—"}</p>`
+              ),
+            ]);
+          }
+        } catch (e) { console.error("[WEBHOOK] permit_watch_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── WAVE 4: WEBSITE SPEED AUDIT ──────────────────────────────────────────
+      if (meta.type === "speed_audit_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("speed_audit_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || meta.name || email,
+              website_url: meta.website_url || "",
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            await Promise.all([
+              supabase.functions.invoke("auto-onboard", { body: { email, type: "speed_audit_subscription", name: meta.business_name || meta.name } }),
+              notifyMatt(
+                `💰 New Website Speed Audit client — ${meta.business_name || email} ($29/mo)`,
+                `<p><strong>${meta.business_name || email}</strong><br>${email}<br>URL: ${meta.website_url || "—"}</p>`
+              ),
+            ]);
+          }
+        } catch (e) { console.error("[WEBHOOK] speed_audit_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── WAVE 4: AI BEDTIME STORIES ───────────────────────────────────────────
+      if (meta.type === "bedtime_story_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("bedtime_story_clients" as any).upsert({
+              parent_email: email,
+              child_name: meta.child_name || "your child",
+              child_age: meta.child_age ? parseInt(meta.child_age) : 5,
+              interests: meta.interests ? meta.interests.split(",").map((i: string) => i.trim()) : [],
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "parent_email" });
+            await Promise.all([
+              supabase.functions.invoke("auto-onboard", { body: { email, type: "bedtime_story_subscription", name: meta.child_name || "your child" } }),
+              notifyMatt(
+                `💰 New AI Bedtime Stories subscriber — ${email} ($4.99/mo)`,
+                `<p>${email}<br>Child: ${meta.child_name || "—"}, age ${meta.child_age || "5"}<br>Interests: ${meta.interests || "—"}</p>`
+              ),
+            ]);
+          }
+        } catch (e) { console.error("[WEBHOOK] bedtime_story_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── WAVE 4: NEIGHBORHOOD CRIME DIGEST ───────────────────────────────────
+      if (meta.type === "crime_digest_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("crime_digest_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || meta.name || null,
+              phone: meta.phone || null,
+              zip_code: meta.zip_code || "48236",
+              city: meta.city || null,
+              state: meta.state || "MI",
+              client_type: meta.client_type || "property_manager",
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            await Promise.all([
+              supabase.functions.invoke("auto-onboard", { body: { email, type: "crime_digest_subscription", name: meta.business_name || meta.name } }),
+              notifyMatt(
+                `💰 New Crime Digest subscriber — ${meta.business_name || email} ($19/mo)`,
+                `<p><strong>${meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>Zip: ${meta.zip_code || "—"} | ${meta.city || "—"}, ${meta.state || "MI"}</p>`
+              ),
+            ]);
+          }
+        } catch (e) { console.error("[WEBHOOK] crime_digest_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── WAVE 4: BUSINESS LICENSE MONITOR ────────────────────────────────────
+      if (meta.type === "license_monitor_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("license_monitor_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || meta.name || email,
+              phone: meta.phone || null,
+              state: meta.state || "MI",
+              license_types: meta.license_types ? meta.license_types.split(",").map((l: string) => l.trim()) : [],
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            await Promise.all([
+              supabase.functions.invoke("auto-onboard", { body: { email, type: "license_monitor_subscription", name: meta.business_name || meta.name } }),
+              notifyMatt(
+                `💰 New License Monitor client — ${meta.business_name || email} ($25/mo)`,
+                `<p><strong>${meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>State: ${meta.state || "MI"} | License types: ${meta.license_types || "—"}</p>`
+              ),
+            ]);
+          }
+        } catch (e) { console.error("[WEBHOOK] license_monitor_subscription error:", e); }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── CATCH-ALL: any subscription type not explicitly handled above ──────
       // Writes to saas_subscriptions so no paid subscriber is ever lost.
       if (meta.type && meta.type.endsWith("_subscription") && (meta.email || customerEmail)) {
@@ -5247,7 +5932,7 @@ ${fwdInstructions}`,
               body: `<p>Thanks for subscribing! We've received your payment and <strong>${meta.business_name ? meta.business_name + " is" : "you are"} all set</strong>.</p>
 <p>Matt will reach out within 24 hours to complete your onboarding and make sure everything is running smoothly.</p>
 <p>Questions in the meantime? Text or call anytime.</p>`,
-              cta: { text: "Text Matt Now", url: "sms:+13138064952" },
+              cta: { text: "Text Matt Now", url: "sms:+13139921219" },
             })
           );
           await notifyMatt(
@@ -5268,6 +5953,7 @@ ${fwdInstructions}`,
       // ── Revenue Suite Bundle ──────────────────────────────────────────
       if (meta.type === "bundle_revenue_suite") {
         try {
+          const email = meta.email || customerEmail;
           const tables = [
             "review_monitor_clients", "sms_blast_clients", "noshow_clients",
             "estimate_drip_clients", "invoice_chaser_clients", "afterjob_drip_clients",
@@ -5294,7 +5980,7 @@ ${fwdInstructions}`,
 <li>Seasonal Promo Blaster</li><li>Slow Day SMS</li>
 </ul>
 <p>I'll reach out within 24 hours to get everything configured for your business. In the meantime, feel free to text me anytime.</p>`,
-              cta: { text: "Text Matt Now", url: "sms:+13138064952" },
+              cta: { text: "Text Matt Now", url: "sms:+13139921219" },
             })
           );
           await notifyMatt(
@@ -5306,10 +5992,80 @@ ${fwdInstructions}`,
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // Unmatched checkout.session.completed — log and acknowledge
+      console.log(`[WEBHOOK] checkout.session.completed with unhandled meta.type: ${meta.type || "none"}`);
+      return new Response(JSON.stringify({ received: true }), { status: 200 });
+    }
+
+    // ── LUKE — Capture abandoned checkouts for recovery emails ────────────────
+    if (event.type === "checkout.session.expired") {
+      try {
+        const expiredSession = event.data.object as Record<string, unknown>;
+        const expMeta = (expiredSession.metadata as Record<string, string>) || {};
+        const expEmail = expMeta.email || (expiredSession.customer_details as Record<string, string>)?.email || null;
+        const instantProductTypes = ["website_audit", "gbp_post_pack", "competitor_report"];
+        if (expMeta.type && instantProductTypes.includes(expMeta.type) && expEmail) {
+          const { count: exists } = await sb.from("cart_abandonments")
+            .select("*", { count: "exact", head: true })
+            .eq("stripe_session_id", expiredSession.id as string);
+          if (!exists) {
+            await sb.from("cart_abandonments").insert({
+              email: expEmail,
+              product_type: expMeta.type,
+              stripe_session_id: expiredSession.id as string,
+              cart_value: expMeta.price ? parseFloat(expMeta.price) : 49,
+              metadata: expMeta,
+            });
+            console.log(`[LUKE] Cart abandonment captured: ${expEmail} — ${expMeta.type}`);
+          }
+        }
+      } catch (e) { console.error("[LUKE] cart_abandonment capture error:", e); }
+      return new Response(JSON.stringify({ received: true }), { status: 200 });
+    }
+
+    // ── Invoice payment failed — deactivate product clients after 3 failures ──
+    if (event.type === "invoice.payment_failed") {
+      try {
+        const invoice = event.data.object as any;
+        const subscriptionId = invoice.subscription as string;
+        const customerEmail = invoice.customer_email as string;
+        const attemptCount = invoice.attempt_count as number || 1;
+        // Only deactivate after 3 failed attempts (Stripe default dunning)
+        if (subscriptionId && attemptCount >= 3) {
+          await Promise.all([
+            sb.from("hire_alert_clients").update({ active: false }).eq("stripe_subscription_id", subscriptionId),
+            sb.from("field_crm_clients").update({ active: false }).eq("stripe_subscription_id", subscriptionId),
+            sb.from("missed_call_clients" as any).update({ active: false }).eq("stripe_subscription_id", subscriptionId),
+          ]);
+          console.log(`[WEBHOOK] Deactivated clients after ${attemptCount} failed payments for sub ${subscriptionId}`);
+          await notifyMatt(
+            `💸 Payment Failed (${attemptCount}x) — ${customerEmail || subscriptionId}`,
+            `<p>Invoice <strong>${invoice.id}</strong> failed ${attemptCount} times.<br>Customer: ${customerEmail || "unknown"}<br>Amount: $${((invoice.amount_due || 0) / 100).toFixed(2)}<br>Subscription: ${subscriptionId}</p><p>Product clients deactivated. Customer needs to update payment method.</p>`
+          ).catch(() => {});
+        } else if (attemptCount === 1) {
+          // First failure — just notify, don't deactivate yet
+          await notifyMatt(
+            `⚠️ Payment Failed (1st attempt) — ${customerEmail || subscriptionId}`,
+            `<p>Invoice ${invoice.id} failed. Stripe will retry automatically. No action needed yet.</p>`
+          ).catch(() => {});
+        }
+      } catch (e) { console.error("[WEBHOOK] invoice.payment_failed error:", e); }
+      return new Response(JSON.stringify({ received: true }), { status: 200 });
+    }
+
+    // ── Unhandled event types (invoice.finalized, etc.) — acknowledge safely ──
+    console.log(`[WEBHOOK] Unhandled event type: ${event.type} — acknowledging`);
     return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("[STRIPE-WEBHOOK] Error:", msg);
+    // Alert Matt on fatal webhook failures (signature errors, crashes, etc.)
+    sendSMS(
+      ADMIN_PHONE,
+      Deno.env.get("TWILIO_PHONE_NUMBER") || "",
+      `STRIPE-WEBHOOK FATAL: ${msg.slice(0, 120)}`,
+      "stripe_webhook_error"
+    ).catch(() => {});
     return new Response(JSON.stringify({ error: msg }), { status: 400 });
   }
 });

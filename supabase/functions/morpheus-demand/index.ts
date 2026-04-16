@@ -191,7 +191,7 @@ serve(async (req) => {
       </div>`).join("")}` : `<p style="font-size:14px;color:#64748b;">No waitlist signups yet. The WaitlistGate is collecting — keep driving traffic.</p>`}
 
     <hr style="border:1px solid #e2e8f0;margin:24px 0;">
-    <p style="font-size:12px;color:#94a3b8;line-height:1.6;">Morpheus runs every Sunday at 8am ET. Numbers are estimates based on subscription table counts. Questions: <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a></p>
+    <p style="font-size:12px;color:#94a3b8;line-height:1.6;">Morpheus runs every Sunday at 8am ET. Numbers are estimates based on subscription table counts. Questions: <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a></p>
   </td></tr>
   <tr><td style="background:#f8fafc;padding:10px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;font-size:11px;color:#94a3b8;">
     Morpheus Strategic Intelligence · M2 Development

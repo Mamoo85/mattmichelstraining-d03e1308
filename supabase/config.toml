@@ -1,5 +1,8 @@
 project_id = "zmyczlfuufhngzovkjdh"
 
+[functions.boiler-sector-intel]
+verify_jwt = false
+
 [functions.abandoned-cart-sender]
 verify_jwt = false
 
@@ -112,6 +115,45 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.ai-reply-detector]
+verify_jwt = false
+
+[functions.cancel-reply-draft]
+verify_jwt = false
+
+[functions.create-hire-alert-trial]
+verify_jwt = false
+
+[functions.handle-inbound-email]
+verify_jwt = false
+
+[functions.hire-alert-phantom-alert]
+verify_jwt = false
+
+[functions.hire-alert-trial-convert]
+verify_jwt = false
+
+[functions.miosha-license-scraper]
+verify_jwt = false
+
+[functions.license-vision-intake]
+verify_jwt = false
+
+[functions.test-license-vision]
+verify_jwt = false
+
+[functions.generate-digital-audit]
+verify_jwt = false
+
+[functions.contractor-aged-lead-downsell]
+verify_jwt = false
+
+[functions.create-aged-lead-checkout]
+verify_jwt = false
+
+[functions.contractor-fomo-mailer]
+verify_jwt = false
+
+[functions.release-pending-replies]
 verify_jwt = false
 
 [functions.ai-sales-script-writer]
@@ -352,6 +394,12 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.create-contractor-checkout]
+verify_jwt = false
+
+[functions.create-contractor-ppl-checkout]
+verify_jwt = false
+
+[functions.get-lead-by-session]
 verify_jwt = false
 
 [functions.create-crime-digest-checkout]
@@ -984,6 +1032,12 @@ verify_jwt = false
 [functions.missed-call-handler]
 verify_jwt = false
 
+[functions.missed-call-status]
+verify_jwt = false
+
+[functions.process-pending-sms]
+verify_jwt = false
+
 [functions.monthly-client-report]
 verify_jwt = false
 
@@ -1454,4 +1508,67 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.hire-alert-scanner]
+verify_jwt = false
+
+[functions.dead-lead-drip]
+verify_jwt = false
+
+[functions.handle-dead-lead-reply]
+verify_jwt = false
+
+[functions.inbound-sms-relay]
+verify_jwt = false
+
+[functions.contractor-roi-sms]
+verify_jwt = false
+
+[functions.contractor-roi-report]
+verify_jwt = false
+
+[functions.dead-lead-outreach-drip]
+verify_jwt = false
+
+[functions.dead-lead-daily-notifier]
+verify_jwt = false
+
+[functions.dead-lead-intake]
+verify_jwt = false
+
+[functions.dead-lead-billing-setup]
+verify_jwt = false
+
+[functions.dead-lead-stats]
+verify_jwt = false
+
+[functions.hire-alert-public-stats]
+verify_jwt = false
+
+[functions.dwa-operator]
+verify_jwt = false
+
+[functions.dwa-closer]
+verify_jwt = false
+
+[functions.get-techalert-signals]
+verify_jwt = false
+
+[functions.client-revenue-recovered]
+verify_jwt = false
+
+[functions.get-contractor-signals]
+verify_jwt = false
+
+[functions.generate-demo-report]
+verify_jwt = false
+
+[functions.create-domain-breach-checkout]
+verify_jwt = false
+
+[functions.deliver-domain-breach-report]
+verify_jwt = false
+
+[functions.create-keyword-gap-checkout]
+verify_jwt = false
+
+[functions.deliver-keyword-gap-report]
 verify_jwt = false

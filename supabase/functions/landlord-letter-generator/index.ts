@@ -195,7 +195,7 @@ FORMAT AS JSON:
     const caseId = caseRecord?.id;
 
     // Increment letters_generated
-    await sb.rpc("increment_letters_generated", { client_id: clientId }).catch(() => {
+    await sb.rpc("increment_letters_generated", { client_id: clientId } as any).then(() => {}, () => {
       // RPC may not exist; update directly
       return sb
         .from("landlord_letter_clients")
@@ -232,7 +232,7 @@ FORMAT AS JSON:
 </div>
 <div class="footer no-print">
   <img src="https://mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;vertical-align:middle;margin-right:8px;" alt="Matt">
-  <span>Matt Michels | M2 Development | matt@mattmichelstraining.com | (313) 806-4952</span>
+  <span>Matt Michels | M2 Development | matt@mattmichelstraining.com | (313) 992-1219</span>
 </div>
 </body>
 </html>`;

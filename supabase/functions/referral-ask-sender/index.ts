@@ -57,7 +57,7 @@ const REFERRAL_WINDOWS: ReferralWindow[] = [
     subject: "Quick favor — know anyone who could use this?",
         bcc: ["matthewmichels@gmail.com"],
     bodyBuilder: (firstName, serviceLabel) =>
-      `Hey ${firstName}, it's been about a month — how's ${serviceLabel} working out for you? If you know another business owner who could use something like this, I'd really appreciate the intro. Send them my way and I'll give you both a $50 credit on next month. Just text me at (313) 806-4952 or have them mention your name when they sign up. — Matt`,
+      `Hey ${firstName}, it's been about a month — how's ${serviceLabel} working out for you? If you know another business owner who could use something like this, I'd really appreciate the intro. Send them my way and I'll give you both a $50 credit on next month. Just text me at (313) 992-1219 or have them mention your name when they sign up. — Matt`,
   },
   {
     templateName: "referral_ask_60d",
@@ -66,7 +66,7 @@ const REFERRAL_WINDOWS: ReferralWindow[] = [
     subject: "Still the best compliment I can get",
         bcc: ["matthewmichels@gmail.com"],
     bodyBuilder: (firstName, serviceLabel) =>
-      `Hey ${firstName}, two months in — hope ${serviceLabel} is still doing its thing for you. If it's been working well, the biggest compliment you can give me is a referral. Send any business owner my way and I'll knock $50 off both of your next bills. Text me at (313) 806-4952. — Matt`,
+      `Hey ${firstName}, two months in — hope ${serviceLabel} is still doing its thing for you. If it's been working well, the biggest compliment you can give me is a referral. Send any business owner my way and I'll knock $50 off both of your next bills. Text me at (313) 992-1219. — Matt`,
   },
   {
     templateName: "referral_ask_90d",
@@ -75,7 +75,7 @@ const REFERRAL_WINDOWS: ReferralWindow[] = [
     subject: "Three months — and a little thank-you offer",
         bcc: ["matthewmichels@gmail.com"],
     bodyBuilder: (firstName, serviceLabel) =>
-      `Hey ${firstName}, you've been with me for three months now — that means a lot. If ${serviceLabel} has been worth it, I'd love an intro to another business owner who could use the same. Refer someone and you both get $50 off next month. Just text me at (313) 806-4952 or have them drop your name at sign-up. Thanks for sticking with me. — Matt`,
+      `Hey ${firstName}, you've been with me for three months now — that means a lot. If ${serviceLabel} has been worth it, I'd love an intro to another business owner who could use the same. Refer someone and you both get $50 off next month. Just text me at (313) 992-1219 or have them drop your name at sign-up. Thanks for sticking with me. — Matt`,
   },
 ];
 
@@ -103,7 +103,7 @@ function buildReferralEmailHtml(bodyText: string): string {
               <div style="font-size:14px;color:#1e293b;font-weight:600;">Matt Michels</div>
         <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
               <div style="font-size:13px;color:#64748b;">M² Training · Grosse Pointe, MI</div>
-              <div style="font-size:13px;color:#64748b;">(313) 806-4952</div>
+              <div style="font-size:13px;color:#64748b;">(313) 992-1219</div>
             </td>
           </tr>
         </table>

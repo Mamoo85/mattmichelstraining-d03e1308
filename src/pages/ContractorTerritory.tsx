@@ -105,7 +105,7 @@ export default function ContractorTerritory() {
             <CheckCircle size={48} className="text-green-500 mx-auto mb-4" />
             <h1 className="text-2xl font-black text-foreground mb-2">Request received!</h1>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              A licensed {territory.trade.toLowerCase()} contractor in {territory.city} will contact you shortly. For immediate help, call <a href="tel:+13138064952" className="text-primary font-bold">(313) 806-4952</a>.
+              A licensed {territory.trade.toLowerCase()} contractor in {territory.city} will contact you shortly. For immediate help, call <a href="tel:+13139921219" className="text-primary font-bold">(313) 992-1219</a>.
             </p>
           </div>
         </div>
@@ -130,8 +130,8 @@ export default function ContractorTerritory() {
             Licensed, local {territory.trade.toLowerCase()} contractors ready to help. Get a free quote — fast response guaranteed.
           </p>
           <div className="mt-5 flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="tel:+13138064952" className="bg-primary hover:bg-primary/90 text-white px-6 py-3 font-bold text-sm transition-all inline-flex items-center justify-center gap-2">
-              <Phone size={14} /> Call Now — (313) 806-4952
+            <a href="tel:+13139921219" className="bg-primary hover:bg-primary/90 text-white px-6 py-3 font-bold text-sm transition-all inline-flex items-center justify-center gap-2">
+              <Phone size={14} /> Call Now — (313) 992-1219
             </a>
             <button
               onClick={() => document.getElementById("lead-form")?.scrollIntoView({ behavior: "smooth" })}
@@ -176,7 +176,7 @@ export default function ContractorTerritory() {
           {/* Emergency callout */}
           <div className="bg-red-950/20 border border-red-900/30 p-5 rounded mb-10 text-center">
             <p className="font-bold text-foreground mb-1">{copy.emergency}</p>
-            <a href="tel:+13138064952" className="text-primary font-bold text-lg hover:underline">(313) 806-4952</a>
+            <a href="tel:+13139921219" className="text-primary font-bold text-lg hover:underline">(313) 992-1219</a>
             <p className="text-[11px] text-muted-foreground mt-1">Available 24/7 for emergencies</p>
           </div>
 
@@ -245,15 +245,15 @@ export default function ContractorTerritory() {
             </p>
             <p>
               Every contractor in our network is vetted, licensed in the State of Michigan, and committed to fair pricing with upfront quotes.
-              Fill out the form above or call <a href="tel:+13138064952">(313) 806-4952</a> to get connected today.
+              Fill out the form above or call <a href="tel:+13139921219">(313) 992-1219</a> to get connected today.
             </p>
           </div>
 
           {/* Footer CTA */}
           <div className="text-center py-8 border-t border-border">
             <p className="text-sm text-muted-foreground mb-2">Serving {territory.city} and surrounding areas</p>
-            <a href="tel:+13138064952" className="text-primary font-bold text-sm hover:underline inline-flex items-center gap-1">
-              <Phone size={14} /> (313) 806-4952
+            <a href="tel:+13139921219" className="text-primary font-bold text-sm hover:underline inline-flex items-center gap-1">
+              <Phone size={14} /> (313) 992-1219
             </a>
           </div>
         </div>

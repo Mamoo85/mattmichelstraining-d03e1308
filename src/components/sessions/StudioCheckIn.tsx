@@ -208,6 +208,26 @@ const StudioCheckIn = ({ onOpenWorkouts }: { onOpenWorkouts?: () => void }) => {
     setChecking(false);
   };
 
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        if (ok) return true;
+      } catch {}
+    }
+    return false;
+  };
+
   const handleShare = async () => {
     const totalDays = new Set(checkins.map((c) => new Date(c.checked_in_at).toDateString())).size;
     const achievedMilestones = milestones.filter((m) => m.achieved);
@@ -223,13 +243,14 @@ const StudioCheckIn = ({ onOpenWorkouts }: { onOpenWorkouts?: () => void }) => {
     if (navigator.share) {
       try {
         await navigator.share({ title: "M2 Training Check-In", text });
-      } catch {
-        // User cancelled — that's fine
-      }
-    } else {
-      // Fallback: copy to clipboard
-      await navigator.clipboard.writeText(text);
+        return;
+      } catch {}
+    }
+    const copied = await copyToClipboard(text);
+    if (copied) {
       toast({ title: "Copied!", description: "Share text copied to clipboard." });
+    } else {
+      toast({ title: "Couldn't copy", description: "Try long-pressing the text to copy manually.", variant: "destructive" });
     }
   };
 
@@ -322,10 +343,13 @@ const StudioCheckIn = ({ onOpenWorkouts }: { onOpenWorkouts?: () => void }) => {
                   onClick={async () => {
                     const text = `${m.emoji} ${m.label} at M2 Training! ${m.detail} #M2Training`;
                     if (navigator.share) {
-                      try { await navigator.share({ title: "M2 Training", text }); } catch {}
-                    } else {
-                      await navigator.clipboard.writeText(text);
+                      try { await navigator.share({ title: "M2 Training", text }); return; } catch {}
+                    }
+                    const copied = await copyToClipboard(text);
+                    if (copied) {
                       toast({ title: "Copied!", description: "Milestone copied to clipboard." });
+                    } else {
+                      toast({ title: "Couldn't copy", description: "Try long-pressing to copy manually.", variant: "destructive" });
                     }
                   }}
                   className="text-muted-foreground hover:text-foreground transition-all"

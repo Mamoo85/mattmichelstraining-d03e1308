@@ -7,7 +7,7 @@ import { RevealSection } from "@/hooks/useInView";
 const heroImg = "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1600&q=80";
 const BRAND = "The Standard";
 const TAGLINE = "Barbershop & Salon";
-const PHONE = "(313) 806-4952";
+const PHONE = "(313) 992-1219";
 const GOLD = "#c9a84c";
 const DARK = "#0a0a0a";
 const DARK2 = "#141414";
@@ -53,7 +53,7 @@ const SalonMockup = () => {
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", color: "#e2e8f0", background: DARK }}>
       <div style={{ background: "#1e40af", color: "white", textAlign: "center", padding: "8px", fontSize: "11px", fontWeight: "700", letterSpacing: "0.1em" }}>
-        SAMPLE WEBSITE — Built by Matt Michels Web Design · (313) 806-4952
+        SAMPLE WEBSITE — Built by Matt Michels Web Design · (313) 992-1219
       </div>
 
       <Helmet>
@@ -68,7 +68,7 @@ const SalonMockup = () => {
         <span className="opacity-60">·</span>
         <Link to="/detroit-web-design" className="underline underline-offset-2">Matt Michels Web Design</Link>
         <span className="opacity-60">·</span>
-        <a href="tel:3138064952">313.806.4952</a>
+        <a href="tel:3139921219">313.992.1219</a>
       </div>
 
       {/* Sticky Header */}

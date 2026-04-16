@@ -71,7 +71,7 @@ async function scanForChurnRisks(sb: ReturnType<typeof createClient>): Promise<C
         action: "Check the GBP poster function — may need Google auth refresh for this client",
         clientMessage: {
           subject: `Quick update on your Google posts`,
-          body: `Hey, just wanted to check in on your Google Business Profile automation.\n\nI noticed your posts may not be going out as scheduled. Wanted to make sure everything's still looking right on your end.\n\nIf you're seeing posts on your Google profile, everything's fine on your side. If not, reply here and I'll get it sorted today.\n\n— Matt\n(313) 806-4952`,
+          body: `Hey, just wanted to check in on your Google Business Profile automation.\n\nI noticed your posts may not be going out as scheduled. Wanted to make sure everything's still looking right on your end.\n\nIf you're seeing posts on your Google profile, everything's fine on your side. If not, reply here and I'll get it sorted today.\n\n— Matt\n(313) 992-1219`,
         },
       });
     }
@@ -101,7 +101,7 @@ async function scanForChurnRisks(sb: ReturnType<typeof createClient>): Promise<C
         action: "Check META_ACCESS_TOKEN and LINKEDIN_ACCESS_TOKEN secrets. Client may need token refresh.",
         clientMessage: {
           subject: "Checking in on your social posts",
-          body: `Hey, wanted to make sure your social media posts are showing up correctly on Facebook, Instagram, and LinkedIn.\n\nWe post 3x/week for you automatically. If you've noticed any gaps, reply here and I'll take a look at what's happening on our end.\n\nIf everything looks good, just ignore this.\n\n— Matt\n(313) 806-4952`,
+          body: `Hey, wanted to make sure your social media posts are showing up correctly on Facebook, Instagram, and LinkedIn.\n\nWe post 3x/week for you automatically. If you've noticed any gaps, reply here and I'll take a look at what's happening on our end.\n\nIf everything looks good, just ignore this.\n\n— Matt\n(313) 992-1219`,
         },
       });
     }
@@ -126,7 +126,7 @@ async function scanForChurnRisks(sb: ReturnType<typeof createClient>): Promise<C
         action: "Send a personal thank-you. Ask for a Google review. Ask for a referral.",
         clientMessage: {
           subject: "Three months in — wanted to say thanks",
-          body: `Hey, I realized you've been with us for over 3 months now.\n\nI don't say this enough, but I appreciate the loyalty. Genuinely.\n\nTwo quick asks:\n\n1. If you're happy with the Google posts, a review on our Google profile means the world: google.com/search?q=M2+Performance+Training\n\n2. Know any other local business owners who could use automated Google posts? I'd love an introduction.\n\nEither way — thanks for sticking with us.\n\n— Matt\n(313) 806-4952`,
+          body: `Hey, I realized you've been with us for over 3 months now.\n\nI don't say this enough, but I appreciate the loyalty. Genuinely.\n\nTwo quick asks:\n\n1. If you're happy with the Google posts, a review on our Google profile means the world: google.com/search?q=M2+Performance+Training\n\n2. Know any other local business owners who could use automated Google posts? I'd love an introduction.\n\nEither way — thanks for sticking with us.\n\n— Matt\n(313) 992-1219`,
         },
       });
     }
@@ -165,7 +165,7 @@ function buildYodaAlert(risks: ChurnRisk[]): { subject: string; html: string } {
           <p style="margin:6px 0 0;font-size:11px;color:#94a3b8;">Re-engagement email sent to client automatically.</p>
         </div>`).join("")}
     <hr style="border:1px solid #e2e8f0;margin:16px 0;">
-    <p style="font-size:12px;color:#94a3b8;">Yoda runs daily at 10am ET. Re-engagement emails sent automatically. For manual intervention: <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a></p>
+    <p style="font-size:12px;color:#94a3b8;">Yoda runs daily at 10am ET. Re-engagement emails sent automatically. For manual intervention: <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a></p>
   </td></tr>
   <tr><td style="background:#f8fafc;padding:10px 24px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;font-size:11px;color:#94a3b8;">
     Yoda Retention Intelligence · M2 Development
@@ -191,7 +191,7 @@ serve(async (req) => {
         ${risk.clientMessage.body.split("\n\n").map(p => `<p style="line-height:1.8;margin:0 0 14px;">${p.replace(/\n/g, "<br>")}</p>`).join("")}
         <hr style="border:1px solid #e2e8f0;margin:20px 0;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:38px;height:38px;border-radius:50%;vertical-align:middle;margin-right:8px;">
-        <span style="font-size:13px;color:#64748b;">Matt Michels · <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a></span>
+        <span style="font-size:13px;color:#64748b;">Matt Michels · <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a></span>
       </body></html>`;
       await fetch("https://api.resend.com/emails", {
         method: "POST",

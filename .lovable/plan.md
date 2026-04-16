@@ -1,60 +1,67 @@
 
 
-# Bug Fix Roundup — 9 Issues from Screenshots
+# Fix Bugs + Strategic Product Restructuring
 
-## Issues Identified
+## Bug Fixes (Code Changes)
 
-1. **Prospector delete confirmation uses browser `confirm()` dialog** — Replace with silent delete (no confirmation prompt) per your request.
+### Fix 1: "See Live Dashboard" → Access Denied
+**Problem:** The button on the hire-alert landing page links to `/my-techalert?token=DEMO`, but the demo system only recognizes `token=DWA_DEMO_MASTER`. So every prospect who clicks it sees "Access Denied."
+**Fix:** Find the button linking with `token=DEMO` and change it to `token=DWA_DEMO_MASTER` so it loads the demo dashboard with mock candidates.
 
-2. **Bottom navbar (HOME/PORTAL/SHOP/SCHEDULE) showing on `/dwa-admin`** — The `HIDDEN_PATHS` array in `BottomTabBar.tsx` includes `/admin` but NOT `/dwa-admin` or `/field-service`. Need to add both.
+### Fix 2: DWA Pages Accessible on M2 Domain
+**Problem:** Image-106 shows `m2training.lovable.app/my-techalert?token=DEMO` — DWA pages (my-techalert, hire-alert, field-service, dead-lead-intake, etc.) are fully accessible on the M2 Training domain. M2 is a fitness brand. DWA is an agency brand. They must be completely isolated.
+**Fix:** Add a domain guard to all DWA-only routes. If the hostname is `m2training.lovable.app` or `mattmichelstraining.com`, redirect DWA routes to `detroitwebagent.com`. This prevents any DWA content from rendering on M2 domains. Implementation: a `DWARouteGuard` wrapper component that checks hostname and either renders children or redirects.
 
-3. **"Could not find table 'public.field_service_clients'"** — The table doesn't exist. The actual table is `field_crm_clients`. `DWAClientRoster.tsx` and `DWAStats.tsx` reference `field_service_clients` — need to change all references to `field_crm_clients` and map the column names (e.g., `company_name` → `business_name`).
+---
 
-4. **Live Map says "Map requires Google Maps API key"** — The `TechMap.tsx` component reads `VITE_GOOGLE_MAPS_API_KEY` but you already have `GOOGLE_MAPS_API_KEY` as a secret (server-side only). Need to either: (a) add `VITE_GOOGLE_MAPS_API_KEY` as a client-side env var, or (b) use an edge function proxy. Since Google Maps JS API keys are public, we can add it as a VITE_ var directly. However, the `.env` file is auto-managed. The simpler fix: hardcode the API key reference or fetch it via an edge function. Will use an edge function to proxy the key.
+## Strategic Product Architecture (Your Vision, Clarified)
 
-5. **Google shows "M² Training | Real Strength Coaching" for detroitwebagent.com** — This is a Google indexing/SEO issue with the custom domain. The site likely needs its own `<title>` and meta tags when served on the DWA domain. Need to check if AgencyHome or the field-service pages set proper SEO meta for the DWA domain. This is partially outside our control (Google re-crawl timing), but we should ensure the correct meta tags are in place.
+Based on everything you said, here's the restructured product strategy:
 
-6. **Visitor-identify script test** — Already tested, it works. The script you shared is functional. No code fix needed.
+### TechAlert / HireAlert = THE Core Product
+You're right — this is the crown jewel. Not just trades. Nurses, CNAs, LPNs, RNs, DONs. Anyone with a state-monitored license. The name should be **HireAlert** (covers all verticals) with TechAlert as the trades-specific branding.
 
-7. **"Failed to log review blast"** — The `review_blast_log` table has RLS enabled but only has a SELECT policy for admin. No INSERT policy exists. Need to add an INSERT policy for admin users.
+### Pricing: Dual Model (Membership + À La Carte)
 
-8. **"Failed to send a request to the Edge Function" (Regulatory Change Monitor)** — The edge function exists but may have deployment issues. Will check logs and redeploy.
+**Membership (Open Season):**
+- Start at $149/mo (trades) / $149/mo (healthcare) — raise later as value proves out
+- Unlimited daily alerts, full dashboard, candidate claiming, outreach drafts
+- Bundle with FieldDesk: $199/mo (both products)
 
-9. **"Failed to add tech"** — Same RLS issue as #7. The `tech_locations` table only has a SELECT policy for admin, no INSERT policy. Need to add INSERT/UPDATE/DELETE policies for admin.
+**À La Carte (On-Demand):**
+- $50 for 10 names RIGHT NOW (one-time purchase)
+- If we can't deliver all 10 (not enough in the system), refund $5 per undelivered name
+- No subscription required — great for one-time hiring pushes or first-time buyers
+- This is the QR code postcard offer: "Scan → Get 5 FREE names of licensed [trade] in your area"
 
-## Implementation Plan
+### Missed Call Text-Back = Standalone Product (Already Built)
+Already live at `/missed-call-text` (MissedCallSaaS.tsx) at $99/mo. It IS standalone. The fix: make it more prominent — add to the main DWA nav, feature it on the agency homepage, include it in QR postcard campaigns.
 
-### Migration (1 SQL file)
-Add missing RLS policies to fix issues #7 and #9:
-- `review_blast_log`: INSERT, UPDATE, DELETE for admin
-- `tech_locations`: INSERT, UPDATE, DELETE for admin
-- Also audit `field_crm_clients` for same missing policies (DWAClientRoster inserts there)
+### FieldDesk = Sticky Long-Term Play
+Keep at $199/mo standalone. It grows on clients over time. Don't oversell it — let it prove itself.
 
-### Code Changes
+### Dead Lead Reactivation = Zero-Risk Entry Point
+Keep as-is. $50/positive reply. No monthly commitment. Gets foot in door → upsell to HireAlert + FieldDesk.
 
-**`src/components/layout/BottomTabBar.tsx`** — Add `/dwa-admin` and `/field-service` to `HIDDEN_PATHS`
+### QR Postcard Campaign
+The offer: "5 FREE licensed [Boiler Operators / CNAs / HVAC Techs] in your area. Scan now."
+- QR → landing page with instant preview of 5 real candidates (blurred contact info)
+- "Want contact info? $50 for 10 names" (à la carte) or "Get unlimited alerts: $149/mo"
+- This is the top-of-funnel that feeds everything
 
-**`src/components/dwa-admin/DWAClientRoster.tsx`** — Change `field_service_clients` → `field_crm_clients`, map `company_name` → `business_name`
+---
 
-**`src/components/dwa-admin/DWAStats.tsx`** — Same table name fix
+## Code Changes for Strategy
 
-**`src/components/dwa-admin/DWARecentJobs.tsx`** — Fix `field_service_clients` reference
+| # | Change | Files |
+|---|--------|-------|
+| 1 | Fix "See Live Dashboard" token=DEMO → token=DWA_DEMO_MASTER | HireAlert.tsx or wherever the button lives |
+| 2 | Add DWARouteGuard — block all DWA routes on M2 domains | New component + wrap routes in App.tsx |
+| 3 | Add à la carte checkout to HireAlert page ("$50 for 10 names") | HireAlert.tsx + new edge function `create-hire-alert-one-time` |
+| 4 | Create edge function for one-time name delivery | `supabase/functions/create-hire-alert-one-time/index.ts` |
+| 5 | Add healthcare-specific HireAlert landing page variant | New or update existing `/hire-alert-healthcare` |
+| 6 | Make Missed Call Text-Back more prominent in DWA nav | DWAStickyNav, AllServices, AgencyHome |
+| 7 | Update pricing across all HireAlert pages ($149/mo standalone) | HireAlert.tsx, checkout function |
 
-**`src/components/dwa-admin/DWADataImport.tsx`** — Fix table reference
-
-**`src/components/admin/AdminProspector.tsx`** — Remove `confirm()` calls on delete, just delete immediately
-
-**`src/components/field-service/TechMap.tsx`** — Fix Google Maps API key loading (use edge function or fetch from secrets)
-
-**`src/pages/AgencyHome.tsx`** (or relevant DWA pages) — Ensure correct SEO title/description for detroitwebagent.com domain
-
-### Edge Function
-- Redeploy `regulatory-monitor-scan` to fix the failed request
-
-### Order
-1. Run migration (RLS policies)
-2. Fix all `field_service_clients` → `field_crm_clients` references
-3. Fix BottomTabBar hidden paths
-4. Remove confirm() dialogs from Prospector
-5. Fix remaining issues (Maps, SEO, redeploy)
+The bug fixes (1-2) ship immediately. The strategic changes (3-7) build out the dual pricing model and healthcare vertical you described.
 

@@ -82,7 +82,7 @@ export default function CitationMonitor() {
         </div>
         <h1 className="text-2xl font-black text-foreground mb-3">Audit started.</h1>
         <p className="text-muted-foreground">Matt will set up your location monitoring within 24 hours. Expect your first citation health report within 48 hours — including every inconsistency we find across all your directories.</p>
-        <p className="mt-4 text-sm text-muted-foreground">Questions? <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a></p>
+        <p className="mt-4 text-sm text-muted-foreground">Questions? <a href="tel:+13139921219" className="text-primary">(313) 992-1219</a></p>
       </div>
     </div>
   );

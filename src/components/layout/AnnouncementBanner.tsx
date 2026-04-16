@@ -2,6 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Megaphone } from "lucide-react";
 
+const IS_AGENCY = typeof window !== "undefined" &&
+  ["detroitwebagent.com", "www.detroitwebagent.com"].includes(window.location.hostname);
+
 const AnnouncementBanner = () => {
   const { data } = useQuery({
     queryKey: ["announcement-banner"],
@@ -16,9 +19,10 @@ const AnnouncementBanner = () => {
       return { text: map["banner_text"] || "", enabled: map["banner_enabled"] === "true" };
     },
     staleTime: 60_000,
+    enabled: !IS_AGENCY,
   });
 
-  if (!data?.enabled || !data.text) return null;
+  if (IS_AGENCY || !data?.enabled || !data.text) return null;
 
   return (
     <div className="bg-primary text-primary-foreground text-center py-2 px-4 fixed top-0 left-0 right-0 z-[60] overflow-hidden">

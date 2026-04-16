@@ -60,7 +60,7 @@ async function sendDunningEmail(record: DunningRecord) {
           <h2 style="margin:0 0 16px;font-size:20px">Payment Update Needed</h2>
           ${bodies[record.day_number]}
           <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0" />
-          <p style="color:#94a3b8;font-size:12px">M² Development · matt@mattmichelstraining.com · (313) 806-4952</p>
+          <p style="color:#94a3b8;font-size:12px">M² Development · matt@mattmichelstraining.com · (313) 992-1219</p>
         </div>`,
     }),
   });

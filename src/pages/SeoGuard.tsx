@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SEOHead from "@/components/layout/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,6 +75,7 @@ export default function SeoGuard() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead title="SEO Guard — $29/mo | Detroit Web Agency" description="Weekly JavaScript visibility check, keyword rank tracking, citation health monitoring, and SMS alerts. Never lose a Google ranking without knowing why." path="/seo-guard" />
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
@@ -152,7 +154,7 @@ export default function SeoGuard() {
 
       {/* Footer */}
       <footer className="text-center py-8 text-sm text-muted-foreground border-t border-border">
-        <p>Detroit Web Agency · Grosse Pointe, MI · <a href="tel:+13138064952" className="text-cyan-500">(313) 806-4952</a></p>
+        <p>Detroit Web Agency · Grosse Pointe, MI · <a href="tel:+13139921219" className="text-cyan-500">(313) 992-1219</a></p>
       </footer>
     </div>
   );

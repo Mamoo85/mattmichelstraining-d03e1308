@@ -281,7 +281,7 @@ export default function GovContractDashboard() {
           <div className="mt-8 p-4 bg-[#1e3a5f]/10 border border-[#1e3a5f]/20 text-[12px] text-muted-foreground">
             <strong className="text-foreground">Score guide:</strong> 70–100 = strong fit (BID). 40–69 = worth evaluating (REVIEW). 0–39 = likely not a fit (NO-BID).
             Opportunities are scanned daily from SAM.gov. Questions? Contact Matt at{" "}
-            <a href="tel:+13138064952" className="text-[#c59b2b] font-bold">(313) 806-4952</a>.
+            <a href="tel:+13139921219" className="text-[#c59b2b] font-bold">(313) 992-1219</a>.
           </div>
         </div>
       </div>

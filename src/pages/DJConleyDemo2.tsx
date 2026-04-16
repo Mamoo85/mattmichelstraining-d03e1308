@@ -48,7 +48,7 @@ export default function DJConleyDemo2() {
         </div>
         <div style={{ textAlign: "right" }}>
           <p style={{ margin: 0, fontSize: 11, color: "#00d4ff", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase" }}>Powered by Detroit Web Agency</p>
-          <p style={{ margin: 0, fontSize: 10, color: "#475569" }}>detroitwebagent.com · (313) 806-4952</p>
+          <p style={{ margin: 0, fontSize: 10, color: "#475569" }}>detroitwebagent.com · (313) 992-1219</p>
         </div>
       </header>
 
@@ -287,7 +287,7 @@ export default function DJConleyDemo2() {
 
         {/* ── Footer ── */}
         <p style={{ textAlign: "center", marginTop: 32, fontSize: 12, color: "#334155" }}>
-          Detroit Web Agency · detroitwebagent.com · matt@mattmichelstraining.com · (313) 806-4952
+          Detroit Web Agency · detroitwebagent.com · matt@mattmichelstraining.com · (313) 992-1219
         </p>
 
       </div>

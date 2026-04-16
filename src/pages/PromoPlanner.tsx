@@ -155,7 +155,7 @@ export default function PromoPlanner() {
 
         {/* Footer */}
         <p className="text-[12px] text-slate-500 text-center">
-          Questions? Email <a href="mailto:matt@mattmichelstraining.com" className="text-cyan-500">matt@mattmichelstraining.com</a> or text <a href="tel:+13138064952" className="text-cyan-500">(313) 806-4952</a>
+          Questions? Email <a href="mailto:matt@mattmichelstraining.com" className="text-cyan-500">matt@mattmichelstraining.com</a> or text <a href="tel:+13139921219" className="text-cyan-500">(313) 992-1219</a>
         </p>
       </div>
     </div>

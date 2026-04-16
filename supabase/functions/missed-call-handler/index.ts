@@ -1,14 +1,15 @@
-// missed-call-handler — fires on every incoming call to +13139921219
-// Immediately sends an SMS back to the caller and plays a short "I'll call you right back" message.
-// Twilio "A call comes in" webhook → this function → TwiML response.
-// No status tracking needed — simpler and actually works.
+// missed-call-handler — Twilio VoiceUrl webhook
+// Multi-tenant: serves both Matt's DWA number AND customer subscription numbers.
+// For customer numbers: looks up missed_call_clients, forwards to their business phone.
+// For Matt's DWA number (+13139921219): forwards to Matt's personal Google Fi.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { sendSMS } from "../_shared/twilio.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
-const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+const MATT_PERSONAL = Deno.env.get("MATT_PERSONAL_PHONE") || "+13138064952";
 
 const TWIML_HEADERS = { "Content-Type": "text/xml" };
 
@@ -19,44 +20,75 @@ function twiml(body: string): Response {
 }
 
 serve(async (req) => {
-  // Twilio sends form-encoded POST data
   if (req.method !== "POST") {
-    return twiml("<Say>Method not allowed.</Say><Hangup/>");
+    return twiml("<Hangup/>");
   }
-
-  let fromNumber = "";
-  let toNumber = TWILIO_PHONE_NUMBER;
 
   try {
     const text = await req.text();
     const params = new URLSearchParams(text);
-    fromNumber = params.get("From") || "";
-    toNumber = params.get("To") || TWILIO_PHONE_NUMBER;
-    const callStatus = params.get("CallStatus") || "";
+    const fromNumber = params.get("From") || "";
+    const toNumber = params.get("To") || "";
 
-    console.log(`[missed-call-handler] Call from=${fromNumber} to=${toNumber} status=${callStatus}`);
+    console.log(`[missed-call-handler] Call from=${fromNumber} to=${toNumber}`);
 
-    // If no caller number, just hang up
     if (!fromNumber) {
       return twiml("<Hangup/>");
     }
 
-    // Send SMS back to caller using shared TCPA-compliant sendSMS
-    const smsBody = "Hey! I just saw your call and I'll call you right back. — Matt @ Detroit Web Agency (313) 806-4952";
-    const smsResult = await sendSMS(fromNumber, toNumber, smsBody, "missed_call");
-    if (smsResult.success) {
-      console.log(`[missed-call-handler] SMS sent to ${fromNumber} — SID: ${smsResult.sid}`);
-    } else if (smsResult.skipped) {
-      console.log(`[missed-call-handler] SMS skipped — ${fromNumber} is opted out`);
-    } else {
-      console.error(`[missed-call-handler] SMS failed: ${smsResult.error}`);
+    const statusUrl = `${SUPABASE_URL}/functions/v1/missed-call-status`;
+    const whisperUrl = `${SUPABASE_URL}/functions/v1/call-whisper`;
+
+    // ── MULTI-TENANT: check if this is a customer subscription number ──────
+    if (toNumber && SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+      const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+      const { data: client } = await sb
+        .from("missed_call_clients")
+        .select("business_phone, business_name")
+        .eq("twilio_number", toNumber)
+        .maybeSingle();
+
+      if (client) {
+        const bizName = (client as any).business_name || "us";
+        const bizPhone = (client as any).business_phone;
+
+        if (!bizPhone) {
+          // No forwarding phone stored — play message, status callback will text caller
+          return twiml(
+            `<Say voice="alice">You've reached ${bizName}. We're sorry we missed your call — we'll text you right back shortly.</Say>` +
+            `<Hangup/>`
+          );
+        }
+
+        // Forward to the business owner's phone; action URL fires when dial completes
+        return twiml(
+          `<Dial timeout="20" action="${statusUrl}" method="POST">` +
+          `<Number>${bizPhone}</Number>` +
+          `</Dial>` +
+          `<Say voice="alice">You've reached ${bizName}. We'll text you right back.</Say>` +
+          `<Hangup/>`
+        );
+      }
     }
+
+    // ── SELF-CALL DETECTION: skip forwarding when Matt calls his own line ──
+    if (fromNumber === MATT_PERSONAL) {
+      return twiml(
+        `<Say voice="alice">You've reached Detroit Web Agency. We missed your call but we'll text you right back shortly.</Say>` +
+        `<Hangup/>`
+      );
+    }
+
+    // ── DWA MODE: Matt's personal number (+13139921219) ────────────────────
+    return twiml(
+      `<Dial timeout="20" action="${statusUrl}" method="POST">` +
+      `<Number url="${whisperUrl}">${MATT_PERSONAL}</Number>` +
+      `</Dial>` +
+      `<Say voice="alice">You've reached Detroit Web Agency. Check your texts — Matt just sent you one. Talk soon.</Say>` +
+      `<Hangup/>`
+    );
   } catch (e: unknown) {
     console.error("[missed-call-handler] Error:", e instanceof Error ? e.message : String(e));
+    return twiml("<Hangup/>");
   }
-
-  // Always return valid TwiML — play a short message and hang up
-  return twiml(
-    `<Say voice="alice">Thanks for calling Detroit Web Agency. We just texted you and will call right back.</Say><Hangup/>`
-  );
 });

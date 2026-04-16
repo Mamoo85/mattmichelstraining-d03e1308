@@ -29,7 +29,7 @@ export default function IndustrialNewsletter() {
             First issue hits your inbox next Monday at 9am. You'll get 5 actionable sales intelligence insights from the manufacturing and industrial markets.
           </p>
           <p className="mt-4 text-sm text-muted-foreground">
-            Questions? <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a>
+            Questions? <a href="tel:+13139921219" className="text-primary">(313) 992-1219</a>
           </p>
         </div>
       </div>
@@ -172,7 +172,7 @@ export default function IndustrialNewsletter() {
 
           <p className="text-center text-sm text-muted-foreground mt-6">
             Questions? Text or call Matt at{" "}
-            <a href="tel:+13138064952" className="text-primary font-semibold">(313) 806-4952</a>
+            <a href="tel:+13139921219" className="text-primary font-semibold">(313) 992-1219</a>
           </p>
         </section>
 

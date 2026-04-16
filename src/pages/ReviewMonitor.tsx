@@ -41,7 +41,7 @@ export default function ReviewMonitor() {
         <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4"><CheckCircle size={32} className="text-green-500" /></div>
         <h1 className="text-2xl font-black text-foreground mb-3">You're set!</h1>
         <p className="text-muted-foreground">Matt will connect your Google Business Profile within 24 hours. After that, every new review triggers an instant text alert with a ready-to-post response.</p>
-        <p className="mt-4 text-sm text-muted-foreground">Questions? <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a></p>
+        <p className="mt-4 text-sm text-muted-foreground">Questions? <a href="tel:+13139921219" className="text-primary">(313) 992-1219</a></p>
       </div>
     </div>
   );

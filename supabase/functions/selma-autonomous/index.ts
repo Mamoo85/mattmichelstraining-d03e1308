@@ -405,6 +405,13 @@ Respond in this EXACT JSON format (no markdown, ONLY valid JSON):
       });
     }
 
+    await supabase.from("agent_heartbeats").upsert({
+      agent_name: "selma-autonomous",
+      last_run_at: new Date().toISOString(),
+      last_status: "ok",
+      last_result: JSON.stringify({ service: campaign.service, platform: campaign.platform }),
+    }, { onConflict: "agent_name" }).catch(() => {});
+
     return new Response(JSON.stringify({ status: "campaign_proposed", service: campaign.service, platform: campaign.platform, data_source: DATAFORSEO_LOGIN ? "dataforseo" : "ai_estimate" }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });

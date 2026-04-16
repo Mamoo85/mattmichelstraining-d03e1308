@@ -150,7 +150,7 @@ export default function ProposalStewartDental() {
           <p className="text-slate-600 mb-6">Thanks, Dr. Stewart. Matt will be in touch within 24 hours to get started. Check your email for a copy of this agreement.</p>
           <div className="text-sm text-slate-500 border rounded-lg p-4" style={{ borderColor: BORDER }}>
             <p className="font-medium mb-1">Questions? Contact Matt directly:</p>
-            <p>(313) 806-4952 | matt@mattmichelstraining.com</p>
+            <p>(313) 992-1219 | matt@mattmichelstraining.com</p>
           </div>
         </div>
       </div>
@@ -187,7 +187,7 @@ export default function ProposalStewartDental() {
                 <p className="text-slate-400 text-sm mt-1">Prepared for Stewart Dental Group · April 2026</p>
               </div>
               <div className="text-sm text-slate-400 space-y-1">
-                <div className="flex items-center gap-2"><Phone size={13} />(313) 806-4952</div>
+                <div className="flex items-center gap-2"><Phone size={13} />(313) 992-1219</div>
                 <div className="flex items-center gap-2"><Mail size={13} />matt@mattmichelstraining.com</div>
                 <div className="flex items-center gap-2"><MapPin size={13} />Grosse Pointe, MI</div>
               </div>
@@ -447,7 +447,7 @@ export default function ProposalStewartDental() {
               </button>
 
               <p className="text-xs text-center text-slate-400">
-                Questions before signing? Call or text Matt: <a href="tel:3138064952" className="underline">(313) 806-4952</a>
+                Questions before signing? Call or text Matt: <a href="tel:3139921219" className="underline">(313) 992-1219</a>
               </p>
             </div>
           </div>
@@ -471,7 +471,7 @@ export default function ProposalStewartDental() {
           </div>
 
           <div className="text-center text-xs text-slate-400 pb-8">
-            Matt Michels Training, LLC · Grosse Pointe, MI · (313) 806-4952 · matt@mattmichelstraining.com
+            Matt Michels Training, LLC · Grosse Pointe, MI · (313) 992-1219 · matt@mattmichelstraining.com
           </div>
         </div>
       </div>

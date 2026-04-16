@@ -219,13 +219,13 @@ Separate each section with the exact dividers shown above. Write with genuine co
       <p style="margin:0;font-size:14px;color:#1e293b;line-height:1.9;white-space:pre-line;">${websiteVersion}</p>
     </div>` : ""}
 
-    <p style="font-size:13px;color:#64748b;line-height:1.7;margin:24px 0 0;">Questions or revisions? Reply to this email or call Matt at <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
+    <p style="font-size:13px;color:#64748b;line-height:1.7;margin:24px 0 0;">Questions or revisions? Reply to this email or call Matt at <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a>.</p>
   </td></tr>
 
   <tr><td style="padding:16px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;">
     <div style="display:flex;align-items:center;gap:12px;">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M² Writing Services · (313) 806-4952</div>
+      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M² Writing Services · (313) 992-1219</div>
     </div>
   </td></tr>
 

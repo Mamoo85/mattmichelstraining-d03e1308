@@ -1,0 +1,1 @@
+ALTER TABLE public.hire_alert_candidates ADD COLUMN IF NOT EXISTS profile_photo_url TEXT;

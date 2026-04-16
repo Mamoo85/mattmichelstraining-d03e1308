@@ -18,10 +18,10 @@ const FindUs = () => (
       </p>
       <div className="flex flex-wrap gap-3 mt-3">
         <a
-          href="tel:3138064952"
+          href="tel:3139921219"
           className="text-sm text-primary font-bold hover:opacity-80 transition-m2"
         >
-          (313) 806-4952
+          (313) 992-1219
         </a>
         <a
           href="mailto:matt@mattmichelstraining.com"
@@ -31,7 +31,7 @@ const FindUs = () => (
         </a>
 
         <a
-          href="sms:3138064952"
+          href="sms:3139921219"
           className="text-sm text-primary font-bold hover:opacity-80 transition-m2"
         >
           Text Matt

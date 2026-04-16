@@ -20,7 +20,7 @@ Still have one spot open for your trade. Once it's gone, the next contractor who
 No commitment to start — just reply and I'll show you what recent leads looked like.
 
 — Matt, Grosse Pointe
-(313) 806-4952`,
+(313) 992-1219`,
     },
     {
       templateName: "contractor_drip_d8_leads",
@@ -34,7 +34,7 @@ The system sends exclusive homeowner leads directly to you — no one else gets 
 
 If you're good on leads, totally understand. Just didn't want you to find out I filled the spot with your competitor.
 
-Reply here or text me: (313) 806-4952
+Reply here or text me: (313) 992-1219
 
 — Matt`,
     },
@@ -46,7 +46,7 @@ Reply here or text me: (313) 806-4952
 
 Last one, I promise.
 
-If the exclusive lead spot in ${city} interests you at all — even to just see what the leads look like — reply or text me at (313) 806-4952.
+If the exclusive lead spot in ${city} interests you at all — even to just see what the leads look like — reply or text me at (313) 992-1219.
 
 If not, no hard feelings. I'll reach back out if something changes.
 
@@ -66,7 +66,7 @@ The contractors I work with in Metro Detroit who were in the same spot as you �
 
 $199/mo, I handle everything. No work on your end.
 
-Worth a 5-minute conversation? Reply here or text (313) 806-4952.
+Worth a 5-minute conversation? Reply here or text (313) 992-1219.
 
 — Matt`,
     },
@@ -85,7 +85,7 @@ I automate all of that for contractors. $199/mo. I run it, you get the calls.
 If you want me to pull a free audit of your GBP and show you exactly what's holding you back, just reply.
 
 — Matt
-(313) 806-4952`,
+(313) 992-1219`,
     },
     {
       templateName: "contractor_drip_d15_gbp",
@@ -95,7 +95,7 @@ If you want me to pull a free audit of your GBP and show you exactly what's hold
 
 Last email on this. If the Google ranking stuff isn't a priority right now — totally get it.
 
-If you ever want to rank higher in ${city} for your trade without touching Google yourself, I'm at (313) 806-4952.
+If you ever want to rank higher in ${city} for your trade without touching Google yourself, I'm at (313) 992-1219.
 
 — Matt, Grosse Pointe`,
     },
@@ -113,7 +113,7 @@ Quick stat: the average contractor misses 3-5 calls a week while on a job. That'
 
 My system texts the missed caller back within 30 seconds — automatically. $99/mo. Takes 10 minutes to set up.
 
-Want to see how it works? Reply or text (313) 806-4952.
+Want to see how it works? Reply or text (313) 992-1219.
 
 — Matt`,
     },
@@ -129,7 +129,7 @@ A plumber I set this up for in Warren picked up an extra $4,400 job last month b
 
 $99/mo. I set it up. You just keep working.
 
-Reply or text (313) 806-4952 if you want in.
+Reply or text (313) 992-1219 if you want in.
 
 — Matt, Grosse Pointe`,
     },
@@ -139,7 +139,7 @@ Reply or text (313) 806-4952 if you want in.
       subject: (biz, city) => `Last message from me`,
       body: (biz, city) => `Hey —
 
-Last one. If the missed-call issue ever costs you a job and you want an automatic fix for $99/mo — I'm at (313) 806-4952.
+Last one. If the missed-call issue ever costs you a job and you want an automatic fix for $99/mo — I'm at (313) 992-1219.
 
 — Matt`,
     },
@@ -155,7 +155,7 @@ function buildHtml(body: string): string {
 <tr><td style="padding:24px;color:#334155;font-size:15px;line-height:1.8;">${htmlBody}
 <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
 <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;vertical-align:middle;" alt="Matt">
-<span style="margin-left:12px;font-size:13px;color:#334155;vertical-align:middle;"><strong>Matt Michels</strong> · Grosse Pointe, MI · (313) 806-4952</span>
+<span style="margin-left:12px;font-size:13px;color:#334155;vertical-align:middle;"><strong>Matt Michels</strong> · Grosse Pointe, MI · (313) 992-1219</span>
 </div></td></tr>
 <tr><td style="background:#f8fafc;padding:12px 24px;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;">M2 Development · Grosse Pointe, MI</td></tr>
 </table></td></tr></table></body></html>`;

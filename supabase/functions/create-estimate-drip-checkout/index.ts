@@ -20,7 +20,7 @@ serve(async (req) => {
       mode: "subscription",
       customer_email: email,
       subscription_data: { trial_period_days: 14 },
-      line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 3900, product_data: { name: "Estimate Follow-Up Drip", description: "5-touch automated follow-up sequence after every quote. Closes more jobs from silence." } }, quantity: 1 }],
+      line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 7900, product_data: { name: "Estimate Follow-Up Drip", description: "5-touch automated follow-up sequence after every quote. Closes more jobs from silence." } }, quantity: 1 }],
       metadata: { type: "estimate_drip_subscription", email, name: name || "", businessName, phone: phone || "", businessType: businessType || "" },
       success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/estimate-followup?status=success`,
       cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/estimate-followup`,

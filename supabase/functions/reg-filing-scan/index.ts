@@ -204,7 +204,7 @@ async function processClient(client: any): Promise<{ items: number; criticals: n
   }
 
   if (criticalCount > 0 && client.phone) {
-    await sendSMS(client.phone, TWILIO_PHONE, `URGENT: ${criticalCount} critical regulatory finding(s) require your attention. Check your email for details. — M² Regulatory Filing Monitor`, "reg_filing_monitor");
+    await sendSMS(client.phone, TWILIO_PHONE, `${criticalCount} critical regulatory finding${criticalCount > 1 ? "s" : ""} need your attention. Details in your email. — Matt (313) 992-1219`, "reg_filing_monitor");
   }
 
   await supabase.from("reg_filing_clients").update({ last_scan_at: new Date().toISOString() }).eq("id", client.id);
@@ -239,7 +239,7 @@ async function deadlineCheck(): Promise<string> {
     }
 
     if (daysUntil <= 3 && client?.phone) {
-      await sendSMS(client.phone, TWILIO_PHONE, `DEADLINE: "${dl.title}" is due in ${daysUntil} day(s). Take action now. — M² Filing Monitor`, "reg_filing_monitor");
+      await sendSMS(client.phone, TWILIO_PHONE, `Heads up: "${dl.title}" is due in ${daysUntil} day${daysUntil !== 1 ? "s" : ""}. Check your email. — Matt (313) 992-1219`, "reg_filing_monitor");
     }
 
     await supabase.from("reg_filing_deadlines").update({ last_reminded: new Date().toISOString() }).eq("id", dl.id);

@@ -292,7 +292,7 @@ function buildEmailHtml(content: NewsletterContent, issueNum: number, dateStr: s
     </div>
 
     <hr style="border:1px solid #e2e8f0;margin:24px 0;">
-    <p style="font-size:13px;color:#64748b;line-height:1.7;">Questions? Reply to this email or text Matt directly at <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a>.</p>
+    <p style="font-size:13px;color:#64748b;line-height:1.7;">Questions? Reply to this email or text Matt directly at <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a>.</p>
 
   </td></tr>
 
@@ -300,7 +300,7 @@ function buildEmailHtml(content: NewsletterContent, issueNum: number, dateStr: s
   <tr><td style="padding:16px 28px;border:1px solid #e2e8f0;border-top:none;">
     <div style="display:flex;align-items:center;gap:12px;">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M2 Development · Grosse Pointe, MI<br><span style="color:#64748b;">(313) 806-4952</span></div>
+      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M2 Development · Grosse Pointe, MI<br><span style="color:#64748b;">(313) 992-1219</span></div>
     </div>
   </td></tr>
 

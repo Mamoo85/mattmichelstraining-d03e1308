@@ -551,6 +551,33 @@ export type Database = {
         }
         Relationships: []
       }
+      api_health_checks: {
+        Row: {
+          api_name: string
+          checked_at: string | null
+          error_message: string | null
+          id: string
+          response_ms: number | null
+          status: string
+        }
+        Insert: {
+          api_name: string
+          checked_at?: string | null
+          error_message?: string | null
+          id?: string
+          response_ms?: number | null
+          status?: string
+        }
+        Update: {
+          api_name?: string
+          checked_at?: string | null
+          error_message?: string | null
+          id?: string
+          response_ms?: number | null
+          status?: string
+        }
+        Relationships: []
+      }
       appointment_reminders: {
         Row: {
           active: boolean | null
@@ -1630,6 +1657,77 @@ export type Database = {
         }
         Relationships: []
       }
+      competitor_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          details: Json | null
+          id: string
+          monitor_id: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          monitor_id: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          monitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_alerts_monitor_id_fkey"
+            columns: ["monitor_id"]
+            isOneToOne: false
+            referencedRelation: "competitor_monitors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitor_monitors: {
+        Row: {
+          client_id: string
+          client_table: string
+          competitor_name: string
+          created_at: string
+          google_business_url: string | null
+          id: string
+          last_avg_rating: number | null
+          last_review_count: number | null
+          last_scanned_at: string | null
+          license_number: string | null
+        }
+        Insert: {
+          client_id: string
+          client_table?: string
+          competitor_name: string
+          created_at?: string
+          google_business_url?: string | null
+          id?: string
+          last_avg_rating?: number | null
+          last_review_count?: number | null
+          last_scanned_at?: string | null
+          license_number?: string | null
+        }
+        Update: {
+          client_id?: string
+          client_table?: string
+          competitor_name?: string
+          created_at?: string
+          google_business_url?: string | null
+          id?: string
+          last_avg_rating?: number | null
+          last_review_count?: number | null
+          last_scanned_at?: string | null
+          license_number?: string | null
+        }
+        Relationships: []
+      }
       competitor_pricing_changes: {
         Row: {
           client_id: string | null
@@ -1874,6 +1972,30 @@ export type Database = {
         }
         Relationships: []
       }
+      compliance_blocks: {
+        Row: {
+          created_at: string
+          id: string
+          phone: string
+          product: string | null
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          phone: string
+          product?: string | null
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          phone?: string
+          product?: string | null
+          reason?: string
+        }
+        Relationships: []
+      }
       content_queue: {
         Row: {
           caption: string
@@ -1904,41 +2026,121 @@ export type Database = {
       contractor_clients: {
         Row: {
           active: boolean | null
+          average_ticket_value: number
           business_name: string
+          city: string | null
           created_at: string | null
+          dead_lead_billing_active: boolean | null
           email: string
+          google_review_link: string | null
           id: string
           industry: string | null
           last_lead_at: string | null
           lead_count: number | null
+          name: string | null
+          onboarded_at: string | null
+          phone: string | null
+          roi_token: string | null
           service_area: string | null
+          state: string | null
           stripe_customer_id: string | null
+          stripe_payment_method_id: string | null
+          stripe_subscription_id: string | null
+          trade: string | null
         }
         Insert: {
           active?: boolean | null
+          average_ticket_value?: number
           business_name: string
+          city?: string | null
           created_at?: string | null
+          dead_lead_billing_active?: boolean | null
           email: string
+          google_review_link?: string | null
           id?: string
           industry?: string | null
           last_lead_at?: string | null
           lead_count?: number | null
+          name?: string | null
+          onboarded_at?: string | null
+          phone?: string | null
+          roi_token?: string | null
           service_area?: string | null
+          state?: string | null
           stripe_customer_id?: string | null
+          stripe_payment_method_id?: string | null
+          stripe_subscription_id?: string | null
+          trade?: string | null
         }
         Update: {
           active?: boolean | null
+          average_ticket_value?: number
           business_name?: string
+          city?: string | null
           created_at?: string | null
+          dead_lead_billing_active?: boolean | null
           email?: string
+          google_review_link?: string | null
           id?: string
           industry?: string | null
           last_lead_at?: string | null
           lead_count?: number | null
+          name?: string | null
+          onboarded_at?: string | null
+          phone?: string | null
+          roi_token?: string | null
           service_area?: string | null
+          state?: string | null
           stripe_customer_id?: string | null
+          stripe_payment_method_id?: string | null
+          stripe_subscription_id?: string | null
+          trade?: string | null
         }
         Relationships: []
+      }
+      contractor_lead_purchases: {
+        Row: {
+          amount_cents: number
+          city: string | null
+          contractor_email: string | null
+          contractor_id: string
+          created_at: string
+          id: string
+          lead_id: string | null
+          stripe_session_id: string | null
+          trade: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          city?: string | null
+          contractor_email?: string | null
+          contractor_id: string
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          stripe_session_id?: string | null
+          trade?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          city?: string | null
+          contractor_email?: string | null
+          contractor_id?: string
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          stripe_session_id?: string | null
+          trade?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contractor_lead_purchases_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contractor_lead_sites: {
         Row: {
@@ -1984,15 +2186,63 @@ export type Database = {
           },
         ]
       }
+      contractor_lead_views: {
+        Row: {
+          city: string | null
+          contractor_id: string
+          created_at: string
+          id: string
+          lead_id: string | null
+          reason: string | null
+          trade: string | null
+        }
+        Insert: {
+          city?: string | null
+          contractor_id: string
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          reason?: string | null
+          trade?: string | null
+        }
+        Update: {
+          city?: string | null
+          contractor_id?: string
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          reason?: string | null
+          trade?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contractor_lead_views_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contractor_leads: {
         Row: {
+          checkout_locked_by: string | null
+          claimed_at: string | null
+          claimed_by: string | null
           client_id: string | null
+          contact_preference: string
           created_at: string | null
           email: string | null
           id: string
+          is_aged: boolean
+          is_demo_record: boolean | null
+          lock_expires_at: string | null
           message: string | null
           name: string
           notified_at: string | null
+          paid_by_contractor_id: string | null
+          payment_amount_cents: number | null
+          payment_session_id: string | null
           phone: string
           project_type: string | null
           site_id: string | null
@@ -2000,13 +2250,23 @@ export type Database = {
           status: string | null
         }
         Insert: {
+          checkout_locked_by?: string | null
+          claimed_at?: string | null
+          claimed_by?: string | null
           client_id?: string | null
+          contact_preference?: string
           created_at?: string | null
           email?: string | null
           id?: string
+          is_aged?: boolean
+          is_demo_record?: boolean | null
+          lock_expires_at?: string | null
           message?: string | null
           name: string
           notified_at?: string | null
+          paid_by_contractor_id?: string | null
+          payment_amount_cents?: number | null
+          payment_session_id?: string | null
           phone: string
           project_type?: string | null
           site_id?: string | null
@@ -2014,13 +2274,23 @@ export type Database = {
           status?: string | null
         }
         Update: {
+          checkout_locked_by?: string | null
+          claimed_at?: string | null
+          claimed_by?: string | null
           client_id?: string | null
+          contact_preference?: string
           created_at?: string | null
           email?: string | null
           id?: string
+          is_aged?: boolean
+          is_demo_record?: boolean | null
+          lock_expires_at?: string | null
           message?: string | null
           name?: string
           notified_at?: string | null
+          paid_by_contractor_id?: string | null
+          payment_amount_cents?: number | null
+          payment_session_id?: string | null
           phone?: string
           project_type?: string | null
           site_id?: string | null
@@ -2220,6 +2490,48 @@ export type Database = {
           },
         ]
       }
+      daily_text_targets: {
+        Row: {
+          business_name: string
+          city: string | null
+          created_at: string
+          google_reviews: number | null
+          id: string
+          phone: string | null
+          sent_at: string | null
+          status: string
+          suggested_text: string | null
+          trade: string | null
+          website_url: string | null
+        }
+        Insert: {
+          business_name: string
+          city?: string | null
+          created_at?: string
+          google_reviews?: number | null
+          id?: string
+          phone?: string | null
+          sent_at?: string | null
+          status?: string
+          suggested_text?: string | null
+          trade?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          business_name?: string
+          city?: string | null
+          created_at?: string
+          google_reviews?: number | null
+          id?: string
+          phone?: string | null
+          sent_at?: string | null
+          status?: string
+          suggested_text?: string | null
+          trade?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       daily_workouts: {
         Row: {
           created_at: string
@@ -2341,6 +2653,200 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "dark_web_monitor_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dead_lead_campaigns: {
+        Row: {
+          campaign_copy_variants: Json | null
+          completed_at: string | null
+          contractor_id: string
+          created_at: string
+          id: string
+          is_demo_record: boolean | null
+          is_free_trial: boolean
+          name: string
+          pause_reason: string | null
+          paused_at: string | null
+          positive_count: number
+          replied_count: number
+          status: string
+          total_contacts: number
+          trade: string | null
+          updated_at: string
+        }
+        Insert: {
+          campaign_copy_variants?: Json | null
+          completed_at?: string | null
+          contractor_id: string
+          created_at?: string
+          id?: string
+          is_demo_record?: boolean | null
+          is_free_trial?: boolean
+          name?: string
+          pause_reason?: string | null
+          paused_at?: string | null
+          positive_count?: number
+          replied_count?: number
+          status?: string
+          total_contacts?: number
+          trade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          campaign_copy_variants?: Json | null
+          completed_at?: string | null
+          contractor_id?: string
+          created_at?: string
+          id?: string
+          is_demo_record?: boolean | null
+          is_free_trial?: boolean
+          name?: string
+          pause_reason?: string | null
+          paused_at?: string | null
+          positive_count?: number
+          replied_count?: number
+          status?: string
+          total_contacts?: number
+          trade?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dead_lead_campaigns_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dead_lead_charges: {
+        Row: {
+          amount_cents: number
+          campaign_id: string | null
+          contact_id: string | null
+          contractor_id: string
+          created_at: string
+          id: string
+          status: string
+          stripe_payment_intent_id: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          campaign_id?: string | null
+          contact_id?: string | null
+          contractor_id: string
+          created_at?: string
+          id?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          campaign_id?: string | null
+          contact_id?: string | null
+          contractor_id?: string
+          created_at?: string
+          id?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dead_lead_charges_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "dead_lead_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dead_lead_charges_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "dead_lead_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dead_lead_charges_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dead_lead_contacts: {
+        Row: {
+          campaign_id: string
+          contractor_notified_at: string | null
+          created_at: string
+          drip1_sent: boolean
+          drip1_sent_at: string | null
+          drip2_sent: boolean
+          drip2_sent_at: string | null
+          drip3_sent: boolean
+          drip3_sent_at: string | null
+          email: string | null
+          id: string
+          is_demo_record: boolean | null
+          name: string
+          original_service: string | null
+          phone: string
+          replied_at: string | null
+          reply_sentiment: string | null
+          reply_text: string | null
+          status: string
+        }
+        Insert: {
+          campaign_id: string
+          contractor_notified_at?: string | null
+          created_at?: string
+          drip1_sent?: boolean
+          drip1_sent_at?: string | null
+          drip2_sent?: boolean
+          drip2_sent_at?: string | null
+          drip3_sent?: boolean
+          drip3_sent_at?: string | null
+          email?: string | null
+          id?: string
+          is_demo_record?: boolean | null
+          name: string
+          original_service?: string | null
+          phone: string
+          replied_at?: string | null
+          reply_sentiment?: string | null
+          reply_text?: string | null
+          status?: string
+        }
+        Update: {
+          campaign_id?: string
+          contractor_notified_at?: string | null
+          created_at?: string
+          drip1_sent?: boolean
+          drip1_sent_at?: string | null
+          drip2_sent?: boolean
+          drip2_sent_at?: string | null
+          drip3_sent?: boolean
+          drip3_sent_at?: string | null
+          email?: string | null
+          id?: string
+          is_demo_record?: boolean | null
+          name?: string
+          original_service?: string | null
+          phone?: string
+          replied_at?: string | null
+          reply_sentiment?: string | null
+          reply_text?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dead_lead_contacts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "dead_lead_campaigns"
             referencedColumns: ["id"]
           },
         ]
@@ -2492,6 +2998,42 @@ export type Database = {
           service_interested?: string | null
           source?: string | null
           stripe_checkout_completed?: boolean | null
+        }
+        Relationships: []
+      }
+      email_reply_drafts: {
+        Row: {
+          cancelled: boolean | null
+          category: string | null
+          created_at: string | null
+          draft_body: string
+          draft_subject: string | null
+          id: string
+          lead_email: string
+          send_after: string
+          sent: boolean | null
+        }
+        Insert: {
+          cancelled?: boolean | null
+          category?: string | null
+          created_at?: string | null
+          draft_body: string
+          draft_subject?: string | null
+          id?: string
+          lead_email: string
+          send_after: string
+          sent?: boolean | null
+        }
+        Update: {
+          cancelled?: boolean | null
+          category?: string | null
+          created_at?: string | null
+          draft_body?: string
+          draft_subject?: string | null
+          id?: string
+          lead_email?: string
+          send_after?: string
+          sent?: boolean | null
         }
         Relationships: []
       }
@@ -2777,6 +3319,7 @@ export type Database = {
         Row: {
           business_name: string
           created_at: string | null
+          dispatch_token: string
           email: string | null
           google_review_url: string | null
           id: string
@@ -2794,6 +3337,7 @@ export type Database = {
         Insert: {
           business_name: string
           created_at?: string | null
+          dispatch_token?: string
           email?: string | null
           google_review_url?: string | null
           id?: string
@@ -2811,6 +3355,7 @@ export type Database = {
         Update: {
           business_name?: string
           created_at?: string | null
+          dispatch_token?: string
           email?: string | null
           google_review_url?: string | null
           id?: string
@@ -2826,6 +3371,329 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      field_service_assets: {
+        Row: {
+          active: boolean
+          asset_type: string | null
+          client_id: string
+          created_at: string
+          customer_id: string | null
+          id: string
+          install_date: string | null
+          last_service_at: string | null
+          location_notes: string | null
+          manufacturer: string | null
+          model: string | null
+          name: string
+          notes: string | null
+          serial_number: string | null
+        }
+        Insert: {
+          active?: boolean
+          asset_type?: string | null
+          client_id: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          install_date?: string | null
+          last_service_at?: string | null
+          location_notes?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          name: string
+          notes?: string | null
+          serial_number?: string | null
+        }
+        Update: {
+          active?: boolean
+          asset_type?: string | null
+          client_id?: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          install_date?: string | null
+          last_service_at?: string | null
+          location_notes?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          name?: string
+          notes?: string | null
+          serial_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "field_service_assets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "field_crm_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_service_assets_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      field_service_contracts: {
+        Row: {
+          active: boolean
+          asset_id: string | null
+          assigned_tech_id: string | null
+          client_id: string
+          created_at: string
+          customer_id: string | null
+          description: string | null
+          frequency: string
+          id: string
+          next_due_date: string
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          asset_id?: string | null
+          assigned_tech_id?: string | null
+          client_id: string
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          frequency?: string
+          id?: string
+          next_due_date: string
+          title: string
+        }
+        Update: {
+          active?: boolean
+          asset_id?: string | null
+          assigned_tech_id?: string | null
+          client_id?: string
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          frequency?: string
+          id?: string
+          next_due_date?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "field_service_contracts_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_service_contracts_assigned_tech_id_fkey"
+            columns: ["assigned_tech_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_techs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_service_contracts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "field_crm_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_service_contracts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      field_service_customers: {
+        Row: {
+          active: boolean
+          address: string | null
+          city: string | null
+          client_id: string
+          company_name: string
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          notes: string | null
+          phone: string | null
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          city?: string | null
+          client_id: string
+          company_name: string
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          city?: string | null
+          client_id?: string
+          company_name?: string
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "field_service_customers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "field_crm_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      field_service_jobs: {
+        Row: {
+          asset_id: string | null
+          assigned_tech_id: string | null
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          customer_contact_phone: string | null
+          customer_id: string | null
+          customer_notified_at: string | null
+          description: string | null
+          estimated_duration_minutes: number | null
+          id: string
+          notes: string | null
+          priority: string
+          referral_asked_at: string | null
+          scheduled_date: string | null
+          scheduled_time: string | null
+          signature_url: string | null
+          started_at: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          asset_id?: string | null
+          assigned_tech_id?: string | null
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          customer_contact_phone?: string | null
+          customer_id?: string | null
+          customer_notified_at?: string | null
+          description?: string | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          referral_asked_at?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          signature_url?: string | null
+          started_at?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          asset_id?: string | null
+          assigned_tech_id?: string | null
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          customer_contact_phone?: string | null
+          customer_id?: string | null
+          customer_notified_at?: string | null
+          description?: string | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          referral_asked_at?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          signature_url?: string | null
+          started_at?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "field_service_jobs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_service_jobs_assigned_tech_id_fkey"
+            columns: ["assigned_tech_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_techs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_service_jobs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "field_crm_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_service_jobs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      field_service_techs: {
+        Row: {
+          active: boolean
+          client_id: string
+          created_at: string
+          id: string
+          name: string
+          phone: string | null
+          pin: string | null
+        }
+        Insert: {
+          active?: boolean
+          client_id: string
+          created_at?: string
+          id?: string
+          name: string
+          phone?: string | null
+          pin?: string | null
+        }
+        Update: {
+          active?: boolean
+          client_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          pin?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "field_service_techs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "field_crm_clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fitness_report_clients: {
         Row: {
@@ -3552,6 +4420,284 @@ export type Database = {
         }
         Relationships: []
       }
+      hire_alert_candidates: {
+        Row: {
+          alerted_at: string | null
+          availability_score: number | null
+          city: string | null
+          client_id: string | null
+          created_at: string | null
+          cross_referenced: boolean | null
+          current_employer: string | null
+          current_title: string | null
+          data_completeness: number | null
+          email: string | null
+          enriched_at: string | null
+          enrichment_status: string | null
+          facebook_url: string | null
+          first_seen_at: string | null
+          full_name: string | null
+          hiring_recommendation: string | null
+          id: string
+          is_company_name: boolean | null
+          is_demo_record: boolean | null
+          last_seen_at: string | null
+          license_expiry: string | null
+          license_number: string | null
+          license_type: string | null
+          linkedin_url: string | null
+          name: string
+          phone: string | null
+          profile_photo_url: string | null
+          qualifications_summary: string | null
+          raw_data: Json | null
+          score: number | null
+          score_reason: string | null
+          social_profiles: Json | null
+          source: string | null
+          state: string | null
+          status: string | null
+          trade: string | null
+          years_experience: number | null
+          zip: string | null
+        }
+        Insert: {
+          alerted_at?: string | null
+          availability_score?: number | null
+          city?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          cross_referenced?: boolean | null
+          current_employer?: string | null
+          current_title?: string | null
+          data_completeness?: number | null
+          email?: string | null
+          enriched_at?: string | null
+          enrichment_status?: string | null
+          facebook_url?: string | null
+          first_seen_at?: string | null
+          full_name?: string | null
+          hiring_recommendation?: string | null
+          id?: string
+          is_company_name?: boolean | null
+          is_demo_record?: boolean | null
+          last_seen_at?: string | null
+          license_expiry?: string | null
+          license_number?: string | null
+          license_type?: string | null
+          linkedin_url?: string | null
+          name: string
+          phone?: string | null
+          profile_photo_url?: string | null
+          qualifications_summary?: string | null
+          raw_data?: Json | null
+          score?: number | null
+          score_reason?: string | null
+          social_profiles?: Json | null
+          source?: string | null
+          state?: string | null
+          status?: string | null
+          trade?: string | null
+          years_experience?: number | null
+          zip?: string | null
+        }
+        Update: {
+          alerted_at?: string | null
+          availability_score?: number | null
+          city?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          cross_referenced?: boolean | null
+          current_employer?: string | null
+          current_title?: string | null
+          data_completeness?: number | null
+          email?: string | null
+          enriched_at?: string | null
+          enrichment_status?: string | null
+          facebook_url?: string | null
+          first_seen_at?: string | null
+          full_name?: string | null
+          hiring_recommendation?: string | null
+          id?: string
+          is_company_name?: boolean | null
+          is_demo_record?: boolean | null
+          last_seen_at?: string | null
+          license_expiry?: string | null
+          license_number?: string | null
+          license_type?: string | null
+          linkedin_url?: string | null
+          name?: string
+          phone?: string | null
+          profile_photo_url?: string | null
+          qualifications_summary?: string | null
+          raw_data?: Json | null
+          score?: number | null
+          score_reason?: string | null
+          social_profiles?: Json | null
+          source?: string | null
+          state?: string | null
+          status?: string | null
+          trade?: string | null
+          years_experience?: number | null
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hire_alert_candidates_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "hire_alert_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hire_alert_client_candidates: {
+        Row: {
+          alert_type: string
+          alerted_at: string
+          candidate_id: string
+          claim_expires_at: string | null
+          claimed_at: string | null
+          client_action: string | null
+          client_id: string
+          id: string
+        }
+        Insert: {
+          alert_type?: string
+          alerted_at?: string
+          candidate_id: string
+          claim_expires_at?: string | null
+          claimed_at?: string | null
+          client_action?: string | null
+          client_id: string
+          id?: string
+        }
+        Update: {
+          alert_type?: string
+          alerted_at?: string
+          candidate_id?: string
+          claim_expires_at?: string | null
+          claimed_at?: string | null
+          client_action?: string | null
+          client_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      hire_alert_clients: {
+        Row: {
+          active: boolean | null
+          booking_link: string | null
+          company_name: string
+          created_at: string | null
+          dashboard_token: string | null
+          fielddesk_cross_sell_sent: boolean | null
+          id: string
+          notify_email: boolean | null
+          notify_sms: boolean | null
+          owner_email: string
+          owner_name: string | null
+          owner_phone: string | null
+          plan: string | null
+          pricing_tier: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          target_roles: string[] | null
+          target_zip_codes: string[] | null
+          tos_accepted_at: string | null
+          tos_version: string | null
+          trial_ends_at: string | null
+          trial_started_at: string | null
+          trial_status: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          booking_link?: string | null
+          company_name: string
+          created_at?: string | null
+          dashboard_token?: string | null
+          fielddesk_cross_sell_sent?: boolean | null
+          id?: string
+          notify_email?: boolean | null
+          notify_sms?: boolean | null
+          owner_email: string
+          owner_name?: string | null
+          owner_phone?: string | null
+          plan?: string | null
+          pricing_tier?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          target_roles?: string[] | null
+          target_zip_codes?: string[] | null
+          tos_accepted_at?: string | null
+          tos_version?: string | null
+          trial_ends_at?: string | null
+          trial_started_at?: string | null
+          trial_status?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          booking_link?: string | null
+          company_name?: string
+          created_at?: string | null
+          dashboard_token?: string | null
+          fielddesk_cross_sell_sent?: boolean | null
+          id?: string
+          notify_email?: boolean | null
+          notify_sms?: boolean | null
+          owner_email?: string
+          owner_name?: string | null
+          owner_phone?: string | null
+          plan?: string | null
+          pricing_tier?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          target_roles?: string[] | null
+          target_zip_codes?: string[] | null
+          tos_accepted_at?: string | null
+          tos_version?: string | null
+          trial_ends_at?: string | null
+          trial_started_at?: string | null
+          trial_status?: string | null
+        }
+        Relationships: []
+      }
+      hire_alert_runs: {
+        Row: {
+          candidates_alerted: number | null
+          candidates_found: number | null
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          lara_status: string | null
+          started_at: string | null
+          status: string | null
+        }
+        Insert: {
+          candidates_alerted?: number | null
+          candidates_found?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          lara_status?: string | null
+          started_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          candidates_alerted?: number | null
+          candidates_found?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          lara_status?: string | null
+          started_at?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       hiring_assistant_clients: {
         Row: {
           active: boolean | null
@@ -3770,6 +4916,114 @@ export type Database = {
         }
         Relationships: []
       }
+      industry_pulse_clients: {
+        Row: {
+          active: boolean | null
+          company_name: string
+          contact_name: string | null
+          created_at: string | null
+          dashboard_token: string | null
+          email: string
+          id: string
+          phone: string | null
+          pricing_tier: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          target_industries: string[] | null
+          target_roles: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_name: string
+          contact_name?: string | null
+          created_at?: string | null
+          dashboard_token?: string | null
+          email: string
+          id?: string
+          phone?: string | null
+          pricing_tier?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          target_industries?: string[] | null
+          target_roles?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_name?: string
+          contact_name?: string | null
+          created_at?: string | null
+          dashboard_token?: string | null
+          email?: string
+          id?: string
+          phone?: string | null
+          pricing_tier?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          target_industries?: string[] | null
+          target_roles?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      industry_pulse_signals: {
+        Row: {
+          client_tag: string | null
+          company_name: string
+          confidence: number | null
+          created_at: string | null
+          cross_referenced: boolean | null
+          detected_at: string | null
+          hiring_count: number | null
+          hiring_roles: string[] | null
+          id: string
+          industry: string | null
+          location: string | null
+          predicted_needs: string[] | null
+          recommended_pitch: string | null
+          sector: string | null
+          signal_type: string | null
+          source_urls: string[] | null
+        }
+        Insert: {
+          client_tag?: string | null
+          company_name: string
+          confidence?: number | null
+          created_at?: string | null
+          cross_referenced?: boolean | null
+          detected_at?: string | null
+          hiring_count?: number | null
+          hiring_roles?: string[] | null
+          id?: string
+          industry?: string | null
+          location?: string | null
+          predicted_needs?: string[] | null
+          recommended_pitch?: string | null
+          sector?: string | null
+          signal_type?: string | null
+          source_urls?: string[] | null
+        }
+        Update: {
+          client_tag?: string | null
+          company_name?: string
+          confidence?: number | null
+          created_at?: string | null
+          cross_referenced?: boolean | null
+          detected_at?: string | null
+          hiring_count?: number | null
+          hiring_roles?: string[] | null
+          id?: string
+          industry?: string | null
+          location?: string | null
+          predicted_needs?: string[] | null
+          recommended_pitch?: string | null
+          sector?: string | null
+          signal_type?: string | null
+          source_urls?: string[] | null
+        }
+        Relationships: []
+      }
       instagram_posts: {
         Row: {
           active: boolean | null
@@ -3963,6 +5217,45 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "inventory_alert_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_notes: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          note: string
+          tech_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          note: string
+          tech_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          note?: string
+          tech_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_notes_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_notes_tech_id_fkey"
+            columns: ["tech_id"]
+            isOneToOne: false
+            referencedRelation: "field_service_techs"
             referencedColumns: ["id"]
           },
         ]
@@ -5198,6 +6491,7 @@ export type Database = {
           ai_drafted_pitch: string | null
           ai_drafted_subject: string | null
           business_name: string
+          channel: string | null
           city: string | null
           company_name: string | null
           created_at: string | null
@@ -5231,6 +6525,7 @@ export type Database = {
           ai_drafted_pitch?: string | null
           ai_drafted_subject?: string | null
           business_name: string
+          channel?: string | null
           city?: string | null
           company_name?: string | null
           created_at?: string | null
@@ -5264,6 +6559,7 @@ export type Database = {
           ai_drafted_pitch?: string | null
           ai_drafted_subject?: string | null
           business_name?: string
+          channel?: string | null
           city?: string | null
           company_name?: string | null
           created_at?: string | null
@@ -5731,6 +7027,165 @@ export type Database = {
           points?: number
           reference_id?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      postcard_campaigns: {
+        Row: {
+          conversion_count: number | null
+          copy_back: string
+          copy_front: string
+          county: string
+          created_at: string
+          id: string
+          lob_batch_id: string | null
+          prospect_count: number | null
+          qr_url: string
+          sent_count: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          conversion_count?: number | null
+          copy_back: string
+          copy_front: string
+          county: string
+          created_at?: string
+          id?: string
+          lob_batch_id?: string | null
+          prospect_count?: number | null
+          qr_url: string
+          sent_count?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          conversion_count?: number | null
+          copy_back?: string
+          copy_front?: string
+          county?: string
+          created_at?: string
+          id?: string
+          lob_batch_id?: string | null
+          prospect_count?: number | null
+          qr_url?: string
+          sent_count?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      postcard_conversions: {
+        Row: {
+          campaign_id: string | null
+          county: string | null
+          created_at: string
+          event: string
+          id: string
+          prospect_id: string | null
+          stripe_session_id: string | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          county?: string | null
+          created_at?: string
+          event?: string
+          id?: string
+          prospect_id?: string | null
+          stripe_session_id?: string | null
+        }
+        Update: {
+          campaign_id?: string | null
+          county?: string | null
+          created_at?: string
+          event?: string
+          id?: string
+          prospect_id?: string | null
+          stripe_session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "postcard_conversions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "postcard_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "postcard_conversions_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "postcard_prospects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      postcard_prospects: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          business_name: string
+          city: string | null
+          converted_at: string | null
+          county: string | null
+          created_at: string
+          email: string | null
+          id: string
+          license_count: number | null
+          license_types: string[] | null
+          newest_license_date: string | null
+          owner_name: string | null
+          phone: string | null
+          postcard_batch_id: string | null
+          postcard_sent_at: string | null
+          source: string | null
+          state: string | null
+          updated_at: string
+          zip: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          business_name: string
+          city?: string | null
+          converted_at?: string | null
+          county?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          license_count?: number | null
+          license_types?: string[] | null
+          newest_license_date?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          postcard_batch_id?: string | null
+          postcard_sent_at?: string | null
+          source?: string | null
+          state?: string | null
+          updated_at?: string
+          zip?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          business_name?: string
+          city?: string | null
+          converted_at?: string | null
+          county?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          license_count?: number | null
+          license_types?: string[] | null
+          newest_license_date?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          postcard_batch_id?: string | null
+          postcard_sent_at?: string | null
+          source?: string | null
+          state?: string | null
+          updated_at?: string
+          zip?: string | null
         }
         Relationships: []
       }
@@ -8551,6 +10006,27 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_opt_outs: {
+        Row: {
+          id: string
+          opted_out_at: string
+          phone: string
+          source: string | null
+        }
+        Insert: {
+          id?: string
+          opted_out_at?: string
+          phone: string
+          source?: string | null
+        }
+        Update: {
+          id?: string
+          opted_out_at?: string
+          phone?: string
+          source?: string | null
+        }
+        Relationships: []
+      }
       social_caption_clients: {
         Row: {
           active: boolean | null
@@ -9022,6 +10498,45 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      system_comms_log: {
+        Row: {
+          body_preview: string | null
+          channel: string
+          created_at: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          product: string | null
+          provider_id: string | null
+          recipient: string
+          status: string
+        }
+        Insert: {
+          body_preview?: string | null
+          channel?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          product?: string | null
+          provider_id?: string | null
+          recipient: string
+          status?: string
+        }
+        Update: {
+          body_preview?: string | null
+          channel?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          product?: string | null
+          provider_id?: string | null
+          recipient?: string
+          status?: string
         }
         Relationships: []
       }
@@ -11127,6 +12642,14 @@ export type Database = {
           discount_value: number
           id: string
           specific_product_id: string
+        }[]
+      }
+      verify_tech_pin: {
+        Args: { _pin: string }
+        Returns: {
+          client_id: string
+          id: string
+          name: string
         }[]
       }
     }

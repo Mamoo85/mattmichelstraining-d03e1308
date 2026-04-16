@@ -63,7 +63,7 @@ STRICT RULES:
 3. THE PRE-BUILT DEMO PITCH: Instead of asking for a meeting, offer a custom asset. Include a line like: "I actually went ahead and built a quick demo of what an Automated Lead System looks like specifically for ${businessName}. Do you have 2 minutes for me to send the link over?"
 4. ZERO BUZZWORDS: Do NOT use "AI", "Synergy", "Algorithm", "Digital Transformation", "Leverage", "Game-Changer", or "Cutting-Edge." Talk like a local Detroit contractor talking to another local business owner.
 5. Keep it under 4 sentences total.
-6. Sign off: Matt Michels | Lead Web Agent | Detroit Web Agency | (313) 806-4952
+6. Sign off: Matt Michels | Lead Web Agent | Detroit Web Agency | (313) 992-1219
 
 Return a JSON object with two keys:
 - "subject": a compelling email subject line (under 50 chars, reference the specific gap)

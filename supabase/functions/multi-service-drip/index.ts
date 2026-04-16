@@ -225,13 +225,13 @@ function buildMultiServiceEmailHtml(subject: string, body: string): string {
       ${htmlBody}
       <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
-        <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 806-4952</div>
+        <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · (313) 992-1219</div>
         <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
       </div>
-      <p style="font-size:12px;color:#94a3b8;margin-top:8px;">Prefer to just text? (313) 806-4952</p>
+      <p style="font-size:12px;color:#94a3b8;margin-top:8px;">Prefer to just text? (313) 992-1219</p>
     </td></tr>
     <tr><td style="background:#f8fafc;padding:16px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
-      Matt Michels · M² Development · Grosse Pointe, MI · (313) 806-4952<br>
+      Matt Michels · M² Development · Grosse Pointe, MI · (313) 992-1219<br>
       <a href="https://www.mattmichelstraining.com" style="color:#94a3b8;">mattmichelstraining.com</a>
     </td></tr>
   </table>
@@ -251,7 +251,7 @@ const STEP_PROMPTS = [
 
   // Step 3: Final touch with urgency
   (biz: string, industry: string, city: string, serviceList: string, demoInfo?: string) =>
-    `Write a FINAL short email (under 80 words) to ${biz}. Last message, no hard feelings if not interested. Mention you only work with a limited number of ${industry} businesses per area so you can give real attention. If timing's ever right, your door's open. Start with "Hey —". End with "— Matt".${demoInfo ? `\n\nDrop this link as proof of your work: ${demoInfo}` : ""}\n\nCTA: "mattmichelstraining.com/get-started or text (313) 806-4952"`,
+    `Write a FINAL short email (under 80 words) to ${biz}. Last message, no hard feelings if not interested. Mention you only work with a limited number of ${industry} businesses per area so you can give real attention. If timing's ever right, your door's open. Start with "Hey —". End with "— Matt".${demoInfo ? `\n\nDrop this link as proof of your work: ${demoInfo}` : ""}\n\nCTA: "mattmichelstraining.com/get-started or text (313) 992-1219"`,
 ];
 
 serve(async (req) => {

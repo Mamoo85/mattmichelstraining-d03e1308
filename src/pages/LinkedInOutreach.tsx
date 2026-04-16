@@ -237,7 +237,7 @@ export default function LinkedInOutreach() {
 
         {/* Footer */}
         <p className="text-[12px] text-slate-500 text-center">
-          Questions? (313) 806-4952 &middot;{" "}
+          Questions? (313) 992-1219 &middot;{" "}
           <a href="mailto:matt@mattmichelstraining.com" className="text-cyan-500">
             matt@mattmichelstraining.com
           </a>

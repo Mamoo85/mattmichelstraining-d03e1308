@@ -6,6 +6,7 @@ import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persist
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { lazyRetry } from "@/lib/lazyRetry";
 import { getDomainBrand } from "@/lib/domainConfig";
+import DWARouteGuard from "@/components/layout/DWARouteGuard";
 // Defer toast providers — only triggered on user action, not needed for FCP
 const Sonner = lazyRetry(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
 const Toaster = lazyRetry(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
@@ -47,6 +48,14 @@ const FreeSeoHealth = lazyRetry(() => import("./pages/FreeSeoHealth"));
 const FreeBreachScanner = lazyRetry(() => import("./pages/FreeBreachScanner"));
 const FreeRankChecker = lazyRetry(() => import("./pages/FreeRankChecker"));
 const FreeMetaAnalyzer = lazyRetry(() => import("./pages/FreeMetaAnalyzer"));
+const FreeLeakyBucketAudit = lazyRetry(() => import("./pages/FreeLeakyBucketAudit"));
+const FreeMedicareStaffingCheck = lazyRetry(() => import("./pages/FreeMedicareStaffingCheck"));
+const FreeLocalSearchAudit = lazyRetry(() => import("./pages/FreeLocalSearchAudit"));
+const FreeServiceGapScanner = lazyRetry(() => import("./pages/FreeServiceGapScanner"));
+const FreeAdaScanner = lazyRetry(() => import("./pages/FreeAdaScanner"));
+const FreeOshaCheck = lazyRetry(() => import("./pages/FreeOshaCheck"));
+const FreeEquipmentAgeCheck = lazyRetry(() => import("./pages/FreeEquipmentAgeCheck"));
+const FreeNursingComplianceCheck = lazyRetry(() => import("./pages/FreeNursingComplianceCheck"));
 const ClientCommandCenter = lazyRetry(() => import("./pages/ClientCommandCenter"));
 const ComputerRepair = lazyRetry(() => import("./pages/ComputerRepair"));
 
@@ -56,6 +65,7 @@ const MyTeam = lazyRetry(() => import("./pages/MyTeam"));
 const JoinTeam = lazyRetry(() => import("./pages/JoinTeam"));
 const Shop = lazyRetry(() => import("./pages/Shop"));
 const ForParents = lazyRetry(() => import("./pages/ForParents"));
+const ForNurses = lazyRetry(() => import("./pages/ForNurses"));
 const Welcome = lazyRetry(() => import("./pages/Welcome"));
 const Auth = lazyRetry(() => import("./pages/Auth"));
 const Admin = lazyRetry(() => import("./pages/Admin"));
@@ -123,7 +133,15 @@ const GbpManagement = lazyRetry(() => import("./pages/GbpManagement"));
 const NewsletterSponsor = lazyRetry(() => import("./pages/NewsletterSponsor"));
 const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
+const ContractorROIReport = lazyRetry(() => import("./pages/ContractorROIReport"));
+const DeadLeadStats = lazyRetry(() => import("./pages/DeadLeadStats"));
+const MyTechAlert = lazyRetry(() => import("./pages/MyTechAlert"));
+const DeadLeadIntake = lazyRetry(() => import("./pages/DeadLeadIntake"));
+const GetQuote = lazyRetry(() => import("./pages/GetQuote"));
 const ContractorTerritory = lazyRetry(() => import("./pages/ContractorTerritory"));
+const ClaimLead = lazyRetry(() => import("./pages/ClaimLead"));
+const LeadUnlocked = lazyRetry(() => import("./pages/LeadUnlocked"));
+const LeadClaimed = lazyRetry(() => import("./pages/LeadClaimed"));
 const FieldServiceManagement = lazyRetry(() => import("./pages/FieldServiceManagement"));
 const FieldServiceDispatch = lazyRetry(() => import("./pages/FieldServiceDispatch"));
 const FieldServiceTechApp = lazyRetry(() => import("./pages/FieldServiceTechApp"));
@@ -265,8 +283,13 @@ const StormDamageLeads = lazyRetry(() => import("./pages/StormDamageLeads"));
 const RecallAlertService = lazyRetry(() => import("./pages/RecallAlertService"));
 const PermitWatch = lazyRetry(() => import("./pages/PermitWatch"));
 const HireAlert = lazyRetry(() => import("./pages/HireAlert"));
+const HireAlertTrial = lazyRetry(() => import("./pages/HireAlertTrial"));
+const TechAlertPostcard = lazyRetry(() => import("./pages/TechAlertPostcard"));
+const HealthcareHireAlert = lazyRetry(() => import("./pages/HealthcareHireAlert"));
 const WebsiteSpeedAudits = lazyRetry(() => import("./pages/WebsiteSpeedAudits"));
 const CrimeDigest = lazyRetry(() => import("./pages/CrimeDigest"));
+const IndustryPulse = lazyRetry(() => import("./pages/IndustryPulse"));
+const MyIndustryPulse = lazyRetry(() => import("./pages/MyIndustryPulse"));
 const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
 const RegulatoryFilingMonitor = lazyRetry(() => import("./pages/RegulatoryFilingMonitor"));
 const BidIntelligence = lazyRetry(() => import("./pages/BidIntelligence"));
@@ -299,6 +322,8 @@ const AiGbpPostPack = lazyRetry(() => import("./pages/AiGbpPostPack"));
 const AiCompetitorReport = lazyRetry(() => import("./pages/AiCompetitorReport"));
 const AdCompetitorReport = lazyRetry(() => import("./pages/AdCompetitorReport"));
 const AdWebsiteAudit = lazyRetry(() => import("./pages/AdWebsiteAudit"));
+const LabDomainBreach = lazyRetry(() => import("./pages/LabDomainBreach"));
+const LabKeywordGap = lazyRetry(() => import("./pages/LabKeywordGap"));
 const AdGbpPosts = lazyRetry(() => import("./pages/AdGbpPosts"));
 const YoungbloodMockupAlt1 = lazyRetry(() => import("./pages/YoungbloodMockupAlt1"));
 const YoungbloodMockupAlt2 = lazyRetry(() => import("./pages/YoungbloodMockupAlt2"));
@@ -432,6 +457,14 @@ const App = () => (
                     <Route path="/free-tools/breach-scan" element={<FreeBreachScanner />} />
                     <Route path="/free-tools/rank-check" element={<FreeRankChecker />} />
                     <Route path="/free-tools/meta-tags" element={<FreeMetaAnalyzer />} />
+                    <Route path="/free-tools/leaky-bucket" element={<FreeLeakyBucketAudit />} />
+                    <Route path="/free-tools/medicare-staffing" element={<FreeMedicareStaffingCheck />} />
+                    <Route path="/free-tools/local-search" element={<FreeLocalSearchAudit />} />
+                    <Route path="/free-tools/service-gap" element={<FreeServiceGapScanner />} />
+                    <Route path="/free-tools/ada-scanner" element={<FreeAdaScanner />} />
+                    <Route path="/free-tools/osha-check" element={<FreeOshaCheck />} />
+                    <Route path="/free-tools/equipment-age" element={<FreeEquipmentAgeCheck />} />
+                    <Route path="/free-tools/nursing-compliance" element={<FreeNursingComplianceCheck />} />
                     <Route path="/command-center" element={<ProtectedRoute><ClientCommandCenter /></ProtectedRoute>} />
                     <Route path="/computer-repair" element={<ComputerRepair />} />
                     <Route path="/unsubscribe" element={<Unsubscribe />} />
@@ -445,6 +478,7 @@ const App = () => (
                     <Route path="/welcome" element={<Welcome />} />
                     <Route path="/shop" element={<Shop />} />
                     <Route path="/for-parents" element={<ForParents />} />
+                    <Route path="/for-nurses" element={<ForNurses />} />
                     <Route path="/pricing" element={<Pricing />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/schedule" element={<Schedule />} />
@@ -486,6 +520,8 @@ const App = () => (
                     <Route path="/ai-gbp-post-pack" element={<AiGbpPostPack />} />
                     <Route path="/ai-competitor-report" element={<AiCompetitorReport />} />
                     <Route path="/ad/website-audit" element={<AdWebsiteAudit />} />
+                    <Route path="/lab/domain-breach" element={<LabDomainBreach />} />
+                    <Route path="/lab/keyword-gap" element={<LabKeywordGap />} />
                     <Route path="/ad/gbp-posts" element={<AdGbpPosts />} />
                     <Route path="/ad/competitor-report" element={<AdCompetitorReport />} />
                     <Route path="/demo-youngblood-alt1" element={<YoungbloodMockupAlt1 />} />
@@ -528,12 +564,21 @@ const App = () => (
                     <Route path="/audit-report" element={<AuditReport />} />
                     <Route path="/gbp-management" element={<GbpManagement />} />
                     <Route path="/sponsor" element={<NewsletterSponsor />} />
-                    <Route path="/contractor-leads" element={<ContractorLeads />} />
-                    <Route path="/contractors/:slug" element={<ContractorTerritory />} />
-                    <Route path="/field-service" element={<FieldServiceManagement />} />
-                    <Route path="/field-service/dispatch" element={<FieldServiceDispatch />} />
-                    <Route path="/field-service/tech" element={<FieldServiceTechApp />} />
-                    <Route path="/field-service/:industry" element={<FieldServiceIndustry />} />
+                    <Route path="/contractor-leads" element={<DWARouteGuard><ContractorLeads /></DWARouteGuard>} />
+                    <Route path="/roi" element={<DWARouteGuard><ContractorROIReport /></DWARouteGuard>} />
+                    <Route path="/dead-lead-stats" element={<DWARouteGuard><DeadLeadStats /></DWARouteGuard>} />
+                    <Route path="/my-techalert" element={<DWARouteGuard><MyTechAlert /></DWARouteGuard>} />
+                    <Route path="/dead-lead-intake" element={<DWARouteGuard><DeadLeadIntake /></DWARouteGuard>} />
+                    <Route path="/get-quote/:trade/:city" element={<DWARouteGuard><GetQuote /></DWARouteGuard>} />
+                    <Route path="/get-quote/:trade" element={<DWARouteGuard><GetQuote /></DWARouteGuard>} />
+                    <Route path="/contractors/:slug" element={<DWARouteGuard><ContractorTerritory /></DWARouteGuard>} />
+                    <Route path="/claim-lead" element={<DWARouteGuard><ClaimLead /></DWARouteGuard>} />
+                    <Route path="/lead-unlocked" element={<DWARouteGuard><LeadUnlocked /></DWARouteGuard>} />
+                    <Route path="/lead-claimed" element={<DWARouteGuard><LeadClaimed /></DWARouteGuard>} />
+                    <Route path="/field-service" element={<DWARouteGuard><FieldServiceManagement /></DWARouteGuard>} />
+                    <Route path="/field-service/dispatch" element={<DWARouteGuard><FieldServiceDispatch /></DWARouteGuard>} />
+                    <Route path="/field-service/tech" element={<DWARouteGuard><FieldServiceTechApp /></DWARouteGuard>} />
+                    <Route path="/field-service/:industry" element={<DWARouteGuard><FieldServiceIndustry /></DWARouteGuard>} />
                     <Route path="/leads/:slug" element={<LeadCapturePage />} />
                     <Route path="/b2b-leads" element={<B2BLeads />} />
                     <Route path="/industrial-database" element={<IndustrialDatabase />} />
@@ -557,7 +602,8 @@ const App = () => (
                     <Route path="/seo-reports" element={<SeoAuditService />} />
                     <Route path="/contractor-chatbot" element={<ContractorChatbot />} />
                     <Route path="/industrial-newsletter" element={<IndustrialNewsletter />} />
-                    <Route path="/missed-call-text" element={<MissedCallSaaS />} />
+                    <Route path="/missed-call-text" element={<DWARouteGuard><MissedCallSaaS /></DWARouteGuard>} />
+                    <Route path="/missed-call-catch" element={<DWARouteGuard><MissedCallSaaS /></DWARouteGuard>} />
                     <Route path="/review-monitor" element={<ReviewMonitor />} />
                     <Route path="/weekly-sms-blast" element={<WeeklySMSBlast />} />
                     <Route path="/no-show-rebooker" element={<NoShowRebooker />} />
@@ -670,9 +716,14 @@ const App = () => (
                     <Route path="/storm-leads" element={<StormDamageLeads />} />
                     <Route path="/recall-alerts" element={<RecallAlertService />} />
                     <Route path="/permit-watch" element={<PermitWatch />} />
-                    <Route path="/hire-alert" element={<HireAlert />} />
+                    <Route path="/hire-alert" element={<DWARouteGuard><HireAlert /></DWARouteGuard>} />
+                    <Route path="/hire-alert-trial" element={<DWARouteGuard><HireAlertTrial /></DWARouteGuard>} />
+                    <Route path="/techalert-postcard" element={<DWARouteGuard><TechAlertPostcard /></DWARouteGuard>} />
+                    <Route path="/hire-alert-healthcare" element={<DWARouteGuard><HealthcareHireAlert /></DWARouteGuard>} />
                     <Route path="/website-speed-audit" element={<WebsiteSpeedAudits />} />
                     <Route path="/crime-digest" element={<CrimeDigest />} />
+                    <Route path="/industry-pulse" element={<DWARouteGuard><IndustryPulse /></DWARouteGuard>} />
+                    <Route path="/my-industry-pulse" element={<DWARouteGuard><MyIndustryPulse /></DWARouteGuard>} />
                     <Route path="/license-monitor" element={<LicenseMonitor />} />
                     <Route path="/regulatory-filing-monitor" element={<RegulatoryFilingMonitor />} />
                     <Route path="/bid-intelligence" element={<BidIntelligence />} />
@@ -707,7 +758,7 @@ const App = () => (
                      <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
                      <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
                      <Route path="/admin" element={<AgencyAdminRoute><Admin /></AgencyAdminRoute>} />
-                     <Route path="/dwa-admin" element={<ProtectedRoute><DWAAdmin /></ProtectedRoute>} />
+                     <Route path="/dwa-admin" element={<AgencyAdminRoute><DWAAdmin /></AgencyAdminRoute>} />
                      <Route path="/admin/view-user/:userId" element={<ProtectedRoute><AdminViewUser /></ProtectedRoute>} />
                      <Route path="/comms-center" element={<ProtectedRoute><CommunicationsCenter /></ProtectedRoute>} />
                      <Route path="/dashboard" element={<ZoneDashboard />} />

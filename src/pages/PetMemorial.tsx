@@ -328,7 +328,7 @@ export function PetMemorialSuccess() {
             </div>
             <div className="flex items-start gap-3">
               <span className="text-amber-600 text-lg leading-none mt-0.5">💬</span>
-              <p className="text-sm text-stone-600 leading-relaxed"><strong className="text-stone-800">Questions?</strong> Reply to the email or text Matt at <a href="tel:+13138064952" className="text-amber-700 font-semibold">(313) 806-4952</a>.</p>
+              <p className="text-sm text-stone-600 leading-relaxed"><strong className="text-stone-800">Questions?</strong> Reply to the email or text Matt at <a href="tel:+13139921219" className="text-amber-700 font-semibold">(313) 992-1219</a>.</p>
             </div>
           </div>
           <a

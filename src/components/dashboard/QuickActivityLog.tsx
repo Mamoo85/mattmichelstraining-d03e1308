@@ -230,6 +230,7 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
       if (error) throw error;
 
       // If AI generated a workout sheet, also save it as a private workout
+      let foundPR = false;
       if (summary.workout_sheet && summary.workout_sheet.length > 0) {
         const today = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
         const { error: wsError } = await supabase.from("community_workouts").insert({
@@ -283,6 +284,7 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
               try { await awardPoints("workout_log", `New PR: ${liftName} ${weight} lbs`); } catch {}
 
               // Show celebration (first PR found)
+              foundPR = true;
               setPrCelebration({
                 exerciseName: liftName,
                 newWeight: weight,
@@ -318,7 +320,7 @@ const QuickActivityLog = ({ onClose, targetUserId }: QuickActivityLogProps) => {
       }
 
       toast({ title: "Activity logged! 💪", description: summary.ai_summary });
-      if (!prCelebration) onClose();
+      if (!foundPR) onClose();
     } catch (e: any) {
       toast({ title: "Save failed", description: e.message, variant: "destructive" });
     } finally {

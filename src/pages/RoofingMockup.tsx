@@ -6,7 +6,7 @@ import { RevealSection } from "@/hooks/useInView";
 
 const heroImg = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80";
 const BRAND = "East Side Roofing Co.";
-const PHONE = "(313) 806-4952";
+const PHONE = "(313) 992-1219";
 const ACCENT = "#2563eb";
 
 const services = [
@@ -64,7 +64,7 @@ const RoofingMockup = () => {
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", color: "#e2e8f0", background: "#0b1929" }}>
       <div style={{background:"#1e40af",color:"white",textAlign:"center",padding:"8px",fontSize:"11px",fontWeight:"700",letterSpacing:"0.1em"}}>
-        SAMPLE WEBSITE — Built by Matt Michels Web Design · (313) 806-4952
+        SAMPLE WEBSITE — Built by Matt Michels Web Design · (313) 992-1219
       </div>
       <style>{`
         @keyframes roof-shingle { 0%{background-position:0 0} 100%{background-position:40px 40px} }
@@ -93,7 +93,7 @@ const RoofingMockup = () => {
         <span className="opacity-60">·</span>
         <Link to="/detroit-web-design" className="underline underline-offset-2">Matt Michels Web Design</Link>
         <span className="opacity-60">·</span>
-        <a href="tel:3138064952">313.806.4952</a>
+        <a href="tel:3139921219">313.992.1219</a>
       </div>
 
       {/* Sticky Header */}

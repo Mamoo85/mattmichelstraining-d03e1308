@@ -129,7 +129,7 @@ export default function SocialConnect() {
     });
     setSubmitting(false);
     if (error || !data || data.error) {
-      setSubmitError(data?.error || "Something went wrong. Please try again or contact Matt at (313) 806-4952.");
+      setSubmitError(data?.error || "Something went wrong. Please try again or contact Matt at (313) 992-1219.");
       return;
     }
     setSuccess(true);
@@ -151,7 +151,7 @@ export default function SocialConnect() {
           <p className="text-gray-600 text-sm">{loadError}</p>
           <p className="text-gray-500 text-sm mt-4">
             Questions? Text or call Matt at{" "}
-            <a href="tel:+13138064952" className="text-cyan-600 font-medium">(313) 806-4952</a>
+            <a href="tel:+13139921219" className="text-cyan-600 font-medium">(313) 992-1219</a>
           </p>
         </div>
       </div>
@@ -170,7 +170,7 @@ export default function SocialConnect() {
           </p>
           <p className="text-gray-500 text-sm">
             Questions? Text Matt at{" "}
-            <a href="tel:+13138064952" className="text-cyan-600 font-medium">(313) 806-4952</a>
+            <a href="tel:+13139921219" className="text-cyan-600 font-medium">(313) 992-1219</a>
           </p>
           <div className="mt-6 flex items-center justify-center gap-3">
             <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" className="w-10 h-10 rounded-full object-cover" />
@@ -358,7 +358,7 @@ export default function SocialConnect() {
 
           <p className="text-xs text-gray-400 text-center">
             Questions? Text Matt at{" "}
-            <a href="tel:+13138064952" className="text-cyan-500">(313) 806-4952</a>
+            <a href="tel:+13139921219" className="text-cyan-500">(313) 992-1219</a>
           </p>
         </form>
       </div>

@@ -6,7 +6,7 @@ import { RevealSection } from "@/hooks/useInView";
 
 const heroImg = "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1600&q=80";
 const BRAND = "Michigan Comfort HVAC";
-const PHONE = "(313) 806-4952";
+const PHONE = "(313) 992-1219";
 const BLUE = "#0284c7";
 
 const services = [
@@ -161,7 +161,7 @@ const HvacMockup = () => {
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", color: "#e2e8f0", background: "#071a2b" }}>
       <div style={{background:"#1e40af",color:"white",textAlign:"center",padding:"8px",fontSize:"11px",fontWeight:"700",letterSpacing:"0.1em"}}>
-        SAMPLE WEBSITE — Built by Matt Michels Web Design · (313) 806-4952
+        SAMPLE WEBSITE — Built by Matt Michels Web Design · (313) 992-1219
       </div>
 
       <style>{`
@@ -211,7 +211,7 @@ const HvacMockup = () => {
           Matt Michels Web Design
         </Link>
         <span className="opacity-60">·</span>
-        <a href="tel:3138064952">313.806.4952</a>
+        <a href="tel:3139921219">313.992.1219</a>
       </div>
 
       {/* Emergency Banner */}

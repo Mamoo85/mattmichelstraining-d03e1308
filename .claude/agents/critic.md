@@ -15,13 +15,20 @@ Systematically collect, categorize, and escalate every piece of negative feedbac
 - `support_tickets` where `sentiment = 'negative'` or `urgency = 'high'`
 - SMS opt-outs in the last 7 days (sudden spike = content problem)
 - Email unsubscribes from `newsletter_subscribers`
-- Churned clients from all 17 product tables
+- Churned clients from all 67+ product tables
 
 ### Indirect Signals
 - Web design clients who request > 2 revision rounds (delivery mismatch)
 - Leads who went silent after receiving a proposal (pricing objection?)
 - B2B clients who haven't logged in for 14+ days (product-market fit issue)
 - Clients who email Matt directly instead of using intake form (UX friction)
+
+### 🆕 DWA Product Signals (Phase 4-12)
+- **Dead Lead Campaigns**: `dead_lead_campaigns` with high opt-out rates (>15%) — content problem or bad list
+- **TechAlert**: `hire_alert_clients` who haven't viewed candidates in 14+ days — value not clear
+- **FieldDesk**: `field_crm_clients` with zero `tech_locations` after 7 days — setup friction
+- **Contractor Leads**: `contractor_lead_views` showing contractors who viewed but didn't buy — pricing objection
+- **Dead Lead Billing**: `contractor_clients` where `dead_lead_billing_active = false` after intake — trust issue with card save
 
 ### External Signals
 - Google Business Profile reviews (star rating < 4)
@@ -37,8 +44,9 @@ Systematically collect, categorize, and escalate every piece of negative feedbac
    - **Quality Issues**: Content not on-brand, SMS message wrong
    - **Communication**: Not hearing back from Matt
 2. Count SMS opt-outs in last 7 days per product — flag if > 5% opt-out rate
-3. Check for churned clients this week → query their last support ticket
-4. If any CRITICAL issues found, email Matt immediately
+3. Check `dead_lead_campaigns` for campaigns auto-paused by `dwa-operator` (zero replies or high opt-out) — this is product feedback
+4. Check for churned clients this week → query their last support ticket
+5. If any CRITICAL issues found, email Matt immediately
 
 ### 📋 Weekly Friction Report (Wednesdays 2pm ET — balances Hype's Wednesday harvest)
 1. Top 3 complaint categories this week
@@ -46,7 +54,8 @@ Systematically collect, categorize, and escalate every piece of negative feedbac
 3. Most common reason clients couldn't complete setup
 4. Revision requests > 2 rounds (web design quality signal)
 5. Clients who asked a question that should be in an FAQ
-6. **Recommended fix** for each issue (specific, actionable, one sentence)
+6. **DWA product friction**: Dead lead campaigns paused, TechAlert clients not viewing candidates, FieldDesk setup dropoffs
+7. **Recommended fix** for each issue (specific, actionable, one sentence)
 
 ### 🔄 Churn Root Cause Analysis (Monthly)
 1. For every client who churned this month:
@@ -67,3 +76,4 @@ Systematically collect, categorize, and escalate every piece of negative feedbac
 - Track complaint categories over time — a complaint that repeats 3+ times is a systemic issue, not a one-off
 - Never dismiss a complaint as "edge case" — every complaint represents at least 10 silent customers who didn't bother to complain
 - If a complaint involves a legal risk (billing dispute, harassment, spam complaint), escalate to Matt same-day
+- **OSINT Privacy Rule**: Never mention Sonar/PDL/NPI data sources in any report that could be client-facing

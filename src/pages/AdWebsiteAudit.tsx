@@ -66,7 +66,7 @@ export default function AdWebsiteAudit() {
       if (data?.url) window.location.href = data.url;
       else throw new Error("No checkout URL");
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong. Call/text Matt: (313) 806-4952");
+      toast.error(err.message || "Something went wrong. Call/text Matt: (313) 992-1219");
     } finally {
       setSubmitting(false);
     }
@@ -79,7 +79,7 @@ export default function AdWebsiteAudit() {
           <CheckCircle size={52} className="mx-auto text-green-400" />
           <h1 className="text-2xl font-black text-white">Audit on the Way</h1>
           <p className="text-slate-300 text-sm">Your full website audit report will arrive within 2 minutes. Check spam if you don't see it.</p>
-          <p className="text-slate-500 text-xs">Questions? Text Matt: (313) 806-4952</p>
+          <p className="text-slate-500 text-xs">Questions? Text Matt: (313) 992-1219</p>
         </div>
       </div>
     );
@@ -90,7 +90,7 @@ export default function AdWebsiteAudit() {
       {/* Above fold */}
       <div className="max-w-lg mx-auto px-5 pt-10 pb-6">
         <div className="text-center mb-6">
-          <span className="inline-block text-xs font-bold uppercase tracking-widest text-cyan-400 mb-3">Instant · AI-Powered · $9</span>
+          <span className="inline-block text-xs font-bold uppercase tracking-widest text-cyan-400 mb-3">Instant · AI-Powered · $29</span>
           <h1 className="text-3xl font-black text-white leading-tight mb-3">
             Is Your Website<br />Costing You Customers?
           </h1>
@@ -148,7 +148,7 @@ export default function AdWebsiteAudit() {
             style={{ background: "#22d3ee" }}
           >
             {submitting ? <Loader2 size={16} className="animate-spin" /> : <Globe size={16} />}
-            {submitting ? "Processing…" : "Get My Website Audit — $9"}
+            {submitting ? "Processing…" : "Get My Website Audit — $29"}
           </button>
           <p className="text-center text-xs text-slate-500">Secure checkout · Report in ~60 sec · No agency fees · One-time</p>
         </form>
@@ -171,7 +171,7 @@ export default function AdWebsiteAudit() {
           <div className="bg-gradient-to-t from-slate-800 to-transparent h-8 -mt-8 relative pointer-events-none" />
         </div>
         <p className="text-center text-xs text-slate-600 mt-4">
-          Detroit Web Agency · mattmichelstraining.com · (313) 806-4952
+          Detroit Web Agency · mattmichelstraining.com · (313) 992-1219
         </p>
       </div>
     </div>

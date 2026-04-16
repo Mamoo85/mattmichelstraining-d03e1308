@@ -15,7 +15,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-async function sendReminderToTrainers(sb: ReturnType<typeof createClient>): Promise<string> {
+async function sendReminderToTrainers(sb: any): Promise<string> {
   const month = new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
   const { data: trainers, error } = await sb
@@ -33,7 +33,7 @@ async function sendReminderToTrainers(sb: ReturnType<typeof createClient>): Prom
       .eq("trainer_id", trainer.id)
       .eq("active", true);
 
-    const pendingClients = (clients || []).filter((c) => {
+    const pendingClients = (clients || []).filter((c: { last_report_at: string | null }) => {
       if (!c.last_report_at) return true;
       const lastReport = new Date(c.last_report_at);
       const daysSince = (Date.now() - lastReport.getTime()) / (1000 * 60 * 60 * 24);
@@ -43,7 +43,7 @@ async function sendReminderToTrainers(sb: ReturnType<typeof createClient>): Prom
     if (pendingClients.length === 0) continue;
 
     const clientList = pendingClients
-      .map((c) => `<li>${c.client_name}</li>`)
+      .map((c: { client_name: string }) => `<li>${c.client_name}</li>`)
       .join("");
 
     const html = `
@@ -66,7 +66,7 @@ async function sendReminderToTrainers(sb: ReturnType<typeof createClient>): Prom
 <p style="margin-top:16px;color:#64748b;font-size:14px;">Your clients love seeing their progress documented — it's one of the best retention tools you have.</p>
 <div class="footer">
   <img src="https://mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;vertical-align:middle;margin-right:8px;" alt="Matt">
-  <span>Matt Michels | M2 Development | matt@mattmichelstraining.com | (313) 806-4952</span>
+  <span>Matt Michels | M2 Development | matt@mattmichelstraining.com | (313) 992-1219</span>
 </div>
 </body>
 </html>`;

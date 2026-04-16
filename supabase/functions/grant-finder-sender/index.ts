@@ -70,7 +70,7 @@ Professional dark-themed HTML formatting.` }] }) });
             from: "M² Development <matt@mattmichelstraining.com>",
             to: [client.email], bcc: ["matthewmichels4@gmail.com"],
             subject: `${client.business_name} — Weekly Grant Opportunities`,
-        bcc: ["matthewmichels@gmail.com"],
+        
             html: `<div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;background:#1a1a2e;color:#e0e0e0;padding:32px;border-radius:12px;">
               <h1 style="color:#e8621a;text-align:center;">Grant Opportunities Report</h1>
               <p style="color:#888;text-align:center;font-size:13px;">${client.business_name} — Week of ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>
@@ -80,7 +80,7 @@ Professional dark-themed HTML formatting.` }] }) });
             <div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
         <div style="font-size:13px;color:#94a3b8;">
-          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952
+          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 992-1219
         </div>
         <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M² Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
       </div></div>` }) });

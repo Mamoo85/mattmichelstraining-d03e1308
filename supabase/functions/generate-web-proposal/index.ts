@@ -71,7 +71,7 @@ Write a professional proposal that includes:
 2. What their site will include (reference specific features relevant to their industry)
 3. The exact investment ($499 flat + $49/month — no surprises)
 4. What they get on day 1 (your personal cell number, discovery call, clear 7-day timeline)
-5. A confident closing with a specific call to action ("Text me at (313) 806-4952 or reply to this email")
+5. A confident closing with a specific call to action ("Text me at (313) 992-1219 or reply to this email")
 
 Keep it under 350 words. No bullet-point walls — write in short paragraphs. Sound like a real person, not a template. Make it feel like it was written specifically for their industry.`;
 

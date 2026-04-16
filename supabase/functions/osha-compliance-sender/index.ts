@@ -32,13 +32,12 @@ serve(async (_req) => {
             method: "POST",
             headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "M² Safety Compliance <matt@mattmichelstraining.com>", to: [client.email], bcc: ["matthewmichels4@gmail.com"],
+              from: "M² Safety Compliance <matt@mattmichelstraining.com>", to: [client.email], bcc: ["matthewmichels4@gmail.com", "matthewmichels@gmail.com"],
               subject: `${month} Safety Compliance Checklist — ${client.business_name}`,
-        bcc: ["matthewmichels@gmail.com"],
               html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#1e293b;color:#e2e8f0;border-radius:12px;"><h2 style="color:#e8621a;">🦺 Monthly Safety Compliance</h2>${content}<hr style="border-color:#334155;"><p style="color:#64748b;font-size:12px;">Powered by M2 Development — matt@mattmichelstraining.com</p><div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;">
         <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
         <div style="font-size:13px;color:#94a3b8;">
-          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952
+          <strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 992-1219
         </div>
         <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M² Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
       </div></div>`,

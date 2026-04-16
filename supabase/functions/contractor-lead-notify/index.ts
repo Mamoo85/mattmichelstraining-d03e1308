@@ -1,5 +1,7 @@
-// Cron-triggered function: checks for unnotified leads every 15 minutes
-// and sends follow-up notifications if immediate delivery failed
+// Cron-triggered function: checks for unnotified leads every 15 minutes.
+// Subscription contractors: full contact info via SMS + email immediately.
+// PPL contractors (no active subscription): FOMO teaser SMS with $50 claim link.
+// Also releases expired soft locks so leads become available again.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -8,65 +10,160 @@ import { sendSMS } from "../_shared/twilio.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
+const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+const SITE_URL = "https://www.detroitwebagent.com";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  // Debug: return env var presence (remove after confirming)
+  const body = await req.text().catch(() => "");
+  if (body.includes('"debug":true')) {
+    const sid = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
+    const tok = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
+    const ph = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
+    return new Response(JSON.stringify({
+      TWILIO_ACCOUNT_SID: sid ? `${sid.slice(0,4)}...${sid.slice(-4)}` : "MISSING",
+      TWILIO_AUTH_TOKEN: tok ? `SET(${tok.length}chars)` : "MISSING",
+      TWILIO_PHONE_NUMBER: ph || "MISSING",
+    }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   try {
+    // Release expired soft locks so leads become available again
+    await sb.from("contractor_leads")
+      .update({ status: "new", checkout_locked_by: null, lock_expires_at: null })
+      .eq("status", "pending_checkout")
+      .lt("lock_expires_at", new Date().toISOString());
+
     // Find leads created in last 24h that haven't been notified
     const { data: unnotified } = await sb
       .from("contractor_leads")
-      .select(`
-        id, name, phone, email, message, project_type, created_at,
-        contractor_lead_sites (trade, city, state, slug, active_contractor_id),
-        contractor_clients (name, business_name, email, phone)
-      `)
+      .select("id, name, phone, email, message, project_type, contact_preference, created_at, site_id")
       .eq("status", "new")
       .is("notified_at", null)
+      .not("site_id", "is", null)
       .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
     if (!unnotified || unnotified.length === 0) {
-      return new Response(JSON.stringify({ notified: 0 }), { status: 200 });
+      console.log("[LEAD-NOTIFY] No unnotified leads with site_id found");
+      return new Response(JSON.stringify({ notified: 0 }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    console.log(`[LEAD-NOTIFY] Found ${unnotified.length} unnotified leads`);
 
     let count = 0;
     for (const lead of unnotified) {
-      const site = (lead as any).contractor_lead_sites;
-      const contractor = (lead as any).contractor_clients;
+      // Fetch site separately — nested joins don't resolve reliably
+      const { data: site } = await sb
+        .from("contractor_lead_sites")
+        .select("id, trade, city, state, slug, active_contractor_id")
+        .eq("id", lead.site_id)
+        .maybeSingle();
 
-      if (!contractor) {
-        console.log(`[LEAD-NOTIFY] No contractor found for lead ${lead.id}, skipping`);
+      if (!site?.active_contractor_id) {
+        console.log(`[LEAD-NOTIFY] No active contractor for site ${lead.site_id} on lead ${lead.id}, skipping`);
         continue;
       }
 
-      // Email the contractor (if Resend is configured)
-      if (contractor.email && RESEND_API_KEY) {
-        await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            from: "Detroit Web Agency <matt@mattmichelstraining.com>",
-            to: [contractor.email],
-            bcc: ["matthewmichels@gmail.com", "matthewmichels4@gmail.com"],
-            subject: `New ${site?.trade || "service"} lead — ${lead.name}`,
-            html: `<p>Hey — you have a new lead waiting.<br><strong>${lead.name}</strong> — <a href="tel:${lead.phone}">${lead.phone}</a>${lead.email ? ` — ${lead.email}` : ""}</p><p>Reply to this email or call them directly. First one to respond wins the job.<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 806-4952</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>`,
-          }),
-        });
+      const { data: contractor } = await sb
+        .from("contractor_clients")
+        .select("id, name, business_name, email, phone, active")
+        .eq("id", site.active_contractor_id)
+        .maybeSingle();
+
+      if (!contractor) {
+        console.log(`[LEAD-NOTIFY] Contractor ${site.active_contractor_id} not found for lead ${lead.id}, skipping`);
+        continue;
       }
 
-      // SMS the contractor (independent of email — always attempt if phone exists)
-      if (contractor.phone) {
-        const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
-        const smsBody = `🔥 New ${site?.trade || "service"} lead!\n${lead.name} — ${lead.phone}${lead.project_type ? `\nProject: ${lead.project_type}` : ""}\nThis lead is EXCLUSIVE to you. Call them now!\n— Detroit Web Agency`;
-        const smsResult = await sendSMS(contractor.phone, TWILIO_PHONE, smsBody, "contractor_leads");
-        if (smsResult.success) {
-          console.log(`[LEAD-NOTIFY] SMS sent to contractor ${contractor.phone}`);
-        } else {
-          console.error(`[LEAD-NOTIFY] SMS failed: ${smsResult.error}`);
+      const isActiveSubscriber = contractor.active === true;
+
+      if (isActiveSubscriber) {
+        // ── SUBSCRIPTION CONTRACTOR: full contact info ──────────────────────
+        if (contractor.email && RESEND_API_KEY) {
+          const tradeLabel = site?.trade || "service";
+          const firstName = lead.name?.split(" ")[0]?.toUpperCase() || "THEM";
+          const messageBlock = lead.message
+            ? `<div style="background:#0d1f3c;border-left:3px solid #00d4ff;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:24px">
+                <p style="color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:2px;margin:0 0 8px;text-transform:uppercase">Message from homeowner</p>
+                <p style="color:#e2e8f0;font-size:14px;margin:0;line-height:1.6;font-style:italic">"${lead.message}"</p>
+               </div>`
+            : "";
+          const leadHtml = `<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#0a1628;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<div style="max-width:580px;margin:0 auto;background:#0a1628">
+  <div style="padding:22px 32px 16px;border-bottom:2px solid #00d4ff;text-align:center">
+    <div style="color:#ffffff;font-size:17px;font-weight:900;letter-spacing:2px">DETROIT <span style="color:#00d4ff">WEB AGENCY</span></div>
+    <div style="color:#00d4ff;font-size:9px;letter-spacing:4px;margin-top:4px;font-weight:600">EXCLUSIVE LEAD NOTIFICATION</div>
+  </div>
+  <div style="background:#00d4ff;padding:14px 32px;text-align:center">
+    <p style="margin:0;color:#0a1628;font-size:17px;font-weight:900;letter-spacing:0.5px">🔥 NEW ${tradeLabel.toUpperCase()} LEAD — EXCLUSIVE TO YOU</p>
+  </div>
+  <div style="padding:28px 32px">
+    <p style="color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:3px;margin:0 0 16px;text-transform:uppercase">Lead Details</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
+      <tr><td style="padding:10px 0;border-bottom:1px solid #1e3a5f;color:#64748b;font-size:13px;width:90px">Name</td><td style="padding:10px 0;border-bottom:1px solid #1e3a5f;color:#ffffff;font-weight:700;font-size:16px">${lead.name}</td></tr>
+      <tr><td style="padding:10px 0;border-bottom:1px solid #1e3a5f;color:#64748b;font-size:13px">Phone</td><td style="padding:10px 0;border-bottom:1px solid #1e3a5f"><a href="tel:${lead.phone}" style="color:#00d4ff;font-weight:700;font-size:16px;text-decoration:none">${lead.phone}</a></td></tr>
+      <tr><td style="padding:10px 0;border-bottom:1px solid #1e3a5f;color:#64748b;font-size:13px">Email</td><td style="padding:10px 0;border-bottom:1px solid #1e3a5f;color:#e2e8f0;font-size:14px">${lead.email || "—"}</td></tr>
+      <tr><td style="padding:10px 0;color:#64748b;font-size:13px">Project</td><td style="padding:10px 0;color:#e2e8f0;font-size:14px">${lead.project_type || "—"}</td></tr>
+    </table>
+    <div style="background:#0d1f3c;border:1px solid #00d4ff33;border-radius:10px;padding:20px 24px;margin-bottom:24px;text-align:center">
+      <p style="margin:0 0 6px;color:#e2e8f0;font-size:14px;font-weight:700">This lead is exclusive — they haven't been contacted by anyone else.</p>
+      <p style="margin:0 0 18px;color:#64748b;font-size:13px">Speed wins jobs. Call now.</p>
+      <a href="tel:${lead.phone}" style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:900;font-size:14px;padding:12px 32px;border-radius:8px;text-decoration:none;letter-spacing:0.5px">CALL ${firstName} NOW →</a>
+    </div>
+    ${messageBlock}
+  </div>
+  <div style="padding:18px 32px;border-top:1px solid #1e3a5f;text-align:center">
+    <p style="margin:0;color:#4a6fa5;font-size:12px">Detroit Web Agency · Grosse Pointe Park, MI · (313) 992-1219</p>
+    <p style="margin:5px 0 0;font-size:11px"><a href="https://detroitwebagent.com" style="color:#00d4ff;text-decoration:none">detroitwebagent.com</a></p>
+  </div>
+</div></body></html>`;
+          const pref = (lead as any).contact_preference || "call";
+          const project = lead.project_type ? ` (${lead.project_type})` : "";
+          const smsBody = pref === "email"
+            ? `LEAD UNLOCKED: ${lead.name} prefers EMAIL at ${lead.email || "no email given"}${project}. Email them — follow up within 24 hours. — DWA Lead Engine`
+            : pref === "text"
+            ? `LEAD UNLOCKED: ${lead.name} — ${lead.phone}. Prefers TEXT${project}. Reach out now. — DWA Lead Engine`
+            : `LEAD UNLOCKED: ${lead.name} — ${lead.phone}${project}. CALL THEM NOW — exclusive to you. — DWA Lead Engine`;
+          await Promise.all([
+            fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "Detroit Web Agency <matt@detroitwebagent.com>",
+                to: [contractor.email],
+                bcc: ["matt@detroitwebagent.com"],
+                subject: `🔥 New ${tradeLabel} lead — ${lead.name} (exclusive)`,
+                html: leadHtml,
+              }),
+            }),
+            contractor.phone
+              ? sendSMS(contractor.phone, TWILIO_PHONE, smsBody, "contractor_leads")
+              : Promise.resolve(),
+          ]);
+        }
+      } else {
+        // ── PPL CONTRACTOR: FOMO teaser — no contact info until paid ─────────
+        if (contractor.phone) {
+          // Build checkout URL — they tap it to claim for $50
+          const claimUrl = `${SITE_URL}/claim-lead?lead_id=${lead.id}&contractor_id=${contractor.id}&email=${encodeURIComponent(contractor.email || "")}`;
+          const smsBody = `🚨 HOT LEAD in ${site?.city || "Metro Detroit"}: ${lead.project_type || site?.trade || "service request"}.\nEXCLUSIVE — first contractor to claim it gets it.\n\n⚡ Reply CLAIM to buy instantly ($50) or tap:\n${claimUrl}`;
+          await sendSMS(contractor.phone, TWILIO_PHONE, smsBody, "contractor_leads");
         }
       }
 
-      // Mark as notified (we attempted delivery via email and/or SMS)
+      // Mark as notified
       await sb.from("contractor_leads")
         .update({ notified_at: new Date().toISOString(), status: "notified" })
         .eq("id", lead.id);
@@ -74,10 +171,11 @@ serve(async (req) => {
       count++;
     }
 
-    console.log(`[LEAD-NOTIFY] Sent ${count} delayed notifications`);
-    return new Response(JSON.stringify({ notified: count }), { status: 200 });
-  } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e);
+    console.log(`[LEAD-NOTIFY] Sent ${count} notifications`);
+    return new Response(JSON.stringify({ notified: count }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
     console.error("[LEAD-NOTIFY] Error:", e);
-    return new Response(JSON.stringify({ error: msg }), { status: 500 });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

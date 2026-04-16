@@ -72,8 +72,8 @@ const DEMO_GROUPS: { category: string; demos: DemoEntry[] }[] = [
     category: "🏭 Custom Client Demos",
     demos: [
       { key: "djconley-v1", label: "DJ Conley — Trusted Steel", path: "/demo-djconley", industry: "manufacturer's rep / industrial boiler", style: "Industrial steel, classic", plan: "Custom", priceRange: "Family" },
-      { key: "djconley-v2", label: "DJ Conley — Dark Industrial", path: "/demo-djconley-v2", industry: "manufacturer's rep / industrial boiler", style: "Dark industrial, bold", plan: "Custom", priceRange: "Family" },
-      { key: "djconley-v3", label: "DJ Conley — Clean Corporate", path: "/demo-djconley-v3", industry: "manufacturer's rep / industrial boiler", style: "Clean corporate, minimal", plan: "Custom", priceRange: "Family" },
+      { key: "djconley-v2", label: "DJ Conley — Dark Industrial", path: "/demo-djconley-2", industry: "manufacturer's rep / industrial boiler", style: "Dark industrial, bold", plan: "Custom", priceRange: "Family" },
+      { key: "djconley-v3", label: "DJ Conley — Clean Corporate", path: "/demo-djconley-3", industry: "manufacturer's rep / industrial boiler", style: "Clean corporate, minimal", plan: "Custom", priceRange: "Family" },
       { key: "djconley-react", label: "DJ Conley — React SPA", path: "/demo-djconley-1", industry: "manufacturer's rep / industrial boiler", style: "Full React build", plan: "Custom", priceRange: "Family" },
       { key: "petfection", label: "PETfection — E-Commerce", path: "/demo-petfection", industry: "pet food / e-commerce", style: "Warm orange, shop-ready", plan: "Custom", priceRange: "Family" },
     ],
@@ -106,7 +106,7 @@ function genText(demo: DemoEntry, name: string, bizName: string, baseUrl: string
   const who = name ? name.split(" ")[0] : "Hey";
   const biz = bizName || `your ${demo.industry}`;
   const url = `${baseUrl}${demo.path}`;
-  return `${name ? `${who} —` : "Hey —"} I put together a quick website mockup for a ${demo.industry} like ${biz}. Worth a 30-second look: ${url} — Matt (313) 806-4952`;
+  return `${name ? `${who} —` : "Hey —"} I put together a quick website mockup for a ${demo.industry} like ${biz}. Worth a 30-second look: ${url} — Matt (313) 992-1219`;
 }
 
 function genEmail(demo: DemoEntry, name: string, bizName: string, baseUrl: string): { subject: string; body: string } {
@@ -125,7 +125,7 @@ Not a pitch — if it's not the right fit, I've got other styles too. But I figu
 ${demo.priceRange} to get started, includes everything.
 
 Matt
-(313) 806-4952
+(313) 992-1219
 matt@mattmichelstraining.com`;
   return { subject, body };
 }

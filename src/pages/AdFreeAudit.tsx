@@ -17,7 +17,7 @@ export default function AdFreeAudit() {
           <h1 className="text-3xl font-black mb-3">Check Your Inbox!</h1>
           <p className="text-slate-300 mb-6">Your website audit is being generated and will arrive within 60 seconds.</p>
           <p className="text-sm text-slate-400">
-            Want help fixing what the audit finds? <a href="tel:+13138064952" className="text-[#22d3ee] font-bold">(313) 806-4952</a>
+            Want help fixing what the audit finds? <a href="tel:+13139921219" className="text-[#22d3ee] font-bold">(313) 992-1219</a>
           </p>
         </div>
       </div>
@@ -37,7 +37,7 @@ export default function AdFreeAudit() {
       if (error) throw error;
       window.location.search = "?success=1";
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong. Call (313) 806-4952.");
+      toast.error(err.message || "Something went wrong. Call (313) 992-1219.");
     } finally { setSubmitting(false); }
   };
 
@@ -51,8 +51,8 @@ export default function AdFreeAudit() {
       <div className="min-h-screen bg-[#1e293b]">
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
           <p className="text-[#22d3ee] font-black text-sm tracking-wider uppercase">Detroit Web Agency</p>
-          <a href="tel:+13138064952" className="text-white/70 text-sm flex items-center gap-1.5 hover:text-white">
-            <Phone size={12} /> (313) 806-4952
+          <a href="tel:+13139921219" className="text-white/70 text-sm flex items-center gap-1.5 hover:text-white">
+            <Phone size={12} /> (313) 992-1219
           </a>
         </div>
 

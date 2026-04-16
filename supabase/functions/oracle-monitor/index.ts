@@ -50,7 +50,7 @@ interface WeeklyStats {
   topWaitlistProduct: string;
 }
 
-async function gatherDailyReport(sb: ReturnType<typeof createClient>): Promise<DailyReport> {
+async function gatherDailyReport(sb: any): Promise<DailyReport> {
   const now = new Date();
   const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString();
@@ -279,7 +279,7 @@ function buildBriefingEmail(report: DailyReport): { subject: string; html: strin
     ${weeklyHtml}
     ${revenueHtml}
     ${waitlistHtml}
-    <p style="font-size:12px;color:#94a3b8;margin:16px 0 0;line-height:1.6;">This is your automated Oracle report. Reply or text <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a> if something looks wrong.</p>
+    <p style="font-size:12px;color:#94a3b8;margin:16px 0 0;line-height:1.6;">This is your automated Oracle report. Reply or text <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a> if something looks wrong.</p>
   </td></tr>
   <tr><td style="background:#f8fafc;padding:12px 24px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;font-size:11px;color:#94a3b8;">
     M2 Development · Oracle Monitor v1.0

@@ -237,16 +237,16 @@ export default function DWAClientRoster() {
         />
       )}
 
-      <div className="flex items-center justify-between gap-4 mb-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-4">
         <input
-          className="bg-[#0f1f35] border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 focus:outline-none focus:border-[#00d4ff]/50 w-64"
+          className="bg-[#0f1f35] border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 focus:outline-none focus:border-[#00d4ff]/50 w-full sm:w-64"
           placeholder="Search clients..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <button
           onClick={() => setShowModal(true)}
-          className="px-4 py-2 rounded-lg bg-[#00d4ff] text-[#0a1628] font-semibold text-sm hover:bg-[#00d4ff]/90 transition-colors"
+          className="px-4 py-2 rounded-lg bg-[#00d4ff] text-[#0a1628] font-semibold text-sm hover:bg-[#00d4ff]/90 transition-colors shrink-0"
         >
           + Add Client
         </button>

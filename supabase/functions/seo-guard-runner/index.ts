@@ -144,7 +144,7 @@ async function sendReport(email: string, businessName: string, scan: any, isMont
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:12px">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt" style="width:44px;height:44px;border-radius:50%;object-fit:cover" />
       <div style="font-size:13px;color:#64748b">
-        <strong style="color:#1e293b">Matt Michels</strong><br>Grosse Pointe, MI · (313) 806-4952
+        <strong style="color:#1e293b">Matt Michels</strong><br>Grosse Pointe, MI · (313) 992-1219
       </div>
     </div>
   </div>

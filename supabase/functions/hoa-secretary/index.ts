@@ -167,10 +167,10 @@ Be thorough, professional, and accurate to the raw notes. If information is miss
     const minutesHtml = minutesText
       .replace(/\n\n/g, "</p><p style='margin:0 0 12px;'>")
       .replace(/\n/g, "<br>")
-      .replace(/\|(.+?)\|/g, (match) => {
+      .replace(/\|(.+?)\|/g, (match: string) => {
         if (match.includes("---")) return match; // skip separator rows
-        const cells = match.split("|").filter((c) => c.trim());
-        return "<tr>" + cells.map((c) => `<td style="padding:8px 12px;border:1px solid #e2e8f0;">${c.trim()}</td>`).join("") + "</tr>";
+        const cells = match.split("|").filter((c: string) => c.trim());
+        return "<tr>" + cells.map((c: string) => `<td style="padding:8px 12px;border:1px solid #e2e8f0;">${c.trim()}</td>`).join("") + "</tr>";
       });
 
     const emailHtml = `<!DOCTYPE html>
@@ -201,7 +201,7 @@ Be thorough, professional, and accurate to the raw notes. If information is miss
   <tr><td style="padding:16px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;">
     <div style="display:flex;align-items:center;gap:12px;">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="Matt Michels">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M² HOA Secretary · (313) 806-4952</div>
+      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>M² HOA Secretary · (313) 992-1219</div>
     </div>
   </td></tr>
 

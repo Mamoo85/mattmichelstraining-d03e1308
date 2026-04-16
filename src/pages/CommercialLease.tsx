@@ -46,7 +46,7 @@ export default function CommercialLease() {
         </div>
         <h1 className="text-2xl font-black text-foreground mb-3">You're set.</h1>
         <p className="text-muted-foreground text-sm leading-relaxed">Matt will reach out within 24 hours to collect your lease documents and complete setup. First extraction runs within 48 hours.</p>
-        <p className="mt-6 text-sm text-muted-foreground">Questions? <a href="tel:+13138064952" className="text-primary font-bold">(313) 806-4952</a></p>
+        <p className="mt-6 text-sm text-muted-foreground">Questions? <a href="tel:+13139921219" className="text-primary font-bold">(313) 992-1219</a></p>
       </div>
     </div>
   );

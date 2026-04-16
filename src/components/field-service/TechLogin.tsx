@@ -11,14 +11,11 @@ export default function TechLogin({ onLogin }: Props) {
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit() {
-    if (pin.length !== 4) { toast.error("Enter your 4-digit PIN"); return; }
+  async function handleSubmit(pinValue: string) {
+    if (pinValue.length !== 4) { toast.error("Enter your 4-digit PIN"); return; }
     setLoading(true);
     const { data, error } = await supabase
-      .from("field_service_techs")
-      .select("id, name, client_id")
-      .eq("pin", pin)
-      .eq("active", true)
+      .rpc("verify_tech_pin", { _pin: pinValue })
       .maybeSingle();
 
     if (error || !data) {
@@ -36,7 +33,7 @@ export default function TechLogin({ onLogin }: Props) {
     if (pin.length >= 4) return;
     const next = pin + digit;
     setPin(next);
-    if (next.length === 4) setTimeout(() => handleSubmit(), 100);
+    if (next.length === 4) setTimeout(() => handleSubmit(next), 100);
   }
 
   const keys = ["1","2","3","4","5","6","7","8","9","","0","⌫"];

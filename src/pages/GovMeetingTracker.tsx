@@ -94,7 +94,7 @@ export default function GovMeetingTracker() {
         </div>
         <h1 className="text-2xl font-black text-foreground mb-3">Monitoring starts now.</h1>
         <p className="text-muted-foreground">Matt will confirm your city list and keywords within 24 hours. Your first weekly intelligence brief will arrive before next week's council meetings. You'll never be caught off guard again.</p>
-        <p className="mt-4 text-sm text-muted-foreground">Questions? <a href="tel:+13138064952" className="text-primary">(313) 806-4952</a></p>
+        <p className="mt-4 text-sm text-muted-foreground">Questions? <a href="tel:+13139921219" className="text-primary">(313) 992-1219</a></p>
       </div>
     </div>
   );

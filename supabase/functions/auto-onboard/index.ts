@@ -38,11 +38,19 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
     subject: "Welcome to Missed Call Text-Back — One Quick Question",
     nextStage: "📧 Welcome Email Sent",
     body: (name) => `
-      <p>Hey ${name}!</p>
-      <p>Welcome to Missed Call Text-Back! To activate your service, I just need <strong>one thing</strong>:</p>
-      <p><strong>What phone number should I monitor for missed calls?</strong></p>
-      <p>Just reply to this email with the number and I'll have everything set up within 24 hours. After that, every missed call automatically gets a friendly text-back so you never lose a lead.</p>
-      <p>Talk soon!</p>`,
+      <p style="font-size:22px;font-weight:800;color:#ffffff;margin:0 0 6px;line-height:1.2">Almost live, ${name}.</p>
+      <p style="color:#4a6fa5;font-size:13px;margin:0 0 24px">One question and you're set — this takes 5 minutes total.</p>
+      <div style="background:#0d1f3c;border:1px solid #00d4ff33;border-radius:10px;padding:24px;margin:0 0 24px;text-align:center">
+        <p style="color:#94a3b8;font-size:14px;margin:0 0 10px">Just reply to this email with one answer:</p>
+        <p style="color:#00d4ff;font-size:18px;font-weight:800;margin:0">What phone number should I monitor for missed calls?</p>
+        <p style="color:#64748b;font-size:12px;margin:10px 0 0">The business number your customers call — cell or landline.</p>
+      </div>
+      <div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:24px;margin:0 0 24px">
+        <p style="color:#ffffff;font-weight:700;font-size:14px;margin:0 0 16px;letter-spacing:0.5px">WHAT HAPPENS AFTER YOU REPLY:</p>
+        <p style="margin:0 0 12px;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:12px;padding:2px 8px;border-radius:4px;margin-right:10px">24 HRS</span>I set up call forwarding on your number — 5 minutes total.</p>
+        <p style="margin:0;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:12px;padding:2px 8px;border-radius:4px;margin-right:10px">GO LIVE</span>Every missed call triggers an instant text-back automatically. Zero effort.</p>
+      </div>
+      ${DWA_SIG}`,
   },
   social_media_subscription: {
     subject: "Welcome to Social Media AI — Let's Connect Your Accounts",
@@ -77,19 +85,22 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
       <p>Don't worry if you don't have all of this yet — just reply with what you have and we'll figure out the rest together.</p>`,
   },
   contractor_leads: {
-    subject: "Welcome to Contractor Lead Gen — Here's What to Expect",
+    subject: "You're Locked In — Exclusive Lead Territory Reserved",
     nextStage: "📧 Welcome Email Sent",
     body: (name) => `
-      <p>Hey ${name}!</p>
-      <p>Welcome to your exclusive lead generation service! Here's what happens next:</p>
-      <ol>
-        <li>I'm setting up your dedicated lead capture page now</li>
-        <li>You'll start receiving exclusive leads within 3-5 business days</li>
-        <li>Each lead comes with name, phone, email, and job details</li>
-        <li>Leads are sent to you via email + text in real-time</li>
-      </ol>
-      <p><strong>Quick question:</strong> What's the best phone number to text leads to? And what's your primary service area (city/zip)?</p>
-      <p>Reply anytime and I'll get everything configured!</p>`,
+      <p style="font-size:22px;font-weight:800;color:#ffffff;margin:0 0 6px;line-height:1.2">You're locked in, ${name}.</p>
+      <p style="color:#4a6fa5;font-size:13px;margin:0 0 24px">Your exclusive territory is reserved. Here's what happens next.</p>
+      <div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:24px;margin:0 0 24px">
+        <p style="color:#ffffff;font-weight:700;font-size:14px;margin:0 0 16px;letter-spacing:0.5px">YOUR ONBOARDING STEPS:</p>
+        <p style="margin:0 0 14px;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:12px;padding:2px 8px;border-radius:4px;margin-right:10px">STEP 1</span><strong>Reply with your call number</strong> — best phone to text leads to, and your primary zip code.</p>
+        <p style="margin:0 0 14px;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:12px;padding:2px 8px;border-radius:4px;margin-right:10px">STEP 2</span><strong>Your lead page goes live</strong> — I'll build and launch your exclusive capture page within 24–48 hours.</p>
+        <p style="margin:0;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:12px;padding:2px 8px;border-radius:4px;margin-right:10px">STEP 3</span><strong>Leads start flowing</strong> — Every lead includes name, phone, email, and project details. You're the only contractor who gets it.</p>
+      </div>
+      <div style="background:#0d1f3c;border-left:3px solid #00d4ff;padding:16px 20px;border-radius:0 8px 8px 0;margin:0 0 24px">
+        <p style="color:#ffffff;font-weight:700;font-size:13px;margin:0 0 8px">WHAT MAKES THIS DIFFERENT:</p>
+        <p style="color:#94a3b8;font-size:13px;margin:0">Unlike Angi or Thumbtack, every lead is exclusive to you. No bidding wars. No shared contact. One trade per city — period.</p>
+      </div>
+      ${DWA_SIG}`,
   },
   storm_lead_subscription: {
     subject: "Welcome to Storm Damage Leads — You're All Set!",
@@ -368,16 +379,23 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
     subject: "⚡ TechAlert is Live — Your Hiring Advantage Starts Tomorrow",
     nextStage: "📧 Welcome Email Sent",
     body: (name) => `
-      <p>Hey ${name} —</p>
-      <p>Welcome to TechAlert. Starting tomorrow at 7am, we scan <strong>three sources every single day</strong> and alert you before anyone else knows a licensed tech is available:</p>
-      <p>🏛️ <strong>Michigan MIOSHA License Database</strong> — new license issued = new talent entering the market. No other tool monitors this.</p>
-      <p>🔍 <strong>Apollo Professional Database</strong> — HVAC techs, plumbers, pipefitters, and electricians matched by location.</p>
-      <p>📋 <strong>Job Board Monitoring</strong> — tradespeople actively posting their availability.</p>
-      <p><strong>How alerts work:</strong></p>
-      <p>🔥 <strong>Score 7-10:</strong> Instant SMS + email — act fast, these are hot<br>
-      📋 <strong>Score 5-6:</strong> Daily email digest — worth keeping an eye on</p>
-      <p>Each alert includes name, trade, city, license info, contact details (when available), and our AI availability score.</p>
-      <p style="color:#64748b;font-size:13px;">Want to adjust your target roles or zip codes? Just reply to this email. — Matt</p>`,
+      <p style="font-size:22px;font-weight:800;color:#ffffff;margin:0 0 6px;line-height:1.2">TechAlert is live, ${name}.</p>
+      <p style="color:#4a6fa5;font-size:13px;margin:0 0 24px">Your exclusive hiring advantage starts tomorrow at 7am.</p>
+      <div style="background:#0d1f3c;border-left:3px solid #00d4ff;padding:20px 24px;border-radius:0 8px 8px 0;margin:0 0 24px">
+        <p style="color:#ffffff;font-weight:700;font-size:14px;margin:0 0 12px;letter-spacing:0.5px">WHAT HAPPENS EVERY MORNING AT 7AM:</p>
+        <p style="color:#94a3b8;font-size:13px;margin:0 0 10px">Our proprietary monitoring network scans three intelligence layers across Metro Detroit — license activity, professional movement, and live availability signals.</p>
+        <p style="color:#94a3b8;font-size:13px;margin:0">You get the alert. <strong style="color:#ffffff">Your competitors don't.</strong></p>
+      </div>
+      <div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:24px;margin:0 0 24px">
+        <p style="color:#ffffff;font-weight:700;font-size:14px;margin:0 0 16px;letter-spacing:0.5px">HOW ALERTS WORK:</p>
+        <p style="margin:0 0 12px;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#ef4444;color:#fff;font-weight:800;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:10px">SCORE 7–10</span><strong>Instant alert</strong> <span style="color:#94a3b8">— SMS + email immediately. These are hot. Act fast.</span></p>
+        <p style="margin:0;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#f59e0b;color:#0a1628;font-weight:800;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:10px">SCORE 5–6</span><strong>Daily digest</strong> <span style="color:#94a3b8">— bundled in your morning email. Worth keeping an eye on.</span></p>
+      </div>
+      <div style="border-top:1px solid #1e3a5f;padding-top:20px">
+        <p style="color:#94a3b8;font-size:13px;margin:0 0 10px">Each alert includes name, trade, city, license info, contact details (when available), and AI scoring.</p>
+        <p style="color:#e2e8f0;font-size:14px;margin:0">Want to adjust your target roles or zip codes? Just reply. — Matt</p>
+        <p style="color:#4a6fa5;font-size:12px;margin:8px 0 0">Detroit Web Agency &nbsp;·&nbsp; (313) 992-1219 &nbsp;·&nbsp; <a href="mailto:matt@detroitwebagent.com" style="color:#00d4ff;text-decoration:none">matt@detroitwebagent.com</a></p>
+      </div>`,
   },
 };
 
@@ -399,7 +417,23 @@ const SMS_TYPES = new Set([
   "sms_blast", "noshow_rebooker", "estimate_followup", "invoice_chaser",
   "afterjob_drip", "promo_blaster", "referral_program", "slow_day_sms",
   "homeowner_campaign", "review_monitor",
+  // _subscription suffixed variants (sent by stripe-webhook)
+  "sms_blast_subscription", "noshow_subscription", "estimate_drip_subscription",
+  "invoice_chaser_subscription", "afterjob_drip_subscription", "promo_blaster_subscription",
+  "referral_program_subscription", "slow_day_subscription", "homeowner_campaign_subscription",
+  "review_monitor_subscription",
 ]);
+
+const DWA_PRODUCTS = new Set([
+  "contractor_leads",
+  "hire_alert_subscription",
+  "missed_call_subscription",
+]);
+
+const DWA_SIG = `<div style="border-top:1px solid #1e3a5f;padding-top:20px">
+  <p style="color:#e2e8f0;font-size:14px;margin:0">— Matt Michels</p>
+  <p style="color:#4a6fa5;font-size:12px;margin:5px 0 0">Detroit Web Agency &nbsp;·&nbsp; (313) 992-1219 &nbsp;·&nbsp; <a href="mailto:matt@detroitwebagent.com" style="color:#00d4ff;text-decoration:none">matt@detroitwebagent.com</a></p>
+</div>`;
 
 function getTemplate(serviceType: string): OnboardTemplate | null {
   if (TEMPLATES[serviceType]) return TEMPLATES[serviceType];
@@ -414,7 +448,7 @@ function m2Email(bodyHtml: string): string {
     <h1 style="margin:0;color:#e8621a;font-size:18px;font-weight:800">M² Development</h1>
   </div>
   <div style="padding:24px 28px;color:#334155;font-size:14px;line-height:1.7">${bodyHtml}
-    <p style="margin-top:20px">Best,<br><strong>Matt Michels</strong><br><span style="color:#94a3b8;font-size:12px">M² Development · (313) 806-4952</span></p>
+    <p style="margin-top:20px">Best,<br><strong>Matt Michels</strong><br><span style="color:#94a3b8;font-size:12px">M² Development · (313) 992-1219</span></p>
   </div>
   <div style="padding:12px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center">
     <p style="margin:0;color:#94a3b8;font-size:11px">M² Development · Grosse Pointe, MI 48230</p>
@@ -433,8 +467,8 @@ function dwaEmail(bodyHtml: string): string {
   </div>
   <div style="padding:32px;color:#e2e8f0;font-size:15px;line-height:1.8">${bodyHtml}</div>
   <div style="padding:20px 32px;border-top:1px solid #1e3a5f;text-align:center">
-    <p style="margin:0;color:#4a6fa5;font-size:12px">Detroit Web Agency · Grosse Pointe Park, MI · (313) 806-4952</p>
-    <p style="margin:6px 0 0;font-size:11px"><a href="https://detroitwebagency.com" style="color:#00d4ff;text-decoration:none">detroitwebagency.com</a>&nbsp;·&nbsp;<a href="mailto:matt@mattmichelstraining.com?subject=Unsubscribe" style="color:#4a6fa5;text-decoration:none">Unsubscribe</a></p>
+    <p style="margin:0;color:#4a6fa5;font-size:12px">Detroit Web Agency · Grosse Pointe Park, MI · (313) 992-1219</p>
+    <p style="margin:6px 0 0;font-size:11px"><a href="https://detroitwebagent.com" style="color:#00d4ff;text-decoration:none">detroitwebagent.com</a>&nbsp;·&nbsp;<a href="mailto:matt@detroitwebagent.com?subject=Unsubscribe" style="color:#4a6fa5;text-decoration:none">Unsubscribe</a></p>
   </div>
 </div></body></html>`;
 }
@@ -480,7 +514,7 @@ function buildFieldServiceBody(
 
     <div style="border-top:1px solid #1e3a5f;padding-top:20px">
       <p style="color:#e2e8f0;font-size:14px;margin:0">— Matt Michels</p>
-      <p style="color:#4a6fa5;font-size:12px;margin:5px 0 0">Detroit Web Agency &nbsp;·&nbsp; (313) 806-4952 &nbsp;·&nbsp; <a href="mailto:matt@detroitwebagent.com" style="color:#00d4ff;text-decoration:none">matt@detroitwebagent.com</a></p>
+      <p style="color:#4a6fa5;font-size:12px;margin:5px 0 0">Detroit Web Agency &nbsp;·&nbsp; (313) 992-1219 &nbsp;·&nbsp; <a href="mailto:matt@detroitwebagent.com" style="color:#00d4ff;text-decoration:none">matt@detroitwebagent.com</a></p>
     </div>`;
 }
 
@@ -503,18 +537,18 @@ serve(async (req) => {
     if (service_type === "field_service_subscription") {
       // Look up the client record to get UUID and company name
       const { data: fsClient } = await sb
-        .from("field_service_clients")
-        .select("id, plan, company_name")
-        .eq("owner_email", client_email)
+        .from("field_crm_clients")
+        .select("id, plan, business_name")
+        .eq("email", client_email)
         .maybeSingle();
 
       const clientId = fsClient?.id || "";
       const clientPlan = plan || fsClient?.plan || "standalone";
-      const companyDisplay = fsClient?.company_name || company || name;
+      const companyDisplay = fsClient?.business_name || company || name;
       const dispatchUrl = clientId
-        ? `https://detroitwebagency.com/field-service/dispatch?client=${clientId}`
-        : "https://detroitwebagency.com/field-service/dispatch";
-      const techAppUrl = "https://detroitwebagency.com/field-service/tech";
+        ? `https://detroitwebagent.com/field-service/dispatch?client=${clientId}`
+        : "https://detroitwebagent.com/field-service/dispatch";
+      const techAppUrl = "https://detroitwebagent.com/field-service/tech";
 
       // Generate one-click magic link (passwordless login)
       let magicLink = dispatchUrl;
@@ -568,16 +602,19 @@ serve(async (req) => {
       return new Response(JSON.stringify({ skipped: true, reason: "no template for service type" }), { headers: JSON_HEADERS });
     }
 
-    // Send onboarding email
+    // Send onboarding email — DWA products use dark DWA brand wrapper + DWA from address
+    const isDWA = DWA_PRODUCTS.has(service_type);
     await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "Matt Michels <matt@mattmichelstraining.com>",
+        from: isDWA
+          ? "Matt Michels — Detroit Web Agency <matt@detroitwebagent.com>"
+          : "Matt Michels <matt@mattmichelstraining.com>",
         to: [client_email],
         bcc: ["matthewmichels4@gmail.com"],
         subject: template.subject,
-        html: m2Email(template.body(name)),
+        html: isDWA ? dwaEmail(template.body(name)) : m2Email(template.body(name)),
       }),
     });
 

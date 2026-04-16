@@ -32,17 +32,7 @@ interface GeneratedContent {
 }
 
 // ── RSS Parsing ───────────────────────────────────────────────────────────────
-function getElementText(el: Element, tag: string): string {
-  const found = el.querySelector(tag);
-  return found?.textContent?.trim() || "";
-}
-
-function getCDataText(el: Element, tag: string): string {
-  // Try namespaced content:encoded first, then plain tag
-  const encoded = el.getElementsByTagName("content:encoded")[0];
-  if (tag === "description" && encoded) return encoded.textContent?.trim() || "";
-  return getElementText(el, tag);
-}
+// RSS parsing helpers removed — replaced with regex-based parser below
 
 interface RssEpisode {
   guid: string;
@@ -53,22 +43,27 @@ interface RssEpisode {
 }
 
 function parseRssFeed(xmlText: string): RssEpisode[] {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(xmlText, "text/xml");
-  const items = Array.from(doc.querySelectorAll("item"));
-
-  return items.map((item) => {
-    const guid = getElementText(item, "guid") || getElementText(item, "id") || "";
-    const title = getElementText(item, "title");
-    const description = getCDataText(item, "description");
-    const url =
-      item.querySelector("enclosure")?.getAttribute("url") ||
-      getElementText(item, "link") ||
-      "";
-    const pubDate = getElementText(item, "pubDate");
-
-    return { guid, title, description, url, pubDate };
-  });
+  // Simple regex-based RSS parser (Deno has no built-in DOMParser)
+  const items: RssEpisode[] = [];
+  const itemRegex = /<item[\s>]([\s\S]*?)<\/item>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = itemRegex.exec(xmlText)) !== null) {
+    const block = match[1];
+    const getText = (tag: string): string => {
+      const r = new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i");
+      const m = block.match(r);
+      return (m?.[1] || m?.[2] || "").trim();
+    };
+    const encM = block.match(/<enclosure[^>]+url=["']([^"']+)["']/i);
+    items.push({
+      guid: getText("guid") || getText("id") || "",
+      title: getText("title"),
+      description: getText("description") || getText("content:encoded"),
+      url: encM?.[1] || getText("link") || "",
+      pubDate: getText("pubDate"),
+    });
+  }
+  return items;
 }
 
 // ── Claude Content Generation ─────────────────────────────────────────────────
@@ -195,7 +190,7 @@ function buildContentEmail(
       <strong style="color:#94a3b8;">Matt Michels</strong> · M² Development · Grosse Pointe, MI
     </p>
     <p style="color:#334155;font-size:11px;margin:0;">
-      Questions? Reply to this email or text <a href="tel:+13138064952" style="color:${accent};">(313) 806-4952</a>
+      Questions? Reply to this email or text <a href="tel:+13139921219" style="color:${accent};">(313) 992-1219</a>
     </p>
     <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:32px;height:32px;margin-top:12px;object-fit:contain;opacity:.7;" />
   </div>
@@ -361,7 +356,7 @@ serve(async (req) => {
     // Process all clients (sequential to respect API rate limits)
     let processed = 0;
     for (const client of clients as PodcastClient[]) {
-      await processClient(client, sb);
+      await processClient(client, sb as any);
       processed++;
     }
 

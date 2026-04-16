@@ -36,7 +36,7 @@ const ONBOARDING_CONTENT: Record<string, Record<number, StepContent>> = {
   gbp_saas: {
     0: {
       subject: "You're set up — here's what happens next",
-      body: `You're now on M² GBP automation. Starting Monday, Wednesday, and Friday, Google Business Profile posts go out for your business automatically.\n\nYou don't have to do a single thing. It just runs.\n\nIf anything looks off in the first week, reply here or text me directly at (313) 806-4952. I'll fix it.`,
+      body: `You're now on M² GBP automation. Starting Monday, Wednesday, and Friday, Google Business Profile posts go out for your business automatically.\n\nYou don't have to do a single thing. It just runs.\n\nIf anything looks off in the first week, reply here or text me directly at (313) 992-1219. I'll fix it.`,
       cta_text: "See Your Google Profile →",
       cta_url: "https://www.google.com/maps",
     },
@@ -97,7 +97,7 @@ const ONBOARDING_CONTENT: Record<string, Record<number, StepContent>> = {
   default: {
     0: {
       subject: "You're set up with M²",
-      body: `You're in. Everything is set up on our end and running.\n\nIf anything isn't working the way you expected in the first 48 hours, reply here or text me at (313) 806-4952. I respond fast.\n\nAppreciate the business.`,
+      body: `You're in. Everything is set up on our end and running.\n\nIf anything isn't working the way you expected in the first 48 hours, reply here or text me at (313) 992-1219. I respond fast.\n\nAppreciate the business.`,
     },
     1: {
       subject: "Quick check-in — everything running?",
@@ -141,7 +141,7 @@ function buildOnboardingEmail(content: StepContent, product: string): string {
     <hr style="border:1px solid #e2e8f0;margin:20px 0;">
     <div style="display:flex;align-items:center;gap:10px;">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a></div>
+      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a></div>
     </div>
   </td></tr>
   <tr><td style="background:#f8fafc;padding:10px 24px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;font-size:11px;color:#94a3b8;">
@@ -202,7 +202,7 @@ serve(async (req) => {
 
       for (const seq of sequences || []) {
         if (sent >= 50) break;
-        const content = getStepContent(seq.product, seq.step || step);
+        const content = getStepContent(seq.product, (seq as any).step || step);
         if (!content) continue;
 
         const html = buildOnboardingEmail(content, seq.product);

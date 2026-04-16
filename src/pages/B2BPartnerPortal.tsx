@@ -202,7 +202,7 @@ export default function B2BPartnerPortal() {
                   )}
 
                   <p className="text-[10px] text-[#555] text-center">
-                    Questions about your referrals? Text Matt at (313) 806-4952
+                    Questions about your referrals? Text Matt at (313) 992-1219
                   </p>
                 </div>
               )}

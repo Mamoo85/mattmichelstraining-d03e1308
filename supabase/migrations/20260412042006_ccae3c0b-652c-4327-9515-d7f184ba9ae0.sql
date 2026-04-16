@@ -1,0 +1,1 @@
+ALTER TABLE public.outreach_leads ADD COLUMN IF NOT EXISTS channel TEXT DEFAULT 'email';

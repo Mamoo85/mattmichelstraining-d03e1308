@@ -55,7 +55,7 @@ const UPSELL_MAP: Record<string, { product: string; headline: string; pitch: str
 const TEST_EMAILS = ["matt@mattmichelstraining.com", "matthewmichels@gmail.com", "matthewmichels4@gmail.com"];
 
 // Check if this email is already a subscriber (don't upsell subscribers)
-async function isSubscriber(sb: ReturnType<typeof createClient>, email: string): Promise<boolean> {
+async function isSubscriber(sb: any, email: string): Promise<boolean> {
   const checks = await Promise.all([
     sb.from("gbp_saas_clients").select("id", { count: "exact", head: true }).eq("email", email),
     sb.from("social_media_clients").select("id", { count: "exact", head: true }).eq("email", email),
@@ -65,7 +65,7 @@ async function isSubscriber(sb: ReturnType<typeof createClient>, email: string):
 }
 
 // Check if already in upsell sequence for this product combo
-async function alreadyInSequence(sb: ReturnType<typeof createClient>, email: string, productBought: string): Promise<boolean> {
+async function alreadyInSequence(sb: any, email: string, productBought: string): Promise<boolean> {
   const { count } = await sb
     .from("upsell_sequences")
     .select("*", { count: "exact", head: true })
@@ -100,7 +100,7 @@ function buildUpsellEmail(email: string, productBought: string, step: number): {
     <hr style="border:1px solid #e2e8f0;margin:20px 0;">
     <div style="display:flex;align-items:center;gap:10px;">
       <img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
-      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · <a href="tel:+13138064952" style="color:#e8621a;">(313) 806-4952</a></div>
+      <div style="font-size:13px;color:#334155;"><strong>Matt Michels</strong><br>Grosse Pointe, MI · <a href="tel:+13139921219" style="color:#e8621a;">(313) 992-1219</a></div>
     </div>
     <p style="margin:16px 0 0;font-size:11px;color:#94a3b8;">You bought a ${productBought.replace(/_/g, " ")} from M² recently. Reply "stop" to unsubscribe from follow-ups.</p>
   </td></tr>
