@@ -390,6 +390,8 @@ export type Database = {
           charge_amount_cents: number | null
           charged_at: string | null
           delivered_at: string
+          ghost_reason: string | null
+          ghosted_at: string | null
           id: string
           interview_booked_at: string | null
           notes: string | null
@@ -407,6 +409,8 @@ export type Database = {
           charge_amount_cents?: number | null
           charged_at?: string | null
           delivered_at?: string
+          ghost_reason?: string | null
+          ghosted_at?: string | null
           id?: string
           interview_booked_at?: string | null
           notes?: string | null
@@ -424,6 +428,8 @@ export type Database = {
           charge_amount_cents?: number | null
           charged_at?: string | null
           delivered_at?: string
+          ghost_reason?: string | null
+          ghosted_at?: string | null
           id?: string
           interview_booked_at?: string | null
           notes?: string | null
@@ -4579,6 +4585,8 @@ export type Database = {
           current_employer: string | null
           current_title: string | null
           data_completeness: number | null
+          do_not_contact: boolean
+          do_not_contact_at: string | null
           email: string | null
           enriched_at: string | null
           enrichment_status: string | null
@@ -4619,6 +4627,8 @@ export type Database = {
           current_employer?: string | null
           current_title?: string | null
           data_completeness?: number | null
+          do_not_contact?: boolean
+          do_not_contact_at?: string | null
           email?: string | null
           enriched_at?: string | null
           enrichment_status?: string | null
@@ -4659,6 +4669,8 @@ export type Database = {
           current_employer?: string | null
           current_title?: string | null
           data_completeness?: number | null
+          do_not_contact?: boolean
+          do_not_contact_at?: string | null
           email?: string | null
           enriched_at?: string | null
           enrichment_status?: string | null
@@ -10600,7 +10612,10 @@ export type Database = {
           contact_name: string | null
           contact_phone: string | null
           created_at: string
+          demand_radar_access: boolean
+          fast_track_credits: number
           id: string
+          is_test_account: boolean
           monthly_retainer_cents: number | null
           notes: string | null
           per_interview_fee_cents: number
@@ -10623,7 +10638,10 @@ export type Database = {
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string
+          demand_radar_access?: boolean
+          fast_track_credits?: number
           id?: string
+          is_test_account?: boolean
           monthly_retainer_cents?: number | null
           notes?: string | null
           per_interview_fee_cents?: number
@@ -10646,7 +10664,10 @@ export type Database = {
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string
+          demand_radar_access?: boolean
+          fast_track_credits?: number
           id?: string
+          is_test_account?: boolean
           monthly_retainer_cents?: number | null
           notes?: string | null
           per_interview_fee_cents?: number
