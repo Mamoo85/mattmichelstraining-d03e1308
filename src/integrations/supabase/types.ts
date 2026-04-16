@@ -4560,7 +4560,10 @@ export type Database = {
           claimed_at: string | null
           client_action: string | null
           client_id: string
+          hired_revenue_estimate: number | null
           id: string
+          interview_scheduled_at: string | null
+          pipeline_stage: string
         }
         Insert: {
           alert_type?: string
@@ -4570,7 +4573,10 @@ export type Database = {
           claimed_at?: string | null
           client_action?: string | null
           client_id: string
+          hired_revenue_estimate?: number | null
           id?: string
+          interview_scheduled_at?: string | null
+          pipeline_stage?: string
         }
         Update: {
           alert_type?: string
@@ -4580,7 +4586,10 @@ export type Database = {
           claimed_at?: string | null
           client_action?: string | null
           client_id?: string
+          hired_revenue_estimate?: number | null
           id?: string
+          interview_scheduled_at?: string | null
+          pipeline_stage?: string
         }
         Relationships: []
       }
