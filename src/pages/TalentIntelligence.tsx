@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Zap, Shield, Lock, TrendingUp, CheckCircle2 } from "lucide-react";
+import ROICalculator from "@/components/talent-intel/ROICalculator";
+import TerritoryScarcity from "@/components/talent-intel/TerritoryScarcity";
+import CaseStudyBlock from "@/components/talent-intel/CaseStudyBlock";
 
 const COUNTIES = ["Wayne", "Oakland", "Macomb", "Washtenaw", "Livingston", "Genesee", "St. Clair", "Monroe"];
 
@@ -119,6 +122,35 @@ export default function TalentIntelligence() {
               </ul>
               <button onClick={() => { setForm(f => ({ ...f, pricing_model: "annual_prepay" })); document.getElementById("request-form")?.scrollIntoView({ behavior: "smooth" }); }} className="block w-full text-center py-3 rounded-lg border border-[#00d4ff]/40 text-[#00d4ff] hover:bg-[#00d4ff]/5 transition-colors text-sm font-semibold">Lock My Territory →</button>
             </div>
+          </div>
+        </section>
+
+        {/* Territory scarcity */}
+        <section className="px-6 py-12 border-t border-white/5">
+          <div className="max-w-5xl mx-auto">
+            <TerritoryScarcity />
+          </div>
+        </section>
+
+        {/* ROI Calculator */}
+        <section className="px-6 py-12 border-t border-white/5">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-white text-2xl md:text-3xl font-bold mb-2">Run your own numbers.</h2>
+              <p className="text-slate-400 text-sm">No sales call needed. Plug in your placements — see the math.</p>
+            </div>
+            <ROICalculator />
+          </div>
+        </section>
+
+        {/* Case studies */}
+        <section className="px-6 py-12 border-t border-white/5">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-white text-2xl md:text-3xl font-bold mb-2">Recent placements.</h2>
+              <p className="text-slate-400 text-sm">Outcomes only. Agency names withheld for territorial protection.</p>
+            </div>
+            <CaseStudyBlock />
           </div>
         </section>
 
