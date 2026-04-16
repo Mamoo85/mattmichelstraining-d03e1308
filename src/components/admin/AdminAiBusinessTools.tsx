@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+import { Instagram } from "@/components/ui/social-icons";
 import {
-  Loader2, X, Instagram, Quote, BookOpen, Mail, Layout,
+  Loader2, X, Quote, BookOpen, Mail, Layout,
   HelpCircle, TrendingDown, DollarSign, BarChart3, Search,
   Copy, Save,
 } from "lucide-react";
