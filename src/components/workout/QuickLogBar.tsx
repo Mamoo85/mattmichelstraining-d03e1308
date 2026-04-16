@@ -80,9 +80,12 @@ const QuickLogBar = ({ exercises, onApplyParsed }: QuickLogBarProps) => {
     setListening(true);
   }, [listening, speechSupported]);
 
-  // Check parsed sets against progress_logs for PR detection
+  // Check parsed sets against progress_logs for PR detection.
+  // Uses estimated 1RM (Epley) so heavier-weight AND more-reps-at-same-weight
+  // both count as PRs (e.g. 105x3 beats prior 105x1).
   const checkForPRs = useCallback(async (sets: ParsedSet[]): Promise<boolean> => {
     if (!user) return false;
+    const e1rm = (w: number, r: number) => (r > 0 ? w * (1 + r / 30) : w);
     const candidates: Array<{
       exercise_name: string;
       weight_lbs: number;
@@ -90,26 +93,42 @@ const QuickLogBar = ({ exercises, onApplyParsed }: QuickLogBarProps) => {
       previous_best: number;
     }> = [];
 
+    // Group sets by matched lift; keep best (by e1rm) per lift in this submission
+    const bestPerLift = new Map<string, ParsedSet>();
     for (const s of sets) {
       const liftName = matchProgressLift(s.exercise_name);
       if (!liftName || s.weight_lbs <= 0) continue;
+      const existing = bestPerLift.get(liftName);
+      if (!existing || e1rm(s.weight_lbs, s.reps) > e1rm(existing.weight_lbs, existing.reps)) {
+        bestPerLift.set(liftName, s);
+      }
+    }
 
+    for (const [liftName, s] of bestPerLift.entries()) {
       try {
         const { data } = await supabase
           .from("progress_logs")
-          .select("weight")
+          .select("weight, reps")
           .eq("user_id", user.id)
-          .eq("exercise_name", liftName)
-          .order("weight", { ascending: false })
-          .limit(1);
+          .eq("exercise_name", liftName);
 
-        const prevBest = data?.[0]?.weight || 0;
-        if (s.weight_lbs > prevBest) {
+        const rows = data || [];
+        const prevBestE1rm = rows.reduce((max, r: any) => {
+          const v = e1rm(Number(r.weight) || 0, Number(r.reps) || 0);
+          return v > max ? v : max;
+        }, 0);
+        const prevBestWeight = rows.reduce((max, r: any) => {
+          const w = Number(r.weight) || 0;
+          return w > max ? w : max;
+        }, 0);
+
+        const newE1rm = e1rm(s.weight_lbs, s.reps);
+        if (newE1rm > prevBestE1rm) {
           candidates.push({
             exercise_name: liftName,
             weight_lbs: s.weight_lbs,
             reps: s.reps,
-            previous_best: prevBest,
+            previous_best: prevBestWeight,
           });
         }
       } catch (err) {
