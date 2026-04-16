@@ -50,13 +50,22 @@ serve(async (req) => {
     }
 
     // 1. Failed payments in last 7 days
+    // Note: Stripe's status=failed filter can return charges that ultimately succeeded
+    // (e.g., a card retry succeeded after initial decline). We must double-check:
+    //   - status === "failed" (not succeeded/pending)
+    //   - paid === false (final settled state)
+    //   - refunded === false (not later refunded)
+    // This prevents false-positive "card declined" alerts on payments that actually went through.
     const weekAgoUnix = Math.floor((Date.now() - 7 * 86400000) / 1000);
-    const failedCharges = await stripeGet(`/charges?limit=20&created[gte]=${weekAgoUnix}&status=failed`);
+    const failedChargesRaw = await stripeGet(`/charges?limit=100&created[gte]=${weekAgoUnix}&status=failed`);
+    const trulyFailed = (failedChargesRaw.data || []).filter((c: any) =>
+      c.status === "failed" && c.paid === false && !c.refunded
+    );
 
-    if (failedCharges.data?.length) {
-      const lostRevenue = failedCharges.data.reduce((sum: number, c: any) => sum + (c.amount || 0), 0) / 100;
-      alerts.push(`<h3 style="color:#ef4444;">❌ ${failedCharges.data.length} Failed Payments — $${lostRevenue.toFixed(2)} lost</h3>
-        <ul>${failedCharges.data.slice(0, 10).map((c: any) => 
+    if (trulyFailed.length) {
+      const lostRevenue = trulyFailed.reduce((sum: number, c: any) => sum + (c.amount || 0), 0) / 100;
+      alerts.push(`<h3 style="color:#ef4444;">❌ ${trulyFailed.length} Failed Payments — $${lostRevenue.toFixed(2)} lost</h3>
+        <ul>${trulyFailed.slice(0, 10).map((c: any) =>
           `<li>${c.billing_details?.email || "Unknown"} — $${(c.amount / 100).toFixed(2)} — ${c.failure_message || "card declined"}</li>`
         ).join("")}</ul>`);
     }
