@@ -173,7 +173,7 @@ export default function HealthcareHireAlert() {
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             {[
               { step: "1", title: "We Scan Licensing Records Daily", desc: "Every morning at 7am, our Automated Ingestion Engine ingests the latest licensing data from Michigan's professional licensing authority — CNAs, RNs, LPNs, and more." },
-              { step: "2", title: "New Licenses Are Flagged Instantly", desc: "When a new healthcare professional clears their license in your county, our system scores them on availability signals — job boards, LinkedIn, and license type." },
+              { step: "2", title: "New Licenses Are Flagged Instantly", desc: "When a new healthcare professional clears their license in your county, our system scores them on availability signals — job boards, professional networks, and license type." },
               { step: "3", title: "You Get a Text Before Anyone Else", desc: "High-scoring candidates trigger an immediate SMS + email alert with their name, license type, city, and contact info. You call them before the agencies even know they exist." },
             ].map(({ step, title, desc }) => (
               <div key={step} style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>

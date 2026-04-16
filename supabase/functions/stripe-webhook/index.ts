@@ -474,6 +474,25 @@ serve(async (req) => {
       console.log(`[WEBHOOK] Charge refunded: ${charge.id} — $${(refundedAmount / 100).toFixed(2)}`);
     }
 
+    // Belt-and-suspenders: sync agency interview charges that succeed asynchronously
+    // (e.g. 3DS retries). Inline write happens in agency-fast-track-interview, but
+    // off-session intents can confirm later — this catches that case.
+    if (event.type === "payment_intent.succeeded") {
+      try {
+        const intent = event.data.object as Stripe.PaymentIntent;
+        const meta = intent.metadata || {};
+        if (meta.type === "agency_interview_charge" && meta.assignment_id) {
+          await sb.from("agency_candidate_assignments").update({
+            charged_at: new Date().toISOString(),
+            stripe_charge_id: intent.id,
+            charge_amount_cents: intent.amount,
+          }).eq("id", meta.assignment_id);
+          console.log(`[WEBHOOK] agency_interview_charge synced: assignment=${meta.assignment_id} intent=${intent.id}`);
+        }
+      } catch (e) {
+        console.error("[WEBHOOK] agency_interview_charge sync error:", e);
+      }
+    }
 
     // Handle guide purchases (existing logic)
     if (event.type === "checkout.session.completed") {
@@ -778,8 +797,8 @@ serve(async (req) => {
             const targetRoles = meta.target_roles
               ? meta.target_roles.split(",").map((r: string) => r.trim()).filter(Boolean)
               : ["boiler_operator", "hvac_tech"];
-            // CRITICAL: if this fails, throw so Stripe retries (return 500 below)
-            const { data: insertedClient, error: insertErr } = await (sb.from as any)("hire_alert_clients").insert({
+            // CRITICAL: upsert so repeat checkouts by same email update instead of duplicate-key failing
+            const { data: insertedClient, error: insertErr } = await (sb.from as any)("hire_alert_clients").upsert({
               company_name: meta.company_name || email,
               owner_email: email,
               owner_phone: meta.owner_phone || null,
@@ -789,8 +808,8 @@ serve(async (req) => {
               plan: meta.plan || "standalone",
               target_roles: targetRoles,
               tos_accepted_at: meta.tos_accepted === "true" ? new Date().toISOString() : null,
-            }).select("dashboard_token").single();
-            if (insertErr) throw new Error(`hire_alert_clients insert: ${insertErr.message}`);
+            }, { onConflict: "owner_email" }).select("dashboard_token").single();
+            if (insertErr) throw new Error(`hire_alert_clients upsert: ${insertErr.message}`);
             const dashboardToken = insertedClient?.dashboard_token;
 
             // Track postcard conversion if ref=postcard
@@ -827,18 +846,18 @@ serve(async (req) => {
     <!-- SOURCE CARDS -->
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
       <tr><td style="padding:14px 16px;background:#0a162808;border-radius:12px;border-left:4px solid #00d4ff;margin-bottom:8px;">
-        <p style="margin:0;font-size:14px;color:#1e293b;font-weight:700;">🏛️ Michigan MIOSHA License Database</p>
-        <p style="margin:4px 0 0;font-size:13px;color:#64748b;line-height:1.5;">Public records of every licensed boiler operator, steam engineer, and pressure vessel inspector in the state. <strong>New license issued = new talent entering the market.</strong> No other tool monitors this.</p>
+        <p style="margin:0;font-size:14px;color:#1e293b;font-weight:700;">🏛️ Licensing Signal Engine</p>
+        <p style="margin:4px 0 0;font-size:13px;color:#64748b;line-height:1.5;">Proprietary monitoring of state licensing records for boiler operators, steam engineers, and pressure vessel inspectors. <strong>New license issued = new talent entering the market.</strong> No other tool monitors this.</p>
       </td></tr>
       <tr><td style="height:8px;"></td></tr>
       <tr><td style="padding:14px 16px;background:#0a162808;border-radius:12px;border-left:4px solid #8b5cf6;">
-        <p style="margin:0;font-size:14px;color:#1e293b;font-weight:700;">🔍 Apollo Professional Database</p>
-        <p style="margin:4px 0 0;font-size:13px;color:#64748b;line-height:1.5;">HVAC techs, plumbers, pipefitters, and electricians matched by location and title across Metro Detroit.</p>
+        <p style="margin:0;font-size:14px;color:#1e293b;font-weight:700;">🔍 Professional Network Signals</p>
+        <p style="margin:4px 0 0;font-size:13px;color:#64748b;line-height:1.5;">HVAC techs, plumbers, pipefitters, and electricians surfaced by location and title across Metro Detroit through proprietary multi-source enrichment.</p>
       </td></tr>
       <tr><td style="height:8px;"></td></tr>
       <tr><td style="padding:14px 16px;background:#0a162808;border-radius:12px;border-left:4px solid #f59e0b;">
-        <p style="margin:0;font-size:14px;color:#1e293b;font-weight:700;">📋 Job Board Monitoring</p>
-        <p style="margin:4px 0 0;font-size:13px;color:#64748b;line-height:1.5;">Tradespeople actively posting their availability on Indeed, ZipRecruiter, and forums.</p>
+        <p style="margin:0;font-size:14px;color:#1e293b;font-weight:700;">📋 Live Intent Monitoring</p>
+        <p style="margin:4px 0 0;font-size:13px;color:#64748b;line-height:1.5;">Tradespeople actively signaling availability across professional networks and job boards.</p>
       </td></tr>
     </table>
 
