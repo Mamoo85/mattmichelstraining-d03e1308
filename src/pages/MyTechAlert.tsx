@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import RevenueRecoveredLedger from "@/components/RevenueRecoveredLedger";
+import HiringHealthScore from "@/components/techalert/HiringHealthScore";
 import DemoModeBadge, { isDemoMode, DEMO_MASTER_TOKEN } from "@/components/DemoModeBadge";
 
 const HEALTHCARE_ROLES = ["cna", "rn", "lpn", "director_of_nursing", "home_health_aide"];
@@ -524,6 +525,9 @@ export default function MyTechAlert() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+        {/* Hiring Health Score + Pipeline Funnel */}
+        {token && <HiringHealthScore token={token} />}
+
         {/* KPI Strip */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
@@ -976,7 +980,7 @@ export default function MyTechAlert() {
                           {generatingDraft === c.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <FileText className="h-3 w-3 mr-1" />}
                           ✍️ Draft Outreach
                         </Button>
-                        {c.client_action !== "contacted" && c.client_action !== "hired" && (
+                        {c.client_action !== "contacted" && c.client_action !== "interviewed" && c.client_action !== "hired" && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -986,6 +990,18 @@ export default function MyTechAlert() {
                           >
                             {isUpdating ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Phone className="h-3 w-3 mr-1" />}
                             Mark Contacted
+                          </Button>
+                        )}
+                        {(c.client_action === "contacted") && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-purple-500/20 text-purple-400 hover:bg-purple-500/10 text-xs"
+                            disabled={isUpdating}
+                            onClick={() => updateAction(c.id, "interviewed")}
+                          >
+                            {isUpdating ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CalendarCheck className="h-3 w-3 mr-1" />}
+                            Mark Interviewed
                           </Button>
                         )}
                         {c.client_action !== "hired" && (
