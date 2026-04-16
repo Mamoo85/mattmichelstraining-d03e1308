@@ -1,37 +1,51 @@
 
 
-# Fix Last 2 Bugs → 100% Market Ready
+# Fix Postcards System — Plan
 
-## Fix 1 — TechAlert Trial: `tos_accepted_at` never written
+## Root Cause
+**RLS blocks all frontend reads.** All three postcard tables (`postcard_prospects`, `postcard_campaigns`, `postcard_conversions`) only have `service_role` policies. The admin UI queries as `authenticated`, so RLS returns 0 rows — even though there are 38 prospects and 6 campaigns in the database.
 
-**Problem:** `create-hire-alert-trial/index.ts` line 42-52 inserts into `hire_alert_clients` but never sets `tos_accepted_at`. The scanner filters on `.not("tos_accepted_at", "is", null)`, so every trial user gets zero alerts for their entire 72-hour trial.
+## What's Broken
 
-**Fix:** Add `tos_accepted_at: new Date().toISOString()` to the insert object (line 42-52). Trial users accepted TOS implicitly by signing up — they should receive alerts immediately.
+1. **RLS — no authenticated read policies** on all 3 postcard tables. Admin sees "0 prospects" despite 38 existing in the DB.
+2. **Missing `audience_type` column** on `postcard_campaigns` — the UI displays it but the column doesn't exist in the schema.
+3. **`generate-postcard-copy` ignores `audience_type`** — the edge function only accepts `county`, not the audience dropdown selection. All copy is hardcoded for "HVAC/boiler/plumbing/electrical" regardless of what's selected.
 
-**File:** `supabase/functions/create-hire-alert-trial/index.ts`
+## Fix Plan
 
----
+### 1. Database Migration
+Add admin-read RLS policies to all three tables using `public.has_role()`:
 
-## Fix 2 — FieldDesk Dispatcher UUID Bypass
+```sql
+-- Allow admins to read all postcard data
+CREATE POLICY "Admins can read postcard_prospects"
+  ON public.postcard_prospects FOR SELECT TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'));
 
-**Problem:** `FieldServiceDispatch.tsx` lines 28-36 — when no `?token=` param is present, it checks if `?client=` is a 36-char string and grants full access. Any guessed UUID opens another company's dispatch board.
+CREATE POLICY "Admins can read postcard_campaigns"
+  ON public.postcard_campaigns FOR SELECT TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'));
 
-**Fix:** Remove the UUID fallback entirely. If no `?token=` is provided and it's not demo mode, deny access. Token-based auth is the only path.
+CREATE POLICY "Admins can read postcard_conversions"
+  ON public.postcard_conversions FOR SELECT TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'));
 
-**File:** `src/pages/FieldServiceDispatch.tsx`
+-- Add audience_type column to campaigns
+ALTER TABLE public.postcard_campaigns ADD COLUMN audience_type TEXT;
+```
 
----
+### 2. Update `generate-postcard-copy` Edge Function
+- Accept `audience_type` parameter from the request body
+- Adjust the AI system prompt based on the audience (healthcare agency, trades agency, nursing home, contractor, supply house)
+- Store `audience_type` on the inserted campaign row
 
-## Also: Drip cap bump (minor)
+### 3. Verify End-to-End
+- Confirm prospects load in UI after migration
+- Confirm campaigns display with audience badges
+- Confirm generate copy stores audience_type
 
-Already done in prior session (raised from 50 to 200). Confirmed.
-
-## Changes Summary
-
-| File | Change |
-|------|--------|
-| `supabase/functions/create-hire-alert-trial/index.ts` | Add `tos_accepted_at` to insert |
-| `src/pages/FieldServiceDispatch.tsx` | Remove UUID bypass — require token or demo mode |
-
-Two small, targeted edits. After this, all 4 products hit 90%+ with zero customer-facing bugs.
+## Technical Details
+- Uses existing `public.has_role()` security definer function (project standard)
+- Only SELECT policies needed — writes happen via edge functions with `service_role`
+- No frontend code changes needed — the UI already handles these fields correctly
 
