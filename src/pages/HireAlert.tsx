@@ -51,7 +51,7 @@ const TESTIMONIALS: Testimonial[] = [
     initials: "MT",
   },
   {
-    quote: "Worth every dollar of the $99. One good hire pays for years of this service.",
+    quote: "Worth every dollar of the $149. One good hire pays for years of this service.",
     name: "Joe M.",
     trade: "Boiler Services, Metro Detroit",
     initials: "JM",
@@ -99,7 +99,26 @@ export default function HireAlert() {
   }, []);
 
   const standalonePrice = betaFull ? 149 : 99;
-  const bundlePrice = betaFull ? 79 : 49;
+  const bundlePrice = betaFull ? 199 : 149;
+
+  const [alaCarteLoading, setAlaCarteLoading] = useState(false);
+  const handleAlaCarte = async () => {
+    if (!email) {
+      toast({ title: "Enter your email first", variant: "destructive" });
+      return;
+    }
+    setAlaCarteLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-hire-alert-one-time", {
+        body: { email, company_name: company, phone, target_roles: selectedRoles },
+      });
+      if (error || !data?.url) throw new Error(error?.message || "Checkout failed");
+      window.location.href = data.url;
+    } catch (e: unknown) {
+      toast({ title: e instanceof Error ? e.message : "Something went wrong", variant: "destructive" });
+      setAlaCarteLoading(false);
+    }
+  };
 
   if (isSuccess) {
     return (
@@ -341,11 +360,38 @@ export default function HireAlert() {
       </section>
 
       {/* Pricing */}
-      <section style={{ maxWidth: 800, margin: "0 auto 80px", padding: "0 16px" }}>
+      <section style={{ maxWidth: 900, margin: "0 auto 80px", padding: "0 16px" }}>
         <h2 style={{ textAlign: "center", fontSize: 32, fontWeight: 800, marginBottom: 48 }}>Simple Pricing</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
+
+          {/* À La Carte */}
           <div style={{ background: "#0d2137", border: "1px solid #1e3a5f", borderRadius: 14, padding: 32 }}>
-            <p style={{ margin: "0 0 8px", color: "#94a3b8", fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>Standalone</p>
+            <p style={{ margin: "0 0 8px", color: "#f97316", fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>On-Demand</p>
+            <div style={{ fontSize: 48, fontWeight: 800, margin: "0 0 4px" }}>
+              $50<span style={{ fontSize: 18, fontWeight: 400, color: "#94a3b8" }}> one-time</span>
+            </div>
+            <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 24 }}>10 licensed names delivered instantly</p>
+            <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px" }}>
+              {["10 verified licensed candidates", "Names + license types + areas", "No subscription required", "$5 refund per name if < 10 available", "Perfect for one-time hiring pushes"].map((f) => (
+                <li key={f} style={{ padding: "6px 0", fontSize: 14, color: "#cbd5e1", display: "flex", gap: 8 }}>
+                  <span style={{ color: "#f97316" }}>✓</span> {f}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => { scrollToCheckout(); }}
+              style={{ width: "100%", background: "#1e3a5f", border: "1px solid #f97316", color: "#f97316", padding: "12px", borderRadius: 8, fontWeight: 700, fontSize: 15, cursor: "pointer" }}
+            >
+              Get 10 Names — $50
+            </button>
+          </div>
+
+          {/* Membership */}
+          <div style={{ background: "#001a33", border: `2px solid ${ACCENT}`, borderRadius: 14, padding: 32, position: "relative" }}>
+            <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: ACCENT, color: BG, padding: "4px 16px", borderRadius: 20, fontSize: 12, fontWeight: 800, whiteSpace: "nowrap" }}>
+              MOST POPULAR
+            </div>
+            <p style={{ margin: "0 0 8px", color: ACCENT, fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>Membership</p>
             <div style={{ fontSize: 48, fontWeight: 800, margin: "0 0 4px" }}>
               ${standalonePrice}<span style={{ fontSize: 18, fontWeight: 400, color: "#94a3b8" }}>/mo</span>
             </div>
@@ -354,9 +400,9 @@ export default function HireAlert() {
                 🔒 Beta price — grandfathered forever
               </p>
             )}
-            <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 24 }}>For any field service company in Michigan</p>
+            <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 24 }}>Unlimited daily alerts + full dashboard</p>
             <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px" }}>
-              {["Proprietary license monitoring", "Professional network intelligence", "Live availability signal tracking", "Availability scoring", "Email digest", "SMS hot alerts"].map((f) => (
+              {["Unlimited daily candidate alerts", "Proprietary license monitoring", "SMS hot alerts (score 7+)", "Full dashboard access", "Candidate claiming", "Outreach draft generator"].map((f) => (
                 <li key={f} style={{ padding: "6px 0", fontSize: 14, color: "#cbd5e1", display: "flex", gap: 8 }}>
                   <span style={{ color: ACCENT }}>✓</span> {f}
                 </li>
@@ -364,21 +410,19 @@ export default function HireAlert() {
             </ul>
             <button
               onClick={() => { setPlan("standalone"); scrollToCheckout(); }}
-              style={{ width: "100%", background: "#1e3a5f", border: `1px solid ${ACCENT}`, color: ACCENT, padding: "12px", borderRadius: 8, fontWeight: 700, fontSize: 15, cursor: "pointer" }}
+              style={{ width: "100%", background: ACCENT, border: "none", color: BG, padding: "12px", borderRadius: 8, fontWeight: 800, fontSize: 15, cursor: "pointer" }}
             >
-              Get Started — ${standalonePrice}/mo
+              Start Membership — ${standalonePrice}/mo
             </button>
           </div>
 
-          <div style={{ background: "#001a33", border: `2px solid ${ACCENT}`, borderRadius: 14, padding: 32, position: "relative" }}>
-            <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: ACCENT, color: BG, padding: "4px 16px", borderRadius: 20, fontSize: 12, fontWeight: 800, whiteSpace: "nowrap" }}>
-              BEST VALUE — WITH FIELD CRM
-            </div>
-            <p style={{ margin: "0 0 8px", color: ACCENT, fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>Field CRM Bundle</p>
+          {/* Bundle */}
+          <div style={{ background: "#0d2137", border: "1px solid #1e3a5f", borderRadius: 14, padding: 32 }}>
+            <p style={{ margin: "0 0 8px", color: "#94a3b8", fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>HireAlert + FieldDesk Bundle</p>
             <div style={{ fontSize: 48, fontWeight: 800, margin: "0 0 4px" }}>${bundlePrice}<span style={{ fontSize: 18, fontWeight: 400, color: "#94a3b8" }}>/mo</span></div>
-            <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 24 }}>Add-on for Detroit Web Agency Field CRM clients</p>
+            <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 24 }}>Both products — save vs buying separately</p>
             <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px" }}>
-              {["Everything in standalone", "Integrated with your Field CRM", "Candidates pre-matched to your roles", "Priority SMS alerts", `Save $${standalonePrice - bundlePrice}/mo vs standalone`].map((f) => (
+              {["Everything in Membership", "FieldDesk Field CRM included", "Dispatch board + mobile tech app", "GPS tracking + invoicing", `Save $${(standalonePrice + 199) - bundlePrice}/mo vs separate`].map((f) => (
                 <li key={f} style={{ padding: "6px 0", fontSize: 14, color: "#cbd5e1", display: "flex", gap: 8 }}>
                   <span style={{ color: ACCENT }}>✓</span> {f}
                 </li>
@@ -386,9 +430,9 @@ export default function HireAlert() {
             </ul>
             <button
               onClick={() => { setPlan("bundle"); scrollToCheckout(); }}
-              style={{ width: "100%", background: ACCENT, border: "none", color: BG, padding: "12px", borderRadius: 8, fontWeight: 800, fontSize: 15, cursor: "pointer" }}
+              style={{ width: "100%", background: "#1e3a5f", border: `1px solid ${ACCENT}`, color: ACCENT, padding: "12px", borderRadius: 8, fontWeight: 700, fontSize: 15, cursor: "pointer" }}
             >
-              Add to Field CRM — ${bundlePrice}/mo
+              Get the Bundle — ${bundlePrice}/mo
             </button>
           </div>
         </div>
@@ -470,6 +514,20 @@ export default function HireAlert() {
                 ? `Start for $${plan === "bundle" ? bundlePrice : standalonePrice}/mo →`
                 : `Claim Beta Slot — $${plan === "bundle" ? bundlePrice : standalonePrice}/mo →`}
             </Button>
+
+            {/* À la carte option */}
+            <div style={{ borderTop: "1px solid #1e3a5f", paddingTop: 14, marginTop: 4 }}>
+              <button
+                onClick={handleAlaCarte}
+                disabled={alaCarteLoading || !tosAccepted}
+                style={{ width: "100%", background: "transparent", border: "1px solid #f97316", color: "#f97316", fontWeight: 700, fontSize: 14, padding: "12px", borderRadius: 8, cursor: "pointer", opacity: tosAccepted ? 1 : 0.5 }}
+              >
+                {alaCarteLoading ? "Redirecting..." : "Or: Get 10 Names Now — $50 (one-time)"}
+              </button>
+              <p style={{ margin: "8px 0 0", fontSize: 11, color: "#64748b", textAlign: "center" }}>
+                No subscription · $5 refund per name if &lt; 10 available
+              </p>
+            </div>
           </div>
 
           <p style={{ margin: "16px 0 0", fontSize: 12, color: "#64748b", textAlign: "center" }}>
