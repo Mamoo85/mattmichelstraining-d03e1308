@@ -80,8 +80,8 @@ The QR code links to: ${qrUrl}`,
           {
             role: "user",
             content: `Generate 3 postcard copy variants. Each variant has:
-- copy_front: The headline (max 25 words). Must create FOMO. Reference real numbers.
-- copy_back: The body text (max 80 words). Explain the value, mention "100% real data from Michigan LARA public records", end with "Scan the QR code."
+- copy_front: The headline (max 25 words). Must create FOMO. Reference real numbers. End with "5 FREE candidate alerts."
+- copy_back: The body text (max 80 words). Explain the value, mention "100% real data from Michigan LARA public records", include the offer "5 FREE candidate alerts — no credit card required", end with "Scan the QR code."
 
 ${statsBlock}
 
