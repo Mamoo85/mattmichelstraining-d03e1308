@@ -62,6 +62,28 @@ export default function AdminPostcardCampaigns() {
     else { toast.success(`${data?.new_prospects || 0} new prospects found`); loadData(); }
   };
 
+  const enrichAddresses = async () => {
+    setEnrichingAddr(true);
+    toast.info("Enriching addresses for existing prospects...");
+    const { data, error } = await supabase.functions.invoke("enrich-postcard-addresses", {
+      body: { limit: 20 },
+    });
+    setEnrichingAddr(false);
+    if (error) { toast.error("Enrichment failed: " + error.message); }
+    else { toast.success(`${data?.enriched || 0}/${data?.total || 0} addresses found (${data?.hit_rate || "0%"})`); loadData(); }
+  };
+
+  const runDeepScraper = async () => {
+    setDeepScraping(true);
+    toast.info("Running LARA deep scrape (verified addresses only)...");
+    const { data, error } = await supabase.functions.invoke("lara-accela-scraper", {
+      body: { county: selectedCounty.toLowerCase() },
+    });
+    setDeepScraping(false);
+    if (error) { toast.error("Deep scrape failed: " + error.message); }
+    else { toast.success(`${data?.new_prospects || 0} new + ${data?.addresses_added_to_existing || 0} addresses added`); loadData(); }
+  };
+
   const generateCopy = async () => {
     setGenerating(true);
     toast.info(`Generating ${selectedAudience} copy for ${selectedCounty} County...`);
