@@ -57,6 +57,7 @@ function asyncCss(): Plugin {
   };
 }
 
+// @ts-ignore - rollup type mismatch with manualChunks
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
 
