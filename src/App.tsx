@@ -716,14 +716,14 @@ const App = () => (
                     <Route path="/storm-leads" element={<StormDamageLeads />} />
                     <Route path="/recall-alerts" element={<RecallAlertService />} />
                     <Route path="/permit-watch" element={<PermitWatch />} />
-                    <Route path="/hire-alert" element={<HireAlert />} />
-                    <Route path="/hire-alert-trial" element={<HireAlertTrial />} />
-                    <Route path="/techalert-postcard" element={<TechAlertPostcard />} />
-                    <Route path="/hire-alert-healthcare" element={<HealthcareHireAlert />} />
+                    <Route path="/hire-alert" element={<DWARouteGuard><HireAlert /></DWARouteGuard>} />
+                    <Route path="/hire-alert-trial" element={<DWARouteGuard><HireAlertTrial /></DWARouteGuard>} />
+                    <Route path="/techalert-postcard" element={<DWARouteGuard><TechAlertPostcard /></DWARouteGuard>} />
+                    <Route path="/hire-alert-healthcare" element={<DWARouteGuard><HealthcareHireAlert /></DWARouteGuard>} />
                     <Route path="/website-speed-audit" element={<WebsiteSpeedAudits />} />
                     <Route path="/crime-digest" element={<CrimeDigest />} />
-                    <Route path="/industry-pulse" element={<IndustryPulse />} />
-                    <Route path="/my-industry-pulse" element={<MyIndustryPulse />} />
+                    <Route path="/industry-pulse" element={<DWARouteGuard><IndustryPulse /></DWARouteGuard>} />
+                    <Route path="/my-industry-pulse" element={<DWARouteGuard><MyIndustryPulse /></DWARouteGuard>} />
                     <Route path="/license-monitor" element={<LicenseMonitor />} />
                     <Route path="/regulatory-filing-monitor" element={<RegulatoryFilingMonitor />} />
                     <Route path="/bid-intelligence" element={<BidIntelligence />} />
