@@ -389,18 +389,21 @@ export type Database = {
           id: string
           last_beat: string
           metadata: Json | null
+          status: string | null
         }
         Insert: {
           agent_name: string
           id?: string
           last_beat?: string
           metadata?: Json | null
+          status?: string | null
         }
         Update: {
           agent_name?: string
           id?: string
           last_beat?: string
           metadata?: Json | null
+          status?: string | null
         }
         Relationships: []
       }
@@ -1038,6 +1041,41 @@ export type Database = {
           urgency?: string | null
         }
         Relationships: []
+      }
+      campaign_copy_variants: {
+        Row: {
+          campaign_id: string | null
+          created_at: string | null
+          id: string
+          selected: boolean | null
+          sms_body: string
+          variant_label: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string | null
+          id?: string
+          selected?: boolean | null
+          sms_body: string
+          variant_label: string
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string | null
+          id?: string
+          selected?: boolean | null
+          sms_body?: string
+          variant_label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_copy_variants_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "dead_lead_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       capture_submissions: {
         Row: {
@@ -6494,6 +6532,30 @@ export type Database = {
           last_sent_at?: string | null
           send_count?: number | null
           stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      outreach_cooldowns: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_agent: string
+          last_contacted_at: string | null
+          prospect_email: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_agent: string
+          last_contacted_at?: string | null
+          prospect_email: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_agent?: string
+          last_contacted_at?: string | null
+          prospect_email?: string
         }
         Relationships: []
       }
