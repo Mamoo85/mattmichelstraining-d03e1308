@@ -31,6 +31,8 @@ export default function AdminPostcardCampaigns() {
   const [conversions, setConversions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [scraping, setScraping] = useState(false);
+  const [enrichingAddr, setEnrichingAddr] = useState(false);
+  const [deepScraping, setDeepScraping] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
   const [selectedCounty, setSelectedCounty] = useState("Wayne");
