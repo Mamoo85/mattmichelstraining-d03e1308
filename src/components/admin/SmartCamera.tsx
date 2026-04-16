@@ -87,7 +87,7 @@ const angleSvgMap: Record<AngleType, () => JSX.Element> = {
 const SmartCamera = ({ onCapture, onClose }: SmartCameraProps) => {
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const detectorRef = useRef<poseDetection.PoseDetector | null>(null);
+  const detectorRef = useRef<any>(null);
   const alignedSinceRef = useRef<number | null>(null);
   const detectionLoopRef = useRef<number | null>(null);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
