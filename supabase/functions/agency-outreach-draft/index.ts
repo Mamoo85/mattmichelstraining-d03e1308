@@ -16,18 +16,24 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { agency_name, contact_name, vertical, recent_candidates } = await req.json();
+    const { agency_name, contact_name, vertical, recent_candidates, cherry_picked } = await req.json();
     if (!agency_name || !vertical) throw new Error("agency_name and vertical required");
 
     const candidatesBlock = (recent_candidates || []).slice(0, 3).map((c: any, i: number) =>
       `${i + 1}. ${c.name} — ${c.licensed_role} (${c.county}) — ${c.signal_strength} signal`
     ).join("\n");
 
+    const cherryNote = cherry_picked
+      ? "The FIRST candidate listed below is hand-selected by Matt as the strongest match. Lead with that one specifically — mention them by role + county before the others."
+      : "";
+
     const system = `You are Matt Michels, founder of Detroit Web Agency, writing a personal outreach email to a staffing agency director. You are NOT selling software — you are offering one free, pre-vetted candidate as a "proof of concept." Never mention: AI, scraping, LARA, MIOSHA, license databases, web scraping, registries, Apollo, LinkedIn, or any data source. Use the term "proprietary talent signal engine" if methodology comes up. Write conversationally. Aim for 110-140 words. End with a single low-friction CTA: "Want me to send the full profile?"`;
 
     const prompt = `Write a cold outreach email TO ${contact_name || "the Director of Recruiting"} at ${agency_name}, a Metro Detroit ${vertical} staffing agency.
 
 Hook: Our talent signal engine just flagged ${(recent_candidates || []).length} pre-market candidates that match their typical placements. Offer ONE candidate FREE as proof. If they place this person, they keep the full commission — no fee owed to us.
+
+${cherryNote}
 
 Available candidates (mention the strongest one by role + county only — never expose the verification ID or signal source):
 ${candidatesBlock}
