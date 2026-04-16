@@ -2,7 +2,7 @@
  * generate-postcard-copy
  * Generates 3 postcard copy variants using real TechAlert stats from the database.
  * Uses Gemini via Lovable AI Gateway.
- * Key differentiator: ALL stats referenced are 100% real, verified data from Michigan LARA.
+ * Supports audience_type for industry-specific copy.
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -16,6 +16,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const AUDIENCE_PROMPTS: Record<string, string> = {
+  trades: "HVAC, boiler service, plumbing, and electrical company owners",
+  healthcare: "healthcare staffing agencies, home health companies, and nursing facilities hiring CNAs, LPNs, and RNs",
+  nursing_home: "nursing home administrators and directors of nursing looking for certified nursing assistants and licensed nurses",
+  contractor: "general contractors and specialty trade contractors hiring licensed tradespeople",
+  supply_house: "plumbing, electrical, and HVAC supply house owners who want to connect with newly licensed contractors",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -24,8 +32,10 @@ serve(async (req) => {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   try {
-    const { county } = await req.json();
+    const { county, audience_type } = await req.json();
     const targetCounty = county || "Macomb";
+    const audience = audience_type || "trades";
+    const audienceDesc = AUDIENCE_PROMPTS[audience] || AUDIENCE_PROMPTS.trades;
 
     // Pull REAL stats from hire_alert_runs and hire_alert_candidates
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -47,7 +57,6 @@ serve(async (req) => {
     const newCandidates = candidatesRes.data?.length || 0;
     const hotCandidates = hotRes.data?.length || 0;
 
-    // Use real numbers — if zero, use honest "monitoring started" language
     const statsBlock = totalScanned > 0
       ? `REAL VERIFIED STATS (use these exact numbers — they are 100% real, pulled from Michigan LARA public records):
 - ${newCandidates} new licensed tradespeople identified in Metro Detroit in the last 30 days
@@ -59,7 +68,6 @@ These numbers are REAL. Do NOT round them or make them up. Use them exactly.`
     const origin = "https://www.detroitwebagent.com";
     const qrUrl = `${origin}/hire-alert-trial?ref=postcard&county=${targetCounty.toLowerCase()}`;
 
-    // Generate copy via Lovable AI Gateway (Gemini)
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -72,7 +80,7 @@ These numbers are REAL. Do NOT round them or make them up. Use them exactly.`
           {
             role: "system",
             content: `You write high-impact direct mail copy for a B2B hiring intelligence service called TechAlert. 
-Target audience: HVAC, boiler service, plumbing, and electrical company owners in ${targetCounty} County, Michigan.
+Target audience: ${audienceDesc} in ${targetCounty} County, Michigan.
 Tone: urgent, direct, industrial. No fluff. No AI jargon.
 CRITICAL: Every statistic you include MUST be from the real data provided. These are 100% verified numbers from Michigan LARA public records. Never fabricate or round numbers.
 The QR code links to: ${qrUrl}`,
@@ -122,6 +130,7 @@ Only return the JSON array.`,
         copy_back: v.copy_back,
         qr_url: qrUrl,
         status: "draft",
+        audience_type: audience,
       }).select().single();
 
       if (data) inserted.push(data);
