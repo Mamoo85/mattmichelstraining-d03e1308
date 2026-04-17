@@ -62,14 +62,33 @@ serve(async (req) => {
     const now = new Date();
     const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString();
 
-    let drip1Count = 0, drip2Count = 0, drip3Count = 0;
+    // TCPA EBR cutoff: 18 months from last business contact
+    const eighteenMonthsAgo = new Date(now.getTime() - 548 * 24 * 60 * 60 * 1000)
+      .toISOString().split("T")[0];
+
+    let drip1Count = 0, drip2Count = 0, drip3Count = 0, tcpaSkipped = 0;
+
+    // ── TCPA SWEEP: terminate any contact past 18-month EBR window ────────
+    // Runs BEFORE drip queries so expired leads can never be texted.
+    const { data: expired, error: expiredErr } = await sb
+      .from("dead_lead_contacts" as any)
+      .update({ status: "tcpa_expired" })
+      .lt("last_contact_date", eighteenMonthsAgo)
+      .in("status", ["pending", "drip1_sent", "drip2_sent"])
+      .select("id");
+    if (expiredErr) console.error("[drip] TCPA sweep error:", expiredErr);
+    tcpaSkipped = expired?.length || 0;
 
     // ── DRIP 1: pending contacts in active campaigns ──────────────────────
+    // .gte() filter enforces EBR at query level. Contacts with NULL
+    // last_contact_date are excluded (safer to skip than risk a violation).
     const { data: drip1Contacts } = await sb
       .from("dead_lead_contacts" as any)
       .select("*, dead_lead_campaigns(id, trade, status, contractor_id, contractor_clients(business_name, phone))")
       .eq("status", "pending")
       .not("dead_lead_campaigns", "is", null)
+      .not("last_contact_date", "is", null)
+      .gte("last_contact_date", eighteenMonthsAgo)
       .limit(200);
 
     for (const contact of drip1Contacts || []) {
