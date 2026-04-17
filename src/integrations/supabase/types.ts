@@ -2940,6 +2940,48 @@ export type Database = {
           },
         ]
       }
+      data_source_endpoints: {
+        Row: {
+          backup_url: string | null
+          created_at: string
+          fallback_url: string | null
+          id: string
+          last_drift_at: string | null
+          last_verified_at: string | null
+          notes: string | null
+          primary_url: string
+          source_name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          backup_url?: string | null
+          created_at?: string
+          fallback_url?: string | null
+          id?: string
+          last_drift_at?: string | null
+          last_verified_at?: string | null
+          notes?: string | null
+          primary_url: string
+          source_name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          backup_url?: string | null
+          created_at?: string
+          fallback_url?: string | null
+          id?: string
+          last_drift_at?: string | null
+          last_verified_at?: string | null
+          notes?: string | null
+          primary_url?: string
+          source_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dead_lead_campaigns: {
         Row: {
           campaign_copy_variants: Json | null
@@ -10949,6 +10991,51 @@ export type Database = {
           id?: string
           is_active?: boolean
           item_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      service_health: {
+        Row: {
+          created_at: string
+          disabled_until: string | null
+          failure_count: number
+          id: string
+          last_failure_at: string | null
+          last_failure_reason: string | null
+          last_status_code: number | null
+          last_success_at: string | null
+          metadata: Json | null
+          service_name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          disabled_until?: string | null
+          failure_count?: number
+          id?: string
+          last_failure_at?: string | null
+          last_failure_reason?: string | null
+          last_status_code?: number | null
+          last_success_at?: string | null
+          metadata?: Json | null
+          service_name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          disabled_until?: string | null
+          failure_count?: number
+          id?: string
+          last_failure_at?: string | null
+          last_failure_reason?: string | null
+          last_status_code?: number | null
+          last_success_at?: string | null
+          metadata?: Json | null
+          service_name?: string
+          status?: string
           updated_at?: string
         }
         Relationships: []
