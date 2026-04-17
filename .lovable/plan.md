@@ -1,71 +1,71 @@
 
 
-User wants Batch 3 — next 20 Radar enhancements (5 per Radar). Batches 1-2 shipped 40 of 80 total. PDF catalog has 40 remaining. Pick the next highest-leverage ones that build on what's already in DB.
+Final batch — 20 remaining (5 per Radar). Batches 1-3 shipped DB schema, scanner expansion, dashboards, SMS dispatch, claim flows, ROI, referrals. Batch 4 = polish + long-tail: advanced analytics, AI agents, integrations, multi-language.
 
-# Batch 3: Next 20 Radar Upgrades (5 per Radar)
+# Batch 4: Final 20 Radar Upgrades (5 per Radar)
 
 ## Why this batch
-Batches 1-2 shipped DB schema + scanner expansion + new dashboards/crons. Batch 3 focuses on **conversion + retention mechanics** — the stuff that turns alerts into revenue: SMS dispatch, claim flows, ROI proof, referral hooks.
+Closes out the 80-enhancement catalog. Focuses on **stickiness + intelligence** — the features that make clients renew at month 6 and refer peers.
 
 ---
 
-## Talent Radar (TR-11 → TR-15)
-- **TR-11** SMS alert dispatch on SCORCHING candidates (score ≥9) — Twilio send to client phone with claim link
-- **TR-12** Candidate "claim" button on alert email — locks candidate to client for 48h (uses existing `hire_alert_client_candidates`)
-- **TR-13** Weekly "ones you missed" digest — candidates client viewed but didn't contact
-- **TR-14** Client ROI tracker — "$X saved vs LinkedIn Recruiter" badge on dashboard (math: hires × $8k avg fee saved)
-- **TR-15** Referral hook — "Refer another agency, get 1 month free" button + unique code per client
+## Talent Radar (TR-16 → TR-20)
+- **TR-16** AI Recruiter Agent — auto-drafts personalized outreach per candidate (uses existing `generate-outreach-draft` pattern)
+- **TR-17** Candidate enrichment expansion — pull LinkedIn + GitHub via Sonar OSINT for tech roles
+- **TR-18** Interview scheduler — Calendly-style booking link in alert emails
+- **TR-19** Hire confirmation flow — "Did you hire this candidate?" SMS at 14d, feeds ROI ledger
+- **TR-20** Multi-seat support — agencies add recruiter teammates to one account
 
-## Demand Radar (DR-11 → DR-15)
-- **DR-11** SMS push for confidence ≥9 signals (same Twilio path as TR-11)
-- **DR-12** "Pitch draft" button — Gemini generates 3-line cold email per signal (uses `recommended_pitch` field already in DB)
-- **DR-13** Signal feedback loop — thumbs up/down per signal, trains future scoring per client
-- **DR-14** "Companies to watch" saved list — pin specific MI companies for daily monitoring
-- **DR-15** Weekly executive summary email — top 5 signals + week-over-week trend chart
+## Demand Radar (DR-16 → DR-20)
+- **DR-16** Trend analytics dashboard — week-over-week signal volume by vertical
+- **DR-17** AI signal summarizer — daily 3-bullet brief at top of dashboard
+- **DR-18** HubSpot/Salesforce CRM push — one-click send signal to CRM as deal
+- **DR-19** Signal expiry — auto-archive signals after 30d (keeps feed fresh)
+- **DR-20** Vertical pivot — let client switch industries mid-subscription
 
-## Growth Radar (GR-11 → GR-15)
-- **GR-11** Map view in dashboard — pin signals on MI map by lat/long (use existing location field)
-- **GR-12** Industry vertical filters in dashboard (manufacturing/construction/healthcare/govt)
-- **GR-13** Slack/Teams webhook integration — push signals to client's workspace
-- **GR-14** Saved searches — client defines keyword + county combos, gets pushed alerts only on matches
-- **GR-15** Competitor monitoring — track when competitors win contracts in client's territory
+## Growth Radar (GR-16 → GR-20)
+- **GR-16** Permit watch integration — cross-ref with existing `permit_watch_clients` data
+- **GR-17** Slack daily digest (uses Batch 3 webhook infrastructure)
+- **GR-18** Multi-state expansion — Ohio + Indiana option (paid add-on)
+- **GR-19** Signal scoring transparency — "Why this scored 9/10" tooltip
+- **GR-20** Export to PDF — client-branded weekly intelligence report
 
-## Lead Radar (LR-11 → LR-15)
-- **LR-11** Contractor leaderboard — public stats (response time, claim rate) builds trust + gamifies
-- **LR-12** Lead "preview" mode — show partial info (trade + city + budget range) before purchase
-- **LR-13** Subscription credit packs — buy 10 leads upfront at discount, auto-deduct on claim
-- **LR-14** SMS lightning notifications enhancement — include `quality_score` badge in SMS body
-- **LR-15** Referral kickback — contractor refers another contractor, both get $50 credit
+## Lead Radar (LR-16 → LR-20)
+- **LR-16** Geographic territory lock — contractor pays for exclusive county+trade combo
+- **LR-17** Lead routing rules — contractor sets max budget, blocks low-value pings
+- **LR-18** Win/loss tracking — contractor logs which leads converted, trains future scoring
+- **LR-19** Auto-response templates — pre-written SMS sent on claim (saves 30s per lead)
+- **LR-20** Annual subscription tier — pay 10 months, get 12 (locks renewal)
 
 ---
 
 ## Files Touched (~10)
 
 **Edge functions (5)**:
-- `talent-radar-sms-dispatch` NEW (TR-11) — Twilio scorching candidate push
-- `claim-candidate` NEW (TR-12) — atomic 48h lock
-- `demand-radar-pitch-generator` NEW (DR-12) — Gemini cold email draft
-- `growth-radar-slack-push` NEW (GR-13) — webhook dispatcher
-- `lead-radar-credit-pack` NEW (LR-13) — Stripe credit purchase + deduction
+- `talent-radar-recruiter-agent` NEW (TR-16) — Gemini outreach drafts
+- `talent-radar-hire-confirm` NEW (TR-19) — 14d SMS check
+- `demand-radar-summarizer` NEW (DR-17) — daily AI brief
+- `growth-radar-pdf-report` NEW (GR-20) — weekly client-branded export
+- `lead-radar-territory-lock` NEW (LR-16) — Stripe exclusive territory checkout
 
 **Frontend (4)**:
-- `MyTechAlert.tsx` (TR-13, TR-14, TR-15) — missed digest section + ROI badge + referral button
-- `MyIndustryPulse.tsx` (DR-13, DR-14) — feedback thumbs + watchlist UI
-- `GrowthRadarDashboard.tsx` (GR-11, GR-12, GR-14) — map view + filters + saved searches
-- `LeadRadarDashboard.tsx` NEW or `ContractorLeads.tsx` (LR-11, LR-12, LR-14) — leaderboard + preview + SMS upgrade
+- `MyTechAlert.tsx` — multi-seat invite UI + hire confirm prompt
+- `MyIndustryPulse.tsx` — trend chart (recharts) + AI brief banner
+- `GrowthRadarDashboard.tsx` — score transparency tooltips + PDF export button
+- `LeadRadarEnhancements.tsx` — territory lock card + win/loss logger + auto-response templates
 
 **Migration (1)**:
-- `radar_enhancements_v3.sql` — `referral_codes`, `signal_feedback`, `companies_watchlist`, `saved_searches`, `lead_credit_packs`, `claim_locks` columns
+- `radar_enhancements_v4.sql` — `team_members`, `hire_confirmations`, `signal_archives`, `territory_locks`, `lead_outcomes`, `auto_response_templates`, `annual_subscriptions`
 
 ## Sequence
-1. Migration v3 (5 min)
-2. 5 new edge functions (~30 min)
-3. 4 frontend updates (~40 min)
+1. Migration v4 (5 min)
+2. 5 new edge functions (~25 min)
+3. 4 frontend updates (~30 min)
 4. QA at 390px + 1280px
-5. Deliverable: `/mnt/documents/DWA_Radar_Batch3_Shipped_2026-04-17.pdf`
+5. Deliverable: `/mnt/documents/DWA_Radar_Batch4_Shipped_2026-04-17.pdf` + master `DWA_Radar_All_80_Complete.pdf`
 
-## What's Left After This
-20 enhancements remain (5 per Radar) — Batch 4 = the polish/long-tail (advanced analytics, AI agents, multi-language). Ship after this batch validates with first paying clients.
+## What's Next After This
+All 80 catalog enhancements shipped. Post-Batch 4 work shifts to **validation**: onboard first 10 paying clients, gather feedback, prioritize fixes from real usage. No more speculative builds.
 
-Total scope: ~90 min.
+Total scope: ~75 min.
 
