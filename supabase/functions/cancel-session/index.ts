@@ -62,7 +62,10 @@ serve(async (req) => {
     // Refund via Stripe
     if (booking.stripe_payment_intent_id) {
       const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
-      await stripe.refunds.create({ payment_intent: booking.stripe_payment_intent_id });
+      await stripe.refunds.create(
+        { payment_intent: booking.stripe_payment_intent_id },
+        { idempotencyKey: `refund-booking-${booking_id}` },
+      );
     }
 
     // Update booking status
