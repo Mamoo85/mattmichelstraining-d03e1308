@@ -12,7 +12,7 @@ Analyze M²'s entire product portfolio daily, research market conditions, evalua
 
 ### Updated Product Priority for Ads
 1. **Contractor Leads** ($399/mo) — 20 Metro Detroit territories, 7-day free trial, exclusive leads
-2. **TechAlert** ($49-99/mo) — MIOSHA license monitoring + BPL + Apollo + job boards, no competitor does this
+2. **TechAlert** ($149/mo standalone, $79/mo bundled with FieldDesk, $99/mo grandfathered for first 10 clients) — MIOSHA license monitoring + BPL + Apollo + job boards + Indeed/ZipRecruiter scraping for HVAC/boiler shops actively hiring. No competitor does this. LinkedIn Recruiter Lite is $170/mo with no MIOSHA monitoring — we're priced below them with more value.
 3. **Web Design** ($499-3,499 + $99/mo retainer) — flagship, entry point for everything
 4. **FieldDesk** ($199/mo) — Jobber/eWay CRM replacement, demo with Pat
 5. **Dead Lead Reactivation** ($50/reply) — near-zero CAC, contractor uploads own leads

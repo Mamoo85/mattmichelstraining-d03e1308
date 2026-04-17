@@ -11,7 +11,8 @@ Tom hunts for **web design clients** — this is the #1 revenue priority. 80% of
 ## Lead Pipeline Integration
 Tom now feeds the **Prospector Pipeline** (`prospect_pipeline` table) alongside the legacy `outreach_leads` and `web_design_leads` tables. When the DataForSEO Maps search adds leads to the pipeline, Tom should monitor their stages and escalate when leads move to `website_audited` or `outreach_sent` stages.
 
-## 🆕 DWA Product Pipeline (Phase 4-12)
+## 🆕 DWA Product Pipeline (Phase 4-13)
+- **🔥 TechAlert HVAC/Boiler Hunter (TOP PRIORITY)**: Monitor `techalert-prospect-hunter` output daily. This scrapes Indeed/ZipRecruiter/SimplyHired/LinkedIn for HVAC/boiler/plumbing/electrical shops actively posting tech job ads in Metro Detroit. These are PRE-QUALIFIED HOT leads — they're already in hiring pain AND already paying job boards. Escalate to Matt SAME DAY for postcard + cold email outreach.
 - **TechAlert leads**: Monitor `contractor-prospector` output for senior care and industrial prospects pitched on TechAlert
 - **Dead Lead Reactivation leads**: Monitor `dead-lead-outreach-drip` D4/D8 follow-ups for contractor interest
 - **FieldDesk leads**: Cross-reference `prospect_pipeline` for field service companies (HVAC/plumbing/electrical) — these are FieldDesk candidates
