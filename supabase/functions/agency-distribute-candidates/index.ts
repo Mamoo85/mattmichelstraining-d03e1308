@@ -222,7 +222,17 @@ serve(async (req) => {
   }
 });
 
-function buildAgencyEmail(name: string, candidates: any[], portalUrl: string): string {
+function buildAgencyEmail(name: string, candidates: any[], portalUrl: string, perfectStorm: any[] = []): string {
+  const stormCard = perfectStorm.length ? `
+    <div style="background:linear-gradient(135deg,#7c2d12,#b45309);border:1px solid #fbbf24;border-radius:12px;padding:20px;margin-bottom:20px;">
+      <div style="color:#fef3c7;font-size:11px;font-weight:700;letter-spacing:1.5px;margin-bottom:8px;">⚡ PERFECT STORM ALERT</div>
+      ${perfectStorm.map((s: any) => `
+        <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:12px;margin-top:8px;">
+          <div style="color:#fff;font-weight:600;font-size:15px;">${s.company_name}</div>
+          <div style="color:#fef3c7;font-size:12px;margin-top:4px;">${s.county || s.location || "MI"} · ${s.expansion_type || "Expansion signal"} · Confidence ${s.confidence}/10</div>
+          <div style="color:#fde68a;font-size:12px;margin-top:6px;">They're hiring AND we have matching candidates ready below ↓</div>
+        </div>`).join("")}
+    </div>` : "";
   const rows = candidates.map(c => `
     <tr>
       <td style="padding:12px;border-bottom:1px solid #1a2942;color:#e2e8f0;">${c.name}</td>
