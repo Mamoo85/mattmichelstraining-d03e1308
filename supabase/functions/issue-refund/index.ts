@@ -41,8 +41,11 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
-    // Issue refund via Stripe
-    const refund = await stripe.refunds.create({ charge: charge_id });
+    // Issue refund via Stripe (idempotency prevents double-refund on retry)
+    const refund = await stripe.refunds.create(
+      { charge: charge_id },
+      { idempotencyKey: `refund-charge-${charge_id}` },
+    );
     console.log(`[REFUND] Refund created: ${refund.id} for charge ${charge_id}`);
 
     // Update local transaction

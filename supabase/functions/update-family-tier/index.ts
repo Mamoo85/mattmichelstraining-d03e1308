@@ -104,6 +104,8 @@ serve(async (req) => {
         customer: customerId,
         items: [{ price: newPriceId, metadata: { member_user_id: memberUserId } }],
         proration_behavior: "create_prorations",
+      }, {
+        idempotencyKey: `family-sub-${parentUserId}-${memberUserId}`,
       });
 
       const item = subscription.items.data[0];
