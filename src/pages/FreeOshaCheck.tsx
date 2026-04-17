@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { HardHat, AlertTriangle, CheckCircle, ArrowRight, Loader2 } from "lucide-react";
+import { useDwaDomainRedirect } from "@/hooks/useDwaDomainRedirect";
 
 export default function FreeOshaCheck() {
+  
+  useDwaDomainRedirect();
   const [companyName, setCompanyName] = useState("");
   const [state, setState] = useState("Michigan");
   const [email, setEmail] = useState("");

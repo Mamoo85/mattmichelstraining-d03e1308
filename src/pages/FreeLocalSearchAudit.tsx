@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Star, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
+import { useDwaDomainRedirect } from "@/hooks/useDwaDomainRedirect";
 
 interface MapResult {
   position: number;
@@ -16,6 +17,8 @@ interface MapResult {
 }
 
 export default function FreeLocalSearchAudit() {
+  
+  useDwaDomainRedirect();
   const [businessName, setBusinessName] = useState("");
   const [city, setCity] = useState("");
   const [email, setEmail] = useState("");

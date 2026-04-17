@@ -4,8 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Shield, Loader2, AlertTriangle, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useDwaDomainRedirect } from "@/hooks/useDwaDomainRedirect";
 
 export default function FreeBreachScanner() {
+  
+  useDwaDomainRedirect();
   const [email, setEmail] = useState("");
   const [domain, setDomain] = useState("");
   const [loading, setLoading] = useState(false);

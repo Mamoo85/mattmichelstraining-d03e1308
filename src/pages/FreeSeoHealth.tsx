@@ -4,8 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Search, CheckCircle, XCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useDwaDomainRedirect } from "@/hooks/useDwaDomainRedirect";
 
 export default function FreeSeoHealth() {
+  
+  useDwaDomainRedirect();
   const [email, setEmail] = useState("");
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);

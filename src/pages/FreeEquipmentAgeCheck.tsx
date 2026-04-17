@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Wrench, AlertTriangle, Clock, ArrowRight, Loader2 } from "lucide-react";
+import { useDwaDomainRedirect } from "@/hooks/useDwaDomainRedirect";
 
 export default function FreeEquipmentAgeCheck() {
+  
+  useDwaDomainRedirect();
   const [address, setAddress] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
