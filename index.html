@@ -172,7 +172,18 @@
   <body>
     <div id="root">
       <script>
-        (function(){var h=window.location.hostname;window.__isDWA=(h==='detroitwebagent.com'||h==='www.detroitwebagent.com');})();
+        (function(){
+          var h=window.location.hostname;
+          window.__isDWA=(h==='detroitwebagent.com'||h==='www.detroitwebagent.com');
+          // Kill PWA install prompt on Detroit Web Agency domain — it's a B2B site, not an installable app
+          if(window.__isDWA){
+            // Remove manifest link so browser never offers "Install M² Training"
+            var m=document.querySelector('link[rel="manifest"]');
+            if(m)m.parentNode.removeChild(m);
+            // Suppress beforeinstallprompt globally on DWA
+            window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();return false;},true);
+          }
+        })();
       </script>
       <!-- Static hero shell — paints before React, replaced on mount -->
       <div id="hero-shell" style="min-height:100vh;background:hsl(0 0% 5%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:5rem;transition:opacity 0.3s ease;opacity:1">

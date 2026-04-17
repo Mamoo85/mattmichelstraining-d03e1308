@@ -2256,6 +2256,7 @@ export type Database = {
           id: string
           industry: string | null
           last_lead_at: string | null
+          last_roi_sms_sent_at: string | null
           lead_count: number | null
           name: string | null
           onboarded_at: string | null
@@ -2281,6 +2282,7 @@ export type Database = {
           id?: string
           industry?: string | null
           last_lead_at?: string | null
+          last_roi_sms_sent_at?: string | null
           lead_count?: number | null
           name?: string | null
           onboarded_at?: string | null
@@ -2306,6 +2308,7 @@ export type Database = {
           id?: string
           industry?: string | null
           last_lead_at?: string | null
+          last_roi_sms_sent_at?: string | null
           lead_count?: number | null
           name?: string | null
           onboarded_at?: string | null
