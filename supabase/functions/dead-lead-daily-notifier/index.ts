@@ -69,6 +69,14 @@ serve(async () => {
   const todayRev = (todayPositive || 0) * 50;
   const totalRev = (totalPositive || 0) * 50;
 
+  // Skip empty digest entirely — no noise on quiet days
+  if ((todayPositive || 0) === 0 && (totalInDrip || 0) === 0 && (campaigns?.length || 0) === 0) {
+    console.log(`[dead-lead-daily-notifier] skipped — no activity today`);
+    return new Response(JSON.stringify({ ok: true, skipped: "no activity" }), {
+      status: 200, headers: { "Content-Type": "application/json" },
+    });
+  }
+
   // SMS Matt if any revived today
   if ((todayPositive || 0) > 0) {
     await sendSMS(
