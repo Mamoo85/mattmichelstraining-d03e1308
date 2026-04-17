@@ -290,7 +290,32 @@ export default function DemandRadar() {
         <section className="py-20 px-4" id="pricing">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl sm:text-3xl font-black text-center mb-3">Choose Your Advantage</h2>
-            <p className="text-white/40 text-sm text-center mb-10">All plans include daily scans, AI scoring, and cancel-anytime flexibility.</p>
+            <p className="text-white/40 text-sm text-center mb-6">All plans include daily scans, AI scoring, and cancel-anytime flexibility.</p>
+
+            {/* Live Territory Scarcity Strip — Pro is exclusive, max 3 per county */}
+            {territoryStats.length > 0 && (
+              <div className="bg-[#0d1117] border border-[#00d4ff]/20 rounded-xl p-4 mb-8">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[#00d4ff] text-[11px] font-bold tracking-wider uppercase">⚡ Pro Tier — Live Territory Availability</span>
+                  <span className="text-white/30 text-[10px]">Cap: 3 subscribers/county</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {territoryStats.map((t) => {
+                    const left = Math.max(0, t.cap - t.taken);
+                    const full = left === 0;
+                    return (
+                      <div key={t.county} className={`rounded-lg p-3 border ${full ? "bg-red-500/5 border-red-500/30" : left === 1 ? "bg-amber-500/5 border-amber-500/30" : "bg-emerald-500/5 border-emerald-500/30"}`}>
+                        <div className="text-white text-xs font-bold">{t.county} County</div>
+                        <div className={`text-[10px] mt-1 font-semibold ${full ? "text-red-400" : left === 1 ? "text-amber-400" : "text-emerald-400"}`}>
+                          {full ? "FULL — Waitlist" : `${left} of ${t.cap} spots left`}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="grid sm:grid-cols-3 gap-4">
               {/* BASIC */}
               <div className="bg-[#0d1117] border border-[#30363d] rounded-2xl p-6">
