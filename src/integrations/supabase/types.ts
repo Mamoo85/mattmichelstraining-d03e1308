@@ -9381,6 +9381,135 @@ export type Database = {
         }
         Relationships: []
       }
+      radar_annual_subscriptions: {
+        Row: {
+          active: boolean
+          amount_paid_cents: number | null
+          client_id: string
+          id: string
+          months_included: number | null
+          product: string
+          renews_at: string | null
+          starts_at: string
+          stripe_subscription_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          amount_paid_cents?: number | null
+          client_id: string
+          id?: string
+          months_included?: number | null
+          product: string
+          renews_at?: string | null
+          starts_at?: string
+          stripe_subscription_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          amount_paid_cents?: number | null
+          client_id?: string
+          id?: string
+          months_included?: number | null
+          product?: string
+          renews_at?: string | null
+          starts_at?: string
+          stripe_subscription_id?: string | null
+        }
+        Relationships: []
+      }
+      radar_auto_response_templates: {
+        Row: {
+          active: boolean
+          contractor_id: string
+          created_at: string
+          id: string
+          template_body: string
+          trade: string | null
+        }
+        Insert: {
+          active?: boolean
+          contractor_id: string
+          created_at?: string
+          id?: string
+          template_body: string
+          trade?: string | null
+        }
+        Update: {
+          active?: boolean
+          contractor_id?: string
+          created_at?: string
+          id?: string
+          template_body?: string
+          trade?: string | null
+        }
+        Relationships: []
+      }
+      radar_hire_confirmations: {
+        Row: {
+          candidate_id: string | null
+          candidate_name: string | null
+          client_id: string
+          estimated_fee_saved_usd: number | null
+          id: string
+          notes: string | null
+          outcome: string | null
+          prompted_at: string
+          responded_at: string | null
+        }
+        Insert: {
+          candidate_id?: string | null
+          candidate_name?: string | null
+          client_id: string
+          estimated_fee_saved_usd?: number | null
+          id?: string
+          notes?: string | null
+          outcome?: string | null
+          prompted_at?: string
+          responded_at?: string | null
+        }
+        Update: {
+          candidate_id?: string | null
+          candidate_name?: string | null
+          client_id?: string
+          estimated_fee_saved_usd?: number | null
+          id?: string
+          notes?: string | null
+          outcome?: string | null
+          prompted_at?: string
+          responded_at?: string | null
+        }
+        Relationships: []
+      }
+      radar_lead_outcomes: {
+        Row: {
+          contractor_id: string
+          id: string
+          lead_id: string | null
+          logged_at: string
+          notes: string | null
+          outcome: string
+          revenue_usd: number | null
+        }
+        Insert: {
+          contractor_id: string
+          id?: string
+          lead_id?: string | null
+          logged_at?: string
+          notes?: string | null
+          outcome: string
+          revenue_usd?: number | null
+        }
+        Update: {
+          contractor_id?: string
+          id?: string
+          lead_id?: string | null
+          logged_at?: string
+          notes?: string | null
+          outcome?: string
+          revenue_usd?: number | null
+        }
+        Relationships: []
+      }
       radar_referral_codes: {
         Row: {
           code: string
@@ -9411,6 +9540,105 @@ export type Database = {
           owner_type?: string
           reward_type?: string
           uses?: number
+        }
+        Relationships: []
+      }
+      radar_signal_archives: {
+        Row: {
+          archived_at: string
+          id: string
+          reason: string | null
+          source_id: string
+          source_table: string
+        }
+        Insert: {
+          archived_at?: string
+          id?: string
+          reason?: string | null
+          source_id: string
+          source_table: string
+        }
+        Update: {
+          archived_at?: string
+          id?: string
+          reason?: string | null
+          source_id?: string
+          source_table?: string
+        }
+        Relationships: []
+      }
+      radar_team_members: {
+        Row: {
+          accepted_at: string | null
+          active: boolean
+          client_id: string
+          client_table: string
+          email: string
+          id: string
+          invited_at: string
+          name: string | null
+          role: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          active?: boolean
+          client_id: string
+          client_table?: string
+          email: string
+          id?: string
+          invited_at?: string
+          name?: string | null
+          role?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          active?: boolean
+          client_id?: string
+          client_table?: string
+          email?: string
+          id?: string
+          invited_at?: string
+          name?: string | null
+          role?: string
+        }
+        Relationships: []
+      }
+      radar_territory_locks: {
+        Row: {
+          active: boolean
+          contractor_email: string | null
+          contractor_id: string
+          county: string
+          expires_at: string | null
+          id: string
+          monthly_price_cents: number | null
+          starts_at: string
+          stripe_subscription_id: string | null
+          trade: string
+        }
+        Insert: {
+          active?: boolean
+          contractor_email?: string | null
+          contractor_id: string
+          county: string
+          expires_at?: string | null
+          id?: string
+          monthly_price_cents?: number | null
+          starts_at?: string
+          stripe_subscription_id?: string | null
+          trade: string
+        }
+        Update: {
+          active?: boolean
+          contractor_email?: string | null
+          contractor_id?: string
+          county?: string
+          expires_at?: string | null
+          id?: string
+          monthly_price_cents?: number | null
+          starts_at?: string
+          stripe_subscription_id?: string | null
+          trade?: string
         }
         Relationships: []
       }
