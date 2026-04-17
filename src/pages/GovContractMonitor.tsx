@@ -1,5 +1,6 @@
 import { useState } from "react";
 import SEOHead from "@/components/layout/SEOHead";
+import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle, Shield, Clock, FileText, Target, Bell, ExternalLink, ChevronRight } from "lucide-react";
 
 const SET_ASIDE_OPTIONS = [

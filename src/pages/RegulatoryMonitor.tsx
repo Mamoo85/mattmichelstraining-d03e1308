@@ -1,5 +1,6 @@
 import { useState } from "react";
 import SEOHead from "@/components/layout/SEOHead";
+import { supabase } from "@/integrations/supabase/client";
 import {
   CheckCircle,
   Shield,
