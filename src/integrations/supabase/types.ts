@@ -2306,8 +2306,10 @@ export type Database = {
           created_at: string
           id: string
           lead_id: string | null
+          refunded_at: string | null
           stripe_session_id: string | null
           trade: string | null
+          unreachable_attempts: number
         }
         Insert: {
           amount_cents?: number
@@ -2317,8 +2319,10 @@ export type Database = {
           created_at?: string
           id?: string
           lead_id?: string | null
+          refunded_at?: string | null
           stripe_session_id?: string | null
           trade?: string | null
+          unreachable_attempts?: number
         }
         Update: {
           amount_cents?: number
@@ -2328,8 +2332,10 @@ export type Database = {
           created_at?: string
           id?: string
           lead_id?: string | null
+          refunded_at?: string | null
           stripe_session_id?: string | null
           trade?: string | null
+          unreachable_attempts?: number
         }
         Relationships: [
           {
@@ -4880,6 +4886,60 @@ export type Database = {
         }
         Relationships: []
       }
+      growth_radar_signals: {
+        Row: {
+          company_name: string
+          confidence: number | null
+          county: string | null
+          created_at: string
+          detected_at: string
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          predicted_needs: string[] | null
+          recommended_pitch: string | null
+          signal_type: string
+          source: string
+          source_url: string | null
+          value_usd: number | null
+          vertical: string | null
+        }
+        Insert: {
+          company_name: string
+          confidence?: number | null
+          county?: string | null
+          created_at?: string
+          detected_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          predicted_needs?: string[] | null
+          recommended_pitch?: string | null
+          signal_type: string
+          source: string
+          source_url?: string | null
+          value_usd?: number | null
+          vertical?: string | null
+        }
+        Update: {
+          company_name?: string
+          confidence?: number | null
+          county?: string | null
+          created_at?: string
+          detected_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          predicted_needs?: string[] | null
+          recommended_pitch?: string | null
+          signal_type?: string
+          source?: string
+          source_url?: string | null
+          value_usd?: number | null
+          vertical?: string | null
+        }
+        Relationships: []
+      }
       handbook_clients: {
         Row: {
           active: boolean | null
@@ -4942,6 +5002,7 @@ export type Database = {
           enriched_at: string | null
           enrichment_status: string | null
           facebook_url: string | null
+          first_eligible_at: string | null
           first_seen_at: string | null
           freshness_score: number | null
           full_name: string | null
@@ -4949,6 +5010,7 @@ export type Database = {
           id: string
           is_company_name: boolean | null
           is_demo_record: boolean | null
+          last_dispatched_at: string | null
           last_seen_at: string | null
           license_expiry: string | null
           license_issued_at: string | null
@@ -4987,6 +5049,7 @@ export type Database = {
           enriched_at?: string | null
           enrichment_status?: string | null
           facebook_url?: string | null
+          first_eligible_at?: string | null
           first_seen_at?: string | null
           freshness_score?: number | null
           full_name?: string | null
@@ -4994,6 +5057,7 @@ export type Database = {
           id?: string
           is_company_name?: boolean | null
           is_demo_record?: boolean | null
+          last_dispatched_at?: string | null
           last_seen_at?: string | null
           license_expiry?: string | null
           license_issued_at?: string | null
@@ -5032,6 +5096,7 @@ export type Database = {
           enriched_at?: string | null
           enrichment_status?: string | null
           facebook_url?: string | null
+          first_eligible_at?: string | null
           first_seen_at?: string | null
           freshness_score?: number | null
           full_name?: string | null
@@ -5039,6 +5104,7 @@ export type Database = {
           id?: string
           is_company_name?: boolean | null
           is_demo_record?: boolean | null
+          last_dispatched_at?: string | null
           last_seen_at?: string | null
           license_expiry?: string | null
           license_issued_at?: string | null
@@ -5463,6 +5529,7 @@ export type Database = {
           buyer_type: string
           company_name: string
           confidence_min: number | null
+          confidence_threshold: number
           contact_name: string | null
           created_at: string | null
           dashboard_token: string | null
@@ -5488,6 +5555,7 @@ export type Database = {
           buyer_type?: string
           company_name: string
           confidence_min?: number | null
+          confidence_threshold?: number
           contact_name?: string | null
           created_at?: string | null
           dashboard_token?: string | null
@@ -5513,6 +5581,7 @@ export type Database = {
           buyer_type?: string
           company_name?: string
           confidence_min?: number | null
+          confidence_threshold?: number
           contact_name?: string | null
           created_at?: string | null
           dashboard_token?: string | null

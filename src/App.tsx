@@ -132,6 +132,7 @@ const GbpManagement = lazyRetry(() => import("./pages/GbpManagement"));
 const NewsletterSponsor = lazyRetry(() => import("./pages/NewsletterSponsor"));
 const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
+const GrowthRadarDashboard = lazyRetry(() => import("./pages/GrowthRadarDashboard"));
 const ContractorROIReport = lazyRetry(() => import("./pages/ContractorROIReport"));
 const DeadLeadStats = lazyRetry(() => import("./pages/DeadLeadStats"));
 const MyTechAlert = lazyRetry(() => import("./pages/MyTechAlert"));
@@ -731,6 +732,7 @@ const App = () => (
                     <Route path="/hire-alert" element={<HireAlert />} />
                     <Route path="/talent-radar" element={<HireAlert />} />
                     <Route path="/growth-radar" element={<IndustryPulse />} />
+                    <Route path="/growth-radar-dashboard" element={<GrowthRadarDashboard />} />
                     <Route path="/lead-radar" element={<ContractorLeads />} />
                     <Route path="/textback" element={<Navigate to="/missed-call-catch" replace />} />
                     <Route path="/radars" element={<Navigate to="/talent-radar" replace />} />
