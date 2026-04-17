@@ -8673,6 +8673,117 @@ export type Database = {
         }
         Relationships: []
       }
+      prospect_pool: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          audience_type: string
+          business_name: string
+          channel_hint: string
+          city: string | null
+          cms_staffing_rating: number | null
+          contact_name: string | null
+          county: string | null
+          created_at: string
+          email: string | null
+          fax_number: string | null
+          has_active_job_postings: boolean | null
+          has_demand_signal: boolean | null
+          id: string
+          intel_notes: Json | null
+          last_sent_at: string | null
+          lead_score: number | null
+          meta: Json | null
+          phone: string | null
+          recent_federal_contract: boolean | null
+          score_breakdown: Json | null
+          scored_at: string | null
+          send_count: number | null
+          source: string
+          source_id: string | null
+          source_url: string | null
+          state: string | null
+          status: string | null
+          updated_at: string
+          verified_address: boolean | null
+          verified_fax: boolean | null
+          website: string | null
+          zip: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          audience_type: string
+          business_name: string
+          channel_hint?: string
+          city?: string | null
+          cms_staffing_rating?: number | null
+          contact_name?: string | null
+          county?: string | null
+          created_at?: string
+          email?: string | null
+          fax_number?: string | null
+          has_active_job_postings?: boolean | null
+          has_demand_signal?: boolean | null
+          id?: string
+          intel_notes?: Json | null
+          last_sent_at?: string | null
+          lead_score?: number | null
+          meta?: Json | null
+          phone?: string | null
+          recent_federal_contract?: boolean | null
+          score_breakdown?: Json | null
+          scored_at?: string | null
+          send_count?: number | null
+          source: string
+          source_id?: string | null
+          source_url?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string
+          verified_address?: boolean | null
+          verified_fax?: boolean | null
+          website?: string | null
+          zip?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          audience_type?: string
+          business_name?: string
+          channel_hint?: string
+          city?: string | null
+          cms_staffing_rating?: number | null
+          contact_name?: string | null
+          county?: string | null
+          created_at?: string
+          email?: string | null
+          fax_number?: string | null
+          has_active_job_postings?: boolean | null
+          has_demand_signal?: boolean | null
+          id?: string
+          intel_notes?: Json | null
+          last_sent_at?: string | null
+          lead_score?: number | null
+          meta?: Json | null
+          phone?: string | null
+          recent_federal_contract?: boolean | null
+          score_breakdown?: Json | null
+          scored_at?: string | null
+          send_count?: number | null
+          source?: string
+          source_id?: string | null
+          source_url?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string
+          verified_address?: boolean | null
+          verified_fax?: boolean | null
+          website?: string | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
       protocol_exercise_flags: {
         Row: {
           admin_response: string | null
@@ -9772,6 +9883,59 @@ export type Database = {
           stripe_customer_id?: string | null
         }
         Relationships: []
+      }
+      sample_sends: {
+        Row: {
+          audience_type: string
+          batch_id: string
+          channel: string
+          cost_cents: number | null
+          created_at: string
+          id: string
+          meta: Json | null
+          preview_html: string | null
+          prospect_id: string | null
+          provider_id: string | null
+          recipient_label: string | null
+          status: string | null
+        }
+        Insert: {
+          audience_type: string
+          batch_id?: string
+          channel: string
+          cost_cents?: number | null
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          preview_html?: string | null
+          prospect_id?: string | null
+          provider_id?: string | null
+          recipient_label?: string | null
+          status?: string | null
+        }
+        Update: {
+          audience_type?: string
+          batch_id?: string
+          channel?: string
+          cost_cents?: number | null
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          preview_html?: string | null
+          prospect_id?: string | null
+          provider_id?: string | null
+          recipient_label?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sample_sends_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_pool"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       satisfaction_survey_clients: {
         Row: {
