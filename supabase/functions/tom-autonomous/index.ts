@@ -126,6 +126,29 @@ serve(async (req) => {
       <p>Suppressed emails: <strong>${suppressedCount || 0}</strong></p>
     `;
 
+    // 5b. Demand Radar — count high-confidence signals by vertical (last 7d)
+    const { data: drSignals } = await sb
+      .from("industry_pulse_signals" as any)
+      .select("vertical, confidence")
+      .gte("detected_at", weekAgo)
+      .gte("confidence", 7);
+    const drByVertical: Record<string, number> = {};
+    (drSignals || []).forEach((s: any) => {
+      const v = s.vertical || "unknown";
+      drByVertical[v] = (drByVertical[v] || 0) + 1;
+    });
+    let demandRadarHtml = "";
+    if (Object.keys(drByVertical).length) {
+      demandRadarHtml = `<h3>📡 Demand Radar — Hot Signals (7d)</h3>
+        <table style="width:100%;border-collapse:collapse;">
+          ${Object.entries(drByVertical).sort((a,b)=>b[1]-a[1]).map(([v,c]) =>
+            `<tr><td style="padding:4px 8px;border-bottom:1px solid #334155;">${v.replace(/_/g,' ')}</td><td style="text-align:right;padding:4px 8px;border-bottom:1px solid #334155;font-weight:bold;color:#22d3ee;">${c}</td></tr>`
+          ).join("")}
+        </table>
+        <p style="color:#22d3ee;font-size:12px;">💡 Pitch suppliers in these verticals — Supplier Outreach tab in /dwa-admin</p>`;
+    }
+
+
     // NEW: 6. Track landing page conversion rates
     const { data: conversions } = await sb
       .from("drip_conversions")
@@ -152,7 +175,7 @@ serve(async (req) => {
     if (alerts.length > 0 || (pipeline?.length || 0) > 0) {
       await sendTomEmail(
         `🎯 Tom Daily: ${hotLeads?.length || 0} hot, ${staleLeads?.length || 0} stale, ${newLeadsThisWeek || 0} new`,
-        alerts.join("") + pipelineHtml + summaryHtml + conversionHtml
+        alerts.join("") + pipelineHtml + summaryHtml + demandRadarHtml + conversionHtml
       );
     }
 
