@@ -58,6 +58,7 @@ function renderDigest(businessName: string, leads: any[], signals: any[] = []): 
         <p style="color:#94a3b8;font-size:13px;margin:0;">Hey ${businessName}, here's what came over the wire overnight:</p>
       </div>
       <table style="width:100%;border-collapse:collapse;">${rows}</table>
+      ${renderRadarSection(signals)}
       <div style="padding:20px 24px;background:#0a1628;text-align:center;border-top:1px solid #1e293b;">
         <a href="https://detroitwebagent.com/the-wire" style="color:#00d4ff;text-decoration:none;font-size:13px;font-weight:600;">View all leads on The Wire →</a>
         <div style="margin-top:12px;color:#475569;font-size:11px;">Detroit Web Agency · (313) 992-1219</div>
