@@ -56,11 +56,8 @@ export default function GoTechAlert() {
       });
 
     // Load scanner stats
-    fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/hire-alert-public-stats`, {
-      headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-    })
-      .then((r) => r.json())
-      .then((data) => { if (data.ok) setWeeklyStats(data.weekly); })
+    supabase.functions.invoke("hire-alert-public-stats", { method: "GET" as never })
+      .then(({ data }) => { if (data?.ok) setWeeklyStats(data.weekly); })
       .catch(() => {});
   }, [source, ref]);
 
