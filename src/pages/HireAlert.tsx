@@ -51,7 +51,7 @@ const TESTIMONIALS: Testimonial[] = [
     initials: "MT",
   },
   {
-    quote: "Worth every dollar of the $99. One good hire pays for years of this service.",
+    quote: "Worth every dollar. One good hire pays for years of this service.",
     name: "Joe M.",
     trade: "Boiler Services, Metro Detroit",
     initials: "JM",

@@ -145,12 +145,10 @@ export default function RegulatoryMonitor() {
     }
     setLoading(true);
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/create-regulatory-monitor-checkout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+      const { data, error: invokeErr } = await supabase.functions.invoke("create-regulatory-monitor-checkout", {
+        body: form,
       });
-      const data = await res.json();
+      if (invokeErr) throw invokeErr;
       if (data?.url) {
         window.location.href = data.url;
       } else {
