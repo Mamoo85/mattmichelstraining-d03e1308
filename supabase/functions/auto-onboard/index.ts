@@ -376,14 +376,16 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
     body: (name) => `<p>Hey ${name} — your dispatch board is live. Reply with your tech list and I'll have everything set up within 24 hours. — Matt</p>`,
   },
   hire_alert_subscription: {
-    subject: "⚡ TechAlert is Live — Your Hiring Advantage Starts Tomorrow",
+    subject: "⚡ Talent Radar is Live — Your Hiring Advantage Starts Tomorrow",
     nextStage: "📧 Welcome Email Sent",
     body: (name) => `
-      <p style="font-size:22px;font-weight:800;color:#ffffff;margin:0 0 6px;line-height:1.2">TechAlert is live, ${name}.</p>
-      <p style="color:#4a6fa5;font-size:13px;margin:0 0 24px">Your exclusive hiring advantage starts tomorrow at 7am.</p>
+      <p style="font-size:22px;font-weight:800;color:#ffffff;margin:0 0 6px;line-height:1.2">Talent Radar is live, ${name}.</p>
+      <p style="color:#4a6fa5;font-size:13px;margin:0 0 6px">Your exclusive hiring advantage starts tomorrow at 7am.</p>
+      <p style="color:#00d4ff;font-size:12px;margin:0 0 24px;font-weight:700">📍 STATEWIDE MICHIGAN COVERAGE — Detroit, Grand Rapids, Lansing, Flint, Traverse City, UP</p>
       <div style="background:#0d1f3c;border-left:3px solid #00d4ff;padding:20px 24px;border-radius:0 8px 8px 0;margin:0 0 24px">
         <p style="color:#ffffff;font-weight:700;font-size:14px;margin:0 0 12px;letter-spacing:0.5px">WHAT HAPPENS EVERY MORNING AT 7AM:</p>
-        <p style="color:#94a3b8;font-size:13px;margin:0 0 10px">Our proprietary monitoring network scans three intelligence layers across Metro Detroit — license activity, professional movement, and live availability signals.</p>
+        <p style="color:#94a3b8;font-size:13px;margin:0 0 10px">Our proprietary monitoring network scans three intelligence layers across all of Michigan — license activity, professional movement, and live availability signals.</p>
+        <p style="color:#94a3b8;font-size:13px;margin:0 0 10px"><strong style="color:#ffffff">First alert ETA:</strong> within 24 hours. If you don't see one in 48h, reply to this email and I'll check the scanner.</p>
         <p style="color:#94a3b8;font-size:13px;margin:0">You get the alert. <strong style="color:#ffffff">Your competitors don't.</strong></p>
       </div>
       <div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:24px;margin:0 0 24px">
@@ -398,13 +400,50 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
       </div>`,
   },
   industry_pulse_subscription: {
-    subject: "Welcome to Industry Pulse — Your Feed Is Live",
+    subject: "Welcome to Demand Radar — Your Feed Is Live",
     nextStage: "📧 Welcome Email Sent",
     body: (name) => `
       <p style="font-size:22px;font-weight:800;color:#ffffff;margin:0 0 6px;line-height:1.2">You're in, ${name}.</p>
-      <p style="color:#4a6fa5;font-size:13px;margin:0 0 24px">Industry Pulse is now monitoring Metro Detroit growth signals for you.</p>
-      <p style="color:#e2e8f0;font-size:14px;margin:0 0 16px">You'll receive weekly intelligence digests covering expansion signals, hiring patterns, and cross-referenced opportunities. High-confidence signals arrive as standalone alerts.</p>
+      <p style="color:#4a6fa5;font-size:13px;margin:0 0 6px">Demand Radar is now monitoring growth signals statewide for you.</p>
+      <p style="color:#00d4ff;font-size:12px;margin:0 0 24px;font-weight:700">📍 STATEWIDE MICHIGAN — every county, every expansion signal</p>
+      <p style="color:#e2e8f0;font-size:14px;margin:0 0 16px">You'll receive weekly intelligence digests covering expansion signals, hiring patterns, and cross-referenced opportunities. High-confidence signals (≥7) arrive as standalone alerts.</p>
+      <p style="color:#e2e8f0;font-size:14px;margin:0 0 16px"><strong>First signal ETA:</strong> within 48 hours. If you don't see one in 72h, reply and I'll check.</p>
       <p style="color:#e2e8f0;font-size:14px;margin:0 0 20px">Reply to this email if you want to tune your industry focus. — Matt</p>
+      ${DWA_SIG}`,
+  },
+  growth_radar_subscription: {
+    subject: "Welcome to Growth Radar — Industrial Expansion Signals Active",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p style="font-size:22px;font-weight:800;color:#ffffff;margin:0 0 6px;line-height:1.2">Growth Radar is live, ${name}.</p>
+      <p style="color:#4a6fa5;font-size:13px;margin:0 0 6px">Daily scans for industrial expansion, equipment installs, and contract awards.</p>
+      <p style="color:#00d4ff;font-size:12px;margin:0 0 24px;font-weight:700">📍 STATEWIDE MICHIGAN — manufacturing, industrial, government contracts</p>
+      <div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:24px;margin:0 0 24px">
+        <p style="color:#ffffff;font-weight:700;font-size:14px;margin:0 0 16px;letter-spacing:0.5px">WHAT YOU GET:</p>
+        <p style="margin:0 0 12px;color:#e2e8f0;font-size:14px">📈 New plant openings, expansions, and facility upgrades across Michigan</p>
+        <p style="margin:0 0 12px;color:#e2e8f0;font-size:14px">🏭 Equipment installs (CNC, laser, excavator, etc.) — early intel</p>
+        <p style="margin:0 0 12px;color:#e2e8f0;font-size:14px">📋 Government contract awards (SAM.gov MI filter)</p>
+        <p style="margin:0;color:#e2e8f0;font-size:14px">💼 Workforce expansion patterns — predictive sales triggers</p>
+      </div>
+      <p style="color:#e2e8f0;font-size:14px;margin:0 0 16px"><strong>First alert ETA:</strong> within 24 hours (consolidated 7am ET digest).</p>
+      <p style="color:#e2e8f0;font-size:14px;margin:0 0 20px">Reply with your target verticals and territories so I can fine-tune the feed. — Matt</p>
+      ${DWA_SIG}`,
+  },
+  contractor_lead_subscription: {
+    subject: "You're Locked In — Lead Radar Territory Reserved",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p style="font-size:22px;font-weight:800;color:#ffffff;margin:0 0 6px;line-height:1.2">You're locked in, ${name}.</p>
+      <p style="color:#4a6fa5;font-size:13px;margin:0 0 6px">Your exclusive Lead Radar territory is reserved.</p>
+      <p style="color:#00d4ff;font-size:12px;margin:0 0 24px;font-weight:700">📍 STATEWIDE MICHIGAN COVERAGE AVAILABLE</p>
+      <div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:24px;margin:0 0 24px">
+        <p style="color:#ffffff;font-weight:700;font-size:14px;margin:0 0 16px;letter-spacing:0.5px">YOUR ONBOARDING STEPS:</p>
+        <p style="margin:0 0 14px;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:12px;padding:2px 8px;border-radius:4px;margin-right:10px">STEP 1</span><strong>Reply with your call number, primary zip, and which MI counties you'll service.</strong></p>
+        <p style="margin:0 0 14px;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:12px;padding:2px 8px;border-radius:4px;margin-right:10px">STEP 2</span><strong>Verify your phone</strong> — I'll text you a 6-digit code so leads don't bounce on a typo.</p>
+        <p style="margin:0 0 14px;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:12px;padding:2px 8px;border-radius:4px;margin-right:10px">STEP 3</span><strong>Your lead page goes live</strong> within 24–48 hours.</p>
+        <p style="margin:0;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:12px;padding:2px 8px;border-radius:4px;margin-right:10px">STEP 4</span><strong>Leads start flowing</strong> — exclusive to you. No bidding wars. One trade per city.</p>
+      </div>
+      <p style="color:#e2e8f0;font-size:14px;margin:0 0 16px"><strong>First lead ETA:</strong> within 7 days of launch. If a lead is unreachable after 3 attempts, I auto-refund the credit.</p>
       ${DWA_SIG}`,
   },
   dead_lead_billing_setup: {
@@ -448,8 +487,12 @@ const SMS_TYPES = new Set([
 
 const DWA_PRODUCTS = new Set([
   "contractor_leads",
+  "contractor_lead_subscription",
   "hire_alert_subscription",
   "missed_call_subscription",
+  "industry_pulse_subscription",
+  "growth_radar_subscription",
+  "field_service_subscription",
 ]);
 
 const DWA_SIG = `<div style="border-top:1px solid #1e3a5f;padding-top:20px">
