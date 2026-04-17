@@ -26,11 +26,13 @@ const VisitorIntelFeed = lazy(() => import("@/components/admin/VisitorIntelFeed"
 const AdminSimulationSuite = lazy(() => import("@/components/admin/AdminSimulationSuite"));
 const AdminGlobalOutbox = lazy(() => import("@/components/admin/AdminGlobalOutbox"));
 const AdminPostcardCampaigns = lazy(() => import("@/components/admin/AdminPostcardCampaigns"));
+const AdminFaxCampaigns = lazy(() => import("@/components/admin/AdminFaxCampaigns"));
+const AdminCampaignTargeting = lazy(() => import("@/components/admin/AdminCampaignTargeting"));
 
 type Tab =
   | "dwa-overview" | "revenue" | "dead-leads" | "contractor-leads"
   | "techalert" | "fielddesk" | "visitor-intel" | "simulation"
-  | "outbox" | "postcards"
+  | "outbox" | "postcards" | "faxes" | "targeting"
   | "overview" | "clients" | "jobs" | "assets" | "contracts" | "import"
   | "command" | "playbook" | "strategy" | "labs" | "sales-guide"
   | "agency-outreach" | "demand-radar" | "supplier-outreach";
@@ -45,6 +47,8 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "fielddesk",        label: "🛠️ FieldDesk Clients" },
   { id: "visitor-intel",    label: "👁️ Visitor Intel" },
   { id: "postcards",        label: "📬 Postcards" },
+  { id: "faxes",            label: "📠 Fax Campaigns" },
+  { id: "targeting",        label: "🎯 Targeting Brain" },
   { id: "simulation",       label: "🧪 Simulation" },
   { id: "outbox",           label: "📤 Global Outbox" },
   // Existing DWA-only tabs
@@ -152,6 +156,12 @@ export default function DWAAdmin() {
         )}
         {activeTab === "postcards" && (
           <Suspense fallback={lazyFallback("postcard ops")}><AdminPostcardCampaigns /></Suspense>
+        )}
+        {activeTab === "faxes" && (
+          <Suspense fallback={lazyFallback("fax campaigns")}><AdminFaxCampaigns /></Suspense>
+        )}
+        {activeTab === "targeting" && (
+          <Suspense fallback={lazyFallback("targeting brain")}><AdminCampaignTargeting /></Suspense>
         )}
         {activeTab === "simulation" && (
           <Suspense fallback={lazyFallback("simulation")}><AdminSimulationSuite /></Suspense>

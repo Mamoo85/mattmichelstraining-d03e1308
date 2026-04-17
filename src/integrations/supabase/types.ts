@@ -3514,6 +3514,177 @@ export type Database = {
         }
         Relationships: []
       }
+      fax_campaigns: {
+        Row: {
+          county: string | null
+          created_at: string
+          id: string
+          message_html: string
+          name: string
+          sent_at: string | null
+          status: string
+          subject: string | null
+          target_segment: string
+          total_cost: number | null
+          total_sent: number | null
+        }
+        Insert: {
+          county?: string | null
+          created_at?: string
+          id?: string
+          message_html: string
+          name: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          target_segment: string
+          total_cost?: number | null
+          total_sent?: number | null
+        }
+        Update: {
+          county?: string | null
+          created_at?: string
+          id?: string
+          message_html?: string
+          name?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          target_segment?: string
+          total_cost?: number | null
+          total_sent?: number | null
+        }
+        Relationships: []
+      }
+      fax_opt_outs: {
+        Row: {
+          fax_number: string
+          id: string
+          notes: string | null
+          opted_out_at: string
+          source: string | null
+        }
+        Insert: {
+          fax_number: string
+          id?: string
+          notes?: string | null
+          opted_out_at?: string
+          source?: string | null
+        }
+        Update: {
+          fax_number?: string
+          id?: string
+          notes?: string | null
+          opted_out_at?: string
+          source?: string | null
+        }
+        Relationships: []
+      }
+      fax_prospects: {
+        Row: {
+          address: string | null
+          business_name: string
+          city: string | null
+          contact_name: string | null
+          created_at: string
+          fax_number: string
+          id: string
+          notes: string | null
+          segment: string
+          source: string
+          source_url: string | null
+          state: string | null
+          verified_public: boolean | null
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          business_name: string
+          city?: string | null
+          contact_name?: string | null
+          created_at?: string
+          fax_number: string
+          id?: string
+          notes?: string | null
+          segment: string
+          source: string
+          source_url?: string | null
+          state?: string | null
+          verified_public?: boolean | null
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          business_name?: string
+          city?: string | null
+          contact_name?: string | null
+          created_at?: string
+          fax_number?: string
+          id?: string
+          notes?: string | null
+          segment?: string
+          source?: string
+          source_url?: string | null
+          state?: string | null
+          verified_public?: boolean | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
+      fax_send_log: {
+        Row: {
+          business_name: string | null
+          campaign_id: string | null
+          cost: number | null
+          error_message: string | null
+          fax_number: string
+          id: string
+          phaxio_id: string | null
+          prospect_id: string | null
+          sent_at: string
+          status: string
+        }
+        Insert: {
+          business_name?: string | null
+          campaign_id?: string | null
+          cost?: number | null
+          error_message?: string | null
+          fax_number: string
+          id?: string
+          phaxio_id?: string | null
+          prospect_id?: string | null
+          sent_at?: string
+          status?: string
+        }
+        Update: {
+          business_name?: string | null
+          campaign_id?: string | null
+          cost?: number | null
+          error_message?: string | null
+          fax_number?: string
+          id?: string
+          phaxio_id?: string | null
+          prospect_id?: string | null
+          sent_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fax_send_log_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "fax_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fax_send_log_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "fax_prospects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       field_crm_clients: {
         Row: {
           business_name: string
