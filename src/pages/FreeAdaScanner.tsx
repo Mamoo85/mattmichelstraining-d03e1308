@@ -13,7 +13,10 @@ interface Violation {
   details: string;
 }
 
+import { useDwaDomainRedirect } from "@/hooks/useDwaDomainRedirect";
+
 export default function FreeAdaScanner() {
+  useDwaDomainRedirect();
   const [url, setUrl] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);

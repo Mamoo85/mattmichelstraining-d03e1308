@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Heart, AlertTriangle, Shield, Star, ArrowRight, Loader2 } from "lucide-react";
+import { useDwaDomainRedirect } from "@/hooks/useDwaDomainRedirect";
 
 interface Facility {
   provider_name: string;
@@ -23,6 +24,8 @@ interface Facility {
 }
 
 export default function FreeMedicareStaffingCheck() {
+  
+  useDwaDomainRedirect();
   const [facilityName, setFacilityName] = useState("");
   const [state, setState] = useState("MI");
   const [email, setEmail] = useState("");

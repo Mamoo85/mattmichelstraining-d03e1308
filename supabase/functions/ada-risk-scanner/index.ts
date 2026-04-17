@@ -20,8 +20,19 @@ Deno.serve(async (req) => {
     }
 
     if (email) {
-      const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-      await sb.from("free_tool_leads").insert({ tool_name: "ada_risk_scanner", email, company_name: url, input_data: { url } });
+      try {
+        const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        await sb.from("free_tool_leads").insert({
+          email,
+          tool_used: "ada_risk_scanner",
+          input_url: url,
+          results_summary: { url },
+        });
+      } catch (e) { console.warn("lead insert failed:", e); }
+    }
+
+    if (!FIRECRAWL_API_KEY) {
+      return new Response(JSON.stringify({ error: "Scanner is temporarily unavailable. Try again in a few minutes." }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Scrape with Firecrawl — get HTML for accessibility analysis

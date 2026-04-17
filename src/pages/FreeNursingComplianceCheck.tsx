@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Stethoscope, AlertTriangle, CheckCircle, Shield, ArrowRight, Loader2, Plus, X } from "lucide-react";
+import { useDwaDomainRedirect } from "@/hooks/useDwaDomainRedirect";
 
 export default function FreeNursingComplianceCheck() {
+  
+  useDwaDomainRedirect();
   const [licenses, setLicenses] = useState<string[]>([""]);
   const [state, setState] = useState("Michigan");
   const [email, setEmail] = useState("");

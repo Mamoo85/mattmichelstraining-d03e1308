@@ -70,16 +70,27 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "url required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Log lead
+    // Log lead (best-effort)
     if (email) {
-      const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-      await sb.from("free_tool_leads").insert({ tool_name: "service_gap_scanner", email, company_name: url, input_data: { url } });
+      try {
+        const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        await sb.from("free_tool_leads").insert({
+          email,
+          tool_used: "service_gap_scanner",
+          input_url: url,
+          results_summary: { url },
+        });
+      } catch (e) { console.warn("lead insert failed:", e); }
+    }
+
+    if (!FIRECRAWL_API_KEY) {
+      return new Response(JSON.stringify({ error: "Scanner is temporarily unavailable. Try again in a few minutes." }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Scrape prospect
     const prospectContent = await scrapeUrl(url);
     if (!prospectContent) {
-      return new Response(JSON.stringify({ error: "Could not scrape the provided URL. Check the address and try again." }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "Could not read that URL. Check the address (include https://) and try again." }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Find competitor URLs from prospect content (look for location hints)

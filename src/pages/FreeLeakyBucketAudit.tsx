@@ -6,8 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { DollarSign, TrendingDown, Zap, ArrowRight, AlertTriangle } from "lucide-react";
+import { useDwaDomainRedirect } from "@/hooks/useDwaDomainRedirect";
 
 export default function FreeLeakyBucketAudit() {
+  
+  useDwaDomainRedirect();
   const [leadsPerMonth, setLeadsPerMonth] = useState(40);
   const [costPerLead, setCostPerLead] = useState(55);
   const [closeRate, setCloseRate] = useState(12);

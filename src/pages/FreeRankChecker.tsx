@@ -4,8 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { BarChart3, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useDwaDomainRedirect } from "@/hooks/useDwaDomainRedirect";
 
 export default function FreeRankChecker() {
+  
+  useDwaDomainRedirect();
   const [email, setEmail] = useState("");
   const [keyword, setKeyword] = useState("");
   const [location, setLocation] = useState("United States");
