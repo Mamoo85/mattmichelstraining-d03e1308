@@ -1,79 +1,127 @@
 
 
-## The Problem
+## Phase A.2 Hardening — Triple-Redundancy for Pipeline Failures
 
-Looking at the screenshot — that's the D4 follow-up from `dead-lead-outreach-drip`. CTA is **"Reply here or text me: (313) 992-1219"** with no link to `/dead-lead-intake` (which is fully self-serve, free first batch, public, no auth). Same dead-end pattern is in 6+ other cold-outreach functions even though the matching self-onboard pages exist.
+You're right — "402 Payment Required" and "405 Method Not Allowed" should never reach a client view. Here's the layered defense:
 
-## What I Found — Cold Outreach Audit
+### Failure Mode 1: PDL / Firecrawl 402 (Credits Exhausted)
 
-| Sender (edge function) | Product pitched | Self-onboard URL exists? | Currently in email? |
-|---|---|---|---|
-| `dead-lead-outreach-drip` (D4 + D8 dead-lead, D4 + D8 senior care) | Dead Lead Reactivation | ✅ `/dead-lead-intake` | ❌ "Reply here / text me" |
-| `contractor-prospector` SNIPER_DEAD | Dead Lead Reactivation | ✅ `/dead-lead-intake` | ❌ "reply or text" |
-| `contractor-prospector` SNIPER_TECH | TechAlert | ✅ `/hire-alert` (Stripe checkout) | ❌ "reply to claim trial" |
-| `contractor-prospector` SNIPER_MISSED_CALL | Missed Call Catch | ✅ `/missed-call-catch` | ❌ "reply or text" |
-| `contractor-prospector` SNIPER (web design) | Web Design | ✅ `/web-design-services` | ❌ "reply" only |
-| `contractor-drip` D4/D8/D15 (leads / GBP / missed call) | PPL leads, GBP, Missed Call | ✅ all 3 product pages | ❌ "reply or text" everywhere |
-| `dwa-closer` | Bundle pitch | ✅ multiple | ❌ "quick call, reply" |
-| `contractor-sms-follow` SMS1/SMS2 | Various | ✅ all | ⚠️ SMS — short links would help |
-| `dead-lead-outreach-drip` senior care D4/D8 | TechAlert (CNA/LPN/RN) | ✅ `/hire-alert` | ❌ "reply or text" |
+**Layer 1 — Prevention (early warning):**
+- Add `pdl_credits_remaining` + `firecrawl_credits_remaining` checks to `pipeline-health-check`
+- Trigger SMS to Matt when either drops below **20% of monthly quota** (not when it hits zero)
+- Daily 8am ET cron — gives 2-7 days runway before exhaustion
 
-The infrastructure to self-onboard already exists. The cold emails just don't link to it.
+**Layer 2 — Automatic Failover (when 402 happens anyway):**
+- `hire-alert-scanner` already uses a waterfall (NPI → Sonar → PDL). Hardening:
+  - If PDL returns 402 → mark `pdl_disabled_until` in a new `service_health` row (24h cooldown)
+  - Scanner checks this flag BEFORE calling PDL — skips entirely, uses NPI + Sonar only
+  - Same pattern for Firecrawl in `dwa-closer` + `prospect-website-audit` (both already have fallback paths — just need to honor the disabled flag)
+- Result: pipeline keeps running on remaining sources, just with slightly less enrichment
 
-## The Fix
+**Layer 3 — Backup Provider:**
+- For PDL (mobile phone enrichment): add **Apollo.io** as secondary (already have `APOLLO_API_KEY`). If PDL disabled, scanner falls through to Apollo's `people/match` endpoint
+- For Firecrawl (website scrape): add **fetch + cheerio** as plain-HTTP fallback (no JS rendering, lower quality, but free and unlimited). Already have basic implementation in `_shared/scrape-fallback.ts` for some functions — extend coverage
 
-Update every cold-outreach copy template to add a primary self-onboard CTA, while keeping the "or reply / text me" as a secondary fallback (some prospects still want to talk to a human, that's fine).
+**Layer 4 — Client-View Protection:**
+- `AdminPipelineHealth` component never shows raw HTTP codes. New states:
+  - 🟢 `Operational` (working)
+  - 🟡 `Degraded — backup active` (primary down, secondary running)
+  - 🔴 `Offline — manual review needed` (only if BOTH primary AND backup fail)
+- Same logic for any client-facing dashboard
 
-**New CTA pattern (email):**
-> Start free in 60 seconds → https://www.detroitwebagent.com/dead-lead-intake
-> Or reply to this email / text (313) 992-1219.
+### Failure Mode 2: Lovable AI Gateway 405 (Wrong HTTP Method)
 
-**New CTA pattern (SMS — short URL only):**
-> Start free: detroitwebagent.com/dead-lead-intake
+**Layer 1 — Fix the bug:** `pipeline-health-check` uses GET on a POST-only endpoint. Change to POST with minimal payload (`{model, messages: [{role:"user", content:"ping"}], max_tokens: 1}`).
 
-### Files to update
+**Layer 2 — Health check the health check:** Wrap each probe in try/catch. Bug in monitor code can NEVER cascade to a "degraded" status. If probe code itself throws, log it as `monitor_error` not `service_degraded`.
 
-1. **`supabase/functions/dead-lead-outreach-drip/index.ts`**
-   - Dead lead D4 + D8 → add `/dead-lead-intake` link as primary CTA
-   - Senior care D4 + D8 → add `/hire-alert` link as primary CTA
+**Layer 3 — Backup AI provider:** All edge functions calling `LOVABLE_API_KEY` already have `ANTHROPIC_API_KEY` as fallback (`_shared/ai.ts` waterfall). Verify the fallback actually triggers on 4xx (currently only triggers on network error — needs to also trigger on 4xx/5xx).
 
-2. **`supabase/functions/contractor-prospector/index.ts`**
-   - `sniperDeadLeadEmail` prompt rule #5 → require self-onboard URL `/dead-lead-intake`
-   - `sniperTechAlertEmail` prompt rule #5 → require `/hire-alert` (free trial path)
-   - `sniperMissedCallEmail` prompt rule #5 → require `/missed-call-catch`
-   - `sniperGenerateEmail` (web design) → require `/web-design-services`
+**Layer 4 — Backup-to-backup:** OpenAI key is in secrets too. Three-tier waterfall in `_shared/ai.ts`: Lovable Gateway → Anthropic Direct → OpenAI Direct. Any single provider going down = transparent to clients.
 
-3. **`supabase/functions/contractor-drip/index.ts`**
-   - `leads` D4/D8/D15 → add `/contractor-leads` Stripe checkout link
-   - `gbp` D4/D8/D15 → add `/local-marketing` checkout link
-   - `missed_call` D4 → add `/missed-call-catch` link
+### Failure Mode 3: Michigan Open Data 404 (Endpoint URL Drift)
 
-4. **`supabase/functions/dwa-closer/index.ts`**
-   - Prompt rule #5 → require concrete self-onboard URL for whichever product is being pitched (map pitch → URL inside the prompt)
+**Layer 1 — Fix current URL:** Update `pipeline-health-check` + `hire-alert-scanner` to current LARA endpoint.
 
-5. **`supabase/functions/contractor-sms-follow/index.ts`**
-   - SMS1/SMS2 templates per offer → append `detroitwebagent.com/<product>` short URL
+**Layer 2 — URL config table:** New `data_source_endpoints` table — `(source_name, primary_url, backup_url, last_verified_at)`. Functions read from DB instead of hardcoded URLs. Update once = fixed everywhere.
 
-6. **`supabase/functions/dead-lead-outreach-drip/index.ts` HTML wrapper**
-   - Add a styled `[Start free →]` button (teal, rounded) above the signature block so the link doesn't get lost in the body text on mobile (the screenshot shows a long wall of text).
+**Layer 3 — Auto-detection:** Weekly cron probes each endpoint with HEAD request. If primary 404s, automatically promotes backup_url to primary, SMS Matt with "URL changed, swapped automatically."
 
-### Behavioral guardrails preserved
+**Layer 4 — Backup data sources:** Michigan LARA license data is also available via:
+- LARA's bulk file FTP (slower, weekly refresh, but never moves)
+- Michigan Open Data Socrata API (different endpoint pattern)
+- Cached in our own DB (`hire_alert_candidates` historical table) — worst case, scanner runs against last-known-good data + flags "running on cache"
 
-- All copy still passes Brand Strategy (no "AI" jargon, blue-collar tone, signed by Matt)
-- Phone number stays the DWA work line `(313) 992-1219` (not Matt personal)
-- TCPA Manual-Only mandate untouched — these are emails, no automated SMS sends are being added
-- `/dead-lead-intake` already gates free-trial-then-bill, so even self-onboard prospects hit billing setup before drip runs
+### New Migration
 
-### Verification plan
+`20260417000000_service_resilience.sql`:
+- `service_health` table — `(service_name, status, disabled_until, last_failure_at, failure_count, last_failure_reason)`
+- `data_source_endpoints` table — `(source_name, primary_url, backup_url, fallback_url, last_verified_at, status)`
+- Seed rows for: `pdl_api`, `firecrawl_api`, `lovable_ai_gateway`, `anthropic_api`, `openai_api`, `michigan_lara`, `michigan_open_data`, `nursys`, `apollo`
 
-After changes deploy, fire one test email per template via `AdminSimulationSuite` to `matt@detroitwebagent.com` and visually confirm:
-- Self-onboard URL is rendered as a button (not buried in text)
-- Mobile preview (393px viewport) keeps button above the fold
-- Reply/text fallback is still present but secondary
+### New Edge Functions
 
-### Out of scope (called out so we don't drift)
+1. **`service-health-monitor`** (replaces broken pipeline-health-check)
+   - Cron: every 30 min
+   - Probes each service with proper method
+   - Updates `service_health` table — never throws on probe failure
+   - Sends SMS only on **state change** (operational→degraded, not every probe)
 
-- This is **email/SMS copy + URL injection only**. Not changing checkout flows, pricing, or DB schemas.
-- Not touching auth/marketing emails or auto-onboard welcome emails — those already point at correct dashboards.
-- Not adding new self-onboard pages — every product pitched in cold outreach already has one.
+2. **`endpoint-drift-detector`**
+   - Cron: weekly Sunday 3am ET
+   - HEAD request each `data_source_endpoints.primary_url`
+   - 404 → promotes `backup_url` to primary, demotes old primary to backup, SMS Matt
+
+### Updated Edge Functions
+
+- `_shared/ai.ts` — three-tier waterfall (Lovable → Anthropic → OpenAI), all triggered on any non-200
+- `_shared/scrape-fallback.ts` — three-tier (Firecrawl → fetch+cheerio → cached snapshot)
+- `hire-alert-scanner` — reads `service_health` before each external call, skips disabled services, reads URLs from `data_source_endpoints`
+- `dwa-closer`, `prospect-website-audit`, `contractor-prospector` — same pattern: check service_health, use endpoint registry
+
+### Updated Components
+
+- `AdminPipelineHealth` (or wherever the screenshot comes from) — never shows raw status codes, only Operational/Degraded/Offline with human-readable descriptions
+- New `AdminServiceResilience` admin tab — shows current state of all services, manual override buttons, history log
+
+### Verification
+
+After deploy, manually trigger each failure scenario in Admin Sandbox:
+- Force PDL disabled → confirm scanner runs on Apollo, dashboard shows 🟡 not 🔴
+- Force AI Gateway disabled → confirm Anthropic fallback fires, dashboard stays 🟢
+- Force Michigan endpoint to bad URL → confirm endpoint-drift-detector swaps to backup
+
+### Files Touched (full list)
+
+**Phase A.1 (TechAlert provision fix):**
+1. `supabase/functions/stripe-webhook/index.ts` — fix `dashboardToken` undefined in `hire_alert_subscription`
+2. Manual DB backfill via `supabase--insert` for failed customer
+
+**Phase A.2 (Triple-redundancy hardening):**
+3. New migration `20260417000000_service_resilience.sql`
+4. New `supabase/functions/service-health-monitor/index.ts`
+5. New `supabase/functions/endpoint-drift-detector/index.ts`
+6. Update `supabase/functions/_shared/ai.ts` — 3-tier waterfall
+7. Update `supabase/functions/_shared/scrape-fallback.ts` — 3-tier waterfall
+8. Update `supabase/functions/hire-alert-scanner/index.ts` — honor service_health + endpoint registry
+9. Update `supabase/functions/dwa-closer/index.ts` — honor service_health
+10. Update `supabase/functions/prospect-website-audit/index.ts` — honor service_health
+11. Delete old `supabase/functions/pipeline-health-check/index.ts` (replaced)
+12. Update admin component for pipeline health (find via grep, replace status display)
+13. New `src/components/dwa-admin/AdminServiceResilience.tsx`
+14. Add new tab to `/dwa-admin`
+
+**Phase A.3 (Dead Lead empty digest):**
+15. `supabase/functions/dead-lead-daily-notifier/index.ts` — skip empty digest
+
+**Phase B (Combined legal research):**
+- Delivered as chat memo, no code
+
+### Out of Scope (preserved)
+
+- No pricing changes
+- No Talent Radar rename
+- No new product pages
+- No MSP outreach
+- Lab products / fitness app untouched
 
