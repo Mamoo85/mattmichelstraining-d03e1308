@@ -126,7 +126,39 @@ export default function TheWire() {
         </div>
       </section>
 
-      {/* Subscribe */}
+      {/* Demand Radar preview */}
+      {radarSignals.length > 0 && (
+        <section className="max-w-5xl mx-auto px-6 pb-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Radio className="h-5 w-5 text-purple-400" /> Demand Radar — expansion signals
+            </h2>
+            <span className="text-xs text-white/40">Bonus intel · included</span>
+          </div>
+          <p className="text-sm text-white/50 mb-4 max-w-2xl">
+            Local businesses showing buying intent — new hires, expansions, contract awards. Reach out before the competition.
+          </p>
+          <div className="grid md:grid-cols-2 gap-3">
+            {radarSignals.map((s) => {
+              const conf = s.confidence || 0;
+              const confColor = conf >= 8 ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                : conf >= 6 ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                : "bg-white/5 text-white/50 border-white/10";
+              return (
+                <div key={s.id} className="bg-[#0f1f35] border border-purple-500/20 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="font-semibold text-purple-300 truncate">{s.company_name || "Local business"}</div>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${confColor}`}>CONF {conf}/10</span>
+                  </div>
+                  <div className="text-xs text-white/50 mb-2">{s.location || s.county || "Metro Detroit"} · {s.expansion_type || s.signal_type || "Expansion"}</div>
+                  <p className="text-sm text-white/70 line-clamp-3">{s.recommended_pitch || s.summary || ""}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       <section className="max-w-3xl mx-auto px-6 py-12">
         <div className="bg-gradient-to-b from-[#0f1f35] to-[#0a1628] border border-[#00d4ff]/30 rounded-2xl p-6 md:p-10">
           <div className="flex items-baseline justify-between mb-2">
