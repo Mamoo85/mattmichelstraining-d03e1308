@@ -152,7 +152,7 @@ serve(async (req) => {
 
     if (alerts.length > 0) {
       await sendCashierEmail(
-        `💰 Cashier: ${failedCharges.data?.length || 0} failed, ${cancelledSubs.data?.length || 0} cancelled, MRR $${totalMrr.toFixed(0)}`,
+        `💰 Cashier: ${failedChargesRaw.data?.length || 0} failed, ${cancelledSubs.data?.length || 0} cancelled, MRR $${totalMrr.toFixed(0)}`,
         alerts.join("") + summaryHtml + roasHtml
       );
     }
@@ -162,7 +162,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       ok: true,
-      failed_payments: failedCharges.data?.length || 0,
+      failed_payments: failedChargesRaw.data?.length || 0,
       cancellations: cancelledSubs.data?.length || 0,
       past_due: pastDue.data?.length || 0,
       dunning_emails_sent: Math.min(pastDue.data?.length || 0, 5),

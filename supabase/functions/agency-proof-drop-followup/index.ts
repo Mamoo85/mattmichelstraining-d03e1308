@@ -114,7 +114,7 @@ BODY: <body with line breaks>`;
       }
     }
 
-    return new Response(JSON.stringify({ ok: true, candidates_checked: drops.length, drafts_created: drafted }), {
+    return new Response(JSON.stringify({ ok: true, candidates_checked: (drops || []).length, drafts_created: drafted }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
