@@ -25,11 +25,10 @@ const FALLBACK_TEMPLATES = [
 
 I help ${p.trade || p.industry || "trade"} businesses in ${p.city || "Metro Detroit"} win back old leads they've already paid for.
 
-Most contractors have 50–200 old quotes sitting in their files — people who called, got a price, and went quiet. We send a 3-message text sequence from your business name. When someone replies interested, you get an instant text. You only pay $50 when a lead actually responds.
+Most contractors have 50–200 old quotes sitting in their files — people who called, got a price, and went quiet. We send a 3-message text sequence from your business name. When someone replies interested, you get an instant text. You only pay $50 when a lead actually responds. First batch is free, no card required.
 
-I also help with dispatcher tools and hiring alerts for licensed techs — could roll everything into one package.
-
-Worth a quick call this week?
+Start free in 60 seconds → https://www.detroitwebagent.com/dead-lead-intake
+Or reply to this email / call (313) 992-1219.
 
 Matt Michels
 Detroit Web Agency
@@ -39,11 +38,10 @@ Detroit Web Agency
 
 Quick question — does ${p.business_name || "your company"} have a list of old leads who never booked?
 
-We help ${p.trade || p.industry || "trade"} contractors in ${p.city || "Metro Detroit"} turn those into revenue. Text drip from your business name, $50 only when someone replies. No monthly fee, no ads, no guesswork.
+We help ${p.trade || p.industry || "trade"} contractors in ${p.city || "Metro Detroit"} turn those into revenue. Text drip from your business name, $50 only when someone replies. No monthly fee, no ads, no guesswork. First batch is free.
 
-If that's useful, I can also show you how we handle dispatcher-to-tech communication and track available licensed workers in the area.
-
-Happy to send a short demo — just reply here.
+Upload your list in 60 seconds → https://www.detroitwebagent.com/dead-lead-intake
+Or reply here / call (313) 992-1219.
 
 Matt Michels
 Detroit Web Agency
@@ -53,7 +51,11 @@ Detroit Web Agency
 
 I work with ${p.trade || p.industry || "trade"} companies in ${p.city || "the Metro Detroit area"} on three things: reactivating dead leads ($50/reply, no monthly fee), dispatcher software that works in a boiler room, and daily alerts when licensed techs become available in your area.
 
-Not sure which fits ${p.business_name || "your business"} best — could be all three, could be just one. Either way worth a 10-minute call.
+Not sure which fits ${p.business_name || "your business"} best — start with the dead-lead piece (free first batch, takes 60 seconds):
+
+→ https://www.detroitwebagent.com/dead-lead-intake
+
+Or reply to this email / call (313) 992-1219.
 
 Matt Michels
 Detroit Web Agency
@@ -206,12 +208,17 @@ BUNDLE OFFER (pick the angle most relevant to this prospect):
 2. FieldDesk — $199/mo dispatcher + tech mobile app (replaces eWay CRM, works offline in boiler rooms)
 3. TechAlert — $99/mo hiring monitor (daily alerts when licensed tradespeople become available in their area)
 
+SELF-SERVE URL MAP (use the URL matching the offer angle you lead with — put it on its own line as the primary CTA):
+- Dead Lead Reactivation → https://www.detroitwebagent.com/dead-lead-intake
+- FieldDesk → https://www.detroitwebagent.com/field-service
+- TechAlert → https://www.detroitwebagent.com/hire-alert
+
 RULES:
 1. Write a plain-text email body only (no subject line, no HTML)
-2. Under 180 words
+2. Under 200 words
 3. One specific observation about their business based on the website intel or trade
 4. Lead with the most compelling offer angle for their situation
-5. End with a soft CTA (quick call, reply to this email)
+5. MUST include the matching self-serve URL from the map above on its own line as the primary CTA, phrased like: "Start free in 60 seconds → <URL>" — then add a secondary line: "Or reply to this email / call (313) 992-1219."
 6. Sign as: Matt Michels / Detroit Web Agency / (313) 992-1219
 7. Do NOT reference prior contact unless history shows a specific reply from them
 8. CRITICAL: Never use the words "AI", "artificial intelligence", "machine learning", or "algorithm" — use "system", "process", or "matching engine" instead
