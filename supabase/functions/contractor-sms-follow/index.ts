@@ -5,23 +5,30 @@ import { sendSMS } from "../_shared/twilio.ts";
 const log = (step: string, data?: any) =>
   console.log(`[CONTRACTOR-SMS] ${step}${data ? " — " + JSON.stringify(data) : ""}`);
 
+// Self-serve URL per offer (short form for SMS)
+const SELF_SERVE_URL: Record<string, string> = {
+  leads: "detroitwebagent.com/contractor-leads",
+  gbp: "detroitwebagent.com/local-marketing",
+  missed_call: "detroitwebagent.com/missed-call-catch",
+};
+
 // SMS text per offer
 const SMS1: Record<string, (biz: string, city: string) => string> = {
   leads: (biz, city) =>
-    `Hey — Matt Michels here, Grosse Pointe. I run an exclusive lead system for contractors in ${city} — one contractor per trade, no shared leads. I've got one spot open. Worth a look? (313) 992-1219`,
+    `Hey — Matt Michels here, Grosse Pointe. I run an exclusive lead system for contractors in ${city} — one contractor per trade, no shared leads. One spot open. Claim it: ${SELF_SERVE_URL.leads} or call (313) 992-1219`,
   gbp: (biz, city) =>
-    `Hey — Matt Michels, Grosse Pointe. I noticed ${biz}'s Google ranking in ${city} has room to improve. I automate GBP for local contractors — $199/mo, I handle everything. Interested? (313) 992-1219`,
+    `Hey — Matt Michels, Grosse Pointe. ${biz}'s Google ranking in ${city} has room to improve. I automate GBP for contractors — $199/mo, I handle everything. Start: ${SELF_SERVE_URL.gbp} or call (313) 992-1219`,
   missed_call: (biz, city) =>
-    `Hey — Matt here in Grosse Pointe. When you're on a job and miss a call, does anything text that person back automatically? Most contractors lose 2-3 jobs/week to whoever picks up first. I built a $99/mo fix. Worth a look? (313) 992-1219`,
+    `Hey — Matt here in Grosse Pointe. When you miss a call on a job, does anything text the caller back? Most contractors lose 2-3 jobs/week. $99/mo fix: ${SELF_SERVE_URL.missed_call} or call (313) 992-1219`,
 };
 
 const SMS2: Record<string, (biz: string, city: string) => string> = {
   leads: (biz, city) =>
-    `Matt Michels again — the ${city} lead spot is still open. Once it goes to another ${city} contractor in your trade, that's it. Reply or call (313) 992-1219 if you want first shot.`,
+    `Matt Michels again — the ${city} lead spot is still open. Once another ${city} contractor in your trade claims it, that's it. Claim now: ${SELF_SERVE_URL.leads} or call (313) 992-1219`,
   gbp: (biz, city) =>
-    `Matt again — just wanted to make sure this didn't get buried. $199/mo for automated Google ranking for ${biz} in ${city}. No work on your end. Happy to show you what it does. (313) 992-1219`,
+    `Matt again — $199/mo automated Google ranking for ${biz} in ${city}. No work on your end. Start: ${SELF_SERVE_URL.gbp} or call (313) 992-1219`,
   missed_call: (biz, city) =>
-    `Matt Michels following up — a Warren plumber I set this up for picked up an extra job last month because my system texted a missed caller back in 30 sec while he was working. $99/mo. (313) 992-1219`,
+    `Matt following up — a Warren plumber I set this up for picked up an extra job last month while working. $99/mo: ${SELF_SERVE_URL.missed_call} or call (313) 992-1219`,
 };
 
 serve(async () => {

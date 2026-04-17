@@ -17,10 +17,10 @@ Sent you an email a few days ago about the exclusive lead system I run for contr
 
 Still have one spot open for your trade. Once it's gone, the next contractor who signs up in your city gets every lead that would've gone to you.
 
-No commitment to start — just reply and I'll show you what recent leads looked like.
+Claim the ${city} spot in 60 seconds → https://www.detroitwebagent.com/contractor-leads
+Or reply / text me: (313) 992-1219.
 
-— Matt, Grosse Pointe
-(313) 992-1219`,
+— Matt, Grosse Pointe`,
     },
     {
       templateName: "contractor_drip_d8_leads",
@@ -32,9 +32,8 @@ Another ${city} contractor in your trade reached out about the lead spot. Wanted
 
 The system sends exclusive homeowner leads directly to you — no one else gets the same lead. $399/mo, cancel any time.
 
-If you're good on leads, totally understand. Just didn't want you to find out I filled the spot with your competitor.
-
-Reply here or text me: (313) 992-1219
+Lock in your trade in ${city} → https://www.detroitwebagent.com/contractor-leads
+Or reply / text (313) 992-1219.
 
 — Matt`,
     },
@@ -46,9 +45,11 @@ Reply here or text me: (313) 992-1219
 
 Last one, I promise.
 
-If the exclusive lead spot in ${city} interests you at all — even to just see what the leads look like — reply or text me at (313) 992-1219.
+If the exclusive lead spot in ${city} interests you at all, you can claim it in 60 seconds:
 
-If not, no hard feelings. I'll reach back out if something changes.
+→ https://www.detroitwebagent.com/contractor-leads
+
+Or reply / text me at (313) 992-1219. If not, no hard feelings.
 
 — Matt, Grosse Pointe`,
     },
@@ -66,7 +67,8 @@ The contractors I work with in Metro Detroit who were in the same spot as you �
 
 $199/mo, I handle everything. No work on your end.
 
-Worth a 5-minute conversation? Reply here or text (313) 992-1219.
+Start in 60 seconds → https://www.detroitwebagent.com/local-marketing
+Or reply / text (313) 992-1219.
 
 — Matt`,
     },
@@ -82,10 +84,10 @@ The difference is almost always the Google Business Profile — review count, po
 
 I automate all of that for contractors. $199/mo. I run it, you get the calls.
 
-If you want me to pull a free audit of your GBP and show you exactly what's holding you back, just reply.
+Get started → https://www.detroitwebagent.com/local-marketing
+Or reply for a free audit / text (313) 992-1219.
 
-— Matt
-(313) 992-1219`,
+— Matt`,
     },
     {
       templateName: "contractor_drip_d15_gbp",
@@ -95,7 +97,7 @@ If you want me to pull a free audit of your GBP and show you exactly what's hold
 
 Last email on this. If the Google ranking stuff isn't a priority right now — totally get it.
 
-If you ever want to rank higher in ${city} for your trade without touching Google yourself, I'm at (313) 992-1219.
+If you change your mind: https://www.detroitwebagent.com/local-marketing or text me at (313) 992-1219.
 
 — Matt, Grosse Pointe`,
     },
@@ -113,7 +115,8 @@ Quick stat: the average contractor misses 3-5 calls a week while on a job. That'
 
 My system texts the missed caller back within 30 seconds — automatically. $99/mo. Takes 10 minutes to set up.
 
-Want to see how it works? Reply or text (313) 992-1219.
+Get started in 60 seconds → https://www.detroitwebagent.com/missed-call-catch
+Or reply / text (313) 992-1219.
 
 — Matt`,
     },
@@ -129,7 +132,8 @@ A plumber I set this up for in Warren picked up an extra $4,400 job last month b
 
 $99/mo. I set it up. You just keep working.
 
-Reply or text (313) 992-1219 if you want in.
+Set it up in 60 seconds → https://www.detroitwebagent.com/missed-call-catch
+Or reply / text (313) 992-1219.
 
 — Matt, Grosse Pointe`,
     },
@@ -139,7 +143,11 @@ Reply or text (313) 992-1219 if you want in.
       subject: (biz, city) => `Last message from me`,
       body: (biz, city) => `Hey —
 
-Last one. If the missed-call issue ever costs you a job and you want an automatic fix for $99/mo — I'm at (313) 992-1219.
+Last one. $99/mo automatic missed-call text back, set up in 60 seconds:
+
+→ https://www.detroitwebagent.com/missed-call-catch
+
+Or text me at (313) 992-1219.
 
 — Matt`,
     },

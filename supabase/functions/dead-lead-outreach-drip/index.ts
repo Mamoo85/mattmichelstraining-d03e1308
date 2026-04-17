@@ -9,12 +9,22 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
-function buildHtml(body: string): string {
+// CTA button — primary self-onboard link, rendered above signature on mobile.
+function ctaButton(url: string, label = "Start free →"): string {
+  return `<div style="margin:24px 0 8px 0;text-align:center;">
+<a href="${url}" style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:700;font-size:15px;text-decoration:none;padding:14px 28px;border-radius:6px;letter-spacing:0.3px;">${label}</a>
+</div>
+<div style="text-align:center;font-size:12px;color:#64748b;margin-bottom:8px;">or reply to this email</div>`;
+}
+
+function buildHtml(body: string, cta?: { url: string; label?: string }): string {
+  const ctaHtml = cta ? ctaButton(cta.url, cta.label) : "";
   return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
 <tr><td style="background:#00d4ff;padding:3px 0;"></td></tr>
 <tr><td style="padding:24px;color:#334155;font-size:15px;line-height:1.8;">${body.replace(/\n/g, "<br>")}
+${ctaHtml}
 <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
 <span style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency · (313) 992-1219</span>
 </div></td></tr>
@@ -52,7 +62,7 @@ Finding licensed CNAs and LPNs who are actually available right now is the harde
 
 $99/mo. No agency fees. You're always first to call.
 
-Worth a quick conversation? Reply here or text me: (313) 806-4952.
+Start your free trial in 60 seconds (no card required) using the button below, or text me at (313) 992-1219.
 
 — Matt, Detroit Web Agency`;
 
@@ -64,7 +74,7 @@ Worth a quick conversation? Reply here or text me: (313) 806-4952.
           to: [lead.email],
           bcc: ["matt@detroitwebagent.com"],
           subject: `quick follow-up — ${lead.business_name}`,
-          html: buildHtml(body),
+          html: buildHtml(body, { url: "https://www.detroitwebagent.com/hire-alert", label: "Start free trial →" }),
         }),
       });
       if (res.ok) {
@@ -80,7 +90,7 @@ Worth a quick conversation? Reply here or text me: (313) 806-4952.
 
 A home health agency in Warren used TechAlert to find a new LPN last month. She'd just passed her boards and hadn't posted anywhere yet. They called her before she ever got on Indeed.
 
-If staffing ever gets tight enough to try something different: matt@detroitwebagent.com or (313) 806-4952.
+If staffing ever gets tight enough to try something different — start a free trial in 60 seconds (button below) or text me at (313) 992-1219.
 
 — Matt, Detroit Web Agency`;
 
@@ -92,7 +102,7 @@ If staffing ever gets tight enough to try something different: matt@detroitwebag
           to: [lead.email],
           bcc: ["matt@detroitwebagent.com"],
           subject: `last note — ${lead.business_name}`,
-          html: buildHtml(body),
+          html: buildHtml(body, { url: "https://www.detroitwebagent.com/hire-alert", label: "Start free trial →" }),
         }),
       });
       if (res.ok) {
@@ -128,7 +138,7 @@ If staffing ever gets tight enough to try something different: matt@detroitwebag
 
 Most ${tradeClean}s I talk to have 50–150 dead estimates in their CRM that never turned into jobs. We SMS them on your behalf — you pay $50 only if one replies YES they still need the work. Zero monthly fee, zero risk.
 
-Worth a 5-minute call? Reply here or text me: (313) 992-1219.
+Upload your dead leads in 60 seconds (no card required) using the button below, or text me at (313) 992-1219.
 
 — Matt, Detroit Web Agency`;
 
@@ -140,7 +150,7 @@ Worth a 5-minute call? Reply here or text me: (313) 992-1219.
           to: [lead.email],
           bcc: ["matt@detroitwebagent.com"],
           subject: `quick follow-up — ${lead.business_name}`,
-          html: buildHtml(body),
+          html: buildHtml(body, { url: "https://www.detroitwebagent.com/dead-lead-intake", label: "Start free →" }),
         }),
       });
 
@@ -154,12 +164,11 @@ Worth a 5-minute call? Reply here or text me: (313) 992-1219.
 
     // D8 final note
     } else if (daysSince >= 8 && !drip.d8_sent) {
-      const tradeClean = (lead.industry || "contractor").toLowerCase();
       const body = `Hey — last note on this, I promise.
 
 I ran a free test batch for an HVAC contractor in Warren a few months back — got 3 YES replies in 5 days from his dead leads. That's $150 he'd have left on the table otherwise.
 
-If you ever want to try it with your own dead estimates: matt@detroitwebagent.com or (313) 992-1219.
+If you ever want to try it with your own dead estimates — upload them in 60 seconds using the button below (first batch free, no card required), or text (313) 992-1219.
 
 — Matt, Detroit Web Agency`;
 
@@ -171,7 +180,7 @@ If you ever want to try it with your own dead estimates: matt@detroitwebagent.co
           to: [lead.email],
           bcc: ["matt@detroitwebagent.com"],
           subject: `last note — ${lead.business_name}`,
-          html: buildHtml(body),
+          html: buildHtml(body, { url: "https://www.detroitwebagent.com/dead-lead-intake", label: "Start free →" }),
         }),
       });
 
