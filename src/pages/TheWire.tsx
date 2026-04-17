@@ -20,13 +20,23 @@ export default function TheWire() {
   useEffect(() => {
     (async () => {
       const since = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
-      const { data } = await supabase
-        .from("contractor_leads" as any)
-        .select("id, trade, city, description, created_at")
-        .gte("created_at", since)
-        .order("created_at", { ascending: false })
-        .limit(8);
-      setRecentLeads((data as any[]) || []);
+      const [leadsRes, signalsRes] = await Promise.all([
+        supabase
+          .from("contractor_leads" as any)
+          .select("id, trade, city, description, created_at")
+          .gte("created_at", since)
+          .order("created_at", { ascending: false })
+          .limit(8),
+        supabase
+          .from("industry_pulse_signals" as any)
+          .select("id, company_name, location, county, expansion_type, signal_type, recommended_pitch, summary, confidence, detected_at")
+          .gte("detected_at", since)
+          .gte("confidence", 6)
+          .order("confidence", { ascending: false })
+          .limit(4),
+      ]);
+      setRecentLeads((leadsRes.data as any[]) || []);
+      setRadarSignals((signalsRes.data as any[]) || []);
     })();
 
     const params = new URLSearchParams(window.location.search);
