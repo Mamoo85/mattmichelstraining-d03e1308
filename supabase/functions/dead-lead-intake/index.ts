@@ -113,19 +113,34 @@ serve(async (req) => {
       );
     }
 
-    // Parse leads from textarea lines: "phone" or "phone, name"
-    const parsedLeads: { phone: string; name: string | null }[] = [];
+    // Parse leads from textarea lines: "phone" or "phone, name" or "phone, name, YYYY-MM-DD"
+    // last_contact_date is required for TCPA EBR (18-month window). If contractor
+    // doesn't provide one, default to today (covers fresh quotes); old leads must
+    // include the actual quote date or they'll be filtered out by the drip.
+    const todayISO = new Date().toISOString().split("T")[0];
+    const eighteenMonthsAgo = new Date(Date.now() - 548 * 24 * 60 * 60 * 1000)
+      .toISOString().split("T")[0];
+
+    const parsedLeads: { phone: string; name: string | null; last_contact_date: string }[] = [];
+    let tcpaScrubbed = 0;
     for (const line of leads) {
       const parts = (line as string).split(",").map((s: string) => s.trim()).filter(Boolean);
       if (!parts[0]) continue;
       const leadPhone = normalizePhone(parts[0]);
       const leadName = parts[1] || null;
-      parsedLeads.push({ phone: leadPhone, name: leadName });
+      const rawDate = parts[2] || todayISO;
+      const lastContactDate = /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : todayISO;
+      // TCPA: skip anything older than 18 months at intake
+      if (lastContactDate < eighteenMonthsAgo) {
+        tcpaScrubbed++;
+        continue;
+      }
+      parsedLeads.push({ phone: leadPhone, name: leadName, last_contact_date: lastContactDate });
     }
 
     if (parsedLeads.length === 0) {
       return new Response(
-        JSON.stringify({ error: "No valid phone numbers found" }),
+        JSON.stringify({ error: "No valid phone numbers found", tcpa_scrubbed: tcpaScrubbed }),
         { status: 400, headers: { ...CORS, "Content-Type": "application/json" } }
       );
     }
@@ -157,6 +172,7 @@ serve(async (req) => {
       contractor_id: contractorId,
       phone: l.phone,
       name: l.name,
+      last_contact_date: l.last_contact_date,
       status: "pending",
     }));
     const { error: contactErr } = await sb
