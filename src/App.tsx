@@ -292,6 +292,7 @@ const CrimeDigest = lazyRetry(() => import("./pages/CrimeDigest"));
 const IndustryPulse = lazyRetry(() => import("./pages/IndustryPulse"));
 const MyIndustryPulse = lazyRetry(() => import("./pages/MyIndustryPulse"));
 const DemandRadar = lazyRetry(() => import("./pages/DemandRadar"));
+const DemandRadarPortal = lazyRetry(() => import("./pages/DemandRadarPortal"));
 const TechAlertJobs = lazyRetry(() => import("./pages/TechAlertJobs"));
 const StaffingAgency = lazyRetry(() => import("./pages/StaffingAgency"));
 const TalentIntelligence = lazyRetry(() => import("./pages/TalentIntelligence"));
@@ -734,6 +735,7 @@ const App = () => (
                     <Route path="/industry-pulse" element={<IndustryPulse />} />
                     <Route path="/my-industry-pulse" element={<MyIndustryPulse />} />
                     <Route path="/demand-radar" element={<DemandRadar />} />
+                    <Route path="/demand-radar-portal" element={<DemandRadarPortal />} />
                     <Route path="/jobs" element={<TechAlertJobs />} />
                     <Route path="/staffing" element={<StaffingAgency />} />
                     <Route path="/talent-intelligence" element={<TalentIntelligence />} />

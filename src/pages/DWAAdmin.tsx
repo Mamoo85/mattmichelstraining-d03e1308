@@ -19,8 +19,9 @@ const AdminLaraHealth = lazy(() => import("@/components/admin/AdminLaraHealth"))
 const AdminTrojanHorseLog = lazy(() => import("@/components/admin/AdminTrojanHorseLog"));
 const AdminPostcardOps = lazy(() => import("@/components/admin/AdminPostcardCampaigns"));
 const AdminAgencyOutreach = lazy(() => import("@/components/dwa-admin/AdminAgencyOutreach"));
+const AdminDemandRadar = lazy(() => import("@/components/dwa-admin/AdminDemandRadar"));
 
-type Tab = "overview" | "clients" | "jobs" | "assets" | "contracts" | "import" | "command" | "board" | "playbook" | "strategy" | "medicare" | "industrial" | "growth" | "labs" | "sales-guide" | "lara-health" | "cross-sell" | "postcards" | "agency-outreach";
+type Tab = "overview" | "clients" | "jobs" | "assets" | "contracts" | "import" | "command" | "board" | "playbook" | "strategy" | "medicare" | "industrial" | "growth" | "labs" | "sales-guide" | "lara-health" | "cross-sell" | "postcards" | "agency-outreach" | "demand-radar";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -42,6 +43,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "cross-sell", label: "🎯 Cross-Sell" },
   { id: "postcards", label: "📬 Postcards" },
   { id: "agency-outreach", label: "🎯 Agency Outreach" },
+  { id: "demand-radar", label: "📡 Demand Radar" },
 ];
 
 function QuickLinks() {
@@ -263,6 +265,11 @@ export default function DWAAdmin() {
         {activeTab === "agency-outreach" && (
           <Suspense fallback={<div className="text-white/40 text-sm">Loading agency outreach...</div>}>
             <AdminAgencyOutreach />
+          </Suspense>
+        )}
+        {activeTab === "demand-radar" && (
+          <Suspense fallback={<div className="text-white/40 text-sm">Loading Demand Radar...</div>}>
+            <AdminDemandRadar />
           </Suspense>
         )}
       </main>
