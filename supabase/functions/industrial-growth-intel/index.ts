@@ -22,46 +22,54 @@ interface VerticalConfig {
   buyer_type: string;
 }
 
+// GR-1, GR-2, GR-3: Statewide Michigan scope, equipment-specific keywords, SAM.gov gov contracts vertical
+const MI_SCOPE = `across the state of Michigan (all 83 counties — including Metro Detroit, Grand Rapids, Lansing, Ann Arbor, Flint, Kalamazoo, Saginaw, Traverse City, Marquette, and the Upper Peninsula)`;
+
 const VERTICAL_PROMPTS: Record<string, VerticalConfig> = {
   industrial_general: {
-    label: "Industrial / Manufacturing Expansion",
+    label: "Industrial / Manufacturing Expansion (Statewide MI)",
     buyer_type: "recruiter",
-    prompt: `Search for recent news (past 90 days) about Metro Detroit manufacturing/industrial activity. Find companies that are expanding facilities, acquiring CNC/industrial machinery, awarded large commercial contracts, hiring skilled trades, or receiving government contracts requiring workforce expansion. Focus on Wayne, Oakland, Macomb, and Washtenaw counties.`,
+    prompt: `Search for recent news (past 90 days) about manufacturing/industrial activity ${MI_SCOPE}. Find companies that are expanding facilities, acquiring CNC/industrial machinery (Caterpillar, Trumpf, Mazak, Haas, DMG Mori, Okuma, Doosan, Makino), awarded large commercial contracts, hiring skilled trades, or receiving government contracts requiring workforce expansion.`,
+  },
+  gov_contracts: {
+    label: "Government Contract Awards (SAM.gov MI)",
+    buyer_type: "supplier",
+    prompt: `Search SAM.gov, USAspending.gov, and Michigan procurement bulletins for federal, state, and local government contract awards in the past 60 days to companies headquartered ${MI_SCOPE}. Include award amount, awarding agency, and contract scope. Prioritize awards over $250,000 to manufacturers, contractors, and trades suppliers.`,
   },
   steel: {
-    label: "Steel Service / Fabrication Demand",
+    label: "Steel Service / Fabrication Demand (Statewide MI)",
     buyer_type: "supplier",
-    prompt: `Search for recent news (past 90 days) about Metro Detroit manufacturers and fabrication shops that just won new contracts, announced equipment expansions, installed new CNC or press equipment, broke ground on new fabrication facilities, or posted multiple CNC/welder/fabricator job openings. These signal upcoming raw steel orders within 30-60 days. Focus on Wayne, Oakland, Macomb, and Washtenaw counties.`,
+    prompt: `Search for recent news (past 90 days) about manufacturers and fabrication shops ${MI_SCOPE} that just won new contracts, announced equipment expansions, installed new CNC, press, laser (Trumpf, Bystronic, Amada), or stamping equipment, broke ground on new fabrication facilities, or posted multiple CNC/welder/fabricator job openings. These signal upcoming raw steel orders within 30-60 days.`,
   },
   plumbing_supply: {
-    label: "Plumbing Supply Demand",
+    label: "Plumbing Supply Demand (Statewide MI)",
     buyer_type: "supplier",
-    prompt: `Search for recent commercial construction permits and project announcements in Metro Detroit (past 60 days) requiring plumbing rough-in: new restaurants, medical buildouts, multi-family residential projects, hotel construction. These signal upcoming PEX/copper/fixture orders within 45 days. Focus on Wayne, Oakland, Macomb, and Washtenaw counties.`,
+    prompt: `Search for recent commercial construction permits and project announcements ${MI_SCOPE} (past 60 days) requiring plumbing rough-in: new restaurants, medical buildouts, multi-family residential projects, hotel construction. These signal upcoming PEX/copper/fixture orders within 45 days.`,
   },
   roofing_supply: {
-    label: "Roofing Supply Demand",
+    label: "Roofing Supply Demand (Statewide MI)",
     buyer_type: "supplier",
-    prompt: `Search for recent (past 60 days) Metro Detroit storm damage events, hail reports, insurance claim spikes, and roofing contractors posting hiring ads. These signal urgent shingle/underlayment orders within 7-14 days. Include any commercial roof replacement permits filed. Focus on Wayne, Oakland, Macomb, and Washtenaw counties.`,
+    prompt: `Search for recent (past 60 days) Michigan storm damage events, hail reports, insurance claim spikes, and roofing contractors posting hiring ads ${MI_SCOPE}. These signal urgent shingle/underlayment orders within 7-14 days. Include any commercial roof replacement permits filed.`,
   },
   hvac_supply: {
-    label: "HVAC Wholesale Demand",
+    label: "HVAC Wholesale Demand (Statewide MI)",
     buyer_type: "supplier",
-    prompt: `Search for recent (past 60 days) Metro Detroit commercial mechanical permits, new boiler installations, HVAC contractors awarded large commercial jobs, and properties with expiring boiler operator licenses (likely facing equipment service needs). Focus on Wayne, Oakland, Macomb, and Washtenaw counties.`,
+    prompt: `Search for recent (past 60 days) commercial mechanical permits ${MI_SCOPE}, new boiler installations (Cleaver-Brooks, Burnham, Weil-McLain, Lochinvar), HVAC contractors awarded large commercial jobs, and properties with expiring boiler operator licenses (likely facing equipment service needs).`,
   },
   electrical_supply: {
-    label: "Electrical Supply Demand",
+    label: "Electrical Supply Demand (Statewide MI)",
     buyer_type: "supplier",
-    prompt: `Search for recent (past 60 days) Metro Detroit solar permit filings, EV charger installations, commercial electrical permit pulls, and large electrical contracts. These signal upcoming panel/conduit/wire orders. Focus on Wayne, Oakland, Macomb, and Washtenaw counties.`,
+    prompt: `Search for recent (past 60 days) solar permit filings, EV charger installations, commercial electrical permit pulls, and large electrical contracts ${MI_SCOPE}. These signal upcoming panel/conduit/wire orders.`,
   },
   concrete: {
-    label: "Concrete / Aggregate Demand",
+    label: "Concrete / Aggregate Demand (Statewide MI)",
     buyer_type: "supplier",
-    prompt: `Search for recent (past 60 days) Metro Detroit foundation permit filings, large commercial site preparation announcements, and ready-mix concrete demand signals. Focus on Wayne, Oakland, Macomb, and Washtenaw counties.`,
+    prompt: `Search for recent (past 60 days) foundation permit filings, large commercial site preparation announcements, and ready-mix concrete demand signals ${MI_SCOPE}.`,
   },
   lumber: {
-    label: "Lumber / Framing Demand",
+    label: "Lumber / Framing Demand (Statewide MI)",
     buyer_type: "supplier",
-    prompt: `Search for recent (past 60 days) Metro Detroit single-family home permit pulls and framing package orders. Aggregate by city. Focus on Wayne, Oakland, Macomb, and Washtenaw counties.`,
+    prompt: `Search for recent (past 60 days) single-family home permit pulls and framing package orders ${MI_SCOPE}. Aggregate by city.`,
   },
 };
 
