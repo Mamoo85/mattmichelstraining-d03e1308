@@ -57,7 +57,7 @@ export default function DemandRadar() {
     { icon: Briefcase, title: "Hiring Surge Detection", desc: "When a company posts 3+ trade jobs at once, they're expanding — not backfilling. You'll know the same day.", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
     { icon: Target, title: "Predicted Equipment Needs", desc: "AI analyzes each hire and predicts what tools, equipment, and supplies they'll need in 30-90 days.", color: "text-[#00d4ff]", bg: "bg-[#00d4ff]/10 border-[#00d4ff]/20" },
     { icon: ShieldCheck, title: "Cross-Referenced Intel", desc: "When a company appears in BOTH hiring data AND expansion news, you get a priority alert. These convert.", color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
-    { icon: Search, title: "MIOSHA Compliance Gaps", desc: "Expired boiler operator licenses = instant need for equipment service contracts. We flag them first.", color: "text-red-400", bg: "bg-red-500/10 border-red-500/20" },
+    { icon: Search, title: "Compliance Gap Signals", desc: "Expired operator credentials = instant need for equipment service contracts. We flag them first.", color: "text-red-400", bg: "bg-red-500/10 border-red-500/20" },
   ];
 
   const INDUSTRIES = ["HVAC", "CNC/Machining", "Welding", "Electrical", "Boiler/Pressure", "Plumbing"];
@@ -197,7 +197,7 @@ export default function DemandRadar() {
             <h2 className="text-2xl sm:text-3xl font-black text-center mb-12">How It Works</h2>
             <div className="grid sm:grid-cols-3 gap-10">
               {[
-                { icon: Eye, step: "01", title: "We Scan Daily", desc: "Indeed, ZipRecruiter, LinkedIn, LARA, MIOSHA, bond filings — scanned every morning at 7am ET." },
+                { icon: Eye, step: "01", title: "We Scan Daily", desc: "Our proprietary demand signal engine sweeps public hiring boards, permit data, and expansion filings every morning at 7am ET." },
                 { icon: BarChart3, step: "02", title: "AI Scores Each Signal", desc: "Each hiring signal gets a 1-10 confidence score. Multiple hires + expansion news = highest priority." },
                 { icon: Bell, step: "03", title: "You Act First", desc: "Email alerts + live dashboard + CSV export. Call the right company before your competitors know." },
               ].map((step, i) => (
@@ -337,7 +337,7 @@ export default function DemandRadar() {
             <h2 className="text-xl font-black text-center mb-8">Questions</h2>
             <div className="space-y-4">
               {[
-                { q: "Where does the data come from?", a: "We scan Indeed, ZipRecruiter, LinkedIn, LARA (Michigan licensing), MIOSHA (compliance), and municipal bond filings. All public data sources, aggregated and analyzed by AI." },
+                { q: "Where does the data come from?", a: "Our proprietary demand signal engine aggregates public hiring activity, permit filings, expansion announcements, and compliance records. Methodology is proprietary — what matters is the signals convert." },
                 { q: "How accurate are the predictions?", a: "Each signal gets a 1-10 confidence score. High-confidence signals (7+) are companies with multiple indicators — hiring + expansion news + compliance gaps. These are your best leads." },
                 { q: "Can I export the data?", a: "Yes. Your dashboard includes CSV export with all signal details — company, location, hiring data, predicted needs, confidence scores, and source URLs." },
                 { q: "How is this different from a lead list?", a: "Lead lists are cold. Demand Radar tells you WHO is buying, WHAT they need, and WHY right now — based on real hiring activity. You're calling with a reason, not a script." },

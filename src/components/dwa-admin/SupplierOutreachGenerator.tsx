@@ -99,7 +99,7 @@ export default function SupplierOutreachGenerator() {
           Supplier Outreach Generator
         </h2>
         <p className="text-white/50 text-xs mt-1">
-          Generate a Demand Radar pitch for any B2B supplier. Uses live signals matched to their vertical. Scrubbed of forbidden terms (AI, scraping, OSINT).
+          Generate a Demand Radar pitch for any B2B supplier. Uses live signals matched to their vertical. Output is auto-scrubbed for client-safe language.
         </p>
       </div>
 
