@@ -19,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import RevenueRecoveredLedger from "@/components/RevenueRecoveredLedger";
 import HiringHealthScore from "@/components/techalert/HiringHealthScore";
 import DemoModeBadge, { isDemoMode, DEMO_MASTER_TOKEN } from "@/components/DemoModeBadge";
+import { supabase } from "@/integrations/supabase/client";
 
 const HEALTHCARE_ROLES = ["cna", "rn", "lpn", "director_of_nursing", "home_health_aide"];
 
