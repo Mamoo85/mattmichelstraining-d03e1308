@@ -4,9 +4,9 @@
 // Called from AdminSimulationSuite URL input.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { stealthScrape, reasonToCopy } from "../_shared/stealth-scrape.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
-const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -27,24 +27,21 @@ serve(async (req) => {
       status: 400, headers: { ...CORS, "Content-Type": "application/json" },
     });
 
-    if (!FIRECRAWL_API_KEY) return json500("FIRECRAWL_API_KEY not set");
-    if (!ANTHROPIC_API_KEY) return json500("ANTHROPIC_API_KEY not set");
+    if (!ANTHROPIC_API_KEY) return json500("AI engine not configured");
 
-    // Scrape homepage with Firecrawl
-    const scrapeRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true }),
-    });
-
-    const scrapeData = await scrapeRes.json();
-    if (!scrapeRes.ok) return json500(`Firecrawl error: ${scrapeData?.error || scrapeRes.status}`);
-
-    const pageText = scrapeData?.data?.markdown || scrapeData?.markdown || "";
-    if (!pageText) return json500("Firecrawl returned empty page content");
+    // Tiered stealth fetch — sanitized errors
+    const scraped = await stealthScrape(url, { maxChars: 6000 });
+    if (!scraped.ok) {
+      return new Response(JSON.stringify({ ok: false, message: reasonToCopy(scraped.reason) }), {
+        status: 200, headers: { ...CORS, "Content-Type": "application/json" },
+      });
+    }
+    const pageText = scraped.markdown || "";
+    if (!pageText) {
+      return new Response(JSON.stringify({ ok: false, message: reasonToCopy("no_content") }), {
+        status: 200, headers: { ...CORS, "Content-Type": "application/json" },
+      });
+    }
 
     // Claude Haiku generates cold SMS pitch
     const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
