@@ -9,6 +9,24 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html", "lcov"],
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: [
+        "src/test/**",
+        "src/integrations/supabase/types.ts",
+        "src/**/*.d.ts",
+        "src/components/ui/**",
+        "src/main.tsx",
+      ],
+      thresholds: {
+        statements: 15,
+        branches: 15,
+        functions: 15,
+        lines: 15,
+      },
+    },
   },
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },
