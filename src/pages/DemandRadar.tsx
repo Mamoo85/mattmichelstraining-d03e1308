@@ -32,6 +32,24 @@ export default function DemandRadar() {
     if (success) toast.success("Welcome to Demand Radar! Check your email for your dashboard link.");
   }, [success]);
 
+  // Live territory scarcity — fetch active Pro subscriber count per county (cap = 3 per county)
+  useEffect(() => {
+    (async () => {
+      const COUNTIES = ["Wayne", "Oakland", "Macomb", "Washtenaw"];
+      const CAP = 3;
+      const { data } = await supabase
+        .from("industry_pulse_clients" as any)
+        .select("target_county, active")
+        .eq("active", true);
+      const counts: Record<string, number> = {};
+      (data as any[] || []).forEach((c) => {
+        const k = c.target_county || "Wayne";
+        counts[k] = (counts[k] || 0) + 1;
+      });
+      setTerritoryStats(COUNTIES.map((c) => ({ county: c, taken: counts[c] || 0, cap: CAP })));
+    })();
+  }, []);
+
   const handleCheckout = async () => {
     if (!email) { toast.error("Email is required"); return; }
     setLoading(true);
