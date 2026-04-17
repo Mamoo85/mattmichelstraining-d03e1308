@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import SEOHead from "@/components/layout/SEOHead";
 import { Search, Shield, BarChart3, Code, Zap, TrendingDown, Heart, MapPin, HardHat, Wrench, Stethoscope } from "lucide-react";
+import { useDwaDomainRedirect } from "@/hooks/useDwaDomainRedirect";
 
 const tools = [
   { icon: Zap, title: "Site Speed Audit", desc: "Test your website's load time, performance score, and mobile responsiveness.", path: "/free-site-scanner", color: "from-cyan-400 to-blue-500" },
@@ -19,6 +20,7 @@ const tools = [
 ];
 
 export default function FreeToolsHub() {
+  useDwaDomainRedirect();
   return (
     <>
       <SEOHead title="Free SEO, Security & Business Intelligence Tools | Detroit Web Agency" description="Run free scans on your website and business: speed audit, SEO health, breach scanner, OSHA check, ADA scan, Medicare staffing, and more." path="/free-tools" />

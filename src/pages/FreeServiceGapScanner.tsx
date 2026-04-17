@@ -12,7 +12,10 @@ interface Gap {
   reasoning: string;
 }
 
+import { useDwaDomainRedirect } from "@/hooks/useDwaDomainRedirect";
+
 export default function FreeServiceGapScanner() {
+  useDwaDomainRedirect();
   const [url, setUrl] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);

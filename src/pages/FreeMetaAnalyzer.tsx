@@ -5,7 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Code, Loader2, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { useDwaDomainRedirect } from "@/hooks/useDwaDomainRedirect";
+
 export default function FreeMetaAnalyzer() {
+  useDwaDomainRedirect();
   const [email, setEmail] = useState("");
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
