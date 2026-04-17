@@ -26,6 +26,7 @@ const AGENTS: Record<string, { fn: string; label: string; defaultBody?: Record<s
   scarlett:             { fn: "scarlett-autonomous",     label: "Scarlett — creative marketing" },
   selma:                { fn: "selma-autonomous",        label: "Selma — head of marketing" },
   dol_labor_stats:      { fn: "dol-labor-stats",         label: "DOL Labor Stats — Detroit trade shortages" },
+  techalert_prospect_hunter: { fn: "techalert-prospect-hunter", label: "TechAlert Prospect Hunter (HVAC/boiler shops hiring)" },
 };
 
 async function callFunction(fnName: string, body: Record<string, unknown>) {

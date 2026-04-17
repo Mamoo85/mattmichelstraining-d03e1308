@@ -19,6 +19,7 @@ const AGENTS: AgentDef[] = [
   { key: "tom",                   label: "Tom — Web Design Hunter",  description: "Find 10 fresh web design prospects + draft outreach.", group: "lead_gen" },
   { key: "vera",                  label: "Vera — Lead Qualifier",    description: "Score today's new leads 1–10.",                     group: "lead_gen" },
   { key: "contractor_prospector", label: "Contractor Prospector",     description: "Scrape HVAC/plumbing/roof/electrical and pitch dead-lead service.", group: "lead_gen" },
+  { key: "techalert_prospect_hunter", label: "TechAlert Prospect Hunter", description: "Find HVAC/boiler shops actively hiring on Indeed/ZipRecruiter — perfect TechAlert prospects.", group: "lead_gen" },
   // Intel
   { key: "hire_scanner",          label: "TechAlert Scanner",         description: "Scan Michigan licenses + job boards for available trades.", group: "intel" },
   { key: "industrial_intel",      label: "Industrial Growth Intel",   description: "Detroit manufacturer expansion / hiring signals.",  group: "intel" },
