@@ -88,7 +88,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const maxSend = body.max || 50; // safety cap per run
+    const maxSend = Math.min(body.max || 50, MAX_PER_RUN);
     const county = body.county || "Macomb";
     const dryRun = body.dry_run === true;
 
@@ -124,8 +124,26 @@ serve(async (req) => {
       );
     }
 
+    // ── COST GUARDRAILS ─────────────────────────────────────────────
+    if (!dryRun) {
+      if (prospects.length > MAX_PER_RUN) {
+        const msg = `🚨 Postcard run BLOCKED: ${prospects.length} > ${MAX_PER_RUN}/run cap`;
+        await notifyMatt(msg, `<p>${msg}</p>`);
+        return new Response(JSON.stringify({ error: msg }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const monthSent = await getMonthSentCount(sb);
+      if (monthSent + prospects.length > MAX_PER_MONTH) {
+        const msg = `🚨 Postcard run BLOCKED: monthly cap. ${monthSent} + ${prospects.length} > ${MAX_PER_MONTH}/month`;
+        await notifyMatt(msg, `<p>${msg}</p>`);
+        return new Response(JSON.stringify({ error: msg, sent_this_month: monthSent, cap: MAX_PER_MONTH }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      console.log(`[send-postcard-lob] Cost OK. ${prospects.length} × $${COST_PER_POSTCARD} = $${(prospects.length * COST_PER_POSTCARD).toFixed(2)}. Month: ${monthSent}/${MAX_PER_MONTH}`);
+    }
+
     const frontHtml = buildFrontHtml(campaign.copy_front);
-    const backHtml = buildBackHtml(campaign.copy_back, campaign.qr_url);
+    // Self-hosted QR — no external dependency at mail time
+    const qrDataUri = await qrcode(campaign.qr_url, { size: 260 }) as string;
+    const backHtml = buildBackHtml(campaign.copy_back, qrDataUri);
 
     let sent = 0;
     const errors: string[] = [];
