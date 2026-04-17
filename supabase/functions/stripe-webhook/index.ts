@@ -5569,7 +5569,7 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
                     subject: "🎉 You earned a free training session!",
                     html: `<p>Hey ${referrerProfile.athlete_name || referrerProfile.full_name || ""},</p><p>Your friend just booked a session at M2 Development — and that means you earned a <strong>free session</strong>!</p><p>Head to <a href="https://www.mattmichelstraining.com/schedule">Schedule</a> to book yours.</p><p>— Matt</p>`,
                   }),
-                }).catch(() => {});
+                }).catch((emailErr) => console.error("[WEBHOOK] Referral reward email failed for", referrerProfile.email, emailErr));
               }
             }
           }
@@ -5725,17 +5725,30 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
 
       // ── NEW HIRE BREACH CHECK — $9.99 one-time HIBP screen ───────────────────
       if (meta.type === "new_hire_breach_check") {
-        fetch(`${SUPABASE_URL}/functions/v1/new-hire-breach-check`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
-          body: JSON.stringify({
-            candidate_name: meta.candidate_name,
-            candidate_email: meta.candidate_email,
-            requester_email: meta.requester_email,
-            is_test: meta.is_test === "true",
-            stripe_session_id: session.id,
-          }),
-        }).catch(console.error);
+        try {
+          const res = await fetch(`${SUPABASE_URL}/functions/v1/new-hire-breach-check`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+            body: JSON.stringify({
+              candidate_name: meta.candidate_name,
+              candidate_email: meta.candidate_email,
+              requester_email: meta.requester_email,
+              is_test: meta.is_test === "true",
+              stripe_session_id: session.id,
+            }),
+          });
+          if (!res.ok) {
+            const body = await res.text();
+            throw new Error(`new-hire-breach-check ${res.status}: ${body.slice(0, 200)}`);
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] new_hire_breach_check error:", e);
+          await notifyMatt(
+            `🚨 New Hire Breach Check FAILED — ${meta.requester_email || "unknown"} paid $9.99 but no report delivered`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p><p>Session: ${session.id}</p><p>Candidate: ${meta.candidate_email}</p><p>Manual fix: invoke new-hire-breach-check directly.</p>`
+          ).catch(() => {});
+          return new Response(JSON.stringify({ error: "report delivery failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
