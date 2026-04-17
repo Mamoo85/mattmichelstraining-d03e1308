@@ -125,14 +125,15 @@ export default function AdminSimulationSuite() {
         <p style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", margin: "0 0 16px" }}>
           CRON TRIGGERS
         </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
-          <ActionButton label="Invoke Scanner" onClick={() => run("hire-alert-scanner")} running={!!running["hire-alert-scanner"]} />
-          <ActionButton label="Run Trial Conversions" onClick={() => run("hire-alert-trial-convert")} running={!!running["hire-alert-trial-convert"]} />
-          <ActionButton label="Run Phantom Alerts" onClick={() => run("hire-alert-phantom-alert")} running={!!running["hire-alert-phantom-alert"]} />
-          <ActionButton label="Release Pending Replies" onClick={() => run("release-pending-replies")} running={!!running["release-pending-replies"]} />
-          <ActionButton label="Check License Expirations" onClick={() => run("license-expiry-checker")} running={!!running["license-expiry-checker"]} />
-          <ActionButton label="Run Aged Lead Downsell" onClick={() => run("contractor-aged-lead-downsell")} running={!!running["contractor-aged-lead-downsell"]} />
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 8 }}>
+          <span title="Runs the TechAlert hiring scanner — pulls fresh licensed-tradesperson candidates from MIOSHA + job boards"><ActionButton label="Invoke Scanner" onClick={() => run("hire-alert-scanner")} running={!!running["hire-alert-scanner"]} /></span>
+          <span title="Auto-converts expired TechAlert trial users to paid subscribers (charges saved card)"><ActionButton label="Run Trial Conversions" onClick={() => run("hire-alert-trial-convert")} running={!!running["hire-alert-trial-convert"]} /></span>
+          <span title="Sends scarcity SMS to TechAlert clients showing 'phantom' candidates from competitors"><ActionButton label="Run Phantom Alerts" onClick={() => run("hire-alert-phantom-alert")} running={!!running["hire-alert-phantom-alert"]} /></span>
+          <span title="Releases queued AI-drafted email replies after the 10-minute Ghost Delay"><ActionButton label="Release Pending Replies" onClick={() => run("release-pending-replies")} running={!!running["release-pending-replies"]} /></span>
+          <span title="Scans monitored business licenses for upcoming expirations and notifies clients"><ActionButton label="Check License Expirations" onClick={() => run("license-expiry-checker")} running={!!running["license-expiry-checker"]} /></span>
+          <span title="Blasts $15 aged contractor leads (48h+ unclaimed) to all active PPL contractors"><ActionButton label="Run Aged Lead Downsell" onClick={() => run("contractor-aged-lead-downsell")} running={!!running["contractor-aged-lead-downsell"]} /></span>
         </div>
+        <p style={{ color: "#475569", fontSize: 11, margin: "0 0 16px", fontStyle: "italic" }}>Hover any button for a one-line description.</p>
 
         {/* AI Classifier */}
         <p style={{ color: "#64748b", fontSize: 11, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", margin: "0 0 8px" }}>TEST AI CLASSIFIER</p>
