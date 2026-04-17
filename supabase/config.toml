@@ -1,5 +1,11 @@
 project_id = "zmyczlfuufhngzovkjdh"
 
+[functions.create-wire-checkout]
+verify_jwt = false
+
+[functions.wire-morning-digest]
+verify_jwt = false
+
 [functions.boiler-sector-intel]
 verify_jwt = false
 

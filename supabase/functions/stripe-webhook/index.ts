@@ -830,6 +830,56 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── THE WIRE — contractor leads $99/mo ────────────────────────────────
+      if (meta.type === "wire_subscription") {
+        const email = meta.email || customerEmail;
+        try {
+          if (email) {
+            let trades: string[] = [];
+            let cities: string[] = [];
+            try { trades = JSON.parse(meta.trades || "[]"); } catch {}
+            try { cities = JSON.parse(meta.cities || "[]"); } catch {}
+            const { error: wErr } = await (sb.from as any)("wire_subscribers").upsert({
+              email,
+              business_name: meta.business_name || null,
+              contact_name: meta.contact_name || null,
+              phone: meta.phone || null,
+              trades, cities,
+              active: true,
+              digest_enabled: true,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+              subscription_status: "active",
+            }, { onConflict: "email" });
+            if (wErr) throw new Error(`wire_subscribers upsert: ${wErr.message}`);
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "The Wire <matt@detroitwebagent.com>",
+                to: [email],
+                subject: "📡 You're on The Wire — first digest tomorrow 7am ET",
+                html: `<div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;background:#0a1628;color:#fff;padding:32px;border-radius:12px;">
+                  <div style="color:#00d4ff;font-size:11px;letter-spacing:3px;font-weight:700;">📡 THE WIRE</div>
+                  <h1 style="font-size:24px;margin:8px 0 12px;">You're in${meta.business_name ? `, ${meta.business_name}` : ""}.</h1>
+                  <p style="color:#94a3b8;font-size:14px;line-height:1.6;">Your first morning digest hits tomorrow at 7am ET. Fresh contractor leads filtered to your trades and cities, ready to claim.</p>
+                  <p style="color:#94a3b8;font-size:13px;margin-top:16px;">Trades: ${(trades||[]).join(", ") || "all"}<br/>Cities: ${(cities||[]).join(", ") || "all"}</p>
+                  <a href="https://detroitwebagent.com/the-wire" style="display:inline-block;margin-top:20px;background:#00d4ff;color:#0a1628;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">View The Wire →</a>
+                  <p style="color:#475569;font-size:11px;margin-top:24px;">Detroit Web Agency · (313) 992-1219</p>
+                </div>`,
+              }),
+            }).catch(e => console.error("[wire welcome email]", e));
+          }
+          await notifyMatt(`📡 New Wire subscriber: ${meta.business_name || email} ($99/mo)`);
+        } catch (err: any) {
+          console.error("[WEBHOOK wire_subscription]", err);
+          await notifyMatt(`⚠️ Wire signup failed: ${email} — ${err.message}`);
+          return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+        }
+      }
+
       if (meta.type === "hire_alert_subscription") {
         const email = meta.email || customerEmail;
         try {

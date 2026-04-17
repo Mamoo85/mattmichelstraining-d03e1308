@@ -12955,6 +12955,86 @@ export type Database = {
           },
         ]
       }
+      wire_digest_log: {
+        Row: {
+          id: string
+          lead_id: string | null
+          sent_at: string | null
+          subscriber_id: string
+        }
+        Insert: {
+          id?: string
+          lead_id?: string | null
+          sent_at?: string | null
+          subscriber_id: string
+        }
+        Update: {
+          id?: string
+          lead_id?: string | null
+          sent_at?: string | null
+          subscriber_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wire_digest_log_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "wire_subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wire_subscribers: {
+        Row: {
+          active: boolean | null
+          business_name: string | null
+          cities: string[] | null
+          contact_name: string | null
+          created_at: string | null
+          digest_enabled: boolean | null
+          email: string
+          id: string
+          last_digest_sent_at: string | null
+          phone: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_status: string | null
+          trades: string[] | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_name?: string | null
+          cities?: string[] | null
+          contact_name?: string | null
+          created_at?: string | null
+          digest_enabled?: boolean | null
+          email: string
+          id?: string
+          last_digest_sent_at?: string | null
+          phone?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
+          trades?: string[] | null
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string | null
+          cities?: string[] | null
+          contact_name?: string | null
+          created_at?: string | null
+          digest_enabled?: boolean | null
+          email?: string
+          id?: string
+          last_digest_sent_at?: string | null
+          phone?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string | null
+          trades?: string[] | null
+        }
+        Relationships: []
+      }
       workout_logs: {
         Row: {
           created_at: string

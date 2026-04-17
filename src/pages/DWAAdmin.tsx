@@ -28,11 +28,12 @@ const AdminGlobalOutbox = lazy(() => import("@/components/admin/AdminGlobalOutbo
 const AdminPostcardCampaigns = lazy(() => import("@/components/admin/AdminPostcardCampaigns"));
 const AdminFaxCampaigns = lazy(() => import("@/components/admin/AdminFaxCampaigns"));
 const AdminCampaignTargeting = lazy(() => import("@/components/admin/AdminCampaignTargeting"));
+const AdminTheWire = lazy(() => import("@/components/admin/AdminTheWire"));
 
 type Tab =
   | "dwa-overview" | "revenue" | "dead-leads" | "contractor-leads"
   | "techalert" | "fielddesk" | "visitor-intel" | "simulation"
-  | "outbox" | "postcards" | "faxes" | "targeting"
+  | "outbox" | "postcards" | "faxes" | "targeting" | "the-wire"
   | "overview" | "clients" | "jobs" | "assets" | "contracts" | "import"
   | "command" | "playbook" | "strategy" | "labs" | "sales-guide"
   | "agency-outreach" | "demand-radar" | "supplier-outreach";
@@ -43,6 +44,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "revenue",          label: "💰 Revenue" },
   { id: "dead-leads",       label: "♻️ Dead Leads" },
   { id: "contractor-leads", label: "🏗️ Contractor Leads" },
+  { id: "the-wire",         label: "📡 The Wire" },
   { id: "techalert",        label: "🔍 TechAlert Clients" },
   { id: "fielddesk",        label: "🛠️ FieldDesk Clients" },
   { id: "visitor-intel",    label: "👁️ Visitor Intel" },
@@ -162,6 +164,9 @@ export default function DWAAdmin() {
         )}
         {activeTab === "targeting" && (
           <Suspense fallback={lazyFallback("targeting brain")}><AdminCampaignTargeting /></Suspense>
+        )}
+        {activeTab === "the-wire" && (
+          <Suspense fallback={lazyFallback("The Wire")}><AdminTheWire /></Suspense>
         )}
         {activeTab === "simulation" && (
           <Suspense fallback={lazyFallback("simulation")}><AdminSimulationSuite /></Suspense>
