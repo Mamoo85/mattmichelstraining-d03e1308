@@ -1,80 +1,71 @@
 
 
-User wants the next batch after the top-20 (5 per Radar) that just shipped in Phase 1. The PDF catalog has 60 remaining (15 per Radar). Next logical batch: ship the next 5 per Radar = 20 more, prioritizing UI integration of Phase 1 DB schema (territory_counties, freshness_score, quality_score, vendor_fit_score columns are now in DB but not yet wired into UI/scanners).
+User wants Batch 3 — next 20 Radar enhancements (5 per Radar). Batches 1-2 shipped 40 of 80 total. PDF catalog has 40 remaining. Pick the next highest-leverage ones that build on what's already in DB.
 
-# Batch 2: Next 20 Radar Upgrades (5 per Radar)
+# Batch 3: Next 20 Radar Upgrades (5 per Radar)
 
 ## Why this batch
-Phase 1 shipped the DB schema + Growth Radar statewide expansion. Most new columns (`freshness_score`, `quality_score`, `agency_priority`, `vendor_fit_score`, `territory_counties`) are sitting unused. This batch wires them into scanners and UI so they actually do work.
+Batches 1-2 shipped DB schema + scanner expansion + new dashboards/crons. Batch 3 focuses on **conversion + retention mechanics** — the stuff that turns alerts into revenue: SMS dispatch, claim flows, ROI proof, referral hooks.
 
 ---
 
-## Talent Radar (TR-6 → TR-10)
+## Talent Radar (TR-11 → TR-15)
+- **TR-11** SMS alert dispatch on SCORCHING candidates (score ≥9) — Twilio send to client phone with claim link
+- **TR-12** Candidate "claim" button on alert email — locks candidate to client for 48h (uses existing `hire_alert_client_candidates`)
+- **TR-13** Weekly "ones you missed" digest — candidates client viewed but didn't contact
+- **TR-14** Client ROI tracker — "$X saved vs LinkedIn Recruiter" badge on dashboard (math: hires × $8k avg fee saved)
+- **TR-15** Referral hook — "Refer another agency, get 1 month free" button + unique code per client
 
-- **TR-6** Wire `freshness_score` into `hire-alert-scanner` — license issued <30d = +2 boost, surface SCORCHING tier in alert emails
-- **TR-7** Statewide MIOSHA scope in `hire-alert-scanner` (kill remaining "Metro Detroit" Sonar prompts — ~8 spots)
-- **TR-8** `MyTechAlert.tsx` auto-fade contacted candidates after 7d (uses existing `client_action='contacted'` + timestamp)
-- **TR-9** Agency 24h head-start filter — alert dispatcher checks `agency_priority=true` clients first, holds non-agency alerts 24h
-- **TR-10** Source diversity badge in candidate cards ("Found via 3 sources") — Black Box rule, never names them
+## Demand Radar (DR-11 → DR-15)
+- **DR-11** SMS push for confidence ≥9 signals (same Twilio path as TR-11)
+- **DR-12** "Pitch draft" button — Gemini generates 3-line cold email per signal (uses `recommended_pitch` field already in DB)
+- **DR-13** Signal feedback loop — thumbs up/down per signal, trains future scoring per client
+- **DR-14** "Companies to watch" saved list — pin specific MI companies for daily monitoring
+- **DR-15** Weekly executive summary email — top 5 signals + week-over-week trend chart
 
-## Demand Radar (DR-6 → DR-10)
+## Growth Radar (GR-11 → GR-15)
+- **GR-11** Map view in dashboard — pin signals on MI map by lat/long (use existing location field)
+- **GR-12** Industry vertical filters in dashboard (manufacturing/construction/healthcare/govt)
+- **GR-13** Slack/Teams webhook integration — push signals to client's workspace
+- **GR-14** Saved searches — client defines keyword + county combos, gets pushed alerts only on matches
+- **GR-15** Competitor monitoring — track when competitors win contracts in client's territory
 
-- **DR-6** Statewide MI scope in `industry-pulse-scanner` (West MI, Lansing, Flint, TC, UP)
-- **DR-7** Confidence threshold slider in `MyIndustryPulse.tsx` (default ≥7, persists per client)
-- **DR-8** "Predicted spend window" badge (14d/30d/60d) — add to Sonar prompt + render badge on signal cards
-- **DR-9** Cross-reference with Talent Radar — flag SCORCHING combo (same company hiring + expanding) at top of feed
-- **DR-10** Vendor-fit score input on signup ("what do you sell?") → AI scores each signal 1-10 for fit
-
-## Growth Radar (GR-6 → GR-10)
-
-- **GR-6** New `GrowthRadarDashboard.tsx` page — client-facing feed (currently admin-only)
-- **GR-7** Daily 7am consolidated digest (`growth-radar-digest` edge function — one email, not 8)
-- **GR-8** County multi-select on signup — filters digest by `territory_counties`
-- **GR-9** One-click CSV export (HubSpot/Salesforce/Pipedrive format)
-- **GR-10** SAM.gov MI gov contracts cron — daily pull into `growth_radar_signals`
-
-## Lead Radar (LR-6 → LR-10)
-
-- **LR-6** Wire `lead_quality_score` — new `lead-quality-scorer` edge function (phone-verified + value + urgency = 1-10)
-- **LR-7** Statewide MI lead capture — kill Wayne/Oakland/Macomb lock in `ContractorLeads.tsx` form + intake
-- **LR-8** Bid-up mode on high-value leads (`bidding_mode=true` flag triggers auction UI in claim flow)
-- **LR-9** Auto-refund cron — `lead-auto-refund` daily, credits `refund_credits_cents` if 3 attempts unreachable
-- **LR-10** Admin `AdminCoverageMap.tsx` heatmap — where contractors needed vs where leads land
+## Lead Radar (LR-11 → LR-15)
+- **LR-11** Contractor leaderboard — public stats (response time, claim rate) builds trust + gamifies
+- **LR-12** Lead "preview" mode — show partial info (trade + city + budget range) before purchase
+- **LR-13** Subscription credit packs — buy 10 leads upfront at discount, auto-deduct on claim
+- **LR-14** SMS lightning notifications enhancement — include `quality_score` badge in SMS body
+- **LR-15** Referral kickback — contractor refers another contractor, both get $50 credit
 
 ---
 
-## Files Touched (~12)
+## Files Touched (~10)
 
 **Edge functions (5)**:
-- `hire-alert-scanner` (TR-6, TR-7) — freshness scoring + statewide
-- `industry-pulse-scanner` (DR-6, DR-8, DR-10) — statewide + spend window + cross-ref
-- `growth-radar-digest` NEW (GR-7, GR-8) — 7am cron, county-filtered
-- `lead-quality-scorer` NEW (LR-6)
-- `lead-auto-refund` NEW (LR-9) — daily cron
-- `sam-gov-mi-pull` NEW (GR-10) — daily cron
+- `talent-radar-sms-dispatch` NEW (TR-11) — Twilio scorching candidate push
+- `claim-candidate` NEW (TR-12) — atomic 48h lock
+- `demand-radar-pitch-generator` NEW (DR-12) — Gemini cold email draft
+- `growth-radar-slack-push` NEW (GR-13) — webhook dispatcher
+- `lead-radar-credit-pack` NEW (LR-13) — Stripe credit purchase + deduction
 
-**Frontend (5)**:
-- `MyTechAlert.tsx` (TR-8, TR-10) — auto-fade + source badges
-- `MyIndustryPulse.tsx` (DR-7, DR-9) — slider + cross-ref banner
-- `GrowthRadarDashboard.tsx` NEW (GR-6, GR-9) — client feed + CSV export
-- `ContractorLeads.tsx` (LR-7, LR-8) — statewide + bid-up UI
-- `AdminCoverageMap.tsx` NEW (LR-10) — heatmap admin tab
-- Signup forms (DR-10, GR-8) — vendor-fit input + county multi-select
+**Frontend (4)**:
+- `MyTechAlert.tsx` (TR-13, TR-14, TR-15) — missed digest section + ROI badge + referral button
+- `MyIndustryPulse.tsx` (DR-13, DR-14) — feedback thumbs + watchlist UI
+- `GrowthRadarDashboard.tsx` (GR-11, GR-12, GR-14) — map view + filters + saved searches
+- `LeadRadarDashboard.tsx` NEW or `ContractorLeads.tsx` (LR-11, LR-12, LR-14) — leaderboard + preview + SMS upgrade
 
 **Migration (1)**:
-- `radar_enhancements_v2.sql` — `confidence_threshold` column on industry_pulse_clients, alert dispatch timestamps for agency head-start, growth_radar_signals table for SAM.gov
+- `radar_enhancements_v3.sql` — `referral_codes`, `signal_feedback`, `companies_watchlist`, `saved_searches`, `lead_credit_packs`, `claim_locks` columns
 
 ## Sequence
-
-1. Migration v2 (5 min)
-2. 5 edge functions — scanner upgrades + 3 new crons (~30 min)
-3. 5 frontend pages + 1 admin tab (~45 min)
-4. QA at 390px + 1280px on new dashboards
-5. Deliverable: `/mnt/documents/DWA_Radar_Batch2_Shipped_2026-04-17.pdf` summary
+1. Migration v3 (5 min)
+2. 5 new edge functions (~30 min)
+3. 4 frontend updates (~40 min)
+4. QA at 390px + 1280px
+5. Deliverable: `/mnt/documents/DWA_Radar_Batch3_Shipped_2026-04-17.pdf`
 
 ## What's Left After This
-
-40 enhancements remain (10 per Radar) — Batches 3 + 4. Documented in the master PDF with priority scores. Ship in two more passes after this lands.
+20 enhancements remain (5 per Radar) — Batch 4 = the polish/long-tail (advanced analytics, AI agents, multi-language). Ship after this batch validates with first paying clients.
 
 Total scope: ~90 min.
 
