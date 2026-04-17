@@ -576,6 +576,63 @@ export default function AdminDeadLeads() {
             ))}
           </div>
 
+          {/* Trade / City picker + last-run feedback */}
+          <div style={{ background: "#0f2342", border: "1px solid #1e3a5f", borderRadius: 10, padding: 14, marginBottom: 16 }}>
+            <div style={{ color: "#00d4ff", fontSize: 12, fontWeight: 700, letterSpacing: 0.6, marginBottom: 10 }}>
+              TARGET A SPECIFIC TRADE + CITY (OPTIONAL)
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 8, marginBottom: 10 }}>
+              <select
+                value={prospectTrade}
+                onChange={(e) => setProspectTrade(e.target.value)}
+                style={{ background: "#0a1628", color: "#e2e8f0", border: "1px solid #1e3a5f", borderRadius: 6, padding: "8px 10px", fontSize: 13 }}
+              >
+                <option value="">— Auto-rotate trade —</option>
+                {PROSPECT_TRADES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <select
+                value={prospectCity}
+                onChange={(e) => setProspectCity(e.target.value)}
+                style={{ background: "#0a1628", color: "#e2e8f0", border: "1px solid #1e3a5f", borderRadius: 6, padding: "8px 10px", fontSize: 13 }}
+              >
+                <option value="">— Auto-rotate city —</option>
+                {PROSPECT_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <Button size="sm" onClick={handleRunProspector} disabled={prospecting}
+                style={{ background: "#00d4ff", color: "#0a1628", fontWeight: 700, whiteSpace: "nowrap" }}>
+                {prospecting ? "Finding…" : "Run Prospector"}
+              </Button>
+            </div>
+            <div style={{ color: "#475569", fontSize: 11 }}>
+              Leave both blank to use today's auto-rotated combos. Selecting both targets one specific trade × city.
+            </div>
+
+            {lastProspectResult && (
+              <div style={{ marginTop: 12, padding: 12, background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span style={{
+                    background: lastProspectResult.emailed > 0 ? "#10b981" : "#f59e0b",
+                    color: "#0a1628", fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 4, letterSpacing: 0.5,
+                  }}>
+                    {lastProspectResult.emailed > 0 ? "SENT" : "NO SENDS"}
+                  </span>
+                  <span style={{ color: "#94a3b8", fontSize: 12 }}>
+                    Last run: {lastProspectResult.emailed} emailed · {lastProspectResult.found} found · {lastProspectResult.skipped} skipped · {lastProspectResult.scoutRejected} AI-rejected
+                  </span>
+                </div>
+                {lastProspectResult.note && (
+                  <div style={{ color: "#fbbf24", fontSize: 12, lineHeight: 1.5, marginBottom: 6 }}>
+                    ⚠ {lastProspectResult.note}
+                  </div>
+                )}
+                <div style={{ color: "#64748b", fontSize: 11 }}>
+                  Daily cap: {lastProspectResult.sentAfter}/{lastProspectResult.cap} sends used today
+                  {lastProspectResult.combos?.length ? ` · combos: ${lastProspectResult.combos.map(c => `${c.trade}/${c.city}`).join(", ")}` : ""}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Pipeline table */}
           <div style={{ background: "#0f2342", border: "1px solid #1e3a5f", borderRadius: 10, overflow: "hidden" }}>
             <div style={{ padding: "10px 14px", borderBottom: "1px solid #1e3a5f" }}>
