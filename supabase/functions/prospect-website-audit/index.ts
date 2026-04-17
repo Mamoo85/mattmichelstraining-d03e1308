@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { stealthScrape } from "../_shared/scrape-fallback.ts";
 
-const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 
@@ -53,30 +53,13 @@ serve(async (req) => {
       );
     }
 
-    // Step 1: Scrape with Firecrawl
-    let markdown = "";
-    if (FIRECRAWL_API_KEY) {
-      let formattedUrl = url.trim();
-      if (!formattedUrl.startsWith("http")) formattedUrl = `https://${formattedUrl}`;
-
-      console.log(`[PROSPECT-AUDIT] Scraping: ${formattedUrl}`);
-      const scrapeRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url: formattedUrl,
-          formats: ["markdown"],
-          onlyMainContent: true,
-        }),
-      });
-
-      const scrapeData = await scrapeRes.json();
-      markdown = scrapeData?.data?.markdown || scrapeData?.markdown || "";
-      console.log(`[PROSPECT-AUDIT] Scraped ${markdown.length} chars`);
-    }
+    // Step 1: Scrape with three-tier waterfall (Firecrawl → plain fetch → empty)
+    let formattedUrl = url.trim();
+    if (!formattedUrl.startsWith("http")) formattedUrl = `https://${formattedUrl}`;
+    console.log(`[PROSPECT-AUDIT] Scraping: ${formattedUrl}`);
+    const scrapeResult = await stealthScrape(formattedUrl, { maxChars: 4000, timeoutMs: 12_000 });
+    const markdown = scrapeResult.markdown;
+    console.log(`[PROSPECT-AUDIT] Scraped ${markdown.length} chars via ${scrapeResult.source}`);
 
     if (!markdown || markdown.length < 50) {
       return new Response(
