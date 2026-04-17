@@ -132,6 +132,7 @@ const GbpManagement = lazyRetry(() => import("./pages/GbpManagement"));
 const NewsletterSponsor = lazyRetry(() => import("./pages/NewsletterSponsor"));
 const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
+const GrowthRadarDashboard = lazyRetry(() => import("./pages/GrowthRadarDashboard"));
 const ContractorROIReport = lazyRetry(() => import("./pages/ContractorROIReport"));
 const DeadLeadStats = lazyRetry(() => import("./pages/DeadLeadStats"));
 const MyTechAlert = lazyRetry(() => import("./pages/MyTechAlert"));
