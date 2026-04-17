@@ -15,6 +15,7 @@ export default function TheWire() {
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [recentLeads, setRecentLeads] = useState<any[]>([]);
+  const [radarSignals, setRadarSignals] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
