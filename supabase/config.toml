@@ -1605,3 +1605,7 @@ verify_jwt = false
 
 [functions.demand-radar-portal-data]
 verify_jwt = false
+
+[functions.supplier-outreach-draft]
+verify_jwt = false
+

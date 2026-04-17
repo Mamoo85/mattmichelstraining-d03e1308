@@ -20,8 +20,9 @@ const AdminTrojanHorseLog = lazy(() => import("@/components/admin/AdminTrojanHor
 const AdminPostcardOps = lazy(() => import("@/components/admin/AdminPostcardCampaigns"));
 const AdminAgencyOutreach = lazy(() => import("@/components/dwa-admin/AdminAgencyOutreach"));
 const AdminDemandRadar = lazy(() => import("@/components/dwa-admin/AdminDemandRadar"));
+const SupplierOutreachGenerator = lazy(() => import("@/components/dwa-admin/SupplierOutreachGenerator"));
 
-type Tab = "overview" | "clients" | "jobs" | "assets" | "contracts" | "import" | "command" | "board" | "playbook" | "strategy" | "medicare" | "industrial" | "growth" | "labs" | "sales-guide" | "lara-health" | "cross-sell" | "postcards" | "agency-outreach" | "demand-radar";
+type Tab = "overview" | "clients" | "jobs" | "assets" | "contracts" | "import" | "command" | "board" | "playbook" | "strategy" | "medicare" | "industrial" | "growth" | "labs" | "sales-guide" | "lara-health" | "cross-sell" | "postcards" | "agency-outreach" | "demand-radar" | "supplier-outreach";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -44,6 +45,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "postcards", label: "📬 Postcards" },
   { id: "agency-outreach", label: "🎯 Agency Outreach" },
   { id: "demand-radar", label: "📡 Demand Radar" },
+  { id: "supplier-outreach", label: "📨 Supplier Outreach" },
 ];
 
 function QuickLinks() {
@@ -270,6 +272,11 @@ export default function DWAAdmin() {
         {activeTab === "demand-radar" && (
           <Suspense fallback={<div className="text-white/40 text-sm">Loading Demand Radar...</div>}>
             <AdminDemandRadar />
+          </Suspense>
+        )}
+        {activeTab === "supplier-outreach" && (
+          <Suspense fallback={<div className="text-white/40 text-sm">Loading Supplier Outreach...</div>}>
+            <SupplierOutreachGenerator />
           </Suspense>
         )}
       </main>
