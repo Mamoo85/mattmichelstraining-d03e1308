@@ -39,6 +39,21 @@ export default function AdminDeadLeads() {
   const [newForm, setNewForm] = useState({ contractor_id: "", name: "", trade: "", contacts: "" });
   const [creating, setCreating] = useState(false);
   const [running, setRunning] = useState(false);
+  const [prospectTrade, setProspectTrade] = useState<string>("");
+  const [prospectCity, setProspectCity] = useState<string>("");
+  const [lastProspectResult, setLastProspectResult] = useState<{
+    ok: boolean;
+    found: number;
+    emailed: number;
+    deadLeadEmailed: number;
+    skipped: number;
+    scoutRejected: number;
+    cap: number;
+    sentBefore: number;
+    sentAfter: number;
+    combos?: { trade: string; city: string }[];
+    note?: string;
+  } | null>(null);
 
   const { data: contractors } = useQuery({
     queryKey: ["contractor_clients_active"],
@@ -137,15 +152,68 @@ export default function AdminDeadLeads() {
     complete: pipeline?.filter((r: any) => r.drip_campaign_status?.d8_sent || r.status === "closed" || r.status === "unsubscribed").length || 0,
   };
 
+  const PROSPECT_TRADES = ["roofer", "HVAC contractor", "plumber", "electrician"];
+  const PROSPECT_CITIES = [
+    "Grosse Pointe MI", "Detroit MI", "Warren MI", "Sterling Heights MI",
+    "Troy MI", "Royal Oak MI", "Dearborn MI", "Livonia MI",
+    "Southfield MI", "Farmington Hills MI", "Novi MI", "Birmingham MI",
+  ];
+
   const handleRunProspector = async () => {
     setProspecting(true);
+    setLastProspectResult(null);
     try {
-      const { data, error } = await supabase.functions.invoke("contractor-prospector", { body: {} });
+      const body: Record<string, string> = {};
+      if (prospectTrade) body.target_trade = prospectTrade;
+      if (prospectCity) body.target_city = prospectCity;
+
+      const { data, error } = await supabase.functions.invoke("contractor-prospector", { body });
       if (error) throw error;
-      toast.success(`Prospector ran — ${data?.totalDeadLeadEmailed ?? 0} dead lead emails sent today`);
+
+      const found      = Number(data?.found ?? 0);
+      const emailed    = Number(data?.emailed ?? 0);
+      const deadLead   = Number(data?.deadLeadEmailed ?? 0);
+      const skipped    = Number(data?.skipped ?? 0);
+      const rejected   = Number(data?.scoutRejected ?? 0);
+      const sentBefore = Number(data?.dailySentBefore ?? 0);
+      const sentAfter  = Number(data?.dailySentAfter ?? 0);
+      const cap        = Number(data?.cap ?? 30);
+
+      // Build a precise reason when nothing was emailed.
+      let note: string | undefined;
+      if (emailed === 0) {
+        if (sentBefore >= cap) {
+          note = `Daily send cap of ${cap} already reached today (sent ${sentBefore}). Resets at midnight ET.`;
+        } else if (found === 0) {
+          note = `Google Places returned 0 ${prospectTrade || "trade"} businesses for ${prospectCity || "today's combos"}. Try a different trade/city or check GOOGLE_MAPS_API_KEY.`;
+        } else if (skipped === found && skipped > 0) {
+          note = `Found ${found} businesses but all were skipped (already in CRM, suppressed, or no email scrapeable).`;
+        } else if (rejected === found && rejected > 0) {
+          note = `Found ${found} businesses but Scout AI rejected all of them (low pain signal / not worth outreach).`;
+        } else {
+          note = `Found ${found} prospects: ${skipped} already in DB, ${rejected} rejected by Scout AI, ${found - skipped - rejected} other. Nothing met the bar.`;
+        }
+      }
+
+      setLastProspectResult({
+        ok: !!data?.ok,
+        found, emailed,
+        deadLeadEmailed: deadLead,
+        skipped, scoutRejected: rejected, cap,
+        sentBefore, sentAfter,
+        combos: data?.combos,
+        note,
+      });
+
+      if (emailed > 0) {
+        toast.success(`Prospector ran — ${emailed} sent (${deadLead} dead-lead pitches)`);
+      } else {
+        toast.message("Prospector ran — 0 sent", { description: note });
+      }
       refetchPipeline();
     } catch (e: any) {
       toast.error(e.message || "Prospector failed");
+      setLastProspectResult({ ok: false, found: 0, emailed: 0, deadLeadEmailed: 0, skipped: 0, scoutRejected: 0, cap: 0, sentBefore: 0, sentAfter: 0, note: e.message });
     } finally {
       setProspecting(false);
     }
