@@ -1596,3 +1596,12 @@ verify_jwt = false
 
 [functions.agency-payment-reconcile]
 verify_jwt = false
+
+[functions.industrial-growth-intel]
+verify_jwt = false
+
+[functions.demand-radar-digest]
+verify_jwt = false
+
+[functions.demand-radar-portal-data]
+verify_jwt = false

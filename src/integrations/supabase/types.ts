@@ -3035,6 +3035,48 @@ export type Database = {
         }
         Relationships: []
       }
+      demand_radar_signal_actions: {
+        Row: {
+          action: string
+          client_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          signal_id: string
+        }
+        Insert: {
+          action?: string
+          client_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          signal_id: string
+        }
+        Update: {
+          action?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          signal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demand_radar_signal_actions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "industry_pulse_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demand_radar_signal_actions_signal_id_fkey"
+            columns: ["signal_id"]
+            isOneToOne: false
+            referencedRelation: "industry_pulse_signals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       direct_mail_clients: {
         Row: {
           active: boolean | null
@@ -5091,51 +5133,72 @@ export type Database = {
       industry_pulse_clients: {
         Row: {
           active: boolean | null
+          buyer_type: string
           company_name: string
           contact_name: string | null
           created_at: string | null
           dashboard_token: string | null
           email: string
           id: string
+          is_test_account: boolean
+          last_alerted_at: string | null
           phone: string | null
+          plan: string | null
           pricing_tier: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           target_industries: string[] | null
           target_roles: string[] | null
+          territory_counties: string[] | null
           updated_at: string | null
+          vertical: string | null
+          webhook_url: string | null
         }
         Insert: {
           active?: boolean | null
+          buyer_type?: string
           company_name: string
           contact_name?: string | null
           created_at?: string | null
           dashboard_token?: string | null
           email: string
           id?: string
+          is_test_account?: boolean
+          last_alerted_at?: string | null
           phone?: string | null
+          plan?: string | null
           pricing_tier?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           target_industries?: string[] | null
           target_roles?: string[] | null
+          territory_counties?: string[] | null
           updated_at?: string | null
+          vertical?: string | null
+          webhook_url?: string | null
         }
         Update: {
           active?: boolean | null
+          buyer_type?: string
           company_name?: string
           contact_name?: string | null
           created_at?: string | null
           dashboard_token?: string | null
           email?: string
           id?: string
+          is_test_account?: boolean
+          last_alerted_at?: string | null
           phone?: string | null
+          plan?: string | null
           pricing_tier?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           target_industries?: string[] | null
           target_roles?: string[] | null
+          territory_counties?: string[] | null
           updated_at?: string | null
+          vertical?: string | null
+          webhook_url?: string | null
         }
         Relationships: []
       }
@@ -5144,9 +5207,11 @@ export type Database = {
           client_tag: string | null
           company_name: string
           confidence: number | null
+          county: string | null
           created_at: string | null
           cross_referenced: boolean | null
           detected_at: string | null
+          expansion_type: string | null
           hiring_count: number | null
           hiring_roles: string[] | null
           id: string
@@ -5157,14 +5222,18 @@ export type Database = {
           sector: string | null
           signal_type: string | null
           source_urls: string[] | null
+          target_buyer_type: string | null
+          vertical: string | null
         }
         Insert: {
           client_tag?: string | null
           company_name: string
           confidence?: number | null
+          county?: string | null
           created_at?: string | null
           cross_referenced?: boolean | null
           detected_at?: string | null
+          expansion_type?: string | null
           hiring_count?: number | null
           hiring_roles?: string[] | null
           id?: string
@@ -5175,14 +5244,18 @@ export type Database = {
           sector?: string | null
           signal_type?: string | null
           source_urls?: string[] | null
+          target_buyer_type?: string | null
+          vertical?: string | null
         }
         Update: {
           client_tag?: string | null
           company_name?: string
           confidence?: number | null
+          county?: string | null
           created_at?: string | null
           cross_referenced?: boolean | null
           detected_at?: string | null
+          expansion_type?: string | null
           hiring_count?: number | null
           hiring_roles?: string[] | null
           id?: string
@@ -5193,6 +5266,8 @@ export type Database = {
           sector?: string | null
           signal_type?: string | null
           source_urls?: string[] | null
+          target_buyer_type?: string | null
+          vertical?: string | null
         }
         Relationships: []
       }

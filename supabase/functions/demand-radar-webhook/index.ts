@@ -41,7 +41,7 @@ serve(async (req) => {
 
     // Get subscribers with webhook URLs configured
     const { data: subscribers } = await supabase
-      .from("industry_pulse_subscribers")
+      .from("industry_pulse_clients")
       .select("id, email, company_name, webhook_url, target_industries")
       .eq("active", true)
       .not("webhook_url", "is", null);
