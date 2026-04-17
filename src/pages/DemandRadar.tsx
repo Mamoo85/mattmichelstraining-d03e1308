@@ -19,6 +19,7 @@ export default function DemandRadar() {
   const [company, setCompany] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
+  const [territoryStats, setTerritoryStats] = useState<{ county: string; taken: number; cap: number }[]>([]);
 
   const CITY_NAMES: Record<string, string> = {
     detroit: "Metro Detroit", "grand-rapids": "Grand Rapids", lansing: "Lansing",
