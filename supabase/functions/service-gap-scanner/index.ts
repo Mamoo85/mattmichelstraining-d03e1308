@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { stealthScrape, reasonToCopy } from "../_shared/stealth-scrape.ts";
 
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
@@ -11,20 +12,8 @@ const corsHeaders = {
 };
 
 async function scrapeUrl(url: string): Promise<string> {
-  if (!FIRECRAWL_API_KEY) return "";
-  try {
-    let formatted = url.trim();
-    if (!formatted.startsWith("http")) formatted = `https://${formatted}`;
-    const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ url: formatted, formats: ["markdown"], onlyMainContent: true }),
-      signal: AbortSignal.timeout(20_000),
-    });
-    if (!res.ok) return "";
-    const data = await res.json();
-    return (data?.data?.markdown || "").slice(0, 5000);
-  } catch { return ""; }
+  const r = await stealthScrape(url, { maxChars: 5000 });
+  return r.ok ? (r.markdown || "") : "";
 }
 
 async function aiAnalyze(prospectContent: string, competitorContents: string[]): Promise<any> {
@@ -83,14 +72,10 @@ Deno.serve(async (req) => {
       } catch (e) { console.warn("lead insert failed:", e); }
     }
 
-    if (!FIRECRAWL_API_KEY) {
-      return new Response(JSON.stringify({ error: "Scanner is temporarily unavailable. Try again in a few minutes." }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    // Scrape prospect
+    // Scrape prospect (uses tiered stealth helper — sanitized errors)
     const prospectContent = await scrapeUrl(url);
     if (!prospectContent) {
-      return new Response(JSON.stringify({ error: "Could not read that URL. Check the address (include https://) and try again." }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ success: false, message: reasonToCopy("site_blocked_us") }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Find competitor URLs from prospect content (look for location hints)

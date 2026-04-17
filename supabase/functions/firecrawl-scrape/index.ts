@@ -1,8 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { stealthScrape, reasonToCopy } from "../_shared/stealth-scrape.ts";
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -36,7 +36,6 @@ Deno.serve(async (req) => {
     }
 
     const { url, options } = await req.json();
-
     if (!url) {
       return new Response(
         JSON.stringify({ success: false, error: 'URL is required' }),
@@ -44,78 +43,37 @@ Deno.serve(async (req) => {
       );
     }
 
-    const apiKey = FIRECRAWL_API_KEY;
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Firecrawl connector not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    let formattedUrl = url.trim();
-    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
-      formattedUrl = `https://${formattedUrl}`;
-    }
-
-    // Stealth defaults: stealth proxy + auto-retry on bot blocks (defeats anti-scraping tech)
-    const requestBody: Record<string, unknown> = {
-      url: formattedUrl,
-      formats: options?.formats || ['markdown'],
-      onlyMainContent: options?.onlyMainContent ?? true,
-      waitFor: options?.waitFor ?? 2000,
-      proxy: options?.proxy ?? 'stealth',
-      mobile: options?.mobile ?? false,
-      timeout: options?.timeout ?? 60000,
-      blockAds: true,
-      removeBase64Images: true,
-    };
-    if (options?.location) requestBody.location = options.location;
-    if (options?.actions) requestBody.actions = options.actions;
-
-    let response = await fetch('https://api.firecrawl.dev/v2/scrape', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
+    const result = await stealthScrape(url, {
+      formats: options?.formats,
+      onlyMainContent: options?.onlyMainContent,
+      maxChars: options?.maxChars,
     });
 
-    let data = await response.json();
-
-    // Auto-retry once with stealth + longer waitFor if blocked or timed out
-    if (!response.ok && (response.status === 403 || response.status === 408 || response.status === 429 || /block|forbidden|timeout|captcha/i.test(JSON.stringify(data)))) {
-      console.log('[firecrawl-scrape] First attempt blocked/timed out, retrying with stealth + 6s wait');
-      requestBody.proxy = 'stealth';
-      requestBody.waitFor = 6000;
-      requestBody.timeout = 90000;
-      response = await fetch('https://api.firecrawl.dev/v2/scrape', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-      data = await response.json();
-    }
-
-    if (!response.ok) {
+    if (!result.ok) {
+      // Always 200 — the request succeeded, the page just wouldn't cooperate.
       return new Response(
-        JSON.stringify({ success: false, error: data.error || `Request failed with status ${response.status}` }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: false, message: reasonToCopy(result.reason) }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    // Match v2 shape clients expect: { success, data: { markdown, html, links, metadata } }
     return new Response(
-      JSON.stringify(data),
+      JSON.stringify({
+        success: true,
+        data: {
+          markdown: result.markdown,
+          html: result.html,
+          links: result.links,
+          metadata: result.metadata,
+        },
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Failed to scrape';
+  } catch (_error) {
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ success: false, message: reasonToCopy() }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
