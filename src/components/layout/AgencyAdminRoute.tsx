@@ -16,7 +16,7 @@ const AgencyAdminRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!user) return <Navigate to="/auth" replace />;
-  if (!isAgencyAdmin) return <Navigate to="/client-portal" replace />;
+  if (!isAgencyAdmin) return <Navigate to="/dashboard" replace />;
 
   return <>{children}</>;
 };
