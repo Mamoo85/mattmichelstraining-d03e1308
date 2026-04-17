@@ -33,8 +33,8 @@ serve(async (req) => {
           unit_amount: 9900, // $99/mo
           recurring: { interval: "month" },
           product_data: {
-            name: "Industry Pulse Intelligence",
-            description: "Daily predictive sales signals: MIOSHA compliance gaps, municipal bond funding, expansion hiring patterns across Metro Detroit industrial sectors.",
+            name: "Demand Radar — Predictive Sales Intelligence",
+            description: "Daily predictive sales signals across all of Michigan: MIOSHA compliance gaps, municipal bond funding, expansion hiring patterns. Statewide industrial coverage.",
           },
         },
       }],

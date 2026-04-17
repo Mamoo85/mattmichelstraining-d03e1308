@@ -729,6 +729,11 @@ const App = () => (
                     <Route path="/recall-alerts" element={<RecallAlertService />} />
                     <Route path="/permit-watch" element={<PermitWatch />} />
                     <Route path="/hire-alert" element={<HireAlert />} />
+                    <Route path="/talent-radar" element={<HireAlert />} />
+                    <Route path="/growth-radar" element={<IndustryPulse />} />
+                    <Route path="/lead-radar" element={<ContractorLeads />} />
+                    <Route path="/textback" element={<Navigate to="/missed-call-catch" replace />} />
+                    <Route path="/radars" element={<Navigate to="/talent-radar" replace />} />
                     <Route path="/go/techalert" element={<GoTechAlert />} />
                     <Route path="/free-leads" element={<FreeLeadsQR />} />
                     <Route path="/hire-alert-trial" element={<HireAlertTrial />} />

@@ -52,8 +52,8 @@ serve(async (req) => {
     }
 
     const planLabel = resolvedPlan === "bundle"
-      ? "TechAlert + Field CRM Bundle"
-      : `TechAlert Hiring Monitor${isBeta ? " (Beta)" : ""}`;
+      ? "Talent Radar + FieldDesk Bundle"
+      : `Talent Radar — Statewide Michigan Hiring Monitor${isBeta ? " (Beta)" : ""}`;
 
     const origin = req.headers.get("origin") || "https://www.detroitwebagent.com";
 
@@ -71,7 +71,7 @@ serve(async (req) => {
             product_data: {
               name: planLabel,
               description:
-                "Daily alerts when licensed tradespeople become available in Metro Detroit. Proprietary multi-source talent signal monitoring.",
+                "Daily alerts when licensed tradespeople become available across all of Michigan. Proprietary multi-source talent radar monitoring — license issuance, professional movement, live availability.",
             },
           },
         },
