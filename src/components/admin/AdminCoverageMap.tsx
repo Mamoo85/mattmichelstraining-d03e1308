@@ -12,15 +12,22 @@ const AdminCoverageMap = () => {
   useEffect(() => {
     (async () => {
       const sinceISO = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
-      const [{ data: leads = [] }, { data: contractors = [] }] = await Promise.all([
-        supabase.from("contractor_leads").select("city, state, created_at").gte("created_at", sinceISO).limit(2000),
+      const [leadsRes, contractorsRes] = await Promise.all([
+        supabase
+          .from("contractor_leads")
+          .select("created_at, contractor_lead_sites(city, state)")
+          .gte("created_at", sinceISO)
+          .limit(2000),
         supabase.from("contractor_clients").select("city, state").eq("active", true).limit(1000),
       ]);
+      const leads = (leadsRes.data || []) as any[];
+      const contractors = (contractorsRes.data || []) as any[];
 
       const counts = new Map<string, Row>();
-      for (const l of leads || []) {
-        const key = (l.city || "Unknown").toLowerCase();
-        const cur = counts.get(key) || { county: l.city || "Unknown", leads: 0, contractors: 0 };
+      for (const l of leads) {
+        const city = l.contractor_lead_sites?.city || "Unknown";
+        const key = city.toLowerCase();
+        const cur = counts.get(key) || { county: city, leads: 0, contractors: 0 };
         cur.leads++;
         counts.set(key, cur);
       }
