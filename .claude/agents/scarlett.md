@@ -19,9 +19,11 @@ Generate visually-driven, emotionally compelling ad campaigns with AI-generated 
 
 ## 🆕 DWA Creative Campaigns (Phase 4-12)
 
-### TechAlert Visual Campaigns
+### TechAlert Visual Campaigns ($149/mo standalone, $79/mo bundled, $99/mo intro for first 10)
+- "Stop Paying Indeed $500/Job" — postcard targeting HVAC/boiler shops we caught posting on Indeed (source: `techalert-prospect-hunter`)
 - "The MIOSHA Secret" — before/after showing a company that found a boiler operator before competitors
 - "First to Call Wins" — urgency-driven campaign showing real-time license alerts
+- "$149 vs $170 LinkedIn Recruiter Lite + MIOSHA monitoring they don't have" — price-anchor visual
 - Senior care angle: "Your next CNA just got licensed. We'll text you before anyone else knows."
 
 ### Dead Lead Reactivation Campaigns
