@@ -53,6 +53,8 @@ serve(async (req) => {
           : "boiler_operator,hvac_tech",
         county: county || "",
         names_requested: "10",
+        tos_version: "2026-04-fcra",
+        data_classification: "b2b_market_intelligence_not_consumer_report",
       },
       success_url: `${origin}/hire-alert?success=ondemand`,
       cancel_url: `${origin}/hire-alert`,
