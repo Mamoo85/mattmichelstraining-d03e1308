@@ -1615,3 +1615,6 @@ verify_jwt = false
 [functions.supplier-outreach-draft]
 verify_jwt = false
 
+
+[functions.msp-inquiry-submit]
+verify_jwt = false
