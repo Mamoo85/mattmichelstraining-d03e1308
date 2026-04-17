@@ -523,6 +523,48 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_run_log: {
+        Row: {
+          agent_name: string
+          completed_at: string | null
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          id: string
+          payload: Json | null
+          result_count: number | null
+          result_summary: string | null
+          status: string
+          triggered_by: string | null
+        }
+        Insert: {
+          agent_name: string
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          payload?: Json | null
+          result_count?: number | null
+          result_summary?: string | null
+          status?: string
+          triggered_by?: string | null
+        }
+        Update: {
+          agent_name?: string
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          payload?: Json | null
+          result_count?: number | null
+          result_summary?: string | null
+          status?: string
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
       ai_action_queue: {
         Row: {
           action_type: string
