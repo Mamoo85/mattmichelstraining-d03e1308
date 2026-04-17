@@ -634,6 +634,17 @@ serve(async (req) => {
             tier = PRODUCT_TIER_MAP[productId] || "unknown";
           }
 
+          // Idempotency guard — if webhook fires twice, skip duplicate conversion
+          const { data: existingConversion } = await sb
+            .from("referral_conversions")
+            .select("id")
+            .eq("referral_code", refCode)
+            .eq("referred_user_id", referredProfile.user_id)
+            .maybeSingle();
+
+          if (existingConversion) {
+            console.log(`[WEBHOOK] Referral conversion already recorded for ${refCode} → ${referredProfile.user_id}, skipping`);
+          } else {
           // Record conversion
           await sb.from("referral_conversions").insert({
             referrer_user_id: refRow.user_id,
@@ -662,6 +673,7 @@ serve(async (req) => {
 
           // Award referral points to the referrer
           await awardPts(sb, refRow.user_id, "referral", 200, `Referral: ${referredEmail} subscribed`, refCode);
+          } // end else (not duplicate)
         }
       }
 
