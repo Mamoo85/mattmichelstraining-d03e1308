@@ -1,31 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
-const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY") || "";
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-async function sendSms(to: string, from: string, body: string) {
-  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-  if (!TWILIO_API_KEY) throw new Error("TWILIO_API_KEY is not configured");
-
-  const res = await fetch(`${GATEWAY_URL}/Messages.json`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      "X-Connection-Api-Key": TWILIO_API_KEY,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({ To: to, From: from, Body: body }),
-  });
-  if (!res.ok) throw new Error(`Twilio gateway error: ${await res.text()}`);
-  return res.json();
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -44,11 +24,18 @@ serve(async (req) => {
     }
 
     const message = `Hi ${customerName}! Thanks for choosing ${client.business_name}. How would you rate your experience? Reply 1-5 (5 = amazing). Your feedback helps us improve!`;
-    await sendSms(customerPhone, client.twilio_number, message);
+    // Route through shared sendSMS — TCPA opt-out check + system_comms_log
+    const result = await sendSMS(customerPhone, client.twilio_number, message, "satisfaction_survey");
+    if (!result.success && !result.skipped) {
+      return new Response(JSON.stringify({ error: result.error || "SMS send failed" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (result.skipped) {
+      return new Response(JSON.stringify({ ok: false, skipped: true, reason: "sms_opt_out" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     await supabase.from("satisfaction_survey_clients").update({ survey_count: (client.survey_count || 0) + 1 }).eq("id", client.id);
 
-    return new Response(JSON.stringify({ success: true, message: `Survey sent to ${customerName} at ${customerPhone}` }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ success: true, message: `Survey sent to ${customerName} at ${customerPhone}`, sid: result.sid }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
     console.error("satisfaction-survey-sender error:", error);
     return new Response(JSON.stringify({ error: (error instanceof Error ? error.message : "Unknown error") }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
