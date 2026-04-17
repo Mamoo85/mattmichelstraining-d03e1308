@@ -44,8 +44,8 @@ serve(async (req) => {
 
     // Get Demand Radar subscribers with SMS alerts
     const { data: subscribers } = await supabase
-      .from("industry_pulse_subscribers")
-      .select("id, email, phone, company_name, target_industries, territory_zips")
+      .from("industry_pulse_clients")
+      .select("id, email, phone, company_name, target_industries, territory_counties, is_test_account, dashboard_token")
       .eq("active", true)
       .not("phone", "is", null);
 
@@ -75,7 +75,18 @@ serve(async (req) => {
       const rolesStr = (top.hiring_roles || []).slice(0, 2).join(", ");
       const needsStr = (top.predicted_needs || []).slice(0, 2).join(", ");
 
-      const message = `Demand Radar: ${top.company_name} (${top.location || "MI"}) hiring ${top.hiring_count}+ ${rolesStr}. Confidence: ${top.confidence}/10${top.cross_referenced ? " [CROSS-REF]" : ""}\n\nPredicted needs: ${needsStr}\n\n${relevant.length > 1 ? `+${relevant.length - 1} more signals today\n\n` : ""}View dashboard: https://detroitwebagent.com/my-industry-pulse?token=${sub.id}\n\nReply STOP to unsubscribe`;
+      const message = `Demand Radar: ${top.company_name} (${top.location || "MI"}) hiring ${top.hiring_count}+ ${rolesStr}. Confidence: ${top.confidence}/10${top.cross_referenced ? " [CROSS-REF]" : ""}\n\nPredicted needs: ${needsStr}\n\n${relevant.length > 1 ? `+${relevant.length - 1} more signals today\n\n` : ""}View dashboard: https://detroitwebagent.com/demand-radar-portal?token=${sub.dashboard_token || sub.id}\n\nReply STOP to opt out`;
+
+      // Sinkhole test accounts — log instead of send
+      if (sub.is_test_account) {
+        await supabase.from("system_comms_log").insert({
+          channel: "sms", product: "demand_radar_sms_alert",
+          recipient: sub.phone, body_preview: message.slice(0, 200),
+          status: "sinkhole", metadata: { client_id: sub.id, reason: "is_test_account" },
+        });
+        results.push({ subscriber: sub.company_name || sub.email, sent: 0, error: "sinkhole" });
+        continue;
+      }
 
       try {
         await sendSMS(supabase, {

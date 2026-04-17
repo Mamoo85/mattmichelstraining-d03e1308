@@ -147,11 +147,52 @@ serve(async (req) => {
         if (!error) stats.candidates_distributed++;
       }
 
+      // PERFECT STORM: cross-reference Demand Radar signals for this agency's territory + vertical
+      // Only confidence >= 8 to preserve the wow factor
+      let perfectStormSignals: any[] = [];
+      try {
+        const stormSince = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
+        const { data: signals = [] } = await supabase
+          .from("industry_pulse_signals")
+          .select("company_name, location, county, expansion_type, predicted_needs, confidence, vertical, industry")
+          .gte("detected_at", stormSince)
+          .gte("confidence", 8)
+          .limit(20);
+        perfectStormSignals = (signals || []).filter((s: any) => {
+          const sigCounty = (s.county || s.location || "").toLowerCase();
+          const countyMatch = !agency.territory_counties?.length || agency.territory_counties.some((c: string) => sigCounty.includes(c.toLowerCase()));
+          if (!countyMatch) return false;
+          const sigVert = ((s.vertical || s.industry || "")).toLowerCase();
+          if (agency.vertical === "industrial") return /hvac|cnc|weld|electric|boiler|plumb|industrial|steel/.test(sigVert);
+          if (agency.vertical === "healthcare") return /health|medic|nurs|cna|rn|lpn/.test(sigVert);
+          return true;
+        }).slice(0, 3);
+        if (perfectStormSignals.length) {
+          await supabase.from("system_comms_log").insert({
+            channel: "email", product: "perfect_storm_match",
+            recipient: agency.contact_email,
+            body_preview: `${perfectStormSignals.length} signals matched ${blended.length} candidates`,
+            status: "matched", metadata: { agency_id: agency.id, signals: perfectStormSignals.map((s: any) => s.company_name) },
+          });
+        }
+      } catch (e) {
+        console.error(`[perfect-storm] match failed for ${agency.id}:`, e);
+      }
+
       // Email the agency (sanitized output only)
       if (RESEND_API_KEY && agency.contact_email && blended.length) {
+        // Sinkhole test accounts
+        if (agency.is_test_account) {
+          await supabase.from("system_comms_log").insert({
+            channel: "email", product: "agency_distribution",
+            recipient: agency.contact_email, body_preview: `${blended.length} candidates (sinkhole)`,
+            status: "sinkhole", metadata: { agency_id: agency.id },
+          });
+          continue;
+        }
         const sanitized = sanitizeBatch(blended);
         const portalUrl = `https://www.detroitwebagent.com/agency-portal?id=${agency.id}`;
-        const html = buildAgencyEmail(agency.agency_name, sanitized, portalUrl);
+        const html = buildAgencyEmail(agency.agency_name, sanitized, portalUrl, perfectStormSignals);
         try {
           await fetch("https://api.resend.com/emails", {
             method: "POST",
