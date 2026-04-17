@@ -208,8 +208,8 @@ serve(async (req) => {
     const estimatedCost = (prospects.length * COST_PER_POSTCARD).toFixed(2);
     console.log(`[send-postcards] Cost guardrails OK. ${prospects.length} cards × $${COST_PER_POSTCARD} = $${estimatedCost}. Month so far: ${monthSent}/${MAX_PER_MONTH}.`);
 
-    // Build the design HTML once (QR rendered inside)
-    const frontHTMLTemplate = await buildFrontHTML(design, city, "");
+
+
 
     let sentCount = 0;
     const errors: string[] = [];
