@@ -1853,6 +1853,30 @@ export type Database = {
         }
         Relationships: []
       }
+      companies_watchlist: {
+        Row: {
+          client_id: string
+          company_name: string
+          created_at: string
+          id: string
+          notes: string | null
+        }
+        Insert: {
+          client_id: string
+          company_name: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+        }
+        Update: {
+          client_id?: string
+          company_name?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+        }
+        Relationships: []
+      }
       competitor_alerts: {
         Row: {
           alert_type: string
@@ -2533,6 +2557,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      contractor_referrals: {
+        Row: {
+          converted_at: string | null
+          created_at: string
+          credit_amount_cents: number
+          id: string
+          referral_code: string
+          referred_contractor_id: string | null
+          referred_email: string | null
+          referrer_contractor_id: string
+          status: string
+        }
+        Insert: {
+          converted_at?: string | null
+          created_at?: string
+          credit_amount_cents?: number
+          id?: string
+          referral_code: string
+          referred_contractor_id?: string | null
+          referred_email?: string | null
+          referrer_contractor_id: string
+          status?: string
+        }
+        Update: {
+          converted_at?: string | null
+          created_at?: string
+          credit_amount_cents?: number
+          id?: string
+          referral_code?: string
+          referred_contractor_id?: string | null
+          referred_email?: string | null
+          referrer_contractor_id?: string
+          status?: string
+        }
+        Relationships: []
       }
       crm_visitor_events: {
         Row: {
@@ -5143,6 +5203,7 @@ export type Database = {
           alerted_at: string
           candidate_id: string
           claim_expires_at: string | null
+          claim_lock_token: string | null
           claimed_at: string | null
           client_action: string | null
           client_id: string
@@ -5157,6 +5218,7 @@ export type Database = {
           alerted_at?: string
           candidate_id: string
           claim_expires_at?: string | null
+          claim_lock_token?: string | null
           claimed_at?: string | null
           client_action?: string | null
           client_id: string
@@ -5171,6 +5233,7 @@ export type Database = {
           alerted_at?: string
           candidate_id?: string
           claim_expires_at?: string | null
+          claim_lock_token?: string | null
           claimed_at?: string | null
           client_action?: string | null
           client_id?: string
@@ -6011,6 +6074,42 @@ export type Database = {
           lead_table?: string
           metadata?: Json | null
           type?: string
+        }
+        Relationships: []
+      }
+      lead_credit_packs: {
+        Row: {
+          activated_at: string | null
+          contractor_id: string
+          created_at: string
+          credits_remaining: number
+          id: string
+          pack_size: number
+          price_cents: number
+          status: string
+          stripe_session_id: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          contractor_id: string
+          created_at?: string
+          credits_remaining: number
+          id?: string
+          pack_size: number
+          price_cents: number
+          status?: string
+          stripe_session_id?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          contractor_id?: string
+          created_at?: string
+          credits_remaining?: number
+          id?: string
+          pack_size?: number
+          price_cents?: number
+          status?: string
+          stripe_session_id?: string | null
         }
         Relationships: []
       }
@@ -9282,6 +9381,39 @@ export type Database = {
         }
         Relationships: []
       }
+      radar_referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          owner_email: string | null
+          owner_id: string
+          owner_type: string
+          reward_type: string
+          uses: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          owner_email?: string | null
+          owner_id: string
+          owner_type: string
+          reward_type?: string
+          uses?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          owner_email?: string | null
+          owner_id?: string
+          owner_type?: string
+          reward_type?: string
+          uses?: number
+        }
+        Relationships: []
+      }
       re_newsletter_clients: {
         Row: {
           active: boolean | null
@@ -10210,6 +10342,39 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_searches: {
+        Row: {
+          active: boolean
+          client_id: string
+          client_type: string
+          counties: string[]
+          created_at: string
+          id: string
+          keywords: string[]
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          client_id: string
+          client_type?: string
+          counties?: string[]
+          created_at?: string
+          id?: string
+          keywords?: string[]
+          name: string
+        }
+        Update: {
+          active?: boolean
+          client_id?: string
+          client_type?: string
+          counties?: string[]
+          created_at?: string
+          id?: string
+          keywords?: string[]
+          name?: string
+        }
+        Relationships: []
+      }
       schedule_slots: {
         Row: {
           booked_by: string | null
@@ -10799,6 +10964,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      signal_feedback: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          signal_id: string
+          signal_table: string
+          vote: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          signal_id: string
+          signal_table: string
+          vote: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          signal_id?: string
+          signal_table?: string
+          vote?: string
+        }
+        Relationships: []
       }
       site_content: {
         Row: {
