@@ -19,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import RevenueRecoveredLedger from "@/components/RevenueRecoveredLedger";
 import HiringHealthScore from "@/components/techalert/HiringHealthScore";
 import DemoModeBadge, { isDemoMode, DEMO_MASTER_TOKEN } from "@/components/DemoModeBadge";
+import { supabase } from "@/integrations/supabase/client";
 
 const HEALTHCARE_ROLES = ["cna", "rn", "lpn", "director_of_nursing", "home_health_aide"];
 
@@ -130,9 +131,8 @@ export default function MyTechAlert() {
   const { data: scannerStats } = useQuery({
     queryKey: ["hire-alert-public-stats"],
     queryFn: async () => {
-      const res = await fetch(`${baseUrl}/hire-alert-public-stats`, { headers: { apikey } });
-      if (!res.ok) return null;
-      return res.json();
+      const { data } = await supabase.functions.invoke("hire-alert-public-stats", { method: "GET" as never });
+      return data ?? null;
     },
     staleTime: 10 * 60 * 1000,
   });
@@ -141,9 +141,9 @@ export default function MyTechAlert() {
   const { data: signalsData } = useQuery({
     queryKey: ["techalert-signals", token],
     queryFn: async () => {
-      const res = await fetch(`${baseUrl}/get-techalert-signals?token=${token}`, { headers: { apikey } });
-      if (!res.ok) return { type: "empty", items: [] };
-      return res.json();
+      const r = await fetch(`${baseUrl}/get-techalert-signals?token=${encodeURIComponent(token || "")}`, { headers: { apikey } });
+      if (!r.ok) return { type: "empty", items: [] };
+      return r.json();
     },
     staleTime: 5 * 60 * 1000,
     enabled: !!token,

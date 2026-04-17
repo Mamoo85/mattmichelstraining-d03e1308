@@ -47,7 +47,7 @@ serve(async (req) => {
       unitAmount = isBeta ? 4900 : 7900; // $49 beta, $79 standard
       pricingTier = isBeta ? "beta_grandfathered" : "standard";
     } else {
-      unitAmount = isBeta ? 9900 : 14900; // $99 beta, $149 standard
+      unitAmount = isBeta ? 9900 : 14900; // $99 beta-grandfathered, $149 standard (raised from $99)
       pricingTier = isBeta ? "beta_grandfathered" : "standard";
     }
 

@@ -6532,6 +6532,7 @@ export type Database = {
           id: string
           last_triggered_at: string | null
           phone: string | null
+          setup_token: string | null
           stripe_customer_id: string | null
         }
         Insert: {
@@ -6543,6 +6544,7 @@ export type Database = {
           id?: string
           last_triggered_at?: string | null
           phone?: string | null
+          setup_token?: string | null
           stripe_customer_id?: string | null
         }
         Update: {
@@ -6554,6 +6556,7 @@ export type Database = {
           id?: string
           last_triggered_at?: string | null
           phone?: string | null
+          setup_token?: string | null
           stripe_customer_id?: string | null
         }
         Relationships: []
@@ -11660,6 +11663,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      techalert_prospect_targets: {
+        Row: {
+          city: string | null
+          company_name: string
+          created_at: string
+          days_posted: number | null
+          email: string | null
+          id: string
+          is_boiler: boolean | null
+          last_contacted_at: string | null
+          notes: string | null
+          open_roles_count: number | null
+          phone: string | null
+          repost_count: number | null
+          role: string | null
+          score: number | null
+          source_label: string | null
+          source_url: string | null
+          state: string | null
+          status: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          city?: string | null
+          company_name: string
+          created_at?: string
+          days_posted?: number | null
+          email?: string | null
+          id?: string
+          is_boiler?: boolean | null
+          last_contacted_at?: string | null
+          notes?: string | null
+          open_roles_count?: number | null
+          phone?: string | null
+          repost_count?: number | null
+          role?: string | null
+          score?: number | null
+          source_label?: string | null
+          source_url?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          city?: string | null
+          company_name?: string
+          created_at?: string
+          days_posted?: number | null
+          email?: string | null
+          id?: string
+          is_boiler?: boolean | null
+          last_contacted_at?: string | null
+          notes?: string | null
+          open_roles_count?: number | null
+          phone?: string | null
+          repost_count?: number | null
+          role?: string | null
+          score?: number | null
+          source_label?: string | null
+          source_url?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
       }
       techalert_referrals: {
         Row: {
