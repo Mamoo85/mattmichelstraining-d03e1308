@@ -1,71 +1,117 @@
+User has 3 immediate issues + a major QA pass:
 
+1. **PWA install prompt firing on detroitwebagent.com** — "Install M² Training" banner appearing on DWA domain. Need to disable PWA sitewide OR scope it to only m2 domain.
+2. **ROI report token not clickable** — SMS shows the URL as text not as a tappable link. Looking at the SMS body: `Full report: https://detroitwebagent.com/roi?token=22899e...` — the issue is likely the **trailing dash** `— Matt (313)...` being interpreted as part of the URL by Google Messages, OR the URL is fine but Android isn't auto-linking due to the long token. Actually looking again — the screenshot shows "Tap to load preview" which means the URL IS detected. The user might mean the dashboard cards themselves aren't clickable.
+3. **10 duplicate weekly ROI texts** — `contractor-roi-sms` cron fired 10x in one minute, OR loop sent to same number 10x. Need to investigate and add idempotency.
 
-Final batch — 20 remaining (5 per Radar). Batches 1-3 shipped DB schema, scanner expansion, dashboards, SMS dispatch, claim flows, ROI, referrals. Batch 4 = polish + long-tail: advanced analytics, AI agents, integrations, multi-language.
+Then full QA across top 4 products (Contractor Leads, Missed Call Catch, TechAlert, FieldDesk).
 
-# Batch 4: Final 20 Radar Upgrades (5 per Radar)
+# Plan: Fixes + Full QA Sweep
 
-## Why this batch
-Closes out the 80-enhancement catalog. Focuses on **stickiness + intelligence** — the features that make clients renew at month 6 and refer peers.
+## Part 1 — Three Bug Fixes (15 min)
 
----
+### Fix 1: Kill PWA install prompt on DWA domain
 
-## Talent Radar (TR-16 → TR-20)
-- **TR-16** AI Recruiter Agent — auto-drafts personalized outreach per candidate (uses existing `generate-outreach-draft` pattern)
-- **TR-17** Candidate enrichment expansion — pull LinkedIn + GitHub via Sonar OSINT for tech roles
-- **TR-18** Interview scheduler — Calendly-style booking link in alert emails
-- **TR-19** Hire confirmation flow — "Did you hire this candidate?" SMS at 14d, feeds ROI ledger
-- **TR-20** Multi-seat support — agencies add recruiter teammates to one account
+- **Root**: `vite.config.ts` registers `vite-plugin-pwa` with M² Training manifest globally. Browser shows install banner on every domain.
+- **Fix options**: 
+  - (A) Scope manifest registration to hostname check in `index.html` — remove `<link rel="manifest">` for non-m2 domains via inline script
+  - (B) Disable PWA install prompt entirely with `beforeinstallprompt` event handler that calls `e.preventDefault()` on DWA hostnames
+- **Recommendation**: Both. Inline script in `index.html` strips manifest link if `hostname.includes('detroitweb')`. Belt + suspenders.
 
-## Demand Radar (DR-16 → DR-20)
-- **DR-16** Trend analytics dashboard — week-over-week signal volume by vertical
-- **DR-17** AI signal summarizer — daily 3-bullet brief at top of dashboard
-- **DR-18** HubSpot/Salesforce CRM push — one-click send signal to CRM as deal
-- **DR-19** Signal expiry — auto-archive signals after 30d (keeps feed fresh)
-- **DR-20** Vertical pivot — let client switch industries mid-subscription
+### Fix 2: ROI report — make stat cards clickable + URL hardening
 
-## Growth Radar (GR-16 → GR-20)
-- **GR-16** Permit watch integration — cross-ref with existing `permit_watch_clients` data
-- **GR-17** Slack daily digest (uses Batch 3 webhook infrastructure)
-- **GR-18** Multi-state expansion — Ohio + Indiana option (paid add-on)
-- **GR-19** Signal scoring transparency — "Why this scored 9/10" tooltip
-- **GR-20** Export to PDF — client-branded weekly intelligence report
+- Looking at `ContractorROIReport.tsx` — the 4 stat cards (Leads/Dead Leads/Missed Calls/Licenses) are static divs. User wants each to deep-link to relevant detail.
+- Add `onClick` handlers:
+  - Leads Delivered → `/contractor-leads`
+  - Dead Leads Revived → `mailto:matt@detroitwebagent.com?subject=Dead Lead Detail`
+  - Missed Calls Caught → `/missed-call-catch`
+  - Licenses Monitored → `/license-monitor`
+- Also harden SMS URL in `contractor-roi-sms`: add space before `—` so Android linkifier doesn't grab the em-dash. Already has space, but the long token may confuse the parser. Switch to shortlinks pattern: put URL on its own line.
 
-## Lead Radar (LR-16 → LR-20)
-- **LR-16** Geographic territory lock — contractor pays for exclusive county+trade combo
-- **LR-17** Lead routing rules — contractor sets max budget, blocks low-value pings
-- **LR-18** Win/loss tracking — contractor logs which leads converted, trains future scoring
-- **LR-19** Auto-response templates — pre-written SMS sent on claim (saves 30s per lead)
-- **LR-20** Annual subscription tier — pay 10 months, get 12 (locks renewal)
+### Fix 3: 10 duplicate ROI texts — investigate + idempotency lock
 
----
+- Check `contractor-roi-sms` cron schedule + add a `last_roi_sms_sent_at` column to `contractor_clients` with 6-day cooldown guard so the function literally cannot send twice in a week.
+- Investigate root cause via cron history + system_comms_log query.
+- Add idempotency: `WHERE last_roi_sms_sent_at IS NULL OR last_roi_sms_sent_at < now() - interval '6 days'` then update timestamp atomically.
 
-## Files Touched (~10)
+## Part 2 — Full QA Sweep on Top 4 Products (45 min)
 
-**Edge functions (5)**:
-- `talent-radar-recruiter-agent` NEW (TR-16) — Gemini outreach drafts
-- `talent-radar-hire-confirm` NEW (TR-19) — 14d SMS check
-- `demand-radar-summarizer` NEW (DR-17) — daily AI brief
-- `growth-radar-pdf-report` NEW (GR-20) — weekly client-branded export
-- `lead-radar-territory-lock` NEW (LR-16) — Stripe exclusive territory checkout
+For each: verify edge functions deploy, secrets present, crons firing, no silent failures, end-to-end checkout works.
 
-**Frontend (4)**:
-- `MyTechAlert.tsx` — multi-seat invite UI + hire confirm prompt
-- `MyIndustryPulse.tsx` — trend chart (recharts) + AI brief banner
-- `GrowthRadarDashboard.tsx` — score transparency tooltips + PDF export button
-- `LeadRadarEnhancements.tsx` — territory lock card + win/loss logger + auto-response templates
+### Contractor Leads ($399/mo)
+
+- Verify `create-contractor-lead-checkout` deploys clean
+- Verify `stripe-webhook` `contractor_lead_subscription` handler returns 500 on DB fail
+- Verify `contractor-lead-notify` 15-min cron is scheduled + firing
+- Verify `chargeContractor()` in `handle-dead-lead-reply` checks `res.ok` before parsing (KNOWN OPEN ITEM)
+- Test welcome email renders DWA dark branding
+
+### Missed Call Catch ($99/mo) I thought we changed the price? 
+
+- Verify `create-missed-call-checkout` deploys
+- Verify `missed-call-handler` Twilio webhook on +13139921219 returns valid TwiML
+- Verify multi-tenant lookup by `To` number works (not hardcoded to Matt)
+- Verify `send-missed-call-test` button works on /setup page
+- Test welcome email DWA branding
+
+### TechAlert ($99–149/mo) 
+
+- Verify `create-hire-alert-checkout` deploys
+- Verify `hire-alert-scanner-daily` cron at 7am ET is scheduled
+- Verify Sonar/Apollo/MIOSHA scanners not hung (90s AbortController)
+- Verify `hire_alert_runs` table populates after scan
+- Verify alert dispatch SMS not duplicated (Batch 3 `talent-radar-sms-dispatch`)
+- Check `MyTechAlert.tsx` loads without blank screen
+
+### FieldDesk ($199/mo)
+
+- Verify `create-field-service-checkout` deploys
+- Verify demo route `/field-service/dispatch?demo=1` loads with 7 jobs
+- Verify mobile tech app `/field-service/tech?demo=1` PIN login works
+- Verify InvoiceGenerator renders + prints
+- Verify DJ Conley demo `/demo-djconley-2` loads
+
+## Part 3 — Cross-Cutting Checks (15 min)
+
+- **Cron audit**: Query `cron.job` for all expected schedules, flag any missing or paused
+- **Edge function deploy**: Deploy all touched functions, scrape logs for errors in last 24h
+- **Secrets audit**: Verify TWILIO_*, STRIPE_*, RESEND_*, ANTHROPIC_*, LOVABLE_API_KEY, SUPABASE_SERVICE_ROLE_KEY
+- **Stripe webhook**: Verify `vibrant-glow` endpoint healthy, no recent failed events
+- **Silent killers from CLAUDE.md known list**:
+  - `chargeContractor()` res.ok check (status: per CLAUDE Phase 16, this is FIXED — confirm)
+  - stripe-webhook 200 on DB fail (status: partially fixed — verify all top-4 handlers)
+
+## Files Touched (~6)
+
+**Frontend (3)**:
+
+- `index.html` — inline script to strip PWA manifest on DWA domain + suppress install prompt
+- `vite.config.ts` — scope PWA registration if possible (or leave to runtime guard)
+- `src/pages/ContractorROIReport.tsx` — clickable stat cards with deep links
+
+**Edge functions (1)**:
+
+- `supabase/functions/contractor-roi-sms/index.ts` — add 6-day cooldown lock + URL formatting
 
 **Migration (1)**:
-- `radar_enhancements_v4.sql` — `team_members`, `hire_confirmations`, `signal_archives`, `territory_locks`, `lead_outcomes`, `auto_response_templates`, `annual_subscriptions`
+
+- `radar_roi_sms_dedup.sql` — `last_roi_sms_sent_at TIMESTAMPTZ` column on `contractor_clients`
+
+**QA report (1)**:
+
+- `/mnt/documents/DWA_Top4_Launch_QA_2026-04-17.pdf` — pass/fail per product, screenshots, list of any silent killers found + fixed
 
 ## Sequence
-1. Migration v4 (5 min)
-2. 5 new edge functions (~25 min)
-3. 4 frontend updates (~30 min)
-4. QA at 390px + 1280px
-5. Deliverable: `/mnt/documents/DWA_Radar_Batch4_Shipped_2026-04-17.pdf` + master `DWA_Radar_All_80_Complete.pdf`
 
-## What's Next After This
-All 80 catalog enhancements shipped. Post-Batch 4 work shifts to **validation**: onboard first 10 paying clients, gather feedback, prioritize fixes from real usage. No more speculative builds.
+1. Migration + cooldown fix (5 min)
+2. PWA disable on DWA + clickable ROI cards (10 min)
+3. Deploy `contractor-roi-sms` + verify
+4. QA Top 4: edge function deploys, cron status, secret check, log scrape (45 min)
+5. Generate launch readiness PDF (10 min)
+6. Final summary: GREEN/YELLOW/RED per product
 
-Total scope: ~75 min.
+## Investigation Questions (will answer during QA, no need to ask)
 
+- Why did 10 ROI texts fire? Hypothesis: cron ran once but loop sent to same number, OR `roi_token` query returned 10 rows for same phone, OR cron schedule is misconfigured to run every minute. Will check `cron.job` table + `system_comms_log` timestamps.
+
+Total scope: ~75 min. Result: 3 user-reported bugs fixed + launch-ready validation across top 4 revenue engines.
