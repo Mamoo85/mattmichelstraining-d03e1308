@@ -286,6 +286,34 @@ export default function DemandRadar() {
           </div>
         </section>
 
+        {/* ── SAMPLE DELIVERABLE PREVIEWS ──────────────────────────── */}
+        <section className="py-16 px-4 border-t border-white/5">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl sm:text-3xl font-black mb-3">See Exactly What You'll Get</h2>
+              <p className="text-white/40 text-sm max-w-xl mx-auto">Download a real sample from each tier — generated from live signal data. No email required.</p>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {[
+                { tier: "Snapshot", price: "$99", file: "sample-demand-radar-snapshot-99.pdf", desc: "5 high-confidence signals — one-time buy or first month preview", color: "border-white/10" },
+                { tier: "Pro Weekly", price: "$199/mo", file: "sample-demand-radar-weekly-199.pdf", desc: "20 signals + county exclusivity + cross-referenced badges", color: "border-[#00d4ff]/40" },
+                { tier: "Enterprise", price: "$499/mo", file: "sample-demand-radar-enterprise-499.pdf", desc: "50+ signals, sector breakdown, API mock, white-label preview", color: "border-amber-500/30" },
+              ].map((s) => (
+                <a key={s.file} href={`/samples/${s.file}`} target="_blank" rel="noreferrer"
+                   className={`group bg-[#0d1117] border ${s.color} rounded-xl p-5 hover:bg-[#161b22] transition-colors`}>
+                  <Download className="h-5 w-5 text-[#00d4ff] mb-3" />
+                  <div className="text-white font-bold text-sm">{s.tier}</div>
+                  <div className="text-white/40 text-xs mb-2">{s.price}</div>
+                  <p className="text-white/50 text-xs leading-relaxed mb-3">{s.desc}</p>
+                  <span className="text-[#00d4ff] text-xs font-semibold inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                    Open PDF <ArrowRight className="h-3 w-3" />
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ── PRICING ──────────────────────────────────────────────── */}
         <section className="py-20 px-4" id="pricing">
           <div className="max-w-4xl mx-auto">
