@@ -29,6 +29,8 @@ async function chargeContractor(
     headers: {
       Authorization: `Basic ${btoa(STRIPE_SECRET_KEY + ":")}`,
       "Content-Type": "application/x-www-form-urlencoded",
+      // Idempotency: duplicate inbound SMS replies must never double-charge $50
+      "Idempotency-Key": `dead-lead-${contactId}`,
     },
     body: new URLSearchParams({
       amount: "5000",

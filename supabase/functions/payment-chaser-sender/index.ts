@@ -1,33 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
-const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY") || "";
-
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
-
-async function sendSmsGateway(to: string, from: string, body: string) {
-  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-  if (!TWILIO_API_KEY) throw new Error("TWILIO_API_KEY is not configured");
-
-  const res = await fetch(`${GATEWAY_URL}/Messages.json`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      "X-Connection-Api-Key": TWILIO_API_KEY,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({ To: to, From: from, Body: body }),
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Twilio gateway error [${res.status}]: ${err}`);
-  }
-  return res.json();
-}
+const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
 serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
@@ -62,8 +40,15 @@ serve(async (req) => {
       } catch { /* fallback to default msg */ }
     }
 
-    await sendSmsGateway(customerPhone, client.phone || customerPhone, msg);
+    // Route through shared sendSMS — checks sms_opt_outs (TCPA) + logs to system_comms_log
+    const result = await sendSMS(customerPhone, client.phone || TWILIO_PHONE_NUMBER, msg, "payment_chaser");
+    if (!result.success && !result.skipped) {
+      return new Response(JSON.stringify({ error: result.error || "SMS send failed" }), { status: 502 });
+    }
+    if (result.skipped) {
+      return new Response(JSON.stringify({ ok: false, skipped: true, reason: "sms_opt_out" }), { status: 200 });
+    }
     await sb.from("payment_chaser_clients").update({ chase_count: (client.chase_count || 0) + 1 }).eq("id", client.id);
-    return new Response(JSON.stringify({ ok: true, tone, daysOverdue }), { status: 200 });
+    return new Response(JSON.stringify({ ok: true, tone, daysOverdue, sid: result.sid }), { status: 200 });
   } catch (e: unknown) { const msg = e instanceof Error ? e.message : String(e); return new Response(JSON.stringify({ error: msg }), { status: 500 }); }
 });

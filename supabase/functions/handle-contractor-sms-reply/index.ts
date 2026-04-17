@@ -95,6 +95,9 @@ serve(async (req) => {
           confirm: true,
           description: `Lightning Claim: Lead ${lead.name} (${lead.id.slice(0,8)})`,
           metadata: { type: "lightning_claim", lead_id: lead.id, contractor_id: contractor.id },
+        }, {
+          // Idempotency: duplicate inbound SMS (Twilio retries) must never double-charge
+          idempotencyKey: `lightning-${lead.id}-${contractor.id}`,
         });
 
         if (pi.status !== "succeeded") {

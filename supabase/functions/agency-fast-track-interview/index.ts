@@ -101,6 +101,9 @@ serve(async (req) => {
           confirm: true,
           description: `Fast-Track Interview · Assignment ${assignment_id.slice(0, 8)}`,
           metadata: { assignment_id, agency_id, type: "agency_interview_charge" },
+        }, {
+          // Idempotency: a webhook retry or duplicate request must never double-charge
+          idempotencyKey: `fast-track-${assignment_id}`,
         });
         chargeId = intent.id;
         await supabase.from("agency_candidate_assignments").update({
