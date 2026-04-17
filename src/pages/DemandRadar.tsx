@@ -19,6 +19,7 @@ export default function DemandRadar() {
   const [company, setCompany] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
+  const [territoryStats, setTerritoryStats] = useState<{ county: string; taken: number; cap: number }[]>([]);
 
   const CITY_NAMES: Record<string, string> = {
     detroit: "Metro Detroit", "grand-rapids": "Grand Rapids", lansing: "Lansing",
@@ -30,6 +31,24 @@ export default function DemandRadar() {
   useEffect(() => {
     if (success) toast.success("Welcome to Demand Radar! Check your email for your dashboard link.");
   }, [success]);
+
+  // Live territory scarcity — fetch active Pro subscriber count per county (cap = 3 per county)
+  useEffect(() => {
+    (async () => {
+      const COUNTIES = ["Wayne", "Oakland", "Macomb", "Washtenaw"];
+      const CAP = 3;
+      const { data } = await supabase
+        .from("industry_pulse_clients" as any)
+        .select("target_county, active")
+        .eq("active", true);
+      const counts: Record<string, number> = {};
+      (data as any[] || []).forEach((c) => {
+        const k = c.target_county || "Wayne";
+        counts[k] = (counts[k] || 0) + 1;
+      });
+      setTerritoryStats(COUNTIES.map((c) => ({ county: c, taken: counts[c] || 0, cap: CAP })));
+    })();
+  }, []);
 
   const handleCheckout = async () => {
     if (!email) { toast.error("Email is required"); return; }
@@ -267,11 +286,64 @@ export default function DemandRadar() {
           </div>
         </section>
 
+        {/* ── SAMPLE DELIVERABLE PREVIEWS ──────────────────────────── */}
+        <section className="py-16 px-4 border-t border-white/5">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl sm:text-3xl font-black mb-3">See Exactly What You'll Get</h2>
+              <p className="text-white/40 text-sm max-w-xl mx-auto">Download a real sample from each tier — generated from live signal data. No email required.</p>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {[
+                { tier: "Snapshot", price: "$99", file: "sample-demand-radar-snapshot-99.pdf", desc: "5 high-confidence signals — one-time buy or first month preview", color: "border-white/10" },
+                { tier: "Pro Weekly", price: "$199/mo", file: "sample-demand-radar-weekly-199.pdf", desc: "20 signals + county exclusivity + cross-referenced badges", color: "border-[#00d4ff]/40" },
+                { tier: "Enterprise", price: "$499/mo", file: "sample-demand-radar-enterprise-499.pdf", desc: "50+ signals, sector breakdown, API mock, white-label preview", color: "border-amber-500/30" },
+              ].map((s) => (
+                <a key={s.file} href={`/samples/${s.file}`} target="_blank" rel="noreferrer"
+                   className={`group bg-[#0d1117] border ${s.color} rounded-xl p-5 hover:bg-[#161b22] transition-colors`}>
+                  <Download className="h-5 w-5 text-[#00d4ff] mb-3" />
+                  <div className="text-white font-bold text-sm">{s.tier}</div>
+                  <div className="text-white/40 text-xs mb-2">{s.price}</div>
+                  <p className="text-white/50 text-xs leading-relaxed mb-3">{s.desc}</p>
+                  <span className="text-[#00d4ff] text-xs font-semibold inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                    Open PDF <ArrowRight className="h-3 w-3" />
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ── PRICING ──────────────────────────────────────────────── */}
         <section className="py-20 px-4" id="pricing">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl sm:text-3xl font-black text-center mb-3">Choose Your Advantage</h2>
-            <p className="text-white/40 text-sm text-center mb-10">All plans include daily scans, AI scoring, and cancel-anytime flexibility.</p>
+            <p className="text-white/40 text-sm text-center mb-6">All plans include daily scans, AI scoring, and cancel-anytime flexibility.</p>
+
+            {/* Live Territory Scarcity Strip — Pro is exclusive, max 3 per county */}
+            {territoryStats.length > 0 && (
+              <div className="bg-[#0d1117] border border-[#00d4ff]/20 rounded-xl p-4 mb-8">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[#00d4ff] text-[11px] font-bold tracking-wider uppercase">⚡ Pro Tier — Live Territory Availability</span>
+                  <span className="text-white/30 text-[10px]">Cap: 3 subscribers/county</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {territoryStats.map((t) => {
+                    const left = Math.max(0, t.cap - t.taken);
+                    const full = left === 0;
+                    return (
+                      <div key={t.county} className={`rounded-lg p-3 border ${full ? "bg-red-500/5 border-red-500/30" : left === 1 ? "bg-amber-500/5 border-amber-500/30" : "bg-emerald-500/5 border-emerald-500/30"}`}>
+                        <div className="text-white text-xs font-bold">{t.county} County</div>
+                        <div className={`text-[10px] mt-1 font-semibold ${full ? "text-red-400" : left === 1 ? "text-amber-400" : "text-emerald-400"}`}>
+                          {full ? "FULL — Waitlist" : `${left} of ${t.cap} spots left`}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="grid sm:grid-cols-3 gap-4">
               {/* BASIC */}
               <div className="bg-[#0d1117] border border-[#30363d] rounded-2xl p-6">
