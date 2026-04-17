@@ -3200,6 +3200,36 @@ export type Database = {
         }
         Relationships: []
       }
+      dol_labor_snapshots: {
+        Row: {
+          area_code: string
+          area_name: string | null
+          created_at: string
+          duration_ms: number | null
+          id: string
+          rows: Json
+          shortage_signals: Json
+        }
+        Insert: {
+          area_code: string
+          area_name?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          rows?: Json
+          shortage_signals?: Json
+        }
+        Update: {
+          area_code?: string
+          area_name?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          rows?: Json
+          shortage_signals?: Json
+        }
+        Relationships: []
+      }
       drip_conversions: {
         Row: {
           business_name: string | null
