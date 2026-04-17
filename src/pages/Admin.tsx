@@ -593,22 +593,21 @@ const Admin = () => {
         )}
 
         {activeTab === "dwa" && (
-          <SubTabs helpId="dwa" defaultTab="dwa-overview" tabs={[
-            { key: "dwa-overview",  label: "🏗 Overview",        content: <AdminDWAOverview /> },
-            { key: "dwa-revenue",   label: "📊 Revenue",         content: <AdminDWARevenueDashboard /> },
-            { key: "dead-leads",    label: "♻️ Dead Leads",      content: <AdminDeadLeads /> },
-            { key: "contractor-leads", label: "🏗 Contractor Leads", content: <AdminContractorLeads /> },
-            { key: "field-desk",    label: "🏢 FieldDesk",       content: <AdminFieldCRMClients /> },
-            { key: "tech-alert",    label: "🔔 TechAlert",       content: <AdminHireAlertClients /> },
-            { key: "visitor-intel", label: "👁 Visitor Intel",   content: <VisitorIntelFeed /> },
-            { key: "dispatch-map",  label: "🗺 Dispatch Map",    content: <TechDispatchMap /> },
-            { key: "review-engine", label: "⭐ Reviews",         content: <ReviewLeaderboard /> },
-            { key: "simulation",    label: "🧪 Simulation",      content: <AdminSimulationSuite /> },
-            { key: "outbox",        label: "📨 Outbox",          content: <AdminGlobalOutbox /> },
-            { key: "ghost-delay",   label: "👻 Ghost Delay",     content: <AdminGhostDelayManager /> },
-            { key: "board-report",  label: "📋 Board Report",    content: <AdminBoardReport /> },
-            { key: "postcards",     label: "📬 Postcards",       content: <AdminPostcardCampaigns /> },
-          ]} />
+          <div className="max-w-2xl mx-auto py-12">
+            <div className="bg-card border-2 border-primary/40 rounded-xl p-8 text-center space-y-5 shadow-lg">
+              <div className="text-5xl">🏢</div>
+              <h2 className="text-2xl font-bold text-foreground">Detroit Web Agency Admin has moved.</h2>
+              <p className="text-muted-foreground text-sm">
+                All DWA revenue dashboards, client panels, dead leads, postcards, and outbox now live in the dedicated DWA command center.
+              </p>
+              <a
+                href="/dwa-admin"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
+              >
+                Open DWA Admin →
+              </a>
+            </div>
+          </div>
         )}
       </div>
 

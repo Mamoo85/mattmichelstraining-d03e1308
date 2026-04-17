@@ -22,7 +22,7 @@ const AgencyRoleRedirect = ({ children }: { children: React.ReactNode }) => {
 
   if (!user) return <>{children}</>;
 
-  if (agencyRole === "agency_admin") return <Navigate to="/admin" replace />;
+  if (agencyRole === "agency_admin") return <Navigate to="/dwa-admin" replace />;
   if (agencyRole === "client") return <Navigate to="/client-portal" replace />;
 
   return <>{children}</>;

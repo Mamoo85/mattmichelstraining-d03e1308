@@ -77,7 +77,7 @@ const Auth = () => {
   }, []);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
-  const defaultRedirect = isAgency ? "/admin" : "/dashboard";
+  const defaultRedirect = isAgency ? "/dwa-admin" : "/dashboard";
 
   const buildAuthRedirectUrl = useCallback((fallbackPath: string) => {
     const redirect = searchParams.get("redirect") || (isAgency ? "/admin" : fallbackPath);
