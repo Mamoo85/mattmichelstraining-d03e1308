@@ -882,6 +882,8 @@ serve(async (req) => {
 
       if (meta.type === "hire_alert_subscription") {
         const email = meta.email || customerEmail;
+        // Hoisted so it's accessible in the welcome-email block below
+        let dashboardToken: string | null = null;
         try {
           if (email) {
             // Parse target_roles from comma-separated string back to array
@@ -901,7 +903,7 @@ serve(async (req) => {
               tos_accepted_at: meta.tos_accepted === "true" ? new Date().toISOString() : null,
             }, { onConflict: "owner_email" }).select("dashboard_token").single();
             if (insertErr) throw new Error(`hire_alert_clients upsert: ${insertErr.message}`);
-            const dashboardToken = insertedClient?.dashboard_token;
+            dashboardToken = insertedClient?.dashboard_token ?? null;
 
             // Track postcard conversion if ref=postcard
             if (meta.ref === "postcard") {
