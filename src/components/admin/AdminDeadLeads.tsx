@@ -39,6 +39,21 @@ export default function AdminDeadLeads() {
   const [newForm, setNewForm] = useState({ contractor_id: "", name: "", trade: "", contacts: "" });
   const [creating, setCreating] = useState(false);
   const [running, setRunning] = useState(false);
+  const [prospectTrade, setProspectTrade] = useState<string>("");
+  const [prospectCity, setProspectCity] = useState<string>("");
+  const [lastProspectResult, setLastProspectResult] = useState<{
+    ok: boolean;
+    found: number;
+    emailed: number;
+    deadLeadEmailed: number;
+    skipped: number;
+    scoutRejected: number;
+    cap: number;
+    sentBefore: number;
+    sentAfter: number;
+    combos?: { trade: string; city: string }[];
+    note?: string;
+  } | null>(null);
 
   const { data: contractors } = useQuery({
     queryKey: ["contractor_clients_active"],
@@ -137,15 +152,68 @@ export default function AdminDeadLeads() {
     complete: pipeline?.filter((r: any) => r.drip_campaign_status?.d8_sent || r.status === "closed" || r.status === "unsubscribed").length || 0,
   };
 
+  const PROSPECT_TRADES = ["roofer", "HVAC contractor", "plumber", "electrician"];
+  const PROSPECT_CITIES = [
+    "Grosse Pointe MI", "Detroit MI", "Warren MI", "Sterling Heights MI",
+    "Troy MI", "Royal Oak MI", "Dearborn MI", "Livonia MI",
+    "Southfield MI", "Farmington Hills MI", "Novi MI", "Birmingham MI",
+  ];
+
   const handleRunProspector = async () => {
     setProspecting(true);
+    setLastProspectResult(null);
     try {
-      const { data, error } = await supabase.functions.invoke("contractor-prospector", { body: {} });
+      const body: Record<string, string> = {};
+      if (prospectTrade) body.target_trade = prospectTrade;
+      if (prospectCity) body.target_city = prospectCity;
+
+      const { data, error } = await supabase.functions.invoke("contractor-prospector", { body });
       if (error) throw error;
-      toast.success(`Prospector ran — ${data?.totalDeadLeadEmailed ?? 0} dead lead emails sent today`);
+
+      const found      = Number(data?.found ?? 0);
+      const emailed    = Number(data?.emailed ?? 0);
+      const deadLead   = Number(data?.deadLeadEmailed ?? 0);
+      const skipped    = Number(data?.skipped ?? 0);
+      const rejected   = Number(data?.scoutRejected ?? 0);
+      const sentBefore = Number(data?.dailySentBefore ?? 0);
+      const sentAfter  = Number(data?.dailySentAfter ?? 0);
+      const cap        = Number(data?.cap ?? 30);
+
+      // Build a precise reason when nothing was emailed.
+      let note: string | undefined;
+      if (emailed === 0) {
+        if (sentBefore >= cap) {
+          note = `Daily send cap of ${cap} already reached today (sent ${sentBefore}). Resets at midnight ET.`;
+        } else if (found === 0) {
+          note = `Google Places returned 0 ${prospectTrade || "trade"} businesses for ${prospectCity || "today's combos"}. Try a different trade/city or check GOOGLE_MAPS_API_KEY.`;
+        } else if (skipped === found && skipped > 0) {
+          note = `Found ${found} businesses but all were skipped (already in CRM, suppressed, or no email scrapeable).`;
+        } else if (rejected === found && rejected > 0) {
+          note = `Found ${found} businesses but Scout AI rejected all of them (low pain signal / not worth outreach).`;
+        } else {
+          note = `Found ${found} prospects: ${skipped} already in DB, ${rejected} rejected by Scout AI, ${found - skipped - rejected} other. Nothing met the bar.`;
+        }
+      }
+
+      setLastProspectResult({
+        ok: !!data?.ok,
+        found, emailed,
+        deadLeadEmailed: deadLead,
+        skipped, scoutRejected: rejected, cap,
+        sentBefore, sentAfter,
+        combos: data?.combos,
+        note,
+      });
+
+      if (emailed > 0) {
+        toast.success(`Prospector ran — ${emailed} sent (${deadLead} dead-lead pitches)`);
+      } else {
+        toast.message("Prospector ran — 0 sent", { description: note });
+      }
       refetchPipeline();
     } catch (e: any) {
       toast.error(e.message || "Prospector failed");
+      setLastProspectResult({ ok: false, found: 0, emailed: 0, deadLeadEmailed: 0, skipped: 0, scoutRejected: 0, cap: 0, sentBefore: 0, sentAfter: 0, note: e.message });
     } finally {
       setProspecting(false);
     }
@@ -506,6 +574,63 @@ export default function AdminDeadLeads() {
                 <div style={{ color: "#64748b", fontSize: 11, fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase", marginTop: 2 }}>{s.label}</div>
               </div>
             ))}
+          </div>
+
+          {/* Trade / City picker + last-run feedback */}
+          <div style={{ background: "#0f2342", border: "1px solid #1e3a5f", borderRadius: 10, padding: 14, marginBottom: 16 }}>
+            <div style={{ color: "#00d4ff", fontSize: 12, fontWeight: 700, letterSpacing: 0.6, marginBottom: 10 }}>
+              TARGET A SPECIFIC TRADE + CITY (OPTIONAL)
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 8, marginBottom: 10 }}>
+              <select
+                value={prospectTrade}
+                onChange={(e) => setProspectTrade(e.target.value)}
+                style={{ background: "#0a1628", color: "#e2e8f0", border: "1px solid #1e3a5f", borderRadius: 6, padding: "8px 10px", fontSize: 13 }}
+              >
+                <option value="">— Auto-rotate trade —</option>
+                {PROSPECT_TRADES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <select
+                value={prospectCity}
+                onChange={(e) => setProspectCity(e.target.value)}
+                style={{ background: "#0a1628", color: "#e2e8f0", border: "1px solid #1e3a5f", borderRadius: 6, padding: "8px 10px", fontSize: 13 }}
+              >
+                <option value="">— Auto-rotate city —</option>
+                {PROSPECT_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <Button size="sm" onClick={handleRunProspector} disabled={prospecting}
+                style={{ background: "#00d4ff", color: "#0a1628", fontWeight: 700, whiteSpace: "nowrap" }}>
+                {prospecting ? "Finding…" : "Run Prospector"}
+              </Button>
+            </div>
+            <div style={{ color: "#475569", fontSize: 11 }}>
+              Leave both blank to use today's auto-rotated combos. Selecting both targets one specific trade × city.
+            </div>
+
+            {lastProspectResult && (
+              <div style={{ marginTop: 12, padding: 12, background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span style={{
+                    background: lastProspectResult.emailed > 0 ? "#10b981" : "#f59e0b",
+                    color: "#0a1628", fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 4, letterSpacing: 0.5,
+                  }}>
+                    {lastProspectResult.emailed > 0 ? "SENT" : "NO SENDS"}
+                  </span>
+                  <span style={{ color: "#94a3b8", fontSize: 12 }}>
+                    Last run: {lastProspectResult.emailed} emailed · {lastProspectResult.found} found · {lastProspectResult.skipped} skipped · {lastProspectResult.scoutRejected} AI-rejected
+                  </span>
+                </div>
+                {lastProspectResult.note && (
+                  <div style={{ color: "#fbbf24", fontSize: 12, lineHeight: 1.5, marginBottom: 6 }}>
+                    ⚠ {lastProspectResult.note}
+                  </div>
+                )}
+                <div style={{ color: "#64748b", fontSize: 11 }}>
+                  Daily cap: {lastProspectResult.sentAfter}/{lastProspectResult.cap} sends used today
+                  {lastProspectResult.combos?.length ? ` · combos: ${lastProspectResult.combos.map(c => `${c.trade}/${c.city}`).join(", ")}` : ""}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Pipeline table */}

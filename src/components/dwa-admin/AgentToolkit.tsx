@@ -11,7 +11,7 @@ interface AgentDef {
   key: string;
   label: string;
   description: string;
-  group: "lead_gen" | "intel" | "outreach" | "marketing";
+  group: "lead_gen" | "intel" | "outreach" | "marketing" | "research";
 }
 
 const AGENTS: AgentDef[] = [
@@ -31,6 +31,8 @@ const AGENTS: AgentDef[] = [
   { key: "oz",                    label: "Oz — Growth & Ops",         description: "Scan portfolio for ops/growth issues.",             group: "marketing" },
   { key: "scarlett",              label: "Scarlett — Creative",       description: "Generate fresh ad creative drafts.",                group: "marketing" },
   { key: "selma",                 label: "Selma — Head of Marketing", description: "Weekly marketing strategy review.",                 group: "marketing" },
+  // Research
+  { key: "dol_labor_stats",       label: "DOL Labor Stats",           description: "Pull Detroit-MSA wage + shortage signals from Dept. of Labor (powers TechAlert pitches).", group: "research" },
 ];
 
 const GROUP_LABELS: Record<AgentDef["group"], string> = {
@@ -38,6 +40,7 @@ const GROUP_LABELS: Record<AgentDef["group"], string> = {
   intel: "Market Intelligence",
   outreach: "Outreach",
   marketing: "Marketing",
+  research: "Government Data",
 };
 
 export default function AgentToolkit() {
