@@ -2236,6 +2236,7 @@ export type Database = {
           name: string | null
           onboarded_at: string | null
           phone: string | null
+          refund_credits_cents: number
           roi_token: string | null
           service_area: string | null
           state: string | null
@@ -2260,6 +2261,7 @@ export type Database = {
           name?: string | null
           onboarded_at?: string | null
           phone?: string | null
+          refund_credits_cents?: number
           roi_token?: string | null
           service_area?: string | null
           state?: string | null
@@ -2284,6 +2286,7 @@ export type Database = {
           name?: string | null
           onboarded_at?: string | null
           phone?: string | null
+          refund_credits_cents?: number
           roi_token?: string | null
           service_area?: string | null
           state?: string | null
@@ -2422,6 +2425,8 @@ export type Database = {
       }
       contractor_leads: {
         Row: {
+          attempt_count: number | null
+          bidding_mode: boolean | null
           checkout_locked_by: string | null
           claimed_at: string | null
           claimed_by: string | null
@@ -2440,12 +2445,17 @@ export type Database = {
           payment_amount_cents: number | null
           payment_session_id: string | null
           phone: string
+          phone_verified: boolean | null
           project_type: string | null
+          quality_score: number | null
+          refunded_at: string | null
           site_id: string | null
           source: string | null
           status: string | null
         }
         Insert: {
+          attempt_count?: number | null
+          bidding_mode?: boolean | null
           checkout_locked_by?: string | null
           claimed_at?: string | null
           claimed_by?: string | null
@@ -2464,12 +2474,17 @@ export type Database = {
           payment_amount_cents?: number | null
           payment_session_id?: string | null
           phone: string
+          phone_verified?: boolean | null
           project_type?: string | null
+          quality_score?: number | null
+          refunded_at?: string | null
           site_id?: string | null
           source?: string | null
           status?: string | null
         }
         Update: {
+          attempt_count?: number | null
+          bidding_mode?: boolean | null
           checkout_locked_by?: string | null
           claimed_at?: string | null
           claimed_by?: string | null
@@ -2488,7 +2503,10 @@ export type Database = {
           payment_amount_cents?: number | null
           payment_session_id?: string | null
           phone?: string
+          phone_verified?: boolean | null
           project_type?: string | null
+          quality_score?: number | null
+          refunded_at?: string | null
           site_id?: string | null
           source?: string | null
           status?: string | null
@@ -4817,6 +4835,51 @@ export type Database = {
         }
         Relationships: []
       }
+      growth_radar_clients: {
+        Row: {
+          active: boolean
+          business_name: string | null
+          contact_name: string | null
+          county_filter: string[] | null
+          created_at: string
+          email: string
+          id: string
+          phone: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          vertical_filter: string[] | null
+        }
+        Insert: {
+          active?: boolean
+          business_name?: string | null
+          contact_name?: string | null
+          county_filter?: string[] | null
+          created_at?: string
+          email: string
+          id?: string
+          phone?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          vertical_filter?: string[] | null
+        }
+        Update: {
+          active?: boolean
+          business_name?: string | null
+          contact_name?: string | null
+          county_filter?: string[] | null
+          created_at?: string
+          email?: string
+          id?: string
+          phone?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          vertical_filter?: string[] | null
+        }
+        Relationships: []
+      }
       handbook_clients: {
         Row: {
           active: boolean | null
@@ -4880,6 +4943,7 @@ export type Database = {
           enrichment_status: string | null
           facebook_url: string | null
           first_seen_at: string | null
+          freshness_score: number | null
           full_name: string | null
           hiring_recommendation: string | null
           id: string
@@ -4887,6 +4951,7 @@ export type Database = {
           is_demo_record: boolean | null
           last_seen_at: string | null
           license_expiry: string | null
+          license_issued_at: string | null
           license_number: string | null
           license_type: string | null
           linkedin_url: string | null
@@ -4899,6 +4964,7 @@ export type Database = {
           score_reason: string | null
           social_profiles: Json | null
           source: string | null
+          source_count: number | null
           state: string | null
           status: string | null
           trade: string | null
@@ -4922,6 +4988,7 @@ export type Database = {
           enrichment_status?: string | null
           facebook_url?: string | null
           first_seen_at?: string | null
+          freshness_score?: number | null
           full_name?: string | null
           hiring_recommendation?: string | null
           id?: string
@@ -4929,6 +4996,7 @@ export type Database = {
           is_demo_record?: boolean | null
           last_seen_at?: string | null
           license_expiry?: string | null
+          license_issued_at?: string | null
           license_number?: string | null
           license_type?: string | null
           linkedin_url?: string | null
@@ -4941,6 +5009,7 @@ export type Database = {
           score_reason?: string | null
           social_profiles?: Json | null
           source?: string | null
+          source_count?: number | null
           state?: string | null
           status?: string | null
           trade?: string | null
@@ -4964,6 +5033,7 @@ export type Database = {
           enrichment_status?: string | null
           facebook_url?: string | null
           first_seen_at?: string | null
+          freshness_score?: number | null
           full_name?: string | null
           hiring_recommendation?: string | null
           id?: string
@@ -4971,6 +5041,7 @@ export type Database = {
           is_demo_record?: boolean | null
           last_seen_at?: string | null
           license_expiry?: string | null
+          license_issued_at?: string | null
           license_number?: string | null
           license_type?: string | null
           linkedin_url?: string | null
@@ -4983,6 +5054,7 @@ export type Database = {
           score_reason?: string | null
           social_profiles?: Json | null
           source?: string | null
+          source_count?: number | null
           state?: string | null
           status?: string | null
           trade?: string | null
@@ -5008,6 +5080,7 @@ export type Database = {
           claimed_at: string | null
           client_action: string | null
           client_id: string
+          contacted_at: string | null
           hired_revenue_estimate: number | null
           id: string
           interview_scheduled_at: string | null
@@ -5021,6 +5094,7 @@ export type Database = {
           claimed_at?: string | null
           client_action?: string | null
           client_id: string
+          contacted_at?: string | null
           hired_revenue_estimate?: number | null
           id?: string
           interview_scheduled_at?: string | null
@@ -5034,6 +5108,7 @@ export type Database = {
           claimed_at?: string | null
           client_action?: string | null
           client_id?: string
+          contacted_at?: string | null
           hired_revenue_estimate?: number | null
           id?: string
           interview_scheduled_at?: string | null
@@ -5044,6 +5119,7 @@ export type Database = {
       hire_alert_clients: {
         Row: {
           active: boolean | null
+          agency_priority: boolean
           booking_link: string | null
           company_name: string
           created_at: string | null
@@ -5062,6 +5138,7 @@ export type Database = {
           stripe_subscription_id: string | null
           target_roles: string[] | null
           target_zip_codes: string[] | null
+          territory_counties: string[] | null
           tos_accepted_at: string | null
           tos_version: string | null
           trial_ends_at: string | null
@@ -5070,6 +5147,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          agency_priority?: boolean
           booking_link?: string | null
           company_name: string
           created_at?: string | null
@@ -5088,6 +5166,7 @@ export type Database = {
           stripe_subscription_id?: string | null
           target_roles?: string[] | null
           target_zip_codes?: string[] | null
+          territory_counties?: string[] | null
           tos_accepted_at?: string | null
           tos_version?: string | null
           trial_ends_at?: string | null
@@ -5096,6 +5175,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          agency_priority?: boolean
           booking_link?: string | null
           company_name?: string
           created_at?: string | null
@@ -5114,6 +5194,7 @@ export type Database = {
           stripe_subscription_id?: string | null
           target_roles?: string[] | null
           target_zip_codes?: string[] | null
+          territory_counties?: string[] | null
           tos_accepted_at?: string | null
           tos_version?: string | null
           trial_ends_at?: string | null
@@ -5381,6 +5462,7 @@ export type Database = {
           active: boolean | null
           buyer_type: string
           company_name: string
+          confidence_min: number | null
           contact_name: string | null
           created_at: string | null
           dashboard_token: string | null
@@ -5397,6 +5479,7 @@ export type Database = {
           target_roles: string[] | null
           territory_counties: string[] | null
           updated_at: string | null
+          vendor_fit_input: string | null
           vertical: string | null
           webhook_url: string | null
         }
@@ -5404,6 +5487,7 @@ export type Database = {
           active?: boolean | null
           buyer_type?: string
           company_name: string
+          confidence_min?: number | null
           contact_name?: string | null
           created_at?: string | null
           dashboard_token?: string | null
@@ -5420,6 +5504,7 @@ export type Database = {
           target_roles?: string[] | null
           territory_counties?: string[] | null
           updated_at?: string | null
+          vendor_fit_input?: string | null
           vertical?: string | null
           webhook_url?: string | null
         }
@@ -5427,6 +5512,7 @@ export type Database = {
           active?: boolean | null
           buyer_type?: string
           company_name?: string
+          confidence_min?: number | null
           contact_name?: string | null
           created_at?: string | null
           dashboard_token?: string | null
@@ -5443,6 +5529,7 @@ export type Database = {
           target_roles?: string[] | null
           territory_counties?: string[] | null
           updated_at?: string | null
+          vendor_fit_input?: string | null
           vertical?: string | null
           webhook_url?: string | null
         }
@@ -5468,7 +5555,9 @@ export type Database = {
           sector: string | null
           signal_type: string | null
           source_urls: string[] | null
+          spend_window: string | null
           target_buyer_type: string | null
+          vendor_fit_score: number | null
           vertical: string | null
         }
         Insert: {
@@ -5490,7 +5579,9 @@ export type Database = {
           sector?: string | null
           signal_type?: string | null
           source_urls?: string[] | null
+          spend_window?: string | null
           target_buyer_type?: string | null
+          vendor_fit_score?: number | null
           vertical?: string | null
         }
         Update: {
@@ -5512,7 +5603,9 @@ export type Database = {
           sector?: string | null
           signal_type?: string | null
           source_urls?: string[] | null
+          spend_window?: string | null
           target_buyer_type?: string | null
+          vendor_fit_score?: number | null
           vertical?: string | null
         }
         Relationships: []
