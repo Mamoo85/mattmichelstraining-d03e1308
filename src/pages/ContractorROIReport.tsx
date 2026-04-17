@@ -41,15 +41,34 @@ export default function ContractorROIReport() {
     } catch { setStatus("error"); }
   };
 
-  const card = (value: number, label: string, icon: string, color: string) => (
-    <div style={{
-      background: "#0f2342", border: `1px solid ${color}22`,
-      borderRadius: 12, padding: "24px 20px", textAlign: "center",
-    }}>
+  const card = (value: number, label: string, icon: string, color: string, href: string) => (
+    <a
+      href={href}
+      style={{
+        display: "block",
+        background: "#0f2342",
+        border: `1px solid ${color}22`,
+        borderRadius: 12,
+        padding: "24px 20px",
+        textAlign: "center",
+        textDecoration: "none",
+        cursor: "pointer",
+        transition: "transform 0.15s ease, border-color 0.15s ease",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-2px)";
+        e.currentTarget.style.borderColor = `${color}66`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.borderColor = `${color}22`;
+      }}
+    >
       <div style={{ fontSize: 36, marginBottom: 8 }}>{icon}</div>
       <div style={{ color, fontSize: 48, fontWeight: 900, lineHeight: 1, marginBottom: 8 }}>{value}</div>
       <div style={{ color: "#94a3b8", fontSize: 14, fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase" }}>{label}</div>
-    </div>
+      <div style={{ color: `${color}99`, fontSize: 11, fontWeight: 700, marginTop: 10, letterSpacing: 0.5 }}>VIEW DETAILS →</div>
+    </a>
   );
 
   if (status === "loading") return (
@@ -88,10 +107,10 @@ export default function ContractorROIReport() {
 
         {/* Metric cards */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-          {card(stats.leads_delivered, "Leads Delivered", "🎯", "#00d4ff")}
-          {card(stats.dead_leads_revived, "Dead Leads Revived", "♻️", "#10b981")}
-          {card(stats.missed_calls_caught, "Missed Calls Caught", "📞", "#f59e0b")}
-          {card(stats.licenses_monitored, "Licenses Monitored", "🔒", "#8b5cf6")}
+          {card(stats.leads_delivered, "Leads Delivered", "🎯", "#00d4ff", "https://detroitwebagent.com/contractor-leads")}
+          {card(stats.dead_leads_revived, "Dead Leads Revived", "♻️", "#10b981", "sms:+13139921219?body=Tell%20me%20more%20about%20my%20revived%20dead%20leads")}
+          {card(stats.missed_calls_caught, "Missed Calls Caught", "📞", "#f59e0b", "https://detroitwebagent.com/missed-call-catch")}
+          {card(stats.licenses_monitored, "Licenses Monitored", "🔒", "#8b5cf6", "https://detroitwebagent.com/license-monitor")}
         </div>
 
         {/* Footer */}

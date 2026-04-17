@@ -2,6 +2,10 @@
 // Texts each active contractor their ROI magic link.
 // CRITICAL: Only sends if at least one metric > 0 for the week.
 // Uses roi_token (not client_id) in the URL — security by obscurity.
+//
+// Idempotency:
+// 1. 6-day cooldown via contractor_clients.last_roi_sms_sent_at — prevents same contractor twice in a week
+// 2. Per-phone dedup in this run — prevents multiple test rows with the same phone all texting Matt
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -21,23 +25,34 @@ serve(async (req) => {
 
   try {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const sixDaysAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Fetch all active contractors with phones and roi_tokens
+    // Fetch active contractors with phones + tokens — EXCLUDE ones texted in last 6 days
     const { data: contractors } = await sb
       .from("contractor_clients")
-      .select("id, phone, business_name, roi_token")
+      .select("id, phone, business_name, roi_token, last_roi_sms_sent_at")
       .eq("active", true)
       .not("phone", "is", null)
-      .not("roi_token", "is", null);
+      .not("roi_token", "is", null)
+      .or(`last_roi_sms_sent_at.is.null,last_roi_sms_sent_at.lt.${sixDaysAgo}`);
 
     if (!contractors?.length) {
-      return new Response(JSON.stringify({ ok: true, sent: 0 }), { status: 200 });
+      return new Response(JSON.stringify({ ok: true, sent: 0, reason: "no_eligible_contractors" }), { status: 200 });
     }
 
     let sent = 0;
+    let skipped = 0;
+    const phonesTexted = new Set<string>(); // dedupe within this run
 
     for (const contractor of contractors) {
       if (!contractor.phone || !contractor.roi_token) continue;
+
+      // Per-run phone dedup — never text the same number twice in one batch
+      const phoneKey = contractor.phone.replace(/\D/g, "");
+      if (phonesTexted.has(phoneKey)) {
+        skipped++;
+        continue;
+      }
 
       // Gather this week's stats in parallel
       const [
@@ -66,7 +81,7 @@ serve(async (req) => {
 
       const total = (leadsDelivered || 0) + (deadLeadsRevived || 0) + (missedCallsCaught || 0);
 
-      // ← KEY: skip if nothing happened this week — don't remind them of zeros
+      // Skip if nothing happened this week — don't remind them of zeros
       if (total === 0) continue;
 
       const reportUrl = `${SITE_URL}/roi?token=${contractor.roi_token}`;
@@ -76,19 +91,24 @@ serve(async (req) => {
       if ((deadLeadsRevived || 0) > 0) highlights.push(`${deadLeadsRevived} dead lead${deadLeadsRevived === 1 ? "" : "s"} revived`);
       if ((missedCallsCaught || 0) > 0) highlights.push(`${missedCallsCaught} missed call${missedCallsCaught === 1 ? "" : "s"} caught`);
 
-      await sendSMS(
-        contractor.phone,
-        TWILIO_PHONE_NUMBER,
-        `Your weekly results: ${highlights.join(", ")}. Full report: ${reportUrl} — Matt (313) 992-1219`,
-        "roi_scorecard"
-      );
+      // URL on its own line so SMS clients linkify it cleanly (em-dash on next line won't get grabbed)
+      const body = `Your weekly results: ${highlights.join(", ")}.\n\nFull report:\n${reportUrl}\n\n— Matt (313) 992-1219`;
 
+      await sendSMS(contractor.phone, TWILIO_PHONE_NUMBER, body, "roi_scorecard");
+
+      // Mark sent atomically — prevents re-send even if function re-runs
+      await sb
+        .from("contractor_clients")
+        .update({ last_roi_sms_sent_at: new Date().toISOString() })
+        .eq("id", contractor.id);
+
+      phonesTexted.add(phoneKey);
       sent++;
     }
 
-    console.log(`[contractor-roi-sms] Sent to ${sent}/${contractors.length} contractors`);
+    console.log(`[contractor-roi-sms] Sent to ${sent}/${contractors.length} contractors (${skipped} dupes skipped)`);
     return new Response(
-      JSON.stringify({ ok: true, sent, total: contractors.length }),
+      JSON.stringify({ ok: true, sent, skipped, total: contractors.length }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (e: unknown) {
