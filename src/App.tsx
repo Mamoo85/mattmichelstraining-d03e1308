@@ -199,6 +199,7 @@ const SeoAuditService = lazyRetry(() => import("./pages/SeoAuditService"));
 const ContractorChatbot = lazyRetry(() => import("./pages/ContractorChatbot"));
 const IndustrialNewsletter = lazyRetry(() => import("./pages/IndustrialNewsletter"));
 const MissedCallSaaS = lazyRetry(() => import("./pages/MissedCallSaaS"));
+const MissedCallSetup = lazyRetry(() => import("./pages/MissedCallSetup"));
 const B2BPartnerPortal = lazyRetry(() => import("./pages/B2BPartnerPortal"));
 const AINewsletterService = lazyRetry(() => import("./pages/AINewsletterService"));
 const FreeTrendingProducts = lazyRetry(() => import("./pages/FreeTrendingProducts"));
@@ -614,6 +615,7 @@ const App = () => (
                     <Route path="/industrial-newsletter" element={<IndustrialNewsletter />} />
                     <Route path="/missed-call-text" element={<MissedCallSaaS />} />
                     <Route path="/missed-call-catch" element={<MissedCallSaaS />} />
+                    <Route path="/missed-call-setup" element={<MissedCallSetup />} />
                     <Route path="/review-monitor" element={<ReviewMonitor />} />
                     <Route path="/weekly-sms-blast" element={<WeeklySMSBlast />} />
                     <Route path="/no-show-rebooker" element={<NoShowRebooker />} />

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import SEOHead from "@/components/layout/SEOHead";
+import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle, Shield, Clock, FileText, Target, Bell, ExternalLink, ChevronRight } from "lucide-react";
 
 const SET_ASIDE_OPTIONS = [
@@ -75,17 +76,14 @@ export default function GovContractMonitor() {
         min_contract_value: form.min_contract_value ? parseInt(form.min_contract_value.replace(/\D/g, "")) : undefined,
         max_contract_value: form.max_contract_value ? parseInt(form.max_contract_value.replace(/\D/g, "")) : undefined,
       };
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/create-gov-contract-checkout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      const { data, error: invokeErr } = await supabase.functions.invoke("create-gov-contract-checkout", {
+        body: payload,
       });
-      const data = await res.json();
-      if (data.url) {
+      if (invokeErr) throw invokeErr;
+      if (data?.url) {
         window.location.href = data.url;
       } else {
-        setError(data.error || "Something went wrong. Please try again.");
+        setError(data?.error || "Something went wrong. Please try again.");
       }
     } catch {
       setError("Network error. Please try again.");

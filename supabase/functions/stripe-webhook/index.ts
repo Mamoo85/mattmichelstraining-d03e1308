@@ -4291,8 +4291,9 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             }
           }
 
+          let setupToken: string | null = null;
           if (email) {
-            await (sb.from as any)("missed_call_clients").upsert({
+            const { data: upserted } = await (sb.from as any)("missed_call_clients").upsert({
               email,
               contact_name: meta.name || null,
               business_name: meta.businessName || email,
@@ -4300,11 +4301,24 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               twilio_number: twilioNumber || null,
               active: !!twilioNumber,
               stripe_subscription_id: session.subscription as string || null,
-            }, { onConflict: "email" });
+            }, { onConflict: "email" }).select("setup_token").single();
+            setupToken = upserted?.setup_token || null;
           }
+
+          const setupUrl = setupToken
+            ? `https://www.detroitwebagent.com/missed-call-setup?token=${setupToken}`
+            : null;
+
+          const setupCta = setupUrl
+            ? `<div style="margin:0 0 20px;text-align:center">
+<a href="${setupUrl}" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 28px;border-radius:8px;font-weight:800;font-size:15px;text-decoration:none">Open Setup Wizard →</a>
+<p style="margin:8px 0 0;font-size:12px;color:#64748b">Tap to view your number, copy forwarding codes, and send a test text</p>
+</div>`
+            : "";
 
           const fwdInstructions = twilioNumber
             ? `<p style="margin:0 0 8px"><strong>Your dedicated text-back number: ${twilioNumber}</strong></p>
+${setupCta}
 <p style="margin:0 0 8px"><strong>Setup (2 minutes on your phone):</strong></p>
 <ol style="margin:0 0 16px;padding-left:20px;color:#94a3b8">
 <li>On your iPhone: Settings → Phone → Call Forwarding → turn ON → enter <strong style="color:#00d4ff">${twilioNumber}</strong></li>
@@ -4313,6 +4327,7 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
 </ol>
 <p style="margin:0 0 8px">Reply to this email or text <a href="tel:+13139921219" style="color:#00d4ff">(313) 992-1219</a> if you need help with the setup.</p>`
             : `<p style="margin:0 0 8px"><strong>What happens next:</strong></p>
+${setupCta}
 <ol style="margin:0 0 16px;padding-left:20px;color:#94a3b8">
 <li>Matt will contact you within a few hours with your dedicated number</li>
 <li>You forward missed calls to that number — takes 2 minutes</li>

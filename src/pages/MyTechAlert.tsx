@@ -222,12 +222,10 @@ export default function MyTechAlert() {
     if (!token) return;
     setUpdatingIds((prev) => new Set(prev).add(candidateId));
     try {
-      const res = await fetch(`${baseUrl}/update-candidate-action`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", apikey },
-        body: JSON.stringify({ token, candidate_id: candidateId, action }),
+      const { data: result, error: invokeErr } = await supabase.functions.invoke("update-candidate-action", {
+        body: { token, candidate_id: candidateId, action },
       });
-      const result = await res.json();
+      if (invokeErr) throw invokeErr;
       if (result.success) {
         setData((prev) => {
           if (!prev) return prev;
@@ -261,12 +259,10 @@ export default function MyTechAlert() {
     claimLockRef.current.add(candidateId);
     setClaimingIds((prev) => new Set(prev).add(candidateId));
     try {
-      const res = await fetch(`${baseUrl}/claim-candidate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", apikey },
-        body: JSON.stringify({ token, candidate_id: candidateId, is_demo: isDemo }),
+      const { data: result, error: invokeErr } = await supabase.functions.invoke("claim-candidate", {
+        body: { token, candidate_id: candidateId, is_demo: isDemo },
       });
-      const result = await res.json();
+      if (invokeErr) throw invokeErr;
       if (result.claimed) {
         setData((prev) => {
           if (!prev) return prev;
@@ -293,12 +289,10 @@ export default function MyTechAlert() {
     if (!token) return;
     setGeneratingDraft(candidateId);
     try {
-      const res = await fetch(`${baseUrl}/generate-outreach-draft`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", apikey },
-        body: JSON.stringify({ token, candidate_id: candidateId, is_demo: isDemo }),
+      const { data: draft, error: invokeErr } = await supabase.functions.invoke("generate-outreach-draft", {
+        body: { token, candidate_id: candidateId, is_demo: isDemo },
       });
-      const draft = await res.json();
+      if (invokeErr) throw invokeErr;
       if (draft.error) throw new Error(draft.error);
       setOutreachModal({ candidateId, draft });
     } catch {
@@ -333,12 +327,10 @@ export default function MyTechAlert() {
     fastTrackLock.current = true;
     setFastTrackingId(candidateId);
     try {
-      const res = await fetch(`${baseUrl}/fast-track-interview`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", apikey },
-        body: JSON.stringify({ token, candidate_id: candidateId, is_demo: isDemo }),
+      const { data: result, error: invokeErr } = await supabase.functions.invoke("fast-track-interview", {
+        body: { token, candidate_id: candidateId, is_demo: isDemo },
       });
-      const result = await res.json();
+      if (invokeErr) throw invokeErr;
       if (result.error === "no_booking_link") {
         toast.info("Add your scheduling link to enable Fast-Track. Email matt@detroitwebagent.com to set it up.");
         return;
