@@ -89,6 +89,8 @@ serve(async (req) => {
         ref: ref || "direct",
         county: county || "",
         tos_accepted: "true",
+        tos_version: "2026-04-fcra",
+        data_classification: "b2b_market_intelligence_not_consumer_report",
       },
       success_url: `${origin}/hire-alert?success=1`,
       cancel_url: `${origin}/hire-alert`,

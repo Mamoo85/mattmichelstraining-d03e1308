@@ -574,10 +574,18 @@ export default function HireAlert() {
                 style={{ accentColor: ACCENT, width: 16, height: 16, flexShrink: 0, marginTop: 2 }}
               />
               <span>
-                I agree that TechAlert data is for <strong style={{ color: "#fff" }}>market intelligence only</strong>. Automated bulk contact or spam of candidates is prohibited. Violation results in immediate service termination.{" "}
-                <a href="/legal/terms" target="_blank" style={{ color: ACCENT, textDecoration: "underline" }}>Full Terms</a>
+                I acknowledge TechAlert data is a <strong style={{ color: "#fff" }}>B2B Market Intelligence Feed and is NOT a Consumer Report under the FCRA</strong>. I will not use it for FCRA permissible purposes (employment eligibility decisions, background screening, adverse action). Auto-dialed/pre-recorded calls or texts to listed candidates are prohibited (TCPA). Reverse-engineering or resale of the underlying data is prohibited. Violation = immediate termination + indemnification.{" "}
+                <a href="/legal/techalert-terms" target="_blank" style={{ color: ACCENT, textDecoration: "underline" }}>Full TechAlert Terms</a>
               </span>
             </label>
+
+            {/* MSP / Enterprise inquiry CTA */}
+            <div style={{ marginTop: 16, padding: "14px 16px", background: "#001a33", border: `1px dashed ${ACCENT}66`, borderRadius: 8, fontSize: 13, color: "#94a3b8" }}>
+              <strong style={{ color: ACCENT }}>Staffing agency or MSP?</strong> Enterprise tier with statewide territory exclusivity, signed MSA, and direct VMS integration starts at $2,500/mo.{" "}
+              <Link to="/hire-alert/enterprise" style={{ color: ACCENT, textDecoration: "underline", fontWeight: 600 }}>
+                Request a discovery call →
+              </Link>
+            </div>
 
             <Button
               onClick={handleCheckout}

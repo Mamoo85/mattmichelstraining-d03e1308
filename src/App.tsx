@@ -285,6 +285,7 @@ const StormDamageLeads = lazyRetry(() => import("./pages/StormDamageLeads"));
 const RecallAlertService = lazyRetry(() => import("./pages/RecallAlertService"));
 const PermitWatch = lazyRetry(() => import("./pages/PermitWatch"));
 const HireAlert = lazyRetry(() => import("./pages/HireAlert"));
+const HireAlertMSPInquiry = lazyRetry(() => import("./pages/HireAlertMSPInquiry"));
 const GoTechAlert = lazyRetry(() => import("./pages/GoTechAlert"));
 const FreeLeadsQR = lazyRetry(() => import("./pages/FreeLeadsQR"));
 const HireAlertTrial = lazyRetry(() => import("./pages/HireAlertTrial"));
@@ -730,6 +731,7 @@ const App = () => (
                     <Route path="/recall-alerts" element={<RecallAlertService />} />
                     <Route path="/permit-watch" element={<PermitWatch />} />
                     <Route path="/hire-alert" element={<HireAlert />} />
+                    <Route path="/hire-alert/enterprise" element={<HireAlertMSPInquiry />} />
                     <Route path="/talent-radar" element={<HireAlert />} />
                     <Route path="/growth-radar" element={<IndustryPulse />} />
                     <Route path="/growth-radar-dashboard" element={<GrowthRadarDashboard />} />
