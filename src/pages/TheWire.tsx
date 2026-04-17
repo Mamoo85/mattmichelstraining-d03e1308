@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import SEOHead from "@/components/SEOHead";
+import SEOHead from "@/components/layout/SEOHead";
 import { Radio, Zap, Bell, MapPin, Wrench, ArrowRight } from "lucide-react";
 
 const TRADES = ["HVAC", "Plumbing", "Roofing", "Electrical", "Concrete", "Landscaping", "Painting", "General"];
