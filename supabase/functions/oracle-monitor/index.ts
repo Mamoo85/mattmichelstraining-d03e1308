@@ -69,7 +69,7 @@ async function gatherDailyReport(sb: any): Promise<DailyReport> {
   for (const [table, label] of [["audit_orders", "Website Audit"], ["gbp_post_packs", "GBP Post Pack"], ["competitor_reports", "Competitor Report"]] as [string, string][]) {
     const { data } = await sb.from(table).select("email, created_at").eq("status", "pending").lt("created_at", twoHoursAgo).limit(10);
     if (data) {
-      data.forEach(row => {
+      data.forEach((row: any) => {
         const ageHours = (now.getTime() - new Date(row.created_at).getTime()) / (1000 * 60 * 60);
         stuckOrders.push({ product: label, email: row.email, age_hours: Math.round(ageHours) });
       });
@@ -135,7 +135,7 @@ async function gatherDailyReport(sb: any): Promise<DailyReport> {
     .eq("is_active", true);
 
   const waitlistCounts: Record<string, number> = {};
-  waitlistData?.forEach(row => {
+  waitlistData?.forEach((row: any) => {
     const product = (row.source as string).replace("waitlist_", "").replace(/_/g, " ");
     waitlistCounts[product] = (waitlistCounts[product] || 0) + 1;
   });
@@ -169,7 +169,7 @@ async function gatherDailyReport(sb: any): Promise<DailyReport> {
   }
 
   return {
-    failures: (failures || []).map(f => ({ product: f.product_type, email: f.email, error: f.error_message, created_at: f.created_at })),
+    failures: (failures || []).map((f: any) => ({ product: f.product_type, email: f.email, error: f.error_message, created_at: f.created_at })),
     stuckOrders,
     newOrders24h,
     newSubscribers24h,

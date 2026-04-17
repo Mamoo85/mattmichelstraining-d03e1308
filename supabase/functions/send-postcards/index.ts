@@ -7,11 +7,18 @@
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { qrcode } from "https://deno.land/x/qrcode@v2.0.0/mod.ts";
+
+// ── COST GUARDRAILS (Matt: change here to adjust caps) ─────────────────
+const MAX_PER_RUN = 500;          // hard cap per send invocation
+const MAX_PER_MONTH = 2000;       // hard cap per calendar month
+const COST_PER_POSTCARD = 0.85;   // Lob 6x4 estimated cost (USD)
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const LOB_API_KEY = Deno.env.get("LOB_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
+const ADMIN_EMAIL = "matt@detroitwebagent.com";
 
 const MATT_PHOTO = "https://customer-assets.emergentagent.com/job_docs-claude-v2/artifacts/6z5o71kv_19405.jpg";
 const DWA_BADGE = "https://customer-assets.emergentagent.com/job_docs-claude-v2/artifacts/1dhqg3eh_25239.png";
@@ -20,6 +27,25 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+async function notifyMatt(subject: string, html: string): Promise<void> {
+  if (!RESEND_API_KEY) return;
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: "DWA Postcard Engine <matt@detroitwebagent.com>", to: [ADMIN_EMAIL], subject, html }),
+  }).catch(() => {});
+}
+
+async function getMonthSentCount(sb: any): Promise<number> {
+  const monthStart = new Date();
+  monthStart.setUTCDate(1); monthStart.setUTCHours(0, 0, 0, 0);
+  const { count } = await sb
+    .from("postcard_prospects")
+    .select("id", { count: "exact", head: true })
+    .gte("postcard_sent_at", monthStart.toISOString());
+  return count || 0;
+}
 
 type AudienceType = "healthcare-agency" | "trades-agency" | "nursing-home" | "contractor" | "supply-house";
 
@@ -75,9 +101,11 @@ const DESIGNS: Record<AudienceType, PostcardDesign> = {
   },
 };
 
-function buildFrontHTML(design: PostcardDesign, city: string, recipientName: string): string {
+async function buildFrontHTML(design: PostcardDesign, city: string, recipientName: string): Promise<string> {
   const qrUrl = `https://detroitwebagent.com${design.qrPath}&city=${city.toLowerCase().replace(/\s+/g, "-")}`;
   const c = design.accentColor;
+  // Self-hosted QR — no external dependency at mail time
+  const qrDataUri = await qrcode(qrUrl, { size: 260 }) as string;
 
   return `<html><head><meta charset="UTF-8"><style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
@@ -105,7 +133,7 @@ function buildFrontHTML(design: PostcardDesign, city: string, recipientName: str
   <div style="width:1.9in;background:#161b22;border-left:3px solid ${c};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0.35in 0.2in;gap:12px;">
     <img src="${DWA_BADGE}" style="width:55px;height:55px;border-radius:50%;border:1.5px solid #30363d;" alt="DWA">
     <div style="font-size:8px;color:#8b949e;text-align:center;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Scan to claim</div>
-    <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(qrUrl)}" width="130" height="130" style="border-radius:8px;border:2px solid #30363d;" alt="QR">
+    <img src="${qrDataUri}" width="130" height="130" style="border-radius:8px;border:2px solid #30363d;" alt="QR">
     <div style="font-size:10px;color:${c};font-weight:800;text-align:center;">${design.offer.includes("MONTH") ? "FREE MONTH" : "FREE 10 NAMES"}</div>
     <div style="font-size:7px;color:#484f58;text-align:center;">detroitwebagent.com</div>
   </div>
@@ -161,16 +189,34 @@ serve(async (req) => {
       .not("address_line1", "is", null)
       .not("city", "is", null)
       .not("zip", "is", null)
-      .limit(100);
+      .limit(MAX_PER_RUN);
 
     if (!prospects?.length) return new Response(JSON.stringify({ error: "No unsent prospects with valid addresses" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    // ── COST GUARDRAILS ─────────────────────────────────────────────
+    if (prospects.length > MAX_PER_RUN) {
+      const msg = `🚨 Postcard run BLOCKED: ${prospects.length} > ${MAX_PER_RUN}/run cap`;
+      await notifyMatt(msg, `<p>${msg}</p><p>Edit MAX_PER_RUN in send-postcards/index.ts to change.</p>`);
+      return new Response(JSON.stringify({ error: msg }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const monthSent = await getMonthSentCount(sb);
+    if (monthSent + prospects.length > MAX_PER_MONTH) {
+      const msg = `🚨 Postcard run BLOCKED: monthly cap. Sent ${monthSent} + this batch ${prospects.length} > ${MAX_PER_MONTH}/month`;
+      await notifyMatt(msg, `<p>${msg}</p><p>Edit MAX_PER_MONTH in send-postcards/index.ts to change.</p>`);
+      return new Response(JSON.stringify({ error: msg, sent_this_month: monthSent, cap: MAX_PER_MONTH }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const estimatedCost = (prospects.length * COST_PER_POSTCARD).toFixed(2);
+    console.log(`[send-postcards] Cost guardrails OK. ${prospects.length} cards × $${COST_PER_POSTCARD} = $${estimatedCost}. Month so far: ${monthSent}/${MAX_PER_MONTH}.`);
+
+
+
 
     let sentCount = 0;
     const errors: string[] = [];
 
     for (const prospect of prospects) {
       try {
-        const frontHTML = buildFrontHTML(design, prospect.city || city, prospect.business_name || "");
+        const frontHTML = await buildFrontHTML(design, prospect.city || city, prospect.business_name || "");
         const backHTML = buildBackHTML(prospect.city || city);
 
         const lobRes = await fetch("https://api.lob.com/v1/postcards", {

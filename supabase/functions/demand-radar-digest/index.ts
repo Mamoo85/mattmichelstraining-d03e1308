@@ -85,7 +85,7 @@ serve(async (req) => {
       const wantsAll = subVerticals.includes("all") || subVerticals.length === 0;
       const subCounties: string[] = sub.territory_counties || [];
 
-      const matches = allSignals.filter((s: any) => {
+      const matches = (allSignals || []).filter((s: any) => {
         const sigVert = (s.vertical || s.industry || s.sector || "").toLowerCase();
         const vertMatch = wantsAll || subVerticals.some((v: string) => sigVert.includes(v) || v.includes(sigVert));
         if (!vertMatch) return false;

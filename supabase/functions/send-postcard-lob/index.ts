@@ -6,15 +6,41 @@
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { qrcode } from "https://deno.land/x/qrcode@v2.0.0/mod.ts";
+
+// ── COST GUARDRAILS (Matt: change here to adjust caps) ─────────────────
+const MAX_PER_RUN = 500;
+const MAX_PER_MONTH = 2000;
+const COST_PER_POSTCARD = 0.85;
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const LOB_API_KEY = Deno.env.get("LOB_API_KEY") || "";
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+async function notifyMatt(subject: string, html: string): Promise<void> {
+  if (!RESEND_API_KEY) return;
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: "DWA Postcard Engine <matt@detroitwebagent.com>", to: ["matt@detroitwebagent.com"], subject, html }),
+  }).catch(() => {});
+}
+
+async function getMonthSentCount(sb: any): Promise<number> {
+  const monthStart = new Date();
+  monthStart.setUTCDate(1); monthStart.setUTCHours(0, 0, 0, 0);
+  const { count } = await sb
+    .from("postcard_send_log")
+    .select("id", { count: "exact", head: true })
+    .gte("sent_at", monthStart.toISOString());
+  return count || 0;
+}
 
 const RETURN_ADDRESS = {
   name: "Detroit Web Agent",
@@ -35,7 +61,7 @@ function buildFrontHtml(copyFront: string): string {
     </div>`;
 }
 
-function buildBackHtml(copyBack: string, qrUrl: string): string {
+function buildBackHtml(copyBack: string, qrDataUri: string): string {
   return `
     <div style="width:6in;height:4in;font-family:Arial,sans-serif;padding:0.4in;display:flex;gap:0.3in;">
       <div style="flex:1;">
@@ -47,7 +73,7 @@ function buildBackHtml(copyBack: string, qrUrl: string): string {
         </div>
       </div>
       <div style="width:1.4in;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrUrl)}" style="width:1.2in;height:1.2in;" />
+        <img src="${qrDataUri}" style="width:1.2in;height:1.2in;" />
         <div style="font-size:9px;color:#666;margin-top:6px;text-align:center;">Scan for 5 FREE alerts</div>
       </div>
     </div>`;
@@ -62,7 +88,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const maxSend = body.max || 50; // safety cap per run
+    const maxSend = Math.min(body.max || 50, MAX_PER_RUN);
     const county = body.county || "Macomb";
     const dryRun = body.dry_run === true;
 
@@ -98,8 +124,26 @@ serve(async (req) => {
       );
     }
 
+    // ── COST GUARDRAILS ─────────────────────────────────────────────
+    if (!dryRun) {
+      if (prospects.length > MAX_PER_RUN) {
+        const msg = `🚨 Postcard run BLOCKED: ${prospects.length} > ${MAX_PER_RUN}/run cap`;
+        await notifyMatt(msg, `<p>${msg}</p>`);
+        return new Response(JSON.stringify({ error: msg }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const monthSent = await getMonthSentCount(sb);
+      if (monthSent + prospects.length > MAX_PER_MONTH) {
+        const msg = `🚨 Postcard run BLOCKED: monthly cap. ${monthSent} + ${prospects.length} > ${MAX_PER_MONTH}/month`;
+        await notifyMatt(msg, `<p>${msg}</p>`);
+        return new Response(JSON.stringify({ error: msg, sent_this_month: monthSent, cap: MAX_PER_MONTH }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      console.log(`[send-postcard-lob] Cost OK. ${prospects.length} × $${COST_PER_POSTCARD} = $${(prospects.length * COST_PER_POSTCARD).toFixed(2)}. Month: ${monthSent}/${MAX_PER_MONTH}`);
+    }
+
     const frontHtml = buildFrontHtml(campaign.copy_front);
-    const backHtml = buildBackHtml(campaign.copy_back, campaign.qr_url);
+    // Self-hosted QR — no external dependency at mail time
+    const qrDataUri = await qrcode(campaign.qr_url, { size: 260 }) as string;
+    const backHtml = buildBackHtml(campaign.copy_back, qrDataUri);
 
     let sent = 0;
     const errors: string[] = [];

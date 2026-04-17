@@ -117,8 +117,8 @@ serve(async (req) => {
         return true;
       };
 
-      const freshMatches = freshCandidates.filter(matchAgency);
-      const passiveMatches = passivePool.filter(matchAgency);
+      const freshMatches = (freshCandidates || []).filter(matchAgency);
+      const passiveMatches = (passivePool || []).filter(matchAgency);
 
       if (!freshMatches.length && !passiveMatches.length) continue;
 

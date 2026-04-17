@@ -1278,8 +1278,26 @@ async function scanMiPLUS(): Promise<LicenseCandidate[]> {
   return candidates;
 }
 
+// Twilio SMS helper for LARA alerts
+const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
+const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+const ADMIN_PHONE = Deno.env.get("ADMIN_PHONE") || "+13138064952";
+
+async function sendSMS(to: string, body: string): Promise<void> {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) return;
+  await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({ To: to, From: TWILIO_PHONE_NUMBER, Body: body }),
+  });
+}
+
 // Log LARA health to database and alert Matt if needed
-async function logLaraHealthAndAlert(sb: ReturnType<typeof createClient>): Promise<void> {
+async function logLaraHealthAndAlert(sb: any): Promise<void> {
   try {
     // Log health check
     const fallbackSources: string[] = [];
@@ -1296,7 +1314,7 @@ async function logLaraHealthAndAlert(sb: ReturnType<typeof createClient>): Promi
       fallback_activated: laraFallbackActivated,
       fallback_sources: fallbackSources.length ? fallbackSources : null,
       candidates_from_fallback: 0, // Updated after Sonar runs
-    });
+    } as any);
 
     // Alert Matt if LARA has been down 2+ consecutive days
     if (laraStatus !== "ok" && laraStatus !== "not_attempted") {
@@ -1306,7 +1324,7 @@ async function logLaraHealthAndAlert(sb: ReturnType<typeof createClient>): Promi
         .order("checked_at", { ascending: false })
         .limit(3);
 
-      const consecutiveFailures = recentLogs?.filter(l => l.status !== "ok").length ?? 0;
+      const consecutiveFailures = (recentLogs as any[] | null)?.filter((l: any) => l.status !== "ok").length ?? 0;
 
       if (consecutiveFailures >= 2) {
         const alertMsg = `🚨 LARA ALERT: Portal ${laraStatus} for ${consecutiveFailures} consecutive checks. Last error: ${laraErrorMessage.substring(0, 100)}. Fallback sources active but consider manual investigation.`;
