@@ -83,12 +83,21 @@ serve(async (req) => {
     }
 
     const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-    const { data: recentLeads } = await supabase
-      .from("contractor_leads")
-      .select("id, trade, city, description, created_at")
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
-      .limit(50);
+    const [{ data: recentLeads }, { data: radarSignals }] = await Promise.all([
+      supabase
+        .from("contractor_leads")
+        .select("id, trade, city, description, created_at")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(50),
+      supabase
+        .from("industry_pulse_signals" as any)
+        .select("*")
+        .gte("detected_at", since)
+        .gte("confidence", 6)
+        .order("confidence", { ascending: false })
+        .limit(40),
+    ]);
 
     let sent = 0;
     for (const sub of subs) {
@@ -114,7 +123,14 @@ serve(async (req) => {
       const fresh = matched.filter((m: any) => !sentIds.has(m.id));
       if (!fresh.length) continue;
 
-      const html = renderDigest(sub.business_name || "there", fresh);
+      // Match radar signals to subscriber's cities (any expansion = potential job)
+      const matchedSignals = (radarSignals || []).filter((s: any) => {
+        if (!cities.length) return true;
+        const sigLoc = (s.county || s.location || s.city || "").toLowerCase();
+        return cities.some((c: string) => sigLoc.includes(c));
+      }).slice(0, 4);
+
+      const html = renderDigest(sub.business_name || "there", fresh, matchedSignals);
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
