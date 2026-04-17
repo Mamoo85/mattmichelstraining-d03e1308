@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import SEOHead from "@/components/layout/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
