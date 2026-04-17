@@ -60,31 +60,16 @@ Detroit Web Agency
 (313) 992-1219`,
 ];
 
-// ── Firecrawl with 5-second timeout (Zone 1 fix) ───────────────────────────
+// ── Resilient stealth scrape via shared helper ─────────────────────────────
+import { stealthScrape } from "../_shared/stealth-scrape.ts";
+
 async function scrapeWebsite(url: string): Promise<string> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 5000);
-  try {
-    const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true }),
-    });
-    clearTimeout(timeoutId);
-    if (!res.ok) return "";
-    const data = await res.json();
-    return (data?.data?.markdown || "").slice(0, 800);
-  } catch (e: unknown) {
-    clearTimeout(timeoutId);
-    const isAbort = e instanceof Error && e.name === "AbortError";
-    console.warn(`[dwa-closer] Firecrawl ${isAbort ? "timed out" : "failed"} for ${url}`);
-    return "";
-  }
+  if (!FIRECRAWL_API_KEY) return "";
+  const r = await stealthScrape(url, { maxChars: 800, timeoutMs: 15_000 });
+  return r.ok ? (r.markdown || "") : "";
 }
+
+
 
 // ── Anti-collision check ────────────────────────────────────────────────────
 async function isOnCooldown(

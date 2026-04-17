@@ -33,7 +33,7 @@ export default function FreeServiceGapScanner() {
       });
       if (fnErr) throw fnErr;
       if (data?.success) setResults({ gaps: data.gaps || [], summary: data.summary || "" });
-      else setError(data?.error || "Scan failed");
+      else setError(data?.message || "We couldn't read this page right now. Try again in a minute.");
     } catch {
       setError("Scan failed. Please try again.");
     } finally {

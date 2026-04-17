@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { stealthScrape, reasonToCopy } from "../_shared/stealth-scrape.ts";
 
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
@@ -32,30 +33,16 @@ Deno.serve(async (req) => {
     }
 
     if (!FIRECRAWL_API_KEY) {
-      return new Response(JSON.stringify({ error: "Scanner is temporarily unavailable. Try again in a few minutes." }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ success: false, message: reasonToCopy("not_configured") }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Scrape with Firecrawl — get HTML for accessibility analysis
-    let formatted = url.trim();
-    if (!formatted.startsWith("http")) formatted = `https://${formatted}`;
-
-    let htmlContent = "";
-    try {
-      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ url: formatted, formats: ["html", "markdown"], onlyMainContent: false }),
-        signal: AbortSignal.timeout(20_000),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        htmlContent = (data?.data?.html || data?.data?.markdown || "").slice(0, 8000);
-      }
-    } catch { /* continue */ }
-
-    if (!htmlContent) {
-      return new Response(JSON.stringify({ error: "Could not scrape the website" }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // Tiered stealth fetch — gets HTML even on Cloudflare/anti-bot sites
+    const scraped = await stealthScrape(url, { formats: ["html", "markdown"], onlyMainContent: false, maxChars: 8000 });
+    if (!scraped.ok) {
+      return new Response(JSON.stringify({ success: false, message: reasonToCopy(scraped.reason) }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    const htmlContent = (scraped.html || scraped.markdown || "").slice(0, 8000);
+    const formatted = url.trim().startsWith("http") ? url.trim() : `https://${url.trim()}`;
 
     // AI analysis for WCAG violations
     const prompt = `You are a WCAG 2.1 AA compliance auditor analyzing a website for ADA lawsuit risk.

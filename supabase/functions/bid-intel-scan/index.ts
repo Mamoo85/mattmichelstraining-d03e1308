@@ -39,33 +39,26 @@ async function searchSamGov(trade: string, territory: string): Promise<any[]> {
 
 async function scrapeBidBoards(trade: string, territory: string): Promise<any[]> {
   if (!FIRECRAWL_API_KEY) return [];
+  const { stealthScrape } = await import("../_shared/stealth-scrape.ts");
   const results: any[] = [];
   const queries = [
     `${trade} subcontractor bid ${territory}`,
     `${trade} construction bid invitation ${territory}`,
   ];
   for (const query of queries) {
-    try {
-      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${FIRECRAWL_API_KEY}` },
-        body: JSON.stringify({ url: `https://www.bidnet.com/bids-search?query=${encodeURIComponent(query)}`, formats: ["markdown"] }),
+    const url = `https://www.bidnet.com/bids-search?query=${encodeURIComponent(query)}`;
+    const r = await stealthScrape(url, { maxChars: 3000 });
+    if (r.ok && r.markdown && r.markdown.length > 100) {
+      results.push({
+        source_url: url,
+        source_name: "BidNet",
+        title: `BidNet: ${trade} opportunities in ${territory}`,
+        description: r.markdown,
+        bid_due_date: null,
+        estimated_value: null,
+        location: territory,
       });
-      if (!res.ok) continue;
-      const data = await res.json();
-      const md = data.data?.markdown || "";
-      if (md.length > 100) {
-        results.push({
-          source_url: `https://www.bidnet.com/bids-search?query=${encodeURIComponent(query)}`,
-          source_name: "BidNet",
-          title: `BidNet: ${trade} opportunities in ${territory}`,
-          description: md.substring(0, 3000),
-          bid_due_date: null,
-          estimated_value: null,
-          location: territory,
-        });
-      }
-    } catch { /* skip */ }
+    }
   }
   return results;
 }
