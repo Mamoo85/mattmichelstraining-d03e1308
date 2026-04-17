@@ -790,7 +790,10 @@ serve(async (req) => {
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] web_design_addon error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] web_design_addon error:", e);
+          return new Response(JSON.stringify({ error: "web_design_addon failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -820,7 +823,10 @@ serve(async (req) => {
             }));
             await notifyMatt(`💰 New Handbook Client — ${meta.businessName || email} ($99/mo)`, `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>State: ${meta.state || "MI"}<br>Employees: ${meta.employeeCount || "n/a"}</p>`);
           }
-        } catch (e) { console.error("[WEBHOOK] handbook_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] handbook_subscription error:", e);
+          return new Response(JSON.stringify({ error: "handbook_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1034,7 +1040,10 @@ serve(async (req) => {
             }));
             await notifyMatt(`💰 New Grant Finder Client — ${meta.businessName || email} ($149/mo)`, `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>Location: ${meta.location || "Michigan"}</p>`);
           }
-        } catch (e) { console.error("[WEBHOOK] grant_finder_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] grant_finder_subscription error:", e);
+          return new Response(JSON.stringify({ error: "grant_finder_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1057,7 +1066,10 @@ serve(async (req) => {
             }) }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Review Response Client — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] review_response_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] review_response_subscription error:", e);
+          return new Response(JSON.stringify({ error: "review_response_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1082,7 +1094,10 @@ serve(async (req) => {
             }) }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Battlecard Client — ${meta.businessName || email} ($39/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Competitors: ${meta.competitorNames || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] battlecard_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] battlecard_subscription error:", e);
+          return new Response(JSON.stringify({ error: "battlecard_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1107,7 +1122,10 @@ serve(async (req) => {
             }) }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Market Intel Client — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>Location: ${meta.location || "Michigan"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] market_intel_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] market_intel_subscription error:", e);
+          return new Response(JSON.stringify({ error: "market_intel_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1129,7 +1147,10 @@ serve(async (req) => {
             }) }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Caption Pack — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Platforms: ${meta.platforms || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] caption_pack_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] caption_pack_subscription error:", e);
+          return new Response(JSON.stringify({ error: "caption_pack_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1176,7 +1197,10 @@ serve(async (req) => {
               await notifyMatt(`New Gov Contract Monitor — ${meta.company_name || email} ($299/mo)`, `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>NAICS: ${meta.naics_codes || "n/a"}<br>Keywords: ${meta.keywords || "n/a"}<br>Set-Asides: ${meta.set_aside_types || "n/a"}</p>`);
             }
           }
-        } catch (e) { console.error("[WEBHOOK] gov_contract_monitor error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] gov_contract_monitor error:", e);
+          return new Response(JSON.stringify({ error: "gov_contract_monitor failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1217,7 +1241,10 @@ serve(async (req) => {
               await notifyMatt(`New Reg Filing Monitor — ${meta.company_name || email} ($497/mo)`, `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>NAICS: ${meta.naics_codes || "n/a"}<br>State: ${meta.state || "n/a"}<br>Phone: ${meta.phone || "n/a"}</p>`);
             }
           }
-        } catch (e) { console.error("[WEBHOOK] reg_filing_monitor error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] reg_filing_monitor error:", e);
+          return new Response(JSON.stringify({ error: "reg_filing_monitor failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1258,7 +1285,10 @@ serve(async (req) => {
               await notifyMatt(`New Bid Intelligence — ${meta.company_name || email} ($599/mo)`, `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Trade: ${meta.trade || "n/a"}<br>Territory: ${meta.service_territory || "n/a"}<br>Phone: ${meta.phone || "n/a"}</p>`);
             }
           }
-        } catch (e) { console.error("[WEBHOOK] bid_intel_monitor error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] bid_intel_monitor error:", e);
+          return new Response(JSON.stringify({ error: "bid_intel_monitor failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1304,7 +1334,10 @@ serve(async (req) => {
               await notifyMatt(`New Regulatory Monitor — ${meta.company_name || email} ($197/mo)`, `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Industry: ${industryLabel}<br>State Focus: ${meta.state_focus || "National"}<br>Sub-industries: ${meta.sub_industries || "n/a"}</p>`);
             }
           }
-        } catch (e) { console.error("[WEBHOOK] regulatory_monitor error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] regulatory_monitor error:", e);
+          return new Response(JSON.stringify({ error: "regulatory_monitor failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1402,7 +1435,10 @@ serve(async (req) => {
               );
             }
           }
-        } catch (e) { console.error("[WEBHOOK] trademark_watch error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] trademark_watch error:", e);
+          return new Response(JSON.stringify({ error: "trademark_watch failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1424,7 +1460,10 @@ serve(async (req) => {
             }) }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New FAQ Refresh — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] faq_refresh_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] faq_refresh_subscription error:", e);
+          return new Response(JSON.stringify({ error: "faq_refresh_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1446,7 +1485,10 @@ serve(async (req) => {
             }) }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Job Posting — ${meta.businessName || email} ($39/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] job_posting_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] job_posting_subscription error:", e);
+          return new Response(JSON.stringify({ error: "job_posting_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1468,7 +1510,10 @@ serve(async (req) => {
             }) }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Newsletter Service — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] newsletter_service_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] newsletter_service_subscription error:", e);
+          return new Response(JSON.stringify({ error: "newsletter_service_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1514,7 +1559,10 @@ serve(async (req) => {
               );
             }
           }
-        } catch (e) { console.error("[WEBHOOK] re_newsletter error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] re_newsletter error:", e);
+          return new Response(JSON.stringify({ error: "re_newsletter failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1586,7 +1634,10 @@ serve(async (req) => {
             `<p><strong>${meta.business_name}</strong><br>Owner: ${meta.name || "n/a"}<br>Email: ${customerEmail}<br>Phone: ${meta.phone || "n/a"}<br>Website: ${meta.website || "n/a"}<br>Industry: ${meta.industry || "hvac"}<br>Plan: ${meta.plan || "standard"}<br>Script Key: ${scriptKey}</p>`
           );
 
-        } catch (e) { console.error("[WEBHOOK] field_crm_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] field_crm_subscription error:", e);
+          return new Response(JSON.stringify({ error: "field_crm_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1639,7 +1690,10 @@ serve(async (req) => {
               }),
             }).catch((e) => console.error("[WEBHOOK] generate-pet-memorial fetch error:", e));
           }
-        } catch (e) { console.error("[WEBHOOK] pet_memorial error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] pet_memorial error:", e);
+          return new Response(JSON.stringify({ error: "pet_memorial failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1666,7 +1720,10 @@ serve(async (req) => {
           if (RESEND_API_KEY && customerEmail) {
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [customerEmail], bcc: ["matthewmichels4@gmail.com"], subject: `Your program is ready — ${meta.program_title || "Interactive Program"}`, html: `<p>Your interactive program has been added to your M² Portal. Log in to start training.</p><p>— Matt</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] interactive_program error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] interactive_program error:", e);
+          return new Response(JSON.stringify({ error: "interactive_program failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1885,7 +1942,10 @@ serve(async (req) => {
               `<p><strong>${meta.company_name || customerEmail}</strong><br>Email: ${customerEmail}<br>Name: ${meta.customer_name || "n/a"}<br>Industry: ${meta.industry || "n/a"}<br>Pricing notes: ${meta.own_pricing_notes || "n/a"}</p>`
             );
           }
-        } catch (e) { console.error("[WEBHOOK] competitor_pricing error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] competitor_pricing error:", e);
+          return new Response(JSON.stringify({ error: "competitor_pricing failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -1980,7 +2040,10 @@ serve(async (req) => {
             }).catch((e) => console.error("[WEBHOOK] podcast initial check fire failed:", e));
           }
 
-        } catch (e) { console.error("[WEBHOOK] podcast_revenue_machine error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] podcast_revenue_machine error:", e);
+          return new Response(JSON.stringify({ error: "podcast_revenue_machine failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -2034,7 +2097,10 @@ serve(async (req) => {
             `💰 New License Monitor Client — ${businessName} ($25/mo)`,
             `<p><strong>${businessName}</strong><br>Email: ${customerEmail}<br>Phone: ${clientPhone || "n/a"}</p>`
           );
-        } catch (e) { console.error("[WEBHOOK] license_monitor_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] license_monitor_subscription error:", e);
+          return new Response(JSON.stringify({ error: "license_monitor_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -2167,7 +2233,10 @@ serve(async (req) => {
               industry: meta.industry || "",
             }),
           }).catch((e) => console.error("[WEBHOOK] deliver-seo-package fire failed:", e));
-        } catch (e) { console.error("[WEBHOOK] deliver-seo-package error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] deliver-seo-package error:", e);
+          return new Response(JSON.stringify({ error: "deliver-seo-package failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -2185,7 +2254,10 @@ serve(async (req) => {
               website_url: meta.website_url || "",
             }),
           }).catch((e) => console.error("[WEBHOOK] deliver-audit-report fire failed:", e));
-        } catch (e) { console.error("[WEBHOOK] deliver-audit-report error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] deliver-audit-report error:", e);
+          return new Response(JSON.stringify({ error: "deliver-audit-report failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -2239,7 +2311,10 @@ serve(async (req) => {
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] gbp_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] gbp_subscription error:", e);
+          return new Response(JSON.stringify({ error: "gbp_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -2282,7 +2357,10 @@ serve(async (req) => {
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] camp_listing error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] camp_listing error:", e);
+          return new Response(JSON.stringify({ error: "camp_listing failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -2403,7 +2481,10 @@ serve(async (req) => {
               }
             } catch (refErr) { console.error("[WEBHOOK] web design referral tracking error:", refErr); }
           }
-        } catch (e) { console.error("[WEBHOOK] web_design_build error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] web_design_build error:", e);
+          return new Response(JSON.stringify({ error: "web_design_build failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -2452,7 +2533,10 @@ serve(async (req) => {
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] web_design_retainer error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] web_design_retainer error:", e);
+          return new Response(JSON.stringify({ error: "web_design_retainer failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -2847,7 +2931,10 @@ serve(async (req) => {
                 })
               : Promise.resolve(),
           ]);
-        } catch (e) { console.error("[WEBHOOK] aged_ppl_lead error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] aged_ppl_lead error:", e);
+          return new Response(JSON.stringify({ error: "aged_ppl_lead failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3024,7 +3111,10 @@ serve(async (req) => {
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] b2b_database_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] b2b_database_subscription error:", e);
+          return new Response(JSON.stringify({ error: "b2b_database_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3173,7 +3263,10 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] gbp_saas_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] gbp_saas_subscription error:", e);
+          return new Response(JSON.stringify({ error: "gbp_saas_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3229,7 +3322,10 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] field_rep_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] field_rep_subscription error:", e);
+          return new Response(JSON.stringify({ error: "field_rep_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3301,7 +3397,10 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] linkedin_ghostwriting_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] linkedin_ghostwriting_subscription error:", e);
+          return new Response(JSON.stringify({ error: "linkedin_ghostwriting_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3366,7 +3465,10 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] social_media_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] social_media_subscription error:", e);
+          return new Response(JSON.stringify({ error: "social_media_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3416,7 +3518,10 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] review_responder_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] review_responder_subscription error:", e);
+          return new Response(JSON.stringify({ error: "review_responder_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3466,7 +3571,10 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] seo_report_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] seo_report_subscription error:", e);
+          return new Response(JSON.stringify({ error: "seo_report_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3523,7 +3631,10 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] chatbot_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] chatbot_subscription error:", e);
+          return new Response(JSON.stringify({ error: "chatbot_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3567,7 +3678,10 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
               `<p>New review monitor subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Phone: ${meta.phone || "n/a"}<br>Action: connect Google Business Profile.</p>`
             );
           }
-        } catch (e) { console.error("[WEBHOOK] review_monitor_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] review_monitor_subscription error:", e);
+          return new Response(JSON.stringify({ error: "review_monitor_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3608,7 +3722,10 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
               `<p>New SMS blast subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Business type: ${meta.business_type || "n/a"} · City: ${meta.city || "n/a"}<br>Action: import their customer list when received.</p>`
             );
           }
-        } catch (e) { console.error("[WEBHOOK] sms_blast_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] sms_blast_subscription error:", e);
+          return new Response(JSON.stringify({ error: "sms_blast_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3647,7 +3764,10 @@ ${meta.booking_url ? `<p>Your booking URL on file: <a href="${meta.booking_url}"
               `<p>New no-show subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Phone: ${meta.phone || "n/a"} · Booking URL: ${meta.booking_url || "none"}<br>Action: set up webhook with their booking system.</p>`
             );
           }
-        } catch (e) { console.error("[WEBHOOK] noshow_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] noshow_subscription error:", e);
+          return new Response(JSON.stringify({ error: "noshow_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3686,7 +3806,10 @@ ${meta.booking_url ? `<p>Your booking URL on file: <a href="${meta.booking_url}"
               `<p>New estimate drip subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Business type: ${meta.business_type || "n/a"}<br>Action: set up intake webhook/form.</p>`
             );
           }
-        } catch (e) { console.error("[WEBHOOK] estimate_drip_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] estimate_drip_subscription error:", e);
+          return new Response(JSON.stringify({ error: "estimate_drip_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3722,7 +3845,10 @@ ${meta.booking_url ? `<p>Your booking URL on file: <a href="${meta.booking_url}"
               `<p>New invoice chaser subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Action: set up intake form/webhook.</p>`
             );
           }
-        } catch (e) { console.error("[WEBHOOK] invoice_chaser_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] invoice_chaser_subscription error:", e);
+          return new Response(JSON.stringify({ error: "invoice_chaser_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3759,7 +3885,10 @@ ${meta.booking_url ? `<p>Your booking URL on file: <a href="${meta.booking_url}"
               `<p>New after-job drip subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Business type: ${meta.business_type || "n/a"}<br>Action: set up job intake webhook.</p>`
             );
           }
-        } catch (e) { console.error("[WEBHOOK] afterjob_drip_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] afterjob_drip_subscription error:", e);
+          return new Response(JSON.stringify({ error: "afterjob_drip_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3802,7 +3931,10 @@ ${meta.booking_url ? `<p>Your booking URL on file: <a href="${meta.booking_url}"
               `<p>New promo blaster subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Business type: ${meta.business_type || "n/a"} · City: ${meta.city || "n/a"}<br>Action: import customer list when received.</p>`
             );
           }
-        } catch (e) { console.error("[WEBHOOK] promo_blaster_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] promo_blaster_subscription error:", e);
+          return new Response(JSON.stringify({ error: "promo_blaster_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3841,7 +3973,10 @@ ${meta.reward_description ? `<p><strong>Your referral reward:</strong> ${meta.re
               `<p>New referral program subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Reward: ${meta.reward_description || "not set"}<br>Action: set up referral link and tracking.</p>`
             );
           }
-        } catch (e) { console.error("[WEBHOOK] referral_program_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] referral_program_subscription error:", e);
+          return new Response(JSON.stringify({ error: "referral_program_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -3883,7 +4018,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               `<p>New slow day subscriber: <strong>${meta.business_name || email}</strong> — ${email}<br>Phone: ${meta.phone || "n/a"} · Default offer: ${meta.promo_offer || "none"}<br>Action: set up trigger number, import contact list.</p>`
             );
           }
-        } catch (e) { console.error("[WEBHOOK] slow_day_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] slow_day_subscription error:", e);
+          return new Response(JSON.stringify({ error: "slow_day_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4045,7 +4183,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] industrial_newsletter_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] industrial_newsletter_subscription error:", e);
+          return new Response(JSON.stringify({ error: "industrial_newsletter_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4223,7 +4364,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               `<p><strong>${meta.businessName || email}</strong><br>Name: ${meta.name || "n/a"}<br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Website: ${meta.website || "none"}<br>Plan: ${meta.plan === "starter" ? "$499 + $149/mo" : "$1,500 + $99/mo"}</p><p><strong>Action items:</strong></p><ol><li>Call/text the client to kick off website design</li><li>Connect their GBP for auto-posting</li><li>Provision Twilio number for missed call text-back</li></ol>`,
             ),
           ]);
-        } catch (e) { console.error("[WEBHOOK] digital_foundation error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] digital_foundation error:", e);
+          return new Response(JSON.stringify({ error: "digital_foundation failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4263,7 +4407,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] reputation_dashboard_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] reputation_dashboard_subscription error:", e);
+          return new Response(JSON.stringify({ error: "reputation_dashboard_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4304,7 +4451,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] ads_copy_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] ads_copy_subscription error:", e);
+          return new Response(JSON.stringify({ error: "ads_copy_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4344,7 +4494,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] voicemail_transcription_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] voicemail_transcription_subscription error:", e);
+          return new Response(JSON.stringify({ error: "voicemail_transcription_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4384,7 +4537,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] contractor_invoicing_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] contractor_invoicing_subscription error:", e);
+          return new Response(JSON.stringify({ error: "contractor_invoicing_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4424,7 +4580,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] phone_answering_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] phone_answering_subscription error:", e);
+          return new Response(JSON.stringify({ error: "phone_answering_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4465,7 +4624,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               }),
             });
           }
-        } catch (e) { console.error("[WEBHOOK] text_marketing_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] text_marketing_subscription error:", e);
+          return new Response(JSON.stringify({ error: "text_marketing_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4485,7 +4647,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Blog Posts are being set up", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Blog Post Service ($79/mo). Your 7-day free trial has started.</p><p>Your first 4 blog posts will be emailed to you this Monday — ready to publish, no editing needed.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Blog Post client — ${meta.businessName || email} ($79/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>Website: ${meta.website || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] blog_post_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] blog_post_subscription error:", e);
+          return new Response(JSON.stringify({ error: "blog_post_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4505,7 +4670,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your Review Request SMS is being set up", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Review Request SMS ($39/mo). Your 7-day free trial has started.</p><p>Matt will reach out within 24 hours to get your Twilio number assigned. After setup, submit a customer's phone number after each job and they'll automatically get a review request text.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Review Request client — ${meta.businessName || email} ($39/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Google Review URL: ${meta.googleReviewUrl || "n/a"}</p><p>Setup: assign Twilio number → update review_request_clients row → activate.</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] review_request_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] review_request_subscription error:", e);
+          return new Response(JSON.stringify({ error: "review_request_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4525,7 +4693,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your first AI Press Release is being written", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Press Release Service ($39/mo). Your 7-day free trial has started.</p><p>Your first press release will arrive in your inbox on the 1st of next month — formatted and ready to submit to local media and PR sites.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Press Release client — ${meta.businessName || email} ($39/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>City: ${meta.city || "n/a"}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] press_release_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] press_release_subscription error:", e);
+          return new Response(JSON.stringify({ error: "press_release_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4545,7 +4716,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your Quote Follow-Up SMS is being set up", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Quote Follow-Up SMS ($49/mo). Your 7-day free trial has started.</p><p>Matt will reach out within 24 hours to assign your Twilio number. After setup, submit a prospect's name and phone to your portal and our AI sends a 3-text follow-up sequence automatically.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Quote Follow-Up client — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}</p><p>Setup: assign Twilio number → update quote_followup_clients row → activate.</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] quote_followup_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] quote_followup_subscription error:", e);
+          return new Response(JSON.stringify({ error: "quote_followup_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4565,7 +4739,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your first Social Caption Pack is being written", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Social Caption Pack ($29/mo). Your 7-day free trial has started.</p><p>Your first pack of 30 captions will arrive on the 1st of next month. All you have to do is copy, paste, and post.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Social Captions client — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>Platforms: ${meta.platforms || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] social_captions_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] social_captions_subscription error:", e);
+          return new Response(JSON.stringify({ error: "social_captions_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4585,7 +4762,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your Win-Back SMS campaign is being set up", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Customer Win-Back SMS ($49/mo). Your 7-day free trial has started.</p><p>Matt will reach out within 24 hours to get your Twilio number assigned and import your first customer list. Your first campaign goes out on the 5th of next month.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Win-Back SMS client — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p><p>Setup: assign Twilio number → import contacts into winback_sms_contacts → update winback_sms_clients row → activate.</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] winback_sms_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] winback_sms_subscription error:", e);
+          return new Response(JSON.stringify({ error: "winback_sms_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4605,7 +4785,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your first Weekly Business Digest arrives Monday", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Weekly Business Digest ($29/mo). Your 7-day free trial has started.</p><p>Every Monday morning you'll get 3 actionable tips specific to the ${meta.industry || "your"} industry — ready to implement that week.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Weekly Digest client — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] weekly_digest_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] weekly_digest_subscription error:", e);
+          return new Response(JSON.stringify({ error: "weekly_digest_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4625,7 +4808,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Proposal Generator is ready", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Proposal Generator ($49/mo). Your 7-day free trial has started.</p><p>To generate your first proposal: go to mattmichelstraining.com/ai-proposal-portal, fill in your project details, and your polished proposal arrives by email in under 2 minutes.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Proposal Generator client — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] proposal_generator_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] proposal_generator_subscription error:", e);
+          return new Response(JSON.stringify({ error: "proposal_generator_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4645,7 +4831,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your Holiday SMS Blasts are being set up", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Holiday SMS Blast ($39/mo). Your 7-day free trial has started.</p><p>Matt will reach out within 24 hours to assign your SMS number and import your customer list. Your first holiday blast will go out automatically on the next upcoming holiday.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Holiday SMS client — ${meta.businessName || email} ($39/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p><p>Setup: assign Twilio number → import contacts into holiday_sms_contacts → update holiday_sms_clients row → activate.</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] holiday_sms_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] holiday_sms_subscription error:", e);
+          return new Response(JSON.stringify({ error: "holiday_sms_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4665,7 +4854,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your first Website Copy Refresh arrives the 1st", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Website Copy Refresh ($49/mo). Your 7-day free trial has started.</p><p>On the 1st of every month you'll receive a fresh homepage hero, 3 value props, and 6 updated FAQs — ready to paste into your website.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Website Copy client — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>Website: ${meta.website || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] website_copy_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] website_copy_subscription error:", e);
+          return new Response(JSON.stringify({ error: "website_copy_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4680,7 +4872,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Competitor Watch is active", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Competitor Watch ($69/mo). 7-day trial started.</p><p>Your first weekly competitor report arrives within 7 days — covering pricing changes, new reviews, and online moves from your top competitors.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Competitor Watch — ${meta.businessName || email} ($69/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>City: ${meta.city || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] competitor_watch_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] competitor_watch_subscription error:", e);
+          return new Response(JSON.stringify({ error: "competitor_watch_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4695,7 +4890,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your Appointment Reminders are being set up", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Appointment Reminder SMS ($39/mo). 7-day trial started.</p><p>Matt will reach out within 24 hours to connect your scheduling system. After that, every appointment gets a 24hr + 1hr SMS reminder automatically.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Appointment Reminders — ${meta.businessName || email} ($39/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}</p><p>Buy a Twilio number, update appointment_reminder_clients row.</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] appointment_reminder_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] appointment_reminder_subscription error:", e);
+          return new Response(JSON.stringify({ error: "appointment_reminder_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4710,7 +4908,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your first 8 video scripts are on the way", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Video Script Writer ($39/mo). 7-day trial started.</p><p>Your first batch of 8 short-form video scripts optimized for TikTok and Reels will arrive within a week.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Video Script client — ${meta.businessName || email} ($39/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] video_script_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] video_script_subscription error:", e);
+          return new Response(JSON.stringify({ error: "video_script_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4725,7 +4926,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your Customer Satisfaction Surveys are live", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Customer Satisfaction Surveys ($29/mo). 7-day trial started.</p><p>After each job, submit the customer's phone and we auto-text them a quick satisfaction check. Monthly NPS report emailed to you.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Satisfaction Survey — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] satisfaction_survey_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] satisfaction_survey_subscription error:", e);
+          return new Response(JSON.stringify({ error: "satisfaction_survey_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4740,7 +4944,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Thank You texts are ready", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Thank You Text ($19/mo). 7-day trial started.</p><p>After each customer visit, submit their phone number and our AI writes and sends a personalized thank-you text instantly.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Thank You SMS — ${meta.businessName || email} ($19/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] thank_you_sms_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] thank_you_sms_subscription error:", e);
+          return new Response(JSON.stringify({ error: "thank_you_sms_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4755,7 +4962,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Estimate Generator is ready", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Estimate Generator ($49/mo). 7-day trial started.</p><p>Submit project details through your portal and get a professional estimate emailed to you and your prospect in minutes.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Estimate Generator — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>City: ${meta.city || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] estimate_generator_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] estimate_generator_subscription error:", e);
+          return new Response(JSON.stringify({ error: "estimate_generator_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4770,7 +4980,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your first Local SEO page is being written", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Local SEO Pages ($59/mo). 7-day trial started.</p><p>On the 1st of every month you'll get a city-specific landing page with H1, sections, FAQ, and meta description — ready to add to your site.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Local SEO — ${meta.businessName || email} ($59/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>City: ${meta.city || "n/a"}<br>Website: ${meta.website || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] local_seo_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] local_seo_subscription error:", e);
+          return new Response(JSON.stringify({ error: "local_seo_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4785,7 +4998,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your Late Payment Chaser is ready", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Late Payment Chaser ($29/mo). 7-day trial started.</p><p>Submit overdue invoices and we auto-send professional reminders at 3, 7, 14, and 30 days via SMS and email.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Payment Chaser — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] payment_chaser_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] payment_chaser_subscription error:", e);
+          return new Response(JSON.stringify({ error: "payment_chaser_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4800,7 +5016,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Google Q&A Manager is live", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Google Q&A Manager ($29/mo). 7-day trial started.</p><p>Every week you'll get 5 AI-written Q&A pairs optimized for your Google Business Profile. Post them and watch your ranking improve.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Google Q&A — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] google_qa_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] google_qa_subscription error:", e);
+          return new Response(JSON.stringify({ error: "google_qa_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4815,7 +5034,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your Staff Newsletter starts Monday", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Staff Internal Newsletter ($29/mo). 7-day trial started.</p><p>Every Monday you'll get a ready-to-forward newsletter for your team: industry news, safety tips, motivational content.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Staff Newsletter — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] staff_newsletter_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] staff_newsletter_subscription error:", e);
+          return new Response(JSON.stringify({ error: "staff_newsletter_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4830,7 +5052,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your Speed-to-Lead SMS is being set up", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Speed-to-Lead SMS ($39/mo). 7-day trial started.</p><p>Matt will reach out within 24 hours to connect your website forms. After that, every form fill gets an instant SMS within 60 seconds.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Speed-to-Lead — ${meta.businessName || email} ($39/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}</p><p>Buy Twilio number, add webhook to their site forms.</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] speed_lead_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] speed_lead_subscription error:", e);
+          return new Response(JSON.stringify({ error: "speed_lead_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4845,7 +5070,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your Welcome Drip sequence is ready", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Email Welcome Drip ($49/mo). 7-day trial started.</p><p>Add new customers to the system and they'll automatically receive a 5-email welcome sequence over 15 days — building trust and driving referrals.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Welcome Drip — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] welcome_drip_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] welcome_drip_subscription error:", e);
+          return new Response(JSON.stringify({ error: "welcome_drip_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4860,7 +5088,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your Review Alerts are active", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Review Alert SMS ($19/mo). 7-day trial started.</p><p>Every time a new review is posted on your Google profile, you'll get an instant text so you can respond fast.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Review Alert — ${meta.businessName || email} ($19/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] review_alert_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] review_alert_subscription error:", e);
+          return new Response(JSON.stringify({ error: "review_alert_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4875,7 +5106,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your first Promo Calendar is on the way", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Seasonal Promo Planner ($39/mo). 7-day trial started.</p><p>On the 1st of every month you'll get a full promotional calendar: 4 weeks of campaigns tied to real holidays and seasons, with copy ready to go.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Promo Planner — ${meta.businessName || email} ($39/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>City: ${meta.city || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] promo_planner_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] promo_planner_subscription error:", e);
+          return new Response(JSON.stringify({ error: "promo_planner_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4890,7 +5124,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your Customer Reactivation emails are set up", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Customer Reactivation ($39/mo). 7-day trial started.</p><p>Upload your lapsed customer list and every month we send personalized "we miss you" emails to bring them back.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Reactivation Email — ${meta.businessName || email} ($39/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] reactivation_email_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] reactivation_email_subscription error:", e);
+          return new Response(JSON.stringify({ error: "reactivation_email_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4905,7 +5142,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your first Sales Scripts are being written", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Sales Script Generator ($29/mo). 7-day trial started.</p><p>Every month you'll get 3 updated phone scripts: cold call opener, follow-up, and objection handling — tailored to your industry.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Sales Scripts — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] sales_script_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] sales_script_subscription error:", e);
+          return new Response(JSON.stringify({ error: "sales_script_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4920,7 +5160,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your first Direct Mail postcard is being designed", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Direct Mail Copy ($49/mo). 7-day trial started.</p><p>Every month you'll get a print-ready postcard design with headline, body copy, and CTA. Just send it to your printer and you're done.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Direct Mail — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>City: ${meta.city || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] direct_mail_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] direct_mail_subscription error:", e);
+          return new Response(JSON.stringify({ error: "direct_mail_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4935,7 +5178,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your Warranty Reminders are being set up", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Warranty Reminder SMS ($29/mo). 7-day trial started.</p><p>Upload your customer warranty list and we'll auto-text them 30 days before expiry — turning warranty expirations into booked service calls.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Warranty Reminder — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] warranty_reminder_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] warranty_reminder_subscription error:", e);
+          return new Response(JSON.stringify({ error: "warranty_reminder_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4950,7 +5196,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Hiring Assistant is ready", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Hiring Assistant ($49/mo). 7-day trial started.</p><p>Submit resumes and job descriptions. AI scores each candidate 1-10, lists strengths/weaknesses, and auto-emails qualified applicants to schedule interviews.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Hiring Assistant — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>City: ${meta.city || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] hiring_assistant_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] hiring_assistant_subscription error:", e);
+          return new Response(JSON.stringify({ error: "hiring_assistant_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4965,7 +5214,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your weekly KPI emails start Monday", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for Business KPI Weekly Email ($49/mo). 7-day trial started.</p><p>Every Monday you'll get a performance snapshot with AI-recommended actions for the week based on your industry benchmarks.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New KPI Email — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}<br>Website: ${meta.website || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] kpi_email_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] kpi_email_subscription error:", e);
+          return new Response(JSON.stringify({ error: "kpi_email_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -4983,7 +5235,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@mattmichelstraining.com", to: email, subject: "Welcome to AI Social Captions!", html: `<p>You're all set! Your AI social captions service is active.</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@mattmichelstraining.com", to: "matt@mattmichelstraining.com", subject: "New Social Captions Client", html: `<p>New caption_pack_subscription: ${email}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] caption_pack_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] caption_pack_subscription error:", e);
+          return new Response(JSON.stringify({ error: "caption_pack_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5001,7 +5256,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@mattmichelstraining.com", to: email, subject: "Welcome — Website Copy Refresh!", html: `<p>Your AI website copy refresh service is active.</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@mattmichelstraining.com", to: "matt@mattmichelstraining.com", subject: "New FAQ/Copy Refresh Client", html: `<p>New faq_refresh_subscription: ${email}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] faq_refresh_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] faq_refresh_subscription error:", e);
+          return new Response(JSON.stringify({ error: "faq_refresh_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5019,7 +5277,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@mattmichelstraining.com", to: email, subject: "Welcome — AI Hiring Assistant!", html: `<p>Your AI hiring assistant service is active.</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@mattmichelstraining.com", to: "matt@mattmichelstraining.com", subject: "New Hiring Assistant Client", html: `<p>New job_posting_subscription: ${email}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] job_posting_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] job_posting_subscription error:", e);
+          return new Response(JSON.stringify({ error: "job_posting_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5037,7 +5298,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@mattmichelstraining.com", to: email, subject: "Welcome to the Field Rep Newsletter!", html: `<p>You're subscribed! Your first digest arrives Monday morning.</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@mattmichelstraining.com", to: "matt@mattmichelstraining.com", subject: "New Newsletter Subscriber", html: `<p>New newsletter_service_subscription: ${email}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] newsletter_service_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] newsletter_service_subscription error:", e);
+          return new Response(JSON.stringify({ error: "newsletter_service_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5048,7 +5312,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
           if (RESEND_API_KEY && email) {
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "matt@mattmichelstraining.com", to: "matt@mattmichelstraining.com", subject: "New Interactive Program Purchase", html: `<p>New interactive_program purchase: ${email}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] interactive_program error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] interactive_program error:", e);
+          return new Response(JSON.stringify({ error: "interactive_program failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5063,7 +5330,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Onboarding Agent is being configured", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Customer Onboarding Agent ($59/mo). 7-day trial started.</p><p>Matt will reach out within 24 hours to connect your customer intake system. After that, every new customer gets a personalized welcome sequence automatically.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Onboarding Agent — ${meta.businessName || email} ($59/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] onboarding_agent_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] onboarding_agent_subscription error:", e);
+          return new Response(JSON.stringify({ error: "onboarding_agent_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5078,7 +5348,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Social Proof Collector is being set up", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Social Proof Collector ($39/mo). 7-day trial started.</p><p>Matt will reach out within 24 hours to configure your SMS number. After that, every completed job triggers an automatic review request.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Social Proof — ${meta.businessName || email} ($39/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] social_proof_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] social_proof_subscription error:", e);
+          return new Response(JSON.stringify({ error: "social_proof_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5093,7 +5366,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Price Monitor is active", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Competitor Price Monitor ($49/mo). 7-day trial started.</p><p>Your first competitor pricing report will arrive within 7 days. Weekly reports every Monday after that.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Price Monitor — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] price_monitor_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] price_monitor_subscription error:", e);
+          return new Response(JSON.stringify({ error: "price_monitor_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5108,7 +5384,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Meeting Prep Agent is ready", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Meeting Prep ($29/mo). 7-day trial started.</p><p>Submit a prospect company name anytime and get a one-page briefing within minutes — talking points, pain points, and a custom opener.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Meeting Prep — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Industry: ${meta.industry || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] meeting_prep_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] meeting_prep_subscription error:", e);
+          return new Response(JSON.stringify({ error: "meeting_prep_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5123,7 +5402,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your first Directory Audit is on the way", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Directory Submitter ($39/mo). 7-day trial started.</p><p>Your first audit of 20+ directories will arrive within 7 days. Monthly audits on the 1st after that.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Directory Submitter — ${meta.businessName || email} ($39/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Address: ${meta.address || "n/a"}<br>Phone: ${meta.phone || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] directory_submitter_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] directory_submitter_subscription error:", e);
+          return new Response(JSON.stringify({ error: "directory_submitter_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5136,7 +5418,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Permit Monitor is active", html: `<p>Hey,</p><p>You're signed up for AI Permit & License Monitor ($79/mo). 7-day trial started.</p><p>Your first permit compliance digest arrives within 7 days.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Permit Monitor — ${meta.businessName || email} ($79/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] permit_monitor error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] permit_monitor error:", e);
+          return new Response(JSON.stringify({ error: "permit_monitor failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5149,7 +5434,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Safety Compliance Checker is active", html: `<p>Hey,</p><p>You're signed up for AI OSHA/Safety Compliance ($99/mo). 7-day trial started.</p><p>Your first monthly safety checklist arrives within 7 days.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New OSHA Compliance — ${meta.businessName || email} ($99/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] osha_compliance error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] osha_compliance error:", e);
+          return new Response(JSON.stringify({ error: "osha_compliance failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5162,7 +5450,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Late Payment Collector is active", html: `<p>Hey,</p><p>You're signed up for AI Late Payment Collector ($49/mo). 7-day trial started.</p><p>Upload your overdue accounts and we'll start generating collection letters immediately.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Collections — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] collections error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] collections error:", e);
+          return new Response(JSON.stringify({ error: "collections failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5175,7 +5466,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Inventory Alerts are active", html: `<p>Hey,</p><p>You're signed up for AI Inventory Reorder Alerts ($49/mo). 7-day trial started.</p><p>Add your inventory items and par levels to start receiving alerts.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Inventory Alerts — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] inventory_alert error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] inventory_alert error:", e);
+          return new Response(JSON.stringify({ error: "inventory_alert failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5188,7 +5482,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Birthday Campaign is active", html: `<p>Hey,</p><p>You're signed up for AI Birthday/Anniversary Campaign ($29/mo). 7-day trial started.</p><p>Upload your customer list with birthdays and we'll handle the rest.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Birthday Campaign — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] birthday_campaign error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] birthday_campaign error:", e);
+          return new Response(JSON.stringify({ error: "birthday_campaign failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5201,7 +5498,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Med Spa Marketing is live", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Med Spa Marketing ($149/mo). Your 7-day free trial has started.</p><p>We'll reach out within 24 hours to get your brand info. Your first week of content goes out soon.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Med Spa Marketing — ${meta.businessName || email} ($149/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>City: ${meta.city || "n/a"}<br>Services: ${meta.services || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] med_spa_marketing error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] med_spa_marketing error:", e);
+          return new Response(JSON.stringify({ error: "med_spa_marketing failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5214,7 +5514,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Real Estate Drip is live", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Real Estate Drip Email ($79/mo). Your 7-day free trial has started.</p><p>Your first market update email goes out this month. We'll reach out to get your leads list.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Real Estate Drip — ${meta.businessName || email} ($79/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Market: ${meta.city || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] real_estate_drip error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] real_estate_drip error:", e);
+          return new Response(JSON.stringify({ error: "real_estate_drip failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5227,7 +5530,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Podcast Show Notes are ready", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Podcast Show Notes ($49/mo). Trial started.</p><p>Send your first episode link to matt@mattmichelstraining.com and show notes will be back within 24 hours.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Podcast Show Notes — ${meta.businessName || email} ($49/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Podcast: ${meta.podcastUrl || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] podcast_show_notes error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] podcast_show_notes error:", e);
+          return new Response(JSON.stringify({ error: "podcast_show_notes failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5240,7 +5546,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Church Newsletter is ready", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Church & Nonprofit Newsletter ($29/mo). Trial started.</p><p>We'll reach out within 24 hours to learn about your church and get your first newsletter going.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Church Newsletter — ${meta.businessName || email} ($29/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Denomination: ${meta.denomination || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] church_newsletter error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] church_newsletter error:", e);
+          return new Response(JSON.stringify({ error: "church_newsletter failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5253,7 +5562,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Property Management Docs are live", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Property Management Automation ($99/mo). Trial started.</p><p>We'll reach out within 24 hours to learn about your properties and set up your templates.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Property Mgmt — ${meta.businessName || email} ($99/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Units: ${meta.units || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] property_management error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] property_management error:", e);
+          return new Response(JSON.stringify({ error: "property_management failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5266,7 +5578,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Franchise Ops Toolkit is live", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Franchise Operations Toolkit ($199/mo). Trial started.</p><p>We'll reach out within 24 hours to get your brand standards and location details.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Franchise Ops — ${meta.businessName || email} ($199/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Locations: ${meta.locations || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] franchise_ops error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] franchise_ops error:", e);
+          return new Response(JSON.stringify({ error: "franchise_ops failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5279,7 +5594,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Product Listings are ready", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI E-commerce Product Listings ($79/mo). Trial started.</p><p>Send your product list (name, category, key features) and we'll have your first listings written within 48 hours.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New E-commerce Listings — ${meta.businessName || email} ($79/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Platform: ${meta.platform || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] ecommerce_listings error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] ecommerce_listings error:", e);
+          return new Response(JSON.stringify({ error: "ecommerce_listings failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5292,7 +5610,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Financial Advisor Content is live", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Financial Advisor Content ($149/mo). Trial started.</p><p>We'll reach out within 24 hours to understand your brand voice and compliance preferences.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Financial Advisor Content — ${meta.businessName || email} ($149/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Designation: ${meta.firm || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] financial_advisor_content error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] financial_advisor_content error:", e);
+          return new Response(JSON.stringify({ error: "financial_advisor_content failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5305,7 +5626,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Vet & Pet Care Marketing is live", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Vet & Pet Care Marketing ($79/mo). Trial started.</p><p>We'll reach out within 24 hours to get your practice info and start creating content.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Vet Marketing — ${meta.businessName || email} ($79/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Type: ${meta.businessType || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] vet_marketing error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] vet_marketing error:", e);
+          return new Response(JSON.stringify({ error: "vet_marketing failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5318,7 +5642,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "Matt Michels <matt@mattmichelstraining.com>", to: [email], bcc: ["matthewmichels4@gmail.com"], subject: "Your AI Trucking & Fleet Docs are live", html: `<p>Hey${meta.name ? " " + meta.name : ""},</p><p>You're signed up for AI Trucking & Fleet Documents ($99/mo). Trial started.</p><p>We'll reach out within 24 hours to get your fleet details and set up your document templates.</p><p>— Matt</p>` }) });
             await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: "M² Notifications <matt@mattmichelstraining.com>", to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"], subject: `💰 New Trucking Docs — ${meta.businessName || email} ($99/mo)`, html: `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>Trucks: ${meta.trucks || "n/a"}</p>` }) });
           }
-        } catch (e) { console.error("[WEBHOOK] trucking_docs error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] trucking_docs error:", e);
+          return new Response(JSON.stringify({ error: "trucking_docs failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5392,7 +5719,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             }).catch((e) => console.error("[WEBHOOK] instant-audit call failed:", e));
             console.log(`[WEBHOOK] website_audit triggered for ${email} — ${meta.business_url}`);
           }
-        } catch (e) { console.error("[WEBHOOK] website_audit error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] website_audit error:", e);
+          return new Response(JSON.stringify({ error: "website_audit failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5417,7 +5747,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             }).catch((e) => console.error("[WEBHOOK] gbp-post-pack call failed:", e));
             console.log(`[WEBHOOK] gbp_post_pack triggered for ${email} — ${meta.business_name}`);
           }
-        } catch (e) { console.error("[WEBHOOK] gbp_post_pack error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] gbp_post_pack error:", e);
+          return new Response(JSON.stringify({ error: "gbp_post_pack failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5439,7 +5772,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             }).catch((e) => console.error("[WEBHOOK] competitor-report call failed:", e));
             console.log(`[WEBHOOK] competitor_report triggered for ${email} — ${meta.industry} in ${meta.city}`);
           }
-        } catch (e) { console.error("[WEBHOOK] competitor_report error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] competitor_report error:", e);
+          return new Response(JSON.stringify({ error: "competitor_report failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5456,7 +5792,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             }).catch((e) => console.error("[WEBHOOK] deliver-domain-breach-report failed:", e));
             console.log(`[WEBHOOK] domain_breach_report triggered for ${email} — ${meta.domain}`);
           }
-        } catch (e) { console.error("[WEBHOOK] domain_breach_report error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] domain_breach_report error:", e);
+          return new Response(JSON.stringify({ error: "domain_breach_report failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5472,7 +5811,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             }).catch((e) => console.error("[WEBHOOK] deliver-keyword-gap-report failed:", e));
             console.log(`[WEBHOOK] keyword_gap_report triggered for ${email}`);
           }
-        } catch (e) { console.error("[WEBHOOK] keyword_gap_report error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] keyword_gap_report error:", e);
+          return new Response(JSON.stringify({ error: "keyword_gap_report failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
       // ── LUKE — Mark cart as recovered when any instant product purchase completes ──
@@ -5631,7 +5973,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Domain: ${meta.monitored_domain || "n/a"}<br>Plan: Direct</p>`
             );
           }
-        } catch (e) { console.error("[WEBHOOK] dark_web_monitor error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] dark_web_monitor error:", e);
+          return new Response(JSON.stringify({ error: "dark_web_monitor failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5670,7 +6015,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               `<p><strong>${meta.business_name || email}</strong><br>Email: ${email}<br>URL: ${meta.website_url || "n/a"}<br>Keywords: ${meta.keywords || "none"}<br>Phone: ${meta.phone || "n/a"}</p>`
             );
           }
-        } catch (e) { console.error("[WEBHOOK] seo_guard error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] seo_guard error:", e);
+          return new Response(JSON.stringify({ error: "seo_guard failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5715,7 +6063,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Domain: ${meta.monitored_domain || "n/a"}<br>Plan: MSP Reseller (10 domains)</p>`
             );
           }
-        } catch (e) { console.error("[WEBHOOK] dark_web_monitor_reseller error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] dark_web_monitor_reseller error:", e);
+          return new Response(JSON.stringify({ error: "dark_web_monitor_reseller failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5731,7 +6082,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
         try {
           const sb2 = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
           await sb2.from("employee_credential_audits").update({ stripe_session_id: session.id as string }).eq("id", auditId);
-        } catch (e) { console.error("[WEBHOOK] employee_credential_audit session_id update error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] employee_credential_audit session_id update error:", e);
+          return new Response(JSON.stringify({ error: "employee_credential_audit session_id update failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5812,7 +6166,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               ),
             ]);
           }
-        } catch (e) { console.error("[WEBHOOK] storm_lead_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] storm_lead_subscription error:", e);
+          return new Response(JSON.stringify({ error: "storm_lead_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5838,7 +6195,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               ),
             ]);
           }
-        } catch (e) { console.error("[WEBHOOK] recall_alert_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] recall_alert_subscription error:", e);
+          return new Response(JSON.stringify({ error: "recall_alert_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5865,7 +6225,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               ),
             ]);
           }
-        } catch (e) { console.error("[WEBHOOK] permit_watch_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] permit_watch_subscription error:", e);
+          return new Response(JSON.stringify({ error: "permit_watch_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5889,7 +6252,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               ),
             ]);
           }
-        } catch (e) { console.error("[WEBHOOK] speed_audit_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] speed_audit_subscription error:", e);
+          return new Response(JSON.stringify({ error: "speed_audit_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5914,7 +6280,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               ),
             ]);
           }
-        } catch (e) { console.error("[WEBHOOK] bedtime_story_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] bedtime_story_subscription error:", e);
+          return new Response(JSON.stringify({ error: "bedtime_story_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5942,7 +6311,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               ),
             ]);
           }
-        } catch (e) { console.error("[WEBHOOK] crime_digest_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] crime_digest_subscription error:", e);
+          return new Response(JSON.stringify({ error: "crime_digest_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -5968,7 +6340,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
               ),
             ]);
           }
-        } catch (e) { console.error("[WEBHOOK] license_monitor_subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] license_monitor_subscription error:", e);
+          return new Response(JSON.stringify({ error: "license_monitor_subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -6013,7 +6388,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
 <p><em>This was handled by the catch-all handler — this product may need a dedicated webhook block.</em></p>`
           );
           console.log(`[WEBHOOK] catch-all: handled ${meta.type} for ${email}`);
-        } catch (e) { console.error("[WEBHOOK] catch-all subscription error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] catch-all subscription error:", e);
+          return new Response(JSON.stringify({ error: "catch-all subscription failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -6055,7 +6433,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             `<p><strong>Revenue Suite ($299/mo)</strong> purchased!<br>Email: ${email}<br>Business: ${meta.business_name || "n/a"}<br>Phone: ${meta.phone || "n/a"}<br>City: ${meta.city || "n/a"}</p><p>All 8 tables upserted. Welcome email sent.</p>`
           );
           console.log(`[WEBHOOK] Revenue Suite: ${email} — all 8 products activated`);
-        } catch (e) { console.error("[WEBHOOK] Revenue Suite error:", e); }
+        } catch (e) {
+          console.error("[WEBHOOK] Revenue Suite error:", e);
+          return new Response(JSON.stringify({ error: "Revenue Suite failed" }), { status: 500 });
+        }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
@@ -6199,7 +6580,10 @@ ${meta.promo_offer ? `<p><strong>Your default offer on file:</strong> "${meta.pr
             `<p>Invoice ${invoice.id} failed. Stripe will retry automatically. No action needed yet.</p>`
           ).catch(() => {});
         }
-      } catch (e) { console.error("[WEBHOOK] invoice.payment_failed error:", e); }
+      } catch (e) {
+        console.error("[WEBHOOK] invoice.payment_failed error:", e);
+        return new Response(JSON.stringify({ error: "invoice.payment_failed failed" }), { status: 500 });
+      }
       return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
