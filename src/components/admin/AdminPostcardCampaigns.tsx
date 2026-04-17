@@ -278,11 +278,21 @@ export default function AdminPostcardCampaigns() {
                     </div>
                   )}
                   <div className="text-xs text-gray-500 mb-3">QR → {c.qr_url}</div>
-                  {c.status === "draft" && (
-                    <Button size="sm" onClick={() => sendPostcards(c.id)} disabled={sending === c.id} className="bg-emerald-500 text-white hover:bg-emerald-600">
-                      <Send className="w-3 h-3 mr-1" /> {sending === c.id ? "Sending..." : "Send via Lob"}
-                    </Button>
-                  )}
+                  {(() => {
+                    const recipientCount = unsentByCounty(c.county || selectedCounty).length;
+                    const estCost = (recipientCount * 0.85).toFixed(2);
+                    return c.status === "draft" && (
+                      <div className="space-y-2">
+                        <div className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded p-2">
+                          💰 This run will mail to <strong>{recipientCount}</strong> {recipientCount === 1 ? "address" : "addresses"} at ~$0.85 each = <strong>${estCost} total</strong>
+                          <div className="text-[10px] text-amber-200/70 mt-1">Caps: 500/run, 2000/month (hard-blocked at the function level)</div>
+                        </div>
+                        <Button size="sm" onClick={() => sendPostcards(c.id)} disabled={sending === c.id || recipientCount === 0} className="bg-emerald-500 text-white hover:bg-emerald-600">
+                          <Send className="w-3 h-3 mr-1" /> {sending === c.id ? "Sending..." : `Confirm & Send $${estCost}`}
+                        </Button>
+                      </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
             ))}
