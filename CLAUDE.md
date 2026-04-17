@@ -28,11 +28,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Known status:**
 - All services operational; no breaking changes since Phase 15
 - Phase 15 work fully merged to main
+- `chargeContractor()` res.ok check confirmed FIXED (line 47 of handle-dead-lead-reply) — stale open item removed
+- `dead_lead_billing_setup` siRes.ok guard added to stripe-webhook (was silent failure)
+- `industry_pulse_subscription` + `dead_lead_billing_setup` welcome emails added to auto-onboard TEMPLATES
 
 **Next actions:**
 - Merge `claude/add-claude-documentation-3yz9v` to main
 - Monitor TechAlert candidate alerts for data formatting issues
-- Fix `chargeContractor()` res.ok check in `handle-dead-lead-reply` (known open item)
 
 ---
 

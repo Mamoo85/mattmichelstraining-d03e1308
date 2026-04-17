@@ -2945,6 +2945,10 @@ serve(async (req) => {
           const siRes = await fetch(`https://api.stripe.com/v1/setup_intents/${session.setup_intent}`, {
             headers: { Authorization: `Basic ${btoa((Deno.env.get("STRIPE_SECRET_KEY") || "") + ":")}` },
           });
+          if (!siRes.ok) {
+            const errText = await siRes.text();
+            throw new Error(`Stripe Setup Intent lookup failed (${siRes.status}): ${errText}`);
+          }
           const si = await siRes.json();
           const paymentMethodId = si.payment_method;
 

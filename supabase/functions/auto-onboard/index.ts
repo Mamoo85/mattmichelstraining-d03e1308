@@ -397,6 +397,28 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
         <p style="color:#4a6fa5;font-size:12px;margin:8px 0 0">Detroit Web Agency &nbsp;·&nbsp; (313) 992-1219 &nbsp;·&nbsp; <a href="mailto:matt@detroitwebagent.com" style="color:#00d4ff;text-decoration:none">matt@detroitwebagent.com</a></p>
       </div>`,
   },
+  industry_pulse_subscription: {
+    subject: "Welcome to Industry Pulse — Your Feed Is Live",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p style="font-size:22px;font-weight:800;color:#ffffff;margin:0 0 6px;line-height:1.2">You're in, ${name}.</p>
+      <p style="color:#4a6fa5;font-size:13px;margin:0 0 24px">Industry Pulse is now monitoring Metro Detroit growth signals for you.</p>
+      <p style="color:#e2e8f0;font-size:14px;margin:0 0 16px">You'll receive weekly intelligence digests covering expansion signals, hiring patterns, and cross-referenced opportunities. High-confidence signals arrive as standalone alerts.</p>
+      <p style="color:#e2e8f0;font-size:14px;margin:0 0 20px">Reply to this email if you want to tune your industry focus. — Matt</p>
+      ${DWA_SIG}`,
+  },
+  dead_lead_billing_setup: {
+    subject: "Billing Saved — You're Ready to Reactivate Leads",
+    nextStage: "📧 Billing Confirmation Sent",
+    body: (name) => `
+      <p style="font-size:22px;font-weight:800;color:#ffffff;margin:0 0 6px;line-height:1.2">Card saved, ${name}.</p>
+      <p style="color:#4a6fa5;font-size:13px;margin:0 0 24px">You'll only be charged when a dead lead replies YES.</p>
+      <div style="background:#0d1f3c;border:1px solid #00d4ff33;border-radius:10px;padding:24px;margin:0 0 24px">
+        <p style="color:#e2e8f0;font-size:14px;margin:0 0 12px">Every time a homeowner from your list replies with interest, you'll get an instant SMS alert and a <strong style="color:#00d4ff">$50 charge</strong> is automatically applied to the card on file.</p>
+        <p style="color:#94a3b8;font-size:13px;margin:0">No reply = no charge. Simple as that.</p>
+      </div>
+      ${DWA_SIG}`,
+  },
 };
 
 // Generic SMS product template
