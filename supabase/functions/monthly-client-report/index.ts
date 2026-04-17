@@ -16,20 +16,12 @@ const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY")!;
 const log = (msg: string, data?: any) =>
   console.log(`[MONTHLY-CLIENT-REPORT] ${msg}${data ? " — " + JSON.stringify(data) : ""}`);
 
+import { stealthScrape } from "../_shared/stealth-scrape.ts";
+
 async function getWebsiteSnapshot(siteUrl: string): Promise<string> {
-  if (!siteUrl || !FIRECRAWL_API_KEY) return "";
-  try {
-    const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ url: siteUrl, formats: ["markdown"], onlyMainContent: true }),
-    });
-    if (!res.ok) return "";
-    const data = await res.json();
-    return (data.data?.markdown || data.markdown || "").substring(0, 800);
-  } catch {
-    return "";
-  }
+  if (!siteUrl) return "";
+  const r = await stealthScrape(siteUrl, { maxChars: 800 });
+  return r.ok ? (r.markdown || "") : "";
 }
 
 async function generateReportSummary(business: string, siteUrl: string, snapshot: string): Promise<string> {

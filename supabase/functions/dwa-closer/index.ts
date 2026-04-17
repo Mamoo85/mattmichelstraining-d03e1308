@@ -68,13 +68,8 @@ async function scrapeWebsite(url: string): Promise<string> {
   const r = await stealthScrape(url, { maxChars: 800, timeoutMs: 15_000 });
   return r.ok ? (r.markdown || "") : "";
 }
-  } catch (e: unknown) {
-    clearTimeout(timeoutId);
-    const isAbort = e instanceof Error && e.name === "AbortError";
-    console.warn(`[dwa-closer] Firecrawl ${isAbort ? "timed out" : "failed"} for ${url}`);
-    return "";
-  }
-}
+
+
 
 // ── Anti-collision check ────────────────────────────────────────────────────
 async function isOnCooldown(

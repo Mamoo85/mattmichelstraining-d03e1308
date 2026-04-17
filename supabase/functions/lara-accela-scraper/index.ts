@@ -46,31 +46,15 @@ interface ScrapedBusiness {
   owner_name?: string;
 }
 
+import { stealthScrape } from "../_shared/stealth-scrape.ts";
+
 async function firecrawlScrape(url: string): Promise<string | null> {
-  try {
-    const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url,
-        formats: ["markdown"],
-        onlyMainContent: true,
-      }),
-      signal: AbortSignal.timeout(45_000),
-    });
-    if (!res.ok) {
-      console.error(`Firecrawl ${res.status} for ${url}`);
-      return null;
-    }
-    const data = await res.json();
-    return data?.data?.markdown || null;
-  } catch (e) {
-    console.error(`Firecrawl error: ${e instanceof Error ? e.message : String(e)}`);
+  const r = await stealthScrape(url, { maxChars: 50000, timeoutMs: 45_000 });
+  if (!r.ok) {
+    console.error(`[lara-accela-scraper] scrape failed url=${url} reason=${r.reason}`);
     return null;
   }
+  return r.markdown || null;
 }
 
 async function extractBusinessesFromMarkdown(
