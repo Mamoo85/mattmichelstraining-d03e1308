@@ -55,7 +55,7 @@ serve(async (req) => {
         if (!bizPhone) {
           // No forwarding phone stored — play message, status callback will text caller
           return twiml(
-            `<Say voice="Polly.Matthew-Neural">You've reached ${bizName}. We're sorry we missed your call — we'll text you right back shortly.</Say>` +
+            `<Say voice="Polly.Joanna">You've reached ${bizName}. We're sorry we missed your call — we'll text you right back shortly.</Say>` +
             `<Hangup/>`
           );
         }
@@ -65,7 +65,7 @@ serve(async (req) => {
           `<Dial timeout="20" action="${statusUrl}" method="POST">` +
           `<Number>${bizPhone}</Number>` +
           `</Dial>` +
-          `<Say voice="Polly.Matthew-Neural">You've reached ${bizName}. We'll text you right back.</Say>` +
+          `<Say voice="Polly.Joanna">You've reached ${bizName}. We'll text you right back.</Say>` +
           `<Hangup/>`
         );
       }
@@ -74,7 +74,7 @@ serve(async (req) => {
     // ── SELF-CALL DETECTION: skip forwarding when Matt calls his own line ──
     if (fromNumber === MATT_PERSONAL) {
       return twiml(
-        `<Say voice="Polly.Matthew-Neural">You've reached Detroit Web Agency. We missed your call but we'll text you right back shortly.</Say>` +
+        `<Say voice="Polly.Joanna">You've reached Detroit Web Agency. We missed your call but we'll text you right back shortly.</Say>` +
         `<Hangup/>`
       );
     }
@@ -84,7 +84,7 @@ serve(async (req) => {
       `<Dial timeout="20" action="${statusUrl}" method="POST">` +
       `<Number url="${whisperUrl}">${MATT_PERSONAL}</Number>` +
       `</Dial>` +
-      `<Say voice="Polly.Matthew-Neural">You've reached Detroit Web Agency. Check your texts — Matt just sent you one. Talk soon.</Say>` +
+      `<Say voice="Polly.Joanna">You've reached Detroit Web Agency. Check your texts — Matt just sent you one. Talk soon.</Say>` +
       `<Hangup/>`
     );
   } catch (e: unknown) {
