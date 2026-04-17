@@ -15,17 +15,28 @@ export default function TheWire() {
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [recentLeads, setRecentLeads] = useState<any[]>([]);
+  const [radarSignals, setRadarSignals] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
       const since = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
-      const { data } = await supabase
-        .from("contractor_leads" as any)
-        .select("id, trade, city, description, created_at")
-        .gte("created_at", since)
-        .order("created_at", { ascending: false })
-        .limit(8);
-      setRecentLeads((data as any[]) || []);
+      const [leadsRes, signalsRes] = await Promise.all([
+        supabase
+          .from("contractor_leads" as any)
+          .select("id, trade, city, description, created_at")
+          .gte("created_at", since)
+          .order("created_at", { ascending: false })
+          .limit(8),
+        supabase
+          .from("industry_pulse_signals" as any)
+          .select("id, company_name, location, county, expansion_type, signal_type, recommended_pitch, summary, confidence, detected_at")
+          .gte("detected_at", since)
+          .gte("confidence", 6)
+          .order("confidence", { ascending: false })
+          .limit(4),
+      ]);
+      setRecentLeads((leadsRes.data as any[]) || []);
+      setRadarSignals((signalsRes.data as any[]) || []);
     })();
 
     const params = new URLSearchParams(window.location.search);
@@ -115,7 +126,39 @@ export default function TheWire() {
         </div>
       </section>
 
-      {/* Subscribe */}
+      {/* Demand Radar preview */}
+      {radarSignals.length > 0 && (
+        <section className="max-w-5xl mx-auto px-6 pb-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Radio className="h-5 w-5 text-purple-400" /> Demand Radar — expansion signals
+            </h2>
+            <span className="text-xs text-white/40">Bonus intel · included</span>
+          </div>
+          <p className="text-sm text-white/50 mb-4 max-w-2xl">
+            Local businesses showing buying intent — new hires, expansions, contract awards. Reach out before the competition.
+          </p>
+          <div className="grid md:grid-cols-2 gap-3">
+            {radarSignals.map((s) => {
+              const conf = s.confidence || 0;
+              const confColor = conf >= 8 ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                : conf >= 6 ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                : "bg-white/5 text-white/50 border-white/10";
+              return (
+                <div key={s.id} className="bg-[#0f1f35] border border-purple-500/20 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="font-semibold text-purple-300 truncate">{s.company_name || "Local business"}</div>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${confColor}`}>CONF {conf}/10</span>
+                  </div>
+                  <div className="text-xs text-white/50 mb-2">{s.location || s.county || "Metro Detroit"} · {s.expansion_type || s.signal_type || "Expansion"}</div>
+                  <p className="text-sm text-white/70 line-clamp-3">{s.recommended_pitch || s.summary || ""}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       <section className="max-w-3xl mx-auto px-6 py-12">
         <div className="bg-gradient-to-b from-[#0f1f35] to-[#0a1628] border border-[#00d4ff]/30 rounded-2xl p-6 md:p-10">
           <div className="flex items-baseline justify-between mb-2">
