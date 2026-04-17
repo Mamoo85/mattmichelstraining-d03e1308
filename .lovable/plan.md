@@ -1,117 +1,79 @@
-User has 3 immediate issues + a major QA pass:
 
-1. **PWA install prompt firing on detroitwebagent.com** — "Install M² Training" banner appearing on DWA domain. Need to disable PWA sitewide OR scope it to only m2 domain.
-2. **ROI report token not clickable** — SMS shows the URL as text not as a tappable link. Looking at the SMS body: `Full report: https://detroitwebagent.com/roi?token=22899e...` — the issue is likely the **trailing dash** `— Matt (313)...` being interpreted as part of the URL by Google Messages, OR the URL is fine but Android isn't auto-linking due to the long token. Actually looking again — the screenshot shows "Tap to load preview" which means the URL IS detected. The user might mean the dashboard cards themselves aren't clickable.
-3. **10 duplicate weekly ROI texts** — `contractor-roi-sms` cron fired 10x in one minute, OR loop sent to same number 10x. Need to investigate and add idempotency.
 
-Then full QA across top 4 products (Contractor Leads, Missed Call Catch, TechAlert, FieldDesk).
+## The Problem
 
-# Plan: Fixes + Full QA Sweep
+Looking at the screenshot — that's the D4 follow-up from `dead-lead-outreach-drip`. CTA is **"Reply here or text me: (313) 992-1219"** with no link to `/dead-lead-intake` (which is fully self-serve, free first batch, public, no auth). Same dead-end pattern is in 6+ other cold-outreach functions even though the matching self-onboard pages exist.
 
-## Part 1 — Three Bug Fixes (15 min)
+## What I Found — Cold Outreach Audit
 
-### Fix 1: Kill PWA install prompt on DWA domain
+| Sender (edge function) | Product pitched | Self-onboard URL exists? | Currently in email? |
+|---|---|---|---|
+| `dead-lead-outreach-drip` (D4 + D8 dead-lead, D4 + D8 senior care) | Dead Lead Reactivation | ✅ `/dead-lead-intake` | ❌ "Reply here / text me" |
+| `contractor-prospector` SNIPER_DEAD | Dead Lead Reactivation | ✅ `/dead-lead-intake` | ❌ "reply or text" |
+| `contractor-prospector` SNIPER_TECH | TechAlert | ✅ `/hire-alert` (Stripe checkout) | ❌ "reply to claim trial" |
+| `contractor-prospector` SNIPER_MISSED_CALL | Missed Call Catch | ✅ `/missed-call-catch` | ❌ "reply or text" |
+| `contractor-prospector` SNIPER (web design) | Web Design | ✅ `/web-design-services` | ❌ "reply" only |
+| `contractor-drip` D4/D8/D15 (leads / GBP / missed call) | PPL leads, GBP, Missed Call | ✅ all 3 product pages | ❌ "reply or text" everywhere |
+| `dwa-closer` | Bundle pitch | ✅ multiple | ❌ "quick call, reply" |
+| `contractor-sms-follow` SMS1/SMS2 | Various | ✅ all | ⚠️ SMS — short links would help |
+| `dead-lead-outreach-drip` senior care D4/D8 | TechAlert (CNA/LPN/RN) | ✅ `/hire-alert` | ❌ "reply or text" |
 
-- **Root**: `vite.config.ts` registers `vite-plugin-pwa` with M² Training manifest globally. Browser shows install banner on every domain.
-- **Fix options**: 
-  - (A) Scope manifest registration to hostname check in `index.html` — remove `<link rel="manifest">` for non-m2 domains via inline script
-  - (B) Disable PWA install prompt entirely with `beforeinstallprompt` event handler that calls `e.preventDefault()` on DWA hostnames
-- **Recommendation**: Both. Inline script in `index.html` strips manifest link if `hostname.includes('detroitweb')`. Belt + suspenders.
+The infrastructure to self-onboard already exists. The cold emails just don't link to it.
 
-### Fix 2: ROI report — make stat cards clickable + URL hardening
+## The Fix
 
-- Looking at `ContractorROIReport.tsx` — the 4 stat cards (Leads/Dead Leads/Missed Calls/Licenses) are static divs. User wants each to deep-link to relevant detail.
-- Add `onClick` handlers:
-  - Leads Delivered → `/contractor-leads`
-  - Dead Leads Revived → `mailto:matt@detroitwebagent.com?subject=Dead Lead Detail`
-  - Missed Calls Caught → `/missed-call-catch`
-  - Licenses Monitored → `/license-monitor`
-- Also harden SMS URL in `contractor-roi-sms`: add space before `—` so Android linkifier doesn't grab the em-dash. Already has space, but the long token may confuse the parser. Switch to shortlinks pattern: put URL on its own line.
+Update every cold-outreach copy template to add a primary self-onboard CTA, while keeping the "or reply / text me" as a secondary fallback (some prospects still want to talk to a human, that's fine).
 
-### Fix 3: 10 duplicate ROI texts — investigate + idempotency lock
+**New CTA pattern (email):**
+> Start free in 60 seconds → https://www.detroitwebagent.com/dead-lead-intake
+> Or reply to this email / text (313) 992-1219.
 
-- Check `contractor-roi-sms` cron schedule + add a `last_roi_sms_sent_at` column to `contractor_clients` with 6-day cooldown guard so the function literally cannot send twice in a week.
-- Investigate root cause via cron history + system_comms_log query.
-- Add idempotency: `WHERE last_roi_sms_sent_at IS NULL OR last_roi_sms_sent_at < now() - interval '6 days'` then update timestamp atomically.
+**New CTA pattern (SMS — short URL only):**
+> Start free: detroitwebagent.com/dead-lead-intake
 
-## Part 2 — Full QA Sweep on Top 4 Products (45 min)
+### Files to update
 
-For each: verify edge functions deploy, secrets present, crons firing, no silent failures, end-to-end checkout works.
+1. **`supabase/functions/dead-lead-outreach-drip/index.ts`**
+   - Dead lead D4 + D8 → add `/dead-lead-intake` link as primary CTA
+   - Senior care D4 + D8 → add `/hire-alert` link as primary CTA
 
-### Contractor Leads ($399/mo)
+2. **`supabase/functions/contractor-prospector/index.ts`**
+   - `sniperDeadLeadEmail` prompt rule #5 → require self-onboard URL `/dead-lead-intake`
+   - `sniperTechAlertEmail` prompt rule #5 → require `/hire-alert` (free trial path)
+   - `sniperMissedCallEmail` prompt rule #5 → require `/missed-call-catch`
+   - `sniperGenerateEmail` (web design) → require `/web-design-services`
 
-- Verify `create-contractor-lead-checkout` deploys clean
-- Verify `stripe-webhook` `contractor_lead_subscription` handler returns 500 on DB fail
-- Verify `contractor-lead-notify` 15-min cron is scheduled + firing
-- Verify `chargeContractor()` in `handle-dead-lead-reply` checks `res.ok` before parsing (KNOWN OPEN ITEM)
-- Test welcome email renders DWA dark branding
+3. **`supabase/functions/contractor-drip/index.ts`**
+   - `leads` D4/D8/D15 → add `/contractor-leads` Stripe checkout link
+   - `gbp` D4/D8/D15 → add `/local-marketing` checkout link
+   - `missed_call` D4 → add `/missed-call-catch` link
 
-### Missed Call Catch ($99/mo) I thought we changed the price? 
+4. **`supabase/functions/dwa-closer/index.ts`**
+   - Prompt rule #5 → require concrete self-onboard URL for whichever product is being pitched (map pitch → URL inside the prompt)
 
-- Verify `create-missed-call-checkout` deploys
-- Verify `missed-call-handler` Twilio webhook on +13139921219 returns valid TwiML
-- Verify multi-tenant lookup by `To` number works (not hardcoded to Matt)
-- Verify `send-missed-call-test` button works on /setup page
-- Test welcome email DWA branding
+5. **`supabase/functions/contractor-sms-follow/index.ts`**
+   - SMS1/SMS2 templates per offer → append `detroitwebagent.com/<product>` short URL
 
-### TechAlert ($99–149/mo) 
+6. **`supabase/functions/dead-lead-outreach-drip/index.ts` HTML wrapper**
+   - Add a styled `[Start free →]` button (teal, rounded) above the signature block so the link doesn't get lost in the body text on mobile (the screenshot shows a long wall of text).
 
-- Verify `create-hire-alert-checkout` deploys
-- Verify `hire-alert-scanner-daily` cron at 7am ET is scheduled
-- Verify Sonar/Apollo/MIOSHA scanners not hung (90s AbortController)
-- Verify `hire_alert_runs` table populates after scan
-- Verify alert dispatch SMS not duplicated (Batch 3 `talent-radar-sms-dispatch`)
-- Check `MyTechAlert.tsx` loads without blank screen
+### Behavioral guardrails preserved
 
-### FieldDesk ($199/mo)
+- All copy still passes Brand Strategy (no "AI" jargon, blue-collar tone, signed by Matt)
+- Phone number stays the DWA work line `(313) 992-1219` (not Matt personal)
+- TCPA Manual-Only mandate untouched — these are emails, no automated SMS sends are being added
+- `/dead-lead-intake` already gates free-trial-then-bill, so even self-onboard prospects hit billing setup before drip runs
 
-- Verify `create-field-service-checkout` deploys
-- Verify demo route `/field-service/dispatch?demo=1` loads with 7 jobs
-- Verify mobile tech app `/field-service/tech?demo=1` PIN login works
-- Verify InvoiceGenerator renders + prints
-- Verify DJ Conley demo `/demo-djconley-2` loads
+### Verification plan
 
-## Part 3 — Cross-Cutting Checks (15 min)
+After changes deploy, fire one test email per template via `AdminSimulationSuite` to `matt@detroitwebagent.com` and visually confirm:
+- Self-onboard URL is rendered as a button (not buried in text)
+- Mobile preview (393px viewport) keeps button above the fold
+- Reply/text fallback is still present but secondary
 
-- **Cron audit**: Query `cron.job` for all expected schedules, flag any missing or paused
-- **Edge function deploy**: Deploy all touched functions, scrape logs for errors in last 24h
-- **Secrets audit**: Verify TWILIO_*, STRIPE_*, RESEND_*, ANTHROPIC_*, LOVABLE_API_KEY, SUPABASE_SERVICE_ROLE_KEY
-- **Stripe webhook**: Verify `vibrant-glow` endpoint healthy, no recent failed events
-- **Silent killers from CLAUDE.md known list**:
-  - `chargeContractor()` res.ok check (status: per CLAUDE Phase 16, this is FIXED — confirm)
-  - stripe-webhook 200 on DB fail (status: partially fixed — verify all top-4 handlers)
+### Out of scope (called out so we don't drift)
 
-## Files Touched (~6)
+- This is **email/SMS copy + URL injection only**. Not changing checkout flows, pricing, or DB schemas.
+- Not touching auth/marketing emails or auto-onboard welcome emails — those already point at correct dashboards.
+- Not adding new self-onboard pages — every product pitched in cold outreach already has one.
 
-**Frontend (3)**:
-
-- `index.html` — inline script to strip PWA manifest on DWA domain + suppress install prompt
-- `vite.config.ts` — scope PWA registration if possible (or leave to runtime guard)
-- `src/pages/ContractorROIReport.tsx` — clickable stat cards with deep links
-
-**Edge functions (1)**:
-
-- `supabase/functions/contractor-roi-sms/index.ts` — add 6-day cooldown lock + URL formatting
-
-**Migration (1)**:
-
-- `radar_roi_sms_dedup.sql` — `last_roi_sms_sent_at TIMESTAMPTZ` column on `contractor_clients`
-
-**QA report (1)**:
-
-- `/mnt/documents/DWA_Top4_Launch_QA_2026-04-17.pdf` — pass/fail per product, screenshots, list of any silent killers found + fixed
-
-## Sequence
-
-1. Migration + cooldown fix (5 min)
-2. PWA disable on DWA + clickable ROI cards (10 min)
-3. Deploy `contractor-roi-sms` + verify
-4. QA Top 4: edge function deploys, cron status, secret check, log scrape (45 min)
-5. Generate launch readiness PDF (10 min)
-6. Final summary: GREEN/YELLOW/RED per product
-
-## Investigation Questions (will answer during QA, no need to ask)
-
-- Why did 10 ROI texts fire? Hypothesis: cron ran once but loop sent to same number, OR `roi_token` query returned 10 rows for same phone, OR cron schedule is misconfigured to run every minute. Will check `cron.job` table + `system_comms_log` timestamps.
-
-Total scope: ~75 min. Result: 3 user-reported bugs fixed + launch-ready validation across top 4 revenue engines.
