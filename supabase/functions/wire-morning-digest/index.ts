@@ -14,7 +14,31 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-function renderDigest(businessName: string, leads: any[]): string {
+function renderRadarSection(signals: any[]): string {
+  if (!signals?.length) return "";
+  const cards = signals.slice(0, 4).map((s: any) => {
+    const conf = s.confidence || 0;
+    const confColor = conf >= 8 ? "#10b981" : conf >= 6 ? "#f59e0b" : "#64748b";
+    return `
+      <tr><td style="padding:10px 8px;border-bottom:1px solid #1e293b;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <div style="color:#a78bfa;font-size:13px;font-weight:700;">${s.company_name || "Local business"}</div>
+          <div style="background:${confColor};color:#000;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700;">CONF ${conf}/10</div>
+        </div>
+        <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;">${s.location || s.county || "Metro Detroit"} · ${s.expansion_type || s.signal_type || "Expansion signal"}</div>
+        <div style="color:#cbd5e1;font-size:12px;line-height:1.45;">${(s.recommended_pitch || s.summary || "").slice(0, 200)}</div>
+      </td></tr>`;
+  }).join("");
+
+  return `
+    <div style="padding:18px 24px 4px;border-top:1px solid #1e293b;background:#0a1628;">
+      <div style="color:#a78bfa;font-size:11px;letter-spacing:2px;font-weight:700;margin-bottom:8px;">📡 DEMAND RADAR · EXPANSION SIGNALS</div>
+      <div style="color:#64748b;font-size:11px;margin-bottom:10px;">Local businesses showing buying intent — reach out before the competition does.</div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;background:#0a1628;">${cards}</table>`;
+}
+
+function renderDigest(businessName: string, leads: any[], signals: any[] = []): string {
   const rows = leads.map(l => `
     <tr style="border-bottom:1px solid #1e293b;">
       <td style="padding:12px 8px;color:#e2e8f0;font-size:14px;">
