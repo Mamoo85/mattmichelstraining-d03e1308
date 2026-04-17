@@ -1,159 +1,79 @@
 
 
-## The Blunt Answer First
+## Goal
+Fix the empty pipeline. Get TechAlert + Demand Radar to "sellable inventory" within 7–14 days by activating the right scanners with the right APIs/credits. Pure research/diagnosis + concrete action list — no code this round.
 
-### TechAlert / HireAlert — Do we have enough data?
+## What I'll Investigate (read-only)
 
-**No, not yet — but the pipeline exists. Here's the truth from the DB right now:**
+1. **Audit every scanner already built** — list each `hire-alert-scanner` source function, each Demand Radar/Industry Pulse scanner, what API key each requires, whether the secret is configured, whether the cron is currently scheduled, last run timestamp, last success/failure.
+2. **Cross-check secrets** — `fetch_secrets` to see which API keys exist vs. which are missing (PDL, Apollo, Sonar/OpenRouter, Firecrawl, NPI, ArcGIS, LARA, Nursys, etc.).
+3. **Cron audit** — query `cron.job` to see which scanners are actually scheduled vs. dormant.
+4. **Last-run audit** — `hire_alert_runs` + `industry_pulse_signals.created_at` distribution to see what's actually firing.
+5. **Identify the 3 root causes** for empty `trade`/`score` fields on the 148 candidates (likely: scanner writes raw license rows but skips the enrichment+scoring pass when an API key returns 402/missing).
 
-| Metric | Reality |
-|---|---|
-| Total candidates in DB | **148** |
-| Candidates with phone OR email | **10** (6.7%) |
-| Score ≥ 7 ("hot") | **0** |
-| Score ≥ 5 ("warm") | **0** |
-| Distinct trades populated | **0** (all NULL — `trade` field never written) |
-| Distinct states | **1** (MI only) |
-| Last 7 days new | **148** (all batch-loaded same day) |
-| Active TechAlert clients | **1** |
+## Deliverable (chat memo + 1 file)
 
-**Verdict:** You have raw license records but **the enrichment pipeline (scoring + contact info) is broken/cold**. The 148 are LARA license issuances with no scoring, no phone numbers, no roles assigned. You CANNOT sell either the $399 sheet or $499/mo today and fulfill it. **You'd run out instantly because effectively you have 10 contactable candidates statewide.**
+A blunt **"Activation Playbook"** delivered to chat AND saved to `/mnt/documents/pipeline-activation-playbook.md`:
 
-What needs to happen first (assuming you fund APIs):
-- Run `hire-alert-scanner` daily for **7-14 days** to build a contactable pool
-- Backfill `trade`, `score`, scoring reasons on existing 148 records
-- Target volume to safely sell: **50+ contactable, score ≥ 7 candidates per trade per region**
+### Section 1: TechAlert Scanner Inventory
+Table per scanner: name, purpose, API required, secret status (✅/❌), cron status, last run, daily candidate yield estimate, monthly cost.
 
----
+Example rows:
+```
+scanLARA        | MI license issuances | none (free)        | ✅ | dormant   | 4/16 | 10-30/day  | $0
+scanBPL         | MI BPL .xlsx         | none (free)        | ✅ | dormant   | never| 5-15/day   | $0
+scanFloridaDBPR | FL trade licenses    | none (free)        | ✅ | dormant   | never| 10-25/day  | $0
+scanApollo      | People search        | APOLLO_API_KEY     | ❓ | dormant   | never| 50-200/day | $49-99/mo
+scanSonar       | OSINT enrichment     | OPENROUTER_API_KEY | ❓ | per-cand. | varies| enrich only| $20-100/mo usage
+scanPDL         | Mobile + email       | PDL_API_KEY        | ❓ | per-cand. | varies| enrich only| $0.10-0.28/match
+scanNPI         | Healthcare licenses  | none (free)        | ✅ | dormant   | never| 20-50/day  | $0
+scanNursys      | RN/LPN licenses      | NURSYS user/pass   | ❓ | dormant   | never| 30-80/day  | ~$200/mo
+scanDetroitArcGIS| Trade permits       | none (free)        | ✅ | dormant   | never| 15-40/day  | $0
+scanLicenseExpiry| Lapsed MIOSHA       | none (free)        | ✅ | dormant   | never| 5-20/day   | $0
+scanVALEnum     | LARA val.apps probe  | none (free)        | ✅ | dormant   | never| 10-30/day  | $0
+```
 
-### Demand Radar — Do we have enough data?
+### Section 2: Demand Radar Scanner Inventory
+Same table format for `industry-pulse`, `industrial-growth-intel`, `medicare-staffing-intel`, `permit-watch-scanner`, `storm-lead-blaster`, `gov-contract-monitor`, etc.
 
-**Better. Real signals exist. Here's the truth:**
+### Section 3: The Three Bottlenecks (root cause)
+1. **Scoring never runs** — `lead-quality-scorer` cron likely missing or `score-prospects` not invoked after intake. Result: 148 rows, score=NULL, all bucketed below "warm" threshold.
+2. **Trade field never written** — scanner writes `license_type` but downstream code reads `trade`. Single-line normalizer fix needed.
+3. **Enrichment is gated, not parallel** — `batch-enrich-candidates` only runs 5/run sequentially. At 5/day enrichment vs. 30/day intake, contact pool grows slower than candidate pool.
 
-| Metric | Reality |
-|---|---|
-| Total Demand Radar / Industry Pulse signals | **58** |
-| Signals with confidence ≥ 8 | **~6** (e.g. Third Coast Electric = 10, Multiple Employers HVAC = 8) |
-| Signals with confidence ≥ 6 | **~30** |
-| Distinct verticals/sectors populated | **0** (vertical/sector fields NULL — pulled from `hiring_roles` instead) |
-| Counties populated | **0** (county field NULL — uses `location` instead, e.g. "Detroit, MI", "Royal Oak, MI") |
-| All signals detected | **2026-04-16** (one batch, one day) |
-| Active Demand Radar clients | **0** |
-| Active Industry Pulse clients | **0** |
+### Section 4: The "Pay-To-Win" Stack (ranked by ROI)
+What APIs to fund + estimated monthly cost + expected lift:
 
-**What works:** The signals are *real and high-quality* — Third Coast Electric in Royal Oak hiring 2 electricians, predicted needs include "hand tools, power tools, ladders, electrical testing equipment, conduit, junction boxes" + a custom AI-generated pitch. This is genuinely sellable intelligence.
+| Tier | API | Monthly Cost | Expected New Hot Candidates/Mo |
+|---|---|---|---|
+| MUST | OpenRouter (Sonar) | $50–100 | +200 (enrich existing 148 in 1 day) |
+| MUST | PDL | $50–150 | +150 contactable mobile/email |
+| MUST | Apollo | $49 (Basic) | +400 people-search hits |
+| NICE | Nursys | $200 | +500 healthcare candidates |
+| NICE | Firecrawl Pro | $40 | +100 Demand Radar signals |
+| FREE | NPI Registry | $0 | +600 healthcare licenses |
+| FREE | LARA BPL | $0 | +300 trade licenses |
+| FREE | Detroit ArcGIS | $0 | +400 trade permits |
+| FREE | FL DBPR | $0 | +500 trade licenses |
 
-**What's broken:**
-- `vertical`, `sector`, `county` columns are NULL — filtering won't work
-- Only one scan day on record — daily intake rate unknown (target: 5-15/day)
-- No active subscribers means zero validation
+**Bare minimum to launch:** $150/mo (Sonar + PDL + Apollo Basic). Free scanners alone → ~50 contactable/week if cron+scoring fixed.
 
-**Verdict:** Demand Radar has enough signal quality for a soft launch (5-10 paying pilots) but the cron isn't running daily and the categorization fields need backfilling.
+### Section 5: The 14-Day Activation Timeline
+Day-by-day what to fund, what cron to enable, what data to expect:
+- **Day 0**: Confirm secrets present. Schedule 6 free scanner crons. Run `lead-quality-scorer` over existing 148 → expect 30-60 to land at score ≥5.
+- **Day 1–3**: Free scanners alone yield 80-150 raw rows/day. PDL+Sonar enrich → 30-50 contactable/day.
+- **Day 4–7**: Hot pool (score ≥7) hits ~50. Safe to launch $399 sheet to first 3 pilots.
+- **Day 8–14**: Hot pool 150+, daily replenishment 20-30/day. Safe to launch $499/mo with 3-client cap per trade/county.
 
----
+### Section 6: Identical Playbook for Demand Radar
+Same structure. Demand Radar scanners exist, just aren't on a daily cron.
 
-## What I'm Going to Do
+### Section 7: What I Recommend Building Next (after research)
+Approval gate — I list 5 specific code changes (cron schedules, trade-field normalizer, scoring-on-insert trigger, parallel enrichment, hot-pool monitor) with effort estimates. You pick which to ship.
 
-### Step 1: Inventory & Throughput Math (research deliverable in chat)
-
-For **both products**:
-- Real DB counts (just shown)
-- Required pipeline runtime to reach safe sellable inventory
-- Burn-rate math: at $X/mo with N clients, how fast does inventory deplete vs. replenish
-- Concrete answer: "max concurrent clients per territory before we run out"
-
-### Step 2: Two Sample Demand Radar Deliverables (PDFs)
-
-Mirror what we did for TechAlert — generate from REAL data:
-
-**Sample A: $99 One-Time Demand Snapshot** (`/mnt/documents/sample-demand-radar-snapshot-99.pdf`)
-- 5 highest-confidence signals
-- Company name, location, hiring activity, predicted needs (top 5), confidence score, recommended pitch (truncated to 200 chars)
-- Source URL hidden ("Verified public source")
-- "What you DON'T get without subscription" teaser at bottom
-- Legal disclaimer block
-
-**Sample B: $199/mo Pro Tier — Weekly Digest** (`/mnt/documents/sample-demand-radar-weekly-199.pdf`)
-- 15-25 signals from past 7 days
-- Full predicted needs lists
-- Full pitches
-- Cross-referenced badge (when hiring + expansion both confirmed)
-- County-exclusivity note
-- Real data sourced from `industry_pulse_signals` table
-
-**Sample C: $499/mo Enterprise Brief** (`/mnt/documents/sample-demand-radar-enterprise-499.pdf`)
-- Monthly executive briefing
-- Sector breakdown (HVAC, Electrical, Manufacturing)
-- Top 50 signals
-- API access mock JSON sample
-- White-label preview
-
-### Step 3: Pricing Model Recommendation (chat deliverable)
-
-Three options with pros/cons + my recommendation:
-
-**A. Pure Monthly ($99 / $199 / $499 — current setup)**
-- Pro: Predictable MRR, lower customer commitment
-- Con: At current intake rate, can sustain ~5 active Pro clients per Metro Detroit county before signal duplication
-
-**B. Pure One-Time ($99 snapshot, $399 quarterly brief)**
-- Pro: Easier first sale, no churn risk, no ongoing FCRA-style concern (these aren't people, they're businesses — different legal landscape than TechAlert)
-- Con: No MRR, must constantly re-sell
-
-**C. Hybrid (recommended): $99 one-time snapshot → $199/mo Pro → $499/mo Enterprise**
-- $99 snapshot is the trial/wedge → upgrade to Pro for live alerts
-- Closest to Apollo/ZoomInfo SMB land-and-expand playbook
-- Demand Radar = B2B intel about COMPANIES (not consumers) → **NO FCRA concern**, much easier legally than TechAlert
-- TCPA only applies if outreach is to mobile numbers — most signals provide office lines and web forms
-
-### Step 4: Onboarding Walkthrough (chat deliverable)
-
-Step-by-step "Customer Journey" for both products:
-
-**Demand Radar onboarding (today's state vs. ideal):**
-1. Customer hits `/demand-radar` → picks tier → Stripe checkout
-2. Webhook fires → row inserted in `industry_pulse_clients` → `dashboard_token` generated
-3. Welcome email with magic link to `/demand-radar-portal?token=...`
-4. Daily 7am ET digest via `demand-radar-digest` edge function (already exists)
-5. Dashboard shows live signal feed, filterable by county/vertical/confidence
-
-I'll audit each step and flag what's missing.
-
-### Step 5: Inventory Sustainability (chat deliverable)
-
-Honest math table:
-- Demand Radar at 5 clients/county = sustainable today
-- Demand Radar at 20 clients/county = needs 3x daily intake increase first
-- Recommended: cap at 3 Pro tier subscribers per county initially → creates exclusivity + scarcity ("Only 1 spot left in Wayne County")
-
-### Step 6: NO Code Changes This Round
-
-Pure research + sample generation. After you review the samples and pricing, you tell me which to ship. Then in a build round I'd:
-- Add the `vertical` + `county` backfill migration so filtering works
-- Tweak Demand Radar landing copy with per-tier sample previews
-- Add the territory-cap counter to landing page ("3 of 3 Pro spots left in Wayne County")
-
----
-
-## Files & Deliverables
-
-**Generated files (`/mnt/documents/`):**
-1. `sample-demand-radar-snapshot-99.pdf` — one-time $99 snapshot, 5 signals
-2. `sample-demand-radar-weekly-199.pdf` — Pro tier weekly digest, ~20 signals
-3. `sample-demand-radar-enterprise-499.pdf` — Enterprise monthly brief, 50 signals + API mock
-4. `techalert-and-demand-radar-inventory-report.md` — full math, sustainability tables, pricing recommendation
-
-**Chat deliverables:**
-- Blunt verdict per product (already shown above)
-- Step-by-step customer journey for Demand Radar
-- Pricing model recommendation
-- "Will we run out?" math
-- Honest gaps list (what to fix before scaling)
-
-### Out of Scope
-
-- No code/UI changes (pure research)
-- No new pricing pushed to live checkout
-- No TechAlert changes (covered last round)
-- No FieldDesk / fitness app touched
+## Out of Scope
+- No code changes
+- No pricing changes
+- No checkout changes
+- No new scanner functions invented (only activate what already exists)
 
