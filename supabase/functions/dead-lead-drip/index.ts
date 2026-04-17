@@ -140,6 +140,8 @@ serve(async (req) => {
       .eq("status", "drip1_sent")
       .not("drip1_sent_at", "is", null)
       .lte("drip1_sent_at", twoDaysAgo)
+      .not("last_contact_date", "is", null)
+      .gte("last_contact_date", eighteenMonthsAgo)
       .limit(200);
 
     for (const contact of drip2Contacts || []) {
@@ -189,6 +191,8 @@ serve(async (req) => {
       .eq("status", "drip2_sent")
       .not("drip2_sent_at", "is", null)
       .lte("drip2_sent_at", twoDaysAgo)
+      .not("last_contact_date", "is", null)
+      .gte("last_contact_date", eighteenMonthsAgo)
       .limit(200);
 
     for (const contact of drip3Contacts || []) {
@@ -231,9 +235,9 @@ serve(async (req) => {
       } catch (e) { console.error("[drip] drip3 error for contact", contact.id, e); }
     }
 
-    console.log(`[dead-lead-drip] drip1=${drip1Count} drip2=${drip2Count} drip3=${drip3Count}`);
+    console.log(`[dead-lead-drip] drip1=${drip1Count} drip2=${drip2Count} drip3=${drip3Count} tcpa_expired=${tcpaSkipped}`);
     return new Response(
-      JSON.stringify({ ok: true, drip1: drip1Count, drip2: drip2Count, drip3: drip3Count }),
+      JSON.stringify({ ok: true, drip1: drip1Count, drip2: drip2Count, drip3: drip3Count, tcpa_expired: tcpaSkipped }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e: unknown) {
