@@ -2945,6 +2945,7 @@ export type Database = {
           email: string | null
           id: string
           is_demo_record: boolean | null
+          last_contact_date: string | null
           name: string
           original_service: string | null
           phone: string
@@ -2966,6 +2967,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_demo_record?: boolean | null
+          last_contact_date?: string | null
           name: string
           original_service?: string | null
           phone: string
@@ -2987,6 +2989,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_demo_record?: boolean | null
+          last_contact_date?: string | null
           name?: string
           original_service?: string | null
           phone?: string
@@ -7711,6 +7714,24 @@ export type Database = {
           last_report_at?: string | null
           report_count?: number | null
           stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      processed_stripe_events: {
+        Row: {
+          event_id: string
+          event_type: string
+          processed_at: string
+        }
+        Insert: {
+          event_id: string
+          event_type: string
+          processed_at?: string
+        }
+        Update: {
+          event_id?: string
+          event_type?: string
+          processed_at?: string
         }
         Relationships: []
       }

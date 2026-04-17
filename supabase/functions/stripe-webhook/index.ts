@@ -274,6 +274,29 @@ serve(async (req) => {
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+    // ─── IDEMPOTENCY GUARD ────────────────────────────────────────────────
+    // Stripe retries webhooks on 5xx or timeout. Without dedupe, every retry
+    // would re-run provisioning, double-SMS the customer, and double-charge.
+    // INSERT with PRIMARY KEY conflict acts as an atomic "claim" on event.id.
+    const { error: dedupeError } = await sb
+      .from("processed_stripe_events")
+      .insert({ event_id: event.id, event_type: event.type });
+
+    if (dedupeError) {
+      // Duplicate key (23505) = already processed → ack 200 so Stripe stops retrying
+      if ((dedupeError as any).code === "23505") {
+        console.log(`[WEBHOOK] Duplicate event ${event.id} (${event.type}) — skipping`);
+        return new Response(JSON.stringify({ received: true, duplicate: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      // Real DB error — let Stripe retry
+      console.error(`[WEBHOOK] Idempotency insert failed:`, dedupeError);
+      return new Response("Idempotency check failed", { status: 500 });
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
     // Helper: log transaction to the transactions table
     async function logTransaction(opts: {
       userId?: string | null;

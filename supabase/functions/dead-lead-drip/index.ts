@@ -62,14 +62,33 @@ serve(async (req) => {
     const now = new Date();
     const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString();
 
-    let drip1Count = 0, drip2Count = 0, drip3Count = 0;
+    // TCPA EBR cutoff: 18 months from last business contact
+    const eighteenMonthsAgo = new Date(now.getTime() - 548 * 24 * 60 * 60 * 1000)
+      .toISOString().split("T")[0];
+
+    let drip1Count = 0, drip2Count = 0, drip3Count = 0, tcpaSkipped = 0;
+
+    // ── TCPA SWEEP: terminate any contact past 18-month EBR window ────────
+    // Runs BEFORE drip queries so expired leads can never be texted.
+    const { data: expired, error: expiredErr } = await sb
+      .from("dead_lead_contacts" as any)
+      .update({ status: "tcpa_expired" })
+      .lt("last_contact_date", eighteenMonthsAgo)
+      .in("status", ["pending", "drip1_sent", "drip2_sent"])
+      .select("id");
+    if (expiredErr) console.error("[drip] TCPA sweep error:", expiredErr);
+    tcpaSkipped = expired?.length || 0;
 
     // ── DRIP 1: pending contacts in active campaigns ──────────────────────
+    // .gte() filter enforces EBR at query level. Contacts with NULL
+    // last_contact_date are excluded (safer to skip than risk a violation).
     const { data: drip1Contacts } = await sb
       .from("dead_lead_contacts" as any)
       .select("*, dead_lead_campaigns(id, trade, status, contractor_id, contractor_clients(business_name, phone))")
       .eq("status", "pending")
       .not("dead_lead_campaigns", "is", null)
+      .not("last_contact_date", "is", null)
+      .gte("last_contact_date", eighteenMonthsAgo)
       .limit(200);
 
     for (const contact of drip1Contacts || []) {
@@ -121,6 +140,8 @@ serve(async (req) => {
       .eq("status", "drip1_sent")
       .not("drip1_sent_at", "is", null)
       .lte("drip1_sent_at", twoDaysAgo)
+      .not("last_contact_date", "is", null)
+      .gte("last_contact_date", eighteenMonthsAgo)
       .limit(200);
 
     for (const contact of drip2Contacts || []) {
@@ -170,6 +191,8 @@ serve(async (req) => {
       .eq("status", "drip2_sent")
       .not("drip2_sent_at", "is", null)
       .lte("drip2_sent_at", twoDaysAgo)
+      .not("last_contact_date", "is", null)
+      .gte("last_contact_date", eighteenMonthsAgo)
       .limit(200);
 
     for (const contact of drip3Contacts || []) {
@@ -212,9 +235,9 @@ serve(async (req) => {
       } catch (e) { console.error("[drip] drip3 error for contact", contact.id, e); }
     }
 
-    console.log(`[dead-lead-drip] drip1=${drip1Count} drip2=${drip2Count} drip3=${drip3Count}`);
+    console.log(`[dead-lead-drip] drip1=${drip1Count} drip2=${drip2Count} drip3=${drip3Count} tcpa_expired=${tcpaSkipped}`);
     return new Response(
-      JSON.stringify({ ok: true, drip1: drip1Count, drip2: drip2Count, drip3: drip3Count }),
+      JSON.stringify({ ok: true, drip1: drip1Count, drip2: drip2Count, drip3: drip3Count, tcpa_expired: tcpaSkipped }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e: unknown) {
