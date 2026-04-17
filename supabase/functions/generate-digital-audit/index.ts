@@ -83,7 +83,7 @@ Return a JSON object:
     });
 
     const claudeData = await claudeRes.json();
-    if (!claudeRes.ok) return json500(`Claude error: ${claudeData?.error?.message}`);
+    if (!claudeRes.ok) return json500("AI generation failed");
 
     const rawText = claudeData.content?.[0]?.text || "";
     let parsed: Record<string, unknown> = { pitch_sms: rawText };
