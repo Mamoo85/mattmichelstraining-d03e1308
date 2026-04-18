@@ -1,0 +1,1 @@
+UPDATE hire_alert_candidates SET phone = NULL WHERE phone IN ('true','false'); UPDATE hire_alert_candidates SET email = NULL WHERE email IN ('true','false'); UPDATE hire_alert_candidates SET score = GREATEST(1, score - 3) WHERE score >= 7 AND (phone IS NULL OR phone = '') AND (email IS NULL OR email = '');
