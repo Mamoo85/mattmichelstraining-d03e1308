@@ -1,64 +1,89 @@
-User's question: pg_cron jobs were rebuilt with the safe `vault.decrypted_secrets` pattern but Sentinel still reports 21/23 dormant. Why and can we fix it?
 
-Let me investigate before planning. Key suspects:
 
-1. `pg_cron` extension may not actually be enabled, OR jobs were created in a schema/role that pg_cron can't execute
-2. The vault migration may have run but the `cron.schedule()` calls inside the DO block may have silently no-op'd if `v_url`/`v_key` came back NULL (vault secrets not actually present under those exact names)
-3. Sentinel watchlist names don't match real cron names → reports false "missing"
-4. Jobs scheduled but `cron.job_run_details` empty because pg_cron worker isn't running on this Supabase tier
-5. The `net.http_post` calls fire but Edge Functions reject them (auth header malformed)
+User wants a 3-phase sprint executed in strict order. This is a clear implementation task — no clarifying questions needed, the diagnosis from prior turns gave us exact root causes. Let me plan tightly.
 
-Need to verify with read-only queries before proposing a fix.
+## Phase 1: Pipeline Infrastructure (must finish + deploy before Phase 2)
 
-## Investigation Plan (read-only first)
+### 1.1 Fix `hire_alert_runs` schema
+Investigation needed: read `supabase/functions/hire-alert-scanner/index.ts` to see EXACT insert payload, then read latest migration on `hire_alert_runs` to see actual columns. From session memory: scanner uses `started_at` (not `run_at`). Likely also missing: `completed_at`, `tos_blocked`, `processed`, `errors[]`, `source_breakdown jsonb`.
 
-1. Query `cron.job` — list every job, schedule, active flag, command preview, username
-2. Query `cron.job_run_details` — last 50 runs, status, return_message — see if pg_cron is firing AT ALL or if specific jobs error
-3. Query `vault.decrypted_secrets` — confirm `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` exist under those exact names (this is the #1 likely failure — the migration assumed names that may not match what's in vault)
-4. Query `pg_extension` — confirm `pg_cron` + `pg_net` actually enabled
-5. Query `net._http_response` — see if http_post calls are succeeding or returning errors
-6. Check Sentinel watchlist vs `cron.job.jobname` — name mismatches
-7. Spot-check 2-3 edge function logs (`hire-alert-scanner`, `industry-pulse-scanner`) — did they receive ANY invocations in last 48h?
+Migration: `ALTER TABLE hire_alert_runs ADD COLUMN IF NOT EXISTS ...` for every field the scanner writes. Don't drop existing columns — additive only.
 
-## Then Fix Plan (default mode after approval)
+### 1.2 Candidate scorer for `hire_alert_candidates`
+Create new edge function `candidate-quality-scorer` (don't pollute lead-quality-scorer which works on a different table).
 
-Based on what investigation finds, fix will be ONE of these (most likely #A):
+Scoring rubric (1-10):
+- +2 phone present, +1 phone E.164 valid
+- +2 email present (non-generic prefix per existing email rules)
+- +2 LinkedIn or Facebook URL present
+- +1 current_employer present
+- +1 license_type populated
+- +1 city in Metro Detroit counties (Wayne/Oakland/Macomb)
+- +1 years_experience >= 3
+- Cap 10, floor 1
 
-**A. Vault secret names don't match** (most likely — explains why ALL rebuilt crons silent)
+Writes `quality_score` + `scored_at`. Schedule daily 11:30 UTC. Manual trigger param `{candidate_ids?: []}`.
 
-- The DO block in `20260418004827_*.sql` does `WHERE name = 'SUPABASE_URL'` — if vault stores it under a different name (e.g., `supabase_url` lowercase, or doesn't have it at all), `v_url` is NULL → `cron.schedule()` schedules with literal `NULL/functions/v1/...` URL → every fire is a no-op
-- Fix: new migration that (1) confirms/inserts correct vault entries, (2) re-runs `cron.schedule()` for all 20 jobs with verified non-NULL URL/key
-- Add a safety guard: `IF v_url IS NULL THEN RAISE EXCEPTION` so future migrations fail loud instead of silently scheduling broken crons
+### 1.3 Fix `trade` column NULL
+Read `hire-alert-scanner/index.ts` to see why `trade` isn't being written. Likely the source-specific scanners (BPL, Apollo, ArcGIS) extract `license_type` but never normalize to `trade`. Add `classifyTrade(license_type, source, raw_text)` helper in scanner — maps "Boiler Operator" → "boiler", "Electrical" → "electrical", etc. Write at insert time.
 
-**B. pg_cron disabled or wrong role**
+Also have scorer do fallback classification for legacy NULL rows.
 
-- Migration to `CREATE EXTENSION IF NOT EXISTS pg_cron` and re-grant
-- Re-schedule under `postgres` role explicitly
+### 1.4 Wire PDL/Apollo enrichment into the candidate pipeline
+`batch-enrich-candidates` already exists for Sonar OSINT. Need:
+- Schedule it more aggressively (currently manual/small batch)
+- Add PDL fallback when Sonar returns no phone/email (PDL_API_KEY exists in secrets)
+- Target the contactless 94% specifically: filter `WHERE email IS NULL AND phone IS NULL`
+- Schedule new cron: `candidate-enrichment-hourly` running `batch-enrich-candidates` every 2h, batch size 10
 
-**C. Edge functions rejecting the cron's auth header**
+## Phase 2: Backfill + retest
 
-- Inspect `verify_jwt` in `config.toml` for each function
-- If function requires JWT and cron sends service-role key as bearer, that's fine — but if function does its own auth check that rejects service role, fix function
+- One-shot SQL/edge-function call to score all 160 existing candidates via new scorer
+- One-shot trade classification for legacy NULL `trade` rows (SQL migration with CASE statement on `license_type`)
+- Re-run `cron-sentinel` + verify `hire_alert_runs` now logs
+- Verify in DB: `SELECT count(*) FILTER (WHERE quality_score >= 7), count(*) FILTER (WHERE trade IS NOT NULL), count(*) FILTER (WHERE email IS NOT NULL OR phone IS NOT NULL) FROM hire_alert_candidates;`
+- Report deltas in chat
 
-**D. Sentinel watchlist mismatch only** (cosmetic — crons actually working but Sentinel wrong)
+## Phase 3: Demand Radar checkouts
 
-- Update `WATCHLIST` in `cron-sentinel/index.ts` to match real `jobname` values from `cron.job`
+Investigation: check if `create-industry-pulse-checkout` already exists (it does per CLAUDE.md). Confirm 3 SKU price points are wired:
+- $99 one-time snapshot
+- $199/mo weekly digest
+- $499/mo enterprise
 
-**E. Hardcoded fallback** (defense in depth)
+Likely currently only handles one tier. Update to accept `tier: "snapshot" | "weekly" | "enterprise"` with corresponding `price_data`.
 
-- Replace vault lookup with hardcoded `https://eauvubfpanpeuxsrqesu.supabase.co` for the URL (URL never rotates) — eliminates an entire failure mode. Service role key still pulled from vault since it can rotate.
+Add FCRA/B2B disclaimer block to `IndustryPulse.tsx` checkout page (mem://business/techalert-compliance-disclosures already documents the canonical language — reuse). Required line: "B2B market intelligence — not a consumer report. Not for FCRA-regulated decisions (employment, credit, housing, insurance)."
 
 ### Deliverables
 
-- Investigation memo in chat: exact root cause with evidence (which query proved it)
-- One migration file fixing the cron creation + adding NULL guards
-- If E chosen: also patch `cron-sentinel` watchlist to match real names
-- Manual `SELECT cron.schedule(...)` triggers to fire 3 critical jobs immediately so user sees data within minutes, not 24h
-- Update `mem://tech/cron-sentinel-and-monitoring.md` with the new "vault name mismatch" failure mode + the NULL-guard pattern (so this becomes failure #3 in the burn book)
-- Re test to see if the crons are fixed,  if not then, re do the entire process but from a different approach until the 21 other cron Jobs are fixed.
+- Migration: `hire_alert_runs` schema alignment + `hire_alert_candidates` trade backfill
+- New edge function: `candidate-quality-scorer` + cron schedule
+- Updated edge function: `hire-alert-scanner` (trade classifier inline)
+- Updated edge function: `batch-enrich-candidates` (PDL fallback + larger scope) + new 2h cron
+- Updated edge function: `create-industry-pulse-checkout` (3 tiers)
+- Updated page: `IndustryPulse.tsx` (3 SKU buttons + FCRA disclaimer)
+- Backfill script run after deploy: score 160 + classify trades + enrich top 50 contactless
+- Verification report in chat: before/after numbers
+- Memory update: `mem://features/candidate-pipeline-v2` documenting the scorer + enrichment cadence
 
 ### Out of Scope
 
-- No new product features
-- No Sentinel UI changes beyond watchlist name alignment
-- No re-architecting the fix-broken-crons migration history — just one new migration on top
+- No new candidate sources (work with existing 16+)
+- No TechAlert pricing changes
+- No new sample PDFs this round (separate request)
+- No UI redesign of MyTechAlert
+
+### Order of execution (strict)
+
+1. Read scanner + migrations to finalize exact schema diff
+2. Migration first (additive columns)
+3. Deploy scanner with trade classifier
+4. Deploy new candidate-quality-scorer
+5. Deploy enriched batch-enrich-candidates + new cron
+6. Run backfill (score + classify + enrich top 50)
+7. Verify counts, post delta report
+8. Deploy 3-tier industry-pulse checkout + FCRA disclaimers
+9. Test each Demand Radar checkout end-to-end with $0 admin sandbox flow
+10. Final go/no-go report per SKU
+
