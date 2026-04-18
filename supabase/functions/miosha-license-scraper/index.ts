@@ -1272,133 +1272,180 @@ let laraResponseTimeMs = 0;
 let laraErrorMessage = "";
 let laraFallbackActivated = false;
 
-async function scanMiPLUS(): Promise<LicenseCandidate[]> {
-  const candidates: LicenseCandidate[] = [];
-  const maxRetries = 3;
-  const baseDelay = 2000;
-
+// ===== S10A: LARA Health Probe (preserved — internal monitoring only, returns no candidates) =====
+async function probeLARAHealth(): Promise<void> {
+  const maxRetries = 2;
+  const baseDelay = 1500;
   for (const endpoint of LARA_ENDPOINTS) {
     let success = false;
-
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       const ua = MIPLUS_USER_AGENTS[Math.floor(Math.random() * MIPLUS_USER_AGENTS.length)];
       const startTime = Date.now();
-
       try {
         const res = await fetch(endpoint.url, {
-          headers: {
-            "User-Agent": ua,
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Cache-Control": "no-cache",
-          },
-          redirect: "follow",
-          signal: AbortSignal.timeout(15_000),
+          headers: { "User-Agent": ua, "Accept": "text/html,*/*", "Accept-Language": "en-US,en;q=0.9" },
+          redirect: "follow", signal: AbortSignal.timeout(10_000),
         });
-
         laraResponseTimeMs = Date.now() - startTime;
         laraHttpStatus = res.status;
-
         if (res.status === 403 || res.status === 429) {
-          console.warn(`[MiPLUS] ${endpoint.label} blocked (HTTP ${res.status}) — attempt ${attempt + 1}/${maxRetries}`);
-          laraStatus = "blocked";
-          laraErrorMessage = `HTTP ${res.status} from ${endpoint.label}`;
-          if (attempt < maxRetries - 1) {
-            await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, attempt)));
-            continue;
-          }
-          break; // Try next endpoint
-        }
-
-        if (!res.ok) {
-          console.warn(`[MiPLUS] ${endpoint.label} HTTP ${res.status} — attempt ${attempt + 1}`);
-          laraStatus = "down";
-          laraErrorMessage = `HTTP ${res.status} from ${endpoint.label}`;
-          if (attempt < maxRetries - 1) {
-            await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, attempt)));
-            continue;
-          }
+          laraStatus = "blocked"; laraErrorMessage = `HTTP ${res.status} from ${endpoint.label}`;
+          if (attempt < maxRetries - 1) { await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, attempt))); continue; }
           break;
         }
-
+        if (!res.ok) {
+          laraStatus = "down"; laraErrorMessage = `HTTP ${res.status} from ${endpoint.label}`;
+          break;
+        }
         const html = await res.text();
         laraResponseBytes = html.length;
-
-        // CAPTCHA / Cloudflare detection
-        if (html.includes("captcha") || html.includes("cf-challenge") || html.includes("Just a moment") || html.includes("challenge-platform")) {
-          console.warn(`[MiPLUS] ${endpoint.label} CAPTCHA/Cloudflare detected`);
-          laraStatus = "captcha";
-          laraErrorMessage = `CAPTCHA on ${endpoint.label}`;
-          break; // Try next endpoint
-        }
-
-        // FORMAT CHANGE DETECTION — if none of our known signatures are present,
-        // the portal has been redesigned and our scraper won't work
-        const knownSignatureFound = KNOWN_FORMAT_SIGNATURES.some(sig => html.includes(sig));
-        if (!knownSignatureFound && html.length > 1000) {
-          console.warn(`[MiPLUS] ⚠️ FORMAT CHANGE DETECTED on ${endpoint.label} — no known signatures found in ${html.length} bytes`);
-          laraStatus = "format_changed";
-          laraErrorMessage = `Format changed on ${endpoint.label} — known signatures missing. HTML starts with: ${html.substring(0, 200)}`;
+        if (html.includes("captcha") || html.includes("cf-challenge") || html.includes("Just a moment")) {
+          laraStatus = "captcha"; laraErrorMessage = `CAPTCHA on ${endpoint.label}`;
           break;
         }
-
-        // SUCCESS — LARA is reachable and format is recognized
-        laraStatus = "ok";
-        laraErrorMessage = "";
-        console.log(`[MiPLUS] ✅ ${endpoint.label} reachable (${html.length} bytes, ${laraResponseTimeMs}ms). Format recognized.`);
-
-        // NOTE: Direct MiPLUS HTML parsing is not yet implemented.
-        // When LARA data extraction logic is added, it will parse the HTML here.
-        // For now, this confirms reachability and format stability.
+        const known = KNOWN_FORMAT_SIGNATURES.some(sig => html.includes(sig));
+        if (!known && html.length > 1000) {
+          laraStatus = "format_changed"; laraErrorMessage = `Format changed on ${endpoint.label}`;
+          break;
+        }
+        laraStatus = "ok"; laraErrorMessage = "";
         success = true;
         break;
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         laraResponseTimeMs = Date.now() - startTime;
-
-        if (msg.includes("timeout") || msg.includes("abort")) {
-          laraStatus = "timeout";
-          laraErrorMessage = `Timeout on ${endpoint.label}: ${msg}`;
-        } else {
-          laraStatus = "down";
-          laraErrorMessage = `Error on ${endpoint.label}: ${msg}`;
-        }
-
-        console.warn(`[MiPLUS] ${endpoint.label} error attempt ${attempt + 1}: ${msg}`);
-        if (attempt < maxRetries - 1) {
-          await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, attempt)));
-        }
+        laraStatus = msg.includes("timeout") ? "timeout" : "down";
+        laraErrorMessage = `${endpoint.label}: ${msg}`;
+        if (attempt < maxRetries - 1) await new Promise(r => setTimeout(r, baseDelay * Math.pow(2, attempt)));
       }
     }
-
-    if (success) break; // Found a working endpoint, stop probing
+    if (success) break;
   }
-
-  // If LARA is not OK, activate fallback amplification
   if (laraStatus !== "ok" && laraStatus !== "not_attempted") {
     laraFallbackActivated = true;
-    console.warn(`[MiPLUS] 🔄 LARA status: ${laraStatus}. Fallback amplification activated — Sonar and OpenData will run with expanded queries.`);
   }
+}
 
+// ===== S10B: LARA BCC via Sonar — REAL CANDIDATE EXTRACTION =====
+// Bureau of Construction Codes (boiler/electrical/plumbing/HVAC) doesn't bulk-publish.
+// Use Sonar (perplexity/sonar-pro) with targeted queries to pull recently licensed individuals.
+async function scanLARABCCViaSonar(): Promise<LicenseCandidate[]> {
+  const apiKey = Deno.env.get("OPENROUTER_API_KEY") || "";
+  if (!apiKey) { console.warn("[S10B:BCC] OPENROUTER_API_KEY missing"); return []; }
+  const candidates: LicenseCandidate[] = [];
+  const trades = [
+    { type: "Boiler Operator", q: "Michigan LARA boiler operator license newly issued 2026 Wayne OR Oakland OR Macomb County" },
+    { type: "Electrician", q: "Michigan journeyman electrician license 2026 newly licensed metro Detroit" },
+    { type: "Plumber", q: "Michigan journeyman plumber license 2026 newly issued Wayne Oakland Macomb" },
+    { type: "HVAC Technician", q: "Michigan mechanical contractor HVAC license 2026 newly licensed metro Detroit" },
+  ];
+  for (const t of trades) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: "Return ONLY a JSON array. No prose, no markdown. Each item: {full_name, license_number, city}. Empty array if none found." },
+            { role: "user", content: `${t.q}. Source: aca-prod.accela.com or michigan.gov LARA pages. Real names of individuals only — exclude businesses. Return up to 10 records as JSON array. JSON only.` },
+          ],
+          max_tokens: 700, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(25_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*\]/);
+      if (!m) continue;
+      let arr: any[] = [];
+      try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const row of arr) {
+        const name = (row.full_name || row.name || "").trim();
+        if (!name || !isPersonName(name)) continue;
+        candidates.push({
+          full_name: name, license_type: t.type,
+          license_number: row.license_number ? String(row.license_number) : null,
+          license_expiry: null, city: row.city || null, source: "lara_bcc",
+        });
+      }
+    } catch (e) {
+      console.warn(`[S10B:BCC] ${t.type} error: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  console.log(`[S10B:BCC] Found ${candidates.length} BCC candidates via Sonar`);
   return candidates;
 }
 
-// Twilio SMS helper for LARA alerts
-const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
-const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
-const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
-const ADMIN_PHONE = Deno.env.get("ADMIN_PHONE") || "+13138064952";
+// ===== S10C: LARA VAL ID Enumeration — INSTANT NEW LICENSE RADAR =====
+// Sequentially probes the next N license IDs. New license issued = new ID = caught within minutes.
+async function scanLARAValEnumeration(): Promise<LicenseCandidate[]> {
+  const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+  const candidates: LicenseCandidate[] = [];
+  // Get cursor
+  const { data: cursor } = await sb.from("lara_val_cursor").select("last_val_id").eq("id", 1).maybeSingle();
+  let lastId = cursor?.last_val_id || 6500000; // sensible LARA range starting point
+  const PROBE_COUNT = 30; // keep small per run; runs every 30 min
+  let probed = 0;
+  for (let i = 1; i <= PROBE_COUNT; i++) {
+    const valId = lastId + i;
+    probed++;
+    try {
+      const url = `https://aca-prod.accela.com/LARA/Cap/CapDetail.aspx?Module=Licensing&capID1=23VAL&capID2=00000&capID3=${valId}`;
+      const res = await fetch(url, {
+        headers: { "User-Agent": MIPLUS_USER_AGENTS[Math.floor(Math.random() * MIPLUS_USER_AGENTS.length)] },
+        signal: AbortSignal.timeout(8_000),
+      });
+      if (!res.ok) { await new Promise(r => setTimeout(r, 1000)); continue; }
+      const html = await res.text();
+      // Match licensee name in detail page
+      const nameMatch = html.match(/Licensee\s*[:<][^>]*>\s*([A-Z][A-Za-z'\-]+(?:\s+[A-Z][A-Za-z'\-]+){1,3})/i);
+      const licMatch = html.match(/License\s*Number[:<][^>]*>\s*([A-Z0-9\-]+)/i);
+      const typeMatch = html.match(/License\s*Type[:<][^>]*>\s*([A-Za-z\s]+?)</i);
+      const cityMatch = html.match(/(?:City|Address)[^<]*<[^>]*>\s*[^,]*,\s*([A-Za-z\s]+?),\s*MI/i);
+      if (nameMatch && isPersonName(nameMatch[1])) {
+        const lt = (typeMatch?.[1] || "").toUpperCase();
+        let mappedType = "Trade Professional";
+        if (lt.includes("ELECTR")) mappedType = "Electrician";
+        else if (lt.includes("PLUMB")) mappedType = "Plumber";
+        else if (lt.includes("BOILER")) mappedType = "Boiler Operator";
+        else if (lt.includes("HVAC") || lt.includes("MECHANIC")) mappedType = "HVAC Technician";
+        candidates.push({
+          full_name: nameMatch[1].trim(), license_type: mappedType,
+          license_number: licMatch?.[1] || `VAL-${valId}`,
+          license_expiry: null, city: cityMatch?.[1]?.trim() || null,
+          source: "lara_val",
+        });
+      }
+      await new Promise(r => setTimeout(r, 1000)); // 1 req/sec — be polite
+    } catch { /* skip */ }
+  }
+  // Update cursor
+  await sb.from("lara_val_cursor").upsert({ id: 1, last_val_id: lastId + probed, updated_at: new Date().toISOString() }, { onConflict: "id" });
+  console.log(`[S10C:VAL] Probed ${probed} IDs ${lastId + 1}-${lastId + probed}, found ${candidates.length}`);
+  return candidates;
+}
 
+// ===== S10 Wrapper: runs health probe + all 3 LARA extractors =====
+async function scanMiPLUS(): Promise<LicenseCandidate[]> {
+  await probeLARAHealth();
+  const [bcc, val] = await Promise.all([
+    scanLARABCCViaSonar().catch(() => []),
+    scanLARAValEnumeration().catch(() => []),
+  ]);
+  if (laraStatus !== "ok" && laraStatus !== "not_attempted") {
+    console.warn(`[MiPLUS] 🔄 LARA portal status: ${laraStatus}. Real-data extraction continues via BCC Sonar + VAL enumeration.`);
+  }
+  return [...bcc, ...val];
+}
+
+// ===== Twilio SMS helper for LARA alerts (uses shared TCPA-compliant helper) =====
+import { sendSMS as sharedSendSMS, ADMIN_PHONE as SHARED_ADMIN_PHONE } from "../_shared/twilio.ts";
+const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+const ADMIN_PHONE = SHARED_ADMIN_PHONE;
 async function sendSMS(to: string, body: string): Promise<void> {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) return;
-  await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({ To: to, From: TWILIO_PHONE_NUMBER, Body: body }),
-  });
+  await sharedSendSMS(to, TWILIO_PHONE_NUMBER, body, "lara_health_alert");
 }
 
 // Log LARA health to database and alert Matt if needed
