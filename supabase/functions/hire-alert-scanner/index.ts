@@ -971,7 +971,12 @@ serve(async (req: Request) => {
     return new Response(JSON.stringify({ processed: 0, tos_blocked: tosBlockedCount }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  // Run sources in parallel (allSettled so one failure doesn't cancel the other)
+  // Phase 18: Dispatch Apify Actor runs in parallel (fire-and-forget — webhook handler picks up results).
+  // This kicks off MIOSHA Excel scraper + Indeed scraper + LinkedIn enrichment via Apify residential proxies.
+  // Results stream back to /apify-results-handler over the next 2-15 minutes.
+  dispatchApifyRuns(sb).catch((e) => console.error("[hire-alert-scanner] dispatchApifyRuns failed:", e));
+
+  // Run direct sources in parallel (allSettled so one failure doesn't cancel the other)
   console.log("[hire-alert-scanner] Scanning all sources...");
   const results = await Promise.allSettled([
     scanMIOSHA(),
