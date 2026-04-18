@@ -100,49 +100,58 @@ function stripHtml(html: string): string {
 const TRADE_WORD_PATTERN = /\b(plumbing|hvac|heating|cooling|electric|electrical|mechanical|boiler|services|service|repair|company|contractors|solutions|co\.?|llc|inc|corp)\b/gi;
 
 // ===== SOURCE 1: NPI Registry (Healthcare Workers) =====
+// taxonomy_description must match NPI database text exactly
 const NPI_SEARCHES = [
-  { taxonomy: "367H00000X", label: "Nurse Aide" },
   { taxonomy: "163W00000X", label: "Registered Nurse" },
   { taxonomy: "164W00000X", label: "Licensed Practical Nurse" },
-  { taxonomy: "372600000X", label: "Home Health Aide" },
   { taxonomy: "363L00000X", label: "Nurse Practitioner" },
+  { taxonomy: "367H00000X", label: "Home Health Aide" },
+  { taxonomy: "367500000X", label: "Nursing, Registered" },
 ];
 
+// Fewer cities but all within Metro Detroit to keep NPI scan under 30s
 const MICHIGAN_CITIES = [
-  "Detroit", "Warren", "Sterling Heights", "Dearborn", "Livonia",
-  "Troy", "Southfield", "Pontiac", "Taylor", "Westland",
-  "Roseville", "Royal Oak", "St. Clair Shores", "Macomb", "Clinton Township",
+  "Detroit", "Warren", "Dearborn", "Livonia", "Southfield",
+  "Sterling Heights", "Troy", "Pontiac", "Westland", "Taylor",
 ];
 
 async function scanNPIRegistry(): Promise<LicenseCandidate[]> {
-  const all: LicenseCandidate[] = [];
   const seen = new Set<string>();
+  const results: LicenseCandidate[] = [];
 
+  // Build all (label, city) pairs and fetch concurrently (5 at a time) to stay under 20s
+  const pairs: Array<{ label: string; city: string }> = [];
   for (const { label } of NPI_SEARCHES) {
-    for (const city of MICHIGAN_CITIES) {
+    for (const city of MICHIGAN_CITIES) pairs.push({ label, city });
+  }
+
+  const BATCH = 5;
+  for (let i = 0; i < pairs.length; i += BATCH) {
+    const batch = pairs.slice(i, i + BATCH);
+    await Promise.allSettled(batch.map(async ({ label, city }) => {
       try {
-        const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&city=${encodeURIComponent(city)}&state=MI&taxonomy_description=${encodeURIComponent(label)}&enumeration_type=NPI-1&limit=50`;
-        const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
-        if (!res.ok) continue;
+        const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&state=MI&city=${encodeURIComponent(city)}&taxonomy_description=${encodeURIComponent(label)}&enumeration_type=NPI-1&limit=200`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(8_000) });
+        if (!res.ok) return;
         const data = await res.json();
         for (const r of (data?.results || [])) {
           const fullName = `${r.basic?.first_name || ""} ${r.basic?.last_name || ""}`.trim();
           if (!fullName || !isPersonName(fullName)) continue;
           const key = `${fullName.toLowerCase()}-${r.number}`;
-          if (seen.has(key)) continue;
+          if (seen.has(key)) return;
           seen.add(key);
           const address = r.addresses?.find((a: any) => a.address_purpose === "LOCATION") || r.addresses?.[0];
-          all.push({
+          results.push({
             full_name: fullName, license_type: label,
             license_number: r.number?.toString() || null,
             license_expiry: null, city: address?.city || city, source: "npi",
           });
         }
-      } catch { /* skip city */ }
-    }
+      } catch { /* skip */ }
+    }));
   }
-  console.log(`[S1:NPI] Found ${all.length} healthcare candidates`);
-  return all;
+  console.log(`[S1:NPI] Found ${results.length} healthcare candidates`);
+  return results;
 }
 
 // ===== SOURCE 2: Michigan Nurse Aide Registry =====
