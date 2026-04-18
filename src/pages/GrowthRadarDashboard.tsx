@@ -22,10 +22,22 @@ type Signal = {
   detected_at: string;
 };
 
+const SIGNAL_TYPE_COLORS: Record<string, string> = {
+  new_business_entity: "#06b6d4",
+  sba_loan_approved: "#10b981",
+  warn_act_notice: "#ef4444",
+  rd_grant_awarded: "#8b5cf6",
+  major_building_permit: "#f59e0b",
+  healthcare_expansion: "#ec4899",
+  hospitality_permit: "#a855f7",
+  school_rfp: "#3b82f6",
+};
+
 const GrowthRadarDashboard = () => {
   const [signals, setSignals] = useState<Signal[]>([]);
   const [loading, setLoading] = useState(true);
   const [minConfidence, setMinConfidence] = useState(7);
+  const [activeTypes, setActiveTypes] = useState<string[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -39,10 +51,23 @@ const GrowthRadarDashboard = () => {
     })();
   }, []);
 
-  const filtered = useMemo(
-    () => signals.filter((s) => (s.confidence || 0) >= minConfidence),
-    [signals, minConfidence]
+  const allTypes = useMemo(
+    () => Array.from(new Set(signals.map((s) => s.signal_type).filter(Boolean))).sort(),
+    [signals]
   );
+
+  const filtered = useMemo(
+    () =>
+      signals.filter(
+        (s) =>
+          (s.confidence || 0) >= minConfidence &&
+          (activeTypes.length === 0 || activeTypes.includes(s.signal_type)),
+      ),
+    [signals, minConfidence, activeTypes]
+  );
+
+  const toggleType = (t: string) =>
+    setActiveTypes((curr) => (curr.includes(t) ? curr.filter((x) => x !== t) : [...curr, t]));
 
   const exportCSV = () => {
     const rows = [
@@ -88,7 +113,7 @@ const GrowthRadarDashboard = () => {
 
         <RadarExportBar radar="growth" records={filtered as any} className="mb-4" />
 
-        <Card className="p-4 mb-6">
+        <Card className="p-4 mb-6 space-y-3">
           <div className="flex items-center gap-4">
             <span className="text-xs text-muted-foreground whitespace-nowrap">
               Min confidence: {minConfidence}/10
@@ -102,6 +127,37 @@ const GrowthRadarDashboard = () => {
               className="flex-1"
             />
           </div>
+          {allTypes.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-1 border-t border-border/40">
+              <span className="text-[11px] text-muted-foreground self-center mr-1">Type:</span>
+              {allTypes.map((t) => {
+                const active = activeTypes.includes(t);
+                const color = SIGNAL_TYPE_COLORS[t] || "#64748b";
+                return (
+                  <button
+                    key={t}
+                    onClick={() => toggleType(t)}
+                    className="px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all"
+                    style={{
+                      background: active ? `${color}30` : "transparent",
+                      color: active ? color : "hsl(var(--muted-foreground))",
+                      border: `1px solid ${active ? `${color}60` : "hsl(var(--border))"}`,
+                    }}
+                  >
+                    {t.replace(/_/g, " ")}
+                  </button>
+                );
+              })}
+              {activeTypes.length > 0 && (
+                <button
+                  onClick={() => setActiveTypes([])}
+                  className="px-2.5 py-1 rounded-full text-[10px] font-semibold text-muted-foreground hover:text-foreground"
+                >
+                  clear
+                </button>
+              )}
+            </div>
+          )}
         </Card>
 
         {loading ? (
