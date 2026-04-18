@@ -1181,7 +1181,11 @@ function calculateCompleteness(row: Record<string, unknown>): number {
 
 // ===== DB UPSERT =====
 // CRITICAL: Always writes BOTH `name` AND `full_name` — the `name` column is NOT NULL
-const BUSINESS_SOURCES = new Set(["yelp", "phcc", "building_permits", "thumbtack", "google_places"]);
+const BUSINESS_SOURCES = new Set([
+  "yelp", "phcc", "building_permits", "thumbtack", "google_places",
+  // New company-routed sources (S22, S23, S25)
+  "lara_contractor_co", "osha_establishment", "michigan_sos_co",
+]);
 
 async function upsertCandidate(sb: any, c: LicenseCandidate): Promise<"new" | "updated" | "error"> {
   try {
