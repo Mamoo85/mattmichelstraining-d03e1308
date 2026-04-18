@@ -1,0 +1,21 @@
+{
+  "title": "MIOSHA Scraper Input",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "licenseTypes": {
+      "title": "License Types",
+      "type": "array",
+      "description": "Which license categories to download: boiler, electrical, plumbing, hvac, nursing",
+      "editor": "stringList",
+      "default": ["boiler", "electrical", "plumbing", "hvac", "nursing"]
+    },
+    "states": {
+      "title": "States",
+      "type": "array",
+      "description": "States to scrape: michigan, florida",
+      "editor": "stringList",
+      "default": ["michigan"]
+    }
+  }
+}
