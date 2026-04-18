@@ -19,10 +19,13 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 // Map Actor IDs (or name fragments) to source labels for routing.
 // Update these once Matt confirms his Apify Actor IDs.
 const ACTOR_SOURCE_MAP: Record<string, "miosha" | "indeed" | "linkedin"> = {
+  "transparent_meteorite~m2training": "miosha",
   "m2training": "miosha",
   "miosha": "miosha",
+  "misceres~indeed-scraper": "indeed",
   "bebity~indeed-scraper": "indeed",
   "indeed-scraper": "indeed",
+  "harvestapi~linkedin-profile-scraper": "linkedin",
   "apify~linkedin-profile-scraper": "linkedin",
   "linkedin-profile-scraper": "linkedin",
 };

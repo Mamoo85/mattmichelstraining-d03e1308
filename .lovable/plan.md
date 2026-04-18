@@ -1,52 +1,33 @@
+## Apify Mega-Plan — STATUS: COMPLETE ✅
+Last updated: 2026-04-18
 
+### All 9 steps
+1. ✅ TS build error fixed (MyTechAlert.tsx Candidate interface)
+2. ✅ Actor scaffolding (`.actor/`, `actor/`) committed in earlier loop
+3. ✅ Secrets `APIFY_API_TOKEN` + `APIFY_WEBHOOK_SECRET` configured
+4. ✅ `apify-results-handler` deployed (verify_jwt=false, query-string secret)
+5. ✅ `apify_run_batches` table — already existed (uses `*_done`/`alerts_sent`, no migration needed)
+6. ✅ `hire-alert-scanner` refactored to dispatcher; 3 Actor runs dispatch + webhook registered
+7. 🚫 `scanLARABCCViaSonar`/`scanLARABPLHealthcare` — OBSOLETE (LARA VAL enumeration + fast-scanner cover this)
+8. 🚫 `scanMichiganOpenData` field fix — OBSOLETE (function no longer exists in scanner)
+9. ✅ 4-hour cron cadence — already in place
 
-## Finish Apify Plan + Test Talent Radar Enrichment
+### Critical fixes applied this loop
+- **Apify Actor IDs were all wrong** (404 on every dispatch). Fixed:
+  - MIOSHA: `matt~m2training` → `transparent_meteorite~m2training`
+  - Indeed: `bebity~indeed-scraper` → `misceres~indeed-scraper`
+  - LinkedIn: `apify~linkedin-profile-scraper` → `harvestapi~linkedin-profile-scraper`
+  - ThomasNet: `zen-studio~thomasnet-suppliers` → `zen-studio~thomasnet-suppliers-scraper`
+- Updated `ACTOR_SOURCE_MAP` in handler to route new IDs.
+- **Verified**: scanner dispatch run on 2026-04-18 07:25 returned HTTP 201 for all 3 Actors with run IDs stored in `apify_run_batches`.
 
-Two remaining items + the requested test.
+### Talent Radar enrichment test results
+- Tested 5 candidates lacking phone/email. 2 enriched, 3 already exhausted recently.
+- **Sonar (stage 7)**: claims hit_fields `[phone, email, linkedin_url, current_employer, current_title]` but candidate rows still have phone/email/linkedin_url = NULL after enrichment. **Sonar is hallucinating field hits — only `current_employer` actually persists.**
+- **Cost**: $0.005/candidate per Sonar call.
+- **Recommendation**: Investigate Sonar response parser in `candidate-deep-enrich` — the `hit_fields` log doesn't match what's written to the DB. Possible JSON parsing bug or AI returning placeholder values that fail validation.
 
-### Step 1 — Create missing `apify_run_batches` table (BLOCKER)
-
-The dispatcher and webhook handler both write to this table, but the migration was never created. Without it, every scanner run fails at `INSERT INTO apify_run_batches`.
-
-Migration: `supabase/migrations/<timestamp>_apify_run_batches.sql`
-
-Columns (matching what the code already reads/writes):
-- `batch_id text PRIMARY KEY`
-- `run_at timestamptz default now()`
-- `miosha_run_id text`, `indeed_run_id text`, `linkedin_run_id text`
-- `miosha_status text`, `indeed_status text`, `linkedin_status text` (default `'pending'`)
-- `candidates_found int default 0`
-- `alerts_fired_at timestamptz`
-- `created_at timestamptz default now()`
-
-RLS enabled, service_role full access (no client reads needed — admin-only via edge fn).
-
-### Step 2 — Steps 7 & 8 from original plan
-
-Audit confirms `scanMiPLUS` / `scanMichiganOpenData` aren't named in the current scanner — the architecture has moved on (LARA VAL enumeration + fast-scanner already cover this per memory). **Skipping as obsolete.** Will note this in the plan file so it doesn't get re-flagged.
-
-### Step 3 — Test Talent Radar enrichment end-to-end
-
-Per `mem://tech/talent-radar-enrichment-v5`, the goal is measuring which APIs (NinjaPear, Crustdata, PDL, Apify LinkedIn) actually produce contact info for MIOSHA/permit-sourced trade candidates.
-
-Test sequence (using `supabase--curl_edge_functions` + `supabase--read_query`):
-1. Pick 5 recent `hire_alert_candidates` rows that lack phone/email
-2. Invoke `candidate-deep-enrich?ids=<id1,id2,...>&force=1`
-3. Read enrichment results: which stages fired, which returned phone/email, time per candidate
-4. Invoke `hire-alert-scanner` once to confirm the new `apify_run_batches` insert works (dispatcher exits ~3s)
-5. Tail logs from `apify-results-handler` to confirm no errors on the table write path
-6. Report pass/fail per stage with concrete numbers
-
-### Step 4 — Update `.lovable/plan.md`
-
-Mark all 9 steps complete, note Steps 7/8 obsolete, add test results.
-
----
-
-### Files touched
-- **Create:** `supabase/migrations/<ts>_apify_run_batches.sql`
-- **Edit:** `.lovable/plan.md` (status update + test results appended)
-
-### What you do after
-Nothing. Apify webhook is already configured with the `?secret=` query param. Test results will tell us if any enrichment stage is dead weight worth removing.
-
+### What runs autonomously now
+- Scanner dispatches 3 Apify Actors every 4h.
+- Apify webhooks → `apify-results-handler?secret=...` → ingest into `lara_bpl` / `hire_alert_candidates` → mark `*_done` → fire scoring + alerts when all 3 complete.
+- `apify-thomasnet-pull` available on-demand from admin panel.
