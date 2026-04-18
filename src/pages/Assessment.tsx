@@ -93,8 +93,8 @@ const Assessment = () => {
 
   const uploadFile = async (file: File, folder: string): Promise<string> => {
     const ext = file.name.split(".").pop() || "bin";
+    if (folder.includes('..')) throw new Error('Invalid folder');
     const path = `${user!.id}/${folder}_${Date.now()}.${ext}`;
-    if (path.includes('..')) throw new Error('Invalid path');
     const { error } = await supabase.storage.from("assessments").upload(path, file, { upsert: true });
     if (error) throw error;
     return path;

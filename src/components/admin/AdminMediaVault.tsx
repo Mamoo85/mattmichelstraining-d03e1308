@@ -93,7 +93,9 @@ const AdminMediaVault = () => {
         const fileType = getFileType(file);
         const filePath = `${user.id}/${crypto.randomUUID()}_${sanitizeFileName(file.name)}`;
 
-        if (filePath.includes('..')) throw new Error("Invalid file path");
+        if (filePath.includes('..')) {
+          throw new Error("Invalid file path");
+        }
         const { error: uploadErr } = await supabase.storage.from("admin_media").upload(filePath, file, {
           upsert: false,
           contentType: file.type || undefined,
