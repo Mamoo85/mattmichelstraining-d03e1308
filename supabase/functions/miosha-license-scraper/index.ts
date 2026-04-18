@@ -3431,12 +3431,10 @@ serve(async (req) => {
       const found = await source.fn();
       sourceCounts[source.label] = found.length;
       ranLabels.push(source.label);
-      for (const c of found) {
-        const res = await upsertCandidate(sb, c);
-        if (res === "new") newCount++;
-        else if (res === "updated") updatedCount++;
-        else errorCount++;
-      }
+      const batchResult = await upsertBatch(sb, found);
+      newCount += batchResult.new;
+      updatedCount += batchResult.updated;
+      errorCount += batchResult.error;
       await sb.from("hire_alert_scanner_checkpoints").upsert({
         source: source.label,
         last_completed_at: new Date().toISOString(),
