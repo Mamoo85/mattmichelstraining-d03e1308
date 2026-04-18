@@ -12,7 +12,57 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-04-16. Update this section every session.*
+*Last updated: 2026-04-18. Update this section every session.*
+
+### Phase 17 — Apify Integration + TechAlert Pipeline Fix (IN PROGRESS)
+*2026-04-18 — branch `claude/setup-talent-radar-knowledge-VbhqW`*
+
+**Decisions made this session (not yet implemented — pick up tomorrow):**
+
+**Proxycurl: CONFIRMED DEAD**
+- LinkedIn filed suit January 2025; Proxycurl shut down July 2025
+- Team pivoted to NinjaPear. Do NOT reference Proxycurl anywhere.
+- All `candidate-deep-enrich` Proxycurl stages must be replaced.
+
+**Crustdata chosen as LinkedIn enrichment replacement**
+- YC F24, real-time data, 10 sources, good dev reviews (4.4/5 Product Hunt)
+- **Critical caveat**: weak coverage for blue-collar/trade workers (designed for white-collar B2B)
+- Good for healthcare vertical (nurses/NPs who use LinkedIn professionally)
+- Pricing: custom quote, estimated $500–$3k+/mo — contact sales before committing
+- For trade workers: Apify + Sonar carry the enrichment load (not Crustdata)
+
+**Apify connected (actor built, not wired in)**
+- Matt connected `mamoo85/m2training` repo to Apify
+- Actor `transparent_meteorite~m2training` built (Build 0.0.2, Running as of 2026-04-18 01:30)
+- No Dockerfile/input schema yet — Actor does nothing until Step 2 of plan
+
+**Full integration plan saved at**: `/root/.claude/plans/can-you-check-out-sleepy-tower.md`
+
+**Plan summary (9 steps, nothing committed yet):**
+1. Fix source label mismatch in `hire-alert-scanner` (`.eq("source","miosha")` returns 0 — highest impact bug)
+2. Add `.actor/actor.json`, `.actor/INPUT_SCHEMA.json`, `.actor/Dockerfile`, `actor/main.js` to configure M2training Actor for MIOSHA/BPL Excel parsing
+3. Matt manually adds `APIFY_API_TOKEN` + `APIFY_WEBHOOK_SECRET` to Lovable secrets
+4. Create `supabase/functions/apify-results-handler/index.ts` (receives Apify webhooks, scores candidates, sends alerts)
+5. New migration: `apify_run_batches` table
+6. Refactor `hire-alert-scanner` from 45s monolith → 3s dispatcher (starts 3 Apify runs and exits)
+7. Fix LARA stubs in `miosha-license-scraper` (replace `scanMiPLUS()` with real Sonar-based queries)
+8. Fix Socrata field names in `scanMichiganOpenData()` (`licensee_first_name` not `first_name`)
+9. New migration: change scanner cron from daily → every 4 hours
+
+**Apify Actor assignments:**
+- `transparent_meteorite~m2training` → MIOSHA/BPL Excel downloads (custom)
+- `bebity~indeed-scraper` → job board scraping with residential proxies (Apify Store)
+- `apify~linkedin-profile-scraper` → LinkedIn enrichment (Apify Store, replaces Proxycurl)
+
+**What Matt needs to do before next session:**
+1. Apify dashboard → Settings → Integrations → API tokens → create one → add to Lovable secrets as `APIFY_API_TOKEN`
+2. After code is committed → Apify Actor → Settings → Webhooks → add webhook URL + secret → add secret to Lovable as `APIFY_WEBHOOK_SECRET`
+
+**Known status:**
+- All services operational; no code changes this session
+- Phase 16 work still needs merge to main (`claude/add-claude-documentation-3yz9v`)
+
+---
 
 ### Phase 16 — Documentation Refresh COMPLETE ✅
 *2026-04-16 — branch `claude/add-claude-documentation-3yz9v`*
@@ -25,16 +75,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Updated dev branch reference and knowledge file agent count
 - Phase 15 status corrected to COMPLETE
 
-**Known status:**
-- All services operational; no breaking changes since Phase 15
-- Phase 15 work fully merged to main
-- `chargeContractor()` res.ok check confirmed FIXED (line 47 of handle-dead-lead-reply) — stale open item removed
-- `dead_lead_billing_setup` siRes.ok guard added to stripe-webhook (was silent failure)
-- `industry_pulse_subscription` + `dead_lead_billing_setup` welcome emails added to auto-onboard TEMPLATES
-
 **Next actions:**
 - Merge `claude/add-claude-documentation-3yz9v` to main
-- Monitor TechAlert candidate alerts for data formatting issues
 
 ---
 
