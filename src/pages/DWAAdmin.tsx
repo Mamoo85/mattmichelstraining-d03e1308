@@ -57,7 +57,7 @@ const GROUPS: SidebarGroup[] = [
     items: [
       { id: "dead-leads",       label: "♻️ Dead Leads" },
       { id: "contractor-leads", label: "🏗️ Contractor Leads" },
-      { id: "techalert",        label: "🔍 TechAlert Clients" },
+      { id: "techalert",        label: "🎯 Talent Radar Clients" },
       { id: "fielddesk",        label: "🛠️ FieldDesk Clients" },
       { id: "clients",          label: "👥 All Clients" },
     ],
