@@ -1073,6 +1073,64 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      if (meta.type === "industry_pulse_snapshot") {
+        const email = meta.email || customerEmail;
+        try {
+          if (email) {
+            const targetIndustries = meta.target_industries
+              ? meta.target_industries.split(",").map((t: string) => t.trim()).filter(Boolean)
+              : ["boiler", "hvac", "manufacturing"];
+
+            // Log the one-time order (no recurring client row, but track in industry_pulse_clients with active=false so we can still build the snapshot link)
+            const { data: inserted, error: insertErr } = await (sb.from as any)("industry_pulse_clients").insert({
+              company_name: meta.company_name || email,
+              email,
+              phone: meta.phone || null,
+              contact_name: meta.contact_name || null,
+              target_industries: targetIndustries,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: null,
+              active: false, // one-time, no ongoing digest
+            }).select("dashboard_token").single();
+            if (insertErr) throw new Error(`industry_pulse_clients (snapshot) insert: ${insertErr.message}`);
+
+            const siteUrl = "https://detroitwebagent.com";
+            const dashLink = `${siteUrl}/my-industry-pulse?token=${inserted.dashboard_token}`;
+
+            if (RESEND_API_KEY) {
+              await dwaEmail(email, "📡 Your Demand Radar Snapshot is Ready — One-Time Intelligence Report", `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#030711;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;text-align:center;">
+    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0;">📡 DEMAND RADAR · SNAPSHOT</p>
+    <h1 style="color:#fff;font-size:24px;margin:12px 0 8px;">Your One-Time Snapshot is Live.</h1>
+    <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Current Metro Detroit predictive sales signals — MIOSHA gaps, expansion patterns, bond filings.</p>
+    <a href="${dashLink}" style="display:inline-block;background:#00d4ff;color:#000;font-weight:700;padding:14px 40px;border-radius:8px;text-decoration:none;font-size:15px;">📊 View Snapshot</a>
+    <p style="color:#64748b;font-size:12px;margin:20px 0 0;">PDF + CSV exports available from the dashboard.</p>
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid #1e3a5f;">
+      <p style="color:#64748b;font-size:11px;margin:0 0 8px;">Want a fresh report every week? Upgrade to the <strong style="color:#00d4ff;">Weekly Digest ($199/mo)</strong>.</p>
+      <a href="${siteUrl}/industry-pulse" style="color:#00d4ff;font-size:12px;text-decoration:none;">→ See plans</a>
+    </div>
+    <p style="color:#475569;font-size:10px;margin:20px 0 0;line-height:1.5;">B2B market intelligence — not a consumer report. Not for FCRA-regulated decisions (employment, credit, housing, insurance).</p>
+  </div>
+  <div style="text-align:center;margin-top:24px;">
+    <p style="color:#475569;font-size:12px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p>
+  </div>
+</div></body></html>`);
+              await notifyMatt(
+                `💰 New Demand Radar Snapshot — ${meta.company_name || email} ($99 one-time)`,
+                `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Industries: ${targetIndustries.join(", ")}<br>Type: One-time snapshot</p>`
+              );
+            }
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] industry_pulse_snapshot error:", e);
+          await notifyMatt(`🚨 Demand Radar Snapshot provision FAILED — ${email || "unknown"}`, `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       if (meta.type === "grant_finder_subscription") {
         try {
           const email = meta.email || customerEmail;
