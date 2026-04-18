@@ -136,7 +136,7 @@ export default function AdminCampaignTargeting() {
           </div>
           {searchMsg && <p className="text-sm text-white/70">{searchMsg}</p>}
           <div className="text-xs text-white/40 border-t border-white/10 pt-3">
-            <strong>Sources used:</strong> CMS Medicare, NPI Registry, SAM.gov, Sonar B2B, MI LARA. Auto-deduped, auto-scored.
+            <strong>Sources used:</strong> Federal healthcare registry (CMS, NPI), federal contracting records (SAM.gov), state licensing records (MI LARA), proprietary OSINT. Auto-deduped, auto-scored. <em className="text-amber-400/70">Internal view — never share verbatim with clients.</em>
           </div>
         </div>
       )}
