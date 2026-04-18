@@ -47,8 +47,8 @@ export default function HireAlertMSPInquiry() {
       />
       <div style={{ minHeight: "100vh", background: BG, color: "#fff", fontFamily: "system-ui" }}>
         <header style={{ borderBottom: `1px solid ${ACCENT}33`, padding: "16px 24px" }}>
-          <Link to="/hire-alert" style={{ color: ACCENT, fontSize: 13, textDecoration: "none" }}>
-            ← Back to TechAlert
+          <Link to="/talent-radar" style={{ color: ACCENT, fontSize: 13, textDecoration: "none" }}>
+            ← Back to Talent Radar
           </Link>
         </header>
 
