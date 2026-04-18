@@ -305,40 +305,77 @@ async function stageNinjaPear(c: CandidateRow, linkedinUrl?: string): Promise<Re
   }
 }
 
-// ===== STAGE 7C: Crustdata (trial) — alternate person enrichment =====
-// Tries by name + location when LinkedIn URL absent. We'll measure ROI vs cost.
+// ===== STAGE 7C: Crustdata (v2 Person API) — enrich by LinkedIn URL =====
+// Uses POST /person/enrich with Bearer auth + x-api-version header (verified Apr 2026).
+// If no LinkedIn URL is on the candidate yet, falls back to /person/search by name+location.
 async function stageCrustdata(c: CandidateRow): Promise<Record<string, unknown>> {
   if (!CRUSTDATA_API_KEY) return {};
+  const headers = {
+    "Authorization": `Bearer ${CRUSTDATA_API_KEY}`,
+    "Content-Type": "application/json",
+    "x-api-version": "2025-11-01",
+  };
   try {
-    const res = await fetch("https://api.crustdata.com/screener/person/enrich", {
+    let linkedinUrl = c.linkedin_url || "";
+
+    // Step 1: if no LinkedIn URL, try /person/search by name + location
+    if (!linkedinUrl) {
+      const fullName = c.full_name || c.name;
+      if (!fullName) return {};
+      const searchRes = await fetch("https://api.crustdata.com/person/search", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          name: fullName,
+          location: c.city ? `${c.city}, Michigan, US` : "Michigan, US",
+          page_size: 3,
+        }),
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (!searchRes.ok) {
+        console.warn(`[Crustdata search] HTTP ${searchRes.status} for ${fullName}`);
+        return {};
+      }
+      const searchData = await searchRes.json();
+      const profiles = searchData?.profiles || searchData?.results || searchData?.data || [];
+      const first = Array.isArray(profiles) ? profiles[0] : null;
+      linkedinUrl = first?.linkedin_profile_url || first?.linkedin_url || "";
+      if (!linkedinUrl) return {};
+    }
+
+    // Step 2: enrich the LinkedIn URL
+    const enrichRes = await fetch("https://api.crustdata.com/person/enrich", {
       method: "POST",
-      headers: { Authorization: `Token ${CRUSTDATA_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: c.full_name || c.name,
-        location: c.city ? `${c.city}, Michigan, US` : "Michigan, US",
-        company: c.current_employer || undefined,
-      }),
-      signal: AbortSignal.timeout(15_000),
+      headers,
+      body: JSON.stringify({ professional_network_profile_urls: [linkedinUrl] }),
+      signal: AbortSignal.timeout(20_000),
     });
-    if (!res.ok) {
-      console.warn(`[Crustdata] HTTP ${res.status} for ${c.full_name}`);
+    if (!enrichRes.ok) {
+      console.warn(`[Crustdata enrich] HTTP ${enrichRes.status} for ${linkedinUrl}`);
       return {};
     }
-    const data = await res.json();
-    const p = Array.isArray(data) ? data[0] : (data?.person || data);
+    const enrichData = await enrichRes.json();
+    const arr = Array.isArray(enrichData) ? enrichData : (enrichData?.data || enrichData?.results || []);
+    const p = arr?.[0];
     if (!p) return {};
+
+    // Crustdata v2 schema: current_employer is usually under p.employer or p.current_employers[0]
+    const currentEmp = p.current_employers?.[0] || p.employer || {};
+    const email = p.email || p.work_email || p.business_email || p.personal_email;
+    const phone = p.phone_number || p.mobile_phone || p.phone;
+
     return {
-      crustdata_linkedin: p.linkedin_url || p.linkedin_profile_url,
-      crustdata_email: p.email || p.work_email,
-      crustdata_phone: p.phone || p.mobile_phone,
-      crustdata_employer: p.current_company_name || p.company_name,
-      crustdata_title: p.title || p.job_title,
-      // Canonical mapping
-      linkedin_url: p.linkedin_url || p.linkedin_profile_url,
-      pdl_personal_email: p.email || p.work_email,
-      pdl_mobile_phone: p.phone || p.mobile_phone,
-      current_employer: p.current_company_name || p.company_name,
-      current_title: p.title || p.job_title,
+      crustdata_linkedin: linkedinUrl,
+      crustdata_email: email,
+      crustdata_phone: phone,
+      crustdata_employer: currentEmp.company_name || p.current_company_name,
+      crustdata_title: currentEmp.title || p.title || p.headline,
+      // Canonical mapping (only fill if not already present)
+      linkedin_url: linkedinUrl,
+      pdl_personal_email: email,
+      pdl_mobile_phone: phone,
+      current_employer: currentEmp.company_name || p.current_company_name,
+      current_title: currentEmp.title || p.title,
     };
   } catch (e) {
     console.warn(`[Crustdata] error: ${e instanceof Error ? e.message : String(e)}`);
