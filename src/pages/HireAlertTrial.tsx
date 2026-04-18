@@ -84,7 +84,7 @@ export default function HireAlertTrial() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#0a1628", padding: "48px 24px" }}>
-      <SEOHead title="TechAlert Free Trial — Detroit Web Agency" description="Start your free 3-day TechAlert trial. Our intelligence engine surfaces available licensed tradespeople across Metro Detroit and alerts you the moment a match appears." path="/hire-alert-trial" />
+      <SEOHead title="Talent Radar Free Trial — Detroit Web Agency" description="Start your free 3-day Talent Radar trial. Our intelligence engine surfaces available licensed tradespeople across Metro Detroit and alerts you the moment a match appears." path="/talent-radar/trial" />
       <div style={{ maxWidth: 560, margin: "0 auto" }}>
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>

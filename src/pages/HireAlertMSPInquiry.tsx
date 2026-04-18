@@ -42,7 +42,7 @@ export default function HireAlertMSPInquiry() {
   return (
     <>
       <SEOHead
-        title="TechAlert Enterprise — MSP & Vendor Management Inquiry | Detroit Web Agency"
+        title="Talent Radar Enterprise — MSP & Vendor Management Inquiry | Detroit Web Agency"
         description="Enterprise hiring intelligence for staffing agencies and MSPs. Statewide territory exclusivity. Signed MSA required."
       />
       <div style={{ minHeight: "100vh", background: BG, color: "#fff", fontFamily: "system-ui" }}>
