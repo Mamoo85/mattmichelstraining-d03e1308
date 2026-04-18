@@ -138,8 +138,12 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // Validate webhook secret
-  const providedSecret = req.headers.get("x-apify-webhook-secret");
+  // Validate webhook secret — accept from header OR query param (Apify webhook UI has no header field)
+  const url = new URL(req.url);
+  const providedSecret =
+    req.headers.get("x-apify-webhook-secret") ||
+    req.headers.get("apify-webhook-secret") ||
+    url.searchParams.get("secret");
   if (!providedSecret || providedSecret !== APIFY_WEBHOOK_SECRET) {
     console.warn("apify-results-handler: invalid or missing webhook secret");
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
