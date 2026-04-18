@@ -1,6 +1,9 @@
-// candidate-quality-scorer — scores hire_alert_candidates 1-10 based on contactability, trade fit, location.
-// Trigger: cron daily 11:30 UTC OR manual POST { candidate_ids?: string[] }.
-// Writes: hire_alert_candidates.score (existing column).
+// candidate-quality-scorer — scores hire_alert_candidates 1-10 + tags FLIGHT RISK by cross-referencing employer activity in industry_pulse_signals.
+// Flight risk taxonomy:
+//   - "hard_to_poach"   → employer has 2+ recent expansion signals (candidate is comfortable)
+//   - "high_flight_risk" → employer has zero recent signals (candidate likely receptive)
+//   - "neutral"         → 1 signal, or no employer present
+// Source protection: output uses generic phrasing ("Employer shows expansion signals") — never names Sonar, Industry Pulse, or any vendor.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
@@ -31,6 +34,15 @@ interface Candidate {
   years_experience?: number | null;
 }
 
+interface PulseSignal {
+  id: string;
+  company_name: string | null;
+  signal_type: string | null;
+  detected_at: string | null;
+  confidence: number | null;
+  hiring_count: number | null;
+}
+
 function classifyTrade(licenseType?: string | null): string | null {
   if (!licenseType) return null;
   const lt = licenseType.toLowerCase();
@@ -49,56 +61,91 @@ function scoreCandidate(c: Candidate): { score: number; reason: string } {
   let score = 1;
   const reasons: string[] = [];
 
-  // Contact info (max 5)
   if (c.phone && c.phone.trim().length > 0) {
-    score += 2;
-    reasons.push("phone");
+    score += 2; reasons.push("phone");
     const digits = c.phone.replace(/\D/g, "");
-    if (digits.length === 10 || digits.length === 11) {
-      score += 1;
-      reasons.push("phone-valid");
-    }
+    if (digits.length === 10 || digits.length === 11) { score += 1; reasons.push("phone-valid"); }
   }
   if (c.email && c.email.includes("@")) {
     const isGeneric = GENERIC_EMAIL_PREFIXES.some((p) => c.email!.toLowerCase().startsWith(p));
     score += isGeneric ? 1 : 2;
     reasons.push(isGeneric ? "email-generic" : "email-personal");
   }
-
-  // Social proof (max 2)
   if (c.linkedin_url || c.facebook_url) {
-    score += 2;
-    reasons.push(c.linkedin_url ? "linkedin" : "facebook");
+    score += 2; reasons.push(c.linkedin_url ? "linkedin" : "facebook");
   }
-
-  // Career signal (max 2)
   if (c.current_employer && c.current_employer.trim().length > 0) {
-    score += 1;
-    reasons.push("employer");
+    score += 1; reasons.push("employer");
   }
   if (c.license_type || c.trade) {
-    score += 1;
-    reasons.push("trade-known");
+    score += 1; reasons.push("trade-known");
   }
-
-  // Location (max 1)
   if (c.city) {
     const cityLower = c.city.toLowerCase();
     if (METRO_DETROIT.some((m) => cityLower.includes(m))) {
-      score += 1;
-      reasons.push("metro-detroit");
+      score += 1; reasons.push("metro-detroit");
     }
   }
-
-  // Experience (max 1)
   if (c.years_experience && c.years_experience >= 3) {
-    score += 1;
-    reasons.push("experienced");
+    score += 1; reasons.push("experienced");
+  }
+
+  return { score: Math.min(10, Math.max(1, score)), reason: reasons.join(", ") };
+}
+
+/**
+ * Cross-reference candidate's current_employer against industry_pulse_signals (last 60 days, confidence >= 6).
+ * Returns flight_risk classification + 1-line proof string for dossier "Tangible Proof" section.
+ * Uses generic phrasing — never names data sources.
+ */
+async function classifyFlightRisk(
+  sb: ReturnType<typeof createClient>,
+  employer: string | null | undefined
+): Promise<{ flight_risk: string; flight_risk_proof: string }> {
+  if (!employer || employer.trim().length < 2) {
+    return { flight_risk: "neutral", flight_risk_proof: "Employer not identified — flight risk unknown." };
+  }
+
+  const sinceISO = new Date(Date.now() - 60 * 24 * 3600 * 1000).toISOString();
+  const empNorm = employer.trim().replace(/[%_]/g, "").slice(0, 80);
+
+  const { data: signals, error } = await sb
+    .from("industry_pulse_signals")
+    .select("id, company_name, signal_type, detected_at, confidence, hiring_count")
+    .ilike("company_name", `%${empNorm}%`)
+    .gte("detected_at", sinceISO)
+    .gte("confidence", 6)
+    .order("detected_at", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    return { flight_risk: "neutral", flight_risk_proof: "Employer activity check unavailable." };
+  }
+
+  const sigs = (signals as PulseSignal[]) || [];
+  const count = sigs.length;
+  const totalHiring = sigs.reduce((s, x) => s + (x.hiring_count || 0), 0);
+
+  if (count >= 2) {
+    const recent = sigs[0];
+    const when = recent?.detected_at ? new Date(recent.detected_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "recently";
+    const hiringNote = totalHiring > 0 ? ` (~${totalHiring} open roles tracked)` : "";
+    return {
+      flight_risk: "hard_to_poach",
+      flight_risk_proof: `🛡️ HARD TO POACH — Employer shows ${count} expansion signals in last 60 days${hiringNote}. Most recent: ${when}. Candidate is likely comfortable.`,
+    };
+  }
+
+  if (count === 0) {
+    return {
+      flight_risk: "high_flight_risk",
+      flight_risk_proof: `🎯 HIGH FLIGHT RISK — No recent growth signals detected at current employer in last 60 days. Candidate is statistically more receptive to outreach.`,
+    };
   }
 
   return {
-    score: Math.min(10, Math.max(1, score)),
-    reason: reasons.join(", "),
+    flight_risk: "neutral",
+    flight_risk_proof: `↔️ NEUTRAL — Employer shows 1 recent activity signal. Approach with standard outreach.`,
   };
 }
 
@@ -120,10 +167,7 @@ Deno.serve(async (req) => {
       .select("id, full_name, name, phone, email, linkedin_url, facebook_url, current_employer, license_type, trade, city, years_experience")
       .limit(1000);
 
-    if (candidateIds?.length) {
-      query = query.in("id", candidateIds);
-    }
-    // No explicit "unscored only" filter — re-scoring is idempotent and cheap.
+    if (candidateIds?.length) query = query.in("id", candidateIds);
 
     const { data: candidates, error } = await query;
     if (error) throw error;
@@ -136,21 +180,25 @@ Deno.serve(async (req) => {
     let scored = 0;
     let highScore = 0;
     let tradesClassified = 0;
+    let hardToPoach = 0;
+    let highFlightRisk = 0;
 
     for (const c of candidates as Candidate[]) {
       const { score, reason } = scoreCandidate(c);
+      const { flight_risk, flight_risk_proof } = await classifyFlightRisk(sb, c.current_employer);
+
+      const reasonWithRisk = `${reason}, flight:${flight_risk}`;
+
       const updates: Record<string, unknown> = {
         score,
         availability_score: score,
-        score_reason: reason,
+        score_reason: reasonWithRisk,
+        flight_risk,
+        flight_risk_proof,
       };
-      // Backfill trade if missing
       if (!c.trade && c.license_type) {
         const t = classifyTrade(c.license_type);
-        if (t) {
-          updates.trade = t;
-          tradesClassified++;
-        }
+        if (t) { updates.trade = t; tradesClassified++; }
       }
       const { error: updErr } = await sb
         .from("hire_alert_candidates")
@@ -159,15 +207,16 @@ Deno.serve(async (req) => {
       if (!updErr) {
         scored++;
         if (score >= 7) highScore++;
+        if (flight_risk === "hard_to_poach") hardToPoach++;
+        if (flight_risk === "high_flight_risk") highFlightRisk++;
       }
     }
 
-    // Heartbeat
     await sb.from("agent_heartbeats").upsert({
       agent_name: "candidate-quality-scorer",
       last_beat: new Date().toISOString(),
       status: "ok",
-      metadata: { scored, high_score: highScore, trades_classified: tradesClassified },
+      metadata: { scored, high_score: highScore, trades_classified: tradesClassified, hard_to_poach: hardToPoach, high_flight_risk: highFlightRisk },
     }, { onConflict: "agent_name" });
 
     return new Response(JSON.stringify({
@@ -176,6 +225,7 @@ Deno.serve(async (req) => {
       scored,
       high_score_7_plus: highScore,
       trades_classified: tradesClassified,
+      flight_risk: { hard_to_poach: hardToPoach, high_flight_risk: highFlightRisk, neutral: scored - hardToPoach - highFlightRisk },
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
