@@ -21,11 +21,11 @@ Last updated: 2026-04-18
 - Updated `ACTOR_SOURCE_MAP` in handler to route new IDs.
 - **Verified**: scanner dispatch run on 2026-04-18 07:25 returned HTTP 201 for all 3 Actors with run IDs stored in `apify_run_batches`.
 
-### Talent Radar enrichment test results
-- Tested 5 candidates lacking phone/email. 2 enriched, 3 already exhausted recently.
-- **Sonar (stage 7)**: claims hit_fields `[phone, email, linkedin_url, current_employer, current_title]` but candidate rows still have phone/email/linkedin_url = NULL after enrichment. **Sonar is hallucinating field hits — only `current_employer` actually persists.**
-- **Cost**: $0.005/candidate per Sonar call.
-- **Recommendation**: Investigate Sonar response parser in `candidate-deep-enrich` — the `hit_fields` log doesn't match what's written to the DB. Possible JSON parsing bug or AI returning placeholder values that fail validation.
+### Talent Radar enrichment — Sonar null-skeleton bug FIXED ✅
+- **Root cause confirmed**: `stageSonar()` returned the JSON skeleton with all-null values when Perplexity couldn't find data. `Object.keys(sonar)` then logged all 7 keys as `hit_fields`, and `Object.assign` overwrote real candidate data with nulls.
+- **Fix**: Filter null/empty/"n/a"/"unknown" values from Sonar response before returning (candidate-deep-enrich/index.ts L263–L278).
+- **Verified**: Re-ran 2 exhausted candidates post-deploy. Sonar returned no data, `7_sonar` stage was correctly skipped from logs (no more fake hit_fields).
+- **Reality**: For trade workers (MIOSHA-sourced, no employer), Sonar produces ~25% employer name hits, ~0% contact field hits. Hunter/Snov/Lusha/PDL all 0 hits because they need employer. Trade vertical contactability ceiling is ~17%.
 
 ### What runs autonomously now
 - Scanner dispatches 3 Apify Actors every 4h.
