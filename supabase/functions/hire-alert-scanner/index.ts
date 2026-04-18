@@ -1114,7 +1114,7 @@ serve(async (req: Request) => {
         full_name: c.full_name,
         phone: c.phone || null,
         email: c.email || null,
-        trade: c.license_type || null,
+        trade: classifyTradeForCandidate(c.license_type, c.source),
         license_type: c.license_type || null,
         license_number: c.license_number || null,
         state: "MI",
