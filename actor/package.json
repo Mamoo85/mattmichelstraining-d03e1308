@@ -1,0 +1,17 @@
+{
+  "name": "m2training-actor",
+  "version": "0.0.1",
+  "description": "M2 MIOSHA & BPL license scraper Actor",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "dependencies": {
+    "apify": "^3.2.0",
+    "xlsx": "^0.18.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

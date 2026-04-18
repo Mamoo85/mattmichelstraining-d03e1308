@@ -1,0 +1,9 @@
+{
+  "actorSpecification": 1,
+  "name": "m2training-miosha-scraper",
+  "title": "M2 MIOSHA & BPL License Scraper",
+  "description": "Downloads Michigan LARA BPL Excel files and Florida DBPR CSVs, parses licensed tradesperson and healthcare data, pushes normalized records to dataset.",
+  "version": "0.0",
+  "input": "./INPUT_SCHEMA.json",
+  "dockerfile": "./Dockerfile"
+}

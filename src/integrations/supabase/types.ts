@@ -775,6 +775,51 @@ export type Database = {
         }
         Relationships: []
       }
+      apify_run_batches: {
+        Row: {
+          alerts_sent: number | null
+          batch_id: string
+          candidates_found: number | null
+          created_at: string | null
+          id: string
+          indeed_done: boolean | null
+          indeed_run_id: string | null
+          linkedin_done: boolean | null
+          linkedin_run_id: string | null
+          miosha_done: boolean | null
+          miosha_run_id: string | null
+          run_at: string | null
+        }
+        Insert: {
+          alerts_sent?: number | null
+          batch_id: string
+          candidates_found?: number | null
+          created_at?: string | null
+          id?: string
+          indeed_done?: boolean | null
+          indeed_run_id?: string | null
+          linkedin_done?: boolean | null
+          linkedin_run_id?: string | null
+          miosha_done?: boolean | null
+          miosha_run_id?: string | null
+          run_at?: string | null
+        }
+        Update: {
+          alerts_sent?: number | null
+          batch_id?: string
+          candidates_found?: number | null
+          created_at?: string | null
+          id?: string
+          indeed_done?: boolean | null
+          indeed_run_id?: string | null
+          linkedin_done?: boolean | null
+          linkedin_run_id?: string | null
+          miosha_done?: boolean | null
+          miosha_run_id?: string | null
+          run_at?: string | null
+        }
+        Relationships: []
+      }
       appointment_reminders: {
         Row: {
           active: boolean | null
