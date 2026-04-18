@@ -1513,6 +1513,16 @@ serve(async (req: Request) => {
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[hire-alert-scanner] Unhandled error:", msg);
+    // Phase 17 fix: mark the run row as errored so the sentinel + dashboard show the failure
+    if (runRowId) {
+      try {
+        await sb.from("hire_alert_runs").update({
+          completed_at: new Date().toISOString(),
+          status: "error",
+          error_message: msg.slice(0, 1000),
+        }).eq("id", runRowId);
+      } catch {/* best-effort */}
+    }
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
