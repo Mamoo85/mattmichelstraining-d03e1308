@@ -309,7 +309,7 @@ export default function AdminHireAlertClients() {
     const [{ data: cData }, { data: rData }, { data: candData }] = await Promise.all([
       (supabase as any).from("hire_alert_clients").select("*").order("created_at", { ascending: false }),
       (supabase as any).from("hire_alert_runs").select("*").order("run_at", { ascending: false }).limit(10),
-      (supabase as any).from("hire_alert_candidates").select("id,full_name,license_type,city,source,status,first_seen_at,cross_referenced,data_completeness")
+      (supabase as any).from("hire_alert_candidates").select("id,full_name,license_type,city,source,status,first_seen_at,cross_referenced,data_completeness,phone,phone_type,phone_verified_at")
         .order("first_seen_at", { ascending: false }).limit(20),
     ]);
     setClients(cData || []);
@@ -713,6 +713,15 @@ export default function AdminHireAlertClients() {
                         {c.full_name}
                         {c.cross_referenced && (
                           <span className="ml-1.5 text-[10px] text-purple-400 font-bold">⚡ Cross-Ref</span>
+                        )}
+                        {c.phone_type === "mobile" && (
+                          <span className="ml-1.5 text-[10px] text-emerald-400 font-bold">✅ Mobile</span>
+                        )}
+                        {c.phone_type === "landline" && (
+                          <span className="ml-1.5 text-[10px] text-amber-400 font-bold">☎ Landline</span>
+                        )}
+                        {c.phone_type === "voip" && (
+                          <span className="ml-1.5 text-[10px] text-sky-400 font-bold">📶 VoIP</span>
                         )}
                       </td>
                       <td className="px-4 py-2.5 text-white/60">{c.license_type || "—"}</td>
