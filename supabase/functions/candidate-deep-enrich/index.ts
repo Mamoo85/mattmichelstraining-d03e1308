@@ -28,6 +28,8 @@ const SNOV_USER_ID = Deno.env.get("SNOV_USER_ID") || "";
 const SNOV_API_KEY = Deno.env.get("SNOV_API_KEY") || "";
 const LUSHA_API_KEY = Deno.env.get("LUSHA_API_KEY") || "";
 const CLAY_API_KEY = Deno.env.get("CLAY_API_KEY") || "";
+const NINJAPEAR_API_KEY = Deno.env.get("NINJAPEAR_API_KEY") || "";
+const CRUSTDATA_API_KEY = Deno.env.get("CRUSTDATA_API_KEY") || "";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const corsHeaders = {
