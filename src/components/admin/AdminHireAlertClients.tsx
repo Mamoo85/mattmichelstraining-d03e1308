@@ -45,6 +45,7 @@ interface Candidate {
   first_seen_at: string;
   cross_referenced: boolean;
   data_completeness: number;
+  phone_type?: string | null;
 }
 
 const ROLE_LABELS: Record<string, string> = {
