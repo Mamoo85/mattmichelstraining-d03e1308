@@ -21,6 +21,25 @@ const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 // Healthcare role detection for NPI routing
 const HEALTHCARE_KEYWORDS = ["rn", "registered nurse", "lpn", "licensed practical nurse", "practical nurse", "cna", "certified nursing assistant", "nurse aide", "nursing assistant", "director of nursing", "don", "nursing director", "home health aide", "home health", "hha", "nurse", "nursing"];
 
+// Normalize a license type (and optional source hint) to a canonical trade slug.
+// Mirrors the logic used in the candidate-quality-scorer + the trade backfill migration.
+function classifyTradeForCandidate(licenseType?: string | null, source?: string | null): string | null {
+  if (!licenseType) {
+    if (source === "miosha") return "other_trade";
+    return null;
+  }
+  const lt = licenseType.toLowerCase();
+  if (lt.includes("boiler") || lt.includes("stationary")) return "boiler";
+  if (lt.includes("hvac") || lt.includes("refrigeration") || lt.includes("mechanical")) return "hvac";
+  if (lt.includes("plumb")) return "plumbing";
+  if (lt.includes("electric")) return "electrical";
+  if (lt.includes("nurse practitioner")) return "nurse_practitioner";
+  if (lt.includes("nurse") || lt.includes("lpn") || lt.includes("rn") || lt.includes("cna")) return "nursing";
+  if (lt.includes("home health") || lt.includes("aide")) return "home_health";
+  if (lt.includes("weld")) return "welding";
+  return "other_trade";
+}
+
 function isHealthcareRole(licenseType?: string): boolean {
   if (!licenseType) return false;
   const lower = licenseType.toLowerCase();
@@ -1114,7 +1133,7 @@ serve(async (req: Request) => {
         full_name: c.full_name,
         phone: c.phone || null,
         email: c.email || null,
-        trade: c.license_type || null,
+        trade: classifyTradeForCandidate(c.license_type, c.source),
         license_type: c.license_type || null,
         license_number: c.license_number || null,
         state: "MI",
@@ -1284,14 +1303,20 @@ serve(async (req: Request) => {
       .in("full_name", alertedNames);
   }
 
-  // Log the run
+  // Log the run — write to BOTH the legacy columns and the canonical schema columns
+  // (started_at/completed_at/status/error_message), since both exist on the table now.
   await sb.from("hire_alert_runs").insert({
-    run_at: runStart,
+    started_at: runStart,
+    completed_at: new Date().toISOString(),
+    status: "ok",
     source: "all",
+    run_at: runStart,
     candidates_found: allRaw.length,
     new_candidates: newCandidates.length,
+    candidates_alerted: alertsSent,
     alerts_sent: alertsSent,
     errors: null,
+    error_message: null,
     lara_status: "not_attempted",
   });
 

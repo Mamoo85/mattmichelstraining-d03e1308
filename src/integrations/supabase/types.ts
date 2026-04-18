@@ -5439,35 +5439,50 @@ export type Database = {
       }
       hire_alert_runs: {
         Row: {
+          alerts_sent: number | null
           candidates_alerted: number | null
           candidates_found: number | null
           completed_at: string | null
           created_at: string | null
           error_message: string | null
+          errors: Json | null
           id: string
           lara_status: string | null
+          new_candidates: number | null
+          run_at: string | null
+          source: string | null
           started_at: string | null
           status: string | null
         }
         Insert: {
+          alerts_sent?: number | null
           candidates_alerted?: number | null
           candidates_found?: number | null
           completed_at?: string | null
           created_at?: string | null
           error_message?: string | null
+          errors?: Json | null
           id?: string
           lara_status?: string | null
+          new_candidates?: number | null
+          run_at?: string | null
+          source?: string | null
           started_at?: string | null
           status?: string | null
         }
         Update: {
+          alerts_sent?: number | null
           candidates_alerted?: number | null
           candidates_found?: number | null
           completed_at?: string | null
           created_at?: string | null
           error_message?: string | null
+          errors?: Json | null
           id?: string
           lara_status?: string | null
+          new_candidates?: number | null
+          run_at?: string | null
+          source?: string | null
           started_at?: string | null
           status?: string | null
         }
