@@ -1236,7 +1236,7 @@ async function upsertCandidate(sb: any, c: LicenseCandidate): Promise<"new" | "u
         await sb.from("hire_alert_candidates").update({ last_seen_at: new Date().toISOString(), name: c.full_name, data_completeness: row.data_completeness }).eq("id", existing.id);
         candidateId = existing.id;
       } else {
-        const { data: inserted } = await sb.from("hire_alert_candidates").insert({ ...row, status: "new", first_seen_at: new Date().toISOString() }).select("id").maybeSingle();
+        const { data: inserted } = await sb.from("hire_alert_candidates").insert({ ...row, status: "new", first_seen_at: new Date().toISOString(), enrichment_status: "pending" }).select("id").maybeSingle();
         candidateId = inserted?.id || null;
         isNew = true;
       }
@@ -1250,7 +1250,7 @@ async function upsertCandidate(sb: any, c: LicenseCandidate): Promise<"new" | "u
         .maybeSingle();
 
       if (!existing) {
-        const { data: inserted } = await sb.from("hire_alert_candidates").insert({ ...row, status: "new", first_seen_at: new Date().toISOString() }).select("id").maybeSingle();
+        const { data: inserted } = await sb.from("hire_alert_candidates").insert({ ...row, status: "new", first_seen_at: new Date().toISOString(), enrichment_status: "pending" }).select("id").maybeSingle();
         candidateId = inserted?.id || null;
         isNew = true;
       } else {
