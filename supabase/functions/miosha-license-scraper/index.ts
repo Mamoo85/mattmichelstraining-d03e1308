@@ -1427,17 +1427,17 @@ async function scanLARAValEnumeration(): Promise<LicenseCandidate[]> {
   return candidates;
 }
 
-// ===== S10 Wrapper: runs health probe + all 3 LARA extractors =====
+// ===== S10 Wrapper: runs health probe + LARA BCC Sonar extractor =====
+// NOTE: VAL ID enumeration was moved to standalone `lara-fast-scanner` edge
+// function (30-min cron) for instant new-license detection. This wrapper now
+// only handles BCC Sonar so the main 4-hour scanner isn't slowed by VAL probes.
 async function scanMiPLUS(): Promise<LicenseCandidate[]> {
   await probeLARAHealth();
-  const [bcc, val] = await Promise.all([
-    scanLARABCCViaSonar().catch(() => []),
-    scanLARAValEnumeration().catch(() => []),
-  ]);
+  const bcc = await scanLARABCCViaSonar().catch(() => []);
   if (laraStatus !== "ok" && laraStatus !== "not_attempted") {
-    console.warn(`[MiPLUS] 🔄 LARA portal status: ${laraStatus}. Real-data extraction continues via BCC Sonar + VAL enumeration.`);
+    console.warn(`[MiPLUS] 🔄 LARA portal status: ${laraStatus}. Real-data extraction continues via BCC Sonar (VAL via lara-fast-scanner).`);
   }
-  return [...bcc, ...val];
+  return bcc;
 }
 
 // ===== Twilio SMS helper for LARA alerts (uses shared TCPA-compliant helper) =====
