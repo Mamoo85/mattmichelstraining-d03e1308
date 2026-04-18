@@ -48,25 +48,46 @@ serve(async (req) => {
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
 
-  // Fetch unverified candidates with a phone number
-  const { data: candidates, error } = await sb
+  // Fetch unverified candidates with a phone number.
+  // Fall back to phone_type IS NULL if phone_verified_at column doesn't exist yet.
+  let candidates: { id: string; phone: string }[] | null = null;
+  let fetchError: string | null = null;
+
+  const { data: c1, error: e1 } = await sb
     .from("hire_alert_candidates")
     .select("id, phone")
     .not("phone", "is", null)
     .is("phone_verified_at", null)
     .neq("is_company_name", true)
     .order("score", { ascending: false })
-    .limit(100); // safety cap
+    .limit(100);
 
-  if (error) {
-    return new Response(JSON.stringify({ ok: false, error: error.message }), {
+  if (e1 && e1.message?.includes("phone_verified_at")) {
+    // Column not yet migrated — fall back to phone_type IS NULL
+    const { data: c2, error: e2 } = await sb
+      .from("hire_alert_candidates")
+      .select("id, phone")
+      .not("phone", "is", null)
+      .is("phone_type", null)
+      .neq("is_company_name", true)
+      .order("score", { ascending: false })
+      .limit(100);
+    candidates = c2;
+    fetchError = e2?.message ?? null;
+  } else {
+    candidates = c1;
+    fetchError = e1?.message ?? null;
+  }
+
+  if (fetchError) {
+    return new Response(JSON.stringify({ ok: false, error: fetchError }), {
       status: 500,
       headers: { ...CORS, "Content-Type": "application/json" },
     });
   }
 
   if (!candidates || candidates.length === 0) {
-    return new Response(JSON.stringify({ ok: true, verified: 0, message: "All phones already verified" }), {
+    return new Response(JSON.stringify({ ok: true, verified: 0, message: "No unverified candidates with phones found" }), {
       headers: { ...CORS, "Content-Type": "application/json" },
     });
   }
