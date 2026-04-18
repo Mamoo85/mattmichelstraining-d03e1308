@@ -1627,3 +1627,6 @@ verify_jwt = false
 
 [functions.verify-candidate-phones]
 verify_jwt = false
+
+[functions.enrich-candidates]
+verify_jwt = false
