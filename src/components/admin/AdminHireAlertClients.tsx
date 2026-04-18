@@ -349,6 +349,27 @@ export default function AdminHireAlertClients() {
     }
   };
 
+  const [verifying, setVerifying] = useState(false);
+  const verifyPhones = async () => {
+    setVerifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-candidate-phones");
+      if (error) throw error;
+      const d = data as { verified: number; summary: Record<string, number>; message?: string };
+      if (d.verified === 0) {
+        toast.success(d.message || "All phones already verified");
+      } else {
+        const parts = Object.entries(d.summary).map(([t, n]) => `${n} ${t}`).join(", ");
+        toast.success(`Verified ${d.verified} phones: ${parts}`);
+      }
+      setTimeout(load, 1500);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Verification failed");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   // ── PDF Generator ──────────────────────────────────────────────────────────
   function buildPDFHTML(report: any): string {
     const { report_date, summary, candidates: cands } = report;
@@ -549,6 +570,11 @@ export default function AdminHireAlertClients() {
           </Button>
           <Button size="sm" onClick={() => setShowAdd(true)} className="bg-orange-500 hover:bg-orange-600 text-white">
             <Plus size={13} className="mr-1" /> Add Client
+          </Button>
+          <Button size="sm" onClick={verifyPhones} disabled={verifying}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white">
+            {verifying ? <Loader2 size={13} className="mr-1 animate-spin" /> : <Phone size={13} className="mr-1" />}
+            {verifying ? "Verifying..." : "Verify Phones"}
           </Button>
           <Button size="sm" onClick={generateDemoPDF} disabled={generatingPDF}
             className="text-white" style={{ background: "#00d4ff", opacity: generatingPDF ? 0.7 : 1 }}>
