@@ -1624,3 +1624,6 @@ verify_jwt = false
 
 [functions.cron-sentinel]
 verify_jwt = false
+
+[functions.verify-candidate-phones]
+verify_jwt = false
