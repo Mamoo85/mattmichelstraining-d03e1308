@@ -1235,6 +1235,53 @@ export type Database = {
           },
         ]
       }
+      candidate_enrichment_log: {
+        Row: {
+          candidate_id: string
+          cost_estimate: number | null
+          created_at: string | null
+          error_message: string | null
+          hit_fields: string[] | null
+          id: string
+          raw_response: Json | null
+          source: string
+          stage: string
+          success: boolean | null
+        }
+        Insert: {
+          candidate_id: string
+          cost_estimate?: number | null
+          created_at?: string | null
+          error_message?: string | null
+          hit_fields?: string[] | null
+          id?: string
+          raw_response?: Json | null
+          source: string
+          stage: string
+          success?: boolean | null
+        }
+        Update: {
+          candidate_id?: string
+          cost_estimate?: number | null
+          created_at?: string | null
+          error_message?: string | null
+          hit_fields?: string[] | null
+          id?: string
+          raw_response?: Json | null
+          source?: string
+          stage?: string
+          success?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_enrichment_log_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "hire_alert_candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       capture_submissions: {
         Row: {
           created_at: string
@@ -5485,6 +5532,39 @@ export type Database = {
           source?: string | null
           started_at?: string | null
           status?: string | null
+        }
+        Relationships: []
+      }
+      hire_alert_scanner_checkpoints: {
+        Row: {
+          error_message: string | null
+          last_completed_at: string | null
+          last_count: number | null
+          last_cursor: Json | null
+          last_started_at: string | null
+          source: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          last_completed_at?: string | null
+          last_count?: number | null
+          last_cursor?: Json | null
+          last_started_at?: string | null
+          source: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          last_completed_at?: string | null
+          last_count?: number | null
+          last_cursor?: Json | null
+          last_started_at?: string | null
+          source?: string
+          status?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -12410,6 +12490,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      techalert_business_prospects: {
+        Row: {
+          business_name: string
+          city: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          outreach_sent_at: string | null
+          phone: string | null
+          raw_data: Json | null
+          source: string
+          state: string | null
+          status: string | null
+          trade: string | null
+          website: string | null
+          zip: string | null
+        }
+        Insert: {
+          business_name: string
+          city?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          outreach_sent_at?: string | null
+          phone?: string | null
+          raw_data?: Json | null
+          source: string
+          state?: string | null
+          status?: string | null
+          trade?: string | null
+          website?: string | null
+          zip?: string | null
+        }
+        Update: {
+          business_name?: string
+          city?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          outreach_sent_at?: string | null
+          phone?: string | null
+          raw_data?: Json | null
+          source?: string
+          state?: string | null
+          status?: string | null
+          trade?: string | null
+          website?: string | null
+          zip?: string | null
+        }
+        Relationships: []
       }
       techalert_prospect_targets: {
         Row: {

@@ -46,29 +46,42 @@ interface LicenseCandidate {
 }
 
 const COMPANY_SIGNALS = [
-  "inc", "llc", "corp", "co.", "company", "contractors", "services", "solutions",
-  "group", "enterprises", "associates", "systems", "industries", "construction",
-  "plumbing", "hvac", "mechanical", "electric", "heating", "cooling", "dba",
-  "d/b/a", "academy", "school", "university", "hospital", "clinic", "center",
-  "association", "foundation", "institute", "authority", "department", "bureau",
-  "commission", "council", "district", "board", "casino", "hotel", "resort",
-  "comfort", "zone", "supreme", "keitz", "marvin", "appliance", "supply",
-  "maintenance", "management", "properties", "realty", "investments",
+  "inc", "llc", "corp", "co.", "company", "contractors", "services", "service",
+  "solutions", "group", "enterprises", "associates", "systems", "industries",
+  "construction", "plumbing", "hvac", "mechanical", "electric", "electrical",
+  "heating", "cooling", "dba", "d/b/a", "academy", "school", "university",
+  "hospital", "clinic", "center", "association", "foundation", "institute",
+  "authority", "department", "bureau", "commission", "council", "district",
+  "board", "casino", "hotel", "resort", "comfort", "zone", "supreme", "keitz",
+  "marvin", "appliance", "supply", "maintenance", "management", "properties",
+  "realty", "investments", "pros", "pro", "handyman", "bargain", "rocket",
+  "pipey", "downriver", "climate", "control", "repair", "holdings", "rentals",
+  "leasing", "express", "all american", "friendly",
 ];
 
-// Word-boundary patterns that indicate company names (e.g., "X and Y", "Son")
-const COMPANY_WORD_BOUNDARY = /\b(and|son|sons|brothers|bros)\b/i;
+// Word-boundary patterns that indicate company names
+const COMPANY_WORD_BOUNDARY = /\b(and|son|sons|brothers|bros|pros|pro|llc|inc|corp|co)\b/i;
+// Pure phone-number pattern at start of name
+const PHONE_PREFIX = /^[\(\d\s\)\-\+\.]+/;
 
 function isPersonName(name: string): boolean {
-  const lower = name.toLowerCase().trim();
-  const words = lower.split(/\s+/).filter(Boolean);
-  if (words.length < 2) return false;
+  if (!name) return false;
+  const trimmed = name.trim();
+  if (trimmed.length < 4 || trimmed.length > 60) return false;
+  // Phone numbers as names
+  if (PHONE_PREFIX.test(trimmed)) return false;
+  if (/^Phone[:\s]/i.test(trimmed)) return false;
+  // Strip middle initials, count alpha-words ≥ 2 chars
+  const lower = trimmed.toLowerCase();
+  const alphaWords = trimmed.split(/\s+/).filter((w) => /^[a-zA-Z][a-zA-Z\-']+$/.test(w) && w.length >= 2);
+  if (alphaWords.length < 2) return false;
   if (COMPANY_SIGNALS.some((s) => lower.includes(s))) return false;
   if (COMPANY_WORD_BOUNDARY.test(lower)) return false;
-  if (name === name.toUpperCase() && name.length > 8) return false;
-  if (name.includes("&")) return false;
-  // Reject names ending with "and" (truncated company names from MIOSHA)
+  if (trimmed === trimmed.toUpperCase() && trimmed.length > 8) return false;
+  if (trimmed.includes("&")) return false;
   if (lower.endsWith(" and")) return false;
+  // Must look like First Last — at least one capitalized word followed by another
+  if (!/[A-Z][a-z]+\s+[A-Z][a-zA-Z\-']+/.test(trimmed)) return false;
   return true;
 }
 
@@ -597,61 +610,102 @@ async function scanYelp(): Promise<LicenseCandidate[]> {
 }
 
 // ===== SOURCE 14: Nursys — National Nursing License Lookup =====
+// ===== SOURCE 14: Nursys e-Notify JSON API (authenticated) =====
+// Real API at api.nursys.com/api/enotify — async POST/GET pattern.
+// Step 1: POST /notificationlookup with date window → returns TransactionId
+// Step 2: GET /notificationlookup?transactionId=X → license-change events
+// Step 3 (optional): POST /nurselookup for full details on each license number
+const NURSYS_BASE = "https://api.nursys.com/api/enotify";
+const NURSYS_USERNAME = Deno.env.get("NURSYS_USERNAME") || "";
+const NURSYS_PASSWORD = Deno.env.get("NURSYS_PASSWORD") || "";
+
+async function nursysCall(method: string, endpoint: string, body?: unknown): Promise<any> {
+  const headers: Record<string, string> = {
+    username: NURSYS_USERNAME,
+    password: NURSYS_PASSWORD,
+    "Content-Type": "application/json",
+  };
+  const opts: RequestInit = { method, headers, signal: AbortSignal.timeout(20_000) };
+  if (body && method === "POST") opts.body = JSON.stringify(body);
+  const res = await fetch(`${NURSYS_BASE}${endpoint}`, opts);
+  const raw = await res.text();
+  try { return { status: res.status, data: JSON.parse(raw) }; }
+  catch { return { status: res.status, data: raw }; }
+}
+
+function classifyNursysLicType(t: string): string {
+  const u = (t || "").toUpperCase();
+  if (u.includes("APRN") || u.includes("ADVANCED")) return "Advanced Practice Registered Nurse";
+  if (u.includes("CRNA")) return "Certified Registered Nurse Anesthetist";
+  if (u.includes("NP") || u.includes("NURSE PRACTITIONER")) return "Nurse Practitioner";
+  if (u.includes("RN") || u.includes("REGISTERED")) return "Registered Nurse";
+  if (u.includes("LPN") || u.includes("PRACTICAL")) return "Licensed Practical Nurse";
+  return "Nurse";
+}
+
 async function scanNursys(): Promise<LicenseCandidate[]> {
+  if (!NURSYS_USERNAME || !NURSYS_PASSWORD) {
+    console.log("[S14:Nursys] credentials not configured — skipping");
+    return [];
+  }
   const candidates: LicenseCandidate[] = [];
   try {
-    const url = "https://www.nursys.com/LQC/LQCSearch.aspx?state=MI";
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; research bot)" },
-      signal: AbortSignal.timeout(20_000),
-    });
-    if (!res.ok) {
-      console.log(`[S14:Nursys] HTTP ${res.status} — skipping`);
+    const endDate = new Date().toISOString().split("T")[0];
+    const startDate = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
+
+    // Step 1: request notification window
+    const init = await nursysCall("POST", "/notificationlookup", { StartDate: startDate, EndDate: endDate });
+    const txId = init.data?.Transaction?.TransactionId || init.data?.TransactionId;
+    if (!txId) {
+      console.log(`[S14:Nursys] No TransactionId in init response (status ${init.status})`);
       return [];
     }
-    const html = await res.text();
-    if (!html || html.length < 500) return [];
 
-    // Parse table rows — simple cell-by-cell extraction (name, lic#, state, type, status)
-    const rowPattern = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-    let match;
+    // Step 2: poll for results (Nursys is async; wait then GET)
+    await new Promise((r) => setTimeout(r, 3000));
+    const poll = await nursysCall("GET", `/notificationlookup?transactionId=${encodeURIComponent(txId)}`);
+    const notifications: any[] =
+      poll.data?.Notifications ||
+      poll.data?.NotificationResults ||
+      poll.data?.Transaction?.Notifications ||
+      [];
+
+    if (!Array.isArray(notifications) || notifications.length === 0) {
+      console.log(`[S14:Nursys] 0 notifications in window ${startDate}→${endDate}`);
+      return [];
+    }
+
     const seen = new Set<string>();
-    while ((match = rowPattern.exec(html)) !== null) {
-      const cells = [...match[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(m => stripHtml(m[1]));
-      if (cells.length < 5) continue;
-      const rawName = cells[0];
-      const licNum = cells[1];
-      const licType = cells[3];
-      const status = cells[4];
+    for (const n of notifications) {
+      const jurisdiction = (n.JurisdictionAbbreviation || n.Jurisdiction || "").toUpperCase();
+      if (jurisdiction !== "MI") continue; // Michigan only
 
-      if (status.toLowerCase() !== "active") continue;
-
-      // Convert "Last, First" to "First Last"
-      let fullName = rawName;
-      if (rawName.includes(",")) {
-        const parts = rawName.split(",").map(p => p.trim());
-        if (parts[1]) fullName = `${parts[1]} ${parts[0]}`;
-      }
+      const first = (n.FirstName || n.First || "").trim();
+      const last = (n.LastName || n.Last || "").trim();
+      if (!first || !last) continue;
+      const fullName = `${first} ${last}`;
       if (!isPersonName(fullName)) continue;
-      if (licNum && !looksLikeLicenseNumber(licNum)) continue;
 
-      const key = fullName.toLowerCase();
+      const licNum = String(n.LicenseNumber || n.LicNumber || "").trim() || null;
+      const licType = classifyNursysLicType(String(n.LicenseType || n.LicType || ""));
+
+      const key = `${fullName.toLowerCase()}|${licNum || ""}`;
       if (seen.has(key)) continue;
       seen.add(key);
 
       candidates.push({
         full_name: fullName,
-        license_type: licType.includes("RN") ? "Registered Nurse" : licType.includes("LPN") ? "Licensed Practical Nurse" : "RN/LPN",
-        license_number: licNum || null,
-        license_expiry: null,
-        city: null,
-        source: "nursys",
+        license_type: licType,
+        license_number: licNum,
+        license_expiry: n.ExpirationDate || n.Expiration || null,
+        city: n.City || null,
+        source: "nursys_api",
       });
     }
   } catch (e) {
     console.warn(`[S14:Nursys] Error: ${e instanceof Error ? e.message : String(e)}`);
   }
-  console.log(`[S14:Nursys] Found ${candidates.length} candidates`);
+  console.log(`[S14:Nursys] Found ${candidates.length} MI nurse candidates`);
   return candidates;
 }
 
@@ -1043,8 +1097,25 @@ function calculateCompleteness(row: Record<string, unknown>): number {
 
 // ===== DB UPSERT =====
 // CRITICAL: Always writes BOTH `name` AND `full_name` — the `name` column is NOT NULL
+const BUSINESS_SOURCES = new Set(["yelp", "phcc", "building_permits", "thumbtack", "google_places"]);
+
 async function upsertCandidate(sb: any, c: LicenseCandidate): Promise<"new" | "updated" | "error"> {
   try {
+    // Phase 1 fix: business-directory sources never go to candidates table.
+    // Route to techalert_business_prospects (B2B prospect feeder for TechAlert sales).
+    if (BUSINESS_SOURCES.has(c.source)) {
+      try {
+        await sb.from("techalert_business_prospects").upsert({
+          business_name: c.full_name,
+          trade: c.license_type,
+          city: c.city,
+          source: c.source,
+          raw_data: c as any,
+        }, { onConflict: "business_name,city" });
+        return "updated";
+      } catch { return "error"; }
+    }
+
     const row: Record<string, unknown> = {
       name: c.full_name,           // REQUIRED — NOT NULL column
       full_name: c.full_name,      // Also write full_name
