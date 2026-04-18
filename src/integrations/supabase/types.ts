@@ -604,6 +604,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_call_log: {
+        Row: {
+          caller: string
+          created_at: string
+          error_message: string | null
+          id: string
+          latency_ms: number | null
+          model: string
+          provider: string
+          success: boolean
+          task: string
+        }
+        Insert: {
+          caller: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          latency_ms?: number | null
+          model: string
+          provider: string
+          success: boolean
+          task: string
+        }
+        Update: {
+          caller?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          latency_ms?: number | null
+          model?: string
+          provider?: string
+          success?: boolean
+          task?: string
+        }
+        Relationships: []
+      }
       ai_marketing_reports: {
         Row: {
           ai_analysis: Json | null
