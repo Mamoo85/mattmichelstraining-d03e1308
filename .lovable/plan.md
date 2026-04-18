@@ -1,80 +1,55 @@
 
 
-## Plan: Three-Part Intelligence + Revenue Build
+## Plan: Fix Build Error + Apify Mega-Plan
 
-Building three connected features. All read-only research done — sources confirmed (`industry_pulse_signals`, `candidate-quality-scorer`, `hire_alert_candidates`, `dwa-closer`, existing Twilio/Resend helpers).
-
----
-
-### Part 1: Flight Risk Cross-Reference (candidate-quality-scorer upgrade)
-
-**File:** `supabase/functions/candidate-quality-scorer/index.ts`
-
-- For each candidate with `current_employer`, query `industry_pulse_signals` filtered by employer match (ILIKE on company/location/event_summary) within last 60 days, `confidence >= 6`.
-- Compute `employer_pulse_score`:
-  - **>= 2 high-confidence signals** → `flight_risk = "hard_to_poach"` (employer hiring/expanding — candidate is comfortable)
-  - **0 signals + employer present** → `flight_risk = "high_flight_risk"` (stagnant employer — candidate likely receptive)
-  - **1 signal or no employer** → `flight_risk = "neutral"`
-- Write to existing `score_reason` field + new column `flight_risk` + `flight_risk_proof` (1-line evidence string for the dossier).
-- Add migration: `ALTER TABLE hire_alert_candidates ADD COLUMN flight_risk text, ADD COLUMN flight_risk_proof text`.
-- Surface `flight_risk_proof` in the "Tangible Proof" section of the v5 PDF dossier generator.
-
-**Source protection:** Output uses generic phrasing — "Employer shows expansion signals" / "No recent growth signals detected" — never names Sonar, Industry Pulse, or any vendor.
+Two parts. Part 1 unblocks the build right now (1 line). Part 2 is your Apify mega-plan, fully accepted.
 
 ---
 
-### Part 2: API Cost-Control Audit (Sunday SMS report)
+### Part 1 — Fix build error (immediate, 1 file)
 
-**New table:** `candidate_enrichment_log` (if not present — quick check shows `ai_call_log` exists but is AI-only; enrichment APIs need their own log).
-- Columns: `id`, `candidate_id`, `provider` (pdl/hunter/snov/lusha/clay/sonar/npi), `cost_cents`, `success` (bool — did it return contact data?), `response_summary`, `created_at`.
-- Backfill instrumentation into `candidate-deep-enrich` to log every paid API call.
+The `Candidate` TS interface in `MyTechAlert.tsx` declares `flight_risk` and `flight_risk_proof` as **required**, but the demo objects (and any older API responses) might not always include them. Make them **optional** on the interface.
 
-**New edge function:** `enrichment-cost-report-weekly`
-- Cron: Sunday 9pm ET.
-- Aggregates last 7 days from `candidate_enrichment_log`:
-  - Per-provider: calls made, hits, hit rate %, total cost, cost-per-successful-lead.
-  - Flag providers with hit rate < 5% as "kill candidates."
-- Sends SMS to ADMIN_PHONE (+13138064952) via `_shared/twilio.ts`. Format: short summary + link to full HTML email digest.
+**File:** `src/pages/MyTechAlert.tsx`
+**Change:** In the `Candidate` interface, change:
+```
+flight_risk: string;
+flight_risk_proof: string;
+```
+to:
+```
+flight_risk?: string | null;
+flight_risk_proof?: string | null;
+```
 
-**Migration:** new cron via approved hardcoded-URL pattern (per `cron-sentinel-and-monitoring.md`).
-
----
-
-### Part 3: Blind Teaser Engine (FCRA-safe staffing agency outreach)
-
-**New edge function:** `automated-blind-teaser-generator`
-- Cron: Daily 8:00 AM ET.
-- Queries `hire_alert_candidates` where `created_at >= now() - 48h` AND `license_issue_date IS NOT NULL`, ordered by score desc, limit 3.
-- **Strict redaction:** strips `full_name`, `name`, `phone`, `email`, `linkedin_url`, `facebook_url`, `current_employer`, `npi_number`. Keeps only `trade`, `city`, `license_issue_date`, generic license type.
-- Generates HTML email (dark DWA branding, matches existing `dwaEmail` wrapper):
-  - Subject: `Market Alert: 3 New Licenses Issued in Metro Detroit`
-  - 3 redacted "Event" cards
-  - Stripe CTA button → new edge function `create-blind-teaser-checkout` ($399, one-time, metadata.type = `blind_teaser_unlock`, stores the 3 candidate IDs in metadata for fulfillment)
-  - Hardcoded FCRA disclaimer footer (exact text from prompt)
-- Routes finalized payload to `dwa-closer` queue table for dispatch to staffing-agency prospect list (re-uses existing closer dispatch — no direct sends, respects manual-approval mandate per `outreach-compliance-standards`).
-
-**Stripe webhook handler:** add `blind_teaser_unlock` case to `stripe-webhook` — on payment, emails buyer the 3 unredacted candidate dossiers + 7 bonus matches from same trade/city.
-
-**Compliance:**
-- Honors TCPA manual-only mandate — teaser emails route through `dwa-closer` queue for Matt's approval, not auto-blast.
-- FCRA disclaimer hardcoded, cannot be edited per-send.
-- Source protection — no vendor names anywhere in email body.
+Build passes. Demo cards still render (they have the fields). Real API responses are safe even if the field is missing on older rows.
 
 ---
 
-### Files to be created/edited
+### Part 2 — Apify Integration (accepting your full plan)
 
-**New:**
-- `supabase/functions/enrichment-cost-report-weekly/index.ts`
-- `supabase/functions/automated-blind-teaser-generator/index.ts`
-- `supabase/functions/create-blind-teaser-checkout/index.ts`
-- 1 migration: `flight_risk` columns + `candidate_enrichment_log` table + 2 crons (cost report Sunday 9pm, teaser daily 8am)
+Approving everything you laid out. Confirming the order:
 
-**Edited:**
-- `supabase/functions/candidate-quality-scorer/index.ts` (flight risk logic)
-- `supabase/functions/candidate-deep-enrich/index.ts` (log every paid API call)
-- `supabase/functions/stripe-webhook/index.ts` (add `blind_teaser_unlock` handler)
-- v5 dossier generator (surface `flight_risk_proof` in Tangible Proof section)
+1. **Step 1 (Bug fix)** — already done in last cycle (`scanMIOSHA()` filter widened). ✅ verified.
+2. **Step 2** — Create Apify Actor scaffolding files at repo root: `.actor/actor.json`, `.actor/INPUT_SCHEMA.json`, `.actor/Dockerfile`, `actor/main.js`, `actor/package.json`. Actor downloads MI LARA BPL Excel + FL DBPR CSV via SheetJS, pushes normalized rows to Apify dataset.
+3. **Step 3** — Two new secrets needed: `APIFY_API_TOKEN` + `APIFY_WEBHOOK_SECRET`. **I will request both before writing dispatcher/handler code.**
+4. **Step 4** — New edge fn `apify-results-handler` (verify_jwt=false): validates `X-Apify-Webhook-Secret`, fetches dataset items, routes by Actor ID (MIOSHA → upsert `lara_bpl`, Indeed → candidate signals, LinkedIn → enrich existing rows), updates `apify_run_batches`, fires scoring + alerts when all 3 done.
+5. **Step 5** — Migration: `apify_run_batches` table.
+6. **Step 6** — Refactor `hire-alert-scanner` from monolith → dispatcher. Dispatches 3 Apify runs (m2training MIOSHA Actor, `bebity~indeed-scraper`, `apify~linkedin-profile-scraper`) with webhook → `apify-results-handler`. Exits in ~3s.
+7. **Step 7** — Replace stub `scanMiPLUS()` with `scanLARABCCViaSonar()` + `scanLARABPLHealthcare()` (Sonar-based, complementary to Actor-based bulk).
+8. **Step 8** — Fix `scanMichiganOpenData()` field names + add trade-type filter + log first row for diagnostics.
+9. **Step 9** — Cron migration: 4-hour cadence. (Already in place from prior cycle — will verify, skip if duplicate.)
 
-**Memory updates:** new file `mem://features/flight-risk-and-blind-teaser.md` documenting the FCRA-safe model, flight risk taxonomy, and API kill-criteria thresholds.
+**Note on already-done items:** Last cycle shipped some of this (4h cron exists, source label fix done, Crustdata Stage 7C in deep-enrich, lara_val_cursor + fast-scanner). The Apify work **layers on top** — it does not replace what's there. Crustdata stays as Stage 7C (already paid trial), Apify LinkedIn becomes Stage 7B (replaces dead Proxycurl reference).
+
+**Manual steps for Matt (after code lands):**
+1. Apify dashboard → API tokens → create + add to Lovable secrets as `APIFY_API_TOKEN`
+2. Apify dashboard → m2training Actor → Webhooks → set URL + secret string → add same string as `APIFY_WEBHOOK_SECRET`
+3. Push to main → Apify auto-rebuilds Actor from GitHub
+
+**Order of execution next loop:**
+1. Fix the 1-line TS error (unblocks build immediately)
+2. Request `APIFY_API_TOKEN` + `APIFY_WEBHOOK_SECRET` (blocker — wait for approval)
+3. While waiting: write Actor files + migration + `apify-results-handler` skeleton
+4. Once secrets land: wire dispatcher in `hire-alert-scanner`, deploy, test
 
