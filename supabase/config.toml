@@ -1630,3 +1630,6 @@ verify_jwt = false
 
 [functions.enrich-candidates]
 verify_jwt = false
+
+[functions.send-mock-trial-emails]
+verify_jwt = false
