@@ -494,7 +494,26 @@ serve(async (req: Request) => {
         }
       }
 
-      // Stage 8 Clay (premium, score >= 7 only, only if still no contact)
+      // Stage 7B NinjaPear (Proxycurl) — fires when LinkedIn URL exists AND still no contact/employer
+      const { email: e2b, phone: p2b } = pickContact(merged);
+      if (merged.linkedin_url && (!e2b || !p2b || !merged.current_employer)) {
+        const np = await stageNinjaPear(c, merged.linkedin_url as string);
+        if (Object.keys(np).length) {
+          Object.assign(merged, np);
+          await logStage(sb, c.id, "7b_ninjapear", "nubela_proxycurl", Object.keys(np), 0.01, true, undefined, np);
+        }
+      }
+
+      // Stage 7C Crustdata — trial fallback when still missing critical fields
+      const { email: e2c, phone: p2c } = pickContact(merged);
+      if (!e2c && !p2c && !merged.linkedin_url) {
+        const cd = await stageCrustdata(c);
+        if (Object.keys(cd).length) {
+          Object.assign(merged, cd);
+          await logStage(sb, c.id, "7c_crustdata", "crustdata", Object.keys(cd), 0.05, true, undefined, cd);
+        }
+      }
+
       const { email: e3, phone: p3 } = pickContact(merged);
       if (!e3 && !p3 && (c.score ?? 0) >= 7) {
         const clay = await stageClay(c);
