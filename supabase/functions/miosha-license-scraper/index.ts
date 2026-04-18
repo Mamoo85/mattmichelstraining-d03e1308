@@ -3346,6 +3346,16 @@ const SOURCE_REGISTRY: Array<{ label: string; fn: () => Promise<LicenseCandidate
   { label: "LinkedIn-OTW",fn: scanLinkedInOpenToWork,            intervalH: 24 },
   { label: "Nextdoor",   fn: scanNextdoorRecommendations,        intervalH: 48 },
   { label: "Reciprocity",fn: scanLicenseReciprocityApplicants,   intervalH: 72 },
+  { label: "CLServices", fn: scanCraigslistServicesSection,      intervalH: 8  },
+  { label: "MiTalent",   fn: scanPureMichiganTalentConnect,      intervalH: 24 },
+  { label: "UnionHalls", fn: scanUnionHiringHalls,               intervalH: 48 },
+  { label: "ExamPass",   fn: scanLARANewExamPassers,             intervalH: 72 },
+  { label: "Glassdoor",  fn: scanGlassdoorOpenToWork,            intervalH: 48 },
+  { label: "HandyTR",    fn: scanHandymanDirectories,            intervalH: 72 },
+  { label: "FieldNation",fn: scanFieldNationTechs,               intervalH: 72 },
+  { label: "SOSDiss",    fn: scanMiSOSDissolutions,              intervalH: 72 },
+  { label: "TradeMags",  fn: scanTradeMagazineJobBoards,         intervalH: 72 },
+  { label: "MiWorks",    fn: scanMichiganWorksGraduates,         intervalH: 48 },
 ];
 
 const WALL_CLOCK_BUDGET_MS = 120_000; // leave headroom under 150s edge timeout
