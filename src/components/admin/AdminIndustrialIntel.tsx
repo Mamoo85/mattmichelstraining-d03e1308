@@ -40,7 +40,13 @@ const SIGNAL_BADGES: Record<string, { label: string; colors: string; emoji: stri
   expansion_hiring: { label: "EXPANSION", colors: "bg-blue-500/20 text-blue-400 border-blue-500/30", emoji: "+" },
 };
 
-type TabMode = "growth" | "boiler";
+type TabMode = "growth" | "boiler" | "thomasnet";
+
+interface ThomasNetResult {
+  items_received: number;
+  inserted: number;
+  categories: string[];
+}
 
 export default function AdminIndustrialIntel() {
   const [tab, setTab] = useState<TabMode>("boiler");
@@ -51,6 +57,22 @@ export default function AdminIndustrialIntel() {
   const [pitchLead, setPitchLead] = useState<IndustrialLead | null>(null);
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
+  const [tnLoading, setTnLoading] = useState(false);
+  const [tnResult, setTnResult] = useState<ThomasNetResult | null>(null);
+
+  async function runThomasNetPull() {
+    setTnLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("apify-thomasnet-pull", { body: {} });
+      if (error) throw error;
+      setTnResult(data as ThomasNetResult);
+      toast({ title: `ThomasNet: ${data?.inserted || 0} new prospects`, description: `${data?.items_received || 0} listings scanned` });
+    } catch (e) {
+      toast({ title: "ThomasNet pull failed", description: String(e), variant: "destructive" });
+    } finally {
+      setTnLoading(false);
+    }
+  }
 
   async function fetchGrowthData() {
     setLoading(true);
@@ -169,6 +191,12 @@ detroitwebagent.com`;
           className={`px-4 py-2 rounded-t text-sm font-medium transition-colors ${tab === "growth" ? "bg-[#00d4ff]/20 text-[#00d4ff] border border-[#00d4ff]/30 border-b-0" : "text-white/40 hover:text-white/60"}`}
         >
           Growth Scanner
+        </button>
+        <button
+          onClick={() => setTab("thomasnet")}
+          className={`px-4 py-2 rounded-t text-sm font-medium transition-colors ${tab === "thomasnet" ? "bg-[#00d4ff]/20 text-[#00d4ff] border border-[#00d4ff]/30 border-b-0" : "text-white/40 hover:text-white/60"}`}
+        >
+          ThomasNet Suppliers
         </button>
       </div>
 
@@ -374,7 +402,51 @@ detroitwebagent.com`;
         </div>
       )}
 
-      {/* ── PITCH MODAL ─────────────────────────────────────────────── */}
+      {/* ─── THOMASNET SUPPLIERS TAB ─── */}
+      {tab === "thomasnet" && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-white/40 text-xs uppercase tracking-wide mb-1">ThomasNet Industrial Suppliers</h2>
+              <p className="text-white/60 text-sm">
+                Pull Metro Detroit boiler manufacturers, machine shops, fabricators, and industrial equipment suppliers from ThomasNet. Saved as TechAlert prospects.
+              </p>
+            </div>
+            <button
+              onClick={runThomasNetPull}
+              disabled={tnLoading}
+              className="px-4 py-2 rounded-lg bg-[#00d4ff]/20 text-[#00d4ff] border border-[#00d4ff]/30 hover:bg-[#00d4ff]/30 transition-colors text-sm font-medium disabled:opacity-50"
+            >
+              {tnLoading ? "Pulling… (1-2 min)" : "Pull Industrial Suppliers"}
+            </button>
+          </div>
+
+          {tnResult && (
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-[#0f1f35] border border-white/10 rounded-lg p-3">
+                <p className="text-white/40 text-xs">Listings Scanned</p>
+                <p className="text-2xl font-bold text-white">{tnResult.items_received}</p>
+              </div>
+              <div className="bg-[#0f1f35] border border-emerald-500/20 rounded-lg p-3">
+                <p className="text-white/40 text-xs">New Prospects</p>
+                <p className="text-2xl font-bold text-emerald-400">{tnResult.inserted}</p>
+              </div>
+              <div className="bg-[#0f1f35] border border-white/10 rounded-lg p-3">
+                <p className="text-white/40 text-xs">Categories</p>
+                <p className="text-sm text-white/70 mt-1">{tnResult.categories.join(", ")}</p>
+              </div>
+            </div>
+          )}
+
+          {!tnResult && !tnLoading && (
+            <div className="bg-[#0f1f35] border border-white/10 rounded-lg p-8 text-center">
+              <p className="text-white/40 text-sm">Click "Pull Industrial Suppliers" to fetch Metro Detroit industrial company listings from ThomasNet.</p>
+              <p className="text-white/30 text-xs mt-2">Results saved to Industry Pulse signals tagged "techalert_prospect" — pitch them on TechAlert hiring monitors.</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {pitchLead && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setPitchLead(null)}>
           <div
