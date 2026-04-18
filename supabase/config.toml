@@ -1633,3 +1633,6 @@ verify_jwt = false
 
 [functions.send-mock-trial-emails]
 verify_jwt = false
+
+[functions.test-pdl-premium]
+verify_jwt = false
