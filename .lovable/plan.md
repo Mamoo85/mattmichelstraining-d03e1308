@@ -1,55 +1,52 @@
 
 
-## Plan: Fix Build Error + Apify Mega-Plan
+## Finish Apify Plan + Test Talent Radar Enrichment
 
-Two parts. Part 1 unblocks the build right now (1 line). Part 2 is your Apify mega-plan, fully accepted.
+Two remaining items + the requested test.
+
+### Step 1 — Create missing `apify_run_batches` table (BLOCKER)
+
+The dispatcher and webhook handler both write to this table, but the migration was never created. Without it, every scanner run fails at `INSERT INTO apify_run_batches`.
+
+Migration: `supabase/migrations/<timestamp>_apify_run_batches.sql`
+
+Columns (matching what the code already reads/writes):
+- `batch_id text PRIMARY KEY`
+- `run_at timestamptz default now()`
+- `miosha_run_id text`, `indeed_run_id text`, `linkedin_run_id text`
+- `miosha_status text`, `indeed_status text`, `linkedin_status text` (default `'pending'`)
+- `candidates_found int default 0`
+- `alerts_fired_at timestamptz`
+- `created_at timestamptz default now()`
+
+RLS enabled, service_role full access (no client reads needed — admin-only via edge fn).
+
+### Step 2 — Steps 7 & 8 from original plan
+
+Audit confirms `scanMiPLUS` / `scanMichiganOpenData` aren't named in the current scanner — the architecture has moved on (LARA VAL enumeration + fast-scanner already cover this per memory). **Skipping as obsolete.** Will note this in the plan file so it doesn't get re-flagged.
+
+### Step 3 — Test Talent Radar enrichment end-to-end
+
+Per `mem://tech/talent-radar-enrichment-v5`, the goal is measuring which APIs (NinjaPear, Crustdata, PDL, Apify LinkedIn) actually produce contact info for MIOSHA/permit-sourced trade candidates.
+
+Test sequence (using `supabase--curl_edge_functions` + `supabase--read_query`):
+1. Pick 5 recent `hire_alert_candidates` rows that lack phone/email
+2. Invoke `candidate-deep-enrich?ids=<id1,id2,...>&force=1`
+3. Read enrichment results: which stages fired, which returned phone/email, time per candidate
+4. Invoke `hire-alert-scanner` once to confirm the new `apify_run_batches` insert works (dispatcher exits ~3s)
+5. Tail logs from `apify-results-handler` to confirm no errors on the table write path
+6. Report pass/fail per stage with concrete numbers
+
+### Step 4 — Update `.lovable/plan.md`
+
+Mark all 9 steps complete, note Steps 7/8 obsolete, add test results.
 
 ---
 
-### Part 1 — Fix build error (immediate, 1 file)
+### Files touched
+- **Create:** `supabase/migrations/<ts>_apify_run_batches.sql`
+- **Edit:** `.lovable/plan.md` (status update + test results appended)
 
-The `Candidate` TS interface in `MyTechAlert.tsx` declares `flight_risk` and `flight_risk_proof` as **required**, but the demo objects (and any older API responses) might not always include them. Make them **optional** on the interface.
-
-**File:** `src/pages/MyTechAlert.tsx`
-**Change:** In the `Candidate` interface, change:
-```
-flight_risk: string;
-flight_risk_proof: string;
-```
-to:
-```
-flight_risk?: string | null;
-flight_risk_proof?: string | null;
-```
-
-Build passes. Demo cards still render (they have the fields). Real API responses are safe even if the field is missing on older rows.
-
----
-
-### Part 2 — Apify Integration (accepting your full plan)
-
-Approving everything you laid out. Confirming the order:
-
-1. **Step 1 (Bug fix)** — already done in last cycle (`scanMIOSHA()` filter widened). ✅ verified.
-2. **Step 2** — Create Apify Actor scaffolding files at repo root: `.actor/actor.json`, `.actor/INPUT_SCHEMA.json`, `.actor/Dockerfile`, `actor/main.js`, `actor/package.json`. Actor downloads MI LARA BPL Excel + FL DBPR CSV via SheetJS, pushes normalized rows to Apify dataset.
-3. **Step 3** — Two new secrets needed: `APIFY_API_TOKEN` + `APIFY_WEBHOOK_SECRET`. **I will request both before writing dispatcher/handler code.**
-4. **Step 4** — New edge fn `apify-results-handler` (verify_jwt=false): validates `X-Apify-Webhook-Secret`, fetches dataset items, routes by Actor ID (MIOSHA → upsert `lara_bpl`, Indeed → candidate signals, LinkedIn → enrich existing rows), updates `apify_run_batches`, fires scoring + alerts when all 3 done.
-5. **Step 5** — Migration: `apify_run_batches` table.
-6. **Step 6** — Refactor `hire-alert-scanner` from monolith → dispatcher. Dispatches 3 Apify runs (m2training MIOSHA Actor, `bebity~indeed-scraper`, `apify~linkedin-profile-scraper`) with webhook → `apify-results-handler`. Exits in ~3s.
-7. **Step 7** — Replace stub `scanMiPLUS()` with `scanLARABCCViaSonar()` + `scanLARABPLHealthcare()` (Sonar-based, complementary to Actor-based bulk).
-8. **Step 8** — Fix `scanMichiganOpenData()` field names + add trade-type filter + log first row for diagnostics.
-9. **Step 9** — Cron migration: 4-hour cadence. (Already in place from prior cycle — will verify, skip if duplicate.)
-
-**Note on already-done items:** Last cycle shipped some of this (4h cron exists, source label fix done, Crustdata Stage 7C in deep-enrich, lara_val_cursor + fast-scanner). The Apify work **layers on top** — it does not replace what's there. Crustdata stays as Stage 7C (already paid trial), Apify LinkedIn becomes Stage 7B (replaces dead Proxycurl reference).
-
-**Manual steps for Matt (after code lands):**
-1. Apify dashboard → API tokens → create + add to Lovable secrets as `APIFY_API_TOKEN`
-2. Apify dashboard → m2training Actor → Webhooks → set URL + secret string → add same string as `APIFY_WEBHOOK_SECRET`
-3. Push to main → Apify auto-rebuilds Actor from GitHub
-
-**Order of execution next loop:**
-1. Fix the 1-line TS error (unblocks build immediately)
-2. Request `APIFY_API_TOKEN` + `APIFY_WEBHOOK_SECRET` (blocker — wait for approval)
-3. While waiting: write Actor files + migration + `apify-results-handler` skeleton
-4. Once secrets land: wire dispatcher in `hire-alert-scanner`, deploy, test
+### What you do after
+Nothing. Apify webhook is already configured with the `?secret=` query param. Test results will tell us if any enrichment stage is dead weight worth removing.
 
