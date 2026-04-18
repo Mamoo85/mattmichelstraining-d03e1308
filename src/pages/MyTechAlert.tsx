@@ -50,8 +50,8 @@ interface Candidate {
   claim_expires_at: string | null;
   claimed_by_other: boolean;
   cross_referenced: boolean;
-  flight_risk: string | null;
-  flight_risk_proof: string | null;
+  flight_risk?: string | null;
+  flight_risk_proof?: string | null;
 }
 
 interface DashboardData {
