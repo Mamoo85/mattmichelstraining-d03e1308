@@ -9,6 +9,7 @@ import {
   Bell, Plus, RefreshCw, Users, DollarSign, Trash2, Pencil,
   Mail, Phone, CheckCircle, XCircle, Clock, Play, FileText, Loader2,
 } from "lucide-react";
+import { EnrichmentHealthStrip } from "./EnrichmentHealthStrip";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -556,6 +557,9 @@ export default function AdminHireAlertClients() {
     <div className="space-y-6 p-1">
       {showAdd && <ClientModal onClose={() => setShowAdd(false)} onSaved={load} />}
       {editClient && <ClientModal existing={editClient} onClose={() => setEditClient(undefined)} onSaved={load} />}
+
+      {/* Enrichment health */}
+      <EnrichmentHealthStrip />
 
       {/* Header */}
       <div className="space-y-3">
