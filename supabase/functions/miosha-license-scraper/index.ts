@@ -1203,7 +1203,8 @@ async function upsertCandidate(sb: any, c: LicenseCandidate): Promise<"new" | "u
           city: c.city,
           source: c.source,
           raw_data: c as any,
-        }, { onConflict: "business_name,city" });
+          enrichment_status: "pending",
+        }, { onConflict: "business_name,city", ignoreDuplicates: true });
         return "updated";
       } catch { return "error"; }
     }
