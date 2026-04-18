@@ -1100,41 +1100,7 @@ Return ONLY valid JSON array. Each object: { "full_name": "First Last", "license
   return all;
 }
 
-// ===== SHARED: Gemini name extraction from markdown/prose =====
-async function extractNamesFromMarkdown(markdown: string, label: string, source: string): Promise<LicenseCandidate[]> {
-  if (!LOVABLE_API_KEY) return [];
-  try {
-    const res = await fetch(GATEWAY_URL, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        max_tokens: 1500,
-        messages: [
-          {
-            role: "system",
-            content: `Extract individual people's names from this page content about ${label}s in Michigan. Return ONLY a JSON array: [{"full_name":"First Last","city":"City or null"}]. Only include real individual people, not companies. No markdown. Max 30 results.`,
-          },
-          { role: "user", content: markdown.slice(0, 8000) },
-        ],
-      }),
-      signal: AbortSignal.timeout(15_000),
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    const text = data?.choices?.[0]?.message?.content || "";
-    const jsonMatch = text.match(/\[[\s\S]*?\]/);
-    if (!jsonMatch) return [];
-    const parsed = JSON.parse(jsonMatch[0]) as Array<{ full_name: string; city?: string }>;
-    return parsed
-      .filter((r) => r.full_name && isPersonName(r.full_name))
-      .map((r) => ({
-        full_name: r.full_name, license_type: label,
-        license_number: null, license_expiry: null,
-        city: r.city && r.city.length > 2 ? r.city : null, source,
-      }));
-  } catch { return []; }
-}
+// (Duplicate extractNamesFromMarkdown removed — see line 363 for the canonical version with regex fallback)
 
 async function extractNamesFromProse(prose: string, label: string, source: string): Promise<LicenseCandidate[]> {
   if (!LOVABLE_API_KEY) return [];
