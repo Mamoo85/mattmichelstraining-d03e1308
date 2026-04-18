@@ -71,7 +71,10 @@ async function dispatchApifyRuns(sb: ReturnType<typeof createClient>): Promise<v
     }),
   }];
 
-  const sources: Array<keyof typeof APIFY_ACTORS> = ["miosha", "indeed", "linkedin"];
+  // Only dispatch the custom MIOSHA Actor (free compute ~$0.01/run).
+  // Indeed + LinkedIn Apify Store actors charge per result and burned the free credit.
+  // Sonar OSINT already handles job board + LinkedIn enrichment at $0.005/candidate.
+  const sources: Array<keyof typeof APIFY_ACTORS> = ["miosha"];
   const dispatches = sources.map(async (src) => {
     const actor = APIFY_ACTORS[src];
     const input = APIFY_INPUTS[src];
