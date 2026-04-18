@@ -1,6 +1,6 @@
 FROM apify/actor-node:20
 
-COPY package*.json ./
+COPY actor-package.json ./package.json
 
 RUN npm --quiet set progress=false \
     && npm install --only=prod --no-optional \
@@ -11,4 +11,4 @@ RUN npm --quiet set progress=false \
 
 COPY . ./
 
-CMD node actor/main.js
+CMD node main.js
