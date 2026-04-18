@@ -34,7 +34,7 @@ interface CronExpect {
 const WATCHLIST: CronExpect[] = [
   // Revenue-critical
   { name: "cron-sentinel-6h", freshnessMinutes: 60 * 8, critical: true, description: "Sentinel itself" },
-  { name: "hire-alert-scanner-daily", freshnessMinutes: 60 * 30, outputTable: "hire_alert_runs", outputColumn: "started_at", critical: true, description: "TechAlert scanner" },
+  { name: "hire-alert-scanner-4h", freshnessMinutes: 60 * 6, outputTable: "hire_alert_runs", outputColumn: "started_at", critical: true, description: "TechAlert scanner" },
   { name: "industry-pulse-scanner-daily", freshnessMinutes: 60 * 30, outputTable: "industry_pulse_signals", critical: true, description: "Demand Radar scanner" },
   { name: "dead-lead-drip-daily", freshnessMinutes: 60 * 30, critical: true, description: "Dead Lead drip" },
   { name: "dead-lead-daily-notifier", freshnessMinutes: 60 * 30, critical: true, description: "Dead Lead daily digest" },
