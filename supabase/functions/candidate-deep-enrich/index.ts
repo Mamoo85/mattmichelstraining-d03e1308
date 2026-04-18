@@ -445,9 +445,45 @@ Rules: Write as a human researcher. Never mention AI, algorithms, data sources, 
   };
 }
 
+// Reject booleans, "true"/"false" strings, and empty/garbage values.
+// Crustdata + some PDL responses return `email: true` as a "exists, upgrade to view" flag,
+// which previously poisoned the phone/email columns with the literal string "true".
+function cleanContact(v: unknown): string | undefined {
+  if (typeof v !== "string") return undefined;
+  const s = v.trim();
+  if (!s) return undefined;
+  const lower = s.toLowerCase();
+  if (lower === "true" || lower === "false" || lower === "null" || lower === "undefined") return undefined;
+  return s;
+}
+function cleanEmail(v: unknown): string | undefined {
+  const s = cleanContact(v);
+  if (!s) return undefined;
+  // must contain @ and a dot
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return undefined;
+  return s.toLowerCase();
+}
+function cleanPhone(v: unknown): string | undefined {
+  const s = cleanContact(v);
+  if (!s) return undefined;
+  // must have at least 7 digits to be a real phone
+  const digits = s.replace(/\D/g, "");
+  if (digits.length < 7) return undefined;
+  return s;
+}
+
 function pickContact(merged: Record<string, any>): { email?: string; phone?: string } {
-  const email = merged.pdl_personal_email || merged.hunter_email || merged.snov_email || merged.lusha_email || merged.clay_email || merged.email;
-  const phone = merged.pdl_mobile_phone || merged.lusha_phone || merged.clay_phone || merged.npi_business_phone || merged.phone;
+  const email = cleanEmail(merged.pdl_personal_email)
+    || cleanEmail(merged.hunter_email)
+    || cleanEmail(merged.snov_email)
+    || cleanEmail(merged.lusha_email)
+    || cleanEmail(merged.clay_email)
+    || cleanEmail(merged.email);
+  const phone = cleanPhone(merged.pdl_mobile_phone)
+    || cleanPhone(merged.lusha_phone)
+    || cleanPhone(merged.clay_phone)
+    || cleanPhone(merged.npi_business_phone)
+    || cleanPhone(merged.phone);
   return { email, phone };
 }
 
