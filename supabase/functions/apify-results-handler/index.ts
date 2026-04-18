@@ -16,26 +16,78 @@ const APIFY_WEBHOOK_SECRET = Deno.env.get("APIFY_WEBHOOK_SECRET")!;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// Map Actor IDs (or name fragments) to source labels for routing.
-// Update these once Matt confirms his Apify Actor IDs.
+// Map Actor IDs (slugs AND internal hash IDs) to source labels for routing.
+// Apify webhooks send the hash ID in eventData.actorId, NOT the slug.
 const ACTOR_SOURCE_MAP: Record<string, "miosha" | "indeed" | "linkedin"> = {
+  // MIOSHA — transparent_meteorite~m2training
   "transparent_meteorite~m2training": "miosha",
+  "CXwInKMIauMk4KwLX": "miosha",
   "m2training": "miosha",
   "miosha": "miosha",
+  // Indeed — misceres~indeed-scraper
   "misceres~indeed-scraper": "indeed",
+  "hMvNSpz3JnHgl5jkh": "indeed",
   "bebity~indeed-scraper": "indeed",
   "indeed-scraper": "indeed",
+  // LinkedIn — harvestapi~linkedin-profile-scraper
   "harvestapi~linkedin-profile-scraper": "linkedin",
+  "LpVuK3Zozwuipa5bp": "linkedin",
   "apify~linkedin-profile-scraper": "linkedin",
   "linkedin-profile-scraper": "linkedin",
 };
 
 function detectSource(actorId: string, actorName?: string): "miosha" | "indeed" | "linkedin" | null {
+  // Try exact hash-ID match first
+  if (actorId && ACTOR_SOURCE_MAP[actorId]) return ACTOR_SOURCE_MAP[actorId];
+  // Then substring fuzzy match on slug/name
   const haystack = `${actorId} ${actorName || ""}`.toLowerCase();
   for (const [key, src] of Object.entries(ACTOR_SOURCE_MAP)) {
     if (haystack.includes(key.toLowerCase())) return src;
   }
   return null;
+}
+
+// Fallback routing: look up which source this runId belongs to in apify_run_batches
+async function detectSourceByRunId(runId: string): Promise<"miosha" | "indeed" | "linkedin" | null> {
+  if (!runId) return null;
+  const { data } = await supabase
+    .from("apify_run_batches")
+    .select("miosha_run_id, indeed_run_id, linkedin_run_id, batch_id")
+    .or(`miosha_run_id.eq.${runId},indeed_run_id.eq.${runId},linkedin_run_id.eq.${runId}`)
+    .maybeSingle();
+  if (!data) return null;
+  if (data.miosha_run_id === runId) return "miosha";
+  if (data.indeed_run_id === runId) return "indeed";
+  if (data.linkedin_run_id === runId) return "linkedin";
+  return null;
+}
+
+async function getBatchIdByRunId(runId: string): Promise<string | null> {
+  if (!runId) return null;
+  const { data } = await supabase
+    .from("apify_run_batches")
+    .select("batch_id")
+    .or(`miosha_run_id.eq.${runId},indeed_run_id.eq.${runId},linkedin_run_id.eq.${runId}`)
+    .maybeSingle();
+  return data?.batch_id || null;
+}
+
+// Hallucination guards: drop UI chrome, template vars, junk strings
+function isJunkName(name: string): boolean {
+  if (!name || typeof name !== "string") return true;
+  const n = name.trim();
+  if (n.length < 4 || n.length > 60) return true;
+  if (/\{\{|\}\}/.test(n)) return true; // template vars
+  if (/[:/\\<>]/.test(n)) return true;
+  const lower = n.toLowerCase();
+  const junk = ["search for", "privacy", "cookie", "phone:", "email:", "close", "menu", "login", "sign in", "sign up", "loading", "untitled", "n/a", "null", "undefined", "{{", "overview", "settings", "navigation", "footer", "header", "result.", "template"];
+  if (junk.some((j) => lower.includes(j))) return true;
+  const words = n.split(/\s+/).filter(Boolean);
+  if (words.length < 2) return true;
+  // Must contain mostly letters
+  const letterRatio = (n.match(/[a-zA-Z]/g) || []).length / n.length;
+  if (letterRatio < 0.6) return true;
+  return false;
 }
 
 async function fetchDatasetItems(datasetId: string): Promise<unknown[]> {
