@@ -3,6 +3,9 @@ project_id = "zmyczlfuufhngzovkjdh"
 [functions.apify-results-handler]
 verify_jwt = false
 
+[functions.enrichment-cost-rollup]
+verify_jwt = false
+
 [functions.create-wire-checkout]
 verify_jwt = false
 
