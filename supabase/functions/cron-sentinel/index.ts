@@ -245,12 +245,14 @@ serve(async (req) => {
   }
 
   // Self-heartbeat
-  await sb.from("agent_heartbeats").upsert({
-    agent_name: "CronSentinel",
-    last_beat: new Date().toISOString(),
-    status: status === "pass" ? "ok" : "alerting",
-    metadata: { failures: failures.length, total: results.length },
-  }, { onConflict: "agent_name" }).catch(() => {});
+  try {
+    await sb.from("agent_heartbeats").upsert({
+      agent_name: "CronSentinel",
+      last_beat: new Date().toISOString(),
+      status: status === "pass" ? "ok" : "alerting",
+      metadata: { failures: failures.length, total: results.length },
+    }, { onConflict: "agent_name" });
+  } catch (_) { /* heartbeat is non-critical */ }
 
   return new Response(JSON.stringify({
     ok: true,
