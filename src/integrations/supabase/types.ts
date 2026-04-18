@@ -2671,6 +2671,66 @@ export type Database = {
           },
         ]
       }
+      cron_sentinel_alerts: {
+        Row: {
+          checked_at: string
+          failure_details: Json
+          failures: number
+          full_report: Json
+          id: string
+          notified_admin: boolean
+          status: string
+          total_checks: number
+          trigger_source: string | null
+        }
+        Insert: {
+          checked_at?: string
+          failure_details?: Json
+          failures?: number
+          full_report?: Json
+          id?: string
+          notified_admin?: boolean
+          status: string
+          total_checks?: number
+          trigger_source?: string | null
+        }
+        Update: {
+          checked_at?: string
+          failure_details?: Json
+          failures?: number
+          full_report?: Json
+          id?: string
+          notified_admin?: boolean
+          status?: string
+          total_checks?: number
+          trigger_source?: string | null
+        }
+        Relationships: []
+      }
+      cron_sentinel_snoozes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          cron_name: string
+          reason: string | null
+          snoozed_until: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          cron_name: string
+          reason?: string | null
+          snoozed_until: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          cron_name?: string
+          reason?: string | null
+          snoozed_until?: string
+        }
+        Relationships: []
+      }
       cross_sell_queue: {
         Row: {
           business_name: string | null
