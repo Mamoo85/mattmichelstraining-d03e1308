@@ -1746,6 +1746,56 @@ export type Database = {
         }
         Relationships: []
       }
+      client_roi_monthly: {
+        Row: {
+          candidates_contacted: number | null
+          candidates_hired: number | null
+          candidates_surfaced: number | null
+          client_id: string | null
+          created_at: string
+          digest_sent_at: string | null
+          estimated_fee_revenue: number | null
+          id: string
+          month_start: string
+          roi_multiplier: number | null
+          subscription_cost: number | null
+        }
+        Insert: {
+          candidates_contacted?: number | null
+          candidates_hired?: number | null
+          candidates_surfaced?: number | null
+          client_id?: string | null
+          created_at?: string
+          digest_sent_at?: string | null
+          estimated_fee_revenue?: number | null
+          id?: string
+          month_start: string
+          roi_multiplier?: number | null
+          subscription_cost?: number | null
+        }
+        Update: {
+          candidates_contacted?: number | null
+          candidates_hired?: number | null
+          candidates_surfaced?: number | null
+          client_id?: string | null
+          created_at?: string
+          digest_sent_at?: string | null
+          estimated_fee_revenue?: number | null
+          id?: string
+          month_start?: string
+          roi_multiplier?: number | null
+          subscription_cost?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_roi_monthly_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "hire_alert_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coach_ai_drafts: {
         Row: {
           admin_edit: string | null
@@ -2910,6 +2960,48 @@ export type Database = {
         }
         Relationships: []
       }
+      cross_product_signals: {
+        Row: {
+          county: string | null
+          created_at: string
+          employer_name: string | null
+          id: string
+          pitch_angle: string | null
+          routed_to: string | null
+          signal_type: string
+          source_id: string | null
+          source_table: string | null
+          status: string | null
+          trade: string | null
+        }
+        Insert: {
+          county?: string | null
+          created_at?: string
+          employer_name?: string | null
+          id?: string
+          pitch_angle?: string | null
+          routed_to?: string | null
+          signal_type: string
+          source_id?: string | null
+          source_table?: string | null
+          status?: string | null
+          trade?: string | null
+        }
+        Update: {
+          county?: string | null
+          created_at?: string
+          employer_name?: string | null
+          id?: string
+          pitch_angle?: string | null
+          routed_to?: string | null
+          signal_type?: string
+          source_id?: string | null
+          source_table?: string | null
+          status?: string | null
+          trade?: string | null
+        }
+        Relationships: []
+      }
       cross_sell_queue: {
         Row: {
           business_name: string | null
@@ -3682,6 +3774,140 @@ export type Database = {
           id?: string
           rows?: Json
           shortage_signals?: Json
+        }
+        Relationships: []
+      }
+      dol_oes_wages: {
+        Row: {
+          created_at: string
+          data_year: number | null
+          id: string
+          median_annual_wage: number | null
+          median_hourly_wage: number | null
+          msa: string
+          occupation_code: string | null
+          trade: string
+        }
+        Insert: {
+          created_at?: string
+          data_year?: number | null
+          id?: string
+          median_annual_wage?: number | null
+          median_hourly_wage?: number | null
+          msa: string
+          occupation_code?: string | null
+          trade: string
+        }
+        Update: {
+          created_at?: string
+          data_year?: number | null
+          id?: string
+          median_annual_wage?: number | null
+          median_hourly_wage?: number | null
+          msa?: string
+          occupation_code?: string | null
+          trade?: string
+        }
+        Relationships: []
+      }
+      dol_rapids_completions: {
+        Row: {
+          apprentice_name: string
+          candidate_id: string | null
+          completion_date: string | null
+          county: string | null
+          created_at: string
+          id: string
+          occupation_code: string | null
+          promoted_to_candidate: boolean | null
+          raw_data: Json | null
+          sponsor_name: string | null
+          state: string | null
+          trade: string | null
+        }
+        Insert: {
+          apprentice_name: string
+          candidate_id?: string | null
+          completion_date?: string | null
+          county?: string | null
+          created_at?: string
+          id?: string
+          occupation_code?: string | null
+          promoted_to_candidate?: boolean | null
+          raw_data?: Json | null
+          sponsor_name?: string | null
+          state?: string | null
+          trade?: string | null
+        }
+        Update: {
+          apprentice_name?: string
+          candidate_id?: string | null
+          completion_date?: string | null
+          county?: string | null
+          created_at?: string
+          id?: string
+          occupation_code?: string | null
+          promoted_to_candidate?: boolean | null
+          raw_data?: Json | null
+          sponsor_name?: string | null
+          state?: string | null
+          trade?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dol_rapids_completions_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "hire_alert_candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dol_whisard_violations: {
+        Row: {
+          bw_atp_amt: number | null
+          case_id: string | null
+          city: string | null
+          created_at: string
+          ee_violtd_cnt: number | null
+          employer_name: string
+          employer_name_normalized: string
+          findings_end_date: string | null
+          findings_start_date: string | null
+          id: string
+          raw_data: Json | null
+          state: string | null
+          violation_count: number | null
+        }
+        Insert: {
+          bw_atp_amt?: number | null
+          case_id?: string | null
+          city?: string | null
+          created_at?: string
+          ee_violtd_cnt?: number | null
+          employer_name: string
+          employer_name_normalized: string
+          findings_end_date?: string | null
+          findings_start_date?: string | null
+          id?: string
+          raw_data?: Json | null
+          state?: string | null
+          violation_count?: number | null
+        }
+        Update: {
+          bw_atp_amt?: number | null
+          case_id?: string | null
+          city?: string | null
+          created_at?: string
+          ee_violtd_cnt?: number | null
+          employer_name?: string
+          employer_name_normalized?: string
+          findings_end_date?: string | null
+          findings_start_date?: string | null
+          id?: string
+          raw_data?: Json | null
+          state?: string | null
+          violation_count?: number | null
         }
         Relationships: []
       }
@@ -5420,16 +5646,22 @@ export type Database = {
         Row: {
           alerted_at: string | null
           availability_score: number | null
+          availability_signal: string | null
+          available_until: string | null
           city: string | null
           client_id: string | null
+          corroboration_score: number | null
           created_at: string | null
           cross_referenced: boolean | null
           current_employer: string | null
           current_title: string | null
+          cyber_hygiene_score: number | null
           data_completeness: number | null
           do_not_contact: boolean
           do_not_contact_at: string | null
           email: string | null
+          employer_domain_breached_recently: boolean | null
+          employer_headcount_delta: number | null
           enriched_at: string | null
           enrichment_status: string | null
           facebook_url: string | null
@@ -5443,6 +5675,7 @@ export type Database = {
           id: string
           is_company_name: boolean | null
           is_demo_record: boolean | null
+          job_stability_index: number | null
           last_dispatched_at: string | null
           last_seen_at: string | null
           license_expiry: string | null
@@ -5451,6 +5684,8 @@ export type Database = {
           license_type: string | null
           linkedin_url: string | null
           name: string
+          password_compromised: boolean | null
+          personal_email_primary: boolean | null
           phone: string | null
           profile_photo_url: string | null
           qualifications_summary: string | null
@@ -5463,22 +5698,29 @@ export type Database = {
           state: string | null
           status: string | null
           trade: string | null
+          urgency_score: number | null
           years_experience: number | null
           zip: string | null
         }
         Insert: {
           alerted_at?: string | null
           availability_score?: number | null
+          availability_signal?: string | null
+          available_until?: string | null
           city?: string | null
           client_id?: string | null
+          corroboration_score?: number | null
           created_at?: string | null
           cross_referenced?: boolean | null
           current_employer?: string | null
           current_title?: string | null
+          cyber_hygiene_score?: number | null
           data_completeness?: number | null
           do_not_contact?: boolean
           do_not_contact_at?: string | null
           email?: string | null
+          employer_domain_breached_recently?: boolean | null
+          employer_headcount_delta?: number | null
           enriched_at?: string | null
           enrichment_status?: string | null
           facebook_url?: string | null
@@ -5492,6 +5734,7 @@ export type Database = {
           id?: string
           is_company_name?: boolean | null
           is_demo_record?: boolean | null
+          job_stability_index?: number | null
           last_dispatched_at?: string | null
           last_seen_at?: string | null
           license_expiry?: string | null
@@ -5500,6 +5743,8 @@ export type Database = {
           license_type?: string | null
           linkedin_url?: string | null
           name: string
+          password_compromised?: boolean | null
+          personal_email_primary?: boolean | null
           phone?: string | null
           profile_photo_url?: string | null
           qualifications_summary?: string | null
@@ -5512,22 +5757,29 @@ export type Database = {
           state?: string | null
           status?: string | null
           trade?: string | null
+          urgency_score?: number | null
           years_experience?: number | null
           zip?: string | null
         }
         Update: {
           alerted_at?: string | null
           availability_score?: number | null
+          availability_signal?: string | null
+          available_until?: string | null
           city?: string | null
           client_id?: string | null
+          corroboration_score?: number | null
           created_at?: string | null
           cross_referenced?: boolean | null
           current_employer?: string | null
           current_title?: string | null
+          cyber_hygiene_score?: number | null
           data_completeness?: number | null
           do_not_contact?: boolean
           do_not_contact_at?: string | null
           email?: string | null
+          employer_domain_breached_recently?: boolean | null
+          employer_headcount_delta?: number | null
           enriched_at?: string | null
           enrichment_status?: string | null
           facebook_url?: string | null
@@ -5541,6 +5793,7 @@ export type Database = {
           id?: string
           is_company_name?: boolean | null
           is_demo_record?: boolean | null
+          job_stability_index?: number | null
           last_dispatched_at?: string | null
           last_seen_at?: string | null
           license_expiry?: string | null
@@ -5549,6 +5802,8 @@ export type Database = {
           license_type?: string | null
           linkedin_url?: string | null
           name?: string
+          password_compromised?: boolean | null
+          personal_email_primary?: boolean | null
           phone?: string | null
           profile_photo_url?: string | null
           qualifications_summary?: string | null
@@ -5561,6 +5816,7 @@ export type Database = {
           state?: string | null
           status?: string | null
           trade?: string | null
+          urgency_score?: number | null
           years_experience?: number | null
           zip?: string | null
         }
@@ -8051,6 +8307,60 @@ export type Database = {
         }
         Relationships: []
       }
+      permit_contractor_signals: {
+        Row: {
+          avg_permit_value: number | null
+          computed_at: string
+          contractor_name: string
+          contractor_name_normalized: string
+          contractor_status: string | null
+          county: string | null
+          growth_trajectory: string | null
+          id: string
+          last_permit_at: string | null
+          permit_velocity_score: number | null
+          permits_30d: number | null
+          permits_60d: number | null
+          permits_90d: number | null
+          trade_mix: Json | null
+          weather_reactive: boolean | null
+        }
+        Insert: {
+          avg_permit_value?: number | null
+          computed_at?: string
+          contractor_name: string
+          contractor_name_normalized: string
+          contractor_status?: string | null
+          county?: string | null
+          growth_trajectory?: string | null
+          id?: string
+          last_permit_at?: string | null
+          permit_velocity_score?: number | null
+          permits_30d?: number | null
+          permits_60d?: number | null
+          permits_90d?: number | null
+          trade_mix?: Json | null
+          weather_reactive?: boolean | null
+        }
+        Update: {
+          avg_permit_value?: number | null
+          computed_at?: string
+          contractor_name?: string
+          contractor_name_normalized?: string
+          contractor_status?: string | null
+          county?: string | null
+          growth_trajectory?: string | null
+          id?: string
+          last_permit_at?: string | null
+          permit_velocity_score?: number | null
+          permits_30d?: number | null
+          permits_60d?: number | null
+          permits_90d?: number | null
+          trade_mix?: Json | null
+          weather_reactive?: boolean | null
+        }
+        Relationships: []
+      }
       permit_monitor_clients: {
         Row: {
           active: boolean | null
@@ -8090,6 +8400,30 @@ export type Database = {
           permits?: Json | null
           send_count?: number | null
           stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      permit_to_category_map: {
+        Row: {
+          created_at: string
+          id: string
+          permit_keyword: string
+          supply_category: string
+          trade: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permit_keyword: string
+          supply_category: string
+          trade?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permit_keyword?: string
+          supply_category?: string
+          trade?: string | null
         }
         Relationships: []
       }

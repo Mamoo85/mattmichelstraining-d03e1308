@@ -6,6 +6,18 @@ verify_jwt = false
 [functions.enrichment-cost-rollup]
 verify_jwt = false
 
+[functions.flight-risk-rescorer]
+verify_jwt = false
+
+[functions.urgency-score-refresh]
+verify_jwt = false
+
+[functions.client-roi-digest]
+verify_jwt = false
+
+[functions.cross-product-signal-router]
+verify_jwt = false
+
 [functions.create-wire-checkout]
 verify_jwt = false
 
