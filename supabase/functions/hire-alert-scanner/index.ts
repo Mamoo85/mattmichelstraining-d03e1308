@@ -314,7 +314,16 @@ async function scanMIOSHA(): Promise<RawCandidate[]> {
   // sonar, lara_socrata, lara_accela, lara_val, lara_bcc, dol, etc. — NEVER "miosha".
   // Old filter `.eq("source","miosha")` returned zero candidates every run.
   // New filter: exclude business-directory sources, include all PERSON candidates.
-  const BUSINESS_SOURCES = ["yelp", "phcc", "building_permits", "thumbtack", "google_places", "yelp_business", "lara_contractor_co", "osha_establishment", "michigan_sos_co"];
+  const BUSINESS_SOURCES = [
+    // original directory sources
+    "yelp", "phcc", "building_permits", "thumbtack", "google_places", "yelp_business",
+    // S22/S23/S25 company routes
+    "lara_contractor_co", "osha_establishment", "michigan_sos_co",
+    // S31/S34 company-only
+    "google_places_sweep", "bbb_directory",
+    // S32/S33/S35/S40/S41 mixed — company branch
+    "angi_co", "manta_co", "alignable_co", "houzz_co", "porch_co",
+  ];
   const { data } = await sb
     .from("hire_alert_candidates")
     .select("full_name, name, phone, email, license_type, license_number, license_expiry, city, zip, source, raw_data, linkedin_url, facebook_url, current_employer, current_title, years_experience, qualifications_summary, hiring_recommendation, social_profiles, enrichment_status")
