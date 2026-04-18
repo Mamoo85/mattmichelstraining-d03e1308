@@ -22,9 +22,9 @@ const APIFY_WEBHOOK_SECRET = Deno.env.get("APIFY_WEBHOOK_SECRET") || "";
 
 // Apify Actor IDs — update if Matt swaps Actors in his Apify account
 const APIFY_ACTORS = {
-  miosha: "matt~m2training",            // Matt's custom MIOSHA Excel scraper (auto-rebuilt from m2training repo)
-  indeed: "bebity~indeed-scraper",      // Maintained Indeed scraper, residential proxies
-  linkedin: "apify~linkedin-profile-scraper",  // Replacement for dead Proxycurl
+  miosha: "transparent_meteorite~m2training",  // Matt's MIOSHA Excel scraper (auto-rebuilt from m2training repo)
+  indeed: "misceres~indeed-scraper",            // Most popular maintained Indeed scraper
+  linkedin: "harvestapi~linkedin-profile-scraper",  // Active LinkedIn profile scraper (Proxycurl replacement)
 };
 
 const APIFY_INPUTS = {
