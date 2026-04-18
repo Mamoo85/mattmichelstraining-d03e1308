@@ -1181,7 +1181,15 @@ function calculateCompleteness(row: Record<string, unknown>): number {
 
 // ===== DB UPSERT =====
 // CRITICAL: Always writes BOTH `name` AND `full_name` — the `name` column is NOT NULL
-const BUSINESS_SOURCES = new Set(["yelp", "phcc", "building_permits", "thumbtack", "google_places"]);
+const BUSINESS_SOURCES = new Set([
+  "yelp", "phcc", "building_permits", "thumbtack", "google_places",
+  // S22/S23/S25
+  "lara_contractor_co", "osha_establishment", "michigan_sos_co",
+  // S31/S34/S36 — company-only directories
+  "google_places_sweep", "bbb_directory",
+  // mixed directories — company branch of split sources
+  "angi_co", "manta_co", "alignable_co", "houzz_co", "porch_co",
+]);
 
 async function upsertCandidate(sb: any, c: LicenseCandidate): Promise<"new" | "updated" | "error"> {
   try {
@@ -1195,7 +1203,8 @@ async function upsertCandidate(sb: any, c: LicenseCandidate): Promise<"new" | "u
           city: c.city,
           source: c.source,
           raw_data: c as any,
-        }, { onConflict: "business_name,city" });
+          enrichment_status: "pending",
+        }, { onConflict: "business_name,city", ignoreDuplicates: true });
         return "updated";
       } catch { return "error"; }
     }
@@ -1228,7 +1237,7 @@ async function upsertCandidate(sb: any, c: LicenseCandidate): Promise<"new" | "u
         await sb.from("hire_alert_candidates").update({ last_seen_at: new Date().toISOString(), name: c.full_name, data_completeness: row.data_completeness }).eq("id", existing.id);
         candidateId = existing.id;
       } else {
-        const { data: inserted } = await sb.from("hire_alert_candidates").insert({ ...row, status: "new", first_seen_at: new Date().toISOString() }).select("id").maybeSingle();
+        const { data: inserted } = await sb.from("hire_alert_candidates").insert({ ...row, status: "new", first_seen_at: new Date().toISOString(), enrichment_status: "pending" }).select("id").maybeSingle();
         candidateId = inserted?.id || null;
         isNew = true;
       }
@@ -1242,7 +1251,7 @@ async function upsertCandidate(sb: any, c: LicenseCandidate): Promise<"new" | "u
         .maybeSingle();
 
       if (!existing) {
-        const { data: inserted } = await sb.from("hire_alert_candidates").insert({ ...row, status: "new", first_seen_at: new Date().toISOString() }).select("id").maybeSingle();
+        const { data: inserted } = await sb.from("hire_alert_candidates").insert({ ...row, status: "new", first_seen_at: new Date().toISOString(), enrichment_status: "pending" }).select("id").maybeSingle();
         candidateId = inserted?.id || null;
         isNew = true;
       } else {
@@ -1645,6 +1654,1653 @@ async function scanLARARealEstate(): Promise<LicenseCandidate[]> {
   return candidates;
 }
 
+// ===== S21: BPL Newly-Issued 7-Day Delta (Socrata explicit issue_date filter) =====
+// Tighter than S3's 30-day window. Explicitly filters on issue_date so we only
+// surface people who were JUST licensed — the highest-intent availability signal.
+async function scanBPLNewlyIssued(): Promise<LicenseCandidate[]> {
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  const since7 = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  // Discover LARA trade datasets from Socrata, same as S3 but we apply a strict issue_date WHERE clause
+  const knownDatasetIds: string[] = [];
+  try {
+    const meta = await fetch("https://data.michigan.gov/api/views/metadata/v1?q=license&limit=50", { signal: AbortSignal.timeout(10_000) });
+    if (meta.ok) {
+      const rows: any[] = await meta.json().then((d: any) => Array.isArray(d) ? d : (d?.results || []));
+      for (const r of rows) {
+        const id = r.id || r.resource?.id;
+        const name = (r.name || r.resource?.name || "").toLowerCase();
+        const dept = (r.attribution || r.resource?.attribution || "").toLowerCase();
+        if (id && /licens|electric|plumb|hvac|boiler|mechanic|nurs/i.test(name) && (dept.includes("lara") || dept.includes("michigan"))) {
+          knownDatasetIds.push(id);
+        }
+      }
+    }
+  } catch { /* fall through with empty list */ }
+
+  for (const ds of knownDatasetIds.slice(0, 6)) {
+    try {
+      // Socrata WHERE on issue_date — many LARA datasets expose this column
+      const url = `https://data.michigan.gov/resource/${ds}.json?$where=issue_date>='${since7}'&$limit=200&$order=issue_date DESC`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(12_000) });
+      if (!res.ok) continue;
+      const data: any[] = await res.json();
+      if (!Array.isArray(data) || data.length === 0) continue;
+
+      for (const row of data) {
+        const firstName = row.first_name || row.licensee_first_name || row.f_name || "";
+        const lastName = row.last_name || row.licensee_last_name || row.l_name || "";
+        const fullName = row.full_name || row.licensee_name || `${firstName} ${lastName}`.trim();
+        if (!fullName || !isPersonName(fullName)) continue;
+        const licType = row.license_type || row.profession || row.license_classification || "Trade Professional";
+        const lt = licType.toUpperCase();
+        if (!/ELECTR|PLUMB|HVAC|MECHANIC|BOILER|NURS|CNA|RN|LPN/i.test(lt)) continue;
+        const status = (row.license_status || row.status || "ACTIVE").toUpperCase();
+        if (!status.includes("ACTIVE") && !status.includes("CURRENT") && !status.includes("VALID")) continue;
+        const key = fullName.toLowerCase() + (row.license_number || "");
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        let mappedType = "Trade Professional";
+        if (lt.includes("ELECTR")) mappedType = "Electrician";
+        else if (lt.includes("PLUMB")) mappedType = "Plumber";
+        else if (lt.includes("HVAC") || lt.includes("MECHANIC")) mappedType = "HVAC Technician";
+        else if (lt.includes("BOILER")) mappedType = "Boiler Operator";
+        else if (lt.includes("RN") || lt.includes("NURS")) mappedType = "Registered Nurse";
+        else if (lt.includes("LPN")) mappedType = "Licensed Practical Nurse";
+        else if (lt.includes("CNA")) mappedType = "Certified Nurse Aide";
+
+        candidates.push({
+          full_name: fullName,
+          license_type: mappedType,
+          license_number: row.license_number ? String(row.license_number) : null,
+          license_expiry: row.expiration_date || null,
+          city: row.city || row.licensee_city || null,
+          source: "lara_newly_issued",
+        });
+      }
+    } catch { /* skip dataset */ }
+  }
+  console.log(`[S21:NewlyIssued] Found ${candidates.length} candidates issued in last 7 days`);
+  return candidates;
+}
+
+// ===== S22: BPL Contractor Company License Extraction =====
+// The same Socrata LARA datasets contain COMPANY licenses (ELECTRICAL CONTRACTOR,
+// MECHANICAL CONTRACTOR, PLUMBING CONTRACTOR, etc.) mixed with individual licenses.
+// Extract those and route them to techalert_business_prospects via source "lara_contractor_co".
+// This surfaces newly licensed trade businesses — companies that NEED workers right now.
+async function scanBPLContractorCompanies(): Promise<LicenseCandidate[]> {
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  let datasetIds: string[] = [];
+  try {
+    const meta = await fetch("https://data.michigan.gov/api/views/metadata/v1?q=contractor+license&limit=30", { signal: AbortSignal.timeout(10_000) });
+    if (meta.ok) {
+      const rows: any[] = await meta.json().then((d: any) => Array.isArray(d) ? d : (d?.results || []));
+      for (const r of rows) {
+        const id = r.id || r.resource?.id;
+        const name = (r.name || r.resource?.name || "").toLowerCase();
+        if (id && /licens|contractor|electric|plumb|hvac|mechanic/i.test(name)) datasetIds.push(id);
+      }
+    }
+  } catch { /* fall through */ }
+
+  for (const ds of datasetIds.slice(0, 5)) {
+    try {
+      // Query for CONTRACTOR license types specifically
+      const where = encodeURIComponent(`license_type like '%CONTRACTOR%' OR license_type like '%COMPANY%' OR license_type like '%FIRM%'`);
+      const url = `https://data.michigan.gov/resource/${ds}.json?$where=${where}&$limit=200&$order=issue_date DESC`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(12_000) });
+      if (!res.ok) continue;
+      const data: any[] = await res.json();
+      if (!Array.isArray(data) || data.length === 0) continue;
+
+      for (const row of data) {
+        const bizName = row.company_name || row.business_name || row.licensee_name || row.dba_name || row.full_name || row.name || "";
+        if (!bizName || bizName.length < 3) continue;
+        const licType = row.license_type || row.profession || "Contractor";
+        const lt = licType.toUpperCase();
+        if (!/ELECTR|PLUMB|HVAC|MECHANIC|BOILER|HEATING|COOLING|PIPE/i.test(lt)) continue;
+        const issued = row.issue_date || row.effective_date || null;
+        if (issued && issued < since30) continue;
+        const key = bizName.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        candidates.push({
+          full_name: bizName,
+          license_type: licType,
+          license_number: row.license_number ? String(row.license_number) : null,
+          license_expiry: row.expiration_date || null,
+          city: row.city || row.business_city || null,
+          source: "lara_contractor_co",
+        });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S22:ContractorCo] Found ${candidates.length} newly licensed contractor companies`);
+  return candidates;
+}
+
+// ===== S23: OSHA Michigan Trade Establishments =====
+// OSHA publishes inspection data for all establishments via a free REST API.
+// Filters for Michigan + trade NAICS codes. Routes to techalert_business_prospects
+// (active employers with inspections = actively operating, likely hiring).
+async function scanOSHAMichiganEstablishments(): Promise<LicenseCandidate[]> {
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  // NAICS codes: 238210=Electrical, 238220=Plumbing+HVAC, 238290=Other building equipment (boilers)
+  const naicsCodes = ["238210", "238220", "238290", "238110"];
+  const cutoff = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  for (const naics of naicsCodes) {
+    try {
+      const url = `https://enforcements.osha.gov/api/search/inspections?state=MI&naics=${naics}&size=50&sort=open_date:desc`;
+      const res = await fetch(url, {
+        headers: { "Accept": "application/json", "User-Agent": "Mozilla/5.0 research" },
+        signal: AbortSignal.timeout(12_000),
+      });
+      if (!res.ok) {
+        console.warn(`[S23:OSHA] HTTP ${res.status} for NAICS ${naics}`);
+        continue;
+      }
+      const data = await res.json();
+      const inspections: any[] = data?.hits?.hits?.map((h: any) => h._source) ||
+        data?.inspections || data?.results || data?.data || [];
+
+      for (const insp of inspections) {
+        const bizName = insp.estab_name || insp.establishment_name || insp.company || "";
+        if (!bizName || bizName.length < 3) continue;
+        const openDate = insp.open_date || insp.date_opened || "";
+        if (openDate && openDate < cutoff) continue;
+        const city = insp.site_city || insp.city || "";
+        const state = (insp.site_state || insp.state || "").toUpperCase();
+        if (state && state !== "MI") continue;
+        const key = bizName.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        let trade = "Trade Professional";
+        if (naics === "238210") trade = "Electrician";
+        else if (naics === "238220") trade = "HVAC/Plumbing";
+        else if (naics === "238290" || naics === "238110") trade = "Boiler/Mechanical";
+
+        candidates.push({
+          full_name: bizName,
+          license_type: trade,
+          license_number: insp.activity_nr ? String(insp.activity_nr) : null,
+          license_expiry: null,
+          city: city || null,
+          source: "osha_establishment",
+        });
+      }
+    } catch (e) {
+      console.warn(`[S23:OSHA] NAICS ${naics} error: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  console.log(`[S23:OSHA] Found ${candidates.length} active Michigan trade establishments`);
+  return candidates;
+}
+
+// ===== S24: LARA Disciplinary Reinstatements (Firecrawl) =====
+// BPL board order pages list license reinstatements (suspended → cleared).
+// Reinstated workers are immediately available and actively looking for work.
+const BPL_BOARD_PAGES = [
+  { url: "https://www.michigan.gov/lara/bureau-list/bpl/occ/professional-licensing/boards-commissions/michigan-boiler-rules", trade: "Boiler Operator" },
+  { url: "https://www.michigan.gov/lara/bureau-list/bpl/occ/professional-licensing/boards-commissions/michigan-board-of-electricians", trade: "Electrician" },
+  { url: "https://www.michigan.gov/lara/bureau-list/bpl/occ/professional-licensing/boards-commissions/Michigan-Board-of-Plumbing-Examiners", trade: "Plumber" },
+  { url: "https://www.michigan.gov/lara/bureau-list/bpl/occ/professional-licensing/boards-commissions/board-of-mechanical-rules", trade: "HVAC Technician" },
+];
+
+async function scanLARADisciplinaryReinstatements(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) {
+    console.warn("[S24:Reinstate] No FIRECRAWL_API_KEY — skipping");
+    return [];
+  }
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of BPL_BOARD_PAGES) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 2000 }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (!markdown || markdown.length < 100) continue;
+
+      // Split on reinstatement keywords and extract names from surrounding context
+      const REINSTATE_PATTERN = /reinstate[dm]?|restoration of license|license restored|order of reinstatement/gi;
+      if (!REINSTATE_PATTERN.test(markdown)) continue;
+
+      // Reset lastIndex after test()
+      REINSTATE_PATTERN.lastIndex = 0;
+      const sections = markdown.split(REINSTATE_PATTERN);
+      for (let i = 1; i < sections.length; i++) {
+        const context = sections[i].slice(0, 600);
+        const nameMatches = context.match(/\b([A-Z][a-z]{1,20})\s+([A-Z][a-z]{1,25})\b/g) || [];
+        for (const rawName of nameMatches) {
+          if (!isPersonName(rawName)) continue;
+          const key = rawName.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+          candidates.push({
+            full_name: rawName,
+            license_type: trade,
+            license_number: null,
+            license_expiry: null,
+            city: null,
+            source: "lara_reinstatement",
+          });
+        }
+      }
+    } catch (e) {
+      console.warn(`[S24:Reinstate] ${trade} error: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  console.log(`[S24:Reinstate] Found ${candidates.length} reinstated license holders`);
+  return candidates;
+}
+
+// ===== S25: Michigan New Trade Business Filings (Sonar) =====
+// Sonar searches Michigan SOS filings and news for recently formed trade LLCs/corps.
+// Owner names → hire_alert_candidates (they just went independent = job change signal)
+// Company names → techalert_business_prospects (new company = needs workers)
+async function scanMichiganNewTradeBusinesses(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) {
+    console.warn("[S25:SOS] No OPENROUTER_API_KEY — skipping");
+    return [];
+  }
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  const queries = [
+    { trade: "HVAC Technician", q: "new Michigan LLC formed 2026 HVAC heating cooling mechanical contractor Michigan Secretary of State filing" },
+    { trade: "Electrician", q: "new Michigan electrical contractor LLC corporation formed 2026 Metro Detroit Wayne Oakland Macomb" },
+    { trade: "Plumber", q: "new Michigan plumbing contractor LLC incorporated 2026 Metro Detroit licensed plumber sole proprietor" },
+    { trade: "Boiler Operator", q: "new Michigan boiler mechanical LLC corporation 2026 licensed boiler operator Metro Detroit independent" },
+  ];
+
+  for (const { trade, q } of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            {
+              role: "system",
+              content: `You are researching recently formed Michigan trade businesses. Return a JSON array only — no prose. Each item must have: full_name (owner's name or company name), is_company (boolean), city (Michigan city or null). Only include entries with verifiable source data. Max 10 results. Empty array if none found.`,
+            },
+            { role: "user", content: q },
+          ],
+          max_tokens: 600,
+          temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(25_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[];
+      try { arr = JSON.parse(m[0]); } catch { continue; }
+
+      for (const r of arr) {
+        const name = (r.full_name || r.name || "").trim();
+        if (!name || name.length < 4) continue;
+        const key = name.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        // Companies go to techalert_business_prospects via source tag; individuals go to candidates
+        const isCompany = r.is_company === true || !isPersonName(name);
+        candidates.push({
+          full_name: name,
+          license_type: trade,
+          license_number: null,
+          license_expiry: null,
+          city: r.city && typeof r.city === "string" && r.city.length > 2 ? r.city : null,
+          source: isCompany ? "michigan_sos_co" : "michigan_sos",
+        });
+      }
+    } catch (e) {
+      console.warn(`[S25:SOS] ${trade} error: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  console.log(`[S25:SOS] Found ${candidates.length} new Michigan trade businesses/owners`);
+  return candidates;
+}
+
+// ===== S26: Indeed Public Resumes =====
+// People who opted into public resume visibility are actively job-hunting RIGHT NOW.
+const INDEED_RESUME_SEARCHES = [
+  { url: "https://www.indeed.com/resumes/hvac-technician/in-detroit-mi", trade: "HVAC Technician" },
+  { url: "https://www.indeed.com/resumes/electrician/in-detroit-mi", trade: "Electrician" },
+  { url: "https://www.indeed.com/resumes/plumber/in-detroit-mi", trade: "Plumber" },
+  { url: "https://www.indeed.com/resumes/boiler-operator/in-detroit-mi", trade: "Boiler Operator" },
+  { url: "https://www.indeed.com/resumes/registered-nurse/in-detroit-mi", trade: "Registered Nurse" },
+  { url: "https://www.indeed.com/resumes/cna/in-detroit-mi", trade: "Nurse Aide" },
+];
+
+async function scanIndeedResumes(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of INDEED_RESUME_SEARCHES) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 3000 }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (markdown.length < 100) continue;
+      const extracted = await extractNamesFromMarkdown(markdown, trade, "indeed_resume");
+      for (const c of extracted) {
+        if (seen.has(c.full_name.toLowerCase())) continue;
+        seen.add(c.full_name.toLowerCase());
+        candidates.push(c);
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S26:Indeed] Found ${candidates.length} active job seekers`);
+  return candidates;
+}
+
+// ===== S27: ZipRecruiter Candidate Profiles =====
+async function scanZipRecruiterCandidates(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const searches = [
+    { url: "https://www.ziprecruiter.com/candidate/search?search=hvac+technician&location=Detroit%2C+MI", trade: "HVAC Technician" },
+    { url: "https://www.ziprecruiter.com/candidate/search?search=licensed+electrician&location=Detroit%2C+MI", trade: "Electrician" },
+    { url: "https://www.ziprecruiter.com/candidate/search?search=journeyman+plumber&location=Detroit%2C+MI", trade: "Plumber" },
+    { url: "https://www.ziprecruiter.com/candidate/search?search=boiler+operator&location=Detroit%2C+MI", trade: "Boiler Operator" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of searches) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 4000 }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (markdown.length < 100) continue;
+      const extracted = await extractNamesFromMarkdown(markdown, trade, "ziprecruiter");
+      for (const c of extracted) {
+        if (seen.has(c.full_name.toLowerCase())) continue;
+        seen.add(c.full_name.toLowerCase());
+        candidates.push(c);
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S27:ZipRecruiter] Found ${candidates.length} candidates`);
+  return candidates;
+}
+
+// ===== S28: Facebook Trade Community Posts (Sonar) =====
+// Public Facebook group posts from Michigan tradespeople announcing availability.
+async function scanFacebookTradePosts(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const queries = [
+    { q: `site:facebook.com Michigan HVAC technician "looking for work" OR "available" OR "just got my license" 2025 OR 2026 Detroit OR Warren OR Dearborn OR "Metro Detroit"`, trade: "HVAC Technician" },
+    { q: `site:facebook.com Michigan licensed electrician "open to work" OR "available" OR "seeking employment" 2025 OR 2026 Detroit OR Wayne County OR Oakland County`, trade: "Electrician" },
+    { q: `site:facebook.com Michigan licensed plumber "looking for work" OR "available" OR "new journeyman" 2025 OR 2026 Metro Detroit`, trade: "Plumber" },
+    { q: `site:facebook.com Michigan boiler operator stationary engineer "looking for work" OR "available" OR "certified" 2025 OR 2026`, trade: "Boiler Operator" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { q, trade } of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: `Find individual Michigan ${trade}s announcing job availability on Facebook or other social platforms. Return ONLY JSON array: [{"full_name":"First Last","city":"Michigan city or null"}]. Individual people only, not companies. Empty array if none found.` },
+            { role: "user", content: q },
+          ],
+          max_tokens: 500, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(25_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[];
+      try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: trade, license_number: null, license_expiry: null, city: r.city || null, source: "facebook_trade" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S28:Facebook] Found ${candidates.length} candidates`);
+  return candidates;
+}
+
+// ===== S29: Michigan BCHS Healthcare Facility Staff (Sonar) =====
+// Bureau of Community & Health Systems licenses MI nursing homes — staff are findable.
+async function scanBCHSHealthcareStaff(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const queries = [
+    `Find individual CNAs (Certified Nurse Aides) and LPNs (Licensed Practical Nurses) currently working at BCHS-licensed nursing homes in Wayne County OR Oakland County OR Macomb County Michigan. Return names of individuals visible on facility websites, LinkedIn, or healthcare job boards. JSON array: [{"full_name":"First Last","city":"city or null","license_type":"CNA or LPN"}]. Real people only. Max 15.`,
+    `Find RNs (Registered Nurses) and NPs (Nurse Practitioners) working at Metro Detroit Michigan skilled nursing facilities or assisted living centers licensed by Michigan LARA BCHS. Search facility websites, ZipRecruiter, Indeed, LinkedIn for public staff listings. JSON array only. Max 15.`,
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const q of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: "Return ONLY a valid JSON array. No prose, no markdown. Empty array [] if nothing found." },
+            { role: "user", content: q },
+          ],
+          max_tokens: 800, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(25_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[];
+      try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        const lt = r.license_type || "Nurse";
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: lt, license_number: null, license_expiry: null, city: r.city || null, source: "bchs_staff" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S29:BCHS] Found ${candidates.length} healthcare staff candidates`);
+  return candidates;
+}
+
+// ===== S30: Michigan EGLE Certified Contractor Registry =====
+// EGLE requires asbestos/lead abatement contractors to register publicly.
+// Asbestos/hazmat workers heavily overlap with HVAC, boiler, and mechanical trades.
+async function scanEGLEContractors(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const urls = [
+    { url: "https://www.michigan.gov/egle/regulatory-assistance/permits-licenses-certifications/asbestos/michigan-licensed-asbestos-contractors", trade: "HVAC Technician" },
+    { url: "https://www.michigan.gov/egle/regulatory-assistance/permits-licenses-certifications/lead", trade: "Trade Professional" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of urls) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 2000 }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (markdown.length < 100) continue;
+      const extracted = await extractNamesFromMarkdown(markdown, trade, "egle_registry");
+      for (const c of extracted) {
+        if (seen.has(c.full_name.toLowerCase())) continue;
+        seen.add(c.full_name.toLowerCase());
+        candidates.push(c);
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S30:EGLE] Found ${candidates.length} EGLE-certified contractors`);
+  return candidates;
+}
+
+// ===== S31: Google Places API Trade Business Sweep =====
+// Uses existing GOOGLE_MAPS_API_KEY. Different coverage than Yelp.
+// Routes to techalert_business_prospects — these are companies that need TechAlert.
+async function scanGooglePlacesTrades(): Promise<LicenseCandidate[]> {
+  if (!GOOGLE_MAPS_API_KEY) return [];
+  const searches = [
+    { query: "HVAC contractor Metro Detroit Michigan", trade: "HVAC Technician" },
+    { query: "licensed electrician Detroit Michigan", trade: "Electrician" },
+    { query: "licensed plumber Warren Michigan", trade: "Plumber" },
+    { query: "boiler repair service Detroit Michigan", trade: "Boiler Operator" },
+    { query: "mechanical contractor Oakland County Michigan", trade: "HVAC Technician" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { query, trade } of searches) {
+    try {
+      const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_API_KEY}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+      if (!res.ok) continue;
+      const data = await res.json();
+      for (const place of (data?.results || []).slice(0, 10)) {
+        const name = (place.name || "").trim();
+        if (!name || name.length < 3) continue;
+        const key = name.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const vicinity = place.vicinity || place.formatted_address || "";
+        const cityMatch = vicinity.match(/([A-Za-z\s]+),\s*MI/);
+        candidates.push({
+          full_name: name, license_type: trade,
+          license_number: null, license_expiry: null,
+          city: cityMatch?.[1]?.trim() || null,
+          source: "google_places_sweep",
+        });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S31:GooglePlaces] Found ${candidates.length} trade businesses`);
+  return candidates;
+}
+
+// ===== S32: Angi Pro Contractor Directory =====
+// Large national platform — many solo operators listed by personal name.
+// Person names → candidates; company names → techalert_business_prospects.
+async function scanAngiDirectory(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const pages = [
+    { url: "https://www.angi.com/companylist/detroit/hvac.htm", trade: "HVAC Technician" },
+    { url: "https://www.angi.com/companylist/detroit/electricians.htm", trade: "Electrician" },
+    { url: "https://www.angi.com/companylist/detroit/plumbers.htm", trade: "Plumber" },
+    { url: "https://www.angi.com/companylist/warren/hvac.htm", trade: "HVAC Technician" },
+    { url: "https://www.angi.com/companylist/troy-mi/electricians.htm", trade: "Electrician" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of pages) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 3000 }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (markdown.length < 100) continue;
+      // Extract all capitalized name-like strings; split person vs company on isPersonName
+      const namePattern = /\*\*([^*\n]{3,60})\*\*|^#+\s+(.{3,60})$/gm;
+      let m: RegExpMatchArray | null;
+      while ((m = namePattern.exec(markdown)) !== null) {
+        const raw = (m[1] || m[2] || "").trim();
+        if (!raw) continue;
+        const stripped = raw.replace(TRADE_WORD_PATTERN, "").replace(/\s+/g, " ").trim();
+        if (!stripped || stripped.length < 3) continue;
+        const key = stripped.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const isPerson = isPersonName(stripped);
+        candidates.push({
+          full_name: stripped, license_type: trade,
+          license_number: null, license_expiry: null, city: null,
+          source: isPerson ? "angi" : "angi_co",
+        });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S32:Angi] Found ${candidates.length} entries`);
+  return candidates;
+}
+
+// ===== S33: Manta Small Business Listings =====
+// Frequently shows owner names ("Bob Smith, Owner"). Many sole proprietors in trades.
+async function scanMantaListings(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const pages = [
+    { url: "https://www.manta.com/mb_46_A8004D_000/electrical_contractors/detroit_mi", trade: "Electrician" },
+    { url: "https://www.manta.com/mb_46_A47C0_000/plumbing_heating_air/detroit_mi", trade: "HVAC Technician" },
+    { url: "https://www.manta.com/mb_46_A47C9_000/plumbing_contractors/detroit_mi", trade: "Plumber" },
+    { url: "https://www.manta.com/mb_46_A47C0_000/plumbing_heating_air/warren_mi", trade: "HVAC Technician" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of pages) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 2000 }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (markdown.length < 100) continue;
+      const extracted = await extractNamesFromMarkdown(markdown, trade, "manta_co");
+      for (const c of extracted) {
+        const key = c.full_name.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        // Re-tag person names as candidates, companies as prospects
+        candidates.push({ ...c, source: isPersonName(c.full_name) ? "manta" : "manta_co" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S33:Manta] Found ${candidates.length} entries`);
+  return candidates;
+}
+
+// ===== S34: BBB Accredited Trade Contractor Directory =====
+// BBB-accredited contractors in Metro Detroit. Routes to techalert_business_prospects.
+async function scanBBBDirectory(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const pages = [
+    { url: "https://www.bbb.org/search?find_country=USA&find_text=hvac+contractor&find_loc=Detroit%2C+MI&page=1", trade: "HVAC Technician" },
+    { url: "https://www.bbb.org/search?find_country=USA&find_text=electrician&find_loc=Detroit%2C+MI&page=1", trade: "Electrician" },
+    { url: "https://www.bbb.org/search?find_country=USA&find_text=plumber&find_loc=Detroit%2C+MI&page=1", trade: "Plumber" },
+    { url: "https://www.bbb.org/search?find_country=USA&find_text=boiler+service&find_loc=Detroit%2C+MI&page=1", trade: "Boiler Operator" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of pages) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 3000 }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (markdown.length < 100) continue;
+      const extracted = await extractNamesFromMarkdown(markdown, trade, "bbb_directory");
+      for (const c of extracted) {
+        const key = c.full_name.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        candidates.push(c);
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S34:BBB] Found ${candidates.length} accredited contractors`);
+  return candidates;
+}
+
+// ===== S35: Alignable Local Business Network =====
+// LinkedIn for local small businesses. Owner names + trade + city visible on profiles.
+async function scanAlignableNetwork(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const pages = [
+    { url: "https://www.alignable.com/detroit-mi/hvac-contractor", trade: "HVAC Technician" },
+    { url: "https://www.alignable.com/detroit-mi/electrician", trade: "Electrician" },
+    { url: "https://www.alignable.com/detroit-mi/plumber", trade: "Plumber" },
+    { url: "https://www.alignable.com/warren-mi/hvac-contractor", trade: "HVAC Technician" },
+    { url: "https://www.alignable.com/sterling-heights-mi/electrician", trade: "Electrician" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of pages) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 3000 }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (markdown.length < 100) continue;
+      const extracted = await extractNamesFromMarkdown(markdown, trade, "alignable_co");
+      for (const c of extracted) {
+        const key = c.full_name.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        candidates.push({ ...c, source: isPersonName(c.full_name) ? "alignable" : "alignable_co" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S35:Alignable] Found ${candidates.length} entries`);
+  return candidates;
+}
+
+// ===== S36: Michigan WARN Act Layoff Notices =====
+// Michigan LEO publishes WARN Act filings (mass layoffs 50+ workers) publicly.
+// We find trade companies on the list, then use Sonar to surface worker names.
+async function scanWARNActLayoffs(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  try {
+    // Step 1: scrape WARN Act page for recent trade-company layoffs
+    const warnRes = await fetch(
+      "https://www.michigan.gov/leo/bureaus-agencies/ueio/worker-adjustment-and-retraining-notification-warn-act",
+      { headers: { "User-Agent": "Mozilla/5.0" }, signal: AbortSignal.timeout(12_000) }
+    );
+    const html = warnRes.ok ? await warnRes.text() : "";
+    // Pull company names from the HTML table rows
+    const companyPattern = />([\w\s&,.''-]{5,60}(?:HVAC|Heating|Cooling|Electric|Plumb|Mechanical|Boiler|Pipe|Sheet Metal)[^<]*)</gi;
+    const tradeLayoffs: string[] = [];
+    let m: RegExpExecArray | null;
+    while ((m = companyPattern.exec(html)) !== null) {
+      tradeLayoffs.push(m[1].trim());
+    }
+    if (tradeLayoffs.length === 0) {
+      // Fallback: ask Sonar to find recent Michigan trade layoffs
+      tradeLayoffs.push("recent Michigan HVAC electrician plumber boiler trade company layoffs 2025 2026");
+    }
+
+    // Step 2: for each layoff, find individual worker names via Sonar
+    for (const company of tradeLayoffs.slice(0, 3)) {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: "Return ONLY a JSON array of individual people's names. No prose. [{\"full_name\":\"First Last\",\"trade\":\"trade type\",\"city\":\"MI city or null\"}]. Empty array if none found." },
+            { role: "user", content: `Find names of individual trade workers (HVAC, electricians, plumbers, boiler operators) laid off from: ${company} in Michigan. Search LinkedIn, news, union announcements. Max 8 results.` },
+          ],
+          max_tokens: 400, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const match = text.match(/\[[\s\S]*?\]/);
+      if (!match) continue;
+      let arr: any[]; try { arr = JSON.parse(match[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: r.trade || "Trade Professional", license_number: null, license_expiry: null, city: r.city || null, source: "warn_act" });
+      }
+    }
+  } catch (e) { console.warn(`[S36:WARN] ${e instanceof Error ? e.message : String(e)}`); }
+  console.log(`[S36:WARN] Found ${candidates.length} laid-off trade workers`);
+  return candidates;
+}
+
+// ===== S37: MLive / Detroit News Trade Coverage (Sonar) =====
+// Local news covers apprenticeship graduations, union milestones, company expansions by name.
+async function scanMLiveTradeCoverage(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const queries = [
+    { q: `site:mlive.com OR site:detroitnews.com OR site:freep.com "new journeyman" OR "apprenticeship graduation" OR "trade school graduation" Michigan electrician OR plumber OR HVAC OR boiler 2025 OR 2026`, trade: "Trade Professional" },
+    { q: `site:mlive.com OR site:detroitnews.com Michigan IBEW OR "UA Local" OR "Boilermakers" new members graduates certified 2025 OR 2026`, trade: "Trade Professional" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { q, trade } of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: "Extract individual people's names mentioned in local Michigan news articles about trade graduations or certifications. JSON array only: [{\"full_name\":\"First Last\",\"license_type\":\"trade\",\"city\":\"MI city or null\"}]. Max 15." },
+            { role: "user", content: q },
+          ],
+          max_tokens: 600, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(25_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[]; try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: r.license_type || trade, license_number: null, license_expiry: null, city: r.city || null, source: "local_news" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S37:MLive] Found ${candidates.length} candidates from local news`);
+  return candidates;
+}
+
+// ===== S38: Michigan Trade School Graduate Lists (Firecrawl) =====
+// Community colleges post trade program completions publicly — brand-new licensed workers.
+const TRADE_SCHOOL_PAGES = [
+  { url: "https://www.hfcc.edu/academics/skilled-trades/news", trade: "Trade Professional", city: "Dearborn" },
+  { url: "https://www.macomb.edu/news/index.html", trade: "Trade Professional", city: "Warren" },
+  { url: "https://www.schoolcraft.edu/news-events/news/index.html", trade: "Trade Professional", city: "Livonia" },
+  { url: "https://www.wcccd.edu/news/", trade: "Trade Professional", city: "Detroit" },
+  { url: "https://www.ltu.edu/news/", trade: "Trade Professional", city: "Southfield" },
+];
+
+async function scanTradeSchoolGraduates(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  const GRAD_KEYWORDS = /graduat|complet|certif|journeyman|licensed|trades|hvac|electric|plumb|boiler|welding|mechanic/i;
+
+  for (const { url, trade, city } of TRADE_SCHOOL_PAGES) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 2000 }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (!markdown || !GRAD_KEYWORDS.test(markdown)) continue;
+      const extracted = await extractNamesFromMarkdown(markdown, trade, "trade_school");
+      for (const c of extracted) {
+        if (seen.has(c.full_name.toLowerCase())) continue;
+        seen.add(c.full_name.toLowerCase());
+        candidates.push({ ...c, city: c.city || city });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S38:TradeSchool] Found ${candidates.length} graduates`);
+  return candidates;
+}
+
+// ===== S39: Reddit Michigan Trade Posts (Sonar) =====
+// Public posts from Michigan tradespeople announcing new licenses or seeking work.
+async function scanRedditTradePosts(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const queries = [
+    { q: `site:reddit.com (r/HVAC OR r/Michigan OR r/Detroit OR r/electricians OR r/plumbing) Michigan "just got my license" OR "passed my exam" OR "looking for work" OR "new journeyman" 2025 OR 2026`, trade: "Trade Professional" },
+    { q: `site:reddit.com r/hvacadvice OR r/Plumbing OR r/askanelectrician Michigan Detroit Warren "open to work" OR "available" OR "seeking position" 2025 OR 2026`, trade: "Trade Professional" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { q, trade } of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: "Find individual Michigan tradespeople who posted about being available for work or getting a new license on Reddit. Return JSON array: [{\"full_name\":\"username or real name\",\"license_type\":\"trade\",\"city\":\"MI city or null\"}]. If only username available, include it as full_name. Max 10." },
+            { role: "user", content: q },
+          ],
+          max_tokens: 500, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(25_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[]; try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        // Reddit usernames don't pass isPersonName — skip them; only include real names
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: r.license_type || trade, license_number: null, license_expiry: null, city: r.city || null, source: "reddit_trade" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S39:Reddit] Found ${candidates.length} candidates`);
+  return candidates;
+}
+
+// ===== S40: Houzz Pro Contractor Directory (Firecrawl) =====
+// Large design/remodel platform with its own contractor directory — different audience.
+async function scanHouzzDirectory(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const pages = [
+    { url: "https://www.houzz.com/professionals/hvac-contractors/detroit-mi-us-l~MTA4NDI1MTI~P~US~AV~Detroit-Metro-Area", trade: "HVAC Technician" },
+    { url: "https://www.houzz.com/professionals/electricians/detroit-mi-us-l~MTA4NDI1MTI~P~US~AV~Detroit-Metro-Area", trade: "Electrician" },
+    { url: "https://www.houzz.com/professionals/plumbers/detroit-mi-us-l~MTA4NDI1MTI~P~US~AV~Detroit-Metro-Area", trade: "Plumber" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of pages) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 4000 }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (markdown.length < 100) continue;
+      const extracted = await extractNamesFromMarkdown(markdown, trade, "houzz_co");
+      for (const c of extracted) {
+        if (seen.has(c.full_name.toLowerCase())) continue;
+        seen.add(c.full_name.toLowerCase());
+        candidates.push({ ...c, source: isPersonName(c.full_name) ? "houzz" : "houzz_co" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S40:Houzz] Found ${candidates.length} entries`);
+  return candidates;
+}
+
+// ===== S41: Porch.com Contractor Directory (Firecrawl) =====
+// National contractor platform — different coverage from Angi/Thumbtack/Yelp.
+async function scanPorchDirectory(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const pages = [
+    { url: "https://porch.com/detroit-mi/hvac-companies", trade: "HVAC Technician" },
+    { url: "https://porch.com/detroit-mi/electricians", trade: "Electrician" },
+    { url: "https://porch.com/detroit-mi/plumbers", trade: "Plumber" },
+    { url: "https://porch.com/warren-mi/hvac-companies", trade: "HVAC Technician" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of pages) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 3000 }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (markdown.length < 100) continue;
+      const extracted = await extractNamesFromMarkdown(markdown, trade, "porch_co");
+      for (const c of extracted) {
+        if (seen.has(c.full_name.toLowerCase())) continue;
+        seen.add(c.full_name.toLowerCase());
+        candidates.push({ ...c, source: isPersonName(c.full_name) ? "porch" : "porch_co" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S41:Porch] Found ${candidates.length} entries`);
+  return candidates;
+}
+
+// ===== S42: Michigan Building Officials Association (MBOA) =====
+// Licensed inspectors who leave municipal jobs = highly experienced trade candidates.
+// Member directory also cross-references which inspectors are active in each city.
+async function scanMBOADirectory(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY && !OPENROUTER_API_KEY) return [];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  // Try Firecrawl first; fall back to Sonar
+  if (FIRECRAWL_API_KEY) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url: "https://www.mboa.org/members", formats: ["markdown"], waitFor: 2000 }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const markdown: string = data?.data?.markdown || data?.markdown || "";
+        if (markdown.length > 100) {
+          const extracted = await extractNamesFromMarkdown(markdown, "Building Inspector", "mboa");
+          for (const c of extracted) {
+            if (seen.has(c.full_name.toLowerCase())) continue;
+            seen.add(c.full_name.toLowerCase());
+            candidates.push(c);
+          }
+        }
+      }
+    } catch { /* fall through to Sonar */ }
+  }
+
+  if (candidates.length === 0 && OPENROUTER_API_KEY) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: "Return JSON array only: [{\"full_name\":\"First Last\",\"city\":\"MI city or null\"}]. Max 15." },
+            { role: "user", content: "Find names of Michigan Building Officials Association (MBOA) members or licensed building inspectors in Wayne County, Oakland County, or Macomb County Michigan. Search mboa.org, LinkedIn, city government pages." },
+          ],
+          max_tokens: 500, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const text: string = data?.choices?.[0]?.message?.content || "";
+        const m = text.match(/\[[\s\S]*?\]/);
+        if (m) {
+          let arr: any[]; try { arr = JSON.parse(m[0]); } catch { arr = []; }
+          for (const r of arr) {
+            const name = (r.full_name || "").trim();
+            if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+            seen.add(name.toLowerCase());
+            candidates.push({ full_name: name, license_type: "Building Inspector", license_number: null, license_expiry: null, city: r.city || null, source: "mboa" });
+          }
+        }
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S42:MBOA] Found ${candidates.length} building officials`);
+  return candidates;
+}
+
+// ===== S43: LinkedIn "Open to Work" Posts (Sonar) =====
+// Different angle from S8 (general search) — specifically targets #opentowork posts.
+async function scanLinkedInOpenToWork(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const queries = [
+    { q: `site:linkedin.com/in Michigan HVAC technician OR boiler operator OR stationary engineer "#opentowork" OR "open to work" OR "seeking new opportunities" 2025 OR 2026`, trade: "HVAC Technician" },
+    { q: `site:linkedin.com/in Michigan licensed electrician journeyman master "#opentowork" OR "open to work" OR "available for hire" Metro Detroit 2025 OR 2026`, trade: "Electrician" },
+    { q: `site:linkedin.com/in Michigan licensed plumber journeyman master "#opentowork" OR "seeking" 2025 OR 2026`, trade: "Plumber" },
+    { q: `site:linkedin.com/in Michigan CNA LPN RN "open to work" OR "seeking" OR "available" Metro Detroit healthcare nursing 2025 OR 2026`, trade: "Nursing" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { q, trade } of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: `Find Michigan ${trade}s with LinkedIn profiles showing "open to work" status. Return JSON array: [{\"full_name\":\"First Last\",\"city\":\"MI city or null\",\"license_type\":\"specific trade\"}]. Real people only, no companies. Max 10.` },
+            { role: "user", content: q },
+          ],
+          max_tokens: 500, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(25_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[]; try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: r.license_type || trade, license_number: null, license_expiry: null, city: r.city || null, source: "linkedin_otw" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S43:LinkedIn-OTW] Found ${candidates.length} open-to-work candidates`);
+  return candidates;
+}
+
+// ===== S44: Nextdoor Trade Recommendations (Sonar) =====
+// Public Nextdoor posts where neighbors recommend specific tradespeople by name.
+// Real person recommendations = verified active workers.
+async function scanNextdoorRecommendations(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const queries = [
+    { q: `site:nextdoor.com OR "nextdoor" Metro Detroit Michigan recommend "great HVAC" OR "great electrician" OR "great plumber" name 2025 OR 2026`, trade: "Trade Professional" },
+    { q: `"nextdoor" Detroit OR Warren OR Dearborn OR Troy Michigan "recommend" OR "highly recommend" boiler HVAC electrician plumber individual person name 2025 2026`, trade: "Trade Professional" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { q, trade } of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: "Find individual Michigan tradespeople mentioned by name in Nextdoor or neighborhood forum recommendations. Return JSON array: [{\"full_name\":\"First Last\",\"license_type\":\"trade\",\"city\":\"MI city or null\"}]. Real person names only. Max 10." },
+            { role: "user", content: q },
+          ],
+          max_tokens: 400, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[]; try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: r.license_type || trade, license_number: null, license_expiry: null, city: r.city || null, source: "nextdoor_rec" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S44:Nextdoor] Found ${candidates.length} recommended tradespeople`);
+  return candidates;
+}
+
+// ===== S45: Michigan License Reciprocity Applicants (Sonar) =====
+// Out-of-state tradespeople applying for Michigan license reciprocity are moving
+// into the Michigan market — zero competition, immediately hireable.
+async function scanLicenseReciprocityApplicants(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const queries = [
+    { q: `Michigan LARA license reciprocity application 2025 OR 2026 electrician OR plumber OR HVAC OR boiler out-of-state relocating Detroit Metro area`, trade: "Trade Professional" },
+    { q: `Michigan electrical contractor license reciprocity Ohio Indiana Illinois Wisconsin 2025 OR 2026 moving Michigan seeking work`, trade: "Electrician" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { q, trade } of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: "Find individual tradespeople who applied for or received Michigan license reciprocity. Return JSON array: [{\"full_name\":\"First Last\",\"license_type\":\"trade\",\"city\":\"MI city or null\"}]. Real names only. Max 10." },
+            { role: "user", content: q },
+          ],
+          max_tokens: 400, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[]; try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: r.license_type || trade, license_number: null, license_expiry: null, city: r.city || null, source: "lara_reciprocity" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S45:Reciprocity] Found ${candidates.length} reciprocity applicants`);
+  return candidates;
+}
+
+// ===== S46: Craigslist Services Section (Firecrawl) =====
+// S9 targets the Craigslist JOBS board (/search/trd). This targets the SERVICES
+// section (/search/lbg gig labor + /services/skilled) where tradespeople post
+// "available for work" ads — strongest same-day availability signal.
+async function scanCraigslistServicesSection(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const urls = [
+    "https://detroit.craigslist.org/search/lbg",
+    "https://detroit.craigslist.org/search/sks",
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  for (const url of urls) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 3000 }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const md: string = data?.data?.markdown || data?.markdown || "";
+      if (!md || md.length < 50) continue;
+      const extracted = await extractNamesFromMarkdown(md, "Trade Professional", "craigslist_services");
+      for (const c of extracted) {
+        if (seen.has(c.full_name.toLowerCase())) continue;
+        seen.add(c.full_name.toLowerCase());
+        candidates.push(c);
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S46:CLServices] Found ${candidates.length} available tradespeople`);
+  return candidates;
+}
+
+// ===== S47: Pure Michigan Talent Connect (Sonar) =====
+// Michigan's official state job seeker board (mitalent.org). Workers register here
+// through Michigan Works! offices after filing unemployment or seeking placement.
+// State-sourced data means these are actively job-seeking, not passively browsing.
+async function scanPureMichiganTalentConnect(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const queries = [
+    { q: `site:mitalent.org Michigan skilled trades HVAC electrician plumber boiler operator job seeker 2025 OR 2026`, trade: "Trade Professional" },
+    { q: `"Michigan Talent Connect" OR "Pure Michigan Talent Connect" electrician OR plumber OR "HVAC technician" available Metro Detroit seeking work`, trade: "Trade Professional" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  for (const { q, trade } of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: "Find individual Michigan trade workers listed as job seekers on mitalent.org or Michigan Works! programs. Return JSON array: [{\"full_name\":\"First Last\",\"license_type\":\"trade\",\"city\":\"MI city or null\"}]. Real names only. Max 10." },
+            { role: "user", content: q },
+          ],
+          max_tokens: 400, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[]; try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: r.license_type || trade, license_number: null, license_expiry: null, city: r.city || null, source: "mitalent_seekers" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S47:MiTalent] Found ${candidates.length} state job seekers`);
+  return candidates;
+}
+
+// ===== S48: Union Hiring Halls (Sonar) =====
+// When union hiring halls post "members seeking work" lists, those are members
+// explicitly available and dispatched by the hall — highest-quality leads because
+// the hall has already vetted their license and journeyman status.
+async function scanUnionHiringHalls(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const queries = [
+    { q: `IBEW Local 58 Detroit electrician hiring hall available members seeking work dispatch 2025 OR 2026`, trade: "Electrician" },
+    { q: `UA Local 98 Detroit plumber pipefitter hiring hall available journeyman seeking employment 2025 OR 2026`, trade: "Plumber" },
+    { q: `"Sheet Metal Workers Local 80" OR "UA Local 190" Ann Arbor Michigan hiring hall members available 2025 OR 2026`, trade: "Sheet Metal / HVAC" },
+    { q: `"Boilermakers Local 169" OR "Pipefitters Local 636" Michigan available members dispatch list 2025 OR 2026`, trade: "Boiler Operator" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  for (const { q, trade } of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: "Find individual union members listed as available for work or seeking dispatch from Michigan trade union hiring halls. Return JSON array: [{\"full_name\":\"First Last\",\"license_type\":\"trade\",\"city\":\"MI city or null\"}]. Journeymen only. Max 10." },
+            { role: "user", content: q },
+          ],
+          max_tokens: 400, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[]; try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: r.license_type || trade, license_number: null, license_expiry: null, city: r.city || null, source: "union_hiring_hall" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S48:UnionHalls] Found ${candidates.length} dispatched union members`);
+  return candidates;
+}
+
+// ===== S49: New Michigan License Exam Passers (Sonar) =====
+// Brand-new market entrants. LARA publishes exam results and pass lists.
+// Someone who just passed the journeyman or contractor exam is entering the market
+// right now — zero competition from other employers yet.
+async function scanLARANewExamPassers(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const queries = [
+    { q: `Michigan LARA electrical contractor exam passed 2025 OR 2026 new license journeyman master electrician Detroit`, trade: "Electrician" },
+    { q: `Michigan LARA plumbing master journeyman exam results 2025 OR 2026 new license Metro Detroit passed`, trade: "Plumber" },
+    { q: `Michigan HVAC refrigeration contractor exam passed 2025 OR 2026 new license certification`, trade: "HVAC Technician" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  for (const { q, trade } of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: "Find individual tradespeople who recently passed Michigan LARA licensing exams and received a new license. Return JSON array: [{\"full_name\":\"First Last\",\"license_type\":\"trade\",\"city\":\"MI city or null\"}]. Real names only. Max 10." },
+            { role: "user", content: q },
+          ],
+          max_tokens: 400, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[]; try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: r.license_type || trade, license_number: null, license_expiry: null, city: r.city || null, source: "lara_exam_pass" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S49:ExamPass] Found ${candidates.length} new exam passers`);
+  return candidates;
+}
+
+// ===== S50: Glassdoor Open to Work (Sonar) =====
+// Glassdoor public profiles include "open to work" signals. Michigan tradespeople
+// who publish their profiles publicly are explicitly signaling job readiness.
+async function scanGlassdoorOpenToWork(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const queries = [
+    { q: `site:glassdoor.com Michigan HVAC technician "open to work" OR "looking for opportunities" Detroit Metro 2025 OR 2026`, trade: "HVAC Technician" },
+    { q: `site:glassdoor.com Michigan electrician journeyman "open to work" Metro Detroit Wayne Oakland Macomb county`, trade: "Electrician" },
+    { q: `site:glassdoor.com Michigan plumber pipefitter "open to work" available seeking new position 2025 OR 2026`, trade: "Plumber" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  for (const { q, trade } of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: "Find Michigan tradespeople with public Glassdoor profiles indicating they are open to work or seeking new employment. Return JSON array: [{\"full_name\":\"First Last\",\"license_type\":\"trade\",\"city\":\"MI city or null\"}]. Real names only. Max 10." },
+            { role: "user", content: q },
+          ],
+          max_tokens: 400, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[]; try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: r.license_type || trade, license_number: null, license_expiry: null, city: r.city || null, source: "glassdoor_otw" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S50:Glassdoor] Found ${candidates.length} open-to-work profiles`);
+  return candidates;
+}
+
+// ===== S51: Handy / TaskRabbit Trade Pros (Firecrawl) =====
+// Handy.com and TaskRabbit list individual licensed tradespeople with public
+// contractor profiles in Metro Detroit. These workers actively market themselves
+// and are available for on-demand work — perfect for companies needing flex labor.
+async function scanHandymanDirectories(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const urls = [
+    "https://www.handy.com/services/plumbing/detroit-mi",
+    "https://www.handy.com/services/electrical/detroit-mi",
+    "https://www.taskrabbit.com/services/electricians/detroit-mi",
+    "https://www.taskrabbit.com/services/plumbing/detroit-mi",
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  for (const url of urls) {
+    const trade = url.includes("plumb") ? "Plumber" : url.includes("electr") ? "Electrician" : "HVAC Technician";
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 3000 }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const md: string = data?.data?.markdown || data?.markdown || "";
+      if (!md || md.length < 50) continue;
+      const extracted = await extractNamesFromMarkdown(md, trade, "handy_tasker");
+      for (const c of extracted) {
+        if (seen.has(c.full_name.toLowerCase())) continue;
+        seen.add(c.full_name.toLowerCase());
+        candidates.push(c);
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S51:Handy/TR] Found ${candidates.length} gig trade pros`);
+  return candidates;
+}
+
+// ===== S52: FieldNation Freelance Techs (Sonar) =====
+// FieldNation is the top freelance marketplace for commercial field service —
+// HVAC, electrical, and low-voltage technicians post their Michigan availability.
+// These are journeymen actively taking side contracts, often open to full-time.
+async function scanFieldNationTechs(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const queries = [
+    { q: `site:fieldnation.com Michigan HVAC technician available Detroit Metro freelance field technician profile 2025 OR 2026`, trade: "HVAC Technician" },
+    { q: `site:fieldnation.com Michigan electrician low-voltage certified available freelance service technician`, trade: "Electrician" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  for (const { q, trade } of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: "Find individual Michigan field service technicians with public FieldNation profiles who are available for work. Return JSON array: [{\"full_name\":\"First Last\",\"license_type\":\"trade\",\"city\":\"MI city or null\"}]. Real names only. Max 10." },
+            { role: "user", content: q },
+          ],
+          max_tokens: 400, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[]; try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: r.license_type || trade, license_number: null, license_expiry: null, city: r.city || null, source: "field_nation" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S52:FieldNation] Found ${candidates.length} freelance field techs`);
+  return candidates;
+}
+
+// ===== S53: Michigan SOS Dissolved Trade Companies (Sonar) =====
+// When a trade company dissolves with the Michigan SOS, the licensed principals
+// (owner-operators) become immediately available as independent tradespeople.
+// Dissolution filings are a strong "free agent entering the market" signal.
+async function scanMiSOSDissolutions(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const queries = [
+    { q: `Michigan Secretary of State dissolved OR dissolution HVAC company Metro Detroit 2025 OR 2026 owner operator licensed technician`, trade: "HVAC Technician" },
+    { q: `Michigan SOS dissolved electrical contractor company Wayne OR Oakland OR Macomb county 2025 OR 2026 owner`, trade: "Electrician" },
+    { q: `Michigan corporation dissolution plumbing OR mechanical contractor company 2025 OR 2026 Detroit area principals`, trade: "Plumber" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  for (const { q, trade } of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: "Find individual Michigan tradespeople who recently closed or dissolved their trade company and are now available as independent workers or employees. Return JSON array: [{\"full_name\":\"First Last\",\"license_type\":\"trade\",\"city\":\"MI city or null\"}]. Real names only. Max 10." },
+            { role: "user", content: q },
+          ],
+          max_tokens: 400, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[]; try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: r.license_type || trade, license_number: null, license_expiry: null, city: r.city || null, source: "sos_dissolution" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S53:SOS-Dissolution] Found ${candidates.length} dissolved company principals`);
+  return candidates;
+}
+
+// ===== S54: Trade Magazine Job Boards (Sonar) =====
+// ACHR News, Contractor Magazine, Electrical Contractor, Plumbing & Mechanical
+// have regional "positions wanted" classifieds where tradespeople advertise.
+// Industry publication job boards reach workers not on generalist platforms.
+async function scanTradeMagazineJobBoards(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const queries = [
+    { q: `site:achrnews.com OR site:contractormag.com Michigan HVAC technician "seeking position" OR "available" OR "positions wanted" 2025 OR 2026`, trade: "HVAC Technician" },
+    { q: `site:ecmag.com OR site:electrical-contractor.net Michigan electrician "positions wanted" OR "seeking employment" journeyman master 2025 OR 2026`, trade: "Electrician" },
+    { q: `site:phcnews.com OR site:pm-engineer.com Michigan plumber pipefitter "seeking position" available 2025 OR 2026 Metro Detroit`, trade: "Plumber" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  for (const { q, trade } of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: "Find individual tradespeople advertising their availability in trade magazine classifieds or job boards in Michigan. Return JSON array: [{\"full_name\":\"First Last\",\"license_type\":\"trade\",\"city\":\"MI city or null\"}]. Real names only. Max 10." },
+            { role: "user", content: q },
+          ],
+          max_tokens: 400, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[]; try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: r.license_type || trade, license_number: null, license_expiry: null, city: r.city || null, source: "trade_magazines" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S54:TradeMags] Found ${candidates.length} classifieds candidates`);
+  return candidates;
+}
+
+// ===== S55: Michigan Works! Program Graduates (Sonar) =====
+// Michigan Works! Southeast and statewide MWDB run trade-specific workforce
+// programs. Success stories, completion announcements, and graduation notices
+// name workers who just finished training and are actively seeking placement.
+async function scanMichiganWorksGraduates(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const queries = [
+    { q: `"Michigan Works" Southeast HVAC OR electrical OR plumbing OR mechanical program graduate completion 2025 OR 2026 Metro Detroit Wayne Oakland Macomb`, trade: "Trade Professional" },
+    { q: `"Pure Michigan Talent Connect" OR "MWDB" trade apprenticeship completion certification program graduate 2025 OR 2026 Metro Detroit`, trade: "Trade Professional" },
+    { q: `"Michigan Works!" skilled trades training graduate certificate boiler operator welder pipefitter 2025 OR 2026 Southeast Michigan`, trade: "Trade Professional" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  for (const { q, trade } of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: "Find individual trade workers named in Michigan Works! program completion announcements, success stories, or graduation notices who are seeking employment. Return JSON array: [{\"full_name\":\"First Last\",\"license_type\":\"trade\",\"city\":\"MI city or null\"}]. Real names only. Max 10." },
+            { role: "user", content: q },
+          ],
+          max_tokens: 400, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[]; try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: r.license_type || trade, license_number: null, license_expiry: null, city: r.city || null, source: "michigan_works" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S55:MiWorks] Found ${candidates.length} workforce program graduates`);
+  return candidates;
+}
+
 // ============= CHECKPOINTED ORCHESTRATION =============
 // Each source has a min-interval (hours). Skipped if last_completed_at < interval ago.
 // Resilient to Edge Function timeouts: next cron tick picks up un-run sources.
@@ -1664,8 +3320,43 @@ const SOURCE_REGISTRY: Array<{ label: string; fn: () => Promise<LicenseCandidate
   { label: "JATC",       fn: scanJATCGraduations,   intervalH: 24 },
   { label: "Thumbtack",  fn: scanThumbtack,         intervalH: 48 },
   { label: "DOL",        fn: scanDOLApprenticeships,intervalH: 24 },
-  { label: "Cosmetology",fn: scanLARACosmetology,   intervalH: 48 },
-  { label: "RealEstate", fn: scanLARARealEstate,    intervalH: 48 },
+  { label: "Cosmetology",fn: scanLARACosmetology,         intervalH: 48 },
+  { label: "RealEstate", fn: scanLARARealEstate,          intervalH: 48 },
+  { label: "NewlyIssued",fn: scanBPLNewlyIssued,          intervalH: 6  },
+  { label: "ContractorCo",fn: scanBPLContractorCompanies, intervalH: 24 },
+  { label: "OSHA",       fn: scanOSHAMichiganEstablishments, intervalH: 24 },
+  { label: "Reinstate",  fn: scanLARADisciplinaryReinstatements, intervalH: 48 },
+  { label: "MiSOS",      fn: scanMichiganNewTradeBusinesses,     intervalH: 24 },
+  { label: "Indeed",     fn: scanIndeedResumes,                  intervalH: 12 },
+  { label: "ZipRecruit", fn: scanZipRecruiterCandidates,         intervalH: 12 },
+  { label: "Facebook",   fn: scanFacebookTradePosts,             intervalH: 24 },
+  { label: "BCHS",       fn: scanBCHSHealthcareStaff,            intervalH: 24 },
+  { label: "EGLE",       fn: scanEGLEContractors,                intervalH: 72 },
+  { label: "GPlaces",    fn: scanGooglePlacesTrades,             intervalH: 48 },
+  { label: "Angi",       fn: scanAngiDirectory,                  intervalH: 48 },
+  { label: "Manta",      fn: scanMantaListings,                  intervalH: 72 },
+  { label: "BBB",        fn: scanBBBDirectory,                   intervalH: 72 },
+  { label: "Alignable",  fn: scanAlignableNetwork,               intervalH: 72 },
+  { label: "WARN",       fn: scanWARNActLayoffs,                 intervalH: 48 },
+  { label: "LocalNews",  fn: scanMLiveTradeCoverage,             intervalH: 48 },
+  { label: "TradeSchool",fn: scanTradeSchoolGraduates,           intervalH: 72 },
+  { label: "Reddit",     fn: scanRedditTradePosts,               intervalH: 24 },
+  { label: "Houzz",      fn: scanHouzzDirectory,                 intervalH: 72 },
+  { label: "Porch",      fn: scanPorchDirectory,                 intervalH: 72 },
+  { label: "MBOA",       fn: scanMBOADirectory,                  intervalH: 72 },
+  { label: "LinkedIn-OTW",fn: scanLinkedInOpenToWork,            intervalH: 24 },
+  { label: "Nextdoor",   fn: scanNextdoorRecommendations,        intervalH: 48 },
+  { label: "Reciprocity",fn: scanLicenseReciprocityApplicants,   intervalH: 72 },
+  { label: "CLServices", fn: scanCraigslistServicesSection,      intervalH: 8  },
+  { label: "MiTalent",   fn: scanPureMichiganTalentConnect,      intervalH: 24 },
+  { label: "UnionHalls", fn: scanUnionHiringHalls,               intervalH: 48 },
+  { label: "ExamPass",   fn: scanLARANewExamPassers,             intervalH: 72 },
+  { label: "Glassdoor",  fn: scanGlassdoorOpenToWork,            intervalH: 48 },
+  { label: "HandyTR",    fn: scanHandymanDirectories,            intervalH: 72 },
+  { label: "FieldNation",fn: scanFieldNationTechs,               intervalH: 72 },
+  { label: "SOSDiss",    fn: scanMiSOSDissolutions,              intervalH: 72 },
+  { label: "TradeMags",  fn: scanTradeMagazineJobBoards,         intervalH: 72 },
+  { label: "MiWorks",    fn: scanMichiganWorksGraduates,         intervalH: 48 },
 ];
 
 const WALL_CLOCK_BUDGET_MS = 120_000; // leave headroom under 150s edge timeout
