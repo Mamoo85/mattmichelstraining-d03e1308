@@ -1,33 +1,47 @@
-## Apify Mega-Plan — STATUS: COMPLETE ✅
-Last updated: 2026-04-18
 
-### All 9 steps
-1. ✅ TS build error fixed (MyTechAlert.tsx Candidate interface)
-2. ✅ Actor scaffolding (`.actor/`, `actor/`) committed in earlier loop
-3. ✅ Secrets `APIFY_API_TOKEN` + `APIFY_WEBHOOK_SECRET` configured
-4. ✅ `apify-results-handler` deployed (verify_jwt=false, query-string secret)
-5. ✅ `apify_run_batches` table — already existed (uses `*_done`/`alerts_sent`, no migration needed)
-6. ✅ `hire-alert-scanner` refactored to dispatcher; 3 Actor runs dispatch + webhook registered
-7. 🚫 `scanLARABCCViaSonar`/`scanLARABPLHealthcare` — OBSOLETE (LARA VAL enumeration + fast-scanner cover this)
-8. 🚫 `scanMichiganOpenData` field fix — OBSOLETE (function no longer exists in scanner)
-9. ✅ 4-hour cron cadence — already in place
 
-### Critical fixes applied this loop
-- **Apify Actor IDs were all wrong** (404 on every dispatch). Fixed:
-  - MIOSHA: `matt~m2training` → `transparent_meteorite~m2training`
-  - Indeed: `bebity~indeed-scraper` → `misceres~indeed-scraper`
-  - LinkedIn: `apify~linkedin-profile-scraper` → `harvestapi~linkedin-profile-scraper`
-  - ThomasNet: `zen-studio~thomasnet-suppliers` → `zen-studio~thomasnet-suppliers-scraper`
-- Updated `ACTOR_SOURCE_MAP` in handler to route new IDs.
-- **Verified**: scanner dispatch run on 2026-04-18 07:25 returned HTTP 201 for all 3 Actors with run IDs stored in `apify_run_batches`.
+## Root Cause (real this time)
 
-### Talent Radar enrichment — Sonar null-skeleton bug FIXED ✅
-- **Root cause confirmed**: `stageSonar()` returned the JSON skeleton with all-null values when Perplexity couldn't find data. `Object.keys(sonar)` then logged all 7 keys as `hit_fields`, and `Object.assign` overwrote real candidate data with nulls.
-- **Fix**: Filter null/empty/"n/a"/"unknown" values from Sonar response before returning (candidate-deep-enrich/index.ts L263–L278).
-- **Verified**: Re-ran 2 exhausted candidates post-deploy. Sonar returned no data, `7_sonar` stage was correctly skipped from logs (no more fake hit_fields).
-- **Reality**: For trade workers (MIOSHA-sourced, no employer), Sonar produces ~25% employer name hits, ~0% contact field hits. Hunter/Snov/Lusha/PDL all 0 hits because they need employer. Trade vertical contactability ceiling is ~17%.
+The Sentinel report is RED on every cron because the RPC `cron_job_status` is hitting PostgREST's **8-second statement timeout** (`SQLSTATE 57014`) — not a permission issue. I confirmed by hitting the endpoint directly and got: `{"code":"57014","message":"canceling statement due to statement timeout"}` → HTTP 500.
 
-### What runs autonomously now
-- Scanner dispatches 3 Apify Actors every 4h.
-- Apify webhooks → `apify-results-handler?secret=...` → ingest into `lara_bpl` / `hire_alert_candidates` → mark `*_done` → fire scoring + alerts when all 3 complete.
-- `apify-thomasnet-pull` available on-demand from admin panel.
+Permissions ARE granted correctly (yesterday's migration worked). The function works when called from psql. But under PostgREST it times out because:
+
+- `cron.job_run_details` has **only a primary-key index on `runid`** — no index on `jobid` or `start_time`
+- With 100+ crons firing for months, that table is huge
+- The `SELECT MAX(d.start_time) … JOIN cron.job` does a full table scan → exceeds 8s → 500
+
+So my "fix" yesterday solved a real permission problem but a *different* problem (timeout) was hiding behind it. As pg_cron history grew, this got worse. Today every cron times out.
+
+## The Fix (one migration, three things)
+
+### 1. Add the missing index
+```sql
+CREATE INDEX IF NOT EXISTS idx_cron_job_run_details_jobid_start
+  ON cron.job_run_details (jobid, start_time DESC);
+```
+This turns a sequential scan over millions of rows into an index seek of one row per cron. Query goes from 8s+ → <50ms.
+
+### 2. Rewrite `cron_job_status` to be timeout-proof
+- Use `ORDER BY start_time DESC LIMIT 1` (index-friendly) instead of `MAX()` over a join
+- Add `SET LOCAL statement_timeout = '3s'` inside the function
+- Wrap in `EXCEPTION WHEN OTHERS` → return `{exists: false, error: "<msg>"}` instead of letting PostgREST emit HTTP 500
+- This way Sentinel sees the real reason ("timeout", "no such cron", etc.) instead of a generic 500
+
+### 3. Trim old `cron.job_run_details` rows
+One-time cleanup of run history older than 30 days (pg_cron never auto-prunes). Then add a weekly pruning cron so it never bloats again.
+```sql
+DELETE FROM cron.job_run_details WHERE end_time < now() - interval '30 days';
+-- + weekly cron to keep it trimmed
+```
+
+## What you'll see after deploy
+- Sentinel report goes from "20 of 22 failing" → real picture (probably 2-3 actually broken)
+- The `contractor-prospector-daily` row already shows the correct error pattern ("web_design_leads is empty") so we know Sentinel CAN report real problems when the RPC works
+- The "Failed to send a request to the Edge Function" error in DWA Overview (3rd screenshot) is a separate issue I'll check after — likely related to the `cron-sentinel` function timing out the same way
+
+## Verification
+1. Apply migration
+2. `curl` the RPC directly → expect `{"active":true,"last_run":"…","exists":true}` in <100ms instead of 500
+3. Click "Run Sentinel Now" in `/dwa-admin → Cron Sentinel` → expect mostly green
+4. Check the DWA Overview "DWA Product Suite" panel — figure out which edge function the failing request is hitting
+
