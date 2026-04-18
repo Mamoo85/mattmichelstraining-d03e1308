@@ -6337,6 +6337,63 @@ export type Database = {
         }
         Relationships: []
       }
+      lara_health_log: {
+        Row: {
+          candidates_from_fallback: number | null
+          checked_at: string
+          error_message: string | null
+          fallback_activated: boolean | null
+          fallback_sources: string[] | null
+          http_status: number | null
+          id: string
+          response_bytes: number | null
+          response_time_ms: number | null
+          status: string
+        }
+        Insert: {
+          candidates_from_fallback?: number | null
+          checked_at?: string
+          error_message?: string | null
+          fallback_activated?: boolean | null
+          fallback_sources?: string[] | null
+          http_status?: number | null
+          id?: string
+          response_bytes?: number | null
+          response_time_ms?: number | null
+          status: string
+        }
+        Update: {
+          candidates_from_fallback?: number | null
+          checked_at?: string
+          error_message?: string | null
+          fallback_activated?: boolean | null
+          fallback_sources?: string[] | null
+          http_status?: number | null
+          id?: string
+          response_bytes?: number | null
+          response_time_ms?: number | null
+          status?: string
+        }
+        Relationships: []
+      }
+      lara_val_cursor: {
+        Row: {
+          id: number
+          last_val_id: number
+          updated_at: string
+        }
+        Insert: {
+          id: number
+          last_val_id?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          last_val_id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lead_activities: {
         Row: {
           content: string | null

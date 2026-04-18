@@ -28,6 +28,8 @@ const SNOV_USER_ID = Deno.env.get("SNOV_USER_ID") || "";
 const SNOV_API_KEY = Deno.env.get("SNOV_API_KEY") || "";
 const LUSHA_API_KEY = Deno.env.get("LUSHA_API_KEY") || "";
 const CLAY_API_KEY = Deno.env.get("CLAY_API_KEY") || "";
+const NINJAPEAR_API_KEY = Deno.env.get("NINJAPEAR_API_KEY") || "";
+const CRUSTDATA_API_KEY = Deno.env.get("CRUSTDATA_API_KEY") || "";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const corsHeaders = {
@@ -267,7 +269,84 @@ async function stageSonar(c: CandidateRow): Promise<Record<string, unknown>> {
   } catch { return {}; }
 }
 
-// ===== STAGE 8: Clay (premium waterfall, score >= 7 only) =====
+// ===== STAGE 7B: NinjaPear (Proxycurl/Nubela API) — LinkedIn profile resolver =====
+// Fires only when we have a LinkedIn URL (typically from Sonar) AND still missing contact/employer.
+// Cost: ~$0.01/call. Returns: full profile, current employer, mobile, personal email.
+async function stageNinjaPear(c: CandidateRow, linkedinUrl?: string): Promise<Record<string, unknown>> {
+  if (!NINJAPEAR_API_KEY || !linkedinUrl) return {};
+  try {
+    const url = `https://nubela.co/proxycurl/api/v2/linkedin?url=${encodeURIComponent(linkedinUrl)}&extra=include&personal_contact_number=include&personal_email=include`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${NINJAPEAR_API_KEY}` },
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!res.ok) {
+      console.warn(`[NinjaPear] HTTP ${res.status} for ${c.full_name}`);
+      return {};
+    }
+    const data = await res.json();
+    const currentExp = (data.experiences || []).find((e: any) => !e.ends_at) || data.experiences?.[0];
+    return {
+      ninjapear_employer: currentExp?.company,
+      ninjapear_title: currentExp?.title,
+      ninjapear_mobile: data.personal_numbers?.[0],
+      ninjapear_email: data.personal_emails?.[0],
+      ninjapear_city: data.city,
+      ninjapear_occupation: data.occupation,
+      // Map into canonical fields
+      current_employer: currentExp?.company,
+      current_title: currentExp?.title,
+      pdl_mobile_phone: data.personal_numbers?.[0],
+      pdl_personal_email: data.personal_emails?.[0],
+    };
+  } catch (e) {
+    console.warn(`[NinjaPear] error: ${e instanceof Error ? e.message : String(e)}`);
+    return {};
+  }
+}
+
+// ===== STAGE 7C: Crustdata (trial) — alternate person enrichment =====
+// Tries by name + location when LinkedIn URL absent. We'll measure ROI vs cost.
+async function stageCrustdata(c: CandidateRow): Promise<Record<string, unknown>> {
+  if (!CRUSTDATA_API_KEY) return {};
+  try {
+    const res = await fetch("https://api.crustdata.com/screener/person/enrich", {
+      method: "POST",
+      headers: { Authorization: `Token ${CRUSTDATA_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: c.full_name || c.name,
+        location: c.city ? `${c.city}, Michigan, US` : "Michigan, US",
+        company: c.current_employer || undefined,
+      }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!res.ok) {
+      console.warn(`[Crustdata] HTTP ${res.status} for ${c.full_name}`);
+      return {};
+    }
+    const data = await res.json();
+    const p = Array.isArray(data) ? data[0] : (data?.person || data);
+    if (!p) return {};
+    return {
+      crustdata_linkedin: p.linkedin_url || p.linkedin_profile_url,
+      crustdata_email: p.email || p.work_email,
+      crustdata_phone: p.phone || p.mobile_phone,
+      crustdata_employer: p.current_company_name || p.company_name,
+      crustdata_title: p.title || p.job_title,
+      // Canonical mapping
+      linkedin_url: p.linkedin_url || p.linkedin_profile_url,
+      pdl_personal_email: p.email || p.work_email,
+      pdl_mobile_phone: p.phone || p.mobile_phone,
+      current_employer: p.current_company_name || p.company_name,
+      current_title: p.title || p.job_title,
+    };
+  } catch (e) {
+    console.warn(`[Crustdata] error: ${e instanceof Error ? e.message : String(e)}`);
+    return {};
+  }
+}
+
+
 async function stageClay(c: CandidateRow): Promise<Record<string, unknown>> {
   if (!CLAY_API_KEY || (c.score ?? 0) < 7) return {};
   try {
@@ -415,7 +494,26 @@ serve(async (req: Request) => {
         }
       }
 
-      // Stage 8 Clay (premium, score >= 7 only, only if still no contact)
+      // Stage 7B NinjaPear (Proxycurl) — fires when LinkedIn URL exists AND still no contact/employer
+      const { email: e2b, phone: p2b } = pickContact(merged);
+      if (merged.linkedin_url && (!e2b || !p2b || !merged.current_employer)) {
+        const np = await stageNinjaPear(c, merged.linkedin_url as string);
+        if (Object.keys(np).length) {
+          Object.assign(merged, np);
+          await logStage(sb, c.id, "7b_ninjapear", "nubela_proxycurl", Object.keys(np), 0.01, true, undefined, np);
+        }
+      }
+
+      // Stage 7C Crustdata — trial fallback when still missing critical fields
+      const { email: e2c, phone: p2c } = pickContact(merged);
+      if (!e2c && !p2c && !merged.linkedin_url) {
+        const cd = await stageCrustdata(c);
+        if (Object.keys(cd).length) {
+          Object.assign(merged, cd);
+          await logStage(sb, c.id, "7c_crustdata", "crustdata", Object.keys(cd), 0.05, true, undefined, cd);
+        }
+      }
+
       const { email: e3, phone: p3 } = pickContact(merged);
       if (!e3 && !p3 && (c.score ?? 0) >= 7) {
         const clay = await stageClay(c);
