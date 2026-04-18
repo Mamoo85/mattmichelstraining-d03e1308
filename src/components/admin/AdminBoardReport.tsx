@@ -78,6 +78,9 @@ export default function AdminBoardReport() {
     (a) => !DEPARTMENTS.some((d) => matchesDept(a.action_type, d.actionTypes))
   );
 
+  const totalActions = actions?.length || 0;
+  const hasNoData = !isLoading && totalActions === 0;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
