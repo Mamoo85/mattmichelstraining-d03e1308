@@ -265,7 +265,16 @@ async function stageSonar(c: CandidateRow): Promise<Record<string, unknown>> {
     const data = await res.json();
     const text = data?.choices?.[0]?.message?.content || "";
     const parsed = extractJSON(text);
-    return parsed || {};
+    if (!parsed) return {};
+    // Strip null/empty values — Sonar returns the JSON skeleton with nulls when it can't find data.
+    // Without this, all 7 keys get logged as "hit_fields" and null values overwrite real data downstream.
+    const cleaned: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(parsed)) {
+      if (v === null || v === undefined) continue;
+      if (typeof v === "string" && (v.trim() === "" || v.toLowerCase() === "null" || v.toLowerCase() === "n/a" || v.toLowerCase() === "unknown")) continue;
+      cleaned[k] = v;
+    }
+    return cleaned;
   } catch { return {}; }
 }
 
