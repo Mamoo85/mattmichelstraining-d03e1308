@@ -100,15 +100,20 @@ async function fetchDatasetItems(datasetId: string): Promise<unknown[]> {
   return await res.json();
 }
 
-async function ingestMioshaItems(items: any[]): Promise<number> {
+async function ingestMioshaItems(items: any[]): Promise<{ inserted: number; skipped: number }> {
   let inserted = 0;
+  let skipped = 0;
   for (const item of items) {
-    if (!item.name) continue;
+    const rawName = item.name || item.full_name || item.fullName;
+    if (!rawName || isJunkName(rawName)) {
+      skipped++;
+      continue;
+    }
     try {
       const { error } = await supabase.from("hire_alert_candidates").upsert(
         {
-          name: item.name,
-          full_name: item.name,
+          name: rawName.trim(),
+          full_name: rawName.trim(),
           license_type: item.license_type || null,
           license_number: item.license_number || null,
           city: item.city || null,
@@ -124,7 +129,8 @@ async function ingestMioshaItems(items: any[]): Promise<number> {
       console.error("ingest miosha error:", err);
     }
   }
-  return inserted;
+  if (skipped > 0) console.log(`[miosha] dropped ${skipped} junk rows (chrome/templates)`);
+  return { inserted, skipped };
 }
 
 async function ingestIndeedItems(items: any[]): Promise<number> {
