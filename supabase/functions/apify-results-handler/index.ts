@@ -229,7 +229,7 @@ Deno.serve(async (req) => {
   const datasetId: string = payload?.resource?.defaultDatasetId || "";
   const actorName: string | undefined = payload?.resource?.actorName;
   const customData: any = payload?.eventData?.customData || payload?.resource?.options?.webhookCustomData || {};
-  const batchId: string | undefined = customData?.batch_id;
+  let batchId: string | undefined = customData?.batch_id || url.searchParams.get("batch_id") || undefined;
 
   console.log(`apify webhook: actorId=${actorId} runId=${actorRunId} dataset=${datasetId} batch=${batchId}`);
 
@@ -240,28 +240,38 @@ Deno.serve(async (req) => {
     });
   }
 
-  const source = detectSource(actorId, actorName);
+  // Try slug/hash routing first; fall back to runId lookup in apify_run_batches
+  let source = detectSource(actorId, actorName);
+  if (!source && actorRunId) {
+    source = await detectSourceByRunId(actorRunId);
+    if (source) console.log(`[fallback-routing] runId ${actorRunId} → ${source}`);
+  }
   if (!source) {
-    console.warn(`Could not route Actor ${actorId} (${actorName})`);
-    return new Response(JSON.stringify({ error: "Unknown Actor", actorId }), {
+    console.warn(`Could not route Actor ${actorId} (${actorName}) runId=${actorRunId}`);
+    return new Response(JSON.stringify({ error: "Unknown Actor", actorId, actorRunId }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+  }
+
+  if (!batchId && actorRunId) {
+    batchId = (await getBatchIdByRunId(actorRunId)) || undefined;
+    if (batchId) console.log(`[fallback-batch] runId ${actorRunId} → batch ${batchId}`);
   }
 
   const items = await fetchDatasetItems(datasetId);
   console.log(`[${source}] dataset ${datasetId} returned ${items.length} items`);
 
   let processed = 0;
-  if (source === "miosha") processed = await ingestMioshaItems(items);
-  else if (source === "indeed") processed = await ingestIndeedItems(items);
+  if (source === "miosha") {
+    const r = await ingestMioshaItems(items);
+    processed = r.inserted;
+  } else if (source === "indeed") processed = await ingestIndeedItems(items);
   else if (source === "linkedin") processed = await ingestLinkedInItems(items);
 
-  // Mark this source done in the batch (if batch_id provided)
   if (batchId) {
     const updates: Record<string, unknown> = {};
     updates[`${source}_done`] = true;
-    // Increment candidates_found
     const { data: existing } = await supabase
       .from("apify_run_batches")
       .select("candidates_found")
