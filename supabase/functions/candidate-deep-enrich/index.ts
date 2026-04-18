@@ -16,6 +16,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { cheapExtract, Schemas } from "../_shared/cheap-extract.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -290,12 +291,9 @@ async function stageClay(c: CandidateRow): Promise<Record<string, unknown>> {
   } catch { return {}; }
 }
 
-// ===== AI Synthesis =====
+// ===== AI Synthesis (cheap helper — Gemini 2.5 Flash Lite via Lovable AI Gateway) =====
 async function synthesize(c: CandidateRow, merged: Record<string, unknown>): Promise<{ qualifications_summary: string; hiring_recommendation: string }> {
-  if (!LOVABLE_API_KEY) return { qualifications_summary: "", hiring_recommendation: "" };
-  const prompt = `You are a hiring researcher writing a brief candidate dossier. Based on this data, write:
-1. QUALIFICATIONS SUMMARY (2-3 sentences)
-2. HIRING RECOMMENDATION (2-3 sentences with urgency + best contact channel)
+  const prompt = `Write a brief candidate dossier based on this research:
 
 CANDIDATE: ${c.full_name || c.name}
 TRADE: ${c.license_type || "Unknown"}
@@ -303,23 +301,23 @@ LICENSE #: ${c.license_number || "n/a"}
 CITY: ${c.city || "Michigan"}
 RESEARCH: ${JSON.stringify(merged, null, 2)}
 
-RULES: Do NOT mention AI, algorithms, data sources, or methodology. Write as a human researcher.
-Return JSON: { "qualifications_summary": "...", "hiring_recommendation": "..." }`;
-  try {
-    const res = await fetch(GATEWAY_URL, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "google/gemini-2.5-flash", max_tokens: 600, messages: [{ role: "user", content: prompt }] }),
-      signal: AbortSignal.timeout(15_000),
-    });
-    if (!res.ok) return { qualifications_summary: "", hiring_recommendation: "" };
-    const data = await res.json();
-    const parsed = extractJSON(data?.choices?.[0]?.message?.content || "");
-    return {
-      qualifications_summary: (parsed?.qualifications_summary as string) || "",
-      hiring_recommendation: (parsed?.hiring_recommendation as string) || "",
-    };
-  } catch { return { qualifications_summary: "", hiring_recommendation: "" }; }
+Output two short fields:
+- qualifications_summary: 2-3 sentences on credentials, experience, and trade specialty.
+- hiring_recommendation: 2-3 sentences with urgency level and best contact channel.
+
+Rules: Write as a human researcher. Never mention AI, algorithms, data sources, or methodology.`;
+
+  const r = await cheapExtract<{ qualifications_summary: string; hiring_recommendation: string }>(prompt, {
+    task: "summary_short",
+    schema: Schemas.candidateSummary as Record<string, unknown>,
+    maxTokens: 600,
+    caller: "candidate-deep-enrich",
+  });
+  if (!r.ok || !r.data) return { qualifications_summary: "", hiring_recommendation: "" };
+  return {
+    qualifications_summary: r.data.qualifications_summary || "",
+    hiring_recommendation: r.data.hiring_recommendation || "",
+  };
 }
 
 function pickContact(merged: Record<string, any>): { email?: string; phone?: string } {

@@ -8,6 +8,7 @@
  *  - force: re-enrich even if address_line1 already set (default false)
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { cheapExtract, Schemas } from "../_shared/cheap-extract.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,20 +30,11 @@ interface AddressResult {
 
 async function sonarAddress(businessName: string, county: string | null): Promise<AddressResult> {
   const countyHint = county ? `${county} County, ` : "";
-  const prompt = `Find the verified business street address for "${businessName}" located in ${countyHint}Michigan. This is a licensed contractor (HVAC, plumbing, boiler, or electrical). Search Michigan LARA license records, Google Business Profile, BBB, and the company website.
+  // Sonar handles the OSINT search (LARA/Google/BBB lookup). Free-form output is fine here —
+  // we hand it to the cheap extraction helper next for clean structured fields.
+  const prompt = `Find the verified business street address for "${businessName}" located in ${countyHint}Michigan. This is a licensed contractor (HVAC, plumbing, boiler, or electrical). Search Michigan LARA license records, Google Business Profile, BBB, and the company website. Include street address, city, state, ZIP, phone, and owner name if listed. If you cannot verify, say so explicitly. Do not invent data.`;
 
-Return ONLY a JSON object with these exact keys (use null if not found):
-{
-  "address_line1": "street number and name only, e.g. 1234 Main St",
-  "city": "city name only",
-  "state": "MI",
-  "zip": "5-digit ZIP",
-  "phone": "(XXX) XXX-XXXX format",
-  "owner_name": "owner or principal full name if listed on license"
-}
-
-Do not invent data. If you cannot verify the address, return null. No prose, no markdown, only the JSON object.`;
-
+  let raw = "";
   try {
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -64,16 +56,26 @@ Do not invent data. If you cannot verify the address, return null. No prose, no 
     }
 
     const data = await res.json();
-    const raw = data.choices?.[0]?.message?.content || "";
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return {};
-
-    const parsed = JSON.parse(jsonMatch[0]);
-    return parsed as AddressResult;
+    raw = data.choices?.[0]?.message?.content || "";
   } catch (e) {
     console.error(`Sonar error for ${businessName}:`, e instanceof Error ? e.message : String(e));
     return {};
   }
+
+  if (!raw.trim()) return {};
+
+  // Cheap extraction step — Gemini 2.5 Flash Lite via Lovable AI Gateway, schema-validated.
+  const extract = await cheapExtract<AddressResult>(
+    `Extract the verified Michigan business address from this research note. If the note says the address could not be verified, return null for every field.\n\nBUSINESS: ${businessName}\nNOTE:\n${raw}`,
+    {
+      task: "address_parse",
+      schema: Schemas.address as Record<string, unknown>,
+      maxTokens: 250,
+      caller: "enrich-postcard-addresses",
+    },
+  );
+
+  return extract.ok && extract.data ? extract.data : {};
 }
 
 Deno.serve(async (req) => {
