@@ -17,6 +17,8 @@ export default function AdminDWAOverview() {
   const [testing, setTesting] = useState<Record<string, boolean>>({});
   const [invoking, setInvoking] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [pdlTesting, setPdlTesting] = useState(false);
+  const [pdlResult, setPdlResult] = useState<Record<string, unknown> | null>(null);
 
   const load = async () => {
     setLoading(true);
