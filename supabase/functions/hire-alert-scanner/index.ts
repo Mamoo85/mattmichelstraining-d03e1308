@@ -17,6 +17,86 @@ const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const PDL_API_KEY = Deno.env.get("PDL_API_KEY") || "";
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const APIFY_API_TOKEN = Deno.env.get("APIFY_API_TOKEN") || "";
+const APIFY_WEBHOOK_SECRET = Deno.env.get("APIFY_WEBHOOK_SECRET") || "";
+
+// Apify Actor IDs — update if Matt swaps Actors in his Apify account
+const APIFY_ACTORS = {
+  miosha: "matt~m2training",            // Matt's custom MIOSHA Excel scraper (auto-rebuilt from m2training repo)
+  indeed: "bebity~indeed-scraper",      // Maintained Indeed scraper, residential proxies
+  linkedin: "apify~linkedin-profile-scraper",  // Replacement for dead Proxycurl
+};
+
+const APIFY_INPUTS = {
+  miosha: {
+    licenses: ["boiler", "electrical", "plumbing", "hvac", "mechanical"],
+    state: "MI",
+  },
+  indeed: {
+    position: "boiler operator OR HVAC technician OR master electrician OR plumber",
+    country: "US",
+    location: "Detroit, MI",
+    maxItems: 50,
+    parseCompanyDetails: false,
+    saveOnlyUniqueItems: true,
+  },
+  linkedin: {
+    // LinkedIn Actor enriches profiles by URL — we'll feed it candidates the scanner already found
+    // For now, send a search-by-keyword to seed the dataset; downstream we'll wire URL-based enrichment
+    searchQueries: ["boiler operator Detroit Michigan", "master electrician Detroit", "HVAC technician Metro Detroit"],
+    maxResultsPerQuery: 20,
+  },
+};
+
+async function dispatchApifyRuns(sb: ReturnType<typeof createClient>): Promise<void> {
+  if (!APIFY_API_TOKEN || !APIFY_WEBHOOK_SECRET) {
+    console.warn("[apify-dispatch] APIFY_API_TOKEN or APIFY_WEBHOOK_SECRET missing — skipping");
+    return;
+  }
+  const batchId = `batch_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const webhookUrl = `${SUPABASE_URL}/functions/v1/apify-results-handler?secret=${encodeURIComponent(APIFY_WEBHOOK_SECRET)}`;
+
+  // Insert batch row up front so the webhook handler can find it
+  await sb.from("apify_run_batches").insert({ batch_id: batchId, run_at: new Date().toISOString() });
+
+  // Webhook spec — fires when run succeeds or fails. customData carries our batch_id.
+  const webhooks = [{
+    eventTypes: ["ACTOR.RUN.SUCCEEDED", "ACTOR.RUN.FAILED"],
+    requestUrl: webhookUrl,
+    payloadTemplate: JSON.stringify({
+      eventType: "{{eventType}}",
+      eventData: { actorId: "{{eventData.actorId}}", actorRunId: "{{eventData.actorRunId}}", customData: { batch_id: batchId } },
+      resource: "{{resource}}",
+    }),
+  }];
+
+  const sources: Array<keyof typeof APIFY_ACTORS> = ["miosha", "indeed", "linkedin"];
+  const dispatches = sources.map(async (src) => {
+    const actor = APIFY_ACTORS[src];
+    const input = APIFY_INPUTS[src];
+    const url = `https://api.apify.com/v2/acts/${encodeURIComponent(actor)}/runs?token=${APIFY_API_TOKEN}`;
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...input, webhooks }),
+        signal: AbortSignal.timeout(15_000),
+      });
+      const data = await res.json().catch(() => ({}));
+      const runId = data?.data?.id || null;
+      console.log(`[apify-dispatch] ${src} → ${runId || "FAILED"} (HTTP ${res.status})`);
+      if (runId) {
+        const updates: Record<string, unknown> = {};
+        updates[`${src}_run_id`] = runId;
+        await sb.from("apify_run_batches").update(updates).eq("batch_id", batchId);
+      }
+    } catch (e) {
+      console.error(`[apify-dispatch] ${src} dispatch error:`, e instanceof Error ? e.message : String(e));
+    }
+  });
+  await Promise.allSettled(dispatches);
+  console.log(`[apify-dispatch] batch ${batchId} dispatched`);
+}
 
 // Healthcare role detection for NPI routing
 const HEALTHCARE_KEYWORDS = ["rn", "registered nurse", "lpn", "licensed practical nurse", "practical nurse", "cna", "certified nursing assistant", "nurse aide", "nursing assistant", "director of nursing", "don", "nursing director", "home health aide", "home health", "hha", "nurse", "nursing"];
