@@ -1183,8 +1183,12 @@ function calculateCompleteness(row: Record<string, unknown>): number {
 // CRITICAL: Always writes BOTH `name` AND `full_name` — the `name` column is NOT NULL
 const BUSINESS_SOURCES = new Set([
   "yelp", "phcc", "building_permits", "thumbtack", "google_places",
-  // New company-routed sources (S22, S23, S25)
+  // S22/S23/S25
   "lara_contractor_co", "osha_establishment", "michigan_sos_co",
+  // S31/S34/S36 — company-only directories
+  "google_places_sweep", "bbb_directory",
+  // mixed directories — company branch of split sources
+  "angi_co", "manta_co", "alignable_co",
 ]);
 
 async function upsertCandidate(sb: any, c: LicenseCandidate): Promise<"new" | "updated" | "error"> {
