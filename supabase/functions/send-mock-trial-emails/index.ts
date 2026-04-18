@@ -31,7 +31,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
         <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border-radius:10px;border-left:4px solid #10b981;padding:16px 20px;">
           <tr><td>
             <p style="margin:0;font-size:14px;font-weight:800;color:#1e293b;">🔍 Daily at 7am — We scan for you</p>
-            <p style="margin:6px 0 0;font-size:13px;color:#475569;line-height:1.6;">55 live sources checked automatically: Michigan LARA/MIOSHA license database, NPI Registry, Nursys, BCHS healthcare registry, Indeed resumes, ZipRecruiter profiles, LinkedIn "open to work", Craigslist services, union hiring halls, Angi/Houzz/Porch directories, BBB, Facebook trade posts, Reddit, Nextdoor, local news, trade schools, WARN Act layoffs, and more.</p>
+            <p style="margin:6px 0 0;font-size:13px;color:#475569;line-height:1.6;">55+ live sources checked automatically across state license registries, healthcare credentialing systems, job boards, professional networks, trade directories, union halls, social platforms, and local news. Methodology proprietary — results delivered, sources never disclosed.</p>
           </td></tr>
         </table>
       </td></tr>
@@ -75,8 +75,8 @@ const EMAILS: Array<{ subject: string; html: string }> = [
           <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a1628;border-radius:10px;padding:16px;text-align:center;">
             <tr><td>
               <p style="margin:0;font-size:24px;">🏛️</p>
-              <p style="margin:6px 0 0;font-size:12px;font-weight:800;color:#00d4ff;">LARA/MIOSHA</p>
-              <p style="margin:4px 0 0;font-size:11px;color:#64748b;line-height:1.5;">Every new Michigan license issued = we know day 1</p>
+              <p style="margin:6px 0 0;font-size:12px;font-weight:800;color:#00d4ff;">State Registry</p>
+              <p style="margin:4px 0 0;font-size:11px;color:#64748b;line-height:1.5;">Every newly issued license = we know day 1</p>
             </td></tr>
           </table>
         </td>
@@ -104,7 +104,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
     <!-- CTA -->
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
       <tr><td style="text-align:center;">
-        <a href="https://m2training.lovable.app/my-techalert?token=DEMO_TOKEN" style="display:inline-block;background:linear-gradient(135deg,#00d4ff,#0066ff);color:#fff;padding:16px 36px;border-radius:10px;font-size:15px;font-weight:800;text-decoration:none;letter-spacing:0.5px;">📊 Open Your Dashboard →</a>
+        <a href="https://www.detroitwebagent.com/my-techalert?token=DWA_DEMO_MASTER" style="display:inline-block;background:linear-gradient(135deg,#00d4ff,#0066ff);color:#fff;padding:16px 36px;border-radius:10px;font-size:15px;font-weight:800;text-decoration:none;letter-spacing:0.5px;">📊 Open Your Dashboard →</a>
         <p style="margin:10px 0 0;font-size:12px;color:#94a3b8;">Bookmark this — it's your live feed of every candidate we've found for you</p>
       </td></tr>
     </table>
@@ -184,7 +184,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
       <tr><td style="padding:0 0 16px;">
         <table width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border-radius:10px;border-left:4px solid #3b82f6;padding:16px 20px;">
           <tr><td>
-            <p style="margin:0;font-size:14px;font-weight:800;color:#1e293b;">🔍 Healthcare sources we monitor 24/7</p>
+            <p style="margin:0;font-size:14px;font-weight:800;color:#1e293b;">🔍 Healthcare intelligence sources we monitor 24/7</p>
             <table cellpadding="0" cellspacing="0" style="margin-top:8px;">
               <tr><td style="padding:3px 0;font-size:12px;color:#475569;">🏛️ <strong>Michigan Nurse Aide Registry (LARA)</strong> — every new CNA certification issued in Michigan</td></tr>
               <tr><td style="padding:3px 0;font-size:12px;color:#475569;">🏥 <strong>NPI Registry</strong> — federal database of all licensed nurses in Michigan</td></tr>
@@ -220,7 +220,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
     <!-- CTA -->
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
       <tr><td style="text-align:center;">
-        <a href="https://m2training.lovable.app/my-techalert?token=DEMO_TOKEN" style="display:inline-block;background:linear-gradient(135deg,#00d4ff,#0066ff);color:#fff;padding:16px 36px;border-radius:10px;font-size:15px;font-weight:800;text-decoration:none;letter-spacing:0.5px;">📊 Open Your Dashboard →</a>
+        <a href="https://www.detroitwebagent.com/my-techalert?token=DWA_DEMO_MASTER" style="display:inline-block;background:linear-gradient(135deg,#00d4ff,#0066ff);color:#fff;padding:16px 36px;border-radius:10px;font-size:15px;font-weight:800;text-decoration:none;letter-spacing:0.5px;">📊 Open Your Dashboard →</a>
       </td></tr>
     </table>
   </td></tr>
@@ -330,8 +330,8 @@ const EMAILS: Array<{ subject: string; html: string }> = [
                 <table cellpadding="0" cellspacing="0"><tr>
                   <td><a href="tel:+13135550142" style="display:inline-block;background:#e8621a;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">📞 Call (313) 555-0142</a></td>
                   <td><a href="mailto:m.williams.hvac@gmail.com" style="display:inline-block;background:#0891b2;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">✉️ Send Email</a></td>
-                  <td><a href="#" style="display:inline-block;background:#0a66c2;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">🔗 LinkedIn</a></td>
-                  <td><a href="#" style="display:inline-block;background:linear-gradient(135deg,#00d4ff,#0066ff);color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">⚡ Claim</a></td>
+                  <td><a href="https://www.linkedin.com/" target="_blank" rel="noreferrer" style="display:inline-block;background:#0a66c2;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">🔗 LinkedIn</a></td>
+                  <td><a href="https://www.detroitwebagent.com/my-techalert?token=DWA_DEMO_MASTER&amp;action=claim" style="display:inline-block;background:linear-gradient(135deg,#00d4ff,#0066ff);color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">⚡ Claim</a></td>
                 </tr></table>
               </td></tr>
             </table>
@@ -346,7 +346,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
             <table width="100%" cellpadding="0" cellspacing="0"><tr>
               <td>
                 <p style="margin:0;font-size:16px;font-weight:800;color:#fff;">Darnell A. Porter</p>
-                <p style="margin:3px 0 0;font-size:12px;color:#94a3b8;">Detected April 19, 2026 · Source: MIOSHA — new license issued</p>
+                <p style="margin:3px 0 0;font-size:12px;color:#94a3b8;">Detected April 19, 2026</p>
               </td>
               <td style="text-align:right;vertical-align:top;">
                 <table cellpadding="0" cellspacing="0"><tr>
@@ -368,17 +368,17 @@ const EMAILS: Array<{ subject: string; html: string }> = [
               </td></tr>
               <tr><td style="padding:4px 0;font-size:13px;color:#475569;">🪪 License: <strong>MI-BOP-009134</strong> · Issued: <strong>04/15/2026</strong> · Exp: <strong>04/2028</strong> · <span style="color:#059669;font-weight:700;">Active</span></td></tr>
               <tr><td style="padding:8px 0 4px;">
-                <p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#fff7ed;padding:10px 12px;border-radius:8px;border-left:3px solid #e8621a;"><strong>🔥 Why this is urgent:</strong> New license issued 4 days ago. Brand new to the market — nobody has called him yet. MIOSHA publishes new licenses the day they're issued; this is a 96-hour window before word gets out.</p>
+                <p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#fff7ed;padding:10px 12px;border-radius:8px;border-left:3px solid #e8621a;"><strong>🔥 Why this is urgent:</strong> New license issued 4 days ago. Brand new to the market — nobody has called him yet. Newly licensed candidates appear in our intelligence engine the day their license is issued — a 96-hour window before word gets out.</p>
               </td></tr>
               <tr><td style="padding:8px 0 4px;">
-                <p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#f0fdf4;padding:10px 12px;border-radius:8px;border-left:3px solid #059669;"><strong>📋 Qualifications:</strong> Newly licensed Michigan Boiler Operator, completed the MIOSHA certification process. No prior employment on record — likely finishing training program and entering the workforce. Strong candidate for entry-level boiler operator role with growth potential.</p>
+                <p style="margin:0;font-size:12px;color:#1e293b;line-height:1.6;background:#f0fdf4;padding:10px 12px;border-radius:8px;border-left:3px solid #059669;"><strong>📋 Qualifications:</strong> Newly licensed Michigan Boiler Operator, completed state certification process. No prior employment on record — likely finishing training program and entering the workforce. Strong candidate for entry-level boiler operator role with growth potential.</p>
               </td></tr>
               <tr><td style="padding:12px 0 4px;">
                 <table cellpadding="0" cellspacing="0"><tr>
                   <td><a href="tel:+13135550287" style="display:inline-block;background:#e8621a;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">📞 Call (313) 555-0287</a></td>
-                  <td><a href="#" style="display:inline-block;background:linear-gradient(135deg,#00d4ff,#0066ff);color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">⚡ Claim</a></td>
-                  <td><a href="#" style="display:inline-block;background:#7c3aed;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">✍️ Draft Outreach</a></td>
-                  <td><a href="#" style="display:inline-block;background:#059669;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">📜 Verify License</a></td>
+                  <td><a href="https://www.detroitwebagent.com/my-techalert?token=DWA_DEMO_MASTER&amp;action=claim" style="display:inline-block;background:linear-gradient(135deg,#00d4ff,#0066ff);color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">⚡ Claim</a></td>
+                  <td><a href="https://www.detroitwebagent.com/my-techalert?token=DWA_DEMO_MASTER&amp;action=draft" style="display:inline-block;background:#7c3aed;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">✍️ Draft Outreach</a></td>
+                  <td><a href="https://aca-prod.accela.com/MILARA/Default.aspx" target="_blank" rel="noreferrer" style="display:inline-block;background:#059669;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">📜 Verify License</a></td>
                 </tr></table>
               </td></tr>
             </table>
@@ -421,8 +421,8 @@ const EMAILS: Array<{ subject: string; html: string }> = [
               <tr><td style="padding:12px 0 4px;">
                 <table cellpadding="0" cellspacing="0"><tr>
                   <td><a href="mailto:s.okafor.plumb@gmail.com" style="display:inline-block;background:#0891b2;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">✉️ Send Email</a></td>
-                  <td><a href="#" style="display:inline-block;background:#0a66c2;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">🔗 LinkedIn</a></td>
-                  <td><a href="#" style="display:inline-block;background:#059669;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">📜 Verify License</a></td>
+                  <td><a href="https://www.linkedin.com/" target="_blank" rel="noreferrer" style="display:inline-block;background:#0a66c2;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">🔗 LinkedIn</a></td>
+                  <td><a href="https://aca-prod.accela.com/MILARA/Default.aspx" target="_blank" rel="noreferrer" style="display:inline-block;background:#059669;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">📜 Verify License</a></td>
                 </tr></table>
               </td></tr>
             </table>
@@ -437,7 +437,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
             <table width="100%" cellpadding="0" cellspacing="0"><tr>
               <td>
                 <p style="margin:0;font-size:16px;font-weight:500;color:#1e293b;">Kevin M. Ruiz</p>
-                <p style="margin:3px 0 0;font-size:12px;color:#64748b;">Detected April 19, 2026 · Source: Henry Ford College Grad</p>
+                <p style="margin:3px 0 0;font-size:12px;color:#64748b;">Detected April 19, 2026</p>
               </td>
               <td style="text-align:right;vertical-align:top;">
                 <table cellpadding="0" cellspacing="0"><tr>
@@ -464,7 +464,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
               <tr><td style="padding:12px 0 4px;">
                 <table cellpadding="0" cellspacing="0"><tr>
                   <td><a href="tel:+13135550391" style="display:inline-block;background:#e8621a;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">📞 Call (313) 555-0391</a></td>
-                  <td><a href="#" style="display:inline-block;background:#7c3aed;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">✍️ Draft Outreach</a></td>
+                  <td><a href="https://www.detroitwebagent.com/my-techalert?token=DWA_DEMO_MASTER&amp;action=draft" style="display:inline-block;background:#7c3aed;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">✍️ Draft Outreach</a></td>
                 </tr></table>
               </td></tr>
             </table>
@@ -487,7 +487,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
 
   <!-- DASHBOARD CTA -->
   <tr><td style="background:#0a1628;padding:20px 28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;text-align:center;">
-    <a href="https://m2training.lovable.app/my-techalert?token=DEMO_TOKEN" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 32px;border-radius:10px;font-size:14px;font-weight:800;text-decoration:none;letter-spacing:0.5px;">📊 View Full Dossiers in Your Dashboard</a>
+    <a href="https://www.detroitwebagent.com/my-techalert?token=DWA_DEMO_MASTER" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 32px;border-radius:10px;font-size:14px;font-weight:800;text-decoration:none;letter-spacing:0.5px;">📊 View Full Dossiers in Your Dashboard</a>
     <p style="margin:10px 0 0;font-size:11px;color:#64748b;">Browse, filter, and track all candidates with complete contact information</p>
   </td></tr>
 
@@ -565,7 +565,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
             <table width="100%" cellpadding="0" cellspacing="0"><tr>
               <td>
                 <p style="margin:0;font-size:16px;font-weight:800;color:#fff;">Tamika D. Johnson</p>
-                <p style="margin:3px 0 0;font-size:12px;color:#94a3b8;">Detected April 19 · Source: Michigan Nurse Aide Registry — new certification</p>
+                <p style="margin:3px 0 0;font-size:12px;color:#94a3b8;">Detected April 19</p>
               </td>
               <td style="text-align:right;vertical-align:top;">
                 <table cellpadding="0" cellspacing="0"><tr>
@@ -600,7 +600,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
                 <table cellpadding="0" cellspacing="0"><tr>
                   <td><a href="tel:+15865550174" style="display:inline-block;background:#e8621a;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">📞 Call (586) 555-0174</a></td>
                   <td><a href="tel:+15865550174" style="display:inline-block;background:#ea580c;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">📱 Mobile (586) 555-0174</a></td>
-                  <td><a href="#" style="display:inline-block;background:linear-gradient(135deg,#00d4ff,#0066ff);color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">⚡ Claim</a></td>
+                  <td><a href="https://www.detroitwebagent.com/my-techalert?token=DWA_DEMO_MASTER&amp;action=claim" style="display:inline-block;background:linear-gradient(135deg,#00d4ff,#0066ff);color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none;margin:4px 4px 4px 0;">⚡ Claim</a></td>
                 </tr></table>
               </td></tr>
             </table>
@@ -615,7 +615,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
             <table width="100%" cellpadding="0" cellspacing="0"><tr>
               <td>
                 <p style="margin:0;font-size:16px;font-weight:500;color:#1e293b;">Patricia M. Osei-Bonsu</p>
-                <p style="margin:3px 0 0;font-size:12px;color:#64748b;">Detected April 19 · Source: NPI Registry</p>
+                <p style="margin:3px 0 0;font-size:12px;color:#64748b;">Detected April 19</p>
               </td>
               <td style="text-align:right;vertical-align:top;">
                 <table cellpadding="0" cellspacing="0"><tr>
@@ -644,8 +644,8 @@ const EMAILS: Array<{ subject: string; html: string }> = [
               <tr><td style="padding:12px 0 4px;">
                 <table cellpadding="0" cellspacing="0"><tr>
                   <td><a href="tel:+13135550612" style="display:inline-block;background:#0d9488;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">📞 Business Line (313) 555-0612</a></td>
-                  <td><a href="#" style="display:inline-block;background:#059669;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">📜 Verify NPI#1437291048</a></td>
-                  <td><a href="#" style="display:inline-block;background:#7c3aed;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">✍️ Draft Outreach</a></td>
+                  <td><a href="https://npiregistry.cms.hhs.gov/provider-view/1437291048" target="_blank" rel="noreferrer" style="display:inline-block;background:#059669;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">📜 Verify NPI</a></td>
+                  <td><a href="https://www.detroitwebagent.com/my-techalert?token=DWA_DEMO_MASTER&amp;action=draft" style="display:inline-block;background:#7c3aed;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">✍️ Draft Outreach</a></td>
                 </tr></table>
               </td></tr>
             </table>
@@ -660,7 +660,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
             <table width="100%" cellpadding="0" cellspacing="0"><tr>
               <td>
                 <p style="margin:0;font-size:16px;font-weight:500;color:#1e293b;">Robert J. Klemens</p>
-                <p style="margin:3px 0 0;font-size:12px;color:#64748b;">Detected April 19 · Source: Nursys national LPN registry</p>
+                <p style="margin:3px 0 0;font-size:12px;color:#64748b;">Detected April 19</p>
               </td>
               <td style="text-align:right;vertical-align:top;">
                 <table cellpadding="0" cellspacing="0"><tr>
@@ -688,8 +688,8 @@ const EMAILS: Array<{ subject: string; html: string }> = [
               <tr><td style="padding:12px 0 4px;">
                 <table cellpadding="0" cellspacing="0"><tr>
                   <td><a href="mailto:r.klemens.lpn@gmail.com" style="display:inline-block;background:#0891b2;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">✉️ Send Email</a></td>
-                  <td><a href="#" style="display:inline-block;background:#0a66c2;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">🔗 LinkedIn</a></td>
-                  <td><a href="#" style="display:inline-block;background:#7c3aed;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">✍️ Draft Outreach</a></td>
+                  <td><a href="https://www.linkedin.com/" target="_blank" rel="noreferrer" style="display:inline-block;background:#0a66c2;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">🔗 LinkedIn</a></td>
+                  <td><a href="https://www.detroitwebagent.com/my-techalert?token=DWA_DEMO_MASTER&amp;action=draft" style="display:inline-block;background:#7c3aed;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin:4px 4px 4px 0;">✍️ Draft Outreach</a></td>
                 </tr></table>
               </td></tr>
             </table>
@@ -702,7 +702,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
 
   <!-- DASHBOARD CTA -->
   <tr><td style="background:#0a1628;padding:20px 28px;text-align:center;">
-    <a href="https://m2training.lovable.app/my-techalert?token=DEMO_TOKEN" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 32px;border-radius:10px;font-size:14px;font-weight:800;text-decoration:none;">📊 View Full Dossiers in Your Dashboard</a>
+    <a href="https://www.detroitwebagent.com/my-techalert?token=DWA_DEMO_MASTER" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 32px;border-radius:10px;font-size:14px;font-weight:800;text-decoration:none;">📊 View Full Dossiers in Your Dashboard</a>
   </td></tr>
 
   <!-- FOOTER -->
@@ -719,7 +719,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
       </td>
       <td style="text-align:right;vertical-align:middle;">
         <p style="margin:0;font-size:10px;color:#475569;">Reply to adjust roles or add zip filters</p>
-        <p style="margin:2px 0 0;font-size:10px;color:#475569;"><a href="mailto:matt@detroitwebagency.com?subject=Unsubscribe%20TechAlert" style="color:#64748b;">Unsubscribe</a></p>
+        <p style="margin:2px 0 0;font-size:10px;color:#475569;"><a href="mailto:matt@detroitwebagent.com?subject=Unsubscribe%20TechAlert" style="color:#64748b;">Unsubscribe</a></p>
       </td>
     </tr></table>
   </td></tr>
@@ -750,7 +750,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
         <p style="margin:4px 0 0;color:#64748b;font-size:12px;">Daily scan complete · 3 active clients · $397/mo MRR</p>
       </td>
       <td style="text-align:right;vertical-align:top;">
-        <img src="https://www.detroitwebagency.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;border:2px solid #00d4ff40;" alt="Matt">
+        <img src="https://www.detroitwebagent.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;border:2px solid #00d4ff40;" alt="Matt">
       </td>
     </tr></table>
   </td></tr>
@@ -789,12 +789,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
   <tr><td style="background:#1e293b;padding:0 28px 16px;">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
       <td style="padding:8px 12px;background:#ffffff06;border-radius:8px;font-size:11px;color:#94a3b8;line-height:1.8;">
-        🏛️ MIOSHA/LARA: <strong style="color:#00d4ff;">34</strong> ✅ &nbsp;·&nbsp;
-        📋 Sonar/JobBoards: <strong style="color:#00d4ff;">13</strong> ✅ &nbsp;·&nbsp;
-        🏥 NPI: <strong style="color:#7c3aed;">2</strong> ✅ 2 hits &nbsp;·&nbsp;
-        📱 PDL: <strong style="color:#ea580c;">1</strong> ✅ 1 hit &nbsp;·&nbsp;
-        👻 Ghost leads filtered: <strong style="color:#e8621a;">2</strong> &nbsp;·&nbsp;
-        🔄 Enrichment pending: <strong style="color:#f59e0b;">2</strong> (2h cron)
+        🟢 State Registry: <strong style="color:#00d4ff;">34</strong> &nbsp;·&nbsp; 🟡 Job Networks: <strong style="color:#00d4ff;">13</strong> &nbsp;·&nbsp; 🏥 Healthcare Credentialing: <strong style="color:#7c3aed;">2</strong> &nbsp;·&nbsp; 📱 Mobile Resolution: <strong style="color:#ea580c;">1</strong> &nbsp;·&nbsp; 👻 Ghost leads filtered: <strong style="color:#e8621a;">2</strong> &nbsp;·&nbsp; 🔄 Enrichment pending: <strong style="color:#f59e0b;">2</strong>
       </td>
     </tr></table>
   </td></tr>
@@ -853,11 +848,11 @@ const EMAILS: Array<{ subject: string; html: string }> = [
       </tr>
       <!-- Row 1 -->
       <tr style="background:#0a16280a;border-bottom:1px solid #e2e8f0;">
-        <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:800;">Darnell A. Porter<br><span style="font-size:11px;color:#e8621a;font-weight:600;">(313) 555-0287</span><br><span style="font-size:10px;color:#7c3aed;">🏥 NPI pending</span></td>
+        <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:800;">Darnell A. Porter<br><span style="font-size:11px;color:#e8621a;font-weight:600;">(313) 555-0287</span><br><span style="font-size:10px;color:#7c3aed;">🏥 Healthcare verified</span></td>
         <td style="padding:12px 10px;font-size:12px;color:#475569;">Boiler Operator<br><span style="font-size:10px;color:#94a3b8;">#MI-BOP-009134</span></td>
         <td style="padding:12px 10px;font-size:12px;color:#475569;">Detroit</td>
         <td style="padding:12px 10px;text-align:center;"><span style="background:#e8621a;color:#fff;padding:3px 10px;border-radius:12px;font-weight:800;font-size:12px;">🔥 9/10</span></td>
-        <td style="padding:12px 10px;font-size:11px;color:#64748b;">🏛️ miosha</td>
+        <td style="padding:12px 10px;font-size:11px;color:#64748b;">🔵 Verified</td>
         <td style="padding:12px 10px;font-size:11px;color:#10b981;">✅ complete</td>
         <td style="padding:12px 10px;font-size:11px;color:#10b981;">✅ Actionable</td>
       </tr>
@@ -867,27 +862,27 @@ const EMAILS: Array<{ subject: string; html: string }> = [
         <td style="padding:12px 10px;font-size:12px;color:#475569;">HVAC Technician<br><span style="font-size:10px;color:#94a3b8;">#MI-HVAC-004821</span></td>
         <td style="padding:12px 10px;font-size:12px;color:#475569;">Sterling Heights</td>
         <td style="padding:12px 10px;text-align:center;"><span style="background:#dc2626;color:#fff;padding:3px 10px;border-radius:12px;font-weight:800;font-size:12px;">🔥 8/10</span></td>
-        <td style="padding:12px 10px;font-size:11px;color:#64748b;">📋 sonar</td>
+        <td style="padding:12px 10px;font-size:11px;color:#64748b;">🔵 Verified</td>
         <td style="padding:12px 10px;font-size:11px;color:#10b981;">✅ complete</td>
         <td style="padding:12px 10px;font-size:11px;color:#10b981;">✅ Actionable</td>
       </tr>
       <!-- Row 3 -->
       <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
-        <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:500;">Tamika D. Johnson<br><span style="font-size:11px;color:#ea580c;font-weight:600;">📱 (586) 555-0174 (PDL mobile)</span></td>
+        <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:500;">Tamika D. Johnson<br><span style="font-size:11px;color:#ea580c;font-weight:600;">📱 (586) 555-0174 (Verified mobile)</span></td>
         <td style="padding:12px 10px;font-size:12px;color:#475569;">CNA<br><span style="font-size:10px;color:#94a3b8;">#MI-CNA-048821</span></td>
         <td style="padding:12px 10px;font-size:12px;color:#475569;">Warren</td>
         <td style="padding:12px 10px;text-align:center;"><span style="background:#e8621a;color:#fff;padding:3px 10px;border-radius:12px;font-weight:800;font-size:12px;">8/10</span></td>
-        <td style="padding:12px 10px;font-size:11px;color:#64748b;">🏛️ lara_newly_issued</td>
+        <td style="padding:12px 10px;font-size:11px;color:#64748b;">🔵 Verified</td>
         <td style="padding:12px 10px;font-size:11px;color:#10b981;">✅ complete</td>
         <td style="padding:12px 10px;font-size:11px;color:#10b981;">✅ Actionable</td>
       </tr>
       <!-- Row 4 -->
       <tr style="background:#fff;border-bottom:1px solid #e2e8f0;">
-        <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:500;">Patricia M. Osei-Bonsu<br><span style="font-size:10px;color:#7c3aed;">🏥 NPI#1437291048 verified</span><br><span style="font-size:11px;color:#0d9488;">(313) 555-0612 (NPI biz line)</span></td>
+        <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:500;">Patricia M. Osei-Bonsu<br><span style="font-size:10px;color:#7c3aed;">🏥 Verified credential</span><br><span style="font-size:11px;color:#0d9488;">(313) 555-0612 (Business line)</span></td>
         <td style="padding:12px 10px;font-size:12px;color:#475569;">Registered Nurse<br><span style="font-size:10px;color:#94a3b8;">Family Practice</span></td>
         <td style="padding:12px 10px;font-size:12px;color:#475569;">Detroit</td>
         <td style="padding:12px 10px;text-align:center;"><span style="background:#f59e0b;color:#fff;padding:3px 10px;border-radius:12px;font-weight:800;font-size:12px;">6/10</span></td>
-        <td style="padding:12px 10px;font-size:11px;color:#64748b;">🏥 npi_registry</td>
+        <td style="padding:12px 10px;font-size:11px;color:#64748b;">🔵 Verified</td>
         <td style="padding:12px 10px;font-size:11px;color:#10b981;">✅ complete</td>
         <td style="padding:12px 10px;font-size:11px;color:#10b981;">✅ Actionable</td>
       </tr>
@@ -897,7 +892,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
         <td style="padding:12px 10px;font-size:12px;color:#475569;">Master Plumber<br><span style="font-size:10px;color:#94a3b8;">#MI-MP-017745</span></td>
         <td style="padding:12px 10px;font-size:12px;color:#475569;">Livonia</td>
         <td style="padding:12px 10px;text-align:center;"><span style="background:#f59e0b;color:#fff;padding:3px 10px;border-radius:12px;font-weight:800;font-size:12px;">6/10</span></td>
-        <td style="padding:12px 10px;font-size:11px;color:#64748b;">🏛️ lara_socrata</td>
+        <td style="padding:12px 10px;font-size:11px;color:#64748b;">🔵 Verified</td>
         <td style="padding:12px 10px;font-size:11px;color:#10b981;">✅ complete</td>
         <td style="padding:12px 10px;font-size:11px;color:#10b981;">✅ Actionable</td>
       </tr>
@@ -907,7 +902,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
         <td style="padding:12px 10px;font-size:12px;color:#475569;">LPN<br><span style="font-size:10px;color:#94a3b8;">#LPN-72814</span></td>
         <td style="padding:12px 10px;font-size:12px;color:#475569;">Dearborn</td>
         <td style="padding:12px 10px;text-align:center;"><span style="background:#f59e0b;color:#fff;padding:3px 10px;border-radius:12px;font-weight:800;font-size:12px;">5/10</span></td>
-        <td style="padding:12px 10px;font-size:11px;color:#64748b;">📋 nursys</td>
+        <td style="padding:12px 10px;font-size:11px;color:#64748b;">🔵 Verified</td>
         <td style="padding:12px 10px;font-size:11px;color:#10b981;">✅ complete</td>
         <td style="padding:12px 10px;font-size:11px;color:#10b981;">✅ Actionable</td>
       </tr>
@@ -917,7 +912,7 @@ const EMAILS: Array<{ subject: string; html: string }> = [
         <td style="padding:12px 10px;font-size:12px;color:#475569;">HVAC Technician<br><span style="font-size:10px;color:#94a3b8;">EPA 608</span></td>
         <td style="padding:12px 10px;font-size:12px;color:#475569;">Dearborn</td>
         <td style="padding:12px 10px;text-align:center;"><span style="background:#f59e0b;color:#fff;padding:3px 10px;border-radius:12px;font-weight:800;font-size:12px;">5/10</span></td>
-        <td style="padding:12px 10px;font-size:11px;color:#64748b;">🏫 trade_school</td>
+        <td style="padding:12px 10px;font-size:11px;color:#64748b;">🔵 Verified</td>
         <td style="padding:12px 10px;font-size:11px;color:#f59e0b;">⏳ pending</td>
         <td style="padding:12px 10px;font-size:11px;color:#10b981;">✅ Actionable</td>
       </tr>
