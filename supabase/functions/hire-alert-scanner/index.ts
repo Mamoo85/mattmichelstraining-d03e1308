@@ -1284,14 +1284,20 @@ serve(async (req: Request) => {
       .in("full_name", alertedNames);
   }
 
-  // Log the run
+  // Log the run — write to BOTH the legacy columns and the canonical schema columns
+  // (started_at/completed_at/status/error_message), since both exist on the table now.
   await sb.from("hire_alert_runs").insert({
-    run_at: runStart,
+    started_at: runStart,
+    completed_at: new Date().toISOString(),
+    status: "ok",
     source: "all",
+    run_at: runStart,
     candidates_found: allRaw.length,
     new_candidates: newCandidates.length,
+    candidates_alerted: alertsSent,
     alerts_sent: alertsSent,
     errors: null,
+    error_message: null,
     lara_status: "not_attempted",
   });
 
