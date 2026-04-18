@@ -1,58 +1,64 @@
+User's question: pg_cron jobs were rebuilt with the safe `vault.decrypted_secrets` pattern but Sentinel still reports 21/23 dormant. Why and can we fix it?
 
+Let me investigate before planning. Key suspects:
 
-User wants me to repeat the "real-life scan + sample print-outs" exercise (like we did for TechAlert/HireAlert and Demand Radar) — but now applied to the **newly-fixed cron pipeline + the products it feeds**. They want to verify the Cron Sentinel fixes actually produced data, then see real sample customer deliverables generated from that data.
+1. `pg_cron` extension may not actually be enabled, OR jobs were created in a schema/role that pg_cron can't execute
+2. The vault migration may have run but the `cron.schedule()` calls inside the DO block may have silently no-op'd if `v_url`/`v_key` came back NULL (vault secrets not actually present under those exact names)
+3. Sentinel watchlist names don't match real cron names → reports false "missing"
+4. Jobs scheduled but `cron.job_run_details` empty because pg_cron worker isn't running on this Supabase tier
+5. The `net.http_post` calls fire but Edge Functions reject them (auth header malformed)
 
-Let me think about what they actually want repeated:
-- Previous practice = (1) blunt DB inventory check, (2) actual sample PDF of what a customer would receive, (3) burn-rate / "will we run out" math, (4) honest verdict
-- Last did this for: TechAlert ($399 sheet + $2,500 MSP) and Demand Radar ($99/$199/$499)
-- Now after fixing 20 broken crons + deploying Cron Sentinel — re-run the same exercise to see what changed
+Need to verify with read-only queries before proposing a fix.
 
-## Plan
+## Investigation Plan (read-only first)
 
-### Phase 1: Live DB Re-Scan (read-only)
-Query current state of:
-- `hire_alert_candidates` — total, scored ≥7, contactable, by trade, by county, last 24h
-- `industry_pulse_signals` — total, by vertical, by county, last 24h, signal_type populated %
-- `cron_sentinel_alerts` — last 24h pass/fail per cron
-- `cron.job_run_details` — actual last-run times for the 20 fixed crons
-- `hire_alert_runs` — did scanner actually write rows since the fix?
-- `agent_heartbeats` — which agents are alive
+1. Query `cron.job` — list every job, schedule, active flag, command preview, username
+2. Query `cron.job_run_details` — last 50 runs, status, return_message — see if pg_cron is firing AT ALL or if specific jobs error
+3. Query `vault.decrypted_secrets` — confirm `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` exist under those exact names (this is the #1 likely failure — the migration assumed names that may not match what's in vault)
+4. Query `pg_extension` — confirm `pg_cron` + `pg_net` actually enabled
+5. Query `net._http_response` — see if http_post calls are succeeding or returning errors
+6. Check Sentinel watchlist vs `cron.job.jobname` — name mismatches
+7. Spot-check 2-3 edge function logs (`hire-alert-scanner`, `industry-pulse-scanner`) — did they receive ANY invocations in last 48h?
 
-Compare to last scan (148 candidates, 0 scored, 0 contactable). Report deltas.
+## Then Fix Plan (default mode after approval)
 
-### Phase 2: Generate Real Sample PDFs from CURRENT DATA
-Pull actual rows from DB (not synthetic) and render:
+Based on what investigation finds, fix will be ONE of these (most likely #A):
 
-1. **`/mnt/documents/sample-techalert-sheet-399-v2.pdf`** — what a $399 buyer gets TODAY based on real candidates in the table
-2. **`/mnt/documents/sample-techalert-monthly-2500-v2.pdf`** — sample monthly MSP delivery using current real data
-3. **`/mnt/documents/sample-demand-radar-snapshot-99-v2.pdf`** — $99 snapshot built from actual `industry_pulse_signals` rows
-4. **`/mnt/documents/sample-demand-radar-weekly-199-v2.pdf`** — $199 weekly digest from real signals
-5. **`/mnt/documents/sample-demand-radar-enterprise-499-v2.pdf`** — $499 enterprise built from real data
+**A. Vault secret names don't match** (most likely — explains why ALL rebuilt crons silent)
 
-If a product has insufficient real data → say so bluntly in the PDF + chat ("only 12 candidates available — would need 50 to ship this product live").
+- The DO block in `20260418004827_*.sql` does `WHERE name = 'SUPABASE_URL'` — if vault stores it under a different name (e.g., `supabase_url` lowercase, or doesn't have it at all), `v_url` is NULL → `cron.schedule()` schedules with literal `NULL/functions/v1/...` URL → every fire is a no-op
+- Fix: new migration that (1) confirms/inserts correct vault entries, (2) re-runs `cron.schedule()` for all 20 jobs with verified non-NULL URL/key
+- Add a safety guard: `IF v_url IS NULL THEN RAISE EXCEPTION` so future migrations fail loud instead of silently scheduling broken crons
 
-### Phase 3: Burn-Rate Math (real numbers, not estimates)
-For each product:
-- Current contactable inventory
-- Daily intake rate (last 7 days from cron logs)
-- Max sellable units before exhaustion
-- Replenishment time
+**B. pg_cron disabled or wrong role**
 
-### Phase 4: Verdict Memo + Artifacts
-Single chat memo + saved file `/mnt/documents/post-fix-pipeline-status.md`:
-- "What changed since the cron fix"
-- "What's actually sellable RIGHT NOW"
-- "What still needs to bake before going live"
-- Links to all 5 sample PDFs
+- Migration to `CREATE EXTENSION IF NOT EXISTS pg_cron` and re-grant
+- Re-schedule under `postgres` role explicitly
 
-### Out of Scope
-- No code changes
-- No new pricing
-- No new scanners — only measuring what's now flowing
-- No fixing remaining gaps this round (separate approval)
+**C. Edge functions rejecting the cron's auth header**
+
+- Inspect `verify_jwt` in `config.toml` for each function
+- If function requires JWT and cron sends service-role key as bearer, that's fine — but if function does its own auth check that rejects service role, fix function
+
+**D. Sentinel watchlist mismatch only** (cosmetic — crons actually working but Sentinel wrong)
+
+- Update `WATCHLIST` in `cron-sentinel/index.ts` to match real `jobname` values from `cron.job`
+
+**E. Hardcoded fallback** (defense in depth)
+
+- Replace vault lookup with hardcoded `https://eauvubfpanpeuxsrqesu.supabase.co` for the URL (URL never rotates) — eliminates an entire failure mode. Service role key still pulled from vault since it can rotate.
 
 ### Deliverables
-- Chat: blunt status table + verdict per product
-- 5 sample PDFs in `/mnt/documents/` (real data, current as-of-now)
-- 1 status memo `/mnt/documents/post-fix-pipeline-status.md`
 
+- Investigation memo in chat: exact root cause with evidence (which query proved it)
+- One migration file fixing the cron creation + adding NULL guards
+- If E chosen: also patch `cron-sentinel` watchlist to match real names
+- Manual `SELECT cron.schedule(...)` triggers to fire 3 critical jobs immediately so user sees data within minutes, not 24h
+- Update `mem://tech/cron-sentinel-and-monitoring.md` with the new "vault name mismatch" failure mode + the NULL-guard pattern (so this becomes failure #3 in the burn book)
+- Re test to see if the crons are fixed,  if not then, re do the entire process but from a different approach until the 21 other cron Jobs are fixed.
+
+### Out of Scope
+
+- No new product features
+- No Sentinel UI changes beyond watchlist name alignment
+- No re-architecting the fix-broken-crons migration history — just one new migration on top
