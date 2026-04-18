@@ -916,10 +916,36 @@ serve(async (req: Request) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  try {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const dateStr = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const runStart = new Date().toISOString();
+
+  // Phase 17 fix: insert a "running" row IMMEDIATELY so the sentinel + dashboard see the run
+  // even if the function later times out (16-source scan can exceed 150s wall-clock).
+  // We update this same row at the end with final stats.
+  let runRowId: string | null = null;
+  try {
+    const { data: runRow } = await sb
+      .from("hire_alert_runs")
+      .insert({
+        started_at: runStart,
+        run_at: runStart,
+        source: "all",
+        status: "running",
+        candidates_found: 0,
+        new_candidates: 0,
+        candidates_alerted: 0,
+        alerts_sent: 0,
+        lara_status: "not_attempted",
+      })
+      .select("id")
+      .single();
+    runRowId = runRow?.id ?? null;
+  } catch (e) {
+    console.warn("[hire-alert-scanner] failed to insert run-start row:", e instanceof Error ? e.message : String(e));
+  }
+
+  try {
 
   // Fetch active paid clients + active trial clients
   const { data: allClients } = await sb.from("hire_alert_clients").select("*").or("active.eq.true,trial_status.eq.active");
@@ -1303,22 +1329,30 @@ serve(async (req: Request) => {
       .in("full_name", alertedNames);
   }
 
-  // Log the run — write to BOTH the legacy columns and the canonical schema columns
-  // (started_at/completed_at/status/error_message), since both exist on the table now.
-  await sb.from("hire_alert_runs").insert({
-    started_at: runStart,
+  // Phase 17 fix: UPDATE the row we inserted at start (instead of inserting a duplicate).
+  // This way the run is visible to the sentinel even if a later step times out.
+  const finalStats = {
     completed_at: new Date().toISOString(),
     status: "ok",
-    source: "all",
-    run_at: runStart,
     candidates_found: allRaw.length,
     new_candidates: newCandidates.length,
     candidates_alerted: alertsSent,
     alerts_sent: alertsSent,
     errors: null,
     error_message: null,
-    lara_status: "not_attempted",
-  });
+  };
+  if (runRowId) {
+    await sb.from("hire_alert_runs").update(finalStats).eq("id", runRowId);
+  } else {
+    // Fallback: insert if the start-row insert failed
+    await sb.from("hire_alert_runs").insert({
+      started_at: runStart,
+      run_at: runStart,
+      source: "all",
+      lara_status: "not_attempted",
+      ...finalStats,
+    });
+  }
 
   // Founder daily report — Matt only (sources visible here only)
   const sourceBreakdown = {
@@ -1479,6 +1513,16 @@ serve(async (req: Request) => {
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[hire-alert-scanner] Unhandled error:", msg);
+    // Phase 17 fix: mark the run row as errored so the sentinel + dashboard show the failure
+    if (runRowId) {
+      try {
+        await sb.from("hire_alert_runs").update({
+          completed_at: new Date().toISOString(),
+          status: "error",
+          error_message: msg.slice(0, 1000),
+        }).eq("id", runRowId);
+      } catch {/* best-effort */}
+    }
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
