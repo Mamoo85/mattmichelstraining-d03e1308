@@ -18,6 +18,8 @@ export default function AdminDWAOverview() {
   const [invoking, setInvoking] = useState(false);
   const [sendingTrial, setSendingTrial] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [pdlTesting, setPdlTesting] = useState(false);
+  const [pdlResult, setPdlResult] = useState<Record<string, unknown> | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -66,6 +68,28 @@ export default function AdminDWAOverview() {
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Test failed");
       setTesting(t => ({ ...t, [product]: false }));
+    }
+  };
+
+  const testPDL = async () => {
+    setPdlTesting(true);
+    setPdlResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("test-pdl-premium", {
+        body: { use_db_candidate: true },
+      });
+      if (error) throw error;
+      setPdlResult(data);
+      const s = data?.upgrade_summary;
+      if (s) {
+        toast.success(`PDL hit: ${s.phones_available} phones, ${s.emails_available} emails, ${s.jobs_in_history} jobs, ${s.certs_found} certs`);
+      } else {
+        toast.error("PDL returned no match — try with a specific name");
+      }
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "PDL test failed");
+    } finally {
+      setPdlTesting(false);
     }
   };
 
@@ -205,11 +229,16 @@ export default function AdminDWAOverview() {
               Cron: daily 7am ET
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button onClick={invokeScanner} disabled={invoking}
               className="bg-orange-500 hover:bg-orange-600 text-white">
               <Play size={13} className="mr-1.5" />
               {invoking ? "Running..." : "Invoke Scanner Now"}
+            </Button>
+            <Button onClick={testPDL} disabled={pdlTesting}
+              className="bg-violet-600 hover:bg-violet-700 text-white">
+              <Zap size={13} className="mr-1.5" />
+              {pdlTesting ? "Testing PDL..." : "Test PDL Premium"}
             </Button>
             <Button onClick={sendMockTrialEmails} disabled={sendingTrial}
               className="bg-purple-600 hover:bg-purple-700 text-white">
@@ -219,6 +248,58 @@ export default function AdminDWAOverview() {
           </div>
         </div>
       </div>
+
+      {/* PDL Test Result */}
+      {pdlResult && (
+        <div className="rounded-2xl border border-violet-500/30 bg-violet-500/5 p-5">
+          <p className="text-violet-400 text-xs font-bold uppercase tracking-wider mb-3">
+            PDL Premium Result — {String(pdlResult.tested_name)} ({String(pdlResult.tested_city)})
+          </p>
+          <div className="grid sm:grid-cols-2 gap-4 text-xs mb-4">
+            <div>
+              <p className="text-white/50 font-bold mb-2">Free Tier Was Returning</p>
+              <pre className="text-green-400/80 text-[11px] leading-5 whitespace-pre-wrap">
+                {JSON.stringify(pdlResult.free_tier_fields, null, 2)}
+              </pre>
+            </div>
+            <div>
+              <p className="text-white/50 font-bold mb-2">Premium Now Adds</p>
+              <pre className="text-violet-300/80 text-[11px] leading-5 whitespace-pre-wrap">
+                {JSON.stringify(pdlResult.upgrade_summary, null, 2)}
+              </pre>
+              {(pdlResult.premium_additions as any)?.certifications?.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-white/40 mb-1">Certifications found:</p>
+                  <p className="text-amber-400 text-[11px]">
+                    {((pdlResult.premium_additions as any).certifications as string[]).join(", ")}
+                  </p>
+                </div>
+              )}
+              {(pdlResult.premium_additions as any)?.skills?.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-white/40 mb-1">Skills:</p>
+                  <p className="text-cyan-400 text-[11px]">
+                    {((pdlResult.premium_additions as any).skills as string[]).slice(0, 8).join(", ")}
+                  </p>
+                </div>
+              )}
+              {(pdlResult.premium_additions as any)?.inferred_salary && (
+                <div className="mt-2">
+                  <p className="text-white/40 mb-1">Inferred salary:</p>
+                  <p className="text-emerald-400 text-[11px] font-bold">
+                    {String((pdlResult.premium_additions as any).inferred_salary)}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+          <p className="text-white/20 text-[10px]">
+            Match likelihood: {String(pdlResult.pdl_match_likelihood ?? "n/a")} / 10 ·
+            Free fields hit: {String(pdlResult.free_tier_hit_count)} ·
+            Premium additions: {String(pdlResult.premium_addition_hit_count)}
+          </p>
+        </div>
+      )}
 
       {/* Pipeline Health */}
       <div className="rounded-2xl border border-white/8 bg-white/2 p-5">

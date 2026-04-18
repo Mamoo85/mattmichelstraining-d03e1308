@@ -99,17 +99,21 @@ async function stageNPI(c: CandidateRow): Promise<Record<string, unknown>> {
   } catch { return {}; }
 }
 
-// ===== STAGE 3: People Data Labs =====
+// ===== STAGE 3: People Data Labs (Premium) =====
 async function stagePDL(c: CandidateRow): Promise<Record<string, unknown>> {
   if (!PDL_API_KEY) return {};
   try {
-    const params: Record<string, string> = {
+    const params = new URLSearchParams({
       name: c.full_name || c.name,
       "location.region": "michigan",
       pretty: "false",
-    };
-    const qs = new URLSearchParams(params).toString();
-    const res = await fetch(`https://api.peopledatalabs.com/v5/person/enrich?${qs}`, {
+      include_if_matched: "true",
+      titlecase: "true",
+      min_likelihood: "3",
+    });
+    if (c.city) params.set("location.locality", c.city);
+
+    const res = await fetch(`https://api.peopledatalabs.com/v5/person/enrich?${params}`, {
       headers: { "X-API-Key": PDL_API_KEY },
       signal: AbortSignal.timeout(15_000),
     });
@@ -117,14 +121,48 @@ async function stagePDL(c: CandidateRow): Promise<Record<string, unknown>> {
     const data = await res.json();
     if (data.status !== 200) return {};
     const p = data.data || {};
+
+    // Best phone: prefer mobile from phone_numbers array, fall back to mobile_phone field
+    const allPhones: string[] = p.phone_numbers || [];
+    const mobilePhone = p.mobile_phone || allPhones[0] || null;
+
+    // Best email: work email first for B2B outreach, personal as fallback
+    const workEmail = p.work_email || null;
+    const personalEmail = p.personal_emails?.[0] || null;
+
+    // Most recent employer from experience array (more accurate than job_company_name)
+    const currentExp = (p.experience || []).find((e: any) => e.is_primary) || (p.experience || [])[0];
+    const employer = currentExp?.company?.name || p.job_company_name || null;
+    const title = currentExp?.title?.name || p.job_title || null;
+
+    // Certifications and skills — gold for trades enrichment
+    const certs: string[] = (p.certifications || []).map((c: any) => c.name).filter(Boolean);
+    const skills: string[] = (p.skills || []).slice(0, 10);
+
+    // Job history depth for stability scoring
+    const jobCount = (p.experience || []).length;
+    const yearsExp = p.inferred_years_experience || null;
+    const stabilityIndex = jobCount > 0 && yearsExp ? Math.round((yearsExp / jobCount) * 10) / 10 : null;
+
     return {
-      pdl_mobile_phone: p.mobile_phone,
-      pdl_personal_email: p.personal_emails?.[0],
-      linkedin_url: p.linkedin_url,
-      current_employer: p.job_company_name,
-      current_title: p.job_title,
-      years_experience: p.inferred_years_experience,
-      facebook_url: p.facebook_url,
+      pdl_mobile_phone: mobilePhone,
+      pdl_personal_email: personalEmail,
+      pdl_work_email: workEmail,
+      pdl_all_phones: allPhones.slice(0, 3),           // store up to 3 phones
+      pdl_likelihood: data.likelihood ?? null,
+      linkedin_url: p.linkedin_url || null,
+      facebook_url: p.facebook_url || null,
+      twitter_url: p.twitter_url || null,
+      current_employer: employer,
+      current_title: title,
+      years_experience: yearsExp,
+      pdl_job_count: jobCount || null,
+      pdl_stability_index: stabilityIndex,
+      pdl_certifications: certs.length > 0 ? certs : null,
+      pdl_skills: skills.length > 0 ? skills : null,
+      pdl_inferred_salary: p.inferred_salary || null,
+      pdl_location_metro: p.location_metro || null,
+      pdl_location_zip: p.location_zip || null,
     };
   } catch { return {}; }
 }
