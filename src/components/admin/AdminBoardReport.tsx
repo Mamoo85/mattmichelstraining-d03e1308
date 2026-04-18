@@ -96,6 +96,14 @@ export default function AdminBoardReport() {
         </Button>
       </div>
 
+      {hasNoData && (
+        <Card className="bg-amber-500/5 border-amber-500/30">
+          <CardContent className="p-4 text-sm text-amber-200/90">
+            <strong>No agent activity in the last 7 days.</strong> The Board Report reads from <code className="text-xs bg-black/30 px-1 py-0.5 rounded">ai_action_queue</code> — your agents log strategic actions there. If this stays empty, run agents from <em>/dwa-admin → 🤖 Agent Toolkit</em> or wait for the next scheduled cron.
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {grouped.map((dept) => (
           <Card key={dept.key} className="bg-card/50">
