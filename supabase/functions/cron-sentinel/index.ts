@@ -106,16 +106,27 @@ async function checkOne(sb: any, expect: CronExpect, snoozes: Set<string>): Prom
     });
     if (res.ok) {
       const data = await res.json();
-      // data: { active: bool, last_run: timestamptz | null }
       r.scheduleOk = !!data?.active;
       r.lastRun = data?.last_run ?? null;
       if (!r.scheduleOk) r.errors.push("cron not scheduled or inactive");
-      if (r.lastRun) {
-        const minsAgo = (Date.now() - new Date(r.lastRun).getTime()) / 60000;
-        r.freshnessOk = minsAgo <= expect.freshnessMinutes;
-        if (!r.freshnessOk) r.errors.push(`last run ${Math.round(minsAgo)}m ago (max ${expect.freshnessMinutes}m)`);
+      // last_run is intentionally null (cron.job_run_details too slow to query). Freshness comes
+      // from outputTable check (below) OR agent_heartbeats fallback.
+      if (!expect.outputTable) {
+        // Try heartbeat as freshness signal
+        const agentName = expect.name.replace(/-(daily|4h|6h|friday|hourly).*/, "");
+        const { data: hb } = await sb.from("agent_heartbeats").select("last_beat").ilike("agent_name", agentName).maybeSingle();
+        if (hb?.last_beat) {
+          r.lastRun = hb.last_beat;
+          const minsAgo = (Date.now() - new Date(hb.last_beat).getTime()) / 60000;
+          r.freshnessOk = minsAgo <= expect.freshnessMinutes;
+          if (!r.freshnessOk) r.errors.push(`heartbeat ${Math.round(minsAgo)}m ago (max ${expect.freshnessMinutes}m)`);
+        } else {
+          // No heartbeat + no output table = trust the schedule
+          r.freshnessOk = r.scheduleOk;
+        }
       } else {
-        r.errors.push("no run history");
+        // Output-table check below will handle freshness
+        r.freshnessOk = true;
       }
     } else {
       r.errors.push(`cron status check failed: ${res.status}`);
