@@ -70,6 +70,28 @@ export default function AdminDWAOverview() {
     }
   };
 
+  const testPDL = async () => {
+    setPdlTesting(true);
+    setPdlResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("test-pdl-premium", {
+        body: { use_db_candidate: true },
+      });
+      if (error) throw error;
+      setPdlResult(data);
+      const s = data?.upgrade_summary;
+      if (s) {
+        toast.success(`PDL hit: ${s.phones_available} phones, ${s.emails_available} emails, ${s.jobs_in_history} jobs, ${s.certs_found} certs`);
+      } else {
+        toast.error("PDL returned no match — try with a specific name");
+      }
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "PDL test failed");
+    } finally {
+      setPdlTesting(false);
+    }
+  };
+
   const invokeScanner = async () => {
     setInvoking(true);
     try {
