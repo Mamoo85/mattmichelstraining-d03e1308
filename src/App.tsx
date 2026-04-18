@@ -286,7 +286,7 @@ const RecallAlertService = lazyRetry(() => import("./pages/RecallAlertService"))
 const PermitWatch = lazyRetry(() => import("./pages/PermitWatch"));
 const HireAlert = lazyRetry(() => import("./pages/HireAlert"));
 const HireAlertMSPInquiry = lazyRetry(() => import("./pages/HireAlertMSPInquiry"));
-const GoTechAlert = lazyRetry(() => import("./pages/GoTechAlert"));
+
 const FreeLeadsQR = lazyRetry(() => import("./pages/FreeLeadsQR"));
 const HireAlertTrial = lazyRetry(() => import("./pages/HireAlertTrial"));
 const HealthcareHireAlert = lazyRetry(() => import("./pages/HealthcareHireAlert"));
@@ -296,7 +296,7 @@ const IndustryPulse = lazyRetry(() => import("./pages/IndustryPulse"));
 const MyIndustryPulse = lazyRetry(() => import("./pages/MyIndustryPulse"));
 const DemandRadar = lazyRetry(() => import("./pages/DemandRadar"));
 const StaffingAgency = lazyRetry(() => import("./pages/StaffingAgency"));
-const TalentIntelligence = lazyRetry(() => import("./pages/TalentIntelligence"));
+
 const AgencyPortal = lazyRetry(() => import("./pages/AgencyPortal"));
 const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
 const RegulatoryFilingMonitor = lazyRetry(() => import("./pages/RegulatoryFilingMonitor"));
@@ -576,7 +576,7 @@ const App = () => (
                     <Route path="/contractor-leads" element={<ContractorLeads />} />
                     <Route path="/roi" element={<ContractorROIReport />} />
                     <Route path="/dead-lead-stats" element={<DeadLeadStats />} />
-                    <Route path="/my-techalert" element={<MyTechAlert />} />
+                    <Route path="/my-techalert" element={<Navigate to="/talent-radar/dashboard" replace />} />
                     <Route path="/dead-lead-intake" element={<DeadLeadIntake />} />
                     <Route path="/the-wire" element={<TheWire />} />
                     <Route path="/get-quote/:trade/:city" element={<GetQuote />} />
