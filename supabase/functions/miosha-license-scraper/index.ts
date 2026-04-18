@@ -1424,6 +1424,121 @@ async function logLaraHealthAndAlert(sb: any): Promise<void> {
 }
 
 // ===== MAIN HANDLER =====
+// ===== SOURCE 18: DOL Apprenticeship Completions (federal RAPIDS) =====
+// Scrapes the public DOL apprenticeship sponsor directory for newly minted journeymen
+// Free DOL_API_KEY required (https://developer.dol.gov/)
+const DOL_API_KEY = Deno.env.get("DOL_API_KEY") || "";
+async function scanDOLApprenticeships(): Promise<LicenseCandidate[]> {
+  const candidates: LicenseCandidate[] = [];
+  if (!DOL_API_KEY) { console.warn("[S18:DOL] DOL_API_KEY missing"); return candidates; }
+  try {
+    // DOL Open Data: Apprenticeship Active Sponsors for MI — gives sponsor names + occupations
+    const url = `https://apiprod.dol.gov/v4/get/eta/apprenticeship/json?state=MI&limit=100&X-API-KEY=${DOL_API_KEY}`;
+    const res = await fetch(url, {
+      headers: { "X-API-KEY": DOL_API_KEY, "Accept": "application/json" },
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!res.ok) { console.warn(`[S18:DOL] HTTP ${res.status}`); return candidates; }
+    const data = await res.json();
+    const rows = Array.isArray(data?.data) ? data.data : (data?.results || []);
+    for (const row of rows) {
+      // DOL exposes sponsor + occupation; we treat the apprentice/journeyworker name field if present
+      const name = row.apprentice_name || row.journeyworker_name || row.sponsor_name || "";
+      if (!name || !isPersonName(name)) continue;
+      const occ = (row.occupation_title || row.occupation || "").toString();
+      let licenseType = "Trade Professional";
+      const o = occ.toUpperCase();
+      if (o.includes("ELECTR")) licenseType = "Electrician";
+      else if (o.includes("PLUMB")) licenseType = "Plumber";
+      else if (o.includes("HVAC") || o.includes("MECHANIC")) licenseType = "HVAC Technician";
+      else if (o.includes("BOILER") || o.includes("PIPEFITTER")) licenseType = "Boiler Operator";
+      else if (o.includes("CARPEN")) licenseType = "Carpenter";
+      candidates.push({
+        full_name: name, license_type: licenseType,
+        license_number: row.registration_number?.toString() || null,
+        license_expiry: null, city: row.city || null, source: "dol_apprenticeship",
+      });
+    }
+  } catch (e) { console.warn(`[S18:DOL] Error: ${e instanceof Error ? e.message : String(e)}`); }
+  console.log(`[S18:DOL] Found ${candidates.length} apprenticeship candidates`);
+  return candidates;
+}
+
+// ===== SOURCE 19: LARA Cosmetology / Barbers (Socrata fallback to MiPLUS search HTML) =====
+async function scanLARACosmetology(): Promise<LicenseCandidate[]> {
+  const candidates: LicenseCandidate[] = [];
+  try {
+    const url = `https://data.michigan.gov/resource/midl-yni7.json?$where=upper(profession)%20like%20%27%25COSMETOL%25%27%20OR%20upper(profession)%20like%20%27%25BARBER%25%27&$limit=200`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+    if (!res.ok) return candidates;
+    const rows = await res.json();
+    for (const r of (Array.isArray(rows) ? rows : [])) {
+      const fn = r.first_name || ""; const ln = r.last_name || "";
+      const full = `${fn} ${ln}`.trim();
+      if (!isPersonName(full)) continue;
+      candidates.push({
+        full_name: full,
+        license_type: (r.profession || "Cosmetologist").toString().split(" ")[0],
+        license_number: r.license_number ? String(r.license_number) : null,
+        license_expiry: r.expiration_date || null,
+        city: r.city || null, source: "lara_cosmetology",
+      });
+    }
+  } catch (e) { console.warn(`[S19:Cosmo] ${e instanceof Error ? e.message : String(e)}`); }
+  console.log(`[S19:Cosmo] Found ${candidates.length} cosmetology/barber candidates`);
+  return candidates;
+}
+
+// ===== SOURCE 20: LARA Real Estate / Insurance (Socrata) =====
+async function scanLARARealEstate(): Promise<LicenseCandidate[]> {
+  const candidates: LicenseCandidate[] = [];
+  try {
+    const url = `https://data.michigan.gov/resource/midl-yni7.json?$where=upper(profession)%20like%20%27%25REAL%20ESTATE%25%27%20OR%20upper(profession)%20like%20%27%25INSURANCE%25%27&$limit=200`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+    if (!res.ok) return candidates;
+    const rows = await res.json();
+    for (const r of (Array.isArray(rows) ? rows : [])) {
+      const fn = r.first_name || ""; const ln = r.last_name || "";
+      const full = `${fn} ${ln}`.trim();
+      if (!isPersonName(full)) continue;
+      candidates.push({
+        full_name: full,
+        license_type: (r.profession || "Real Estate").toString().split(" ").slice(0,2).join(" "),
+        license_number: r.license_number ? String(r.license_number) : null,
+        license_expiry: r.expiration_date || null,
+        city: r.city || null, source: "lara_real_estate",
+      });
+    }
+  } catch (e) { console.warn(`[S20:RE] ${e instanceof Error ? e.message : String(e)}`); }
+  console.log(`[S20:RE] Found ${candidates.length} real estate/insurance candidates`);
+  return candidates;
+}
+
+// ============= CHECKPOINTED ORCHESTRATION =============
+// Each source has a min-interval (hours). Skipped if last_completed_at < interval ago.
+// Resilient to Edge Function timeouts: next cron tick picks up un-run sources.
+const SOURCE_REGISTRY: Array<{ label: string; fn: () => Promise<LicenseCandidate[]>; intervalH: number }> = [
+  { label: "NPI",        fn: scanNPIRegistry,       intervalH: 24 },
+  { label: "NAR",        fn: scanMichiganNurseAide, intervalH: 24 },
+  { label: "OpenData",   fn: scanMichiganOpenData,  intervalH: 12 },
+  { label: "Permits",    fn: scanBuildingPermits,   intervalH: 6  },
+  { label: "NATE",       fn: scanNATERegistry,      intervalH: 48 },
+  { label: "Unions",     fn: scanTradeUnions,       intervalH: 48 },
+  { label: "PDL",        fn: scanPDL,               intervalH: 24 },
+  { label: "Craigslist", fn: scanCraigslist,        intervalH: 6  },
+  { label: "MiPLUS",     fn: scanMiPLUS,            intervalH: 12 },
+  { label: "Yelp",       fn: scanYelp,              intervalH: 48 },
+  { label: "Nursys",     fn: scanNursys,            intervalH: 24 },
+  { label: "PHCC",       fn: scanPHCC,              intervalH: 48 },
+  { label: "JATC",       fn: scanJATCGraduations,   intervalH: 24 },
+  { label: "Thumbtack",  fn: scanThumbtack,         intervalH: 48 },
+  { label: "DOL",        fn: scanDOLApprenticeships,intervalH: 24 },
+  { label: "Cosmetology",fn: scanLARACosmetology,   intervalH: 48 },
+  { label: "RealEstate", fn: scanLARARealEstate,    intervalH: 48 },
+];
+
+const WALL_CLOCK_BUDGET_MS = 120_000; // leave headroom under 150s edge timeout
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: { "Access-Control-Allow-Origin": "*" } });
@@ -1435,28 +1550,71 @@ serve(async (req) => {
   let newCount = 0;
   let updatedCount = 0;
   let errorCount = 0;
+  const startedAt = Date.now();
 
-  console.log("[miosha-scraper] 🚀 Planetary-Scale Scanner starting — 14 sources (13 fast + MiPLUS probe + Sonar last)");
+  console.log(`[miosha-scraper] 🚀 Checkpointed scanner starting — ${SOURCE_REGISTRY.length} sources, ${WALL_CLOCK_BUDGET_MS}ms budget`);
 
-  // Run 14 fast sources in parallel (Sonar removed — runs separately after)
-  const results = await Promise.allSettled([
-    scanNPIRegistry(),           // S1
-    scanMichiganNurseAide(),     // S2
-    scanMichiganOpenData(),      // S3 — direct Socrata fetch, no Firecrawl
-    scanBuildingPermits(),       // S4 — ArcGIS endpoint
-    scanNATERegistry(),          // S5
-    scanTradeUnions(),           // S6
-    scanPDL(),                   // S7 — day rotation + city fix
-    scanCraigslist(),            // S9 — high-intent tradespeople posting availability
-    scanMiPLUS(),                // S10 — LARA/MiPLUS health probe
-    scanYelp(),                  // S12 — Yelp Fusion contractor owner-operators
-    scanNursys(),                // S14 — national nursing license lookup
-    scanPHCC(),                  // S15 — PHCC contractor directory
-    scanJATCGraduations(),       // S16 — newly graduated journeymen
-    scanThumbtack(),             // S17 — Thumbtack pro profiles
-  ]);
+  // Pull all checkpoints in one query
+  const { data: ckpts } = await sb.from("hire_alert_scanner_checkpoints").select("source,last_completed_at,status");
+  const ckptMap = new Map<string, { last_completed_at: string | null; status: string | null }>();
+  (ckpts || []).forEach((c: any) => ckptMap.set(c.source, { last_completed_at: c.last_completed_at, status: c.status }));
 
-  const sourceLabels = ["NPI", "NAR", "OpenData", "Permits", "NATE", "Unions", "PDL", "Craigslist", "MiPLUS", "Yelp", "Nursys", "PHCC", "JATC", "Thumbtack"];
+  // Sort sources by oldest checkpoint first (so we always make progress on stale ones)
+  const due = SOURCE_REGISTRY.filter((s) => {
+    const c = ckptMap.get(s.label);
+    if (!c?.last_completed_at) return true;
+    const ageH = (Date.now() - new Date(c.last_completed_at).getTime()) / 3_600_000;
+    return ageH >= s.intervalH;
+  }).sort((a, b) => {
+    const ta = ckptMap.get(a.label)?.last_completed_at ? new Date(ckptMap.get(a.label)!.last_completed_at!).getTime() : 0;
+    const tb = ckptMap.get(b.label)?.last_completed_at ? new Date(ckptMap.get(b.label)!.last_completed_at!).getTime() : 0;
+    return ta - tb;
+  });
+
+  console.log(`[miosha-scraper] ${due.length}/${SOURCE_REGISTRY.length} sources due this run`);
+
+  const skipped: string[] = SOURCE_REGISTRY.filter((s) => !due.includes(s)).map((s) => s.label);
+  const ranLabels: string[] = [];
+
+  for (const source of due) {
+    if (Date.now() - startedAt > WALL_CLOCK_BUDGET_MS) {
+      console.warn(`[miosha-scraper] ⏰ Budget exceeded — deferring ${source.label} to next tick`);
+      break;
+    }
+    // Mark started
+    await sb.from("hire_alert_scanner_checkpoints").upsert({
+      source: source.label, last_started_at: new Date().toISOString(), status: "running",
+    }, { onConflict: "source" });
+
+    try {
+      const found = await source.fn();
+      sourceCounts[source.label] = found.length;
+      ranLabels.push(source.label);
+      for (const c of found) {
+        const res = await upsertCandidate(sb, c);
+        if (res === "new") newCount++;
+        else if (res === "updated") updatedCount++;
+        else errorCount++;
+      }
+      await sb.from("hire_alert_scanner_checkpoints").upsert({
+        source: source.label,
+        last_completed_at: new Date().toISOString(),
+        last_count: found.length,
+        status: "ok",
+        error_message: null,
+      }, { onConflict: "source" });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      sourceCounts[source.label] = 0;
+      console.error(`[miosha-scraper] ${source.label} FAILED:`, msg);
+      await sb.from("hire_alert_scanner_checkpoints").upsert({
+        source: source.label, status: "error", error_message: msg.slice(0, 500),
+      }, { onConflict: "source" });
+    }
+  }
+
+  // legacy sourceLabels kept for downstream parity
+  const sourceLabels = ranLabels;
 
   for (let i = 0; i < results.length; i++) {
     const result = results[i];
