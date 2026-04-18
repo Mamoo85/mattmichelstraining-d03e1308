@@ -65,6 +65,30 @@ function scoreBand(s: number | null): { label: string; color: [number, number, n
   return { label: "MONITOR", color: [148, 163, 184] };
 }
 
+// Strip emoji, control chars, and any non-Latin1 glyphs that Helvetica can't render.
+// Replaces common emoji with ASCII tags so meaning isn't lost.
+function sanitizeForPDF(s: string | null | undefined): string {
+  if (!s) return "";
+  return s
+    .replace(/🔥/g, "[HOT]")
+    .replace(/⚡/g, "[!]")
+    .replace(/🎯/g, "[TARGET]")
+    .replace(/🛡️|🛡/g, "[SHIELD]")
+    .replace(/↔️|↔/g, "[NEUTRAL]")
+    .replace(/✅/g, "[OK]")
+    .replace(/❌/g, "[X]")
+    .replace(/⚠️|⚠/g, "[WARN]")
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}\u{1F000}-\u{1F2FF}\uFE0F]/gu, "")
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ")
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\u2013|\u2014/g, "-")
+    .replace(/\u2026/g, "...")
+    .replace(/\u00A0/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function rect(doc: jsPDF, x: number, y: number, w: number, h: number, fill: [number, number, number]) {
   doc.setFillColor(fill[0], fill[1], fill[2]);
   doc.rect(x, y, w, h, "F");
@@ -80,12 +104,13 @@ function text(
   doc.setFontSize(opts.size ?? 10);
   const c = opts.color ?? [30, 41, 59];
   doc.setTextColor(c[0], c[1], c[2]);
+  const safe = sanitizeForPDF(s);
   if (opts.maxWidth) {
-    const lines = doc.splitTextToSize(s, opts.maxWidth);
+    const lines = doc.splitTextToSize(safe, opts.maxWidth);
     doc.text(lines, x, y);
     return (lines.length * (opts.size ?? 10)) / 2.5;
   }
-  doc.text(s, x, y);
+  doc.text(safe, x, y);
   return (opts.size ?? 10) / 2.5;
 }
 

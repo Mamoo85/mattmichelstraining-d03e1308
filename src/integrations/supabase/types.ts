@@ -3487,6 +3487,66 @@ export type Database = {
           },
         ]
       }
+      demand_radar_signals: {
+        Row: {
+          company_name: string | null
+          confidence: number | null
+          county: string | null
+          created_at: string | null
+          cross_referenced: boolean | null
+          detected_at: string | null
+          expansion_type: string | null
+          hiring_count: number | null
+          id: string
+          industry: string | null
+          location: string | null
+          predicted_needs: string[] | null
+          recommended_pitch: string | null
+          signal_type: string | null
+          source_urls: string[] | null
+          vertical: string | null
+          zip: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          confidence?: number | null
+          county?: string | null
+          created_at?: string | null
+          cross_referenced?: boolean | null
+          detected_at?: string | null
+          expansion_type?: string | null
+          hiring_count?: number | null
+          id?: string
+          industry?: string | null
+          location?: string | null
+          predicted_needs?: string[] | null
+          recommended_pitch?: string | null
+          signal_type?: string | null
+          source_urls?: string[] | null
+          vertical?: string | null
+          zip?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          confidence?: number | null
+          county?: string | null
+          created_at?: string | null
+          cross_referenced?: boolean | null
+          detected_at?: string | null
+          expansion_type?: string | null
+          hiring_count?: number | null
+          id?: string
+          industry?: string | null
+          location?: string | null
+          predicted_needs?: string[] | null
+          recommended_pitch?: string | null
+          signal_type?: string | null
+          source_urls?: string[] | null
+          vertical?: string | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
       direct_mail_clients: {
         Row: {
           active: boolean | null
