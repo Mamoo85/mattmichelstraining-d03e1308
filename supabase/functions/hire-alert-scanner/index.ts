@@ -1329,22 +1329,30 @@ serve(async (req: Request) => {
       .in("full_name", alertedNames);
   }
 
-  // Log the run — write to BOTH the legacy columns and the canonical schema columns
-  // (started_at/completed_at/status/error_message), since both exist on the table now.
-  await sb.from("hire_alert_runs").insert({
-    started_at: runStart,
+  // Phase 17 fix: UPDATE the row we inserted at start (instead of inserting a duplicate).
+  // This way the run is visible to the sentinel even if a later step times out.
+  const finalStats = {
     completed_at: new Date().toISOString(),
     status: "ok",
-    source: "all",
-    run_at: runStart,
     candidates_found: allRaw.length,
     new_candidates: newCandidates.length,
     candidates_alerted: alertsSent,
     alerts_sent: alertsSent,
     errors: null,
     error_message: null,
-    lara_status: "not_attempted",
-  });
+  };
+  if (runRowId) {
+    await sb.from("hire_alert_runs").update(finalStats).eq("id", runRowId);
+  } else {
+    // Fallback: insert if the start-row insert failed
+    await sb.from("hire_alert_runs").insert({
+      started_at: runStart,
+      run_at: runStart,
+      source: "all",
+      lara_status: "not_attempted",
+      ...finalStats,
+    });
+  }
 
   // Founder daily report — Matt only (sources visible here only)
   const sourceBreakdown = {
