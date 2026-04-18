@@ -349,6 +349,56 @@ async function scanBuildingPermits(): Promise<LicenseCandidate[]> {
   return candidates;
 }
 
+// Extracts person names from Firecrawl markdown using AI (OpenRouter) with regex fallback.
+// Used by NATE (S5), Trade Unions (S6), and Craigslist (S9) scanners.
+async function extractNamesFromMarkdown(markdown: string, role: string, source: string): Promise<LicenseCandidate[]> {
+  if (!markdown || markdown.length < 50) return [];
+
+  // Regex fallback — works without API key, catches obvious "First Last" patterns
+  const extractByRegex = (): LicenseCandidate[] => {
+    const seen = new Set<string>();
+    const pattern = /\b([A-Z][a-z]{1,15})\s+([A-Z][a-z]{1,20})\b/g;
+    let m: RegExpExecArray | null;
+    const results: LicenseCandidate[] = [];
+    while ((m = pattern.exec(markdown)) !== null) {
+      const name = `${m[1]} ${m[2]}`;
+      if (!seen.has(name) && isPersonName(name)) {
+        seen.add(name);
+        results.push({ full_name: name, license_type: role, license_number: null, license_expiry: null, city: null, source });
+      }
+    }
+    return results.slice(0, 20);
+  };
+
+  if (!OPENROUTER_API_KEY) return extractByRegex();
+
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "perplexity/sonar",
+        messages: [{ role: "user", content: `Extract all individual person names (NOT company or business names) from this text. Return ONLY a JSON array of strings like ["First Last", ...]. If none found, return [].\n\n${markdown.slice(0, 4000)}` }],
+        max_tokens: 400,
+        temperature: 0,
+      }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!res.ok) return extractByRegex();
+    const data = await res.json();
+    const content = data?.choices?.[0]?.message?.content || "[]";
+    const match = content.match(/\[[\s\S]*?\]/);
+    if (!match) return extractByRegex();
+    const names: string[] = JSON.parse(match[0]);
+    return names
+      .filter((n) => typeof n === "string" && isPersonName(n))
+      .slice(0, 30)
+      .map((name) => ({ full_name: name, license_type: role, license_number: null, license_expiry: null, city: null, source }));
+  } catch {
+    return extractByRegex();
+  }
+}
+
 // ===== SOURCE 5: NATE Certified Technician Registry (Firecrawl) =====
 async function scanNATERegistry(): Promise<LicenseCandidate[]> {
   if (!FIRECRAWL_API_KEY) {

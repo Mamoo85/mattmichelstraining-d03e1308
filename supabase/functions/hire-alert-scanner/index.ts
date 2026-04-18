@@ -315,7 +315,7 @@ async function scanMIOSHA(): Promise<RawCandidate[]> {
   const { data } = await sb
     .from("hire_alert_candidates")
     .select("full_name, name, phone, email, license_type, license_number, license_expiry, city, zip, source, raw_data, linkedin_url, facebook_url, current_employer, current_title, years_experience, qualifications_summary, hiring_recommendation, social_profiles, enrichment_status")
-    .not("source", "in", `(${BUSINESS_SOURCES.map(s => `"${s}"`).join(",")})`)
+    .not("source", "in", `(${BUSINESS_SOURCES.join(",")})`)
     .neq("is_company_name", true)
     .gte("first_seen_at", since);
 
