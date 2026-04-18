@@ -33,7 +33,8 @@ const APIFY_INPUTS = {
     state: "MI",
   },
   indeed: {
-    position: "boiler operator OR HVAC technician OR master electrician OR plumber",
+    // Trades + healthcare — covers both TechAlert verticals
+    position: "boiler operator OR HVAC technician OR master electrician OR plumber OR CNA OR registered nurse OR LPN OR home health aide",
     country: "US",
     location: "Detroit, MI",
     maxItems: 50,
@@ -43,7 +44,14 @@ const APIFY_INPUTS = {
   linkedin: {
     // LinkedIn Actor enriches profiles by URL — we'll feed it candidates the scanner already found
     // For now, send a search-by-keyword to seed the dataset; downstream we'll wire URL-based enrichment
-    searchQueries: ["boiler operator Detroit Michigan", "master electrician Detroit", "HVAC technician Metro Detroit"],
+    searchQueries: [
+      "boiler operator Detroit Michigan",
+      "master electrician Detroit",
+      "HVAC technician Metro Detroit",
+      "CNA certified nursing assistant Metro Detroit open to work",
+      "registered nurse RN Detroit Michigan open to work",
+      "LPN licensed practical nurse Detroit Michigan",
+    ],
     maxResultsPerQuery: 20,
   },
 };
