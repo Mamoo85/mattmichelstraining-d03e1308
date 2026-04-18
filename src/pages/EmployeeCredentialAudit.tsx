@@ -244,7 +244,7 @@ export default function EmployeeCredentialAudit() {
             },
             {
               q: "Is my employee data secure?",
-              a: "Email addresses are only used to check against HIBP's API. We do not store, sell, or share employee email lists after the audit completes.",
+              a: "Email addresses are only used to run our background-data hygiene check against verified breach intelligence sources. We do not store, sell, or share employee email lists after the audit completes.",
             },
           ].map(({ q, a }) => (
             <div key={q} className="bg-[#0a0a0f] border border-slate-800 rounded-lg p-5">
