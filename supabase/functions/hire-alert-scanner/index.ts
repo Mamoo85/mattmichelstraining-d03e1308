@@ -94,10 +94,15 @@ async function dispatchApifyRuns(sb: ReturnType<typeof createClient>): Promise<v
         body: JSON.stringify({ ...input, webhooks }),
         signal: AbortSignal.timeout(15_000),
       });
-      const data = await res.json().catch(() => ({}));
+      const rawBody = await res.text();
+      let data: any = {};
+      try { data = JSON.parse(rawBody); } catch { /* non-JSON */ }
       const runId = data?.data?.id || null;
-      console.log(`[apify-dispatch] ${src} → ${runId || "FAILED"} (HTTP ${res.status})`);
-      if (runId) {
+      if (!runId) {
+        // Surface the actual Apify error (404 wrong slug, 401 bad token, 402 out of credits, etc.)
+        console.error(`[apify-dispatch] ${src} actor=${actor} HTTP ${res.status} body=${rawBody.slice(0, 500)}`);
+      } else {
+        console.log(`[apify-dispatch] ${src} → ${runId} (HTTP ${res.status})`);
         const updates: Record<string, unknown> = {};
         updates[`${src}_run_id`] = runId;
         await sb.from("apify_run_batches").update(updates).eq("batch_id", batchId);
@@ -305,6 +310,7 @@ async function scanMIOSHA(): Promise<RawCandidate[]> {
         Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
         "Content-Type": "application/json",
       },
+      signal: AbortSignal.timeout(130_000), // 130s — scraper budget 120s, hard timeout 150s
     });
     if (!res.ok) {
       console.warn(`[hire-alert-scanner] miosha-license-scraper returned ${res.status}`);

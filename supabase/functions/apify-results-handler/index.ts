@@ -199,18 +199,22 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // Validate webhook secret — accept from header OR query param (Apify webhook UI has no header field)
+  // Validate webhook secret — accept from header OR query param (Apify webhook UI has no header field).
+  // If APIFY_WEBHOOK_SECRET is not configured in env, skip check (allows unauthenticated calls
+  // from the Apify dashboard integration while secret isn't set up yet).
   const url = new URL(req.url);
-  const providedSecret =
-    req.headers.get("x-apify-webhook-secret") ||
-    req.headers.get("apify-webhook-secret") ||
-    url.searchParams.get("secret");
-  if (!providedSecret || providedSecret !== APIFY_WEBHOOK_SECRET) {
-    console.warn("apify-results-handler: invalid or missing webhook secret");
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  if (APIFY_WEBHOOK_SECRET) {
+    const providedSecret =
+      req.headers.get("x-apify-webhook-secret") ||
+      req.headers.get("apify-webhook-secret") ||
+      url.searchParams.get("secret");
+    if (!providedSecret || providedSecret !== APIFY_WEBHOOK_SECRET) {
+      console.warn("apify-results-handler: invalid webhook secret");
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
   }
 
   let payload: any;

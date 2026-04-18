@@ -16,6 +16,7 @@ export default function AdminDWAOverview() {
   const [healthChecks, setHealthChecks] = useState<Array<{ api_name: string; status: string; response_ms: number; error_message: string | null; checked_at: string }>>([]);
   const [testing, setTesting] = useState<Record<string, boolean>>({});
   const [invoking, setInvoking] = useState(false);
+  const [sendingTrial, setSendingTrial] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pdlTesting, setPdlTesting] = useState(false);
   const [pdlResult, setPdlResult] = useState<Record<string, unknown> | null>(null);
@@ -89,6 +90,19 @@ export default function AdminDWAOverview() {
       toast.error(e instanceof Error ? e.message : "PDL test failed");
     } finally {
       setPdlTesting(false);
+    }
+  };
+
+  const sendMockTrialEmails = async () => {
+    setSendingTrial(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-mock-trial-emails");
+      if (error) throw error;
+      toast.success("✅ 5 mock trial emails sent to matt@mattmichelstraining.com");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Send failed");
+    } finally {
+      setSendingTrial(false);
     }
   };
 
@@ -225,6 +239,11 @@ export default function AdminDWAOverview() {
               className="bg-violet-600 hover:bg-violet-700 text-white">
               <Zap size={13} className="mr-1.5" />
               {pdlTesting ? "Testing PDL..." : "Test PDL Premium"}
+            </Button>
+            <Button onClick={sendMockTrialEmails} disabled={sendingTrial}
+              className="bg-purple-600 hover:bg-purple-700 text-white">
+              <Bell size={13} className="mr-1.5" />
+              {sendingTrial ? "Sending..." : "Send Mock Trial Emails"}
             </Button>
           </div>
         </div>

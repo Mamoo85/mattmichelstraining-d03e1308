@@ -9,6 +9,7 @@ import {
   Bell, Plus, RefreshCw, Users, DollarSign, Trash2, Pencil,
   Mail, Phone, CheckCircle, XCircle, Clock, Play, FileText, Loader2,
 } from "lucide-react";
+import { EnrichmentHealthStrip } from "./EnrichmentHealthStrip";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -45,6 +46,7 @@ interface Candidate {
   first_seen_at: string;
   cross_referenced: boolean;
   data_completeness: number;
+  phone_type?: string | null;
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -351,15 +353,20 @@ export default function AdminHireAlertClients() {
 
   const [verifying, setVerifying] = useState(false);
   const verifyPhones = async () => {
+    if (candidates.length === 0) {
+      toast.info("No candidates in DB yet — run the scanner first, then verify phones.");
+      return;
+    }
     setVerifying(true);
     try {
       const { data, error } = await supabase.functions.invoke("verify-candidate-phones");
-      if (error) throw error;
-      const d = data as { verified: number; summary: Record<string, number>; message?: string };
+      if (error) throw new Error(error.message || "Function error");
+      const d = data as { verified: number; summary?: Record<string, number>; message?: string; error?: string };
+      if (d.error) throw new Error(d.error);
       if (d.verified === 0) {
         toast.success(d.message || "All phones already verified");
       } else {
-        const parts = Object.entries(d.summary).map(([t, n]) => `${n} ${t}`).join(", ");
+        const parts = Object.entries(d.summary ?? {}).map(([t, n]) => `${n} ${t}`).join(", ");
         toast.success(`Verified ${d.verified} phones: ${parts}`);
       }
       setTimeout(load, 1500);
@@ -550,6 +557,9 @@ export default function AdminHireAlertClients() {
     <div className="space-y-6 p-1">
       {showAdd && <ClientModal onClose={() => setShowAdd(false)} onSaved={load} />}
       {editClient && <ClientModal existing={editClient} onClose={() => setEditClient(undefined)} onSaved={load} />}
+
+      {/* Enrichment health */}
+      <EnrichmentHealthStrip />
 
       {/* Header */}
       <div className="space-y-3">
