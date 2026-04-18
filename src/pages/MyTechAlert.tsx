@@ -50,6 +50,8 @@ interface Candidate {
   claim_expires_at: string | null;
   claimed_by_other: boolean;
   cross_referenced: boolean;
+  flight_risk: string | null;
+  flight_risk_proof: string | null;
 }
 
 interface DashboardData {
@@ -942,6 +944,24 @@ export default function MyTechAlert() {
                         <div className="bg-[#00d4ff]/5 border border-[#00d4ff]/20 rounded-lg p-3">
                           <p className="text-[11px] font-bold text-[#00d4ff] uppercase tracking-wide mb-1">Recommendation</p>
                           <p className="text-slate-300 text-xs leading-relaxed line-clamp-6">{c.hiring_recommendation}</p>
+                        </div>
+                      )}
+
+                      {/* Tangible Proof — flight risk classification */}
+                      {c.flight_risk_proof && (
+                        <div className={
+                          c.flight_risk === "high_flight_risk"
+                            ? "bg-amber-500/10 border border-amber-500/30 rounded-lg p-3"
+                            : c.flight_risk === "hard_to_poach"
+                            ? "bg-slate-500/10 border border-slate-500/30 rounded-lg p-3"
+                            : "bg-slate-500/5 border border-slate-500/20 rounded-lg p-3"
+                        }>
+                          <p className={
+                            c.flight_risk === "high_flight_risk"
+                              ? "text-[11px] font-bold text-amber-400 uppercase tracking-wide mb-1"
+                              : "text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1"
+                          }>Tangible Proof</p>
+                          <p className="text-slate-300 text-xs leading-relaxed">{c.flight_risk_proof}</p>
                         </div>
                       )}
 
