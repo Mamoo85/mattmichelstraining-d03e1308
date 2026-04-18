@@ -54,7 +54,8 @@ async function dispatchApifyRuns(sb: ReturnType<typeof createClient>): Promise<v
     return;
   }
   const batchId = `batch_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  const webhookUrl = `${SUPABASE_URL}/functions/v1/apify-results-handler?secret=${encodeURIComponent(APIFY_WEBHOOK_SECRET)}`;
+  // Include batch_id in URL too — guarantees the handler can recover batch context even if payloadTemplate fails
+  const webhookUrl = `${SUPABASE_URL}/functions/v1/apify-results-handler?secret=${encodeURIComponent(APIFY_WEBHOOK_SECRET)}&batch_id=${encodeURIComponent(batchId)}`;
 
   // Insert batch row up front so the webhook handler can find it
   await sb.from("apify_run_batches").insert({ batch_id: batchId, run_at: new Date().toISOString() });
