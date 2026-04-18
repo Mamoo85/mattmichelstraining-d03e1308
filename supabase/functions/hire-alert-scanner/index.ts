@@ -310,7 +310,7 @@ async function scanMIOSHA(): Promise<RawCandidate[]> {
         Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
         "Content-Type": "application/json",
       },
-      signal: AbortSignal.timeout(100_000), // 100s — scraper budget is 120s, leave margin
+      signal: AbortSignal.timeout(130_000), // 130s — scraper budget 120s, hard timeout 150s
     });
     if (!res.ok) {
       console.warn(`[hire-alert-scanner] miosha-license-scraper returned ${res.status}`);

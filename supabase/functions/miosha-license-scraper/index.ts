@@ -3421,11 +3421,18 @@ serve(async (req) => {
       const found = await source.fn();
       sourceCounts[source.label] = found.length;
       ranLabels.push(source.label);
-      for (const c of found) {
-        const res = await upsertCandidate(sb, c);
-        if (res === "new") newCount++;
-        else if (res === "updated") updatedCount++;
-        else errorCount++;
+      // Concurrent batch upserts (10 at a time) — sequential awaits blew the 120s budget
+      const CONCURRENCY = 10;
+      for (let i = 0; i < found.length; i += CONCURRENCY) {
+        const batch = found.slice(i, i + CONCURRENCY);
+        const results = await Promise.allSettled(batch.map(c => upsertCandidate(sb, c)));
+        for (const r of results) {
+          if (r.status === "fulfilled") {
+            if (r.value === "new") newCount++;
+            else if (r.value === "updated") updatedCount++;
+            else errorCount++;
+          } else { errorCount++; }
+        }
       }
       await sb.from("hire_alert_scanner_checkpoints").upsert({
         source: source.label,
@@ -3451,11 +3458,18 @@ serve(async (req) => {
     try {
       const sonarCandidates = await scanViaSonar();
       sourceCounts["Sonar"] = sonarCandidates.length;
-      for (const c of sonarCandidates) {
-        const res = await upsertCandidate(sb, c);
-        if (res === "new") newCount++;
-        else if (res === "updated") updatedCount++;
-        else errorCount++;
+      // Concurrent batch upserts (10 at a time)
+      const CONCURRENCY = 10;
+      for (let i = 0; i < sonarCandidates.length; i += CONCURRENCY) {
+        const batch = sonarCandidates.slice(i, i + CONCURRENCY);
+        const results = await Promise.allSettled(batch.map(c => upsertCandidate(sb, c)));
+        for (const r of results) {
+          if (r.status === "fulfilled") {
+            if (r.value === "new") newCount++;
+            else if (r.value === "updated") updatedCount++;
+            else errorCount++;
+          } else { errorCount++; }
+        }
       }
       await sb.from("hire_alert_scanner_checkpoints").upsert({
         source: "Sonar", last_completed_at: new Date().toISOString(),
