@@ -95,9 +95,12 @@ function drawHeader(doc: jsPDF, title: string, subtitle: string) {
   text(doc, "DETROIT WEB AGENCY", 15, 14, { size: 9, bold: true, color: TEAL });
   text(doc, title, 15, 24, { size: 18, bold: true, color: [255, 255, 255] });
   text(doc, subtitle, 15, 32, { size: 9, color: [203, 213, 225] });
-  text(doc, "TechAlert", 195, 14, { size: 9, bold: true, color: TEAL });
-  doc.setTextColor(203, 213, 225);
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
+  doc.setTextColor(TEAL[0], TEAL[1], TEAL[2]);
+  doc.text("TechAlert", 195, 14, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(203, 213, 225);
   doc.text("Confidential", 195, 22, { align: "right" });
 }
 
@@ -107,7 +110,7 @@ function drawFooter(doc: jsPDF, pageNum: number, total: number) {
     size: 8,
     color: SLATE,
   });
-  text(doc, `Page ${pageNum} of ${total}`, 195, 292, { size: 8, color: SLATE });
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(SLATE[0], SLATE[1], SLATE[2]);
   doc.text(`Page ${pageNum} of ${total}`, 195, 292, { align: "right" });
