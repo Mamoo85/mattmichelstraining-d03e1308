@@ -1649,6 +1649,334 @@ async function scanLARARealEstate(): Promise<LicenseCandidate[]> {
   return candidates;
 }
 
+// ===== S21: BPL Newly-Issued 7-Day Delta (Socrata explicit issue_date filter) =====
+// Tighter than S3's 30-day window. Explicitly filters on issue_date so we only
+// surface people who were JUST licensed — the highest-intent availability signal.
+async function scanBPLNewlyIssued(): Promise<LicenseCandidate[]> {
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  const since7 = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  // Discover LARA trade datasets from Socrata, same as S3 but we apply a strict issue_date WHERE clause
+  const knownDatasetIds: string[] = [];
+  try {
+    const meta = await fetch("https://data.michigan.gov/api/views/metadata/v1?q=license&limit=50", { signal: AbortSignal.timeout(10_000) });
+    if (meta.ok) {
+      const rows: any[] = await meta.json().then((d: any) => Array.isArray(d) ? d : (d?.results || []));
+      for (const r of rows) {
+        const id = r.id || r.resource?.id;
+        const name = (r.name || r.resource?.name || "").toLowerCase();
+        const dept = (r.attribution || r.resource?.attribution || "").toLowerCase();
+        if (id && /licens|electric|plumb|hvac|boiler|mechanic|nurs/i.test(name) && (dept.includes("lara") || dept.includes("michigan"))) {
+          knownDatasetIds.push(id);
+        }
+      }
+    }
+  } catch { /* fall through with empty list */ }
+
+  for (const ds of knownDatasetIds.slice(0, 6)) {
+    try {
+      // Socrata WHERE on issue_date — many LARA datasets expose this column
+      const url = `https://data.michigan.gov/resource/${ds}.json?$where=issue_date>='${since7}'&$limit=200&$order=issue_date DESC`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(12_000) });
+      if (!res.ok) continue;
+      const data: any[] = await res.json();
+      if (!Array.isArray(data) || data.length === 0) continue;
+
+      for (const row of data) {
+        const firstName = row.first_name || row.licensee_first_name || row.f_name || "";
+        const lastName = row.last_name || row.licensee_last_name || row.l_name || "";
+        const fullName = row.full_name || row.licensee_name || `${firstName} ${lastName}`.trim();
+        if (!fullName || !isPersonName(fullName)) continue;
+        const licType = row.license_type || row.profession || row.license_classification || "Trade Professional";
+        const lt = licType.toUpperCase();
+        if (!/ELECTR|PLUMB|HVAC|MECHANIC|BOILER|NURS|CNA|RN|LPN/i.test(lt)) continue;
+        const status = (row.license_status || row.status || "ACTIVE").toUpperCase();
+        if (!status.includes("ACTIVE") && !status.includes("CURRENT") && !status.includes("VALID")) continue;
+        const key = fullName.toLowerCase() + (row.license_number || "");
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        let mappedType = "Trade Professional";
+        if (lt.includes("ELECTR")) mappedType = "Electrician";
+        else if (lt.includes("PLUMB")) mappedType = "Plumber";
+        else if (lt.includes("HVAC") || lt.includes("MECHANIC")) mappedType = "HVAC Technician";
+        else if (lt.includes("BOILER")) mappedType = "Boiler Operator";
+        else if (lt.includes("RN") || lt.includes("NURS")) mappedType = "Registered Nurse";
+        else if (lt.includes("LPN")) mappedType = "Licensed Practical Nurse";
+        else if (lt.includes("CNA")) mappedType = "Certified Nurse Aide";
+
+        candidates.push({
+          full_name: fullName,
+          license_type: mappedType,
+          license_number: row.license_number ? String(row.license_number) : null,
+          license_expiry: row.expiration_date || null,
+          city: row.city || row.licensee_city || null,
+          source: "lara_newly_issued",
+        });
+      }
+    } catch { /* skip dataset */ }
+  }
+  console.log(`[S21:NewlyIssued] Found ${candidates.length} candidates issued in last 7 days`);
+  return candidates;
+}
+
+// ===== S22: BPL Contractor Company License Extraction =====
+// The same Socrata LARA datasets contain COMPANY licenses (ELECTRICAL CONTRACTOR,
+// MECHANICAL CONTRACTOR, PLUMBING CONTRACTOR, etc.) mixed with individual licenses.
+// Extract those and route them to techalert_business_prospects via source "lara_contractor_co".
+// This surfaces newly licensed trade businesses — companies that NEED workers right now.
+async function scanBPLContractorCompanies(): Promise<LicenseCandidate[]> {
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  let datasetIds: string[] = [];
+  try {
+    const meta = await fetch("https://data.michigan.gov/api/views/metadata/v1?q=contractor+license&limit=30", { signal: AbortSignal.timeout(10_000) });
+    if (meta.ok) {
+      const rows: any[] = await meta.json().then((d: any) => Array.isArray(d) ? d : (d?.results || []));
+      for (const r of rows) {
+        const id = r.id || r.resource?.id;
+        const name = (r.name || r.resource?.name || "").toLowerCase();
+        if (id && /licens|contractor|electric|plumb|hvac|mechanic/i.test(name)) datasetIds.push(id);
+      }
+    }
+  } catch { /* fall through */ }
+
+  for (const ds of datasetIds.slice(0, 5)) {
+    try {
+      // Query for CONTRACTOR license types specifically
+      const where = encodeURIComponent(`license_type like '%CONTRACTOR%' OR license_type like '%COMPANY%' OR license_type like '%FIRM%'`);
+      const url = `https://data.michigan.gov/resource/${ds}.json?$where=${where}&$limit=200&$order=issue_date DESC`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(12_000) });
+      if (!res.ok) continue;
+      const data: any[] = await res.json();
+      if (!Array.isArray(data) || data.length === 0) continue;
+
+      for (const row of data) {
+        const bizName = row.company_name || row.business_name || row.licensee_name || row.dba_name || row.full_name || row.name || "";
+        if (!bizName || bizName.length < 3) continue;
+        const licType = row.license_type || row.profession || "Contractor";
+        const lt = licType.toUpperCase();
+        if (!/ELECTR|PLUMB|HVAC|MECHANIC|BOILER|HEATING|COOLING|PIPE/i.test(lt)) continue;
+        const issued = row.issue_date || row.effective_date || null;
+        if (issued && issued < since30) continue;
+        const key = bizName.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        candidates.push({
+          full_name: bizName,
+          license_type: licType,
+          license_number: row.license_number ? String(row.license_number) : null,
+          license_expiry: row.expiration_date || null,
+          city: row.city || row.business_city || null,
+          source: "lara_contractor_co",
+        });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S22:ContractorCo] Found ${candidates.length} newly licensed contractor companies`);
+  return candidates;
+}
+
+// ===== S23: OSHA Michigan Trade Establishments =====
+// OSHA publishes inspection data for all establishments via a free REST API.
+// Filters for Michigan + trade NAICS codes. Routes to techalert_business_prospects
+// (active employers with inspections = actively operating, likely hiring).
+async function scanOSHAMichiganEstablishments(): Promise<LicenseCandidate[]> {
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+  // NAICS codes: 238210=Electrical, 238220=Plumbing+HVAC, 238290=Other building equipment (boilers)
+  const naicsCodes = ["238210", "238220", "238290", "238110"];
+  const cutoff = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  for (const naics of naicsCodes) {
+    try {
+      const url = `https://enforcements.osha.gov/api/search/inspections?state=MI&naics=${naics}&size=50&sort=open_date:desc`;
+      const res = await fetch(url, {
+        headers: { "Accept": "application/json", "User-Agent": "Mozilla/5.0 research" },
+        signal: AbortSignal.timeout(12_000),
+      });
+      if (!res.ok) {
+        console.warn(`[S23:OSHA] HTTP ${res.status} for NAICS ${naics}`);
+        continue;
+      }
+      const data = await res.json();
+      const inspections: any[] = data?.hits?.hits?.map((h: any) => h._source) ||
+        data?.inspections || data?.results || data?.data || [];
+
+      for (const insp of inspections) {
+        const bizName = insp.estab_name || insp.establishment_name || insp.company || "";
+        if (!bizName || bizName.length < 3) continue;
+        const openDate = insp.open_date || insp.date_opened || "";
+        if (openDate && openDate < cutoff) continue;
+        const city = insp.site_city || insp.city || "";
+        const state = (insp.site_state || insp.state || "").toUpperCase();
+        if (state && state !== "MI") continue;
+        const key = bizName.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        let trade = "Trade Professional";
+        if (naics === "238210") trade = "Electrician";
+        else if (naics === "238220") trade = "HVAC/Plumbing";
+        else if (naics === "238290" || naics === "238110") trade = "Boiler/Mechanical";
+
+        candidates.push({
+          full_name: bizName,
+          license_type: trade,
+          license_number: insp.activity_nr ? String(insp.activity_nr) : null,
+          license_expiry: null,
+          city: city || null,
+          source: "osha_establishment",
+        });
+      }
+    } catch (e) {
+      console.warn(`[S23:OSHA] NAICS ${naics} error: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  console.log(`[S23:OSHA] Found ${candidates.length} active Michigan trade establishments`);
+  return candidates;
+}
+
+// ===== S24: LARA Disciplinary Reinstatements (Firecrawl) =====
+// BPL board order pages list license reinstatements (suspended → cleared).
+// Reinstated workers are immediately available and actively looking for work.
+const BPL_BOARD_PAGES = [
+  { url: "https://www.michigan.gov/lara/bureau-list/bpl/occ/professional-licensing/boards-commissions/michigan-boiler-rules", trade: "Boiler Operator" },
+  { url: "https://www.michigan.gov/lara/bureau-list/bpl/occ/professional-licensing/boards-commissions/michigan-board-of-electricians", trade: "Electrician" },
+  { url: "https://www.michigan.gov/lara/bureau-list/bpl/occ/professional-licensing/boards-commissions/Michigan-Board-of-Plumbing-Examiners", trade: "Plumber" },
+  { url: "https://www.michigan.gov/lara/bureau-list/bpl/occ/professional-licensing/boards-commissions/board-of-mechanical-rules", trade: "HVAC Technician" },
+];
+
+async function scanLARADisciplinaryReinstatements(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) {
+    console.warn("[S24:Reinstate] No FIRECRAWL_API_KEY — skipping");
+    return [];
+  }
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of BPL_BOARD_PAGES) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 2000 }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (!markdown || markdown.length < 100) continue;
+
+      // Split on reinstatement keywords and extract names from surrounding context
+      const REINSTATE_PATTERN = /reinstate[dm]?|restoration of license|license restored|order of reinstatement/gi;
+      if (!REINSTATE_PATTERN.test(markdown)) continue;
+
+      // Reset lastIndex after test()
+      REINSTATE_PATTERN.lastIndex = 0;
+      const sections = markdown.split(REINSTATE_PATTERN);
+      for (let i = 1; i < sections.length; i++) {
+        const context = sections[i].slice(0, 600);
+        const nameMatches = context.match(/\b([A-Z][a-z]{1,20})\s+([A-Z][a-z]{1,25})\b/g) || [];
+        for (const rawName of nameMatches) {
+          if (!isPersonName(rawName)) continue;
+          const key = rawName.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+          candidates.push({
+            full_name: rawName,
+            license_type: trade,
+            license_number: null,
+            license_expiry: null,
+            city: null,
+            source: "lara_reinstatement",
+          });
+        }
+      }
+    } catch (e) {
+      console.warn(`[S24:Reinstate] ${trade} error: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  console.log(`[S24:Reinstate] Found ${candidates.length} reinstated license holders`);
+  return candidates;
+}
+
+// ===== S25: Michigan New Trade Business Filings (Sonar) =====
+// Sonar searches Michigan SOS filings and news for recently formed trade LLCs/corps.
+// Owner names → hire_alert_candidates (they just went independent = job change signal)
+// Company names → techalert_business_prospects (new company = needs workers)
+async function scanMichiganNewTradeBusinesses(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) {
+    console.warn("[S25:SOS] No OPENROUTER_API_KEY — skipping");
+    return [];
+  }
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  const queries = [
+    { trade: "HVAC Technician", q: "new Michigan LLC formed 2026 HVAC heating cooling mechanical contractor Michigan Secretary of State filing" },
+    { trade: "Electrician", q: "new Michigan electrical contractor LLC corporation formed 2026 Metro Detroit Wayne Oakland Macomb" },
+    { trade: "Plumber", q: "new Michigan plumbing contractor LLC incorporated 2026 Metro Detroit licensed plumber sole proprietor" },
+    { trade: "Boiler Operator", q: "new Michigan boiler mechanical LLC corporation 2026 licensed boiler operator Metro Detroit independent" },
+  ];
+
+  for (const { trade, q } of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            {
+              role: "system",
+              content: `You are researching recently formed Michigan trade businesses. Return a JSON array only — no prose. Each item must have: full_name (owner's name or company name), is_company (boolean), city (Michigan city or null). Only include entries with verifiable source data. Max 10 results. Empty array if none found.`,
+            },
+            { role: "user", content: q },
+          ],
+          max_tokens: 600,
+          temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(25_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[];
+      try { arr = JSON.parse(m[0]); } catch { continue; }
+
+      for (const r of arr) {
+        const name = (r.full_name || r.name || "").trim();
+        if (!name || name.length < 4) continue;
+        const key = name.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        // Companies go to techalert_business_prospects via source tag; individuals go to candidates
+        const isCompany = r.is_company === true || !isPersonName(name);
+        candidates.push({
+          full_name: name,
+          license_type: trade,
+          license_number: null,
+          license_expiry: null,
+          city: r.city && typeof r.city === "string" && r.city.length > 2 ? r.city : null,
+          source: isCompany ? "michigan_sos_co" : "michigan_sos",
+        });
+      }
+    } catch (e) {
+      console.warn(`[S25:SOS] ${trade} error: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  console.log(`[S25:SOS] Found ${candidates.length} new Michigan trade businesses/owners`);
+  return candidates;
+}
+
 // ============= CHECKPOINTED ORCHESTRATION =============
 // Each source has a min-interval (hours). Skipped if last_completed_at < interval ago.
 // Resilient to Edge Function timeouts: next cron tick picks up un-run sources.
@@ -1668,8 +1996,13 @@ const SOURCE_REGISTRY: Array<{ label: string; fn: () => Promise<LicenseCandidate
   { label: "JATC",       fn: scanJATCGraduations,   intervalH: 24 },
   { label: "Thumbtack",  fn: scanThumbtack,         intervalH: 48 },
   { label: "DOL",        fn: scanDOLApprenticeships,intervalH: 24 },
-  { label: "Cosmetology",fn: scanLARACosmetology,   intervalH: 48 },
-  { label: "RealEstate", fn: scanLARARealEstate,    intervalH: 48 },
+  { label: "Cosmetology",fn: scanLARACosmetology,         intervalH: 48 },
+  { label: "RealEstate", fn: scanLARARealEstate,          intervalH: 48 },
+  { label: "NewlyIssued",fn: scanBPLNewlyIssued,          intervalH: 6  },
+  { label: "ContractorCo",fn: scanBPLContractorCompanies, intervalH: 24 },
+  { label: "OSHA",       fn: scanOSHAMichiganEstablishments, intervalH: 24 },
+  { label: "Reinstate",  fn: scanLARADisciplinaryReinstatements, intervalH: 48 },
+  { label: "MiSOS",      fn: scanMichiganNewTradeBusinesses, intervalH: 24 },
 ];
 
 const WALL_CLOCK_BUDGET_MS = 120_000; // leave headroom under 150s edge timeout
