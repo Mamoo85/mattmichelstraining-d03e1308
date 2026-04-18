@@ -65,7 +65,7 @@ serve(async (req) => {
     const candidateIds = clientCandidates.map((cc: any) => cc.candidate_id);
     const { data: candidates } = await sb
       .from("hire_alert_candidates")
-      .select("id, full_name, phone, email, license_type, license_number, license_expiry, city, zip, availability_score, score_reason, qualifications_summary, hiring_recommendation, linkedin_url, facebook_url, profile_photo_url, current_employer, current_title, years_experience, cross_referenced, data_completeness")
+      .select("id, full_name, phone, email, license_type, license_number, license_expiry, city, zip, availability_score, score_reason, qualifications_summary, hiring_recommendation, linkedin_url, facebook_url, profile_photo_url, current_employer, current_title, years_experience, cross_referenced, data_completeness, flight_risk, flight_risk_proof")
       .in("id", candidateIds);
 
     // Check for active claims by OTHER clients on each candidate
@@ -136,6 +136,8 @@ serve(async (req) => {
           claim_expires_at: cc.claim_expires_at,
           claimed_by_other: otherClaimMap.has(c.id),
           cross_referenced: c.cross_referenced || false,
+          flight_risk: c.flight_risk || null,
+          flight_risk_proof: c.flight_risk_proof || null,
         };
       })
       .filter(Boolean);
