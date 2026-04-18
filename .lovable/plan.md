@@ -1,89 +1,98 @@
+## What's actually broken (truth, blunt)
 
+**Inventory & data quality:**
 
-User wants a 3-phase sprint executed in strict order. This is a clear implementation task — no clarifying questions needed, the diagnosis from prior turns gave us exact root causes. Let me plan tightly.
+- 165 candidates total. Top-scored "candidates" are garbage: `Mr Pipey`, `Rocket Pros`, `Comfort Zone and`, `Marvin and Son`, even a phone number as a full_name. The `isPersonName()` filter in `miosha-license-scraper` is letting business names through because Yelp + PHCC + building-permits are pumping company names into `hire_alert_candidates`.
+- 6.9% contactable, 1 LinkedIn URL across 165 rows. PDL and Sonar are wired but barely producing.
+- `hire_alert_runs` shows last 2 runs returning `candidates_found: 0` — the wrapper `hire-alert-scanner` looks back only 25 hours from MIOSHA but the underlying `miosha-license-scraper` hasn't logged a real success in days (no logs returned at all).
 
-## Phase 1: Pipeline Infrastructure (must finish + deploy before Phase 2)
+**Wired but underused paid APIs:**
 
-### 1.1 Fix `hire_alert_runs` schema
-Investigation needed: read `supabase/functions/hire-alert-scanner/index.ts` to see EXACT insert payload, then read latest migration on `hire_alert_runs` to see actual columns. From session memory: scanner uses `started_at` (not `run_at`). Likely also missing: `completed_at`, `tos_blocked`, `processed`, `errors[]`, `source_breakdown jsonb`.
+- **HUNTER_API_KEY, SNOV_API_KEY, LUSHA_API_KEY, CLAY_API_KEY** — all paid, all in secrets, **zero enrichment functions use them.** `lead-enrichment-waterfall` uses them for *lead/prospect* enrichment (B2B prospecting), not candidate enrichment.
+- **APOLLO_API_KEY** — only in `lead-enrichment-waterfall`, free-plan blocked.
+- **NURSYS_USERNAME/PASSWORD** — `test-nursys` exists as a connectivity test only. The real `scanNursys()` inside `miosha-license-scraper` scrapes an HTML page (`https://www.nursys.com/LQC/LQCSearch.aspx?state=MI`), NOT the authenticated JSON API at `api.nursys.com/api/enotify`. We're paying for the API and using a screen-scrape that almost certainly returns nothing.
+- **DOL_API_KEY** — wired in secrets, never used.
+- **HIBP** — used by 9 unrelated functions, never offered as a Talent Radar value-add.
 
-Migration: `ALTER TABLE hire_alert_runs ADD COLUMN IF NOT EXISTS ...` for every field the scanner writes. Don't drop existing columns — additive only.
+**Architecture problems:**
 
-### 1.2 Candidate scorer for `hire_alert_candidates`
-Create new edge function `candidate-quality-scorer` (don't pollute lead-quality-scorer which works on a different table).
+- `hire-alert-scanner` only runs 2 sources (`scanMIOSHA` + `scanJobBoards`). It delegates MIOSHA to `miosha-license-scraper` (which runs 14 sources). So the "16+ source planetary scanner" only fires if `miosha-license-scraper` is invoked. Last 2 runs of `hire-alert-scanner` show `candidates_found: 0` — meaning `miosha-license-scraper` is failing or finding nothing new.
+- Edge-function timeout hard cap is ~150s. `miosha-license-scraper` runs 14 sources sequentially via `Promise.allSettled` then upserts in a `for` loop with `await`. Heavy sources (Yelp×6 zips, PHCC×10 zips, Building Permits, NPI×5×15 cities = 75 calls) blow past timeout. There's no resumption — if it dies at S10 of 14, it just dies.
+- No checkpointing. No "where it left off" state.
 
-Scoring rubric (1-10):
-- +2 phone present, +1 phone E.164 valid
-- +2 email present (non-generic prefix per existing email rules)
-- +2 LinkedIn or Facebook URL present
-- +1 current_employer present
-- +1 license_type populated
-- +1 city in Metro Detroit counties (Wayne/Oakland/Macomb)
-- +1 years_experience >= 3
-- Cap 10, floor 1
+---
 
-Writes `quality_score` + `scored_at`. Schedule daily 11:30 UTC. Manual trigger param `{candidate_ids?: []}`.
+## The plan — execute in this order, no asking between steps
 
-### 1.3 Fix `trade` column NULL
-Read `hire-alert-scanner/index.ts` to see why `trade` isn't being written. Likely the source-specific scanners (BPL, Apollo, ArcGIS) extract `license_type` but never normalize to `trade`. Add `classifyTrade(license_type, source, raw_text)` helper in scanner — maps "Boiler Operator" → "boiler", "Electrical" → "electrical", etc. Write at insert time.
+### Phase 1 — Stop the bleeding (data quality)
 
-Also have scorer do fallback classification for legacy NULL rows.
+1. **Harden `isPersonName()**` in `miosha-license-scraper`: reject any name that's purely a phone number, contains only ALL-CAPS company tokens (`PRO`, `PROS`, `ZONE`, `BARGAIN`, `HANDYMAN`, etc.), ends in trade words, or has fewer than 2 alpha-words ≥ 2 chars. Add an `is_company_name = true` flag instead of inserting bad rows.
+2. **Migration**: backfill `is_company_name = true` on the 30+ obvious garbage rows (`Mr Pipey`, `Rocket Pros`, `Comfort Zone and`, `Marvin and Son`, phone-numbers-as-names, `A1 Bargain`, `Drewski Handyman`, `Plumb Pros`, etc.) and **exclude `is_company_name = true` from all client-facing alerts and dashboards**.
+3. **Yelp + PHCC + Building Permits** — these are *contractor business* sources, not *individual licensee* sources. Either repurpose them as B2B prospect feeders (TechAlert *clients*, not candidates) or aggressively strip business words and require a human first+last extracted from "Owner: X" patterns. Default: stop inserting them as candidates, route to a new `techalert_business_prospects` table (already partly exists as `techalert_prospect_targets`).
 
-### 1.4 Wire PDL/Apollo enrichment into the candidate pipeline
-`batch-enrich-candidates` already exists for Sonar OSINT. Need:
-- Schedule it more aggressively (currently manual/small batch)
-- Add PDL fallback when Sonar returns no phone/email (PDL_API_KEY exists in secrets)
-- Target the contactless 94% specifically: filter `WHERE email IS NULL AND phone IS NULL`
-- Schedule new cron: `candidate-enrichment-hourly` running `batch-enrich-candidates` every 2h, batch size 10
+### Phase 2 — Fix Nursys properly (the user explicitly asked)
 
-## Phase 2: Backfill + retest
+4. **Replace the HTML scrape `scanNursys()` with the real authenticated JSON API.** Mirror the working `test-nursys` pattern:
+  - POST `/notificationlookup` daily with a 7-day window → get TransactionId → poll GET → parse new MI license changes.
+  - For each notification, POST `/nurselookup` with the license number to get full details (name, license type, status, expiration, multi-state privilege).
+  - Insert as candidates with `source = 'nursys_api'`, license number populated, full name populated.
+5. Add **all nursing license types** to the scan: RN, LPN, APRN, CRNA, NP. Currently only RN/LPN.
 
-- One-shot SQL/edge-function call to score all 160 existing candidates via new scorer
-- One-shot trade classification for legacy NULL `trade` rows (SQL migration with CASE statement on `license_type`)
-- Re-run `cron-sentinel` + verify `hire_alert_runs` now logs
-- Verify in DB: `SELECT count(*) FILTER (WHERE quality_score >= 7), count(*) FILTER (WHERE trade IS NOT NULL), count(*) FILTER (WHERE email IS NOT NULL OR phone IS NOT NULL) FROM hire_alert_candidates;`
-- Report deltas in chat
+### Phase 3 — Resumable checkpointed scanner (fix timeouts the right way)
 
-## Phase 3: Demand Radar checkouts
+6. New table `hire_alert_scanner_checkpoints (source TEXT, last_completed_at TIMESTAMPTZ, last_cursor JSONB, status TEXT)`. Each source records where it stopped.
+7. Refactor `miosha-license-scraper` into a **dispatch + worker** model:
+  - `miosha-license-scraper` becomes a 5-second dispatcher: for each of 17 sources, check if checkpoint says `due`, fire-and-forget invoke a per-source worker function (or queue via `EdgeRuntime.waitUntil`).
+  - Each per-source worker has its own 60s budget, writes its own checkpoint on completion or partial-completion.
+  - "Resume where it left off" = next cron tick reads checkpoint, picks up at `last_cursor` (e.g. next batch of NPI cities, next 10 PHCC zips, next 100 LARA val IDs).
+8. **Wrap the LARA/MIOSHA `scanMiPLUS` enumerator in checkpointed pagination** — the `val.apps` portal is sequential ID enumeration; record `last_id` and pick up from there.
 
-Investigation: check if `create-industry-pulse-checkout` already exists (it does per CLAUDE.md). Confirm 3 SKU price points are wired:
-- $99 one-time snapshot
-- $199/mo weekly digest
-- $499/mo enterprise
+### Phase 4 — Full enrichment fan-out (use every paid API)
 
-Likely currently only handles one tier. Update to accept `tier: "snapshot" | "weekly" | "enterprise"` with corresponding `price_data`.
+9. Rebuild `candidate-deep-enrich` as a **6-stage waterfall** that processes any candidate without contact info:
+  - **Stage 1 — License-source** (already-have data: name, license #, license type, city, expiry).
+  - **Stage 2 — NPI Registry** (free, healthcare only) → business phone, taxonomy, practice address.
+  - **Stage 3 — PDL** (`PDL_API_KEY`) → mobile phone, personal email, LinkedIn URL, current employer, job title, years of experience.
+  - **Stage 4 — Hunter.io** (`HUNTER_API_KEY`) → if employer found, find their @work-email pattern + email-finder by name+domain.
+  - **Stage 5 — Snov.io** (`SNOV_API_KEY`) → second pass for email finding + verification (validates Hunter results).
+  - **Stage 6 — Lusha** (`LUSHA_API_KEY`) → mobile phone + direct dial fallback when PDL misses.
+  - **Stage 7 — Sonar OSINT** (`OPENROUTER_API_KEY`) → final fallback: open-web search for LinkedIn/Facebook + employer history. Only fires if stages 2-6 left holes.
+  - **Stage 8 — Clay** (`CLAY_API_KEY`) → optional final waterfall enrichment if everything else missed; cost-gated to `score >= 7` only.
+10. Each stage logs to a new `candidate_enrichment_log (candidate_id, stage, source, hit_fields TEXT[], cost_estimate NUMERIC)` so we can see per-source ROI.
+11. Recompute `data_completeness` after each stage. Mark `enrichment_status='complete'` only when at least 1 contact channel (email OR phone) is found, otherwise `enrichment_status='exhausted'`.
 
-Add FCRA/B2B disclaimer block to `IndustryPulse.tsx` checkout page (mem://business/techalert-compliance-disclosures already documents the canonical language — reuse). Required line: "B2B market intelligence — not a consumer report. Not for FCRA-regulated decisions (employment, credit, housing, insurance)."
+### Phase 5 — Sector expansion (every license, every database)
 
-### Deliverables
+12. Add scanners for the rest of MI LARA professions beyond trades + nursing:
+  - Cosmetology, barbers, real estate, insurance, accountants, security guards, polygraph examiners, residential builders/maintenance & alteration contractors (RBMAC), MML mortgage loan officers.
+    - Add a `LARA_PROFESSIONS` config array; each gets a checkpointed val-ID enumerator.
+13. Add **DOL (`DOL_API_KEY`)** for federal apprenticeship completion records (newly minted journeymen) — high-intent talent.
+14. Add MIOSHA hot-work / boiler operator certification expiry feed as a separate source (re-cert events = mobility signal).
 
-- Migration: `hire_alert_runs` schema alignment + `hire_alert_candidates` trade backfill
-- New edge function: `candidate-quality-scorer` + cron schedule
-- Updated edge function: `hire-alert-scanner` (trade classifier inline)
-- Updated edge function: `batch-enrich-candidates` (PDL fallback + larger scope) + new 2h cron
-- Updated edge function: `create-industry-pulse-checkout` (3 tiers)
-- Updated page: `IndustryPulse.tsx` (3 SKU buttons + FCRA disclaimer)
-- Backfill script run after deploy: score 160 + classify trades + enrich top 50 contactless
-- Verification report in chat: before/after numbers
-- Memory update: `mem://features/candidate-pipeline-v2` documenting the scorer + enrichment cadence
+### Phase 6 — HIBP value-add (use what we pay for)
 
-### Out of Scope
+15. New optional enrichment stage `hibp-new-hire-screen`: for any candidate added to a TechAlert client's pipeline at **claim time**, run their email through HIBP and surface "appears in N data breaches — flag for security review" as a value-add bullet on the dossier. Marketed as **"Free background-data hygiene check on every candidate."**
 
-- No new candidate sources (work with existing 16+)
-- No TechAlert pricing changes
-- No new sample PDFs this round (separate request)
-- No UI redesign of MyTechAlert
+### Phase 7 — Verify + ship
 
-### Order of execution (strict)
+16. Run the new `miosha-license-scraper` end-to-end, confirm `hire_alert_runs` rows show non-zero `candidates_found`.
+17. Force-enrich the existing top 30 candidates through the new 8-stage waterfall; expect contactability to jump from 6.9% to 35-50%.
+18. Backfill `is_company_name=true` on the garbage rows so the dashboard stops showing "Mr Pipey" as a $99-tier deliverable.
+19. Generate **v5 sample PDFs** with the new enriched data (only the 5 that ship). Validate no garbage rows leak in.
+20. Status memo `/mnt/documents/talent-radar-enrichment-v5.md` — what each new source produced, contactability before/after, per-stage hit rates, per-stage cost.
 
-1. Read scanner + migrations to finalize exact schema diff
-2. Migration first (additive columns)
-3. Deploy scanner with trade classifier
-4. Deploy new candidate-quality-scorer
-5. Deploy enriched batch-enrich-candidates + new cron
-6. Run backfill (score + classify + enrich top 50)
-7. Verify counts, post delta report
-8. Deploy 3-tier industry-pulse checkout + FCRA disclaimers
-9. Test each Demand Radar checkout end-to-end with $0 admin sandbox flow
-10. Final go/no-go report per SKU
+### Out of scope this sprint
 
+- No UI rewrites. No pricing changes. No new client portal features.
+- No Apollo upgrade — confirmed dead, replaced by the Hunter/Snov/Lusha/PDL/Clay stack.
+- No edge-function renames (still `hire-alert-*`).
+
+### What the user gets at the end
+
+- A scanner that actually completes and resumes where it stopped.
+- Nursys hitting the real authenticated API instead of a useless HTML scrape.
+- Every paid API (Hunter, Snov, Lusha, Clay, PDL, HIBP, DOL) doing real work in a documented, logged waterfall.
+- LARA coverage broadened from 4 trades + 2 nursing types to ~12+ professions with checkpointed enumeration.
+- A clean candidate table where the top 9 scored rows are real humans, not "Comfort Zone and".
+- One status memo + 5 v5 PDFs proving it.
+- Lets run a real test after and show me what an actual customer would get. Make sure there are specifics and tons and tons of information. 
