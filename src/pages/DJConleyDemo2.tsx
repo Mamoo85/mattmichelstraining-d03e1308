@@ -25,8 +25,8 @@ const PROBLEMS_SOLVED = [
 
 // ── Fake tech alert candidates ────────────────────────────────────────────────
 const DEMO_CANDIDATES = [
-  { name: "James P.", license: "1st Class Boiler Op", city: "Warren", score: 9, source: "MIOSHA" },
-  { name: "Kevin M.", license: "2nd Class Boiler Op", city: "Sterling Heights", score: 7, source: "Apollo" },
+  { name: "James P.", license: "1st Class Boiler Op", city: "Warren", score: 9, source: "State licensing records" },
+  { name: "Kevin M.", license: "2nd Class Boiler Op", city: "Sterling Heights", score: 7, source: "Proprietary OSINT" },
 ];
 
 const scoreColor = (s: number) => s >= 8 ? "#dc2626" : s >= 7 ? "#e8621a" : "#f59e0b";
