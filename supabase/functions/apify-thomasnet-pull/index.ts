@@ -13,7 +13,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const APIFY_API_TOKEN = Deno.env.get("APIFY_API_TOKEN")!;
 
-const ACTOR = "zen-studio~thomasnet-suppliers";
+const ACTOR = "zen-studio~thomasnet-suppliers-scraper";
 
 // Default search categories — Metro Detroit industrial verticals that buy from ThomasNet
 const DEFAULT_CATEGORIES = [
