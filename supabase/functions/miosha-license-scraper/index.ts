@@ -185,71 +185,105 @@ async function scanMichiganNurseAide(): Promise<LicenseCandidate[]> {
   return candidates;
 }
 
-// ===== SOURCE 3: Michigan Open Data Portal (direct Socrata fetch — NO Firecrawl) =====
-// Queries data.michigan.gov SODA API directly for professional license datasets
+// ===== SOURCE 3: Michigan Open Data Portal (Socrata) — DYNAMIC DATASET DISCOVERY =====
+// Old hardcoded dataset IDs (r25e-29bj, 5gkx-k3qs, midl-yni7) returned 404.
+// Now: discovers live LARA license datasets via Socrata metadata search.
 async function scanMichiganOpenData(): Promise<LicenseCandidate[]> {
   const candidates: LicenseCandidate[] = [];
   const seen = new Set<string>();
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-  // Known Socrata dataset IDs on data.michigan.gov for professional licenses
-  const datasets = [
-    { id: "r25e-29bj", label: "Trade Professional", filter: "" },
-    { id: "5gkx-k3qs", label: "Trade Professional", filter: "" },
-  ];
+  // STEP 1: Discover live LARA license datasets dynamically
+  let datasetIds: string[] = [];
+  try {
+    const metaUrl = `https://data.michigan.gov/api/views/metadata/v1?q=license&limit=50`;
+    const metaRes = await fetch(metaUrl, { signal: AbortSignal.timeout(15_000) });
+    if (metaRes.ok) {
+      const meta = await metaRes.json();
+      const rows = Array.isArray(meta) ? meta : (meta?.results || meta?.data || []);
+      for (const r of rows) {
+        const id = r.id || r.resource?.id;
+        const name = (r.name || r.resource?.name || "").toLowerCase();
+        const dept = (r.attribution || r.resource?.attribution || "").toLowerCase();
+        const isLicenseRoster = /licens|profession|registr|practitioner|nurs|cosmet|trade|electric|plumb|hvac|boiler|mechanic/i.test(name);
+        const isLARA = dept.includes("lara") || dept.includes("regulat") || name.includes("lara");
+        if (id && isLicenseRoster && (isLARA || dept.includes("michigan"))) {
+          datasetIds.push(id);
+        }
+      }
+      console.log(`[S3:OpenData] Discovered ${datasetIds.length} candidate datasets via metadata API`);
+    }
+  } catch (e) {
+    console.warn(`[S3:OpenData] Metadata discovery failed: ${e instanceof Error ? e.message : String(e)}`);
+  }
+  // Cap at 8 to stay within wall-clock budget
+  datasetIds = datasetIds.slice(0, 8);
 
-  // Also try generic professional license search
-  const genericUrl = `https://data.michigan.gov/resource/midl-yni7.json?$where=license_status='ACTIVE'&$limit=200&$select=first_name,last_name,license_type,license_number,city,state`;
-
-  const urls = [
-    genericUrl,
-    ...datasets.map(d => `https://data.michigan.gov/resource/${d.id}.json?$limit=200`),
-  ];
-
-  for (const url of urls) {
+  // STEP 2: Query each discovered dataset, with field-name fallback
+  for (const ds of datasetIds) {
     try {
+      const url = `https://data.michigan.gov/resource/${ds}.json?$limit=200&$order=:created_at DESC`;
       const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
       if (!res.ok) {
-        console.warn(`[S3:OpenData] HTTP ${res.status} for ${url.slice(0, 80)}`);
+        console.warn(`[S3:OpenData] HTTP ${res.status} for ${ds}`);
         continue;
       }
       const data = await res.json();
-      if (!Array.isArray(data)) continue;
+      if (!Array.isArray(data) || data.length === 0) continue;
+
+      // Log first row schema once per dataset for debugging
+      console.log(`[S3:OpenData] ${ds} sample keys: ${Object.keys(data[0]).slice(0, 12).join(",")}`);
 
       for (const row of data) {
-        // Try multiple field name patterns
-        const firstName = row.first_name || row.firstname || row.FIRST_NAME || "";
-        const lastName = row.last_name || row.lastname || row.LAST_NAME || "";
-        let fullName = row.full_name || row.name || `${firstName} ${lastName}`.trim();
+        // Field-name fallback — Socrata schemas vary wildly across datasets
+        const firstName = row.first_name || row.firstname || row.licensee_first_name || row.lic_first_name || row.f_name || row.first || "";
+        const lastName = row.last_name || row.lastname || row.licensee_last_name || row.lic_last_name || row.l_name || row.last || row.surname || "";
+        let fullName = row.full_name || row.licensee_name || row.name || row.dba_name || `${firstName} ${lastName}`.trim();
         if (!fullName || !isPersonName(fullName)) continue;
 
-        const licNum = row.license_number || row.license_no || row.LICENSE_NUMBER || null;
-        const city = row.city || row.CITY || null;
-        const licType = row.license_type || row.LICENSE_TYPE || row.profession || "Trade Professional";
+        const licNum = row.license_number || row.license_no || row.licensee_number || row.lic_no || row.permit_number || null;
+        const city = row.city || row.licensee_city || row.business_city || null;
+        const county = (row.county || row.licensee_county || "").toLowerCase();
+        const licType = row.license_type || row.profession || row.license_classification || row.permit_type || "Trade Professional";
+        const status = (row.license_status || row.status || row.lic_status || "ACTIVE").toUpperCase();
+        const issued = row.issue_date || row.license_issue_date || row.date_issued || null;
+
+        // Filter: must be ACTIVE
+        if (status && !status.includes("ACTIVE") && !status.includes("CURRENT") && !status.includes("VALID")) continue;
+        // Filter: Wayne/Oakland/Macomb (or city not specified — let it through)
+        if (county && !["wayne", "oakland", "macomb"].some(c => county.includes(c))) continue;
+        // Filter: trade-relevant only
+        const lt = (licType || "").toUpperCase();
+        const isRelevant = /ELECTR|PLUMB|HVAC|MECHANIC|BOILER|NURS|CNA|RN|LPN|REFRIG|SHEET|PIPE|WELD/i.test(lt);
+        if (!isRelevant) continue;
+        // Filter: issued in last 30 days if date present
+        if (issued && issued < since) continue;
+
+        let mappedType = "Trade Professional";
+        if (lt.includes("ELECTR")) mappedType = "Electrician";
+        else if (lt.includes("PLUMB")) mappedType = "Plumber";
+        else if (lt.includes("HVAC") || lt.includes("MECHANIC") || lt.includes("REFRIG")) mappedType = "HVAC Technician";
+        else if (lt.includes("BOILER")) mappedType = "Boiler Operator";
+        else if (lt.includes("RN") || lt.includes("NURS")) mappedType = "Registered Nurse";
+        else if (lt.includes("LPN")) mappedType = "Licensed Practical Nurse";
+        else if (lt.includes("CNA")) mappedType = "Certified Nurse Aide";
 
         const key = fullName.toLowerCase() + (licNum || "");
         if (seen.has(key)) continue;
         seen.add(key);
 
-        let mappedType = "Trade Professional";
-        const lt = (licType || "").toUpperCase();
-        if (lt.includes("ELECTR")) mappedType = "Electrician";
-        else if (lt.includes("PLUMB")) mappedType = "Plumber";
-        else if (lt.includes("HVAC") || lt.includes("MECHANIC")) mappedType = "HVAC Technician";
-        else if (lt.includes("BOILER")) mappedType = "Boiler Operator";
-        else if (lt.includes("NURS")) mappedType = "Licensed Practical Nurse";
-
         candidates.push({
           full_name: fullName, license_type: mappedType,
           license_number: licNum ? String(licNum) : null,
-          license_expiry: null, city: city || null, source: "michigan_open_data",
+          license_expiry: null, city: city || null, source: "lara_socrata",
         });
       }
     } catch (e) {
-      console.warn(`[S3:OpenData] Error: ${e instanceof Error ? e.message : String(e)}`);
+      console.warn(`[S3:OpenData] ${ds} error: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 
-  console.log(`[S3:OpenData] Found ${candidates.length} candidates (direct Socrata, no Firecrawl)`);
+  console.log(`[S3:OpenData] Found ${candidates.length} LARA candidates from Socrata datasets`);
   return candidates;
 }
 
