@@ -916,10 +916,36 @@ serve(async (req: Request) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  try {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const dateStr = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const runStart = new Date().toISOString();
+
+  // Phase 17 fix: insert a "running" row IMMEDIATELY so the sentinel + dashboard see the run
+  // even if the function later times out (16-source scan can exceed 150s wall-clock).
+  // We update this same row at the end with final stats.
+  let runRowId: string | null = null;
+  try {
+    const { data: runRow } = await sb
+      .from("hire_alert_runs")
+      .insert({
+        started_at: runStart,
+        run_at: runStart,
+        source: "all",
+        status: "running",
+        candidates_found: 0,
+        new_candidates: 0,
+        candidates_alerted: 0,
+        alerts_sent: 0,
+        lara_status: "not_attempted",
+      })
+      .select("id")
+      .single();
+    runRowId = runRow?.id ?? null;
+  } catch (e) {
+    console.warn("[hire-alert-scanner] failed to insert run-start row:", e instanceof Error ? e.message : String(e));
+  }
+
+  try {
 
   // Fetch active paid clients + active trial clients
   const { data: allClients } = await sb.from("hire_alert_clients").select("*").or("active.eq.true,trial_status.eq.active");
