@@ -155,8 +155,8 @@ export default function HireAlert() {
   return (
     <div style={{ background: BG, minHeight: "100vh", color: "#fff", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <SEOHead
-        title="TechAlert — Licensed Tradesperson Hiring Monitor | Detroit Web Agency"
-        description="Get exclusive first-access alerts when licensed boiler operators, HVAC techs, plumbers, and electricians become available in Metro Detroit. Proprietary daily monitoring."
+        title="Talent Radar — Licensed Tradesperson Hiring Intelligence | Detroit Web Agency"
+        description="Talent Radar surfaces licensed boiler operators, HVAC techs, plumbers, and electricians the moment they become available in Metro Detroit. Proprietary daily monitoring."
         path="/hire-alert"
       />
 

@@ -114,7 +114,7 @@ export default function HealthcareHireAlert() {
   return (
     <>
       <SEOHead
-        title="Healthcare Staffing Monitor | Stop Paying Staffing Agencies"
+        title="Talent Radar Healthcare — CNA / RN / LPN Hiring Intelligence"
         description="Get texted the moment a new CNA, RN, or LPN clears their state license in your county. Hire directly — skip the $80/hr staffing agency markup."
       />
       <DWAStickyNav ctaLabel="Start Monitoring" ctaHref="#signup" />
