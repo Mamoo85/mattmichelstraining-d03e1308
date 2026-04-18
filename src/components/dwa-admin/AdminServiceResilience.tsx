@@ -147,19 +147,23 @@ export default function AdminServiceResilience() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="min-w-0 flex-1">
           <h2 className="text-xl font-bold text-white">🛡️ Service Resilience</h2>
           <p className="text-white/60 text-sm">Triple-redundancy monitoring across all external APIs and data sources.</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={runProbe} disabled={running !== null} size="sm" variant="outline" className="gap-1.5">
+        <div className="flex gap-2 flex-wrap">
+          <Button onClick={runProbe} disabled={running !== null} size="sm" variant="outline" className="gap-1.5" title="Pings every external API (Lovable AI, Anthropic, Apollo, PDL, Firecrawl, etc.) to confirm they respond. Updates the status badges below.">
             <Play className="w-3.5 h-3.5" /> {running === "probe" ? "Probing…" : "Run Health Probe"}
           </Button>
-          <Button onClick={runDrift} disabled={running !== null} size="sm" variant="outline" className="gap-1.5">
+          <Button onClick={runDrift} disabled={running !== null} size="sm" variant="outline" className="gap-1.5" title="Verifies each data-source URL still returns valid data (catches when state portals change their URLs).">
             <RefreshCw className="w-3.5 h-3.5" /> {running === "drift" ? "Checking…" : "Check Endpoint Drift"}
           </Button>
         </div>
+      </div>
+
+      <div className="bg-[#0a1628]/60 border border-white/10 rounded-md p-3 text-xs text-white/60 leading-relaxed">
+        <strong className="text-white/80">What this does:</strong> The Health Probe sends a tiny test request to each connected external service (AI gateways, enrichment APIs, scrapers) and marks them 🟢 Operational, 🟡 Degraded, or 🔴 Offline. The Endpoint Drift check confirms public data sources (LARA, Michigan Open Data, NPI Registry) haven't moved or changed their URL structure. Both are safe to run anytime — they make no changes.
       </div>
 
       <div className="grid grid-cols-3 gap-3">
