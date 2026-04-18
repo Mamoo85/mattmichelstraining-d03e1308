@@ -3361,6 +3361,25 @@ const SOURCE_REGISTRY: Array<{ label: string; fn: () => Promise<LicenseCandidate
 
 const WALL_CLOCK_BUDGET_MS = 120_000; // leave headroom under 150s edge timeout
 
+// Run upserts concurrently (10 at a time) — eliminates the sequential 400ms-per-candidate bottleneck
+// that blew the 120s budget when NPI returned 500+ candidates.
+async function upsertBatch(sb: any, candidates: LicenseCandidate[]): Promise<{ new: number; updated: number; error: number }> {
+  let newC = 0, updated = 0, err = 0;
+  const CONCURRENCY = 10;
+  for (let i = 0; i < candidates.length; i += CONCURRENCY) {
+    const batch = candidates.slice(i, i + CONCURRENCY);
+    const results = await Promise.allSettled(batch.map((c) => upsertCandidate(sb, c)));
+    for (const r of results) {
+      if (r.status === "fulfilled") {
+        if (r.value === "new") newC++;
+        else if (r.value === "updated") updated++;
+        else err++;
+      } else { err++; }
+    }
+  }
+  return { new: newC, updated, error: err };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: { "Access-Control-Allow-Origin": "*" } });
