@@ -1097,8 +1097,25 @@ function calculateCompleteness(row: Record<string, unknown>): number {
 
 // ===== DB UPSERT =====
 // CRITICAL: Always writes BOTH `name` AND `full_name` — the `name` column is NOT NULL
+const BUSINESS_SOURCES = new Set(["yelp", "phcc", "building_permits", "thumbtack", "google_places"]);
+
 async function upsertCandidate(sb: any, c: LicenseCandidate): Promise<"new" | "updated" | "error"> {
   try {
+    // Phase 1 fix: business-directory sources never go to candidates table.
+    // Route to techalert_business_prospects (B2B prospect feeder for TechAlert sales).
+    if (BUSINESS_SOURCES.has(c.source)) {
+      try {
+        await sb.from("techalert_business_prospects").upsert({
+          business_name: c.full_name,
+          trade: c.license_type,
+          city: c.city,
+          source: c.source,
+          raw_data: c as any,
+        }, { onConflict: "business_name,city" });
+        return "updated";
+      } catch { return "error"; }
+    }
+
     const row: Record<string, unknown> = {
       name: c.full_name,           // REQUIRED — NOT NULL column
       full_name: c.full_name,      // Also write full_name
