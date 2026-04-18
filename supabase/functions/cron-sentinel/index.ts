@@ -30,35 +30,34 @@ interface CronExpect {
   description: string;
 }
 
-// Hardcoded watchlist — adding a new cron requires adding it here. Forces discipline.
+// Hardcoded watchlist — names MUST match real cron.job.jobname values exactly. Adding a new cron requires adding it here. Forces discipline.
 const WATCHLIST: CronExpect[] = [
   // Revenue-critical
   { name: "cron-sentinel-6h", freshnessMinutes: 60 * 8, critical: true, description: "Sentinel itself" },
-  { name: "hire-alert-scanner-daily", freshnessMinutes: 60 * 30, outputTable: "hire_alert_runs", outputColumn: "run_at", critical: true, description: "TechAlert scanner" },
-  { name: "industry-pulse-scanner", freshnessMinutes: 60 * 30, outputTable: "industry_pulse_signals", critical: true, description: "Demand Radar scanner" },
+  { name: "hire-alert-scanner-daily", freshnessMinutes: 60 * 30, outputTable: "hire_alert_runs", outputColumn: "started_at", critical: true, description: "TechAlert scanner" },
+  { name: "industry-pulse-scanner-daily", freshnessMinutes: 60 * 30, outputTable: "industry_pulse_signals", critical: true, description: "Demand Radar scanner" },
   { name: "dead-lead-drip-daily", freshnessMinutes: 60 * 30, critical: true, description: "Dead Lead drip" },
   { name: "dead-lead-daily-notifier", freshnessMinutes: 60 * 30, critical: true, description: "Dead Lead daily digest" },
-  { name: "dead-lead-outreach-drip", freshnessMinutes: 60 * 30, critical: true, description: "Dead Lead prospect follow-ups" },
-  { name: "contractor-prospector", freshnessMinutes: 60 * 30, outputTable: "web_design_leads", critical: true, description: "Contractor prospecting" },
-  { name: "contractor-aged-lead-downsell", freshnessMinutes: 60 * 30, critical: true, description: "PPL aged lead downsell" },
-  { name: "contractor-roi-sms", freshnessMinutes: 60 * 24 * 8, critical: false, description: "Weekly ROI SMS (Friday)" },
-  { name: "contractor-fomo-mailer", freshnessMinutes: 60 * 30, critical: false, description: "PPL FOMO mailer" },
-  { name: "lead-quality-scorer", freshnessMinutes: 60 * 30, critical: true, description: "Lead scoring" },
+  { name: "dead-lead-outreach-drip-daily", freshnessMinutes: 60 * 30, critical: true, description: "Dead Lead prospect follow-ups" },
+  { name: "contractor-prospector-daily", freshnessMinutes: 60 * 30, outputTable: "web_design_leads", critical: true, description: "Contractor prospecting" },
+  { name: "contractor-aged-lead-downsell-daily", freshnessMinutes: 60 * 30, critical: true, description: "PPL aged lead downsell" },
+  { name: "contractor-roi-sms-friday", freshnessMinutes: 60 * 24 * 8, critical: false, description: "Weekly ROI SMS (Friday)" },
+  { name: "contractor-fomo-mailer-daily", freshnessMinutes: 60 * 30, critical: false, description: "PPL FOMO mailer" },
+  { name: "lead-quality-scorer-daily", freshnessMinutes: 60 * 30, critical: true, description: "Lead scoring" },
 
   // Agents
-  { name: "dwa-operator", freshnessMinutes: 60 * 6, critical: true, description: "DWA Operator (every 4h)" },
-  { name: "dwa-closer", freshnessMinutes: 60 * 30, critical: true, description: "DWA Closer (daily)" },
-  { name: "morning-digest", freshnessMinutes: 60 * 30, critical: true, description: "Morning approval digest" },
-  { name: "tom-autonomous", freshnessMinutes: 60 * 30, critical: false, description: "Tom agent" },
-  { name: "oz-autonomous", freshnessMinutes: 60 * 30, critical: false, description: "Oz agent" },
-  { name: "scarlett-autonomous", freshnessMinutes: 60 * 30, critical: false, description: "Scarlett agent" },
-  { name: "selma-autonomous", freshnessMinutes: 60 * 30, critical: false, description: "Selma agent" },
-  { name: "ops-autonomous", freshnessMinutes: 60 * 30, critical: false, description: "Ops agent" },
+  { name: "dwa-operator-4h", freshnessMinutes: 60 * 6, critical: true, description: "DWA Operator (every 4h)" },
+  { name: "dwa-closer-daily", freshnessMinutes: 60 * 30, critical: true, description: "DWA Closer (daily)" },
+  { name: "tom-daily-pipeline", freshnessMinutes: 60 * 30, critical: false, description: "Tom agent" },
+  { name: "oz-growth-daily", freshnessMinutes: 60 * 30, critical: false, description: "Oz growth agent" },
+  { name: "scarlett-autonomous-daily", freshnessMinutes: 60 * 30, critical: false, description: "Scarlett agent" },
+  { name: "selma-autonomous-daily", freshnessMinutes: 60 * 30, critical: false, description: "Selma agent" },
+  { name: "ops-daily-projects", freshnessMinutes: 60 * 30, critical: false, description: "Ops agent" },
 
   // Intel scanners
-  { name: "medicare-staffing-intel", freshnessMinutes: 60 * 30, critical: false, description: "Medicare staffing intel" },
-  { name: "industrial-growth-intel", freshnessMinutes: 60 * 30, critical: false, description: "Industrial growth intel" },
-  { name: "permit-watch-scanner", freshnessMinutes: 60 * 30, critical: false, description: "Permit watch" },
+  { name: "medicare-staffing-intel-daily", freshnessMinutes: 60 * 30, critical: false, description: "Medicare staffing intel" },
+  { name: "industrial-growth-intel-daily", freshnessMinutes: 60 * 30, critical: false, description: "Industrial growth intel" },
+  { name: "permit-watch-scanner-daily", freshnessMinutes: 60 * 30, critical: false, description: "Permit watch" },
   { name: "license-expiry-checker-daily", freshnessMinutes: 60 * 30, critical: false, description: "License expiry checker" },
 ];
 
