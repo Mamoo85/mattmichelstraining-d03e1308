@@ -1981,6 +1981,420 @@ async function scanMichiganNewTradeBusinesses(): Promise<LicenseCandidate[]> {
   return candidates;
 }
 
+// ===== S26: Indeed Public Resumes =====
+// People who opted into public resume visibility are actively job-hunting RIGHT NOW.
+const INDEED_RESUME_SEARCHES = [
+  { url: "https://www.indeed.com/resumes/hvac-technician/in-detroit-mi", trade: "HVAC Technician" },
+  { url: "https://www.indeed.com/resumes/electrician/in-detroit-mi", trade: "Electrician" },
+  { url: "https://www.indeed.com/resumes/plumber/in-detroit-mi", trade: "Plumber" },
+  { url: "https://www.indeed.com/resumes/boiler-operator/in-detroit-mi", trade: "Boiler Operator" },
+  { url: "https://www.indeed.com/resumes/registered-nurse/in-detroit-mi", trade: "Registered Nurse" },
+  { url: "https://www.indeed.com/resumes/cna/in-detroit-mi", trade: "Nurse Aide" },
+];
+
+async function scanIndeedResumes(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of INDEED_RESUME_SEARCHES) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 3000 }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (markdown.length < 100) continue;
+      const extracted = await extractNamesFromMarkdown(markdown, trade, "indeed_resume");
+      for (const c of extracted) {
+        if (seen.has(c.full_name.toLowerCase())) continue;
+        seen.add(c.full_name.toLowerCase());
+        candidates.push(c);
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S26:Indeed] Found ${candidates.length} active job seekers`);
+  return candidates;
+}
+
+// ===== S27: ZipRecruiter Candidate Profiles =====
+async function scanZipRecruiterCandidates(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const searches = [
+    { url: "https://www.ziprecruiter.com/candidate/search?search=hvac+technician&location=Detroit%2C+MI", trade: "HVAC Technician" },
+    { url: "https://www.ziprecruiter.com/candidate/search?search=licensed+electrician&location=Detroit%2C+MI", trade: "Electrician" },
+    { url: "https://www.ziprecruiter.com/candidate/search?search=journeyman+plumber&location=Detroit%2C+MI", trade: "Plumber" },
+    { url: "https://www.ziprecruiter.com/candidate/search?search=boiler+operator&location=Detroit%2C+MI", trade: "Boiler Operator" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of searches) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 4000 }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (markdown.length < 100) continue;
+      const extracted = await extractNamesFromMarkdown(markdown, trade, "ziprecruiter");
+      for (const c of extracted) {
+        if (seen.has(c.full_name.toLowerCase())) continue;
+        seen.add(c.full_name.toLowerCase());
+        candidates.push(c);
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S27:ZipRecruiter] Found ${candidates.length} candidates`);
+  return candidates;
+}
+
+// ===== S28: Facebook Trade Community Posts (Sonar) =====
+// Public Facebook group posts from Michigan tradespeople announcing availability.
+async function scanFacebookTradePosts(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const queries = [
+    { q: `site:facebook.com Michigan HVAC technician "looking for work" OR "available" OR "just got my license" 2025 OR 2026 Detroit OR Warren OR Dearborn OR "Metro Detroit"`, trade: "HVAC Technician" },
+    { q: `site:facebook.com Michigan licensed electrician "open to work" OR "available" OR "seeking employment" 2025 OR 2026 Detroit OR Wayne County OR Oakland County`, trade: "Electrician" },
+    { q: `site:facebook.com Michigan licensed plumber "looking for work" OR "available" OR "new journeyman" 2025 OR 2026 Metro Detroit`, trade: "Plumber" },
+    { q: `site:facebook.com Michigan boiler operator stationary engineer "looking for work" OR "available" OR "certified" 2025 OR 2026`, trade: "Boiler Operator" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { q, trade } of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: `Find individual Michigan ${trade}s announcing job availability on Facebook or other social platforms. Return ONLY JSON array: [{"full_name":"First Last","city":"Michigan city or null"}]. Individual people only, not companies. Empty array if none found.` },
+            { role: "user", content: q },
+          ],
+          max_tokens: 500, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(25_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[];
+      try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: trade, license_number: null, license_expiry: null, city: r.city || null, source: "facebook_trade" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S28:Facebook] Found ${candidates.length} candidates`);
+  return candidates;
+}
+
+// ===== S29: Michigan BCHS Healthcare Facility Staff (Sonar) =====
+// Bureau of Community & Health Systems licenses MI nursing homes — staff are findable.
+async function scanBCHSHealthcareStaff(): Promise<LicenseCandidate[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  const queries = [
+    `Find individual CNAs (Certified Nurse Aides) and LPNs (Licensed Practical Nurses) currently working at BCHS-licensed nursing homes in Wayne County OR Oakland County OR Macomb County Michigan. Return names of individuals visible on facility websites, LinkedIn, or healthcare job boards. JSON array: [{"full_name":"First Last","city":"city or null","license_type":"CNA or LPN"}]. Real people only. Max 15.`,
+    `Find RNs (Registered Nurses) and NPs (Nurse Practitioners) working at Metro Detroit Michigan skilled nursing facilities or assisted living centers licensed by Michigan LARA BCHS. Search facility websites, ZipRecruiter, Indeed, LinkedIn for public staff listings. JSON array only. Max 15.`,
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const q of queries) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [
+            { role: "system", content: "Return ONLY a valid JSON array. No prose, no markdown. Empty array [] if nothing found." },
+            { role: "user", content: q },
+          ],
+          max_tokens: 800, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(25_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.choices?.[0]?.message?.content || "";
+      const m = text.match(/\[[\s\S]*?\]/);
+      if (!m) continue;
+      let arr: any[];
+      try { arr = JSON.parse(m[0]); } catch { continue; }
+      for (const r of arr) {
+        const name = (r.full_name || "").trim();
+        const lt = r.license_type || "Nurse";
+        if (!name || !isPersonName(name) || seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        candidates.push({ full_name: name, license_type: lt, license_number: null, license_expiry: null, city: r.city || null, source: "bchs_staff" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S29:BCHS] Found ${candidates.length} healthcare staff candidates`);
+  return candidates;
+}
+
+// ===== S30: Michigan EGLE Certified Contractor Registry =====
+// EGLE requires asbestos/lead abatement contractors to register publicly.
+// Asbestos/hazmat workers heavily overlap with HVAC, boiler, and mechanical trades.
+async function scanEGLEContractors(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const urls = [
+    { url: "https://www.michigan.gov/egle/regulatory-assistance/permits-licenses-certifications/asbestos/michigan-licensed-asbestos-contractors", trade: "HVAC Technician" },
+    { url: "https://www.michigan.gov/egle/regulatory-assistance/permits-licenses-certifications/lead", trade: "Trade Professional" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of urls) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 2000 }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (markdown.length < 100) continue;
+      const extracted = await extractNamesFromMarkdown(markdown, trade, "egle_registry");
+      for (const c of extracted) {
+        if (seen.has(c.full_name.toLowerCase())) continue;
+        seen.add(c.full_name.toLowerCase());
+        candidates.push(c);
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S30:EGLE] Found ${candidates.length} EGLE-certified contractors`);
+  return candidates;
+}
+
+// ===== S31: Google Places API Trade Business Sweep =====
+// Uses existing GOOGLE_MAPS_API_KEY. Different coverage than Yelp.
+// Routes to techalert_business_prospects — these are companies that need TechAlert.
+async function scanGooglePlacesTrades(): Promise<LicenseCandidate[]> {
+  if (!GOOGLE_MAPS_API_KEY) return [];
+  const searches = [
+    { query: "HVAC contractor Metro Detroit Michigan", trade: "HVAC Technician" },
+    { query: "licensed electrician Detroit Michigan", trade: "Electrician" },
+    { query: "licensed plumber Warren Michigan", trade: "Plumber" },
+    { query: "boiler repair service Detroit Michigan", trade: "Boiler Operator" },
+    { query: "mechanical contractor Oakland County Michigan", trade: "HVAC Technician" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { query, trade } of searches) {
+    try {
+      const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_API_KEY}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+      if (!res.ok) continue;
+      const data = await res.json();
+      for (const place of (data?.results || []).slice(0, 10)) {
+        const name = (place.name || "").trim();
+        if (!name || name.length < 3) continue;
+        const key = name.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const vicinity = place.vicinity || place.formatted_address || "";
+        const cityMatch = vicinity.match(/([A-Za-z\s]+),\s*MI/);
+        candidates.push({
+          full_name: name, license_type: trade,
+          license_number: null, license_expiry: null,
+          city: cityMatch?.[1]?.trim() || null,
+          source: "google_places_sweep",
+        });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S31:GooglePlaces] Found ${candidates.length} trade businesses`);
+  return candidates;
+}
+
+// ===== S32: Angi Pro Contractor Directory =====
+// Large national platform — many solo operators listed by personal name.
+// Person names → candidates; company names → techalert_business_prospects.
+async function scanAngiDirectory(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const pages = [
+    { url: "https://www.angi.com/companylist/detroit/hvac.htm", trade: "HVAC Technician" },
+    { url: "https://www.angi.com/companylist/detroit/electricians.htm", trade: "Electrician" },
+    { url: "https://www.angi.com/companylist/detroit/plumbers.htm", trade: "Plumber" },
+    { url: "https://www.angi.com/companylist/warren/hvac.htm", trade: "HVAC Technician" },
+    { url: "https://www.angi.com/companylist/troy-mi/electricians.htm", trade: "Electrician" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of pages) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 3000 }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (markdown.length < 100) continue;
+      // Extract all capitalized name-like strings; split person vs company on isPersonName
+      const namePattern = /\*\*([^*\n]{3,60})\*\*|^#+\s+(.{3,60})$/gm;
+      let m: RegExpMatchArray | null;
+      while ((m = namePattern.exec(markdown)) !== null) {
+        const raw = (m[1] || m[2] || "").trim();
+        if (!raw) continue;
+        const stripped = raw.replace(TRADE_WORD_PATTERN, "").replace(/\s+/g, " ").trim();
+        if (!stripped || stripped.length < 3) continue;
+        const key = stripped.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const isPerson = isPersonName(stripped);
+        candidates.push({
+          full_name: stripped, license_type: trade,
+          license_number: null, license_expiry: null, city: null,
+          source: isPerson ? "angi" : "angi_co",
+        });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S32:Angi] Found ${candidates.length} entries`);
+  return candidates;
+}
+
+// ===== S33: Manta Small Business Listings =====
+// Frequently shows owner names ("Bob Smith, Owner"). Many sole proprietors in trades.
+async function scanMantaListings(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const pages = [
+    { url: "https://www.manta.com/mb_46_A8004D_000/electrical_contractors/detroit_mi", trade: "Electrician" },
+    { url: "https://www.manta.com/mb_46_A47C0_000/plumbing_heating_air/detroit_mi", trade: "HVAC Technician" },
+    { url: "https://www.manta.com/mb_46_A47C9_000/plumbing_contractors/detroit_mi", trade: "Plumber" },
+    { url: "https://www.manta.com/mb_46_A47C0_000/plumbing_heating_air/warren_mi", trade: "HVAC Technician" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of pages) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 2000 }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (markdown.length < 100) continue;
+      const extracted = await extractNamesFromMarkdown(markdown, trade, "manta_co");
+      for (const c of extracted) {
+        const key = c.full_name.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        // Re-tag person names as candidates, companies as prospects
+        candidates.push({ ...c, source: isPersonName(c.full_name) ? "manta" : "manta_co" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S33:Manta] Found ${candidates.length} entries`);
+  return candidates;
+}
+
+// ===== S34: BBB Accredited Trade Contractor Directory =====
+// BBB-accredited contractors in Metro Detroit. Routes to techalert_business_prospects.
+async function scanBBBDirectory(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const pages = [
+    { url: "https://www.bbb.org/search?find_country=USA&find_text=hvac+contractor&find_loc=Detroit%2C+MI&page=1", trade: "HVAC Technician" },
+    { url: "https://www.bbb.org/search?find_country=USA&find_text=electrician&find_loc=Detroit%2C+MI&page=1", trade: "Electrician" },
+    { url: "https://www.bbb.org/search?find_country=USA&find_text=plumber&find_loc=Detroit%2C+MI&page=1", trade: "Plumber" },
+    { url: "https://www.bbb.org/search?find_country=USA&find_text=boiler+service&find_loc=Detroit%2C+MI&page=1", trade: "Boiler Operator" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of pages) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 3000 }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (markdown.length < 100) continue;
+      const extracted = await extractNamesFromMarkdown(markdown, trade, "bbb_directory");
+      for (const c of extracted) {
+        const key = c.full_name.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        candidates.push(c);
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S34:BBB] Found ${candidates.length} accredited contractors`);
+  return candidates;
+}
+
+// ===== S35: Alignable Local Business Network =====
+// LinkedIn for local small businesses. Owner names + trade + city visible on profiles.
+async function scanAlignableNetwork(): Promise<LicenseCandidate[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  const pages = [
+    { url: "https://www.alignable.com/detroit-mi/hvac-contractor", trade: "HVAC Technician" },
+    { url: "https://www.alignable.com/detroit-mi/electrician", trade: "Electrician" },
+    { url: "https://www.alignable.com/detroit-mi/plumber", trade: "Plumber" },
+    { url: "https://www.alignable.com/warren-mi/hvac-contractor", trade: "HVAC Technician" },
+    { url: "https://www.alignable.com/sterling-heights-mi/electrician", trade: "Electrician" },
+  ];
+  const candidates: LicenseCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const { url, trade } of pages) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ url, formats: ["markdown"], waitFor: 3000 }),
+        signal: AbortSignal.timeout(22_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const markdown: string = data?.data?.markdown || data?.markdown || "";
+      if (markdown.length < 100) continue;
+      const extracted = await extractNamesFromMarkdown(markdown, trade, "alignable_co");
+      for (const c of extracted) {
+        const key = c.full_name.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        candidates.push({ ...c, source: isPersonName(c.full_name) ? "alignable" : "alignable_co" });
+      }
+    } catch { /* skip */ }
+  }
+  console.log(`[S35:Alignable] Found ${candidates.length} entries`);
+  return candidates;
+}
+
 // ============= CHECKPOINTED ORCHESTRATION =============
 // Each source has a min-interval (hours). Skipped if last_completed_at < interval ago.
 // Resilient to Edge Function timeouts: next cron tick picks up un-run sources.
@@ -2006,7 +2420,17 @@ const SOURCE_REGISTRY: Array<{ label: string; fn: () => Promise<LicenseCandidate
   { label: "ContractorCo",fn: scanBPLContractorCompanies, intervalH: 24 },
   { label: "OSHA",       fn: scanOSHAMichiganEstablishments, intervalH: 24 },
   { label: "Reinstate",  fn: scanLARADisciplinaryReinstatements, intervalH: 48 },
-  { label: "MiSOS",      fn: scanMichiganNewTradeBusinesses, intervalH: 24 },
+  { label: "MiSOS",      fn: scanMichiganNewTradeBusinesses,     intervalH: 24 },
+  { label: "Indeed",     fn: scanIndeedResumes,                  intervalH: 12 },
+  { label: "ZipRecruit", fn: scanZipRecruiterCandidates,         intervalH: 12 },
+  { label: "Facebook",   fn: scanFacebookTradePosts,             intervalH: 24 },
+  { label: "BCHS",       fn: scanBCHSHealthcareStaff,            intervalH: 24 },
+  { label: "EGLE",       fn: scanEGLEContractors,                intervalH: 72 },
+  { label: "GPlaces",    fn: scanGooglePlacesTrades,             intervalH: 48 },
+  { label: "Angi",       fn: scanAngiDirectory,                  intervalH: 48 },
+  { label: "Manta",      fn: scanMantaListings,                  intervalH: 72 },
+  { label: "BBB",        fn: scanBBBDirectory,                   intervalH: 72 },
+  { label: "Alignable",  fn: scanAlignableNetwork,               intervalH: 72 },
 ];
 
 const WALL_CLOCK_BUDGET_MS = 120_000; // leave headroom under 150s edge timeout
