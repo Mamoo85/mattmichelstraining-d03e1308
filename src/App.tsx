@@ -289,15 +289,12 @@ const HireAlertMSPInquiry = lazyRetry(() => import("./pages/HireAlertMSPInquiry"
 const GoTechAlert = lazyRetry(() => import("./pages/GoTechAlert"));
 const FreeLeadsQR = lazyRetry(() => import("./pages/FreeLeadsQR"));
 const HireAlertTrial = lazyRetry(() => import("./pages/HireAlertTrial"));
-const TechAlertPostcard = lazyRetry(() => import("./pages/TechAlertPostcard"));
 const HealthcareHireAlert = lazyRetry(() => import("./pages/HealthcareHireAlert"));
 const WebsiteSpeedAudits = lazyRetry(() => import("./pages/WebsiteSpeedAudits"));
 const CrimeDigest = lazyRetry(() => import("./pages/CrimeDigest"));
 const IndustryPulse = lazyRetry(() => import("./pages/IndustryPulse"));
 const MyIndustryPulse = lazyRetry(() => import("./pages/MyIndustryPulse"));
 const DemandRadar = lazyRetry(() => import("./pages/DemandRadar"));
-const DemandRadarPortal = lazyRetry(() => import("./pages/DemandRadarPortal"));
-const TechAlertJobs = lazyRetry(() => import("./pages/TechAlertJobs"));
 const StaffingAgency = lazyRetry(() => import("./pages/StaffingAgency"));
 const TalentIntelligence = lazyRetry(() => import("./pages/TalentIntelligence"));
 const AgencyPortal = lazyRetry(() => import("./pages/AgencyPortal"));
@@ -730,28 +727,32 @@ const App = () => (
                     <Route path="/storm-leads" element={<StormDamageLeads />} />
                     <Route path="/recall-alerts" element={<RecallAlertService />} />
                     <Route path="/permit-watch" element={<PermitWatch />} />
-                    <Route path="/hire-alert" element={<HireAlert />} />
-                    <Route path="/hire-alert/enterprise" element={<HireAlertMSPInquiry />} />
+                    {/* Talent Radar — canonical hiring intelligence brand */}
                     <Route path="/talent-radar" element={<HireAlert />} />
+                    <Route path="/talent-radar/enterprise" element={<HireAlertMSPInquiry />} />
+                    <Route path="/talent-radar/healthcare" element={<HealthcareHireAlert />} />
+                    <Route path="/talent-radar/dashboard" element={<MyTechAlert />} />
+                    <Route path="/talent-radar/trial" element={<HireAlertTrial />} />
+                    {/* Legacy redirects → Talent Radar */}
+                    <Route path="/hire-alert" element={<Navigate to="/talent-radar" replace />} />
+                    <Route path="/hire-alert/enterprise" element={<Navigate to="/talent-radar/enterprise" replace />} />
+                    <Route path="/hire-alert-healthcare" element={<Navigate to="/talent-radar/healthcare" replace />} />
+                    <Route path="/hire-alert-trial" element={<Navigate to="/talent-radar/trial" replace />} />
+                    <Route path="/talent-intelligence" element={<Navigate to="/talent-radar" replace />} />
+                    <Route path="/go/techalert" element={<Navigate to="/talent-radar" replace />} />
+                    <Route path="/radars" element={<Navigate to="/talent-radar" replace />} />
+                    <Route path="/textback" element={<Navigate to="/missed-call-catch" replace />} />
+                    {/* Growth Radar (company-side intelligence — separate product) */}
                     <Route path="/growth-radar" element={<IndustryPulse />} />
                     <Route path="/growth-radar-dashboard" element={<GrowthRadarDashboard />} />
+                    <Route path="/industry-pulse" element={<Navigate to="/growth-radar" replace />} />
+                    <Route path="/my-industry-pulse" element={<MyIndustryPulse />} />
                     <Route path="/lead-radar" element={<ContractorLeads />} />
-                    <Route path="/textback" element={<Navigate to="/missed-call-catch" replace />} />
-                    <Route path="/radars" element={<Navigate to="/talent-radar" replace />} />
-                    <Route path="/go/techalert" element={<GoTechAlert />} />
                     <Route path="/free-leads" element={<FreeLeadsQR />} />
-                    <Route path="/hire-alert-trial" element={<HireAlertTrial />} />
-                    <Route path="/techalert-postcard" element={<TechAlertPostcard />} />
-                    <Route path="/hire-alert-healthcare" element={<HealthcareHireAlert />} />
                     <Route path="/website-speed-audit" element={<WebsiteSpeedAudits />} />
                     <Route path="/crime-digest" element={<CrimeDigest />} />
-                    <Route path="/industry-pulse" element={<IndustryPulse />} />
-                    <Route path="/my-industry-pulse" element={<MyIndustryPulse />} />
                     <Route path="/demand-radar" element={<DemandRadar />} />
-                    <Route path="/demand-radar-portal" element={<DemandRadarPortal />} />
-                    <Route path="/jobs" element={<TechAlertJobs />} />
                     <Route path="/staffing" element={<StaffingAgency />} />
-                    <Route path="/talent-intelligence" element={<TalentIntelligence />} />
                     <Route path="/agency-portal" element={<AgencyPortal />} />
                     <Route path="/license-monitor" element={<LicenseMonitor />} />
                     <Route path="/regulatory-filing-monitor" element={<RegulatoryFilingMonitor />} />
