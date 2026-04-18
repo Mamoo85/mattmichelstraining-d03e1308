@@ -14294,6 +14294,7 @@ export type Database = {
         Args: { _field: string; _target_user_id: string }
         Returns: boolean
       }
+      cron_job_status: { Args: { p_jobname: string }; Returns: Json }
       decrypt_cms_credentials: {
         Args: { _client_id: string }
         Returns: {
