@@ -1038,6 +1038,54 @@ export type Database = {
         }
         Relationships: []
       }
+      blind_teaser_dispatches: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          candidate_ids: string[]
+          city_summary: string | null
+          created_at: string
+          dispatched_at: string | null
+          email_html: string
+          id: string
+          paid_unlocks: number | null
+          recipient_count: number | null
+          status: string
+          subject: string
+          trade_summary: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          candidate_ids: string[]
+          city_summary?: string | null
+          created_at?: string
+          dispatched_at?: string | null
+          email_html: string
+          id?: string
+          paid_unlocks?: number | null
+          recipient_count?: number | null
+          status?: string
+          subject: string
+          trade_summary?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          candidate_ids?: string[]
+          city_summary?: string | null
+          created_at?: string
+          dispatched_at?: string | null
+          email_html?: string
+          id?: string
+          paid_unlocks?: number | null
+          recipient_count?: number | null
+          status?: string
+          subject?: string
+          trade_summary?: string | null
+        }
+        Relationships: []
+      }
       blog_post_clients: {
         Row: {
           active: boolean | null
@@ -5252,6 +5300,8 @@ export type Database = {
           facebook_url: string | null
           first_eligible_at: string | null
           first_seen_at: string | null
+          flight_risk: string | null
+          flight_risk_proof: string | null
           freshness_score: number | null
           full_name: string | null
           hiring_recommendation: string | null
@@ -5299,6 +5349,8 @@ export type Database = {
           facebook_url?: string | null
           first_eligible_at?: string | null
           first_seen_at?: string | null
+          flight_risk?: string | null
+          flight_risk_proof?: string | null
           freshness_score?: number | null
           full_name?: string | null
           hiring_recommendation?: string | null
@@ -5346,6 +5398,8 @@ export type Database = {
           facebook_url?: string | null
           first_eligible_at?: string | null
           first_seen_at?: string | null
+          flight_risk?: string | null
+          flight_risk_proof?: string | null
           freshness_score?: number | null
           full_name?: string | null
           hiring_recommendation?: string | null
