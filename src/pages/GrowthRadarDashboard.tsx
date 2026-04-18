@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Download, Radar } from "lucide-react";
+import { RadarExportBar } from "@/components/shared/RadarExportBar";
 
 type Signal = {
   id: string;
@@ -83,10 +84,9 @@ const GrowthRadarDashboard = () => {
               </p>
             </div>
           </div>
-          <Button onClick={exportCSV} disabled={!filtered.length} variant="outline">
-            <Download className="h-4 w-4 mr-2" /> Export CSV
-          </Button>
         </div>
+
+        <RadarExportBar radar="growth" records={filtered as any} className="mb-4" />
 
         <Card className="p-4 mb-6">
           <div className="flex items-center gap-4">

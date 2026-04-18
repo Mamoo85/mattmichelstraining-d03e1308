@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import RevenueRecoveredLedger from "@/components/RevenueRecoveredLedger";
 import HiringHealthScore from "@/components/techalert/HiringHealthScore";
+import { RadarExportBar } from "@/components/shared/RadarExportBar";
 import DemoModeBadge, { isDemoMode, DEMO_MASTER_TOKEN } from "@/components/DemoModeBadge";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -725,10 +726,14 @@ export default function MyTechAlert() {
               <SelectItem value="contact">Has Contact</SelectItem>
             </SelectContent>
           </Select>
-          <Button size="sm" onClick={exportCSV} className="bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-black font-bold gap-1.5">
-            <Download className="h-3.5 w-3.5" /> Export
-          </Button>
         </div>
+
+        {/* Universal Export Bar — PDF / CSV / Email / SMS */}
+        <RadarExportBar
+          radar="talent"
+          records={filteredCandidates as any}
+          businessName={data?.client?.company_name}
+        />
 
         {/* Candidate List */}
         {filteredCandidates.length === 0 ? (
