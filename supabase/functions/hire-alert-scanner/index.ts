@@ -21,6 +21,25 @@ const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 // Healthcare role detection for NPI routing
 const HEALTHCARE_KEYWORDS = ["rn", "registered nurse", "lpn", "licensed practical nurse", "practical nurse", "cna", "certified nursing assistant", "nurse aide", "nursing assistant", "director of nursing", "don", "nursing director", "home health aide", "home health", "hha", "nurse", "nursing"];
 
+// Normalize a license type (and optional source hint) to a canonical trade slug.
+// Mirrors the logic used in the candidate-quality-scorer + the trade backfill migration.
+function classifyTradeForCandidate(licenseType?: string | null, source?: string | null): string | null {
+  if (!licenseType) {
+    if (source === "miosha") return "other_trade";
+    return null;
+  }
+  const lt = licenseType.toLowerCase();
+  if (lt.includes("boiler") || lt.includes("stationary")) return "boiler";
+  if (lt.includes("hvac") || lt.includes("refrigeration") || lt.includes("mechanical")) return "hvac";
+  if (lt.includes("plumb")) return "plumbing";
+  if (lt.includes("electric")) return "electrical";
+  if (lt.includes("nurse practitioner")) return "nurse_practitioner";
+  if (lt.includes("nurse") || lt.includes("lpn") || lt.includes("rn") || lt.includes("cna")) return "nursing";
+  if (lt.includes("home health") || lt.includes("aide")) return "home_health";
+  if (lt.includes("weld")) return "welding";
+  return "other_trade";
+}
+
 function isHealthcareRole(licenseType?: string): boolean {
   if (!licenseType) return false;
   const lower = licenseType.toLowerCase();
