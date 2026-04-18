@@ -1613,43 +1613,31 @@ serve(async (req) => {
     }
   }
 
-  // legacy sourceLabels kept for downstream parity
-  const sourceLabels = ranLabels;
-
-  for (let i = 0; i < results.length; i++) {
-    const result = results[i];
-    const label = sourceLabels[i];
-    if (result.status === "fulfilled") {
-      sourceCounts[label] = result.value.length;
-      for (const c of result.value) {
+  // Sonar runs only if we still have budget (it's slow — 30s window)
+  if (Date.now() - startedAt < WALL_CLOCK_BUDGET_MS - 30_000) {
+    const sonarMode = laraFallbackActivated ? "expanded" : "normal";
+    console.log(`[miosha-scraper] ⏳ Running Sonar (${sonarMode} mode)...`);
+    try {
+      const sonarCandidates = await scanViaSonar();
+      sourceCounts["Sonar"] = sonarCandidates.length;
+      for (const c of sonarCandidates) {
         const res = await upsertCandidate(sb, c);
         if (res === "new") newCount++;
         else if (res === "updated") updatedCount++;
         else errorCount++;
       }
-    } else {
-      sourceCounts[label] = 0;
-      console.error(`[miosha-scraper] ${label} FAILED:`, result.reason);
+      await sb.from("hire_alert_scanner_checkpoints").upsert({
+        source: "Sonar", last_completed_at: new Date().toISOString(),
+        last_count: sonarCandidates.length, status: "ok",
+      }, { onConflict: "source" });
+    } catch (e) {
+      sourceCounts["Sonar"] = 0;
+      console.error(`[miosha-scraper] Sonar FAILED:`, e);
     }
+  } else {
+    console.warn("[miosha-scraper] ⏰ Skipping Sonar — budget exhausted");
   }
-
-  // S8: Sonar runs LAST with its own dedicated timeout (not in parallel block)
-  // If LARA is down, Sonar runs with EXPANDED queries for license-specific searches
-  const sonarMode = laraFallbackActivated ? "expanded" : "normal";
-  console.log(`[miosha-scraper] ⏳ Running Sonar separately (${sonarMode} mode, dedicated 30s window)...`);
-  try {
-    const sonarCandidates = await scanViaSonar();
-    sourceCounts["Sonar"] = sonarCandidates.length;
-    for (const c of sonarCandidates) {
-      const res = await upsertCandidate(sb, c);
-      if (res === "new") newCount++;
-      else if (res === "updated") updatedCount++;
-      else errorCount++;
-    }
-  } catch (e) {
-    sourceCounts["Sonar"] = 0;
-    console.error(`[miosha-scraper] Sonar FAILED:`, e);
-  }
+  void skipped;
 
   // Log LARA health status and alert Matt if needed
   await logLaraHealthAndAlert(sb);
