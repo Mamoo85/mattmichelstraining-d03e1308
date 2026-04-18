@@ -607,6 +607,7 @@ export type Database = {
       ai_call_log: {
         Row: {
           caller: string
+          cost_usd: number | null
           created_at: string
           error_message: string | null
           id: string
@@ -618,6 +619,7 @@ export type Database = {
         }
         Insert: {
           caller: string
+          cost_usd?: number | null
           created_at?: string
           error_message?: string | null
           id?: string
@@ -629,6 +631,7 @@ export type Database = {
         }
         Update: {
           caller?: string
+          cost_usd?: number | null
           created_at?: string
           error_message?: string | null
           id?: string
@@ -3008,6 +3011,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      daily_metrics: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json | null
+          metric_date: string
+          metric_name: string
+          metric_value: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_date: string
+          metric_name: string
+          metric_value: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_date?: string
+          metric_name?: string
+          metric_value?: number
+        }
+        Relationships: []
       }
       daily_text_targets: {
         Row: {
@@ -6809,6 +6839,39 @@ export type Database = {
         }
         Relationships: []
       }
+      llm_response_cache: {
+        Row: {
+          created_at: string
+          expires_at: string
+          hit_count: number
+          id: string
+          last_hit_at: string
+          model: string
+          prompt_hash: string
+          response: Json
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          hit_count?: number
+          id?: string
+          last_hit_at?: string
+          model: string
+          prompt_hash: string
+          response: Json
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          hit_count?: number
+          id?: string
+          last_hit_at?: string
+          model?: string
+          prompt_hash?: string
+          response?: Json
+        }
+        Relationships: []
+      }
       local_seo_clients: {
         Row: {
           active: boolean | null
@@ -7961,6 +8024,30 @@ export type Database = {
           industry?: string | null
           phone?: string | null
           stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      pdl_negative_cache: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          lookup_key: string
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          lookup_key: string
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          lookup_key?: string
+          reason?: string | null
         }
         Relationships: []
       }
@@ -11082,6 +11169,72 @@ export type Database = {
           is_available?: boolean
           slot_date?: string
           start_time?: string
+        }
+        Relationships: []
+      }
+      scrape_errors: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          next_retry_at: string
+          resolved_at: string | null
+          retry_count: number
+          source: string
+          status_code: number | null
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          next_retry_at?: string
+          resolved_at?: string | null
+          retry_count?: number
+          source: string
+          status_code?: number | null
+          url: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          next_retry_at?: string
+          resolved_at?: string | null
+          retry_count?: number
+          source?: string
+          status_code?: number | null
+          url?: string
+        }
+        Relationships: []
+      }
+      scrape_raw_cache: {
+        Row: {
+          body: Json | null
+          created_at: string
+          expires_at: string
+          id: string
+          status_code: number | null
+          url: string
+          url_hash: string
+        }
+        Insert: {
+          body?: Json | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          status_code?: number | null
+          url: string
+          url_hash: string
+        }
+        Update: {
+          body?: Json | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          status_code?: number | null
+          url?: string
+          url_hash?: string
         }
         Relationships: []
       }
