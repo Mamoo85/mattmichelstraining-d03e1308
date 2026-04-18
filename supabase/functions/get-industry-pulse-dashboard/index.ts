@@ -26,18 +26,21 @@ serve(async (req) => {
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    // Validate client
+    // Validate client — both active subscribers AND one-time snapshot buyers (active=false) are allowed
     const { data: client } = await sb.from("industry_pulse_clients")
-      .select("id, company_name, target_industries, target_roles, active")
+      .select("id, company_name, target_industries, target_roles, active, stripe_subscription_id, created_at")
       .eq("dashboard_token", token)
-      .eq("active", true)
       .maybeSingle();
 
     if (!client) {
-      return new Response(JSON.stringify({ error: "Invalid or inactive token" }), {
+      return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 401, headers: { ...cors, "Content-Type": "application/json" },
       });
     }
+
+    // Snapshot buyers (no recurring subscription, active=false) get a frozen view from their purchase date.
+    // Subscribers get rolling 30-day intelligence.
+    const isSnapshot = client.active === false && !client.stripe_subscription_id;
 
     // Fetch signals from last 30 days, ordered by confidence
     const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -70,6 +73,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       company_name: client.company_name,
+      plan: isSnapshot ? "snapshot" : (client.stripe_subscription_id ? "subscription" : "trial"),
       stats: {
         total: filtered.length,
         high_confidence: highConf,
