@@ -3459,12 +3459,10 @@ serve(async (req) => {
     try {
       const sonarCandidates = await scanViaSonar();
       sourceCounts["Sonar"] = sonarCandidates.length;
-      for (const c of sonarCandidates) {
-        const res = await upsertCandidate(sb, c);
-        if (res === "new") newCount++;
-        else if (res === "updated") updatedCount++;
-        else errorCount++;
-      }
+      const sonarResult = await upsertBatch(sb, sonarCandidates);
+      newCount += sonarResult.new;
+      updatedCount += sonarResult.updated;
+      errorCount += sonarResult.error;
       await sb.from("hire_alert_scanner_checkpoints").upsert({
         source: "Sonar", last_completed_at: new Date().toISOString(),
         last_count: sonarCandidates.length, status: "ok",
