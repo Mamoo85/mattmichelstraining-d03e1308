@@ -21,13 +21,13 @@ serve(async (req) => {
     // Pulse signals from the last 48h with confidence >= 6
     const { data: signals, error } = await sb
       .from("industry_pulse_signals")
-      .select("id, employer_name, vertical, county, confidence")
+      .select("id, company_name, vertical, county, confidence")
       .gte("created_at", new Date(Date.now() - 48 * 3600_000).toISOString())
       .gte("confidence", 6)
-      .not("employer_name", "is", null)
+      .not("company_name", "is", null)
       .limit(200);
 
-    if (error) throw error;
+    if (error) throw new Error(error.message ?? JSON.stringify(error));
 
     let correlated = 0;
     let pairs = 0;
@@ -35,7 +35,7 @@ serve(async (req) => {
     for (const s of signals ?? []) {
       const { data, error: rpcErr } = await sb.rpc("correlate_pulse_to_candidates", {
         _signal_id: s.id,
-        _employer_name: s.employer_name,
+        _employer_name: s.company_name,
         _vertical: s.vertical ?? null,
         _county: s.county ?? null,
       });
@@ -49,8 +49,9 @@ serve(async (req) => {
       { headers: { ...cors, "Content-Type": "application/json" } },
     );
   } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : (typeof e === "object" ? JSON.stringify(e) : String(e));
     return new Response(
-      JSON.stringify({ ok: false, error: e instanceof Error ? e.message : String(e) }),
+      JSON.stringify({ ok: false, error: msg }),
       { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
     );
   }
