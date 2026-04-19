@@ -10,6 +10,7 @@ import {
   Mail, Phone, CheckCircle, XCircle, Clock, Play, FileText, Loader2,
 } from "lucide-react";
 import { EnrichmentHealthStrip } from "./EnrichmentHealthStrip";
+import { CandidateWorkbench } from "./CandidateWorkbench";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
