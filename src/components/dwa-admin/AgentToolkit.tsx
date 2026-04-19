@@ -68,7 +68,13 @@ export default function AgentToolkit() {
         body: { agent: def.key, payload: {} },
       });
       if (error) throw error;
-      if (data?.ok) {
+      const skipped = data?.raw?.status === "skipped" || data?.status === "skipped";
+      if (skipped) {
+        toast.info(`${def.label}: already ran today`, {
+          id: t,
+          description: data?.raw?.reason || data?.reason || "Try again tomorrow",
+        });
+      } else if (data?.ok) {
         toast.success(
           data.result_count != null
             ? `${def.label}: ${data.result_count} results`

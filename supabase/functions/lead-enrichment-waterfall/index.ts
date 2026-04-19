@@ -612,7 +612,7 @@ serve(async (req) => {
         .limit(batchLimit);
 
       if (!pending || pending.length === 0) {
-        return new Response(JSON.stringify({ ok: true, enriched: 0, message: "No pending prospects" }), {
+        return new Response(JSON.stringify({ ok: true, enriched: 0, total: 0, message: "No pending prospects" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 

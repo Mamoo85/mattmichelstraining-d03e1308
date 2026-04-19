@@ -27,13 +27,13 @@ export default function AdminAgencyOutreach() {
 
   const loadCandidates = async () => {
     setLoadingCands(true);
-    const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
     const { data } = await supabase
       .from("hire_alert_candidates")
       .select("id, name, role, county, score, created_at")
       .gte("created_at", since)
       .order("score", { ascending: false })
-      .limit(20);
+      .limit(50);
     setCandidates(data || []);
     setLoadingCands(false);
   };
@@ -41,8 +41,8 @@ export default function AdminAgencyOutreach() {
   const matchingCandidatesFor = (vertical: "industrial" | "healthcare") =>
     candidates.filter(c => {
       const r = (c.role || "").toLowerCase();
-      const isHC = /\b(rn|lpn|cna|nurse|home\s*health|aide)\b/.test(r);
-      const isInd = /\b(boiler|hvac|electric|plumb|stationary|engineer|machinist)\b/.test(r);
+      const isHC = /\b(rn|lpn|cna|nurse|nursing|aide|home\s*health|caregiver|medical|clinical|therapist)\b/.test(r);
+      const isInd = /\b(boiler|hvac|electric|plumb|stationary|engineer|machinist|operator|tech|welder|mechanic|fitter|pipefitter|fabricat|cnc|industrial)\b/.test(r);
       return vertical === "healthcare" ? isHC : isInd;
     });
 
@@ -151,7 +151,7 @@ export default function AdminAgencyOutreach() {
                 </div>
                 <div className="space-y-1.5 max-h-56 overflow-y-auto">
                   {matchingCandidatesFor(agency.vertical as any).length === 0 && (
-                    <p className="text-slate-500 text-xs text-center py-4">No matching candidates in last 24h. Run scanner first.</p>
+                    <p className="text-slate-500 text-xs text-center py-4">No matching candidates in last 7 days. Run scanner first.</p>
                   )}
                   {matchingCandidatesFor(agency.vertical as any).map(c => {
                     const isPicked = pickedFor[agency.name] === c.id;
