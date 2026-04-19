@@ -196,11 +196,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    const table = radar === "demand" ? "demand_radar_signals" : "industry_pulse_signals";
+    // Both Growth Radar and Demand Radar are powered by industry_pulse_signals.
+    // (The demand_radar_signals table was deprecated — same data, single source of truth.)
+    const table = "industry_pulse_signals";
     let q = supabase.from(table as any).select("*").order("confidence", { ascending: false }).limit(50);
     if (Array.isArray(ids) && ids.length) q = q.in("id", ids);
     const { data, error } = await q;
     if (error) throw error;
+    console.log(`[radar-export-pdf] radar=${radar} ids=${ids?.length ?? 0} rows=${(data || []).length}`);
 
     const pdf = buildSignalReport(radar, (data || []) as Signal[], business_name || "Your Team");
     return new Response(pdf, {
