@@ -3104,6 +3104,7 @@ serve(async (req) => {
         try {
           const wdSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
           // Activate contractor client
+          let contractorRoiToken: string | null = null;
           if (meta.contractor_id) {
             const { error: clientErr } = await wdSb.from("contractor_clients" as any)
               .update({
@@ -3114,6 +3115,13 @@ serve(async (req) => {
               })
               .eq("id", meta.contractor_id);
             if (clientErr) throw new Error(`contractor_clients update failed: ${clientErr.message}`);
+
+            // Fetch roi_token for portal link in welcome email
+            const { data: tokenRow } = await wdSb.from("contractor_clients" as any)
+              .select("roi_token")
+              .eq("id", meta.contractor_id)
+              .maybeSingle();
+            contractorRoiToken = (tokenRow as any)?.roi_token || null;
 
             // Assign contractor to the matching lead site (only if trade + city present)
             if (meta.trade && meta.city) {
@@ -3163,6 +3171,7 @@ serve(async (req) => {
       <p style="margin:0 0 16px">Hey ${meta.business_name || "there"} —</p>
       <p style="margin:0 0 16px"><strong style="color:#00d4ff">Every exclusive ${tradeLabel.toLowerCase()} lead in ${meta.city || "your area"} now goes directly to you.</strong> No sharing. No competing bids. You're the only contractor getting these.</p>
       <p style="margin:0 0 16px">When a lead comes in, you'll get an email + text immediately with their name, phone, and project. <strong>Call them fast — the first contractor to call wins the job.</strong></p>
+      ${contractorRoiToken ? `<div style="background:#0a2040;border:1px solid #00d4ff30;border-radius:8px;padding:16px;margin:0 0 20px;"><p style="margin:0 0 8px;color:#94a3b8;font-size:13px;">Your lead dashboard — see every lead, mark who you hired, dispute bad leads:</p><a href="https://detroitwebagent.com/my-contractor-leads?token=${contractorRoiToken}" style="color:#00d4ff;font-weight:700;font-size:14px;word-break:break-all;">detroitwebagent.com/my-contractor-leads?token=${contractorRoiToken}</a></div>` : ""}
       <p style="margin:0 0 24px">Questions? Text me at <a href="tel:+13139921219" style="color:#00d4ff">(313) 992-1219</a>.</p>
       <div style="border-top:1px solid #1e3a5f;padding-top:20px;display:flex;align-items:center;gap:12px;">
         <img src="https://www.detroitwebagent.com/images/dwa/matt.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt">

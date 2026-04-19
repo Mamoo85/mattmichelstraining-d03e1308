@@ -1666,3 +1666,6 @@ verify_jwt = false
 
 [functions.get-fielddesk-onboarding]
 verify_jwt = false
+
+[functions.contractor-leads-dashboard]
+verify_jwt = false
