@@ -187,7 +187,7 @@ export default function FreeLeadsQR() {
             textTransform: "uppercase",
             marginBottom: 20,
           }}>
-            {isHealthcare ? "Healthcare HireAlert" : "TechAlert"} · Free Preview
+            {isHealthcare ? "Healthcare Talent Radar" : "Talent Radar"} · Free Preview
           </div>
 
           <h1 style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.15, margin: "0 0 12px" }}>

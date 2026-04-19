@@ -264,7 +264,7 @@ export default function DJConleyDemo2() {
         <div style={{ background: "#0a1628", border: "1px solid #00d4ff30", borderRadius: 16, padding: "20px 24px" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 280 }}>
-              <p style={{ margin: "0 0 6px", fontSize: 11, color: "#00d4ff", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase" }}>⚡ TechAlert — $99/mo Add-On</p>
+              <p style={{ margin: "0 0 6px", fontSize: 11, color: "#00d4ff", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase" }}>⚡ Talent Radar — $99/mo Add-On</p>
               <p style={{ margin: "0 0 10px", fontWeight: 800, fontSize: 16 }}>Need to hire a licensed boiler op?<br />We know before anyone else.</p>
               <p style={{ margin: 0, fontSize: 13, color: "#94a3b8", lineHeight: 1.7 }}>
                 Michigan MIOSHA publishes every licensed boiler operator in the state. The day a new license is issued — a tech just became available — we alert you first. No other hiring tool watches this.
