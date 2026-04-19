@@ -161,7 +161,7 @@ export default function HireAlert() {
       />
 
       <DWAStickyNav
-        productName="TechAlert"
+        productName="Talent Radar"
         ctaLabel={betaFull ? "Join Waitlist — $149/mo →" : `Start for $${standalonePrice}/mo →`}
         ctaOnClick={scrollToCheckout}
         accentColor={ACCENT}
