@@ -33,12 +33,13 @@ interface HealthResult {
 async function pingAPI(
   name: string,
   fn: () => Promise<Response>,
+  additionalOkStatuses: number[] = [],
 ): Promise<HealthResult> {
   const start = Date.now();
   try {
     const res = await fn();
     const elapsed = Date.now() - start;
-    if (res.ok) {
+    if (res.ok || additionalOkStatuses.includes(res.status)) {
       return { api_name: name, status: "ok", response_ms: elapsed, error_message: null };
     }
     return { api_name: name, status: "degraded", response_ms: elapsed, error_message: `HTTP ${res.status}` };
@@ -75,9 +76,9 @@ Deno.serve(async (req) => {
         })
       ),
 
-      // 3. People Data Labs
+      // 3. People Data Labs (use enrich endpoint — search requires higher plan tier)
       pingAPI("People Data Labs", () =>
-        fetch("https://api.peopledatalabs.com/v5/person/search?size=1&query=location_metro%3Ddetroit", {
+        fetch("https://api.peopledatalabs.com/v5/person/enrich?name=John+Smith&location.region=michigan&pretty=false&min_likelihood=2", {
           headers: { "X-Api-Key": PDL_API_KEY },
           signal: AbortSignal.timeout(10_000),
         })
@@ -91,14 +92,14 @@ Deno.serve(async (req) => {
         })
       ),
 
-      // 5. Firecrawl
+      // 5. Firecrawl (HEAD probe — avoids burning scrape credits on health checks)
       pingAPI("Firecrawl", () =>
         fetch("https://api.firecrawl.dev/v1/scrape", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ url: "https://example.com", formats: ["markdown"], onlyMainContent: true }),
+          method: "HEAD",
+          headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}` },
           signal: AbortSignal.timeout(10_000),
-        })
+        }),
+        [401, 405] // 401=no body sent, 405=HEAD not supported — both mean server is alive
       ),
 
       // 6. Resend (verify domain — lightweight)
@@ -109,17 +110,18 @@ Deno.serve(async (req) => {
         })
       ),
 
-      // 7. Lovable AI Gateway
+      // 7. Lovable AI Gateway (POST-only; 405 on GET = server is alive)
       pingAPI("Lovable AI Gateway", () =>
         fetch("https://ai.gateway.lovable.dev/v1/models", {
           headers: { Authorization: `Bearer ${LOVABLE_API_KEY}` },
           signal: AbortSignal.timeout(10_000),
-        })
+        }),
+        [405] // Gateway is POST-only; 405 on GET = server is alive and responding
       ),
 
-      // 8. Michigan Open Data (Socrata)
+      // 8. Michigan Open Data (Socrata — midl-yni7 = professional licenses dataset)
       pingAPI("Michigan Open Data", () =>
-        fetch("https://data.michigan.gov/resource/az5f-bwij.json?$limit=1", {
+        fetch("https://data.michigan.gov/resource/midl-yni7.json?$limit=1", {
           signal: AbortSignal.timeout(10_000),
         })
       ),
