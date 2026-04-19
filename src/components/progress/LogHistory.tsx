@@ -131,7 +131,7 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
 
   const playVideo = async (video: LiftVideo) => {
     if (!isAdmin && video.status !== "approved") return;
-    if (video.video_path.includes('..')) throw new Error('Invalid video path');
+    if (video.video_path.includes('..')) throw new Error('Invalid path');
     const { data } = await supabase.storage.from("lift_videos").createSignedUrl(video.video_path, 300);
     if (data?.signedUrl) {
       setPlayingVideo({ url: data.signedUrl, exercise: "Lift Video" });

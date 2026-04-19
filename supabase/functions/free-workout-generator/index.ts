@@ -132,7 +132,17 @@ serve(async (req) => {
     let isAuthenticated = false;
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
-      if (token !== Deno.env.get("SUPABASE_ANON_KEY")) {
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+      if (anonKey) {
+        const actual = crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
+        const expected = crypto.subtle.digest("SHA-256", new TextEncoder().encode(anonKey));
+        const [actualDigest, expectedDigest] = await Promise.all([actual, expected]);
+        const isAnonKey = crypto.timingSafeEqual(new Uint8Array(actualDigest), new Uint8Array(expectedDigest));
+        if (!isAnonKey) {
+          const { data: userData } = await supabaseClient.auth.getUser(token);
+          if (userData?.user) isAuthenticated = true;
+        }
+      } else {
         const { data: userData } = await supabaseClient.auth.getUser(token);
         if (userData?.user) isAuthenticated = true;
       }

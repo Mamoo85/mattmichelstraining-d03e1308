@@ -143,6 +143,7 @@ const AdminExerciseLibrary = () => {
       // Delete old uploaded video if replacing
       if (editing.video_url.includes("exercise_videos/")) {
         const oldPath = editing.video_url.split("exercise_videos/")[1];
+        if (oldPath.includes('..')) throw new Error("Invalid path");
         if (oldPath) await supabase.storage.from("exercise_videos").remove([oldPath]);
       }
       const { error } = await supabase.storage.from("exercise_videos").upload(path, file, { contentType: file.type });

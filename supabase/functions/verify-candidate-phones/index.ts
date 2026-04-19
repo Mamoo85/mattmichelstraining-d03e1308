@@ -172,7 +172,7 @@ serve(async (req) => {
     .is("phone_verified_at", null)
     .neq("is_company_name", true)
     .order("score", { ascending: false })
-    .limit(100);
+    .limit(100); // safety cap
 
   if (e1 && e1.message?.includes("phone_verified_at")) {
     const { data: c2, error: e2 } = await sb
@@ -197,7 +197,7 @@ serve(async (req) => {
   }
 
   if (!candidates || candidates.length === 0) {
-    return new Response(JSON.stringify({ ok: true, verified: 0, message: "No unverified candidates with phones found" }), {
+    return new Response(JSON.stringify({ ok: true, verified: 0, message: "All phones already verified" }), {
       headers: { ...CORS, "Content-Type": "application/json" },
     });
   }
