@@ -64,7 +64,7 @@ export default function HealthcareHireAlert() {
       <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
         <div style={{ maxWidth: 520, textAlign: "center" }}>
           <div style={{ fontSize: 64, marginBottom: 24 }}>🏥</div>
-          <h1 style={{ color: "#fff", fontSize: 32, fontWeight: 800, margin: "0 0 12px" }}>Healthcare HireAlert is Live</h1>
+          <h1 style={{ color: "#fff", fontSize: 32, fontWeight: 800, margin: "0 0 12px" }}>Talent Radar Healthcare is Live</h1>
           <p style={{ color: ACCENT, fontSize: 18, fontWeight: 700, margin: "0 0 20px" }}>Your staffing advantage starts tomorrow at 7am.</p>
           <p style={{ color: "#94a3b8", fontSize: 15, lineHeight: 1.7, margin: "0 0 32px" }}>
             Check your email — we sent your welcome guide. Our Licensing Monitor scans professional licensing records every morning at 7am and texts you the moment a new CNA, RN, or LPN clears their license in your area.
@@ -150,7 +150,7 @@ export default function HealthcareHireAlert() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 24 }}>
             {[
               { icon: <DollarSign size={24} />, title: "Staffing Agency", cost: "$82/hr", detail: "Average CNA agency rate in Metro Detroit. One 8-hour shift = $656.", color: "#ef4444" },
-              { icon: <Users size={24} />, title: "Direct Hire via TechAlert", cost: "$22/hr", detail: "Average CNA direct-hire rate. Same shift = $176. You save $480/day.", color: "#10b981" },
+              { icon: <Users size={24} />, title: "Direct Hire via Talent Radar", cost: "$22/hr", detail: "Average CNA direct-hire rate. Same shift = $176. You save $480/day.", color: "#10b981" },
               { icon: <Zap size={24} />, title: "Annual Savings", cost: "$124K+", detail: "Replace just ONE agency CNA position and save $124,800/year.", color: ACCENT },
             ].map(({ icon, title, cost, detail, color }) => (
               <div key={title} style={{ background: BG, border: `1px solid ${color}25`, borderRadius: 16, padding: 28 }}>
