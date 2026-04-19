@@ -162,6 +162,17 @@ Deno.serve(async (req) => {
             </div>`
           );
           day14Sent++;
+
+          // Zero-alert flag — notify Matt so he can adjust roles/geo
+          if (total === 0) {
+            const roles = (client.target_roles || []).join(", ") || "none set";
+            await sendSMS(
+              ADMIN_PHONE,
+              TWILIO_PHONE_NUMBER,
+              `⚠️ TechAlert zero-alert: ${name} (${client.owner_email || "no email"}) — 14 days active, 0 candidates. Roles: ${roles}. Consider expanding trades or geo.`,
+              "hire_alert_zero_alert"
+            ).catch(() => {});
+          }
         }
       }
     }
