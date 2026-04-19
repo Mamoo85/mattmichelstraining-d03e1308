@@ -1567,6 +1567,9 @@ verify_jwt = false
 [functions.hire-alert-public-stats]
 verify_jwt = false
 
+[functions.hire-alert-client-drip]
+verify_jwt = false
+
 [functions.dwa-operator]
 verify_jwt = false
 
