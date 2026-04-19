@@ -325,17 +325,20 @@ export default function AdminHireAlertClients() {
     toast.success(`Opening as: ${data.company_name}`);
   };
 
+  const [candidatesTotal, setCandidatesTotal] = useState<number>(0);
   const load = async () => {
     setLoading(true);
-    const [{ data: cData }, { data: rData }, { data: candData }] = await Promise.all([
+    const [{ data: cData }, { data: rData }, { data: candData }, { count: candCount }] = await Promise.all([
       (supabase as any).from("hire_alert_clients").select("*").order("created_at", { ascending: false }),
-      (supabase as any).from("hire_alert_runs").select("*").order("run_at", { ascending: false }).limit(10),
+      (supabase as any).from("hire_alert_runs").select("*").order("run_at", { ascending: false }).limit(40),
       (supabase as any).from("hire_alert_candidates").select("id,full_name,license_type,city,source,status,first_seen_at,cross_referenced,data_completeness,phone,phone_verified_at")
         .order("first_seen_at", { ascending: false }).limit(20),
+      (supabase as any).from("hire_alert_candidates").select("id", { count: "exact", head: true }),
     ]);
     setClients(cData || []);
     setRuns(rData || []);
     setCandidates(candData || []);
+    setCandidatesTotal(candCount || 0);
     setLoading(false);
   };
 
@@ -356,12 +359,16 @@ export default function AdminHireAlertClients() {
   const activeClients = filteredClients.filter(c => c.active);
   const mrr = activeClients.reduce((s, c) => s + (c.plan === "bundle" ? 4900 : 9900), 0);
 
+  const [scanProfession, setScanProfession] = useState<string>("");
   const invokeScanner = async () => {
     setInvoking(true);
     try {
-      const { error } = await supabase.functions.invoke("hire-alert-scanner");
+      const body = scanProfession ? { profession: scanProfession } : {};
+      const { error } = await supabase.functions.invoke("hire-alert-scanner", { body });
       if (error) throw error;
-      toast.success("Scanner running — check email in ~60s");
+      toast.success(scanProfession
+        ? `Scanner targeting "${scanProfession}" — check email in ~60s`
+        : "Scanner running — check email in ~60s");
       setTimeout(load, 5000);
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Scanner failed");
@@ -593,6 +600,22 @@ export default function AdminHireAlertClients() {
           <Button variant="outline" size="sm" onClick={load} className="border-white/15 text-white/60 hover:text-white">
             <RefreshCw size={13} className="mr-1" /> Refresh
           </Button>
+          <select
+            value={scanProfession}
+            onChange={(e) => setScanProfession(e.target.value)}
+            className="text-xs bg-white/5 border border-white/15 text-white rounded px-2 py-1.5"
+            title="Target a specific profession (focuses scanner on the right sources)"
+          >
+            <option value="">All professions</option>
+            <option value="electrician">⚡ Electrician</option>
+            <option value="plumber">🔧 Plumber</option>
+            <option value="hvac">❄️ HVAC Technician</option>
+            <option value="boiler">🔥 Boiler Operator</option>
+            <option value="rn">🏥 Nurse RN</option>
+            <option value="lpn">🏥 Nurse LPN</option>
+            <option value="cna">🏥 CNA</option>
+            <option value="home_health">🏠 Home Health Aide</option>
+          </select>
           <Button size="sm" onClick={invokeScanner} disabled={invoking}
             className="bg-amber-500 hover:bg-amber-600 text-white">
             <Play size={13} className="mr-1" /> {invoking ? "Running..." : "Run Scanner"}
@@ -650,7 +673,7 @@ export default function AdminHireAlertClients() {
         {[
           { icon: Users, label: "Active Clients", value: activeClients.length, color: "#10b981" },
           { icon: DollarSign, label: "Monthly Revenue", value: `$${(mrr / 100).toLocaleString()}`, color: "#e8621a" },
-          { icon: Bell, label: "Candidates in DB", value: candidates.length >= 20 ? "20+" : candidates.length, color: "#f59e0b" },
+          { icon: Bell, label: "Candidates in DB", value: candidatesTotal.toLocaleString(), color: "#f59e0b" },
         ].map(({ icon: Icon, label, value, color }) => (
           <div key={label} className="rounded-2xl border p-4" style={{ background: `${color}0d`, borderColor: `${color}25` }}>
             <Icon size={16} style={{ color }} className="mb-2" />

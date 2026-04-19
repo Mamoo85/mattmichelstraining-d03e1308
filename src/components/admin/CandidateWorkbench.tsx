@@ -151,6 +151,13 @@ export function CandidateWorkbench() {
     else { toast.success("Flagged as company"); load(); }
   };
 
+  const unmarkCompany = async (c: Cand) => {
+    const { error } = await (supabase as any).from("hire_alert_candidates")
+      .update({ is_company_name: false }).eq("id", c.id);
+    if (error) toast.error(error.message);
+    else { toast.success("Unflagged — now visible as a person"); load(); }
+  };
+
   const remove = async (c: Cand) => {
     if (!confirm(`Delete "${c.full_name || c.name}" permanently?`)) return;
     const { error } = await (supabase as any).from("hire_alert_candidates").delete().eq("id", c.id);
@@ -256,7 +263,13 @@ export function CandidateWorkbench() {
                       </div>
                     )}
                     {c.is_company_name && (
-                      <Badge className="text-[9px] py-0 mt-1 bg-red-500/15 text-red-400 border-red-500/30">company</Badge>
+                      <button
+                        onClick={() => unmarkCompany(c)}
+                        title="Unmark as company — restore as a person"
+                        className="text-[9px] py-0 mt-1 px-1.5 rounded bg-red-500/15 text-red-400 border border-red-500/30 hover:bg-emerald-500/15 hover:text-emerald-400 hover:border-emerald-500/30 transition-colors"
+                      >
+                        company ✕ unmark
+                      </button>
                     )}
                   </td>
                   <td className="px-3 py-2 hidden md:table-cell">

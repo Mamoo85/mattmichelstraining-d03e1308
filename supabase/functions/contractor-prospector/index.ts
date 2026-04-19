@@ -901,6 +901,10 @@ serve(async (req) => {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     log("ERROR", { msg });
-    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // Return 200 so the UI shows the actual error message instead of "non-2xx" toast.
+    return new Response(
+      JSON.stringify({ ok: false, error: msg, found: 0, emailed: 0, deadLeadEmailed: 0, skipped: 0, scoutRejected: 0, cap: 0, dailySentBefore: 0, dailySentAfter: 0 }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 });
