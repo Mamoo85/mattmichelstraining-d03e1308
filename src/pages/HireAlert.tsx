@@ -260,7 +260,7 @@ export default function HireAlert() {
             <p style={{ margin: "0 0 4px", color: "#f97316", fontWeight: 700, fontSize: 12, letterSpacing: 2, textTransform: "uppercase" }}>Territory Lock</p>
             <h3 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 800 }}>Only 3 Per Trade Per County</h3>
             <p style={{ margin: 0, color: "#94a3b8", fontSize: 14, lineHeight: 1.6 }}>
-              We limit TechAlert to 3 companies per trade in each county. Once Wayne County HVAC is full, it's closed. Your competitors can't buy the same intelligence.
+              We limit Talent Radar to 3 companies per trade in each county. Once Wayne County HVAC is full, it's closed. Your competitors can't buy the same intelligence.
             </p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
