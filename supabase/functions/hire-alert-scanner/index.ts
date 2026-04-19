@@ -1376,7 +1376,8 @@ serve(async (req: Request) => {
         qualifications_summary: c.qualifications_summary || null,
         hiring_recommendation: c.hiring_recommendation || null,
         enrichment_status: c.enrichment_status || "pending",
-        first_seen_at: new Date().toISOString(),
+        // first_seen_at intentionally omitted: DB DEFAULT now() handles new rows;
+        // on conflict (license_number) existing rows keep their original timestamp.
         last_seen_at: new Date().toISOString(),
       })),
       { onConflict: "license_number", ignoreDuplicates: false }
