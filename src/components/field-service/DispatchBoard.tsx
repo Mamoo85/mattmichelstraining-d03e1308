@@ -20,7 +20,10 @@ interface DispatchJob {
   scheduled_date: string | null;
   scheduled_time: string | null;
   estimated_duration_minutes: number | null;
+  estimated_value: number | null;
+  completed_at: string | null;
   notes: string | null;
+  job_token: string | null;
   field_service_customers: { company_name: string; phone: string } | null;
   field_service_techs: { name: string } | null;
 }
@@ -43,13 +46,13 @@ const priorityBadge: Record<string, string> = {
 const TODAY = new Date().toISOString().split("T")[0];
 
 const DEMO_JOBS: DispatchJob[] = [
-  { id: "d1", title: "Emergency: High-Pressure Alarm", priority: "emergency", status: "open", scheduled_date: TODAY, scheduled_time: "07:30", estimated_duration_minutes: 120, notes: "Contact Dave Kotrba — plant manager. Gate code: 4521.", field_service_customers: { company_name: "Chrysler Sterling Heights Assembly", phone: "(586) 939-7000" }, field_service_techs: null },
-  { id: "d2", title: "Boiler Controls Upgrade Quote", priority: "normal", status: "open", scheduled_date: TODAY, scheduled_time: "14:00", estimated_duration_minutes: 60, notes: null, field_service_customers: { company_name: "Detroit Water & Sewage Dept.", phone: "(313) 267-8000" }, field_service_techs: null },
-  { id: "d3", title: "Annual Boiler Tune-Up", priority: "high", status: "assigned", scheduled_date: TODAY, scheduled_time: "08:00", estimated_duration_minutes: 240, notes: "Unit 2 — East Powerhouse. Ask for loading dock access.", field_service_customers: { company_name: "Ford Motor Co. — River Rouge", phone: "(313) 845-8540" }, field_service_techs: { name: "Mike Johnson" } },
-  { id: "d4", title: "Annual PM + CSD-1 Test", priority: "high", status: "assigned", scheduled_date: TODAY, scheduled_time: "10:30", estimated_duration_minutes: 180, notes: null, field_service_customers: { company_name: "Henry Ford Hospital", phone: "(313) 916-2600" }, field_service_techs: { name: "Dan Kowalski" } },
-  { id: "d5", title: "Combustion Analysis — Unit 3", priority: "normal", status: "en_route", scheduled_date: TODAY, scheduled_time: "09:00", estimated_duration_minutes: 90, notes: null, field_service_customers: { company_name: "DTE Energy Plant — Trenton", phone: "(734) 675-7100" }, field_service_techs: { name: "Tony Radke" } },
-  { id: "d6", title: "Burner Replacement — 200 HP", priority: "high", status: "on_site", scheduled_date: TODAY, scheduled_time: "07:00", estimated_duration_minutes: 480, notes: "North entrance only. Hardhat required.", field_service_customers: { company_name: "Stellantis Jefferson North Assembly", phone: "(313) 567-1800" }, field_service_techs: { name: "Chris Oller" } },
-  { id: "d7", title: "Pressure Vessel Inspection", priority: "normal", status: "completed", scheduled_date: TODAY, scheduled_time: "06:30", estimated_duration_minutes: 60, notes: null, field_service_customers: { company_name: "GM Technical Center — Warren", phone: "(586) 986-5000" }, field_service_techs: { name: "Chris Oller" } },
+  { id: "d1", title: "Emergency: High-Pressure Alarm", priority: "emergency", status: "open", scheduled_date: TODAY, scheduled_time: "07:30", estimated_duration_minutes: 120, estimated_value: 3200, completed_at: null, job_token: "demo1", notes: "Contact Dave Kotrba — plant manager. Gate code: 4521.", field_service_customers: { company_name: "Chrysler Sterling Heights Assembly", phone: "(586) 939-7000" }, field_service_techs: null },
+  { id: "d2", title: "Boiler Controls Upgrade Quote", priority: "normal", status: "open", scheduled_date: TODAY, scheduled_time: "14:00", estimated_duration_minutes: 60, estimated_value: 1500, completed_at: null, job_token: "demo2", notes: null, field_service_customers: { company_name: "Detroit Water & Sewage Dept.", phone: "(313) 267-8000" }, field_service_techs: null },
+  { id: "d3", title: "Annual Boiler Tune-Up", priority: "high", status: "assigned", scheduled_date: TODAY, scheduled_time: "08:00", estimated_duration_minutes: 240, estimated_value: 2400, completed_at: null, job_token: "demo3", notes: "Unit 2 — East Powerhouse. Ask for loading dock access.", field_service_customers: { company_name: "Ford Motor Co. — River Rouge", phone: "(313) 845-8540" }, field_service_techs: { name: "Mike Johnson" } },
+  { id: "d4", title: "Annual PM + CSD-1 Test", priority: "high", status: "assigned", scheduled_date: TODAY, scheduled_time: "10:30", estimated_duration_minutes: 180, estimated_value: 1800, completed_at: null, job_token: "demo4", notes: null, field_service_customers: { company_name: "Henry Ford Hospital", phone: "(313) 916-2600" }, field_service_techs: { name: "Dan Kowalski" } },
+  { id: "d5", title: "Combustion Analysis — Unit 3", priority: "normal", status: "en_route", scheduled_date: TODAY, scheduled_time: "09:00", estimated_duration_minutes: 90, estimated_value: 950, completed_at: null, job_token: "demo5", notes: null, field_service_customers: { company_name: "DTE Energy Plant — Trenton", phone: "(734) 675-7100" }, field_service_techs: { name: "Tony Radke" } },
+  { id: "d6", title: "Burner Replacement — 200 HP", priority: "high", status: "on_site", scheduled_date: TODAY, scheduled_time: "07:00", estimated_duration_minutes: 480, estimated_value: 5800, completed_at: null, job_token: "demo6", notes: "North entrance only. Hardhat required.", field_service_customers: { company_name: "Stellantis Jefferson North Assembly", phone: "(313) 567-1800" }, field_service_techs: { name: "Chris Oller" } },
+  { id: "d7", title: "Pressure Vessel Inspection", priority: "normal", status: "completed", scheduled_date: TODAY, scheduled_time: "06:30", estimated_duration_minutes: 60, estimated_value: 1200, completed_at: new Date().toISOString(), job_token: "demo7", notes: null, field_service_customers: { company_name: "GM Technical Center — Warren", phone: "(586) 986-5000" }, field_service_techs: { name: "Chris Oller" } },
 ];
 
 // Draggable job card
@@ -137,7 +140,7 @@ const DispatchBoard: React.FC<DispatchBoardProps> = ({ clientId }) => {
       const { data, error } = await supabase
         .from("field_service_jobs")
         .select(
-          "id, title, priority, status, scheduled_date, scheduled_time, estimated_duration_minutes, notes, field_service_customers(company_name, phone), field_service_techs:assigned_tech_id(name)"
+          "id, title, priority, status, scheduled_date, scheduled_time, estimated_duration_minutes, estimated_value, completed_at, job_token, notes, field_service_customers(company_name, phone), field_service_techs:assigned_tech_id(name)"
         )
         .eq("client_id", clientId)
         .order("scheduled_date", { ascending: true });
@@ -203,8 +206,37 @@ const DispatchBoard: React.FC<DispatchBoardProps> = ({ clientId }) => {
 
   const activeJob = activeId ? jobs.find((j) => j.id === activeId) : null;
 
+  // This Month revenue — sum estimated_value on completed jobs this calendar month
+  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+  const completedThisMonth = jobs.filter(
+    (j) => j.status === "completed" && j.completed_at && j.completed_at >= monthStart
+  );
+  const monthRevenue = completedThisMonth.reduce((sum, j) => sum + (j.estimated_value || 0), 0);
+
   return (
     <div className="min-h-screen bg-[#0a1628] text-white">
+      {/* Revenue strip */}
+      <div className="flex items-center gap-6 px-4 py-2.5 bg-[#051020] border-b border-[#1e3a5f]">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-white/40 uppercase tracking-wide">This Month</span>
+          <span className="text-[#00d4ff] font-black text-lg">
+            ${monthRevenue.toLocaleString()}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-white/40 uppercase tracking-wide">Jobs Done</span>
+          <span className="text-white font-bold text-base">{completedThisMonth.length}</span>
+        </div>
+        {completedThisMonth.length > 0 && monthRevenue > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-white/40 uppercase tracking-wide">Avg Ticket</span>
+            <span className="text-emerald-400 font-bold text-base">
+              ${Math.round(monthRevenue / completedThisMonth.length).toLocaleString()}
+            </span>
+          </div>
+        )}
+      </div>
+
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#1e3a5f]">
         <h2 className="text-white font-bold text-lg">Dispatch Board</h2>

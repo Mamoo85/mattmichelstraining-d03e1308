@@ -1660,3 +1660,9 @@ verify_jwt = false
 
 [functions.industry-pulse-client-drip]
 verify_jwt = false
+
+[functions.get-job-status]
+verify_jwt = false
+
+[functions.get-fielddesk-onboarding]
+verify_jwt = false

@@ -147,6 +147,7 @@ const FieldServiceManagement = lazyRetry(() => import("./pages/FieldServiceManag
 const FieldServiceDispatch = lazyRetry(() => import("./pages/FieldServiceDispatch"));
 const FieldServiceTechApp = lazyRetry(() => import("./pages/FieldServiceTechApp"));
 const FieldServiceIndustry = lazyRetry(() => import("./pages/FieldServiceIndustry"));
+const JobStatusPage = lazyRetry(() => import("./pages/JobStatusPage"));
 const LeadCapturePage = lazyRetry(() => import("./pages/LeadCapturePage"));
 const B2BLeads = lazyRetry(() => import("./pages/B2BLeads"));
 const IndustrialDatabase = lazyRetry(() => import("./pages/IndustrialDatabase"));
@@ -589,6 +590,7 @@ const App = () => (
                     <Route path="/field-service/dispatch" element={<FieldServiceDispatch />} />
                     <Route path="/field-service/tech" element={<FieldServiceTechApp />} />
                     <Route path="/field-service/:industry" element={<FieldServiceIndustry />} />
+                    <Route path="/job-status" element={<JobStatusPage />} />
                     <Route path="/leads/:slug" element={<LeadCapturePage />} />
                     <Route path="/b2b-leads" element={<B2BLeads />} />
                     <Route path="/industrial-database" element={<IndustrialDatabase />} />
