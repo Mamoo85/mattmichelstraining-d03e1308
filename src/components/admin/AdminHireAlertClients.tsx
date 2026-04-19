@@ -719,20 +719,40 @@ export default function AdminHireAlertClients() {
             </p>
             <div className="flex flex-wrap gap-1">
               {(() => {
-                const sources = Array.from(new Set(runs.map(r => r.source || "all")));
-                return ["all-sources", ...sources].map(s => (
-                  <button
-                    key={s}
-                    onClick={() => setRunSourceFilter(s === "all-sources" ? null : s)}
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors capitalize ${
-                      (runSourceFilter ?? "all-sources") === s
-                        ? "bg-amber-500 text-white"
-                        : "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/70"
-                    }`}
-                  >
-                    {s === "all-sources" ? `All (${runs.length})` : `${s} (${runs.filter(r => (r.source || "all") === s).length})`}
-                  </button>
-                ));
+                // Show every source we've ever seen a run for, but PRIORITIZE sources
+                // that actually returned data (candidates_found > 0). Sources stuck on 0
+                // get pushed to the end and dimmed so the user can spot them at a glance.
+                const sourceStats = new Map<string, { runs: number; found: number }>();
+                runs.forEach(r => {
+                  const key = r.source || "all";
+                  const cur = sourceStats.get(key) || { runs: 0, found: 0 };
+                  cur.runs += 1;
+                  cur.found += r.candidates_found || 0;
+                  sourceStats.set(key, cur);
+                });
+                const sorted = Array.from(sourceStats.entries()).sort((a, b) => b[1].found - a[1].found);
+                return ["all-sources", ...sorted.map(([s]) => s)].map(s => {
+                  const stats = sourceStats.get(s);
+                  const isDead = stats && stats.found === 0;
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => setRunSourceFilter(s === "all-sources" ? null : s)}
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors capitalize ${
+                        (runSourceFilter ?? "all-sources") === s
+                          ? "bg-amber-500 text-white"
+                          : isDead
+                            ? "bg-white/3 text-white/25 hover:bg-white/8"
+                            : "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/70"
+                      }`}
+                      title={stats ? `${stats.runs} runs · ${stats.found} candidates found` : undefined}
+                    >
+                      {s === "all-sources"
+                        ? `All (${runs.length})`
+                        : `${s} (${stats?.runs ?? 0}${stats?.found ? ` · ${stats.found}` : ""})`}
+                    </button>
+                  );
+                });
               })()}
             </div>
           </div>
