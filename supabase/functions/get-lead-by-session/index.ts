@@ -32,7 +32,7 @@ serve(async (req) => {
     // Look up purchase by Stripe session ID
     const { data: purchase, error: purchaseErr } = await sb
       .from("contractor_lead_purchases")
-      .select("lead_id, contractor_id, purchased_at")
+      .select("lead_id, contractor_id, created_at")
       .eq("stripe_session_id", session_id)
       .single();
 
@@ -91,7 +91,7 @@ serve(async (req) => {
           quality_score: l.quality_score ?? null,
           lead_tier: l.lead_tier ?? null,
         },
-        purchased_at: purchase.purchased_at,
+        purchased_at: purchase.created_at,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

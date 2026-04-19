@@ -49,16 +49,19 @@ serve(async (req) => {
 
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-    // Available leads in last 24h matching trade/city
+    // Available leads in last 24h matching trade/city via the joined site row
     let leadsQuery = sbAdmin.from("contractor_leads")
-      .select("id, name, phone, project_type, city, created_at, status")
+      .select("id, name, phone, project_type, created_at, status, contractor_lead_sites!inner(trade, city, state)")
       .eq("status", "available")
       .gte("created_at", twentyFourHoursAgo)
       .order("created_at", { ascending: false })
       .limit(10);
 
     if (contractor.trade) {
-      leadsQuery = leadsQuery.ilike("project_type", `%${contractor.trade}%`);
+      leadsQuery = leadsQuery.ilike("contractor_lead_sites.trade", `%${contractor.trade}%`);
+    }
+    if (contractor.city) {
+      leadsQuery = leadsQuery.ilike("contractor_lead_sites.city", `%${contractor.city}%`);
     }
 
     const { data: leads } = await leadsQuery;
@@ -75,7 +78,8 @@ serve(async (req) => {
         id: l.id,
         name: l.name,
         project_type: l.project_type,
-        city: l.city,
+        city: l.contractor_lead_sites?.city || null,
+        trade: l.contractor_lead_sites?.trade || null,
         created_at: l.created_at,
       })),
       missed_count: missedCount || 0,

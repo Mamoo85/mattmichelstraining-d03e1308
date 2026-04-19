@@ -43,7 +43,7 @@ serve(async (req) => {
       sb.from("contractor_lead_purchases")
         .select("id", { count: "exact", head: true })
         .eq("contractor_id", contractor.id)
-        .gte("purchased_at", sevenDaysAgo),
+        .gte("created_at", sevenDaysAgo),
       sb.from("dead_lead_contacts" as any)
         .select("id", { count: "exact", head: true })
         .eq("contractor_id", contractor.id)
