@@ -311,7 +311,7 @@ export default function AdminHireAlertClients() {
     const [{ data: cData }, { data: rData }, { data: candData }] = await Promise.all([
       (supabase as any).from("hire_alert_clients").select("*").order("created_at", { ascending: false }),
       (supabase as any).from("hire_alert_runs").select("*").order("run_at", { ascending: false }).limit(10),
-      (supabase as any).from("hire_alert_candidates").select("id,full_name,license_type,city,source,status,first_seen_at,cross_referenced,data_completeness,phone,phone_type,phone_verified_at")
+      (supabase as any).from("hire_alert_candidates").select("id,full_name,license_type,city,source,status,first_seen_at,cross_referenced,data_completeness,phone,phone_verified_at")
         .order("first_seen_at", { ascending: false }).limit(20),
     ]);
     setClients(cData || []);

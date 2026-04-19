@@ -1,0 +1,1 @@
+UPDATE public.hire_alert_clients SET tos_accepted_at = now(), tos_version = COALESCE(tos_version, '1.0') WHERE tos_accepted_at IS NULL;

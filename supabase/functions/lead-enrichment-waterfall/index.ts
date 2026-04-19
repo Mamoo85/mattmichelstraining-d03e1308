@@ -594,7 +594,9 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const body = await req.json();
+    // Tolerate empty/invalid body — admin "Run" buttons sometimes call with no payload.
+    let body: any = {};
+    try { body = await req.json(); } catch { body = {}; }
     const { prospect_id, domain, business_name, businessName, website, mode, industry, allow_email_guess } = body;
     // Default allow_email_guess to true — guess info@/contact@ as last resort
     const allowEmailGuessResolved = allow_email_guess !== false;
@@ -664,6 +666,19 @@ serve(async (req) => {
     }
 
     // ── SINGLE ENRICHMENT MODE (called by omni-lead-engine) ──
+    // Guard: if domain/website weren't supplied (e.g. admin button with no body), don't error — return stats.
+    if (!domain && !website) {
+      const [t, e, p, n] = await Promise.all([
+        sb.from("prospect_businesses").select("id", { head: true, count: "exact" }),
+        sb.from("prospect_businesses").select("id", { head: true, count: "exact" }).eq("enrichment_status", "enriched"),
+        sb.from("prospect_businesses").select("id", { head: true, count: "exact" }).eq("enrichment_status", "pending"),
+        sb.from("prospect_businesses").select("id", { head: true, count: "exact" }).eq("enrichment_status", "no_data"),
+      ]);
+      return new Response(JSON.stringify({
+        ok: true, message: "No prospects passed — returning stats. Pass {domain} or {website} to enrich a single record.",
+        total: t.count || 0, enriched: e.count || 0, pending: p.count || 0, no_data: n.count || 0,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     const targetDomain = domain || (website ? extractDomain(website) : "");
     if (!targetDomain) {
       return new Response(JSON.stringify({ error: "domain or website required" }), {
