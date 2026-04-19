@@ -3600,7 +3600,21 @@ export type Database = {
             foreignKeyName: "demand_radar_signal_actions_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "growth_radar_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demand_radar_signal_actions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
             referencedRelation: "industry_pulse_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demand_radar_signal_actions_signal_id_fkey"
+            columns: ["signal_id"]
+            isOneToOne: false
+            referencedRelation: "growth_radar_signals"
             referencedColumns: ["id"]
           },
           {
@@ -5647,105 +5661,6 @@ export type Database = {
           phone?: string | null
           send_count?: number | null
           stripe_customer_id?: string | null
-        }
-        Relationships: []
-      }
-      growth_radar_clients: {
-        Row: {
-          active: boolean
-          business_name: string | null
-          contact_name: string | null
-          county_filter: string[] | null
-          created_at: string
-          email: string
-          id: string
-          phone: string | null
-          stripe_customer_id: string | null
-          stripe_subscription_id: string | null
-          updated_at: string
-          vertical_filter: string[] | null
-        }
-        Insert: {
-          active?: boolean
-          business_name?: string | null
-          contact_name?: string | null
-          county_filter?: string[] | null
-          created_at?: string
-          email: string
-          id?: string
-          phone?: string | null
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
-          updated_at?: string
-          vertical_filter?: string[] | null
-        }
-        Update: {
-          active?: boolean
-          business_name?: string | null
-          contact_name?: string | null
-          county_filter?: string[] | null
-          created_at?: string
-          email?: string
-          id?: string
-          phone?: string | null
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
-          updated_at?: string
-          vertical_filter?: string[] | null
-        }
-        Relationships: []
-      }
-      growth_radar_signals: {
-        Row: {
-          company_name: string
-          confidence: number | null
-          county: string | null
-          created_at: string
-          detected_at: string
-          expires_at: string | null
-          id: string
-          metadata: Json | null
-          predicted_needs: string[] | null
-          recommended_pitch: string | null
-          signal_type: string
-          source: string
-          source_url: string | null
-          value_usd: number | null
-          vertical: string | null
-        }
-        Insert: {
-          company_name: string
-          confidence?: number | null
-          county?: string | null
-          created_at?: string
-          detected_at?: string
-          expires_at?: string | null
-          id?: string
-          metadata?: Json | null
-          predicted_needs?: string[] | null
-          recommended_pitch?: string | null
-          signal_type: string
-          source: string
-          source_url?: string | null
-          value_usd?: number | null
-          vertical?: string | null
-        }
-        Update: {
-          company_name?: string
-          confidence?: number | null
-          county?: string | null
-          created_at?: string
-          detected_at?: string
-          expires_at?: string | null
-          id?: string
-          metadata?: Json | null
-          predicted_needs?: string[] | null
-          recommended_pitch?: string | null
-          signal_type?: string
-          source?: string
-          source_url?: string | null
-          value_usd?: number | null
-          vertical?: string | null
         }
         Relationships: []
       }
@@ -15570,6 +15485,105 @@ export type Database = {
           slug?: string | null
           template_key?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      growth_radar_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string | null
+          contact_name: string | null
+          county_filter: string[] | null
+          created_at: string | null
+          email: string | null
+          id: string | null
+          phone: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string | null
+          vertical_filter: string[] | null
+        }
+        Insert: {
+          active?: never
+          business_name?: string | null
+          contact_name?: string | null
+          county_filter?: string[] | null
+          created_at?: string | null
+          email?: string | null
+          id?: string | null
+          phone?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          vertical_filter?: never
+        }
+        Update: {
+          active?: never
+          business_name?: string | null
+          contact_name?: string | null
+          county_filter?: string[] | null
+          created_at?: string | null
+          email?: string | null
+          id?: string | null
+          phone?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          vertical_filter?: never
+        }
+        Relationships: []
+      }
+      growth_radar_signals: {
+        Row: {
+          company_name: string | null
+          confidence: number | null
+          county: string | null
+          created_at: string | null
+          detected_at: string | null
+          expires_at: string | null
+          id: string | null
+          metadata: Json | null
+          predicted_needs: string[] | null
+          recommended_pitch: string | null
+          signal_type: string | null
+          source: string | null
+          source_url: string | null
+          value_usd: number | null
+          vertical: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          confidence?: number | null
+          county?: string | null
+          created_at?: string | null
+          detected_at?: string | null
+          expires_at?: never
+          id?: string | null
+          metadata?: never
+          predicted_needs?: string[] | null
+          recommended_pitch?: string | null
+          signal_type?: string | null
+          source?: never
+          source_url?: never
+          value_usd?: never
+          vertical?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          confidence?: number | null
+          county?: string | null
+          created_at?: string | null
+          detected_at?: string | null
+          expires_at?: never
+          id?: string | null
+          metadata?: never
+          predicted_needs?: string[] | null
+          recommended_pitch?: string | null
+          signal_type?: string | null
+          source?: never
+          source_url?: never
+          value_usd?: never
+          vertical?: string | null
         }
         Relationships: []
       }

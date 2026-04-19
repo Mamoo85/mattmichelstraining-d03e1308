@@ -371,7 +371,7 @@ export default function HireAlert() {
         <WallOfLove testimonials={TESTIMONIALS} accentColor={ACCENT} theme="dark" title="What Talent Radar Partners Say" />
       </div>
 
-      {/* Competitive Comparison — TechAlert vs Alternatives */}
+      {/* Competitive Comparison — Talent Radar vs Alternatives */}
       <section style={{ maxWidth: 900, margin: "0 auto", padding: "80px 24px 60px" }}>
         <h2 style={{ textAlign: "center", fontSize: 28, fontWeight: 800, marginBottom: 12 }}>
           What Hiring <span style={{ color: ACCENT }}>Actually</span> Costs

@@ -89,7 +89,7 @@ export default function HireAlertTrial() {
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <p style={{ color: "#00d4ff", fontSize: 11, fontWeight: 800, letterSpacing: 3, textTransform: "uppercase", margin: "0 0 12px" }}>
-            ⚡ TechAlert by Detroit Web Agency
+            ⚡ Talent Radar by Detroit Web Agency
           </p>
           <h1 style={{ color: "#fff", fontSize: 32, fontWeight: 800, margin: "0 0 12px", lineHeight: 1.2 }}>
             3-Day Free Trial
