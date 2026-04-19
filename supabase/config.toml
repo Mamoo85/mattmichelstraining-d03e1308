@@ -1669,3 +1669,12 @@ verify_jwt = false
 
 [functions.contractor-leads-dashboard]
 verify_jwt = false
+
+[functions.endpoint-drift-detector]
+verify_jwt = false
+
+[functions.service-health-monitor]
+verify_jwt = false
+
+[functions.lead-enrichment-waterfall]
+verify_jwt = false
