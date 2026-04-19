@@ -306,6 +306,24 @@ export default function AdminHireAlertClients() {
   const [invoking, setInvoking] = useState(false);
   const [sectorFilter, setSectorFilter] = useState<"all" | "trades" | "healthcare">("all");
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [tab, setTab] = useState<"clients" | "workbench">("clients");
+
+  const openClientDemo = async () => {
+    // Pick first active client with a dashboard_token; fall back to any
+    const { data } = await (supabase as any)
+      .from("hire_alert_clients")
+      .select("dashboard_token, company_name, active")
+      .not("dashboard_token", "is", null)
+      .order("active", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!data?.dashboard_token) {
+      toast.error("No client with a dashboard_token. Add a client first.");
+      return;
+    }
+    window.open(`/talent-radar/dashboard?token=${data.dashboard_token}`, "_blank");
+    toast.success(`Opening as: ${data.company_name}`);
+  };
 
   const load = async () => {
     setLoading(true);
