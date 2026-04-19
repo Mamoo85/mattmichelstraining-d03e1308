@@ -134,6 +134,7 @@ const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
 const GrowthRadarDashboard = lazyRetry(() => import("./pages/GrowthRadarDashboard"));
 const ContractorROIReport = lazyRetry(() => import("./pages/ContractorROIReport"));
+const MyContractorLeads = lazyRetry(() => import("./pages/MyContractorLeads"));
 const DeadLeadStats = lazyRetry(() => import("./pages/DeadLeadStats"));
 const MyTechAlert = lazyRetry(() => import("./pages/MyTechAlert"));
 const DeadLeadIntake = lazyRetry(() => import("./pages/DeadLeadIntake"));
@@ -576,6 +577,7 @@ const App = () => (
                     <Route path="/sponsor" element={<NewsletterSponsor />} />
                     <Route path="/contractor-leads" element={<ContractorLeads />} />
                     <Route path="/roi" element={<ContractorROIReport />} />
+                    <Route path="/my-contractor-leads" element={<MyContractorLeads />} />
                     <Route path="/dead-lead-stats" element={<DeadLeadStats />} />
                     <Route path="/my-techalert" element={<Navigate to="/talent-radar/dashboard" replace />} />
                     <Route path="/dead-lead-intake" element={<DeadLeadIntake />} />
