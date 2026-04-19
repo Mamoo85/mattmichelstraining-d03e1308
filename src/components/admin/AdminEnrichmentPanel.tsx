@@ -60,7 +60,7 @@ export default function AdminEnrichmentPanel() {
       setBatchRunning(false);
       toast({
         title: "Batch enrichment complete",
-        description: `Enriched ${data.enriched} of ${data.total} prospects`,
+        description: `Enriched ${data?.enriched ?? 0} of ${data?.total ?? 0} prospects`,
       });
       queryClient.invalidateQueries({ queryKey: ["enrichment-stats"] });
       queryClient.invalidateQueries({ queryKey: ["recent-enriched"] });

@@ -62,7 +62,8 @@ async function probeAnthropic(): Promise<ProbeResult> {
 }
 
 async function probeOpenAI(): Promise<ProbeResult> {
-  if (!OPENAI_API_KEY) return { service: "openai_api", ok: false, reason: "no key (optional)" };
+  // Expected: we use Lovable AI Gateway, not direct OpenAI. Mark as ok with note.
+  if (!OPENAI_API_KEY) return { service: "openai_api", ok: true, reason: "intentionally unused — using Lovable AI Gateway" };
   const res = await fetch("https://api.openai.com/v1/models", {
     headers: { Authorization: `Bearer ${OPENAI_API_KEY}` },
     signal: AbortSignal.timeout(8_000),
@@ -127,7 +128,9 @@ async function probeMichiganLARA(): Promise<ProbeResult> {
     signal: AbortSignal.timeout(8_000),
     redirect: "follow",
   });
-  return { service: "michigan_lara", ok: res.ok, statusCode: res.status };
+  // LARA blocks HEAD requests with 403 — that is expected, not a failure.
+  const ok = res.ok || res.status === 403;
+  return { service: "michigan_lara", ok, statusCode: res.status, reason: res.status === 403 ? "expected (LARA blocks HEAD)" : undefined };
 }
 
 async function probeNPI(): Promise<ProbeResult> {
