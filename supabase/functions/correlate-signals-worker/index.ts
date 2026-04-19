@@ -34,10 +34,7 @@ serve(async (req) => {
 
     for (const s of signals ?? []) {
       const { data, error: rpcErr } = await sb.rpc("correlate_pulse_to_candidates", {
-        _signal_id: s.id,
-        _employer_name: s.company_name,
-        _vertical: s.vertical ?? null,
-        _county: s.county ?? null,
+        p_pulse_id: s.id,
       });
       if (rpcErr) continue;
       correlated++;
