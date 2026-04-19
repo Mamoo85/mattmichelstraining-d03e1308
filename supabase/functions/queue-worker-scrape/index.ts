@@ -122,6 +122,17 @@ serve(async (req) => {
           },
           { onConflict: "source" }
         );
+      // Log a transparent run row so admin can see this source had no worker
+      await sb.from("hire_alert_runs").insert({
+        run_at: new Date().toISOString(),
+        source,
+        candidates_found: 0,
+        new_candidates: 0,
+        alerts_sent: 0,
+        errors: 0,
+        status: "skipped_no_worker",
+        completed_at: new Date().toISOString(),
+      } as any);
       processed.push({ source, action: "skipped_no_worker" });
       continue;
     }
