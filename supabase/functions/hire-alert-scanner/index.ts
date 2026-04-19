@@ -1332,7 +1332,7 @@ serve(async (req: Request) => {
   // Upsert all new candidates into DB
   const allScored = [...enrichBatch, ...pendingBatch];
   if (allScored.length) {
-    const { data: insertedRows, error: insertError } = await sb.from("hire_alert_candidates").insert(
+    const { data: insertedRows, error: insertError } = await sb.from("hire_alert_candidates").upsert(
       allScored.map((c) => ({
         name: c.full_name,
         full_name: c.full_name,
@@ -1369,13 +1369,14 @@ serve(async (req: Request) => {
         enrichment_status: c.enrichment_status || "pending",
         first_seen_at: new Date().toISOString(),
         last_seen_at: new Date().toISOString(),
-      }))
+      })),
+      { onConflict: "license_number", ignoreDuplicates: false }
     ).select("id, full_name");
 
     if (insertError) {
-      console.error("[hire-alert-scanner] DB INSERT ERROR:", insertError.message, insertError.details);
+      console.error("[hire-alert-scanner] DB UPSERT ERROR:", insertError.message, insertError.details);
     } else {
-      console.log(`[hire-alert-scanner] Inserted ${insertedRows?.length || 0} candidates into DB`);
+      console.log(`[hire-alert-scanner] Upserted ${insertedRows?.length || 0} candidates into DB`);
     }
 
     if (insertedRows) {
