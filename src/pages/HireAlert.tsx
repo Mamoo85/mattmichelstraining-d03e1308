@@ -352,7 +352,7 @@ export default function HireAlert() {
 
       {/* Wall of Love */}
       <div style={{ background: "#0d2137" }}>
-        <WallOfLove testimonials={TESTIMONIALS} accentColor={ACCENT} theme="dark" title="What TechAlert Partners Say" />
+        <WallOfLove testimonials={TESTIMONIALS} accentColor={ACCENT} theme="dark" title="What Talent Radar Partners Say" />
       </div>
 
       {/* Competitive Comparison — TechAlert vs Alternatives */}
