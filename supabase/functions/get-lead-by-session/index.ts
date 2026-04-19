@@ -32,7 +32,7 @@ serve(async (req) => {
     // Look up purchase by Stripe session ID
     const { data: purchase, error: purchaseErr } = await sb
       .from("contractor_lead_purchases")
-      .select("lead_id, contractor_id, purchased_at")
+      .select("lead_id, contractor_id, created_at")
       .eq("stripe_session_id", session_id)
       .single();
 
