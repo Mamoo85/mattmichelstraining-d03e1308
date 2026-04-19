@@ -1403,9 +1403,9 @@ serve(async (req: Request) => {
     const msg = results[1].reason instanceof Error ? results[1].reason.message : String(results[1].reason);
     console.error("[hire-alert-scanner] scanJobBoards failed:", msg);
     sourceErrors.jobBoards = msg.slice(0, 300);
-  } else if (jobBoardCandidates.length === 0) {
-    sourceErrors.jobBoards = "0 results — silent failure suspected";
   }
+  // Note: jobBoards returning 0 is EXPECTED (Sonar can no longer reliably scrape Indeed/LinkedIn
+  // since the LinkedIn lawsuit). It's an advisory source — not an error. Do not flag as failure.
 
   // Stamp per-source diagnostics on the run row immediately so the audit dashboard
   // shows WHICH source went silent — not just "0 candidates".
