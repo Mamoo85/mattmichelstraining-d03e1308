@@ -593,11 +593,30 @@ async function runWaterfall(domain: string, businessName: string, options: { web
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  // ── HEALTH PROBE — fast path for AdminServiceResilience ──
+  const probeUrl = new URL(req.url);
+  if (probeUrl.searchParams.get("probe") === "1") {
+    return new Response(JSON.stringify({ ok: true, name: "lead-enrichment-waterfall" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     // Tolerate empty/invalid body — admin "Run" buttons sometimes call with no payload.
     let body: any = {};
     try { body = await req.json(); } catch { body = {}; }
-    const { prospect_id, domain, business_name, businessName, website, mode, industry, allow_email_guess } = body;
+    const { prospect_id, domain, business_name, businessName, website, mode, industry, allow_email_guess, prospects } = body;
+
+    // ── INPUT GUARD — explicit "prospects array" mode (Fix 2) ──
+    // If caller passed { prospects: [...] } (or undefined), respond clearly.
+    if ("prospects" in body && !Array.isArray(prospects)) {
+      return new Response(JSON.stringify({
+        ok: false,
+        error: "prospects must be an array",
+        hint: "Use { mode: 'batch', limit: N } or { prospect_id, website, business_name } for single enrichment.",
+        received_type: typeof prospects,
+      }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     // Default allow_email_guess to true — guess info@/contact@ as last resort
     const allowEmailGuessResolved = allow_email_guess !== false;
     const resolvedBusinessName = business_name || businessName || "";
