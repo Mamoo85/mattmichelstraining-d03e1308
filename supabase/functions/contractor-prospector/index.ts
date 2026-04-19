@@ -873,9 +873,9 @@ serve(async (req) => {
         // Throttle between sends
         await new Promise(r => setTimeout(r, 500));
 
-        if (totalEmailed >= maxToSend) break;
+        if (totalEmailed >= maxToSend || isTimedOut()) break;
       }
-      if (totalEmailed >= maxToSend) break;
+      if (totalEmailed >= maxToSend || isTimedOut()) break;
     }
 
     return new Response(
