@@ -1132,9 +1132,12 @@ serve(async (req) => {
     <p style="color:#475569;font-size:12px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p>
   </div>
 </div></body></html>`);
+              const tierLabel = meta.tier === "enterprise" ? "$499/mo Enterprise"
+                : meta.tier === "snapshot" ? "$99 One-Time Snapshot"
+                : "$199/mo Weekly";
               await notifyMatt(
-                `💰 New Demand Radar Client — ${meta.company_name || email} ($299/mo)`,
-                `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Industries: ${targetIndustries.join(", ")}</p>`
+                `💰 New Demand Radar Client — ${meta.company_name || email} (${tierLabel})`,
+                `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Tier: ${tierLabel}<br>Industries: ${targetIndustries.join(", ")}<br>Dashboard: <a href="${dashLink}">${dashLink}</a></p>`
               );
             }
             // Welcome SMS if phone provided

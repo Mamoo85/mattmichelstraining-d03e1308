@@ -6447,6 +6447,54 @@ export type Database = {
         }
         Relationships: []
       }
+      industry_pulse_client_actions: {
+        Row: {
+          action: string
+          client_id: string
+          company_name: string
+          created_at: string
+          deal_value: number | null
+          id: string
+          note: string | null
+          signal_id: string
+        }
+        Insert: {
+          action: string
+          client_id: string
+          company_name: string
+          created_at?: string
+          deal_value?: number | null
+          id?: string
+          note?: string | null
+          signal_id: string
+        }
+        Update: {
+          action?: string
+          client_id?: string
+          company_name?: string
+          created_at?: string
+          deal_value?: number | null
+          id?: string
+          note?: string | null
+          signal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "industry_pulse_client_actions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "growth_radar_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "industry_pulse_client_actions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "industry_pulse_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       industry_pulse_clients: {
         Row: {
           active: boolean | null
