@@ -360,6 +360,7 @@ export default function AdminHireAlertClients() {
   const mrr = activeClients.reduce((s, c) => s + (c.plan === "bundle" ? 4900 : 9900), 0);
 
   const [scanProfession, setScanProfession] = useState<string>("");
+  const [runSourceFilter, setRunSourceFilter] = useState<string | null>(null);
   const invokeScanner = async () => {
     setInvoking(true);
     try {
