@@ -15191,7 +15191,15 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      delete_job: {
+        Args: { message_id: number; queue_name: string }
+        Returns: boolean
+      }
       enqueue_email: {
+        Args: { payload: Json; queue_name: string }
+        Returns: number
+      }
+      enqueue_job: {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
@@ -15229,6 +15237,14 @@ export type Database = {
           is_public_profile: boolean
           random_alias: string
           user_id: string
+        }[]
+      }
+      get_queue_status: {
+        Args: never
+        Returns: {
+          depth: number
+          oldest_msg: string
+          queue_name: string
         }[]
       }
       get_tenant_id: { Args: { _user_id: string }; Returns: string }
@@ -15269,6 +15285,14 @@ export type Database = {
         Returns: number
       }
       read_email_batch: {
+        Args: { batch_size: number; queue_name: string; vt: number }
+        Returns: {
+          message: Json
+          msg_id: number
+          read_ct: number
+        }[]
+      }
+      read_job_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
           message: Json
