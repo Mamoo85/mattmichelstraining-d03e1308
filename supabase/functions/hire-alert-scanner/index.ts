@@ -29,7 +29,16 @@ const APIFY_ACTORS = {
 
 const APIFY_INPUTS = {
   miosha: {
-    licenses: ["boiler", "electrical", "plumbing", "hvac", "mechanical"],
+    licenses: [
+      "boiler", "electrical", "plumbing", "hvac", "mechanical",
+      "cosmetology", "esthetics", "barbering",
+      "real estate broker", "real estate salesperson",
+      "insurance agent", "insurance adjuster",
+      "pharmacy technician", "pharmacist",
+      "respiratory therapist", "physical therapist", "occupational therapist",
+      "speech language pathologist", "audiologist",
+      "professional engineer", "architect",
+    ],
     state: "MI",
   },
   indeed: {
