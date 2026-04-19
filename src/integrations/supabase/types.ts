@@ -5927,6 +5927,7 @@ export type Database = {
           license_type: string | null
           linkedin_url: string | null
           lng: number | null
+          metro: string | null
           name: string
           password_compromised: boolean | null
           personal_email_primary: boolean | null
@@ -5990,6 +5991,7 @@ export type Database = {
           license_type?: string | null
           linkedin_url?: string | null
           lng?: number | null
+          metro?: string | null
           name: string
           password_compromised?: boolean | null
           personal_email_primary?: boolean | null
@@ -6053,6 +6055,7 @@ export type Database = {
           license_type?: string | null
           linkedin_url?: string | null
           lng?: number | null
+          metro?: string | null
           name?: string
           password_compromised?: boolean | null
           personal_email_primary?: boolean | null
@@ -6151,8 +6154,11 @@ export type Database = {
           referral_code: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
+          target_metro: string | null
           target_roles: string[] | null
+          target_state: string | null
           target_zip_codes: string[] | null
+          target_zip_prefixes: string[] | null
           territory_counties: string[] | null
           tos_accepted_at: string | null
           tos_version: string | null
@@ -6179,8 +6185,11 @@ export type Database = {
           referral_code?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          target_metro?: string | null
           target_roles?: string[] | null
+          target_state?: string | null
           target_zip_codes?: string[] | null
+          target_zip_prefixes?: string[] | null
           territory_counties?: string[] | null
           tos_accepted_at?: string | null
           tos_version?: string | null
@@ -6207,8 +6216,11 @@ export type Database = {
           referral_code?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          target_metro?: string | null
           target_roles?: string[] | null
+          target_state?: string | null
           target_zip_codes?: string[] | null
+          target_zip_prefixes?: string[] | null
           territory_counties?: string[] | null
           tos_accepted_at?: string | null
           tos_version?: string | null

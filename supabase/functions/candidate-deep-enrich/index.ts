@@ -82,7 +82,8 @@ async function stageNPI(c: CandidateRow): Promise<Record<string, unknown>> {
     const [first, ...rest] = (c.full_name || c.name).split(/\s+/);
     const last = rest.pop() || "";
     if (!first || !last) return {};
-    const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&first_name=${encodeURIComponent(first)}&last_name=${encodeURIComponent(last)}&state=MI&limit=5`;
+    const state = ((c as any).state || "MI").toString().toUpperCase();
+    const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&first_name=${encodeURIComponent(first)}&last_name=${encodeURIComponent(last)}&state=${state}&limit=5`;
     const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
     if (!res.ok) return {};
     const data = await res.json();

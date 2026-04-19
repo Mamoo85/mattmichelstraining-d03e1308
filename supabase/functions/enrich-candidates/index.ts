@@ -135,7 +135,7 @@ async function sonarEnrichB2B(businessName: string, ownerName: string | null, ci
 // ─────────────────────────────────────────────────────────────
 // NPI Registry — free, healthcare candidates only
 // ─────────────────────────────────────────────────────────────
-async function npiLookup(name: string, city: string | null): Promise<{
+async function npiLookup(name: string, city: string | null, state: string | null = "MI"): Promise<{
   npi_number: string | null;
   phone: string | null;
   taxonomy: string | null;
@@ -146,7 +146,8 @@ async function npiLookup(name: string, city: string | null): Promise<{
     const first = parts[0];
     const last  = parts[parts.length - 1];
     const cityQ = city ? `&city=${encodeURIComponent(city)}` : "";
-    const url = `https://npiregistry.cms.hhs.gov/api/?first_name=${encodeURIComponent(first)}&last_name=${encodeURIComponent(last)}&state=MI${cityQ}&enumeration_type=NPI-1&limit=1&version=2.1`;
+    const st = (state || "MI").toUpperCase();
+    const url = `https://npiregistry.cms.hhs.gov/api/?first_name=${encodeURIComponent(first)}&last_name=${encodeURIComponent(last)}&state=${st}${cityQ}&enumeration_type=NPI-1&limit=1&version=2.1`;
     const res = await fetch(url, { signal: AbortSignal.timeout(8_000) });
     if (!res.ok) return null;
     const data = await res.json();
@@ -157,7 +158,7 @@ async function npiLookup(name: string, city: string | null): Promise<{
       phone:            r.basic?.authorized_official_telephone_number || null,
       taxonomy:         r.taxonomies?.[0]?.desc || null,
       practice_address: r.addresses?.[0]
-        ? `${r.addresses[0].address_1}, ${r.addresses[0].city}, MI`
+        ? `${r.addresses[0].address_1}, ${r.addresses[0].city}, ${st}`
         : null,
     };
   } catch { return null; }
