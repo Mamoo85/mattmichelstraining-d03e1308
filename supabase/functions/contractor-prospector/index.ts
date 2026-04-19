@@ -519,6 +519,10 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response('ok', { headers: corsHeaders });
   }
+  // Hard timeout wrapper — return partial results instead of CPU-exceeded crash
+  const startedAt = Date.now();
+  const SOFT_TIMEOUT_MS = 50_000;
+  const isTimedOut = () => Date.now() - startedAt > SOFT_TIMEOUT_MS;
   try {
     const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY")!;
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
@@ -869,14 +873,17 @@ serve(async (req) => {
         // Throttle between sends
         await new Promise(r => setTimeout(r, 500));
 
-        if (totalEmailed >= maxToSend) break;
+        if (totalEmailed >= maxToSend || isTimedOut()) break;
       }
-      if (totalEmailed >= maxToSend) break;
+      if (totalEmailed >= maxToSend || isTimedOut()) break;
     }
 
     return new Response(
       JSON.stringify({
         ok: true,
+        partial: isTimedOut(),
+        note: isTimedOut() ? "Soft 50s timeout — returning partial results to avoid CPU-exceeded crash." : undefined,
+        duration_ms: Date.now() - startedAt,
         found: totalFound,
         emailed: totalEmailed,
         deadLeadEmailed: totalDeadLeadEmailed,

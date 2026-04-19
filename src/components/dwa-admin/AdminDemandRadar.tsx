@@ -326,12 +326,12 @@ export default function AdminDemandRadar() {
                   </a>
                 )}
                 <a
-                  href="/my-industry-pulse"
+                  href="/my-industry-pulse?token=6c40f300f70e4069f7a880c9af2cfbe1"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-2 rounded-md bg-white/5 border border-white/10 hover:border-[#00d4ff]/40 text-white/80 text-xs font-semibold flex items-center justify-center gap-1.5"
+                  className="px-3 py-2 rounded-md bg-[#8b5cf6] hover:bg-[#7c3aed] text-white text-xs font-bold flex items-center justify-center gap-1.5"
                 >
-                  <Eye size={12} /> Open Client View
+                  📺 View as Client
                 </a>
               </div>
 

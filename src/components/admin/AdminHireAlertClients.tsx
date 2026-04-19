@@ -10,6 +10,7 @@ import {
   Mail, Phone, CheckCircle, XCircle, Clock, Play, FileText, Loader2,
 } from "lucide-react";
 import { EnrichmentHealthStrip } from "./EnrichmentHealthStrip";
+import { CandidateWorkbench } from "./CandidateWorkbench";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -305,6 +306,24 @@ export default function AdminHireAlertClients() {
   const [invoking, setInvoking] = useState(false);
   const [sectorFilter, setSectorFilter] = useState<"all" | "trades" | "healthcare">("all");
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [tab, setTab] = useState<"clients" | "workbench">("clients");
+
+  const openClientDemo = async () => {
+    // Pick first active client with a dashboard_token; fall back to any
+    const { data } = await (supabase as any)
+      .from("hire_alert_clients")
+      .select("dashboard_token, company_name, active")
+      .not("dashboard_token", "is", null)
+      .order("active", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!data?.dashboard_token) {
+      toast.error("No client with a dashboard_token. Add a client first.");
+      return;
+    }
+    window.open(`/talent-radar/dashboard?token=${data.dashboard_token}`, "_blank");
+    toast.success(`Opening as: ${data.company_name}`);
+  };
 
   const load = async () => {
     setLoading(true);
@@ -591,17 +610,40 @@ export default function AdminHireAlertClients() {
             {generatingPDF ? <Loader2 size={13} className="mr-1 animate-spin" /> : <FileText size={13} className="mr-1" />}
             {generatingPDF ? "Generating..." : "📄 Generate Demo PDF"}
           </Button>
+          <Button size="sm" onClick={openClientDemo}
+            className="text-white" style={{ background: "#8b5cf6" }}>
+            📺 View as Client
+          </Button>
         </div>
-        {/* Sector filter */}
-        <div className="flex items-center gap-1 ml-auto">
-          {(["all", "trades", "healthcare"] as const).map(f => (
-            <button key={f} onClick={() => setSectorFilter(f)}
-              className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${sectorFilter === f ? "bg-amber-500 text-white" : "bg-white/5 text-white/40 hover:text-white hover:bg-white/10"}`}>
-              {f === "all" ? "All" : f === "trades" ? "🔧 Trades" : "🏥 Healthcare"}
+
+        {/* Tabs */}
+        <div className="flex items-center gap-1 border-b border-white/10">
+          {([["clients", "Clients"], ["workbench", "🔬 Candidate Workbench"]] as const).map(([k, label]) => (
+            <button key={k} onClick={() => setTab(k)}
+              className={`px-4 py-2 text-xs font-bold border-b-2 transition-colors ${tab === k ? "border-amber-500 text-amber-400" : "border-transparent text-white/40 hover:text-white"}`}>
+              {label}
             </button>
           ))}
         </div>
+
+        {/* Sector filter (only on clients tab) */}
+        {tab === "clients" && (
+          <div className="flex items-center gap-1">
+            {(["all", "trades", "healthcare"] as const).map(f => (
+              <button key={f} onClick={() => setSectorFilter(f)}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${sectorFilter === f ? "bg-amber-500 text-white" : "bg-white/5 text-white/40 hover:text-white hover:bg-white/10"}`}>
+                {f === "all" ? "All" : f === "trades" ? "🔧 Trades" : "🏥 Healthcare"}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+
+      {tab === "workbench" ? (
+        <CandidateWorkbench />
+      ) : (
+      <>
+        {/* Clients tab content below */}
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -764,6 +806,8 @@ export default function AdminHireAlertClients() {
             </table>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );
