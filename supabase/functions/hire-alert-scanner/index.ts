@@ -369,7 +369,21 @@ async function scanJobBoards(): Promise<RawCandidate[]> {
 }
 
 // Company name signals — used to filter out job postings stored as fake candidates
-const COMPANY_NAME_SIGNALS = ["inc", "llc", "corp", "co.", "company", "contractors", "services", "solutions", "group", "enterprises", "associates", "systems", "industries", "construction", "plumbing", "hvac", "mechanical", "electric", "heating", "cooling", "dba"];
+const COMPANY_NAME_SIGNALS = [
+  // Legal entity markers
+  "inc", "llc", "corp", "co.", "company", "ltd", "limited", "dba", "d/b/a", "holdings",
+  // Business type words
+  "contractors", "services", "solutions", "group", "enterprises", "associates",
+  "systems", "industries", "construction", "plumbing", "hvac", "mechanical",
+  "electric", "electrical", "heating", "cooling", "realty",
+  // Generic biz suffixes
+  "pros", "brothers", "bros", "and sons", "& sons", "& son", "and son",
+  // Common garbage business names observed in DB
+  "pipey", "bargain", "comfort zone", "rocket", "reliable", "best", "premier",
+  "advantage", "quality", "professional", "specialist", "expert", "master",
+  // Trailing filler
+  "and", "or", // name ending in "and" / "or" = company abbreviation
+];
 
 function isPersonNameJobBoard(name: string): boolean {
   const lower = name.toLowerCase().trim();
