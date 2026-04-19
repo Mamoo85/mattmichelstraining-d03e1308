@@ -47,7 +47,13 @@ serve(async (req) => {
     // Fetch full lead details
     const { data: lead, error: leadErr } = await sb
       .from("contractor_leads")
-      .select("name, phone, email, project_type, message, contact_preference, contractor_lead_sites(trade, city, state)")
+      .select(
+        "name, phone, email, project_type, message, contact_preference, " +
+        // Quality fields (items 35, 36, 37, 38, 39, 43, 44, 45, 47). Safe if columns are null.
+        "phone_carrier_type, email_breach_count, email_deliverable, identity_verified, " +
+        "estimated_home_value, ownership_years, lead_type, quality_score, lead_tier, " +
+        "contractor_lead_sites(trade, city, state)"
+      )
       .eq("id", purchase.lead_id)
       .single();
 
@@ -59,6 +65,7 @@ serve(async (req) => {
     }
 
     const site = (lead as any).contractor_lead_sites;
+    const l = lead as any;
 
     return new Response(
       JSON.stringify({
@@ -69,10 +76,20 @@ serve(async (req) => {
           email: lead.email,
           project_type: lead.project_type,
           message: lead.message,
-          contact_preference: (lead as any).contact_preference,
+          contact_preference: l.contact_preference,
           trade: site?.trade,
           city: site?.city,
           state: site?.state,
+          // Quality flags — UI only renders badges when values are present
+          phone_carrier_type: l.phone_carrier_type ?? null,
+          email_breach_count: l.email_breach_count ?? null,
+          email_deliverable: l.email_deliverable ?? null,
+          identity_verified: l.identity_verified ?? null,
+          estimated_home_value: l.estimated_home_value ?? null,
+          ownership_years: l.ownership_years ?? null,
+          lead_type: l.lead_type ?? null,
+          quality_score: l.quality_score ?? null,
+          lead_tier: l.lead_tier ?? null,
         },
         purchased_at: purchase.purchased_at,
       }),

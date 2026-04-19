@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import RevenueRecoveredLedger from "@/components/RevenueRecoveredLedger";
 import HiringHealthScore from "@/components/techalert/HiringHealthScore";
+import CandidateRiskBadges from "@/components/techalert/CandidateRiskBadges";
 import { RadarExportBar } from "@/components/shared/RadarExportBar";
 import DemoModeBadge, { isDemoMode, DEMO_MASTER_TOKEN } from "@/components/DemoModeBadge";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,6 +54,13 @@ interface Candidate {
   cross_referenced: boolean;
   flight_risk?: string | null;
   flight_risk_proof?: string | null;
+  // Item 3 — HIBP cyber hygiene
+  cyber_hygiene_score?: number | null;
+  employer_domain_breached_recently?: boolean | null;
+  password_compromised?: boolean | null;
+  // Item 5 — urgency decay
+  urgency_score?: number | null;
+  available_until?: string | null;
 }
 
 interface DashboardData {
@@ -969,6 +977,16 @@ export default function MyTechAlert() {
                           <p className="text-slate-300 text-xs leading-relaxed">{c.flight_risk_proof}</p>
                         </div>
                       )}
+
+                      {/* Item 3 + 5 — HIBP cyber hygiene + urgency decay window */}
+                      <CandidateRiskBadges
+                        cyber_hygiene_score={c.cyber_hygiene_score}
+                        employer_domain_breached_recently={c.employer_domain_breached_recently}
+                        password_compromised={c.password_compromised}
+                        license_expiry={c.license_expiry}
+                        urgency_score={c.urgency_score}
+                        available_until={c.available_until}
+                      />
 
                       {c.score_reason && (
                         <p className="text-[11px] text-slate-500 italic">{c.score_reason}</p>

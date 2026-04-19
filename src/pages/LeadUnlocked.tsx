@@ -6,8 +6,9 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import LeadQualityBadges, { LeadQualityData } from "@/components/contractor/LeadQualityBadges";
 
-interface LeadData {
+interface LeadData extends LeadQualityData {
   name: string;
   phone: string;
   email: string;
@@ -121,6 +122,13 @@ export default function LeadUnlocked() {
                 <h1 style={{ color: "#fff", fontSize: 22, fontWeight: 800, margin: 0 }}>Call them now</h1>
               </div>
             </div>
+
+            {/* Items 35, 37, 38, 39, 45, 47 — quality intelligence (rendered only when data present) */}
+            {lead && (
+              <div style={{ marginBottom: 20 }}>
+                <LeadQualityBadges data={lead} />
+              </div>
+            )}
 
             <div style={{ background: "#0a1628", borderRadius: 10, padding: "20px 24px", marginBottom: 24 }}>
               <div style={{ display: "grid", gap: 16 }}>

@@ -5,6 +5,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import LeadQualityBadges, { LeadQualityData } from "@/components/contractor/LeadQualityBadges";
 
 export default function ClaimLead() {
   const [searchParams] = useSearchParams();
@@ -16,27 +17,43 @@ export default function ClaimLead() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"idle" | "locked" | "claimed" | "error">("idle");
   const [minutesLeft, setMinutesLeft] = useState(0);
-  const [leadPreview, setLeadPreview] = useState<{ trade: string; city: string; project_type: string } | null>(null);
+  const [leadPreview, setLeadPreview] = useState<
+    | ({ trade: string; city: string; project_type: string } & LeadQualityData)
+    | null
+  >(null);
   const [previewLoading, setPreviewLoading] = useState(!hasMissingParams);
   const claimLock = useRef(false);
 
   useEffect(() => {
     if (!lead_id) return;
-    // Fetch non-sensitive lead preview
-    supabase
-      .from("contractor_leads")
-      .select("project_type, status, contractor_lead_sites(trade, city)")
+    // Fetch non-sensitive lead preview + quality flags (no contact info)
+    (supabase
+      .from("contractor_leads") as any)
+      .select(
+        "project_type, status, phone_carrier_type, email_breach_count, email_deliverable, " +
+        "identity_verified, estimated_home_value, ownership_years, lead_type, quality_score, " +
+        "lead_tier, contractor_lead_sites(trade, city)"
+      )
       .eq("id", lead_id)
       .single()
-      .then(({ data }) => {
+      .then(({ data }: { data: any }) => {
         if (data) {
-          const site = (data as any).contractor_lead_sites;
+          const site = data.contractor_lead_sites;
           setLeadPreview({
             trade: site?.trade || "Service",
             city: site?.city || "Metro Detroit",
-            project_type: (data as any).project_type || "Service request",
+            project_type: data.project_type || "Service request",
+            phone_carrier_type: data.phone_carrier_type ?? null,
+            email_breach_count: data.email_breach_count ?? null,
+            email_deliverable: data.email_deliverable ?? null,
+            identity_verified: data.identity_verified ?? null,
+            estimated_home_value: data.estimated_home_value ?? null,
+            ownership_years: data.ownership_years ?? null,
+            lead_type: data.lead_type ?? null,
+            quality_score: data.quality_score ?? null,
+            lead_tier: data.lead_tier ?? null,
           });
-          if ((data as any).status === "sold") setStatus("claimed");
+          if (data.status === "sold") setStatus("claimed");
         }
         setPreviewLoading(false);
       });
@@ -152,9 +169,17 @@ export default function ClaimLead() {
             <h1 style={{ color: "#fff", fontSize: 26, fontWeight: 800, margin: "0 0 8px", lineHeight: 1.3 }}>
               {leadPreview?.trade} Lead in {leadPreview?.city}
             </h1>
-            <p style={{ color: "#94a3b8", fontSize: 15, margin: "0 0 24px" }}>
+            <p style={{ color: "#94a3b8", fontSize: 15, margin: "0 0 16px" }}>
               {leadPreview?.project_type}
             </p>
+
+            {/* Items 35, 37, 38, 39, 45, 47 — quality badges (rendered only when data present) */}
+            {leadPreview && (
+              <div style={{ marginBottom: 20 }}>
+                <LeadQualityBadges data={leadPreview} />
+              </div>
+            )}
+
 
             <div style={{ background: "#0a1628", borderRadius: 8, padding: "16px 20px", marginBottom: 24 }}>
               <p style={{ color: "#64748b", fontSize: 13, margin: "0 0 8px" }}>What you get for $50:</p>
