@@ -594,7 +594,9 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const body = await req.json();
+    // Tolerate empty/invalid body — admin "Run" buttons sometimes call with no payload.
+    let body: any = {};
+    try { body = await req.json(); } catch { body = {}; }
     const { prospect_id, domain, business_name, businessName, website, mode, industry, allow_email_guess } = body;
     // Default allow_email_guess to true — guess info@/contact@ as last resort
     const allowEmailGuessResolved = allow_email_guess !== false;
