@@ -74,25 +74,8 @@ async function checkProjectComplete(name: string, trade: string): Promise<boolea
 }
 
 
-// ── Item 42: Sonar homeowner re-enrichment — skip completed projects ───────────
-async function checkProjectComplete(name: string, trade: string): Promise<boolean> {
-  if (!OPENROUTER_API_KEY || !name) return false;
-  try {
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "perplexity/sonar-pro",
-        messages: [{ role: "user", content: `Is there any online evidence that "${name}" in Michigan recently completed a ${trade} home project in 2025-2026 (review posted, photo shared, job listed as done)? Answer YES or NO only.` }],
-        max_tokens: 50, temperature: 0.1,
-      }),
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!res.ok) return false;
-    const data = await res.json();
-    return (data?.choices?.[0]?.message?.content || "").toUpperCase().startsWith("YES");
-  } catch { return false; }
-}
+// (duplicate checkProjectComplete declaration removed — see line 57)
+
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
