@@ -1112,8 +1112,30 @@ serve(async (req: Request) => {
 
   const mioshaCandidates = results[0].status === "fulfilled" ? results[0].value : [];
   const jobBoardCandidates = results[1].status === "fulfilled" ? results[1].value : [];
-  if (results[0].status === "rejected") console.error("[hire-alert-scanner] scanMIOSHA failed:", results[0].reason);
-  if (results[1].status === "rejected") console.error("[hire-alert-scanner] scanJobBoards failed:", results[1].reason);
+  const sourceErrors: Record<string, string> = {};
+  if (results[0].status === "rejected") {
+    const msg = results[0].reason instanceof Error ? results[0].reason.message : String(results[0].reason);
+    console.error("[hire-alert-scanner] scanMIOSHA failed:", msg);
+    sourceErrors.miosha = msg.slice(0, 300);
+  } else if (mioshaCandidates.length === 0) {
+    sourceErrors.miosha = "0 results — silent failure suspected";
+  }
+  if (results[1].status === "rejected") {
+    const msg = results[1].reason instanceof Error ? results[1].reason.message : String(results[1].reason);
+    console.error("[hire-alert-scanner] scanJobBoards failed:", msg);
+    sourceErrors.jobBoards = msg.slice(0, 300);
+  } else if (jobBoardCandidates.length === 0) {
+    sourceErrors.jobBoards = "0 results — silent failure suspected";
+  }
+
+  // Stamp per-source diagnostics on the run row immediately so the audit dashboard
+  // shows WHICH source went silent — not just "0 candidates".
+  if (runRowId && Object.keys(sourceErrors).length) {
+    sb.from("hire_alert_runs")
+      .update({ errors: sourceErrors as any, error_message: Object.entries(sourceErrors).map(([k, v]) => `${k}: ${v}`).join(" | ") })
+      .eq("id", runRowId)
+      .then(() => {}, (e: unknown) => console.warn("[hire-alert-scanner] failed to stamp source errors:", e));
+  }
 
   const allRaw = [...mioshaCandidates, ...jobBoardCandidates];
   const sourceHealth: Record<string, string> = {
