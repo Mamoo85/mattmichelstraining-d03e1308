@@ -325,17 +325,20 @@ export default function AdminHireAlertClients() {
     toast.success(`Opening as: ${data.company_name}`);
   };
 
+  const [candidatesTotal, setCandidatesTotal] = useState<number>(0);
   const load = async () => {
     setLoading(true);
-    const [{ data: cData }, { data: rData }, { data: candData }] = await Promise.all([
+    const [{ data: cData }, { data: rData }, { data: candData }, { count: candCount }] = await Promise.all([
       (supabase as any).from("hire_alert_clients").select("*").order("created_at", { ascending: false }),
-      (supabase as any).from("hire_alert_runs").select("*").order("run_at", { ascending: false }).limit(10),
+      (supabase as any).from("hire_alert_runs").select("*").order("run_at", { ascending: false }).limit(40),
       (supabase as any).from("hire_alert_candidates").select("id,full_name,license_type,city,source,status,first_seen_at,cross_referenced,data_completeness,phone,phone_verified_at")
         .order("first_seen_at", { ascending: false }).limit(20),
+      (supabase as any).from("hire_alert_candidates").select("id", { count: "exact", head: true }),
     ]);
     setClients(cData || []);
     setRuns(rData || []);
     setCandidates(candData || []);
+    setCandidatesTotal(candCount || 0);
     setLoading(false);
   };
 
@@ -650,7 +653,7 @@ export default function AdminHireAlertClients() {
         {[
           { icon: Users, label: "Active Clients", value: activeClients.length, color: "#10b981" },
           { icon: DollarSign, label: "Monthly Revenue", value: `$${(mrr / 100).toLocaleString()}`, color: "#e8621a" },
-          { icon: Bell, label: "Candidates in DB", value: candidates.length >= 20 ? "20+" : candidates.length, color: "#f59e0b" },
+          { icon: Bell, label: "Candidates in DB", value: candidatesTotal.toLocaleString(), color: "#f59e0b" },
         ].map(({ icon: Icon, label, value, color }) => (
           <div key={label} className="rounded-2xl border p-4" style={{ background: `${color}0d`, borderColor: `${color}25` }}>
             <Icon size={16} style={{ color }} className="mb-2" />
