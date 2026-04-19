@@ -75,8 +75,8 @@ export default function AdminDWAOverview() {
     setPdlTesting(true);
     setPdlResult(null);
     try {
-      const { data, error } = await supabase.functions.invoke("test-pdl-premium", {
-        body: { use_db_candidate: true },
+      const { data, error } = await supabase.functions.invoke("verify-candidate-phones", {
+        body: { action: "test_pdl", use_db_candidate: true },
       });
       if (error) throw error;
       setPdlResult(data);
