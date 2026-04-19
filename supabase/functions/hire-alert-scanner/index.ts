@@ -16,7 +16,25 @@ const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const PDL_API_KEY = Deno.env.get("PDL_API_KEY") || "";
+const HUNTER_API_KEY = Deno.env.get("HUNTER_API_KEY") || "";
+const SNOV_USER_ID = Deno.env.get("SNOV_USER_ID") || "";
+const SNOV_API_KEY = Deno.env.get("SNOV_API_KEY") || "";
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+
+// NPI taxonomy codes that command premium scoring (+1 to +3 points)
+const TAXONOMY_PREMIUM_MAP: Record<string, number> = {
+  "Certified Registered Nurse Anesthetist": 3,
+  "Nurse Practitioner": 2,
+  "Nurse Anesthetist, Certified Registered": 3,
+  "Clinical Nurse Specialist": 2,
+  "Registered Nurse": 1,
+  "Certified Nurse Midwife": 2,
+  "Physician Assistant": 2,
+  "Surgical/Operating Room": 2,
+  "Critical Care": 2,
+  "Emergency": 1,
+  "Intensive Care": 2,
+};
 const APIFY_API_TOKEN = Deno.env.get("APIFY_API_TOKEN") || "";
 const APIFY_WEBHOOK_SECRET = Deno.env.get("APIFY_WEBHOOK_SECRET") || "";
 
