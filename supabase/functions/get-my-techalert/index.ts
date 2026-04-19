@@ -61,12 +61,14 @@ serve(async (req) => {
       });
     }
 
-    // Fetch candidate details — NEVER expose source to clients
+    // Fetch candidate details — NEVER expose source to clients.
+    // Hardening: exclude flagged company rows + junk-name patterns from the dashboard payload.
     const candidateIds = clientCandidates.map((cc: any) => cc.candidate_id);
     const { data: candidates } = await sb
       .from("hire_alert_candidates")
-      .select("id, full_name, phone, email, license_type, license_number, license_expiry, city, zip, availability_score, score_reason, qualifications_summary, hiring_recommendation, linkedin_url, facebook_url, profile_photo_url, current_employer, current_title, years_experience, cross_referenced, data_completeness, flight_risk, flight_risk_proof")
-      .in("id", candidateIds);
+      .select("id, full_name, phone, email, license_type, license_number, license_expiry, city, zip, availability_score, score_reason, qualifications_summary, hiring_recommendation, linkedin_url, facebook_url, profile_photo_url, current_employer, current_title, years_experience, cross_referenced, data_completeness, flight_risk, flight_risk_proof, is_company_name")
+      .in("id", candidateIds)
+      .neq("is_company_name", true);
 
     // Check for active claims by OTHER clients on each candidate
     const now = new Date().toISOString();
@@ -110,11 +112,14 @@ serve(async (req) => {
         if (!c) return null;
         // Filter: only show candidates with data_completeness >= 40
         if ((c.data_completeness || 0) < 40) return null;
+        // Belt-and-suspenders: scrub boolean-string contamination at response time
+        const safePhone = (c.phone && !["true","false"].includes(String(c.phone).toLowerCase())) ? c.phone : null;
+        const safeEmail = (c.email && !["true","false"].includes(String(c.email).toLowerCase())) ? c.email : null;
         return {
           id: c.id,
           full_name: c.full_name,
-          phone: c.phone,
-          email: c.email,
+          phone: safePhone,
+          email: safeEmail,
           license_type: c.license_type,
           license_number: c.license_number,
           license_expiry: c.license_expiry,
