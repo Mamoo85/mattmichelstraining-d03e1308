@@ -74,31 +74,42 @@ async function checkProjectComplete(name: string, trade: string): Promise<boolea
 }
 
 
-// ── Item 42: Sonar homeowner re-enrichment — skip completed projects ───────────
-async function checkProjectComplete(name: string, trade: string): Promise<boolean> {
-  if (!OPENROUTER_API_KEY || !name) return false;
-  try {
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "perplexity/sonar-pro",
-        messages: [{ role: "user", content: `Is there any online evidence that "${name}" in Michigan recently completed a ${trade} home project in 2025-2026 (review posted, photo shared, job listed as done)? Answer YES or NO only.` }],
-        max_tokens: 50, temperature: 0.1,
-      }),
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!res.ok) return false;
-    const data = await res.json();
-    return (data?.choices?.[0]?.message?.content || "").toUpperCase().startsWith("YES");
-  } catch { return false; }
-}
+// (duplicate checkProjectComplete declaration removed — see line 57)
+
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // ── HEALTH PROBE ──
+  const probeUrl = new URL(req.url);
+  if (probeUrl.searchParams.get("probe") === "1") {
+    return new Response(JSON.stringify({ ok: true, name: "dead-lead-drip" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // ── BACKGROUND MODE — return 202 immediately, run work via waitUntil ──
+  const isBackground = probeUrl.searchParams.get("bg") === "1";
+  if (isBackground) {
+    const work = (async () => {
+      try { await runDripJob(); } catch (e) { console.error("[dead-lead-drip bg]", e); }
+    })();
+    // @ts-ignore — EdgeRuntime is available in Supabase Deno runtime
+    if (typeof EdgeRuntime !== "undefined" && (EdgeRuntime as any).waitUntil) {
+      // @ts-ignore
+      (EdgeRuntime as any).waitUntil(work);
+    }
+    return new Response(JSON.stringify({ ok: true, dispatched: true, mode: "background" }), {
+      status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  return await runDripJob();
+});
+
+async function runDripJob(): Promise<Response> {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   try {
@@ -318,4 +329,5 @@ serve(async (req) => {
     console.error("[dead-lead-drip] Error:", msg);
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
-});
+}
+

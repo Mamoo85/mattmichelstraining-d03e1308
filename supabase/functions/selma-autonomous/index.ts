@@ -185,6 +185,34 @@ async function getKeywordData(keywords: string[], login: string, password: strin
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
+  // ── HEALTH PROBE ──
+  const probeUrl = new URL(req.url);
+  if (probeUrl.searchParams.get("probe") === "1") {
+    return new Response(JSON.stringify({ ok: true, name: "selma-autonomous" }), {
+      headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
+
+  // ── BACKGROUND MODE — return 202 immediately, run work via waitUntil ──
+  const isBackground = probeUrl.searchParams.get("bg") === "1";
+  if (isBackground) {
+    const work = (async () => {
+      try { await runSelma(); } catch (e) { console.error("[selma bg]", e); }
+    })();
+    // @ts-ignore — EdgeRuntime is available in Supabase Deno runtime
+    if (typeof EdgeRuntime !== "undefined" && (EdgeRuntime as any).waitUntil) {
+      // @ts-ignore
+      (EdgeRuntime as any).waitUntil(work);
+    }
+    return new Response(JSON.stringify({ ok: true, dispatched: true, mode: "background" }), {
+      status: 202, headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
+
+  return await runSelma();
+});
+
+async function runSelma(): Promise<Response> {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -423,4 +451,4 @@ Respond in this EXACT JSON format (no markdown, ONLY valid JSON):
       headers: { ...cors, "Content-Type": "application/json" },
     });
   }
-});
+}

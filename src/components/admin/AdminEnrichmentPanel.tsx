@@ -58,9 +58,14 @@ export default function AdminEnrichmentPanel() {
     },
     onSuccess: (data) => {
       setBatchRunning(false);
+      // Defensive: backend returns { enriched, total } — never log "undefined".
+      const enrichedCount = Number(data?.enriched ?? 0);
+      const totalCount = Number(data?.total ?? 0);
       toast({
         title: "Batch enrichment complete",
-        description: `Enriched ${data?.enriched ?? 0} of ${data?.total ?? 0} prospects`,
+        description: totalCount === 0
+          ? "No pending prospects to enrich right now."
+          : `Enriched ${enrichedCount} of ${totalCount} prospects`,
       });
       queryClient.invalidateQueries({ queryKey: ["enrichment-stats"] });
       queryClient.invalidateQueries({ queryKey: ["recent-enriched"] });

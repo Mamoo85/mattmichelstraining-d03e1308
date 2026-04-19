@@ -7004,6 +7004,24 @@ export type Database = {
         }
         Relationships: []
       }
+      lara_prefix_cursors: {
+        Row: {
+          last_id: number
+          prefix: string
+          updated_at: string
+        }
+        Insert: {
+          last_id?: number
+          prefix: string
+          updated_at?: string
+        }
+        Update: {
+          last_id?: number
+          prefix?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lara_val_cursor: {
         Row: {
           id: number
