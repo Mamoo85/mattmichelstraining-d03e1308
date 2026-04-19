@@ -4079,33 +4079,105 @@ export type Database = {
         }
         Relationships: []
       }
+      enrichment_jitter_log: {
+        Row: {
+          created_at: string
+          id: string
+          jitter_seconds: number
+          jittered_at: string
+          proxy_pool: string | null
+          scheduled_at: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          jitter_seconds: number
+          jittered_at: string
+          proxy_pool?: string | null
+          scheduled_at: string
+          source: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          jitter_seconds?: number
+          jittered_at?: string
+          proxy_pool?: string | null
+          scheduled_at?: string
+          source?: string
+        }
+        Relationships: []
+      }
+      enrichment_provider_routes: {
+        Row: {
+          call_order: number
+          created_at: string
+          enabled: boolean
+          id: string
+          min_score: number | null
+          provider: string
+          requires_field: string | null
+          short_circuit_on: string[] | null
+          vertical: string
+        }
+        Insert: {
+          call_order: number
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          min_score?: number | null
+          provider: string
+          requires_field?: string | null
+          short_circuit_on?: string[] | null
+          vertical: string
+        }
+        Update: {
+          call_order?: number
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          min_score?: number | null
+          provider?: string
+          requires_field?: string | null
+          short_circuit_on?: string[] | null
+          vertical?: string
+        }
+        Relationships: []
+      }
       enrichment_source_budgets: {
         Row: {
           calls_today: number
+          cost_per_call: number
           daily_call_cap: number
           daily_cap_usd: number
           enabled: boolean
           notes: string | null
+          paused_until: string | null
           reset_at: string
           source: string
           spent_today_usd: number
         }
         Insert: {
           calls_today?: number
+          cost_per_call?: number
           daily_call_cap?: number
           daily_cap_usd: number
           enabled?: boolean
           notes?: string | null
+          paused_until?: string | null
           reset_at?: string
           source: string
           spent_today_usd?: number
         }
         Update: {
           calls_today?: number
+          cost_per_call?: number
           daily_call_cap?: number
           daily_cap_usd?: number
           enabled?: boolean
           notes?: string | null
+          paused_until?: string | null
           reset_at?: string
           source?: string
           spent_today_usd?: number
@@ -5740,6 +5812,7 @@ export type Database = {
           do_not_contact: boolean
           do_not_contact_at: string | null
           email: string | null
+          embedding: string | null
           employer_domain_breached_recently: boolean | null
           employer_headcount_delta: number | null
           enriched_at: string | null
@@ -5758,11 +5831,13 @@ export type Database = {
           job_stability_index: number | null
           last_dispatched_at: string | null
           last_seen_at: string | null
+          lat: number | null
           license_expiry: string | null
           license_issued_at: string | null
           license_number: string | null
           license_type: string | null
           linkedin_url: string | null
+          lng: number | null
           name: string
           password_compromised: boolean | null
           personal_email_primary: boolean | null
@@ -5772,6 +5847,7 @@ export type Database = {
           raw_data: Json | null
           score: number | null
           score_reason: string | null
+          search_vector: unknown
           social_profiles: Json | null
           source: string | null
           source_count: number | null
@@ -5799,6 +5875,7 @@ export type Database = {
           do_not_contact?: boolean
           do_not_contact_at?: string | null
           email?: string | null
+          embedding?: string | null
           employer_domain_breached_recently?: boolean | null
           employer_headcount_delta?: number | null
           enriched_at?: string | null
@@ -5817,11 +5894,13 @@ export type Database = {
           job_stability_index?: number | null
           last_dispatched_at?: string | null
           last_seen_at?: string | null
+          lat?: number | null
           license_expiry?: string | null
           license_issued_at?: string | null
           license_number?: string | null
           license_type?: string | null
           linkedin_url?: string | null
+          lng?: number | null
           name: string
           password_compromised?: boolean | null
           personal_email_primary?: boolean | null
@@ -5831,6 +5910,7 @@ export type Database = {
           raw_data?: Json | null
           score?: number | null
           score_reason?: string | null
+          search_vector?: unknown
           social_profiles?: Json | null
           source?: string | null
           source_count?: number | null
@@ -5858,6 +5938,7 @@ export type Database = {
           do_not_contact?: boolean
           do_not_contact_at?: string | null
           email?: string | null
+          embedding?: string | null
           employer_domain_breached_recently?: boolean | null
           employer_headcount_delta?: number | null
           enriched_at?: string | null
@@ -5876,11 +5957,13 @@ export type Database = {
           job_stability_index?: number | null
           last_dispatched_at?: string | null
           last_seen_at?: string | null
+          lat?: number | null
           license_expiry?: string | null
           license_issued_at?: string | null
           license_number?: string | null
           license_type?: string | null
           linkedin_url?: string | null
+          lng?: number | null
           name?: string
           password_compromised?: boolean | null
           personal_email_primary?: boolean | null
@@ -5890,6 +5973,7 @@ export type Database = {
           raw_data?: Json | null
           score?: number | null
           score_reason?: string | null
+          search_vector?: unknown
           social_profiles?: Json | null
           source?: string | null
           source_count?: number | null
@@ -6437,6 +6521,7 @@ export type Database = {
           created_at: string | null
           cross_referenced: boolean | null
           detected_at: string | null
+          embedding: string | null
           expansion_type: string | null
           hiring_count: number | null
           hiring_roles: string[] | null
@@ -6445,6 +6530,7 @@ export type Database = {
           location: string | null
           predicted_needs: string[] | null
           recommended_pitch: string | null
+          search_vector: unknown
           sector: string | null
           signal_type: string | null
           source_urls: string[] | null
@@ -6461,6 +6547,7 @@ export type Database = {
           created_at?: string | null
           cross_referenced?: boolean | null
           detected_at?: string | null
+          embedding?: string | null
           expansion_type?: string | null
           hiring_count?: number | null
           hiring_roles?: string[] | null
@@ -6469,6 +6556,7 @@ export type Database = {
           location?: string | null
           predicted_needs?: string[] | null
           recommended_pitch?: string | null
+          search_vector?: unknown
           sector?: string | null
           signal_type?: string | null
           source_urls?: string[] | null
@@ -6485,6 +6573,7 @@ export type Database = {
           created_at?: string | null
           cross_referenced?: boolean | null
           detected_at?: string | null
+          embedding?: string | null
           expansion_type?: string | null
           hiring_count?: number | null
           hiring_roles?: string[] | null
@@ -6493,6 +6582,7 @@ export type Database = {
           location?: string | null
           predicted_needs?: string[] | null
           recommended_pitch?: string | null
+          search_vector?: unknown
           sector?: string | null
           signal_type?: string | null
           source_urls?: string[] | null
@@ -11535,6 +11625,48 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_search_alerts: {
+        Row: {
+          alert_channel: string
+          alert_enabled: boolean
+          client_id: string
+          created_at: string
+          filters: Json
+          id: string
+          label: string
+          last_alerted_at: string | null
+          last_match_id: string | null
+          product: string
+          query_text: string | null
+        }
+        Insert: {
+          alert_channel?: string
+          alert_enabled?: boolean
+          client_id: string
+          created_at?: string
+          filters?: Json
+          id?: string
+          label: string
+          last_alerted_at?: string | null
+          last_match_id?: string | null
+          product: string
+          query_text?: string | null
+        }
+        Update: {
+          alert_channel?: string
+          alert_enabled?: boolean
+          client_id?: string
+          created_at?: string
+          filters?: Json
+          id?: string
+          label?: string
+          last_alerted_at?: string | null
+          last_match_id?: string | null
+          product?: string
+          query_text?: string | null
+        }
+        Relationships: []
+      }
       saved_searches: {
         Row: {
           active: boolean
@@ -11697,6 +11829,45 @@ export type Database = {
           page_url?: string
           position?: number | null
           query?: string | null
+        }
+        Relationships: []
+      }
+      search_query_log: {
+        Row: {
+          clicked_result_id: string | null
+          client_id: string | null
+          created_at: string
+          filters: Json | null
+          id: string
+          latency_ms: number | null
+          product: string
+          query_text: string | null
+          result_count: number | null
+          user_id: string | null
+        }
+        Insert: {
+          clicked_result_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          filters?: Json | null
+          id?: string
+          latency_ms?: number | null
+          product: string
+          query_text?: string | null
+          result_count?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          clicked_result_id?: string | null
+          client_id?: string | null
+          created_at?: string
+          filters?: Json | null
+          id?: string
+          latency_ms?: number | null
+          product?: string
+          query_text?: string | null
+          result_count?: number | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -12268,6 +12439,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      signal_correlations: {
+        Row: {
+          correlation_reason: string | null
+          correlation_score: number
+          created_at: string
+          id: string
+          signal_a_id: string
+          signal_a_type: string
+          signal_b_id: string
+          signal_b_type: string
+        }
+        Insert: {
+          correlation_reason?: string | null
+          correlation_score: number
+          created_at?: string
+          id?: string
+          signal_a_id: string
+          signal_a_type: string
+          signal_b_id: string
+          signal_b_type: string
+        }
+        Update: {
+          correlation_reason?: string | null
+          correlation_score?: number
+          created_at?: string
+          id?: string
+          signal_a_id?: string
+          signal_a_type?: string
+          signal_b_id?: string
+          signal_b_type?: string
+        }
+        Relationships: []
       }
       signal_feedback: {
         Row: {
@@ -15215,6 +15419,20 @@ export type Database = {
         }
         Relationships: []
       }
+      enrichment_provider_health: {
+        Row: {
+          avg_cost: number | null
+          avg_hits: number | null
+          calls_7d: number | null
+          last_call_at: string | null
+          provider: string | null
+          spent_7d: number | null
+          success_rate_pct: number | null
+          successes_7d: number | null
+          unique_candidates_7d: number | null
+        }
+        Relationships: []
+      }
       generated_sites_public: {
         Row: {
           business_name: string | null
@@ -15293,6 +15511,21 @@ export type Database = {
         }
         Relationships: []
       }
+      unified_signals: {
+        Row: {
+          city: string | null
+          confidence: number | null
+          created_at: string | null
+          freshness: number | null
+          id: string | null
+          rank_score: number | null
+          signal_type: string | null
+          state: string | null
+          subtitle: string | null
+          title: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       award_points: {
@@ -15305,13 +15538,42 @@ export type Database = {
         }
         Returns: number
       }
+      candidates_within_radius: {
+        Args: {
+          p_lat: number
+          p_limit?: number
+          p_lng: number
+          p_min_score?: number
+          p_radius_miles?: number
+        }
+        Returns: {
+          city: string
+          distance_miles: number
+          id: string
+          name: string
+          score: number
+          trade: string
+        }[]
+      }
+      check_contactability_complete: {
+        Args: { p_email: string; p_linkedin?: string; p_phone: string }
+        Returns: boolean
+      }
       check_user_visibility: {
         Args: { _field: string; _target_user_id: string }
         Returns: boolean
       }
+      compute_freshness_score: {
+        Args: { p_created_at: string; p_half_life_days?: number }
+        Returns: number
+      }
       consume_source_budget: {
-        Args: { _cost: number; _source: string }
-        Returns: boolean
+        Args: { p_estimated_cost?: number; p_provider: string }
+        Returns: Json
+      }
+      correlate_pulse_to_candidates: {
+        Args: { p_pulse_id: string }
+        Returns: number
       }
       cron_job_status: { Args: { p_jobname: string }; Returns: Json }
       decrypt_cms_credentials: {
@@ -15319,6 +15581,15 @@ export type Database = {
         Returns: {
           cms_app_password: string
           cms_username: string
+        }[]
+      }
+      dedup_candidates_fuzzy: {
+        Args: { p_city?: string; p_name: string; p_threshold?: number }
+        Returns: {
+          city: string
+          id: string
+          name: string
+          similarity: number
         }[]
       }
       delete_email: {
@@ -15329,6 +15600,7 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      earth: { Args: never; Returns: number }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
@@ -15427,6 +15699,21 @@ export type Database = {
           similarity: number
         }[]
       }
+      match_signals_semantic: {
+        Args: {
+          industry_filter?: string
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+        }
+        Returns: {
+          company_name: string
+          confidence: number
+          id: string
+          recommended_pitch: string
+          similarity: number
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -15461,6 +15748,31 @@ export type Database = {
           read_ct: number
         }[]
       }
+      search_candidates_hybrid: {
+        Args: {
+          city_filter?: string
+          limit_n?: number
+          min_score?: number
+          query_embedding?: string
+          query_text: string
+          state_filter?: string
+        }
+        Returns: {
+          blended_rank: number
+          city: string
+          created_at: string
+          current_employer: string
+          freshness: number
+          fts_rank: number
+          id: string
+          license_type: string
+          name: string
+          score: number
+          semantic_sim: number
+          state: string
+          trade: string
+        }[]
+      }
       search_coaching_documents: {
         Args: { match_count?: number; query: string }
         Returns: {
@@ -15470,6 +15782,8 @@ export type Database = {
           title: string
         }[]
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       toggle_points_visibility: {
         Args: { _is_public: boolean }
         Returns: undefined
