@@ -4079,6 +4079,83 @@ export type Database = {
         }
         Relationships: []
       }
+      enrichment_source_budgets: {
+        Row: {
+          calls_today: number
+          daily_call_cap: number
+          daily_cap_usd: number
+          enabled: boolean
+          notes: string | null
+          reset_at: string
+          source: string
+          spent_today_usd: number
+        }
+        Insert: {
+          calls_today?: number
+          daily_call_cap?: number
+          daily_cap_usd: number
+          enabled?: boolean
+          notes?: string | null
+          reset_at?: string
+          source: string
+          spent_today_usd?: number
+        }
+        Update: {
+          calls_today?: number
+          daily_call_cap?: number
+          daily_cap_usd?: number
+          enabled?: boolean
+          notes?: string | null
+          reset_at?: string
+          source?: string
+          spent_today_usd?: number
+        }
+        Relationships: []
+      }
+      enrichment_stage_state: {
+        Row: {
+          candidate_id: string
+          completed_stages: string[]
+          current_stage: string
+          failed_stages: string[]
+          finished_at: string | null
+          last_advanced_at: string
+          merged_payload: Json
+          started_at: string
+          total_cost_usd: number
+        }
+        Insert: {
+          candidate_id: string
+          completed_stages?: string[]
+          current_stage?: string
+          failed_stages?: string[]
+          finished_at?: string | null
+          last_advanced_at?: string
+          merged_payload?: Json
+          started_at?: string
+          total_cost_usd?: number
+        }
+        Update: {
+          candidate_id?: string
+          completed_stages?: string[]
+          current_stage?: string
+          failed_stages?: string[]
+          finished_at?: string | null
+          last_advanced_at?: string
+          merged_payload?: Json
+          started_at?: string
+          total_cost_usd?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrichment_stage_state_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: true
+            referencedRelation: "hire_alert_candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       estimate_generator_clients: {
         Row: {
           active: boolean | null
@@ -15100,6 +15177,44 @@ export type Database = {
         }
         Relationships: []
       }
+      dlq_enrich_inspector: {
+        Row: {
+          candidate_id: string | null
+          enqueued_at: string | null
+          last_error: string | null
+          msg_id: number | null
+          read_ct: number | null
+          stage: string | null
+        }
+        Insert: {
+          candidate_id?: never
+          enqueued_at?: string | null
+          last_error?: never
+          msg_id?: number | null
+          read_ct?: number | null
+          stage?: never
+        }
+        Update: {
+          candidate_id?: never
+          enqueued_at?: string | null
+          last_error?: never
+          msg_id?: number | null
+          read_ct?: number | null
+          stage?: never
+        }
+        Relationships: []
+      }
+      enrich_observability: {
+        Row: {
+          calls_24h: number | null
+          hit_rate_pct: number | null
+          hits_24h: number | null
+          source: string | null
+          spend_24h_usd: number | null
+          unique_candidates: number | null
+        }
+        Relationships: []
+      }
       generated_sites_public: {
         Row: {
           business_name: string | null
@@ -15194,6 +15309,10 @@ export type Database = {
         Args: { _field: string; _target_user_id: string }
         Returns: boolean
       }
+      consume_source_budget: {
+        Args: { _cost: number; _source: string }
+        Returns: boolean
+      }
       cron_job_status: { Args: { p_jobname: string }; Returns: Json }
       decrypt_cms_credentials: {
         Args: { _client_id: string }
@@ -15216,6 +15335,10 @@ export type Database = {
       }
       enqueue_job: {
         Args: { payload: Json; queue_name: string }
+        Returns: number
+      }
+      enqueue_stage: {
+        Args: { _candidate_id: string; _stage: string }
         Returns: number
       }
       get_active_training_programs: {
@@ -15312,6 +15435,15 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      next_enrich_stage: { Args: { _candidate_id: string }; Returns: string }
+      queue_depth_snapshot: {
+        Args: never
+        Returns: {
+          depth: number
+          oldest_age: string
+          queue_name: string
+        }[]
       }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
