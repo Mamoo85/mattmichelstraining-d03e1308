@@ -444,7 +444,7 @@ export default function MyTechAlert() {
   };
 
   const accentColor = isHealthcare ? "text-blue-500" : "text-[#00d4ff]";
-  const brandName = isHealthcare ? "HireAlert" : "TechAlert";
+  const brandName = "Talent Radar";
   const subtitle = isHealthcare ? "Licensed Healthcare Professionals" : "Licensed Techs in Your Area";
   const IndustryIcon = isHealthcare ? Stethoscope : Wrench;
 
@@ -1057,7 +1057,7 @@ export default function MyTechAlert() {
                 <div>
                   <p className="text-white font-bold text-sm mb-1">Refer a Partner Facility</p>
                   <p className="text-slate-400 text-xs mb-3">Know another facility struggling to find staff? Refer them and get 1 month free.</p>
-                  <a href="mailto:matt@detroitwebagent.com?subject=HireAlert%20Referral" className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors">
+                  <a href="mailto:matt@detroitwebagent.com?subject=Talent%20Radar%20Referral" className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors">
                     <Mail className="h-3.5 w-3.5" /> Refer Now
                   </a>
                 </div>
@@ -1093,7 +1093,7 @@ export default function MyTechAlert() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-white font-bold text-sm flex items-center gap-2">
                 <FileText className="h-4 w-4 text-purple-400" />
-                {outreachModal.isPitch ? "TechAlert Pitch Drafts" : "Outreach Drafts"}
+                {outreachModal.isPitch ? "Talent Radar Pitch Drafts" : "Outreach Drafts"}
               </h3>
               <button onClick={() => setOutreachModal(null)} className="text-slate-500 hover:text-white">
                 <X className="h-5 w-5" />

@@ -94,7 +94,7 @@ export default function GoTechAlert() {
         <div style={{ textAlign: "center", maxWidth: 440 }}>
           <div style={{ fontSize: 56, marginBottom: 16 }}>⚡</div>
           <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 800, margin: "0 0 12px" }}>You're In.</h1>
-          <p style={{ color: ACCENT, fontSize: 16, fontWeight: 700, margin: "0 0 16px" }}>TechAlert starts scanning tomorrow at 7am.</p>
+          <p style={{ color: ACCENT, fontSize: 16, fontWeight: 700, margin: "0 0 16px" }}>Talent Radar starts scanning tomorrow at 7am.</p>
           <p style={{ color: "#94a3b8", fontSize: 14, lineHeight: 1.7 }}>
             Check your email for your welcome guide. You'll get your first candidate alert within 24–48 hours.
           </p>
@@ -109,7 +109,7 @@ export default function GoTechAlert() {
   return (
     <div style={{ minHeight: "100vh", background: BG, color: "#fff", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <SEOHead
-        title={`TechAlert — Find Licensed Techs in ${cityLabel} Before Your Competitors`}
+        title={`Talent Radar — Find Licensed Techs in ${cityLabel} Before Your Competitors`}
         description={`Exclusive hiring intelligence for ${cityLabel} contractors. Licensed ${city.trades} found daily.`}
         path="/go/techalert"
       />
@@ -146,7 +146,7 @@ export default function GoTechAlert() {
           textTransform: "uppercase",
           marginBottom: 20,
         }}>
-          {betaFull ? "Beta Full — $149/mo" : slotsRemaining !== null ? `${slotsRemaining} Beta Slots Left — $99/mo` : "TechAlert"}
+          {betaFull ? "Beta Full — $149/mo" : slotsRemaining !== null ? `${slotsRemaining} Beta Slots Left — $99/mo` : "Talent Radar"}
         </div>
 
         <h1 style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.15, margin: "0 0 12px" }}>
@@ -167,7 +167,7 @@ export default function GoTechAlert() {
       <div style={{ maxWidth: 420, margin: "0 auto", padding: "0 20px 40px" }}>
         <div style={{ background: "#0d2137", border: `2px solid ${ACCENT}`, borderRadius: 14, padding: "28px 24px" }}>
           <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 800 }}>
-            {betaFull ? "Start TechAlert" : "Claim Your Beta Slot"}
+            {betaFull ? "Start Talent Radar" : "Claim Your Slot"}
           </h2>
           <p style={{ margin: "0 0 20px", color: "#94a3b8", fontSize: 13 }}>
             ${price}/mo · Cancel anytime{!betaFull && " · Beta price locked forever"}

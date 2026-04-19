@@ -29,7 +29,16 @@ const APIFY_ACTORS = {
 
 const APIFY_INPUTS = {
   miosha: {
-    licenses: ["boiler", "electrical", "plumbing", "hvac", "mechanical"],
+    licenses: [
+      "boiler", "electrical", "plumbing", "hvac", "mechanical",
+      "cosmetology", "esthetics", "barbering",
+      "real estate broker", "real estate salesperson",
+      "insurance agent", "insurance adjuster",
+      "pharmacy technician", "pharmacist",
+      "respiratory therapist", "physical therapist", "occupational therapist",
+      "speech language pathologist", "audiologist",
+      "professional engineer", "architect",
+    ],
     state: "MI",
   },
   indeed: {
@@ -369,7 +378,21 @@ async function scanJobBoards(): Promise<RawCandidate[]> {
 }
 
 // Company name signals — used to filter out job postings stored as fake candidates
-const COMPANY_NAME_SIGNALS = ["inc", "llc", "corp", "co.", "company", "contractors", "services", "solutions", "group", "enterprises", "associates", "systems", "industries", "construction", "plumbing", "hvac", "mechanical", "electric", "heating", "cooling", "dba"];
+const COMPANY_NAME_SIGNALS = [
+  // Legal entity markers
+  "inc", "llc", "corp", "co.", "company", "ltd", "limited", "dba", "d/b/a", "holdings",
+  // Business type words
+  "contractors", "services", "solutions", "group", "enterprises", "associates",
+  "systems", "industries", "construction", "plumbing", "hvac", "mechanical",
+  "electric", "electrical", "heating", "cooling", "realty",
+  // Generic biz suffixes
+  "pros", "brothers", "bros", "and sons", "& sons", "& son", "and son",
+  // Common garbage business names observed in DB
+  "pipey", "bargain", "comfort zone", "rocket", "reliable", "best", "premier",
+  "advantage", "quality", "professional", "specialist", "expert", "master",
+  // Trailing filler
+  "and", "or", // name ending in "and" / "or" = company abbreviation
+];
 
 function isPersonNameJobBoard(name: string): boolean {
   const lower = name.toLowerCase().trim();
@@ -1155,11 +1178,16 @@ serve(async (req: Request) => {
     return true;
   });
 
-  // Check which candidates are new
+  // Check which candidates are new.
+  // CRITICAL: Do NOT filter by source — the miosha-license-scraper writes source="npi","lara_socrata",
+  // "lara_bcc", "dol", etc., never "miosha". Filtering by source caused existingKeys to be empty,
+  // every candidate appeared "new", the INSERT hit a UNIQUE constraint on license_number, and 0 rows committed.
+  // Fix: fetch ALL candidates older than the 25h window as "already seen". Candidates inserted in the last
+  // 25h by the scraper are NOT in existingKeys → correctly treated as new → scored and alerted.
   const { data: existingRecords } = await sb
     .from("hire_alert_candidates")
     .select("license_number, full_name, name, city, linkedin_url, facebook_url, current_employer, current_title, years_experience, qualifications_summary, hiring_recommendation, enrichment_status, email, phone")
-    .in("source", ["miosha", "firecrawl"]);
+    .lt("first_seen_at", since);
 
   const enrichmentLookup = new Map<string, Record<string, unknown>>();
   for (const r of existingRecords || []) {
@@ -1313,7 +1341,7 @@ serve(async (req: Request) => {
   // Upsert all new candidates into DB
   const allScored = [...enrichBatch, ...pendingBatch];
   if (allScored.length) {
-    const { data: insertedRows, error: insertError } = await sb.from("hire_alert_candidates").insert(
+    const { data: insertedRows, error: insertError } = await sb.from("hire_alert_candidates").upsert(
       allScored.map((c) => ({
         name: c.full_name,
         full_name: c.full_name,
@@ -1348,15 +1376,17 @@ serve(async (req: Request) => {
         qualifications_summary: c.qualifications_summary || null,
         hiring_recommendation: c.hiring_recommendation || null,
         enrichment_status: c.enrichment_status || "pending",
-        first_seen_at: new Date().toISOString(),
+        // first_seen_at intentionally omitted: DB DEFAULT now() handles new rows;
+        // on conflict (license_number) existing rows keep their original timestamp.
         last_seen_at: new Date().toISOString(),
-      }))
+      })),
+      { onConflict: "license_number", ignoreDuplicates: false }
     ).select("id, full_name");
 
     if (insertError) {
-      console.error("[hire-alert-scanner] DB INSERT ERROR:", insertError.message, insertError.details);
+      console.error("[hire-alert-scanner] DB UPSERT ERROR:", insertError.message, insertError.details);
     } else {
-      console.log(`[hire-alert-scanner] Inserted ${insertedRows?.length || 0} candidates into DB`);
+      console.log(`[hire-alert-scanner] Upserted ${insertedRows?.length || 0} candidates into DB`);
     }
 
     if (insertedRows) {
@@ -1450,11 +1480,11 @@ serve(async (req: Request) => {
 
       if (client.notify_sms && client.owner_phone && clientHotCandidates.length) {
         const top = clientHotCandidates[0];
-        const dashLink = client.dashboard_token ? ` View all: m2training.lovable.app/my-techalert?token=${client.dashboard_token}` : "";
+        const dashLink = client.dashboard_token ? ` View all: detroitwebagent.com/my-techalert?token=${client.dashboard_token}` : "";
         const availLabel = top.availability_score >= 8 ? "High Availability" : top.availability_score >= 5 ? "Possible Availability" : "Monitor";
         const smsBody = clientHotCandidates.length === 1
-          ? `TechAlert: ${top.full_name} (${top.license_type || "licensed tech"}, ${top.city || "Metro Detroit"}) — ${availLabel}. You're the only one seeing this.${dashLink} Reply STOP to opt out.`
-          : `TechAlert: ${clientHotCandidates.length} licensed techs found. Top: ${top.full_name} (${top.license_type || "tradesperson"}, ${availLabel}).${dashLink} Reply STOP to opt out.`;
+          ? `Talent Radar: ${top.full_name} (${top.license_type || "licensed tech"}, ${top.city || "Metro Detroit"}) — ${availLabel}. You're the only one seeing this.${dashLink} Reply STOP to opt out.`
+          : `Talent Radar: ${clientHotCandidates.length} licensed techs found. Top: ${top.full_name} (${top.license_type || "tradesperson"}, ${availLabel}).${dashLink} Reply STOP to opt out.`;
         await sendSMS(client.owner_phone, TWILIO_PHONE_NUMBER, smsBody, "hire_alert");
       }
 
