@@ -1048,16 +1048,15 @@ serve(async (req) => {
             }).select("dashboard_token").single();
             if (insertErr) throw new Error(`industry_pulse_clients insert: ${insertErr.message}`);
 
-            // Send welcome email with dashboard link
-            const dashboardUrl = `${SUPABASE_URL.replace('.supabase.co', '')}.detroitwebagent.com/my-industry-pulse?token=${inserted.dashboard_token}`;
+            // Send welcome email + SMS with dashboard link
             const siteUrl = "https://detroitwebagent.com";
             const dashLink = `${siteUrl}/my-industry-pulse?token=${inserted.dashboard_token}`;
             if (RESEND_API_KEY) {
-              await dwaEmail(email, "📡 Industry Pulse Intelligence is Live — Your Dashboard is Ready", `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+              await dwaEmail(email, "📡 Demand Radar is Live — Your Dashboard is Ready", `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#030711;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
 <div style="max-width:600px;margin:0 auto;padding:32px 16px;">
   <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;text-align:center;">
-    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0;">📡 INDUSTRY PULSE</p>
+    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0;">📡 DEMAND RADAR</p>
     <h1 style="color:#fff;font-size:24px;margin:12px 0 8px;">You're In.</h1>
     <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Predictive sales signals start flowing today.</p>
     <a href="${dashLink}" style="display:inline-block;background:#00d4ff;color:#000;font-weight:700;padding:14px 40px;border-radius:8px;text-decoration:none;font-size:15px;">📊 Open Your Dashboard</a>
@@ -1068,8 +1067,17 @@ serve(async (req) => {
   </div>
 </div></body></html>`);
               await notifyMatt(
-                `💰 New Industry Pulse Client — ${meta.company_name || email} ($299/mo)`,
+                `💰 New Demand Radar Client — ${meta.company_name || email} ($299/mo)`,
                 `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Industries: ${targetIndustries.join(", ")}</p>`
+              );
+            }
+            // Welcome SMS if phone provided
+            if (meta.phone) {
+              await sendSMS(
+                meta.phone,
+                "+13139921219",
+                `Demand Radar is live. Your sales intelligence dashboard: ${dashLink} — Reply STOP to opt out.`,
+                "demand_radar_welcome"
               );
             }
           }
