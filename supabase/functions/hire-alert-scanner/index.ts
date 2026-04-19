@@ -428,6 +428,9 @@ const COMPANY_NAME_SIGNALS = [
   // Common garbage business names observed in DB
   "pipey", "bargain", "comfort zone", "rocket", "reliable", "best", "premier",
   "advantage", "quality", "professional", "specialist", "expert", "master",
+  // Geographic/trade junk that slipped through (from real DB cleanup 2026-04-19)
+  "detroit", "metro", "michigan", "drewski", "drain", "handyman", "rooter",
+  "sewer", "remodel", "remodeling", "renovation", "repair", "maintenance",
   // Trailing filler
   "and", "or", // name ending in "and" / "or" = company abbreviation
 ];
