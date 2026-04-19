@@ -807,6 +807,8 @@ export default function AdminHireAlertClients() {
           </div>
         </div>
       )}
+      </>
+      )}
     </div>
   );
 }
