@@ -465,6 +465,8 @@ async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[
 
   const allResults: RawCandidate[] = [];
   const seen = new Set<string>();
+  // HALLUCINATION GUARD: track name → trades. If same name appears in 2+ trades, Sonar is hallucinating.
+  const nameToTrades = new Map<string, Set<string>>();
 
   for (const query of searches) {
     try {
@@ -486,10 +488,12 @@ CRITICAL: Search LinkedIn "open to work" profiles, Indeed public resumes, trade 
 - Have posted public resumes on Indeed, ZipRecruiter, or CareerBuilder
 - Listed in trade union member directories or professional association pages
 
-Return ONLY valid JSON array. Each object must be a real person:
-{ "name": "First Last", "trade": "specific trade title", "city": "Michigan city", "source_url": "URL where you found them or null" }
+Return ONLY valid JSON array. Each object must be a real person with a verifiable source URL:
+{ "name": "First Last", "trade": "specific trade title", "city": "Michigan city", "source_url": "REQUIRED real URL" }
 
 REJECT any result where name looks like a company (LLC, Inc, Corp, Contractors, Services, etc).
+REJECT any result without a real source_url — do not invent URLs.
+REJECT single-word names. Require at least First Last.
 If you genuinely cannot find individual job seekers, return an empty array [].
 Max 15 results. No markdown, no explanation.`,
             },
@@ -521,7 +525,16 @@ Max 15 results. No markdown, no explanation.`,
           console.log(`[hire-alert-scanner] No JSON from Sonar, trying Gemini extraction`);
           const extracted = await extractJobSeekersFromProse(text);
           for (const item of extracted) {
-            const key = `${item.name.toLowerCase()}-${item.trade.toLowerCase()}`;
+            // Guard 1: require multi-word name
+            if (item.name.trim().split(/\s+/).length < 2) {
+              console.log(`[hire-alert-scanner] Rejected single-word name "${item.name}"`);
+              continue;
+            }
+            const nameLower = item.name.toLowerCase();
+            const tradeLower = (item.trade || "").toLowerCase();
+            if (!nameToTrades.has(nameLower)) nameToTrades.set(nameLower, new Set());
+            nameToTrades.get(nameLower)!.add(tradeLower);
+            const key = `${nameLower}-${tradeLower}`;
             if (seen.has(key)) continue;
             seen.add(key);
             allResults.push({
@@ -552,7 +565,22 @@ Max 15 results. No markdown, no explanation.`,
           console.log(`[hire-alert-scanner] Job board: rejected company name "${item.name}"`);
           continue;
         }
-        const key = `${item.name.toLowerCase()}-${item.trade.toLowerCase()}`;
+        // Guard 1: require multi-word name
+        if (item.name.trim().split(/\s+/).length < 2) {
+          console.log(`[hire-alert-scanner] Rejected single-word name "${item.name}"`);
+          continue;
+        }
+        // Guard 3: require real source_url
+        if (!item.source_url || !/^https?:\/\//i.test(item.source_url)) {
+          console.log(`[hire-alert-scanner] Rejected "${item.name}" — missing/invalid source_url`);
+          continue;
+        }
+        const nameLower = item.name.toLowerCase();
+        const tradeLower = item.trade.toLowerCase();
+        if (!nameToTrades.has(nameLower)) nameToTrades.set(nameLower, new Set());
+        nameToTrades.get(nameLower)!.add(tradeLower);
+
+        const key = `${nameLower}-${tradeLower}`;
         if (seen.has(key)) continue;
         seen.add(key);
 
@@ -569,8 +597,18 @@ Max 15 results. No markdown, no explanation.`,
     }
   }
 
-  console.log(`[hire-alert-scanner] OpenRouter web search: found ${allResults.length} validated candidates`);
-  return allResults;
+  // Guard 2 (final): blacklist any name that appeared in 2+ different trades — that's hallucination
+  const blacklisted = new Set<string>();
+  for (const [name, trades] of nameToTrades) {
+    if (trades.size >= 2) {
+      blacklisted.add(name);
+      console.log(`[hire-alert-scanner] BLACKLIST "${name}" — appeared in ${trades.size} trades: ${[...trades].join(", ")}`);
+    }
+  }
+  const filtered = allResults.filter((c) => !blacklisted.has(c.full_name.toLowerCase()));
+
+  console.log(`[hire-alert-scanner] OpenRouter: ${filtered.length} validated, ${allResults.length - filtered.length} hallucinations rejected`);
+  return filtered;
 }
 
 // Extract job seeker names from Sonar prose via Gemini
