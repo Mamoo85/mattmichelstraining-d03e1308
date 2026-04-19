@@ -712,9 +712,29 @@ export default function AdminHireAlertClients() {
       {/* Scanner runs */}
       {runs.length > 0 ? (
         <div>
-          <p className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Clock size={12} /> Recent Scanner Runs
-          </p>
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <p className="text-white/50 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+              <Clock size={12} /> Recent Scanner Runs
+            </p>
+            <div className="flex flex-wrap gap-1">
+              {(() => {
+                const sources = Array.from(new Set(runs.map(r => r.source || "all")));
+                return ["all-sources", ...sources].map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setRunSourceFilter(s === "all-sources" ? null : s)}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors capitalize ${
+                      (runSourceFilter ?? "all-sources") === s
+                        ? "bg-amber-500 text-white"
+                        : "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/70"
+                    }`}
+                  >
+                    {s === "all-sources" ? `All (${runs.length})` : `${s} (${runs.filter(r => (r.source || "all") === s).length})`}
+                  </button>
+                ));
+              })()}
+            </div>
+          </div>
           <div className="rounded-2xl border border-white/8 overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
@@ -727,7 +747,7 @@ export default function AdminHireAlertClients() {
                 </tr>
               </thead>
               <tbody>
-                {runs.map(r => (
+                {runs.filter(r => !runSourceFilter || (r.source || "all") === runSourceFilter).map(r => (
                   <tr key={r.id} className="border-b border-white/5 hover:bg-white/3">
                     <td className="px-4 py-2.5 text-white/60">{new Date(r.run_at).toLocaleString()}</td>
                     <td className="px-4 py-2.5 text-white/60 capitalize hidden sm:table-cell">{r.source || "all"}</td>
