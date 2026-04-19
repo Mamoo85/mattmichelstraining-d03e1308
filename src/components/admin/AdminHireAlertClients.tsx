@@ -643,8 +643,7 @@ export default function AdminHireAlertClients() {
         <CandidateWorkbench />
       ) : (
       <>
-      </>
-      )}
+        {/* Clients tab content below */}
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
