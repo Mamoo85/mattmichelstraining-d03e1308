@@ -295,6 +295,7 @@ const CrimeDigest = lazyRetry(() => import("./pages/CrimeDigest"));
 const IndustryPulse = lazyRetry(() => import("./pages/IndustryPulse"));
 const MyIndustryPulse = lazyRetry(() => import("./pages/MyIndustryPulse"));
 const DemandRadar = lazyRetry(() => import("./pages/DemandRadar"));
+const HighVolumeBuyerAlerts = lazyRetry(() => import("./pages/HighVolumeBuyerAlerts"));
 const StaffingAgency = lazyRetry(() => import("./pages/StaffingAgency"));
 
 const AgencyPortal = lazyRetry(() => import("./pages/AgencyPortal"));
@@ -752,6 +753,7 @@ const App = () => (
                     <Route path="/website-speed-audit" element={<WebsiteSpeedAudits />} />
                     <Route path="/crime-digest" element={<CrimeDigest />} />
                     <Route path="/demand-radar" element={<DemandRadar />} />
+                    <Route path="/high-volume-buyer-alerts" element={<HighVolumeBuyerAlerts />} />
                     <Route path="/staffing" element={<StaffingAgency />} />
                     <Route path="/agency-portal" element={<AgencyPortal />} />
                     <Route path="/license-monitor" element={<LicenseMonitor />} />
