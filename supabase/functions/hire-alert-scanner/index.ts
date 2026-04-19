@@ -913,6 +913,44 @@ async function findHRContactViaSnoviо(domain: string): Promise<string | null> {
   }
 }
 
+
+// ── Apollo org enrich on current_employer (item 15) ──────────────────────────
+async function apolloOrgEnrich(companyName: string): Promise<{ employee_count: number | null; industry: string | null }> {
+  const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
+  if (!APOLLO_API_KEY || !companyName) return { employee_count: null, industry: null };
+  try {
+    const res = await fetch(`https://api.apollo.io/api/v1/organizations/enrich?organization_name=${encodeURIComponent(companyName)}`, {
+      headers: { "X-Api-Key": APOLLO_API_KEY, "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return { employee_count: null, industry: null };
+    const data = await res.json();
+    const org = data?.organization;
+    return {
+      employee_count: org?.estimated_num_employees ?? null,
+      industry: org?.industry ?? null,
+    };
+  } catch {
+    return { employee_count: null, industry: null };
+  }
+}
+
+// ── HIBP paste check for password_compromised (item 16) ──────────────────────
+async function checkPasswordCompromised(email: string): Promise<boolean> {
+  const HIBP_API_KEY = Deno.env.get("HIBP_API_KEY") || "";
+  if (!HIBP_API_KEY || !email) return false;
+  try {
+    const res = await fetch(`https://haveibeenpwned.com/api/v3/pasteaccount/${encodeURIComponent(email)}`, {
+      headers: { "hibp-api-key": HIBP_API_KEY, "User-Agent": "TechAlert-Intelligence/1.0" },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (res.status === 404) return false; // not found = clean
+    return res.ok; // 200 = compromised
+  } catch {
+    return false;
+  }
+}
+
 // Score candidate availability via AI with real signals
 async function scoreCandidate(candidate: RawCandidate): Promise<{ score: number; reason: string }> {
   // 🛡️ Company-name gate: never score business names above 4. Prevents "A1 Bargain LLC = 10/10" leak.
@@ -1601,6 +1639,52 @@ serve(async (req: Request) => {
         }
       }
 
+      // Phase 3i: personal_email_primary (item 14)
+      if (pdlData.pdl_personal_email) {
+        (candidate as any).personal_email_primary = true;
+      }
+
+      // Phase 3j: Apollo org enrich fallback for employer context (item 15)
+      if (candidate.current_employer && !(pdlData as any).pdl_company_employee_count) {
+        const apolloOrg = await apolloOrgEnrich(candidate.current_employer);
+        if (apolloOrg.employee_count) {
+          (candidate.raw_data as any) = { ...(candidate.raw_data || {}), apollo_employee_count: apolloOrg.employee_count, apollo_industry: apolloOrg.industry };
+          // Use for headcount delta if PDL missed it
+          if ((candidate as any).employer_headcount_delta === undefined || (candidate as any).employer_headcount_delta === null) {
+            const prevCount = (candidate.raw_data as any)?.apollo_employee_count_prev;
+            if (prevCount) (candidate as any).employer_headcount_delta = apolloOrg.employee_count - prevCount;
+          }
+          // Small employer = higher flight risk adjustment
+          if (apolloOrg.employee_count < 15 && (candidate as any).flight_risk !== "high_flight_risk") {
+            (candidate as any).flight_risk_proof = `${(candidate as any).flight_risk_proof || ""} Small employer (~${apolloOrg.employee_count} employees) — candidate unlikely to have strong retention benefits.`.trim();
+          }
+        }
+      }
+
+      // Phase 3k: HIBP paste check for password_compromised (item 16)
+      const checkEmail = candidate.email || pdlData.pdl_personal_email as string | undefined;
+      if (checkEmail) {
+        const compromised = await checkPasswordCompromised(String(checkEmail));
+        (candidate as any).password_compromised = compromised;
+      }
+
+      // Phase 3l: available_until computation (item 18)
+      let availableUntil: string | null = null;
+      if (candidate.license_expiry) {
+        const expiry = new Date(candidate.license_expiry);
+        if (expiry < new Date()) {
+          // Lapsed: availability window = expiry + 90 days
+          const until = new Date(expiry.getTime() + 90 * 24 * 60 * 60 * 1000);
+          availableUntil = until.toISOString().split("T")[0];
+        }
+      }
+      if (!availableUntil && (candidate as any).availability_signal?.includes("Active on job boards")) {
+        // Active on job board: window = 45 days from now
+        const until = new Date(Date.now() + 45 * 24 * 60 * 60 * 1000);
+        availableUntil = until.toISOString().split("T")[0];
+      }
+      if (availableUntil) (candidate as any).available_until = availableUntil;
+
       // Phase 4: AI Synthesis (now includes NPI + PDL context)
       const { qualifications_summary, hiring_recommendation } = await synthesizeViaAI(candidate, sonarData, npiData, pdlData);
       if (qualifications_summary) candidate.qualifications_summary = qualifications_summary;
@@ -1666,6 +1750,9 @@ serve(async (req: Request) => {
         employer_headcount_delta: (c as any).employer_headcount_delta ?? null,
         job_stability_index: (c as any).job_stability_index ?? null,
         availability_signal: (c as any).availability_signal || null,
+        personal_email_primary: (c as any).personal_email_primary ?? null,
+        password_compromised: (c as any).password_compromised ?? null,
+        available_until: (c as any).available_until ?? null,
         // first_seen_at intentionally omitted: DB DEFAULT now() handles new rows;
         // on conflict (license_number) existing rows keep their original timestamp.
         last_seen_at: new Date().toISOString(),

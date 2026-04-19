@@ -12,6 +12,113 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
+const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
+
+// ── Apollo org validation (item 21) ──────────────────────────────────────────
+async function apolloValidateCompany(name: string): Promise<{ valid: boolean; employee_count: number | null; size_tier: string }> {
+  if (!APOLLO_API_KEY) return { valid: true, employee_count: null, size_tier: "unknown" };
+  try {
+    const res = await fetch(`https://api.apollo.io/api/v1/organizations/enrich?organization_name=${encodeURIComponent(name)}`, {
+      headers: { "X-Api-Key": APOLLO_API_KEY },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!res.ok) return { valid: true, employee_count: null, size_tier: "unknown" };
+    const data = await res.json();
+    const emp = data?.organization?.estimated_num_employees;
+    const tier = !emp ? "unknown" : emp <= 10 ? "micro" : emp <= 50 ? "small" : emp <= 200 ? "mid" : "large";
+    return { valid: !!data?.organization, employee_count: emp ?? null, size_tier: tier };
+  } catch {
+    return { valid: true, employee_count: null, size_tier: "unknown" };
+  }
+}
+
+// ── Detroit BSEED permit surge harvester (item 19) ───────────────────────────
+async function harvestBSEEDPermitSignals(sb: any): Promise<any[]> {
+  if (!OPENROUTER_API_KEY) return [];
+  try {
+    // Detroit BSEED ArcGIS REST endpoint for commercial permits
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const dateStr = `${thirtyDaysAgo.getFullYear()}-${String(thirtyDaysAgo.getMonth()+1).padStart(2,"0")}-${String(thirtyDaysAgo.getDate()).padStart(2,"0")}`;
+
+    // Try ArcGIS first; fall back to Sonar web search
+    let permitData: any[] = [];
+    try {
+      const arcRes = await fetch(
+        `https://gis.detroitmi.gov/arcgis/rest/services/DBI/OpenDataPortal/FeatureServer/0/query?where=permit_issued+>=+date+'${dateStr}'+AND+estimated_cost+>=+50000+AND+permit_type+LIKE+'%25COMMERCIAL%25'&outFields=contractor_name,permit_type,estimated_cost,address,permit_issued&f=json&resultRecordCount=100`,
+        { signal: AbortSignal.timeout(12000) }
+      );
+      if (arcRes.ok) {
+        const arcData = await arcRes.json();
+        permitData = (arcData?.features || []).map((f: any) => f.attributes).filter((a: any) => a.contractor_name);
+      }
+    } catch { /* fall through to Sonar */ }
+
+    if (!permitData.length) {
+      // Sonar fallback: search recent BSEED permit filings
+      const sonarRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "perplexity/sonar-pro",
+          messages: [{ role: "user", content: `Search for recent building permits filed in Detroit Michigan in the last 30 days worth over $50,000: site:detroitmi.gov permits OR BSEED building permit 2025 commercial contractor
+
+Extract: contractor company name, permit type, estimated value, address.
+Return JSON array: [{"contractor_name":"...","permit_type":"...","estimated_cost":50000,"address":"..."}]
+Return empty array [] if nothing found.` }],
+          max_tokens: 800, temperature: 0.1,
+        }),
+        signal: AbortSignal.timeout(20000),
+      });
+      if (sonarRes.ok) {
+        const sonarData = await sonarRes.json();
+        const raw = sonarData?.choices?.[0]?.message?.content || "";
+        try { permitData = extractJSON(raw) || []; } catch { permitData = []; }
+      }
+    }
+
+    if (!permitData.length) return [];
+
+    // Aggregate by contractor name (item 22 — multi-permit aggregation)
+    const aggregated: Record<string, { contractor: string; count: number; total_value: number; types: string[] }> = {};
+    for (const p of permitData) {
+      const key = (p.contractor_name || "").toLowerCase().trim();
+      if (!key || key.length < 3) continue;
+      if (!aggregated[key]) aggregated[key] = { contractor: p.contractor_name, count: 0, total_value: 0, types: [] };
+      aggregated[key].count++;
+      aggregated[key].total_value += Number(p.estimated_cost) || 0;
+      if (p.permit_type && !aggregated[key].types.includes(p.permit_type)) aggregated[key].types.push(p.permit_type);
+    }
+
+    // Only emit companies with 3+ permits (high-volume buyer signal)
+    const hvbSignals: any[] = [];
+    for (const agg of Object.values(aggregated)) {
+      if (agg.count < 3) continue;
+      const avgValue = Math.round(agg.total_value / agg.count);
+      hvbSignals.push({
+        company_name: agg.contractor,
+        location: "Detroit, MI",
+        industry: "Commercial Construction",
+        hiring_roles: agg.types,
+        hiring_count: agg.count,
+        predicted_needs: ["Building materials", "HVAC equipment", "Electrical supplies", "Plumbing fixtures"],
+        confidence: Math.min(10, 6 + Math.floor(agg.count / 2)),
+        recommended_pitch: `⚡ HIGH-VOLUME BUYER: ${agg.contractor} has pulled ${agg.count} commercial permits in the last 30 days (avg $${avgValue.toLocaleString()}/permit). Active project pipeline — ideal for supply house outreach.`,
+        source_urls: [],
+        cross_referenced: false,
+        signal_type: "permit_surge",
+        sector: "construction",
+      });
+    }
+    console.log(`[industry-pulse] BSEED: ${permitData.length} permits → ${hvbSignals.length} high-volume buyer signals`);
+    return hvbSignals;
+  } catch (e) {
+    console.warn("[industry-pulse] BSEED harvest error:", e instanceof Error ? e.message : String(e));
+    return [];
+  }
+}
+
+
+
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -174,6 +281,13 @@ serve(async (req) => {
             trade.industry
           );
 
+          // Item 21: Apollo org validation — skip junk companies, get size_tier
+          const apolloCheck = await apolloValidateCompany(co.company);
+          if (!apolloCheck.valid) continue;
+          // Boost confidence for small companies (growing fast = hot prospect)
+          let adjConfidence = prediction.confidence;
+          if (apolloCheck.size_tier === "micro") adjConfidence = Math.min(10, adjConfidence + 1);
+
           signals.push({
             company_name: co.company,
             location: co.location || "Metro Detroit, MI",
@@ -181,16 +295,21 @@ serve(async (req) => {
             hiring_roles: co.roles,
             hiring_count: co.count || 1,
             predicted_needs: prediction.predicted_needs,
-            confidence: prediction.confidence,
+            confidence: adjConfidence,
             recommended_pitch: prediction.recommended_pitch,
             source_urls: co.source_url ? [co.source_url] : [],
             cross_referenced: false,
+            sector: apolloCheck.size_tier !== "unknown" ? apolloCheck.size_tier : null,
           });
         }
       } catch {
         console.log(`[industry-pulse] Failed to parse ${trade.industry} results`);
       }
     }
+
+    // Item 19: Harvest BSEED permit surge signals (aggregated by contractor, item 22)
+    const bseedSignals = await harvestBSEEDPermitSignals(sb);
+    signals.push(...bseedSignals);
 
     // Cross-reference: check if any companies also appear in industrial growth intel
     if (signals.length > 0) {
