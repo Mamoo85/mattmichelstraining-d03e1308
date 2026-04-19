@@ -11,6 +11,7 @@
  * Always logs to public.ai_call_log for ROI measurement.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { cachedLLM, type ContentType } from "./llm-cache.ts";
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
@@ -48,6 +49,10 @@ interface CheapOpts {
   maxTokens?: number;
   /** Caller name for ROI logs (e.g. "candidate-deep-enrich"). */
   caller?: string;
+  /** Content type for cache TTL/segmentation. Defaults to "generic". */
+  contentType?: ContentType;
+  /** Skip the semantic LLM cache (default false — cache is on). */
+  noCache?: boolean;
 }
 
 interface CheapResult<T> {
@@ -142,46 +147,68 @@ async function callProvider(
 /**
  * Extract structured data from a prompt using the cheap model with tool-calling.
  * Tries Lovable AI Gateway first, then OpenRouter as paid fallback.
+ *
+ * Wrapped in cachedLLM() — exact + semantic cache (B17). Pass `noCache: true` to bypass.
  */
 export async function cheapExtract<T = Record<string, unknown>>(
   prompt: string,
   opts: CheapOpts,
 ): Promise<CheapResult<T>> {
   const caller = opts.caller || "unknown";
-  const t0 = Date.now();
 
-  // Tier 1: Lovable AI Gateway (free-tier eligible)
-  if (LOVABLE_API_KEY) {
-    try {
-      const r = await callProvider(LOVABLE_URL, LOVABLE_API_KEY, prompt, opts);
-      const ms = Date.now() - t0;
-      if (r.ok) {
-        await logCall(caller, opts.task, "lovable", CHEAP_MODEL, true, ms);
-        return { ok: true, data: r.data as T, provider: "lovable", ms };
+  const inner = async (): Promise<CheapResult<T>> => {
+    const t0 = Date.now();
+
+    // Tier 1: Lovable AI Gateway (free-tier eligible)
+    if (LOVABLE_API_KEY) {
+      try {
+        const r = await callProvider(LOVABLE_URL, LOVABLE_API_KEY, prompt, opts);
+        const ms = Date.now() - t0;
+        if (r.ok) {
+          await logCall(caller, opts.task, "lovable", CHEAP_MODEL, true, ms);
+          return { ok: true, data: r.data as T, provider: "lovable", ms };
+        }
+        await logCall(caller, opts.task, "lovable", CHEAP_MODEL, false, ms, r.error);
+      } catch (e) {
+        await logCall(caller, opts.task, "lovable", CHEAP_MODEL, false, Date.now() - t0, String(e).slice(0, 200));
       }
-      await logCall(caller, opts.task, "lovable", CHEAP_MODEL, false, ms, r.error);
-    } catch (e) {
-      await logCall(caller, opts.task, "lovable", CHEAP_MODEL, false, Date.now() - t0, String(e).slice(0, 200));
     }
-  }
 
-  // Tier 2: OpenRouter (paid fallback)
-  if (OPENROUTER_API_KEY) {
-    const t1 = Date.now();
-    try {
-      const r = await callProvider(OPENROUTER_URL, OPENROUTER_API_KEY, prompt, opts);
-      const ms = Date.now() - t1;
-      if (r.ok) {
-        await logCall(caller, opts.task, "openrouter", CHEAP_MODEL, true, ms);
-        return { ok: true, data: r.data as T, provider: "openrouter", ms };
+    // Tier 2: OpenRouter (paid fallback)
+    if (OPENROUTER_API_KEY) {
+      const t1 = Date.now();
+      try {
+        const r = await callProvider(OPENROUTER_URL, OPENROUTER_API_KEY, prompt, opts);
+        const ms = Date.now() - t1;
+        if (r.ok) {
+          await logCall(caller, opts.task, "openrouter", CHEAP_MODEL, true, ms);
+          return { ok: true, data: r.data as T, provider: "openrouter", ms };
+        }
+        await logCall(caller, opts.task, "openrouter", CHEAP_MODEL, false, ms, r.error);
+      } catch (e) {
+        await logCall(caller, opts.task, "openrouter", CHEAP_MODEL, false, Date.now() - t1, String(e).slice(0, 200));
       }
-      await logCall(caller, opts.task, "openrouter", CHEAP_MODEL, false, ms, r.error);
-    } catch (e) {
-      await logCall(caller, opts.task, "openrouter", CHEAP_MODEL, false, Date.now() - t1, String(e).slice(0, 200));
     }
-  }
 
-  return { ok: false, data: null, provider: "none", ms: Date.now() - t0, error: "all providers failed" };
+    return { ok: false, data: null, provider: "none", ms: Date.now() - t0, error: "all providers failed" };
+  };
+
+  if (opts.noCache) return inner();
+
+  // Always-cached wrapper (B17). Cache key includes the task + schema shape so
+  // different schemas don't collide on the same prompt.
+  const cacheKey = `task=${opts.task}\nschema=${JSON.stringify(opts.schema)}\nprompt=${prompt}`;
+  const cached = await cachedLLM<CheapResult<T>>(
+    {
+      model: CHEAP_MODEL,
+      prompt: cacheKey,
+      temperature: 0,
+      contentType: opts.contentType || "generic",
+      caller,
+    },
+    inner,
+  );
+  return cached.data;
 }
 
 // Convenience schemas for the most common tasks.

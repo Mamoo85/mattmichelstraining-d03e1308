@@ -606,6 +606,7 @@ export type Database = {
       }
       ai_call_log: {
         Row: {
+          cache_tier: string
           caller: string
           cost_usd: number | null
           created_at: string
@@ -618,6 +619,7 @@ export type Database = {
           task: string
         }
         Insert: {
+          cache_tier?: string
           caller: string
           cost_usd?: number | null
           created_at?: string
@@ -630,6 +632,7 @@ export type Database = {
           task: string
         }
         Update: {
+          cache_tier?: string
           caller?: string
           cost_usd?: number | null
           created_at?: string
@@ -7097,33 +7100,45 @@ export type Database = {
       }
       llm_response_cache: {
         Row: {
+          content_type: string
           created_at: string
           expires_at: string
           hit_count: number
           id: string
           last_hit_at: string
           model: string
+          model_family: string
+          prompt_embedding: string | null
           prompt_hash: string
+          prompt_preview: string | null
           response: Json
         }
         Insert: {
+          content_type?: string
           created_at?: string
           expires_at?: string
           hit_count?: number
           id?: string
           last_hit_at?: string
           model: string
+          model_family?: string
+          prompt_embedding?: string | null
           prompt_hash: string
+          prompt_preview?: string | null
           response: Json
         }
         Update: {
+          content_type?: string
           created_at?: string
           expires_at?: string
           hit_count?: number
           id?: string
           last_hit_at?: string
           model?: string
+          model_family?: string
+          prompt_embedding?: string | null
           prompt_hash?: string
+          prompt_preview?: string | null
           response?: Json
         }
         Relationships: []
@@ -15274,6 +15289,20 @@ export type Database = {
       log_challenge_progress: {
         Args: { _challenge_id: string; _user_id: string; _value: number }
         Returns: number
+      }
+      match_llm_cache: {
+        Args: {
+          _content_type?: string
+          _embedding: string
+          _model_family?: string
+          _threshold?: number
+        }
+        Returns: {
+          hit_count: number
+          id: string
+          response: Json
+          similarity: number
+        }[]
       }
       move_to_dlq: {
         Args: {
