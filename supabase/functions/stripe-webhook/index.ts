@@ -891,6 +891,9 @@ serve(async (req) => {
               ? meta.target_roles.split(",").map((r: string) => r.trim()).filter(Boolean)
               : ["boiler_operator", "hvac_tech"];
             // CRITICAL: upsert so repeat checkouts by same email update instead of duplicate-key failing
+            const targetZipPrefixes = meta.target_zip_prefixes
+              ? meta.target_zip_prefixes.split(",").map((z: string) => z.trim()).filter(Boolean)
+              : null;
             const { data: insertedClient, error: insertErr } = await (sb.from as any)("hire_alert_clients").upsert({
               company_name: meta.company_name || email,
               owner_email: email,
@@ -900,6 +903,9 @@ serve(async (req) => {
               active: true,
               plan: meta.plan || "standalone",
               target_roles: targetRoles,
+              target_state: (meta.target_state || "MI").toUpperCase(),
+              target_metro: (meta.target_metro || "detroit").toLowerCase(),
+              target_zip_prefixes: targetZipPrefixes,
               tos_accepted_at: meta.tos_accepted === "true" ? new Date().toISOString() : null,
             }, { onConflict: "owner_email" }).select("dashboard_token").single();
             if (insertErr) throw new Error(`hire_alert_clients upsert: ${insertErr.message}`);
