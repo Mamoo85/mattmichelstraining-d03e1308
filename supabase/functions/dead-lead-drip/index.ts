@@ -137,10 +137,6 @@ async function runDripJob(): Promise<Response> {
     let sonarEnrichedCount = 0;
     const SONAR_ENRICH_LIMIT = 3;
 
-    // Item 42: Sonar enrichment counter (first 3 drip1 contacts)
-    let sonarEnrichedCount = 0;
-    const SONAR_ENRICH_LIMIT = 3;
-
     // ── DRIP 1: pending contacts in active campaigns ──────────────────────
     // .gte() filter enforces EBR at query level. Contacts with NULL
     // last_contact_date are excluded (safer to skip than risk a violation).
@@ -181,16 +177,7 @@ async function runDripJob(): Promise<Response> {
           }
         }
 
-        // Item 42: Skip if Sonar finds project already completed
-        if (sonarEnrichedCount < SONAR_ENRICH_LIMIT) {
-          const projectDone = await checkProjectComplete(contact.name || "", trade);
-          sonarEnrichedCount++;
-          if (projectDone) {
-            await sb.from("dead_lead_contacts" as any).update({ status: "project_complete" }).eq("id", contact.id);
-            console.log(`[drip] Sonar: ${contact.name} project likely complete — skipping`);
-            continue;
-          }
-        }
+
 
         const body = customCopy?.drip1_copy
           ? customCopy.drip1_copy
