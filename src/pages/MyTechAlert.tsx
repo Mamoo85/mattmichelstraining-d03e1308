@@ -978,6 +978,16 @@ export default function MyTechAlert() {
                         </div>
                       )}
 
+                      {/* Item 3 + 5 — HIBP cyber hygiene + urgency decay window */}
+                      <CandidateRiskBadges
+                        cyber_hygiene_score={c.cyber_hygiene_score}
+                        employer_domain_breached_recently={c.employer_domain_breached_recently}
+                        password_compromised={c.password_compromised}
+                        license_expiry={c.license_expiry}
+                        urgency_score={c.urgency_score}
+                        available_until={c.available_until}
+                      />
+
                       {c.score_reason && (
                         <p className="text-[11px] text-slate-500 italic">{c.score_reason}</p>
                       )}
