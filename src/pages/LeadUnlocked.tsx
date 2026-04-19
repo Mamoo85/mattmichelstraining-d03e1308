@@ -123,6 +123,13 @@ export default function LeadUnlocked() {
               </div>
             </div>
 
+            {/* Items 35, 37, 38, 39, 45, 47 — quality intelligence (rendered only when data present) */}
+            {lead && (
+              <div style={{ marginBottom: 20 }}>
+                <LeadQualityBadges data={lead} />
+              </div>
+            )}
+
             <div style={{ background: "#0a1628", borderRadius: 10, padding: "20px 24px", marginBottom: 24 }}>
               <div style={{ display: "grid", gap: 16 }}>
                 <div>
