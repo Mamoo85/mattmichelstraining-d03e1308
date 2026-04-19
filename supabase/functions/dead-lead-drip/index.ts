@@ -346,4 +346,5 @@ async function runDripJob(): Promise<Response> {
     console.error("[dead-lead-drip] Error:", msg);
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
-});
+}
+
