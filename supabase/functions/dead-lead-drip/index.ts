@@ -177,16 +177,7 @@ async function runDripJob(): Promise<Response> {
           }
         }
 
-        // Item 42: Skip if Sonar finds project already completed
-        if (sonarEnrichedCount < SONAR_ENRICH_LIMIT) {
-          const projectDone = await checkProjectComplete(contact.name || "", trade);
-          sonarEnrichedCount++;
-          if (projectDone) {
-            await sb.from("dead_lead_contacts" as any).update({ status: "project_complete" }).eq("id", contact.id);
-            console.log(`[drip] Sonar: ${contact.name} project likely complete — skipping`);
-            continue;
-          }
-        }
+
 
         const body = customCopy?.drip1_copy
           ? customCopy.drip1_copy
