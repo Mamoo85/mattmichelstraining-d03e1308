@@ -400,4 +400,5 @@ Respond in EXACT JSON (no markdown):
       headers: { ...cors, "Content-Type": "application/json" },
     });
   }
-});
+}
+
