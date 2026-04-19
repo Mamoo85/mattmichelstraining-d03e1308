@@ -23,14 +23,16 @@ serve(async (req) => {
     // Last 7 runs (most recent first) — for the dashboard run history table
     const { data: runs } = await sb
       .from("hire_alert_runs" as any)
-      .select("run_at, source, candidates_found, new_candidates, alerts_sent, errors")
+      .select("run_at, source, candidates_found, new_candidates, alerts_sent, errors, status")
+      .neq("status", "skipped_no_worker")
       .order("run_at", { ascending: false })
       .limit(7);
 
     // Weekly aggregate — for the landing page stat strip
     const { data: weekRuns } = await sb
       .from("hire_alert_runs" as any)
-      .select("candidates_found, new_candidates, alerts_sent")
+      .select("candidates_found, new_candidates, alerts_sent, status")
+      .neq("status", "skipped_no_worker")
       .gte("run_at", sevenDaysAgo);
 
     const weeklyStats = (weekRuns || []).reduce(
