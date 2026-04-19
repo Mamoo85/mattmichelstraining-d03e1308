@@ -119,6 +119,9 @@ export default function MyTechAlert() {
   const [outreachModal, setOutreachModal] = useState<{ candidateId: string; draft: OutreachDraft; isPitch?: boolean } | null>(null);
   const [generatingDraft, setGeneratingDraft] = useState<string | null>(null);
   const [fastTrackingId, setFastTrackingId] = useState<string | null>(null);
+  const [quickStartDismissed, setQuickStartDismissed] = useState(() =>
+    typeof window !== "undefined" && localStorage.getItem("techalert_quickstart_dismissed") === "1"
+  );
   const highlightRef = useRef<HTMLDivElement>(null);
   const highlightHandled = useRef(false);
 
