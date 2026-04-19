@@ -1169,11 +1169,16 @@ serve(async (req: Request) => {
     return true;
   });
 
-  // Check which candidates are new
+  // Check which candidates are new.
+  // CRITICAL: Do NOT filter by source — the miosha-license-scraper writes source="npi","lara_socrata",
+  // "lara_bcc", "dol", etc., never "miosha". Filtering by source caused existingKeys to be empty,
+  // every candidate appeared "new", the INSERT hit a UNIQUE constraint on license_number, and 0 rows committed.
+  // Fix: fetch ALL candidates older than the 25h window as "already seen". Candidates inserted in the last
+  // 25h by the scraper are NOT in existingKeys → correctly treated as new → scored and alerted.
   const { data: existingRecords } = await sb
     .from("hire_alert_candidates")
     .select("license_number, full_name, name, city, linkedin_url, facebook_url, current_employer, current_title, years_experience, qualifications_summary, hiring_recommendation, enrichment_status, email, phone")
-    .in("source", ["miosha", "firecrawl"]);
+    .lt("first_seen_at", since);
 
   const enrichmentLookup = new Map<string, Record<string, unknown>>();
   for (const r of existingRecords || []) {
