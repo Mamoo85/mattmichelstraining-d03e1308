@@ -12,11 +12,97 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
 const SITE_URL = "https://www.detroitwebagent.com";
+const HUNTER_API_KEY = Deno.env.get("HUNTER_API_KEY") || "";
+const PDL_API_KEY = Deno.env.get("PDL_API_KEY") || "";
+const HIBP_API_KEY = Deno.env.get("HIBP_API_KEY") || "";
+const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+
+// Item 43: Hunter email validation
+async function validateEmail(email: string): Promise<boolean> {
+  if (!HUNTER_API_KEY || !email) return true;
+  try {
+    const res = await fetch(
+      `https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${HUNTER_API_KEY}`,
+      { signal: AbortSignal.timeout(6000) }
+    );
+    if (!res.ok) return true;
+    const data = await res.json();
+    return data?.data?.status !== "invalid";
+  } catch { return true; }
+}
+
+// Item 44: PDL person enrichment on homeowner phone
+async function pdlEnrichPhone(phone: string): Promise<string> {
+  if (!PDL_API_KEY || !phone) return "";
+  try {
+    const clean = phone.replace(/\D/g, "");
+    const res = await fetch(
+      `https://api.peopledatalabs.com/v5/person/enrich?phone=%2B1${clean.slice(-10)}&min_likelihood=4&pretty=false`,
+      { headers: { "X-Api-Key": PDL_API_KEY }, signal: AbortSignal.timeout(7000) }
+    );
+    if (res.status === 404 || !res.ok) return "";
+    const data = await res.json();
+    const name = data?.person?.full_name || "";
+    const job = data?.person?.job_title || "";
+    if (!name) return "";
+    return job ? `${name} (${job})` : name;
+  } catch { return ""; }
+}
+
+// Item 48: HIBP domain breach check for contractor
+async function checkDomainBreach(email: string): Promise<boolean> {
+  if (!HIBP_API_KEY || !email || !email.includes("@")) return false;
+  const domain = email.split("@")[1];
+  try {
+    const res = await fetch(
+      `https://haveibeenpwned.com/api/v3/breaches?domain=${encodeURIComponent(domain)}`,
+      { headers: { "hibp-api-key": HIBP_API_KEY, "User-Agent": "DetroitWebAgency" }, signal: AbortSignal.timeout(6000) }
+    );
+    if (res.status === 404) return false;
+    if (!res.ok) return false;
+    const data = await res.json();
+    return Array.isArray(data) && data.length > 0;
+  } catch { return false; }
+}
+
+// Item 36: Twilio carrier lookup for lead phone
+async function leadCarrierType(phone: string): Promise<string> {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !phone) return "unknown";
+  try {
+    const res = await fetch(
+      `https://lookups.twilio.com/v2/PhoneNumbers/${encodeURIComponent(phone)}?Fields=line_type_intelligence`,
+      {
+        headers: { Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}` },
+        signal: AbortSignal.timeout(5000),
+      }
+    );
+    if (!res.ok) return "unknown";
+    const data = await res.json();
+    return data?.line_type_intelligence?.type || "unknown";
+  } catch { return "unknown"; }
+}
+
+// Item 40: Recent permit surge signals for city
+async function queryPermitContext(sb: any, city: string): Promise<string> {
+  try {
+    const { data } = await sb
+      .from("industry_pulse_signals")
+      .select("company_name, hiring_count")
+      .eq("signal_type", "permit_surge")
+      .ilike("location", `%${city}%`)
+      .gte("detected_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .limit(3);
+    if (!data?.length) return "";
+    return `${data.length} active contractor(s) pulling permits in ${city}: ${data.map((d: any) => d.company_name).join(", ")}`;
+  } catch { return ""; }
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -89,8 +175,18 @@ serve(async (req) => {
       const isActiveSubscriber = contractor.active === true;
 
       if (isActiveSubscriber) {
+        // Items 36,40,43,44,48: parallel lead enrichment
+        const [emailValid, pdlVerified, domainBreached, carrierType, permitCtx] = await Promise.all([
+          validateEmail(contractor.email),
+          pdlEnrichPhone(lead.phone),
+          checkDomainBreach(contractor.email),
+          leadCarrierType(lead.phone),
+          queryPermitContext(sb, site?.city || "Detroit"),
+        ]);
+        const breachWarn = domainBreached ? "🔒 BREACH: contractor domain. " : "";
+
         // ── SUBSCRIPTION CONTRACTOR: full contact info ──────────────────────
-        if (contractor.email && RESEND_API_KEY) {
+        if (emailValid && contractor.email && RESEND_API_KEY) {
           const tradeLabel = site?.trade || "service";
           const firstName = lead.name?.split(" ")[0]?.toUpperCase() || "THEM";
           const messageBlock = lead.message
@@ -116,6 +212,9 @@ serve(async (req) => {
       <tr><td style="padding:10px 0;border-bottom:1px solid #1e3a5f;color:#64748b;font-size:13px">Phone</td><td style="padding:10px 0;border-bottom:1px solid #1e3a5f"><a href="tel:${lead.phone}" style="color:#00d4ff;font-weight:700;font-size:16px;text-decoration:none">${lead.phone}</a></td></tr>
       <tr><td style="padding:10px 0;border-bottom:1px solid #1e3a5f;color:#64748b;font-size:13px">Email</td><td style="padding:10px 0;border-bottom:1px solid #1e3a5f;color:#e2e8f0;font-size:14px">${lead.email || "—"}</td></tr>
       <tr><td style="padding:10px 0;color:#64748b;font-size:13px">Project</td><td style="padding:10px 0;color:#e2e8f0;font-size:14px">${lead.project_type || "—"}</td></tr>
+      ${carrierType !== "unknown" ? `<tr><td style="padding:8px 0;color:#64748b;font-size:12px">Phone</td><td style="padding:8px 0;color:#94a3b8;font-size:13px">${carrierType}${carrierType === "landline" ? " ⚠️ DNC-risk" : ""}</td></tr>` : ""}
+      ${pdlVerified ? `<tr><td style="padding:8px 0;color:#64748b;font-size:12px">PDL</td><td style="padding:8px 0;color:#22c55e;font-size:13px">✓ ${pdlVerified}</td></tr>` : ""}
+      ${permitCtx ? `<tr><td style="padding:8px 0;color:#64748b;font-size:12px">Market</td><td style="padding:8px 0;color:#fbbf24;font-size:12px">${permitCtx}</td></tr>` : ""}
     </table>
     <div style="background:#0d1f3c;border:1px solid #00d4ff33;border-radius:10px;padding:20px 24px;margin-bottom:24px;text-align:center">
       <p style="margin:0 0 6px;color:#e2e8f0;font-size:14px;font-weight:700">This lead is exclusive — they haven't been contacted by anyone else.</p>
@@ -144,7 +243,7 @@ serve(async (req) => {
                 from: "Detroit Web Agency <matt@detroitwebagent.com>",
                 to: [contractor.email],
                 bcc: ["matt@detroitwebagent.com"],
-                subject: `🔥 New ${tradeLabel} lead — ${lead.name} (exclusive)`,
+                subject: `${breachWarn}🔥 New ${tradeLabel} lead — ${lead.name} (exclusive)`,
                 html: leadHtml,
               }),
             }),

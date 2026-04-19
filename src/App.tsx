@@ -134,6 +134,7 @@ const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
 const GrowthRadarDashboard = lazyRetry(() => import("./pages/GrowthRadarDashboard"));
 const ContractorROIReport = lazyRetry(() => import("./pages/ContractorROIReport"));
+const MyContractorLeads = lazyRetry(() => import("./pages/MyContractorLeads"));
 const DeadLeadStats = lazyRetry(() => import("./pages/DeadLeadStats"));
 const MyTechAlert = lazyRetry(() => import("./pages/MyTechAlert"));
 const DeadLeadIntake = lazyRetry(() => import("./pages/DeadLeadIntake"));
@@ -147,6 +148,7 @@ const FieldServiceManagement = lazyRetry(() => import("./pages/FieldServiceManag
 const FieldServiceDispatch = lazyRetry(() => import("./pages/FieldServiceDispatch"));
 const FieldServiceTechApp = lazyRetry(() => import("./pages/FieldServiceTechApp"));
 const FieldServiceIndustry = lazyRetry(() => import("./pages/FieldServiceIndustry"));
+const JobStatusPage = lazyRetry(() => import("./pages/JobStatusPage"));
 const LeadCapturePage = lazyRetry(() => import("./pages/LeadCapturePage"));
 const B2BLeads = lazyRetry(() => import("./pages/B2BLeads"));
 const IndustrialDatabase = lazyRetry(() => import("./pages/IndustrialDatabase"));
@@ -576,6 +578,7 @@ const App = () => (
                     <Route path="/sponsor" element={<NewsletterSponsor />} />
                     <Route path="/contractor-leads" element={<ContractorLeads />} />
                     <Route path="/roi" element={<ContractorROIReport />} />
+                    <Route path="/my-contractor-leads" element={<MyContractorLeads />} />
                     <Route path="/dead-lead-stats" element={<DeadLeadStats />} />
                     <Route path="/my-techalert" element={<Navigate to="/talent-radar/dashboard" replace />} />
                     <Route path="/dead-lead-intake" element={<DeadLeadIntake />} />
@@ -590,6 +593,7 @@ const App = () => (
                     <Route path="/field-service/dispatch" element={<FieldServiceDispatch />} />
                     <Route path="/field-service/tech" element={<FieldServiceTechApp />} />
                     <Route path="/field-service/:industry" element={<FieldServiceIndustry />} />
+                    <Route path="/job-status" element={<JobStatusPage />} />
                     <Route path="/leads/:slug" element={<LeadCapturePage />} />
                     <Route path="/b2b-leads" element={<B2BLeads />} />
                     <Route path="/industrial-database" element={<IndustrialDatabase />} />

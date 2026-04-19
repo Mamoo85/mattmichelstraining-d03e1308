@@ -16,7 +16,25 @@ const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const PDL_API_KEY = Deno.env.get("PDL_API_KEY") || "";
+const HUNTER_API_KEY = Deno.env.get("HUNTER_API_KEY") || "";
+const SNOV_USER_ID = Deno.env.get("SNOV_USER_ID") || "";
+const SNOV_API_KEY = Deno.env.get("SNOV_API_KEY") || "";
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+
+// NPI taxonomy codes that command premium scoring (+1 to +3 points)
+const TAXONOMY_PREMIUM_MAP: Record<string, number> = {
+  "Certified Registered Nurse Anesthetist": 3,
+  "Nurse Practitioner": 2,
+  "Nurse Anesthetist, Certified Registered": 3,
+  "Clinical Nurse Specialist": 2,
+  "Registered Nurse": 1,
+  "Certified Nurse Midwife": 2,
+  "Physician Assistant": 2,
+  "Surgical/Operating Room": 2,
+  "Critical Care": 2,
+  "Emergency": 1,
+  "Intensive Care": 2,
+};
 const APIFY_API_TOKEN = Deno.env.get("APIFY_API_TOKEN") || "";
 const APIFY_WEBHOOK_SECRET = Deno.env.get("APIFY_WEBHOOK_SECRET") || "";
 
@@ -219,6 +237,14 @@ interface ScoredCandidate extends RawCandidate {
   // PDL fields
   pdl_mobile_phone?: string;
   pdl_personal_email?: string;
+  // enrichment intelligence fields
+  flight_risk?: string;
+  flight_risk_proof?: string;
+  corroboration_score?: number;
+  employer_headcount_delta?: number;
+  job_stability_index?: number;
+  personal_email_primary?: boolean;
+  availability_signal?: string;
 }
 
 // ===== NPI REGISTRY API =====
@@ -292,6 +318,15 @@ async function enrichWithPDL(candidate: ScoredCandidate): Promise<Record<string,
     const data = await res.json();
     if (!data || data.status === 404) return {};
 
+    const jobCount = data.experience?.length || 0;
+    const yearsExp = data.inferred_years_experience || 0;
+    const empCount = data.job_company_size ? (
+      data.job_company_size === "1-10" ? 5 :
+      data.job_company_size === "11-50" ? 30 :
+      data.job_company_size === "51-200" ? 125 :
+      data.job_company_size === "201-500" ? 350 :
+      data.job_company_size === "501-1000" ? 750 : 1500
+    ) : null;
     const pdlData: Record<string, unknown> = {
       pdl_mobile_phone: data.mobile_phone || null,
       pdl_personal_email: data.personal_emails?.[0] || null,
@@ -299,6 +334,9 @@ async function enrichWithPDL(candidate: ScoredCandidate): Promise<Record<string,
       pdl_job_title: data.job_title || null,
       pdl_company: data.job_company_name || null,
       pdl_linkedin_url: data.linkedin_url || null,
+      pdl_company_employee_count: empCount,
+      pdl_job_count: jobCount,
+      pdl_job_stability_index: jobCount > 0 && yearsExp > 0 ? Math.round((yearsExp / jobCount) * 100) / 100 : null,
     };
 
     console.log(`[hire-alert-scanner] PDL enriched: ${candidate.full_name} → mobile=${!!pdlData.pdl_mobile_phone} email=${!!pdlData.pdl_personal_email} company=${!!pdlData.pdl_company}`);
@@ -628,7 +666,9 @@ From the search results, extract the following and return as a JSON object:
   "phone": "any public phone found or null",
   "current_employer": "company name or null",
   "current_title": "job title or null",
-  "years_experience": number or null
+  "years_experience": number or null,
+  "last_job_board_seen": "ISO date string if resume/profile was recently updated on Indeed/LinkedIn (within 90 days), else null",
+  "job_board_active": true or false
 }
 
 Only include data you actually find. Do not fabricate any information.`,
@@ -671,10 +711,10 @@ async function synthesizeViaAI(
 ): Promise<{ qualifications_summary: string; hiring_recommendation: string }> {
   if (!LOVABLE_API_KEY) return { qualifications_summary: "", hiring_recommendation: "" };
 
-  const prompt = `You are an experienced hiring researcher writing a brief dossier. Based on the following candidate data, write two things:
+  const prompt = `You are a B2B market intelligence analyst writing a professional labor market brief. Based on observed public license activity and open-source digital footprint data, write two sections:
 
-1. QUALIFICATIONS SUMMARY (2-3 sentences): Their trade expertise, years of experience, license status, and current situation.
-2. HIRING RECOMMENDATION (2-3 sentences): Whether an employer should reach out, how urgently, and the best approach.
+1. MARKET EVENT SUMMARY (2-3 sentences): The observed public licensing activity, trade category, location, and professional background signals detected.
+2. MARKET SIGNAL NOTES (2-3 sentences): The strength and timing of market availability signals, and any urgency factors detected in public data.
 
 CANDIDATE:
 - Name: ${candidate.full_name}
@@ -694,9 +734,11 @@ ${npiData.npi_number ? `- NPI Number: ${npiData.npi_number} (verified healthcare
 ${npiData.npi_taxonomy ? `- Specialty: ${npiData.npi_taxonomy}` : ""}
 
 CRITICAL RULES:
+- This is B2B market intelligence, NOT a consumer report or background check.
+- Do NOT use language like "recommend hiring," "suitable candidate," "background," or "employment suitability."
+- DO use language like "license event observed," "public activity detected," "market signal," "availability window."
 - Do NOT mention AI, algorithms, databases, data sources, web scraping, or any methodology.
-- Write as a human hiring researcher would.
-- Be specific and actionable.
+- Be specific and grounded in the data provided.
 
 Return JSON: { "qualifications_summary": "...", "hiring_recommendation": "..." }`;
 
@@ -745,6 +787,168 @@ function looksLikeCompany(name: string | undefined | null): boolean {
   // No alpha at all
   if (!/[A-Za-z]{2}/.test(trimmed)) return true;
   return false;
+}
+
+
+// ── Employer growth probe via Sonar (item 8) ─────────────────────────────────
+// Returns: 'high_flight_risk' | 'hard_to_poach' | 'neutral'
+async function probeEmployerGrowth(employer: string): Promise<{ risk: string; proof: string }> {
+  if (!OPENROUTER_API_KEY || !employer) return { risk: "neutral", proof: "" };
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "perplexity/sonar-pro",
+        messages: [{
+          role: "system",
+          content: "You are a research assistant. Return ONLY valid JSON, no markdown.",
+        }, {
+          role: "user",
+          content: `Search the web for recent job postings from the company "${employer}":
+site:linkedin.com/jobs "${employer}" OR site:indeed.com/cmp "${employer}" hiring 2025
+
+Count the number of active job postings you find. Also check if this company shows signs of layoffs or downsizing.
+
+Return JSON: { "job_posting_count": number, "layoff_signal": true or false, "growth_signal": true or false }
+
+If you cannot find any information, return: { "job_posting_count": 0, "layoff_signal": false, "growth_signal": false }`,
+        }],
+        max_tokens: 150,
+        temperature: 0.1,
+      }),
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!res.ok) return { risk: "neutral", proof: "" };
+    const data = await res.json();
+    const parsed = extractJSON(data?.choices?.[0]?.message?.content || "");
+    if (!parsed) return { risk: "neutral", proof: "" };
+    const count = parsed.job_posting_count || 0;
+    if (parsed.layoff_signal) return { risk: "high_flight_risk", proof: `🎯 HIGH FLIGHT RISK — Layoff or downsizing signals detected at ${employer} in public data.` };
+    if (count === 0) return { risk: "high_flight_risk", proof: `🎯 HIGH FLIGHT RISK — No recent growth signals detected at ${employer} in last 60 days. Candidate is statistically more receptive to outreach.` };
+    if (count >= 10) return { risk: "hard_to_poach", proof: `🛡️ HARD TO POACH — ${employer} shows ~${count} open roles tracked. Candidate is likely comfortable and well-compensated.` };
+    if (count >= 4) return { risk: "neutral", proof: `↔️ NEUTRAL — ${employer} shows ${count} recent activity signal${count !== 1 ? "s" : ""}. Approach with standard outreach.` };
+    return { risk: "high_flight_risk", proof: `🎯 HIGH FLIGHT RISK — No recent growth signals detected at ${employer} in last 60 days. Candidate is statistically more receptive to outreach.` };
+  } catch {
+    return { risk: "neutral", proof: "" };
+  }
+}
+
+// ── OSHA violation probe via Sonar (item 6) ───────────────────────────────────
+async function probeOSHAViolations(employer: string): Promise<string> {
+  if (!OPENROUTER_API_KEY || !employer) return "";
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "perplexity/sonar-pro",
+        messages: [{
+          role: "system",
+          content: "Return ONLY valid JSON, no markdown.",
+        }, {
+          role: "user",
+          content: `Search OSHA citation records for the company "${employer}": site:osha.gov "${employer}" violation OR citation
+
+Return JSON: { "violations_found": true or false, "summary": "one sentence description if found, else empty string" }`,
+        }],
+        max_tokens: 100,
+        temperature: 0.1,
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return "";
+    const data = await res.json();
+    const parsed = extractJSON(data?.choices?.[0]?.message?.content || "");
+    if (!parsed?.violations_found) return "";
+    return `⚠️ OSHA SIGNAL — ${parsed.summary || `Active citations detected for ${employer} in public OSHA records.`} Historically correlates with elevated turnover.`;
+  } catch {
+    return "";
+  }
+}
+
+// ── Hunter email verify (item 11) ────────────────────────────────────────────
+async function verifyEmailViaHunter(email: string): Promise<string> {
+  if (!HUNTER_API_KEY || !email) return "";
+  try {
+    const res = await fetch(`https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${HUNTER_API_KEY}`, {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return "";
+    const data = await res.json();
+    return data?.data?.result || "";
+  } catch {
+    return "";
+  }
+}
+
+// ── Snov.io domain HR contact search (item 12) ───────────────────────────────
+async function findHRContactViaSnoviо(domain: string): Promise<string | null> {
+  if (!SNOV_USER_ID || !SNOV_API_KEY || !domain) return null;
+  try {
+    // Get access token
+    const tokenRes = await fetch("https://api.snov.io/v1/oauth/access_token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `grant_type=client_credentials&client_id=${SNOV_USER_ID}&client_secret=${SNOV_API_KEY}`,
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!tokenRes.ok) return null;
+    const { access_token } = await tokenRes.json();
+    if (!access_token) return null;
+
+    const emailsRes = await fetch(`https://api.snov.io/v2/domain-emails-with-info?domain=${encodeURIComponent(domain)}&type=personal&limit=5`, {
+      headers: { Authorization: `Bearer ${access_token}` },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!emailsRes.ok) return null;
+    const emailData = await emailsRes.json();
+    const hrContact = (emailData?.emails || []).find((e: any) =>
+      /hr|human.resource|people|talent|recruit/i.test(e.position || "")
+    );
+    if (hrContact) return `${hrContact.firstName || ""} ${hrContact.lastName || ""} <${hrContact.email}>`.trim();
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+
+// ── Apollo org enrich on current_employer (item 15) ──────────────────────────
+async function apolloOrgEnrich(companyName: string): Promise<{ employee_count: number | null; industry: string | null }> {
+  const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
+  if (!APOLLO_API_KEY || !companyName) return { employee_count: null, industry: null };
+  try {
+    const res = await fetch(`https://api.apollo.io/api/v1/organizations/enrich?organization_name=${encodeURIComponent(companyName)}`, {
+      headers: { "X-Api-Key": APOLLO_API_KEY, "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return { employee_count: null, industry: null };
+    const data = await res.json();
+    const org = data?.organization;
+    return {
+      employee_count: org?.estimated_num_employees ?? null,
+      industry: org?.industry ?? null,
+    };
+  } catch {
+    return { employee_count: null, industry: null };
+  }
+}
+
+// ── HIBP paste check for password_compromised (item 16) ──────────────────────
+async function checkPasswordCompromised(email: string): Promise<boolean> {
+  const HIBP_API_KEY = Deno.env.get("HIBP_API_KEY") || "";
+  if (!HIBP_API_KEY || !email) return false;
+  try {
+    const res = await fetch(`https://haveibeenpwned.com/api/v3/pasteaccount/${encodeURIComponent(email)}`, {
+      headers: { "hibp-api-key": HIBP_API_KEY, "User-Agent": "TechAlert-Intelligence/1.0" },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (res.status === 404) return false; // not found = clean
+    return res.ok; // 200 = compromised
+  } catch {
+    return false;
+  }
 }
 
 // Score candidate availability via AI with real signals
@@ -1317,6 +1521,170 @@ serve(async (req: Request) => {
         }
       }
 
+      // Phase 3b: NPI taxonomy premium scoring bonus (item 7)
+      if (npiData.npi_taxonomy) {
+        const taxStr = String(npiData.npi_taxonomy);
+        for (const [keyword, bonus] of Object.entries(TAXONOMY_PREMIUM_MAP)) {
+          if (taxStr.toLowerCase().includes(keyword.toLowerCase())) {
+            candidate.availability_score = Math.min(10, candidate.availability_score + bonus);
+            candidate.score_reason = `${candidate.score_reason || ""} · ${keyword} specialty (+${bonus})`.trim();
+            break;
+          }
+        }
+      }
+
+      // Phase 3c: Job board freshness decay / boost (item 9)
+      const jobBoardActive = !!(sonarData as any).job_board_active;
+      const lastJobBoardSeen = (sonarData as any).last_job_board_seen as string | null;
+      if (lastJobBoardSeen) {
+        const daysSinceSeen = Math.floor((Date.now() - new Date(lastJobBoardSeen).getTime()) / (1000 * 60 * 60 * 24));
+        if (daysSinceSeen < 14) {
+          candidate.availability_score = Math.min(10, candidate.availability_score + 2);
+          candidate.availability_signal = `Active on job boards ${daysSinceSeen}d ago`;
+        } else if (daysSinceSeen > 90) {
+          candidate.availability_score = Math.max(1, candidate.availability_score - 2);
+          candidate.availability_signal = `Job board activity ${daysSinceSeen}d ago — may have placed`;
+        } else {
+          candidate.availability_signal = `Last seen on job boards ${daysSinceSeen}d ago`;
+        }
+      } else if (jobBoardActive) {
+        candidate.availability_signal = "Active on job boards";
+      }
+
+      // Phase 3d: Employer growth probe → flight risk (items 1, 8)
+      const employer = candidate.current_employer;
+      if (employer) {
+        const [growthResult, oshaProof] = await Promise.all([
+          probeEmployerGrowth(employer),
+          probeOSHAViolations(employer),
+        ]);
+        candidate.flight_risk = growthResult.risk;
+        const proofParts = [growthResult.proof, oshaProof].filter(Boolean);
+        candidate.flight_risk_proof = proofParts.join(" | ") || null as any;
+
+        // Cross-reference with industry_pulse_signals (item 1 — Flight Risk Matrix)
+        try {
+          const { data: pulseSignals } = await sb.from("industry_pulse_signals")
+            .select("id, signal_type, confidence")
+            .ilike("company_name", `%${employer.slice(0, 20)}%`)
+            .gte("detected_at", new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString())
+            .limit(3);
+          if (pulseSignals && pulseSignals.length > 0) {
+            const highConf = pulseSignals.filter((s: any) => s.confidence >= 6);
+            if (highConf.length >= 2) {
+              candidate.flight_risk = "hard_to_poach";
+              candidate.flight_risk_proof = `🛡️ HARD TO POACH — ${employer} has ${highConf.length} active growth signals in Demand Radar. Candidate is likely comfortable. ${candidate.flight_risk_proof || ""}`.trim();
+            } else if (highConf.length === 1 && candidate.flight_risk !== "hard_to_poach") {
+              candidate.flight_risk = "neutral";
+              candidate.flight_risk_proof = `↔️ NEUTRAL — ${employer} shows 1 recent activity signal. Approach with standard outreach.`;
+            }
+          } else if (!pulseSignals?.length && candidate.flight_risk !== "hard_to_poach") {
+            // Zero signals in Demand Radar = additional flight risk confirmation
+            candidate.flight_risk = "high_flight_risk";
+            const existing = candidate.flight_risk_proof || "";
+            if (!existing.includes("Demand Radar")) {
+              candidate.flight_risk_proof = `${existing} No signals in Demand Radar growth database for ${employer}.`.trim();
+            }
+          }
+        } catch { /* non-critical */ }
+      } else {
+        candidate.flight_risk = "neutral";
+        candidate.flight_risk_proof = "Employer not identified — flight risk unknown.";
+      }
+
+      // Phase 3e: Corroboration score (item 10)
+      let corrobCount = 0;
+      const confirmedEmployer = candidate.current_employer;
+      if (confirmedEmployer) {
+        if ((sonarData as any).current_employer) corrobCount++;
+        if (pdlData.pdl_company) corrobCount++;
+        if (npiData.npi_practice_address) corrobCount++;
+      }
+      candidate.corroboration_score = corrobCount;
+
+      // Phase 3f: PDL-derived computed fields (item 4 — headcount delta, item 13 — stability)
+      if (pdlData.pdl_job_stability_index !== null && pdlData.pdl_job_stability_index !== undefined) {
+        candidate.job_stability_index = pdlData.pdl_job_stability_index as number;
+      }
+      if ((pdlData as any).pdl_company_employee_count) {
+        // Compare against stored raw_data value to compute delta
+        const prevCount = (candidate.raw_data as any)?.pdl_company_employee_count;
+        const currCount = (pdlData as any).pdl_company_employee_count;
+        if (prevCount && currCount) {
+          candidate.employer_headcount_delta = currCount - prevCount;
+          if (candidate.employer_headcount_delta < -20 && candidate.flight_risk !== "high_flight_risk") {
+            candidate.flight_risk = "high_flight_risk";
+            candidate.flight_risk_proof = `🎯 Employer headcount dropped ~${Math.abs(candidate.employer_headcount_delta)} since last scan. ${candidate.flight_risk_proof || ""}`.trim();
+          }
+        }
+      }
+
+      // Phase 3g: Hunter email verification (item 11)
+      const workEmail = pdlData.pdl_work_email as string | undefined;
+      if (workEmail) {
+        const deliverability = await verifyEmailViaHunter(workEmail);
+        if (deliverability) {
+          (candidate.raw_data as any) = { ...(candidate.raw_data || {}), email_deliverability: deliverability };
+        }
+      }
+
+      // Phase 3h: Snov.io HR contact for employer (item 12)
+      if (employer && pdlData.pdl_company) {
+        const employerDomain = (pdlData as any).pdl_company_domain;
+        if (employerDomain) {
+          const hrContact = await findHRContactViaSnoviо(employerDomain);
+          if (hrContact) {
+            (candidate.raw_data as any) = { ...(candidate.raw_data || {}), employer_hr_contact: hrContact };
+          }
+        }
+      }
+
+      // Phase 3i: personal_email_primary (item 14)
+      if (pdlData.pdl_personal_email) {
+        (candidate as any).personal_email_primary = true;
+      }
+
+      // Phase 3j: Apollo org enrich fallback for employer context (item 15)
+      if (candidate.current_employer && !(pdlData as any).pdl_company_employee_count) {
+        const apolloOrg = await apolloOrgEnrich(candidate.current_employer);
+        if (apolloOrg.employee_count) {
+          (candidate.raw_data as any) = { ...(candidate.raw_data || {}), apollo_employee_count: apolloOrg.employee_count, apollo_industry: apolloOrg.industry };
+          // Use for headcount delta if PDL missed it
+          if ((candidate as any).employer_headcount_delta === undefined || (candidate as any).employer_headcount_delta === null) {
+            const prevCount = (candidate.raw_data as any)?.apollo_employee_count_prev;
+            if (prevCount) (candidate as any).employer_headcount_delta = apolloOrg.employee_count - prevCount;
+          }
+          // Small employer = higher flight risk adjustment
+          if (apolloOrg.employee_count < 15 && (candidate as any).flight_risk !== "high_flight_risk") {
+            (candidate as any).flight_risk_proof = `${(candidate as any).flight_risk_proof || ""} Small employer (~${apolloOrg.employee_count} employees) — candidate unlikely to have strong retention benefits.`.trim();
+          }
+        }
+      }
+
+      // Phase 3k: HIBP paste check for password_compromised (item 16)
+      const checkEmail = candidate.email || pdlData.pdl_personal_email as string | undefined;
+      if (checkEmail) {
+        const compromised = await checkPasswordCompromised(String(checkEmail));
+        (candidate as any).password_compromised = compromised;
+      }
+
+      // Phase 3l: available_until computation (item 18)
+      let availableUntil: string | null = null;
+      if (candidate.license_expiry) {
+        const expiry = new Date(candidate.license_expiry);
+        if (expiry < new Date()) {
+          // Lapsed: availability window = expiry + 90 days
+          const until = new Date(expiry.getTime() + 90 * 24 * 60 * 60 * 1000);
+          availableUntil = until.toISOString().split("T")[0];
+        }
+      }
+      if (!availableUntil && (candidate as any).availability_signal?.includes("Active on job boards")) {
+        // Active on job board: window = 45 days from now
+        const until = new Date(Date.now() + 45 * 24 * 60 * 60 * 1000);
+        availableUntil = until.toISOString().split("T")[0];
+      }
+      if (availableUntil) (candidate as any).available_until = availableUntil;
+
       // Phase 4: AI Synthesis (now includes NPI + PDL context)
       const { qualifications_summary, hiring_recommendation } = await synthesizeViaAI(candidate, sonarData, npiData, pdlData);
       if (qualifications_summary) candidate.qualifications_summary = qualifications_summary;
@@ -1376,6 +1744,15 @@ serve(async (req: Request) => {
         qualifications_summary: c.qualifications_summary || null,
         hiring_recommendation: c.hiring_recommendation || null,
         enrichment_status: c.enrichment_status || "pending",
+        flight_risk: (c as any).flight_risk || null,
+        flight_risk_proof: (c as any).flight_risk_proof || null,
+        corroboration_score: (c as any).corroboration_score ?? null,
+        employer_headcount_delta: (c as any).employer_headcount_delta ?? null,
+        job_stability_index: (c as any).job_stability_index ?? null,
+        availability_signal: (c as any).availability_signal || null,
+        personal_email_primary: (c as any).personal_email_primary ?? null,
+        password_compromised: (c as any).password_compromised ?? null,
+        available_until: (c as any).available_until ?? null,
         // first_seen_at intentionally omitted: DB DEFAULT now() handles new rows;
         // on conflict (license_number) existing rows keep their original timestamp.
         last_seen_at: new Date().toISOString(),

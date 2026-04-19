@@ -1,4 +1,4 @@
-// Client-facing dashboard API for Industry Pulse Intelligence
+// Client-facing dashboard API for Demand Radar Intelligence
 // Authenticated via dashboard_token (no login required)
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -38,18 +38,27 @@ serve(async (req) => {
       });
     }
 
-    // Snapshot buyers (no recurring subscription, active=false) get a frozen view from their purchase date.
-    // Subscribers get rolling 30-day intelligence.
     const isSnapshot = client.active === false && !client.stripe_subscription_id;
 
     // Fetch signals from last 30 days, ordered by confidence
     const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: signals } = await sb.from("industry_pulse_signals")
-      .select("*")
-      .gte("detected_at", cutoff)
-      .order("confidence", { ascending: false })
-      .order("detected_at", { ascending: false })
-      .limit(50);
+    const [{ data: signals }, { data: actions }] = await Promise.all([
+      sb.from("industry_pulse_signals")
+        .select("*")
+        .gte("detected_at", cutoff)
+        .order("confidence", { ascending: false })
+        .order("detected_at", { ascending: false })
+        .limit(50),
+      sb.from("industry_pulse_client_actions")
+        .select("signal_id, action, deal_value, note, created_at")
+        .eq("client_id", client.id),
+    ]);
+
+    // Build actions map keyed by signal_id
+    const actionMap: Record<string, { action: string; deal_value: number; note: string | null; created_at: string }> = {};
+    for (const a of actions || []) {
+      actionMap[a.signal_id] = { action: a.action, deal_value: a.deal_value || 0, note: a.note, created_at: a.created_at };
+    }
 
     // Filter by client's target industries if set
     const targetIndustries = client.target_industries || [];
@@ -64,12 +73,22 @@ serve(async (req) => {
       });
     }
 
-    // Compute stats
+    // Compute signal stats
     const highConf = filtered.filter((s: any) => s.confidence >= 7).length;
     const crossRef = filtered.filter((s: any) => s.cross_referenced).length;
     const thisWeek = filtered.filter((s: any) =>
       new Date(s.detected_at).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000
     ).length;
+
+    // Compute ROI stats from actions
+    const wonActions = (actions || []).filter((a: any) => a.action === "won");
+    const roiStats = {
+      contacted: (actions || []).filter((a: any) => a.action === "contacted").length,
+      won: wonActions.length,
+      lost: (actions || []).filter((a: any) => a.action === "lost").length,
+      passed: (actions || []).filter((a: any) => a.action === "passed").length,
+      total_revenue: wonActions.reduce((sum: number, a: any) => sum + (a.deal_value || 0), 0),
+    };
 
     return new Response(JSON.stringify({
       company_name: client.company_name,
@@ -80,6 +99,7 @@ serve(async (req) => {
         cross_referenced: crossRef,
         this_week: thisWeek,
       },
+      roi: roiStats,
       signals: filtered.map((s: any) => ({
         id: s.id,
         company_name: s.company_name,
@@ -93,6 +113,7 @@ serve(async (req) => {
         predicted_needs: s.predicted_needs || [],
         detected_at: s.detected_at,
         source_urls: s.source_urls || [],
+        client_action: actionMap[s.id] || null,
       })),
     }), {
       headers: { ...cors, "Content-Type": "application/json" },

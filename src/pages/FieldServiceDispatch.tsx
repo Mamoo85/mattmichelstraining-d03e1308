@@ -354,6 +354,10 @@ export default function FieldServiceDispatch() {
   const [userIndustry, setUserIndustry] = useState<"trades" | "healthcare">("trades");
   const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 769);
   const [fabOpen, setFabOpen] = useState(false);
+  const [onboardingData, setOnboardingData] = useState<{ tech_count: number; job_count: number; customer_count: number; snippet_active: boolean } | null>(null);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(() =>
+    typeof window !== "undefined" && localStorage.getItem("fielddesk_onboarding_dismissed") === "1"
+  );
 
   const params = new URLSearchParams(window.location.search);
   const rawToken = params.get("token") || "";
@@ -400,6 +404,20 @@ export default function FieldServiceDispatch() {
       setAuthState("denied");
     })();
   }, []);
+
+  // Fetch onboarding status once auth resolves for FieldDesk clients
+  useEffect(() => {
+    if (authState !== "authorized" || !hasFieldDesk || isDemo || onboardingDismissed) return;
+    (async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-fielddesk-onboarding?token=${rawToken}`,
+          { headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } }
+        );
+        if (res.ok) setOnboardingData(await res.json());
+      } catch { /* silent */ }
+    })();
+  }, [authState, hasFieldDesk]);
 
   const relevantProducts = PRODUCTS.filter(p =>
     p.industries.includes("all") || p.industries.includes(userIndustry)
@@ -559,6 +577,50 @@ export default function FieldServiceDispatch() {
 
         {/* CENTER CONTENT — animated transitions */}
         <main className="fd-center" data-testid="fd-center">
+          {/* Onboarding checklist — only for FieldDesk clients until dismissed */}
+          {hasFieldDesk && !onboardingDismissed && onboardingData && (() => {
+            const checks = [
+              { label: "Add your first technician", done: onboardingData.tech_count > 0 },
+              { label: "Create your first job", done: onboardingData.job_count > 0 },
+              { label: "Add a customer contact", done: onboardingData.customer_count > 0 },
+              { label: "SiteRadar snippet installed", done: onboardingData.snippet_active, helpUrl: "/my-fielddesk" },
+            ];
+            const allDone = checks.every(c => c.done);
+            const doneCount = checks.filter(c => c.done).length;
+            return (
+              <div style={{ background: allDone ? "#0a200a" : "#0a1628", borderBottom: `1px solid ${allDone ? "#3fb95040" : "#1e3a5f"}`, padding: "12px 16px", display: "flex", alignItems: "flex-start", gap: 12, fontFamily: FONT }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: allDone ? T.green : T.blue, textTransform: "uppercase", letterSpacing: 1 }}>
+                      {allDone ? "✓ Setup Complete" : `Getting Started — ${doneCount}/${checks.length}`}
+                    </span>
+                    {!allDone && (
+                      <div style={{ flex: 1, height: 4, background: T.border, borderRadius: 2, maxWidth: 120 }}>
+                        <div style={{ height: "100%", width: `${(doneCount / checks.length) * 100}%`, background: T.blue, borderRadius: 2, transition: "width .3s" }} />
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 20px" }}>
+                    {checks.map(c => (
+                      <span key={c.label} style={{ fontSize: 12, color: c.done ? T.green : T.sec, display: "flex", alignItems: "center", gap: 5 }}>
+                        <span style={{ fontSize: 13 }}>{c.done ? "✓" : "☐"}</span>
+                        {c.label}
+                        {!c.done && c.helpUrl && (
+                          <a href={c.helpUrl} style={{ color: T.blue, fontSize: 10, textDecoration: "none" }}>→ setup</a>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  onClick={() => { localStorage.setItem("fielddesk_onboarding_dismissed", "1"); setOnboardingDismissed(true); }}
+                  style={{ background: "none", border: "none", color: T.ter, cursor: "pointer", fontSize: 16, lineHeight: 1, padding: "2px 4px", flexShrink: 0 }}
+                  title="Dismiss"
+                >×</button>
+              </div>
+            );
+          })()}
+
           <AnimatePresence mode="wait">
             <motion.div
               key={contentKey}

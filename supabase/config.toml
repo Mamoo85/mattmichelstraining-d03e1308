@@ -1654,3 +1654,18 @@ verify_jwt = false
 
 [functions.test-pdl-premium]
 verify_jwt = false
+
+[functions.log-industry-pulse-action]
+verify_jwt = false
+
+[functions.industry-pulse-client-drip]
+verify_jwt = false
+
+[functions.get-job-status]
+verify_jwt = false
+
+[functions.get-fielddesk-onboarding]
+verify_jwt = false
+
+[functions.contractor-leads-dashboard]
+verify_jwt = false

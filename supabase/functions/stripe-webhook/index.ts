@@ -1108,16 +1108,15 @@ serve(async (req) => {
             }).select("dashboard_token").single();
             if (insertErr) throw new Error(`industry_pulse_clients insert: ${insertErr.message}`);
 
-            // Send welcome email with dashboard link
-            const dashboardUrl = `${SUPABASE_URL.replace('.supabase.co', '')}.detroitwebagent.com/my-industry-pulse?token=${inserted.dashboard_token}`;
+            // Send welcome email + SMS with dashboard link
             const siteUrl = "https://detroitwebagent.com";
             const dashLink = `${siteUrl}/my-industry-pulse?token=${inserted.dashboard_token}`;
             if (RESEND_API_KEY) {
-              await dwaEmail(email, "📡 Industry Pulse Intelligence is Live — Your Dashboard is Ready", `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+              await dwaEmail(email, "📡 Demand Radar is Live — Your Dashboard is Ready", `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#030711;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
 <div style="max-width:600px;margin:0 auto;padding:32px 16px;">
   <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;text-align:center;">
-    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0;">📡 INDUSTRY PULSE</p>
+    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0;">📡 DEMAND RADAR</p>
     <h1 style="color:#fff;font-size:24px;margin:12px 0 8px;">You're In.</h1>
     <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Predictive sales signals start flowing today.</p>
     <a href="${dashLink}" style="display:inline-block;background:#00d4ff;color:#000;font-weight:700;padding:14px 40px;border-radius:8px;text-decoration:none;font-size:15px;">📊 Open Your Dashboard</a>
@@ -1128,8 +1127,17 @@ serve(async (req) => {
   </div>
 </div></body></html>`);
               await notifyMatt(
-                `💰 New Industry Pulse Client — ${meta.company_name || email} ($299/mo)`,
+                `💰 New Demand Radar Client — ${meta.company_name || email} ($299/mo)`,
                 `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Industries: ${targetIndustries.join(", ")}</p>`
+              );
+            }
+            // Welcome SMS if phone provided
+            if (meta.phone) {
+              await sendSMS(
+                meta.phone,
+                "+13139921219",
+                `Demand Radar is live. Your sales intelligence dashboard: ${dashLink} — Reply STOP to opt out.`,
+                "demand_radar_welcome"
               );
             }
           }
@@ -3156,6 +3164,7 @@ serve(async (req) => {
         try {
           const wdSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
           // Activate contractor client
+          let contractorRoiToken: string | null = null;
           if (meta.contractor_id) {
             const { error: clientErr } = await wdSb.from("contractor_clients" as any)
               .update({
@@ -3166,6 +3175,13 @@ serve(async (req) => {
               })
               .eq("id", meta.contractor_id);
             if (clientErr) throw new Error(`contractor_clients update failed: ${clientErr.message}`);
+
+            // Fetch roi_token for portal link in welcome email
+            const { data: tokenRow } = await wdSb.from("contractor_clients" as any)
+              .select("roi_token")
+              .eq("id", meta.contractor_id)
+              .maybeSingle();
+            contractorRoiToken = (tokenRow as any)?.roi_token || null;
 
             // Assign contractor to the matching lead site (only if trade + city present)
             if (meta.trade && meta.city) {
@@ -3215,6 +3231,7 @@ serve(async (req) => {
       <p style="margin:0 0 16px">Hey ${meta.business_name || "there"} —</p>
       <p style="margin:0 0 16px"><strong style="color:#00d4ff">Every exclusive ${tradeLabel.toLowerCase()} lead in ${meta.city || "your area"} now goes directly to you.</strong> No sharing. No competing bids. You're the only contractor getting these.</p>
       <p style="margin:0 0 16px">When a lead comes in, you'll get an email + text immediately with their name, phone, and project. <strong>Call them fast — the first contractor to call wins the job.</strong></p>
+      ${contractorRoiToken ? `<div style="background:#0a2040;border:1px solid #00d4ff30;border-radius:8px;padding:16px;margin:0 0 20px;"><p style="margin:0 0 8px;color:#94a3b8;font-size:13px;">Your lead dashboard — see every lead, mark who you hired, dispute bad leads:</p><a href="https://detroitwebagent.com/my-contractor-leads?token=${contractorRoiToken}" style="color:#00d4ff;font-weight:700;font-size:14px;word-break:break-all;">detroitwebagent.com/my-contractor-leads?token=${contractorRoiToken}</a></div>` : ""}
       <p style="margin:0 0 24px">Questions? Text me at <a href="tel:+13139921219" style="color:#00d4ff">(313) 992-1219</a>.</p>
       <div style="border-top:1px solid #1e3a5f;padding-top:20px;display:flex;align-items:center;gap:12px;">
         <img src="https://www.detroitwebagent.com/images/dwa/matt.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt">

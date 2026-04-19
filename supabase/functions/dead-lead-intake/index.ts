@@ -17,6 +17,46 @@ const CORS = {
   "Access-Control-Allow-Headers": "content-type",
 };
 
+
+// ── Items 34 & 36: Twilio Lookup v2 — phone carrier classification ─────────────
+async function twilioCarrierLookup(phone: string): Promise<{ type: string; isDncRisk: boolean }> {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) return { type: "unknown", isDncRisk: false };
+  try {
+    const res = await fetch(
+      `https://lookups.twilio.com/v2/PhoneNumbers/${encodeURIComponent(phone)}?Fields=line_type_intelligence`,
+      {
+        headers: { Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}` },
+        signal: AbortSignal.timeout(5000),
+      }
+    );
+    if (!res.ok) return { type: "unknown", isDncRisk: false };
+    const data = await res.json();
+    const type: string = data?.line_type_intelligence?.type || "unknown";
+    // Landlines are higher DNC-risk (can be on National DNC Registry)
+    return { type, isDncRisk: type === "landline" };
+  } catch { return { type: "unknown", isDncRisk: false }; }
+}
+
+
+// ── Items 34 & 36: Twilio Lookup v2 — phone carrier classification ─────────────
+async function twilioCarrierLookup(phone: string): Promise<{ type: string; isDncRisk: boolean }> {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) return { type: "unknown", isDncRisk: false };
+  try {
+    const res = await fetch(
+      `https://lookups.twilio.com/v2/PhoneNumbers/${encodeURIComponent(phone)}?Fields=line_type_intelligence`,
+      {
+        headers: { Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}` },
+        signal: AbortSignal.timeout(5000),
+      }
+    );
+    if (!res.ok) return { type: "unknown", isDncRisk: false };
+    const data = await res.json();
+    const type: string = data?.line_type_intelligence?.type || "unknown";
+    // Landlines are higher DNC-risk (can be on National DNC Registry)
+    return { type, isDncRisk: type === "landline" };
+  } catch { return { type: "unknown", isDncRisk: false }; }
+}
+
 function normalizePhone(raw: string): string {
   const digits = raw.replace(/\D/g, "");
   if (digits.length === 10) return `+1${digits}`;
@@ -138,6 +178,18 @@ serve(async (req) => {
       parsedLeads.push({ phone: leadPhone, name: leadName, last_contact_date: lastContactDate });
     }
 
+    // Items 34 & 36: carrier lookup on first 5 leads
+    const carrierMap: Record<string, { type: string; isDncRisk: boolean }> = {};
+    for (const l of parsedLeads.slice(0, 5)) {
+      carrierMap[l.phone] = await twilioCarrierLookup(l.phone);
+    }
+
+    // Items 34 & 36: carrier lookup on first 5 leads
+    const carrierMap: Record<string, { type: string; isDncRisk: boolean }> = {};
+    for (const l of parsedLeads.slice(0, 5)) {
+      carrierMap[l.phone] = await twilioCarrierLookup(l.phone);
+    }
+
     if (parsedLeads.length === 0) {
       return new Response(
         JSON.stringify({ error: "No valid phone numbers found", tcpa_scrubbed: tcpaScrubbed }),
@@ -174,6 +226,8 @@ serve(async (req) => {
       name: l.name,
       last_contact_date: l.last_contact_date,
       status: "pending",
+      phone_carrier_type: carrierMap[l.phone]?.type || null,
+      is_dnc_risk: carrierMap[l.phone]?.isDncRisk || false,
     }));
     const { error: contactErr } = await sb
       .from("dead_lead_contacts" as any)

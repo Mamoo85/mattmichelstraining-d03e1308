@@ -12,7 +12,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-04-18. Update this section every session.*
+*Last updated: 2026-04-19. Update this section every session.*
+
+### Phase 18 — 50-Item Revenue Operations Enhancement COMPLETE ✅
+*2026-04-19 — branch `claude/setup-talent-radar-knowledge-VbhqW`*
+
+**50-item Revenue Ops list — all Claude items shipped (4 batches):**
+
+Lovable handled: items 3, 5, 35, 37, 38, 39, 45, 46, 47, 50
+
+**Batch 1 (items 1–12) — TechAlert enrichment waterfall** *(prior session)*
+- Items 1–12 implemented in hire-alert-scanner (FCRA-safe AI prompts, NPI taxonomy premium map, job board freshness decay, Flight Risk Matrix, corroboration score, Hunter/Snov email enrichment, availability_signal, available_until, job_stability_index)
+
+**Batch 2 (items 13–22)** — commit `bd297e4`
+- hire-alert-scanner: apolloOrgEnrich, HIBP paste check, personal_email_primary, available_until, phases 3i–3l
+- industry-pulse-scanner: Apollo validation + size_tier, BSEED permit surge harvesting (ArcGIS + Sonar fallback), multi-permit aggregation
+- sam-gov-mi-pull: NAICS supply vertical map, contracts ≥$100k dual-upsert into industry_pulse_signals
+
+**Batch 3 (items 23–32)** — commit `8773925`
+- industry-pulse-scanner: Sonar competitor intel probe (item 23), DOL H-2B visa monitor (25), Google Places review score harvesting (26), Apollo decision-maker mapping (27), N-way cluster scoring TRIPLE-CONFIRMED (28), Michigan SOS new business velocity (29), NOAA storm × permit lag correlation (30), FieldDesk upsell flag (31), HIBP domain breach (32)
+
+**Batch 4 (items 33,34,36,40–44,48,49)** — commits `505eb46`, `9e52aa0`
+- sam-gov-mi-pull: naicsToVertical() for growth_radar_signals vertical (33), DOL prevailing wage estimate appended to pitch (49)
+- dead-lead-intake: Twilio Lookup v2 carrier classification (34+36), phone_carrier_type + is_dnc_risk on contacts
+- dead-lead-drip: Sonar re-enrichment before drip1 — skips project_complete contacts (42)
+- contractor-lead-notify: Hunter email validation (43), PDL person enrich badge (44), HIBP domain breach in subject (48), permit surge market context (40), Twilio carrier type in lead table (36)
+- migration: `20260419000001_dead_lead_contacts_phone_intel.sql` — phone_carrier_type, is_dnc_risk, project_completed_at
+
+**New secrets needed (not yet added to Lovable):**
+- `HUNTER_API_KEY` — Hunter.io email verification
+- `SNOV_USER_ID` + `SNOV_API_KEY` — Snov.io HR contact lookup
+- `HIBP_API_KEY` — HIBP paste/breach checks (already exists? confirm)
+- `NOAA_API_KEY` — storm event correlation (already exists)
+- `GOOGLE_MAPS_API_KEY` — already exists (used for review scores in industry-pulse-scanner)
+
+---
 
 ### Phase 17 — Apify Integration + TechAlert Pipeline Fix (IN PROGRESS)
 *2026-04-18 — branch `claude/setup-talent-radar-knowledge-VbhqW`*

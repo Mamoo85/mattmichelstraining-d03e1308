@@ -1,0 +1,363 @@
+import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import SEOHead from "@/components/layout/SEOHead";
+import {
+  Phone, CheckCircle2, XCircle, Loader2, MapPin,
+  Wrench, TrendingUp, RefreshCw, AlertTriangle, Star,
+} from "lucide-react";
+
+interface Lead {
+  id: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  message: string | null;
+  project_type: string | null;
+  source: string;
+  status: string;
+  contractor_feedback: "called" | "hired" | "bad_lead" | null;
+  bad_lead_flagged_at: string | null;
+  created_at: string;
+}
+
+interface Stats {
+  total: number;
+  this_month: number;
+  called: number;
+  hired: number;
+  bad_lead: number;
+  pending_feedback: number;
+}
+
+interface Contractor {
+  business_name: string;
+  trade: string;
+  city: string;
+  state: string;
+  active: boolean;
+  member_since: string;
+}
+
+interface DashboardData {
+  contractor: Contractor;
+  stats: Stats;
+  leads: Lead[];
+}
+
+const FEEDBACK_CONFIG = {
+  called:   { label: "Called",    icon: Phone,        color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
+  hired:    { label: "Hired ✓",   icon: CheckCircle2, color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
+  bad_lead: { label: "Disputed",  icon: AlertTriangle, color: "bg-red-500/20 text-red-400 border-red-500/30" },
+} as const;
+
+export default function MyContractorLeads() {
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [feedbackLoading, setFeedbackLoading] = useState<string | null>(null);
+  const [localFeedback, setLocalFeedback] = useState<Record<string, Lead["contractor_feedback"]>>({});
+  const [filter, setFilter] = useState<"all" | "pending" | "hired" | "called" | "bad_lead">("all");
+
+  const base = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contractor-leads-dashboard`;
+  const apiKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+  const fetchData = async () => {
+    if (!token) { setError("No dashboard token provided"); setLoading(false); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(`${base}?token=${token}`, { headers: { apikey: apiKey } });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Failed to load dashboard");
+      }
+      const json: DashboardData = await res.json();
+      setData(json);
+      // Seed local feedback state from server
+      const seed: Record<string, Lead["contractor_feedback"]> = {};
+      for (const l of json.leads) { if (l.contractor_feedback) seed[l.id] = l.contractor_feedback; }
+      setLocalFeedback(seed);
+      setError(null);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchData(); }, [token]);
+
+  const logFeedback = async (leadId: string, feedback: Lead["contractor_feedback"]) => {
+    if (!token || !feedback) return;
+    setFeedbackLoading(leadId + feedback);
+    setLocalFeedback(prev => ({ ...prev, [leadId]: feedback }));
+    try {
+      await fetch(base, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: apiKey },
+        body: JSON.stringify({ token, lead_id: leadId, feedback }),
+      });
+    } catch { /* keep optimistic */ }
+    setFeedbackLoading(null);
+  };
+
+  const filtered = useMemo(() => {
+    if (!data) return [];
+    return data.leads.filter(l => {
+      const fb = localFeedback[l.id] ?? l.contractor_feedback;
+      if (filter === "pending") return !fb;
+      if (filter === "hired") return fb === "hired";
+      if (filter === "called") return fb === "called";
+      if (filter === "bad_lead") return fb === "bad_lead";
+      return true;
+    });
+  }, [data, localFeedback, filter]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#030711] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#00d4ff]" />
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="min-h-screen bg-[#030711] flex items-center justify-center px-4">
+        <div className="text-center">
+          <Wrench className="h-12 w-12 text-white/20 mx-auto mb-4" />
+          <h2 className="text-white font-bold text-lg mb-2">Access Denied</h2>
+          <p className="text-white/50 text-sm">{error || "Invalid or expired dashboard link."}</p>
+          <a href="sms:+13139921219" className="text-[#00d4ff] text-sm mt-4 inline-block hover:underline">
+            Text Matt for help →
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  const { contractor, stats } = data;
+  const tradeLabel = contractor.trade.charAt(0).toUpperCase() + contractor.trade.slice(1);
+
+  return (
+    <>
+      <SEOHead
+        title={`My Leads — ${contractor.business_name}`}
+        description="Your exclusive contractor lead dashboard"
+      />
+      <div className="min-h-screen bg-[#030711] text-white">
+        {/* Header */}
+        <header className="border-b border-white/5 bg-[#0a1628]/90 backdrop-blur-md sticky top-0 z-50">
+          <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div>
+              <h1 className="text-sm font-bold text-white">{contractor.business_name}</h1>
+              <div className="flex items-center gap-2 mt-0.5">
+                <p className="text-[10px] text-white/40">Detroit Lead Network</p>
+                <span className="text-[10px] text-white/20">·</span>
+                <span className="flex items-center gap-1 text-[10px]">
+                  <MapPin className="h-2.5 w-2.5 text-[#00d4ff]" />
+                  <span className="text-[#00d4ff]">{tradeLabel} · {contractor.city}, {contractor.state}</span>
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {contractor.active && (
+                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">● Active</Badge>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={fetchData}
+                className="border-white/10 text-white/50 hover:bg-white/5 text-xs h-8"
+              >
+                <RefreshCw className="h-3 w-3 mr-1" /> Refresh
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+          {/* Stats */}
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+            {[
+              { label: "Total Leads",   value: stats.total,           color: "text-white" },
+              { label: "This Month",    value: stats.this_month,       color: "text-[#00d4ff]" },
+              { label: "Called",        value: stats.called,           color: "text-blue-400" },
+              { label: "Hired",         value: stats.hired,            color: "text-emerald-400" },
+              { label: "Disputed",      value: stats.bad_lead,         color: "text-red-400" },
+              { label: "Need Action",   value: stats.pending_feedback, color: "text-amber-400" },
+            ].map(s => (
+              <div key={s.label} className="bg-[#0f1f35] border border-white/10 rounded-lg p-3 text-center">
+                <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+                <p className="text-[9px] text-white/40 uppercase tracking-wide mt-0.5">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Hire rate callout */}
+          {stats.total > 0 && (
+            <div className="bg-[#0a1f0a] border border-emerald-500/20 rounded-xl px-4 py-3 flex items-center gap-3">
+              <Star className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+              <p className="text-sm text-emerald-400">
+                <strong>{stats.hired}</strong> hire{stats.hired !== 1 ? "s" : ""} from {stats.total} leads
+                {stats.total > 0 && (
+                  <span className="text-emerald-400/60 ml-2">
+                    ({Math.round((stats.hired / stats.total) * 100)}% close rate)
+                  </span>
+                )}
+                {stats.pending_feedback > 0 && (
+                  <span className="text-amber-400 ml-3">· {stats.pending_feedback} need your feedback</span>
+                )}
+              </p>
+            </div>
+          )}
+
+          {/* Filter tabs */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {([
+              { id: "all",      label: `All (${stats.total})` },
+              { id: "pending",  label: `Need Action (${stats.pending_feedback})` },
+              { id: "hired",    label: `Hired (${stats.hired})` },
+              { id: "called",   label: `Called (${stats.called})` },
+              { id: "bad_lead", label: `Disputed (${stats.bad_lead})` },
+            ] as const).map(f => (
+              <Button
+                key={f.id}
+                size="sm"
+                variant={filter === f.id ? "default" : "outline"}
+                onClick={() => setFilter(f.id)}
+                className={`h-7 text-xs ${filter === f.id ? "bg-[#00d4ff] text-black" : "border-white/10 text-white/50 hover:bg-white/5"}`}
+              >
+                {f.label}
+              </Button>
+            ))}
+          </div>
+
+          {/* Lead list */}
+          {filtered.length === 0 ? (
+            <div className="bg-[#0f1f35] border border-white/10 rounded-xl py-16 text-center">
+              <TrendingUp className="h-10 w-10 text-white/20 mx-auto mb-3" />
+              <p className="text-white/40 text-sm">
+                {stats.total === 0 ? "Your first lead is on its way." : "No leads match this filter."}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filtered.map(lead => {
+                const fb = localFeedback[lead.id] ?? lead.contractor_feedback;
+                const fbConfig = fb ? FEEDBACK_CONFIG[fb] : null;
+                return (
+                  <div
+                    key={lead.id}
+                    className={`bg-[#0f1f35] border rounded-xl p-4 ${
+                      fb === "hired" ? "border-emerald-500/30" :
+                      fb === "bad_lead" ? "border-red-500/20" :
+                      fb === "called" ? "border-blue-500/20" :
+                      "border-white/10"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-white font-bold text-sm">{lead.name}</h3>
+                          {fbConfig && (
+                            <Badge className={`text-[10px] ${fbConfig.color}`}>{fbConfig.label}</Badge>
+                          )}
+                          {lead.bad_lead_flagged_at && (
+                            <Badge className="text-[10px] bg-red-500/10 text-red-400/70 border-red-500/20">
+                              Matt notified
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-3 text-[11px] text-white/40 mb-2">
+                          <a href={`tel:${lead.phone}`} className="text-[#00d4ff] hover:underline flex items-center gap-1">
+                            <Phone className="h-2.5 w-2.5" /> {lead.phone}
+                          </a>
+                          {lead.email && (
+                            <a href={`mailto:${lead.email}`} className="text-white/50 hover:text-white/70">
+                              {lead.email}
+                            </a>
+                          )}
+                          <span>📅 {new Date(lead.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                          {lead.project_type && <span>🔧 {lead.project_type}</span>}
+                        </div>
+
+                        {lead.message && (
+                          <p className="text-[11px] text-white/50 leading-relaxed mb-3 italic">
+                            "{lead.message}"
+                          </p>
+                        )}
+
+                        {/* Action buttons — only show if no feedback yet */}
+                        {!fb ? (
+                          <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
+                            <span className="text-[10px] text-white/30 self-center">Update status:</span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={feedbackLoading === lead.id + "called"}
+                              onClick={() => logFeedback(lead.id, "called")}
+                              className="h-7 text-[11px] border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+                            >
+                              <Phone className="h-3 w-3 mr-1" /> Called
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={feedbackLoading === lead.id + "hired"}
+                              onClick={() => logFeedback(lead.id, "hired")}
+                              className="h-7 text-[11px] border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                            >
+                              <CheckCircle2 className="h-3 w-3 mr-1" /> Hired
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={feedbackLoading === lead.id + "bad_lead"}
+                              onClick={() => logFeedback(lead.id, "bad_lead")}
+                              className="h-7 text-[11px] border-red-500/30 text-red-400 hover:bg-red-500/10"
+                              title="Flag for Matt to review — we'll follow up"
+                            >
+                              <XCircle className="h-3 w-3 mr-1" /> Bad Lead
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="pt-2 border-t border-white/5">
+                            <button
+                              onClick={() => setLocalFeedback(prev => { const n = { ...prev }; delete n[lead.id]; return n; })}
+                              className="text-[10px] text-white/20 hover:text-white/40 transition-colors"
+                            >
+                              undo
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Bad lead disclaimer */}
+          {stats.bad_lead > 0 && (
+            <p className="text-[10px] text-white/20 text-center">
+              Disputed leads are reviewed by Matt within 24 hours. Credit issued if confirmed bogus.
+            </p>
+          )}
+        </main>
+
+        <footer className="py-8 border-t border-white/5 text-center">
+          <p className="text-white/20 text-[10px]">Detroit Web Agency — Contractor Lead Network</p>
+          <a href="sms:+13139921219" className="text-[#00d4ff]/40 text-[10px] hover:text-[#00d4ff] mt-1 block">
+            Questions? Text Matt at (313) 992-1219
+          </a>
+        </footer>
+      </div>
+    </>
+  );
+}

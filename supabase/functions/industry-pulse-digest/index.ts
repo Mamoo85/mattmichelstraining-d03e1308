@@ -90,7 +90,7 @@ serve(async (req) => {
 <div style="max-width:680px;margin:0 auto;padding:24px 16px;">
 
   <div style="text-align:center;margin-bottom:24px;">
-    <h1 style="color:#00d4ff;font-size:20px;margin:0;">📡 Industry Pulse Weekly</h1>
+    <h1 style="color:#00d4ff;font-size:20px;margin:0;">📡 Demand Radar Weekly</h1>
     <p style="color:#64748b;font-size:12px;margin:4px 0 0;">${client.company_name} — Week of ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>
   </div>
 
@@ -129,7 +129,7 @@ serve(async (req) => {
   </div>
 
   <p style="color:#475569;font-size:10px;text-align:center;margin-top:32px;">
-    Detroit Web Agency — Industry Pulse Intelligence<br>
+    Detroit Web Agency — Demand Radar Intelligence<br>
     <a href="mailto:matt@detroitwebagent.com" style="color:#00d4ff;">matt@detroitwebagent.com</a>
   </p>
 </div>
@@ -141,7 +141,7 @@ serve(async (req) => {
         body: JSON.stringify({
           from: "Detroit Web Agency <matt@detroitwebagent.com>",
           to: [client.email],
-          subject: `📡 ${clientSignals.length} New Industry Signals — Week of ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
+          subject: `📡 ${clientSignals.length} New Demand Radar Signals — Week of ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
           html,
         }),
       });
