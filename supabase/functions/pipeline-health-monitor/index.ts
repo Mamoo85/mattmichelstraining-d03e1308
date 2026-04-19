@@ -76,12 +76,14 @@ Deno.serve(async (req) => {
         })
       ),
 
-      // 3. People Data Labs (use enrich endpoint — search requires higher plan tier)
+      // 3. People Data Labs — flat query params (dot-notation only works in JSON body).
+      // 404 = "no match found" (auth + endpoint healthy); 401/402 = real failure.
       pingAPI("People Data Labs", () =>
-        fetch("https://api.peopledatalabs.com/v5/person/enrich?name=John+Smith&location.region=michigan&pretty=false&min_likelihood=2", {
+        fetch("https://api.peopledatalabs.com/v5/person/enrich?name=John+Smith&region=michigan&country=US&min_likelihood=2", {
           headers: { "X-Api-Key": PDL_API_KEY },
           signal: AbortSignal.timeout(10_000),
-        })
+        }),
+        [404] // 404 = "no person matches" — proves auth works + endpoint reachable
       ),
 
       // 4. Yelp Fusion
@@ -92,14 +94,12 @@ Deno.serve(async (req) => {
         })
       ),
 
-      // 5. Firecrawl (HEAD probe — avoids burning scrape credits on health checks)
+      // 5. Firecrawl — credit-usage endpoint: zero scrape credits burned, also confirms premium plan active.
       pingAPI("Firecrawl", () =>
-        fetch("https://api.firecrawl.dev/v1/scrape", {
-          method: "HEAD",
+        fetch("https://api.firecrawl.dev/v2/team/credit-usage", {
           headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}` },
           signal: AbortSignal.timeout(10_000),
-        }),
-        [401, 405] // 401=no body sent, 405=HEAD not supported — both mean server is alive
+        })
       ),
 
       // 6. Resend (verify domain — lightweight)
@@ -119,9 +119,9 @@ Deno.serve(async (req) => {
         [405] // Gateway is POST-only; 405 on GET = server is alive and responding
       ),
 
-      // 8. Michigan Open Data (Socrata — midl-yni7 = professional licenses dataset)
+      // 8. Michigan Open Data — Socrata catalog root (specific dataset IDs change; root is stable).
       pingAPI("Michigan Open Data", () =>
-        fetch("https://data.michigan.gov/resource/midl-yni7.json?$limit=1", {
+        fetch("https://data.michigan.gov/api/views.json?$limit=1", {
           signal: AbortSignal.timeout(10_000),
         })
       ),
