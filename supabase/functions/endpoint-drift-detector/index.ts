@@ -17,7 +17,8 @@ async function probeUrl(url: string): Promise<{ ok: boolean; status: number }> {
       signal: AbortSignal.timeout(10_000),
       redirect: "follow",
     });
-    return { ok: res.ok || res.status === 405, status: res.status }; // 405 = HEAD not allowed but URL is valid
+    // 4xx except 404/410 = server reachable (auth/billing/method issue), not broken
+    return { ok: res.ok || (res.status >= 401 && res.status < 500 && res.status !== 404 && res.status !== 410), status: res.status };
   } catch {
     return { ok: false, status: 0 };
   }
