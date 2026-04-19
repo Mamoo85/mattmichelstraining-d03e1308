@@ -444,7 +444,7 @@ export default function MyTechAlert() {
   };
 
   const accentColor = isHealthcare ? "text-blue-500" : "text-[#00d4ff]";
-  const brandName = isHealthcare ? "HireAlert" : "TechAlert";
+  const brandName = "Talent Radar";
   const subtitle = isHealthcare ? "Licensed Healthcare Professionals" : "Licensed Techs in Your Area";
   const IndustryIcon = isHealthcare ? Stethoscope : Wrench;
 
