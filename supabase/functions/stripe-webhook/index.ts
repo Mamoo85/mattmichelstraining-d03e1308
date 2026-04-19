@@ -1029,6 +1029,66 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      if (meta.type === "high_volume_buyer_subscription") {
+        const email = meta.email || customerEmail;
+        try {
+          if (email) {
+            const targetTrades = meta.target_trades
+              ? meta.target_trades.split(",").map((t: string) => t.trim()).filter(Boolean)
+              : ["hvac", "plumbing", "electrical"];
+            const targetCounties = meta.target_counties
+              ? meta.target_counties.split(",").map((c: string) => c.trim()).filter(Boolean)
+              : ["Wayne", "Oakland", "Macomb"];
+            const minPermits = parseInt(meta.min_permit_count || "5", 10);
+
+            const { error: insertErr } = await (sb.from as any)("high_volume_buyer_clients").upsert({
+              business_name: meta.business_name || email,
+              email,
+              phone: meta.phone || null,
+              contact_name: meta.contact_name || null,
+              target_trades: targetTrades,
+              target_counties: targetCounties,
+              min_permit_count: minPermits,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+              active: true,
+            }, { onConflict: "email" });
+            if (insertErr) throw new Error(`high_volume_buyer_clients upsert: ${insertErr.message}`);
+
+            if (RESEND_API_KEY) {
+              await dwaEmail(email, "📦 High-Volume Buyer Alerts is Live — First Digest Monday 7am", `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#030711;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;">
+    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0;">📦 HIGH-VOLUME BUYER ALERTS</p>
+    <h1 style="color:#fff;font-size:24px;margin:12px 0 8px;">You're In, ${meta.business_name || "team"}.</h1>
+    <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;line-height:1.6;">Your first weekly digest hits your inbox <strong style="color:#00d4ff;">this Monday at 7am ET</strong> — every Metro Detroit contractor pulling ${minPermits}+ permits in <strong style="color:#fff;">${targetTrades.join(", ")}</strong> across <strong style="color:#fff;">${targetCounties.join(", ")}</strong>.</p>
+    <div style="background:#0f172a;border:1px solid #1e3a5f;border-radius:12px;padding:16px;margin:0 0 20px;">
+      <p style="color:#cbd5e1;font-size:13px;line-height:1.7;margin:0;">Each entry includes:<br>• Contractor name + ${minPermits}+ active permits<br>• Estimated material spend<br>• Decision-maker contact emails<br>• Recent project addresses</p>
+    </div>
+    <p style="color:#64748b;font-size:12px;margin:0;">Want to adjust trades, counties, or permit threshold? Reply to this email.</p>
+  </div>
+  <div style="text-align:center;margin-top:24px;">
+    <p style="color:#475569;font-size:12px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p>
+  </div>
+</div></body></html>`);
+              await notifyMatt(
+                `💰 New High-Volume Buyer Client — ${meta.business_name || email} ($199/mo)`,
+                `<p><strong>${meta.business_name || email}</strong><br>Email: ${email}<br>Contact: ${meta.contact_name || "n/a"}<br>Phone: ${meta.phone || "n/a"}<br>Trades: ${targetTrades.join(", ")}<br>Counties: ${targetCounties.join(", ")}<br>Min permits: ${minPermits}</p>`
+              );
+            }
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] high_volume_buyer_subscription error:", e);
+          await notifyMatt(
+            `🚨 High-Volume Buyer provision FAILED — ${email || "unknown"} paid but not activated`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p><p>Stripe session: ${session.id}</p>`
+          ).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       if (meta.type === "industry_pulse_subscription") {
         const email = meta.email || customerEmail;
         try {
