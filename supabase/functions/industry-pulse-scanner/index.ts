@@ -214,15 +214,29 @@ serve(async (req) => {
       }
     }
 
-    // Insert into DB
+    // Deduplicate: skip any company+industry seen in the last 7 days
     if (signals.length > 0) {
-      const { error: insertErr } = await sb
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: recentSignals } = await sb
         .from("industry_pulse_signals")
-        .insert(signals);
+        .select("company_name, industry")
+        .gte("detected_at", sevenDaysAgo);
 
-      if (insertErr) {
-        console.error("[industry-pulse] Insert error:", insertErr);
+      const recentKeys = new Set(
+        (recentSignals || []).map((r: any) => `${r.company_name.toLowerCase()}|${(r.industry || "").toLowerCase()}`)
+      );
+
+      const deduped = signals.filter((s) =>
+        !recentKeys.has(`${s.company_name.toLowerCase()}|${(s.industry || "").toLowerCase()}`)
+      );
+
+      if (deduped.length > 0) {
+        const { error: insertErr } = await sb
+          .from("industry_pulse_signals")
+          .insert(deduped);
+        if (insertErr) console.error("[industry-pulse] Insert error:", insertErr);
       }
+      console.log(`[industry-pulse] Deduped: ${signals.length} found, ${deduped.length} new`);
     }
 
     // Update agent heartbeat
