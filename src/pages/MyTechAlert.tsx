@@ -546,6 +546,38 @@ export default function MyTechAlert() {
           ))}
         </div>
 
+        {/* Quick Start Banner */}
+        {!quickStartDismissed && !isDemo && (
+          <div className="rounded-xl border border-[#00d4ff]/20 bg-[#00d4ff]/5 p-4">
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-[#00d4ff]" />
+                <p className="text-[#00d4ff] font-bold text-xs uppercase tracking-wider">Quick Start</p>
+              </div>
+              <button
+                onClick={() => { localStorage.setItem("techalert_quickstart_dismissed", "1"); setQuickStartDismissed(true); }}
+                className="text-slate-500 hover:text-white transition-colors shrink-0"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <ul className="space-y-2">
+              {[
+                { icon: "⚡", text: "Claim candidates before competitors — 48-hour exclusivity locks them to you" },
+                { icon: "📞", text: "Mark candidates as Contacted to track your hiring pipeline" },
+                { icon: "✍️", text: "Use Draft Outreach on any card for AI-written SMS + email templates" },
+                { icon: "🎯", text: "Filter by trade (Boiler / HVAC / Healthcare) or use the search bar" },
+                { icon: "🔔", text: "Scanner runs every morning at 7am — new matches appear here automatically and trigger an alert" },
+              ].map((item, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-slate-300 leading-relaxed">
+                  <span className="shrink-0">{item.icon}</span>
+                  <span>{item.text}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Scanner Activity — last 7 runs */}
         {scannerStats?.runs && scannerStats.runs.length > 0 && (
           <div className="rounded-xl border border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e] overflow-hidden">
