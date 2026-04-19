@@ -169,9 +169,17 @@ export default function ClaimLead() {
             <h1 style={{ color: "#fff", fontSize: 26, fontWeight: 800, margin: "0 0 8px", lineHeight: 1.3 }}>
               {leadPreview?.trade} Lead in {leadPreview?.city}
             </h1>
-            <p style={{ color: "#94a3b8", fontSize: 15, margin: "0 0 24px" }}>
+            <p style={{ color: "#94a3b8", fontSize: 15, margin: "0 0 16px" }}>
               {leadPreview?.project_type}
             </p>
+
+            {/* Items 35, 37, 38, 39, 45, 47 — quality badges (rendered only when data present) */}
+            {leadPreview && (
+              <div style={{ marginBottom: 20 }}>
+                <LeadQualityBadges data={leadPreview} />
+              </div>
+            )}
+
 
             <div style={{ background: "#0a1628", borderRadius: 8, padding: "16px 20px", marginBottom: 24 }}>
               <p style={{ color: "#64748b", fontSize: 13, margin: "0 0 8px" }}>What you get for $50:</p>
