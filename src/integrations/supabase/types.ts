@@ -6202,6 +6202,7 @@ export type Database = {
           last_completed_at: string | null
           last_count: number | null
           last_cursor: Json | null
+          last_error: string | null
           last_started_at: string | null
           source: string
           status: string | null
@@ -6212,6 +6213,7 @@ export type Database = {
           last_completed_at?: string | null
           last_count?: number | null
           last_cursor?: Json | null
+          last_error?: string | null
           last_started_at?: string | null
           source: string
           status?: string | null
@@ -6222,6 +6224,7 @@ export type Database = {
           last_completed_at?: string | null
           last_count?: number | null
           last_cursor?: Json | null
+          last_error?: string | null
           last_started_at?: string | null
           source?: string
           status?: string | null
