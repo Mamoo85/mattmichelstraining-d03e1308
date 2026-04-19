@@ -1923,142 +1923,22 @@ serve(async (req: Request) => {
     });
   }
 
-  // Founder daily report — Matt only (sources visible here only)
-  const sourceBreakdown = {
-    miosha: allScored.filter((c) => c.source === "miosha").length,
-    sonar: allScored.filter((c) => c.source === "firecrawl").length,
-  };
-
   const enrichedCount = allScored.filter((c) => c.enrichment_status === "complete").length;
   const ghostLeadsFiltered = allScored.filter((c) => c.availability_score >= 5 && !c.linkedin_url && !c.facebook_url && !c.email && !c.phone && !c.npi_business_phone && !c.pdl_mobile_phone).length;
 
-  const candidateRows = allScored.length
-    ? allScored
-        .sort((a, b) => b.availability_score - a.availability_score)
-        .map(
-          (c, i) => {
-            const rowBg = c.availability_score >= 7 ? "#0a16280a" : i % 2 === 0 ? "#fff" : "#f8fafc";
-            const scoreBgColor = c.availability_score >= 8 ? "#dc2626" : c.availability_score >= 7 ? "#e8621a" : c.availability_score >= 5 ? "#f59e0b" : "#94a3b8";
-            const sourceIcon = c.source === "miosha" ? "🏛️" : "📋";
-            const enrichIcon = c.enrichment_status === "complete" ? "✅" : c.enrichment_status === "pending" ? "⏳" : "❌";
-            const hasAction = c.linkedin_url || c.facebook_url || c.email || c.phone || c.npi_business_phone || c.pdl_mobile_phone;
-            const npiIcon = c.npi_number ? `<br><span style="font-size:10px;color:#7c3aed;">🏥 NPI#${c.npi_number}</span>` : "";
-            const pdlIcon = c.pdl_mobile_phone ? `<br><span style="font-size:10px;color:#ea580c;">📱 PDL: ${c.pdl_mobile_phone}</span>` : "";
-            return `<tr style="background:${rowBg};border-bottom:1px solid #e2e8f0;">
-              <td style="padding:12px 10px;font-size:13px;color:#1e293b;font-weight:${c.availability_score >= 7 ? "800" : "500"};">${c.full_name}${c.email ? `<br><span style="font-size:11px;color:#0891b2;font-weight:400;">${c.email}</span>` : ""}${c.phone ? `<br><span style="font-size:11px;color:#e8621a;font-weight:600;">${c.phone}</span>` : ""}${npiIcon}${pdlIcon}</td>
-              <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.license_type || "—"}${c.license_number ? `<br><span style="font-size:10px;color:#94a3b8;">#${c.license_number}</span>` : ""}</td>
-              <td style="padding:12px 10px;font-size:12px;color:#475569;">${c.city || "—"}</td>
-              <td style="padding:12px 10px;text-align:center;">
-                <span style="display:inline-block;background:${scoreBgColor};color:#fff;padding:3px 10px;border-radius:12px;font-weight:800;font-size:12px;">${c.availability_score >= 8 ? "🔥 " : ""}${c.availability_score}/10</span>
-              </td>
-              <td style="padding:12px 10px;font-size:11px;color:#64748b;">${sourceIcon} ${c.source}</td>
-              <td style="padding:12px 10px;font-size:11px;color:#64748b;">${enrichIcon} ${c.enrichment_status || "—"}</td>
-              <td style="padding:12px 10px;font-size:11px;color:#475569;">${hasAction ? "✅ Actionable" : "❌ Ghost"}</td>
-            </tr>`;
-          }
-        )
-        .join("")
-    : `<tr><td colspan="7" style="padding:32px;text-align:center;color:#94a3b8;font-size:14px;">No new candidates found today. Scanner ran successfully.</td></tr>`;
-
-  await notifyMatt(
-    `${allHotCandidates.length > 0 ? "🔥 " : ""}TechAlert — ${dateStr} — ${newCandidates.length} new${allHotCandidates.length > 0 ? `, ${allHotCandidates.length} HOT` : ""} · ${enrichedCount} enriched · NPI:${npiHits} PDL:${pdlHits}`,
-    `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;"><tr><td align="center" style="padding:32px 16px;">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:720px;">
-
-<!-- HEADER -->
-<tr><td style="background:linear-gradient(135deg,#0a1628 0%,#1e293b 100%);padding:28px 28px 20px;border-radius:16px 16px 0 0;border-bottom:3px solid #00d4ff;">
-  <table width="100%" cellpadding="0" cellspacing="0"><tr>
-    <td>
-      <p style="margin:0;color:#00d4ff;font-size:10px;font-weight:800;letter-spacing:4px;text-transform:uppercase;">⚡ TechAlert — Founder Report</p>
-      <p style="margin:8px 0 0;color:#fff;font-size:22px;font-weight:800;letter-spacing:-0.5px;">${dateStr}</p>
-      <p style="margin:4px 0 0;color:#64748b;font-size:12px;">Daily scan complete · ${clients.length} active ${clients.length === 1 ? "client" : "clients"}</p>
-    </td>
-    <td style="text-align:right;vertical-align:top;">
-      <img src="https://www.detroitwebagent.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff40;" alt="Matt">
-    </td>
-  </tr></table>
-</td></tr>
-
-<!-- KPI DASHBOARD -->
-<tr><td style="background:#1e293b;padding:20px 28px;">
-  <table width="100%" cellpadding="0" cellspacing="0"><tr>
-    <td style="text-align:center;padding:16px 8px;background:#ffffff08;border-radius:12px;">
-      <p style="margin:0;font-size:32px;font-weight:900;color:#00d4ff;line-height:1;">${allRaw.length}</p>
-      <p style="margin:4px 0 0;font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Scanned</p>
-    </td>
-    <td width="8"></td>
-    <td style="text-align:center;padding:16px 8px;background:#ffffff08;border-radius:12px;">
-      <p style="margin:0;font-size:32px;font-weight:900;color:#fff;line-height:1;">${newCandidates.length}</p>
-      <p style="margin:4px 0 0;font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">New</p>
-    </td>
-    <td width="8"></td>
-    <td style="text-align:center;padding:16px 8px;background:#10b98118;border-radius:12px;">
-      <p style="margin:0;font-size:32px;font-weight:900;color:#10b981;line-height:1;">${enrichedCount}</p>
-      <p style="margin:4px 0 0;font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Enriched</p>
-    </td>
-    <td width="8"></td>
-    <td style="text-align:center;padding:16px 8px;background:${allHotCandidates.length > 0 ? "#e8621a15" : "#ffffff08"};border-radius:12px;${allHotCandidates.length > 0 ? "border:1px solid #e8621a40;" : ""}">
-      <p style="margin:0;font-size:32px;font-weight:900;color:${allHotCandidates.length > 0 ? "#e8621a" : "#fff"};line-height:1;">${allHotCandidates.length}</p>
-      <p style="margin:4px 0 0;font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Hot 🔥</p>
-    </td>
-    <td width="8"></td>
-    <td style="text-align:center;padding:16px 8px;background:#ffffff08;border-radius:12px;">
-      <p style="margin:0;font-size:32px;font-weight:900;color:#10b981;line-height:1;">${alertsSent}</p>
-      <p style="margin:4px 0 0;font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Alerted</p>
-    </td>
-  </tr></table>
-</td></tr>
-
-<!-- SOURCE + ENRICHMENT HEALTH -->
-<tr><td style="background:#1e293b;padding:0 28px 16px;">
-  <table width="100%" cellpadding="0" cellspacing="0"><tr>
-    <td style="padding:8px 12px;background:#ffffff06;border-radius:8px;">
-      <span style="font-size:11px;color:#94a3b8;">🏛️ MIOSHA: <strong style="color:#00d4ff;">${sourceBreakdown.miosha}</strong> ${sourceHealth.miosha}</span>
-      <span style="font-size:11px;color:#334155;"> · </span>
-      <span style="font-size:11px;color:#94a3b8;">📋 Sonar/JobBoards: <strong style="color:#00d4ff;">${sourceBreakdown.sonar}</strong> ${sourceHealth.sonar}</span>
-      <span style="font-size:11px;color:#334155;"> · </span>
-      <span style="font-size:11px;color:#94a3b8;">🏥 NPI: <strong style="color:#7c3aed;">${npiHits}</strong> ${sourceHealth.npi}</span>
-      <span style="font-size:11px;color:#334155;"> · </span>
-      <span style="font-size:11px;color:#94a3b8;">📱 PDL: <strong style="color:#ea580c;">${pdlHits}</strong> ${sourceHealth.pdl}</span>
-      <span style="font-size:11px;color:#334155;"> · </span>
-      <span style="font-size:11px;color:#94a3b8;">👻 Ghost leads filtered: <strong style="color:#e8621a;">${ghostLeadsFiltered}</strong></span>
-    </td>
-  </tr></table>
-</td></tr>
-
-<!-- CANDIDATE TABLE -->
-<tr><td style="background:#fff;padding:24px 20px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
-  <p style="margin:0 0 16px;font-size:14px;font-weight:800;color:#1e293b;text-transform:uppercase;letter-spacing:0.5px;">All Candidates · Sorted by Score</p>
-  <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
-    <tr style="background:#0a1628;">
-      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Name</th>
-      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Trade</th>
-      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">City</th>
-      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:center;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Score</th>
-      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Src</th>
-      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Enrich</th>
-      <th style="padding:10px 10px;font-size:10px;color:#94a3b8;text-align:left;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">Status</th>
-    </tr>
-    ${candidateRows}
-  </table>
-</td></tr>
-
-<!-- LEGEND + FOOTER -->
-<tr><td style="padding:20px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 16px 16px;background:#0a1628;">
-  <table width="100%" cellpadding="0" cellspacing="0"><tr>
-    <td style="font-size:11px;color:#64748b;line-height:1.6;">
-      🔥 <strong style="color:#e8621a;">8-10</strong> = alert sent &nbsp;·&nbsp;
-      ⚡ <strong style="color:#f59e0b;">5-7</strong> = digest only &nbsp;·&nbsp;
-      <span style="color:#94a3b8;">Below 5</span> = stored, no alert<br>
-      <span style="color:#475569;">Enrichment waterfall: NPI → Sonar OSINT → PDL · Top 5/run · No Ghost Lead filter active</span>
-    </td>
-  </tr></table>
-</td></tr>
-
-</table></td></tr></table>
-</body></html>`
-  );
+  try {
+    await fetch(`${SUPABASE_URL}/functions/v1/hire-alert-founder-report`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ send: true, triggered_by: "hire-alert-scanner" }),
+      signal: AbortSignal.timeout(20_000),
+    });
+  } catch (e) {
+    console.error("[hire-alert-scanner] founder report dispatch failed:", e instanceof Error ? e.message : String(e));
+  }
 
   await sb.from("agent_heartbeats").upsert({
     agent_name: "hire-alert-scanner",
