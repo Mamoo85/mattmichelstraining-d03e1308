@@ -1470,11 +1470,11 @@ serve(async (req: Request) => {
 
       if (client.notify_sms && client.owner_phone && clientHotCandidates.length) {
         const top = clientHotCandidates[0];
-        const dashLink = client.dashboard_token ? ` View all: m2training.lovable.app/my-techalert?token=${client.dashboard_token}` : "";
+        const dashLink = client.dashboard_token ? ` View all: detroitwebagent.com/my-techalert?token=${client.dashboard_token}` : "";
         const availLabel = top.availability_score >= 8 ? "High Availability" : top.availability_score >= 5 ? "Possible Availability" : "Monitor";
         const smsBody = clientHotCandidates.length === 1
-          ? `TechAlert: ${top.full_name} (${top.license_type || "licensed tech"}, ${top.city || "Metro Detroit"}) — ${availLabel}. You're the only one seeing this.${dashLink} Reply STOP to opt out.`
-          : `TechAlert: ${clientHotCandidates.length} licensed techs found. Top: ${top.full_name} (${top.license_type || "tradesperson"}, ${availLabel}).${dashLink} Reply STOP to opt out.`;
+          ? `Talent Radar: ${top.full_name} (${top.license_type || "licensed tech"}, ${top.city || "Metro Detroit"}) — ${availLabel}. You're the only one seeing this.${dashLink} Reply STOP to opt out.`
+          : `Talent Radar: ${clientHotCandidates.length} licensed techs found. Top: ${top.full_name} (${top.license_type || "tradesperson"}, ${availLabel}).${dashLink} Reply STOP to opt out.`;
         await sendSMS(client.owner_phone, TWILIO_PHONE_NUMBER, smsBody, "hire_alert");
       }
 
