@@ -1,80 +1,56 @@
 
 
-## Naming Audit — Radar Product Confusion
+# Production Readiness Audit — Top 3 Products
 
-You're right — there's significant tangle. Here's the full picture and my proposed cleanup.
+User wants a deep diagnostic audit, not new features. This is a read-only investigation that produces a brutal honest report. I'll need to query DB, hit logs, curl edge functions.
 
-### What canonical names should be (per existing memory)
-| Canonical | Purpose |
-|---|---|
-| **Talent Radar** | Hiring intelligence (trades + healthcare) |
-| **Demand Radar** | Buyer-intent signals |
-| **Growth Radar** | Industry expansion / regulatory pulse |
+## What I'll investigate (5 sections)
 
-### What's actually in the codebase (the mess)
+### 1. Cron & Edge Function Health
+- Query `cron.job` + `cron.job_run_details` for last 24h: which scheduled jobs are actually firing, success/fail counts
+- Query `net._http_response` for HTTP 402/404/405/500 in last 24h grouped by URL (identify which APIs are broken)
+- Check `hire_alert_scanner_checkpoints` table — are checkpoints advancing or stuck?
+- Pull edge function logs for: `hire-alert-scanner`, `industry-pulse-scanner`, `lead-enrichment-waterfall`, `candidate-deep-enrich`, `scarlett-autonomous`, `selma-autonomous`, `dead-lead-drip`
 
-**Talent Radar has 4 active aliases:**
-- `TechAlert` — 40+ files (UI strings, component names, page titles)
-- `HireAlert` — 40+ files (route paths, page filenames, edge functions)
-- `Talent Radar` — the new canonical (routes + some new UI)
-- `talent_intelligence` — old redirect
+### 2. Silent Killers — Data Quality
+- `hire_alert_candidates`: count by source, last 7d insertions, % with `is_company_name=true` (should be filtered out), % with score=0/null, % with name length <4 or matching company tokens that slipped through
+- `industry_pulse_signals` (canonical): count by signal_type, freshness (signals where created_at > 30d), null/empty critical fields
+- Junk-name detection: regex against names like "Mr Pipey", "Inc", "LLC", phone-number-as-name patterns
+- Source freshness: per-source max(created_at) — any source dead >7d?
 
-**Growth Radar has 2 names mixed:**
-- `industry_pulse` — DB tables (`industry_pulse_signals`, `industry_pulse_clients`), page files (`IndustryPulse.tsx`, `MyIndustryPulse.tsx`), edge functions
-- `growth_radar` — DB tables (`growth_radar_signals`, `growth_radar_clients` — DUPLICATES exist), routes
+### 3. Enrichment Waterfall Match Rates
+- Query `enrichment_stage_state` + per-candidate enriched fields: success rate per stage (NPI, PDL, Hunter, Snov, Lusha, Sonar, Crustdata)
+- True contactability: % of last-30d candidates with verified email OR mobile phone
+- Check `enrichment_source_budgets` — which providers are paused/cap-reached?
+- Check `ai_call_log` for per-provider error rates
 
-**Demand Radar:** clean (only one name).
+### 4. AI Scoring Accuracy
+- `hire_alert_candidates.score` distribution: how many 0/null vs 1-10
+- Check `candidate-quality-scorer` logs for failures
+- Sample 20 high-score candidates — do they have corroborating fields?
 
-### The 4 real risks I found
+### 5. Billing & Fulfillment
+- Inspect `stripe-webhook/index.ts` handlers for: `hire_alert_subscription`, `field_service_subscription`, `contractor_lead_subscription`, `industry_pulse_subscription` ($149 Demand Radar)
+- Look for `undefined` variables in welcome email flows (the prior `dashboardToken` bug class)
+- Check last 7d `stripe_webhook_log` for failed deliveries
+- Verify auto-onboard TEMPLATES dict covers all 4 product types
 
-1. **Two parallel DB tables for Growth Radar** — `industry_pulse_signals` AND `growth_radar_signals` both exist. Writers/readers may be split between them → silent data loss.
-2. **Page file names lie about identity** — `MyTechAlert.tsx` is rendered at `/talent-radar/dashboard`. `HireAlert.tsx` is rendered at `/talent-radar`. Future devs (or Claude/Lovable) will grep for "talent-radar" and miss everything.
-3. **Stripe metadata is still `hire_alert_subscription`** — webhook routing, customer history, refunds all keyed to legacy name. Touching this is risky (existing subscribers).
-4. **UI copy inconsistent** — admin tabs say "TechAlert", client emails say "Talent Radar", SMS says "HireAlert". Clients see 3 different product names for the same thing.
+## Deliverable
 
-### Proposed Cleanup (4 phases — surgical, low-risk)
+A single audit report with:
+- **Section-by-section findings** (what's broken, what's working, with specific row counts / log excerpts as proof)
+- **Silent killers list** (ranked by severity)
+- **Per-product Production Readiness %** with justification:
+  - Demand Radar (Industry Pulse / Growth Radar)
+  - Talent Radar (TechAlert / HireAlert)
+  - FieldDesk + Contractor Leads
+- **Top 5 must-fix bottlenecks** before sales outreach scales
 
-**Phase 1 — UI/Copy normalization (zero-risk, ~30 min)**
-- Replace every user-facing string "TechAlert" / "HireAlert" → "Talent Radar"
-- Replace user-facing "Industry Pulse" → "Growth Radar"
-- Scope: page H1s, button labels, email subjects, SMS bodies, admin tab labels, SEO titles
-- DOES NOT touch: file names, route paths, table names, Stripe metadata, function names
+## Method
+- Read-only. No code changes in this turn.
+- Heavy use of `supabase--read_query`, `supabase--analytics_query` (for cron + edge logs), `supabase--edge_function_logs`
+- I will NOT mark anything "working" without log/DB proof
+- Findings I can't verify will be labeled `UNVERIFIED — needs runtime check` rather than guessed
 
-**Phase 2 — DB consolidation for Growth Radar (medium-risk, needs migration)**
-- Pick one: keep `industry_pulse_*` (more data, older) OR migrate to `growth_radar_*`
-- Create views so old code keeps working: `CREATE VIEW industry_pulse_signals AS SELECT * FROM growth_radar_signals` (or vice versa)
-- Backfill any rows in the abandoned table → consolidate, then deprecate
-
-**Phase 3 — Rename page files + components (low-risk, mechanical)**
-- `HireAlert.tsx` → `TalentRadar.tsx`
-- `MyTechAlert.tsx` → `TalentRadarDashboard.tsx`
-- `HireAlertTrial.tsx` → `TalentRadarTrial.tsx`
-- `IndustryPulse.tsx` → `GrowthRadar.tsx`
-- `MyIndustryPulse.tsx` → `GrowthRadarDashboard.tsx` (already partially exists — merge)
-- Update imports in `App.tsx` only — routes stay identical
-
-**Phase 4 — Leave alone (high-risk, touch only if needed)**
-- DB table `hire_alert_*` → keep. Add a memory note that these are the canonical Talent Radar tables.
-- Stripe metadata `hire_alert_subscription` → keep. Add comment in webhook: `// legacy name = Talent Radar`
-- Edge function names (`hire-alert-scanner`, etc.) → keep. Renaming breaks crons.
-- Legacy redirect routes (`/hire-alert` → `/talent-radar`) → keep for SEO/email links.
-
-### Single source of truth (after cleanup)
-
-I'll write a `NAMING.md` at repo root + update `mem://tech/radar-product-consolidation` so every future session knows:
-
-```
-USER SEES → "Talent Radar", "Demand Radar", "Growth Radar"  
-CODE USES → routes /talent-radar/*, /demand-radar, /growth-radar  
-DB USES   → hire_alert_* (Talent), demand_radar_*, growth_radar_*  
-STRIPE    → hire_alert_subscription = Talent Radar (legacy key, do not change)
-```
-
-### Open question before I build
-
-**Question:** Phase 2 — for Growth Radar DB, do you want me to:
-- **A)** Keep `industry_pulse_*` as the real table, make `growth_radar_*` a view (least churn)
-- **B)** Migrate everything to `growth_radar_*` and drop industry_pulse (cleanest long-term, ~1 risky migration)
-
-Default if you don't specify: **A** (safer).
+After you approve, I switch to default mode, run all queries in parallel where safe, and post the full report. Estimated 15–25 tool calls. No file edits unless you then ask for fixes.
 
