@@ -1396,9 +1396,11 @@ serve(async (req: Request) => {
     const clientRoles: string[] = client.target_roles || [];
     const clientZips: string[] = (client as any).target_zip_codes || [];
 
-    // Filter scored candidates to only those matching this client's target roles + zips
+    // Filter scored candidates to only those matching this client's target roles + zips.
+    // 🛡️ Company-name guard belt-and-suspenders — even if scoreCandidate missed it, kill it here.
     const clientAlertWorthy = allScored.filter(
       (c) => c.availability_score >= 5
+        && !looksLikeCompany(c.full_name)
         && candidateMatchesRoles(c.license_type, clientRoles)
         && candidateMatchesZips(c.zip, c.city, clientZips)
     );
