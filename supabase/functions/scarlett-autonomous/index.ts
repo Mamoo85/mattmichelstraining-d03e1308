@@ -138,6 +138,34 @@ const dfPassword = Deno.env.get("DATAFORSEO_PASSWORD") ?? "";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
+  // ── HEALTH PROBE ──
+  const probeUrl = new URL(req.url);
+  if (probeUrl.searchParams.get("probe") === "1") {
+    return new Response(JSON.stringify({ ok: true, name: "scarlett-autonomous" }), {
+      headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
+
+  // ── BACKGROUND MODE — return 202 immediately, run work via waitUntil ──
+  const isBackground = probeUrl.searchParams.get("bg") === "1";
+  if (isBackground) {
+    const work = (async () => {
+      try { await runScarlett(); } catch (e) { console.error("[scarlett bg]", e); }
+    })();
+    // @ts-ignore — EdgeRuntime is available in Supabase Deno runtime
+    if (typeof EdgeRuntime !== "undefined" && (EdgeRuntime as any).waitUntil) {
+      // @ts-ignore
+      (EdgeRuntime as any).waitUntil(work);
+    }
+    return new Response(JSON.stringify({ ok: true, dispatched: true, mode: "background" }), {
+      status: 202, headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
+
+  return await runScarlett();
+});
+
+async function runScarlett(): Promise<Response> {
   try {
     const supabase = createClient(supabaseUrl, serviceKey);
 
