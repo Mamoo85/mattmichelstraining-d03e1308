@@ -3458,6 +3458,30 @@ serve(async (req) => {
   const summary = `✅ Done: new=${newCount} updated=${updatedCount} errors=${errorCount}${laraNote} | ${Object.entries(sourceCounts).map(([k, v]) => `${k}=${v}`).join(" ")}`;
   console.log(`[miosha-scraper] ${summary}`);
 
+  // Log per-source run row + release checkpoint lock so admin run table is honest
+  const totalFound = Object.values(sourceCounts).reduce((a: number, b: any) => a + (Number(b) || 0), 0);
+  await sb.from("hire_alert_runs").insert({
+    run_at: new Date().toISOString(),
+    source: "miosha",
+    candidates_found: totalFound,
+    new_candidates: newCount,
+    alerts_sent: 0,
+    errors: errorCount,
+    status: errorCount > 0 ? "partial" : "ok",
+    completed_at: new Date().toISOString(),
+  } as any);
+  await sb.from("hire_alert_scanner_checkpoints").upsert(
+    {
+      source: "miosha",
+      status: "ok",
+      last_completed_at: new Date().toISOString(),
+      last_count: newCount,
+      last_error: null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "source" }
+  );
+
   return new Response(
     JSON.stringify({
       ok: true,

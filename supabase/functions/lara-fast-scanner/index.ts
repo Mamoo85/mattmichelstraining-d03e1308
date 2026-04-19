@@ -134,6 +134,31 @@ serve(async (req) => {
     { onConflict: "id" }
   );
 
+  // Log per-source run row so admin run table reflects this worker's activity
+  await sb.from("hire_alert_runs").insert({
+    run_at: new Date().toISOString(),
+    source: "lara_val",
+    candidates_found: probed,
+    new_candidates: inserted,
+    alerts_sent: 0,
+    errors: 0,
+    status: "ok",
+    completed_at: new Date().toISOString(),
+  } as any);
+
+  // Mark checkpoint complete (release the perpetual "processing" lock)
+  await sb.from("hire_alert_scanner_checkpoints").upsert(
+    {
+      source: "lara_val",
+      status: "ok",
+      last_completed_at: new Date().toISOString(),
+      last_count: inserted,
+      last_error: null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "source" }
+  );
+
   const summary = {
     ok: true,
     probed,
