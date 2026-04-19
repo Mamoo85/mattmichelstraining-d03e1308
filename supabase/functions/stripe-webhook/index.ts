@@ -3001,7 +3001,7 @@ serve(async (req) => {
               .from("contractor_lead_purchases")
               .select("id", { count: "exact", head: true })
               .eq("contractor_id", meta.contractor_id)
-              .gte("purchased_at", sevenDaysAgo);
+              .gte("created_at", sevenDaysAgo);
             if (weekCount === 3) {
               const upgradeUrl = `https://detroitwebagent.com/contractor-leads?upgrade=1&prefilled_email=${encodeURIComponent(customerEmail || "")}`;
               await sendSMS(
