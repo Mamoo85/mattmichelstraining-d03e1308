@@ -196,11 +196,22 @@ async function firecrawlSearch(query: string): Promise<Array<{ url: string; mark
       method: "POST",
       headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({ query, limit: 5 }),
+      signal: AbortSignal.timeout(15_000),
     });
-    const data = await res.json();
+    // Read as text first — Firecrawl returns HTML error pages on 404/5xx, which crashes res.json()
+    const text = await res.text();
+    if (!res.ok) {
+      console.warn(`[hire-alert-scanner] Firecrawl HTTP ${res.status}: ${text.slice(0, 120)}`);
+      return [];
+    }
+    if (!text || !text.trim().startsWith("{")) {
+      console.warn(`[hire-alert-scanner] Firecrawl non-JSON response: ${text.slice(0, 120)}`);
+      return [];
+    }
+    const data = JSON.parse(text);
     return data?.data || [];
   } catch (e) {
-    console.error("[hire-alert-scanner] Firecrawl error:", e);
+    console.error("[hire-alert-scanner] Firecrawl error:", e instanceof Error ? e.message : e);
     return [];
   }
 }
@@ -1391,10 +1402,11 @@ serve(async (req: Request) => {
   // every candidate appeared "new", the INSERT hit a UNIQUE constraint on license_number, and 0 rows committed.
   // Fix: fetch ALL candidates older than the 25h window as "already seen". Candidates inserted in the last
   // 25h by the scraper are NOT in existingKeys → correctly treated as new → scored and alerted.
+  const sinceCutoff = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
   const { data: existingRecords } = await sb
     .from("hire_alert_candidates")
     .select("license_number, full_name, name, city, linkedin_url, facebook_url, current_employer, current_title, years_experience, qualifications_summary, hiring_recommendation, enrichment_status, email, phone")
-    .lt("first_seen_at", since);
+    .lt("first_seen_at", sinceCutoff);
 
   const enrichmentLookup = new Map<string, Record<string, unknown>>();
   for (const r of existingRecords || []) {
