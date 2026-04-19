@@ -33,7 +33,7 @@ const TESTIMONIALS: Testimonial[] = [
     initials: "RK",
   },
   {
-    quote: "I used to spend Friday afternoons manually searching job boards. Now I spend that time calling the guys TechAlert already found for me.",
+    quote: "I used to spend Friday afternoons manually searching job boards. Now I spend that time calling the candidates Talent Radar already found for me.",
     name: "Brian S.",
     trade: "Mechanical Contractor, Wayne County",
     initials: "BS",

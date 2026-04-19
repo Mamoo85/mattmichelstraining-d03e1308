@@ -20,7 +20,7 @@ const HEALTHCARE_ROLES = [
 
 const TESTIMONIALS: Testimonial[] = [
   {
-    quote: "We were paying a staffing agency $82/hour for CNAs. TechAlert texted us a newly licensed CNA in our county — hired her at $22/hour. This service paid for itself in a single shift.",
+    quote: "We were paying a staffing agency $82/hour for CNAs. Talent Radar texted us a newly licensed CNA in our county — hired her at $22/hour. This service paid for itself in a single shift.",
     name: "Karen M.",
     trade: "Director of Nursing, Oakland County",
     initials: "KM",
