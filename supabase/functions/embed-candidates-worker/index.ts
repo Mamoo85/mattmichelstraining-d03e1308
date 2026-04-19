@@ -47,11 +47,9 @@ function buildText(c: Record<string, unknown>): string {
     c.current_title,
     c.trade,
     c.current_employer,
-    c.county,
     c.city,
     c.state,
     c.flight_risk_proof,
-    c.summary,
   ].filter((x) => x && typeof x === "string");
   return parts.join(" | ");
 }
@@ -63,13 +61,13 @@ serve(async (req) => {
   try {
     const { data: rows, error } = await sb
       .from("hire_alert_candidates")
-      .select("id, name, current_title, trade, current_employer, county, city, state, flight_risk_proof, summary")
+      .select("id, name, current_title, trade, current_employer, city, state, flight_risk_proof")
       .is("embedding", null)
       .not("name", "is", null)
       .order("first_seen_at", { ascending: false })
       .limit(BATCH);
 
-    if (error) throw error;
+    if (error) throw new Error(error.message ?? JSON.stringify(error));
 
     let embedded = 0;
     let skipped = 0;
@@ -92,8 +90,9 @@ serve(async (req) => {
       { headers: { ...cors, "Content-Type": "application/json" } },
     );
   } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : (typeof e === "object" ? JSON.stringify(e) : String(e));
     return new Response(
-      JSON.stringify({ ok: false, error: e instanceof Error ? e.message : String(e) }),
+      JSON.stringify({ ok: false, error: msg }),
       { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
     );
   }
