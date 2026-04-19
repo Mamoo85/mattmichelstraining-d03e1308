@@ -1005,6 +1005,14 @@ serve(async (req) => {
 </table>
 </body></html>`;
             await dwaEmail(email, `⚡ TechAlert is Live — Your Hiring Advantage Starts Tomorrow`, welcomeHtml);
+            if (meta.owner_phone) {
+              sendSMS(
+                meta.owner_phone,
+                Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219",
+                `TechAlert is live! You'll get a text the moment a licensed candidate shows up in Metro Detroit. Questions? (313) 992-1219 — Matt`,
+                "hire_alert_onboard"
+              ).catch(() => {});
+            }
             await notifyMatt(
               `💰 New TechAlert Client — ${meta.company_name || email} ($${meta.plan === "bundle" ? "49" : "99"}/mo)`,
               `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Phone: ${meta.owner_phone || "n/a"}<br>Plan: ${meta.plan || "standalone"}</p>`
@@ -3099,25 +3107,35 @@ serve(async (req) => {
               .eq("id", meta.contractor_id);
             if (clientErr) throw new Error(`contractor_clients update failed: ${clientErr.message}`);
 
-            // Assign contractor to the matching lead site
-            const { data: site } = await wdSb
-              .from("contractor_lead_sites" as any)
-              .select("id, active_contractor_id")
-              .eq("trade", meta.trade || "")
-              .ilike("city", `%${(meta.city || "").split(",")[0]}%`)
-              .limit(1)
-              .single();
+            // Assign contractor to the matching lead site (only if trade + city present)
+            if (meta.trade && meta.city) {
+              const citySlug = meta.city.split(",")[0].trim();
+              const { data: site } = await wdSb
+                .from("contractor_lead_sites" as any)
+                .select("id, active_contractor_id")
+                .eq("trade", meta.trade)
+                .ilike("city", `%${citySlug}%`)
+                .limit(1)
+                .maybeSingle();
 
-            if (site && !(site as any).active_contractor_id) {
-              await wdSb.from("contractor_lead_sites" as any)
-                .update({ active_contractor_id: meta.contractor_id })
-                .eq("id", (site as any).id);
+              if (site && !(site as any).active_contractor_id) {
+                await wdSb.from("contractor_lead_sites" as any)
+                  .update({ active_contractor_id: meta.contractor_id })
+                  .eq("id", (site as any).id);
+              }
             }
           }
 
           if (RESEND_API_KEY && customerEmail) {
             const tradeLabel = (meta.trade || "service").charAt(0).toUpperCase() + (meta.trade || "service").slice(1);
+            const contractorPhone = meta.owner_phone || meta.phone || null;
             await Promise.all([
+              contractorPhone ? sendSMS(
+                contractorPhone,
+                Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219",
+                `You're locked in for exclusive ${tradeLabel.toLowerCase()} leads in ${meta.city || "your area"}. Leads come via email + text. Questions? (313) 992-1219 — Matt`,
+                "contractor_lead_onboard"
+              ).catch(() => {}) : Promise.resolve(),
               // Welcome email to contractor — DWA branding
               fetch("https://api.resend.com/emails", {
                 method: "POST",
@@ -3446,20 +3464,32 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
       // ── FIELD SERVICE MANAGEMENT — $199-299/mo subscription ──────────────
       if (meta.type === "field_service_subscription") {
         try {
-          const { email, name, company, plan } = meta;
+          const email = meta.email || customerEmail;
+          const name = meta.name || null;
+          const company = meta.company || null;
+          const plan = meta.plan || "standalone";
           const { data: fieldClient } = await sb.from("field_crm_clients").upsert(
-            { email: email, owner_name: name || null, business_name: company || "New Client", plan: plan || "standalone", status: "active", stripe_customer_id: session.customer as string, stripe_subscription_id: session.subscription as string || null },
+            { email: email, owner_name: name, business_name: company || "New Client", plan, status: "active", stripe_customer_id: session.customer as string, stripe_subscription_id: session.subscription as string || null },
             { onConflict: "email" }
           ).select("dispatch_token").single();
-          const dispatchToken = (fieldClient as any)?.dispatch_token || "unknown";
-          const dispatchUrl = `https://detroitwebagent.com/field-service/dispatch?token=${dispatchToken}`;
+          const dispatchToken = (fieldClient as any)?.dispatch_token || null;
+          const dispatchUrl = dispatchToken
+            ? `https://detroitwebagent.com/field-service/dispatch?token=${dispatchToken}`
+            : `https://detroitwebagent.com/field-service/dispatch`;
+          const ownerPhone = meta.owner_phone || meta.phone || null;
           await Promise.all([
             notifyMatt(`New Field Service Client: ${company || email}`, `<p>New Detroit Web Agency Field Service signup:<br/>Name: ${name}<br/>Email: ${email}<br/>Company: ${company}<br/>Plan: ${plan}<br/><br/><strong>Dispatch URL:</strong> <a href="${dispatchUrl}">${dispatchUrl}</a></p>`),
             fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, {
               method: "POST",
               headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({ service_type: "field_service_subscription", client_email: email, business_name: company || name || email, company: company, plan: plan || "standalone" }),
+              body: JSON.stringify({ service_type: "field_service_subscription", client_email: email, business_name: company || name || email, company, plan }),
             }).catch((e: unknown) => console.error("[WEBHOOK] auto-onboard field_service error:", e)),
+            ownerPhone ? sendSMS(
+              ownerPhone,
+              Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219",
+              `Welcome to FieldDesk! Your dispatch board is ready: ${dispatchUrl} — Text (313) 992-1219 with any questions.`,
+              "field_service_onboard"
+            ).catch(() => {}) : Promise.resolve(),
           ]);
         } catch (e) {
           console.error("[WEBHOOK] field_service_subscription error:", e);

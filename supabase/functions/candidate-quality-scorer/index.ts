@@ -132,14 +132,14 @@ async function classifyFlightRisk(
     const hiringNote = totalHiring > 0 ? ` (~${totalHiring} open roles tracked)` : "";
     return {
       flight_risk: "hard_to_poach",
-      flight_risk_proof: `🛡️ HARD TO POACH — Employer shows ${count} expansion signals in last 60 days${hiringNote}. Most recent: ${when}. Candidate is likely comfortable.`,
+      flight_risk_proof: `🛡️ HARD TO POACH — Current employer shows signs of stability and active growth. Candidate is likely comfortable in their role.`,
     };
   }
 
   if (count === 0) {
     return {
       flight_risk: "high_flight_risk",
-      flight_risk_proof: `🎯 HIGH FLIGHT RISK — No recent growth signals detected at current employer in last 60 days. Candidate is statistically more receptive to outreach.`,
+      flight_risk_proof: `🎯 HIGH FLIGHT RISK — Current employer shows limited recent activity. Candidate may be more receptive to new opportunities.`,
     };
   }
 

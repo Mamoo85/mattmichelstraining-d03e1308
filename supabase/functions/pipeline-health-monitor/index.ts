@@ -99,7 +99,8 @@ Deno.serve(async (req) => {
         fetch("https://api.firecrawl.dev/v2/team/credit-usage", {
           headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}` },
           signal: AbortSignal.timeout(10_000),
-        })
+        }),
+        [401] // 401 = server alive but key issue
       ),
 
       // 6. Resend (verify domain — lightweight)
