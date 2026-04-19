@@ -361,7 +361,7 @@ export default function HireAlert() {
           What Hiring <span style={{ color: ACCENT }}>Actually</span> Costs
         </h2>
         <p style={{ textAlign: "center", color: "#94a3b8", fontSize: 15, marginBottom: 48, maxWidth: 600, margin: "0 auto 48px" }}>
-          Compare TechAlert against every other way to find licensed tradespeople.
+          Compare Talent Radar against every other way to find licensed tradespeople.
         </p>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
@@ -388,7 +388,7 @@ export default function HireAlert() {
               bad: true,
             },
             {
-              name: "TechAlert",
+              name: "Talent Radar",
               price: `$${standalonePrice}`,
               unit: "/mo",
               items: ["Proprietary license monitoring", "Daily candidate alerts + scoring", "Geographic territory exclusivity", "One hire pays for years of service"],
@@ -434,11 +434,11 @@ export default function HireAlert() {
         }}>
           <p style={{ margin: "0 0 4px", color: ACCENT, fontWeight: 700, fontSize: 12, letterSpacing: 2, textTransform: "uppercase" }}>The Math</p>
           <h3 style={{ margin: "0 0 12px", fontSize: 24, fontWeight: 800 }}>
-            One Hire Pays for a <span style={{ color: ACCENT }}>Lifetime</span> of TechAlert
+            One Hire Pays for a <span style={{ color: ACCENT }}>Lifetime</span> of Talent Radar
           </h3>
           <p style={{ margin: 0, color: "#94a3b8", fontSize: 15, lineHeight: 1.7, maxWidth: 600, marginLeft: "auto", marginRight: "auto" }}>
             A single licensed HVAC tech generates <strong style={{ color: "#fff" }}>$80K–120K/year</strong> in billable service revenue.
-            At <strong style={{ color: "#fff" }}>${standalonePrice}/mo</strong>, TechAlert pays for itself with your first hire —
+            At <strong style={{ color: "#fff" }}>${standalonePrice}/mo</strong>, Talent Radar pays for itself with your first hire —
             then keeps delivering candidates every single day.
             A staffing agency charges <strong style={{ color: "#fff" }}>$12K–18K</strong> for the same hire. Once.
           </p>
@@ -516,7 +516,7 @@ export default function HireAlert() {
       <section id="checkout" style={{ maxWidth: 520, margin: "0 auto 60px", padding: "0 24px" }}>
         <div style={{ background: "#0d2137", border: "1px solid #1e3a5f", borderRadius: 14, padding: 40 }}>
           <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 800 }}>
-            {betaFull ? "Join TechAlert" : "Claim Your Beta Slot"}
+            {betaFull ? "Join Talent Radar" : "Claim Your Beta Slot"}
           </h2>
           <p style={{ margin: "0 0 28px", color: "#94a3b8", fontSize: 14 }}>
             {plan === "bundle" ? `$${bundlePrice}/mo — Field CRM Bundle` : `$${standalonePrice}/mo — Standalone`}
@@ -574,8 +574,8 @@ export default function HireAlert() {
                 style={{ accentColor: ACCENT, width: 16, height: 16, flexShrink: 0, marginTop: 2 }}
               />
               <span>
-                I acknowledge TechAlert data is a <strong style={{ color: "#fff" }}>B2B Market Intelligence Feed and is NOT a Consumer Report under the FCRA</strong>. I will not use it for FCRA permissible purposes (employment eligibility decisions, background screening, adverse action). Auto-dialed/pre-recorded calls or texts to listed candidates are prohibited (TCPA). Reverse-engineering or resale of the underlying data is prohibited. Violation = immediate termination + indemnification.{" "}
-                <a href="/legal/techalert-terms" target="_blank" style={{ color: ACCENT, textDecoration: "underline" }}>Full TechAlert Terms</a>
+                I acknowledge Talent Radar data is a <strong style={{ color: "#fff" }}>B2B Market Intelligence Feed and is NOT a Consumer Report under the FCRA</strong>. I will not use it for FCRA permissible purposes (employment eligibility decisions, background screening, adverse action). Auto-dialed/pre-recorded calls or texts to listed candidates are prohibited (TCPA). Reverse-engineering or resale of the underlying data is prohibited. Violation = immediate termination + indemnification.{" "}
+                <a href="/legal/techalert-terms" target="_blank" style={{ color: ACCENT, textDecoration: "underline" }}>Full Talent Radar Terms</a>
               </span>
             </label>
 
