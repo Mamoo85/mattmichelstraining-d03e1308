@@ -4079,33 +4079,105 @@ export type Database = {
         }
         Relationships: []
       }
+      enrichment_jitter_log: {
+        Row: {
+          created_at: string
+          id: string
+          jitter_seconds: number
+          jittered_at: string
+          proxy_pool: string | null
+          scheduled_at: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          jitter_seconds: number
+          jittered_at: string
+          proxy_pool?: string | null
+          scheduled_at: string
+          source: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          jitter_seconds?: number
+          jittered_at?: string
+          proxy_pool?: string | null
+          scheduled_at?: string
+          source?: string
+        }
+        Relationships: []
+      }
+      enrichment_provider_routes: {
+        Row: {
+          call_order: number
+          created_at: string
+          enabled: boolean
+          id: string
+          min_score: number | null
+          provider: string
+          requires_field: string | null
+          short_circuit_on: string[] | null
+          vertical: string
+        }
+        Insert: {
+          call_order: number
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          min_score?: number | null
+          provider: string
+          requires_field?: string | null
+          short_circuit_on?: string[] | null
+          vertical: string
+        }
+        Update: {
+          call_order?: number
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          min_score?: number | null
+          provider?: string
+          requires_field?: string | null
+          short_circuit_on?: string[] | null
+          vertical?: string
+        }
+        Relationships: []
+      }
       enrichment_source_budgets: {
         Row: {
           calls_today: number
+          cost_per_call: number
           daily_call_cap: number
           daily_cap_usd: number
           enabled: boolean
           notes: string | null
+          paused_until: string | null
           reset_at: string
           source: string
           spent_today_usd: number
         }
         Insert: {
           calls_today?: number
+          cost_per_call?: number
           daily_call_cap?: number
           daily_cap_usd: number
           enabled?: boolean
           notes?: string | null
+          paused_until?: string | null
           reset_at?: string
           source: string
           spent_today_usd?: number
         }
         Update: {
           calls_today?: number
+          cost_per_call?: number
           daily_call_cap?: number
           daily_cap_usd?: number
           enabled?: boolean
           notes?: string | null
+          paused_until?: string | null
           reset_at?: string
           source?: string
           spent_today_usd?: number
@@ -15215,6 +15287,20 @@ export type Database = {
         }
         Relationships: []
       }
+      enrichment_provider_health: {
+        Row: {
+          avg_cost: number | null
+          avg_hits: number | null
+          calls_7d: number | null
+          last_call_at: string | null
+          provider: string | null
+          spent_7d: number | null
+          success_rate_pct: number | null
+          successes_7d: number | null
+          unique_candidates_7d: number | null
+        }
+        Relationships: []
+      }
       generated_sites_public: {
         Row: {
           business_name: string | null
@@ -15305,13 +15391,17 @@ export type Database = {
         }
         Returns: number
       }
+      check_contactability_complete: {
+        Args: { p_email: string; p_linkedin?: string; p_phone: string }
+        Returns: boolean
+      }
       check_user_visibility: {
         Args: { _field: string; _target_user_id: string }
         Returns: boolean
       }
       consume_source_budget: {
-        Args: { _cost: number; _source: string }
-        Returns: boolean
+        Args: { p_estimated_cost?: number; p_provider: string }
+        Returns: Json
       }
       cron_job_status: { Args: { p_jobname: string }; Returns: Json }
       decrypt_cms_credentials: {
