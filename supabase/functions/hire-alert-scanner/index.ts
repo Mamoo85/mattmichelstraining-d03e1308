@@ -708,8 +708,28 @@ Return JSON: { "qualifications_summary": "...", "hiring_recommendation": "..." }
   }
 }
 
+// Inline company-name detector — mirrors the DB `is_company_name` heuristic.
+// Used to gate scoring + alerts so junk like "A1 Bargain", "Mr Pipey", "Plumb Pros" never
+// reach the hot tier even if their DB row wasn't flagged at insert time.
+const _COMPANY_TOKENS = /\b(inc|llc|corp|co\.|company|services?|solutions|group|enterprises|systems|industries|construction|plumbing|hvac|mechanical|electric(al)?|heating|cooling|dba|d\/b\/a|holdings|realty|pros|bargain|and son|& son|and sons|& sons)\b/i;
+function looksLikeCompany(name: string | undefined | null): boolean {
+  if (!name) return false;
+  const trimmed = name.trim();
+  if (trimmed.length < 4) return true;
+  if (_COMPANY_TOKENS.test(trimmed)) return true;
+  // "Mr Pipey", "Mrs Smith Co" etc. — single-word + honorific
+  if (/^(mr|mrs|ms|dr)\.?\s+\S+$/i.test(trimmed) && trimmed.split(/\s+/).length === 2) return true;
+  // No alpha at all
+  if (!/[A-Za-z]{2}/.test(trimmed)) return true;
+  return false;
+}
+
 // Score candidate availability via AI with real signals
 async function scoreCandidate(candidate: RawCandidate): Promise<{ score: number; reason: string }> {
+  // 🛡️ Company-name gate: never score business names above 4. Prevents "A1 Bargain LLC = 10/10" leak.
+  if (looksLikeCompany(candidate.full_name)) {
+    return { score: 1, reason: "company-name-blocked" };
+  }
   const hasPhone = !!candidate.phone;
   const hasEmail = !!candidate.email;
   const hasLicenseNumber = !!candidate.license_number;
