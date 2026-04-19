@@ -1,56 +1,78 @@
 
 
-# Production Readiness Audit — Top 3 Products
+## What I verified
 
-User wants a deep diagnostic audit, not new features. This is a read-only investigation that produces a brutal honest report. I'll need to query DB, hit logs, curl edge functions.
+**Real DB state (Talent Radar):**
+- 167 candidates total. 35 flagged `is_company_name=true`, 69 visible (≥40 completeness), 53 with phone, 21 with email
+- Recent inserts are mostly score=2, no city, no phone, no email — Indeed/ZipRecruiter scrapes that never enriched (Dan Wood, Bruce Tate, Ben Marx, etc.)
+- Some old rows are still wrong: "Plumb Pros", "Drewski Handyman", "A1 Bargain", "Detroit Metro" — companies, not people. The `is_company_name` filter caught some but not at scrape time
 
-## What I'll investigate (5 sections)
+**What's actually broken (proven via logs):**
+1. **firecrawl_api = 500** in service-health-monitor (`firecrawl_api=❌(500)`) — confirms the SMS the user sent. Firecrawl key is rejected/expired
+2. **contractor-prospector = CPU Time exceeded** — that's the dead-lead "Find Prospects" button failing + "Edge Function returned non-2xx" toast
+3. **Demand Radar dashboard "No dashboard token provided"** — user opened `/my-industry-pulse` without `?token=...`. Token exists (`5f420e0ca464fe5fe9c3bb9b17bc386a439d7a99f1652400`) but there's no demo-link button in admin
+4. **Talent Radar admin shows last 20 rows only**, no search, no delete, no manual enrich. Only edge function exists for bulk enrichment, no per-candidate UI
 
-### 1. Cron & Edge Function Health
-- Query `cron.job` + `cron.job_run_details` for last 24h: which scheduled jobs are actually firing, success/fail counts
-- Query `net._http_response` for HTTP 402/404/405/500 in last 24h grouped by URL (identify which APIs are broken)
-- Check `hire_alert_scanner_checkpoints` table — are checkpoints advancing or stuck?
-- Pull edge function logs for: `hire-alert-scanner`, `industry-pulse-scanner`, `lead-enrichment-waterfall`, `candidate-deep-enrich`, `scarlett-autonomous`, `selma-autonomous`, `dead-lead-drip`
+**Why the prospector for web design "works so good" but Talent Radar doesn't:**
+- contractor-prospector hits Google Places + Firecrawl on KNOWN business URLs → high success
+- hire-alert-scanner pulls names from Indeed scrape / MIOSHA list with no website to scrape → enrichment waterfall has nothing to anchor on
+- There is NO admin-triggered "enrich this one candidate" button — only the bulk cron
 
-### 2. Silent Killers — Data Quality
-- `hire_alert_candidates`: count by source, last 7d insertions, % with `is_company_name=true` (should be filtered out), % with score=0/null, % with name length <4 or matching company tokens that slipped through
-- `industry_pulse_signals` (canonical): count by signal_type, freshness (signals where created_at > 30d), null/empty critical fields
-- Junk-name detection: regex against names like "Mr Pipey", "Inc", "LLC", phone-number-as-name patterns
-- Source freshness: per-source max(created_at) — any source dead >7d?
+---
 
-### 3. Enrichment Waterfall Match Rates
-- Query `enrichment_stage_state` + per-candidate enriched fields: success rate per stage (NPI, PDL, Hunter, Snov, Lusha, Sonar, Crustdata)
-- True contactability: % of last-30d candidates with verified email OR mobile phone
-- Check `enrichment_source_budgets` — which providers are paused/cap-reached?
-- Check `ai_call_log` for per-provider error rates
+## Plan — Build the Talent Radar Candidate Workbench
 
-### 4. AI Scoring Accuracy
-- `hire_alert_candidates.score` distribution: how many 0/null vs 1-10
-- Check `candidate-quality-scorer` logs for failures
-- Sample 20 high-score candidates — do they have corroborating fields?
+### 1. New "Candidates" tab in `AdminHireAlertClients.tsx`
+Full management table with:
+- **Search** by name, license type, city, source
+- **Filters**: All / Has phone / Has email / No contact / Companies-flagged / Score ≥ 7
+- **Per-row actions**:
+  - 🔍 **Enrich** button → calls existing `candidate-deep-enrich` edge function with that single `candidate_id`, polls, refreshes row
+  - ⚡ **Quick PDL** → calls a new lightweight `enrich-candidate-manual` function that runs PDL + Hunter + Sonar in series and writes back phone/email/employer/title/linkedin
+  - 🗑️ **Delete** with confirm
+  - 🏢 **Mark as Company** (sets `is_company_name=true`, hides from clients)
+  - 👁 **View** modal — full candidate JSON, source, all enrichment fields, raw data
+- Pagination (50/page) instead of "last 20"
 
-### 5. Billing & Fulfillment
-- Inspect `stripe-webhook/index.ts` handlers for: `hire_alert_subscription`, `field_service_subscription`, `contractor_lead_subscription`, `industry_pulse_subscription` ($149 Demand Radar)
-- Look for `undefined` variables in welcome email flows (the prior `dashboardToken` bug class)
-- Check last 7d `stripe_webhook_log` for failed deliveries
-- Verify auto-onboard TEMPLATES dict covers all 4 product types
+### 2. New edge function `enrich-candidate-manual`
+- Input: `{ candidate_id }`
+- Reads candidate row → runs PDL person enrich → if no hit, runs Hunter domain → if no hit, runs Sonar OSINT → writes results to row
+- Returns: `{ ok, hits: { pdl, hunter, sonar }, fields_added: [...] }`
+- Modeled on the `test-pdl-premium` pattern that already works
 
-## Deliverable
+### 3. Demo button for client view
+In `AdminHireAlertClients.tsx`, add button **"📺 View as Client (Demo)"** that opens `/talent-radar/dashboard?token={demo_client.dashboard_token}` in new tab. Same pattern for Demand Radar — add **"📺 View Demand Radar Dashboard"** button in `AdminIndustryPulse` linking to `/my-industry-pulse?token=5f420e0ca464fe5fe9c3bb9b17bc386a439d7a99f1652400`. Solves "I can't demo what the client sees."
 
-A single audit report with:
-- **Section-by-section findings** (what's broken, what's working, with specific row counts / log excerpts as proof)
-- **Silent killers list** (ranked by severity)
-- **Per-product Production Readiness %** with justification:
-  - Demand Radar (Industry Pulse / Growth Radar)
-  - Talent Radar (TechAlert / HireAlert)
-  - FieldDesk + Contractor Leads
-- **Top 5 must-fix bottlenecks** before sales outreach scales
+### 4. Fix the "non-2xx" Find Prospects button
+- contractor-prospector exceeded CPU. Wrap the heavy phase in `Promise.race(..., 50s timeout)` and return partial results with `{ok:true, found, emailed, note:"timed out, partial run"}` instead of crashing. UI shows the partial result instead of red toast.
 
-## Method
-- Read-only. No code changes in this turn.
-- Heavy use of `supabase--read_query`, `supabase--analytics_query` (for cron + edge logs), `supabase--edge_function_logs`
-- I will NOT mark anything "working" without log/DB proof
-- Findings I can't verify will be labeled `UNVERIFIED — needs runtime check` rather than guessed
+### 5. Acknowledge Firecrawl 500 (NOT fixing here)
+Firecrawl API key is returning 500 — that's why service health is RED. **Action:** I'll add a clear warning in admin Service Health card saying "Firecrawl returned 500 — check API key in Lovable Cloud secrets" with a link. I cannot rotate the secret for you. You'll need to verify `FIRECRAWL_API_KEY` is valid in the Lovable Cloud secrets panel.
 
-After you approve, I switch to default mode, run all queries in parallel where safe, and post the full report. Estimated 15–25 tool calls. No file edits unless you then ask for fixes.
+### 6. Hardening at scrape time (silent killer)
+Update `hire-alert-scanner` Indeed/ZipRecruiter parser: skip any "name" that contains words from a junk list (Detroit, Metro, Pros, Bargain, Drain, Handyman, LLC, Inc, Co, Plumbing, Heating, Electric) — those are companies, not people. Backfill: bulk-flag the 35 existing junk rows as `is_company_name=true`.
+
+---
+
+## Files I'll touch
+
+- `src/components/admin/AdminHireAlertClients.tsx` — new Candidates tab with search/filter/actions
+- `src/components/admin/CandidateWorkbench.tsx` (new) — table + modal
+- `src/components/admin/CandidateDetailModal.tsx` (new) — full enrichment view
+- `supabase/functions/enrich-candidate-manual/index.ts` (new) — single-row enrichment
+- `supabase/functions/contractor-prospector/index.ts` — add timeout wrap
+- `supabase/functions/hire-alert-scanner/index.ts` — junk-name guard at scrape time
+- `supabase/migrations/[ts]_backfill_junk_company_names.sql` — flag historical junk
+- `src/components/dwa-admin/AdminIndustryPulse.tsx` — demo dashboard button (find file)
+- `src/components/admin/ServiceHealth*.tsx` — Firecrawl warning (find file)
+
+## What you get
+1. Click any candidate → see full data → click Enrich → get phone/email/employer in 5–15s
+2. Delete junk in one click; flag companies as companies
+3. Search 167 candidates instantly, see who's actually contactable
+4. One-click "View as client" so you can demo Demand Radar and Talent Radar dashboards without hunting tokens
+5. Find Prospects button stops red-toasting
+
+## What you must do
+- Verify `FIRECRAWL_API_KEY` in Lovable Cloud secrets — currently returning HTTP 500. I cannot fix that from code.
 
