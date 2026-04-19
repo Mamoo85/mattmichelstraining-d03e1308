@@ -9,15 +9,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+// Only sources with a real worker mapped in queue-worker-scrape get enqueued.
+// bpl / indeed / ziprecruiter / florida_dbpr / openrouter_jobseekers /
+// detroit_bseed_permits already run in-process inside hire-alert-scanner's
+// own 4h cron, so we don't double-dispatch them here.
 const SOURCES = [
   "miosha",
-  "bpl",
-  "indeed",
-  "ziprecruiter",
-  "florida_dbpr",
-  "openrouter_jobseekers",
   "lara_val",
-  "detroit_bseed_permits",
 ];
 
 const corsHeaders = {
