@@ -27,11 +27,16 @@ async function fetchBuyersForClient(
   counties: string[],
   minPermits: number
 ): Promise<BuyerRow[]> {
-  // Pull from industry_pulse_signals where signal_type = 'permit_surge' or company appears 5+ times in last 30d
-  // Falls back to grouping by company_name if permit_surge signals don't yet exist (Claude Code's E22 work)
+  // Real schema: industry_pulse_signals stores permit_surge rows where:
+  //   hiring_count = permit count, hiring_roles = permit types,
+  //   predicted_needs = supply categories, location/county = geo.
+  // Match on industry/predicted_needs/recommended_pitch text — no raw_data column exists.
   const { data: signals } = await sb
     .from("industry_pulse_signals")
-    .select("company_name, signal_type, recommended_pitch, raw_data, confidence, created_at")
+    .select(
+      "company_name, signal_type, recommended_pitch, predicted_needs, hiring_count, hiring_roles, industry, vertical, location, county, confidence, created_at, source_urls"
+    )
+    .eq("signal_type", "permit_surge")
     .gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
     .gte("confidence", 6)
     .order("created_at", { ascending: false })
@@ -39,18 +44,31 @@ async function fetchBuyersForClient(
 
   if (!signals || signals.length === 0) return [];
 
-  // Aggregate by company_name
+  const tradesLc = trades.map((t) => t.toLowerCase());
+  const countiesLc = counties.map((c) => c.toLowerCase());
+
   const grouped = new Map<string, BuyerRow>();
   for (const s of signals) {
     const company = (s.company_name || "").trim();
     if (!company) continue;
-    const raw = (s.raw_data as any) || {};
-    const tradeMatch = trades.length === 0 || trades.some(
-      (t) =>
-        JSON.stringify(raw).toLowerCase().includes(t.toLowerCase()) ||
-        (s.recommended_pitch || "").toLowerCase().includes(t.toLowerCase())
-    );
+
+    const haystack = [
+      s.industry,
+      s.vertical,
+      s.recommended_pitch,
+      ...(Array.isArray(s.hiring_roles) ? s.hiring_roles : []),
+      ...(Array.isArray(s.predicted_needs) ? s.predicted_needs : []),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    const tradeMatch = tradesLc.length === 0 || tradesLc.some((t) => haystack.includes(t));
     if (!tradeMatch) continue;
+
+    const geoHaystack = `${s.location || ""} ${s.county || ""}`.toLowerCase();
+    const geoMatch = countiesLc.length === 0 || countiesLc.some((c) => geoHaystack.includes(c));
+    if (!geoMatch) continue;
 
     const existing = grouped.get(company) || {
       company_name: company,
@@ -60,16 +78,23 @@ async function fetchBuyersForClient(
       contact_emails: [],
       recent_addresses: [],
     };
-    existing.permit_count += raw.permit_count || 1;
-    existing.total_value += Number(raw.total_value || raw.estimated_value || 0);
-    if (raw.trade && !existing.trades.includes(raw.trade)) existing.trades.push(raw.trade);
-    if (Array.isArray(raw.contact_emails)) {
-      for (const e of raw.contact_emails) {
-        if (!existing.contact_emails.includes(e)) existing.contact_emails.push(e);
+    // hiring_count holds the permit count for permit_surge signals
+    existing.permit_count = Math.max(existing.permit_count, Number(s.hiring_count) || 1);
+    // Try to extract a $value from the pitch ("avg $12,500/permit")
+    const valueMatch = (s.recommended_pitch || "").match(/\$([\d,]+)/);
+    if (valueMatch) {
+      const v = Number(valueMatch[1].replace(/,/g, "")) || 0;
+      existing.total_value = Math.max(existing.total_value, v * existing.permit_count);
+    }
+    if (Array.isArray(s.hiring_roles)) {
+      for (const t of s.hiring_roles) {
+        if (t && !existing.trades.includes(t)) existing.trades.push(t);
       }
     }
-    if (raw.address && !existing.recent_addresses.includes(raw.address)) {
-      existing.recent_addresses.push(raw.address);
+    if (Array.isArray(s.source_urls)) {
+      for (const u of s.source_urls) {
+        if (u && !existing.recent_addresses.includes(u)) existing.recent_addresses.push(u);
+      }
     }
     grouped.set(company, existing);
   }
