@@ -1,78 +1,76 @@
 
 
-## What I verified
+## What the screenshots show
 
-**Real DB state (Talent Radar):**
-- 167 candidates total. 35 flagged `is_company_name=true`, 69 visible (≥40 completeness), 53 with phone, 21 with email
-- Recent inserts are mostly score=2, no city, no phone, no email — Indeed/ZipRecruiter scrapes that never enriched (Dan Wood, Bruce Tate, Ben Marx, etc.)
-- Some old rows are still wrong: "Plumb Pros", "Drewski Handyman", "A1 Bargain", "Detroit Metro" — companies, not people. The `is_company_name` filter caught some but not at scrape time
+**Screenshot 1 (Recent Scanner Runs)**: All runs only show "Miosha" + "All". No LARA, no Nursys, no BPL, no Detroit ArcGIS, no Florida DBPR. Either those scanners aren't running, or they aren't logging to `hire_alert_runs` with their own source label.
 
-**What's actually broken (proven via logs):**
-1. **firecrawl_api = 500** in service-health-monitor (`firecrawl_api=❌(500)`) — confirms the SMS the user sent. Firecrawl key is rejected/expired
-2. **contractor-prospector = CPU Time exceeded** — that's the dead-lead "Find Prospects" button failing + "Edge Function returned non-2xx" toast
-3. **Demand Radar dashboard "No dashboard token provided"** — user opened `/my-industry-pulse` without `?token=...`. Token exists (`5f420e0ca464fe5fe9c3bb9b17bc386a439d7a99f1652400`) but there's no demo-link button in admin
-4. **Talent Radar admin shows last 20 rows only**, no search, no delete, no manual enrich. Only edge function exists for bulk enrichment, no per-candidate UI
+**Screenshot 2 (TechAlert Clients)**: 0 candidates in DB despite 167 in the database — the count card is broken (likely counting filtered/healthcare only or missing query).
 
-**Why the prospector for web design "works so good" but Talent Radar doesn't:**
-- contractor-prospector hits Google Places + Firecrawl on KNOWN business URLs → high success
-- hire-alert-scanner pulls names from Indeed scrape / MIOSHA list with no website to scrape → enrichment waterfall has nothing to anchor on
-- There is NO admin-triggered "enrich this one candidate" button — only the bulk cron
+**Screenshot 3 (TechAlert Candidates table)**: Real people like "Scott Mueller" + "Randall L Wieland" are flagged `company` red badge — wrong. No way to unflag them.
+
+**Screenshot 4 (Dead Lead Reactivation)**: "Find Prospects Now" still red-toasting "Edge Function returned a non-2xx status code" — the prospector function is crashing.
+
+**Screenshot 5 (PDL Premium tester)**: Returning all nulls + `undefined` premium additions — PDL response parsing or API key tier issue.
+
+**Screenshot 6 (TechAlert Workbench)**: Score 10/10 candidates but no enrichment options visible from this view — needs to be obvious from the candidate list.
 
 ---
 
-## Plan — Build the Talent Radar Candidate Workbench
+## Plan: Do A → B → C → then plan
 
-### 1. New "Candidates" tab in `AdminHireAlertClients.tsx`
-Full management table with:
-- **Search** by name, license type, city, source
-- **Filters**: All / Has phone / Has email / No contact / Companies-flagged / Score ≥ 7
-- **Per-row actions**:
-  - 🔍 **Enrich** button → calls existing `candidate-deep-enrich` edge function with that single `candidate_id`, polls, refreshes row
-  - ⚡ **Quick PDL** → calls a new lightweight `enrich-candidate-manual` function that runs PDL + Hunter + Sonar in series and writes back phone/email/employer/title/linkedin
-  - 🗑️ **Delete** with confirm
-  - 🏢 **Mark as Company** (sets `is_company_name=true`, hides from clients)
-  - 👁 **View** modal — full candidate JSON, source, all enrichment fields, raw data
-- Pagination (50/page) instead of "last 20"
+### A. Investigate what's actually broken (read-only — this turn)
+1. Query DB: which sources are in `hire_alert_runs` last 7 days? Confirm LARA/Nursys/BPL/ArcGIS are missing.
+2. Query DB: count by source in `hire_alert_candidates` to confirm MIOSHA is dominating.
+3. Read `hire-alert-scanner` to see why LARA/BPL/Nursys aren't logging runs separately.
+4. Read `find-dead-lead-prospects` (or whatever Find Prospects Now calls) and its recent edge logs to find the 500.
+5. Read `AdminHireAlertClients.tsx` Candidates-in-DB count query.
+6. Check PDL key tier — confirm it's a free key (which is why premium fields return null).
 
-### 2. New edge function `enrich-candidate-manual`
-- Input: `{ candidate_id }`
-- Reads candidate row → runs PDL person enrich → if no hit, runs Hunter domain → if no hit, runs Sonar OSINT → writes results to row
-- Returns: `{ ok, hits: { pdl, hunter, sonar }, fields_added: [...] }`
-- Modeled on the `test-pdl-premium` pattern that already works
+### B. Present findings concisely (this turn, in this plan)
+Already shown above.
 
-### 3. Demo button for client view
-In `AdminHireAlertClients.tsx`, add button **"📺 View as Client (Demo)"** that opens `/talent-radar/dashboard?token={demo_client.dashboard_token}` in new tab. Same pattern for Demand Radar — add **"📺 View Demand Radar Dashboard"** button in `AdminIndustryPulse` linking to `/my-industry-pulse?token=5f420e0ca464fe5fe9c3bb9b17bc386a439d7a99f1652400`. Solves "I can't demo what the client sees."
+### C. Build the fix list (next turn, after approval)
 
-### 4. Fix the "non-2xx" Find Prospects button
-- contractor-prospector exceeded CPU. Wrap the heavy phase in `Promise.race(..., 50s timeout)` and return partial results with `{ok:true, found, emailed, note:"timed out, partial run"}` instead of crashing. UI shows the partial result instead of red toast.
+**C1. Make all scanners log their own source label**
+- LARA, Nursys, BPL, Detroit ArcGIS, Florida DBPR each insert their own row into `hire_alert_runs` with `source = 'lara_val'`, `'nursys'`, `'bpl'`, `'detroit_arcgis'`, `'florida_dbpr'`.
+- Recent Scanner Runs table will then show all sources.
 
-### 5. Acknowledge Firecrawl 500 (NOT fixing here)
-Firecrawl API key is returning 500 — that's why service health is RED. **Action:** I'll add a clear warning in admin Service Health card saying "Firecrawl returned 500 — check API key in Lovable Cloud secrets" with a link. I cannot rotate the secret for you. You'll need to verify `FIRECRAWL_API_KEY` is valid in the Lovable Cloud secrets panel.
+**C2. Profession-targeted search bar in admin Workbench**
+- Dropdown: Electrician / Plumber / HVAC / Boiler Op / Nurse RN / Nurse LPN / CNA / Home Health / All
+- Triggers `hire-alert-scanner` with `?profession=electrician` param so scrapers only spend Firecrawl/Sonar credits on the selected trade.
 
-### 6. Hardening at scrape time (silent killer)
-Update `hire-alert-scanner` Indeed/ZipRecruiter parser: skip any "name" that contains words from a junk list (Detroit, Metro, Pros, Bargain, Drain, Handyman, LLC, Inc, Co, Plumbing, Heating, Electric) — those are companies, not people. Backfill: bulk-flag the 35 existing junk rows as `is_company_name=true`.
+**C3. "Unmark as company" + "Mark as company" toggle in candidate row**
+- Adds inline pencil button on every candidate card → flips `is_company_name` boolean.
+- Scott Mueller + Randall Wieland will show as people immediately.
+
+**C4. 10 new enrichment sources (per user request)**
+| # | Source | What it adds |
+|---|---|---|
+| 1 | Hunter.io email finder by name+domain | Verified work email |
+| 2 | Snov.io HR contact lookup | Personal email + phone |
+| 3 | Apollo people enrich (already wired but expand to all candidates, not just orgs) | Phone, title, seniority |
+| 4 | RocketReach (single-person query) | Phone + email + LinkedIn |
+| 5 | Clearbit Person enrich | Job title, social handles |
+| 6 | TruePeopleSearch / FastPeopleSearch scrape via Firecrawl | Cell phone, address |
+| 7 | Whitepages premium API | Landline + cell |
+| 8 | Spokeo via Firecrawl | Phone + relatives |
+| 9 | Google Custom Search ("Name" + city + phone) | OSINT phone discovery |
+| 10 | Facebook public profile scrape via Firecrawl | Employer, photo, intro |
+
+Plus add per-candidate "Enrich Now" button in admin Workbench that runs the full waterfall on demand (just like contractor-prospector does for companies).
+
+**C5. Fix Find Prospects Now (Dead Leads)**
+- Read `find-dead-lead-prospects` edge logs, identify the 500, fix it.
+
+**C6. Fix Candidates-in-DB count**
+- `AdminHireAlertClients.tsx` is querying `hire_alert_candidates` with a filter that excludes everything. Restore correct count (167).
+
+**C7. Fix PDL Premium tester**
+- Diagnose: is the API key a sandbox key? Is the response shape mismatched? Either upgrade key tier or fix parser.
 
 ---
-
-## Files I'll touch
-
-- `src/components/admin/AdminHireAlertClients.tsx` — new Candidates tab with search/filter/actions
-- `src/components/admin/CandidateWorkbench.tsx` (new) — table + modal
-- `src/components/admin/CandidateDetailModal.tsx` (new) — full enrichment view
-- `supabase/functions/enrich-candidate-manual/index.ts` (new) — single-row enrichment
-- `supabase/functions/contractor-prospector/index.ts` — add timeout wrap
-- `supabase/functions/hire-alert-scanner/index.ts` — junk-name guard at scrape time
-- `supabase/migrations/[ts]_backfill_junk_company_names.sql` — flag historical junk
-- `src/components/dwa-admin/AdminIndustryPulse.tsx` — demo dashboard button (find file)
-- `src/components/admin/ServiceHealth*.tsx` — Firecrawl warning (find file)
-
-## What you get
-1. Click any candidate → see full data → click Enrich → get phone/email/employer in 5–15s
-2. Delete junk in one click; flag companies as companies
-3. Search 167 candidates instantly, see who's actually contactable
-4. One-click "View as client" so you can demo Demand Radar and Talent Radar dashboards without hunting tokens
-5. Find Prospects button stops red-toasting
 
 ## What you must do
-- Verify `FIRECRAWL_API_KEY` in Lovable Cloud secrets — currently returning HTTP 500. I cannot fix that from code.
+- Confirm you want all 10 enrichment sources, or pick a subset (some require new API keys: Hunter, Snov, RocketReach, Clearbit, Whitepages = paid, the others are free OSINT via Firecrawl).
+- Approve and I'll execute C1–C7 in default mode.
 
