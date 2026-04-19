@@ -153,6 +153,7 @@ Deno.serve(async (req) => {
                   </p>`
               }
 
+
               <a href="${dashUrl}" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 28px;border-radius:8px;font-weight:800;text-decoration:none;margin-bottom:24px;">Open Your Dashboard →</a>
 
               <p style="color:#94a3b8;font-size:14px;margin:0;">Questions or feedback? Reply to this email or text me directly.<br>
