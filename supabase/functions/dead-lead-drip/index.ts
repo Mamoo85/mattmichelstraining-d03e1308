@@ -10,6 +10,8 @@ import { sendSMS } from "../_shared/twilio.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
+const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
+const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,6 +53,48 @@ function getTradeTemplate(trade: string, drip: "d1" | "d2" | "d3"): string {
   return tpl[drip];
 }
 
+
+// ── Item 42: Sonar homeowner re-enrichment — skip completed projects ───────────
+async function checkProjectComplete(name: string, trade: string): Promise<boolean> {
+  if (!OPENROUTER_API_KEY || !name) return false;
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "perplexity/sonar-pro",
+        messages: [{ role: "user", content: `Is there any online evidence that "${name}" in Michigan recently completed a ${trade} home project in 2025-2026 (review posted, photo shared, job listed as done)? Answer YES or NO only.` }],
+        max_tokens: 50, temperature: 0.1,
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return (data?.choices?.[0]?.message?.content || "").toUpperCase().startsWith("YES");
+  } catch { return false; }
+}
+
+
+// ── Item 42: Sonar homeowner re-enrichment — skip completed projects ───────────
+async function checkProjectComplete(name: string, trade: string): Promise<boolean> {
+  if (!OPENROUTER_API_KEY || !name) return false;
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "perplexity/sonar-pro",
+        messages: [{ role: "user", content: `Is there any online evidence that "${name}" in Michigan recently completed a ${trade} home project in 2025-2026 (review posted, photo shared, job listed as done)? Answer YES or NO only.` }],
+        max_tokens: 50, temperature: 0.1,
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return (data?.choices?.[0]?.message?.content || "").toUpperCase().startsWith("YES");
+  } catch { return false; }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response('ok', { headers: corsHeaders });
@@ -78,6 +122,14 @@ serve(async (req) => {
       .select("id");
     if (expiredErr) console.error("[drip] TCPA sweep error:", expiredErr);
     tcpaSkipped = expired?.length || 0;
+
+    // Item 42: Sonar enrichment counter (first 3 drip1 contacts)
+    let sonarEnrichedCount = 0;
+    const SONAR_ENRICH_LIMIT = 3;
+
+    // Item 42: Sonar enrichment counter (first 3 drip1 contacts)
+    let sonarEnrichedCount = 0;
+    const SONAR_ENRICH_LIMIT = 3;
 
     // ── DRIP 1: pending contacts in active campaigns ──────────────────────
     // .gte() filter enforces EBR at query level. Contacts with NULL
@@ -107,6 +159,28 @@ serve(async (req) => {
           .eq("campaign_id", campaign.id)
           .eq("selected", true)
           .maybeSingle();
+
+        // Item 42: Skip if Sonar finds project already completed
+        if (sonarEnrichedCount < SONAR_ENRICH_LIMIT) {
+          const projectDone = await checkProjectComplete(contact.name || "", trade);
+          sonarEnrichedCount++;
+          if (projectDone) {
+            await sb.from("dead_lead_contacts" as any).update({ status: "project_complete" }).eq("id", contact.id);
+            console.log(`[drip] Sonar: ${contact.name} project likely complete — skipping`);
+            continue;
+          }
+        }
+
+        // Item 42: Skip if Sonar finds project already completed
+        if (sonarEnrichedCount < SONAR_ENRICH_LIMIT) {
+          const projectDone = await checkProjectComplete(contact.name || "", trade);
+          sonarEnrichedCount++;
+          if (projectDone) {
+            await sb.from("dead_lead_contacts" as any).update({ status: "project_complete" }).eq("id", contact.id);
+            console.log(`[drip] Sonar: ${contact.name} project likely complete — skipping`);
+            continue;
+          }
+        }
 
         const body = customCopy?.drip1_copy
           ? customCopy.drip1_copy
