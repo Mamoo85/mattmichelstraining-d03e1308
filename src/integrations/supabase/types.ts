@@ -5794,6 +5794,95 @@ export type Database = {
         }
         Relationships: []
       }
+      high_volume_buyer_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string
+          contact_name: string | null
+          created_at: string
+          digest_count: number | null
+          email: string
+          id: string
+          last_digest_sent_at: string | null
+          min_permit_count: number | null
+          phone: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          target_counties: string[] | null
+          target_trades: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          business_name: string
+          contact_name?: string | null
+          created_at?: string
+          digest_count?: number | null
+          email: string
+          id?: string
+          last_digest_sent_at?: string | null
+          min_permit_count?: number | null
+          phone?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          target_counties?: string[] | null
+          target_trades?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string
+          contact_name?: string | null
+          created_at?: string
+          digest_count?: number | null
+          email?: string
+          id?: string
+          last_digest_sent_at?: string | null
+          min_permit_count?: number | null
+          phone?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          target_counties?: string[] | null
+          target_trades?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      high_volume_buyer_digests: {
+        Row: {
+          buyer_count: number | null
+          client_id: string | null
+          id: string
+          payload: Json | null
+          sent_at: string
+          total_permit_value: number | null
+        }
+        Insert: {
+          buyer_count?: number | null
+          client_id?: string | null
+          id?: string
+          payload?: Json | null
+          sent_at?: string
+          total_permit_value?: number | null
+        }
+        Update: {
+          buyer_count?: number | null
+          client_id?: string | null
+          id?: string
+          payload?: Json | null
+          sent_at?: string
+          total_permit_value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "high_volume_buyer_digests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "high_volume_buyer_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hire_alert_candidates: {
         Row: {
           alerted_at: string | null
