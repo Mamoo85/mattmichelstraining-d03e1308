@@ -49,6 +49,10 @@ interface CheapOpts {
   maxTokens?: number;
   /** Caller name for ROI logs (e.g. "candidate-deep-enrich"). */
   caller?: string;
+  /** Content type for cache TTL/segmentation. Defaults to "generic". */
+  contentType?: ContentType;
+  /** Skip the semantic LLM cache (default false — cache is on). */
+  noCache?: boolean;
 }
 
 interface CheapResult<T> {
