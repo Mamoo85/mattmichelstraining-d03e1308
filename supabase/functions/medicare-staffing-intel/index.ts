@@ -9,8 +9,35 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Metro Detroit zip prefixes
-const METRO_DETROIT_ZIPS = ["480", "481", "482", "483"];
+// Metro zip-prefix map for filtering CMS results to a specific market.
+// Default = Detroit so existing callers don't break, but any state+metro can be passed in.
+const METRO_ZIP_MAP: Record<string, string[]> = {
+  detroit: ["480", "481", "482", "483"],
+  dfw: ["750", "751", "752", "753", "754", "760", "761", "762"],
+  houston: ["770", "771", "772", "773", "774", "775"],
+  phoenix: ["850", "851", "852", "853"],
+  atlanta: ["300", "301", "302", "303", "305", "311"],
+  miami: ["330", "331", "332", "334"],
+  nyc: ["100", "101", "102", "103", "104", "110", "111", "112", "113", "114", "116"],
+  la: ["900", "901", "902", "904", "905", "906", "907", "908", "910", "911", "912", "913"],
+  chicago: ["600", "601", "602", "603", "604", "605", "606"],
+  philly: ["190", "191"],
+  boston: ["021", "022", "023", "024"],
+};
+
+const METRO_LABELS: Record<string, string> = {
+  detroit: "Metro Detroit",
+  dfw: "Dallas–Fort Worth",
+  houston: "Houston Metro",
+  phoenix: "Phoenix Metro",
+  atlanta: "Atlanta Metro",
+  miami: "Miami Metro",
+  nyc: "NYC Metro",
+  la: "Los Angeles Metro",
+  chicago: "Chicago Metro",
+  philly: "Philadelphia Metro",
+  boston: "Boston Metro",
+};
 
 interface FacilityResult {
   provider_name: string;
@@ -30,13 +57,28 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
+    // Accept ?state=TX&metro=dfw OR JSON body { state, metro } — defaults to MI/Detroit
+    const url = new URL(req.url);
+    let stateParam = (url.searchParams.get("state") || "").toUpperCase();
+    let metroParam = (url.searchParams.get("metro") || "").toLowerCase();
+    if (!stateParam && req.method === "POST") {
+      try {
+        const body = await req.json();
+        stateParam = (body?.state || "").toUpperCase();
+        metroParam = (body?.metro || "").toLowerCase();
+      } catch { /* ignore */ }
+    }
+    const targetState = stateParam || "MI";
+    const targetMetro = metroParam || (targetState === "MI" ? "detroit" : "");
+    const zipPrefixes = METRO_ZIP_MAP[targetMetro] || [];
+    const metroLabel = METRO_LABELS[targetMetro] || `${targetState} statewide`;
+
     // CMS Nursing Home Provider Info dataset
-    // Using the data.cms.gov CKAN API
     const cmsUrl = "https://data.cms.gov/provider-data/api/1/datastore/query/4pq5-n9py/0";
 
     const body = {
       conditions: [
-        { property: "state", value: "MI", operator: "=" },
+        { property: "state", value: targetState, operator: "=" },
       ],
       limit: 500,
       offset: 0,
@@ -59,15 +101,17 @@ serve(async (req) => {
       facilities = rows
         .filter((r: any) => {
           const zip = (r.zip || r.provider_zip_code || "").toString();
-          const isMetroDetroit = METRO_DETROIT_ZIPS.some(prefix => zip.startsWith(prefix));
+          const inMetro = zipPrefixes.length === 0
+            ? true // no metro filter → state-wide
+            : zipPrefixes.some(prefix => zip.startsWith(prefix));
           const staffingRating = parseInt(r.staffing_rating || r.staff_rating || "0", 10);
-          return isMetroDetroit && staffingRating >= 1 && staffingRating <= 2;
+          return inMetro && staffingRating >= 1 && staffingRating <= 2;
         })
         .map((r: any) => ({
           provider_name: r.provider_name || r.facility_name || "Unknown",
           address: r.provider_address || r.address || "",
           city: r.provider_city || r.city || "",
-          state: r.provider_state || r.state || "MI",
+          state: r.provider_state || r.state || targetState,
           zip: (r.provider_zip_code || r.zip || "").toString(),
           phone: r.provider_phone_number || r.phone || "",
           overall_rating: parseInt(r.overall_rating || "0", 10) || null,
@@ -94,7 +138,9 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       total: facilities.length,
-      metro_area: "Metro Detroit",
+      state: targetState,
+      metro: targetMetro || null,
+      metro_area: metroLabel,
       filter: "Staffing Rating 1-2 Stars",
       facilities,
     }, null, 2), {

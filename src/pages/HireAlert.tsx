@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import DWAStickyNav from "@/components/shared/DWAStickyNav";
 import WallOfLove, { Testimonial } from "@/components/shared/WallOfLove";
 import EnterpriseFooterBlock from "@/components/shared/EnterpriseFooterBlock";
+import { US_METROS, DEFAULT_METRO_ID, getMetroById, getMetroPricing } from "@/lib/usMetros";
 
 const ROLE_OPTIONS = [
   { key: "boiler_operator", label: "Boiler Operator (1st/2nd Class)" },
@@ -71,6 +72,8 @@ export default function HireAlert() {
   const [phone, setPhone] = useState("");
   const [plan, setPlan] = useState<"standalone" | "bundle">("standalone");
   const [selectedRoles, setSelectedRoles] = useState<string[]>(["boiler_operator", "hvac_tech"]);
+  const [metroId, setMetroId] = useState<string>(DEFAULT_METRO_ID);
+  const selectedMetro = getMetroById(metroId);
   const [loading, setLoading] = useState(false);
   const [slotsRemaining, setSlotsRemaining] = useState<number | null>(null);
   const [betaFull, setBetaFull] = useState(false);
@@ -95,8 +98,11 @@ export default function HireAlert() {
       .catch(() => {});
   }, []);
 
-  const standalonePrice = betaFull ? 149 : 99;
-  const bundlePrice = betaFull ? 79 : 49;
+  // Pricing varies by metro: TX/AZ premium markets are higher; MI baseline keeps beta lock-in.
+  const metroStandalone = getMetroPricing(metroId, "standalone") / 100;
+  const metroBundle = getMetroPricing(metroId, "bundle") / 100;
+  const standalonePrice = metroId === "detroit" && !betaFull ? 99 : metroStandalone;
+  const bundlePrice = metroId === "detroit" && !betaFull ? 49 : metroBundle;
 
   if (isSuccess) {
     return (
@@ -139,7 +145,17 @@ export default function HireAlert() {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-hire-alert-checkout", {
-        body: { email, company_name: company, phone, plan, target_roles: selectedRoles, tos_accepted: true },
+        body: {
+          email,
+          company_name: company,
+          phone,
+          plan,
+          target_roles: selectedRoles,
+          tos_accepted: true,
+          target_state: selectedMetro.state,
+          target_metro: selectedMetro.id,
+          target_zip_prefixes: selectedMetro.zipPrefixes,
+        },
       });
       if (error || !data?.url) throw new Error(error?.message || "Checkout failed");
       window.location.href = data.url;
@@ -549,7 +565,30 @@ export default function HireAlert() {
               style={{ background: "#001a33", border: "1px solid #1e3a5f", color: "#fff", padding: "12px 14px" }}
             />
             <div>
-              <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 600, color: "#94a3b8" }}>Which trades do you want to monitor? *</p>
+              <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 600, color: "#94a3b8" }}>Which market? *</p>
+              <select
+                value={metroId}
+                onChange={(e) => setMetroId(e.target.value)}
+                style={{ width: "100%", background: "#001a33", border: "1px solid #1e3a5f", color: "#fff", padding: "12px 14px", borderRadius: 6, fontSize: 14 }}
+              >
+                {US_METROS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label}{m.priorityMarket ? " ⚡" : ""}
+                  </option>
+                ))}
+              </select>
+              <p style={{ margin: "8px 0 0", fontSize: 12, color: selectedMetro.coverage === "full" ? "#22c55e" : selectedMetro.coverage === "healthcare_full_trades_partial" ? "#fbbf24" : "#94a3b8", lineHeight: 1.5 }}>
+                {selectedMetro.coverage === "full" ? "✓ " : selectedMetro.coverage === "healthcare_full_trades_partial" ? "⚡ " : "ℹ️ "}
+                {selectedMetro.coverageLabel}
+              </p>
+              {metroId !== "detroit" && (
+                <p style={{ margin: "6px 0 0", fontSize: 12, color: ACCENT, fontWeight: 600 }}>
+                  ${metroStandalone}/mo standalone · ${metroBundle}/mo bundle
+                </p>
+              )}
+            </div>
+            <div>
+              <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 600, color: "#94a3b8" }}>Which roles do you want to monitor? *</p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 {ROLE_OPTIONS.map((r) => (
                   <label key={r.key} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", padding: "8px 10px", borderRadius: 6, background: selectedRoles.includes(r.key) ? "#00d4ff22" : "#001a33", border: `1px solid ${selectedRoles.includes(r.key) ? ACCENT : "#1e3a5f"}`, fontSize: 13, color: selectedRoles.includes(r.key) ? "#fff" : "#94a3b8" }}>

@@ -19,7 +19,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email, company_name, phone, plan, target_roles, ref, county } = await req.json();
+    const { email, company_name, phone, plan, target_roles, ref, county, target_state, target_metro, target_zip_prefixes } = await req.json();
 
     if (!email) {
       return new Response(
@@ -40,20 +40,47 @@ serve(async (req) => {
 
     // Determine pricing
     const resolvedPlan = plan === "bundle" ? "bundle" : "standalone";
+    const resolvedState = (target_state || "MI").toUpperCase();
+    const resolvedMetro = (target_metro || "detroit").toLowerCase();
+    const isMI = resolvedState === "MI";
+    const isPremiumMetro = ["dfw", "houston", "phoenix"].includes(resolvedMetro);
     let unitAmount: number;
     let pricingTier: string;
 
-    if (resolvedPlan === "bundle") {
-      unitAmount = isBeta ? 4900 : 7900; // $49 beta, $79 standard
-      pricingTier = isBeta ? "beta_grandfathered" : "standard";
+    if (isPremiumMetro) {
+      // TX/AZ premium markets — no beta discount, full pricing
+      unitAmount = resolvedPlan === "bundle" ? 9900 : 24900; // $99 / $249
+      pricingTier = "premium_metro";
+    } else if (isMI && isBeta) {
+      // Michigan beta lock-in
+      unitAmount = resolvedPlan === "bundle" ? 4900 : 9900; // $49 / $99
+      pricingTier = "beta_grandfathered";
+    } else if (resolvedPlan === "bundle") {
+      unitAmount = 7900; // $79 standard bundle
+      pricingTier = "standard";
     } else {
-      unitAmount = isBeta ? 9900 : 14900; // $99 beta-grandfathered, $149 standard (raised from $99)
-      pricingTier = isBeta ? "beta_grandfathered" : "standard";
+      unitAmount = 14900; // $149 standard
+      pricingTier = "standard";
     }
 
+    const metroLabels: Record<string, string> = {
+      detroit: "Metro Detroit, MI",
+      dfw: "Dallas–Fort Worth, TX",
+      houston: "Houston Metro, TX",
+      phoenix: "Phoenix Metro, AZ",
+      atlanta: "Atlanta Metro, GA",
+      miami: "Miami Metro, FL",
+      nyc: "New York City Metro",
+      la: "Los Angeles Metro, CA",
+      chicago: "Chicago Metro, IL",
+      philly: "Philadelphia Metro, PA",
+      boston: "Boston Metro, MA",
+    };
+    const marketLabel = metroLabels[resolvedMetro] || resolvedState;
+
     const planLabel = resolvedPlan === "bundle"
-      ? "Talent Radar + FieldDesk Bundle"
-      : `Talent Radar — Statewide Michigan Hiring Monitor${isBeta ? " (Beta)" : ""}`;
+      ? `Talent Radar + FieldDesk Bundle — ${marketLabel}`
+      : `Talent Radar — ${marketLabel}${isMI && isBeta ? " (Beta)" : ""}`;
 
     const origin = req.headers.get("origin") || "https://www.detroitwebagent.com";
 
@@ -86,6 +113,9 @@ serve(async (req) => {
         target_roles: Array.isArray(target_roles) && target_roles.length
           ? target_roles.join(",")
           : "boiler_operator,hvac_tech",
+        target_state: resolvedState,
+        target_metro: resolvedMetro,
+        target_zip_prefixes: Array.isArray(target_zip_prefixes) ? target_zip_prefixes.join(",") : "",
         ref: ref || "direct",
         county: county || "",
         tos_accepted: "true",
