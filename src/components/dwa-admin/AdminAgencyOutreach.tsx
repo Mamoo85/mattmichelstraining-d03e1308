@@ -175,8 +175,8 @@ export default function AdminAgencyOutreach() {
                         }`}
                       >
                         <div className="min-w-0 flex-1">
-                          <div className="text-white font-semibold truncate">{c.name || "(unnamed)"}</div>
-                          <div className="text-slate-500 text-[11px] truncate">{c.role} · {c.county || "—"}</div>
+                          <div className="text-white font-semibold truncate">{c.full_name || c.name || "(unnamed)"}</div>
+                          <div className="text-slate-500 text-[11px] truncate">{c.current_title || c.trade || "—"} · {c.city || c.metro || "—"}</div>
                         </div>
                         <div className="flex items-center gap-2 ml-2">
                           <span className={`text-[10px] uppercase tracking-wider font-bold ${tierColor}`}>{tier}</span>
