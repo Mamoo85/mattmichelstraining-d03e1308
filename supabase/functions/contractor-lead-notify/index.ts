@@ -109,17 +109,15 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // Debug: return env var presence (remove after confirming)
-  const body = await req.text().catch(() => "");
-  if (body.includes('"debug":true')) {
-    const sid = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
-    const tok = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
-    const ph = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
-    return new Response(JSON.stringify({
-      TWILIO_ACCOUNT_SID: sid ? `${sid.slice(0,4)}...${sid.slice(-4)}` : "MISSING",
-      TWILIO_AUTH_TOKEN: tok ? `SET(${tok.length}chars)` : "MISSING",
-      TWILIO_PHONE_NUMBER: ph || "MISSING",
-    }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  // Auth: require service-role key (cron) — prevents external invocation that would
+  // trigger duplicate Twilio sends and reveal credential metadata.
+  const authHeader = req.headers.get("authorization") || "";
+  const expected = `Bearer ${SUPABASE_SERVICE_KEY}`;
+  if (!SUPABASE_SERVICE_KEY || authHeader !== expected) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
