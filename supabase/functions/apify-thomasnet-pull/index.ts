@@ -57,34 +57,61 @@ function parseSuppliers(markdown: string, category: string): ScrapedSupplier[] {
   const suppliers: ScrapedSupplier[] = [];
   if (!markdown) return suppliers;
 
-  // Match heading-style company links (### or ##) followed by city/state
+  const seenCompanies = new Set<string>();
+  const pushSupplier = (company: string, url: string | undefined, block: string) => {
+    const cleanCompany = company.trim().replace(/^[#*\-\s]+|[#*\s]+$/g, "");
+    if (!cleanCompany || cleanCompany.length < 2 || cleanCompany.length > 100) return;
+    if (/thomasnet|advertise|sponsor|view profile|contact us|request (a )?quote|sign in|register|search|filter|category|subscribe|cookie|privacy|terms/i.test(cleanCompany)) return;
+    const key = cleanCompany.toLowerCase();
+    if (seenCompanies.has(key)) return;
+    seenCompanies.add(key);
+    const cityMatch = block.match(/([A-Z][a-zA-Z .'-]+),\s*(?:MI|Michigan)\b/);
+    suppliers.push({
+      company_name: cleanCompany,
+      city: cityMatch ? cityMatch[1].trim() : undefined,
+      url: url?.trim(),
+      category,
+    });
+  };
+
+  // Tier 1: heading-style company links (### or ##)
   const blockRegex = /(?:^|\n)#{2,4}\s*\[([^\]]+)\]\(([^)]+)\)([\s\S]*?)(?=\n#{2,4}\s|\n*$)/g;
   let m: RegExpExecArray | null;
   while ((m = blockRegex.exec(markdown)) !== null) {
-    const company = m[1].trim();
-    const url = m[2].trim();
-    const block = m[3];
-    if (!company || company.length < 2 || /thomasnet|advertise|sponsor/i.test(company)) continue;
-    // Look for "City, MI" or "City, Michigan"
-    const cityMatch = block.match(/([A-Z][a-zA-Z .'-]+),\s*(?:MI|Michigan)\b/);
-    suppliers.push({
-      company_name: company,
-      city: cityMatch ? cityMatch[1].trim() : undefined,
-      url,
-      category,
-    });
+    pushSupplier(m[1], m[2], m[3]);
   }
 
-  // Fallback: simple bold-link pattern **[Name](url)**
+  // Tier 2: bold-link pattern **[Name](url)**
   if (suppliers.length === 0) {
-    const linkRegex = /\*\*\[([^\]]+)\]\(([^)]+)\)\*\*/g;
+    const boldRegex = /\*\*\[([^\]]+)\]\(([^)]+)\)\*\*([\s\S]{0,200})/g;
     let l: RegExpExecArray | null;
-    while ((l = linkRegex.exec(markdown)) !== null) {
-      const company = l[1].trim();
-      if (!company || company.length < 2) continue;
-      suppliers.push({ company_name: company, url: l[2].trim(), category });
+    while ((l = boldRegex.exec(markdown)) !== null) {
+      pushSupplier(l[1], l[2], l[3]);
     }
   }
+
+  // Tier 3: any link to a thomasnet supplier profile (catches new layouts)
+  if (suppliers.length === 0) {
+    const profileRegex = /\[([^\]]+)\]\((https?:\/\/(?:www\.)?thomasnet\.com\/profile\/[^)]+)\)([\s\S]{0,200})/gi;
+    let p: RegExpExecArray | null;
+    while ((p = profileRegex.exec(markdown)) !== null) {
+      pushSupplier(p[1], p[2], p[3]);
+    }
+  }
+
+  // Tier 4: city/state-anchored — find lines with "Name ... City, MI"
+  if (suppliers.length === 0) {
+    const lineRegex = /^([A-Z][A-Za-z0-9 &.,'\-]{2,80})\s+(?:[-–|•]\s+)?([A-Z][a-zA-Z .'-]+),\s*(?:MI|Michigan)\b/gm;
+    let n: RegExpExecArray | null;
+    while ((n = lineRegex.exec(markdown)) !== null) {
+      pushSupplier(n[1], undefined, `${n[2]}, MI`);
+    }
+  }
+
+  if (suppliers.length === 0) {
+    console.warn(`[parser] 0 suppliers from ${category} — markdown sample (first 800 chars):\n${markdown.slice(0, 800)}`);
+  }
+
   return suppliers;
 }
 
