@@ -80,6 +80,8 @@ export default function MyContractorLeads() {
   const [feedbackLoading, setFeedbackLoading] = useState<string | null>(null);
   const [localFeedback, setLocalFeedback] = useState<Record<string, Lead["contractor_feedback"]>>({});
   const [filter, setFilter] = useState<"all" | "pending" | "hired" | "called" | "bad_lead">("all");
+  const [shopOpen, setShopOpen] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   const base = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contractor-leads-dashboard`;
   const apiKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
