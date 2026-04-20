@@ -12954,6 +12954,39 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_reply_drafts: {
+        Row: {
+          created_at: string
+          draft_body: string
+          id: string
+          inbound_body: string | null
+          inbound_message_id: string | null
+          phone: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          draft_body: string
+          id?: string
+          inbound_body?: string | null
+          inbound_message_id?: string | null
+          phone: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          draft_body?: string
+          id?: string
+          inbound_body?: string | null
+          inbound_message_id?: string | null
+          phone?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       social_caption_clients: {
         Row: {
           active: boolean | null
