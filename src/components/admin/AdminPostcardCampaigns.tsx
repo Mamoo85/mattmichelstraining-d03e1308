@@ -188,6 +188,85 @@ export default function AdminPostcardCampaigns() {
     else { toast.success(`Resend: ${data?.sent || 0} sent · ${data?.failed || 0} failed`); loadData(); }
   };
 
+  // Map UI audience → scraper audience_type so we can search prospects right inside this tab.
+  const SCRAPER_AUDIENCE: Record<AudienceType, string> = {
+    "healthcare-agency": "healthcare_staffing",
+    "trades-agency":     "trades_staffing",
+    "nursing-home":      "nursing_home",
+    "contractor":        "trades_staffing",
+    "supply-house":      "supply_house",
+  };
+
+  const findProspects = async () => {
+    setFinding(true);
+    toast.info(`Searching for ${selectedAudience} in ${selectedCounty} County...`);
+    const { data, error } = await supabase.functions.invoke("targeting-prospect-scraper", {
+      body: {
+        audience_type: SCRAPER_AUDIENCE[selectedAudience],
+        county: selectedCounty,
+        limit: 50,
+        mode: "postcard",
+      },
+    });
+    setFinding(false);
+    if (error) { toast.error("Search failed: " + error.message); return; }
+    toast.success(`Found ${data?.found || 0} · Added ${data?.postcard_prospects_added || 0} new postcard-ready prospects`);
+    loadData();
+  };
+
+  // Shared preview HTML — kept visually close to what Lob mails.
+  // ONE QR code → /postcard?audience=...&utm_campaign=preview
+  const previewHTML = useMemo(() => {
+    const variant = AUDIENCE_OPTIONS.find(a => a.value === previewAudience)!;
+    const accent = previewAudience === "supply-house" ? "#06b6d4" : previewAudience.includes("healthcare") || previewAudience === "nursing-home" ? "#10b981" : "#3b82f6";
+    const offer = previewAudience === "supply-house" ? "FREE MONTH — DEMAND RADAR" : "FREE 10 NAMES";
+    const headline = previewAudience === "supply-house" ? "Know Who's Buying" : previewAudience === "nursing-home" ? "Struggling to Find Nurses?" : variant.label.includes("Healthcare") ? "We Find Licensed Nurses" : "We Find Licensed Techs";
+    const sub = previewAudience === "supply-house" ? "Before They Call" : previewAudience === "nursing-home" ? "We Find Them First." : "Before Anyone Else";
+    const qrUrl = `https://detroitwebagent.com/postcard?audience=${previewAudience}&utm_campaign=preview&city=${previewCity.toLowerCase().replace(/\s+/g, "-")}`;
+    const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(qrUrl)}`;
+    const secondary = previewAudience === "supply-house"
+      ? [["🔧","Talent Radar — Trades"],["🛠️","FieldDesk"],["📞","Missed Call Catch"]]
+      : previewAudience.includes("healthcare") || previewAudience === "nursing-home"
+        ? [["🔧","Talent Radar — Trades"],["🛠️","FieldDesk"],["📞","Missed Call Catch"]]
+        : [["🏥","Talent Radar — Healthcare"],["🛠️","FieldDesk"],["📞","Missed Call Catch"]];
+
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',system-ui,sans-serif;background:#1a1a1a;padding:20px;}
+.card{width:6.25in;height:4.25in;background:#0d1117;color:#e6edf3;display:flex;overflow:hidden;border-radius:4px;}
+</style></head><body>
+<div class="card">
+  <div style="flex:1;padding:0.5in 0.45in 0.4in;display:flex;flex-direction:column;justify-content:space-between;">
+    <div>
+      <div style="font-size:7px;color:#484f58;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:4px;">${previewCity.toUpperCase()}</div>
+      ${previewRecipient ? `<div style="font-size:8px;color:#484f58;margin-bottom:6px;">For: ${previewRecipient}</div>` : ""}
+      <div style="font-size:22px;font-weight:900;line-height:1.15;letter-spacing:-0.5px;margin-bottom:10px;">${headline}<br><span style="color:${accent};">${sub}</span></div>
+      <div style="font-size:9.5px;color:#8b949e;line-height:1.55;margin-bottom:12px;">We invented a way to surface the people and signals your competitors miss. Verified. Free to try. No card.</div>
+      <div style="display:inline-block;background:${accent}15;border:1.5px solid ${accent}40;color:${accent};font-size:9px;font-weight:800;padding:5px 12px;border-radius:4px;letter-spacing:0.5px;">${offer}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:8px 10px;">
+      <div style="width:40px;height:40px;border-radius:8px;background:${accent};color:#0a1628;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;">MM</div>
+      <div style="font-size:8.5px;color:#8b949e;line-height:1.4;">
+        <strong style="color:#e6edf3;font-size:9px;">Matt Michels</strong> — Founder<br>
+        Don't believe it works? Text me.<br>
+        <span style="color:${accent};font-weight:700;font-size:10px;">(313) 992-1219</span>
+      </div>
+    </div>
+  </div>
+  <div style="width:1.9in;background:#161b22;border-left:3px solid ${accent};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0.3in 0.18in;gap:8px;">
+    <div style="width:48px;height:48px;border-radius:50%;background:${accent};color:#0a1628;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;">DWA</div>
+    <div style="font-size:8px;color:#8b949e;text-align:center;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Scan to claim</div>
+    <img src="${qrImg}" width="118" height="118" style="border-radius:8px;border:2px solid #30363d;" alt="QR">
+    <div style="font-size:9.5px;color:${accent};font-weight:800;text-align:center;line-height:1.1;">${offer.includes("MONTH") ? "FREE MONTH" : "FREE 10 NAMES"}</div>
+    <div style="width:100%;border-top:1px dashed #30363d;padding-top:6px;display:flex;flex-direction:column;gap:3px;">
+      <div style="font-size:6.5px;color:#484f58;text-transform:uppercase;letter-spacing:0.8px;text-align:center;font-weight:700;margin-bottom:2px;">+ 3 More Free Tools</div>
+      ${secondary.map(s => `<div style="display:flex;align-items:center;gap:5px;font-size:7.5px;color:#8b949e;line-height:1.2;"><span style="font-size:9px;">${s[0]}</span><span>${s[1]}</span></div>`).join("")}
+    </div>
+    <div style="font-size:6.5px;color:#484f58;text-align:center;">detroitwebagent.com</div>
+  </div>
+</div>
+</body></html>`;
+  }, [previewAudience, previewCity, previewRecipient]);
+
   const totalSent = campaigns.reduce((sum: number, c: any) => sum + (c.sent_count || 0), 0);
   const totalDelivered = campaigns.reduce((sum: number, c: any) => sum + (c.delivered_count || 0), 0);
   const totalCost = campaigns.reduce((sum: number, c: any) => sum + (c.total_cost_cents || 0), 0) / 100;
