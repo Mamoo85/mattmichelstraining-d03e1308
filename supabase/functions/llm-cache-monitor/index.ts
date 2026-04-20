@@ -55,11 +55,24 @@ Deno.serve(async (req) => {
     const hitRate = total > 0 ? hits / total : 0;
 
     let alertSent = false;
-    if (total >= 50 && hitRate < 0.30) {
-      await smsMatt(
-        `🧠 LLM cache hit rate dropped: ${(hitRate * 100).toFixed(1)}% over 24h (${hits}/${total}). Possible cache regression — check llm-cache.ts deployment.`,
-      );
-      alertSent = true;
+    // Only alert on meaningful volume + once per 24h (anti-spam)
+    if (total >= 500 && hitRate < 0.20) {
+      const since24h = new Date(Date.now() - 86400_000).toISOString();
+      const { data: recentAlert } = await sb
+        .from("system_comms_log")
+        .select("id")
+        .eq("channel", "sms")
+        .ilike("body", "%LLM cache hit rate dropped%")
+        .gte("created_at", since24h)
+        .limit(1)
+        .maybeSingle();
+
+      if (!recentAlert) {
+        await smsMatt(
+          `🧠 LLM cache hit rate: ${(hitRate * 100).toFixed(1)}% over 24h (${hits}/${total}). Check llm-cache.ts. (Next alert in 24h.)`,
+        );
+        alertSent = true;
+      }
     }
 
     // ── 2. Pre-warm embeddings for high-confidence Demand Radar signals ──
