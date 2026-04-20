@@ -29,7 +29,10 @@ async function probeUrl(url: string): Promise<{ ok: boolean; status: number }> {
   }
 }
 
-serve(async () => {
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   const { data: endpoints, error } = await (sb.from as any)("data_source_endpoints").select("*");
