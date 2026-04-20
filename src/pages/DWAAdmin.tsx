@@ -13,7 +13,8 @@ const DWAStrategy = lazy(() => import("@/components/dwa-admin/DWAStrategy"));
 const DWALabs = lazy(() => import("@/components/dwa-admin/DWALabs"));
 const DWASalesGuide = lazy(() => import("@/components/dwa-admin/DWASalesGuide"));
 const AdminAgencyOutreach = lazy(() => import("@/components/dwa-admin/AdminAgencyOutreach"));
-const AdminDemandRadar = lazy(() => import("@/components/dwa-admin/AdminDemandRadar"));
+const TalentRadarHub = lazy(() => import("@/components/dwa-admin/TalentRadarHub"));
+const DemandRadarHub = lazy(() => import("@/components/dwa-admin/DemandRadarHub"));
 const AdminHighVolumeBuyer = lazy(() => import("@/components/dwa-admin/AdminHighVolumeBuyer"));
 const SupplierOutreachGenerator = lazy(() => import("@/components/dwa-admin/SupplierOutreachGenerator"));
 const AgentToolkit = lazy(() => import("@/components/dwa-admin/AgentToolkit"));
@@ -24,7 +25,7 @@ const AdminDWAOverview = lazy(() => import("@/components/admin/AdminDWAOverview"
 const AdminDWARevenueDashboard = lazy(() => import("@/components/admin/AdminDWARevenueDashboard"));
 const AdminDeadLeads = lazy(() => import("@/components/admin/AdminDeadLeads"));
 const AdminContractorLeads = lazy(() => import("@/components/admin/AdminContractorLeads"));
-const AdminHireAlertClients = lazy(() => import("@/components/admin/AdminHireAlertClients"));
+
 const AdminFieldCRMClients = lazy(() => import("@/components/admin/AdminFieldCRMClients"));
 const VisitorIntelFeed = lazy(() => import("@/components/admin/VisitorIntelFeed"));
 const AdminSimulationSuite = lazy(() => import("@/components/admin/AdminSimulationSuite"));
@@ -54,13 +55,19 @@ const GROUPS: SidebarGroup[] = [
     ],
   },
   {
+    label: "Radars",
+    items: [
+      { id: "techalert",     label: "🎯 Talent Radar" },
+      { id: "demand-radar",  label: "📈 Demand Radar" },
+      { id: "hvb",           label: "📦 High-Volume Buyers" },
+    ],
+  },
+  {
     label: "Customers",
     items: [
       { id: "dead-leads",       label: "♻️ Dead Leads" },
       { id: "contractor-leads", label: "🏗️ Contractor Leads" },
-      { id: "techalert",        label: "🎯 Talent Radar Clients" },
       { id: "fielddesk",        label: "🛠️ FieldDesk Clients" },
-      { id: "hvb",              label: "📦 High-Volume Buyers" },
       { id: "clients",          label: "👥 All Clients" },
     ],
   },
@@ -80,7 +87,6 @@ const GROUPS: SidebarGroup[] = [
     items: [
       { id: "visitor-intel", label: "👁️ Visitor Intel" },
       { id: "the-wire",      label: "📡 The Wire" },
-      { id: "demand-radar",  label: "📈 Demand Radar" },
       { id: "field-stats",   label: "📊 Field Stats" },
       { id: "jobs",          label: "🧰 Jobs" },
     ],
@@ -135,7 +141,7 @@ export default function DWAAdmin() {
           {activeTab === "agent-toolkit"    && <Suspense fallback={lazyFallback("agent toolkit")}><AgentToolkit /></Suspense>}
           {activeTab === "dead-leads"       && <Suspense fallback={lazyFallback("dead leads")}><AdminDeadLeads /></Suspense>}
           {activeTab === "contractor-leads" && <Suspense fallback={lazyFallback("contractor leads")}><AdminContractorLeads /></Suspense>}
-          {activeTab === "techalert"        && <Suspense fallback={lazyFallback("TechAlert clients")}><AdminHireAlertClients /></Suspense>}
+          {activeTab === "techalert"        && <Suspense fallback={lazyFallback("Talent Radar Hub")}><TalentRadarHub /></Suspense>}
           {activeTab === "fielddesk"        && <Suspense fallback={lazyFallback("FieldDesk clients")}><AdminFieldCRMClients /></Suspense>}
           {activeTab === "hvb"              && <Suspense fallback={lazyFallback("high-volume buyers")}><AdminHighVolumeBuyer /></Suspense>}
           {activeTab === "visitor-intel"    && <Suspense fallback={lazyFallback("visitor intel")}><VisitorIntelFeed /></Suspense>}
@@ -148,7 +154,7 @@ export default function DWAAdmin() {
           {activeTab === "cron-sentinel"    && <Suspense fallback={lazyFallback("cron sentinel")}><AdminCronSentinel /></Suspense>}
           {activeTab === "outbox"           && <Suspense fallback={lazyFallback("outbox")}><AdminGlobalOutbox /></Suspense>}
           {activeTab === "agency-outreach"  && <Suspense fallback={lazyFallback("agency outreach")}><AdminAgencyOutreach /></Suspense>}
-          {activeTab === "demand-radar"     && <Suspense fallback={lazyFallback("demand radar")}><AdminDemandRadar /></Suspense>}
+          {activeTab === "demand-radar"     && <Suspense fallback={lazyFallback("Demand Radar Hub")}><DemandRadarHub /></Suspense>}
           {activeTab === "supplier-outreach"&& <Suspense fallback={lazyFallback("supplier outreach")}><SupplierOutreachGenerator /></Suspense>}
 
           {activeTab === "field-stats" && (
