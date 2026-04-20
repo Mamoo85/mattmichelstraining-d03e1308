@@ -269,7 +269,8 @@ export default function AdminCommandDeck() {
       const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
       const week7d = new Date(Date.now() - 7 * 86400000).toISOString();
       const today = new Date().toISOString().slice(0, 10);
-      const [cActive, cLeads, cRevenue, tPaid, tTrials, tCandidates7d, tHot, fActive, fToday, fCompleted7d] = await Promise.all([
+      const day1 = new Date(Date.now() - 86400000).toISOString();
+      const [cActive, cLeads, cRevenue, tPaid, tTrials, tCandidates7d, tHot, drTotal7d, drNew24h, drHot, drGrowth7d] = await Promise.all([
         supabase.from("contractor_clients").select("id", { count: "exact", head: true }).eq("active", true),
         supabase.from("contractor_leads").select("id", { count: "exact", head: true }).gte("created_at", monthStart),
         supabase.from("contractor_leads").select("payment_amount_cents").eq("status", "sold").gte("created_at", monthStart),
@@ -277,15 +278,16 @@ export default function AdminCommandDeck() {
         supabase.from("hire_alert_clients").select("id", { count: "exact", head: true }).eq("trial_status", "active"),
         supabase.from("hire_alert_candidates").select("id", { count: "exact", head: true }).gte("created_at", week7d),
         supabase.from("hire_alert_candidates").select("id", { count: "exact", head: true }).gte("availability_score", 8).gte("created_at", week7d),
-        supabase.from("field_crm_clients").select("id", { count: "exact", head: true }).eq("status", "active"),
-        supabase.from("field_service_jobs").select("id", { count: "exact", head: true }).gte("created_at", today),
-        supabase.from("field_service_jobs").select("id", { count: "exact", head: true }).eq("status", "completed").gte("updated_at", week7d),
+        supabase.from("industry_pulse_signals" as any).select("id", { count: "exact", head: true }).gte("detected_at", week7d),
+        supabase.from("industry_pulse_signals" as any).select("id", { count: "exact", head: true }).gte("detected_at", day1),
+        supabase.from("industry_pulse_signals" as any).select("id", { count: "exact", head: true }).gte("confidence", 7).gte("detected_at", week7d),
+        supabase.from("industry_pulse_signals" as any).select("id", { count: "exact", head: true }).in("signal_type", ["expansion", "rd_grant", "sba_loan", "new_business_entity", "investment", "permit_new"]).gte("detected_at", week7d),
       ]);
       const rev = ((cRevenue.data || []) as any[]).reduce((s, r) => s + (r.payment_amount_cents || 0), 0) / 100;
       return {
         contractor: { active: cActive.count ?? 0, leads: cLeads.count ?? 0, revenue: rev },
         techAlert: { paid: tPaid.count ?? 0, trials: tTrials.count ?? 0, candidates7d: tCandidates7d.count ?? 0, hot: tHot.count ?? 0 },
-        fieldDesk: { active: fActive.count ?? 0, today: fToday.count ?? 0, completed7d: fCompleted7d.count ?? 0 },
+        demandRadar: { total7d: drTotal7d.count ?? 0, new24h: drNew24h.count ?? 0, hot: drHot.count ?? 0, growth7d: drGrowth7d.count ?? 0 },
       };
     },
     staleTime: 300000,
@@ -640,11 +642,12 @@ export default function AdminCommandDeck() {
                   { label: "CANDIDATES (7D)", value: revenueQuery.data?.techAlert.candidates7d ?? "—" },
                   { label: "HOT (SCORE ≥8)", value: revenueQuery.data?.techAlert.hot ?? "—" },
                 ]} />
-                {/* FieldDesk */}
-                <RevCard title="🔧 FIELDDESK" stats={[
-                  { label: "ACTIVE CLIENTS", value: revenueQuery.data?.fieldDesk.active ?? "—" },
-                  { label: "JOBS TODAY", value: revenueQuery.data?.fieldDesk.today ?? "—" },
-                  { label: "COMPLETED (7D)", value: revenueQuery.data?.fieldDesk.completed7d ?? "—" },
+                {/* Demand Radar */}
+                <RevCard title="📡 DEMAND RADAR" stats={[
+                  { label: "SIGNALS (7D)", value: revenueQuery.data?.demandRadar.total7d ?? "—" },
+                  { label: "NEW (24H)", value: revenueQuery.data?.demandRadar.new24h ?? "—" },
+                  { label: "HOT (CONF ≥7)", value: revenueQuery.data?.demandRadar.hot ?? "—" },
+                  { label: "GROWTH (7D)", value: revenueQuery.data?.demandRadar.growth7d ?? "—" },
                 ]} />
               </div>
             )}
