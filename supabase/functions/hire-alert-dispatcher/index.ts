@@ -16,8 +16,6 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SOURCES = [
   "miosha",
   "lara_val",
-  "talent_radar",
-  "demand_radar",
 ];
 
 const corsHeaders = {

@@ -1,4 +1,30 @@
 // miosha-license-scraper — Planetary-Scale Hiring Intelligence Scanner
+//
+// ═══════════════════════════════════════════════════════════════════
+// TALENT RADAR PROTOCOL (canonical implementation — do not fork)
+// ═══════════════════════════════════════════════════════════════════
+// ROLE: Talent Radar Extraction Agent. Sole directive: retrieve
+// deterministic licensing data for HVAC, Plumbing, Electrical, and
+// Roofing tradespeople and queue it for downstream enrichment.
+//
+// PRIMARY DATA SOURCE: Michigan LARA via Accela REST API
+//   (ACCELA_APP_ID / ACCELA_APP_SECRET — OAuth2 guest token).
+//   Socrata SODA does NOT carry MI trade licenses; do not rewire to it.
+//
+// PROTOCOL CONSTRAINTS:
+//   • Window: last 24h on cron tick.
+//   • Trades: HVAC / Plumbing / Electrical / Roofing only.
+//   • Pagination: cursor-based, zero data loss.
+//   • Fields extracted: full_name, license_classification, issue_date,
+//     expiration_status, business_entity (DBA).
+//   • EXTRACTION ONLY. Never guess emails or phones here. Missing
+//     contact fields are passed through to the enhancement layer.
+//
+// POST-EXTRACTION ENHANCEMENT QUEUE:
+//   Output → public.hire_alert_candidates with enrichment_status='pending'
+//   → consumed by candidate-deep-enrich (Sonar / NinjaPear / Hunter / Snov).
+// ═══════════════════════════════════════════════════════════════════
+//
 // SEVENTEEN data sources running in parallel + Sonar last:
 // S1: NPI Registry — free federal API for healthcare workers
 // S2: Michigan Nurse Aide Registry — state CNA registry

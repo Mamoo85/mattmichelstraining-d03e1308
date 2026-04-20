@@ -3719,51 +3719,6 @@ export type Database = {
         }
         Relationships: []
       }
-      demand_radar_targets: {
-        Row: {
-          company_name: string
-          created_at: string
-          discovered_at: string
-          enrichment_completed_at: string | null
-          enrichment_status: string
-          id: string
-          physical_address: string | null
-          place_id: string
-          primary_domain: string | null
-          rating_count: number | null
-          sector: string
-          updated_at: string
-        }
-        Insert: {
-          company_name: string
-          created_at?: string
-          discovered_at?: string
-          enrichment_completed_at?: string | null
-          enrichment_status?: string
-          id?: string
-          physical_address?: string | null
-          place_id: string
-          primary_domain?: string | null
-          rating_count?: number | null
-          sector: string
-          updated_at?: string
-        }
-        Update: {
-          company_name?: string
-          created_at?: string
-          discovered_at?: string
-          enrichment_completed_at?: string | null
-          enrichment_status?: string
-          id?: string
-          physical_address?: string | null
-          place_id?: string
-          primary_domain?: string | null
-          rating_count?: number | null
-          sector?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       direct_mail_clients: {
         Row: {
           active: boolean | null

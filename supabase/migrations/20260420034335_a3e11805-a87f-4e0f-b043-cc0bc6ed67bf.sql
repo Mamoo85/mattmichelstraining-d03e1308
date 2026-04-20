@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS public.demand_radar_targets CASCADE;
