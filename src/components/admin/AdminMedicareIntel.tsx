@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { X, Copy, Mail, ExternalLink, Info, Trash2, CheckCircle2 } from "lucide-react";
+import IntelRowActions from "./IntelRowActions";
 
 interface Facility {
   provider_name: string;
@@ -234,21 +235,36 @@ detroitwebagent.com`;
                     )}
                   </td>
                   <td className="py-2.5 px-3 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        onClick={() => setPitchTarget(f)}
-                        className="px-3 py-1.5 rounded bg-[#00d4ff]/10 text-[#00d4ff] text-xs font-medium hover:bg-[#00d4ff]/20 transition-colors border border-[#00d4ff]/20"
-                        data-testid={`pitch-btn-${i}`}
-                      >
-                        TechAlert Pitch
-                      </button>
-                      <button
-                        onClick={() => removeFacility(f.provider_name)}
-                        className="p-1.5 rounded text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                        title="Remove from list"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                    <div className="flex flex-col items-end gap-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setPitchTarget(f)}
+                          className="px-3 py-1.5 rounded bg-[#00d4ff]/10 text-[#00d4ff] text-xs font-medium hover:bg-[#00d4ff]/20 transition-colors border border-[#00d4ff]/20"
+                          data-testid={`pitch-btn-${i}`}
+                        >
+                          TechAlert Pitch
+                        </button>
+                        <button
+                          onClick={() => removeFacility(f.provider_name)}
+                          className="p-1.5 rounded text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                          title="Remove from list"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <IntelRowActions
+                        companyName={f.provider_name}
+                        phone={f.phone}
+                        city={f.city}
+                        state={f.state}
+                        role="CNA / LPN / RN"
+                        sourceLabel="medicare_care_compare"
+                        score={f.staffing_rating === 1 ? 9 : f.staffing_rating === 2 ? 7 : 5}
+                        notes={`CMS staffing rating: ${f.staffing_rating ?? "N/A"} | Beds: ${f.number_of_beds ?? "N/A"} | Address: ${f.address}`}
+                        emailSubject={`Staffing Support for ${f.provider_name}`}
+                        emailBody={generatePitch(f)}
+                        compact
+                      />
                     </div>
                   </td>
                 </tr>

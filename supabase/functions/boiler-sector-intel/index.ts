@@ -12,9 +12,11 @@ import { sendSMS } from "../_shared/twilio.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const SECTOR = "boiler";
 
 // Sector clients — add more as the product grows
@@ -61,23 +63,34 @@ async function aiChat(prompt: string, maxTokens = 1500): Promise<string> {
   } catch (e) { console.error("[AI]", e); return ""; }
 }
 
+// Real web-search via OpenRouter Perplexity Sonar (gemini has no web access)
 async function sonarSearch(query: string): Promise<string> {
-  if (!LOVABLE_API_KEY) return "";
+  if (!OPENROUTER_API_KEY) {
+    console.warn("[sonar] OPENROUTER_API_KEY not configured — web search unavailable");
+    return "";
+  }
   try {
-    const res = await fetch(GATEWAY_URL, {
+    const res = await fetch(OPENROUTER_URL, {
       method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        max_tokens: 2000,
+        model: "perplexity/sonar-pro",
         messages: [{ role: "user", content: query }],
+        temperature: 0.2,
+        max_tokens: 2000,
       }),
-      signal: AbortSignal.timeout(30_000),
+      signal: AbortSignal.timeout(45_000),
     });
-    if (!res.ok) return "";
+    if (!res.ok) {
+      console.error(`[sonar] HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
+      return "";
+    }
     const d = await res.json();
     return d?.choices?.[0]?.message?.content?.trim() || "";
-  } catch { return ""; }
+  } catch (e) {
+    console.error("[sonar]", e);
+    return "";
+  }
 }
 
 interface Signal {
@@ -368,7 +381,9 @@ serve(async (req) => {
         compliance_scan: complianceResult.status === "fulfilled" ? `OK (${complianceResult.value.length} found)` : `FAILED: ${complianceResult.reason}`,
         funding_scan: fundingResult.status === "fulfilled" ? `OK (${fundingResult.value.length} found)` : `FAILED: ${fundingResult.reason}`,
         hiring_scan: hiringResult.status === "fulfilled" ? `OK (${hiringResult.value.length} found)` : `FAILED: ${hiringResult.reason}`,
+        sonar_configured: !!OPENROUTER_API_KEY,
         ai_key_configured: !!LOVABLE_API_KEY,
+        note: !OPENROUTER_API_KEY ? "OPENROUTER_API_KEY missing — bond/hiring scans cannot use real web search" : undefined,
       },
       scanned_at: new Date().toISOString(),
     }), {

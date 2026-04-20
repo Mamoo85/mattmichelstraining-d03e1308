@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { X, Copy, Mail, ExternalLink, CheckCircle2 } from "lucide-react";
+import IntelRowActions from "./IntelRowActions";
 
 interface IndustrialLead {
   company_name: string;
@@ -266,7 +267,7 @@ detroitwebagent.com`;
                   </div>
                   <p className="text-white/40 text-xs mb-2">{s.location} · {s.industry || "Industrial"}</p>
                   <p className="text-white/70 text-sm leading-relaxed mb-3">{s.recommended_pitch}</p>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <button
                       onClick={() => copyPitch(s.recommended_pitch || "")}
                       className="px-3 py-1.5 rounded bg-[#00d4ff]/10 text-[#00d4ff] text-xs font-medium hover:bg-[#00d4ff]/20 transition-colors border border-[#00d4ff]/20 flex items-center gap-1"
@@ -278,6 +279,22 @@ detroitwebagent.com`;
                         <ExternalLink className="w-3 h-3" /> Source
                       </a>
                     ))}
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-white/5">
+                    <IntelRowActions
+                      companyName={s.company_name}
+                      city={s.location?.split(",")[0]?.trim()}
+                      state="MI"
+                      role={s.industry || "boiler operator"}
+                      isBoiler
+                      score={s.confidence || 6}
+                      sourceUrl={s.source_urls?.[0] || null}
+                      sourceLabel={`boiler_intel_${s.signal_type || "signal"}`}
+                      notes={s.recommended_pitch || ""}
+                      emailSubject={`Re: ${s.company_name}`}
+                      emailBody={s.recommended_pitch || ""}
+                      compact
+                    />
                   </div>
                 </div>
               ))}
@@ -379,12 +396,26 @@ detroitwebagent.com`;
                       <td className="py-2.5 px-3 text-white/50 text-xs max-w-xs">{lead.details}</td>
                       <td className="py-2.5 px-3 text-center text-white/40 text-xs">{lead.news_date || "—"}</td>
                       <td className="py-2.5 px-3 text-right">
-                        <button
-                          onClick={() => setPitchLead(lead)}
-                          className="px-3 py-1.5 rounded bg-[#00d4ff]/10 text-[#00d4ff] text-xs font-medium hover:bg-[#00d4ff]/20 transition-colors border border-[#00d4ff]/20"
-                        >
-                          TechAlert Pitch
-                        </button>
+                        <div className="flex flex-col items-end gap-1.5">
+                          <button
+                            onClick={() => setPitchLead(lead)}
+                            className="px-3 py-1.5 rounded bg-[#00d4ff]/10 text-[#00d4ff] text-xs font-medium hover:bg-[#00d4ff]/20 transition-colors border border-[#00d4ff]/20"
+                          >
+                            TechAlert Pitch
+                          </button>
+                          <IntelRowActions
+                            companyName={lead.company_name}
+                            city={lead.location?.split(",")[0]?.trim()}
+                            state="MI"
+                            sourceUrl={lead.source_url}
+                            sourceLabel="industrial_growth_intel"
+                            score={7}
+                            notes={`${lead.expansion_type}: ${lead.details}`}
+                            emailSubject={`Workforce Solutions for ${lead.company_name}`}
+                            emailBody={generateLeadPitch(lead)}
+                            compact
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}
