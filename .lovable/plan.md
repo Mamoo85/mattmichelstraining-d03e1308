@@ -1,59 +1,74 @@
 
 
-## The truth: NO postcards were actually sent.
+## Merge Postcard Ops + Postcards into one tab — and ship 4-product postcards
 
-**Evidence:**
-- `postcard_campaigns` shows the Macomb nursing-home campaign as `status='mailed'`, `lob_batch_id` set, but `sent_count = 0`.
-- `postcard_send_log` is **completely empty** — zero rows ever written.
-- `postcard_prospects.postcard_sent_at` is NULL for **all 66 rows** — no prospect was ever marked as mailed.
-- 33 prospects have addresses, 14 are in Macomb — none of them were actually pushed to Lob.
+You have two postcard tabs doing half the job each:
+- **Postcards** = real database (prospects, campaigns, send log via Lob, conversions)
+- **Postcard Ops** = standalone HTML preview/print tool with no database tie-in
 
-**Why it looked "mailed":**
-The `send-postcards` function flips the campaign to `status='mailed'` even when zero Lob calls succeed (or when zero prospects matched the filter). It also never writes to `postcard_send_log` — that table exists but the function doesn't insert into it. So the UI shows "mailed" while reality is "nothing happened."
-
-**Most likely root cause:**
-The campaign filter `.ilike("county", campaign.county).is("postcard_sent_at", null).not("address_line1", "is", null)` returned 0 prospects (county case mismatch, or addresses got enriched after campaign creation, or the Lob API key is missing/invalid). The function then quietly marked the campaign mailed anyway.
+You also want supply-house targeting (for Demand Radar) baked into the same workflow, plus every postcard from now on offers all 4 products.
 
 ---
 
-## Plan: Honest postcard tracking
+### A. Merge into one tab: **"Postcards"** (kill "Postcard Ops")
 
-### A. Fix the lying status (`send-postcards/index.ts`)
-1. Only set `status='mailed'` if `sentCount > 0`. If zero sends, set `status='failed'` and write the reason to a new `last_error` column.
-2. **Insert one row into `postcard_send_log` per Lob call** (success AND failure) — capturing `lob_id`, address, `cost_cents`, `status` (`sent`/`failed`/`returned`), and the Lob error body if any.
-3. Return Lob's full error in the JSON response so the admin UI can show it.
+Single tab, 4 sub-tabs across the top:
+1. **🎯 Find Prospects** — searches like Postcard Ops (audience + city/county) but writes to `postcard_prospects` DB. Uses existing `targeting-prospect-scraper` (already supports `supply_house`, `nursing_home`, `healthcare_staffing`, `trades_staffing`, `industrial_mfg`, `senior_care`). Search box: "Find supply houses in Oakland County" → 1 click → rows land in DB tagged with audience.
+2. **📋 Prospects** — current grouped-by-county table with the new audience filter chip
+3. **📮 Campaigns** — current send/track UI (Send Log, Diagnose, Resend Failed — already shipped last turn)
+4. **🖨️ Print Preview** — the Postcard Ops HTML preview for QA before sending via Lob (kept as a sanity check)
 
-### B. Wire up Lob delivery webhooks (real tracking)
-4. New edge function `lob-webhook` (verify_jwt=false) — receives Lob's `postcard.in_transit`, `postcard.delivered`, `postcard.returned_to_sender`, `postcard.processed_for_delivery` events. Updates `postcard_send_log.delivery_status` + `delivered_at`. Aggregates back to `postcard_campaigns.delivered_count` + `returned_count`.
-5. Migration: add `delivered_at`, `expected_delivery_date`, `tracking_events JSONB` to `postcard_send_log`; add `delivered_count`, `returned_count`, `last_error`, `total_cost_cents` to `postcard_campaigns`.
-6. Tell user to paste the webhook URL into Lob dashboard → Settings → Webhooks (one-time manual step).
+Result: one workflow — search → prospects appear → generate copy → preview → send via Lob → track delivery. No more split brain.
 
-### C. Per-postcard tracking UI (`AdminPostcardCampaigns.tsx`)
-7. Add a "Send Log" expandable panel under each campaign card showing the live table:
-   - Business name | City | Lob ID (clickable → Lob dashboard) | Status badge (queued/in_transit/delivered/returned/failed) | Sent at | Delivered at | Cost
-8. Stat strip per campaign: **X queued · Y in transit · Z delivered · N returned · $C.CC spent**
-9. "Resend Failed" button — re-runs only the failed prospects from `postcard_send_log`.
-10. **"Diagnose" button** on every campaign — runs a dry-run that shows exactly how many prospects match, why others were skipped (no address / wrong county / already sent), and tests the Lob API key.
+---
 
-### D. QR conversion attribution
-11. Append `?utm_campaign={campaign_id}` to the QR URL so `/hire-alert-trial` page logs `postcard_conversions` with the actual campaign ID. Currently the QR is generic — we can't tie a signup back to a specific mailing.
+### B. Multi-offer postcard design — **ONE QR code, not four**
 
-### E. Daily digest email
-12. Cron `postcard-tracking-digest` (daily 8am ET) — emails Matt: cards in transit, delivered yesterday, returns, conversions, cost-per-acquisition per campaign. Skip if zero activity.
+**Recommendation: ONE QR code that lands on a multi-product offer page.** Here's why:
 
-### Files touched
-- `supabase/functions/send-postcards/index.ts` (fix status lie + write to send_log)
-- `supabase/functions/lob-webhook/index.ts` (NEW)
-- `supabase/functions/postcard-tracking-digest/index.ts` (NEW)
-- `src/components/admin/AdminPostcardCampaigns.tsx` (send log panel + diagnose button)
-- `src/pages/HireAlertTrial.tsx` (capture utm_campaign → postcard_conversions)
-- 1 migration: new columns on `postcard_send_log` + `postcard_campaigns`
+| 4 separate QR codes | 1 QR code → multi-offer page |
+|---|---|
+| Visually cluttered (4 boxes on a 6×4) | Clean — keeps the "Free X" hero offer prominent |
+| Forces them to choose before they understand | Lets us upsell on the landing page where we have copy room |
+| Can't change offers post-print | Landing page is editable forever |
+| Attribution split 4 ways | All scans hit one URL with `?utm_campaign=` for clean attribution |
 
-### What you'll need to do (one-time, ~3 min)
-- Confirm `LOB_API_KEY` is set in Lovable secrets (I'll show you how to test it via the Diagnose button before we send anything else)
-- Paste the webhook URL into Lob dashboard once webhook function deploys
+**New postcard layout (6×4 inches):**
+- LEFT 4": Hero offer (matches their audience — e.g. "FREE 10 Verified Nurse Names" for nursing homes). Same as today.
+- RIGHT 2": QR code + **"Plus 3 more free tools"** strip with 3 tiny icon+name rows: 🔧 FieldDesk · 📞 Missed Call Catch · 📡 SiteRadar (the 3 products that aren't the hero). Looks intentional, not cluttered.
 
-### Risk / honesty
-- I won't auto-resend the failed Macomb batch — first I make Diagnose tell you *why* it failed, then you click Resend if you want.
-- Lob tracking lag is real: "delivered" status arrives 5-12 days after mailing. Digest will reflect that timeline honestly.
+**New landing page: `/postcard?audience=nursing_home&utm_campaign=...`**
+- Top fold: Hero offer claim button (matches what they expected from the postcard)
+- Below: 3 secondary offer cards for the other products
+- Tracks `postcard_conversions` per offer clicked (`event = trial_signup_<product>`) so the digest tells us *which* secondary offers actually convert
+
+This is the right call because (a) it lets us A/B test secondary offers without reprinting, (b) it keeps the postcard scannable from across a desk, and (c) attribution stays clean.
+
+---
+
+### C. Files touched
+
+- `src/components/admin/AdminPostcardCampaigns.tsx` — add 4 sub-tabs: Find Prospects (search), Prospects, Campaigns, Print Preview
+- `src/components/admin/AdminPostcardOps.tsx` — DELETE (folded into the merged tab)
+- `src/pages/DWAAdmin.tsx` — remove "Postcard Ops" sidebar entry (sidebar shows just "Postcards")
+- `supabase/functions/send-postcards/index.ts` — update QR builder to point at new `/postcard` landing page with `audience` + `utm_campaign` params; add small "+3 more" strip to right column
+- `src/pages/PostcardLanding.tsx` (NEW, public, no auth) — multi-offer landing page; logs to `postcard_conversions` per click
+- `src/App.tsx` — register `/postcard` route
+- `supabase/functions/targeting-prospect-scraper/index.ts` — small tweak so search results write into `postcard_prospects` (not just `targeting_prospects`) when `mode='postcard'` is passed
+
+---
+
+### D. What this unlocks immediately
+
+- **Search supply houses for Demand Radar**: type "Find supply houses in Macomb" → 1 click → prospects in DB → generate copy (already supports `supply-house` audience with Demand Radar pitch) → diagnose → send via Lob
+- **Each postcard now sells the whole product line** without looking like a junk-mail brochure
+- **One source of truth** for postcard work — no more flipping between two tabs
+
+### E. What I will NOT change
+- Lob send pipeline (already honest after last turn — no regressions)
+- Send log / Diagnose / Resend buttons (working as built)
+- Existing `postcard_campaigns` schema (just adds the landing page on the receive end)
+
+### Risk
+- Print Preview tab uses inline HTML; the live Lob send uses a slightly different HTML builder. I'll unify them into one shared template function so what you see in Preview is byte-identical to what Lob mails. If they drift, you'd be debugging a phantom — this prevents that.
 
