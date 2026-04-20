@@ -9,7 +9,7 @@
 import { useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import SEOHead from "@/components/SEOHead";
+import SEOHead from "@/components/layout/SEOHead";
 
 type Audience =
   | "healthcare-agency" | "trades-agency" | "nursing-home"
