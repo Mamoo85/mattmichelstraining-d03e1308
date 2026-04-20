@@ -132,12 +132,6 @@ export default function AdminMedicareIntel() {
     setFacilities(prev => prev.filter(f => f.provider_name !== name));
     toast({ title: `Removed "${name}" from your list` });
   }
-    const updated = savedNames.filter(n => n !== name);
-    setSavedNames(updated);
-    setSaved(updated);
-    setFacilities(prev => prev.filter(f => f.provider_name !== name));
-    toast({ title: `Removed "${name}" from your list` });
-  }
 
   function ratingBadge(rating: number | null) {
     if (!rating) return <span className="text-white/30 text-xs">N/A</span>;
