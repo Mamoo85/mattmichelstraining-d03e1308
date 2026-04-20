@@ -17,6 +17,11 @@ const PDL_API_KEY = Deno.env.get("PDL_API_KEY") || "";
 const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
 interface ProbeResult {
   service: string;
   ok: boolean;
@@ -140,7 +145,10 @@ async function probeNPI(): Promise<ProbeResult> {
   return { service: "npi_registry", ok: res.ok, statusCode: res.status };
 }
 
-serve(async () => {
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   // Run all probes in parallel (each is wrapped in safeProbe)
@@ -215,6 +223,6 @@ serve(async () => {
 
   return new Response(JSON.stringify({ ok: true, probes, stateChanges, lowCreditWarnings }), {
     status: 200,
-    headers: { "Content-Type": "application/json" },
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });

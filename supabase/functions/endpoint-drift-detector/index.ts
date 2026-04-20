@@ -10,6 +10,11 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
 async function probeUrl(url: string): Promise<{ ok: boolean; status: number }> {
   try {
     const res = await fetch(url, {
@@ -24,12 +29,15 @@ async function probeUrl(url: string): Promise<{ ok: boolean; status: number }> {
   }
 }
 
-serve(async () => {
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   const { data: endpoints, error } = await (sb.from as any)("data_source_endpoints").select("*");
   if (error || !endpoints) {
-    return new Response(JSON.stringify({ error: error?.message || "no endpoints" }), { status: 500 });
+    return new Response(JSON.stringify({ error: error?.message || "no endpoints" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   const swaps: string[] = [];
@@ -89,6 +97,6 @@ serve(async () => {
   console.log(`[DRIFT] checked=${endpoints.length} swaps=${swaps.length} dead=${dead.length}`);
   return new Response(JSON.stringify({ ok: true, checked: endpoints.length, swaps, dead }), {
     status: 200,
-    headers: { "Content-Type": "application/json" },
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
