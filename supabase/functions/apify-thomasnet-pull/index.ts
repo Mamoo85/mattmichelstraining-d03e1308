@@ -29,30 +29,23 @@ interface ScrapedSupplier {
   category: string;
 }
 
-async function firecrawlScrape(url: string): Promise<string> {
+async function scrapeThomasNet(url: string): Promise<string> {
   if (!FIRECRAWL_API_KEY) return "";
   try {
-    const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url,
-        formats: ["markdown"],
-        onlyMainContent: true,
-      }),
-      signal: AbortSignal.timeout(45_000),
+    // Use the shared stealth scraper — auto-escalates through stealth → mobile → scroll-actions
+    const result = await stealthScrape(url, {
+      formats: ["markdown"],
+      onlyMainContent: true,
+      maxChars: 60000,
+      timeoutMs: 45_000,
     });
-    if (!res.ok) {
-      console.error(`[firecrawl] HTTP ${res.status} for ${url}: ${(await res.text()).slice(0, 200)}`);
+    if (!result.ok) {
+      console.error(`[thomasnet-scrape] ${url} failed: ${result.reason}`);
       return "";
     }
-    const j = await res.json();
-    return j?.data?.markdown || j?.markdown || "";
+    return result.markdown || "";
   } catch (e) {
-    console.error("[firecrawl] error:", e);
+    console.error("[thomasnet-scrape] error:", e);
     return "";
   }
 }
