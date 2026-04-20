@@ -1,8 +1,19 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { X, Copy, Mail, ExternalLink, Info, Trash2, CheckCircle2 } from "lucide-react";
+import { X, Copy, Mail, ExternalLink, Info, Trash2, CheckCircle2, ArrowUp, ArrowDown, Search } from "lucide-react";
 import IntelRowActions from "./IntelRowActions";
+import { US_METROS } from "@/lib/usMetros";
+
+// Build state→metro index from canonical US_METROS list (DFW, Houston, Atlanta, Phoenix, Detroit…)
+const STATE_METROS: Record<string, { id: string; label: string }[]> = US_METROS.reduce((acc, m) => {
+  (acc[m.state] ||= []).push({ id: m.id, label: m.label });
+  return acc;
+}, {} as Record<string, { id: string; label: string }[]>);
+const STATE_OPTIONS = Object.keys(STATE_METROS).sort();
+
+type SortKey = "provider_name" | "city" | "staffing_rating" | "overall_rating" | "number_of_beds";
+const MARKET_KEY = "dwa_medicare_market";
 
 interface Facility {
   provider_name: string;
@@ -34,26 +45,84 @@ export default function AdminMedicareIntel() {
   const [pitchTarget, setPitchTarget] = useState<Facility | null>(null);
   const [copied, setCopied] = useState(false);
   const [savedNames, setSavedNames] = useState<string[]>(getSaved);
+  const [marketLabel, setMarketLabel] = useState<string>("");
+  // Market selectors — restored from localStorage
+  const persisted = (() => { try { return JSON.parse(localStorage.getItem(MARKET_KEY) || "{}"); } catch { return {}; } })();
+  const [stateCode, setStateCode] = useState<string>(persisted.state || "MI");
+  const [metroId, setMetroId] = useState<string>(persisted.metro ?? "detroit");
+  // Sort + filter UI state
+  const [sortKey, setSortKey] = useState<SortKey>("staffing_rating");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [search, setSearch] = useState("");
+  const [onlyOneStar, setOnlyOneStar] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    localStorage.setItem(MARKET_KEY, JSON.stringify({ state: stateCode, metro: metroId }));
+  }, [stateCode, metroId]);
+
+  // When state changes, reset metro to that state's first metro (or statewide)
+  function handleStateChange(s: string) {
+    setStateCode(s);
+    const metros = STATE_METROS[s] || [];
+    setMetroId(metros[0]?.id ?? "");
+  }
 
   async function fetchData() {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("medicare-staffing-intel");
+      const { data, error } = await supabase.functions.invoke("medicare-staffing-intel", {
+        body: { state: stateCode, metro: metroId || undefined },
+      });
       if (error) throw error;
       const fetched: Facility[] = data?.facilities || [];
       setFacilities(fetched);
       setTotal(data?.total || 0);
-      // auto-save all fetched facility names
+      setMarketLabel(data?.metro_area || `${stateCode} statewide`);
       const names = [...new Set([...savedNames, ...fetched.map(f => f.provider_name)])];
       setSavedNames(names);
       setSaved(names);
-      toast({ title: `Found ${data?.total || 0} understaffed facilities` });
+      toast({ title: `Found ${data?.total || 0} understaffed facilities in ${data?.metro_area || stateCode}` });
     } catch (e) {
       toast({ title: "Error fetching Medicare data", description: String(e), variant: "destructive" });
     } finally {
       setLoading(false);
     }
+  }
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) setSortDir(d => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(key); setSortDir(key === "provider_name" || key === "city" ? "asc" : "desc"); }
+  }
+
+  // Filter + sort pipeline
+  const visibleFacilities = useMemo(() => {
+    let out = facilities;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      out = out.filter(f => f.provider_name.toLowerCase().includes(q) || (f.city || "").toLowerCase().includes(q));
+    }
+    if (onlyOneStar) out = out.filter(f => f.staffing_rating === 1);
+    out = [...out].sort((a, b) => {
+      const av = a[sortKey] ?? (typeof a[sortKey] === "string" ? "" : -1);
+      const bv = b[sortKey] ?? (typeof b[sortKey] === "string" ? "" : -1);
+      if (av < bv) return sortDir === "asc" ? -1 : 1;
+      if (av > bv) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+    return out;
+  }, [facilities, search, onlyOneStar, sortKey, sortDir]);
+
+  function SortHeader({ k, label, align = "left" }: { k: SortKey; label: string; align?: "left" | "center" | "right" }) {
+    const active = sortKey === k;
+    return (
+      <th className={`text-${align} py-2 px-3 cursor-pointer select-none hover:text-white/70`} onClick={() => toggleSort(k)}>
+        <span className="inline-flex items-center gap-1">
+          {label}
+          {active && (sortDir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+        </span>
+      </th>
+    );
   }
 
   function removeFacility(name: string) {
@@ -144,7 +213,7 @@ detroitwebagent.com`;
         <div>
           <h2 className="text-white/40 text-xs uppercase tracking-wide mb-1">Medicare Care Compare</h2>
           <p className="text-white/60 text-sm">
-            Nursing homes with 1-2 Star Staffing Ratings in Metro Detroit — prime TechAlert prospects.
+            Nursing homes with 1-2 Star Staffing Ratings — prime TechAlert prospects.
           </p>
           <p className="text-white/30 text-xs mt-1 flex items-center gap-1">
             <Info className="w-3 h-3" /> Facilities stay on your list until you remove them.
@@ -158,6 +227,59 @@ detroitwebagent.com`;
           {loading ? "Scanning CMS..." : total > 0 ? "Refresh Data" : "Scan Medicare API"}
         </button>
       </div>
+
+      {/* Market selectors — state + metro */}
+      <div className="bg-[#0f1f35] border border-white/10 rounded-lg p-3 flex flex-wrap items-end gap-3">
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] text-white/40 uppercase tracking-wide">State</label>
+          <select
+            value={stateCode}
+            onChange={(e) => handleStateChange(e.target.value)}
+            className="bg-[#0a1628] border border-white/10 text-white text-sm rounded px-2 py-1.5 min-w-[80px]"
+          >
+            {STATE_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] text-white/40 uppercase tracking-wide">Metro</label>
+          <select
+            value={metroId}
+            onChange={(e) => setMetroId(e.target.value)}
+            className="bg-[#0a1628] border border-white/10 text-white text-sm rounded px-2 py-1.5 min-w-[200px]"
+          >
+            <option value="">Statewide (all metros)</option>
+            {(STATE_METROS[stateCode] || []).map(m => (
+              <option key={m.id} value={m.id}>{m.label}</option>
+            ))}
+          </select>
+        </div>
+        {marketLabel && (
+          <p className="text-white/40 text-xs ml-auto">
+            Showing <strong className="text-white/70">{visibleFacilities.length}</strong> of {total} — {marketLabel}
+            {!metroId && total >= 500 && <span className="block text-amber-400/70 text-[10px]">Capped at 500 — pick a metro for more.</span>}
+          </p>
+        )}
+      </div>
+
+      {/* Search + filter row */}
+      {facilities.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="w-3.5 h-3.5 text-white/30 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Filter by facility or city…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-[#0a1628] border border-white/10 text-white text-sm rounded pl-8 pr-3 py-1.5"
+            />
+          </div>
+          <label className="flex items-center gap-2 text-xs text-white/60 cursor-pointer">
+            <input type="checkbox" checked={onlyOneStar} onChange={(e) => setOnlyOneStar(e.target.checked)} />
+            1-star only
+          </label>
+        </div>
+      )}
 
       {total > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -187,17 +309,17 @@ detroitwebagent.com`;
           <table className="w-full text-sm">
             <thead>
               <tr className="text-white/40 text-xs uppercase border-b border-white/10">
-                <th className="text-left py-2 px-3">Facility</th>
-                <th className="text-left py-2 px-3">City</th>
-                <th className="text-center py-2 px-3">Staffing</th>
-                <th className="text-center py-2 px-3">Overall</th>
-                <th className="text-center py-2 px-3">Beds</th>
+                <SortHeader k="provider_name" label="Facility" />
+                <SortHeader k="city" label="City" />
+                <SortHeader k="staffing_rating" label="Staffing" align="center" />
+                <SortHeader k="overall_rating" label="Overall" align="center" />
+                <SortHeader k="number_of_beds" label="Beds" align="center" />
                 <th className="text-left py-2 px-3">Phone</th>
                 <th className="text-right py-2 px-3">Action</th>
               </tr>
             </thead>
             <tbody>
-              {facilities.map((f, i) => (
+              {visibleFacilities.map((f, i) => (
                 <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
                   <td className="py-2.5 px-3">
                     <button
