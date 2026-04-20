@@ -189,10 +189,18 @@ Deno.serve(async (req) => {
   let totalFound = 0;
   let totalNew = 0;
   const errors: string[] = [];
-  const perAgency: Record<string, { found: number; new: number; status: number }> = {};
+  const perAgency: Record<string, { found: number; new: number; status: number; auth?: string }> = {};
+  let anyTokenSucceeded = false;
 
   for (const agency of SEED_AGENCIES) {
     try {
+      const token = await getAccelaToken(agency);
+      if (!token) {
+        perAgency[agency] = { found: 0, new: 0, status: 401, auth: "no_token" };
+        errors.push(`${agency}:auth_failed`);
+        continue;
+      }
+      anyTokenSucceeded = true;
       const { ok, status, records } = await searchPermits(token, agency, sinceISO);
       perAgency[agency] = { found: records.length, new: 0, status };
       if (!ok) {
@@ -220,7 +228,9 @@ Deno.serve(async (req) => {
     }
   }
 
-  const status: RunMetrics["status"] = errors.length === 0 ? "ok" : (totalNew > 0 ? "partial" : "error");
+  const status: RunMetrics["status"] = !anyTokenSucceeded
+    ? "error"
+    : errors.length === 0 ? "ok" : (totalNew > 0 ? "partial" : "error");
 
   await logRun(supabase, {
     source: "accela-permit-scanner",
