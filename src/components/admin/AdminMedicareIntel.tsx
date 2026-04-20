@@ -309,17 +309,17 @@ detroitwebagent.com`;
           <table className="w-full text-sm">
             <thead>
               <tr className="text-white/40 text-xs uppercase border-b border-white/10">
-                <th className="text-left py-2 px-3">Facility</th>
-                <th className="text-left py-2 px-3">City</th>
-                <th className="text-center py-2 px-3">Staffing</th>
-                <th className="text-center py-2 px-3">Overall</th>
-                <th className="text-center py-2 px-3">Beds</th>
+                <SortHeader k="provider_name" label="Facility" />
+                <SortHeader k="city" label="City" />
+                <SortHeader k="staffing_rating" label="Staffing" align="center" />
+                <SortHeader k="overall_rating" label="Overall" align="center" />
+                <SortHeader k="number_of_beds" label="Beds" align="center" />
                 <th className="text-left py-2 px-3">Phone</th>
                 <th className="text-right py-2 px-3">Action</th>
               </tr>
             </thead>
             <tbody>
-              {facilities.map((f, i) => (
+              {visibleFacilities.map((f, i) => (
                 <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
                   <td className="py-2.5 px-3">
                     <button
