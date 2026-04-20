@@ -1,14 +1,31 @@
-// candidate-deep-enrich — 8-stage enrichment waterfall for Talent Radar candidates
+// candidate-deep-enrich — Lead Enhancement Orchestrator (canonical waterfall)
 // Runs every 30 minutes via cron. Picks up candidates with enrichment_status='pending'.
+//
+// PROTOCOL (Lead Enhancement Orchestrator policy, ratified 2026-04-20):
+//  - Sequential execution; downstream stages are skipped the moment a verified
+//    contact (email + phone) is secured. See pickContact() short-circuit gates
+//    around stages 6/7/7B/7C/8.
+//  - Every stage logs to candidate_enrichment_log + ai_call_log for ROI tracking.
+//  - No vendor duplication: Prospeo, ZeroBounce, NeverBounce, Clearbit are
+//    intentionally NOT integrated — Hunter handles email verification, PDL
+//    handles firmographics. Adding them would burn credits without new signal.
+//  - No CRM POST step: hire_alert_candidates IS the CRM. Records are tagged
+//    market-ready by setting enrichment_status='complete'.
+//  - Coverage targets are per-vertical (NOT a global 85%):
+//      healthcare ≈ 60% (NPI + PDL)
+//      white-collar contractor decision-makers ≈ 50% (Apollo + Hunter)
+//      trade individuals (named on a license) ≈ 20% — measured ceiling
 //
 // STAGES (each logged to candidate_enrichment_log):
 //  1. License-source     — already-have data baseline
 //  2. NPI Registry       — free; healthcare workers only
 //  3. PDL                — mobile phone, personal email, LinkedIn, employer
-//  4. Hunter.io          — email by name+domain (needs employer)
+//  4. Hunter.io          — email by name+domain (needs employer); confidence ≥ 50
 //  5. Snov.io            — email finder + verification
-//  6. Lusha              — mobile/direct dial fallback
+//  6. Lusha              — mobile/direct dial fallback (SMB-focused, US trades)
 //  7. Sonar OSINT        — open-web fallback for social + employer
+//  7B. NinjaPear          — LinkedIn enrichment when URL known
+//  7C. Crustdata          — trial fallback for missing critical fields
 //  8. Clay               — final waterfall (only candidates with score >= 7)
 //
 // Marks enrichment_status='complete' when at least 1 contact channel found,
