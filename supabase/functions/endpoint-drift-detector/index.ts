@@ -97,6 +97,6 @@ serve(async (req) => {
   console.log(`[DRIFT] checked=${endpoints.length} swaps=${swaps.length} dead=${dead.length}`);
   return new Response(JSON.stringify({ ok: true, checked: endpoints.length, swaps, dead }), {
     status: 200,
-    headers: { "Content-Type": "application/json" },
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
