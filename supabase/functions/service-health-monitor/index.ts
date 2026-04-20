@@ -17,6 +17,11 @@ const PDL_API_KEY = Deno.env.get("PDL_API_KEY") || "";
 const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
 interface ProbeResult {
   service: string;
   ok: boolean;
