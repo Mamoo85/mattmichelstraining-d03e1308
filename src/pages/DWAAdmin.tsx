@@ -20,6 +20,7 @@ const SupplierOutreachGenerator = lazy(() => import("@/components/dwa-admin/Supp
 const AgentToolkit = lazy(() => import("@/components/dwa-admin/AgentToolkit"));
 const AdminServiceResilience = lazy(() => import("@/components/dwa-admin/AdminServiceResilience"));
 const AdminCronSentinel = lazy(() => import("@/components/dwa-admin/AdminCronSentinel"));
+const AdminComplianceMonitor = lazy(() => import("@/components/dwa-admin/AdminComplianceMonitor"));
 
 const AdminDWAOverview = lazy(() => import("@/components/admin/AdminDWAOverview"));
 const AdminDWARevenueDashboard = lazy(() => import("@/components/admin/AdminDWARevenueDashboard"));
@@ -40,7 +41,7 @@ type Tab =
   | "dead-leads" | "contractor-leads" | "techalert" | "fielddesk"
   | "visitor-intel" | "the-wire"
   | "postcards" | "faxes" | "targeting" | "outbox"
-  | "simulation" | "resilience" | "cron-sentinel"
+  | "simulation" | "resilience" | "cron-sentinel" | "compliance"
   | "field-stats" | "clients" | "jobs" | "assets" | "contracts" | "import"
   | "command" | "playbook" | "strategy" | "labs" | "sales-guide"
   | "agency-outreach" | "demand-radar" | "supplier-outreach" | "hvb";
@@ -97,6 +98,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "simulation",    label: "🧪 Simulation" },
       { id: "resilience",    label: "🛡️ Service Health" },
       { id: "cron-sentinel", label: "🛡️ Cron Sentinel" },
+      { id: "compliance",  label: "🛡️ TCPA Compliance" },
       { id: "labs",        label: "⚗️ Labs" },
       { id: "assets",      label: "📦 Assets" },
       { id: "contracts",   label: "📄 Contracts" },
@@ -152,6 +154,7 @@ export default function DWAAdmin() {
           {activeTab === "simulation"       && <Suspense fallback={lazyFallback("simulation")}><AdminSimulationSuite /></Suspense>}
           {activeTab === "resilience"       && <Suspense fallback={lazyFallback("service health")}><AdminServiceResilience /></Suspense>}
           {activeTab === "cron-sentinel"    && <Suspense fallback={lazyFallback("cron sentinel")}><AdminCronSentinel /></Suspense>}
+          {activeTab === "compliance"       && <Suspense fallback={lazyFallback("compliance")}><AdminComplianceMonitor /></Suspense>}
           {activeTab === "outbox"           && <Suspense fallback={lazyFallback("outbox")}><AdminGlobalOutbox /></Suspense>}
           {activeTab === "agency-outreach"  && <Suspense fallback={lazyFallback("agency outreach")}><AdminAgencyOutreach /></Suspense>}
           {activeTab === "demand-radar"     && <Suspense fallback={lazyFallback("Demand Radar Hub")}><DemandRadarHub /></Suspense>}
