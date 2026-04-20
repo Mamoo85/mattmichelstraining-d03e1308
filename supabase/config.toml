@@ -1681,3 +1681,9 @@ verify_jwt = false
 
 [functions.lead-enrichment-waterfall]
 verify_jwt = false
+
+[functions.lob-webhook]
+verify_jwt = false
+
+[functions.postcard-tracking-digest]
+verify_jwt = false

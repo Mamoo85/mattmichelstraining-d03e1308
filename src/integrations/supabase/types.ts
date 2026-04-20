@@ -8998,12 +8998,16 @@ export type Database = {
           copy_front: string
           county: string
           created_at: string
+          delivered_count: number
           id: string
+          last_error: string | null
           lob_batch_id: string | null
           prospect_count: number | null
           qr_url: string
+          returned_count: number
           sent_count: number | null
           status: string
+          total_cost_cents: number
           updated_at: string
         }
         Insert: {
@@ -9013,12 +9017,16 @@ export type Database = {
           copy_front: string
           county: string
           created_at?: string
+          delivered_count?: number
           id?: string
+          last_error?: string | null
           lob_batch_id?: string | null
           prospect_count?: number | null
           qr_url: string
+          returned_count?: number
           sent_count?: number | null
           status?: string
+          total_cost_cents?: number
           updated_at?: string
         }
         Update: {
@@ -9028,12 +9036,16 @@ export type Database = {
           copy_front?: string
           county?: string
           created_at?: string
+          delivered_count?: number
           id?: string
+          last_error?: string | null
           lob_batch_id?: string | null
           prospect_count?: number | null
           qr_url?: string
+          returned_count?: number
           sent_count?: number | null
           status?: string
+          total_cost_cents?: number
           updated_at?: string
         }
         Relationships: []
@@ -9159,13 +9171,16 @@ export type Database = {
           campaign_id: string | null
           city: string | null
           cost_cents: number | null
+          delivered_at: string | null
           delivery_status: string | null
+          expected_delivery_date: string | null
           id: string
           lob_id: string | null
           prospect_id: string | null
           sent_at: string | null
           state: string | null
           status: string | null
+          tracking_events: Json | null
           zip: string | null
         }
         Insert: {
@@ -9174,13 +9189,16 @@ export type Database = {
           campaign_id?: string | null
           city?: string | null
           cost_cents?: number | null
+          delivered_at?: string | null
           delivery_status?: string | null
+          expected_delivery_date?: string | null
           id?: string
           lob_id?: string | null
           prospect_id?: string | null
           sent_at?: string | null
           state?: string | null
           status?: string | null
+          tracking_events?: Json | null
           zip?: string | null
         }
         Update: {
@@ -9189,13 +9207,16 @@ export type Database = {
           campaign_id?: string | null
           city?: string | null
           cost_cents?: number | null
+          delivered_at?: string | null
           delivery_status?: string | null
+          expected_delivery_date?: string | null
           id?: string
           lob_id?: string | null
           prospect_id?: string | null
           sent_at?: string | null
           state?: string | null
           status?: string | null
+          tracking_events?: Json | null
           zip?: string | null
         }
         Relationships: [

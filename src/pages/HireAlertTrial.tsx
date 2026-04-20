@@ -29,6 +29,14 @@ export default function HireAlertTrial() {
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Capture utm_campaign from QR code URL for postcard attribution
+  const utmCampaign = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("utm_campaign")
+    : null;
+  const utmSource = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("src") || new URLSearchParams(window.location.search).get("utm_source")
+    : null;
+
   const toggleRole = (role: string) => {
     setForm((f) => ({
       ...f,
@@ -49,9 +57,19 @@ export default function HireAlertTrial() {
 
     try {
       const { error } = await supabase.functions.invoke("create-hire-alert-trial", {
-        body: form,
+        body: { ...form, utm_campaign: utmCampaign, utm_source: utmSource },
       });
       if (error) throw error;
+
+      // Log postcard conversion (best-effort, don't block on failure)
+      if (utmCampaign) {
+        await supabase.from("postcard_conversions" as any).insert({
+          campaign_id: utmCampaign,
+          event: "trial_signup",
+          email: form.email,
+          county: null,
+        }).then(() => {}, () => {});
+      }
       setStatus("done");
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : "Something went wrong.");
