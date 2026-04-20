@@ -421,7 +421,17 @@ serve(async (req) => {
     }
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-    let inserted = 0, dup = 0, errors = 0, postcardInserted = 0;
+    let inserted = 0, dup = 0, errors = 0, postcardInserted = 0, faxInserted = 0;
+
+    // Map audience_type → fax segment label
+    const FAX_SEGMENT_MAP: Record<string, string> = {
+      "nursing_home": "nursing_home",
+      "healthcare_staffing": "medical",
+      "trades_staffing": "industrial",
+      "supply_house": "industrial",
+      "industrial_mfg": "industrial",
+      "senior_care": "nursing_home",
+    };
     const insertedIds: string[] = [];
     for (const p of prospects) {
       if (!p.business_name) continue;
@@ -466,6 +476,34 @@ serve(async (req) => {
             else console.error("[postcard insert]", pcErr.message);
           }
         }
+        // Also mirror into fax_prospects when mode='fax' and prospect has a fax number.
+        if (mode === "fax" && p.fax_number) {
+          const faxSeg = FAX_SEGMENT_MAP[p.audience_type] || "industrial";
+          const { data: fxExisting } = await sb
+            .from("fax_prospects")
+            .select("id")
+            .eq("fax_number", p.fax_number)
+            .maybeSingle();
+          if (!fxExisting) {
+            const { error: fxErr } = await sb.from("fax_prospects").insert({
+              business_name: p.business_name,
+              fax_number: p.fax_number,
+              contact_name: p.contact_name || null,
+              address: p.address_line1 || null,
+              city: p.city || null,
+              state: p.state || "MI",
+              zip: p.zip || null,
+              county: p.county || county || null,
+              segment: faxSeg,
+              audience_type: p.audience_type,
+              source: `targeting_${p.audience_type}`,
+              source_url: p.source_url || null,
+              verified_public: !!p.verified_fax,
+            });
+            if (!fxErr) faxInserted++;
+            else console.error("[fax insert]", fxErr.message);
+          }
+        }
       } catch (e) { errors++; console.error("[loop]", e); }
     }
 
@@ -478,7 +516,7 @@ serve(async (req) => {
       }).catch((e) => console.error("[trigger-score]", e));
     }
 
-    return new Response(JSON.stringify({ ok: true, audience, county, mode, found: prospects.length, inserted, duplicates: dup, errors, postcard_prospects_added: postcardInserted }), {
+    return new Response(JSON.stringify({ ok: true, audience, county, mode, found: prospects.length, inserted, duplicates: dup, errors, postcard_prospects_added: postcardInserted, fax_prospects_added: faxInserted }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
