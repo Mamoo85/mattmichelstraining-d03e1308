@@ -9052,31 +9052,43 @@ export type Database = {
       }
       postcard_conversions: {
         Row: {
+          audience_type: string | null
           campaign_id: string | null
           county: string | null
           created_at: string
           event: string
           id: string
+          product_key: string | null
           prospect_id: string | null
+          referrer: string | null
           stripe_session_id: string | null
+          user_agent: string | null
         }
         Insert: {
+          audience_type?: string | null
           campaign_id?: string | null
           county?: string | null
           created_at?: string
           event?: string
           id?: string
+          product_key?: string | null
           prospect_id?: string | null
+          referrer?: string | null
           stripe_session_id?: string | null
+          user_agent?: string | null
         }
         Update: {
+          audience_type?: string | null
           campaign_id?: string | null
           county?: string | null
           created_at?: string
           event?: string
           id?: string
+          product_key?: string | null
           prospect_id?: string | null
+          referrer?: string | null
           stripe_session_id?: string | null
+          user_agent?: string | null
         }
         Relationships: [
           {
