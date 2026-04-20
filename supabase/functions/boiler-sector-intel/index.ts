@@ -63,23 +63,34 @@ async function aiChat(prompt: string, maxTokens = 1500): Promise<string> {
   } catch (e) { console.error("[AI]", e); return ""; }
 }
 
+// Real web-search via OpenRouter Perplexity Sonar (gemini has no web access)
 async function sonarSearch(query: string): Promise<string> {
-  if (!LOVABLE_API_KEY) return "";
+  if (!OPENROUTER_API_KEY) {
+    console.warn("[sonar] OPENROUTER_API_KEY not configured — web search unavailable");
+    return "";
+  }
   try {
-    const res = await fetch(GATEWAY_URL, {
+    const res = await fetch(OPENROUTER_URL, {
       method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        max_tokens: 2000,
+        model: "perplexity/sonar-pro",
         messages: [{ role: "user", content: query }],
+        temperature: 0.2,
+        max_tokens: 2000,
       }),
-      signal: AbortSignal.timeout(30_000),
+      signal: AbortSignal.timeout(45_000),
     });
-    if (!res.ok) return "";
+    if (!res.ok) {
+      console.error(`[sonar] HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
+      return "";
+    }
     const d = await res.json();
     return d?.choices?.[0]?.message?.content?.trim() || "";
-  } catch { return ""; }
+  } catch (e) {
+    console.error("[sonar]", e);
+    return "";
+  }
 }
 
 interface Signal {
