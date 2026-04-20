@@ -13,7 +13,8 @@ const DWAStrategy = lazy(() => import("@/components/dwa-admin/DWAStrategy"));
 const DWALabs = lazy(() => import("@/components/dwa-admin/DWALabs"));
 const DWASalesGuide = lazy(() => import("@/components/dwa-admin/DWASalesGuide"));
 const AdminAgencyOutreach = lazy(() => import("@/components/dwa-admin/AdminAgencyOutreach"));
-const AdminDemandRadar = lazy(() => import("@/components/dwa-admin/AdminDemandRadar"));
+const TalentRadarHub = lazy(() => import("@/components/dwa-admin/TalentRadarHub"));
+const DemandRadarHub = lazy(() => import("@/components/dwa-admin/DemandRadarHub"));
 const AdminHighVolumeBuyer = lazy(() => import("@/components/dwa-admin/AdminHighVolumeBuyer"));
 const SupplierOutreachGenerator = lazy(() => import("@/components/dwa-admin/SupplierOutreachGenerator"));
 const AgentToolkit = lazy(() => import("@/components/dwa-admin/AgentToolkit"));
@@ -54,13 +55,19 @@ const GROUPS: SidebarGroup[] = [
     ],
   },
   {
+    label: "Radars",
+    items: [
+      { id: "techalert",     label: "🎯 Talent Radar" },
+      { id: "demand-radar",  label: "📈 Demand Radar" },
+      { id: "hvb",           label: "📦 High-Volume Buyers" },
+    ],
+  },
+  {
     label: "Customers",
     items: [
       { id: "dead-leads",       label: "♻️ Dead Leads" },
       { id: "contractor-leads", label: "🏗️ Contractor Leads" },
-      { id: "techalert",        label: "🎯 Talent Radar Clients" },
       { id: "fielddesk",        label: "🛠️ FieldDesk Clients" },
-      { id: "hvb",              label: "📦 High-Volume Buyers" },
       { id: "clients",          label: "👥 All Clients" },
     ],
   },
@@ -80,7 +87,6 @@ const GROUPS: SidebarGroup[] = [
     items: [
       { id: "visitor-intel", label: "👁️ Visitor Intel" },
       { id: "the-wire",      label: "📡 The Wire" },
-      { id: "demand-radar",  label: "📈 Demand Radar" },
       { id: "field-stats",   label: "📊 Field Stats" },
       { id: "jobs",          label: "🧰 Jobs" },
     ],
