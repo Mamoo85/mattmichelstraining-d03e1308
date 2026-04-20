@@ -421,7 +421,17 @@ serve(async (req) => {
     }
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-    let inserted = 0, dup = 0, errors = 0, postcardInserted = 0;
+    let inserted = 0, dup = 0, errors = 0, postcardInserted = 0, faxInserted = 0;
+
+    // Map audience_type → fax segment label
+    const FAX_SEGMENT_MAP: Record<string, string> = {
+      "nursing_home": "nursing_home",
+      "healthcare_staffing": "medical",
+      "trades_staffing": "industrial",
+      "supply_house": "industrial",
+      "industrial_mfg": "industrial",
+      "senior_care": "nursing_home",
+    };
     const insertedIds: string[] = [];
     for (const p of prospects) {
       if (!p.business_name) continue;
