@@ -201,6 +201,62 @@ export default function MyContractorLeads() {
         </header>
 
         <main className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+          {/* Shipping Upgrades banner */}
+          {!bannerDismissed && (
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-3 flex items-start gap-3">
+              <Hammer className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-amber-300 text-xs font-bold mb-0.5">🚧 Brand new dashboard — shipping upgrades daily</p>
+                <p className="text-amber-200/70 text-[11px] leading-relaxed">
+                  Bear with us as we make this better every day. Got an idea or hit a bug? Text Matt at (313) 992-1219 — he reads every message.
+                </p>
+              </div>
+              <button
+                onClick={() => setBannerDismissed(true)}
+                className="text-amber-400/40 hover:text-amber-400 text-xs"
+                aria-label="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          {/* Included Free — bundled bonus services */}
+          {data.bundled_services && (
+            <div className="bg-gradient-to-br from-emerald-500/10 to-[#0f1f35] border border-emerald-500/30 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Gift className="h-4 w-4 text-emerald-400" />
+                <h2 className="text-sm font-bold text-emerald-300">Included Free with Your Plan</h2>
+                <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px] ml-auto">
+                  $163/mo value · $0
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {[
+                  { active: data.bundled_services.missed_call, label: "Missed Call Text-Back", value: "$99/mo", desc: "Caller goes to voicemail? Auto-text fires in 5 sec." },
+                  { active: data.bundled_services.reviews,      label: "Review Monitor",       value: "$25/mo", desc: "Get alerted on every new Google review + reply drafts." },
+                  { active: data.bundled_services.afterjob,     label: "Quote Follow-Up Drip", value: "$39/mo", desc: "Auto-text quotes that didn't book within 48hrs." },
+                ].map(b => (
+                  <div key={b.label} className="bg-[#0a1628]/60 border border-white/5 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-white text-xs font-bold">{b.label}</p>
+                      {b.active ? (
+                        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px]">● Active</Badge>
+                      ) : (
+                        <Badge className="bg-white/5 text-white/40 border-white/10 text-[9px]">Pending</Badge>
+                      )}
+                    </div>
+                    <p className="text-emerald-400/70 text-[10px] font-bold mb-1">{b.value} value</p>
+                    <p className="text-white/50 text-[10px] leading-relaxed">{b.desc}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-white/30 text-[10px] mt-3 text-center">
+                Auto-provisioned when you signed up. No extra card capture. Yours as long as your lead network plan is active.
+              </p>
+            </div>
+          )}
+
           {/* Stats */}
           <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
             {[
