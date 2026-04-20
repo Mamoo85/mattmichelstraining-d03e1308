@@ -145,7 +145,10 @@ async function probeNPI(): Promise<ProbeResult> {
   return { service: "npi_registry", ok: res.ok, statusCode: res.status };
 }
 
-serve(async () => {
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   // Run all probes in parallel (each is wrapped in safeProbe)
