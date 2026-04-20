@@ -372,12 +372,68 @@ export default function AdminPostcardCampaigns() {
         </p>
       </div>
 
-      <Tabs defaultValue="campaigns" className="w-full">
-        <TabsList className="bg-white/5">
-          <TabsTrigger value="campaigns">Campaigns ({campaigns.length})</TabsTrigger>
-          <TabsTrigger value="prospects">Prospects ({prospects.length})</TabsTrigger>
-          <TabsTrigger value="conversions">Conversions ({conversions.length})</TabsTrigger>
+      <Tabs defaultValue="find" className="w-full">
+        <TabsList className="bg-white/5 flex-wrap h-auto">
+          <TabsTrigger value="find">🎯 Find Prospects</TabsTrigger>
+          <TabsTrigger value="prospects">📋 Prospects ({prospects.length})</TabsTrigger>
+          <TabsTrigger value="campaigns">📮 Campaigns ({campaigns.length})</TabsTrigger>
+          <TabsTrigger value="preview">🖨️ Print Preview</TabsTrigger>
+          <TabsTrigger value="conversions">📊 Conversions ({conversions.length})</TabsTrigger>
         </TabsList>
+
+        {/* Find Prospects Tab — search any audience + county, write to postcard_prospects */}
+        <TabsContent value="find">
+          <Card className="bg-white/5 border-white/10">
+            <CardContent className="p-5 space-y-4">
+              <div>
+                <h3 className="text-white font-bold text-base mb-1">Search for postcard prospects</h3>
+                <p className="text-white/50 text-xs">Pick an audience + county above. Results get scored, deduped, and added to <code className="text-cyan-400">postcard_prospects</code> ready for a campaign.</p>
+              </div>
+              <div className="bg-black/30 border border-white/5 rounded p-3 text-xs text-white/70">
+                <div><strong className="text-white">Audience:</strong> {AUDIENCE_OPTIONS.find(a => a.value === selectedAudience)?.label}</div>
+                <div><strong className="text-white">County:</strong> {selectedCounty}</div>
+                <div><strong className="text-white">Source:</strong> {SCRAPER_AUDIENCE[selectedAudience]} (CMS / NPI / Sonar)</div>
+              </div>
+              <Button onClick={findProspects} disabled={finding} className="bg-cyan-500 text-[#0a1628] hover:bg-cyan-400 font-bold">
+                <Search className={`w-4 h-4 mr-2 ${finding ? "animate-pulse" : ""}`} />
+                {finding ? "Searching..." : `Find ${AUDIENCE_OPTIONS.find(a => a.value === selectedAudience)?.label} in ${selectedCounty} County`}
+              </Button>
+              <div className="text-[11px] text-white/40">
+                💡 Use <strong>supply-house</strong> to surface distributors for Demand Radar mailings.
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Print Preview Tab — visual QA before live Lob send */}
+        <TabsContent value="preview">
+          <Card className="bg-white/5 border-white/10">
+            <CardContent className="p-5 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-white/40 text-[10px] uppercase tracking-wide block mb-1">Audience</label>
+                  <select value={previewAudience} onChange={e => setPreviewAudience(e.target.value as AudienceType)} className="w-full bg-[#161b22] border border-[#30363d] text-white text-sm rounded px-3 py-2">
+                    {AUDIENCE_OPTIONS.map(a => <option key={a.value} value={a.value} className="bg-gray-900">{a.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-white/40 text-[10px] uppercase tracking-wide block mb-1">City</label>
+                  <Input value={previewCity} onChange={e => setPreviewCity(e.target.value)} className="bg-[#161b22] border-[#30363d] text-white text-sm" />
+                </div>
+                <div>
+                  <label className="text-white/40 text-[10px] uppercase tracking-wide block mb-1">Recipient (optional)</label>
+                  <Input value={previewRecipient} onChange={e => setPreviewRecipient(e.target.value)} placeholder="Acme Staffing" className="bg-[#161b22] border-[#30363d] text-white text-sm" />
+                </div>
+              </div>
+              <div className="text-[11px] text-white/40">
+                <Eye className="w-3 h-3 inline mr-1" /> Preview only — does not send. Live sends from the <strong>Campaigns</strong> tab use the same template.
+              </div>
+              <div className="bg-[#1a1a1a] rounded-lg p-4 overflow-auto">
+                <iframe srcDoc={previewHTML} style={{ width: "6.5in", height: "4.5in", border: "none" }} title="Postcard preview" />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Campaigns Tab — now with Send Log + Diagnose + Resend */}
         <TabsContent value="campaigns">
