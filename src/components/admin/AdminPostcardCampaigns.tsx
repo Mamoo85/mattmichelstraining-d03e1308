@@ -9,14 +9,15 @@
  * - Resend Failed button (re-runs failed prospects from send_log)
  * - Live tracking stats: queued · in transit · delivered · returned · cost
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Send, RefreshCw, FileText, BarChart3, Users, MapPin, Stethoscope, ChevronDown, ChevronUp } from "lucide-react";
+import { Send, RefreshCw, FileText, BarChart3, Users, MapPin, Stethoscope, ChevronDown, ChevronUp, Search, Eye } from "lucide-react";
 
 type AudienceType = "healthcare-agency" | "trades-agency" | "nursing-home" | "contractor" | "supply-house";
 
@@ -57,6 +58,10 @@ export default function AdminPostcardCampaigns() {
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
   const [selectedCounty, setSelectedCounty] = useState("Wayne");
   const [selectedAudience, setSelectedAudience] = useState<AudienceType>("healthcare-agency");
+  const [finding, setFinding] = useState(false);
+  const [previewAudience, setPreviewAudience] = useState<AudienceType>("healthcare-agency");
+  const [previewCity, setPreviewCity] = useState("Metro Detroit");
+  const [previewRecipient, setPreviewRecipient] = useState("");
 
   useEffect(() => { loadData(); }, []);
 
@@ -183,6 +188,85 @@ export default function AdminPostcardCampaigns() {
     else { toast.success(`Resend: ${data?.sent || 0} sent · ${data?.failed || 0} failed`); loadData(); }
   };
 
+  // Map UI audience → scraper audience_type so we can search prospects right inside this tab.
+  const SCRAPER_AUDIENCE: Record<AudienceType, string> = {
+    "healthcare-agency": "healthcare_staffing",
+    "trades-agency":     "trades_staffing",
+    "nursing-home":      "nursing_home",
+    "contractor":        "trades_staffing",
+    "supply-house":      "supply_house",
+  };
+
+  const findProspects = async () => {
+    setFinding(true);
+    toast.info(`Searching for ${selectedAudience} in ${selectedCounty} County...`);
+    const { data, error } = await supabase.functions.invoke("targeting-prospect-scraper", {
+      body: {
+        audience_type: SCRAPER_AUDIENCE[selectedAudience],
+        county: selectedCounty,
+        limit: 50,
+        mode: "postcard",
+      },
+    });
+    setFinding(false);
+    if (error) { toast.error("Search failed: " + error.message); return; }
+    toast.success(`Found ${data?.found || 0} · Added ${data?.postcard_prospects_added || 0} new postcard-ready prospects`);
+    loadData();
+  };
+
+  // Shared preview HTML — kept visually close to what Lob mails.
+  // ONE QR code → /postcard?audience=...&utm_campaign=preview
+  const previewHTML = useMemo(() => {
+    const variant = AUDIENCE_OPTIONS.find(a => a.value === previewAudience)!;
+    const accent = previewAudience === "supply-house" ? "#06b6d4" : previewAudience.includes("healthcare") || previewAudience === "nursing-home" ? "#10b981" : "#3b82f6";
+    const offer = previewAudience === "supply-house" ? "FREE MONTH — DEMAND RADAR" : "FREE 10 NAMES";
+    const headline = previewAudience === "supply-house" ? "Know Who's Buying" : previewAudience === "nursing-home" ? "Struggling to Find Nurses?" : variant.label.includes("Healthcare") ? "We Find Licensed Nurses" : "We Find Licensed Techs";
+    const sub = previewAudience === "supply-house" ? "Before They Call" : previewAudience === "nursing-home" ? "We Find Them First." : "Before Anyone Else";
+    const qrUrl = `https://detroitwebagent.com/postcard?audience=${previewAudience}&utm_campaign=preview&city=${previewCity.toLowerCase().replace(/\s+/g, "-")}`;
+    const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(qrUrl)}`;
+    const secondary = previewAudience === "supply-house"
+      ? [["🔧","Talent Radar — Trades"],["🛠️","FieldDesk"],["📞","Missed Call Catch"]]
+      : previewAudience.includes("healthcare") || previewAudience === "nursing-home"
+        ? [["🔧","Talent Radar — Trades"],["🛠️","FieldDesk"],["📞","Missed Call Catch"]]
+        : [["🏥","Talent Radar — Healthcare"],["🛠️","FieldDesk"],["📞","Missed Call Catch"]];
+
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',system-ui,sans-serif;background:#1a1a1a;padding:20px;}
+.card{width:6.25in;height:4.25in;background:#0d1117;color:#e6edf3;display:flex;overflow:hidden;border-radius:4px;}
+</style></head><body>
+<div class="card">
+  <div style="flex:1;padding:0.5in 0.45in 0.4in;display:flex;flex-direction:column;justify-content:space-between;">
+    <div>
+      <div style="font-size:7px;color:#484f58;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:4px;">${previewCity.toUpperCase()}</div>
+      ${previewRecipient ? `<div style="font-size:8px;color:#484f58;margin-bottom:6px;">For: ${previewRecipient}</div>` : ""}
+      <div style="font-size:22px;font-weight:900;line-height:1.15;letter-spacing:-0.5px;margin-bottom:10px;">${headline}<br><span style="color:${accent};">${sub}</span></div>
+      <div style="font-size:9.5px;color:#8b949e;line-height:1.55;margin-bottom:12px;">We invented a way to surface the people and signals your competitors miss. Verified. Free to try. No card.</div>
+      <div style="display:inline-block;background:${accent}15;border:1.5px solid ${accent}40;color:${accent};font-size:9px;font-weight:800;padding:5px 12px;border-radius:4px;letter-spacing:0.5px;">${offer}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:8px 10px;">
+      <div style="width:40px;height:40px;border-radius:8px;background:${accent};color:#0a1628;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;">MM</div>
+      <div style="font-size:8.5px;color:#8b949e;line-height:1.4;">
+        <strong style="color:#e6edf3;font-size:9px;">Matt Michels</strong> — Founder<br>
+        Don't believe it works? Text me.<br>
+        <span style="color:${accent};font-weight:700;font-size:10px;">(313) 992-1219</span>
+      </div>
+    </div>
+  </div>
+  <div style="width:1.9in;background:#161b22;border-left:3px solid ${accent};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0.3in 0.18in;gap:8px;">
+    <div style="width:48px;height:48px;border-radius:50%;background:${accent};color:#0a1628;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;">DWA</div>
+    <div style="font-size:8px;color:#8b949e;text-align:center;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Scan to claim</div>
+    <img src="${qrImg}" width="118" height="118" style="border-radius:8px;border:2px solid #30363d;" alt="QR">
+    <div style="font-size:9.5px;color:${accent};font-weight:800;text-align:center;line-height:1.1;">${offer.includes("MONTH") ? "FREE MONTH" : "FREE 10 NAMES"}</div>
+    <div style="width:100%;border-top:1px dashed #30363d;padding-top:6px;display:flex;flex-direction:column;gap:3px;">
+      <div style="font-size:6.5px;color:#484f58;text-transform:uppercase;letter-spacing:0.8px;text-align:center;font-weight:700;margin-bottom:2px;">+ 3 More Free Tools</div>
+      ${secondary.map(s => `<div style="display:flex;align-items:center;gap:5px;font-size:7.5px;color:#8b949e;line-height:1.2;"><span style="font-size:9px;">${s[0]}</span><span>${s[1]}</span></div>`).join("")}
+    </div>
+    <div style="font-size:6.5px;color:#484f58;text-align:center;">detroitwebagent.com</div>
+  </div>
+</div>
+</body></html>`;
+  }, [previewAudience, previewCity, previewRecipient]);
+
   const totalSent = campaigns.reduce((sum: number, c: any) => sum + (c.sent_count || 0), 0);
   const totalDelivered = campaigns.reduce((sum: number, c: any) => sum + (c.delivered_count || 0), 0);
   const totalCost = campaigns.reduce((sum: number, c: any) => sum + (c.total_cost_cents || 0), 0) / 100;
@@ -288,12 +372,68 @@ export default function AdminPostcardCampaigns() {
         </p>
       </div>
 
-      <Tabs defaultValue="campaigns" className="w-full">
-        <TabsList className="bg-white/5">
-          <TabsTrigger value="campaigns">Campaigns ({campaigns.length})</TabsTrigger>
-          <TabsTrigger value="prospects">Prospects ({prospects.length})</TabsTrigger>
-          <TabsTrigger value="conversions">Conversions ({conversions.length})</TabsTrigger>
+      <Tabs defaultValue="find" className="w-full">
+        <TabsList className="bg-white/5 flex-wrap h-auto">
+          <TabsTrigger value="find">🎯 Find Prospects</TabsTrigger>
+          <TabsTrigger value="prospects">📋 Prospects ({prospects.length})</TabsTrigger>
+          <TabsTrigger value="campaigns">📮 Campaigns ({campaigns.length})</TabsTrigger>
+          <TabsTrigger value="preview">🖨️ Print Preview</TabsTrigger>
+          <TabsTrigger value="conversions">📊 Conversions ({conversions.length})</TabsTrigger>
         </TabsList>
+
+        {/* Find Prospects Tab — search any audience + county, write to postcard_prospects */}
+        <TabsContent value="find">
+          <Card className="bg-white/5 border-white/10">
+            <CardContent className="p-5 space-y-4">
+              <div>
+                <h3 className="text-white font-bold text-base mb-1">Search for postcard prospects</h3>
+                <p className="text-white/50 text-xs">Pick an audience + county above. Results get scored, deduped, and added to <code className="text-cyan-400">postcard_prospects</code> ready for a campaign.</p>
+              </div>
+              <div className="bg-black/30 border border-white/5 rounded p-3 text-xs text-white/70">
+                <div><strong className="text-white">Audience:</strong> {AUDIENCE_OPTIONS.find(a => a.value === selectedAudience)?.label}</div>
+                <div><strong className="text-white">County:</strong> {selectedCounty}</div>
+                <div><strong className="text-white">Source:</strong> {SCRAPER_AUDIENCE[selectedAudience]} (CMS / NPI / Sonar)</div>
+              </div>
+              <Button onClick={findProspects} disabled={finding} className="bg-cyan-500 text-[#0a1628] hover:bg-cyan-400 font-bold">
+                <Search className={`w-4 h-4 mr-2 ${finding ? "animate-pulse" : ""}`} />
+                {finding ? "Searching..." : `Find ${AUDIENCE_OPTIONS.find(a => a.value === selectedAudience)?.label} in ${selectedCounty} County`}
+              </Button>
+              <div className="text-[11px] text-white/40">
+                💡 Use <strong>supply-house</strong> to surface distributors for Demand Radar mailings.
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Print Preview Tab — visual QA before live Lob send */}
+        <TabsContent value="preview">
+          <Card className="bg-white/5 border-white/10">
+            <CardContent className="p-5 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-white/40 text-[10px] uppercase tracking-wide block mb-1">Audience</label>
+                  <select value={previewAudience} onChange={e => setPreviewAudience(e.target.value as AudienceType)} className="w-full bg-[#161b22] border border-[#30363d] text-white text-sm rounded px-3 py-2">
+                    {AUDIENCE_OPTIONS.map(a => <option key={a.value} value={a.value} className="bg-gray-900">{a.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-white/40 text-[10px] uppercase tracking-wide block mb-1">City</label>
+                  <Input value={previewCity} onChange={e => setPreviewCity(e.target.value)} className="bg-[#161b22] border-[#30363d] text-white text-sm" />
+                </div>
+                <div>
+                  <label className="text-white/40 text-[10px] uppercase tracking-wide block mb-1">Recipient (optional)</label>
+                  <Input value={previewRecipient} onChange={e => setPreviewRecipient(e.target.value)} placeholder="Acme Staffing" className="bg-[#161b22] border-[#30363d] text-white text-sm" />
+                </div>
+              </div>
+              <div className="text-[11px] text-white/40">
+                <Eye className="w-3 h-3 inline mr-1" /> Preview only — does not send. Live sends from the <strong>Campaigns</strong> tab use the same template.
+              </div>
+              <div className="bg-[#1a1a1a] rounded-lg p-4 overflow-auto">
+                <iframe srcDoc={previewHTML} style={{ width: "6.5in", height: "4.5in", border: "none" }} title="Postcard preview" />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Campaigns Tab — now with Send Log + Diagnose + Resend */}
         <TabsContent value="campaigns">

@@ -391,6 +391,8 @@ serve(async (req) => {
     const county: string | undefined = body.county;
     const limit: number = Math.min(body.limit || 50, 200);
     const dryRun: boolean = body.dry_run === true;
+    // mode='postcard' → also mirror prospects into postcard_prospects table
+    const mode: string = body.mode || "default";
 
     let prospects: Prospect[] = [];
     switch (audience) {
@@ -419,7 +421,7 @@ serve(async (req) => {
     }
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-    let inserted = 0, dup = 0, errors = 0;
+    let inserted = 0, dup = 0, errors = 0, postcardInserted = 0;
     const insertedIds: string[] = [];
     for (const p of prospects) {
       if (!p.business_name) continue;
@@ -431,10 +433,39 @@ serve(async (req) => {
           .eq("audience_type", p.audience_type)
           .eq("zip", p.zip || "")
           .maybeSingle();
-        if (existing) { dup++; continue; }
-        const { data, error } = await sb.from("prospect_pool").insert(p).select("id").maybeSingle();
-        if (error) { errors++; console.error("[insert]", error.message); }
-        else { inserted++; if (data?.id) insertedIds.push(data.id); }
+        if (existing) { dup++; }
+        else {
+          const { data, error } = await sb.from("prospect_pool").insert(p).select("id").maybeSingle();
+          if (error) { errors++; console.error("[insert]", error.message); }
+          else { inserted++; if (data?.id) insertedIds.push(data.id); }
+        }
+
+        // Also mirror into postcard_prospects when mode='postcard' and prospect has an address.
+        if (mode === "postcard" && p.address_line1 && p.city && p.zip) {
+          const { data: pcExisting } = await sb
+            .from("postcard_prospects")
+            .select("id")
+            .ilike("business_name", p.business_name)
+            .eq("zip", p.zip)
+            .maybeSingle();
+          if (!pcExisting) {
+            const { error: pcErr } = await sb.from("postcard_prospects").insert({
+              business_name: p.business_name,
+              address_line1: p.address_line1,
+              address_line2: p.address_line2 || null,
+              city: p.city,
+              state: p.state || "MI",
+              zip: p.zip,
+              county: p.county || county || null,
+              owner_name: p.contact_name || null,
+              phone: p.phone || null,
+              email: p.email || null,
+              source: `targeting_${p.audience_type}`,
+            });
+            if (!pcErr) postcardInserted++;
+            else console.error("[postcard insert]", pcErr.message);
+          }
+        }
       } catch (e) { errors++; console.error("[loop]", e); }
     }
 
@@ -447,7 +478,7 @@ serve(async (req) => {
       }).catch((e) => console.error("[trigger-score]", e));
     }
 
-    return new Response(JSON.stringify({ ok: true, audience, county, found: prospects.length, inserted, duplicates: dup, errors }), {
+    return new Response(JSON.stringify({ ok: true, audience, county, mode, found: prospects.length, inserted, duplicates: dup, errors, postcard_prospects_added: postcardInserted }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
