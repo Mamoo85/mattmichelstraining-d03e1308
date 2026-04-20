@@ -293,11 +293,16 @@ export default function AdminSMSInbox() {
   );
 
   async function handleSend() {
-    if (!activeThread || !draft.trim() || sending) return;
+    const targetPhone = composing ? normalize(composeTo) : activeThread?.phone ?? null;
+    if (!targetPhone) {
+      toast.error(composing ? "Enter a valid US phone number" : "No recipient");
+      return;
+    }
+    if (!draft.trim() || sending) return;
     setSending(true);
     try {
       const { data, error } = await supabase.functions.invoke("dwa-send-sms", {
-        body: { to: activeThread.phone, body: draft.trim() },
+        body: { to: targetPhone, body: draft.trim() },
       });
       if (error) throw error;
       const result = data as { success?: boolean; skipped?: boolean; error?: string };
@@ -307,7 +312,12 @@ export default function AdminSMSInbox() {
       }
       toast.success("Sent");
       setDraft("");
-      // Optimistic refresh
+      // If we were composing, switch to the new thread
+      if (composing) {
+        setComposing(false);
+        setComposeTo("");
+        setActivePhone(targetPhone);
+      }
       await loadInbox();
     } catch (e) {
       console.error(e);
@@ -315,6 +325,13 @@ export default function AdminSMSInbox() {
     } finally {
       setSending(false);
     }
+  }
+
+  function startCompose() {
+    setComposing(true);
+    setActivePhone(null);
+    setDraft("");
+    setComposeTo("");
   }
 
   return (
