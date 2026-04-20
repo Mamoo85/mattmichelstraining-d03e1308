@@ -642,11 +642,12 @@ export default function AdminCommandDeck() {
                   { label: "CANDIDATES (7D)", value: revenueQuery.data?.techAlert.candidates7d ?? "—" },
                   { label: "HOT (SCORE ≥8)", value: revenueQuery.data?.techAlert.hot ?? "—" },
                 ]} />
-                {/* FieldDesk */}
-                <RevCard title="🔧 FIELDDESK" stats={[
-                  { label: "ACTIVE CLIENTS", value: revenueQuery.data?.fieldDesk.active ?? "—" },
-                  { label: "JOBS TODAY", value: revenueQuery.data?.fieldDesk.today ?? "—" },
-                  { label: "COMPLETED (7D)", value: revenueQuery.data?.fieldDesk.completed7d ?? "—" },
+                {/* Demand Radar */}
+                <RevCard title="📡 DEMAND RADAR" stats={[
+                  { label: "SIGNALS (7D)", value: revenueQuery.data?.demandRadar.total7d ?? "—" },
+                  { label: "NEW (24H)", value: revenueQuery.data?.demandRadar.new24h ?? "—" },
+                  { label: "HOT (CONF ≥7)", value: revenueQuery.data?.demandRadar.hot ?? "—" },
+                  { label: "GROWTH (7D)", value: revenueQuery.data?.demandRadar.growth7d ?? "—" },
                 ]} />
               </div>
             )}
