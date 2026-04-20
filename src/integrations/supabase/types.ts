@@ -3570,6 +3570,39 @@ export type Database = {
         }
         Relationships: []
       }
+      demand_radar_runs: {
+        Row: {
+          duration_ms: number | null
+          errors: string | null
+          id: string
+          run_at: string
+          signals_found: number
+          signals_new: number
+          source: string
+          status: string
+        }
+        Insert: {
+          duration_ms?: number | null
+          errors?: string | null
+          id?: string
+          run_at?: string
+          signals_found?: number
+          signals_new?: number
+          source: string
+          status?: string
+        }
+        Update: {
+          duration_ms?: number | null
+          errors?: string | null
+          id?: string
+          run_at?: string
+          signals_found?: number
+          signals_new?: number
+          source?: string
+          status?: string
+        }
+        Relationships: []
+      }
       demand_radar_signal_actions: {
         Row: {
           action: string
