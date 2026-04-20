@@ -45,21 +45,44 @@ export default function AdminMedicareIntel() {
   const [pitchTarget, setPitchTarget] = useState<Facility | null>(null);
   const [copied, setCopied] = useState(false);
   const [savedNames, setSavedNames] = useState<string[]>(getSaved);
+  const [marketLabel, setMarketLabel] = useState<string>("");
+  // Market selectors — restored from localStorage
+  const persisted = (() => { try { return JSON.parse(localStorage.getItem(MARKET_KEY) || "{}"); } catch { return {}; } })();
+  const [stateCode, setStateCode] = useState<string>(persisted.state || "MI");
+  const [metroId, setMetroId] = useState<string>(persisted.metro ?? "detroit");
+  // Sort + filter UI state
+  const [sortKey, setSortKey] = useState<SortKey>("staffing_rating");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [search, setSearch] = useState("");
+  const [onlyOneStar, setOnlyOneStar] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    localStorage.setItem(MARKET_KEY, JSON.stringify({ state: stateCode, metro: metroId }));
+  }, [stateCode, metroId]);
+
+  // When state changes, reset metro to that state's first metro (or statewide)
+  function handleStateChange(s: string) {
+    setStateCode(s);
+    const metros = STATE_METROS[s] || [];
+    setMetroId(metros[0]?.id ?? "");
+  }
 
   async function fetchData() {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("medicare-staffing-intel");
+      const { data, error } = await supabase.functions.invoke("medicare-staffing-intel", {
+        body: { state: stateCode, metro: metroId || undefined },
+      });
       if (error) throw error;
       const fetched: Facility[] = data?.facilities || [];
       setFacilities(fetched);
       setTotal(data?.total || 0);
-      // auto-save all fetched facility names
+      setMarketLabel(data?.metro_area || `${stateCode} statewide`);
       const names = [...new Set([...savedNames, ...fetched.map(f => f.provider_name)])];
       setSavedNames(names);
       setSaved(names);
-      toast({ title: `Found ${data?.total || 0} understaffed facilities` });
+      toast({ title: `Found ${data?.total || 0} understaffed facilities in ${data?.metro_area || stateCode}` });
     } catch (e) {
       toast({ title: "Error fetching Medicare data", description: String(e), variant: "destructive" });
     } finally {
@@ -67,7 +90,48 @@ export default function AdminMedicareIntel() {
     }
   }
 
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) setSortDir(d => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(key); setSortDir(key === "provider_name" || key === "city" ? "asc" : "desc"); }
+  }
+
+  // Filter + sort pipeline
+  const visibleFacilities = useMemo(() => {
+    let out = facilities;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      out = out.filter(f => f.provider_name.toLowerCase().includes(q) || (f.city || "").toLowerCase().includes(q));
+    }
+    if (onlyOneStar) out = out.filter(f => f.staffing_rating === 1);
+    out = [...out].sort((a, b) => {
+      const av = a[sortKey] ?? (typeof a[sortKey] === "string" ? "" : -1);
+      const bv = b[sortKey] ?? (typeof b[sortKey] === "string" ? "" : -1);
+      if (av < bv) return sortDir === "asc" ? -1 : 1;
+      if (av > bv) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+    return out;
+  }, [facilities, search, onlyOneStar, sortKey, sortDir]);
+
+  function SortHeader({ k, label, align = "left" }: { k: SortKey; label: string; align?: "left" | "center" | "right" }) {
+    const active = sortKey === k;
+    return (
+      <th className={`text-${align} py-2 px-3 cursor-pointer select-none hover:text-white/70`} onClick={() => toggleSort(k)}>
+        <span className="inline-flex items-center gap-1">
+          {label}
+          {active && (sortDir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+        </span>
+      </th>
+    );
+  }
+
   function removeFacility(name: string) {
+    const updated = savedNames.filter(n => n !== name);
+    setSavedNames(updated);
+    setSaved(updated);
+    setFacilities(prev => prev.filter(f => f.provider_name !== name));
+    toast({ title: `Removed "${name}" from your list` });
+  }
     const updated = savedNames.filter(n => n !== name);
     setSavedNames(updated);
     setSaved(updated);
