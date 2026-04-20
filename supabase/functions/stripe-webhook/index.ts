@@ -3211,6 +3211,40 @@ serve(async (req) => {
             }
           }
 
+          // ─── AUTO-PROVISION FREE BUNDLED ADD-ONS ─────────────────────────
+          // Contractor lead clients get 3 services free as part of $399/mo:
+          //   - Missed Call Text-Back ($99/mo value)
+          //   - Review Monitor ($25/mo value)
+          //   - Quote Follow-Up Drip ($39/mo value)
+          // Marked bundled_from='contractor_leads' so we don't bill separately.
+          if (customerEmail) {
+            const businessName = meta.business_name || customerEmail.split("@")[0];
+            const contractorPhoneForBundle = meta.owner_phone || meta.phone || null;
+            const tradeIndustry = meta.trade || null;
+            await Promise.all([
+              wdSb.from("missed_call_clients" as any).upsert({
+                email: customerEmail,
+                business_name: businessName,
+                phone: contractorPhoneForBundle,
+                bundled_from: "contractor_leads",
+                active: true,
+              }, { onConflict: "email" }).then((r: any) => r.error && console.error("[bundle] missed_call:", r.error.message)),
+              wdSb.from("review_alert_clients" as any).upsert({
+                email: customerEmail,
+                business_name: businessName,
+                industry: tradeIndustry,
+                bundled_from: "contractor_leads",
+                active: true,
+              }, { onConflict: "email" }).then((r: any) => r.error && console.error("[bundle] review_alert:", r.error.message)),
+              wdSb.from("quote_followup_clients" as any).upsert({
+                email: customerEmail,
+                business_name: businessName,
+                industry: tradeIndustry,
+                bundled_from: "contractor_leads",
+                active: true,
+              }, { onConflict: "email" }).then((r: any) => r.error && console.error("[bundle] quote_followup:", r.error.message)),
+            ]);
+          }
           if (RESEND_API_KEY && customerEmail) {
             const tradeLabel = (meta.trade || "service").charAt(0).toUpperCase() + (meta.trade || "service").slice(1);
             const contractorPhone = meta.owner_phone || meta.phone || null;

@@ -142,8 +142,32 @@ serve(async (req) => {
       pending_feedback: allLeads.filter((l) => !l.contractor_feedback).length,
     };
 
+    // Check which free bundled services are active for this contractor
+    const [missedCallRow, reviewRow, afterjobRow] = await Promise.all([
+      sb.from("missed_call_clients").select("id, active").eq("email", contractor.email).maybeSingle(),
+      sb.from("review_alert_clients").select("id, active").eq("email", contractor.email).maybeSingle(),
+      sb.from("quote_followup_clients").select("id, active").eq("email", contractor.email).maybeSingle(),
+    ]);
+
+    const bundled_services = {
+      missed_call: !!missedCallRow.data && (missedCallRow.data as any).active !== false,
+      reviews: !!reviewRow.data && (reviewRow.data as any).active !== false,
+      afterjob: !!afterjobRow.data && (afterjobRow.data as any).active !== false,
+    };
+
+    // Static upgrade shop — 30% off bundled discount for active lead-network clients
+    const available_upgrades = [
+      { key: "techalert",  name: "TechAlert",         tagline: "Hiring monitor — get alerted when licensed pros come available", standalone: 149, bundled: 104, checkout_path: "/hire-alert" },
+      { key: "fielddesk",  name: "FieldDesk",         tagline: "Dispatch CRM + mobile tech app — replace eWay/FieldServio",     standalone: 199, bundled: 139, checkout_path: "/field-service" },
+      { key: "siteradar",  name: "SiteRadar",         tagline: "See which businesses visit your website (real-time intel)",     standalone: 49,  bundled: 34,  checkout_path: "/visitor-intel" },
+      { key: "promo",      name: "Seasonal Promo Blaster", tagline: "Auto-text past customers when seasons change",             standalone: 29,  bundled: 20,  checkout_path: "/seasonal-promo" },
+      { key: "estimate",   name: "Estimate Follow-Up Drip", tagline: "Auto-text quotes that didn't book — pull deals back in",  standalone: 39,  bundled: 27,  checkout_path: "/estimate-followup" },
+      { key: "smsblast",   name: "Weekly SMS Blast",  tagline: "One opt-in customer list, one tap, weekly promotion",           standalone: 19,  bundled: 13,  checkout_path: "/weekly-sms" },
+    ];
+
     return new Response(JSON.stringify({
       contractor: {
+        email: contractor.email,
         business_name: contractor.business_name || contractor.name,
         trade: contractor.trade,
         city: contractor.city,
@@ -152,6 +176,8 @@ serve(async (req) => {
         member_since: contractor.created_at,
       },
       stats,
+      bundled_services,
+      available_upgrades,
       leads: allLeads.map((l) => ({
         id: l.id,
         name: l.name,

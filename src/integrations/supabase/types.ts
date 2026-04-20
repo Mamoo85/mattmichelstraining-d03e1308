@@ -8057,6 +8057,7 @@ export type Database = {
       missed_call_clients: {
         Row: {
           active: boolean | null
+          bundled_from: string | null
           business_name: string
           created_at: string | null
           custom_message: string | null
@@ -8069,6 +8070,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          bundled_from?: string | null
           business_name: string
           created_at?: string | null
           custom_message?: string | null
@@ -8081,6 +8083,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          bundled_from?: string | null
           business_name?: string
           created_at?: string | null
           custom_message?: string | null
@@ -10754,6 +10757,7 @@ export type Database = {
       quote_followup_clients: {
         Row: {
           active: boolean | null
+          bundled_from: string | null
           business_name: string
           created_at: string | null
           email: string
@@ -10765,6 +10769,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          bundled_from?: string | null
           business_name: string
           created_at?: string | null
           email: string
@@ -10776,6 +10781,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          bundled_from?: string | null
           business_name?: string
           created_at?: string | null
           email?: string
@@ -11623,6 +11629,7 @@ export type Database = {
         Row: {
           active: boolean | null
           alert_count: number | null
+          bundled_from: string | null
           business_name: string
           created_at: string | null
           email: string
@@ -11635,6 +11642,7 @@ export type Database = {
         Insert: {
           active?: boolean | null
           alert_count?: number | null
+          bundled_from?: string | null
           business_name: string
           created_at?: string | null
           email: string
@@ -11647,6 +11655,7 @@ export type Database = {
         Update: {
           active?: boolean | null
           alert_count?: number | null
+          bundled_from?: string | null
           business_name?: string
           created_at?: string | null
           email?: string

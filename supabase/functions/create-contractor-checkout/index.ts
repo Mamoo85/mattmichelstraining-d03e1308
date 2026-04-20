@@ -67,7 +67,6 @@ serve(async (req) => {
       mode: "subscription",
       payment_method_types: ["card"],
       customer_email: email,
-      subscription_data: { trial_period_days: 7 },
       line_items: [{
         quantity: 1,
         price_data: {
@@ -76,7 +75,7 @@ serve(async (req) => {
           recurring: { interval: "month" },
           product_data: {
             name: `Exclusive ${tradeLabel} Leads — ${city}, ${state}`,
-            description: `Exclusive territory. Every ${tradeLabel.toLowerCase()} lead in ${city} goes only to you. SMS + email delivery within minutes.`,
+            description: `Exclusive ${tradeLabel.toLowerCase()} territory in ${city}. Includes FREE: Missed Call Text-Back ($99/mo value), Review Monitor ($25/mo), Quote Follow-Up Drip ($39/mo). Cancel anytime. 30-day money-back guarantee if zero leads delivered.`,
           },
         },
       }],
@@ -101,7 +100,7 @@ serve(async (req) => {
           from: "M² System <matt@mattmichelstraining.com>",
           to: ["matt@mattmichelstraining.com"], bcc: ["matthewmichels4@gmail.com"],
           subject: `New contractor checkout started — ${tradeLabel} in ${city}`,
-          html: `<p>Contractor started checkout:<br><strong>${business_name || name}</strong><br>${email} | ${phone || "no phone"}<br>Trade: ${tradeLabel} | City: ${city}, ${state}<br>Monthly: $${(monthlyPrice / 100).toFixed(0)}/mo (7-day free trial)<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 992-1219</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>`,
+          html: `<p>Contractor started checkout:<br><strong>${business_name || name}</strong><br>${email} | ${phone || "no phone"}<br>Trade: ${tradeLabel} | City: ${city}, ${state}<br>Monthly: $${(monthlyPrice / 100).toFixed(0)}/mo (no trial · 30-day money-back guarantee · bonus stack auto-provisioned)<div style="margin-top:24px;padding-top:16px;border-top:1px solid #334155;display:flex;align-items:center;gap:12px;"><img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" alt="Matt Michels" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" /><div style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong><br/>Grosse Pointe, MI · (313) 992-1219</div><img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" /></div></p>`,
         }),
       });
     }
