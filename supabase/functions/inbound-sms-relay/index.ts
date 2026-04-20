@@ -72,11 +72,13 @@ serve(async (req) => {
     const isEdit = !!editMatch;
 
     if (sb && fromNormalized === MATT_PERSONAL && (isApprove || isEdit)) {
-      // Find the latest pending draft (any phone — most recent wins)
+      // Find the latest pending OR previously-failed draft (any phone — most
+      // recent wins). Including "failed" lets Matt simply text "A" again
+      // after a transient Twilio error.
       const { data: pending } = await sb
         .from("sms_reply_drafts")
         .select("id, phone, draft_body")
-        .eq("status", "pending")
+        .in("status", ["pending", "failed"])
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();

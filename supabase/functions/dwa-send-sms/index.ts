@@ -44,29 +44,36 @@ serve(async (req) => {
   }
 
   try {
-    // 1. Auth — verify the caller is logged in
+    // 1. Auth — accept either an admin user JWT OR an internal service-role call
+    //    (inbound-sms-relay calls this fn with the service-role key when Matt
+    //     replies "A" to approve a draft).
     const authHeader = req.headers.get("Authorization") ?? "";
     if (!authHeader.startsWith("Bearer ")) {
       return json(401, { error: "Missing bearer token" });
     }
-    const sbAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userData, error: userError } = await sbAuth.auth.getUser();
-    if (userError || !userData?.user) {
-      return json(401, { error: "Invalid session" });
-    }
-
-    // 2. Check agency-admin role via service-role client (bypasses RLS)
+    const token = authHeader.slice(7).trim();
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-    const { data: roleRow } = await sb
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userData.user.id)
-      .in("role", ["admin", "agency_admin"])
-      .maybeSingle();
-    if (!roleRow) {
-      return json(403, { error: "Admin role required" });
+
+    // Service-role bypass: internal edge functions (e.g. inbound-sms-relay)
+    if (token === SUPABASE_SERVICE_KEY) {
+      // trusted internal caller — skip user/role lookup
+    } else {
+      const sbAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: userData, error: userError } = await sbAuth.auth.getUser();
+      if (userError || !userData?.user) {
+        return json(401, { error: "Invalid session" });
+      }
+      const { data: roleRow } = await sb
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userData.user.id)
+        .in("role", ["admin", "agency_admin"])
+        .maybeSingle();
+      if (!roleRow) {
+        return json(403, { error: "Admin role required" });
+      }
     }
 
     // 3. Parse + validate body
