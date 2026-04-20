@@ -102,7 +102,7 @@ serve(withRunLog("medicare-staffing-intel", async (req) => {
 
       facilities = rows
         .filter((r: any) => {
-          const zip = (r.zip || r.provider_zip_code || "").toString();
+          const zip = (r.zip_code || r.zip || r.provider_zip_code || "").toString();
           const inMetro = zipPrefixes.length === 0
             ? true // no metro filter → state-wide
             : zipPrefixes.some(prefix => zip.startsWith(prefix));
@@ -112,13 +112,13 @@ serve(withRunLog("medicare-staffing-intel", async (req) => {
         .map((r: any) => ({
           provider_name: r.provider_name || r.facility_name || "Unknown",
           address: r.provider_address || r.address || "",
-          city: r.provider_city || r.city || "",
-          state: r.provider_state || r.state || targetState,
-          zip: (r.provider_zip_code || r.zip || "").toString(),
-          phone: r.provider_phone_number || r.phone || "",
+          city: r.citytown || r.provider_city || r.city || "",
+          state: r.state || r.provider_state || targetState,
+          zip: (r.zip_code || r.provider_zip_code || r.zip || "").toString(),
+          phone: r.telephone_number || r.provider_phone_number || r.phone || "",
           overall_rating: parseInt(r.overall_rating || "0", 10) || null,
           staffing_rating: parseInt(r.staffing_rating || r.staff_rating || "0", 10) || null,
-          rn_staffing_hours: parseFloat(r.reported_nurse_aide_staffing_hours_per_resident_per_day || "0") || null,
+          rn_staffing_hours: parseFloat(r.reported_rn_staffing_hours_per_resident_per_day || r.reported_nurse_aide_staffing_hours_per_resident_per_day || "0") || null,
           ownership_type: r.ownership_type || null,
           number_of_beds: parseInt(r.number_of_certified_beds || "0", 10) || null,
         }));
