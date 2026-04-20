@@ -2000,6 +2000,34 @@ serve(async (req: Request) => {
 
   // Phase 17 fix: UPDATE the row we inserted at start (instead of inserting a duplicate).
   // This way the run is visible to the sentinel even if a later step times out.
+  //
+  // Phase C (Lead Enhancement Orchestrator policy): per-vertical contactability.
+  // A candidate is "contactable" if any direct channel was resolved.
+  // Vertical = healthcare (NPI taxonomy hit) | white_collar (decision-maker title)
+  // | trade (everything else — the measured ~17% ceiling vertical).
+  const verticalOf = (c: any): "healthcare" | "white_collar" | "trade" => {
+    if (c.npi_taxonomy || /nurse|cna|lpn|rn|home health|aide/i.test(c.license_type || "")) return "healthcare";
+    if (/owner|president|ceo|cfo|director|manager|vp|principal/i.test(c.current_title || "")) return "white_collar";
+    return "trade";
+  };
+  const isContactable = (c: any) =>
+    !!(c.email || c.phone || c.pdl_mobile_phone || c.pdl_personal_email || c.pdl_work_email ||
+       c.hunter_email || c.snov_email || c.lusha_phone || c.lusha_email || c.npi_business_phone);
+  const coverage_by_vertical: Record<string, { total: number; contactable: number; pct: number }> = {
+    healthcare: { total: 0, contactable: 0, pct: 0 },
+    white_collar: { total: 0, contactable: 0, pct: 0 },
+    trade: { total: 0, contactable: 0, pct: 0 },
+  };
+  for (const c of allScored) {
+    const v = verticalOf(c);
+    coverage_by_vertical[v].total += 1;
+    if (isContactable(c)) coverage_by_vertical[v].contactable += 1;
+  }
+  for (const v of Object.keys(coverage_by_vertical)) {
+    const row = coverage_by_vertical[v];
+    row.pct = row.total ? Math.round((row.contactable / row.total) * 1000) / 10 : 0;
+  }
+
   const finalStats = {
     completed_at: new Date().toISOString(),
     status: "ok",
@@ -2009,7 +2037,11 @@ serve(async (req: Request) => {
     alerts_sent: alertsSent,
     errors: null,
     error_message: null,
-    source_breakdown: { miosha: mioshaCandidates.length, job_boards: jobBoardCandidates.length },
+    source_breakdown: {
+      miosha: mioshaCandidates.length,
+      job_boards: jobBoardCandidates.length,
+      coverage_by_vertical,
+    },
   };
   if (runRowId) {
     await sb.from("hire_alert_runs").update(finalStats).eq("id", runRowId);
