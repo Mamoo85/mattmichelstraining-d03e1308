@@ -107,12 +107,25 @@ const DESIGNS: Record<AudienceType, PostcardDesign> = {
   },
 };
 
-async function buildFrontHTML(design: PostcardDesign, city: string, recipientName: string, campaignId: string): Promise<string> {
-  // Append utm_campaign for attribution
-  const sep = design.qrPath.includes("?") ? "&" : "?";
-  const qrUrl = `https://detroitwebagent.com${design.qrPath}${sep}utm_campaign=${campaignId}&city=${city.toLowerCase().replace(/\s+/g, "-")}`;
+async function buildFrontHTML(design: PostcardDesign, city: string, recipientName: string, campaignId: string, audienceType: AudienceType): Promise<string> {
+  // ONE QR per postcard → multi-offer landing page (/postcard) for clean attribution.
+  const qrUrl = `https://detroitwebagent.com/postcard?audience=${audienceType}&utm_campaign=${campaignId}&city=${city.toLowerCase().replace(/\s+/g, "-")}`;
   const c = design.accentColor;
   const qrDataUri = await qrcode(qrUrl, { size: 260 }) as string;
+
+  // 3 secondary product mentions (everything except their hero offer).
+  // Order: Talent Radar (other vertical), Demand Radar, FieldDesk, Missed Call Catch.
+  const SECONDARY: Record<AudienceType, Array<{ icon: string; label: string }>> = {
+    "healthcare-agency":  [{ icon: "🔧", label: "Talent Radar — Trades" }, { icon: "🛠️", label: "FieldDesk" },     { icon: "📞", label: "Missed Call Catch" }],
+    "nursing-home":       [{ icon: "🔧", label: "Talent Radar — Trades" }, { icon: "🛠️", label: "FieldDesk" },     { icon: "📞", label: "Missed Call Catch" }],
+    "trades-agency":      [{ icon: "🏥", label: "Talent Radar — Healthcare" }, { icon: "🛠️", label: "FieldDesk" }, { icon: "📞", label: "Missed Call Catch" }],
+    "contractor":         [{ icon: "📡", label: "Demand Radar" },          { icon: "🛠️", label: "FieldDesk" },     { icon: "📞", label: "Missed Call Catch" }],
+    "supply-house":       [{ icon: "🔧", label: "Talent Radar — Trades" }, { icon: "🛠️", label: "FieldDesk" },     { icon: "📞", label: "Missed Call Catch" }],
+  };
+  const secondary = SECONDARY[audienceType] || SECONDARY["contractor"];
+  const secondaryHTML = secondary.map(s =>
+    `<div style="display:flex;align-items:center;gap:5px;font-size:7.5px;color:#8b949e;line-height:1.2;"><span style="font-size:9px;">${s.icon}</span><span>${s.label}</span></div>`
+  ).join("");
 
   return `<html><head><meta charset="UTF-8"><style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
@@ -137,12 +150,16 @@ async function buildFrontHTML(design: PostcardDesign, city: string, recipientNam
       </div>
     </div>
   </div>
-  <div style="width:1.9in;background:#161b22;border-left:3px solid ${c};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0.35in 0.2in;gap:12px;">
-    <img src="${DWA_BADGE}" style="width:55px;height:55px;border-radius:50%;border:1.5px solid #30363d;" alt="DWA">
+  <div style="width:1.9in;background:#161b22;border-left:3px solid ${c};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0.3in 0.18in;gap:8px;">
+    <img src="${DWA_BADGE}" style="width:48px;height:48px;border-radius:50%;border:1.5px solid #30363d;" alt="DWA">
     <div style="font-size:8px;color:#8b949e;text-align:center;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Scan to claim</div>
-    <img src="${qrDataUri}" width="130" height="130" style="border-radius:8px;border:2px solid #30363d;" alt="QR">
-    <div style="font-size:10px;color:${c};font-weight:800;text-align:center;">${design.offer.includes("MONTH") ? "FREE MONTH" : "FREE 10 NAMES"}</div>
-    <div style="font-size:7px;color:#484f58;text-align:center;">detroitwebagent.com</div>
+    <img src="${qrDataUri}" width="118" height="118" style="border-radius:8px;border:2px solid #30363d;" alt="QR">
+    <div style="font-size:9.5px;color:${c};font-weight:800;text-align:center;line-height:1.1;">${design.offer.includes("MONTH") ? "FREE MONTH" : "FREE 10 NAMES"}</div>
+    <div style="width:100%;border-top:1px dashed #30363d;padding-top:6px;display:flex;flex-direction:column;gap:3px;">
+      <div style="font-size:6.5px;color:#484f58;text-transform:uppercase;letter-spacing:0.8px;text-align:center;font-weight:700;margin-bottom:2px;">+ 3 More Free Tools</div>
+      ${secondaryHTML}
+    </div>
+    <div style="font-size:6.5px;color:#484f58;text-align:center;">detroitwebagent.com</div>
   </div>
 </div>
 </body></html>`;
@@ -288,7 +305,7 @@ serve(async (req) => {
       };
 
       try {
-        const frontHTML = await buildFrontHTML(design, prospect.city || city, prospect.business_name || "", campaign_id);
+        const frontHTML = await buildFrontHTML(design, prospect.city || city, prospect.business_name || "", campaign_id, audienceType);
         const backHTML = buildBackHTML(prospect.city || city);
 
         const lobRes = await fetch("https://api.lob.com/v1/postcards", {
