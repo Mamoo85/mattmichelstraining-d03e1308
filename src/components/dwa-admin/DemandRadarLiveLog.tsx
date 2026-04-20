@@ -108,6 +108,23 @@ export default function DemandRadarLiveLog() {
         </Button>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {[
+          { fn: "accela-permit-scanner", label: "▶ Run Accela Permits" },
+          { fn: "industry-pulse-scanner", label: "▶ Run Industry Pulse" },
+          { fn: "hire-alert-scanner", label: "▶ Run Talent Radar" },
+        ].map(({ fn, label }) => (
+          <button
+            key={fn}
+            onClick={() => runScanner(fn)}
+            disabled={running === fn}
+            className="px-3 py-1.5 text-xs font-bold bg-[#00d4ff]/10 text-[#00d4ff] border border-[#00d4ff]/30 rounded hover:bg-[#00d4ff]/20 disabled:opacity-50"
+          >
+            {running === fn ? "Running…" : label}
+          </button>
+        ))}
+      </div>
+
       {rows.length === 0 && !loading && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-200">
           ⚠️ No demand radar runs logged yet. Scanners need to be wired to insert into <code className="bg-black/30 px-1 rounded">demand_radar_runs</code>.
