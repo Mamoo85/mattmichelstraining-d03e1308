@@ -87,7 +87,7 @@ export default function DemandThroughputKPIs() {
   const avgPerDay = stats.last_7d / 7;
   const sellRate = stats.last_30d > 0 ? stats.last_30d / 30 : avgPerDay;
   const daysOfInventory = sellRate > 0 ? stats.sellable_now / sellRate : 0;
-  const a la carteRev = stats.sellable_now * PRICE_PER_SIGNAL;
+  const aLaCarteRev = stats.sellable_now * PRICE_PER_SIGNAL;
   const monthlyRunRate = avgPerDay * 30;
   const subscriptionRev = Math.floor(monthlyRunRate / 20) * PRICE_PER_SUBSCRIPTION; // ~20 signals/client capacity
 
