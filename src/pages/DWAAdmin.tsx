@@ -35,6 +35,9 @@ const AdminPostcardCampaigns = lazy(() => import("@/components/admin/AdminPostca
 const AdminFaxCampaigns = lazy(() => import("@/components/admin/AdminFaxCampaigns"));
 const AdminCampaignTargeting = lazy(() => import("@/components/admin/AdminCampaignTargeting"));
 const AdminTheWire = lazy(() => import("@/components/admin/AdminTheWire"));
+const AdminMedicareIntel = lazy(() => import("@/components/admin/AdminMedicareIntel"));
+const AdminIndustrialIntel = lazy(() => import("@/components/admin/AdminIndustrialIntel"));
+const AdminTechAlertProspects = lazy(() => import("@/components/dwa-admin/AdminTechAlertProspects"));
 
 type Tab =
   | "dwa-overview" | "revenue" | "agent-toolkit"
@@ -44,7 +47,8 @@ type Tab =
   | "simulation" | "resilience" | "cron-sentinel" | "compliance"
   | "field-stats" | "clients" | "jobs" | "assets" | "contracts" | "import"
   | "command" | "playbook" | "strategy" | "labs" | "sales-guide"
-  | "agency-outreach" | "demand-radar" | "supplier-outreach" | "hvb";
+  | "agency-outreach" | "demand-radar" | "supplier-outreach" | "hvb"
+  | "medicare-intel" | "industrial-intel" | "techalert-prospects";
 
 const GROUPS: SidebarGroup[] = [
   {
@@ -61,6 +65,14 @@ const GROUPS: SidebarGroup[] = [
       { id: "techalert",     label: "🎯 Talent Radar" },
       { id: "demand-radar",  label: "📈 Demand Radar" },
       { id: "hvb",           label: "📦 High-Volume Buyers" },
+    ],
+  },
+  {
+    label: "Market Intel",
+    items: [
+      { id: "medicare-intel",     label: "🏥 Medicare Intel" },
+      { id: "industrial-intel",   label: "🏭 Industrial Intel" },
+      { id: "techalert-prospects",label: "🎯 TechAlert Prospects" },
     ],
   },
   {
@@ -159,6 +171,9 @@ export default function DWAAdmin() {
           {activeTab === "agency-outreach"  && <Suspense fallback={lazyFallback("agency outreach")}><AdminAgencyOutreach /></Suspense>}
           {activeTab === "demand-radar"     && <Suspense fallback={lazyFallback("Demand Radar Hub")}><DemandRadarHub /></Suspense>}
           {activeTab === "supplier-outreach"&& <Suspense fallback={lazyFallback("supplier outreach")}><SupplierOutreachGenerator /></Suspense>}
+          {activeTab === "medicare-intel"   && <Suspense fallback={lazyFallback("Medicare intel")}><AdminMedicareIntel /></Suspense>}
+          {activeTab === "industrial-intel" && <Suspense fallback={lazyFallback("industrial intel")}><AdminIndustrialIntel /></Suspense>}
+          {activeTab === "techalert-prospects" && <Suspense fallback={lazyFallback("TechAlert prospects")}><AdminTechAlertProspects /></Suspense>}
 
           {activeTab === "field-stats" && (
             <div className="space-y-6">
