@@ -10815,6 +10815,57 @@ export type Database = {
         }
         Relationships: []
       }
+      raw_signals_dump: {
+        Row: {
+          ai_cost_usd: number | null
+          duration_ms: number | null
+          enriched_count: number | null
+          fetched_at: string
+          final_inserted: number | null
+          id: string
+          kept_after_gate: number | null
+          notes: string | null
+          pulled_count: number | null
+          raw_payload: Json
+          scanner: string
+          source: string
+          source_url: string | null
+          vertical: string | null
+        }
+        Insert: {
+          ai_cost_usd?: number | null
+          duration_ms?: number | null
+          enriched_count?: number | null
+          fetched_at?: string
+          final_inserted?: number | null
+          id?: string
+          kept_after_gate?: number | null
+          notes?: string | null
+          pulled_count?: number | null
+          raw_payload?: Json
+          scanner: string
+          source: string
+          source_url?: string | null
+          vertical?: string | null
+        }
+        Update: {
+          ai_cost_usd?: number | null
+          duration_ms?: number | null
+          enriched_count?: number | null
+          fetched_at?: string
+          final_inserted?: number | null
+          id?: string
+          kept_after_gate?: number | null
+          notes?: string | null
+          pulled_count?: number | null
+          raw_payload?: Json
+          scanner?: string
+          source?: string
+          source_url?: string | null
+          vertical?: string | null
+        }
+        Relationships: []
+      }
       re_newsletter_clients: {
         Row: {
           active: boolean | null

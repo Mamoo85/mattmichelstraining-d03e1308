@@ -2047,6 +2047,22 @@ serve(async (req: Request) => {
     metadata: { candidates_found: allRaw.length, new_candidates: newCandidates.length, hot_candidates: allHotCandidates.length, alerts_sent: alertsSent, enriched_inline: enrichedCount, ghost_leads_filtered: ghostLeadsFiltered, npi_hits: npiHits, pdl_hits: pdlHits },
   }, { onConflict: "agent_name" });
 
+  // Phase 20: waterfall drop-off snapshot for replay + diagnostics
+  try {
+    await sb.from("raw_signals_dump").insert({
+      scanner: "hire-alert-scanner",
+      source: "all",
+      vertical: (typeof body === "object" && body && (body as any).vertical_filter) || "mixed",
+      raw_payload: { source_health: sourceHealth, sample: allRaw.slice(0, 25) },
+      pulled_count: allRaw.length,
+      kept_after_gate: deduped.length,
+      enriched_count: enrichedCount,
+      final_inserted: newCandidates.length,
+      duration_ms: Date.now() - new Date(runStart).getTime(),
+      notes: `hot=${allHotCandidates.length} alerts=${alertsSent} ghost_filtered=${ghostLeadsFiltered}`,
+    });
+  } catch (e) { console.warn("[hire-alert-scanner] raw dump failed:", e instanceof Error ? e.message : String(e)); }
+
   return new Response(
     JSON.stringify({
       candidates_found: allRaw.length,

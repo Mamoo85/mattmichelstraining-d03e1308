@@ -640,6 +640,21 @@ serve(withRunLog("industry-pulse-scanner", async (req) => {
 
     console.log(`[industry-pulse] Complete: ${signals.length} signals, ${highConf.length} high-confidence`);
 
+    // Phase 20: waterfall drop-off snapshot
+    try {
+      await sb.from("raw_signals_dump").insert({
+        scanner: "industry-pulse-scanner",
+        source: "mixed",
+        vertical: "commercial",
+        raw_payload: { sample: signals.slice(0, 25) },
+        pulled_count: signals.length,
+        kept_after_gate: signals.length,
+        enriched_count: signals.filter((s: any) => s.predicted_needs?.length).length,
+        final_inserted: highConf.length,
+        notes: `cross_ref=${signals.filter((s: any) => s.cross_referenced).length}`,
+      });
+    } catch (e) { console.warn("[industry-pulse-scanner] raw dump failed:", e); }
+
     return new Response(JSON.stringify({
       success: true,
       signals_found: signals.length,
