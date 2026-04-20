@@ -63,9 +63,9 @@ export default function AdminAgencyOutreach() {
       const finalList = [...cherryPicked, ...restMatches].slice(0, 3);
 
       const matchingCands = finalList.map(c => ({
-        name: c.name,
-        licensed_role: c.role,
-        county: c.county,
+        name: c.full_name || c.name,
+        licensed_role: c.current_title || c.trade,
+        county: c.city || c.metro,
         signal_strength: c.score >= 8 ? "exceptional" : c.score >= 6 ? "strong" : "moderate",
       }));
 
