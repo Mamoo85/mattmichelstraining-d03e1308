@@ -223,6 +223,6 @@ serve(async (req) => {
 
   return new Response(JSON.stringify({ ok: true, probes, stateChanges, lowCreditWarnings }), {
     status: 200,
-    headers: { "Content-Type": "application/json" },
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
