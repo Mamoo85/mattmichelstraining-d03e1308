@@ -213,7 +213,7 @@ detroitwebagent.com`;
         <div>
           <h2 className="text-white/40 text-xs uppercase tracking-wide mb-1">Medicare Care Compare</h2>
           <p className="text-white/60 text-sm">
-            Nursing homes with 1-2 Star Staffing Ratings in Metro Detroit — prime TechAlert prospects.
+            Nursing homes with 1-2 Star Staffing Ratings — prime TechAlert prospects.
           </p>
           <p className="text-white/30 text-xs mt-1 flex items-center gap-1">
             <Info className="w-3 h-3" /> Facilities stay on your list until you remove them.
@@ -227,6 +227,59 @@ detroitwebagent.com`;
           {loading ? "Scanning CMS..." : total > 0 ? "Refresh Data" : "Scan Medicare API"}
         </button>
       </div>
+
+      {/* Market selectors — state + metro */}
+      <div className="bg-[#0f1f35] border border-white/10 rounded-lg p-3 flex flex-wrap items-end gap-3">
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] text-white/40 uppercase tracking-wide">State</label>
+          <select
+            value={stateCode}
+            onChange={(e) => handleStateChange(e.target.value)}
+            className="bg-[#0a1628] border border-white/10 text-white text-sm rounded px-2 py-1.5 min-w-[80px]"
+          >
+            {STATE_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] text-white/40 uppercase tracking-wide">Metro</label>
+          <select
+            value={metroId}
+            onChange={(e) => setMetroId(e.target.value)}
+            className="bg-[#0a1628] border border-white/10 text-white text-sm rounded px-2 py-1.5 min-w-[200px]"
+          >
+            <option value="">Statewide (all metros)</option>
+            {(STATE_METROS[stateCode] || []).map(m => (
+              <option key={m.id} value={m.id}>{m.label}</option>
+            ))}
+          </select>
+        </div>
+        {marketLabel && (
+          <p className="text-white/40 text-xs ml-auto">
+            Showing <strong className="text-white/70">{visibleFacilities.length}</strong> of {total} — {marketLabel}
+            {!metroId && total >= 500 && <span className="block text-amber-400/70 text-[10px]">Capped at 500 — pick a metro for more.</span>}
+          </p>
+        )}
+      </div>
+
+      {/* Search + filter row */}
+      {facilities.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="w-3.5 h-3.5 text-white/30 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Filter by facility or city…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-[#0a1628] border border-white/10 text-white text-sm rounded pl-8 pr-3 py-1.5"
+            />
+          </div>
+          <label className="flex items-center gap-2 text-xs text-white/60 cursor-pointer">
+            <input type="checkbox" checked={onlyOneStar} onChange={(e) => setOnlyOneStar(e.target.checked)} />
+            1-star only
+          </label>
+        </div>
+      )}
 
       {total > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
