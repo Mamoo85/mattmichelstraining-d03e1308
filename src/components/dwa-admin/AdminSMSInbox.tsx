@@ -543,17 +543,27 @@ export default function AdminSMSInbox() {
                   className="w-full bg-[#0a1628] border border-white/10 rounded p-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#00d4ff]"
                   disabled={sending}
                 />
-                <div className="flex items-center justify-between mt-2 gap-2">
+                <div className="flex items-center justify-between mt-2 gap-2 flex-wrap">
                   <span className="text-[11px] text-white/40 truncate">
                     From (313) 992-1219 · {draft.length}/1500
                   </span>
-                  <button
-                    onClick={handleSend}
-                    disabled={sending || !draft.trim() || !composeValid}
-                    className="px-4 py-1.5 rounded font-bold text-sm bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/90 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-                  >
-                    {sending ? "Sending…" : "Send →"}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleAIDraft}
+                      disabled={drafting || !composeValid}
+                      className="px-3 py-1.5 rounded font-semibold text-xs bg-white/5 hover:bg-white/10 text-white border border-white/10 disabled:opacity-40 shrink-0"
+                      title="Generate an AI-suggested reply"
+                    >
+                      {drafting ? "Drafting…" : "🤖 Draft"}
+                    </button>
+                    <button
+                      onClick={handleSend}
+                      disabled={sending || !draft.trim() || !composeValid}
+                      className="px-4 py-1.5 rounded font-bold text-sm bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/90 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                    >
+                      {sending ? "Sending…" : "Send →"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </>
@@ -622,6 +632,36 @@ export default function AdminSMSInbox() {
                 })}
               </div>
 
+              {/* Onboarding cheatsheet — only visible when contact is unknown (likely new prospect) */}
+              {isUnknownContact && (
+                <div className="border-t border-white/10 bg-white/[0.02]">
+                  <button
+                    onClick={() => setShowCheatsheet((s) => !s)}
+                    className="w-full px-3 py-2 text-left text-xs font-semibold text-[#00d4ff] hover:bg-white/[0.03] flex items-center justify-between"
+                  >
+                    <span>📋 Onboarding cheatsheet — tap an answer to load it</span>
+                    <span className="text-white/40">{showCheatsheet ? "▾" : "▸"}</span>
+                  </button>
+                  {showCheatsheet && (
+                    <div className="px-3 pb-3 space-y-1.5 max-h-56 overflow-y-auto">
+                      {ONBOARDING_FAQ.map((item) => (
+                        <button
+                          key={item.q}
+                          onClick={() => {
+                            setDraft(item.a);
+                            toast.success("Loaded — edit before sending");
+                          }}
+                          className="w-full text-left p-2 rounded bg-white/[0.03] hover:bg-white/[0.08] border border-white/5"
+                        >
+                          <div className="text-[11px] font-semibold text-white/80">{item.q}</div>
+                          <div className="text-[11px] text-white/50 mt-0.5 line-clamp-2">{item.a}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="border-t border-white/10 p-3">
                 <textarea
                   value={draft}
@@ -637,17 +677,27 @@ export default function AdminSMSInbox() {
                   className="w-full bg-[#0a1628] border border-white/10 rounded p-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#00d4ff]"
                   disabled={sending}
                 />
-                <div className="flex items-center justify-between mt-2 gap-2">
+                <div className="flex items-center justify-between mt-2 gap-2 flex-wrap">
                   <span className="text-[11px] text-white/40 truncate">
                     From (313) 992-1219 · {draft.length}/1500
                   </span>
-                  <button
-                    onClick={handleSend}
-                    disabled={sending || !draft.trim()}
-                    className="px-4 py-1.5 rounded font-bold text-sm bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/90 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-                  >
-                    {sending ? "Sending…" : "Send →"}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleAIDraft}
+                      disabled={drafting}
+                      className="px-3 py-1.5 rounded font-semibold text-xs bg-white/5 hover:bg-white/10 text-white border border-white/10 disabled:opacity-40 shrink-0"
+                      title="Generate an AI-suggested reply"
+                    >
+                      {drafting ? "Drafting…" : "🤖 Draft"}
+                    </button>
+                    <button
+                      onClick={handleSend}
+                      disabled={sending || !draft.trim()}
+                      className="px-4 py-1.5 rounded font-bold text-sm bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/90 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                    >
+                      {sending ? "Sending…" : "Send →"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </>
