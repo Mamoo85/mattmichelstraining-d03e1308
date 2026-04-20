@@ -36,6 +36,19 @@ export default function DemandRadarLiveLog() {
   const [windowSel, setWindowSel] = useState<Window>("24h");
   const [statusFilter, setStatusFilter] = useState<"all" | "ok" | "empty" | "error">("all");
   const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [running, setRunning] = useState<string | null>(null);
+
+  const runScanner = async (fn: string) => {
+    setRunning(fn);
+    try {
+      const { data, error } = await supabase.functions.invoke(fn, { body: { trigger: "manual" } });
+      if (error) alert(`${fn} error: ${error.message}`);
+      else alert(`${fn} done: ${JSON.stringify(data).slice(0, 300)}`);
+      await load();
+    } finally {
+      setRunning(null);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
