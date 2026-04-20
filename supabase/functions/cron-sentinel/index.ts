@@ -254,6 +254,25 @@ serve(async (req) => {
     await emailDigest(failures, results.length);
   }
 
+  // Fix 4: Dead-pipe check — 3 consecutive zero-candidate scanner runs = catastrophic failure
+  try {
+    const { data: recentRuns } = await sb
+      .from('hire_alert_runs')
+      .select('candidates_found, started_at')
+      .order('started_at', { ascending: false })
+      .limit(3);
+    const allZero = (recentRuns?.length ?? 0) >= 3 && recentRuns!.every((r: any) => (r.candidates_found ?? 0) === 0);
+    if (allZero) {
+      await sendSMS(
+        ADMIN_PHONE, TWILIO_FROM,
+        '🚨 TechAlert DEAD PIPE: Last 3 scanner runs all returned 0 candidates. Immediate action required.',
+        'cron_sentinel_zero_pipe'
+      ).catch(() => {});
+    }
+  } catch (e) {
+    console.warn('[cron-sentinel] dead-pipe check failed:', e instanceof Error ? e.message : String(e));
+  }
+
   // Self-heartbeat
   try {
     await sb.from("agent_heartbeats").upsert({
