@@ -1,46 +1,80 @@
 
 
-## Why cherry-pick shows "No matching candidates" despite 184 candidates in DB
+## Plan: Fix False Alerts + AI-Suggested Replies + Onboard First Contractor
 
-**Root cause — silent column mismatch in `AdminAgencyOutreach.tsx`:**
+### Part 1 — Kill the false "DEAD PIPE" + "Enrichment RED" alerts
 
-The component selects `id, name, role, county, score, created_at` from `hire_alert_candidates`, but the actual columns are `trade` and `city` (plus `metro`). Postgres returns `role: undefined` and `county: undefined` for all 184 rows. Then `matchingCandidatesFor()` runs a regex against `(c.role || "").toLowerCase()` — always empty string — so EVERY candidate is filtered out. Result: the cherry-pick panel shows "No matching candidates in last 7 days. Run scanner first." which is a lie. The DB has 13 healthcare + 152 industrial candidates ready right now.
+**Root cause #1 — Wrong column in cron-sentinel dead-pipe check (`cron-sentinel/index.ts` line 267):**
+The query orders by `started_at` but the `hire_alert_runs` table uses `run_at`. Because `started_at` doesn't exist (or is always NULL), the query may return rows in random order, which is why you got "DEAD PIPE" while the scanner actually found 35 candidates at 04:36 UTC today.
 
-The cherry-pick UI itself, the `agency-outreach-draft` Opus function, and the draft pipeline are all wired correctly. Only the data fetch + matcher is wrong.
+Fix: change `.order('started_at', ...)` → `.order('run_at', ...)`. Also add a sanity guard: only fire if the most recent run is < 6 hours old (otherwise the scanner is just paused, not dead) and require all 3 runs to be from the same `source` (the table mixes `source='miosha'` and `source='all'` rows — currently the check averages across both, which is why you see false zeros).
 
----
+**Root cause #2 — Stale heartbeat threshold too aggressive (`enrichment-health-check/index.ts` line 107):**
+Right now ANY heartbeat older than 360 min (6 hrs) = RED + SMS. The `candidate-deep-enrich` agent only runs when there's something in the queue — if the queue is empty, the heartbeat goes stale even though everything is healthy.
 
-## Fix (small, focused, 1 file + verification)
+Fix:
+- Bump threshold from 360 min → 1440 min (24h)
+- Only fire if there are ALSO `stuck_pending` candidates (i.e., real backlog, not just an idle agent)
+- Add the same 24-hour cooldown we just added to `llm-cache-monitor` (currently only 4-hour cooldown, which is why you got it twice today)
 
-### A. Repoint the data layer to the real columns
-**`src/components/dwa-admin/AdminAgencyOutreach.tsx`**
-1. Change select to: `id, name, full_name, trade, city, metro, score, current_title, qualifications_summary, created_at`
-2. Filter out company-name rows + do_not_contact rows: add `.eq("is_company_name", false).eq("do_not_contact", false)`
-3. Rewrite `matchingCandidatesFor()` to use the real `trade` enum (boiler/hvac/electrical/plumbing/nursing/home_health/other_trade) instead of regex on `role`:
-   - `healthcare` → `trade in ('nursing','home_health')` OR title regex match (RN/CNA/LPN/etc.)
-   - `industrial` → `trade in ('boiler','hvac','electrical','plumbing','other_trade')` OR title regex
-4. Update the cherry-pick row display to show `c.full_name || c.name`, `c.current_title || c.trade`, `c.city || c.metro`
-5. Pass `licensed_role` = `current_title || trade` and `county` = `city || metro` into the draft payload (so the Opus prompt actually has something specific to lead with)
+### Part 2 — AI-suggested replies in the SMS Inbox (you stay in control)
 
-### B. Verify end-to-end after the fix
-1. Open `/dwa-admin` → "🎯 Agency Outreach" tab
-2. Confirm the badge says ~"184 candidates available for matching" (was 0 before)
-3. Click **Cherry-Pick** on Maxim Healthcare Staffing → confirm the picker now shows the 13 healthcare candidates with tier badges
-4. Pick the highest-scoring one → click **Draft with Opus**
-5. Confirm draft returns ~110-140 words, leads with the picked candidate's role + city, no banned terms (LARA/MIOSHA/scraping/AI)
-6. Repeat on Aerotek (industrial) — should now see 152 industrial candidates instead of "0"
-7. Check `ai_action_queue` for the audit row written by the edge function
+Build a **two-track approval system** so you can either review on the website OR by text:
 
-### C. What I'm NOT changing
-- `agency-outreach-draft` edge function — already works
-- `_shared/opus.ts` — already works
-- `_shared/sanitize-candidate.ts` scrubbing — already works
-- Cherry-pick UI/state/picker — already works
-- The DB schema — no migration needed
+**Track A — Inline in `/dwa-admin` SMS Inbox (`AdminSMSInbox.tsx`):**
+- Add a **"🤖 Draft reply"** button next to the message input on every inbound thread
+- Click → calls a new edge function `draft-sms-reply` that:
+  - Pulls the full thread context (last 10 msgs)
+  - Pulls product context (contractor lead pricing, FAQ, your tone)
+  - Returns a 1–2 sentence draft via Lovable AI Gateway (`google/gemini-2.5-flash`)
+- Draft auto-fills the textarea — you can **edit freely** before hitting Send
+- Three quick-action buttons under the draft: **✏️ Edit** (default — already in textarea), **✅ Send as-is**, **🔄 Regenerate**
+
+**Track B — Text-to-approve flow (when you're driving / not at desk):**
+- New edge function `auto-draft-on-inbound` runs whenever a new inbound SMS hits `system_comms_log`
+- It generates a draft AND texts you a preview from the work line:
+  > `📩 [contractor name]: "their message..."\n\n💡 Suggested reply:\n[draft]\n\nReply A to send, E to edit, or just type your own reply`
+- New routing in `inbound-sms-relay`:
+  - You text **"A"** → sends the suggested draft as-is to the contractor, marks resolved
+  - You text **"E [your version]"** → sends your edit
+  - Anything else → treated as your custom reply (existing behavior, unchanged)
+- One safety rule: **never auto-send without your explicit "A"** — TCPA + brand control
+
+### Part 3 — Onboarding playbook for the +17346207178 contractor
+
+This contractor is asking real qualifying questions ("how does it work? how much?"). Here's a clean reply you can send right now from the SMS Inbox (already prefilled by the new AI feature once shipped):
+
+> Here's the short version:
+>
+> 1. You pick your trade + city. I lock that territory to you (one contractor per trade per city — no shared leads).
+> 2. When a homeowner in your area requests a quote on detroitwebagent.com, you get an instant SMS with their name, number, and job details.
+> 3. $399/mo flat — no per-lead fees, no contracts. Cancel anytime.
+> 4. You can claim multiple cities — each city is a separate territory at $399/mo.
+>
+> Want me to send the signup link for your trade + city? Or jump on a 5-min call: (313) 992-1219.
+
+I'll also add a **📋 Onboarding Cheatsheet** panel inside the SMS Inbox (collapsible header, only shows when an unidentified phone is selected) with:
+- Pre-written answers to the top 8 questions ("How are leads generated?", "What if a lead is bad?", "Cancellation?", "Multiple territories?", "Exclusivity proof?", "Average leads/month?", "Refund policy?", "How do I get notified?")
+- Each answer has a **📋 Copy** button → drops it into the reply box, ready for you to personalize and send
+
+### Files to change
+
+| File | Change |
+|---|---|
+| `supabase/functions/cron-sentinel/index.ts` | Fix dead-pipe column + 6h freshness guard + same-source check |
+| `supabase/functions/enrichment-health-check/index.ts` | Heartbeat threshold 360→1440 min, require stuck_pending > 0, cooldown 4h→24h |
+| `supabase/functions/draft-sms-reply/index.ts` | NEW — generates AI draft from thread + product context |
+| `supabase/functions/auto-draft-on-inbound/index.ts` | NEW — DB trigger or cron polling new inbound rows, texts you the preview |
+| `supabase/functions/inbound-sms-relay/index.ts` | Route "A" / "E ..." commands to send the cached draft |
+| `src/components/dwa-admin/AdminSMSInbox.tsx` | Add 🤖 Draft button, regenerate flow, onboarding cheatsheet panel |
+| Migration | New table `sms_reply_drafts` (phone, draft_body, created_at, status) for the text-to-approve cache |
 
 ### Risk
-Low. Single component change, no schema, no edge-function redeploy, no migration. Worst case: the regex on `current_title` is too narrow and we fall back to the `trade` enum match (which will still surface all 13 healthcare and 152 industrial candidates).
+Low. AI drafts never auto-send. False-alert fixes are pure threshold/column changes — the underlying scanners keep running.
 
-### What you'll see in preview after the fix
-The "No matching candidates" empty state from your screenshot will become a list of real candidates with names, titles, cities, and tier badges. Cherry-pick the strongest one → Opus drafts an email leading with that specific person → copy → paste in your inbox → send.
+### What you'll see after the fix
+- No more "Enrichment RED 706min stale" or "TechAlert DEAD PIPE" texts unless something is actually broken
+- Cap of 1 LLM cache + 1 enrichment alert per 24 hours
+- Every inbound SMS triggers a draft preview text within 60 seconds — you reply "A" to fire it, or "E [your edit]" to send a tweaked version
+- In `/dwa-admin` → SMS Inbox: a 🤖 Draft Reply button + an Onboarding FAQ panel with 8 copy-paste answers ready for the +17346207178 contractor
 
