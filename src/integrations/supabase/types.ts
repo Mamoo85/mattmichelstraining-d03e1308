@@ -206,6 +206,104 @@ export type Database = {
         }
         Relationships: []
       }
+      ad_launch_drafts: {
+        Row: {
+          business_name: string
+          city: string
+          contractor_id: string | null
+          created_at: string
+          google_descriptions: string[] | null
+          google_headlines: string[] | null
+          google_keywords: string[] | null
+          google_status: string | null
+          id: string
+          landing_url: string | null
+          meta_campaign_id: string | null
+          meta_daily_budget_cents: number | null
+          meta_description: string | null
+          meta_headline: string | null
+          meta_image_prompt: string | null
+          meta_image_url: string | null
+          meta_launch_error: string | null
+          meta_launched_at: string | null
+          meta_primary_text: string | null
+          meta_status: string | null
+          meta_targeting: Json | null
+          notes: string | null
+          reviewed_at: string | null
+          state: string | null
+          status: string
+          trade: string
+          utm_params: string | null
+        }
+        Insert: {
+          business_name: string
+          city: string
+          contractor_id?: string | null
+          created_at?: string
+          google_descriptions?: string[] | null
+          google_headlines?: string[] | null
+          google_keywords?: string[] | null
+          google_status?: string | null
+          id?: string
+          landing_url?: string | null
+          meta_campaign_id?: string | null
+          meta_daily_budget_cents?: number | null
+          meta_description?: string | null
+          meta_headline?: string | null
+          meta_image_prompt?: string | null
+          meta_image_url?: string | null
+          meta_launch_error?: string | null
+          meta_launched_at?: string | null
+          meta_primary_text?: string | null
+          meta_status?: string | null
+          meta_targeting?: Json | null
+          notes?: string | null
+          reviewed_at?: string | null
+          state?: string | null
+          status?: string
+          trade: string
+          utm_params?: string | null
+        }
+        Update: {
+          business_name?: string
+          city?: string
+          contractor_id?: string | null
+          created_at?: string
+          google_descriptions?: string[] | null
+          google_headlines?: string[] | null
+          google_keywords?: string[] | null
+          google_status?: string | null
+          id?: string
+          landing_url?: string | null
+          meta_campaign_id?: string | null
+          meta_daily_budget_cents?: number | null
+          meta_description?: string | null
+          meta_headline?: string | null
+          meta_image_prompt?: string | null
+          meta_image_url?: string | null
+          meta_launch_error?: string | null
+          meta_launched_at?: string | null
+          meta_primary_text?: string | null
+          meta_status?: string | null
+          meta_targeting?: Json | null
+          notes?: string | null
+          reviewed_at?: string | null
+          state?: string | null
+          status?: string
+          trade?: string
+          utm_params?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_launch_drafts_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ad_spend_allocation: {
         Row: {
           created_at: string

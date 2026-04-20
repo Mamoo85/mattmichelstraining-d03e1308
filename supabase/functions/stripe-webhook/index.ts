@@ -3256,6 +3256,18 @@ serve(async (req) => {
                 `💰 New contractor client — ${meta.business_name || customerEmail}`,
                 `<p><strong>${meta.business_name}</strong> — ${customerEmail}<br>Trade: ${meta.trade} | City: ${meta.city}, ${meta.state || "MI"}<br>Subscription: ${session.subscription || "n/a"}</p>`,
               ),
+              // Auto-draft ad campaign for one-click launch
+              fetch(`${SUPABASE_URL}/functions/v1/draft-ad-campaign`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+                body: JSON.stringify({
+                  contractor_id: meta.contractor_id,
+                  business_name: meta.business_name || customerEmail,
+                  trade: meta.trade || "service",
+                  city: meta.city || "Detroit",
+                  state: meta.state || "MI",
+                }),
+              }).catch((e) => console.error("[WEBHOOK] draft-ad-campaign failed:", e)),
             ]);
           }
           return new Response(JSON.stringify({ received: true }), { status: 200 });

@@ -42,6 +42,7 @@ const AdminLaraHealth = lazy(() => import("@/components/admin/AdminLaraHealth"))
 const AdminGrowthSignals = lazy(() => import("@/components/admin/AdminGrowthSignals"));
 const AdminTrojanHorseLog = lazy(() => import("@/components/admin/AdminTrojanHorseLog"));
 const AdminSMSInbox = lazy(() => import("@/components/dwa-admin/AdminSMSInbox"));
+const AdminAdLauncher = lazy(() => import("@/components/dwa-admin/AdminAdLauncher"));
 
 const AdminCoverageMap = lazy(() => import("@/components/admin/AdminCoverageMap"));
 const AdminCRMDashboard = lazy(() => import("@/components/admin/AdminCRMDashboard"));
@@ -57,7 +58,7 @@ type Tab =
   | "agency-outreach" | "demand-radar" | "supplier-outreach" | "hvb"
   | "medicare-intel" | "industrial-intel" | "techalert-prospects"
   | "lara-health" | "growth-signals" | "trojan-log" | "coverage-map" | "crm-dashboard"
-  | "sms-inbox";
+  | "sms-inbox" | "ad-launcher";
 
 const GROUPS: SidebarGroup[] = [
   {
@@ -100,6 +101,7 @@ const GROUPS: SidebarGroup[] = [
     label: "Outreach",
     items: [
       { id: "sms-inbox",        label: "💬 SMS Inbox" },
+      { id: "ad-launcher",      label: "🚀 Ad Launcher" },
       { id: "postcards",        label: "📬 Postcards" },
       { id: "faxes",            label: "📠 Fax Campaigns" },
       { id: "targeting",        label: "🎯 Targeting" },
@@ -193,6 +195,7 @@ export default function DWAAdmin() {
           {activeTab === "growth-signals"   && <Suspense fallback={lazyFallback("growth signals")}><AdminGrowthSignals /></Suspense>}
           {activeTab === "trojan-log"       && <Suspense fallback={lazyFallback("trojan horse log")}><AdminTrojanHorseLog /></Suspense>}
           {activeTab === "sms-inbox"        && <Suspense fallback={lazyFallback("SMS inbox")}><AdminSMSInbox /></Suspense>}
+          {activeTab === "ad-launcher"      && <Suspense fallback={lazyFallback("Ad Launcher")}><AdminAdLauncher /></Suspense>}
           
           {activeTab === "coverage-map"     && <Suspense fallback={lazyFallback("coverage map")}><AdminCoverageMap /></Suspense>}
           {activeTab === "crm-dashboard"    && <Suspense fallback={lazyFallback("CRM dashboard")}><AdminCRMDashboard /></Suspense>}
