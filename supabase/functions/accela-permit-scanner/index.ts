@@ -170,20 +170,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  const token = await getAccelaToken();
-  if (!token) {
-    await logRun(supabase, {
-      source: "accela-permit-scanner",
-      signals_found: 0,
-      signals_new: 0,
-      status: "error",
-      errors: "OAuth token request failed",
-      duration_ms: Date.now() - startedAt,
-    });
-    return new Response(JSON.stringify({ error: "Accela auth failed" }), {
-      status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  // Token is fetched per-agency below (Accela requires agency_name on token request).
 
   const sinceISO = new Date(Date.now() - 7 * 24 * 3600_000).toISOString();
   let totalFound = 0;
