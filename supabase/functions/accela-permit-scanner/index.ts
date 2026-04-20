@@ -51,8 +51,14 @@ interface RunMetrics {
   duration_ms: number;
 }
 
-async function getAccelaToken(): Promise<string | null> {
+// Accela's app-level (client_credentials) OAuth requires an agency_name.
+// We try each agency in TARGET_AGENCIES until one succeeds; cache per-agency tokens.
+const tokenCache = new Map<string, { token: string; exp: number }>();
+
+async function getAccelaToken(agency: string): Promise<string | null> {
   if (!ACCELA_APP_ID || !ACCELA_APP_SECRET) return null;
+  const cached = tokenCache.get(agency);
+  if (cached && cached.exp > Date.now()) return cached.token;
   try {
     const res = await fetch(`${ACCELA_BASE}/oauth2/token`, {
       method: "POST",
@@ -62,16 +68,21 @@ async function getAccelaToken(): Promise<string | null> {
         client_id: ACCELA_APP_ID,
         client_secret: ACCELA_APP_SECRET,
         scope: "search_records get_record",
+        agency_name: agency,
+        environment: "PROD",
       }),
     });
     if (!res.ok) {
-      console.error("Accela token error:", res.status, await res.text());
+      console.error(`Accela token error [${agency}]:`, res.status, await res.text());
       return null;
     }
     const json = await res.json();
-    return json.access_token || null;
+    if (!json.access_token) return null;
+    const ttl = (json.expires_in || 3600) * 1000 - 60_000;
+    tokenCache.set(agency, { token: json.access_token, exp: Date.now() + ttl });
+    return json.access_token;
   } catch (e) {
-    console.error("Accela token exception:", e);
+    console.error(`Accela token exception [${agency}]:`, e);
     return null;
   }
 }
@@ -159,29 +170,24 @@ Deno.serve(async (req) => {
     });
   }
 
-  const token = await getAccelaToken();
-  if (!token) {
-    await logRun(supabase, {
-      source: "accela-permit-scanner",
-      signals_found: 0,
-      signals_new: 0,
-      status: "error",
-      errors: "OAuth token request failed",
-      duration_ms: Date.now() - startedAt,
-    });
-    return new Response(JSON.stringify({ error: "Accela auth failed" }), {
-      status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  // Token is fetched per-agency below (Accela requires agency_name on token request).
 
   const sinceISO = new Date(Date.now() - 7 * 24 * 3600_000).toISOString();
   let totalFound = 0;
   let totalNew = 0;
   const errors: string[] = [];
-  const perAgency: Record<string, { found: number; new: number; status: number }> = {};
+  const perAgency: Record<string, { found: number; new: number; status: number; auth?: string }> = {};
+  let anyTokenSucceeded = false;
 
   for (const agency of SEED_AGENCIES) {
     try {
+      const token = await getAccelaToken(agency);
+      if (!token) {
+        perAgency[agency] = { found: 0, new: 0, status: 401, auth: "no_token" };
+        errors.push(`${agency}:auth_failed`);
+        continue;
+      }
+      anyTokenSucceeded = true;
       const { ok, status, records } = await searchPermits(token, agency, sinceISO);
       perAgency[agency] = { found: records.length, new: 0, status };
       if (!ok) {
@@ -209,7 +215,9 @@ Deno.serve(async (req) => {
     }
   }
 
-  const status: RunMetrics["status"] = errors.length === 0 ? "ok" : (totalNew > 0 ? "partial" : "error");
+  const status: RunMetrics["status"] = !anyTokenSucceeded
+    ? "error"
+    : errors.length === 0 ? "ok" : (totalNew > 0 ? "partial" : "error");
 
   await logRun(supabase, {
     source: "accela-permit-scanner",
