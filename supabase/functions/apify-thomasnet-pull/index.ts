@@ -116,7 +116,7 @@ serve(async (req) => {
     .map((t: any) => ({
       keyword: t.keyword,
       category: t.category,
-      location: t.location || "Detroit, Michigan, United States",
+      location: t.location || "United States",
     }));
   const useTargets = targets.length > 0 ? targets : DEFAULT_TARGETS;
   const maxItems = Number(body.maxItems) || 30;
