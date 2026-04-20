@@ -31,6 +31,7 @@ const QUIET_HOURS_BYPASS_PRODUCTS = new Set([
   "appointment_reminder",
   "field_service",
   "dead_lead_reply",
+  "dwa_admin_reply",
   "test-sms",
   "test_sms",
 ]);

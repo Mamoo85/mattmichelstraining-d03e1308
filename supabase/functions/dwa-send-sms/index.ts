@@ -78,31 +78,57 @@ serve(async (req) => {
     if (!toE164) {
       return json(400, { error: `Invalid US phone number: ${to}` });
     }
-    if (body.length > 1500) {
-      return json(400, { error: "Message exceeds 1500 chars" });
+    if (body.length > 8000) {
+      return json(400, { error: "Message exceeds 8000 chars (too long even split)" });
     }
 
-    // 4. Send via shared Twilio helper (handles opt-out scrub + logging).
-    //    "dead_lead_reply" is whitelisted to bypass quiet hours since this is
-    //    a manual reply to an inbound conversation — same TCPA exemption.
-    const result = await sendSMS(
-      toE164,
-      TWILIO_PHONE_NUMBER,
-      body,
-      "dwa_admin_reply",
-      false,
-      { bypassQuietHours: true }
-    );
-
-    if (!result.success) {
-      return json(result.skipped ? 200 : 500, {
-        success: false,
-        skipped: result.skipped ?? false,
-        error: result.error,
-      });
+    // 4. Auto-split long messages so admin can paste full FAQ answers.
+    //    Each chunk stays under Twilio's practical limit; recipient sees
+    //    (1/3), (2/3) prefixes so they know it's a multi-part reply.
+    const CHUNK_LIMIT = 1400;
+    const chunks: string[] = [];
+    if (body.length <= 1500) {
+      chunks.push(body);
+    } else {
+      let remaining = body.trim();
+      while (remaining.length > CHUNK_LIMIT) {
+        let cutAt = remaining.lastIndexOf("\n\n", CHUNK_LIMIT);
+        if (cutAt < CHUNK_LIMIT * 0.5) cutAt = remaining.lastIndexOf("\n", CHUNK_LIMIT);
+        if (cutAt < CHUNK_LIMIT * 0.5) cutAt = remaining.lastIndexOf(". ", CHUNK_LIMIT);
+        if (cutAt < CHUNK_LIMIT * 0.5) cutAt = remaining.lastIndexOf(" ", CHUNK_LIMIT);
+        if (cutAt < CHUNK_LIMIT * 0.5) cutAt = CHUNK_LIMIT;
+        chunks.push(remaining.slice(0, cutAt).trim());
+        remaining = remaining.slice(cutAt).trim();
+      }
+      if (remaining.length > 0) chunks.push(remaining);
     }
 
-    return json(200, { success: true, sid: result.sid });
+    const total = chunks.length;
+    const sids: string[] = [];
+    for (let i = 0; i < chunks.length; i++) {
+      const prefix = total > 1 ? `(${i + 1}/${total}) ` : "";
+      const result = await sendSMS(
+        toE164,
+        TWILIO_PHONE_NUMBER,
+        prefix + chunks[i],
+        "dwa_admin_reply",
+        false,
+        { bypassQuietHours: true }
+      );
+      if (!result.success) {
+        return json(result.skipped ? 200 : 500, {
+          success: false,
+          skipped: result.skipped ?? false,
+          error: result.error,
+          partial_sent: sids.length,
+          total_chunks: total,
+        });
+      }
+      if (result.sid) sids.push(result.sid);
+      if (i < chunks.length - 1) await new Promise((r) => setTimeout(r, 400));
+    }
+
+    return json(200, { success: true, sids, chunks: total });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[dwa-send-sms] error:", msg);
