@@ -381,7 +381,9 @@ serve(async (req) => {
         compliance_scan: complianceResult.status === "fulfilled" ? `OK (${complianceResult.value.length} found)` : `FAILED: ${complianceResult.reason}`,
         funding_scan: fundingResult.status === "fulfilled" ? `OK (${fundingResult.value.length} found)` : `FAILED: ${fundingResult.reason}`,
         hiring_scan: hiringResult.status === "fulfilled" ? `OK (${hiringResult.value.length} found)` : `FAILED: ${hiringResult.reason}`,
+        sonar_configured: !!OPENROUTER_API_KEY,
         ai_key_configured: !!LOVABLE_API_KEY,
+        note: !OPENROUTER_API_KEY ? "OPENROUTER_API_KEY missing — bond/hiring scans cannot use real web search" : undefined,
       },
       scanned_at: new Date().toISOString(),
     }), {
