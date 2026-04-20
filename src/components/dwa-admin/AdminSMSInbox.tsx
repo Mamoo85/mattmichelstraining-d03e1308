@@ -187,22 +187,21 @@ export default function AdminSMSInbox() {
       if (d.length === 11 && d.startsWith("1")) digitsToE164.set(d.slice(1), p);
     }
 
-    const lookups = [
+    const lookups: Array<{ table: "contractor_clients" | "field_crm_clients"; label: string; field: string }> = [
       { table: "contractor_clients", label: "contractor", field: "business_name" },
       { table: "field_crm_clients", label: "FieldDesk", field: "business_name" },
-      { table: "hire_alert_clients", label: "TechAlert", field: "business_name" },
-    ] as const;
+    ];
 
     await Promise.all(
       lookups.map(async (lk) => {
         try {
           const { data } = await supabase
-            // @ts-expect-error — dynamic table name
             .from(lk.table)
             .select(`${lk.field}, phone`)
             .not("phone", "is", null)
             .limit(2000);
-          for (const row of (data ?? []) as Array<Record<string, string | null>>) {
+          const rows = (data ?? []) as unknown as Array<Record<string, string | null>>;
+          for (const row of rows) {
             const p = row.phone ? row.phone.replace(/\D/g, "") : "";
             const matched = digitsToE164.get(p) || digitsToE164.get(p.replace(/^1/, ""));
             if (matched && !out.has(matched)) {
@@ -210,7 +209,7 @@ export default function AdminSMSInbox() {
             }
           }
         } catch {
-          /* table may not exist in some envs — silent */
+          /* silent — best-effort labeling */
         }
       })
     );
