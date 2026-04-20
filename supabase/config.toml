@@ -3,6 +3,12 @@ project_id = "zmyczlfuufhngzovkjdh"
 [functions.apify-results-handler]
 verify_jwt = false
 
+[functions.draft-sms-reply]
+verify_jwt = false
+
+[functions.auto-draft-on-inbound]
+verify_jwt = false
+
 [functions.enrichment-cost-rollup]
 verify_jwt = false
 

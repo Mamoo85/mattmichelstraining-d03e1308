@@ -76,6 +76,43 @@ function timeAgo(iso: string): string {
 
 // ----- component -----
 
+// Onboarding cheatsheet — shown when an unknown phone is selected. Each entry
+// can be one-click copied into the reply box and personalized before sending.
+const ONBOARDING_FAQ: Array<{ q: string; a: string }> = [
+  {
+    q: "How are leads generated?",
+    a: "Homeowners in your trade + city request quotes on detroitwebagent.com. You get an instant SMS with their name, number, and job details — no shared leads, just yours.",
+  },
+  {
+    q: "How much / what's the price?",
+    a: "$399/mo flat. One contractor per trade per city — exclusive territory. No per-lead fees, no contracts, cancel anytime.",
+  },
+  {
+    q: "What if a lead is bad?",
+    a: "If a lead is fake or unreachable, just text me and I'll credit it on your next bill. I want this to work for you long-term.",
+  },
+  {
+    q: "Can I cancel?",
+    a: "Yep — cancel anytime, no contracts. Just text or email me and I'll shut it off the same day.",
+  },
+  {
+    q: "Multiple cities / territories?",
+    a: "Sure — each city is a separate $399/mo territory. Most guys start with one and add more once leads are flowing.",
+  },
+  {
+    q: "Exclusivity proof?",
+    a: "Only one contractor per trade per city. I'll never sell your zip to another HVAC/plumber/etc — that's the whole point.",
+  },
+  {
+    q: "Average leads/month?",
+    a: "Depends on city + trade, but Metro Detroit roofers/HVAC see 8–20/mo on average. I'll be straight with you about volume in your area.",
+  },
+  {
+    q: "How do I get notified?",
+    a: "Instant SMS to your cell the second a lead comes in — usually before they even submit on a competitor's site. Speed wins.",
+  },
+];
+
 export default function AdminSMSInbox() {
   const [loading, setLoading] = useState(true);
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -84,6 +121,8 @@ export default function AdminSMSInbox() {
   const [sending, setSending] = useState(false);
   const [composing, setComposing] = useState(false);
   const [composeTo, setComposeTo] = useState("");
+  const [drafting, setDrafting] = useState(false);
+  const [showCheatsheet, setShowCheatsheet] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Mobile: when a thread is picked, hide the list. Back button returns to list.
@@ -334,8 +373,38 @@ export default function AdminSMSInbox() {
     setComposeTo("");
   }
 
+  async function handleAIDraft() {
+    const targetPhone = composing ? normalize(composeTo) : activeThread?.phone ?? null;
+    if (!targetPhone) {
+      toast.error("Pick a thread or enter a number first");
+      return;
+    }
+    setDrafting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("draft-sms-reply", {
+        body: { phone: targetPhone, hint: draft.trim() || undefined },
+      });
+      if (error) throw error;
+      const result = data as { draft?: string; error?: string };
+      if (!result?.draft) {
+        toast.error(result?.error ?? "No draft returned");
+        return;
+      }
+      setDraft(result.draft);
+      toast.success("Draft ready — edit or send");
+    } catch (e) {
+      console.error(e);
+      toast.error(e instanceof Error ? e.message : "Draft failed");
+    } finally {
+      setDrafting(false);
+    }
+  }
+
   const composeNormalized = composing ? normalize(composeTo) : null;
   const composeValid = composing ? composeNormalized !== null : true;
+
+  // Show the onboarding cheatsheet for any unknown contact (no contractor/FieldDesk label)
+  const isUnknownContact = activeThread && !activeThread.contactLabel;
 
   return (
     <div className="space-y-4">
@@ -474,17 +543,27 @@ export default function AdminSMSInbox() {
                   className="w-full bg-[#0a1628] border border-white/10 rounded p-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#00d4ff]"
                   disabled={sending}
                 />
-                <div className="flex items-center justify-between mt-2 gap-2">
+                <div className="flex items-center justify-between mt-2 gap-2 flex-wrap">
                   <span className="text-[11px] text-white/40 truncate">
                     From (313) 992-1219 · {draft.length}/1500
                   </span>
-                  <button
-                    onClick={handleSend}
-                    disabled={sending || !draft.trim() || !composeValid}
-                    className="px-4 py-1.5 rounded font-bold text-sm bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/90 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-                  >
-                    {sending ? "Sending…" : "Send →"}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleAIDraft}
+                      disabled={drafting || !composeValid}
+                      className="px-3 py-1.5 rounded font-semibold text-xs bg-white/5 hover:bg-white/10 text-white border border-white/10 disabled:opacity-40 shrink-0"
+                      title="Generate an AI-suggested reply"
+                    >
+                      {drafting ? "Drafting…" : "🤖 Draft"}
+                    </button>
+                    <button
+                      onClick={handleSend}
+                      disabled={sending || !draft.trim() || !composeValid}
+                      className="px-4 py-1.5 rounded font-bold text-sm bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/90 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                    >
+                      {sending ? "Sending…" : "Send →"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </>
@@ -553,6 +632,36 @@ export default function AdminSMSInbox() {
                 })}
               </div>
 
+              {/* Onboarding cheatsheet — only visible when contact is unknown (likely new prospect) */}
+              {isUnknownContact && (
+                <div className="border-t border-white/10 bg-white/[0.02]">
+                  <button
+                    onClick={() => setShowCheatsheet((s) => !s)}
+                    className="w-full px-3 py-2 text-left text-xs font-semibold text-[#00d4ff] hover:bg-white/[0.03] flex items-center justify-between"
+                  >
+                    <span>📋 Onboarding cheatsheet — tap an answer to load it</span>
+                    <span className="text-white/40">{showCheatsheet ? "▾" : "▸"}</span>
+                  </button>
+                  {showCheatsheet && (
+                    <div className="px-3 pb-3 space-y-1.5 max-h-56 overflow-y-auto">
+                      {ONBOARDING_FAQ.map((item) => (
+                        <button
+                          key={item.q}
+                          onClick={() => {
+                            setDraft(item.a);
+                            toast.success("Loaded — edit before sending");
+                          }}
+                          className="w-full text-left p-2 rounded bg-white/[0.03] hover:bg-white/[0.08] border border-white/5"
+                        >
+                          <div className="text-[11px] font-semibold text-white/80">{item.q}</div>
+                          <div className="text-[11px] text-white/50 mt-0.5 line-clamp-2">{item.a}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="border-t border-white/10 p-3">
                 <textarea
                   value={draft}
@@ -568,17 +677,27 @@ export default function AdminSMSInbox() {
                   className="w-full bg-[#0a1628] border border-white/10 rounded p-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#00d4ff]"
                   disabled={sending}
                 />
-                <div className="flex items-center justify-between mt-2 gap-2">
+                <div className="flex items-center justify-between mt-2 gap-2 flex-wrap">
                   <span className="text-[11px] text-white/40 truncate">
                     From (313) 992-1219 · {draft.length}/1500
                   </span>
-                  <button
-                    onClick={handleSend}
-                    disabled={sending || !draft.trim()}
-                    className="px-4 py-1.5 rounded font-bold text-sm bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/90 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-                  >
-                    {sending ? "Sending…" : "Send →"}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleAIDraft}
+                      disabled={drafting}
+                      className="px-3 py-1.5 rounded font-semibold text-xs bg-white/5 hover:bg-white/10 text-white border border-white/10 disabled:opacity-40 shrink-0"
+                      title="Generate an AI-suggested reply"
+                    >
+                      {drafting ? "Drafting…" : "🤖 Draft"}
+                    </button>
+                    <button
+                      onClick={handleSend}
+                      disabled={sending || !draft.trim()}
+                      className="px-4 py-1.5 rounded font-bold text-sm bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/90 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                    >
+                      {sending ? "Sending…" : "Send →"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </>
