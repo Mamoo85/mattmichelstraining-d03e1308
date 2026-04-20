@@ -6620,6 +6620,8 @@ export type Database = {
           county: string | null
           created_at: string | null
           cross_referenced: boolean | null
+          decision_makers: Json | null
+          decision_makers_enriched_at: string | null
           detected_at: string | null
           embedding: string | null
           expansion_type: string | null
@@ -6646,6 +6648,8 @@ export type Database = {
           county?: string | null
           created_at?: string | null
           cross_referenced?: boolean | null
+          decision_makers?: Json | null
+          decision_makers_enriched_at?: string | null
           detected_at?: string | null
           embedding?: string | null
           expansion_type?: string | null
@@ -6672,6 +6676,8 @@ export type Database = {
           county?: string | null
           created_at?: string | null
           cross_referenced?: boolean | null
+          decision_makers?: Json | null
+          decision_makers_enriched_at?: string | null
           detected_at?: string | null
           embedding?: string | null
           expansion_type?: string | null

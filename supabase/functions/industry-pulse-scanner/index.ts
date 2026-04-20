@@ -193,29 +193,67 @@ async function getGoogleReviewScore(company: string, location: string): Promise<
 }
 
 // ── Item 27: Apollo decision-maker mapping ────────────────────────────────────
-async function findDecisionMaker(companyName: string): Promise<{ name: string; title: string; email: string } | null> {
-  if (!APOLLO_API_KEY) return null;
+// Returns up to 3 named decision-makers per company. Net is wide on purpose so
+// we get at least one hit even when a company doesn't have the "ideal" title.
+export type DecisionMaker = {
+  name: string;
+  title: string;
+  email: string;
+  email_status?: string;
+  linkedin_url?: string;
+  seniority?: string;
+};
+
+export async function findDecisionMakers(
+  companyName: string,
+  domain?: string,
+): Promise<DecisionMaker[]> {
+  if (!APOLLO_API_KEY || !companyName) return [];
   try {
+    const body: Record<string, unknown> = {
+      person_titles: [
+        "owner", "president", "ceo", "coo", "cfo",
+        "general manager", "operations manager", "plant manager",
+        "vp operations", "vp of operations", "director of operations",
+        "hr director", "human resources", "hr manager",
+        "purchasing manager", "procurement manager", "facilities manager",
+      ],
+      page: 1,
+      per_page: 5,
+    };
+    if (domain) body.q_organization_domains = [domain];
+    else body.organization_name = companyName;
+
     const res = await fetch("https://api.apollo.io/api/v1/mixed_people/search", {
       method: "POST",
       headers: { "X-Api-Key": APOLLO_API_KEY, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        organization_name: companyName,
-        titles: ["purchasing manager", "procurement manager", "operations manager", "plant manager"],
-        per_page: 1,
-      }),
-      signal: AbortSignal.timeout(8000),
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(10_000),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.warn(`[apollo-dm] ${companyName}: HTTP ${res.status} (free plan blocks this endpoint)`);
+      return [];
+    }
     const data = await res.json();
-    const person = data?.people?.[0];
-    if (!person) return null;
-    return {
-      name: `${person.first_name || ""} ${person.last_name || ""}`.trim(),
-      title: person.title || "",
-      email: person.email || "",
-    };
-  } catch { return null; }
+    const people = (data?.people || []) as any[];
+    return people.slice(0, 3).map((p) => ({
+      name: `${p.first_name || ""} ${p.last_name || ""}`.trim(),
+      title: p.title || "",
+      email: p.email || "",
+      email_status: p.email_status || undefined,
+      linkedin_url: p.linkedin_url || undefined,
+      seniority: p.seniority || undefined,
+    })).filter((p) => p.name);
+  } catch (e) {
+    console.warn(`[apollo-dm] ${companyName} error:`, e instanceof Error ? e.message : e);
+    return [];
+  }
+}
+
+// Back-compat shim — returns the top contact in the old shape.
+async function findDecisionMaker(companyName: string): Promise<{ name: string; title: string; email: string } | null> {
+  const list = await findDecisionMakers(companyName);
+  return list[0] || null;
 }
 
 // ── Item 29: Michigan SOS new business velocity ───────────────────────────────
