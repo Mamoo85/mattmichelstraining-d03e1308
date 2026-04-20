@@ -27,13 +27,14 @@ const DATAFORSEO_LOGIN = Deno.env.get("DATAFORSEO_LOGIN") || "";
 const DATAFORSEO_PASSWORD = Deno.env.get("DATAFORSEO_PASSWORD") || "";
 
 // Default category × city searches. Each one ~$0.005 = ~$0.10 per full run.
+// DataForSEO Maps responds best to "<keyword> near <city>" with location_name="United States".
 const DEFAULT_TARGETS: { keyword: string; category: string; location: string }[] = [
-  { keyword: "boiler manufacturers", category: "boiler manufacturers", location: "Detroit, Michigan, United States" },
-  { keyword: "machine shops",        category: "machine shops",        location: "Detroit, Michigan, United States" },
-  { keyword: "metal fabricators",    category: "metal fabricators",    location: "Detroit, Michigan, United States" },
-  { keyword: "industrial equipment suppliers", category: "industrial equipment", location: "Detroit, Michigan, United States" },
-  { keyword: "machine shops",        category: "machine shops",        location: "Grand Rapids, Michigan, United States" },
-  { keyword: "metal fabricators",    category: "metal fabricators",    location: "Lansing, Michigan, United States" },
+  { keyword: "boiler manufacturers near Detroit Michigan", category: "boiler manufacturers", location: "United States" },
+  { keyword: "machine shops near Detroit Michigan",        category: "machine shops",        location: "United States" },
+  { keyword: "metal fabricators near Detroit Michigan",    category: "metal fabricators",    location: "United States" },
+  { keyword: "industrial equipment suppliers near Detroit Michigan", category: "industrial equipment", location: "United States" },
+  { keyword: "machine shops near Grand Rapids Michigan",   category: "machine shops",        location: "United States" },
+  { keyword: "metal fabricators near Lansing Michigan",    category: "metal fabricators",    location: "United States" },
 ];
 
 interface ScrapedSupplier {
