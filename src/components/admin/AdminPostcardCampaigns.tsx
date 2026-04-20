@@ -58,6 +58,10 @@ export default function AdminPostcardCampaigns() {
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
   const [selectedCounty, setSelectedCounty] = useState("Wayne");
   const [selectedAudience, setSelectedAudience] = useState<AudienceType>("healthcare-agency");
+  const [finding, setFinding] = useState(false);
+  const [previewAudience, setPreviewAudience] = useState<AudienceType>("healthcare-agency");
+  const [previewCity, setPreviewCity] = useState("Metro Detroit");
+  const [previewRecipient, setPreviewRecipient] = useState("");
 
   useEffect(() => { loadData(); }, []);
 
