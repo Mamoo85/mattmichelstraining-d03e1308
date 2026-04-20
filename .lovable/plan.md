@@ -1,72 +1,120 @@
-## Honest reassessment
+The user is handing me a third agent prompt — the **Lead Enhancement Orchestrator**. Same pattern as last time: nice-sounding spec, but I need to map it against what already exists before I touch anything.
 
-You're right to pause. Let me audit the plan I just half-shipped before we keep going.
+Let me think about what's already live:
 
-### What I built (and what's wrong with each piece)
+**Existing enrichment infrastructure (from CLAUDE.md + memory):**
 
-**1. `talent-radar-extraction` — broken by design**
-The agent prompt says "use SODA." I built it. It returned **0 records**. Why? Michigan LARA trade licenses are **not on data.michigan.gov / Socrata**. They live on Accela (MiPLUS).
+- `lead-enrichment-waterfall` — already exists (referenced in `capture-enrich/index.ts`)
+- `candidate-deep-enrich` — runs the 8-stage waterfall per candidate (referenced in `queue-worker-enrich/index.ts`)
+- Memory `tech/talent-radar-enrichment-v5` — documents the actual enrichment stack with measured hit rates
+- Memory `features/lara-data-extraction-pipeline` — Sonar + VAL + NinjaPear + Crustdata
+- Phase 18 (yesterday): added Hunter, Snov, Apollo, HIBP, PDL, NPI Registry stages
+- Phase 17 decision: **Proxycurl is dead** (LinkedIn lawsuit, shut down July 2025); **Crustdata is the LinkedIn replacement** but weak for trades
+- `_shared/scraper.ts` + `_shared/cheap-extract.ts` — cost-optimization adapters already centralized
+- `ai_call_log` — per-provider ROI tracking already exists
 
-Meanwhile, your existing `miosha-license-scraper` was JUST upgraded yesterday (Phase 19, commit `e4339fb`) to use the **Accela REST API** with `ACCELA_APP_ID` + `ACCELA_APP_SECRET` — exactly the data source the new agent needs but isn't using.
+**What the prompt asks for vs reality:**
 
-So I built a parallel scanner that queries the wrong API while the working one sits next to it. That's not extraction discipline — that's duplication.
 
-**2. `demand-radar-extraction` — works, but solves a problem you already solved**
-The 25/25/25/25 sector balance logic works (proven in test: 5/5/5/5). But:
+| Prompt step                   | Reality                                                                                                               |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Apollo primary email          | ✅ Already wired (Phase 18)                                                                                            |
+| Prospeo fallback              | ❌ Not integrated. New vendor.                                                                                         |
+| Hunter fallback               | ✅ Already wired (Phase 18, `HUNTER_API_KEY`)                                                                          |
+| ZeroBounce/NeverBounce SMTP   | ❌ Not integrated. New vendor. Hunter already does verification though.                                                |
+| Lusha mobile primary          | ❌ Not integrated. New vendor.                                                                                         |
+| Cognism mobile fallback       | ❌ Not integrated. New vendor.                                                                                         |
+| Clearbit firmographics        | ❌ Clearbit was acquired by HubSpot, free tier killed. PDL already does this.                                          |
+| PeopleDataLabs                | ✅ Already wired (`PDL_API_KEY` live)                                                                                  |
+| CRM POST (HubSpot/Salesforce) | ❌ No CRM connector. Records go to `hire_alert_candidates` / `contractor_clients`.                                     |
+| 85% coverage target           | Memory `talent-radar-enrichment-v5` says **trade vertical ceiling is ~17%** measured. 85% is fantasy for blue-collar. |
 
-- You already have `contractor-prospector` doing Google Places discovery for the same 4 trades.
-- I created a new `demand_radar_targets` table when contractor candidates already flow into `contractor_clients` / `contractor_lead_sites`.
-- Nothing downstream reads `demand_radar_targets` yet — it's a dead-end queue.
 
-**3. The "Post-Extraction Enhancement Queue" is fictional**
-The agent prompt names it like it exists. It doesn't. I mapped Talent Radar to `hire_alert_candidates` (real) and Demand Radar to a brand new orphan table (not real). Inconsistent.
+**This is the same trap as last time.** If I build it literally, I'll:
 
-### The smart play
+1. Add 4 new vendor integrations (Prospeo, ZeroBounce, Lusha, Cognism, Clearbit) — each needs a secret, each costs money, several duplicate what Hunter/PDL already do
+2. Build a parallel "orchestrator" function that competes with the existing `candidate-deep-enrich` and `lead-enrichment-waterfall`
+3. Promise an 85% hit rate that the measured data says is impossible for trades
 
-The agent prompts are **good policy** (deterministic extraction, no contact-guessing, sector balance, queue handoff). But they should be **enforced on the existing scanners**, not used as an excuse to build parallel ones.
+**The smart play (same shape as last time):**
+
+- Treat the prompt as **policy** to enforce on the existing waterfall, not as a spec for a new function
+- Identify which vendor gaps are actually worth filling (Lusha for mobile is the real one — current stack is weak on direct-dial)
+- Reject duplicates (Prospeo, ZeroBounce, Clearbit add no signal over Hunter + PDL)
+- Set an honest coverage target per vertical, not one global 85%
+
+I have enough context. No need to read more files — I just refactored this stack twice in the last 3 days. Let me write the plan.
+
+---
+
+## Honest read on the prompt
+
+You're feeding me a third agent spec. Same shape as the last two: it sounds tight, but if I implement it literally I'll build a parallel orchestrator that competes with `candidate-deep-enrich` + `lead-enrichment-waterfall` (both already live and just upgraded in Phase 18 yesterday).
+
+Let me grade each step against what's actually shipped.
+
+### What the prompt asks for vs. what exists
+
+
+| Step                        | Status                                                                            | Verdict                                                                                             |
+| --------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Apollo primary email        | ✅ Live (Phase 18)                                                                 | Keep                                                                                                |
+| Prospeo fallback            | ❌ New vendor                                                                      | **Skip** — duplicates Hunter                                                                        |
+| Hunter fallback             | ✅ Live (Phase 18)                                                                 | Keep                                                                                                |
+| ZeroBounce/NeverBounce SMTP | ❌ New vendor                                                                      | **Skip** — Hunter already returns verification status                                               |
+| Lusha mobile (primary)      | ❌ Not wired                                                                       | **Add** — this is the real gap                                                                      |
+| Cognism mobile (fallback)   | ❌ Not wired                                                                       | **Defer** — enterprise pricing, evaluate after Lusha proves out                                     |
+| Clearbit firmographics      | ❌ Dead product (HubSpot killed free tier)                                         | **Skip** — PDL already does this                                                                    |
+| PDL firmographics           | ✅ Live                                                                            | Keep                                                                                                |
+| CRM POST                    | ❌ No HubSpot/Salesforce                                                           | **Skip** — records already land in `hire_alert_candidates` / `contractor_clients`, which IS the CRM |
+| 85% coverage target         | Measured ceiling for trades is ~17% (per `mem://tech/talent-radar-enrichment-v5`) | **Reject the number** — set per-vertical targets                                                    |
+
+
+### The 85% problem
+
+You already measured this. The memory file from yesterday says trades cap at ~17% contactability because blue-collar workers don't live on LinkedIn and don't have B2B email databases tracking them. Healthcare hits higher (NPI registry is a goldmine). White-collar contractors hit higher (Apollo coverage).
+
+A blanket 85% target is a recipe for me to spam-add vendors chasing a number that physics won't let me hit. Better targets:
+
+- **Healthcare** (CNA/RN/LPN): 60% (NPI + PDL combo)
+- **White-collar contractor decision-makers** (HVAC company owners, etc.): 50% (Apollo + Hunter)
+- **Trade individuals** (a roofer named on a MIOSHA license): 20% — the ceiling is real
 
 ### Revised plan
 
-**Phase A — Delete the duplicates**
+**Phase A — Add the one vendor that actually closes a gap**
 
-- Delete `talent-radar-extraction` edge function
-- Delete `demand-radar-extraction` edge function
-- Delete `demand_radar_targets` table (migration)
-- Revert the additions to `queue-worker-scrape` and `hire-alert-dispatcher`
+- Wire **Lusha** into `candidate-deep-enrich` as a new stage between PDL and Sonar fallback
+- Lusha is SMB-focused, has direct-dial coverage US trades vendors don't
+- Add `LUSHA_API_KEY` secret request
+- Stage logs to existing `ai_call_log` so we can measure ROI before adding Cognism
 
-**Phase B — Apply the protocols to the real scanners**
+**Phase B — Codify the orchestrator policy on the existing function**
 
-*Talent Radar protocol → `miosha-license-scraper` (already on Accela, already wired):*
+- Add header doc block to `candidate-deep-enrich/index.ts` with the protocol (sequential, stop on first hit, log all)
+- Verify the "stop on first verified hit" short-circuit logic is actually firing (audit, don't rebuild)
+- Confirm Hunter's verification status is being respected (drop "risky"/"catch-all" — currently we may be keeping them)
 
-- Add a header comment block making the protocol explicit (extraction-only, no contact guessing, 24h window, 4 trades)
-- Confirm it filters strictly to HVAC/Plumbing/Electrical/Roofing (it does — verify)
-- Confirm output goes to `hire_alert_candidates` with `enrichment_status='pending'` so `candidate-deep-enrich` picks it up
-- Add `source_breakdown` per-trade counts to `hire_alert_runs` (already done in Phase 19)
+**Phase C — Per-vertical coverage tracking**
 
-*Demand Radar protocol → `contractor-prospector`:*
+- Add `coverage_by_vertical` rollup to `hire_alert_runs.source_breakdown` (already JSONB)
+- Daily morning digest surfaces: healthcare X%, white-collar Y%, trades Z%
+- This makes the 85%/17% conversation data-driven instead of vibes
 
-- Add the 25/25/25/25 sector-balance enforcement (this is the one genuinely new piece — it's currently uneven)
-- Add the qualification filter (drop sole-prop / require rating_count ≥ 5 OR website)
-- Keep writing to existing `contractor_clients` table — don't fork the schema
-- Add header comment with the agent protocol
+**Phase D — Explicitly do NOT build**
 
-**Phase C — Document and stop**
-
-- Update memory: "Talent Radar = `miosha-license-scraper` (Accela). Demand Radar = `contractor-prospector` (Google Places). Do not create parallel scanners."
-
-### Why this is better
-
-1. **No new tables.** Everything flows into the schema you already pay attention to.
-2. **One source of truth per radar.** No guessing which scanner ran.
-3. **Keeps the hard-won Accela auth work** from Phase 19 alive instead of bypassing it.
-4. **The only genuinely new logic** (25/25/25/25 + qualification filter) gets added to the real scanner that already has clients depending on it.
-5. **Roughly 70% less code** than what I was about to ship.
+- No Prospeo (Hunter covers it)
+- No ZeroBounce/NeverBounce (Hunter returns status)
+- No Clearbit (dead, PDL covers it)
+- No CRM POST (your DB tables ARE the CRM — `hire_alert_candidates` + `contractor_clients`)
+- No new orchestrator function (we have two already)
 
 ### Open question for you
 
-The agent prompts use the term "Post-Extraction Enhancement Queue." In your stack that maps to:
+Lusha pricing is $39/user/mo for ~330 credits, scaling up. Before I ask you to drop a card on a `LUSHA_API_KEY`, want me to:
 
-- Talent side: `hire_alert_candidates` rows with `enrichment_status='pending'` → consumed by `candidate-deep-enrich`
-- Demand side: `contractor_clients` rows → consumed by enrichment waterfall
+1. **Just wire it** — assume you'll pay $39/mo to pilot
+2. **Skip Lusha too** — accept current mobile-number coverage and stop chasing the gap
+3. **Try the free tier first** — Lusha gives 5 credits/mo free, enough to test the integration before billing **i agree with everything, I got a free trial ask me for the key*
 
-Confirm that mapping is what you meant, or tell me if "Enhancement Queue" was meant to be a new unified table for both sides (I'd argue against it, but it's your call). **I agree with you. Don't do it. *
+My recommendation: **option 3**. Wire it, you sign up free, we measure 5 lookups, then decide.
