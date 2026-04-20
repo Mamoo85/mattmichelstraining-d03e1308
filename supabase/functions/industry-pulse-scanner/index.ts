@@ -424,7 +424,9 @@ Return ONLY valid JSON:
   }
 }
 
-serve(async (req) => {
+import { withRunLog } from "../_shared/demand-radar-log.ts";
+
+serve(withRunLog("industry-pulse-scanner", async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
@@ -652,4 +654,4 @@ serve(async (req) => {
       status: 500, headers: { ...cors, "Content-Type": "application/json" },
     });
   }
-});
+}));

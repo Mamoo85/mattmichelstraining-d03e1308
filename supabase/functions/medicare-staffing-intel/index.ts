@@ -53,7 +53,9 @@ interface FacilityResult {
   number_of_beds: number | null;
 }
 
-serve(async (req) => {
+import { withRunLog } from "../_shared/demand-radar-log.ts";
+
+serve(withRunLog("medicare-staffing-intel", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
@@ -153,4 +155,4 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-});
+}));
