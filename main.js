@@ -10,6 +10,8 @@ await Actor.init();
 const input = (await Actor.getInput()) || {};
 const licenseTypes = input.licenseTypes || ['boiler', 'electrical', 'plumbing', 'hvac', 'nursing'];
 const states = input.states || ['michigan'];
+const mode = input.mode || 'excel';
+const tradeTypes = input.tradeTypes || licenseTypes;
 
 console.log('Actor started with input:', JSON.stringify({ licenseTypes, states }));
 
@@ -120,23 +122,87 @@ async function downloadAndParseCSV(url, licenseType, source, state) {
   }
 }
 
-const allCandidates = [];
 
-if (states.includes('michigan')) {
-  for (const lt of licenseTypes) {
-    const url = MI_LARA_URLS[lt];
-    if (!url) continue;
-    const rows = await downloadAndParseXLSX(url, lt, 'lara_bpl', 'michigan');
-    allCandidates.push(...rows);
+// ── lara_playwright mode: headless Playwright scrape of aca-prod.accela.com/LARA ──
+// Uses Apify residential proxies (built-in) to bypass Cloudflare/anti-bot on LARA portal.
+// Triggered only when direct Excel downloads return 0 candidates.
+async function scrapeLARAPlaywright(tradeTypes) {
+  const { chromium } = await import('playwright');
+  const proxyConfiguration = await Actor.createProxyConfiguration({
+    groups: ['RESIDENTIAL'],
+    countryCode: 'US',
+  });
+  const proxy = await proxyConfiguration.newUrl();
+  const browser = await chromium.launch({ proxy: { server: proxy } });
+  const page = await browser.newPage();
+  const results = [];
+
+  try {
+    for (const trade of tradeTypes) {
+      try {
+        await page.goto('https://aca-prod.accela.com/LARA/Default.aspx', { waitUntil: 'networkidle', timeout: 30000 });
+        // Search for active licenses by trade type
+        await page.fill('input[name*="search"], input[id*="search"], #txtSearch', trade).catch(() => {});
+        await page.click('input[type=submit], button[type=submit]').catch(() => {});
+        await page.waitForTimeout(2000);
+
+        // Extract names from results table
+        const rows = await page.$$eval('table tr', (trs) =>
+          trs.slice(1).map((tr) => {
+            const cells = Array.from(tr.querySelectorAll('td')).map((td) => td.innerText.trim());
+            return cells;
+          })
+        ).catch(() => []);
+
+        for (const cells of rows) {
+          const name = cells[0] || cells[1] || '';
+          if (!name || name.length < 3) continue;
+          results.push({
+            name,
+            license_type: trade,
+            license_number: cells[2] || null,
+            city: cells[3] || null,
+            state: 'MI',
+            source: 'lara_playwright',
+            scraped_at: new Date().toISOString(),
+          });
+        }
+        console.log(`[lara_playwright] ${trade}: ${results.length} candidates so far`);
+      } catch (e) {
+        console.warn(`[lara_playwright] ${trade} error:`, e.message);
+      }
+    }
+  } finally {
+    await browser.close();
   }
+  return results;
 }
 
-if (states.includes('florida')) {
-  for (const lt of licenseTypes) {
-    const url = FL_DBPR_URLS[lt];
-    if (!url) continue;
-    const rows = await downloadAndParseCSV(url, lt, 'fl_dbpr', 'florida');
-    allCandidates.push(...rows);
+const allCandidates = [];
+
+if (mode === 'lara_playwright') {
+  console.log('[lara_playwright] Starting headless LARA scrape with residential proxies...');
+  const playwrightResults = await scrapeLARAPlaywright(tradeTypes);
+  allCandidates.push(...playwrightResults);
+  console.log(`[lara_playwright] Total from Playwright: ${playwrightResults.length}`);
+} else {
+  // Default: excel mode — download LARA/DBPR Excel/CSV files
+  if (states.includes('michigan')) {
+    for (const lt of licenseTypes) {
+      const url = MI_LARA_URLS[lt];
+      if (!url) continue;
+      const rows = await downloadAndParseXLSX(url, lt, 'lara_bpl', 'michigan');
+      allCandidates.push(...rows);
+    }
+  }
+
+  if (states.includes('florida')) {
+    for (const lt of licenseTypes) {
+      const url = FL_DBPR_URLS[lt];
+      if (!url) continue;
+      const rows = await downloadAndParseCSV(url, lt, 'fl_dbpr', 'florida');
+      allCandidates.push(...rows);
+    }
   }
 }
 

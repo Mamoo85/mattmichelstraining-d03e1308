@@ -5,7 +5,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { sendSMS } from "../_shared/twilio.ts";
+import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 import { generateJSON } from "../_shared/ai.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
@@ -1417,6 +1417,53 @@ serve(async (req: Request) => {
   }
 
   const allRaw = [...mioshaCandidates, ...jobBoardCandidates];
+
+  // Fix 4: 2-strike zero-result alert — only fires after 2 consecutive zero runs to avoid Sunday noise.
+  try {
+    const { data: prevRun } = await sb
+      .from("hire_alert_runs")
+      .select("candidates_found")
+      .neq("id", runRowId || "")
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const prevWasZero = (prevRun?.candidates_found ?? 1) === 0;
+    if (mioshaCandidates.length === 0 && prevWasZero) {
+      await sendSMS(
+        ADMIN_PHONE, TWILIO_PHONE_NUMBER,
+        `⚠️ TechAlert zero-result: LARA/MIOSHA returned 0 candidates for 2 consecutive runs (${new Date().toLocaleTimeString("en-US", { timeZone: "America/Detroit" })} ET). Check scanner logs.`,
+        "hire_alert_zero_result"
+      ).catch(() => {});
+    }
+    if (jobBoardCandidates.length === 0 && prevWasZero) {
+      await sendSMS(
+        ADMIN_PHONE, TWILIO_PHONE_NUMBER,
+        "⚠️ TechAlert zero-result: Job boards returned 0 candidates for 2 consecutive runs.",
+        "hire_alert_zero_result"
+      ).catch(() => {});
+    }
+  } catch (e) {
+    console.warn("[hire-alert-scanner] zero-result check failed:", e instanceof Error ? e.message : String(e));
+  }
+
+  // Fix 2: Apify Playwright fallback — fire-and-forget when LARA direct scan returns 0.
+  // Playwright run has no 150s limit; results stream back via webhook to apify-results-handler.
+  if (mioshaCandidates.length === 0 && APIFY_API_TOKEN) {
+    console.warn("[scanner] LARA/MIOSHA returned 0 — triggering Apify Playwright fallback run");
+    fetch(
+      `https://api.apify.com/v2/acts/${encodeURIComponent(APIFY_ACTORS.miosha)}/runs?token=${APIFY_API_TOKEN}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "lara_playwright",
+          tradeTypes: ["Boiler", "Electrical", "Plumbing", "HVAC", "Nursing"],
+          timeout: 300,
+        }),
+        signal: AbortSignal.timeout(10000),
+      }
+    ).catch(() => {});
+  }
   const sourceHealth: Record<string, string> = {
     miosha: mioshaCandidates.length > 0 ? "✅" : "⚠️ 0 results",
     sonar: jobBoardCandidates.length > 0 ? "✅" : "⚠️ 0 results",
@@ -1962,6 +2009,7 @@ serve(async (req: Request) => {
     alerts_sent: alertsSent,
     errors: null,
     error_message: null,
+    source_breakdown: { miosha: mioshaCandidates.length, job_boards: jobBoardCandidates.length },
   };
   if (runRowId) {
     await sb.from("hire_alert_runs").update(finalStats).eq("id", runRowId);
