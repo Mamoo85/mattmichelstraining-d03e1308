@@ -150,6 +150,66 @@ async function logRun(supabase: any, metrics: RunMetrics) {
   await supabase.from("demand_radar_runs").insert(metrics);
 }
 
+// ─── BSEED ArcGIS fallback ─────────────────────────────────────────────────
+// Free public Detroit Open Data feed. No auth, no agency approval needed.
+// Used when ALL Accela agencies fail OAuth (which is the typical case until
+// each city individually approves our app — see developer.accela.com).
+async function bseedArcGISFallback(supabase: any, sinceISO: string): Promise<{ found: number; new: number; error?: string }> {
+  const ARCGIS_URL = "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_trades_permits/FeatureServer/0/query";
+  const sinceDate = sinceISO.split("T")[0];
+  // ArcGIS where clause — filter by issue date
+  const params = new URLSearchParams({
+    where: `issue_date >= DATE '${sinceDate}'`,
+    outFields: "*",
+    f: "json",
+    resultRecordCount: "200",
+    orderByFields: "issue_date DESC",
+  });
+  try {
+    const res = await fetch(`${ARCGIS_URL}?${params}`, { signal: AbortSignal.timeout(20_000) });
+    if (!res.ok) return { found: 0, new: 0, error: `bseed_arcgis_http_${res.status}` };
+    const json = await res.json();
+    const features: any[] = Array.isArray(json?.features) ? json.features : [];
+    let inserted = 0;
+    for (const feat of features) {
+      const a = feat?.attributes || {};
+      const permitType = String(a.permit_type || a.work_type || "Building").trim();
+      const lower = permitType.toLowerCase();
+      if (!TARGET_TYPES.some(t => lower.includes(t.toLowerCase()))) continue;
+      const company = a.contractor_name || a.business_name || null;
+      const address = [a.address, a.city || "Detroit", "MI"].filter(Boolean).join(", ");
+      const description = a.description || a.work_description || `${permitType} permit issued in Detroit`;
+      let confidence = 5;
+      if (/commercial|industrial/i.test(permitType + " " + description)) confidence = 8;
+      else if (/boiler|hvac|mechanical/i.test(permitType + " " + description)) confidence = 7;
+      const signal = {
+        signal_type: "permit_surge",
+        company_name: company,
+        location: address,
+        vertical: lower.includes("boiler") ? "boiler"
+          : lower.includes("hvac") || lower.includes("mechanical") ? "hvac"
+          : lower.includes("plumb") ? "plumbing"
+          : lower.includes("electric") ? "electrical"
+          : "construction",
+        expansion_type: null,
+        predicted_needs: description,
+        confidence,
+        source_url: a.permit_number ? `https://detroitmi.gov/government/buildings-and-permits/permits?q=${encodeURIComponent(a.permit_number)}` : null,
+        detected_at: a.issue_date ? new Date(a.issue_date).toISOString() : new Date().toISOString(),
+        status: "new",
+        raw_payload: { source: "bseed_arcgis_fallback", permit: a },
+      };
+      const { error } = await supabase
+        .from("industry_pulse_signals")
+        .upsert(signal, { onConflict: "source_url", ignoreDuplicates: true });
+      if (!error) inserted++;
+    }
+    return { found: features.length, new: inserted };
+  } catch (e: any) {
+    return { found: 0, new: 0, error: e?.message || "bseed_exception" };
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
