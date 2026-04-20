@@ -275,9 +275,28 @@ Deno.serve(async (req) => {
     }
   }
 
-  const status: RunMetrics["status"] = !anyTokenSucceeded
-    ? "error"
-    : errors.length === 0 ? "ok" : (totalNew > 0 ? "partial" : "error");
+  // ── BSEED ArcGIS fallback when Accela auth gates everything ──
+  let bseed: { found: number; new: number; error?: string } | null = null;
+  if (!anyTokenSucceeded) {
+    console.log("[accela] No agency tokens succeeded — falling back to Detroit BSEED ArcGIS feed");
+    bseed = await bseedArcGISFallback(supabase, sinceISO);
+    totalFound += bseed.found;
+    totalNew += bseed.new;
+    perAgency["DETROIT_BSEED_ARCGIS"] = {
+      found: bseed.found,
+      new: bseed.new,
+      status: bseed.error ? 500 : 200,
+      auth: bseed.error ? bseed.error : "fallback_no_auth_required",
+    };
+  }
+
+  const status: RunMetrics["status"] = (anyTokenSucceeded || (bseed && bseed.new > 0))
+    ? (errors.length === 0 ? "ok" : (totalNew > 0 ? "partial" : "error"))
+    : "error";
+
+  const note = !anyTokenSucceeded
+    ? `Accela auth gated for all ${SEED_AGENCIES.length} agencies — using BSEED ArcGIS fallback (${bseed?.new || 0} permits). Request per-agency approval at developer.accela.com.`
+    : `agencies=${SEED_AGENCIES.length} status=${status}`;
 
   await logRun(supabase, {
     source: "accela-permit-scanner",
@@ -292,15 +311,15 @@ Deno.serve(async (req) => {
   try {
     await supabase.from("raw_signals_dump").insert({
       scanner: "accela-permit-scanner",
-      source: "accela",
+      source: anyTokenSucceeded ? "accela" : "bseed_arcgis_fallback",
       vertical: "commercial",
-      raw_payload: { per_agency: perAgency, errors },
+      raw_payload: { per_agency: perAgency, errors, bseed_fallback: bseed },
       pulled_count: totalFound,
       kept_after_gate: totalFound,
       enriched_count: totalNew,
       final_inserted: totalNew,
       duration_ms: Date.now() - startedAt,
-      notes: `agencies=${SEED_AGENCIES.length} status=${status}`,
+      notes: note,
     });
   } catch (e) { console.warn("[accela-permit-scanner] raw dump failed:", e); }
 
@@ -311,5 +330,8 @@ Deno.serve(async (req) => {
     agencies_scanned: SEED_AGENCIES.length,
     per_agency: perAgency,
     errors,
+    accela_auth_succeeded: anyTokenSucceeded,
+    bseed_fallback: bseed,
+    note,
   }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });
