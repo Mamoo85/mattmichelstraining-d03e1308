@@ -110,7 +110,7 @@ serve(async (req) => {
   const perCategory: Record<string, number> = {};
 
   for (const t of targets) {
-    const md = await firecrawlScrape(t.url);
+    const md = await scrapeThomasNet(t.url);
     const list = parseSuppliers(md, t.category).slice(0, maxItems);
     perCategory[t.category] = list.length;
     allSuppliers.push(...list);
