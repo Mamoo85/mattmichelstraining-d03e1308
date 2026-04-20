@@ -1,77 +1,59 @@
 
 
-## Full DWA Admin Audit + Agent Upgrade Plan
+## The truth: NO postcards were actually sent.
 
-The DWA Admin has **40 tabs** across 7 sidebar groups, calling **~100 distinct edge functions**, with security findings that need fixing alongside the orphan/cron audit. I cannot blindly click 40 tabs and 100 buttons in one shot — I need a structured sweep. Here's how I'll do it.
+**Evidence:**
+- `postcard_campaigns` shows the Macomb nursing-home campaign as `status='mailed'`, `lob_batch_id` set, but `sent_count = 0`.
+- `postcard_send_log` is **completely empty** — zero rows ever written.
+- `postcard_prospects.postcard_sent_at` is NULL for **all 66 rows** — no prospect was ever marked as mailed.
+- 33 prospects have addresses, 14 are in Macomb — none of them were actually pushed to Lob.
 
-### Phase 1 — Orphan Sweep (read-only, ~30 min)
-Walk every DWAAdmin tab in order. For each, verify:
-- The lazy import resolves (component exists)
-- Every button on the tab calls a function that exists in `supabase/functions/`
-- That function appears in a working cron OR is admin-triggered (intentional)
-- The tables it reads/writes still exist with the columns the UI expects
+**Why it looked "mailed":**
+The `send-postcards` function flips the campaign to `status='mailed'` even when zero Lob calls succeed (or when zero prospects matched the filter). It also never writes to `postcard_send_log` — that table exists but the function doesn't insert into it. So the UI shows "mailed" while reality is "nothing happened."
 
-Output: a single **Orphan Report** table with columns: Tab → Component → Status (✅ wired / ⚠️ partial / 🔴 broken / 👻 orphan) → Root cause → Fix recommendation.
+**Most likely root cause:**
+The campaign filter `.ilike("county", campaign.county).is("postcard_sent_at", null).not("address_line1", "is", null)` returned 0 prospects (county case mismatch, or addresses got enriched after campaign creation, or the Lob API key is missing/invalid). The function then quietly marked the campaign mailed anyway.
 
-Tabs being audited: Overview, Revenue, Agent Toolkit, Talent Radar, Demand Radar, HVB, Medicare Intel, Industrial Intel, TechAlert Prospects, Growth Signals, Coverage Map, Dead Leads, Contractor Leads, FieldDesk, All Clients, CRM Dashboard, Postcards, Postcard Ops, Faxes, Targeting, Outbox, Agency Outreach, Supplier Outreach, Visitor Intel, The Wire, Trojan Log, Field Stats, Jobs, Simulation, Service Health, Cron Sentinel, Compliance, LARA Health, Labs, Assets, Contracts, Import, Command Deck, Playbook, Strategy, Sales Guide.
+---
 
-### Phase 2 — Live Edge-Function Health Check (~20 min)
-Use `supabase--curl_edge_functions` to ping every "scan/info" button function (the user's specific concern):
-- `medicare-staffing-intel` (multi-state)
-- `industrial-growth-intel`, `boiler-sector-intel`
-- `apify-thomasnet-pull`, `lara-accela-scraper`, `lara-business-scraper`
-- `hire-alert-scanner`, `industry-pulse-scanner`
-- `candidate-deep-enrich`, `lead-enrichment-waterfall`, `enrich-candidate-manual`
-- `cron-sentinel`, `compliance-stats`, `agent-smith-report`
-- `high-volume-buyer-digest`, `dataforseo-maps-search`
-- `agency-outreach-draft`, `generate-audit-pitch`, `generate-digital-audit`
-- `pulse-sms-monitor`, `endpoint-drift-detector`
-- `openrouter-research`, `omni-lead-engine`, `hybrid-prospector`
-- `enrich-postcard-addresses`, `send-postcards`, `enrich-visitor`
+## Plan: Honest postcard tracking
 
-For each: capture status code + error + recent log line. Report.
+### A. Fix the lying status (`send-postcards/index.ts`)
+1. Only set `status='mailed'` if `sentCount > 0`. If zero sends, set `status='failed'` and write the reason to a new `last_error` column.
+2. **Insert one row into `postcard_send_log` per Lob call** (success AND failure) — capturing `lob_id`, address, `cost_cents`, `status` (`sent`/`failed`/`returned`), and the Lob error body if any.
+3. Return Lob's full error in the JSON response so the admin UI can show it.
 
-### Phase 3 — Cron Audit (~15 min)
-Query `cron.job` via SECURITY DEFINER helper or `supabase--read_query`. For each cron:
-- Is the URL hardcoded (good) or vault-lookup (broken — see memory `mem://tech/cron-sentinel-and-monitoring`)
-- Does the target function exist
-- Last-run status from `cron.job_run_details`
-- Identify any cron firing but producing 0 rows for ≥3 consecutive runs
+### B. Wire up Lob delivery webhooks (real tracking)
+4. New edge function `lob-webhook` (verify_jwt=false) — receives Lob's `postcard.in_transit`, `postcard.delivered`, `postcard.returned_to_sender`, `postcard.processed_for_delivery` events. Updates `postcard_send_log.delivery_status` + `delivered_at`. Aggregates back to `postcard_campaigns.delivered_count` + `returned_count`.
+5. Migration: add `delivered_at`, `expected_delivery_date`, `tracking_events JSONB` to `postcard_send_log`; add `delivered_count`, `returned_count`, `last_error`, `total_cost_cents` to `postcard_campaigns`.
+6. Tell user to paste the webhook URL into Lob dashboard → Settings → Webhooks (one-time manual step).
 
-Cross-reference against `cron-sentinel` watchlist to find crons that exist but aren't being watched, and watched names that don't match real cron jobs.
+### C. Per-postcard tracking UI (`AdminPostcardCampaigns.tsx`)
+7. Add a "Send Log" expandable panel under each campaign card showing the live table:
+   - Business name | City | Lob ID (clickable → Lob dashboard) | Status badge (queued/in_transit/delivered/returned/failed) | Sent at | Delivered at | Cost
+8. Stat strip per campaign: **X queued · Y in transit · Z delivered · N returned · $C.CC spent**
+9. "Resend Failed" button — re-runs only the failed prospects from `postcard_send_log`.
+10. **"Diagnose" button** on every campaign — runs a dry-run that shows exactly how many prospects match, why others were skipped (no address / wrong county / already sent), and tests the Lob API key.
 
-### Phase 4 — Agent Upgrades (research + apply)
-For every agent under `.claude/agents/` and the autonomous edge functions (`tom-autonomous`, `oz-autonomous`, `scarlett-autonomous`, `selma-autonomous`, `ops-autonomous`, `dwa-operator`, `dwa-closer`):
-- Confirm heartbeat is firing (read `agent_heartbeats` table)
-- Confirm cron is wired
-- Apply 3 targeted upgrades: (a) all OpenRouter calls use `perplexity/sonar-pro` for research (we paid for it), (b) every agent writes structured output to `agent_run_log` so the Agent Board UI is honest, (c) cost-aware `cheap-extract` adapter swap for any agent doing simple JSON extraction (memory rule).
+### D. QR conversion attribution
+11. Append `?utm_campaign={campaign_id}` to the QR URL so `/hire-alert-trial` page logs `postcard_conversions` with the actual campaign ID. Currently the QR is generic — we can't tie a signup back to a specific mailing.
 
-### Phase 5 — Critical Fixes Applied This Round
-Limit fixes to high-leverage wins (full repair of every orphan would take 2 weeks). Targets:
-1. **Security findings (4 RLS errors)** — `hire_alert_client_candidates`, `industry_pulse_clients`, `search_query_log` policies scoped to `public` instead of `service_role`. One migration fixes all three. Plus the SECURITY DEFINER view (`security--manage_security_finding`).
-2. **Any 🔴 broken scan button found in Phase 1/2** — fix in place (same pattern as Medicare CMS field rename).
-3. **Cron Sentinel watchlist** — sync with actual `cron.job` names so we stop getting false "missing" alerts.
-4. **One missing `IntelRowActions` integration** — apply to any market-intel result table that doesn't have it yet (HVB, Growth Signals, TechAlert Prospects).
+### E. Daily digest email
+12. Cron `postcard-tracking-digest` (daily 8am ET) — emails Matt: cards in transit, delivered yesterday, returns, conversions, cost-per-acquisition per campaign. Skip if zero activity.
 
-### Phase 6 — Click-Through Verification
-Use `browser--navigate_to_sandbox` + `browser--act` to click the top 8 highest-revenue scan buttons (Medicare scan, Industrial scan, Boiler scan, ThomasNet pull, LARA scan, MIOSHA scan, HVB digest, Demand Radar scan). Capture screenshots of result tables so I can confirm rendering, not just HTTP 200s.
+### Files touched
+- `supabase/functions/send-postcards/index.ts` (fix status lie + write to send_log)
+- `supabase/functions/lob-webhook/index.ts` (NEW)
+- `supabase/functions/postcard-tracking-digest/index.ts` (NEW)
+- `src/components/admin/AdminPostcardCampaigns.tsx` (send log panel + diagnose button)
+- `src/pages/HireAlertTrial.tsx` (capture utm_campaign → postcard_conversions)
+- 1 migration: new columns on `postcard_send_log` + `postcard_campaigns`
 
-### Deliverable
-A single response with:
-- 📋 **Orphan Report table** (one row per tab)
-- 🩺 **Edge-Function Health Report** (status + log excerpt per function)
-- ⏰ **Cron Audit Report** (all jobs + sentinel sync diff)
-- 🤖 **Agent Upgrade Report** (heartbeat status + applied upgrades)
-- 🛡️ **Security fixes shipped** (1 migration + finding marks)
-- 🔧 **Files edited** (kept minimal — orphan repair will be a follow-up if any tab is fully broken)
-- 📸 **Screenshots** from the click-through pass
+### What you'll need to do (one-time, ~3 min)
+- Confirm `LOB_API_KEY` is set in Lovable secrets (I'll show you how to test it via the Diagnose button before we send anything else)
+- Paste the webhook URL into Lob dashboard once webhook function deploys
 
-### What I will NOT do this pass
-- I will NOT delete orphaned components — I'll flag them for your review first (some are intentionally dormant)
-- I will NOT rebuild any edge function from scratch — only field-name / param fixes inline
-- I will NOT touch M2 Training admin (`/admin`) — DWA only, per your scope
-- I will NOT add new features unrelated to fixing what's already there
-
-### Risk
-This is a 90-minute audit. Some tabs likely depend on tables that no longer exist (e.g. `crm_visitor_events`, old prospector tables). Where I find a dead table, I'll flag it instead of silently dropping the tab. If the audit reveals 10+ broken tabs, I'll stop fixing and surface a triage list for you to prioritize before I burn cycles patching low-traffic ones.
+### Risk / honesty
+- I won't auto-resend the failed Macomb batch — first I make Diagnose tell you *why* it failed, then you click Resend if you want.
+- Lob tracking lag is real: "delivered" status arrives 5-12 days after mailing. Digest will reflect that timeline honestly.
 
