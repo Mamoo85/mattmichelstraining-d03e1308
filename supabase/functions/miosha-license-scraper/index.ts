@@ -29,6 +29,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
+const ACCELA_APP_ID = Deno.env.get("ACCELA_APP_ID") || "";
+const ACCELA_APP_SECRET = Deno.env.get("ACCELA_APP_SECRET") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 const PDL_API_KEY = Deno.env.get("PDL_API_KEY") || "";
@@ -1465,12 +1467,92 @@ async function scanLARAValEnumeration(): Promise<LicenseCandidate[]> {
 // NOTE: VAL ID enumeration was moved to standalone `lara-fast-scanner` edge
 // function (30-min cron) for instant new-license detection. This wrapper now
 // only handles BCC Sonar so the main 4-hour scanner isn't slowed by VAL probes.
+
+// ── Fix 1: Accela REST API — bypasses JS rendering on aca-prod.accela.com/LARA ─────
+// Layer 1 of scanMiPLUS(). Uses ACCELA_APP_ID + ACCELA_APP_SECRET (register free at
+// developer.accela.com — agency_name "LARA", environment "PROD").
+async function getAccelaGuestToken(): Promise<string | null> {
+  if (!ACCELA_APP_ID || !ACCELA_APP_SECRET) return null;
+  try {
+    const res = await fetch("https://apis.accela.com/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "client_credentials",
+        client_id: ACCELA_APP_ID,
+        client_secret: ACCELA_APP_SECRET,
+        scope: "get_records search_records",
+        agency_name: "LARA",
+        environment: "PROD",
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) { console.warn("[Accela] token fetch failed:", res.status); return null; }
+    const data = await res.json();
+    return data.access_token || null;
+  } catch (e) { console.warn("[Accela] token error:", e instanceof Error ? e.message : String(e)); return null; }
+}
+
+async function scanAccelaAPI(): Promise<LicenseCandidate[]> {
+  const token = await getAccelaGuestToken();
+  if (!token) return [];
+
+  const tradeTypes = ["Boiler", "Electrical", "Plumbing", "HVAC", "Nursing"];
+  const results: LicenseCandidate[] = [];
+
+  for (const trade of tradeTypes) {
+    try {
+      const url = new URL("https://apis.accela.com/v4/records");
+      url.searchParams.set("agency_name", "LARA");
+      url.searchParams.set("environment", "PROD");
+      url.searchParams.set("type", "License");
+      url.searchParams.set("status", "Active");
+      url.searchParams.set("customId", trade);
+      url.searchParams.set("limit", "200");
+      url.searchParams.set("offset", "0");
+
+      const res = await fetch(url.toString(), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "x-accela-appid": ACCELA_APP_ID,
+        },
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!res.ok) { console.warn(`[Accela] ${trade} query failed: ${res.status}`); continue; }
+      const data = await res.json();
+      for (const record of data?.result || []) {
+        const contact = record?.applicant || record?.contacts?.[0];
+        if (!contact?.firstName) continue;
+        results.push({
+          full_name: `${contact.firstName} ${contact.lastName || ""}`.trim(),
+          license_type: trade,
+          license_number: record.customId || null,
+          license_expiry: null,
+          city: contact?.address?.city || null,
+          source: "accela_api",
+        });
+      }
+    } catch (e) { console.warn(`[Accela] ${trade} error:`, e instanceof Error ? e.message : String(e)); }
+  }
+  console.log(`[scanAccelaAPI] found ${results.length} candidates`);
+  return results;
+}
+
 async function scanMiPLUS(): Promise<LicenseCandidate[]> {
+  // Layer 1: Accela REST API (direct, no JS rendering) — requires ACCELA_APP_ID + ACCELA_APP_SECRET
+  const accela = await scanAccelaAPI().catch(() => []);
+  if (accela.length > 0) {
+    console.log(`[scanMiPLUS] Layer 1 (Accela API): ${accela.length} candidates`);
+    return accela;
+  }
+
+  // Layer 2: Sonar LLM fallback (existing)
   await probeLARAHealth();
   const bcc = await scanLARABCCViaSonar().catch(() => []);
   if (laraStatus !== "ok" && laraStatus !== "not_attempted") {
     console.warn(`[MiPLUS] 🔄 LARA portal status: ${laraStatus}. Real-data extraction continues via BCC Sonar (VAL via lara-fast-scanner).`);
   }
+  console.log(`[scanMiPLUS] Layer 2 (Sonar fallback): ${bcc.length} candidates`);
   return bcc;
 }
 
