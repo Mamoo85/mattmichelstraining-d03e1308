@@ -334,13 +334,16 @@ export default function AdminSMSInbox() {
     setComposeTo("");
   }
 
+  const composeNormalized = composing ? normalize(composeTo) : null;
+  const composeValid = composing ? composeNormalized !== null : true;
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-white">💬 SMS Inbox</h2>
-          <p className="text-white/50 text-xs">
-            Two-way conversations on (313) 992-1219 · last 30 days
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="min-w-0">
+          <h2 className="text-lg sm:text-xl font-bold text-white">💬 SMS Inbox</h2>
+          <p className="text-white/50 text-[11px] sm:text-xs">
+            (313) 992-1219 · last 30 days
             {totalUnread > 0 && (
               <span className="ml-2 px-2 py-0.5 rounded bg-[#00d4ff]/20 text-[#00d4ff] text-[10px] font-semibold">
                 {totalUnread} unread
@@ -348,23 +351,31 @@ export default function AdminSMSInbox() {
             )}
           </p>
         </div>
-        <button
-          onClick={loadInbox}
-          className="px-3 py-1.5 rounded text-xs font-semibold bg-white/5 hover:bg-white/10 text-white border border-white/10"
-        >
-          ↻ Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={startCompose}
+            className="px-3 py-1.5 rounded text-xs font-bold bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/90"
+          >
+            ✏️ New
+          </button>
+          <button
+            onClick={loadInbox}
+            className="px-3 py-1.5 rounded text-xs font-semibold bg-white/5 hover:bg-white/10 text-white border border-white/10"
+          >
+            ↻
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 h-[70vh] min-h-[500px]">
-        {/* Thread list */}
-        <div className="border border-white/10 rounded-lg bg-white/[0.02] overflow-y-auto">
+      <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 h-[calc(100vh-200px)] md:h-[70vh] min-h-[500px]">
+        {/* Thread list — hidden on mobile when a convo/compose is open */}
+        <div className={`${showListOnMobile ? "block" : "hidden"} md:block border border-white/10 rounded-lg bg-white/[0.02] overflow-y-auto`}>
           {loading && threads.length === 0 && (
             <div className="p-4 text-white/40 text-sm">Loading…</div>
           )}
           {!loading && threads.length === 0 && (
             <div className="p-4 text-white/40 text-sm">
-              No SMS conversations yet. Inbound texts to (313) 992-1219 will appear here.
+              No SMS conversations yet. Tap <b>✏️ New</b> to text any number.
             </div>
           )}
           {threads.map((t) => {
@@ -372,7 +383,7 @@ export default function AdminSMSInbox() {
             return (
               <button
                 key={t.phone}
-                onClick={() => setActivePhone(t.phone)}
+                onClick={() => { setComposing(false); setActivePhone(t.phone); }}
                 className={`w-full text-left p-3 border-b border-white/5 transition ${
                   active ? "bg-[#00d4ff]/10" : "hover:bg-white/[0.04]"
                 }`}
@@ -406,31 +417,107 @@ export default function AdminSMSInbox() {
           })}
         </div>
 
-        {/* Conversation panel */}
-        <div className="border border-white/10 rounded-lg bg-white/[0.02] flex flex-col min-h-0">
-          {!activeThread && (
+        {/* Conversation panel — hidden on mobile when on list */}
+        <div className={`${showConvoOnMobile ? "flex" : "hidden"} md:flex border border-white/10 rounded-lg bg-white/[0.02] flex-col min-h-0`}>
+          {!activeThread && !composing && (
             <div className="flex-1 flex items-center justify-center text-white/40 text-sm">
-              Select a conversation
+              Select a conversation or tap ✏️ New
             </div>
           )}
-          {activeThread && (
+
+          {/* COMPOSE MODE */}
+          {composing && (
             <>
-              <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-                <div>
-                  <div className="text-white font-semibold">{activeThread.display}</div>
-                  {activeThread.contactLabel && (
-                    <div className="text-[#00d4ff] text-xs">{activeThread.contactLabel}</div>
-                  )}
+              <div className="px-3 py-3 border-b border-white/10 flex items-center gap-2">
+                <button
+                  onClick={() => { setComposing(false); setComposeTo(""); setDraft(""); }}
+                  className="md:hidden text-white/70 hover:text-white text-sm px-2 py-1"
+                  aria-label="Back"
+                >
+                  ←
+                </button>
+                <div className="flex-1 flex items-center gap-2">
+                  <span className="text-white/50 text-xs shrink-0">To:</span>
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    autoFocus
+                    value={composeTo}
+                    onChange={(e) => setComposeTo(e.target.value)}
+                    placeholder="(313) 555-1234"
+                    className="flex-1 bg-[#0a1628] border border-white/10 rounded px-2 py-1.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#00d4ff]"
+                  />
+                </div>
+                {composeNormalized && (
+                  <span className="text-[10px] text-[#00d4ff] hidden sm:inline">
+                    {formatPhone(composeNormalized)}
+                  </span>
+                )}
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 text-white/40 text-sm flex items-center justify-center">
+                {composeValid
+                  ? "New conversation — your reply will start the thread."
+                  : "Enter a 10-digit US phone number to begin."}
+              </div>
+              <div className="border-t border-white/10 p-3">
+                <textarea
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  placeholder="Type your message…"
+                  rows={3}
+                  className="w-full bg-[#0a1628] border border-white/10 rounded p-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#00d4ff]"
+                  disabled={sending}
+                />
+                <div className="flex items-center justify-between mt-2 gap-2">
+                  <span className="text-[11px] text-white/40 truncate">
+                    From (313) 992-1219 · {draft.length}/1500
+                  </span>
+                  <button
+                    onClick={handleSend}
+                    disabled={sending || !draft.trim() || !composeValid}
+                    className="px-4 py-1.5 rounded font-bold text-sm bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/90 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                  >
+                    {sending ? "Sending…" : "Send →"}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* EXISTING THREAD MODE */}
+          {activeThread && !composing && (
+            <>
+              <div className="px-3 sm:px-4 py-3 border-b border-white/10 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <button
+                    onClick={() => setActivePhone(null)}
+                    className="md:hidden text-white/70 hover:text-white text-lg px-1"
+                    aria-label="Back to inbox"
+                  >
+                    ←
+                  </button>
+                  <div className="min-w-0">
+                    <div className="text-white font-semibold truncate">{activeThread.display}</div>
+                    {activeThread.contactLabel && (
+                      <div className="text-[#00d4ff] text-xs truncate">{activeThread.contactLabel}</div>
+                    )}
+                  </div>
                 </div>
                 <a
                   href={`tel:${activeThread.phone}`}
-                  className="text-xs text-white/60 hover:text-white px-3 py-1.5 rounded border border-white/10"
+                  className="text-xs text-white/60 hover:text-white px-3 py-1.5 rounded border border-white/10 shrink-0"
                 >
                   📞 Call
                 </a>
               </div>
 
-              <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-2">
+              <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2">
                 {activeThread.messages.map((m) => {
                   const mine = m.direction === "outbound";
                   return (
@@ -439,7 +526,7 @@ export default function AdminSMSInbox() {
                       className={`flex ${mine ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap break-words ${
+                        className={`max-w-[85%] sm:max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap break-words ${
                           mine
                             ? "bg-[#00d4ff] text-[#0a1628]"
                             : "bg-white/[0.06] text-white border border-white/10"
@@ -476,19 +563,19 @@ export default function AdminSMSInbox() {
                       handleSend();
                     }
                   }}
-                  placeholder="Type your reply… (⌘/Ctrl+Enter to send)"
+                  placeholder="Type your reply…"
                   rows={3}
                   className="w-full bg-[#0a1628] border border-white/10 rounded p-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#00d4ff]"
                   disabled={sending}
                 />
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-[11px] text-white/40">
+                <div className="flex items-center justify-between mt-2 gap-2">
+                  <span className="text-[11px] text-white/40 truncate">
                     From (313) 992-1219 · {draft.length}/1500
                   </span>
                   <button
                     onClick={handleSend}
                     disabled={sending || !draft.trim()}
-                    className="px-4 py-1.5 rounded font-bold text-sm bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/90 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="px-4 py-1.5 rounded font-bold text-sm bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/90 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                   >
                     {sending ? "Sending…" : "Send →"}
                   </button>
@@ -498,6 +585,5 @@ export default function AdminSMSInbox() {
           )}
         </div>
       </div>
-    </div>
   );
 }
