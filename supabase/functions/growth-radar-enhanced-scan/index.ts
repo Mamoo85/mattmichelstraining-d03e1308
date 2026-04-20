@@ -207,7 +207,9 @@ async function scanMiProcurementRFPs(): Promise<Signal[]> {
   }));
 }
 
-serve(async (req) => {
+import { withRunLog } from "../_shared/demand-radar-log.ts";
+
+serve(withRunLog("growth-radar-enhanced-scan", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -261,7 +263,7 @@ serve(async (req) => {
   }
 
   return new Response(
-    JSON.stringify({ ok: true, scanned: scanners.length, inserted, by_source: results }),
+    JSON.stringify({ ok: true, scanned: scanners.length, inserted, by_source: results, signals_found: allSignals.length, signals_new: inserted }),
     { headers: { ...cors, "Content-Type": "application/json" } },
   );
-});
+}));

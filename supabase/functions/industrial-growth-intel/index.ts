@@ -126,7 +126,9 @@ Confidence is 1-10. Score 8+ only if you have strong corroborating evidence (mul
   return leads.map((l) => ({ ...l, vertical, target_buyer_type: config.buyer_type }));
 }
 
-serve(async (req) => {
+import { withRunLog } from "../_shared/demand-radar-log.ts";
+
+serve(withRunLog("industrial-growth-intel", async (req) => {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -239,10 +241,13 @@ serve(async (req) => {
     leads: allLeads,
     total: allLeads.length,
     inserted,
+    signals_found: allLeads.length,
+    signals_new: inserted,
     verticals_scanned: verticalsToScan,
     errors,
+    error: errors.length ? errors.join(" | ") : undefined,
     scanned_at: new Date().toISOString(),
   }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
-});
+}));

@@ -35,7 +35,9 @@ function naicsToVertical(naics: string | null): string {
   return "government_construction";
 }
 
-serve(async (req) => {
+import { withRunLog } from "../_shared/demand-radar-log.ts";
+
+serve(withRunLog("sam-gov-mi-pull", async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -114,4 +116,4 @@ serve(async (req) => {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-});
+}));
