@@ -51,8 +51,14 @@ interface RunMetrics {
   duration_ms: number;
 }
 
-async function getAccelaToken(): Promise<string | null> {
+// Accela's app-level (client_credentials) OAuth requires an agency_name.
+// We try each agency in TARGET_AGENCIES until one succeeds; cache per-agency tokens.
+const tokenCache = new Map<string, { token: string; exp: number }>();
+
+async function getAccelaToken(agency: string): Promise<string | null> {
   if (!ACCELA_APP_ID || !ACCELA_APP_SECRET) return null;
+  const cached = tokenCache.get(agency);
+  if (cached && cached.exp > Date.now()) return cached.token;
   try {
     const res = await fetch(`${ACCELA_BASE}/oauth2/token`, {
       method: "POST",
@@ -62,16 +68,21 @@ async function getAccelaToken(): Promise<string | null> {
         client_id: ACCELA_APP_ID,
         client_secret: ACCELA_APP_SECRET,
         scope: "search_records get_record",
+        agency_name: agency,
+        environment: "PROD",
       }),
     });
     if (!res.ok) {
-      console.error("Accela token error:", res.status, await res.text());
+      console.error(`Accela token error [${agency}]:`, res.status, await res.text());
       return null;
     }
     const json = await res.json();
-    return json.access_token || null;
+    if (!json.access_token) return null;
+    const ttl = (json.expires_in || 3600) * 1000 - 60_000;
+    tokenCache.set(agency, { token: json.access_token, exp: Date.now() + ttl });
+    return json.access_token;
   } catch (e) {
-    console.error("Accela token exception:", e);
+    console.error(`Accela token exception [${agency}]:`, e);
     return null;
   }
 }
