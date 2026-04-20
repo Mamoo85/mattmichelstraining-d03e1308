@@ -256,6 +256,14 @@ function RunDetail({ row, run }: { row: RawDumpRow; run?: RunRow }) {
         </div>
       )}
 
+      {row.scanner === "accela-permit-scanner" && perAgency?.["DETROIT_BSEED_ARCGIS"] && (
+        <div className="rounded border border-amber-500/30 bg-amber-500/5 p-3 text-[11px] text-amber-200">
+          ⚠️ <strong>Accela auth gated for all agencies</strong> — using Detroit BSEED ArcGIS fallback ({perAgency["DETROIT_BSEED_ARCGIS"].new} permits ingested).
+          To unlock Royal Oak, Warren, Sterling Heights, etc., request per-agency approval at{" "}
+          <a href="https://developer.accela.com" target="_blank" rel="noreferrer" className="underline text-[#00d4ff]">developer.accela.com</a>.
+        </div>
+      )}
+
       {perAgency && (
         <div>
           <div className="text-white/60 font-bold mb-1.5">Per-agency / per-source breakdown</div>
