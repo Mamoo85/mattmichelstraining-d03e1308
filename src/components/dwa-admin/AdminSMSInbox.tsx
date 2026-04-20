@@ -170,8 +170,10 @@ export default function AdminSMSInbox() {
       );
 
       setThreads(built);
-      // Default to first thread if nothing selected
-      if (!activePhone && built.length > 0) setActivePhone(built[0].phone);
+      // Default to first thread on desktop only — mobile keeps list visible
+      if (!activePhone && !composing && built.length > 0 && window.innerWidth >= 768) {
+        setActivePhone(built[0].phone);
+      }
     } catch (e) {
       console.error(e);
       toast.error("Failed to load inbox");
