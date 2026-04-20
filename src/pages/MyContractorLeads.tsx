@@ -6,6 +6,7 @@ import SEOHead from "@/components/layout/SEOHead";
 import {
   Phone, CheckCircle2, XCircle, Loader2, MapPin,
   Wrench, TrendingUp, RefreshCw, AlertTriangle, Star,
+  Gift, ShoppingBag, ChevronDown, ChevronUp, Sparkles, Hammer,
 } from "lucide-react";
 
 interface Lead {
@@ -32,6 +33,7 @@ interface Stats {
 }
 
 interface Contractor {
+  email: string;
   business_name: string;
   trade: string;
   city: string;
@@ -40,10 +42,27 @@ interface Contractor {
   member_since: string;
 }
 
+interface BundledServices {
+  missed_call: boolean;
+  reviews: boolean;
+  afterjob: boolean;
+}
+
+interface UpgradeOption {
+  key: string;
+  name: string;
+  tagline: string;
+  standalone: number;
+  bundled: number;
+  checkout_path: string;
+}
+
 interface DashboardData {
   contractor: Contractor;
   stats: Stats;
   leads: Lead[];
+  bundled_services?: BundledServices;
+  available_upgrades?: UpgradeOption[];
 }
 
 const FEEDBACK_CONFIG = {
