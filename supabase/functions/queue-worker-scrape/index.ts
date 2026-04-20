@@ -28,6 +28,9 @@ const SOURCE_FUNCTIONS: Record<string, string | null> = {
   openrouter_jobseekers: null,
   lara_val: "lara-fast-scanner",
   detroit_bseed_permits: null,
+  // New deterministic agents (per protocol):
+  talent_radar: "talent-radar-extraction",   // Socrata SODA — last 24h, 4 trades
+  demand_radar: "demand-radar-extraction",   // Google Places — 25/25/25/25 sectors
 };
 
 const BATCH_SIZE = 5;
