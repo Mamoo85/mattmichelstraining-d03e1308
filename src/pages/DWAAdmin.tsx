@@ -98,7 +98,6 @@ const GROUPS: SidebarGroup[] = [
     label: "Outreach",
     items: [
       { id: "postcards",        label: "📬 Postcards" },
-      { id: "postcard-ops",     label: "🛠️ Postcard Ops" },
       { id: "faxes",            label: "📠 Fax Campaigns" },
       { id: "targeting",        label: "🎯 Targeting" },
       { id: "outbox",           label: "📤 Global Outbox" },
