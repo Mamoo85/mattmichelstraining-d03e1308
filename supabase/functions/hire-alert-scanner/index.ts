@@ -1393,6 +1393,25 @@ serve(async (req: Request) => {
   } catch (e) {
     console.warn("[hire-alert-scanner] zero-result check failed:", e instanceof Error ? e.message : String(e));
   }
+
+  // Fix 2: Apify Playwright fallback — fire-and-forget when LARA direct scan returns 0.
+  // Playwright run has no 150s limit; results stream back via webhook to apify-results-handler.
+  if (mioshaCandidates.length === 0 && APIFY_API_TOKEN) {
+    console.warn("[scanner] LARA/MIOSHA returned 0 — triggering Apify Playwright fallback run");
+    fetch(
+      `https://api.apify.com/v2/acts/${encodeURIComponent(APIFY_ACTORS.miosha)}/runs?token=${APIFY_API_TOKEN}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "lara_playwright",
+          tradeTypes: ["Boiler", "Electrical", "Plumbing", "HVAC", "Nursing"],
+          timeout: 300,
+        }),
+        signal: AbortSignal.timeout(10000),
+      }
+    ).catch(() => {});
+  }
   const sourceHealth: Record<string, string> = {
     miosha: mioshaCandidates.length > 0 ? "✅" : "⚠️ 0 results",
     sonar: jobBoardCandidates.length > 0 ? "✅" : "⚠️ 0 results",

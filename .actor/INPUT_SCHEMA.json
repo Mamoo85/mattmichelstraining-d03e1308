@@ -8,14 +8,32 @@
       "type": "array",
       "description": "Which license categories to download: boiler, electrical, plumbing, hvac, nursing",
       "editor": "stringList",
-      "default": ["boiler", "electrical", "plumbing", "hvac", "nursing"]
+      "default": [
+        "boiler",
+        "electrical",
+        "plumbing",
+        "hvac",
+        "nursing"
+      ]
     },
     "states": {
       "title": "States",
       "type": "array",
       "description": "States to scrape: michigan, florida",
       "editor": "stringList",
-      "default": ["michigan"]
+      "default": [
+        "michigan"
+      ]
+    },
+    "mode": {
+      "title": "Scrape Mode",
+      "type": "string",
+      "description": "excel: download LARA/DBPR Excel/CSV files (default). lara_playwright: headless Playwright scrape of aca-prod.accela.com/LARA when Excel downloads return 0.",
+      "enum": [
+        "excel",
+        "lara_playwright"
+      ],
+      "default": "excel"
     }
   }
 }
