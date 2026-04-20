@@ -12,7 +12,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-04-19. Update this section every session.*
+*Last updated: 2026-04-20. Update this section every session.*
+
+### Phase 19 — MiPLUS/LARA Fail-Proof Scraping Pipeline COMPLETE ✅
+*2026-04-20 — branch `claude/setup-talent-radar-knowledge-VbhqW`*
+
+**4 fixes shipped (all committed + pushed):**
+
+**Fix 4 (silent-zero SMS alerts)** — commits `054ead3`, `a649ab2`
+- Migration `20260420000000_hire_alert_runs_candidates_found.sql` — adds `source_breakdown JSONB` to `hire_alert_runs`
+- `hire-alert-scanner`: 2-strike zero-result SMS (fires only on 2nd consecutive 0 for MIOSHA and job boards separately); writes `source_breakdown` to run row; imports `ADMIN_PHONE`
+- `cron-sentinel`: 3-consecutive-zero "DEAD PIPE" SMS check before self-heartbeat
+
+**Fix 1 (Accela REST API)** — commit `e4339fb`
+- `miosha-license-scraper`: `ACCELA_APP_ID` + `ACCELA_APP_SECRET` constants; `getAccelaGuestToken()` OAuth2; `scanAccelaAPI()` queries `/v4/records` for 5 trade types
+- `scanMiPLUS()` rewired: Layer 1 = Accela REST, Layer 2 = Sonar fallback
+- **Matt action required**: register at developer.accela.com → add `ACCELA_APP_ID` + `ACCELA_APP_SECRET` to Lovable secrets
+
+**Fix 2 (Apify Playwright fallback)** — commit `b3fd2bd`
+- `.actor/Dockerfile`: upgraded to `apify/actor-node-playwright:20`
+- `actor-package.json`: added `playwright ^1.44.0`
+- `.actor/INPUT_SCHEMA.json`: added `lara_playwright` mode enum
+- `main.js`: `scrapeLARAPlaywright()` with Apify residential proxies (`RESIDENTIAL` group); mode dispatch
+- `hire-alert-scanner`: fire-and-forget Playwright run when `mioshaCandidates=0 && APIFY_API_TOKEN` set
+- **Matt action required**: verify Apify webhook in Actor settings → Webhooks → `apify-results-handler` URL
+
+**Fix 3 (proxy rotation)** — no code change. Apify residential proxies are built-in (already in Fix 2).
+
+**New secrets needed:**
+- `ACCELA_APP_ID` + `ACCELA_APP_SECRET` — from developer.accela.com (free tier, agency "LARA", env "PROD")
+
+---
 
 ### Phase 18 — 50-Item Revenue Operations Enhancement COMPLETE ✅
 *2026-04-19 — branch `claude/setup-talent-radar-knowledge-VbhqW`*
