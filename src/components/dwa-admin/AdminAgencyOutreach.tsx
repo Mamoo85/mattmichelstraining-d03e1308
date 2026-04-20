@@ -30,20 +30,27 @@ export default function AdminAgencyOutreach() {
     const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
     const { data } = await supabase
       .from("hire_alert_candidates")
-      .select("id, name, role, county, score, created_at")
+      .select("id, name, full_name, trade, city, metro, score, current_title, qualifications_summary, created_at")
+      .eq("is_company_name", false)
+      .eq("do_not_contact", false)
       .gte("created_at", since)
       .order("score", { ascending: false })
-      .limit(50);
+      .limit(200);
     setCandidates(data || []);
     setLoadingCands(false);
   };
 
+  const HC_TRADES = new Set(["nursing", "home_health"]);
+  const IND_TRADES = new Set(["boiler", "hvac", "electrical", "plumbing", "other_trade"]);
+  const HC_RX = /\b(rn|lpn|cna|nurse|nursing|aide|home\s*health|caregiver|medical|clinical|therapist|hha)\b/;
+  const IND_RX = /\b(boiler|hvac|electric|plumb|stationary|engineer|machinist|operator|tech|welder|mechanic|fitter|pipefitter|fabricat|cnc|industrial)\b/;
+
   const matchingCandidatesFor = (vertical: "industrial" | "healthcare") =>
     candidates.filter(c => {
-      const r = (c.role || "").toLowerCase();
-      const isHC = /\b(rn|lpn|cna|nurse|nursing|aide|home\s*health|caregiver|medical|clinical|therapist)\b/.test(r);
-      const isInd = /\b(boiler|hvac|electric|plumb|stationary|engineer|machinist|operator|tech|welder|mechanic|fitter|pipefitter|fabricat|cnc|industrial)\b/.test(r);
-      return vertical === "healthcare" ? isHC : isInd;
+      const title = `${c.current_title || ""} ${c.trade || ""}`.toLowerCase();
+      const trade = (c.trade || "").toLowerCase();
+      if (vertical === "healthcare") return HC_TRADES.has(trade) || HC_RX.test(title);
+      return IND_TRADES.has(trade) || IND_RX.test(title);
     });
 
   const draftEmail = async (agency: typeof METRO_DETROIT_AGENCIES[0]) => {
