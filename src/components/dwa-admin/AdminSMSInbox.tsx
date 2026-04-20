@@ -82,7 +82,13 @@ export default function AdminSMSInbox() {
   const [activePhone, setActivePhone] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [composing, setComposing] = useState(false);
+  const [composeTo, setComposeTo] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Mobile: when a thread is picked, hide the list. Back button returns to list.
+  const showListOnMobile = !activePhone && !composing;
+  const showConvoOnMobile = !!activePhone || composing;
 
   async function loadInbox() {
     setLoading(true);
