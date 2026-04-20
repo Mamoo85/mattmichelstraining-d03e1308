@@ -602,6 +602,15 @@ serve(async (req) => {
         const rating = place.rating || 0;
         const reviewCount = place.userRatingCount || 0;
 
+        // ── Demand Radar qualification filter ──
+        // Drop sole-proprietor / no-velocity listings: require at least
+        // 5 reviews OR a website. Trade verticals only (dentist exempt
+        // — legacy GBP outreach path).
+        if (DEAD_LEAD_TRADES.has(trade) && reviewCount < 5 && !website) {
+          totalSkipped++;
+          continue;
+        }
+
         // Deduplicate
         const { data: existing } = await sb
           .from("outreach_leads")
