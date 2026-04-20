@@ -444,10 +444,15 @@ export default function AdminSMSInbox() {
             ✏️ New
           </button>
           <button
-            onClick={loadInbox}
-            className="px-3 py-1.5 rounded text-xs font-semibold bg-white/5 hover:bg-white/10 text-white border border-white/10"
+            onClick={async () => {
+              await loadInbox();
+              toast.success("Inbox refreshed");
+            }}
+            disabled={loading}
+            className="px-3 py-1.5 rounded text-xs font-semibold bg-white/5 hover:bg-white/10 text-white border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Refresh inbox"
           >
-            ↻
+            <span className={loading ? "inline-block animate-spin" : "inline-block"}>↻</span>
           </button>
         </div>
       </div>
