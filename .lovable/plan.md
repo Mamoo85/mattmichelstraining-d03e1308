@@ -1,80 +1,77 @@
 
 
-## Audit Results — what's actually broken
+## Full DWA Admin Audit + Agent Upgrade Plan
 
-I called all 4 functions live and inspected the response shapes. Here's the truth:
+The DWA Admin has **40 tabs** across 7 sidebar groups, calling **~100 distinct edge functions**, with security findings that need fixing alongside the orphan/cron audit. I cannot blindly click 40 tabs and 100 buttons in one shot — I need a structured sweep. Here's how I'll do it.
 
-### 1. Medicare — Backend WORKS, frontend doesn't render
-Live API call returned **dozens of 1- and 2-star facilities** (Beaconshire, Orchards at Harper Woods, Roseville, Warren, etc.) with full data. The component sets `facilities` state correctly, but the screenshot shows the empty state. Most likely cause: a stale browser bundle, OR the toast fires `Found X` but the table render path has a bug. Need to verify by reading the rendering code carefully and confirming `facilities.length > 0` actually renders the table. This is the easy fix.
+### Phase 1 — Orphan Sweep (read-only, ~30 min)
+Walk every DWAAdmin tab in order. For each, verify:
+- The lazy import resolves (component exists)
+- Every button on the tab calls a function that exists in `supabase/functions/`
+- That function appears in a working cron OR is admin-triggered (intentional)
+- The tables it reads/writes still exist with the columns the UI expects
 
-### 2. ThomasNet pull — Apify returns HTTP 403
-Live call returned `502 - Actor run failed status: 403`. The actor `zen-studio~thomasnet-suppliers-scraper` is either:
-- A paid actor your Apify account hasn't rented, OR
-- A misnamed/private actor
+Output: a single **Orphan Report** table with columns: Tab → Component → Status (✅ wired / ⚠️ partial / 🔴 broken / 👻 orphan) → Root cause → Fix recommendation.
 
-Real fix: swap to a **free public actor** (e.g. `apify/web-scraper` or `compass/crawler-google-places`) OR rebuild ThomasNet pull to scrape directly via Firecrawl (we have `FIRECRAWL_API_KEY`).
+Tabs being audited: Overview, Revenue, Agent Toolkit, Talent Radar, Demand Radar, HVB, Medicare Intel, Industrial Intel, TechAlert Prospects, Growth Signals, Coverage Map, Dead Leads, Contractor Leads, FieldDesk, All Clients, CRM Dashboard, Postcards, Postcard Ops, Faxes, Targeting, Outbox, Agency Outreach, Supplier Outreach, Visitor Intel, The Wire, Trojan Log, Field Stats, Jobs, Simulation, Service Health, Cron Sentinel, Compliance, LARA Health, Labs, Assets, Contracts, Import, Command Deck, Playbook, Strategy, Sales Guide.
 
-### 3. Boiler Sector Intel — returns 0 because data sources are empty
-Three scans run in parallel:
-- **Compliance gap** — queries `hire_alert_candidates` filtered by boiler-license-type AND `current_employer` matching hospital/school/etc. The candidates table likely has no rows matching those exact license-type strings → 0 results.
-- **Bond funding** — Sonar AI search via Lovable AI gateway. `google/gemini-2.5-flash` is NOT a Sonar/web-search model, it's an LLM with no web access → it returns `[]` or hallucinated empty.
-- **Expansion hiring** — same Sonar problem.
+### Phase 2 — Live Edge-Function Health Check (~20 min)
+Use `supabase--curl_edge_functions` to ping every "scan/info" button function (the user's specific concern):
+- `medicare-staffing-intel` (multi-state)
+- `industrial-growth-intel`, `boiler-sector-intel`
+- `apify-thomasnet-pull`, `lara-accela-scraper`, `lara-business-scraper`
+- `hire-alert-scanner`, `industry-pulse-scanner`
+- `candidate-deep-enrich`, `lead-enrichment-waterfall`, `enrich-candidate-manual`
+- `cron-sentinel`, `compliance-stats`, `agent-smith-report`
+- `high-volume-buyer-digest`, `dataforseo-maps-search`
+- `agency-outreach-draft`, `generate-audit-pitch`, `generate-digital-audit`
+- `pulse-sms-monitor`, `endpoint-drift-detector`
+- `openrouter-research`, `omni-lead-engine`, `hybrid-prospector`
+- `enrich-postcard-addresses`, `send-postcards`, `enrich-visitor`
 
-Real fix: route the two web-research scans through **OpenRouter Perplexity Sonar** (`perplexity/sonar-pro`) — we already use this elsewhere (techalert-prospect-hunter) and `OPENROUTER_API_KEY` is configured.
+For each: capture status code + error + recent log line. Report.
 
-### 4. Accela — auth fails for all 11 agencies
-Live test confirmed: every one of the 11 agencies returned `auth_failed / no_token`. Credentials exist in secrets. Likely root cause: **Accela `agency_name` parameter format is wrong** — Accela expects the agency's actual short ID as registered in their developer console (e.g. `DETROIT`, not `DETROIT_MI`), AND your app must be individually approved per agency. Most public Accela apps only get auto-approval for sandbox `ISSSTAGING`.
+### Phase 3 — Cron Audit (~15 min)
+Query `cron.job` via SECURITY DEFINER helper or `supabase--read_query`. For each cron:
+- Is the URL hardcoded (good) or vault-lookup (broken — see memory `mem://tech/cron-sentinel-and-monitoring`)
+- Does the target function exist
+- Last-run status from `cron.job_run_details`
+- Identify any cron firing but producing 0 rows for ≥3 consecutive runs
 
-Real fix: there are two paths:
-1. **Code fix**: try a different agency-name pattern (drop `_MI` suffix), AND fall back to Accela's public-records search API which doesn't need agency-level OAuth.
-2. **Honest UX fix**: the Accela API is gated by per-agency approval that takes weeks. Replace this scanner's primary path with the **Detroit BSEED ArcGIS feed** (free, no auth, already documented in your memory) and demote Accela to a secondary/optional source.
+Cross-reference against `cron-sentinel` watchlist to find crons that exist but aren't being watched, and watched names that don't match real cron jobs.
 
----
+### Phase 4 — Agent Upgrades (research + apply)
+For every agent under `.claude/agents/` and the autonomous edge functions (`tom-autonomous`, `oz-autonomous`, `scarlett-autonomous`, `selma-autonomous`, `ops-autonomous`, `dwa-operator`, `dwa-closer`):
+- Confirm heartbeat is firing (read `agent_heartbeats` table)
+- Confirm cron is wired
+- Apply 3 targeted upgrades: (a) all OpenRouter calls use `perplexity/sonar-pro` for research (we paid for it), (b) every agent writes structured output to `agent_run_log` so the Agent Board UI is honest, (c) cost-aware `cheap-extract` adapter swap for any agent doing simple JSON extraction (memory rule).
 
-## The plan (what I'll do once you approve)
+### Phase 5 — Critical Fixes Applied This Round
+Limit fixes to high-leverage wins (full repair of every orphan would take 2 weeks). Targets:
+1. **Security findings (4 RLS errors)** — `hire_alert_client_candidates`, `industry_pulse_clients`, `search_query_log` policies scoped to `public` instead of `service_role`. One migration fixes all three. Plus the SECURITY DEFINER view (`security--manage_security_finding`).
+2. **Any 🔴 broken scan button found in Phase 1/2** — fix in place (same pattern as Medicare CMS field rename).
+3. **Cron Sentinel watchlist** — sync with actual `cron.job` names so we stop getting false "missing" alerts.
+4. **One missing `IntelRowActions` integration** — apply to any market-intel result table that doesn't have it yet (HVB, Growth Signals, TechAlert Prospects).
 
-### Phase 1 — Medicare visibility (highest confidence fix)
-- Re-read `AdminMedicareIntel.tsx` render logic line-by-line to confirm the bug
-- Add an explicit "loaded N from API" debug line under the scan button
-- Add a **clickable row action panel** (not just modal) — Call / Email / Google / View on Medicare.gov / Add to TechAlert prospects DB / Add to postcard queue
-- Wire **"Add to TechAlert prospects"** button → inserts into `techalert_prospect_targets` so they flow into your existing prospect hunter UI
+### Phase 6 — Click-Through Verification
+Use `browser--navigate_to_sandbox` + `browser--act` to click the top 8 highest-revenue scan buttons (Medicare scan, Industrial scan, Boiler scan, ThomasNet pull, LARA scan, MIOSHA scan, HVB digest, Demand Radar scan). Capture screenshots of result tables so I can confirm rendering, not just HTTP 200s.
 
-### Phase 2 — Boiler Intel (real data, not empty)
-- Swap `aiChat()` and `sonarSearch()` to OpenRouter `perplexity/sonar-pro` (real web search) — same pattern as `techalert-prospect-hunter`
-- Loosen the compliance-gap query: also pull from `miosha_licenses` table directly if it exists, not just `hire_alert_candidates`
-- Add diagnostic counters in the response so the toast shows *why* a scan returned 0 (e.g. "Sonar returned 4 raw, 0 passed confidence ≥6 filter")
+### Deliverable
+A single response with:
+- 📋 **Orphan Report table** (one row per tab)
+- 🩺 **Edge-Function Health Report** (status + log excerpt per function)
+- ⏰ **Cron Audit Report** (all jobs + sentinel sync diff)
+- 🤖 **Agent Upgrade Report** (heartbeat status + applied upgrades)
+- 🛡️ **Security fixes shipped** (1 migration + finding marks)
+- 🔧 **Files edited** (kept minimal — orphan repair will be a follow-up if any tab is fully broken)
+- 📸 **Screenshots** from the click-through pass
 
-### Phase 3 — ThomasNet (replace broken Apify actor)
-- Rewrite `apify-thomasnet-pull` to use **Firecrawl** against ThomasNet category pages (`thomasnet.com/suppliers/michigan/boiler-manufacturers/...`) — we already pay for Firecrawl
-- Parse company name + city + url from the markdown, upsert as before
-- Same UI, same results table, just a working data source
+### What I will NOT do this pass
+- I will NOT delete orphaned components — I'll flag them for your review first (some are intentionally dormant)
+- I will NOT rebuild any edge function from scratch — only field-name / param fixes inline
+- I will NOT touch M2 Training admin (`/admin`) — DWA only, per your scope
+- I will NOT add new features unrelated to fixing what's already there
 
-### Phase 4 — Accela (honest fallback)
-- Add a real fallback inside `accela-permit-scanner`: when all agencies return `auth_failed`, hit the **Detroit BSEED ArcGIS REST API** (free, public — already used by `industry-pulse-scanner`) for last 7 days of trades permits and write those into `industry_pulse_signals` so the scan still produces useful results
-- Update the WaterfallDiagnostics row for Accela to show "Accela auth gated — using BSEED ArcGIS fallback (N permits)" instead of looking like a hard failure
-- Add a one-line explainer in `WaterfallDiagnostics` linking to developer.accela.com so you know the long-term path is "request agency approval"
-
-### Phase 5 — Universal "make every result clickable"
-For Medicare, Boiler signals, Industrial Growth, and ThomasNet rows — add the same 5-action toolbar to each row:
-- 📞 Call (tel:)
-- ✉️ Email (mailto with pre-filled pitch)
-- 🔎 Google
-- 📋 Copy contact info
-- ➕ Add to TechAlert prospects (writes to `techalert_prospect_targets`)
-
-That last button is the key piece you've been asking for — every market-intel result becomes a one-click prospect that flows into your existing outreach pipeline.
-
-### Files I'll touch
-- `supabase/functions/medicare-staffing-intel/index.ts` — already correct, no change unless render audit reveals shape mismatch
-- `supabase/functions/boiler-sector-intel/index.ts` — switch to OpenRouter Sonar, add diagnostics
-- `supabase/functions/apify-thomasnet-pull/index.ts` — full rewrite to Firecrawl
-- `supabase/functions/accela-permit-scanner/index.ts` — add BSEED ArcGIS fallback
-- `src/components/admin/AdminMedicareIntel.tsx` — add per-row action toolbar + Add-to-Prospects
-- `src/components/admin/AdminIndustrialIntel.tsx` — same toolbar on signals + leads
-- `src/components/dwa-admin/WaterfallDiagnostics.tsx` — better Accela messaging
-- One new shared helper: `src/lib/addToTechAlertProspects.ts`
-
-### Risk / what I won't promise
-- Accela will still need per-agency approval to ever return real Accela data. The BSEED ArcGIS fallback covers Detroit only — Royal Oak, Warren, etc. are gated until you get approved by each city. I'll make the diagnostics tell you that clearly instead of pretending it works.
-- Boiler Sonar results depend on whether real bond/hiring news actually exists in the past 30–90 days. Some scans will legitimately return small numbers — but they'll be real, not hallucinated.
+### Risk
+This is a 90-minute audit. Some tabs likely depend on tables that no longer exist (e.g. `crm_visitor_events`, old prospector tables). Where I find a dead table, I'll flag it instead of silently dropping the tab. If the audit reveals 10+ broken tabs, I'll stop fixing and surface a triage list for you to prioritize before I burn cycles patching low-traffic ones.
 
