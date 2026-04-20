@@ -1,8 +1,19 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { X, Copy, Mail, ExternalLink, Info, Trash2, CheckCircle2 } from "lucide-react";
+import { X, Copy, Mail, ExternalLink, Info, Trash2, CheckCircle2, ArrowUp, ArrowDown, Search } from "lucide-react";
 import IntelRowActions from "./IntelRowActions";
+import { US_METROS } from "@/lib/usMetros";
+
+// Build state→metro index from canonical US_METROS list (DFW, Houston, Atlanta, Phoenix, Detroit…)
+const STATE_METROS: Record<string, { id: string; label: string }[]> = US_METROS.reduce((acc, m) => {
+  (acc[m.state] ||= []).push({ id: m.id, label: m.label });
+  return acc;
+}, {} as Record<string, { id: string; label: string }[]>);
+const STATE_OPTIONS = Object.keys(STATE_METROS).sort();
+
+type SortKey = "provider_name" | "city" | "staffing_rating" | "overall_rating" | "number_of_beds";
+const MARKET_KEY = "dwa_medicare_market";
 
 interface Facility {
   provider_name: string;
