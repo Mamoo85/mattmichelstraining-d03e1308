@@ -221,38 +221,76 @@ export default function MyContractorLeads() {
             </div>
           )}
 
-          {/* Included Free — bundled bonus services */}
+          {/* Included Free — bundled bonus services (OPT-IN) */}
           {data.bundled_services && (
             <div className="bg-gradient-to-br from-emerald-500/10 to-[#0f1f35] border border-emerald-500/30 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-2">
                 <Gift className="h-4 w-4 text-emerald-400" />
-                <h2 className="text-sm font-bold text-emerald-300">Included Free with Your Plan</h2>
+                <h2 className="text-sm font-bold text-emerald-300">Free Bonuses — Opt In Anytime</h2>
                 <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px] ml-auto">
                   $163/mo value · $0
                 </Badge>
               </div>
+              <p className="text-white/50 text-[11px] mb-3 leading-relaxed">
+                These are <span className="text-emerald-300 font-semibold">100% optional</span> and bundled free with your lead plan. Turn any of them on/off anytime — no card needed, no extra charge ever.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {[
-                  { active: data.bundled_services.missed_call, label: "Missed Call Text-Back", value: "$99/mo", desc: "Caller goes to voicemail? Auto-text fires in 5 sec." },
-                  { active: data.bundled_services.reviews,      label: "Review Monitor",       value: "$25/mo", desc: "Get alerted on every new Google review + reply drafts." },
-                  { active: data.bundled_services.afterjob,     label: "Quote Follow-Up Drip", value: "$39/mo", desc: "Auto-text quotes that didn't book within 48hrs." },
+                  {
+                    key: "missed_call",
+                    active: data.bundled_services.missed_call,
+                    label: "Missed Call Text-Back",
+                    value: "$99/mo",
+                    desc: "If a caller goes to voicemail, an auto-text fires in 5 seconds so they don't bounce to a competitor.",
+                    example: `"Hey, this is ${data.contractor?.business_name || "your business"} — sorry I missed your call. What can I help with? I'll call back ASAP."`,
+                  },
+                  {
+                    key: "reviews",
+                    active: data.bundled_services.reviews,
+                    label: "Review Monitor",
+                    value: "$25/mo",
+                    desc: "Alerts you the second a new Google review hits + drafts a reply for you to copy/paste.",
+                    example: `"⭐ New 5★ from Sarah K: 'Fast, clean install.' Suggested reply: 'Thanks Sarah! Glad we got it done quick — call us anytime.'"`,
+                  },
+                  {
+                    key: "afterjob",
+                    active: data.bundled_services.afterjob,
+                    label: "Quote Follow-Up Drip",
+                    value: "$39/mo",
+                    desc: "If a quote doesn't book within 48 hrs, auto-texts the homeowner a polite nudge so it doesn't go cold.",
+                    example: `"Hi Mike — checking in on the panel quote from Tuesday. Any questions I can answer? Happy to lock you in this week. — ${data.contractor?.business_name || "your business"}"`,
+                  },
                 ].map(b => (
-                  <div key={b.label} className="bg-[#0a1628]/60 border border-white/5 rounded-lg p-3">
+                  <div key={b.key} className="bg-[#0a1628]/60 border border-white/5 rounded-lg p-3 flex flex-col">
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-white text-xs font-bold">{b.label}</p>
                       {b.active ? (
-                        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px]">● Active</Badge>
+                        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px]">● ON</Badge>
                       ) : (
-                        <Badge className="bg-white/5 text-white/40 border-white/10 text-[9px]">Pending</Badge>
+                        <Badge className="bg-white/5 text-white/40 border-white/10 text-[9px]">OFF</Badge>
                       )}
                     </div>
-                    <p className="text-emerald-400/70 text-[10px] font-bold mb-1">{b.value} value</p>
-                    <p className="text-white/50 text-[10px] leading-relaxed">{b.desc}</p>
+                    <p className="text-emerald-400/70 text-[10px] font-bold mb-1">{b.value} value · FREE</p>
+                    <p className="text-white/60 text-[10px] leading-relaxed mb-2">{b.desc}</p>
+                    <div className="bg-black/30 border-l-2 border-emerald-500/40 px-2 py-1.5 rounded mb-2">
+                      <p className="text-white/40 text-[9px] uppercase tracking-wide mb-0.5">Example:</p>
+                      <p className="text-emerald-200/80 text-[10px] italic leading-snug">{b.example}</p>
+                    </div>
+                    <a
+                      href={`mailto:matt@detroitwebagent.com?subject=${encodeURIComponent(`${b.active ? "Pause" : "Turn on"} ${b.label}`)}&body=${encodeURIComponent(`Hey Matt — please ${b.active ? "pause" : "activate"} ${b.label} on my account.`)}`}
+                      className={`mt-auto text-center text-[10px] font-semibold rounded-md px-2 py-1.5 transition ${
+                        b.active
+                          ? "bg-white/5 text-white/60 hover:bg-white/10 border border-white/10"
+                          : "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40"
+                      }`}
+                    >
+                      {b.active ? "Turn off" : "Turn on (free)"}
+                    </a>
                   </div>
                 ))}
               </div>
               <p className="text-white/30 text-[10px] mt-3 text-center">
-                Auto-provisioned when you signed up. No extra card capture. Yours as long as your lead network plan is active.
+                Opt out anytime — text Matt at (313) 992-1219 or tap the button on any card. No charge either way.
               </p>
             </div>
           )}
