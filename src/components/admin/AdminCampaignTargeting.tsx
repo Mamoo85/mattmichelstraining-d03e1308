@@ -197,7 +197,7 @@ export default function AdminCampaignTargeting() {
                   <th className="px-4 py-2">Location</th>
                   <th className="px-4 py-2">Channel</th>
                   <th className="px-4 py-2">Why</th>
-                  <th className="px-4 py-2">Source</th>
+                  <th className="px-4 py-2 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -206,30 +206,60 @@ export default function AdminCampaignTargeting() {
                     {loading ? "Loading…" : "No prospects yet for this audience. Switch to '🔍 Find New Prospects' to scan."}
                   </td></tr>
                 )}
-                {prospects.map((p) => (
-                  <tr key={p.id} className="border-t border-white/5 hover:bg-white/5">
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                        p.lead_score >= 60 ? "bg-emerald-500/20 text-emerald-300"
-                        : p.lead_score >= 30 ? "bg-amber-500/20 text-amber-300"
-                        : "bg-white/10 text-white/60"
-                      }`}>{p.lead_score}/100</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="font-medium">{p.business_name}</div>
-                      {p.phone && <div className="text-xs text-white/40">{p.phone}</div>}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-white/60">
-                      {[p.city, p.state, p.zip].filter(Boolean).join(", ") || "—"}
-                      {p.county && <div className="text-white/30">{p.county} County</div>}
-                    </td>
-                    <td className="px-4 py-3 text-xs">{channelEmoji(p.channel_hint)}</td>
-                    <td className="px-4 py-3 text-xs text-white/70 max-w-md">
-                      {(p.intel_notes || []).join(" · ") || <span className="text-white/30">—</span>}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-white/40">{p.source}</td>
-                  </tr>
-                ))}
+                {prospects.map((p) => {
+                  const loc = [p.city, p.state, p.zip].filter(Boolean).join(", ");
+                  const gQuery = encodeURIComponent(`${p.business_name} ${p.city || ""} ${p.state || ""}`);
+                  const mailto = p.business_name
+                    ? `mailto:?subject=${encodeURIComponent(`Quick question — ${p.business_name}`)}&body=${encodeURIComponent(`Hi ${p.business_name} team,\n\n— Matt Michels\nDetroit Web Agency\n(313) 992-1219\ndetroitwebagent.com`)}`
+                    : "#";
+                  const copyAll = () => {
+                    const text = [p.business_name, loc, p.phone, p.fax_number, (p.intel_notes || []).join(" · ")]
+                      .filter(Boolean).join(" · ");
+                    navigator.clipboard.writeText(text);
+                  };
+                  return (
+                    <tr key={p.id} className="border-t border-white/5 hover:bg-white/5">
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                          p.lead_score >= 60 ? "bg-emerald-500/20 text-emerald-300"
+                          : p.lead_score >= 30 ? "bg-amber-500/20 text-amber-300"
+                          : "bg-white/10 text-white/60"
+                        }`}>{p.lead_score}/100</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <a
+                          href={`https://www.google.com/search?q=${gQuery}`}
+                          target="_blank" rel="noreferrer"
+                          className="font-medium text-white hover:text-[#00d4ff]"
+                        >{p.business_name}</a>
+                        {p.phone && <div className="text-xs text-white/40">{p.phone}</div>}
+                        <div className="text-[10px] text-white/30">{p.source}</div>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-white/60">
+                        {loc || "—"}
+                        {p.county && <div className="text-white/30">{p.county} County</div>}
+                      </td>
+                      <td className="px-4 py-3 text-xs">{channelEmoji(p.channel_hint)}</td>
+                      <td className="px-4 py-3 text-xs text-white/70 max-w-md">
+                        {(p.intel_notes || []).join(" · ") || <span className="text-white/30">—</span>}
+                      </td>
+                      <td className="px-4 py-3 text-xs">
+                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                          {p.phone && (
+                            <a href={`tel:${p.phone}`} title="Call"
+                               className="px-2 py-1 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/20">📞</a>
+                          )}
+                          <a href={mailto} title="Email"
+                             className="px-2 py-1 rounded bg-[#00d4ff]/10 text-[#00d4ff] border border-[#00d4ff]/20 hover:bg-[#00d4ff]/20">✉️</a>
+                          <a href={`https://www.google.com/search?q=${gQuery}`} target="_blank" rel="noreferrer" title="Google"
+                             className="px-2 py-1 rounded bg-white/5 text-white/60 border border-white/10 hover:bg-white/10">🔎</a>
+                          <button onClick={copyAll} title="Copy"
+                                  className="px-2 py-1 rounded bg-white/5 text-white/60 border border-white/10 hover:bg-white/10">📋</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
