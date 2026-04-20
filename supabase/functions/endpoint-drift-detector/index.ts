@@ -37,7 +37,7 @@ serve(async (req) => {
 
   const { data: endpoints, error } = await (sb.from as any)("data_source_endpoints").select("*");
   if (error || !endpoints) {
-    return new Response(JSON.stringify({ error: error?.message || "no endpoints" }), { status: 500 });
+    return new Response(JSON.stringify({ error: error?.message || "no endpoints" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   const swaps: string[] = [];
