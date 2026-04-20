@@ -1,3 +1,32 @@
+// contractor-prospector — DWA outreach + Demand Radar
+//
+// ═══════════════════════════════════════════════════════════════════
+// DEMAND RADAR PROTOCOL (canonical implementation — do not fork)
+// ═══════════════════════════════════════════════════════════════════
+// ROLE: Demand Radar Extraction Agent. Identify active, high-intent
+// home service businesses (HVAC, Plumbing, Electrical, Roofing) within
+// designated Metro Detroit territories.
+//
+// SECTOR BALANCING: per-run extraction is balanced equally across the
+// 4 trade verticals (HVAC / Plumbing / Electrical / Roofing) via the
+// daily combo rotation in getTodaysCombos(). Dentist remains as a
+// non-trade vertical for legacy GBP outreach but is excluded from
+// Demand Radar sector accounting.
+//
+// QUALIFICATION FILTER (drop sole-prop / no-velocity):
+//   Keep a Google Places result only if (userRatingCount >= 5) OR a
+//   websiteUri is present. Everything else is treated as a sole prop
+//   without operational velocity and skipped.
+//
+// EXTRACTION-ONLY DISCIPLINE: do not spend compute guessing CEO mobile
+// numbers or personal emails. Persist business firmographics and let
+// the enhancement layer (Sonar/Hunter/Snov) handle contact discovery.
+//
+// POST-EXTRACTION ENHANCEMENT QUEUE:
+//   Output → public.contractor_clients / public.outreach_leads
+//   → consumed by the existing enrichment + outreach waterfall.
+// ═══════════════════════════════════════════════════════════════════
+//
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { generateText } from "../_shared/ai.ts";
