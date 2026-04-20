@@ -585,5 +585,6 @@ export default function AdminSMSInbox() {
           )}
         </div>
       </div>
+    </div>
   );
 }
