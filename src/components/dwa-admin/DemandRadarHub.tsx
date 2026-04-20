@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Loader2, ExternalLink } from "lucide-react";
 import DemandThroughputKPIs from "./DemandThroughputKPIs";
 import DemandRadarLiveLog from "./DemandRadarLiveLog";
+import WaterfallDiagnostics from "./WaterfallDiagnostics";
 
 const AdminDemandRadar = lazy(() => import("./AdminDemandRadar"));
 
@@ -105,6 +106,9 @@ export default function DemandRadarHub() {
           <TabsTrigger value="pulse" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-300">
             🏭 Industry Pulse
           </TabsTrigger>
+          <TabsTrigger value="waterfall" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-300">
+            💧 Waterfall
+          </TabsTrigger>
           <TabsTrigger value="live-log" className="data-[state=active]:bg-rose-500/20 data-[state=active]:text-rose-300">
             🔴 Live Log
           </TabsTrigger>
@@ -126,6 +130,10 @@ export default function DemandRadarHub() {
 
         <TabsContent value="pulse" className="mt-4">
           <FilteredSignalList types={PULSE_TYPES} label="Industry Pulse" />
+        </TabsContent>
+
+        <TabsContent value="waterfall" className="mt-4">
+          <WaterfallDiagnostics scannerFilter={["industry-pulse-scanner", "accela-permit-scanner"]} />
         </TabsContent>
 
         <TabsContent value="live-log" className="mt-4">

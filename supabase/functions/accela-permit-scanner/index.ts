@@ -220,6 +220,22 @@ Deno.serve(async (req) => {
     duration_ms: Date.now() - startedAt,
   });
 
+  // Phase 20: waterfall drop-off snapshot
+  try {
+    await supabase.from("raw_signals_dump").insert({
+      scanner: "accela-permit-scanner",
+      source: "accela",
+      vertical: "commercial",
+      raw_payload: { per_agency: perAgency, errors },
+      pulled_count: totalFound,
+      kept_after_gate: totalFound,
+      enriched_count: totalNew,
+      final_inserted: totalNew,
+      duration_ms: Date.now() - startedAt,
+      notes: `agencies=${SEED_AGENCIES.length} status=${status}`,
+    });
+  } catch (e) { console.warn("[accela-permit-scanner] raw dump failed:", e); }
+
   return new Response(JSON.stringify({
     ok: true,
     signals_found: totalFound,
