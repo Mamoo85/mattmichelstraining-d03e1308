@@ -4468,11 +4468,14 @@ export type Database = {
       }
       fax_campaigns: {
         Row: {
+          audience_type: string | null
           county: string | null
           created_at: string
           id: string
+          last_error: string | null
           message_html: string
           name: string
+          phaxio_batch_id: string | null
           sent_at: string | null
           status: string
           subject: string | null
@@ -4481,11 +4484,14 @@ export type Database = {
           total_sent: number | null
         }
         Insert: {
+          audience_type?: string | null
           county?: string | null
           created_at?: string
           id?: string
+          last_error?: string | null
           message_html: string
           name: string
+          phaxio_batch_id?: string | null
           sent_at?: string | null
           status?: string
           subject?: string | null
@@ -4494,11 +4500,14 @@ export type Database = {
           total_sent?: number | null
         }
         Update: {
+          audience_type?: string | null
           county?: string | null
           created_at?: string
           id?: string
+          last_error?: string | null
           message_html?: string
           name?: string
+          phaxio_batch_id?: string | null
           sent_at?: string | null
           status?: string
           subject?: string | null
@@ -4507,6 +4516,69 @@ export type Database = {
           total_sent?: number | null
         }
         Relationships: []
+      }
+      fax_conversions: {
+        Row: {
+          audience_type: string | null
+          business_name: string | null
+          campaign_id: string | null
+          created_at: string
+          email: string | null
+          event: string
+          id: string
+          notes: string | null
+          product_key: string | null
+          prospect_id: string | null
+          referrer: string | null
+          user_agent: string | null
+          utm_campaign: string | null
+        }
+        Insert: {
+          audience_type?: string | null
+          business_name?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          email?: string | null
+          event: string
+          id?: string
+          notes?: string | null
+          product_key?: string | null
+          prospect_id?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+        }
+        Update: {
+          audience_type?: string | null
+          business_name?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          email?: string | null
+          event?: string
+          id?: string
+          notes?: string | null
+          product_key?: string | null
+          prospect_id?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fax_conversions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "fax_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fax_conversions_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "fax_prospects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fax_opt_outs: {
         Row: {
@@ -4535,11 +4607,15 @@ export type Database = {
       fax_prospects: {
         Row: {
           address: string | null
+          audience_type: string | null
           business_name: string
           city: string | null
           contact_name: string | null
+          county: string | null
           created_at: string
           fax_number: string
+          fax_send_id: string | null
+          fax_sent_at: string | null
           id: string
           notes: string | null
           segment: string
@@ -4551,11 +4627,15 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          audience_type?: string | null
           business_name: string
           city?: string | null
           contact_name?: string | null
+          county?: string | null
           created_at?: string
           fax_number: string
+          fax_send_id?: string | null
+          fax_sent_at?: string | null
           id?: string
           notes?: string | null
           segment: string
@@ -4567,11 +4647,15 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          audience_type?: string | null
           business_name?: string
           city?: string | null
           contact_name?: string | null
+          county?: string | null
           created_at?: string
           fax_number?: string
+          fax_send_id?: string | null
+          fax_sent_at?: string | null
           id?: string
           notes?: string | null
           segment?: string
@@ -4585,37 +4669,49 @@ export type Database = {
       }
       fax_send_log: {
         Row: {
+          audience_type: string | null
           business_name: string | null
           campaign_id: string | null
           cost: number | null
+          delivered_at: string | null
           error_message: string | null
+          failed_at: string | null
           fax_number: string
           id: string
           phaxio_id: string | null
+          phaxio_status: string | null
           prospect_id: string | null
           sent_at: string
           status: string
         }
         Insert: {
+          audience_type?: string | null
           business_name?: string | null
           campaign_id?: string | null
           cost?: number | null
+          delivered_at?: string | null
           error_message?: string | null
+          failed_at?: string | null
           fax_number: string
           id?: string
           phaxio_id?: string | null
+          phaxio_status?: string | null
           prospect_id?: string | null
           sent_at?: string
           status?: string
         }
         Update: {
+          audience_type?: string | null
           business_name?: string | null
           campaign_id?: string | null
           cost?: number | null
+          delivered_at?: string | null
           error_message?: string | null
+          failed_at?: string | null
           fax_number?: string
           id?: string
           phaxio_id?: string | null
+          phaxio_status?: string | null
           prospect_id?: string | null
           sent_at?: string
           status?: string
