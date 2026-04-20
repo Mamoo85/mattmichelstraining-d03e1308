@@ -144,7 +144,16 @@ serve(async (req) => {
   for (const it of unique) {
     try {
       const ratingNote = it.rating ? ` (Google ${it.rating}★, ${it.reviews ?? 0} reviews)` : "";
-      const { error } = await sb.from("industry_pulse_signals").upsert({
+      // Skip if already exists (no unique constraint to upsert against)
+      const { data: existing } = await sb
+        .from("industry_pulse_signals")
+        .select("id")
+        .eq("company_name", it.company_name)
+        .eq("sector", "industrial_supplier")
+        .maybeSingle();
+      if (existing) continue;
+
+      const { error } = await sb.from("industry_pulse_signals").insert({
         company_name: it.company_name,
         location: it.city ? `${it.city}, MI` : "Michigan",
         sector: "industrial_supplier",
@@ -155,9 +164,9 @@ serve(async (req) => {
         recommended_pitch: `${it.company_name}${ratingNote} — Michigan ${it.category}. Pitch TechAlert for verified licensed tradesperson hiring (boiler operators, electricians, HVAC techs, machinists).`,
         detected_at: new Date().toISOString(),
         client_tag: "techalert_prospect",
-      }, { onConflict: "company_name,sector", ignoreDuplicates: false });
+      });
       if (!error) inserted++;
-      else console.error("[upsert] error:", error.message);
+      else console.error("[insert] error:", error.message);
     } catch (err) {
       console.error("ingest supplier error:", err);
     }
