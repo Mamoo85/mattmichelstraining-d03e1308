@@ -1,80 +1,95 @@
 
 
-## Plan: Fix False Alerts + AI-Suggested Replies + Onboard First Contractor
+# Livonia Onboarding — Premium Offer + Dashboard Upgrade
 
-### Part 1 — Kill the false "DEAD PIPE" + "Enrichment RED" alerts
+## What changes in the SMS to the electrician
+- **No 7-day free trial** (we're spending on ads — pay starts day 1)
+- **Cancel anytime + 30-day money-back guarantee** if zero leads delivered
+- **Bonus stack** included free with the $399/mo:
+  - 🎁 Missed Call Text-Back ($99/mo value) — never lose another caller
+  - 🎁 Review Monitor ($25/mo value) — Google review alerts + reply drafts
+  - 🎁 After-Job Drip ($29/mo value) — auto follow-up on completed jobs
+  - 🎁 Lead dashboard with 1-tap call/hire/dispute tracking
+- **Add-on shop in dashboard** at heavy bundle discount (30% off all DWA add-ons for active lead-network clients)
+- **Honesty line**: "The dashboard is brand new — we're shipping upgrades almost daily. Bare with us as it gets better."
 
-**Root cause #1 — Wrong column in cron-sentinel dead-pipe check (`cron-sentinel/index.ts` line 267):**
-The query orders by `started_at` but the `hire_alert_runs` table uses `run_at`. Because `started_at` doesn't exist (or is always NULL), the query may return rows in random order, which is why you got "DEAD PIPE" while the scanner actually found 35 candidates at 04:36 UTC today.
+## Dashboard changes (MyContractorLeads.tsx)
 
-Fix: change `.order('started_at', ...)` → `.order('run_at', ...)`. Also add a sanity guard: only fire if the most recent run is < 6 hours old (otherwise the scanner is just paused, not dead) and require all 3 runs to be from the same `source` (the table mixes `source='miosha'` and `source='all'` rows — currently the check averages across both, which is why you see false zeros).
+### 1. Add "🎁 Included Free" strip at top
+Shows the 3 bonus services bundled in (Missed Call, Reviews, After-Job Drip) with a one-click "Activate" link that pre-fills their info into each product's $0 internal checkout (no separate card capture — flagged as "bundled" in DB).
 
-**Root cause #2 — Stale heartbeat threshold too aggressive (`enrichment-health-check/index.ts` line 107):**
-Right now ANY heartbeat older than 360 min (6 hrs) = RED + SMS. The `candidate-deep-enrich` agent only runs when there's something in the queue — if the queue is empty, the heartbeat goes stale even though everything is healthy.
+### 2. Add "🛒 Upgrade Shop" section (collapsible)
+Card grid with bundle-discounted DWA add-ons:
 
-Fix:
-- Bump threshold from 360 min → 1440 min (24h)
-- Only fire if there are ALSO `stuck_pending` candidates (i.e., real backlog, not just an idle agent)
-- Add the same 24-hour cooldown we just added to `llm-cache-monitor` (currently only 4-hour cooldown, which is why you got it twice today)
+| Add-on | Standalone | Bundled (30% off) |
+|---|---|---|
+| TechAlert (hiring monitor) | $149/mo | $104/mo |
+| FieldDesk (dispatch CRM) | $199/mo | $139/mo |
+| SiteRadar (visitor intel) | $49/mo | $34/mo |
+| Seasonal Promo Blaster | $29/mo | $20/mo |
+| Estimate Follow-Up Drip | $39/mo | $27/mo |
+| Weekly SMS Blast | $19/mo | $13/mo |
 
-### Part 2 — AI-suggested replies in the SMS Inbox (you stay in control)
+Each card → "Add to my plan" button that fires the existing `create-*-checkout` edge function with a `?bundle_discount=lead_network` flag and prefilled email.
 
-Build a **two-track approval system** so you can either review on the website OR by text:
+### 3. Add "🚧 New Dashboard — Shipping Upgrades Daily" banner
+Subtle amber banner under the header. Sets honest expectations + builds goodwill.
 
-**Track A — Inline in `/dwa-admin` SMS Inbox (`AdminSMSInbox.tsx`):**
-- Add a **"🤖 Draft reply"** button next to the message input on every inbound thread
-- Click → calls a new edge function `draft-sms-reply` that:
-  - Pulls the full thread context (last 10 msgs)
-  - Pulls product context (contractor lead pricing, FAQ, your tone)
-  - Returns a 1–2 sentence draft via Lovable AI Gateway (`google/gemini-2.5-flash`)
-- Draft auto-fills the textarea — you can **edit freely** before hitting Send
-- Three quick-action buttons under the draft: **✏️ Edit** (default — already in textarea), **✅ Send as-is**, **🔄 Regenerate**
+### 4. Fix dashboard test
+Before sending SMS, hit the live `contractor-leads-dashboard` endpoint with the electrician's `roi_token` (created on Stripe checkout success) and confirm:
+- Loads without error
+- Shows his business name + Livonia + Electrical
+- Stats display (will be 0/0 — that's correct for new account)
+- Filter buttons render
+- Empty state copy reads correctly
 
-**Track B — Text-to-approve flow (when you're driving / not at desk):**
-- New edge function `auto-draft-on-inbound` runs whenever a new inbound SMS hits `system_comms_log`
-- It generates a draft AND texts you a preview from the work line:
-  > `📩 [contractor name]: "their message..."\n\n💡 Suggested reply:\n[draft]\n\nReply A to send, E to edit, or just type your own reply`
-- New routing in `inbound-sms-relay`:
-  - You text **"A"** → sends the suggested draft as-is to the contractor, marks resolved
-  - You text **"E [your version]"** → sends your edit
-  - Anything else → treated as your custom reply (existing behavior, unchanged)
-- One safety rule: **never auto-send without your explicit "A"** — TCPA + brand control
+If anything fails, fix before sending.
 
-### Part 3 — Onboarding playbook for the +17346207178 contractor
+## Backend changes
 
-This contractor is asking real qualifying questions ("how does it work? how much?"). Here's a clean reply you can send right now from the SMS Inbox (already prefilled by the new AI feature once shipped):
+### `create-contractor-checkout/index.ts`
+- Remove `subscription_data: { trial_period_days: 7 }` (line 60)
+- Update product description to mention bonus stack:
+  > "Exclusive {trade} territory in {city}. Includes free Missed Call Text-Back ($99/mo), Review Monitor ($25/mo), After-Job Drip ($29/mo). Cancel anytime. 30-day money-back guarantee if zero leads delivered."
+- Keep $399/mo pricing
 
-> Here's the short version:
->
-> 1. You pick your trade + city. I lock that territory to you (one contractor per trade per city — no shared leads).
-> 2. When a homeowner in your area requests a quote on detroitwebagent.com, you get an instant SMS with their name, number, and job details.
-> 3. $399/mo flat — no per-lead fees, no contracts. Cancel anytime.
-> 4. You can claim multiple cities — each city is a separate territory at $399/mo.
->
-> Want me to send the signup link for your trade + city? Or jump on a 5-min call: (313) 992-1219.
+### `stripe-webhook` `contractor_lead_subscription` handler
+- On successful checkout, **auto-provision** the 3 free add-ons:
+  - Insert row into `missed_call_clients` with `bundled_from = 'contractor_leads'`, `business_phone = contractor.phone`, `business_name`
+  - Insert row into `review_monitor_clients` (bundled flag)
+  - Insert row into `afterjob_drip_clients` (bundled flag)
+- Each gets `monthly_price = 0` so they don't bill separately
+- Welcome email lists all 4 things they got + dashboard link
 
-I'll also add a **📋 Onboarding Cheatsheet** panel inside the SMS Inbox (collapsible header, only shows when an unidentified phone is selected) with:
-- Pre-written answers to the top 8 questions ("How are leads generated?", "What if a lead is bad?", "Cancellation?", "Multiple territories?", "Exclusivity proof?", "Average leads/month?", "Refund policy?", "How do I get notified?")
-- Each answer has a **📋 Copy** button → drops it into the reply box, ready for you to personalize and send
+### Migration: `bundled_from` columns
+Add nullable `bundled_from text` to:
+- `missed_call_clients`
+- `review_monitor_clients`
+- `afterjob_drip_clients`
 
-### Files to change
+Allows tracking which freebies came from a lead-network sub. If they cancel the lead sub, we can downgrade or notify (later — V1 just leaves them active as goodwill).
 
-| File | Change |
-|---|---|
-| `supabase/functions/cron-sentinel/index.ts` | Fix dead-pipe column + 6h freshness guard + same-source check |
-| `supabase/functions/enrichment-health-check/index.ts` | Heartbeat threshold 360→1440 min, require stuck_pending > 0, cooldown 4h→24h |
-| `supabase/functions/draft-sms-reply/index.ts` | NEW — generates AI draft from thread + product context |
-| `supabase/functions/auto-draft-on-inbound/index.ts` | NEW — DB trigger or cron polling new inbound rows, texts you the preview |
-| `supabase/functions/inbound-sms-relay/index.ts` | Route "A" / "E ..." commands to send the cached draft |
-| `src/components/dwa-admin/AdminSMSInbox.tsx` | Add 🤖 Draft button, regenerate flow, onboarding cheatsheet panel |
-| Migration | New table `sms_reply_drafts` (phone, draft_body, created_at, status) for the text-to-approve cache |
+### `contractor-leads-dashboard/index.ts`
+Extend the GET response to include:
+- `bundled_services: { missed_call: bool, reviews: bool, afterjob: bool }` — checks the 3 client tables for matching email
+- `available_upgrades: [...]` — static list of add-ons with bundled price
 
-### Risk
-Low. AI drafts never auto-send. False-alert fixes are pure threshold/column changes — the underlying scanners keep running.
+## SMS draft for Livonia (after all of above)
 
-### What you'll see after the fix
-- No more "Enrichment RED 706min stale" or "TechAlert DEAD PIPE" texts unless something is actually broken
-- Cap of 1 LLM cache + 1 enrichment alert per 24 hours
-- Every inbound SMS triggers a draft preview text within 60 seconds — you reply "A" to fire it, or "E [your edit]" to send a tweaked version
-- In `/dwa-admin` → SMS Inbox: a 🤖 Draft Reply button + an Onboarding FAQ panel with 8 copy-paste answers ready for the +17346207178 contractor
+> Locked in 1 sec. Livonia electrical leads = $399/mo flat — no setup fee, no contract, cancel anytime. **30-day refund if you don't get a single lead.** Plus you get free: Missed Call Text-Back ($99 value), Review Monitor ($25), After-Job Follow-Up ($29). Total bundled value $552/mo, you pay $399. Card link: [Stripe checkout]. Once paid, dashboard link comes via text + email — track every lead, mark hires, request refund on junk leads in 1 tap. Dashboard is brand new so bare with us, shipping updates daily. — Matt, Detroit Web Agency
+
+## Order of operations after approval
+1. Build migration + edge function changes + UI
+2. Test the dashboard with a real fake `roi_token` (insert + GET + verify response)
+3. Text Matt the final SMS draft to approve
+4. On Matt's "A" → send to electrician
+5. Update memory: `mem://business/contractor-leads-pricing` (no trial, 30-day guarantee, bundled stack)
+
+## Files changed
+- `supabase/functions/create-contractor-checkout/index.ts` — remove trial, update copy
+- `supabase/functions/stripe-webhook/index.ts` — auto-provision 3 free add-ons in `contractor_lead_subscription` handler
+- `supabase/functions/contractor-leads-dashboard/index.ts` — return bundled + upgrade data
+- `src/pages/MyContractorLeads.tsx` — add "Included Free" strip, "Upgrade Shop" section, "Shipping Upgrades Daily" banner
+- New migration: `bundled_from` columns on 3 client tables
+- `mem://business/contractor-leads-pricing` — update pricing rules
 
