@@ -36,6 +36,19 @@ export default function DemandRadarLiveLog() {
   const [windowSel, setWindowSel] = useState<Window>("24h");
   const [statusFilter, setStatusFilter] = useState<"all" | "ok" | "empty" | "error">("all");
   const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [running, setRunning] = useState<string | null>(null);
+
+  const runScanner = async (fn: string) => {
+    setRunning(fn);
+    try {
+      const { data, error } = await supabase.functions.invoke(fn, { body: { trigger: "manual" } });
+      if (error) alert(`${fn} error: ${error.message}`);
+      else alert(`${fn} done: ${JSON.stringify(data).slice(0, 300)}`);
+      await load();
+    } finally {
+      setRunning(null);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -93,6 +106,23 @@ export default function DemandRadarLiveLog() {
         <Button size="sm" variant="outline" onClick={load} disabled={loading} className="bg-white/5 border-white/10">
           {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
         </Button>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {[
+          { fn: "accela-permit-scanner", label: "▶ Run Accela Permits" },
+          { fn: "industry-pulse-scanner", label: "▶ Run Industry Pulse" },
+          { fn: "hire-alert-scanner", label: "▶ Run Talent Radar" },
+        ].map(({ fn, label }) => (
+          <button
+            key={fn}
+            onClick={() => runScanner(fn)}
+            disabled={running === fn}
+            className="px-3 py-1.5 text-xs font-bold bg-[#00d4ff]/10 text-[#00d4ff] border border-[#00d4ff]/30 rounded hover:bg-[#00d4ff]/20 disabled:opacity-50"
+          >
+            {running === fn ? "Running…" : label}
+          </button>
+        ))}
       </div>
 
       {rows.length === 0 && !loading && (
