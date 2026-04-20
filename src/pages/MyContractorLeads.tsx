@@ -426,6 +426,56 @@ export default function MyContractorLeads() {
               Disputed leads are reviewed by Matt within 24 hours. Credit issued if confirmed bogus.
             </p>
           )}
+
+          {/* Upgrade Shop — bundle-discounted DWA add-ons */}
+          {data.available_upgrades && data.available_upgrades.length > 0 && (
+            <div className="bg-[#0f1f35] border border-[#00d4ff]/20 rounded-xl overflow-hidden">
+              <button
+                onClick={() => setShopOpen(o => !o)}
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors"
+              >
+                <ShoppingBag className="h-4 w-4 text-[#00d4ff]" />
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-bold text-white">Upgrade Shop</p>
+                  <p className="text-[10px] text-white/40">Add-ons at 30% off — exclusive to lead network clients</p>
+                </div>
+                <Badge className="bg-[#00d4ff]/20 text-[#00d4ff] border-[#00d4ff]/30 text-[9px]">
+                  <Sparkles className="h-2.5 w-2.5 mr-1" /> Bundle pricing
+                </Badge>
+                {shopOpen ? <ChevronUp className="h-4 w-4 text-white/40" /> : <ChevronDown className="h-4 w-4 text-white/40" />}
+              </button>
+
+              {shopOpen && (
+                <div className="border-t border-white/5 p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {data.available_upgrades.map(u => {
+                    const savings = u.standalone - u.bundled;
+                    const upgradeUrl = `${u.checkout_path}?prefilled_email=${encodeURIComponent(data.contractor.email)}&bundle_discount=lead_network`;
+                    return (
+                      <div key={u.key} className="bg-[#0a1628]/60 border border-white/5 rounded-lg p-4 hover:border-[#00d4ff]/30 transition-colors">
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <div>
+                            <p className="text-white text-sm font-bold">{u.name}</p>
+                            <p className="text-white/50 text-[11px] mt-0.5 leading-relaxed">{u.tagline}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-baseline gap-2 mt-3 mb-3">
+                          <span className="text-white/30 line-through text-xs">${u.standalone}</span>
+                          <span className="text-[#00d4ff] text-xl font-black">${u.bundled}</span>
+                          <span className="text-white/40 text-[11px]">/mo</span>
+                          <span className="text-emerald-400/80 text-[10px] ml-auto font-bold">save ${savings}/mo</span>
+                        </div>
+                        <a href={upgradeUrl} target="_blank" rel="noreferrer">
+                          <Button size="sm" className="w-full h-8 bg-[#00d4ff]/10 hover:bg-[#00d4ff]/20 text-[#00d4ff] border border-[#00d4ff]/30 text-xs">
+                            Add to my plan →
+                          </Button>
+                        </a>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </main>
 
         <footer className="py-8 border-t border-white/5 text-center">
