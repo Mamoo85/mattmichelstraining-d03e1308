@@ -111,6 +111,22 @@ const ONBOARDING_FAQ: Array<{ q: string; a: string }> = [
     q: "How do I get notified?",
     a: "Instant SMS to your cell the second a lead comes in — usually before they even submit on a competitor's site. Speed wins.",
   },
+  {
+    q: "🔥 Full pitch (long-form reply)",
+    a: "Sorry for the delay — here's exactly how it works:\n\nHow leads come in: Homeowners fill out a quote form on detroitwebagent.com (we run Google/Facebook ads + SEO to drive them). When one matches your trade + city, you get an instant SMS with their name, phone, address, and job details. First to call usually wins — most of my contractors call within 5 minutes.\n\nLeads per month: Honestly varies by trade and city — plumbing/HVAC in Metro Detroit is pulling 8–15/mo per territory right now. Roofing spikes after storms (20+). I don't promise a number because I won't BS you — but if you don't get at least 5 in your first month I'll refund you, no questions.\n\nConfirmed real leads: Yes — every lead is a real homeowner who filled out the form themselves. No scraped lists, no shared leads, no bots. You're the only contractor who gets it (one contractor per trade per city — that's the whole point of the territory lock).\n\nMultiple territories: Absolutely — $399/mo per trade per city. Most guys start with 1 city to test, then add neighbors (Warren, Sterling Heights, Roseville, etc.) once they see leads come in. No contract, cancel anytime.\n\nWant me to lock in your trade + first city right now? Just tell me the trade and which city you want to start with.\n\n— Matt | (313) 992-1219",
+  },
+  {
+    q: "Are these real leads or scraped?",
+    a: "Real homeowners who filled out the quote form themselves on detroitwebagent.com. No scraped lists, no shared leads, no bots. You're the only contractor in your trade + city who gets them.",
+  },
+  {
+    q: "Refund / guarantee?",
+    a: "If you don't get at least 5 real leads in your first month, I'll refund you in full — no questions. I want this to actually work for you.",
+  },
+  {
+    q: "Speed-to-call matters",
+    a: "First contractor to call almost always wins the job. Most of my guys call within 5 minutes of the SMS — that's why we send the alert instantly instead of an email digest.",
+  },
 ];
 
 export default function AdminSMSInbox() {
