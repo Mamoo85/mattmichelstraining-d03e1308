@@ -25,7 +25,7 @@ const AdminDWAOverview = lazy(() => import("@/components/admin/AdminDWAOverview"
 const AdminDWARevenueDashboard = lazy(() => import("@/components/admin/AdminDWARevenueDashboard"));
 const AdminDeadLeads = lazy(() => import("@/components/admin/AdminDeadLeads"));
 const AdminContractorLeads = lazy(() => import("@/components/admin/AdminContractorLeads"));
-const AdminHireAlertClients = lazy(() => import("@/components/admin/AdminHireAlertClients"));
+
 const AdminFieldCRMClients = lazy(() => import("@/components/admin/AdminFieldCRMClients"));
 const VisitorIntelFeed = lazy(() => import("@/components/admin/VisitorIntelFeed"));
 const AdminSimulationSuite = lazy(() => import("@/components/admin/AdminSimulationSuite"));
