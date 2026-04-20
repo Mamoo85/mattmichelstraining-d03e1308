@@ -38,6 +38,12 @@ const AdminTheWire = lazy(() => import("@/components/admin/AdminTheWire"));
 const AdminMedicareIntel = lazy(() => import("@/components/admin/AdminMedicareIntel"));
 const AdminIndustrialIntel = lazy(() => import("@/components/admin/AdminIndustrialIntel"));
 const AdminTechAlertProspects = lazy(() => import("@/components/dwa-admin/AdminTechAlertProspects"));
+const AdminLaraHealth = lazy(() => import("@/components/admin/AdminLaraHealth"));
+const AdminGrowthSignals = lazy(() => import("@/components/admin/AdminGrowthSignals"));
+const AdminTrojanHorseLog = lazy(() => import("@/components/admin/AdminTrojanHorseLog"));
+const AdminPostcardOps = lazy(() => import("@/components/admin/AdminPostcardOps"));
+const AdminCoverageMap = lazy(() => import("@/components/admin/AdminCoverageMap"));
+const AdminCRMDashboard = lazy(() => import("@/components/admin/AdminCRMDashboard"));
 
 type Tab =
   | "dwa-overview" | "revenue" | "agent-toolkit"
@@ -48,7 +54,8 @@ type Tab =
   | "field-stats" | "clients" | "jobs" | "assets" | "contracts" | "import"
   | "command" | "playbook" | "strategy" | "labs" | "sales-guide"
   | "agency-outreach" | "demand-radar" | "supplier-outreach" | "hvb"
-  | "medicare-intel" | "industrial-intel" | "techalert-prospects";
+  | "medicare-intel" | "industrial-intel" | "techalert-prospects"
+  | "lara-health" | "growth-signals" | "trojan-log" | "postcard-ops" | "coverage-map" | "crm-dashboard";
 
 const GROUPS: SidebarGroup[] = [
   {
@@ -73,6 +80,8 @@ const GROUPS: SidebarGroup[] = [
       { id: "medicare-intel",     label: "🏥 Medicare Intel" },
       { id: "industrial-intel",   label: "🏭 Industrial Intel" },
       { id: "techalert-prospects",label: "🎯 TechAlert Prospects" },
+      { id: "growth-signals",     label: "📡 Growth Signals" },
+      { id: "coverage-map",       label: "🗺️ Coverage Map" },
     ],
   },
   {
@@ -82,12 +91,14 @@ const GROUPS: SidebarGroup[] = [
       { id: "contractor-leads", label: "🏗️ Contractor Leads" },
       { id: "fielddesk",        label: "🛠️ FieldDesk Clients" },
       { id: "clients",          label: "👥 All Clients" },
+      { id: "crm-dashboard",    label: "📇 CRM Dashboard" },
     ],
   },
   {
     label: "Outreach",
     items: [
       { id: "postcards",        label: "📬 Postcards" },
+      { id: "postcard-ops",     label: "🛠️ Postcard Ops" },
       { id: "faxes",            label: "📠 Fax Campaigns" },
       { id: "targeting",        label: "🎯 Targeting" },
       { id: "outbox",           label: "📤 Global Outbox" },
@@ -100,6 +111,7 @@ const GROUPS: SidebarGroup[] = [
     items: [
       { id: "visitor-intel", label: "👁️ Visitor Intel" },
       { id: "the-wire",      label: "📡 The Wire" },
+      { id: "trojan-log",    label: "🐴 Trojan Horse Log" },
       { id: "field-stats",   label: "📊 Field Stats" },
       { id: "jobs",          label: "🧰 Jobs" },
     ],
@@ -111,6 +123,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "resilience",    label: "🛡️ Service Health" },
       { id: "cron-sentinel", label: "🛡️ Cron Sentinel" },
       { id: "compliance",  label: "🛡️ TCPA Compliance" },
+      { id: "lara-health", label: "🏛️ LARA Health" },
       { id: "labs",        label: "⚗️ Labs" },
       { id: "assets",      label: "📦 Assets" },
       { id: "contracts",   label: "📄 Contracts" },
@@ -174,6 +187,12 @@ export default function DWAAdmin() {
           {activeTab === "medicare-intel"   && <Suspense fallback={lazyFallback("Medicare intel")}><AdminMedicareIntel /></Suspense>}
           {activeTab === "industrial-intel" && <Suspense fallback={lazyFallback("industrial intel")}><AdminIndustrialIntel /></Suspense>}
           {activeTab === "techalert-prospects" && <Suspense fallback={lazyFallback("TechAlert prospects")}><AdminTechAlertProspects /></Suspense>}
+          {activeTab === "lara-health"      && <Suspense fallback={lazyFallback("LARA health")}><AdminLaraHealth /></Suspense>}
+          {activeTab === "growth-signals"   && <Suspense fallback={lazyFallback("growth signals")}><AdminGrowthSignals /></Suspense>}
+          {activeTab === "trojan-log"       && <Suspense fallback={lazyFallback("trojan horse log")}><AdminTrojanHorseLog /></Suspense>}
+          {activeTab === "postcard-ops"     && <Suspense fallback={lazyFallback("postcard ops")}><AdminPostcardOps /></Suspense>}
+          {activeTab === "coverage-map"     && <Suspense fallback={lazyFallback("coverage map")}><AdminCoverageMap /></Suspense>}
+          {activeTab === "crm-dashboard"    && <Suspense fallback={lazyFallback("CRM dashboard")}><AdminCRMDashboard /></Suspense>}
 
           {activeTab === "field-stats" && (
             <div className="space-y-6">
