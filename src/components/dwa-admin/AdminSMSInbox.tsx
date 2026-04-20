@@ -76,6 +76,43 @@ function timeAgo(iso: string): string {
 
 // ----- component -----
 
+// Onboarding cheatsheet — shown when an unknown phone is selected. Each entry
+// can be one-click copied into the reply box and personalized before sending.
+const ONBOARDING_FAQ: Array<{ q: string; a: string }> = [
+  {
+    q: "How are leads generated?",
+    a: "Homeowners in your trade + city request quotes on detroitwebagent.com. You get an instant SMS with their name, number, and job details — no shared leads, just yours.",
+  },
+  {
+    q: "How much / what's the price?",
+    a: "$399/mo flat. One contractor per trade per city — exclusive territory. No per-lead fees, no contracts, cancel anytime.",
+  },
+  {
+    q: "What if a lead is bad?",
+    a: "If a lead is fake or unreachable, just text me and I'll credit it on your next bill. I want this to work for you long-term.",
+  },
+  {
+    q: "Can I cancel?",
+    a: "Yep — cancel anytime, no contracts. Just text or email me and I'll shut it off the same day.",
+  },
+  {
+    q: "Multiple cities / territories?",
+    a: "Sure — each city is a separate $399/mo territory. Most guys start with one and add more once leads are flowing.",
+  },
+  {
+    q: "Exclusivity proof?",
+    a: "Only one contractor per trade per city. I'll never sell your zip to another HVAC/plumber/etc — that's the whole point.",
+  },
+  {
+    q: "Average leads/month?",
+    a: "Depends on city + trade, but Metro Detroit roofers/HVAC see 8–20/mo on average. I'll be straight with you about volume in your area.",
+  },
+  {
+    q: "How do I get notified?",
+    a: "Instant SMS to your cell the second a lead comes in — usually before they even submit on a competitor's site. Speed wins.",
+  },
+];
+
 export default function AdminSMSInbox() {
   const [loading, setLoading] = useState(true);
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -84,6 +121,8 @@ export default function AdminSMSInbox() {
   const [sending, setSending] = useState(false);
   const [composing, setComposing] = useState(false);
   const [composeTo, setComposeTo] = useState("");
+  const [drafting, setDrafting] = useState(false);
+  const [showCheatsheet, setShowCheatsheet] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Mobile: when a thread is picked, hide the list. Back button returns to list.
@@ -334,8 +373,38 @@ export default function AdminSMSInbox() {
     setComposeTo("");
   }
 
+  async function handleAIDraft() {
+    const targetPhone = composing ? normalize(composeTo) : activeThread?.phone ?? null;
+    if (!targetPhone) {
+      toast.error("Pick a thread or enter a number first");
+      return;
+    }
+    setDrafting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("draft-sms-reply", {
+        body: { phone: targetPhone, hint: draft.trim() || undefined },
+      });
+      if (error) throw error;
+      const result = data as { draft?: string; error?: string };
+      if (!result?.draft) {
+        toast.error(result?.error ?? "No draft returned");
+        return;
+      }
+      setDraft(result.draft);
+      toast.success("Draft ready — edit or send");
+    } catch (e) {
+      console.error(e);
+      toast.error(e instanceof Error ? e.message : "Draft failed");
+    } finally {
+      setDrafting(false);
+    }
+  }
+
   const composeNormalized = composing ? normalize(composeTo) : null;
   const composeValid = composing ? composeNormalized !== null : true;
+
+  // Show the onboarding cheatsheet for any unknown contact (no contractor/FieldDesk label)
+  const isUnknownContact = activeThread && !activeThread.contactLabel;
 
   return (
     <div className="space-y-4">
