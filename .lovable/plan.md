@@ -1,117 +1,94 @@
 
 
-Let me explore the current state of these three products to ground the plan.
-<lov-tool-use id="toolu_vrtx_01P5PPeV6vvkeLQSCjTdhRGt" name="code--list_dir" integration-id="code" data="{\"dir_path\": \"src/pages\"}">
-</lov-tool-use>
+## Self-Audit — Honest Answers
 
-<lov-tool-use id="toolu_vrtx_017W7fg1LFDVP45dTsrYGNej" name="code--search_files" integration-id="code" data="{\"query\": \"demand_radar|DemandRadar|GrowthRadar|industry_pulse|IndustryPulse\", \"include_patterns\": \"src/**/*.tsx,src/**/*.ts\"}">
-</lov-tool-use>
+### Q1: Will the proposed rewrite break what's working?
 
-<lov-tool-use id="toolu_vrtx_013t1U9YHwpRRoXcYthFnBYr" name="code--search_files" integration-id="code" data="{\"include_patterns\": \"src/**/*.tsx,src/**/*.ts\", \"query\": \"DemandRadar|GrowthRadar|IndustryPulse|TalentRadar|MyTechAlert\"}">
-</lov-tool-use>
+**Yes, meaningful risk. Here's the truth:**
 
-<lov-tool-use id="toolu_vrtx_01FVRWtF193AUX6cZALTtjQs" name="code--list_dir" integration-id="code" data="{\"dir_path\": \"src/components/admin\"}">
-</lov-tool-use>
+The current system is NOT failing the way the prompt assumes. Looking at actual data:
 
-<lov-tool-use id="toolu_vrtx_01Nezf9HY5JFDxhWYXn7cKUs" name="code--list_dir" integration-id="code" data="{\"dir_path\": \"src/components/dwa-admin\"}">
-</lov-tool-use>
+- `hire_alert_runs` last 3 days: **522 candidates found, 146 new** (4/19 alone produced 122 new). That's not "AI panicking and dropping 90% of data."
+- `hire_alert_candidates`: **165 rows**. `industry_pulse_signals`: **131 rows** (79 hiring, 36 expansion, 11 school RFPs, 5 permit_surge).
+- The scanners are **already** mostly dumb extraction — `hire-alert-scanner` is 2,078 lines of mostly Apify/MIOSHA/Sonar/Hunter/Snov/PDL waterfall, with AI only at the scoring step. `industry-pulse-scanner` (657 lines) already pulls BSEED, SAM.gov, NOAA, etc. before any AI.
+- The **real bug from your v5 audit** (`knowledge/talent-radar-v5/`) is contactability ceiling at ~17% because MIOSHA records have no employer field — Hunter/Snov/Lusha/PDL all need an employer to function. That's a **data source problem, not an architecture problem.** The prompt's premise misdiagnoses it.
+- `alerts_sent: 0` for 3 days is the actual silent bug worth fixing — but it's a scoring threshold issue, not extraction.
 
-<lov-tool-use id="toolu_vrtx_01FfEm4b5DVgh3ydxZfmKX2N" name="supabase--read_query" integration-id="supabase" data="{\"query\": \"SELECT signal_type, COUNT(*) AS total, COUNT(*) FILTER (WHERE detected_at > now() - interval '7 days') AS last_7d, COUNT(*) FILTER (WHERE detected_at > now() - interval '1 day') AS last_24h FROM industry_pulse_signals GROUP BY signal_type ORDER BY total DESC;\"}">
-</lov-tool-use>
+**What ripping it out costs:**
+- ~3,000 lines of working scanner code replaced
+- Apify Actor pipeline (just got working in Phase 19, 2 days ago) gets bypassed
+- The 8-stage waterfall + 2-strike SMS alerts + source_breakdown logging from Phase 19 — all that gets orphaned
+- `accela-permit-scanner` (built yesterday, not yet run) hasn't even produced data yet to know if it works
 
-<lov-tool-use id="toolu_vrtx_01SxxZVvTsW4y6G1VZABM2Cw" name="code--view" integration-id="code" data="{\"file_path\": \"src/components/dwa-admin/AdminDemandRadar.tsx\", \"lines\": \"1-80\"}">
-</lov-tool-use>
+**Risk level: HIGH that we set ourselves back 1–2 weeks for marginal gain.**
 
-<lov-tool-use id="toolu_vrtx_019iunFSrETMuqKLK11scthm" name="code--view" integration-id="code" data="{\"file_path\": \"src/pages/DWAAdmin.tsx\"}">
-</lov-tool-use>
+### Q2: Will it actually improve or weaken results?
 
-<lov-tool-use id="toolu_vrtx_01MfMJhDA58p4nzHKJrkJupc" name="supabase--read_query" integration-id="supabase" data="{\"query\": \"SELECT\\n  (SELECT COUNT(*) FROM hire_alert_runs WHERE run_at > now() - interval '24 hours') AS talent_runs_24h,\\n  (SELECT COUNT(*) FROM hire_alert_runs WHERE run_at > now() - interval '7 days') AS talent_runs_7d,\\n  (SELECT COUNT(*) FROM hire_alert_candidates WHERE created_at > now() - interval '7 days') AS talent_cands_7d,\\n  (SELECT COUNT(*) FROM industry_pulse_signals WHERE detected_at > now() - interval '7 days') AS demand_signals_7d,\\n  (SELECT COUNT(*) FROM industry_pulse_signals WHERE detected_at > now() - interval '24 hours') AS demand_signals_24h,\\n  (SELECT COUNT(*) FROM industry_pulse_signals) AS demand_signals_total,\\n  (SELECT COUNT(*) FROM industry_pulse_clients WHERE active=true) AS demand_clients_active;\"}">
-</lov-tool-use>
-I have enough context. The user wants: (1) a unified "Talent Radar Hub" tab with an open log, (2) Demand Radar promoted to a real hub with the same depth, plus throughput math (avg signals/day, sellable inventory). Growth Radar/Industry Pulse are still alive but live under the Demand Radar umbrella per the consolidation memo — need to surface that.
+**Mixed — mostly neutral, partially weakening, with one real win.**
 
-<lov-plan>
+| Claim in prompt | Reality |
+|---|---|
+| "Wasting AI credits on empty returns" | Partly true. v5 audit shows total spend = **$0.74 across 126 candidates** ($0.034/contactable lead). This is not a cost crisis. |
+| "AI tries to extract + analyze in one step" | **False for this codebase.** Extraction is already dumb (Apify/REST/Firecrawl). AI runs only at scoring + enrichment polish. |
+| "Keyword gate would save money" | **Marginal.** Already spending ~$0.005/candidate. Gate saves maybe $0.20/run. Not material. |
+| Round-robin sector schedule | **Actual win.** Current crons overlap; staggering 1/2/3am IS cleaner and easier to debug. |
+| "Pulled X → Gated Y → Enriched Z" diagnostics | **Real win.** Current logging is per-source counts; full waterfall drop-off view would be genuinely useful. |
+| Raw dump table for replayability | **Real win.** If enrichment logic changes, we can re-run on raw without re-scraping. |
 
-## What's actually broken in the UI
+**Net: the architectural rewrite is mostly cargo-culting a pattern that's already in place. But 3 specific pieces (round-robin cron, drop-off logging, raw dump for replay) are genuinely valuable.**
 
-Right now in `/dwa-admin` sidebar:
-- **Talent Radar** = single tab (`AdminHireAlertClients`) — clients list + scanner runs jammed together. No open log of *where it's failing*. No clear separation from Demand.
-- **Demand Radar** = single tab (`AdminDemandRadar`) — 100-row signal list, that's it. No throughput math, no source breakdown, no Growth Radar / Industry Pulse surfaced (they're hidden under the same `industry_pulse_signals` table per the consolidation memo).
-- **High-Volume Buyers** floats off on its own — it's actually a Demand Radar sub-product.
+---
 
-Real DB inventory I just pulled:
-- Talent Radar: 167 candidates / 7d, 97 scanner runs / 24h
-- Demand Radar: 131 signals total (79 hiring, 36 expansion, 11 school RFPs, 5 permit surge), 20/24h, 131/7d
-- Demand clients active: 1
-- Growth Radar = view over `industry_pulse_signals` (per memo) — currently invisible in admin
-- Industry Pulse = view over `industry_pulse_signals` — also invisible
+## Revised Plan — Surgical, Not Total Rewrite
 
-## Plan — 3 product hubs, each with its own tabbed shell + live log
+Keep all working code. Add the 3 valuable pieces without ripping anything out.
 
-### A. Talent Radar Hub (`techalert` tab → rebuild as 4 sub-tabs)
-**File:** new `src/components/dwa-admin/TalentRadarHub.tsx` wrapping existing components
-- **📋 Clients** — existing `AdminHireAlertClients` clients table only
-- **🎯 Workbench** — existing `CandidateWorkbench` (already built, just lift it out)
-- **📡 Scanner Runs** — existing run history strip from `AdminHireAlertClients`, expanded to show per-source success/fail/found counts, last-run-age, error messages
-- **🔴 Live Log (NEW)** — `TalentRadarLiveLog.tsx`: tails `hire_alert_runs` + `candidate_enrichment_log` + `enrichment_health_log` in one chronological feed. Color-coded (green=ok, amber=0 results, red=error). Filters: source, status, last 1h/24h/7d. This is the "open log so I can see where its messing up" the user asked for. Auto-refresh every 30s.
+### Change 1: `raw_signals_dump` table (additive, zero risk)
+New table. Existing scanners get **one extra line** that also dumps raw payload before processing. Nothing else changes. Enables replay + drop-off math.
 
-### B. Demand Radar Hub (`demand-radar` tab → rebuild as 5 sub-tabs)
-**File:** new `src/components/dwa-admin/DemandRadarHub.tsx`
-- **📊 Throughput Dashboard (NEW)** — top-of-page KPI strip:
-  - Signals/day (7-day avg) + sparkline
-  - Days of inventory at current sell rate
-  - "Sellable now" count (confidence ≥ 7, < 30 days old, not yet sold)
-  - Per-signal-type breakdown (hiring 79 / expansion 36 / RFP 11 / permit_surge 5)
-  - Per-vertical breakdown (industrial / steel / plumbing supply / etc.)
-  - Revenue forecast: `sellable × $50 avg` and `monthly_run_rate × $199 subscription`
-- **📡 Signals Feed** — existing `AdminDemandRadar` signal list (full functionality preserved)
-- **🌱 Growth Radar** — filtered view: `signal_type IN ('expansion','rd_grant','sba_loan','new_business_entity')`. Same UI as signals feed, scoped. Now visible again.
-- **🏭 Industry Pulse** — filtered view: `signal_type IN ('hiring','permit_surge','school_rfp')`. The HVB ($199/mo) sub-product feeds from this slice.
-- **🔴 Live Log (NEW)** — `DemandRadarLiveLog.tsx`: tails the 6 demand-radar scanner edge functions (`industry-pulse-scanner`, `demand-radar-enhanced-scan`, `sam-gov-mi-pull`, `medicare-staffing-intel`, `industrial-growth-intel`, `growth-radar-enhanced-scan`) via `agent_heartbeats` + a new `demand_radar_runs` log table. Same color coding as Talent.
+### Change 2: Round-robin cron schedule (low risk)
+Migration that drops overlapping schedules and reinstalls staggered:
+- 1am ET: healthcare-focused hire-alert-scanner pass (filtered by role)
+- 2am ET: industrial-focused hire-alert-scanner pass
+- 3am ET: commercial pass (industry-pulse + accela)
+- Existing every-4h Accela cron stays for now (until we see if 3am alone is enough)
 
-### C. Sidebar reorg (`DWAAdmin.tsx`)
-Reshuffle the "Customers" + "Intel" groups into a clear **"Radars"** group:
+No code changes to scanners — just cron schedule edits + a `vertical_filter` query param the existing scanners already support.
+
+### Change 3: Waterfall diagnostics view (UI only, zero backend risk)
+New tab in Talent Radar Hub + Demand Radar Hub:
 ```
-RADARS
-  🎯 Talent Radar
-  📈 Demand Radar
-  📦 High-Volume Buyers   (move here from Customers — it's a Demand sub-product)
+Time   Run               Pulled  After-Gate  Enriched  Final  $
+01:00  hire-alert(hc)    187     142         58        24     $0.12
+02:00  hire-alert(ind)   95      71          31        12     $0.08
+03:00  industry-pulse    140     98          42        18     $0.21
 ```
-Move the existing `techalert` clients tab content under Talent Radar Hub > Clients sub-tab. HVB stays its own tab but sidebar groups it correctly so it's obvious it pairs with Demand.
+Reads from existing `hire_alert_runs` + `demand_radar_runs` (already has source_breakdown JSON from Phase 19). Adds drop-off math client-side. **No edge function changes.**
 
-### D. New tiny migration
-```sql
-create table if not exists demand_radar_runs (
-  id uuid primary key default gen_random_uuid(),
-  run_at timestamptz default now(),
-  source text not null,        -- which scanner
-  signals_found int default 0,
-  signals_new int default 0,
-  errors text,
-  status text default 'ok',
-  duration_ms int
-);
-```
-Wire the 6 demand scanners to insert one row per run (mirrors `hire_alert_runs` pattern).
+### Change 4: Fix the actual silent bug — `alerts_sent: 0`
+The real failure: 522 candidates found in last 3 days, **0 alerts sent**. Investigate why scoring threshold or client matching is failing. This is the bug worth fixing tonight.
 
-## Files I'll touch
-- NEW: `src/components/dwa-admin/TalentRadarHub.tsx`
-- NEW: `src/components/dwa-admin/TalentRadarLiveLog.tsx`
-- NEW: `src/components/dwa-admin/DemandRadarHub.tsx`
-- NEW: `src/components/dwa-admin/DemandRadarLiveLog.tsx`
-- NEW: `src/components/dwa-admin/DemandThroughputKPIs.tsx`
-- EDIT: `src/pages/DWAAdmin.tsx` (sidebar reorg + wire hubs)
-- EDIT: `supabase/functions/industry-pulse-scanner/index.ts` (+5 sister scanners): one INSERT per run into `demand_radar_runs`
-- NEW migration: `demand_radar_runs` table + RLS
-- (Talent already logs to `hire_alert_runs` — just surface it)
+### What we explicitly are NOT doing
+- ❌ Not building 3 new "raw vacuum" functions (existing scanners already do this)
+- ❌ Not building a separate enrichment engine (waterfall already exists in hire-alert-scanner)
+- ❌ Not adding a keyword gate (marginal $ savings, real bug-introduction risk)
+- ❌ Not touching the Apify pipeline that just started working
 
-## What I will NOT do
-- Won't change pricing or product names (per the radar consolidation memo, canonical names stay)
-- Won't break existing `MyTechAlert` / `MyIndustryPulse` client-facing pages
-- Won't add new scanners — just expose what's running
+### Files
+**New:**
+- migration: `raw_signals_dump` table + round-robin cron reschedule
+- `src/components/dwa-admin/WaterfallDiagnostics.tsx`
 
-## Success criteria
-- `/dwa-admin` sidebar shows a **Radars** group with 3 distinct hubs
-- Each hub has a **🔴 Live Log** sub-tab showing color-coded runs with auto-refresh
-- Demand Radar Throughput tab shows: "X signals/day avg · Y days of inventory · Z sellable now · $N forecast"
-- Growth Radar + Industry Pulse are visibly accessible as filtered sub-tabs under Demand Radar (no more "where did those features go?")
+**Edited:**
+- `hire-alert-scanner/index.ts` — add 1 dump-to-raw call (5 lines)
+- `industry-pulse-scanner/index.ts` — add 1 dump-to-raw call (5 lines)
+- `accela-permit-scanner/index.ts` — add 1 dump-to-raw call (5 lines)
+- `TalentRadarHub.tsx` + `DemandRadarHub.tsx` — add Waterfall tab
+
+### Plus the bug investigation
+First action when approved: query why `alerts_sent=0` despite 122 new candidates. Could be scoring threshold raised, client target_roles mismatch, or notification function silently erroring. **This is the highest-ROI fix in this whole conversation.**
+
+## Two questions answered, plainly
+1. **Original plan**: high risk of breaking working code for marginal gain. **Revised plan**: low risk — additive only, no scanner rewrites.
+2. **Original plan**: would weaken short-term (regression risk) for unclear long-term gain. **Revised plan**: strictly improves diagnostics + replayability + cron hygiene, plus fixes the real bug (zero alerts).
 
