@@ -34,8 +34,13 @@ interface CronExpect {
 const WATCHLIST: CronExpect[] = [
   // Revenue-critical
   { name: "cron-sentinel-6h", freshnessMinutes: 60 * 8, critical: true, description: "Sentinel itself" },
-  { name: "hire-alert-scanner-4h", freshnessMinutes: 60 * 6, outputTable: "hire_alert_runs", outputColumn: "started_at", critical: true, description: "TechAlert scanner" },
-  { name: "industry-pulse-scanner-daily", freshnessMinutes: 60 * 30, outputTable: "industry_pulse_signals", critical: true, description: "Demand Radar scanner" },
+  { name: "hire-alert-healthcare-1am-et", freshnessMinutes: 60 * 30, outputTable: "hire_alert_runs", outputColumn: "started_at", critical: true, description: "TechAlert scanner — healthcare" },
+  { name: "hire-alert-industrial-2am-et", freshnessMinutes: 60 * 30, outputTable: "hire_alert_runs", outputColumn: "started_at", critical: true, description: "TechAlert scanner — industrial" },
+  { name: "industry-pulse-commercial-3am-et", freshnessMinutes: 60 * 30, outputTable: "industry_pulse_signals", critical: true, description: "Demand Radar scanner — commercial" },
+  { name: "growth-radar-enhanced-scan-twice-daily", freshnessMinutes: 60 * 14, critical: true, description: "Growth Radar scanner" },
+  { name: "techalert-prospect-hunter-daily", freshnessMinutes: 60 * 30, critical: false, description: "TechAlert prospect hunter" },
+  { name: "boiler-sector-intel-daily", freshnessMinutes: 60 * 30, critical: false, description: "Boiler sector intel" },
+  { name: "accela-permits-3am-et", freshnessMinutes: 60 * 30, critical: false, description: "Accela permit scanner" },
   { name: "dead-lead-drip-daily", freshnessMinutes: 60 * 30, critical: true, description: "Dead Lead drip" },
   { name: "dead-lead-daily-notifier", freshnessMinutes: 60 * 30, critical: true, description: "Dead Lead daily digest" },
   { name: "dead-lead-outreach-drip-daily", freshnessMinutes: 60 * 30, critical: true, description: "Dead Lead prospect follow-ups" },
