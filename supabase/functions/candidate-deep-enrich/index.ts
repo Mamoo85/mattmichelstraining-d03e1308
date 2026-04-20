@@ -210,6 +210,12 @@ async function stageHunter(c: CandidateRow, employer?: string): Promise<Record<s
     if (!findRes.ok) return {};
     const found = await findRes.json();
     if (found?.data?.email) {
+      // Confidence gate — Hunter scores < 50 are "risky"/"catch-all" per their docs.
+      // Per Lead Enhancement Orchestrator policy, drop unverified emails to keep
+      // the outbound sequencer clean. Domain still returned so Snov can attempt.
+      if ((found.data.score ?? 0) < 50) {
+        return { company_domain: domain, hunter_rejected_score: found.data.score };
+      }
       return {
         hunter_email: found.data.email,
         hunter_confidence: found.data.score,
