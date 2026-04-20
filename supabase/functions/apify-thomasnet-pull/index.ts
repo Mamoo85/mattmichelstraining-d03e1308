@@ -14,12 +14,14 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 
-// ThomasNet Michigan category landing pages (publicly indexable supplier directories)
+// ThomasNet public search endpoints (login-free, indexable supplier listings).
+// The old /suppliers/michigan/<category>-<code> URLs now redirect to a login wall —
+// the public search endpoint with state=Michigan still returns supplier cards.
 const DEFAULT_CATEGORY_URLS = [
-  { url: "https://www.thomasnet.com/suppliers/michigan/boiler-manufacturers-23080000", category: "boiler manufacturers" },
-  { url: "https://www.thomasnet.com/suppliers/michigan/machine-shops-91510101", category: "machine shops" },
-  { url: "https://www.thomasnet.com/suppliers/michigan/metal-fabricators-91500000", category: "metal fabricators" },
-  { url: "https://www.thomasnet.com/suppliers/michigan/industrial-equipment-23000000", category: "industrial equipment" },
+  { url: "https://www.thomasnet.com/suppliers/search?cov=NA&heading=23080000&searchterm=boilers&state=Michigan&which=all", category: "boiler manufacturers" },
+  { url: "https://www.thomasnet.com/suppliers/search?cov=NA&heading=91510101&searchterm=machine+shops&state=Michigan&which=all", category: "machine shops" },
+  { url: "https://www.thomasnet.com/suppliers/search?cov=NA&heading=91500000&searchterm=metal+fabricators&state=Michigan&which=all", category: "metal fabricators" },
+  { url: "https://www.thomasnet.com/suppliers/search?cov=NA&heading=23000000&searchterm=industrial+equipment&state=Michigan&which=all", category: "industrial equipment" },
 ];
 
 interface ScrapedSupplier {
