@@ -67,7 +67,6 @@ serve(async (req) => {
       mode: "subscription",
       payment_method_types: ["card"],
       customer_email: email,
-      subscription_data: { trial_period_days: 7 },
       line_items: [{
         quantity: 1,
         price_data: {
@@ -76,7 +75,7 @@ serve(async (req) => {
           recurring: { interval: "month" },
           product_data: {
             name: `Exclusive ${tradeLabel} Leads — ${city}, ${state}`,
-            description: `Exclusive territory. Every ${tradeLabel.toLowerCase()} lead in ${city} goes only to you. SMS + email delivery within minutes.`,
+            description: `Exclusive ${tradeLabel.toLowerCase()} territory in ${city}. Includes FREE: Missed Call Text-Back ($99/mo value), Review Monitor ($25/mo), Quote Follow-Up Drip ($39/mo). Cancel anytime. 30-day money-back guarantee if zero leads delivered.`,
           },
         },
       }],
