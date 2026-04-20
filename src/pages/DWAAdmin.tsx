@@ -141,7 +141,7 @@ export default function DWAAdmin() {
           {activeTab === "agent-toolkit"    && <Suspense fallback={lazyFallback("agent toolkit")}><AgentToolkit /></Suspense>}
           {activeTab === "dead-leads"       && <Suspense fallback={lazyFallback("dead leads")}><AdminDeadLeads /></Suspense>}
           {activeTab === "contractor-leads" && <Suspense fallback={lazyFallback("contractor leads")}><AdminContractorLeads /></Suspense>}
-          {activeTab === "techalert"        && <Suspense fallback={lazyFallback("TechAlert clients")}><AdminHireAlertClients /></Suspense>}
+          {activeTab === "techalert"        && <Suspense fallback={lazyFallback("Talent Radar Hub")}><TalentRadarHub /></Suspense>}
           {activeTab === "fielddesk"        && <Suspense fallback={lazyFallback("FieldDesk clients")}><AdminFieldCRMClients /></Suspense>}
           {activeTab === "hvb"              && <Suspense fallback={lazyFallback("high-volume buyers")}><AdminHighVolumeBuyer /></Suspense>}
           {activeTab === "visitor-intel"    && <Suspense fallback={lazyFallback("visitor intel")}><VisitorIntelFeed /></Suspense>}
@@ -154,7 +154,7 @@ export default function DWAAdmin() {
           {activeTab === "cron-sentinel"    && <Suspense fallback={lazyFallback("cron sentinel")}><AdminCronSentinel /></Suspense>}
           {activeTab === "outbox"           && <Suspense fallback={lazyFallback("outbox")}><AdminGlobalOutbox /></Suspense>}
           {activeTab === "agency-outreach"  && <Suspense fallback={lazyFallback("agency outreach")}><AdminAgencyOutreach /></Suspense>}
-          {activeTab === "demand-radar"     && <Suspense fallback={lazyFallback("demand radar")}><AdminDemandRadar /></Suspense>}
+          {activeTab === "demand-radar"     && <Suspense fallback={lazyFallback("Demand Radar Hub")}><DemandRadarHub /></Suspense>}
           {activeTab === "supplier-outreach"&& <Suspense fallback={lazyFallback("supplier outreach")}><SupplierOutreachGenerator /></Suspense>}
 
           {activeTab === "field-stats" && (
