@@ -259,20 +259,41 @@ serve(async (req) => {
     await emailDigest(failures, results.length);
   }
 
-  // Fix 4: Dead-pipe check — 3 consecutive zero-candidate scanner runs = catastrophic failure
+  // Fix 4: Dead-pipe check — 3 consecutive zero-candidate scanner runs = catastrophic failure.
+  // Guards: (a) order by run_at (the actual column), (b) only fire if the most recent run is < 6h old
+  // (otherwise the scanner is just paused, not dead), (c) restrict to source='all' to avoid mixing
+  // partial source rows that legitimately have 0 candidates, (d) 24h cooldown on the alert itself.
   try {
     const { data: recentRuns } = await sb
       .from('hire_alert_runs')
-      .select('candidates_found, started_at')
-      .order('started_at', { ascending: false })
+      .select('candidates_found, run_at, source')
+      .eq('source', 'all')
+      .order('run_at', { ascending: false })
       .limit(3);
-    const allZero = (recentRuns?.length ?? 0) >= 3 && recentRuns!.every((r: any) => (r.candidates_found ?? 0) === 0);
-    if (allZero) {
-      await sendSMS(
-        ADMIN_PHONE, TWILIO_FROM,
-        '🚨 TechAlert DEAD PIPE: Last 3 scanner runs all returned 0 candidates. Immediate action required.',
-        'cron_sentinel_zero_pipe'
-      ).catch(() => {});
+    const rows = recentRuns ?? [];
+    const mostRecentAgeHr = rows[0]?.run_at
+      ? (Date.now() - new Date(rows[0].run_at as string).getTime()) / 3_600_000
+      : 9999;
+    const allZero = rows.length >= 3 && rows.every((r: any) => (r.candidates_found ?? 0) === 0);
+
+    if (allZero && mostRecentAgeHr < 6) {
+      // 24h cooldown — don't spam Matt
+      const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: recentAlert } = await sb
+        .from('system_comms_log')
+        .select('id')
+        .eq('product', 'cron_sentinel_zero_pipe')
+        .gte('created_at', since24h)
+        .limit(1)
+        .maybeSingle();
+
+      if (!recentAlert) {
+        await sendSMS(
+          ADMIN_PHONE, TWILIO_FROM,
+          '🚨 TechAlert DEAD PIPE: Last 3 scanner runs (source=all) returned 0 candidates within 6h. Investigate.',
+          'cron_sentinel_zero_pipe'
+        ).catch(() => {});
+      }
     }
   } catch (e) {
     console.warn('[cron-sentinel] dead-pipe check failed:', e instanceof Error ? e.message : String(e));

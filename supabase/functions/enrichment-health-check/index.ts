@@ -104,12 +104,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (beatAgeMin !== null && beatAgeMin > 360) {
+    // Stale heartbeat — only critical if there's ALSO a real backlog. The deep-enrich
+    // agent only runs when the queue has work, so an idle agent = empty queue = healthy.
+    // Threshold bumped 6h → 24h to match real-world idle periods.
+    if (beatAgeMin !== null && beatAgeMin > 1440 && (stuckPending || 0) > 0) {
       level = "red";
-      issues.push(`Scanner heartbeat ${beatAgeMin}min stale`);
+      issues.push(`Scanner heartbeat ${beatAgeMin}min stale with ${stuckPending} pending`);
     }
 
-    // 6) Alert Matt if RED (max 1 SMS per 4 hours)
+    // 6) Alert Matt if RED (max 1 SMS per 24 hours — was 4h, was too noisy)
     const { data: lastAlert } = await sb
       .from("system_comms_log")
       .select("created_at")
@@ -122,7 +125,7 @@ Deno.serve(async (req) => {
       ? (Date.now() - new Date((lastAlert as any).created_at).getTime()) / 60000
       : 9999;
 
-    if (level === "red" && alertAgeMin > 240) {
+    if (level === "red" && alertAgeMin > 1440) {
       await sendSMS(
         ADMIN_PHONE,
         `⚠️ Enrichment ${level.toUpperCase()}: ${issues.join("; ")}`.slice(0, 320),
