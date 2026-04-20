@@ -1,120 +1,80 @@
-The user is handing me a third agent prompt — the **Lead Enhancement Orchestrator**. Same pattern as last time: nice-sounding spec, but I need to map it against what already exists before I touch anything.
-
-Let me think about what's already live:
-
-**Existing enrichment infrastructure (from CLAUDE.md + memory):**
-
-- `lead-enrichment-waterfall` — already exists (referenced in `capture-enrich/index.ts`)
-- `candidate-deep-enrich` — runs the 8-stage waterfall per candidate (referenced in `queue-worker-enrich/index.ts`)
-- Memory `tech/talent-radar-enrichment-v5` — documents the actual enrichment stack with measured hit rates
-- Memory `features/lara-data-extraction-pipeline` — Sonar + VAL + NinjaPear + Crustdata
-- Phase 18 (yesterday): added Hunter, Snov, Apollo, HIBP, PDL, NPI Registry stages
-- Phase 17 decision: **Proxycurl is dead** (LinkedIn lawsuit, shut down July 2025); **Crustdata is the LinkedIn replacement** but weak for trades
-- `_shared/scraper.ts` + `_shared/cheap-extract.ts` — cost-optimization adapters already centralized
-- `ai_call_log` — per-provider ROI tracking already exists
-
-**What the prompt asks for vs reality:**
 
 
-| Prompt step                   | Reality                                                                                                               |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Apollo primary email          | ✅ Already wired (Phase 18)                                                                                            |
-| Prospeo fallback              | ❌ Not integrated. New vendor.                                                                                         |
-| Hunter fallback               | ✅ Already wired (Phase 18, `HUNTER_API_KEY`)                                                                          |
-| ZeroBounce/NeverBounce SMTP   | ❌ Not integrated. New vendor. Hunter already does verification though.                                                |
-| Lusha mobile primary          | ❌ Not integrated. New vendor.                                                                                         |
-| Cognism mobile fallback       | ❌ Not integrated. New vendor.                                                                                         |
-| Clearbit firmographics        | ❌ Clearbit was acquired by HubSpot, free tier killed. PDL already does this.                                          |
-| PeopleDataLabs                | ✅ Already wired (`PDL_API_KEY` live)                                                                                  |
-| CRM POST (HubSpot/Salesforce) | ❌ No CRM connector. Records go to `hire_alert_candidates` / `contractor_clients`.                                     |
-| 85% coverage target           | Memory `talent-radar-enrichment-v5` says **trade vertical ceiling is ~17%** measured. 85% is fantasy for blue-collar. |
+## Audit Results — what's actually broken
 
+I called all 4 functions live and inspected the response shapes. Here's the truth:
 
-**This is the same trap as last time.** If I build it literally, I'll:
+### 1. Medicare — Backend WORKS, frontend doesn't render
+Live API call returned **dozens of 1- and 2-star facilities** (Beaconshire, Orchards at Harper Woods, Roseville, Warren, etc.) with full data. The component sets `facilities` state correctly, but the screenshot shows the empty state. Most likely cause: a stale browser bundle, OR the toast fires `Found X` but the table render path has a bug. Need to verify by reading the rendering code carefully and confirming `facilities.length > 0` actually renders the table. This is the easy fix.
 
-1. Add 4 new vendor integrations (Prospeo, ZeroBounce, Lusha, Cognism, Clearbit) — each needs a secret, each costs money, several duplicate what Hunter/PDL already do
-2. Build a parallel "orchestrator" function that competes with the existing `candidate-deep-enrich` and `lead-enrichment-waterfall`
-3. Promise an 85% hit rate that the measured data says is impossible for trades
+### 2. ThomasNet pull — Apify returns HTTP 403
+Live call returned `502 - Actor run failed status: 403`. The actor `zen-studio~thomasnet-suppliers-scraper` is either:
+- A paid actor your Apify account hasn't rented, OR
+- A misnamed/private actor
 
-**The smart play (same shape as last time):**
+Real fix: swap to a **free public actor** (e.g. `apify/web-scraper` or `compass/crawler-google-places`) OR rebuild ThomasNet pull to scrape directly via Firecrawl (we have `FIRECRAWL_API_KEY`).
 
-- Treat the prompt as **policy** to enforce on the existing waterfall, not as a spec for a new function
-- Identify which vendor gaps are actually worth filling (Lusha for mobile is the real one — current stack is weak on direct-dial)
-- Reject duplicates (Prospeo, ZeroBounce, Clearbit add no signal over Hunter + PDL)
-- Set an honest coverage target per vertical, not one global 85%
+### 3. Boiler Sector Intel — returns 0 because data sources are empty
+Three scans run in parallel:
+- **Compliance gap** — queries `hire_alert_candidates` filtered by boiler-license-type AND `current_employer` matching hospital/school/etc. The candidates table likely has no rows matching those exact license-type strings → 0 results.
+- **Bond funding** — Sonar AI search via Lovable AI gateway. `google/gemini-2.5-flash` is NOT a Sonar/web-search model, it's an LLM with no web access → it returns `[]` or hallucinated empty.
+- **Expansion hiring** — same Sonar problem.
 
-I have enough context. No need to read more files — I just refactored this stack twice in the last 3 days. Let me write the plan.
+Real fix: route the two web-research scans through **OpenRouter Perplexity Sonar** (`perplexity/sonar-pro`) — we already use this elsewhere (techalert-prospect-hunter) and `OPENROUTER_API_KEY` is configured.
+
+### 4. Accela — auth fails for all 11 agencies
+Live test confirmed: every one of the 11 agencies returned `auth_failed / no_token`. Credentials exist in secrets. Likely root cause: **Accela `agency_name` parameter format is wrong** — Accela expects the agency's actual short ID as registered in their developer console (e.g. `DETROIT`, not `DETROIT_MI`), AND your app must be individually approved per agency. Most public Accela apps only get auto-approval for sandbox `ISSSTAGING`.
+
+Real fix: there are two paths:
+1. **Code fix**: try a different agency-name pattern (drop `_MI` suffix), AND fall back to Accela's public-records search API which doesn't need agency-level OAuth.
+2. **Honest UX fix**: the Accela API is gated by per-agency approval that takes weeks. Replace this scanner's primary path with the **Detroit BSEED ArcGIS feed** (free, no auth, already documented in your memory) and demote Accela to a secondary/optional source.
 
 ---
 
-## Honest read on the prompt
+## The plan (what I'll do once you approve)
 
-You're feeding me a third agent spec. Same shape as the last two: it sounds tight, but if I implement it literally I'll build a parallel orchestrator that competes with `candidate-deep-enrich` + `lead-enrichment-waterfall` (both already live and just upgraded in Phase 18 yesterday).
+### Phase 1 — Medicare visibility (highest confidence fix)
+- Re-read `AdminMedicareIntel.tsx` render logic line-by-line to confirm the bug
+- Add an explicit "loaded N from API" debug line under the scan button
+- Add a **clickable row action panel** (not just modal) — Call / Email / Google / View on Medicare.gov / Add to TechAlert prospects DB / Add to postcard queue
+- Wire **"Add to TechAlert prospects"** button → inserts into `techalert_prospect_targets` so they flow into your existing prospect hunter UI
 
-Let me grade each step against what's actually shipped.
+### Phase 2 — Boiler Intel (real data, not empty)
+- Swap `aiChat()` and `sonarSearch()` to OpenRouter `perplexity/sonar-pro` (real web search) — same pattern as `techalert-prospect-hunter`
+- Loosen the compliance-gap query: also pull from `miosha_licenses` table directly if it exists, not just `hire_alert_candidates`
+- Add diagnostic counters in the response so the toast shows *why* a scan returned 0 (e.g. "Sonar returned 4 raw, 0 passed confidence ≥6 filter")
 
-### What the prompt asks for vs. what exists
+### Phase 3 — ThomasNet (replace broken Apify actor)
+- Rewrite `apify-thomasnet-pull` to use **Firecrawl** against ThomasNet category pages (`thomasnet.com/suppliers/michigan/boiler-manufacturers/...`) — we already pay for Firecrawl
+- Parse company name + city + url from the markdown, upsert as before
+- Same UI, same results table, just a working data source
 
+### Phase 4 — Accela (honest fallback)
+- Add a real fallback inside `accela-permit-scanner`: when all agencies return `auth_failed`, hit the **Detroit BSEED ArcGIS REST API** (free, public — already used by `industry-pulse-scanner`) for last 7 days of trades permits and write those into `industry_pulse_signals` so the scan still produces useful results
+- Update the WaterfallDiagnostics row for Accela to show "Accela auth gated — using BSEED ArcGIS fallback (N permits)" instead of looking like a hard failure
+- Add a one-line explainer in `WaterfallDiagnostics` linking to developer.accela.com so you know the long-term path is "request agency approval"
 
-| Step                        | Status                                                                            | Verdict                                                                                             |
-| --------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Apollo primary email        | ✅ Live (Phase 18)                                                                 | Keep                                                                                                |
-| Prospeo fallback            | ❌ New vendor                                                                      | **Skip** — duplicates Hunter                                                                        |
-| Hunter fallback             | ✅ Live (Phase 18)                                                                 | Keep                                                                                                |
-| ZeroBounce/NeverBounce SMTP | ❌ New vendor                                                                      | **Skip** — Hunter already returns verification status                                               |
-| Lusha mobile (primary)      | ❌ Not wired                                                                       | **Add** — this is the real gap                                                                      |
-| Cognism mobile (fallback)   | ❌ Not wired                                                                       | **Defer** — enterprise pricing, evaluate after Lusha proves out                                     |
-| Clearbit firmographics      | ❌ Dead product (HubSpot killed free tier)                                         | **Skip** — PDL already does this                                                                    |
-| PDL firmographics           | ✅ Live                                                                            | Keep                                                                                                |
-| CRM POST                    | ❌ No HubSpot/Salesforce                                                           | **Skip** — records already land in `hire_alert_candidates` / `contractor_clients`, which IS the CRM |
-| 85% coverage target         | Measured ceiling for trades is ~17% (per `mem://tech/talent-radar-enrichment-v5`) | **Reject the number** — set per-vertical targets                                                    |
+### Phase 5 — Universal "make every result clickable"
+For Medicare, Boiler signals, Industrial Growth, and ThomasNet rows — add the same 5-action toolbar to each row:
+- 📞 Call (tel:)
+- ✉️ Email (mailto with pre-filled pitch)
+- 🔎 Google
+- 📋 Copy contact info
+- ➕ Add to TechAlert prospects (writes to `techalert_prospect_targets`)
 
+That last button is the key piece you've been asking for — every market-intel result becomes a one-click prospect that flows into your existing outreach pipeline.
 
-### The 85% problem
+### Files I'll touch
+- `supabase/functions/medicare-staffing-intel/index.ts` — already correct, no change unless render audit reveals shape mismatch
+- `supabase/functions/boiler-sector-intel/index.ts` — switch to OpenRouter Sonar, add diagnostics
+- `supabase/functions/apify-thomasnet-pull/index.ts` — full rewrite to Firecrawl
+- `supabase/functions/accela-permit-scanner/index.ts` — add BSEED ArcGIS fallback
+- `src/components/admin/AdminMedicareIntel.tsx` — add per-row action toolbar + Add-to-Prospects
+- `src/components/admin/AdminIndustrialIntel.tsx` — same toolbar on signals + leads
+- `src/components/dwa-admin/WaterfallDiagnostics.tsx` — better Accela messaging
+- One new shared helper: `src/lib/addToTechAlertProspects.ts`
 
-You already measured this. The memory file from yesterday says trades cap at ~17% contactability because blue-collar workers don't live on LinkedIn and don't have B2B email databases tracking them. Healthcare hits higher (NPI registry is a goldmine). White-collar contractors hit higher (Apollo coverage).
+### Risk / what I won't promise
+- Accela will still need per-agency approval to ever return real Accela data. The BSEED ArcGIS fallback covers Detroit only — Royal Oak, Warren, etc. are gated until you get approved by each city. I'll make the diagnostics tell you that clearly instead of pretending it works.
+- Boiler Sonar results depend on whether real bond/hiring news actually exists in the past 30–90 days. Some scans will legitimately return small numbers — but they'll be real, not hallucinated.
 
-A blanket 85% target is a recipe for me to spam-add vendors chasing a number that physics won't let me hit. Better targets:
-
-- **Healthcare** (CNA/RN/LPN): 60% (NPI + PDL combo)
-- **White-collar contractor decision-makers** (HVAC company owners, etc.): 50% (Apollo + Hunter)
-- **Trade individuals** (a roofer named on a MIOSHA license): 20% — the ceiling is real
-
-### Revised plan
-
-**Phase A — Add the one vendor that actually closes a gap**
-
-- Wire **Lusha** into `candidate-deep-enrich` as a new stage between PDL and Sonar fallback
-- Lusha is SMB-focused, has direct-dial coverage US trades vendors don't
-- Add `LUSHA_API_KEY` secret request
-- Stage logs to existing `ai_call_log` so we can measure ROI before adding Cognism
-
-**Phase B — Codify the orchestrator policy on the existing function**
-
-- Add header doc block to `candidate-deep-enrich/index.ts` with the protocol (sequential, stop on first hit, log all)
-- Verify the "stop on first verified hit" short-circuit logic is actually firing (audit, don't rebuild)
-- Confirm Hunter's verification status is being respected (drop "risky"/"catch-all" — currently we may be keeping them)
-
-**Phase C — Per-vertical coverage tracking**
-
-- Add `coverage_by_vertical` rollup to `hire_alert_runs.source_breakdown` (already JSONB)
-- Daily morning digest surfaces: healthcare X%, white-collar Y%, trades Z%
-- This makes the 85%/17% conversation data-driven instead of vibes
-
-**Phase D — Explicitly do NOT build**
-
-- No Prospeo (Hunter covers it)
-- No ZeroBounce/NeverBounce (Hunter returns status)
-- No Clearbit (dead, PDL covers it)
-- No CRM POST (your DB tables ARE the CRM — `hire_alert_candidates` + `contractor_clients`)
-- No new orchestrator function (we have two already)
-
-### Open question for you
-
-Lusha pricing is $39/user/mo for ~330 credits, scaling up. Before I ask you to drop a card on a `LUSHA_API_KEY`, want me to:
-
-1. **Just wire it** — assume you'll pay $39/mo to pilot
-2. **Skip Lusha too** — accept current mobile-number coverage and stop chasing the gap
-3. **Try the free tier first** — Lusha gives 5 credits/mo free, enough to test the integration before billing **i agree with everything, I got a free trial ask me for the key*
-
-My recommendation: **option 3**. Wire it, you sign up free, we measure 5 lookups, then decide.
