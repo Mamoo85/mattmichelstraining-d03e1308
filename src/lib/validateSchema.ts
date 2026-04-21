@@ -29,23 +29,28 @@ export function validateSchema(
     const m = error.message?.match(COLUMN_ERROR_RE);
     if (m) {
       const col = m[1] || m[2];
-      return {
+      const fail: SchemaValidation = {
         ok: false,
         reason: `Data model mismatch: column "${col}" referenced in the query does not exist on this table. Update the select() to match the current schema.`,
         missing: [col],
         forbidden: [],
       };
+      return fail;
     }
-    return {
+    const fail: SchemaValidation = {
       ok: false,
       reason: `Query failed: ${error.message || "unknown error"}`,
       missing: [],
       forbidden: [],
     };
+    return fail;
   }
 
   // 2. No rows = nothing to validate (legitimately empty table).
-  if (!rows || rows.length === 0) return { ok: true };
+  if (!rows || rows.length === 0) {
+    const ok: SchemaValidation = { ok: true };
+    return ok;
+  }
 
   const sample = rows[0];
   const keys = new Set(Object.keys(sample || {}));
@@ -53,19 +58,23 @@ export function validateSchema(
   const missing = check.expected.filter((c) => !keys.has(c));
   const forbidden = (check.forbidden || []).filter((c) => keys.has(c));
 
-  if (missing.length === 0 && forbidden.length === 0) return { ok: true };
+  if (missing.length === 0 && forbidden.length === 0) {
+    const ok: SchemaValidation = { ok: true };
+    return ok;
+  }
 
   const parts: string[] = [];
   if (missing.length) parts.push(`missing expected column(s): ${missing.join(", ")}`);
   if (forbidden.length)
     parts.push(`found forbidden column(s) that should be removed from select(): ${forbidden.join(", ")}`);
 
-  return {
+  const fail: SchemaValidation = {
     ok: false,
     reason: `Data model mismatch — ${parts.join(" · ")}.`,
     missing,
     forbidden,
   };
+  return fail;
 }
 
 /** Pre-baked check for the industry_pulse_signals table. */
