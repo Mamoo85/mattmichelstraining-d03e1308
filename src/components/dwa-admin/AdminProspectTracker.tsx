@@ -20,6 +20,14 @@ type Prospect = {
   paid_at: string | null;
   status: string;
   created_at: string;
+  nudge_sent_at: string | null;
+  nudge_count: number | null;
+};
+
+const NUDGE_TEMPLATE = (trackedUrl: string, city: string | null, trade: string | null) => {
+  const where = city ? ` in ${city}` : "";
+  const what = trade ? ` ${trade} ` : " ";
+  return `Hey — Matt with Detroit Web Agency. We send exclusive${what}leads to contractors${where} (no shared leads, no contracts). Quick look: ${trackedUrl} — reply STOP to opt out.`;
 };
 
 type FilterKey = "all" | "active" | "stalled" | "converted";
@@ -116,6 +124,36 @@ export default function AdminProspectTracker() {
       toast({ title: "Link copied", description: url });
     } catch {
       toast({ title: "Copy failed", description: url, variant: "destructive" });
+    }
+  }
+
+  async function sendNudge(p: Prospect) {
+    const trackedUrl = `https://detroitwebagent.com/r/${p.link_token}`;
+    const body = NUDGE_TEMPLATE(trackedUrl, p.city, p.trade);
+    const confirmMsg = `Send tracked nudge SMS to ${p.phone}?\n\n${body}`;
+    if (!window.confirm(confirmMsg)) return;
+    const { data, error } = await supabase.functions.invoke("dwa-send-sms", {
+      body: { to: p.phone, body, product: "dwa_prospect_nudge" },
+    });
+    if (error || !data?.success) {
+      toast({
+        title: "Send failed",
+        description: error?.message || data?.error || "Unknown error",
+        variant: "destructive",
+      });
+      return;
+    }
+    const { error: upErr } = await supabase
+      .from("prospect_nudges")
+      .update({
+        nudge_sent_at: new Date().toISOString(),
+        nudge_count: (p.nudge_count ?? 0) + 1,
+      })
+      .eq("id", p.id);
+    if (upErr) {
+      toast({ title: "Sent, but log failed", description: upErr.message, variant: "destructive" });
+    } else {
+      toast({ title: "Nudge sent ✓", description: p.phone });
     }
   }
 
@@ -335,11 +373,26 @@ export default function AdminProspectTracker() {
                   )}
                 </div>
 
+                {p.nudge_sent_at && (
+                  <div className="mt-1 text-[11px] text-white/40">
+                    📤 Last nudge: {timeAgo(p.nudge_sent_at)}
+                    {(p.nudge_count ?? 0) > 1 && <span className="ml-1">· sent {p.nudge_count}×</span>}
+                  </div>
+                )}
+
                 {p.notes && (
                   <div className="mt-2 text-xs text-white/60 italic border-l-2 border-white/10 pl-2">{p.notes}</div>
                 )}
 
                 <div className="mt-4 flex gap-2 flex-wrap">
+                  <Button
+                    onClick={() => sendNudge(p)}
+                    size="sm"
+                    disabled={dead}
+                    className="bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/80 disabled:opacity-40"
+                  >
+                    📤 {p.nudge_sent_at ? "Send again" : "Send nudge SMS"}
+                  </Button>
                   <Button
                     onClick={() => copyLink(p.link_token)}
                     size="sm"

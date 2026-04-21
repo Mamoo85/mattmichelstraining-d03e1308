@@ -10697,6 +10697,8 @@ export type Database = {
           link_token: string
           name: string | null
           notes: string | null
+          nudge_count: number
+          nudge_sent_at: string | null
           paid_at: string | null
           phone: string
           profile_completed_at: string | null
@@ -10714,6 +10716,8 @@ export type Database = {
           link_token?: string
           name?: string | null
           notes?: string | null
+          nudge_count?: number
+          nudge_sent_at?: string | null
           paid_at?: string | null
           phone: string
           profile_completed_at?: string | null
@@ -10731,6 +10735,8 @@ export type Database = {
           link_token?: string
           name?: string | null
           notes?: string | null
+          nudge_count?: number
+          nudge_sent_at?: string | null
           paid_at?: string | null
           phone?: string
           profile_completed_at?: string | null
