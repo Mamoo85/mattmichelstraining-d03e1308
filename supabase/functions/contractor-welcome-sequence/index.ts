@@ -31,14 +31,38 @@ serve(async (req) => {
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     const { data: c } = await sb
       .from("contractor_clients" as any)
-      .select("id, business_name, phone, trade, city, roi_token, free_dead_leads_quota")
+      .select("id, business_name, phone, trade, city, roi_token, free_dead_leads_quota, active, stripe_customer_id, onboarded_at")
       .eq("id", contractor_id)
       .maybeSingle();
 
+    // Guardrail: contractor_clients row must exist (Stripe webhook creates it)
+    if (!c) {
+      return new Response(JSON.stringify({
+        error: "no_contractor_row",
+        message: "No contractor_clients row exists yet. Stripe webhook (contractor_lead_subscription) creates this row on successful checkout. Welcome SMS will not fire until payment clears.",
+      }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Guardrail: must be Stripe-provisioned (active + has stripe_customer_id)
+    if (!(c as any).stripe_customer_id) {
+      return new Response(JSON.stringify({
+        error: "not_stripe_provisioned",
+        message: "Contractor row exists but has no stripe_customer_id. Likely a manual insert or test record — welcome SMS blocked to prevent sending to unpaid prospects.",
+      }), { status: 412, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    if ((c as any).active === false) {
+      return new Response(JSON.stringify({
+        error: "contractor_inactive",
+        message: "Contractor row is marked inactive. Welcome SMS blocked.",
+      }), { status: 412, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     if (!c?.phone) {
-      return new Response(JSON.stringify({ error: "contractor or phone missing" }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({
+        error: "phone_missing",
+        message: "Contractor row exists and is paid, but phone is missing. Cannot send SMS.",
+      }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const trade = ((c as any).trade || "service").toLowerCase();

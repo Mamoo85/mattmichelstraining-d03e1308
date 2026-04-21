@@ -32,13 +32,29 @@ export default function AdminContractorOnboarding() {
   }
   useEffect(() => { load(); }, []);
 
+  function checkReadiness(c: Contractor): { ready: boolean; reason?: string } {
+    if (!(c as any).stripe_customer_id) return { ready: false, reason: "⏳ Waiting for Stripe payment — no contractor_clients row provisioned yet (or manual insert without stripe_customer_id). Welcome SMS blocked." };
+    if (c.active === false) return { ready: false, reason: "⛔ Contractor marked inactive." };
+    if (!c.phone) return { ready: false, reason: "⚠️ Phone missing on contractor row." };
+    return { ready: true };
+  }
+
   async function fireWelcome(id: string, idx: number) {
+    const c = list.find((x) => x.id === id);
+    if (c) {
+      const r = checkReadiness(c);
+      if (!r.ready) { alert(r.reason); return; }
+    }
     setBusyId(id + idx);
     try {
-      const { error } = await (supabase.functions as any).invoke("contractor-welcome-sequence", {
+      const { data, error } = await (supabase.functions as any).invoke("contractor-welcome-sequence", {
         body: { contractor_id: id, message_index: idx },
       });
       if (error) throw error;
+      if ((data as any)?.error) {
+        alert(`Blocked: ${(data as any).message || (data as any).error}`);
+        return;
+      }
       alert(`Sent welcome message #${idx + 1}`);
     } catch (e: any) {
       alert(`Failed: ${e?.message || e}`);
