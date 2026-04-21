@@ -383,7 +383,7 @@ export async function sendSMS(
           body_hash: bodyHash,
           status: "failed",
           error_message: data?.message || `HTTP ${res.status}`,
-          metadata: { twilio_code: data?.code },
+          metadata: { twilio_code: data?.code, template_id: templateId },
         })).catch(() => {});
       }
       // Surface to error_logs so admin sees silent SMS failures
