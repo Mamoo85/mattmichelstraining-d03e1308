@@ -3132,6 +3132,7 @@ export type Database = {
           id: string
           message_index: number
           recipient_phone: string | null
+          stale_alerted: boolean
           status: string
           twilio_error_code: string | null
           twilio_sid: string | null
@@ -3147,6 +3148,7 @@ export type Database = {
           id?: string
           message_index: number
           recipient_phone?: string | null
+          stale_alerted?: boolean
           status?: string
           twilio_error_code?: string | null
           twilio_sid?: string | null
@@ -3162,6 +3164,7 @@ export type Database = {
           id?: string
           message_index?: number
           recipient_phone?: string | null
+          stale_alerted?: boolean
           status?: string
           twilio_error_code?: string | null
           twilio_sid?: string | null

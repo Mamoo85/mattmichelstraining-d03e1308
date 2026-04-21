@@ -118,11 +118,12 @@ serve(async (req) => {
     const city = (c as any).city || "your area";
     const portalUrl = `https://detroitwebagent.com/contractor-portal/${(c as any).roi_token || contractor_id}`;
     const intakeUrl = `https://detroitwebagent.com/dead-lead-intake?cid=${contractor_id}`;
+    const statusUrl = `https://detroitwebagent.com/contractor-onboarding-status?contractor_id=${contractor_id}`;
     const quota = (c as any).free_dead_leads_quota || 40;
 
     const messages = [
-      // T+5min — welcome + free boost CTA
-      `Welcome to DWA. Your ${trade} lead system is LIVE in ${city}. FREE BOOST: paste up to ${quota} old quotes here for free SMS reactivation while Google ads warm up (3-5 days): ${intakeUrl}\n\nDashboard: ${portalUrl}\n— Matt (313) 992-1219`,
+      // T+5min — welcome + free boost CTA + activation status link
+      `Welcome to DWA. Your ${trade} lead system is LIVE in ${city}. FREE BOOST: paste up to ${quota} old quotes here for free SMS reactivation while Google ads warm up (3-5 days): ${intakeUrl}\n\nDashboard: ${portalUrl}\nActivation status: ${statusUrl}\n— Matt (313) 992-1219`,
       // T+72h — status
       `${(c as any).business_name || "Hey"} — Day 3 update: your landing page is live + Google ads launching today. The 'priming period' takes 3-5 days. Dashboard: ${portalUrl}`,
       // T+7d — first recap
