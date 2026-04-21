@@ -236,6 +236,34 @@ export default function AdminPendingSMSDrafts() {
                     {charCount} chars
                   </div>
                 </div>
+
+                {/* Preview with highlighted sign-up URL */}
+                <div className="rounded-lg bg-[#0a1628] border border-[#00d4ff]/20 p-3 mb-2 text-white/90 text-sm whitespace-pre-wrap leading-relaxed">
+                  {renderWithHighlightedUrl(editedBody) || (
+                    <span className="text-white/30 italic">Empty draft</span>
+                  )}
+                </div>
+
+                {extractUrl(editedBody) ? (
+                  <div className="flex items-center gap-2 mb-2 text-[11px]">
+                    <span className="text-emerald-400">✓ Sign-up link detected</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(extractUrl(editedBody)!);
+                        toast.success("URL copied");
+                      }}
+                      className="text-[#00d4ff] hover:underline"
+                    >
+                      Copy URL
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mb-2 text-[11px] text-amber-400">
+                    ⚠ No sign-up URL in this draft
+                  </div>
+                )}
+
                 <Textarea
                   value={editedBody}
                   onChange={(e) =>
