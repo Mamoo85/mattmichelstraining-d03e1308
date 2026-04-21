@@ -18,7 +18,7 @@ interface Signal {
   cross_referenced: boolean | null;
   detected_at: string;
   recommended_pitch: string | null;
-  source_url: string | null;
+  source_urls: string[] | null;
 }
 
 const VERTICALS = [
@@ -315,9 +315,9 @@ export default function AdminDemandRadar() {
                   {drafting ? <Loader2 size={12} className="animate-spin" /> : <Wand2 size={12} />}
                   Draft with Opus
                 </button>
-                {selected.source_url && (
+                {selected.source_urls && selected.source_urls[0] && (
                   <a
-                    href={selected.source_url}
+                    href={selected.source_urls[0]}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-3 py-2 rounded-md bg-white/5 border border-white/10 hover:border-[#00d4ff]/40 text-white/80 text-xs font-semibold flex items-center justify-center gap-1.5"
