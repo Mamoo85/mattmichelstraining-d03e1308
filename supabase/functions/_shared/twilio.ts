@@ -239,6 +239,10 @@ export async function sendSMS(
     ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
     : null;
 
+  // Compute body_hash up-front — used by every comms-log insert below so we can
+  // resend byte-identical messages later and dedup against this exact payload.
+  const bodyHash = await computeBodyHash(to, body, product ?? null);
+
   // 3. E.164 US-only validation
   if (!US_E164.test(to)) {
     console.warn(`[SMS] Rejected non-US/non-E.164 number: ${to}`);
@@ -253,6 +257,8 @@ export async function sendSMS(
         product: product ?? null,
         recipient: to,
         body_preview: body.slice(0, 200),
+        body_full: body,
+        body_hash: bodyHash,
         status: "skipped",
         error_message: "invalid_e164_us_only",
       })).catch(() => {});
