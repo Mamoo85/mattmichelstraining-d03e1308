@@ -27,21 +27,24 @@ export default function ContractorTrustDashboard() {
     if (!token) return;
     (async () => {
       try {
-        const { data: c, error } = await (supabase as any)
-          .from("contractor_clients")
-          .select("id, business_name, trade, city, free_dead_leads_used, free_dead_leads_quota, email")
-          .or(`roi_token.eq.${token},id.eq.${token}`)
-          .maybeSingle();
-        if (error || !c) { setErr("Dashboard not found."); return; }
-        setContractor(c as Contractor);
-
-        const since = new Date(Date.now() - 30 * 86400000).toISOString();
-        const [{ data: ld }, { data: bd }] = await Promise.all([
-          (supabase as any).from("contractor_leads").select("id, created_at, project_description").eq("contractor_id", (c as any).id).gte("created_at", since),
-          (supabase as any).from("contractor_lead_boosts").select("*").eq("contractor_id", (c as any).id).order("created_at", { ascending: false }).limit(5),
-        ]);
-        setLeads(((ld as any[]) || []));
-        setBoosts(((bd as any[]) || []));
+        // RLS blocks anon reads of contractor_clients, so we use a token-gated edge function.
+        const { data, error } = await (supabase as any).functions.invoke("contractor-portal-lookup", {
+          body: null,
+          method: "GET",
+          headers: {},
+        });
+        // Fallback: invoke doesn't pass query strings cleanly, so use direct fetch with token.
+        const SUPABASE_URL = (import.meta as any).env.VITE_SUPABASE_URL;
+        const ANON = (import.meta as any).env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/contractor-portal-lookup?token=${encodeURIComponent(token)}`, {
+          headers: { apikey: ANON, Authorization: `Bearer ${ANON}` },
+        });
+        if (!res.ok) { setErr("Dashboard not found."); return; }
+        const json = await res.json();
+        if (!json?.contractor) { setErr("Dashboard not found."); return; }
+        setContractor(json.contractor as Contractor);
+        setLeads(json.leads || []);
+        setBoosts(json.boosts || []);
       } catch (e: any) { setErr(e?.message || "Load failed"); }
       finally { setLoading(false); }
     })();
