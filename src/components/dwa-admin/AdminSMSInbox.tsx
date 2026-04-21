@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ResendSmsModal, { type ResendTarget } from "./ResendSmsModal";
 
 type CommsRow = {
   id: string;
@@ -15,6 +16,7 @@ type CommsRow = {
   product: string | null;
   recipient: string | null;
   body_preview: string | null;
+  body_full: string | null;
   status: string | null;
   metadata: Record<string, unknown> | null;
   created_at: string;
@@ -25,7 +27,8 @@ type Direction = "inbound" | "outbound";
 type Message = {
   id: string;
   direction: Direction;
-  body: string;
+  body: string;          // body_full ?? body_preview — what we render
+  body_full: string | null; // raw, for resend
   status: string;
   product: string | null;
   created_at: string;
@@ -139,6 +142,7 @@ export default function AdminSMSInbox() {
   const [composeTo, setComposeTo] = useState("");
   const [drafting, setDrafting] = useState(false);
   const [showCheatsheet, setShowCheatsheet] = useState(false);
+  const [resendTarget, setResendTarget] = useState<ResendTarget | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Mobile: when a thread is picked, hide the list. Back button returns to list.
@@ -152,7 +156,7 @@ export default function AdminSMSInbox() {
       const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const { data, error } = await supabase
         .from("system_comms_log")
-        .select("id, channel, product, recipient, body_preview, status, metadata, created_at")
+        .select("id, channel, product, recipient, body_preview, body_full, status, metadata, created_at")
         .eq("channel", "sms")
         .gte("created_at", since)
         .order("created_at", { ascending: true })
@@ -189,7 +193,8 @@ export default function AdminSMSInbox() {
         arr.push({
           id: r.id,
           direction,
-          body: r.body_preview ?? "",
+          body: r.body_full ?? r.body_preview ?? "",
+          body_full: r.body_full,
           status: r.status ?? "",
           product: r.product,
           created_at: r.created_at,
