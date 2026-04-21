@@ -369,6 +369,25 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: msg, sent_this_month: monthSent, cap: MAX_PER_MONTH }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // Resolve assets ONCE per run with fallback chain — if a hosted image
+    // is down we use the next URL (or a safe data-URI placeholder) instead
+    // of mailing a broken image.
+    const [photoAsset, badgeAsset] = await Promise.all([
+      resolveAssetUrl(POSTCARD_ASSETS.matt_photo),
+      resolveAssetUrl(POSTCARD_ASSETS.dwa_badge),
+    ]);
+    if (photoAsset.usedPlaceholder || badgeAsset.usedPlaceholder) {
+      await notifyMatt(
+        `⚠️ Postcard asset fell back to placeholder (${campaign.county})`,
+        `<p>Sending campaign <strong>${campaign_id}</strong> with placeholder image(s):</p>
+         <ul>
+           <li>Photo: ${photoAsset.usedPlaceholder ? "❌ all CDN URLs failed → using SVG placeholder" : "✅ " + photoAsset.url}</li>
+           <li>Badge: ${badgeAsset.usedPlaceholder ? "❌ all CDN URLs failed → using SVG placeholder" : "✅ " + badgeAsset.url}</li>
+         </ul>`
+      );
+    }
+    const resolvedAssets = { photoUrl: photoAsset.url, badgeUrl: badgeAsset.url };
+
     let sentCount = 0;
     let failedCount = 0;
     const errors: string[] = [];
@@ -386,7 +405,7 @@ serve(async (req) => {
       };
 
       try {
-        const frontHTML = await buildFrontHTML(design, prospect.city || city, prospect.business_name || "", campaign_id, audienceType);
+        const frontHTML = await buildFrontHTML(design, prospect.city || city, prospect.business_name || "", campaign_id, audienceType, resolvedAssets);
         const backHTML = buildBackHTML(prospect.city || city);
 
         const lobRes = await fetch("https://api.lob.com/v1/postcards", {
