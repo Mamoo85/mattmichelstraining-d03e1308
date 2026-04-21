@@ -13,6 +13,7 @@ interface Contractor {
   roi_token: string | null;
   free_dead_leads_quota: number;
   created_at: string;
+  stripe_customer_id: string | null;
 }
 
 export default function AdminContractorOnboarding() {
@@ -24,7 +25,7 @@ export default function AdminContractorOnboarding() {
     setLoading(true);
     const { data } = await (supabase as any)
       .from("contractor_clients")
-      .select("id, business_name, email, phone, trade, city, active, onboarded_at, roi_token, free_dead_leads_quota, created_at")
+      .select("id, business_name, email, phone, trade, city, active, onboarded_at, roi_token, free_dead_leads_quota, created_at, stripe_customer_id")
       .order("created_at", { ascending: false })
       .limit(50);
     setList(((data as any[]) || []) as Contractor[]);
@@ -32,13 +33,29 @@ export default function AdminContractorOnboarding() {
   }
   useEffect(() => { load(); }, []);
 
+  function checkReadiness(c: Contractor): { ready: boolean; reason?: string } {
+    if (!(c as any).stripe_customer_id) return { ready: false, reason: "⏳ Waiting for Stripe payment — no contractor_clients row provisioned yet (or manual insert without stripe_customer_id). Welcome SMS blocked." };
+    if (c.active === false) return { ready: false, reason: "⛔ Contractor marked inactive." };
+    if (!c.phone) return { ready: false, reason: "⚠️ Phone missing on contractor row." };
+    return { ready: true };
+  }
+
   async function fireWelcome(id: string, idx: number) {
+    const c = list.find((x) => x.id === id);
+    if (c) {
+      const r = checkReadiness(c);
+      if (!r.ready) { alert(r.reason); return; }
+    }
     setBusyId(id + idx);
     try {
-      const { error } = await (supabase.functions as any).invoke("contractor-welcome-sequence", {
+      const { data, error } = await (supabase.functions as any).invoke("contractor-welcome-sequence", {
         body: { contractor_id: id, message_index: idx },
       });
       if (error) throw error;
+      if ((data as any)?.error) {
+        alert(`Blocked: ${(data as any).message || (data as any).error}`);
+        return;
+      }
       alert(`Sent welcome message #${idx + 1}`);
     } catch (e: any) {
       alert(`Failed: ${e?.message || e}`);
@@ -76,6 +93,8 @@ export default function AdminContractorOnboarding() {
         {list.map((c) => {
           const portalUrl = `https://detroitwebagent.com/contractor-portal/${c.roi_token || c.id}`;
           const intakeUrl = `https://detroitwebagent.com/dead-lead-intake?cid=${c.id}`;
+          const readiness = checkReadiness(c);
+          const stripeOk = !!c.stripe_customer_id;
           return (
             <div key={c.id} className="bg-[#0d1f3c] border border-white/10 rounded-lg p-4">
               <div className="flex items-start justify-between mb-3">
@@ -83,14 +102,20 @@ export default function AdminContractorOnboarding() {
                   <div className="font-bold text-white">{c.business_name}</div>
                   <div className="text-white/50 text-xs">{c.trade} · {c.city} · {c.email} · {c.phone}</div>
                 </div>
-                <span className={`text-xs px-2 py-1 rounded ${c.active ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"}`}>
-                  {c.active ? "Active" : "Pending"}
+                <span className={`text-xs px-2 py-1 rounded ${readiness.ready ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"}`}>
+                  {readiness.ready ? "Ready" : "Blocked"}
                 </span>
               </div>
 
+              {!readiness.ready && (
+                <div className="mb-3 bg-amber-500/10 border border-amber-500/30 rounded p-2 text-xs text-amber-300">
+                  {readiness.reason}
+                </div>
+              )}
+
               <div className="grid sm:grid-cols-2 gap-2 text-xs">
                 <div className="bg-[#0a1628] rounded p-2 text-white/60">
-                  ✅ Stripe payment {c.active ? "cleared" : "pending"}
+                  {stripeOk ? "✅ Stripe payment cleared" : "⏳ Stripe payment pending — no webhook provisioning yet"}
                 </div>
                 <div className="bg-[#0a1628] rounded p-2 text-white/60">
                   📍 Trade + city: {c.trade} / {c.city}
