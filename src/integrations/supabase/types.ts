@@ -3038,6 +3038,54 @@ export type Database = {
           },
         ]
       }
+      contractor_provisioning_audit: {
+        Row: {
+          business_name: string | null
+          contractor_email: string | null
+          contractor_id: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          outcome: string
+          reason: string | null
+          stripe_customer_id: string | null
+          stripe_event_id: string | null
+          stripe_event_type: string | null
+          stripe_session_id: string | null
+          stripe_subscription_id: string | null
+        }
+        Insert: {
+          business_name?: string | null
+          contractor_email?: string | null
+          contractor_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          outcome: string
+          reason?: string | null
+          stripe_customer_id?: string | null
+          stripe_event_id?: string | null
+          stripe_event_type?: string | null
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+        }
+        Update: {
+          business_name?: string | null
+          contractor_email?: string | null
+          contractor_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          outcome?: string
+          reason?: string | null
+          stripe_customer_id?: string | null
+          stripe_event_id?: string | null
+          stripe_event_type?: string | null
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+        }
+        Relationships: []
+      }
       contractor_referrals: {
         Row: {
           converted_at: string | null
@@ -3071,6 +3119,54 @@ export type Database = {
           referred_email?: string | null
           referrer_contractor_id?: string
           status?: string
+        }
+        Relationships: []
+      }
+      contractor_welcome_log: {
+        Row: {
+          attempted_by: string
+          body_preview: string | null
+          contractor_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          message_index: number
+          recipient_phone: string | null
+          status: string
+          twilio_error_code: string | null
+          twilio_sid: string | null
+          twilio_status: string | null
+          updated_at: string
+        }
+        Insert: {
+          attempted_by?: string
+          body_preview?: string | null
+          contractor_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_index: number
+          recipient_phone?: string | null
+          status?: string
+          twilio_error_code?: string | null
+          twilio_sid?: string | null
+          twilio_status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attempted_by?: string
+          body_preview?: string | null
+          contractor_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_index?: number
+          recipient_phone?: string | null
+          status?: string
+          twilio_error_code?: string | null
+          twilio_sid?: string | null
+          twilio_status?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
