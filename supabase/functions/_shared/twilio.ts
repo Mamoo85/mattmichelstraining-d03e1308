@@ -410,7 +410,7 @@ export async function sendSMS(
         body_hash: bodyHash,
         status: "sent",
         provider_id: data.sid,
-        metadata: { from },
+        metadata: { from, template_id: templateId },
       })).catch(() => {});
     }
     return { success: true, sid: data.sid };
