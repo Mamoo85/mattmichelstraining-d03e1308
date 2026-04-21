@@ -140,6 +140,21 @@ Deno.test("no signup-promise SMS body is missing its URL", async () => {
       const isAskingPermission = /\bwant me to send\b/i.test(literal);
       if (isAskingPermission) continue;
 
+      // Skip prompt-rule documentation strings (negative examples telling the
+      // AI what NOT to write). They appear inside SYSTEM_PROMPT, never sent.
+      // Heuristic: the literal is part of a regex (preceded by `/`) or a rule
+      // sentence containing "Never" / "without pasting" / "don't" nearby.
+      const ruleContext = src.slice(
+        Math.max(0, (m.index ?? 0) - 80),
+        (m.index ?? 0) + literal.length + 80,
+      );
+      if (
+        /\b(Never|never say|without pasting|don'?t|do not)\b/i.test(ruleContext) ||
+        /[/(]\s*$/.test(src.slice(0, m.index ?? 0).trimEnd())
+      ) {
+        continue;
+      }
+
       assert(
         hasUrl,
         `${rel}: SMS literal promises a link but contains no URL:\n  ${literal}\n` +
