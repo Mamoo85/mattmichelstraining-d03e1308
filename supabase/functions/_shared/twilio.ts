@@ -15,6 +15,7 @@
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { logError } from "./error-log.ts";
 
 const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
@@ -345,6 +346,16 @@ export async function sendSMS(
           metadata: { twilio_code: data?.code },
         })).catch(() => {});
       }
+      // Surface to error_logs so admin sees silent SMS failures
+      logError({
+        source: "twilio",
+        function_name: product ?? "sendSMS",
+        severity: "error",
+        recipient: to,
+        payload: { from, body_preview: body.slice(0, 120), product },
+        error_message: data?.message || `Twilio HTTP ${res.status}`,
+        http_status: res.status,
+      }).catch(() => {});
       return { success: false, error: data?.message || "Twilio error" };
     }
 
@@ -374,6 +385,14 @@ export async function sendSMS(
         error_message: msg,
       })).catch(() => {});
     }
+    logError({
+      source: "twilio",
+      function_name: product ?? "sendSMS",
+      severity: "error",
+      recipient: to,
+      payload: { from, body_preview: body.slice(0, 120), product },
+      error_message: msg,
+    }).catch(() => {});
     return { success: false, error: msg };
   }
 }

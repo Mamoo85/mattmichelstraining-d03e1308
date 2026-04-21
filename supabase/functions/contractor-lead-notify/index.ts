@@ -6,6 +6,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
+import { logError } from "../_shared/error-log.ts";
+import { generateWithHaiku } from "../_shared/opus.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -104,6 +106,40 @@ async function queryPermitContext(sb: any, city: string): Promise<string> {
   } catch { return ""; }
 }
 
+/**
+ * AI-generated one-liner for SMS/email subject. Cached on contractor_leads.ai_summary.
+ * Falls back to "" so existing static copy still ships if AI fails.
+ * Format target: "Apex Signal: $40k+ Kitchen Remodel in Grosse Pointe."
+ */
+async function buildAiSummary(lead: any, site: any): Promise<string> {
+  const trade = site?.trade || "service";
+  const city = site?.city || "Metro Detroit";
+  const project = lead.project_type || trade;
+  const msg = (lead.message || "").slice(0, 280);
+  const prompt = `You write one-line lead alerts for trade contractors. Tone: confident, specific, scarce — never hypey, never use the word "AI".
+
+Lead details:
+- Trade: ${trade}
+- City: ${city}
+- Project: ${project}
+- Homeowner message: "${msg || "no message provided"}"
+
+Write ONE sentence (max 18 words) that quantifies likely project value if obvious from the message and creates urgency. Format exactly: "Apex Signal: <value-or-quality bracket> <project> in <city>."
+
+Examples:
+- "Apex Signal: New $40k+ Kitchen Remodel request in Grosse Pointe."
+- "Apex Signal: Same-day emergency boiler replacement in Livonia."
+- "Apex Signal: Detached garage rewire (200A panel) in Royal Oak."
+
+Output ONLY the sentence. No quotes, no preamble, no commentary.`;
+  try {
+    const out = await generateWithHaiku(prompt, undefined, 80);
+    const cleaned = (out || "").replace(/^["']|["']$/g, "").split("\n")[0].trim();
+    if (cleaned.length < 10 || cleaned.length > 200) return "";
+    return cleaned;
+  } catch { return ""; }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -187,6 +223,16 @@ serve(async (req) => {
         if (emailValid && contractor.email && RESEND_API_KEY) {
           const tradeLabel = site?.trade || "service";
           const firstName = lead.name?.split(" ")[0]?.toUpperCase() || "THEM";
+
+          // AI summary (cached) — use as subject + SMS first line if available
+          let aiSummary: string = (lead as any).ai_summary || "";
+          if (!aiSummary) {
+            aiSummary = await buildAiSummary(lead, site);
+            if (aiSummary) {
+              await sb.from("contractor_leads").update({ ai_summary: aiSummary }).eq("id", lead.id);
+            }
+          }
+
           const messageBlock = lead.message
             ? `<div style="background:#0d1f3c;border-left:3px solid #00d4ff;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:24px">
                 <p style="color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:2px;margin:0 0 8px;text-transform:uppercase">Message from homeowner</p>
@@ -203,6 +249,7 @@ serve(async (req) => {
   <div style="background:#00d4ff;padding:14px 32px;text-align:center">
     <p style="margin:0;color:#0a1628;font-size:17px;font-weight:900;letter-spacing:0.5px">🔥 NEW ${tradeLabel.toUpperCase()} LEAD — EXCLUSIVE TO YOU</p>
   </div>
+  ${aiSummary ? `<div style="background:#0d1f3c;padding:14px 32px;text-align:center;border-bottom:1px solid #1e3a5f"><p style="margin:0;color:#00d4ff;font-size:14px;font-weight:700;letter-spacing:0.3px">${aiSummary}</p></div>` : ""}
   <div style="padding:28px 32px">
     <p style="color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:3px;margin:0 0 16px;text-transform:uppercase">Lead Details</p>
     <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
@@ -228,23 +275,65 @@ serve(async (req) => {
 </div></body></html>`;
           const pref = (lead as any).contact_preference || "call";
           const project = lead.project_type ? ` (${lead.project_type})` : "";
+          const baseLine = aiSummary || `LEAD UNLOCKED`;
           const smsBody = pref === "email"
-            ? `LEAD UNLOCKED: ${lead.name} prefers EMAIL at ${lead.email || "no email given"}${project}. Email them — follow up within 24 hours. — DWA Lead Engine`
+            ? `${baseLine}\n${lead.name} prefers EMAIL at ${lead.email || "no email given"}${project}. Email them — follow up within 24 hours.`
             : pref === "text"
-            ? `LEAD UNLOCKED: ${lead.name} — ${lead.phone}. Prefers TEXT${project}. Reach out now. — DWA Lead Engine`
-            : `LEAD UNLOCKED: ${lead.name} — ${lead.phone}${project}. CALL THEM NOW — exclusive to you. — DWA Lead Engine`;
+            ? `${baseLine}\n${lead.name} — ${lead.phone}. Prefers TEXT${project}. Reach out now.`
+            : `${baseLine}\n${lead.name} — ${lead.phone}${project}. CALL NOW — exclusive to you.`;
+
+          // Subject prefers AI summary; falls back to existing static copy
+          const subject = aiSummary
+            ? `${breachWarn}${aiSummary}`
+            : `${breachWarn}🔥 New ${tradeLabel} lead — ${lead.name} (exclusive)`;
+
+          // Resend send — check res.ok and log silent failures
+          const sendResend = (async () => {
+            try {
+              const r = await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  from: "Detroit Web Agency <matt@detroitwebagent.com>",
+                  to: [contractor.email],
+                  bcc: ["matt@detroitwebagent.com"],
+                  subject,
+                  html: leadHtml,
+                }),
+                signal: AbortSignal.timeout(15_000),
+              });
+              if (!r.ok) {
+                const errBody = await r.text().catch(() => "");
+                console.error(`[LEAD-NOTIFY] Resend ${r.status}: ${errBody}`);
+                await logError({
+                  source: "resend",
+                  function_name: "contractor-lead-notify",
+                  severity: "error",
+                  recipient: contractor.email,
+                  payload: { lead_id: lead.id, contractor_id: contractor.id, subject },
+                  error_message: `Resend HTTP ${r.status}: ${errBody.slice(0, 400)}`,
+                  http_status: r.status,
+                });
+                return { ok: false };
+              }
+              return { ok: true };
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : String(e);
+              console.error(`[LEAD-NOTIFY] Resend exception: ${msg}`);
+              await logError({
+                source: "resend",
+                function_name: "contractor-lead-notify",
+                severity: "error",
+                recipient: contractor.email,
+                payload: { lead_id: lead.id, contractor_id: contractor.id, subject },
+                error_message: msg,
+              });
+              return { ok: false };
+            }
+          })();
+
           await Promise.all([
-            fetch("https://api.resend.com/emails", {
-              method: "POST",
-              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({
-                from: "Detroit Web Agency <matt@detroitwebagent.com>",
-                to: [contractor.email],
-                bcc: ["matt@detroitwebagent.com"],
-                subject: `${breachWarn}🔥 New ${tradeLabel} lead — ${lead.name} (exclusive)`,
-                html: leadHtml,
-              }),
-            }),
+            sendResend,
             contractor.phone
               ? sendSMS(contractor.phone, TWILIO_PHONE, smsBody, "contractor_leads")
               : Promise.resolve(),

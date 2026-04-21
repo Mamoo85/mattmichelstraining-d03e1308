@@ -7,6 +7,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
+import { logError } from "../_shared/error-log.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -56,7 +57,8 @@ async function chargeContractor(
   if (pi.status !== "succeeded") {
     throw new Error(`Stripe payment not completed: status=${pi.status}. Off-session charges requiring 3D Secure cannot be confirmed.`);
   }
-  await (sb as any).from("dead_lead_charges").insert({
+  // Money already taken — DB insert MUST succeed or admin gets paged
+  const { error: insertErr } = await (sb as any).from("dead_lead_charges").insert({
     contact_id: contactId,
     contractor_id: contractorId,
     amount_cents: 5000,
@@ -64,6 +66,19 @@ async function chargeContractor(
     status: "succeeded",
     error_message: null,
   });
+  if (insertErr) {
+    // CRITICAL: Stripe charge succeeded but we have no audit row. Page Matt.
+    await logError({
+      source: "stripe",
+      function_name: "handle-dead-lead-reply",
+      severity: "critical",
+      recipient: leadName,
+      payload: { contact_id: contactId, contractor_id: contractorId, payment_intent_id: pi.id, amount_cents: 5000 },
+      error_message: `Stripe charge ${pi.id} SUCCEEDED but dead_lead_charges insert failed: ${insertErr.message}`,
+    });
+    // Re-throw so caller logs and doesn't continue as if normal
+    throw new Error(`POST-CHARGE DB FAILURE: ${insertErr.message}`);
+  }
   console.log(`[handle-dead-lead-reply] charge ${pi.id} status=succeeded`);
 }
 
