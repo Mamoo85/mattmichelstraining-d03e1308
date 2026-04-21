@@ -1,7 +1,11 @@
 // contractor-welcome-sequence — fired by stripe-webhook on contractor_lead_subscription
 // Sends 3 welcome SMS over 7 days to set expectations + reinforce trust.
 // T+5min = welcome + dashboard link, T+72h = status, T+7d = first recap.
-// Schedules itself by writing to system_comms_queue OR fires immediately based on payload.
+//
+// IDEMPOTENCY: every attempt is logged to contractor_welcome_log with a partial
+// unique index on (contractor_id, message_index) where status IN
+// ('queued','sent','delivered'). A second invocation for the same slot returns
+// 200 + { duplicate: true } and does NOT re-text the contractor.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
@@ -20,7 +24,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const { contractor_id, message_index = 0 } = body;
+    const { contractor_id, message_index = 0, attempted_by = "system" } = body;
 
     if (!contractor_id) {
       return new Response(JSON.stringify({ error: "contractor_id required" }), {
@@ -65,6 +69,51 @@ serve(async (req) => {
       }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    const idx = Math.max(0, Math.min(2, Number(message_index)));
+
+    // ── IDEMPOTENCY GUARD ─────────────────────────────────────────────────
+    // Reserve the (contractor_id, message_index) slot BEFORE sending.
+    // Partial unique index blocks any duplicate where status IN
+    // ('queued','sent','delivered'). On conflict → already sent → return 200.
+    const { data: reserveRow, error: reserveErr } = await sb
+      .from("contractor_welcome_log" as any)
+      .insert({
+        contractor_id,
+        message_index: idx,
+        status: "queued",
+        recipient_phone: c.phone,
+        attempted_by,
+      })
+      .select("id")
+      .maybeSingle();
+
+    if (reserveErr) {
+      // 23505 = unique violation → slot already reserved/sent
+      const code = (reserveErr as any).code || "";
+      if (code === "23505" || /duplicate key/i.test(reserveErr.message || "")) {
+        // Look up existing row so admin can see status
+        const { data: existing } = await sb
+          .from("contractor_welcome_log" as any)
+          .select("id, status, twilio_sid, twilio_status, created_at")
+          .eq("contractor_id", contractor_id)
+          .eq("message_index", idx)
+          .in("status", ["queued", "sent", "delivered"])
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        return new Response(JSON.stringify({
+          ok: true,
+          duplicate: true,
+          message: `Welcome message #${idx + 1} already attempted for this contractor.`,
+          existing,
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      // Other DB error — log and continue with send (don't block on log failure)
+      console.error("[contractor-welcome-sequence] reserve insert failed:", reserveErr);
+    }
+
+    const reserveId = (reserveRow as any)?.id || null;
+
     const trade = ((c as any).trade || "service").toLowerCase();
     const city = (c as any).city || "your area";
     const portalUrl = `https://detroitwebagent.com/contractor-portal/${(c as any).roi_token || contractor_id}`;
@@ -80,12 +129,32 @@ serve(async (req) => {
       `Week 1 recap is ready in your dashboard — leads delivered, free boost progress, lead probability %. View: ${portalUrl}`,
     ];
 
-    const idx = Math.max(0, Math.min(2, Number(message_index)));
     const msg = messages[idx];
 
-    await sendSMS(c.phone, TWILIO_PHONE_NUMBER, msg, "contractor_welcome");
+    const result = await sendSMS(c.phone, TWILIO_PHONE_NUMBER, msg, "contractor_welcome");
 
-    return new Response(JSON.stringify({ ok: true, sent: idx, phone: c.phone }), {
+    // Update the reserved log row with the result
+    if (reserveId) {
+      await sb
+        .from("contractor_welcome_log" as any)
+        .update({
+          status: result.success ? "sent" : (result.skipped ? "skipped" : "failed"),
+          twilio_sid: result.sid || null,
+          twilio_status: result.success ? "queued" : null,
+          error_message: result.error || null,
+          body_preview: msg.slice(0, 200),
+        })
+        .eq("id", reserveId);
+    }
+
+    return new Response(JSON.stringify({
+      ok: result.success,
+      sent: idx,
+      phone: c.phone,
+      twilio_sid: result.sid,
+      log_id: reserveId,
+      error: result.error,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

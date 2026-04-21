@@ -3185,6 +3185,37 @@ serve(async (req) => {
               .eq("id", meta.contractor_id);
             if (clientErr) throw new Error(`contractor_clients update failed: ${clientErr.message}`);
 
+            // Audit: record this exact Stripe event provisioned this contractor
+            await wdSb.from("contractor_provisioning_audit" as any).insert({
+              contractor_id: meta.contractor_id,
+              contractor_email: customerEmail || null,
+              business_name: meta.business_name || null,
+              stripe_event_id: event.id,
+              stripe_event_type: event.type,
+              stripe_session_id: (session as any).id || null,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+              outcome: "provisioned",
+              reason: "checkout.session.completed received and contractor_clients row activated",
+              metadata: { trade: meta.trade || null, city: meta.city || null },
+            }).catch((e: any) => console.error("[audit] provisioning insert failed:", e?.message));
+          } else {
+            // Stripe event exists but no contractor_id in metadata — manual checkout?
+            await wdSb.from("contractor_provisioning_audit" as any).insert({
+              contractor_id: null,
+              contractor_email: customerEmail || null,
+              business_name: meta.business_name || null,
+              stripe_event_id: event.id,
+              stripe_event_type: event.type,
+              stripe_session_id: (session as any).id || null,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+              outcome: "skipped_no_contractor_id",
+              reason: "Stripe checkout had no contractor_id in metadata — likely manual or test checkout",
+              metadata: { meta },
+            }).catch((e: any) => console.error("[audit] no-contractor-id insert failed:", e?.message));
+          }
+
             // Fetch roi_token for portal link in welcome email
             const { data: tokenRow } = await wdSb.from("contractor_clients" as any)
               .select("roi_token")
@@ -3314,6 +3345,23 @@ serve(async (req) => {
         } catch (e) {
           console.error("[WEBHOOK] contractor_lead_subscription error:", e);
           notifyMatt("⚠️ Contractor lead webhook DB failure", `<p>${String(e)}</p>`).catch(() => {});
+          // Audit the failure so admin can see why this contractor wasn't provisioned
+          try {
+            const auditSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+            await auditSb.from("contractor_provisioning_audit" as any).insert({
+              contractor_id: meta.contractor_id || null,
+              contractor_email: customerEmail || null,
+              business_name: meta.business_name || null,
+              stripe_event_id: event.id,
+              stripe_event_type: event.type,
+              stripe_session_id: (session as any).id || null,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+              outcome: "failed",
+              reason: String(e).slice(0, 500),
+              metadata: { meta },
+            });
+          } catch { /* audit best-effort */ }
           return new Response(JSON.stringify({ error: String(e) }), { status: 500 });
         }
       }
