@@ -30,6 +30,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { generateText } from "../_shared/ai.ts";
+import { isBlocked, recordOutreach } from "../_shared/outreach-blocklist.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -624,12 +625,30 @@ serve(async (req) => {
           continue;
         }
 
+        // 90-day grace period + paying-client protection
+        const blockCheck = await isBlocked(sb, { business_name: name, phone });
+        if (blockCheck.blocked) {
+          log("Blocked by grace period", { name, reason: blockCheck.reason, matched: blockCheck.matched_on });
+          totalSkipped++;
+          continue;
+        }
+
         // GBP scoring (fast, no AI)
         const { score: gbpScore, issues } = scoreGbp(place);
 
         // Get email from website
         let email: string | null = null;
         if (website) email = await scrapeEmail(website);
+
+        // Email-level block check (after scrape)
+        if (email) {
+          const emailBlock = await isBlocked(sb, { email, business_name: name });
+          if (emailBlock.blocked) {
+            log("Blocked by grace period (email)", { name, email, reason: emailBlock.reason });
+            totalSkipped++;
+            continue;
+          }
+        }
 
         if (!email) {
           // Insert as SMS-only lead
@@ -907,6 +926,9 @@ serve(async (req) => {
 
         totalEmailed++;
         log("Emailed", { name, email, scoutScore: scout.score, offer: finalOffer.offer, city });
+
+        // Record 90-day cooldown for this prospect
+        await recordOutreach(sb, { business_name: name, email, phone, agent: "contractor-prospector" });
 
         // Throttle between sends
         await new Promise(r => setTimeout(r, 500));

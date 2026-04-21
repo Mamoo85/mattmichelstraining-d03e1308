@@ -4,6 +4,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isBlocked, recordOutreach } from "../_shared/outreach-blocklist.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -52,6 +53,9 @@ serve(async () => {
   for (const lead of (scLeads || [])) {
     const drip = (lead.drip_campaign_status as any) || {};
     if (!drip.d0_sent) continue;
+    // Skip if now a paying client (forever-block) — they shouldn't get follow-ups
+    const blk = await isBlocked(sb, { email: lead.email, business_name: lead.business_name });
+    if (blk.blocked && blk.reason === "paying_client") continue;
     const d0Date = drip.d0_sent_at ? new Date(drip.d0_sent_at) : new Date(lead.last_contact_date || now);
     const daysSince = (now.getTime() - d0Date.getTime()) / 86400000;
 
@@ -127,6 +131,10 @@ If staffing ever gets tight enough to try something different — start a free t
   for (const lead of (leads || [])) {
     const drip = (lead.drip_campaign_status as any) || {};
     if (!drip.d0_sent) continue;
+
+    // Skip paying clients
+    const blk = await isBlocked(sb, { email: lead.email, business_name: lead.business_name });
+    if (blk.blocked && blk.reason === "paying_client") continue;
 
     const d0Date = drip.d0_sent_at ? new Date(drip.d0_sent_at) : new Date(lead.last_contact_date || now);
     const daysSince = (now.getTime() - d0Date.getTime()) / 86400000;

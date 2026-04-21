@@ -10,6 +10,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 import { generateText } from "../_shared/ai.ts";
+import { isBlocked, recordOutreach } from "../_shared/outreach-blocklist.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -154,7 +155,12 @@ serve(async (req) => {
       const prospect = candidates[idx];
       if (!prospect.email) { skipped++; continue; }
 
-      // ── Step 2: Anti-collision ────────────────────────────────────────────
+      // ── Step 2: Anti-collision (90-day blocklist + legacy 7-day cooldown) ──
+      const block = await isBlocked(sb, { email: prospect.email, business_name: prospect.business_name });
+      if (block.blocked) {
+        console.log(`[dwa-closer] blocked: ${prospect.email} reason=${block.reason}`);
+        skipped++; continue;
+      }
       const onCooldown = await isOnCooldown(sb, prospect.email);
       if (onCooldown) { skipped++; continue; }
 
@@ -259,13 +265,18 @@ RULES:
         "dwa_closer"
       );
 
-      // ── Step 8: Record cooldown ───────────────────────────────────────────
+      // ── Step 8: Record cooldown (legacy + new 90-day blocklist) ───────────
       await sb.from("outreach_cooldowns" as any).upsert({
         prospect_email: prospect.email,
         last_agent: "closer",
         last_contacted_at: now.toISOString(),
         last_channel: "email",
       }, { onConflict: "prospect_email" });
+      await recordOutreach(sb, {
+        email: prospect.email,
+        business_name: prospect.business_name,
+        agent: "dwa-closer",
+      });
 
       queued++;
     }

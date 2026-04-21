@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isBlocked, recordOutreach } from "../_shared/outreach-blocklist.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,6 +78,15 @@ serve(async (req) => {
         if (currentStep > 4) {
           results.push({ id: lead.id, business: lead.business_name, status: "skipped_complete" });
           continue;
+        }
+
+        // 90-day blocklist check (skip paying clients + recent contacts)
+        if (action !== "draft_all" && lead.email) {
+          const blk = await isBlocked(sb, { email: lead.email, business_name: lead.business_name });
+          if (blk.blocked) {
+            results.push({ id: lead.id, business: lead.business_name, status: `skipped_blocked_${blk.reason}` });
+            continue;
+          }
         }
 
         // Enforce minimum delay between drip steps
@@ -232,6 +242,9 @@ Return ONLY valid JSON, no markdown.`;
 
         sentCount++;
         results.push({ id: lead.id, business: lead.business_name, status: "sent" });
+
+        // Record 90-day cooldown
+        await recordOutreach(sb, { email: lead.email, business_name: lead.business_name, agent: "pipeline-batch-drip" });
 
         // Small delay between sends to avoid rate limits
         await new Promise(r => setTimeout(r, 500));
