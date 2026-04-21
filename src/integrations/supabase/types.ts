@@ -8516,6 +8516,48 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_blocklist: {
+        Row: {
+          blocked_until: string | null
+          business_name: string | null
+          created_at: string
+          domain: string | null
+          email: string | null
+          id: string
+          phone: string | null
+          reason: string
+          source_agent: string | null
+          source_table: string | null
+          updated_at: string
+        }
+        Insert: {
+          blocked_until?: string | null
+          business_name?: string | null
+          created_at?: string
+          domain?: string | null
+          email?: string | null
+          id?: string
+          phone?: string | null
+          reason: string
+          source_agent?: string | null
+          source_table?: string | null
+          updated_at?: string
+        }
+        Update: {
+          blocked_until?: string | null
+          business_name?: string | null
+          created_at?: string
+          domain?: string | null
+          email?: string | null
+          id?: string
+          phone?: string | null
+          reason?: string
+          source_agent?: string | null
+          source_table?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       outreach_cooldowns: {
         Row: {
           created_at: string | null
@@ -16156,6 +16198,7 @@ export type Database = {
         Args: { _candidate_id: string; _stage: string }
         Returns: number
       }
+      extract_domain: { Args: { input: string }; Returns: string }
       get_active_training_programs: {
         Args: never
         Returns: {

@@ -43,6 +43,7 @@ const AdminGrowthSignals = lazy(() => import("@/components/admin/AdminGrowthSign
 const AdminTrojanHorseLog = lazy(() => import("@/components/admin/AdminTrojanHorseLog"));
 const AdminSMSInbox = lazy(() => import("@/components/dwa-admin/AdminSMSInbox"));
 const AdminAdLauncher = lazy(() => import("@/components/dwa-admin/AdminAdLauncher"));
+const AdminOutreachBlocklist = lazy(() => import("@/components/dwa-admin/AdminOutreachBlocklist"));
 
 const AdminCoverageMap = lazy(() => import("@/components/admin/AdminCoverageMap"));
 const AdminCRMDashboard = lazy(() => import("@/components/admin/AdminCRMDashboard"));
@@ -58,7 +59,7 @@ type Tab =
   | "agency-outreach" | "demand-radar" | "supplier-outreach" | "hvb"
   | "medicare-intel" | "industrial-intel" | "techalert-prospects"
   | "lara-health" | "growth-signals" | "trojan-log" | "coverage-map" | "crm-dashboard"
-  | "sms-inbox" | "ad-launcher";
+  | "sms-inbox" | "ad-launcher" | "blocklist";
 
 const GROUPS: SidebarGroup[] = [
   {
@@ -108,6 +109,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "outbox",           label: "📤 Global Outbox" },
       { id: "agency-outreach",  label: "📨 Agency Outreach" },
       { id: "supplier-outreach",label: "🏭 Supplier Outreach" },
+      { id: "blocklist",        label: "🛡️ Outreach Blocklist" },
     ],
   },
   {
@@ -196,6 +198,7 @@ export default function DWAAdmin() {
           {activeTab === "trojan-log"       && <Suspense fallback={lazyFallback("trojan horse log")}><AdminTrojanHorseLog /></Suspense>}
           {activeTab === "sms-inbox"        && <Suspense fallback={lazyFallback("SMS inbox")}><AdminSMSInbox /></Suspense>}
           {activeTab === "ad-launcher"      && <Suspense fallback={lazyFallback("Ad Launcher")}><AdminAdLauncher /></Suspense>}
+          {activeTab === "blocklist"        && <Suspense fallback={lazyFallback("blocklist")}><AdminOutreachBlocklist /></Suspense>}
           
           {activeTab === "coverage-map"     && <Suspense fallback={lazyFallback("coverage map")}><AdminCoverageMap /></Suspense>}
           {activeTab === "crm-dashboard"    && <Suspense fallback={lazyFallback("CRM dashboard")}><AdminCRMDashboard /></Suspense>}
