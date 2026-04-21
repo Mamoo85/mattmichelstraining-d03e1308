@@ -20,6 +20,14 @@ type Prospect = {
   paid_at: string | null;
   status: string;
   created_at: string;
+  nudge_sent_at: string | null;
+  nudge_count: number | null;
+};
+
+const NUDGE_TEMPLATE = (trackedUrl: string, city: string | null, trade: string | null) => {
+  const where = city ? ` in ${city}` : "";
+  const what = trade ? ` ${trade} ` : " ";
+  return `Hey — Matt with Detroit Web Agency. We send exclusive${what}leads to contractors${where} (no shared leads, no contracts). Quick look: ${trackedUrl} — reply STOP to opt out.`;
 };
 
 type FilterKey = "all" | "active" | "stalled" | "converted";
