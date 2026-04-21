@@ -14,6 +14,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { qrcode } from "https://deno.land/x/qrcode@v2.0.0/mod.ts";
+import {
+  POSTCARD_ASSETS,
+  POSTCARD_ASSET_VERSION,
+  resolveAssetUrl,
+  buildQrUrl,
+} from "../_shared/postcard-assets.ts";
 
 const MAX_PER_RUN = 500;
 const MAX_PER_MONTH = 2000;
@@ -25,9 +31,6 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const LOB_API_KEY = Deno.env.get("LOB_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const ADMIN_EMAIL = "matt@detroitwebagent.com";
-
-const MATT_PHOTO = "https://customer-assets.emergentagent.com/job_docs-claude-v2/artifacts/6z5o71kv_19405.jpg";
-const DWA_BADGE = "https://customer-assets.emergentagent.com/job_docs-claude-v2/artifacts/1dhqg3eh_25239.png";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -107,14 +110,21 @@ const DESIGNS: Record<AudienceType, PostcardDesign> = {
   },
 };
 
-async function buildFrontHTML(design: PostcardDesign, city: string, recipientName: string, campaignId: string, audienceType: AudienceType): Promise<string> {
+async function buildFrontHTML(
+  design: PostcardDesign,
+  city: string,
+  recipientName: string,
+  campaignId: string,
+  audienceType: AudienceType,
+  resolved: { photoUrl: string; badgeUrl: string }
+): Promise<string> {
   // ONE QR per postcard → multi-offer landing page (/postcard) for clean attribution.
-  const qrUrl = `https://detroitwebagent.com/postcard?audience=${audienceType}&utm_campaign=${campaignId}&city=${city.toLowerCase().replace(/\s+/g, "-")}`;
+  const qrUrl = buildQrUrl(audienceType, campaignId, city);
   const c = design.accentColor;
   const qrDataUri = await qrcode(qrUrl, { size: 260 }) as string;
+  const { photoUrl, badgeUrl } = resolved;
 
   // 3 secondary product mentions (everything except their hero offer).
-  // Order: Talent Radar (other vertical), Demand Radar, FieldDesk, Missed Call Catch.
   const SECONDARY: Record<AudienceType, Array<{ icon: string; label: string }>> = {
     "healthcare-agency":  [{ icon: "🔧", label: "Talent Radar — Trades" }, { icon: "🛠️", label: "FieldDesk" },     { icon: "📞", label: "Missed Call Catch" }],
     "nursing-home":       [{ icon: "🔧", label: "Talent Radar — Trades" }, { icon: "🛠️", label: "FieldDesk" },     { icon: "📞", label: "Missed Call Catch" }],
@@ -141,7 +151,7 @@ async function buildFrontHTML(design: PostcardDesign, city: string, recipientNam
       <div style="display:inline-block;background:${c}15;border:1.5px solid ${c}40;color:${c};font-size:9px;font-weight:800;padding:5px 12px;border-radius:4px;letter-spacing:0.5px;">${design.offer}</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:8px 10px;">
-      <img src="${MATT_PHOTO}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;border:1.5px solid #30363d;" alt="Matt">
+      <img src="${photoUrl}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;border:1.5px solid #30363d;" alt="Matt">
       <div style="font-size:8.5px;color:#8b949e;line-height:1.4;">
         <strong style="color:#e6edf3;font-size:9px;">Matt Michels</strong> — Founder<br>
         Don't believe it works? Text me.<br>
@@ -151,7 +161,7 @@ async function buildFrontHTML(design: PostcardDesign, city: string, recipientNam
     </div>
   </div>
   <div style="width:1.9in;background:#161b22;border-left:3px solid ${c};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0.3in 0.18in;gap:8px;">
-    <img src="${DWA_BADGE}" style="width:48px;height:48px;border-radius:50%;border:1.5px solid #30363d;" alt="DWA">
+    <img src="${badgeUrl}" style="width:48px;height:48px;border-radius:50%;border:1.5px solid #30363d;" alt="DWA">
     <div style="font-size:8px;color:#8b949e;text-align:center;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Scan to claim</div>
     <img src="${qrDataUri}" width="118" height="118" style="border-radius:8px;border:2px solid #30363d;" alt="QR">
     <div style="font-size:9.5px;color:${c};font-weight:800;text-align:center;line-height:1.1;">${design.offer.includes("MONTH") ? "FREE MONTH" : "FREE 10 NAMES"}</div>
@@ -189,7 +199,78 @@ serve(async (req) => {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   try {
-    const { campaign_id, dry_run, prospect_ids } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const { campaign_id, dry_run, prospect_ids, check_assets, preview_html, preview_audience, preview_city, preview_recipient } = body || {};
+
+    // ── ASSET PARITY CHECK ────────────────────────────────────────────
+    // Returns the canonical asset registry the live mailer uses, plus a
+    // live HEAD/GET probe of every URL in the fallback chain. Admin uses
+    // this to compare against what its UI is rendering — if the URLs
+    // diverge, alert the operator BEFORE mailing.
+    if (check_assets) {
+      const probes: Record<string, any> = {};
+      for (const key of Object.keys(POSTCARD_ASSETS) as Array<keyof typeof POSTCARD_ASSETS>) {
+        const asset = POSTCARD_ASSETS[key];
+        const result = await resolveAssetUrl(asset);
+        probes[key] = {
+          label: asset.label,
+          candidates: asset.candidates,
+          checked: result.checked,
+          resolved_url: result.url,
+          used_fallback_index: result.usedFallbackIndex,
+          used_placeholder: result.usedPlaceholder,
+          placeholder_data_uri_prefix: asset.placeholder.substring(0, 64) + "…",
+        };
+      }
+      return new Response(
+        JSON.stringify({
+          asset_version: POSTCARD_ASSET_VERSION,
+          assets: probes,
+          checked_at: new Date().toISOString(),
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ── PREVIEW ACTUAL MAIL ───────────────────────────────────────────
+    // Renders the EXACT same front HTML the live mailer would use for a
+    // given audience/city/recipient. Admin opens this in an iframe — what
+    // you see here is byte-for-byte what Lob receives.
+    if (preview_html) {
+      const audienceType: AudienceType = (preview_audience as AudienceType) || "contractor";
+      const design = { ...DESIGNS[audienceType] || DESIGNS["contractor"] };
+      let campaignIdForQr = "preview";
+      if (campaign_id) {
+        const { data: campaign } = await sb.from("postcard_campaigns").select("copy_front, copy_back").eq("id", campaign_id).single();
+        if (campaign?.copy_front) design.headline = campaign.copy_front;
+        if (campaign?.copy_back) design.body = campaign.copy_back;
+        campaignIdForQr = campaign_id;
+      }
+      const photo = await resolveAssetUrl(POSTCARD_ASSETS.matt_photo);
+      const badge = await resolveAssetUrl(POSTCARD_ASSETS.dwa_badge);
+      const html = await buildFrontHTML(
+        design,
+        preview_city || "Metro Detroit",
+        preview_recipient || "",
+        campaignIdForQr,
+        audienceType,
+        { photoUrl: photo.url, badgeUrl: badge.url }
+      );
+      return new Response(
+        JSON.stringify({
+          html,
+          asset_version: POSTCARD_ASSET_VERSION,
+          resolved: {
+            photo_url: photo.url,
+            photo_used_placeholder: photo.usedPlaceholder,
+            badge_url: badge.url,
+            badge_used_placeholder: badge.usedPlaceholder,
+          },
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (!campaign_id) return new Response(JSON.stringify({ error: "campaign_id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     // ── DIAGNOSE / DRY-RUN MODE ────────────────────────────────────────
@@ -288,6 +369,25 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: msg, sent_this_month: monthSent, cap: MAX_PER_MONTH }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // Resolve assets ONCE per run with fallback chain — if a hosted image
+    // is down we use the next URL (or a safe data-URI placeholder) instead
+    // of mailing a broken image.
+    const [photoAsset, badgeAsset] = await Promise.all([
+      resolveAssetUrl(POSTCARD_ASSETS.matt_photo),
+      resolveAssetUrl(POSTCARD_ASSETS.dwa_badge),
+    ]);
+    if (photoAsset.usedPlaceholder || badgeAsset.usedPlaceholder) {
+      await notifyMatt(
+        `⚠️ Postcard asset fell back to placeholder (${campaign.county})`,
+        `<p>Sending campaign <strong>${campaign_id}</strong> with placeholder image(s):</p>
+         <ul>
+           <li>Photo: ${photoAsset.usedPlaceholder ? "❌ all CDN URLs failed → using SVG placeholder" : "✅ " + photoAsset.url}</li>
+           <li>Badge: ${badgeAsset.usedPlaceholder ? "❌ all CDN URLs failed → using SVG placeholder" : "✅ " + badgeAsset.url}</li>
+         </ul>`
+      );
+    }
+    const resolvedAssets = { photoUrl: photoAsset.url, badgeUrl: badgeAsset.url };
+
     let sentCount = 0;
     let failedCount = 0;
     const errors: string[] = [];
@@ -305,7 +405,7 @@ serve(async (req) => {
       };
 
       try {
-        const frontHTML = await buildFrontHTML(design, prospect.city || city, prospect.business_name || "", campaign_id, audienceType);
+        const frontHTML = await buildFrontHTML(design, prospect.city || city, prospect.business_name || "", campaign_id, audienceType, resolvedAssets);
         const backHTML = buildBackHTML(prospect.city || city);
 
         const lobRes = await fetch("https://api.lob.com/v1/postcards", {

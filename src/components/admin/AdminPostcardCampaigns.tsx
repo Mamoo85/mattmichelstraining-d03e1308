@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Send, RefreshCw, FileText, BarChart3, Users, MapPin, Stethoscope, ChevronDown, ChevronUp, Search, Eye } from "lucide-react";
+import PostcardAssetDebugPanel from "./PostcardAssetDebugPanel";
 
 type AudienceType = "healthcare-agency" | "trades-agency" | "nursing-home" | "contractor" | "supply-house";
 
@@ -434,6 +435,15 @@ export default function AdminPostcardCampaigns() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Asset debug + actual-mail preview — single source of truth */}
+          <div className="mt-4">
+            <PostcardAssetDebugPanel
+              audience={previewAudience}
+              city={previewCity}
+              recipient={previewRecipient}
+            />
+          </div>
         </TabsContent>
 
         {/* Campaigns Tab — now with Send Log + Diagnose + Resend */}
