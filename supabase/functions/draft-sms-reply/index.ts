@@ -168,6 +168,9 @@ Draft Matt's next reply. 1–2 short sentences. SMS only.`;
     const classification = classifySignupProduct(inboundContextText || inboundText);
     let classifierNote: string | undefined;
 
+    // Mask phone for logs: keep last 4 digits only
+    const phoneMasked = digits.length >= 4 ? `***-***-${digits.slice(-4)}` : "***";
+
     if (wantsLink && !hasUrl) {
       if (classification.ambiguous) {
         // Don't guess — replace the draft with a one-line clarifier so Matt
@@ -175,10 +178,47 @@ Draft Matt's next reply. 1–2 short sentences. SMS only.`;
         draft =
           "Quick check before I send the link — is this for getting more jobs (Contractor Leads), hiring techs (TechAlert), running your crew (FieldDesk), or catching missed calls?";
         classifierNote = "ambiguous_intent_asked_clarifier";
+        console.log(JSON.stringify({
+          tag: "[draft-sms-reply][safety-net]",
+          event: "ambiguous_clarifier_inserted",
+          phone: phoneMasked,
+          wants_link_signal: wantsSignupLink(inboundText) ? "inbound_asked" : "draft_promised",
+          draft_promised_link: draftPromisesLink,
+          classifier: {
+            product: classification.product,
+            confidence: classification.confidence,
+            matched: classification.matched,
+            tied_with: classification.tiedWith || null,
+          },
+          inbound_context_preview: (inboundContextText || inboundText).slice(0, 160),
+          ts: new Date().toISOString(),
+        }));
       } else {
-        draft = `${draft} ${classification.url}`.trim();
+        const appendedUrl = classification.url;
+        draft = `${draft} ${appendedUrl}`.trim();
         classifierNote = `routed_to_${classification.product}_conf_${classification.confidence}`;
+        console.log(JSON.stringify({
+          tag: "[draft-sms-reply][safety-net]",
+          event: "url_auto_appended",
+          phone: phoneMasked,
+          appended_url: appendedUrl,
+          product: classification.product,
+          confidence: classification.confidence,
+          matched_phrases: classification.matched,
+          wants_link_signal: wantsSignupLink(inboundText) ? "inbound_asked" : "draft_promised",
+          draft_promised_link: draftPromisesLink,
+          inbound_context_preview: (inboundContextText || inboundText).slice(0, 160),
+          ts: new Date().toISOString(),
+        }));
       }
+    } else if (wantsLink && hasUrl) {
+      // Already had a URL — log so we can audit AI-supplied vs safety-net-supplied URLs
+      console.log(JSON.stringify({
+        tag: "[draft-sms-reply][safety-net]",
+        event: "url_already_present_skipped",
+        phone: phoneMasked,
+        ts: new Date().toISOString(),
+      }));
     }
 
     return new Response(
