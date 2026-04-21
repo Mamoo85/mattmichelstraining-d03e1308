@@ -110,14 +110,21 @@ const DESIGNS: Record<AudienceType, PostcardDesign> = {
   },
 };
 
-async function buildFrontHTML(design: PostcardDesign, city: string, recipientName: string, campaignId: string, audienceType: AudienceType): Promise<string> {
+async function buildFrontHTML(
+  design: PostcardDesign,
+  city: string,
+  recipientName: string,
+  campaignId: string,
+  audienceType: AudienceType,
+  resolved: { photoUrl: string; badgeUrl: string }
+): Promise<string> {
   // ONE QR per postcard → multi-offer landing page (/postcard) for clean attribution.
-  const qrUrl = `https://detroitwebagent.com/postcard?audience=${audienceType}&utm_campaign=${campaignId}&city=${city.toLowerCase().replace(/\s+/g, "-")}`;
+  const qrUrl = buildQrUrl(audienceType, campaignId, city);
   const c = design.accentColor;
   const qrDataUri = await qrcode(qrUrl, { size: 260 }) as string;
+  const { photoUrl, badgeUrl } = resolved;
 
   // 3 secondary product mentions (everything except their hero offer).
-  // Order: Talent Radar (other vertical), Demand Radar, FieldDesk, Missed Call Catch.
   const SECONDARY: Record<AudienceType, Array<{ icon: string; label: string }>> = {
     "healthcare-agency":  [{ icon: "🔧", label: "Talent Radar — Trades" }, { icon: "🛠️", label: "FieldDesk" },     { icon: "📞", label: "Missed Call Catch" }],
     "nursing-home":       [{ icon: "🔧", label: "Talent Radar — Trades" }, { icon: "🛠️", label: "FieldDesk" },     { icon: "📞", label: "Missed Call Catch" }],
@@ -144,7 +151,7 @@ async function buildFrontHTML(design: PostcardDesign, city: string, recipientNam
       <div style="display:inline-block;background:${c}15;border:1.5px solid ${c}40;color:${c};font-size:9px;font-weight:800;padding:5px 12px;border-radius:4px;letter-spacing:0.5px;">${design.offer}</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:8px 10px;">
-      <img src="${MATT_PHOTO}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;border:1.5px solid #30363d;" alt="Matt">
+      <img src="${photoUrl}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;border:1.5px solid #30363d;" alt="Matt">
       <div style="font-size:8.5px;color:#8b949e;line-height:1.4;">
         <strong style="color:#e6edf3;font-size:9px;">Matt Michels</strong> — Founder<br>
         Don't believe it works? Text me.<br>
@@ -154,7 +161,7 @@ async function buildFrontHTML(design: PostcardDesign, city: string, recipientNam
     </div>
   </div>
   <div style="width:1.9in;background:#161b22;border-left:3px solid ${c};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0.3in 0.18in;gap:8px;">
-    <img src="${DWA_BADGE}" style="width:48px;height:48px;border-radius:50%;border:1.5px solid #30363d;" alt="DWA">
+    <img src="${badgeUrl}" style="width:48px;height:48px;border-radius:50%;border:1.5px solid #30363d;" alt="DWA">
     <div style="font-size:8px;color:#8b949e;text-align:center;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Scan to claim</div>
     <img src="${qrDataUri}" width="118" height="118" style="border-radius:8px;border:2px solid #30363d;" alt="QR">
     <div style="font-size:9.5px;color:${c};font-weight:800;text-align:center;line-height:1.1;">${design.offer.includes("MONTH") ? "FREE MONTH" : "FREE 10 NAMES"}</div>
