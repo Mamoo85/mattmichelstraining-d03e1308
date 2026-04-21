@@ -267,6 +267,7 @@ export async function sendSMS(
   // Compute body_hash up-front — used by every comms-log insert below so we can
   // resend byte-identical messages later and dedup against this exact payload.
   const bodyHash = await computeBodyHash(to, body, product ?? null);
+  const templateId = options?.templateId ?? null;
 
   // 3. E.164 US-only validation
   if (!US_E164.test(to)) {
