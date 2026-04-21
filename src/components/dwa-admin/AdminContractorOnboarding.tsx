@@ -25,7 +25,7 @@ export default function AdminContractorOnboarding() {
     setLoading(true);
     const { data } = await (supabase as any)
       .from("contractor_clients")
-      .select("id, business_name, email, phone, trade, city, active, onboarded_at, roi_token, free_dead_leads_quota, created_at")
+      .select("id, business_name, email, phone, trade, city, active, onboarded_at, roi_token, free_dead_leads_quota, created_at, stripe_customer_id")
       .order("created_at", { ascending: false })
       .limit(50);
     setList(((data as any[]) || []) as Contractor[]);
