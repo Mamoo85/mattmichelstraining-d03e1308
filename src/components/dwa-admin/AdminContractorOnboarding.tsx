@@ -93,6 +93,8 @@ export default function AdminContractorOnboarding() {
         {list.map((c) => {
           const portalUrl = `https://detroitwebagent.com/contractor-portal/${c.roi_token || c.id}`;
           const intakeUrl = `https://detroitwebagent.com/dead-lead-intake?cid=${c.id}`;
+          const readiness = checkReadiness(c);
+          const stripeOk = !!c.stripe_customer_id;
           return (
             <div key={c.id} className="bg-[#0d1f3c] border border-white/10 rounded-lg p-4">
               <div className="flex items-start justify-between mb-3">
@@ -100,14 +102,20 @@ export default function AdminContractorOnboarding() {
                   <div className="font-bold text-white">{c.business_name}</div>
                   <div className="text-white/50 text-xs">{c.trade} · {c.city} · {c.email} · {c.phone}</div>
                 </div>
-                <span className={`text-xs px-2 py-1 rounded ${c.active ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"}`}>
-                  {c.active ? "Active" : "Pending"}
+                <span className={`text-xs px-2 py-1 rounded ${readiness.ready ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"}`}>
+                  {readiness.ready ? "Ready" : "Blocked"}
                 </span>
               </div>
 
+              {!readiness.ready && (
+                <div className="mb-3 bg-amber-500/10 border border-amber-500/30 rounded p-2 text-xs text-amber-300">
+                  {readiness.reason}
+                </div>
+              )}
+
               <div className="grid sm:grid-cols-2 gap-2 text-xs">
                 <div className="bg-[#0a1628] rounded p-2 text-white/60">
-                  ✅ Stripe payment {c.active ? "cleared" : "pending"}
+                  {stripeOk ? "✅ Stripe payment cleared" : "⏳ Stripe payment pending — no webhook provisioning yet"}
                 </div>
                 <div className="bg-[#0a1628] rounded p-2 text-white/60">
                   📍 Trade + city: {c.trade} / {c.city}
