@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ResendSmsModal, { type ResendTarget } from "./ResendSmsModal";
 
 type CommsRow = {
   id: string;
@@ -15,6 +16,7 @@ type CommsRow = {
   product: string | null;
   recipient: string | null;
   body_preview: string | null;
+  body_full: string | null;
   status: string | null;
   metadata: Record<string, unknown> | null;
   created_at: string;
@@ -25,7 +27,8 @@ type Direction = "inbound" | "outbound";
 type Message = {
   id: string;
   direction: Direction;
-  body: string;
+  body: string;          // body_full ?? body_preview — what we render
+  body_full: string | null; // raw, for resend
   status: string;
   product: string | null;
   created_at: string;
@@ -139,6 +142,7 @@ export default function AdminSMSInbox() {
   const [composeTo, setComposeTo] = useState("");
   const [drafting, setDrafting] = useState(false);
   const [showCheatsheet, setShowCheatsheet] = useState(false);
+  const [resendTarget, setResendTarget] = useState<ResendTarget | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Mobile: when a thread is picked, hide the list. Back button returns to list.
@@ -152,7 +156,7 @@ export default function AdminSMSInbox() {
       const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const { data, error } = await supabase
         .from("system_comms_log")
-        .select("id, channel, product, recipient, body_preview, status, metadata, created_at")
+        .select("id, channel, product, recipient, body_preview, body_full, status, metadata, created_at")
         .eq("channel", "sms")
         .gte("created_at", since)
         .order("created_at", { ascending: true })
@@ -189,7 +193,8 @@ export default function AdminSMSInbox() {
         arr.push({
           id: r.id,
           direction,
-          body: r.body_preview ?? "",
+          body: r.body_full ?? r.body_preview ?? "",
+          body_full: r.body_full,
           status: r.status ?? "",
           product: r.product,
           created_at: r.created_at,
@@ -626,7 +631,7 @@ export default function AdminSMSInbox() {
                       className={`flex ${mine ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-[85%] sm:max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap break-words ${
+                        className={`max-w-[85%] sm:max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap break-words group relative ${
                           mine
                             ? "bg-[#00d4ff] text-[#0a1628]"
                             : "bg-white/[0.06] text-white border border-white/10"
@@ -634,18 +639,36 @@ export default function AdminSMSInbox() {
                       >
                         <div>{m.body}</div>
                         <div
-                          className={`text-[10px] mt-1 ${
+                          className={`text-[10px] mt-1 flex items-center justify-between gap-2 ${
                             mine ? "text-[#0a1628]/60" : "text-white/40"
                           }`}
                         >
-                          {new Date(m.created_at).toLocaleString([], {
-                            month: "short",
-                            day: "numeric",
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}
-                          {m.product && ` · ${m.product}`}
-                          {m.status && m.status !== "sent" && m.status !== "inbound" && ` · ${m.status}`}
+                          <span>
+                            {new Date(m.created_at).toLocaleString([], {
+                              month: "short",
+                              day: "numeric",
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })}
+                            {m.product && ` · ${m.product}`}
+                            {m.status && m.status !== "sent" && m.status !== "inbound" && ` · ${m.status}`}
+                          </span>
+                          {mine && activeThread && (
+                            <button
+                              onClick={() => setResendTarget({
+                                message_id: m.id,
+                                recipient: activeThread.phone,
+                                body: m.body,
+                                product: m.product,
+                                sent_at: m.created_at,
+                                body_full_stored: m.body_full !== null,
+                              })}
+                              title={m.body_full ? "Resend exact message (idempotent)" : "Original full body not stored — pick a template"}
+                              className="px-1.5 py-0.5 rounded bg-[#0a1628]/20 hover:bg-[#0a1628]/40 text-[#0a1628] text-[10px] font-bold shrink-0"
+                            >
+                              ↻ Resend
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -725,6 +748,14 @@ export default function AdminSMSInbox() {
           )}
         </div>
       </div>
+
+      {resendTarget && (
+        <ResendSmsModal
+          target={resendTarget}
+          onClose={() => setResendTarget(null)}
+          onSent={() => { setResendTarget(null); loadInbox(); }}
+        />
+      )}
     </div>
   );
 }
