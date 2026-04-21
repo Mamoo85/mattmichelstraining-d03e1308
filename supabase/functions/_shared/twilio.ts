@@ -315,6 +315,7 @@ export async function sendSMS(
         body_hash: bodyHash,
         status: "skipped",
         error_message: "sms_opt_out",
+        metadata: { template_id: templateId },
       })).catch(() => {});
       return { success: false, skipped: true };
     }
