@@ -244,16 +244,17 @@ export default function AdminPostcardCampaigns() {
       <div style="display:inline-block;background:${accent}15;border:1.5px solid ${accent}40;color:${accent};font-size:9px;font-weight:800;padding:5px 12px;border-radius:4px;letter-spacing:0.5px;">${offer}</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:8px 10px;">
-      <div style="width:40px;height:40px;border-radius:8px;background:${accent};color:#0a1628;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;">MM</div>
+      <img src="https://customer-assets.emergentagent.com/job_docs-claude-v2/artifacts/6z5o71kv_19405.jpg" style="width:40px;height:40px;border-radius:8px;object-fit:cover;border:1.5px solid #30363d;" alt="Matt">
       <div style="font-size:8.5px;color:#8b949e;line-height:1.4;">
         <strong style="color:#e6edf3;font-size:9px;">Matt Michels</strong> — Founder<br>
         Don't believe it works? Text me.<br>
+        I'll call you personally and prove it.<br>
         <span style="color:${accent};font-weight:700;font-size:10px;">(313) 992-1219</span>
       </div>
     </div>
   </div>
   <div style="width:1.9in;background:#161b22;border-left:3px solid ${accent};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0.3in 0.18in;gap:8px;">
-    <div style="width:48px;height:48px;border-radius:50%;background:${accent};color:#0a1628;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;">DWA</div>
+    <img src="https://customer-assets.emergentagent.com/job_docs-claude-v2/artifacts/1dhqg3eh_25239.png" style="width:48px;height:48px;border-radius:50%;border:1.5px solid #30363d;" alt="DWA">
     <div style="font-size:8px;color:#8b949e;text-align:center;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Scan to claim</div>
     <img src="${qrImg}" width="118" height="118" style="border-radius:8px;border:2px solid #30363d;" alt="QR">
     <div style="font-size:9.5px;color:${accent};font-weight:800;text-align:center;line-height:1.1;">${offer.includes("MONTH") ? "FREE MONTH" : "FREE 10 NAMES"}</div>
