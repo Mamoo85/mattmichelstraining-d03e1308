@@ -26,17 +26,27 @@ export default function AdminOutreachBlocklist() {
   const [rows, setRows] = useState<BlockRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [lastLoaded, setLastLoaded] = useState<Date | null>(null);
   const [stats, setStats] = useState({ total: 0, forever: 0, expiring7d: 0, byReason: {} as Record<string, number> });
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase
+    setError(null);
+    const { data, error: err } = await supabase
       .from("outreach_blocklist" as any)
       .select("*")
       .order("created_at", { ascending: false })
       .limit(500);
+    if (err) {
+      console.error("[AdminOutreachBlocklist] load error:", err);
+      setError(err.message || "Failed to load blocklist");
+      setLoading(false);
+      return;
+    }
     const list = ((data as any[]) || []) as BlockRow[];
     setRows(list);
+    setLastLoaded(new Date());
 
     const now = Date.now();
     const wk = now + 7 * 86400000;
