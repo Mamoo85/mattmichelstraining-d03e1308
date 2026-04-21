@@ -373,11 +373,26 @@ export default function AdminProspectTracker() {
                   )}
                 </div>
 
+                {p.nudge_sent_at && (
+                  <div className="mt-1 text-[11px] text-white/40">
+                    📤 Last nudge: {timeAgo(p.nudge_sent_at)}
+                    {(p.nudge_count ?? 0) > 1 && <span className="ml-1">· sent {p.nudge_count}×</span>}
+                  </div>
+                )}
+
                 {p.notes && (
                   <div className="mt-2 text-xs text-white/60 italic border-l-2 border-white/10 pl-2">{p.notes}</div>
                 )}
 
                 <div className="mt-4 flex gap-2 flex-wrap">
+                  <Button
+                    onClick={() => sendNudge(p)}
+                    size="sm"
+                    disabled={dead}
+                    className="bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/80 disabled:opacity-40"
+                  >
+                    📤 {p.nudge_sent_at ? "Send again" : "Send nudge SMS"}
+                  </Button>
                   <Button
                     onClick={() => copyLink(p.link_token)}
                     size="sm"
