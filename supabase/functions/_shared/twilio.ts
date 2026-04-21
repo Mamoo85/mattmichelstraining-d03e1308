@@ -218,6 +218,13 @@ export interface SMSResult {
 export interface SMSOptions {
   /** Bypass quiet-hours gate. Only honored for transactional products. */
   bypassQuietHours?: boolean;
+  /**
+   * Pinned SMS template id (e.g. `electrician_lock_in_v1`) when the body was
+   * server-rendered from the registry in `_shared/sms-templates.ts`. Logged
+   * to `system_comms_log.metadata.template_id` so we can diagnose mismatches
+   * (e.g. onboarding vs sales) by querying which template fired which send.
+   */
+  templateId?: string;
 }
 
 /**
@@ -260,6 +267,7 @@ export async function sendSMS(
   // Compute body_hash up-front — used by every comms-log insert below so we can
   // resend byte-identical messages later and dedup against this exact payload.
   const bodyHash = await computeBodyHash(to, body, product ?? null);
+  const templateId = options?.templateId ?? null;
 
   // 3. E.164 US-only validation
   if (!US_E164.test(to)) {
@@ -279,6 +287,7 @@ export async function sendSMS(
         body_hash: bodyHash,
         status: "skipped",
         error_message: "invalid_e164_us_only",
+        metadata: { template_id: templateId },
       })).catch(() => {});
     }
     return { success: false, skipped: true, error: "invalid_e164_us_only" };
@@ -306,6 +315,7 @@ export async function sendSMS(
         body_hash: bodyHash,
         status: "skipped",
         error_message: "sms_opt_out",
+        metadata: { template_id: templateId },
       })).catch(() => {});
       return { success: false, skipped: true };
     }
@@ -334,7 +344,7 @@ export async function sendSMS(
           body_hash: bodyHash,
           status: "skipped",
           error_message: reason,
-          metadata: { local_hour: localHour, tz, bypass_requested: bypassRequested },
+          metadata: { local_hour: localHour, tz, bypass_requested: bypassRequested, template_id: templateId },
         })).catch(() => {});
       }
       return { success: false, skipped: true, error: "quiet_hours" };
@@ -373,7 +383,7 @@ export async function sendSMS(
           body_hash: bodyHash,
           status: "failed",
           error_message: data?.message || `HTTP ${res.status}`,
-          metadata: { twilio_code: data?.code },
+          metadata: { twilio_code: data?.code, template_id: templateId },
         })).catch(() => {});
       }
       // Surface to error_logs so admin sees silent SMS failures
@@ -400,7 +410,7 @@ export async function sendSMS(
         body_hash: bodyHash,
         status: "sent",
         provider_id: data.sid,
-        metadata: { from },
+        metadata: { from, template_id: templateId },
       })).catch(() => {});
     }
     return { success: true, sid: data.sid };
@@ -417,6 +427,7 @@ export async function sendSMS(
         body_hash: bodyHash,
         status: "failed",
         error_message: msg,
+        metadata: { template_id: templateId },
       })).catch(() => {});
     }
     logError({

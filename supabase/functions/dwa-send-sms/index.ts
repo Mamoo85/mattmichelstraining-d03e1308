@@ -142,7 +142,7 @@ serve(async (req) => {
         prefix + chunks[i],
         product,
         false,
-        { bypassQuietHours: true }
+        { bypassQuietHours: true, templateId: payload.template_id }
       );
       if (!result.success) {
         return json(result.skipped ? 200 : 500, {
