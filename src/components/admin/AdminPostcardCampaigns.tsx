@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Send, RefreshCw, FileText, BarChart3, Users, MapPin, Stethoscope, ChevronDown, ChevronUp, Search, Eye } from "lucide-react";
+import PostcardAssetDebugPanel from "./PostcardAssetDebugPanel";
 
 type AudienceType = "healthcare-agency" | "trades-agency" | "nursing-home" | "contractor" | "supply-house";
 
