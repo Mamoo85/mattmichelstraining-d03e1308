@@ -435,6 +435,15 @@ export default function AdminPostcardCampaigns() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Asset debug + actual-mail preview — single source of truth */}
+          <div className="mt-4">
+            <PostcardAssetDebugPanel
+              audience={previewAudience}
+              city={previewCity}
+              recipient={previewRecipient}
+            />
+          </div>
         </TabsContent>
 
         {/* Campaigns Tab — now with Send Log + Diagnose + Resend */}
