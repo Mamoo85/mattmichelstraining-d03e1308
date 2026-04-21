@@ -427,6 +427,7 @@ export async function sendSMS(
         body_hash: bodyHash,
         status: "failed",
         error_message: msg,
+        metadata: { template_id: templateId },
       })).catch(() => {});
     }
     logError({
