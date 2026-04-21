@@ -5,6 +5,11 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  classifySignupProduct,
+  SIGNUP_URLS as CLASSIFIER_URLS,
+  wantsSignupLink,
+} from "../_shared/signup-classifier.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -144,24 +149,56 @@ Draft Matt's next reply. 1–2 short sentences. SMS only.`;
     const inboundText = ((latestInbound as any)?.body_preview || "").toLowerCase();
     const draftLower = draft.toLowerCase();
 
-    const wantsLink =
-      /\b(sign\s*up|signup|sign me up|link|get started|how do i (start|join|sign)|where do i (sign|start)|enroll|register|join)\b/.test(inboundText) ||
+    const draftPromisesLink =
       /\b(send (you )?(the|a) link|i'?ll send|here'?s the link|sign[- ]?up link)\b/.test(draftLower);
-
+    const wantsLink = wantsSignupLink(inboundText) || draftPromisesLink;
     const hasUrl = /https?:\/\//i.test(draft);
 
+    // Use the full transcript (last 3 inbound messages) as classifier context —
+    // the contractor's intent often spans multiple texts ("we use eWay" / "send link").
+    const inboundContextText = matches
+      .filter((r: any) => {
+        const meta = (r.metadata || {}) as Record<string, unknown>;
+        return r.status === "inbound" || meta.direction === "inbound" || r.product === "inbound";
+      })
+      .slice(-3)
+      .map((r: any) => r.body_preview || "")
+      .join(" \n ");
+
+    const classification = classifySignupProduct(inboundContextText || inboundText);
+    let classifierNote: string | undefined;
+
     if (wantsLink && !hasUrl) {
-      // Pick the right product URL based on inbound keywords; default to contractor leads.
-      let url = SIGNUP_URLS.contractor_leads;
-      if (/\btech\s*alert|hiring|hire\b/.test(inboundText)) url = SIGNUP_URLS.techalert;
-      else if (/\bfield\s*desk|dispatch|crm\b/.test(inboundText)) url = SIGNUP_URLS.fielddesk;
-      else if (/\bmissed\s*call\b/.test(inboundText)) url = SIGNUP_URLS.missed_call;
-      draft = `${draft} ${url}`.trim();
+      if (classification.ambiguous) {
+        // Don't guess — replace the draft with a one-line clarifier so Matt
+        // doesn't accidentally send the wrong product link.
+        draft =
+          "Quick check before I send the link — is this for getting more jobs (Contractor Leads), hiring techs (TechAlert), running your crew (FieldDesk), or catching missed calls?";
+        classifierNote = "ambiguous_intent_asked_clarifier";
+      } else {
+        draft = `${draft} ${classification.url}`.trim();
+        classifierNote = `routed_to_${classification.product}_conf_${classification.confidence}`;
+      }
     }
 
-    return new Response(JSON.stringify({ draft, transcript_lines: matches.length }), {
-      headers: { ...CORS, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        draft,
+        transcript_lines: matches.length,
+        classification: {
+          product: classification.product,
+          url: classification.url,
+          confidence: classification.confidence,
+          matched: classification.matched,
+          ambiguous: classification.ambiguous,
+          ...(classification.tiedWith ? { tied_with: classification.tiedWith } : {}),
+        },
+        classifier_action: classifierNote || "no_link_needed",
+      }),
+      {
+        headers: { ...CORS, "Content-Type": "application/json" },
+      },
+    );
   } catch (e) {
     console.error("[draft-sms-reply] error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : String(e) }), {
