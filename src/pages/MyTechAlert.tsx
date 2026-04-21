@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import RevenueRecoveredLedger from "@/components/RevenueRecoveredLedger";
+import InstallAppBanner from "@/components/shared/InstallAppBanner";
 import HiringHealthScore from "@/components/techalert/HiringHealthScore";
 import CandidateRiskBadges from "@/components/techalert/CandidateRiskBadges";
 import { RadarExportBar } from "@/components/shared/RadarExportBar";
@@ -531,6 +532,9 @@ export default function MyTechAlert() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+        {/* One-tap install — shown to net-new clients arriving from welcome email */}
+        <InstallAppBanner app="dwa-client" />
+
         {/* Hiring Health Score + Pipeline Funnel */}
         {token && <HiringHealthScore token={token} />}
 

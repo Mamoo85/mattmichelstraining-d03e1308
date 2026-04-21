@@ -14,6 +14,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 
 const DispatchBoard = lazy(() => import("@/components/field-service/DispatchBoard"));
+import InstallAppBanner from "@/components/shared/InstallAppBanner";
 const TechMap = lazy(() => import("@/components/field-service/TechMap"));
 const InvoiceGenerator = lazy(() => import("@/components/field-service/InvoiceGenerator"));
 const AssetManager = lazy(() => import("@/components/field-service/AssetManager"));
@@ -576,6 +577,10 @@ export default function FieldServiceDispatch() {
 
         {/* CENTER CONTENT — animated transitions */}
         <main className="fd-center" data-testid="fd-center">
+          {/* One-tap install for dispatchers arriving from welcome email */}
+          <div style={{ padding: "12px 16px 0" }}>
+            <InstallAppBanner app="fielddesk" />
+          </div>
           {/* Onboarding checklist — only for FieldDesk clients until dismissed */}
           {hasFieldDesk && !onboardingDismissed && onboardingData && (() => {
             const checks = [

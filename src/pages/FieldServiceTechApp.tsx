@@ -11,6 +11,7 @@ import {
   getOfflineQueue,
   clearOfflineQueue,
 } from "@/lib/fieldServiceOfflineQueue";
+import InstallAppBanner from "@/components/shared/InstallAppBanner";
 
 interface Tech {
   id: string;
@@ -193,6 +194,11 @@ export default function FieldServiceTechApp() {
           <button onClick={() => setTech(null)} className="text-gray-500 text-xs hover:text-gray-300">Sign Out</button>
         </div>
       </header>
+
+      {/* One-tap install — primary onboarding moment for techs in the truck */}
+      <div className="px-4 pt-3">
+        <InstallAppBanner app="fielddesk" />
+      </div>
 
       {/* Tab Bar */}
       <div className="flex border-b border-[#1e3a5f]">

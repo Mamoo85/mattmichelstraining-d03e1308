@@ -7,6 +7,7 @@ import DWACommandDeck from "@/components/dwa-admin/DWACommandDeck";
 import DWADataImport from "@/components/dwa-admin/DWADataImport";
 import AssetManager from "@/components/field-service/AssetManager";
 import ContractManager from "@/components/field-service/ContractManager";
+import InstallAppBanner from "@/components/shared/InstallAppBanner";
 
 const DWAPlaybook = lazy(() => import("@/components/dwa-admin/DWAPlaybook"));
 const DWAStrategy = lazy(() => import("@/components/dwa-admin/DWAStrategy"));
@@ -169,6 +170,9 @@ export default function DWAAdmin() {
         </header>
 
         <div className="px-3 sm:px-6 py-6">
+          {/* One-tap install — Matt's command center on his phone home screen */}
+          <InstallAppBanner app="dwa-admin" />
+
           {activeTab === "dwa-overview"     && <Suspense fallback={lazyFallback("overview")}><AdminDWAOverview /></Suspense>}
           {activeTab === "revenue"          && <Suspense fallback={lazyFallback("revenue")}><AdminDWARevenueDashboard /></Suspense>}
           {activeTab === "agent-toolkit"    && <Suspense fallback={lazyFallback("agent toolkit")}><AgentToolkit /></Suspense>}
