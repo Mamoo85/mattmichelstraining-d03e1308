@@ -2788,6 +2788,7 @@ export type Database = {
       }
       contractor_leads: {
         Row: {
+          ai_summary: string | null
           attempt_count: number | null
           bidding_mode: boolean | null
           checkout_locked_by: string | null
@@ -2817,6 +2818,7 @@ export type Database = {
           status: string | null
         }
         Insert: {
+          ai_summary?: string | null
           attempt_count?: number | null
           bidding_mode?: boolean | null
           checkout_locked_by?: string | null
@@ -2846,6 +2848,7 @@ export type Database = {
           status?: string | null
         }
         Update: {
+          ai_summary?: string | null
           attempt_count?: number | null
           bidding_mode?: boolean | null
           checkout_locked_by?: string | null
@@ -3566,6 +3569,7 @@ export type Database = {
           campaign_id: string
           contractor_notified_at: string | null
           created_at: string
+          drip_step: number
           drip1_sent: boolean
           drip1_sent_at: string | null
           drip2_sent: boolean
@@ -3582,12 +3586,14 @@ export type Database = {
           replied_at: string | null
           reply_sentiment: string | null
           reply_text: string | null
+          requires_human: boolean
           status: string
         }
         Insert: {
           campaign_id: string
           contractor_notified_at?: string | null
           created_at?: string
+          drip_step?: number
           drip1_sent?: boolean
           drip1_sent_at?: string | null
           drip2_sent?: boolean
@@ -3604,12 +3610,14 @@ export type Database = {
           replied_at?: string | null
           reply_sentiment?: string | null
           reply_text?: string | null
+          requires_human?: boolean
           status?: string
         }
         Update: {
           campaign_id?: string
           contractor_notified_at?: string | null
           created_at?: string
+          drip_step?: number
           drip1_sent?: boolean
           drip1_sent_at?: string | null
           drip2_sent?: boolean
@@ -3626,6 +3634,7 @@ export type Database = {
           replied_at?: string | null
           reply_sentiment?: string | null
           reply_text?: string | null
+          requires_human?: boolean
           status?: string
         }
         Relationships: [
@@ -4372,6 +4381,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      error_logs: {
+        Row: {
+          alerted_admin: boolean
+          created_at: string
+          error_message: string | null
+          function_name: string | null
+          http_status: number | null
+          id: string
+          payload: Json | null
+          recipient: string | null
+          severity: string
+          source: string
+        }
+        Insert: {
+          alerted_admin?: boolean
+          created_at?: string
+          error_message?: string | null
+          function_name?: string | null
+          http_status?: number | null
+          id?: string
+          payload?: Json | null
+          recipient?: string | null
+          severity?: string
+          source: string
+        }
+        Update: {
+          alerted_admin?: boolean
+          created_at?: string
+          error_message?: string | null
+          function_name?: string | null
+          http_status?: number | null
+          id?: string
+          payload?: Json | null
+          recipient?: string | null
+          severity?: string
+          source?: string
+        }
+        Relationships: []
       }
       estimate_generator_clients: {
         Row: {
