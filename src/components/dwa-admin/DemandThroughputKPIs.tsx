@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, TrendingUp, Package, DollarSign, Calendar } from "lucide-react";
+import { Loader2, TrendingUp, Package, DollarSign, Calendar, AlertTriangle } from "lucide-react";
+import { validateSchema } from "@/lib/validateSchema";
 
 interface Stats {
   total: number;
@@ -19,18 +20,29 @@ const PRICE_PER_SUBSCRIPTION = 199;
 export default function DemandThroughputKPIs() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [schemaError, setSchemaError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
+      setSchemaError(null);
       const { data, error } = await supabase
         .from("industry_pulse_signals" as any)
         .select("signal_type, vertical, confidence, detected_at")
         .order("detected_at", { ascending: false })
         .limit(2000);
 
-      if (error) console.error("[DemandThroughputKPIs] query error:", error);
       const rows = (data as any[]) || [];
+      const check = validateSchema(rows, error as any, {
+        expected: ["signal_type", "detected_at"],
+        forbidden: ["status"],
+      });
+      if (!check.ok) {
+        console.error("[DemandThroughputKPIs] schema validation failed:", check.reason);
+        setSchemaError(check.reason);
+        setLoading(false);
+        return;
+      }
       const now = Date.now();
       const h24 = now - 24 * 3600_000;
       const d7 = now - 7 * 24 * 3600_000;
@@ -79,6 +91,15 @@ export default function DemandThroughputKPIs() {
   }, []);
 
   if (loading) return <div className="flex items-center gap-2 text-white/50 p-6"><Loader2 className="w-4 h-4 animate-spin" /> Loading throughput…</div>;
+  if (schemaError) return (
+    <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-4 flex items-start gap-3">
+      <AlertTriangle className="w-5 h-5 text-rose-300 shrink-0 mt-0.5" />
+      <div className="text-sm">
+        <div className="text-rose-200 font-bold mb-1">Data model mismatch</div>
+        <div className="text-white/70 text-xs leading-relaxed">{schemaError}</div>
+      </div>
+    </div>
+  );
   if (!stats) return null;
 
   const avgPerDay = stats.last_7d / 7;
