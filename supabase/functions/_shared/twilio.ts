@@ -218,6 +218,13 @@ export interface SMSResult {
 export interface SMSOptions {
   /** Bypass quiet-hours gate. Only honored for transactional products. */
   bypassQuietHours?: boolean;
+  /**
+   * Pinned SMS template id (e.g. `electrician_lock_in_v1`) when the body was
+   * server-rendered from the registry in `_shared/sms-templates.ts`. Logged
+   * to `system_comms_log.metadata.template_id` so we can diagnose mismatches
+   * (e.g. onboarding vs sales) by querying which template fired which send.
+   */
+  templateId?: string;
 }
 
 /**
