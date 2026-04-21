@@ -3151,33 +3151,78 @@ export type Database = {
       cron_job_health: {
         Row: {
           consecutive_failures: number
+          expected_interval_minutes: number | null
           jobname: string
           last_error: string | null
           last_failure_at: string | null
           last_success_at: string | null
           next_run_at: string | null
+          stale_after_minutes: number | null
           total_runs: number
           updated_at: string
         }
         Insert: {
           consecutive_failures?: number
+          expected_interval_minutes?: number | null
           jobname: string
           last_error?: string | null
           last_failure_at?: string | null
           last_success_at?: string | null
           next_run_at?: string | null
+          stale_after_minutes?: number | null
           total_runs?: number
           updated_at?: string
         }
         Update: {
           consecutive_failures?: number
+          expected_interval_minutes?: number | null
           jobname?: string
           last_error?: string | null
           last_failure_at?: string | null
           last_success_at?: string | null
           next_run_at?: string | null
+          stale_after_minutes?: number | null
           total_runs?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      cron_schedule_audit: {
+        Row: {
+          attempted_at: string
+          attempted_by: string | null
+          command: string | null
+          error_message: string | null
+          error_rule: string | null
+          id: string
+          jobname: string
+          mode: string
+          outcome: string
+          schedule: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          attempted_by?: string | null
+          command?: string | null
+          error_message?: string | null
+          error_rule?: string | null
+          id?: string
+          jobname: string
+          mode?: string
+          outcome: string
+          schedule?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          attempted_by?: string | null
+          command?: string | null
+          error_message?: string | null
+          error_rule?: string | null
+          id?: string
+          jobname?: string
+          mode?: string
+          outcome?: string
+          schedule?: string | null
         }
         Relationships: []
       }
@@ -16410,6 +16455,14 @@ export type Database = {
       }
     }
     Functions: {
+      _validate_cron_command: {
+        Args: { p_command: string; p_jobname: string; p_schedule: string }
+        Returns: {
+          error_msg: string
+          ok: boolean
+          rule: string
+        }[]
+      }
       award_points: {
         Args: {
           _action: string
@@ -16631,10 +16684,14 @@ export type Database = {
           read_ct: number
         }[]
       }
-      rollback_cron: { Args: { p_jobname: string }; Returns: number }
+      rollback_cron: { Args: { p_jobname: string }; Returns: Json }
       safe_cron_schedule: {
         Args: { p_command: string; p_jobname: string; p_schedule: string }
-        Returns: number
+        Returns: undefined
+      }
+      safe_cron_validate: {
+        Args: { p_command: string; p_jobname: string; p_schedule: string }
+        Returns: Json
       }
       search_candidates_hybrid: {
         Args: {

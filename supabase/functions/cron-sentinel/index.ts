@@ -9,6 +9,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
+import { parseCronWindow } from "../_shared/cron-window.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -230,12 +231,20 @@ serve(async (req) => {
   const criticalFailures = failures.filter(f => f.critical);
   const status = failures.length === 0 ? "pass" : (criticalFailures.length > 0 ? "fail" : "warn");
 
+  // Look up schedule for each job from cron_schedule_history (active=true) for per-job stale window
+  const { data: histRows = [] } = await sb
+    .from("cron_schedule_history")
+    .select("jobname, schedule")
+    .eq("active", true);
+  const scheduleMap = new Map<string, string>((histRows || []).map((h: any) => [h.jobname, h.schedule]));
+
   // Upsert cron_job_health for every checked cron — gives /dwa-admin → Cron Status its data
   await Promise.all(results.map(async (r) => {
     const ok = r.scheduleOk && r.freshnessOk && r.outputOk;
     const nowIso = new Date().toISOString();
+    const schedule = scheduleMap.get(r.cron);
+    const win = parseCronWindow(schedule);
     try {
-      // Read current to compute consecutive_failures + total_runs
       const { data: prev } = await sb.from("cron_job_health").select("consecutive_failures, total_runs").eq("jobname", r.cron).maybeSingle();
       const prevFails = (prev as any)?.consecutive_failures ?? 0;
       const prevTotal = (prev as any)?.total_runs ?? 0;
@@ -246,6 +255,9 @@ serve(async (req) => {
         last_error: ok ? null : (r.errors.join("; ") || "unknown"),
         consecutive_failures: ok ? 0 : prevFails + 1,
         total_runs: prevTotal + 1,
+        next_run_at: win.nextRunAt.toISOString(),
+        expected_interval_minutes: win.intervalMinutes,
+        stale_after_minutes: win.staleAfterMinutes,
         updated_at: nowIso,
       }, { onConflict: "jobname" });
     } catch (_) { /* health tracking is non-critical */ }
