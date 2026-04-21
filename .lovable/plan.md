@@ -1,86 +1,85 @@
 
 
-## Final E2E Test — Pretend to Be the Electrician
+## Plan: Beef up the schema-mismatch panel + log failures + retry button
 
-I will run through the **exact** signup flow a Livonia electrician will hit tomorrow, clicking every button, filling every form, and verifying every backend write. Both of us will know it works before he wakes up.
+Three small, surgical changes — no DB schema redesign, no UI overhaul.
 
-### What I'll test (in order)
+### 1. Upgrade `validateSchema()` to return more debug detail
 
-**1. Landing page → Territory form**
-- Navigate to `https://www.detroitwebagent.com/contractor-leads` on mobile viewport (390×844, since most contractors browse on phones)
-- Verify page loads, no console errors, no broken images
-- Scroll through the offer, find the territory signup form
-- Fill it out as **"Sparky's Electric, Mike Sparks, mike+test@detroitwebagent.com, (313) 555-0142, Electrical, Livonia"**
-- Click submit → verify Stripe checkout opens
+`src/lib/validateSchema.ts` — extend `SchemaValidation` with the fields we already compute but don't expose:
 
-**2. Stripe checkout page**
-- Verify the checkout shows: **$399/mo, "Exclusive Electrical Leads — Livonia, MI"**, correct bonus stack in description
-- Verify trade-specific pricing logic didn't accidentally trigger Gutters/Siding $299 rate
-- Verify customer email is prefilled
-- **Cancel** the checkout (don't actually charge a test card — we just need to confirm the cancel URL goes to detroitwebagent.com, not mattmichelstraining.com)
-- Verify cancel redirects back to `https://www.detroitwebagent.com/contractor-leads`
+- `selectFields: string[]` — the exact `select()` string the caller used (passed in, echoed back)
+- `tableName: string` — same
+- `missing: string[]` (already there)
+- `forbidden: string[]` (already there)
+- `sampleKeys: string[]` — `Object.keys(rows[0])` so devs see what DID come back
+- `rawError?: string` — the original Postgres error message verbatim
 
-**3. Re-do checkout, complete with Stripe test card**
-- Re-submit form, get back to checkout
-- Use Stripe test card `4242 4242 4242 4242`, any future expiry, any CVC, any ZIP
-- Submit payment
-- **Critical check**: Success URL must land on `https://www.detroitwebagent.com/contractor-leads?success=1&...` — NOT mattmichelstraining.com (this is the bug Matt flagged)
+Add a 3rd `context` arg: `{ table: string; selectFields: string }` so each call site declares what it asked for.
 
-**4. Backend verification (via supabase--read_query)**
-- Confirm `contractor_clients` row exists with `free_dead_leads_quota=40`, `free_dead_leads_used=0`
-- Confirm `contractor_lead_subscriptions` row created by webhook
-- Confirm welcome SMS fired (check `system_comms_log` for outbound to (313) 555-0142 — will fail-soft since fake number, but log must show attempt)
-- Confirm welcome email queued in `email_send_log`
-- Check `stripe-webhook` edge function logs for `contractor_lead_subscription` event processed cleanly with no 500s
+### 2. Create reusable `SchemaErrorPanel` component
 
-**5. Contractor portal magic link**
-- Pull `roi_token` from the DB row
-- Navigate to `https://www.detroitwebagent.com/contractor-portal/<roi_token>`
-- Verify dashboard loads showing: business name, "0/40 free boost used", Lead Probability card (65% / 80% / 90% tiers), "No leads yet — Google ads typically take 3-5 days to prime" empty state
+`src/components/shared/SchemaErrorPanel.tsx` — replaces the 3 inline copy-pasted rose-colored divs in `DemandThroughputKPIs.tsx`, `AdminDemandRadar.tsx`, and `DemandRadarHub.tsx` (FilteredSignalList).
 
-**6. Free Boost intake flow (`?cid=` param)**
-- Click the Free Boost CTA → should land on `/dead-lead-intake?cid=<contractor_id>`
-- Verify "🎁 Free Boost Gift — 40 free reactivations" hero shows
-- Paste 3 fake dead leads (name/phone format), submit
-- Verify rows land in `dead_lead_contacts` linked to the contractor
+Props: `validation`, `onRetry`, `componentName`.
 
-**7. Lead Boost upsell (don't complete payment)**
-- Back on portal, click "Boost Your %" → $100 option
-- Verify Stripe checkout opens with $100, correct fine print about 20% management fee in description
-- Verify success/cancel URLs point to detroitwebagent.com portal, not mattmichelstraining.com
-- Cancel out
+Renders:
+- Red header with `AlertTriangle` + "Data model mismatch in {componentName}"
+- `reason` line
+- Two columns of monospace chips:
+  - **Missing columns** (red): list of `missing[]`
+  - **Forbidden columns** (amber): list of `forbidden[]`
+- **Queried table:** `industry_pulse_signals`
+- **Selected fields:** monospace block showing the exact `select()` string
+- **Returned columns** (collapsed `<details>`): the actual keys from row 0
+- **Refresh data** button (cyan, calls `onRetry`)
+- **Copy debug info** button — copies a JSON blob to clipboard for pasting into Lovable chat
 
-**8. Cleanup**
-- Delete the test `contractor_clients` row + cascading `dead_lead_contacts` rows so the test data doesn't pollute live admin views
-- Refund the $399 test charge in Stripe (or note it for Matt to refund manually since I'm using a test card on live mode — wait, **I need to verify if Stripe is in test or live mode first** before charging anything)
+### 3. Log mismatches to `schema_validation_failures` table
 
-### Pre-flight check before charging anything
-- Inspect `stripe-webhook` logs and recent `contractor_lead_subscriptions` rows to determine if the Stripe account is in test mode or live mode
-- If LIVE: I will NOT complete a real $399 charge. I'll only verify the checkout page renders correctly + cancel URL works, then test the post-payment flow by manually inserting a fake `contractor_clients` row and invoking `stripe-webhook` with a synthetic event
-- If TEST: full $4242 card flow, then refund
+New migration `supabase/migrations/<ts>_schema_validation_failures.sql`:
 
-### Bugs I'll fix on the fly (no asking)
-- Any redirect that lands on mattmichelstraining.com instead of detroitwebagent.com
-- Any 500 error in `stripe-webhook` during the subscription event
-- Any missing CTA / broken link / wrong price displayed
-- Any console errors on the portal dashboard
+```text
+schema_validation_failures
+├── id              uuid PK
+├── component       text       (e.g. "AdminDemandRadar")
+├── table_name      text
+├── select_fields   text
+├── reason          text
+├── missing         text[]
+├── forbidden       text[]
+├── raw_error       text
+├── user_agent      text
+├── route           text       (window.location.pathname)
+└── detected_at     timestamptz default now()
+```
 
-### What I'll report back
-- ✅ / ❌ for each of the 8 steps above
-- Screenshot of the final dashboard
-- Confirmation that cancel/success URLs both go to detroitwebagent.com
-- List of any bugs found + fixes applied
-- Green light (or red flag) for tomorrow's signup
+RLS: enabled. Policies:
+- INSERT: `to anon, authenticated using (true)` — anyone can log a failure
+- SELECT: `to authenticated using (public.has_role(auth.uid(), 'admin'))` — admins only
 
-### Tools I'll use
-- `browser--navigate_to_sandbox` + `browser--navigate_to_url` (test the live detroitwebagent.com flow)
-- `browser--observe` + `browser--act` (fill forms, click buttons)
-- `browser--screenshot` (proof of each milestone)
-- `supabase--read_query` (verify DB writes)
-- `supabase--edge_function_logs` (verify webhook ran clean)
-- `stripe--list_payment_intents` + `stripe--list_subscriptions` (verify Stripe side)
-- `code--line_replace` / `code--write` (any bug fixes found mid-test)
+`SchemaErrorPanel` fires a fire-and-forget `supabase.from("schema_validation_failures").insert(...)` once per mount (guarded by `useRef` so retry doesn't double-log).
 
-### Time estimate
-~10 minutes of browser automation + DB checks. You can stay calm and wait for the green light.
+### 4. Wire the 3 callers to use the new panel + pass retry handler
+
+Refactor each call site to:
+- Pass `{ table: "industry_pulse_signals", selectFields: "<exact string>" }` to `validateSchema`
+- Replace inline error div with `<SchemaErrorPanel validation={check} onRetry={load} componentName="..." />`
+- For `DemandThroughputKPIs` (uses an IIFE in `useEffect`), refactor the loader into a `load()` callback so it can be re-invoked on retry.
+
+### Files touched
+
+| File | Change |
+|---|---|
+| `src/lib/validateSchema.ts` | Extended return type + context arg |
+| `src/components/shared/SchemaErrorPanel.tsx` | **New** — reusable error UI |
+| `src/components/dwa-admin/DemandThroughputKPIs.tsx` | Use new panel; extract loader for retry |
+| `src/components/dwa-admin/AdminDemandRadar.tsx` | Use new panel |
+| `src/components/dwa-admin/DemandRadarHub.tsx` | Use new panel in `FilteredSignalList` |
+| `supabase/migrations/<ts>_schema_validation_failures.sql` | **New** table + RLS |
+
+### Out of scope (not doing unless you ask)
+
+- No alerting/email digest of failures — just the table. Add later if it gets noisy.
+- No admin dashboard view for `schema_validation_failures` — query it via Supabase or add a `/dwa-admin` tab in a follow-up.
 
