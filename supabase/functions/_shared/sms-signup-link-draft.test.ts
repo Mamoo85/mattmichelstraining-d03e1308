@@ -88,7 +88,7 @@ const CASES: Case[] = [
     inbound: "I'm looking to hire an electrician",
     aiDrafts: [
       "I'll send you the sign-up link.",
-      "Here's the TechAlert link:",
+      "I'll send the link.",
     ],
     expectUrl: true,
     expectedProduct: "techalert",
