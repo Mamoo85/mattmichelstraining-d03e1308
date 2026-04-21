@@ -81,7 +81,7 @@ serve(async (req) => {
         contractor_id: contractor?.id || "",
         business_name: business_name || name,
       },
-      success_url: `${origin}/contractor-leads?success=1&trade=${encodeURIComponent(normalizedTrade)}&city=${encodeURIComponent(city)}`,
+      success_url: `${origin}/contractor-leads?success=1&trade=${encodeURIComponent(normalizedTrade)}&city=${encodeURIComponent(city)}&cid=${encodeURIComponent(contractor?.id || "")}`,
       cancel_url: `${origin}/contractor-leads`,
     });
 

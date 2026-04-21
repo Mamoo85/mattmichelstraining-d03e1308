@@ -69,7 +69,9 @@ export default function ContractorLeads() {
   const [form, setForm] = useState({ name: "", business_name: "", email: "", phone: "" });
   const [loading, setLoading] = useState(false);
 
-  const success = new URLSearchParams(window.location.search).get("success") === "1";
+  const successParams = new URLSearchParams(window.location.search);
+  const success = successParams.get("success") === "1";
+  const successCid = successParams.get("cid") || "";
 
   const scrollToTerritory = () => document.getElementById("territory")?.scrollIntoView({ behavior: "smooth" });
 
@@ -100,6 +102,9 @@ export default function ContractorLeads() {
   };
 
   if (success) {
+    const statusUrl = successCid
+      ? `/contractor-onboarding-status?contractor_id=${encodeURIComponent(successCid)}`
+      : `/contractor-onboarding-status`;
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-6">
         <div className="text-center max-w-sm">
@@ -108,6 +113,16 @@ export default function ContractorLeads() {
           </div>
           <h1 className="text-2xl font-black text-foreground mb-3">You're locked in!</h1>
           <p className="text-muted-foreground leading-relaxed mb-4">Your territory is reserved. You'll receive an onboarding email within 24 hours with your lead capture page details and go-live date.</p>
+
+          <a
+            href={statusUrl}
+            className="block bg-primary/10 border border-primary/30 rounded-lg p-4 mb-4 text-left hover:bg-primary/15 transition-colors"
+          >
+            <div className="text-[11px] font-bold uppercase tracking-widest text-primary mb-1">Track activation</div>
+            <div className="text-sm font-bold text-foreground mb-1">Payment pending → Ready</div>
+            <div className="text-xs text-muted-foreground leading-relaxed">See real-time activation status and when your welcome SMS will arrive →</div>
+          </a>
+
           <p className="text-sm text-muted-foreground">Questions? <a href="sms:+13139921219" className="text-primary font-bold hover:underline">Text Matt at (313) 992-1219</a></p>
         </div>
       </div>
