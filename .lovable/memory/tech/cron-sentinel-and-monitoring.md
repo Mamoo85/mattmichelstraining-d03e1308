@@ -23,6 +23,9 @@ Returns NULL inside `cron.schedule()`. Phase 13/15 disaster.
 ### #3 — Scheduling without NULL guards
 If you don't `RAISE EXCEPTION` when v_url or v_key is empty, you'll never know it failed.
 
+### #4 — Calling raw `cron.schedule()` in new migrations (2026-04-21)
+**MANDATE**: All new cron migrations MUST call `PERFORM public.safe_cron_schedule(jobname, schedule, command)` instead of raw `cron.schedule()`. The wrapper rejects bans #1, #2, #4 (NULL urls, missing Bearer, short Bearer) at deploy time AND archives the prior version into `cron_schedule_history` for one-click rollback via `/dwa-admin → 🛡️ Cron Status`. See [Cron Safety Layer](mem://tech/cron-safety-layer).
+
 ---
 
 # ✅ THE ONLY APPROVED CRON PATTERN
