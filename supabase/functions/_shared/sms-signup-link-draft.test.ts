@@ -114,11 +114,11 @@ const CASES: Case[] = [
     expectedProduct: "fielddesk",
   },
   {
-    name: "missed_call: missing calls on roofs",
+    name: "missed_call: missing calls on roofs (link promised)",
     inbound: "I keep missing calls when on roofs",
     aiDrafts: [
-      "Missed Call Catch auto-texts them back.",
       "Send me your number and I'll send the link.",
+      "Here's the sign-up link:",
     ],
     expectUrl: true,
     expectedProduct: "missed_call",
