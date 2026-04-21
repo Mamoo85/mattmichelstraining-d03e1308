@@ -51,7 +51,7 @@ export function validateSchema(
 
   // 2. No rows = nothing to validate (legitimately empty table).
   if (!rows || rows.length === 0) {
-    const ok: SchemaValidation = { ok: true };
+    const ok: SchemaValidation = { ok: true, reason: "", missing: [], forbidden: [] };
     return ok;
   }
 
@@ -62,7 +62,7 @@ export function validateSchema(
   const forbidden = (check.forbidden || []).filter((c) => keys.has(c));
 
   if (missing.length === 0 && forbidden.length === 0) {
-    const ok: SchemaValidation = { ok: true };
+    const ok: SchemaValidation = { ok: true, reason: "", missing: [], forbidden: [] };
     return ok;
   }
 
