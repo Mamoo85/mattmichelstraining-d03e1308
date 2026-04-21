@@ -6,6 +6,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
+import { logError } from "../_shared/error-log.ts";
+import { generateWithHaiku } from "../_shared/opus.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -101,6 +103,40 @@ async function queryPermitContext(sb: any, city: string): Promise<string> {
       .limit(3);
     if (!data?.length) return "";
     return `${data.length} active contractor(s) pulling permits in ${city}: ${data.map((d: any) => d.company_name).join(", ")}`;
+  } catch { return ""; }
+}
+
+/**
+ * AI-generated one-liner for SMS/email subject. Cached on contractor_leads.ai_summary.
+ * Falls back to "" so existing static copy still ships if AI fails.
+ * Format target: "Apex Signal: $40k+ Kitchen Remodel in Grosse Pointe."
+ */
+async function buildAiSummary(lead: any, site: any): Promise<string> {
+  const trade = site?.trade || "service";
+  const city = site?.city || "Metro Detroit";
+  const project = lead.project_type || trade;
+  const msg = (lead.message || "").slice(0, 280);
+  const prompt = `You write one-line lead alerts for trade contractors. Tone: confident, specific, scarce — never hypey, never use the word "AI".
+
+Lead details:
+- Trade: ${trade}
+- City: ${city}
+- Project: ${project}
+- Homeowner message: "${msg || "no message provided"}"
+
+Write ONE sentence (max 18 words) that quantifies likely project value if obvious from the message and creates urgency. Format exactly: "Apex Signal: <value-or-quality bracket> <project> in <city>."
+
+Examples:
+- "Apex Signal: New $40k+ Kitchen Remodel request in Grosse Pointe."
+- "Apex Signal: Same-day emergency boiler replacement in Livonia."
+- "Apex Signal: Detached garage rewire (200A panel) in Royal Oak."
+
+Output ONLY the sentence. No quotes, no preamble, no commentary.`;
+  try {
+    const out = await generateWithHaiku(prompt, undefined, 80);
+    const cleaned = (out || "").replace(/^["']|["']$/g, "").split("\n")[0].trim();
+    if (cleaned.length < 10 || cleaned.length > 200) return "";
+    return cleaned;
   } catch { return ""; }
 }
 
