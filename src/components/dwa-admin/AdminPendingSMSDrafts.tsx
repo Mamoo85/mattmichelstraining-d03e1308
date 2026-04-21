@@ -25,6 +25,35 @@ const formatPhone = (e164: string) => {
   return m ? `(${m[1]}) ${m[2]}-${m[3]}` : e164;
 };
 
+const URL_REGEX = /(https?:\/\/[^\s]+)/gi;
+
+const renderWithHighlightedUrl = (body: string) => {
+  const parts = body.split(URL_REGEX);
+  return parts.map((part, i) => {
+    if (URL_REGEX.test(part)) {
+      // reset regex state (test() is stateful with /g)
+      URL_REGEX.lastIndex = 0;
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-block px-1.5 py-0.5 mx-0.5 rounded bg-[#00d4ff]/20 text-[#00d4ff] font-semibold border border-[#00d4ff]/40 hover:bg-[#00d4ff]/30 break-all"
+        >
+          🔗 {part}
+        </a>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+};
+
+const extractUrl = (body: string): string | null => {
+  const m = body.match(/https?:\/\/[^\s]+/i);
+  return m ? m[0] : null;
+};
+
 const timeAgo = (iso: string) => {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
   if (diff < 60) return `${Math.floor(diff)}s ago`;
@@ -207,6 +236,34 @@ export default function AdminPendingSMSDrafts() {
                     {charCount} chars
                   </div>
                 </div>
+
+                {/* Preview with highlighted sign-up URL */}
+                <div className="rounded-lg bg-[#0a1628] border border-[#00d4ff]/20 p-3 mb-2 text-white/90 text-sm whitespace-pre-wrap leading-relaxed">
+                  {renderWithHighlightedUrl(editedBody) || (
+                    <span className="text-white/30 italic">Empty draft</span>
+                  )}
+                </div>
+
+                {extractUrl(editedBody) ? (
+                  <div className="flex items-center gap-2 mb-2 text-[11px]">
+                    <span className="text-emerald-400">✓ Sign-up link detected</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(extractUrl(editedBody)!);
+                        toast.success("URL copied");
+                      }}
+                      className="text-[#00d4ff] hover:underline"
+                    >
+                      Copy URL
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mb-2 text-[11px] text-amber-400">
+                    ⚠ No sign-up URL in this draft
+                  </div>
+                )}
+
                 <Textarea
                   value={editedBody}
                   onChange={(e) =>
