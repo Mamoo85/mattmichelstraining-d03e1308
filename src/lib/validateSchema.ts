@@ -12,9 +12,12 @@ export type SchemaCheck = {
   forbidden?: string[];        // columns that must NOT exist (catches stale model)
 };
 
-export type SchemaValidation =
-  | { ok: true }
-  | { ok: false; reason: string; missing: string[]; forbidden: string[] };
+export type SchemaValidation = {
+  ok: boolean;
+  reason: string;
+  missing: string[];
+  forbidden: string[];
+};
 
 const COLUMN_ERROR_RE =
   /column\s+["']?([a-zA-Z0-9_.]+)["']?\s+does not exist|could not find the '([a-zA-Z0-9_]+)' column/i;
