@@ -287,6 +287,7 @@ export async function sendSMS(
         body_hash: bodyHash,
         status: "skipped",
         error_message: "invalid_e164_us_only",
+        metadata: { template_id: templateId },
       })).catch(() => {});
     }
     return { success: false, skipped: true, error: "invalid_e164_us_only" };
