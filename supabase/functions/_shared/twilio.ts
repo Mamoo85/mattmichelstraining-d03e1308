@@ -25,6 +25,24 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 // Admin phone — use env var, fall back to Matt's number
 export const ADMIN_PHONE = Deno.env.get("ADMIN_PHONE") ?? "+13138064952";
 
+/**
+ * Stable hash for dedup + idempotent resend.
+ * Same recipient + body + product → same hash → same conversation slot.
+ * Used by `dwa-resend-sms` to detect "we already sent this exact text in last 24h".
+ */
+export async function computeBodyHash(
+  recipient: string,
+  body: string,
+  product: string | null,
+): Promise<string> {
+  const input = `${recipient}|${product ?? ""}|${body}`;
+  const buf = new TextEncoder().encode(input);
+  const hashBuf = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(hashBuf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 // Products allowed to bypass quiet hours (transactional / inbound-reply only).
 // Marketing, drip, blast, weekly_sms_blast, text_marketing, etc. NEVER bypass.
 const QUIET_HOURS_BYPASS_PRODUCTS = new Set([
