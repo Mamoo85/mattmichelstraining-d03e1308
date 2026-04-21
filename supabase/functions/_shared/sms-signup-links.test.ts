@@ -130,7 +130,12 @@ Deno.test("no signup-promise SMS body is missing its URL", async () => {
     const src = await readSource(rel);
     for (const m of src.matchAll(PROMISE_RE)) {
       const literal = m[0];
-      const hasUrl = URL_RE.test(literal);
+      // Accept either a literal DWA URL OR a template interpolation that
+      // resolves to a URL constant (e.g. ${SELF_SERVE_URL.leads}, ${url},
+      // ${SIGNUP_URLS.contractor_leads}). Both ship a real link in the SMS.
+      const hasUrl =
+        URL_RE.test(literal) ||
+        /\$\{[^}]*(?:url|URL|link|LINK)[^}]*\}/.test(literal);
       // Reset regex global state after .test()
       URL_RE.lastIndex = 0;
 
