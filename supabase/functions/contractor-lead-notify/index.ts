@@ -277,10 +277,10 @@ serve(async (req) => {
           const project = lead.project_type ? ` (${lead.project_type})` : "";
           const baseLine = aiSummary || `LEAD UNLOCKED`;
           const smsBody = pref === "email"
-            ? `${baseLine}\n${lead.name} prefers EMAIL at ${lead.email || "no email given"}${project}. Email them — follow up within 24 hours.`
+            ? `${baseLine}\n${lead.name} prefers EMAIL at ${lead.email || "no email given"}${project}. Email them — follow up within 24 hours.\nReply STOP to opt out.`
             : pref === "text"
-            ? `${baseLine}\n${lead.name} — ${lead.phone}. Prefers TEXT${project}. Reach out now.`
-            : `${baseLine}\n${lead.name} — ${lead.phone}${project}. CALL NOW — exclusive to you.`;
+            ? `${baseLine}\n${lead.name} — ${lead.phone}. Prefers TEXT${project}. Reach out now.\nReply STOP to opt out.`
+            : `${baseLine}\n${lead.name} — ${lead.phone}${project}. CALL NOW — exclusive to you.\nReply STOP to opt out.`;
 
           // Subject prefers AI summary; falls back to existing static copy
           const subject = aiSummary
