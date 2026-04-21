@@ -50,7 +50,7 @@ const RULES: Array<{
   { product: "techalert", weight: 1.0, pattern: /\btech\s*alert\b/i, label: "techalert" },
   { product: "techalert", weight: 1.0, pattern: /\bhire\s*alert\b/i, label: "hire alert" },
   { product: "techalert", weight: 0.8, pattern: /\b(?:need|looking|trying)\s+to\s+hire\b/i, label: "looking to hire" },
-  { product: "techalert", weight: 0.8, pattern: /\bhiring\s+(?:a\s+)?(?:tech|electrician|plumber|hvac|nurse|cna|lpn|rn|tradesman|journeyman|apprentice)/i, label: "hiring a tradesperson" },
+  { product: "techalert", weight: 0.8, pattern: /\b(?:hire|hiring)\s+(?:a\s+|some\s+|more\s+)?(?:techs?|technicians?|electricians?|plumbers?|hvac|nurses?|cnas?|lpns?|rns?|tradesm[ae]n|journeym[ae]n|apprentices?|workers?|guys?|people)\b/i, label: "hire techs" },
   { product: "techalert", weight: 0.7, pattern: /\b(?:find|finding|need)\s+(?:a\s+)?(?:tech|techs|workers?|employees?|staff|help)\b/i, label: "find workers" },
   { product: "techalert", weight: 0.7, pattern: /\blicens(?:ed|ing)\s+(?:tech|electrician|plumber|hvac|tradesperson)/i, label: "licensed talent" },
   { product: "techalert", weight: 0.6, pattern: /\brecruit(?:ing|ment|er)?\b/i, label: "recruit" },
