@@ -344,7 +344,7 @@ export async function sendSMS(
           body_hash: bodyHash,
           status: "skipped",
           error_message: reason,
-          metadata: { local_hour: localHour, tz, bypass_requested: bypassRequested },
+          metadata: { local_hour: localHour, tz, bypass_requested: bypassRequested, template_id: templateId },
         })).catch(() => {});
       }
       return { success: false, skipped: true, error: "quiet_hours" };
