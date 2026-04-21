@@ -230,6 +230,27 @@ serve(async (req) => {
   const criticalFailures = failures.filter(f => f.critical);
   const status = failures.length === 0 ? "pass" : (criticalFailures.length > 0 ? "fail" : "warn");
 
+  // Upsert cron_job_health for every checked cron — gives /dwa-admin → Cron Status its data
+  await Promise.all(results.map(async (r) => {
+    const ok = r.scheduleOk && r.freshnessOk && r.outputOk;
+    const nowIso = new Date().toISOString();
+    try {
+      // Read current to compute consecutive_failures + total_runs
+      const { data: prev } = await sb.from("cron_job_health").select("consecutive_failures, total_runs").eq("jobname", r.cron).maybeSingle();
+      const prevFails = (prev as any)?.consecutive_failures ?? 0;
+      const prevTotal = (prev as any)?.total_runs ?? 0;
+      await sb.from("cron_job_health").upsert({
+        jobname: r.cron,
+        last_success_at: ok ? nowIso : undefined,
+        last_failure_at: ok ? undefined : nowIso,
+        last_error: ok ? null : (r.errors.join("; ") || "unknown"),
+        consecutive_failures: ok ? 0 : prevFails + 1,
+        total_runs: prevTotal + 1,
+        updated_at: nowIso,
+      }, { onConflict: "jobname" });
+    } catch (_) { /* health tracking is non-critical */ }
+  }));
+
   // Insert alert row
   const { data: alertRow } = await sb.from("cron_sentinel_alerts").insert({
     status,
