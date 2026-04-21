@@ -13424,6 +13424,33 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_idempotency_keys: {
+        Row: {
+          body_hash: string | null
+          created_at: string
+          expires_at: string
+          key: string
+          recipient: string | null
+          response: Json
+        }
+        Insert: {
+          body_hash?: string | null
+          created_at?: string
+          expires_at?: string
+          key: string
+          recipient?: string | null
+          response?: Json
+        }
+        Update: {
+          body_hash?: string | null
+          created_at?: string
+          expires_at?: string
+          key?: string
+          recipient?: string | null
+          response?: Json
+        }
+        Relationships: []
+      }
       sms_opt_outs: {
         Row: {
           id: string
@@ -14035,6 +14062,8 @@ export type Database = {
       }
       system_comms_log: {
         Row: {
+          body_full: string | null
+          body_hash: string | null
           body_preview: string | null
           channel: string
           created_at: string
@@ -14047,6 +14076,8 @@ export type Database = {
           status: string
         }
         Insert: {
+          body_full?: string | null
+          body_hash?: string | null
           body_preview?: string | null
           channel?: string
           created_at?: string
@@ -14059,6 +14090,8 @@ export type Database = {
           status?: string
         }
         Update: {
+          body_full?: string | null
+          body_hash?: string | null
           body_preview?: string | null
           channel?: string
           created_at?: string
@@ -16660,6 +16693,7 @@ export type Database = {
         Returns: number
       }
       next_enrich_stage: { Args: { _candidate_id: string }; Returns: string }
+      purge_expired_idempotency_keys: { Args: never; Returns: number }
       queue_depth_snapshot: {
         Args: never
         Returns: {
