@@ -3302,12 +3302,43 @@ serve(async (req) => {
                   state: meta.state || "MI",
                 }),
               }).catch((e) => console.error("[WEBHOOK] draft-ad-campaign failed:", e)),
+              // Fire welcome SMS sequence (msg 0 immediately)
+              meta.contractor_id ? fetch(`${SUPABASE_URL}/functions/v1/contractor-welcome-sequence`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+                body: JSON.stringify({ contractor_id: meta.contractor_id, message_index: 0 }),
+              }).catch((e) => console.error("[WEBHOOK] contractor-welcome-sequence failed:", e)) : Promise.resolve(),
             ]);
           }
           return new Response(JSON.stringify({ received: true }), { status: 200 });
         } catch (e) {
           console.error("[WEBHOOK] contractor_lead_subscription error:", e);
           notifyMatt("⚠️ Contractor lead webhook DB failure", `<p>${String(e)}</p>`).catch(() => {});
+          return new Response(JSON.stringify({ error: String(e) }), { status: 500 });
+        }
+      }
+
+      // ── LEAD BOOST PURCHASE (one-time or recurring) ──────────────────────
+      if (meta.type === "lead_boost_purchase") {
+        try {
+          const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          const boostAmount = Number(meta.boost_amount || 0);
+          const feeAmount = +(boostAmount * 0.20).toFixed(2);
+          const adAmount = +(boostAmount - feeAmount).toFixed(2);
+          await sb.from("contractor_lead_boosts" as any).insert({
+            contractor_id: meta.contractor_id,
+            stripe_charge_id: session.payment_intent || session.subscription || session.id,
+            boost_amount: boostAmount,
+            fee_amount: feeAmount,
+            status: "active",
+          });
+          await notifyMatt(
+            `🚀 Lead Boost purchased — $${boostAmount}${meta.recurring === "true" ? "/mo" : ""}`,
+            `<p><strong>${customerEmail}</strong> bought a $${boostAmount} Lead Boost.<br>Ad spend portion: $${adAmount}<br>Mgmt fee: $${feeAmount}<br>Recurring: ${meta.recurring}<br>Apply to their Google Ads budget.</p>`,
+          ).catch(() => {});
+          return new Response(JSON.stringify({ received: true }), { status: 200 });
+        } catch (e) {
+          console.error("[WEBHOOK] lead_boost_purchase error:", e);
           return new Response(JSON.stringify({ error: String(e) }), { status: 500 });
         }
       }
