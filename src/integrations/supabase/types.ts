@@ -10686,6 +10686,60 @@ export type Database = {
           },
         ]
       }
+      prospect_nudges: {
+        Row: {
+          account_created_at: string | null
+          business: string | null
+          city: string | null
+          clicked_at: string | null
+          created_at: string
+          id: string
+          link_token: string
+          name: string | null
+          notes: string | null
+          paid_at: string | null
+          phone: string
+          profile_completed_at: string | null
+          signup_started_at: string | null
+          status: string
+          trade: string | null
+        }
+        Insert: {
+          account_created_at?: string | null
+          business?: string | null
+          city?: string | null
+          clicked_at?: string | null
+          created_at?: string
+          id?: string
+          link_token?: string
+          name?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          phone: string
+          profile_completed_at?: string | null
+          signup_started_at?: string | null
+          status?: string
+          trade?: string | null
+        }
+        Update: {
+          account_created_at?: string | null
+          business?: string | null
+          city?: string | null
+          clicked_at?: string | null
+          created_at?: string
+          id?: string
+          link_token?: string
+          name?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          phone?: string
+          profile_completed_at?: string | null
+          signup_started_at?: string | null
+          status?: string
+          trade?: string | null
+        }
+        Relationships: []
+      }
       prospect_outreach: {
         Row: {
           business_name: string | null
