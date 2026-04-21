@@ -84,11 +84,11 @@ const CASES: Case[] = [
     expectedProduct: "techalert",
   },
   {
-    name: "techalert: hiring electricians",
+    name: "techalert: hiring electricians (link promised)",
     inbound: "I'm looking to hire an electrician",
     aiDrafts: [
-      "TechAlert pings you when licensed electricians come available.",
       "I'll send you the sign-up link.",
+      "Here's the TechAlert link:",
     ],
     expectUrl: true,
     expectedProduct: "techalert",
