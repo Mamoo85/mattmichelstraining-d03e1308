@@ -69,6 +69,7 @@ const Welcome = lazyRetry(() => import("./pages/Welcome"));
 const Auth = lazyRetry(() => import("./pages/Auth"));
 const Admin = lazyRetry(() => import("./pages/Admin"));
 const DWAAdmin = lazyRetry(() => import("./pages/DWAAdmin"));
+const ProspectRedirect = lazyRetry(() => import("./pages/ProspectRedirect"));
 const Pricing = lazyRetry(() => import("./pages/Pricing"));
 const About = lazyRetry(() => import("./pages/About"));
 const Profile = lazyRetry(() => import("./pages/Profile"));
@@ -803,6 +804,7 @@ const App = () => (
                      <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
                      <Route path="/admin" element={<AgencyAdminRoute><Admin /></AgencyAdminRoute>} />
                      <Route path="/dwa-admin" element={<AgencyAdminRoute><DWAAdmin /></AgencyAdminRoute>} />
+                     <Route path="/r/:token" element={<ProspectRedirect />} />
                      <Route path="/admin/view-user/:userId" element={<ProtectedRoute><AdminViewUser /></ProtectedRoute>} />
                      <Route path="/comms-center" element={<ProtectedRoute><CommunicationsCenter /></ProtectedRoute>} />
                      <Route path="/dashboard" element={<ZoneDashboard />} />
