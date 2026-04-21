@@ -18,7 +18,7 @@ interface Signal {
   predicted_needs: string | null;
   confidence: number | null;
   detected_at: string;
-  source_url: string | null;
+  source_urls: string[] | null;
 }
 
 const GROWTH_TYPES = ["expansion", "rd_grant", "sba_loan", "new_business_entity", "investment", "permit_new"];
@@ -31,12 +31,13 @@ function FilteredSignalList({ types, label }: { types: string[]; label: string }
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("industry_pulse_signals" as any)
-        .select("id, company_name, location, vertical, signal_type, expansion_type, predicted_needs, confidence, detected_at, source_url")
+        .select("id, company_name, location, vertical, signal_type, expansion_type, predicted_needs, confidence, detected_at, source_urls")
         .in("signal_type", types)
         .order("detected_at", { ascending: false })
         .limit(80);
+      if (error) console.error(`[${label}] query error:`, error);
       setSignals(((data as any) || []) as Signal[]);
       setLoading(false);
     })();
@@ -65,8 +66,8 @@ function FilteredSignalList({ types, label }: { types: string[]; label: string }
             </div>
             <div className="text-right shrink-0">
               <div className="text-[10px] text-white/40">{new Date(s.detected_at).toLocaleDateString()}</div>
-              {s.source_url && (
-                <a href={s.source_url} target="_blank" rel="noreferrer" className="text-[#00d4ff] hover:underline text-xs inline-flex items-center gap-1 mt-1">
+              {s.source_urls && s.source_urls[0] && (
+                <a href={s.source_urls[0]} target="_blank" rel="noreferrer" className="text-[#00d4ff] hover:underline text-xs inline-flex items-center gap-1 mt-1">
                   source <ExternalLink className="w-3 h-3" />
                 </a>
               )}

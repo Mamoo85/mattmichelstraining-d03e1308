@@ -23,12 +23,13 @@ export default function DemandThroughputKPIs() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("industry_pulse_signals" as any)
-        .select("signal_type, vertical, confidence, detected_at, status")
+        .select("signal_type, vertical, confidence, detected_at")
         .order("detected_at", { ascending: false })
         .limit(2000);
 
+      if (error) console.error("[DemandThroughputKPIs] query error:", error);
       const rows = (data as any[]) || [];
       const now = Date.now();
       const h24 = now - 24 * 3600_000;
@@ -58,11 +59,7 @@ export default function DemandThroughputKPIs() {
           confCount++;
         }
 
-        if (
-          (r.confidence ?? 0) >= 7 &&
-          t > d30 &&
-          (r.status === "new" || r.status === "ready" || !r.status)
-        ) {
+        if ((r.confidence ?? 0) >= 7 && t > d30) {
           sellable_now++;
         }
       }
