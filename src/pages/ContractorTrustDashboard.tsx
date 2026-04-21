@@ -28,12 +28,6 @@ export default function ContractorTrustDashboard() {
     (async () => {
       try {
         // RLS blocks anon reads of contractor_clients, so we use a token-gated edge function.
-        const { data, error } = await (supabase as any).functions.invoke("contractor-portal-lookup", {
-          body: null,
-          method: "GET",
-          headers: {},
-        });
-        // Fallback: invoke doesn't pass query strings cleanly, so use direct fetch with token.
         const SUPABASE_URL = (import.meta as any).env.VITE_SUPABASE_URL;
         const ANON = (import.meta as any).env.VITE_SUPABASE_PUBLISHABLE_KEY;
         const res = await fetch(`${SUPABASE_URL}/functions/v1/contractor-portal-lookup?token=${encodeURIComponent(token)}`, {
