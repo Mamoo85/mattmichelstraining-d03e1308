@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Radar, Zap, X, Copy, Wand2, ExternalLink, Eye } from "lucide-react";
+import { Loader2, Radar, Zap, X, Copy, Wand2, ExternalLink, Eye, AlertTriangle } from "lucide-react";
 import { RadarExportBar } from "@/components/shared/RadarExportBar";
+import { validateSchema, INDUSTRY_PULSE_SIGNALS_CHECK } from "@/lib/validateSchema";
 
 interface Signal {
   id: string;
@@ -40,16 +41,26 @@ export default function AdminDemandRadar() {
   const [selected, setSelected] = useState<Signal | null>(null);
   const [drafting, setDrafting] = useState(false);
   const [draft, setDraft] = useState<string>("");
+  const [schemaError, setSchemaError] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
+    setSchemaError(null);
     const { data, error } = await supabase
       .from("industry_pulse_signals" as any)
       .select("*")
       .order("detected_at", { ascending: false })
       .limit(100);
-    if (error) toast.error(error.message);
-    else setSignals((data as any) || []);
+    const rows = (data as any[]) || [];
+    const check = validateSchema(rows, error as any, INDUSTRY_PULSE_SIGNALS_CHECK);
+    if (!check.ok) {
+      console.error("[AdminDemandRadar] schema validation failed:", check.reason);
+      setSchemaError(check.reason);
+      toast.error("Data model mismatch — see panel for details");
+      setSignals([]);
+    } else {
+      setSignals(rows as Signal[]);
+    }
     setLoading(false);
   };
 
@@ -195,6 +206,14 @@ export default function AdminDemandRadar() {
       {loading ? (
         <div className="text-white/40 text-sm flex items-center gap-2">
           <Loader2 size={14} className="animate-spin" /> Loading signals…
+        </div>
+      ) : schemaError ? (
+        <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-rose-300 shrink-0 mt-0.5" />
+          <div className="text-sm">
+            <div className="text-rose-200 font-bold mb-1">Data model mismatch</div>
+            <div className="text-white/70 text-xs leading-relaxed">{schemaError}</div>
+          </div>
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-white/40 text-sm bg-[#0f1f35] border border-white/10 rounded-xl p-6 text-center">

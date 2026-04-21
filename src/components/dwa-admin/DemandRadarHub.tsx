@@ -1,10 +1,11 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, ExternalLink } from "lucide-react";
+import { Loader2, ExternalLink, AlertTriangle } from "lucide-react";
 import DemandThroughputKPIs from "./DemandThroughputKPIs";
 import DemandRadarLiveLog from "./DemandRadarLiveLog";
 import WaterfallDiagnostics from "./WaterfallDiagnostics";
+import { validateSchema, INDUSTRY_PULSE_SIGNALS_CHECK } from "@/lib/validateSchema";
 
 const AdminDemandRadar = lazy(() => import("./AdminDemandRadar"));
 
@@ -27,23 +28,40 @@ const PULSE_TYPES = ["hiring", "permit_surge", "school_rfp", "contract_award", "
 function FilteredSignalList({ types, label }: { types: string[]; label: string }) {
   const [signals, setSignals] = useState<Signal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [schemaError, setSchemaError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
+      setSchemaError(null);
       const { data, error } = await supabase
         .from("industry_pulse_signals" as any)
         .select("id, company_name, location, vertical, signal_type, expansion_type, predicted_needs, confidence, detected_at, source_urls")
         .in("signal_type", types)
         .order("detected_at", { ascending: false })
         .limit(80);
-      if (error) console.error(`[${label}] query error:`, error);
-      setSignals(((data as any) || []) as Signal[]);
+      const rows = ((data as any) || []) as Signal[];
+      const check = validateSchema(rows, error as any, INDUSTRY_PULSE_SIGNALS_CHECK);
+      if (!check.ok) {
+        console.error(`[${label}] schema validation failed:`, check.reason);
+        setSchemaError(check.reason);
+      } else {
+        setSignals(rows);
+      }
       setLoading(false);
     })();
   }, [types]);
 
   if (loading) return <div className="flex items-center gap-2 text-white/50 p-6"><Loader2 className="w-4 h-4 animate-spin" /> Loading {label}…</div>;
+  if (schemaError) return (
+    <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-4 flex items-start gap-3">
+      <AlertTriangle className="w-5 h-5 text-rose-300 shrink-0 mt-0.5" />
+      <div className="text-sm">
+        <div className="text-rose-200 font-bold mb-1">Data model mismatch in {label}</div>
+        <div className="text-white/70 text-xs leading-relaxed">{schemaError}</div>
+      </div>
+    </div>
+  );
   if (signals.length === 0) return <div className="text-white/40 text-sm p-6 text-center">No {label} signals found yet. Scanners will populate this view.</div>;
 
   return (
