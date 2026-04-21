@@ -127,6 +127,36 @@ export default function AdminProspectTracker() {
     }
   }
 
+  async function sendNudge(p: Prospect) {
+    const trackedUrl = `https://detroitwebagent.com/r/${p.link_token}`;
+    const body = NUDGE_TEMPLATE(trackedUrl, p.city, p.trade);
+    const confirmMsg = `Send tracked nudge SMS to ${p.phone}?\n\n${body}`;
+    if (!window.confirm(confirmMsg)) return;
+    const { data, error } = await supabase.functions.invoke("dwa-send-sms", {
+      body: { to: p.phone, body, product: "dwa_prospect_nudge" },
+    });
+    if (error || !data?.success) {
+      toast({
+        title: "Send failed",
+        description: error?.message || data?.error || "Unknown error",
+        variant: "destructive",
+      });
+      return;
+    }
+    const { error: upErr } = await supabase
+      .from("prospect_nudges")
+      .update({
+        nudge_sent_at: new Date().toISOString(),
+        nudge_count: (p.nudge_count ?? 0) + 1,
+      })
+      .eq("id", p.id);
+    if (upErr) {
+      toast({ title: "Sent, but log failed", description: upErr.message, variant: "destructive" });
+    } else {
+      toast({ title: "Nudge sent ✓", description: p.phone });
+    }
+  }
+
   async function setStatus(id: string, status: string) {
     const { error } = await supabase.from("prospect_nudges").update({ status }).eq("id", id);
     if (error) {
