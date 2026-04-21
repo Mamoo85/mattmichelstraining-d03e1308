@@ -263,8 +263,35 @@ async function handleReply(fromPhone: string, replyBody: string) {
       let chargeAttempted = false;
       let chargeSucceeded = false;
 
+      // ── FREE BOOST QUOTA CHECK ──────────────────────────────────────────
+      // First N positive replies are free (trust-builder for new contractors).
+      // Atomic increment via select-then-update under quota.
+      let usedFreeQuota = false;
+      const contractorId = (contractor as any)?.id;
+      if (contractorId) {
+        const { data: cRow } = await sb.from("contractor_clients" as any)
+          .select("free_dead_leads_used, free_dead_leads_quota")
+          .eq("id", contractorId).maybeSingle();
+        const used = Number((cRow as any)?.free_dead_leads_used || 0);
+        const quota = Number((cRow as any)?.free_dead_leads_quota || 0);
+        if (used < quota) {
+          await sb.from("contractor_clients" as any)
+            .update({ free_dead_leads_used: used + 1 })
+            .eq("id", contractorId);
+          await sb.from("dead_lead_charges" as any).insert({
+            contact_id: contact.id,
+            contractor_id: contractorId,
+            amount_cents: 0,
+            stripe_payment_intent_id: null,
+            status: "free_trial",
+            error_message: `Free boost ${used + 1}/${quota}`,
+          });
+          usedFreeQuota = true;
+        }
+      }
+
       // Attempt charge BEFORE revealing contact info — failed charge = free lead otherwise
-      if (!isFreeTrial && billingActive && stripeCustomerId && paymentMethodId && STRIPE_SECRET_KEY) {
+      if (!usedFreeQuota && !isFreeTrial && billingActive && stripeCustomerId && paymentMethodId && STRIPE_SECRET_KEY) {
         chargeAttempted = true;
         try {
           await chargeContractor(sb, contact.id, campaign.contractor_id, stripeCustomerId, paymentMethodId, contact.name || fromPhone);
@@ -284,7 +311,7 @@ async function handleReply(fromPhone: string, replyBody: string) {
       }
 
       // Update DB status — only mark contractor_notified if we're actually notifying them
-      const notifying = chargeSucceeded || isFreeTrial || !chargeAttempted;
+      const notifying = chargeSucceeded || isFreeTrial || usedFreeQuota || !chargeAttempted;
       await sb.from("dead_lead_contacts" as any).update({
         status: "replied_positive",
         reply_text: replyBody,
@@ -293,7 +320,9 @@ async function handleReply(fromPhone: string, replyBody: string) {
 
       // Send lead info SMS only if charge succeeded, free trial, or no billing configured
       if (notifying && contractor?.phone) {
-        const billingNote = isFreeTrial
+        const billingNote = usedFreeQuota
+          ? "(FREE — Boost gift, no charge.)"
+          : isFreeTrial
           ? "(Free trial lead — set up billing to keep getting notified.)"
           : chargeSucceeded ? "($50 charged automatically.)" : "($50 added to your tab.)";
         await sendSMS(

@@ -2573,6 +2573,91 @@ export type Database = {
         }
         Relationships: []
       }
+      contractor_ad_budget_log: {
+        Row: {
+          agent: string
+          contractor_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          new_budget: number
+          old_budget: number | null
+          reason: string
+        }
+        Insert: {
+          agent?: string
+          contractor_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          new_budget: number
+          old_budget?: number | null
+          reason: string
+        }
+        Update: {
+          agent?: string
+          contractor_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          new_budget?: number
+          old_budget?: number | null
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contractor_ad_budget_log_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contractor_ad_spend: {
+        Row: {
+          contractor_id: string
+          created_at: string
+          id: string
+          leads_delivered: number
+          month: string
+          notes: string | null
+          recommended_budget_next_30d: number | null
+          spend_usd: number
+          updated_at: string
+        }
+        Insert: {
+          contractor_id: string
+          created_at?: string
+          id?: string
+          leads_delivered?: number
+          month: string
+          notes?: string | null
+          recommended_budget_next_30d?: number | null
+          spend_usd?: number
+          updated_at?: string
+        }
+        Update: {
+          contractor_id?: string
+          created_at?: string
+          id?: string
+          leads_delivered?: number
+          month?: string
+          notes?: string | null
+          recommended_budget_next_30d?: number | null
+          spend_usd?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contractor_ad_spend_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contractor_clients: {
         Row: {
           active: boolean | null
@@ -2582,6 +2667,8 @@ export type Database = {
           created_at: string | null
           dead_lead_billing_active: boolean | null
           email: string
+          free_dead_leads_quota: number
+          free_dead_leads_used: number
           google_review_link: string | null
           id: string
           industry: string | null
@@ -2608,6 +2695,8 @@ export type Database = {
           created_at?: string | null
           dead_lead_billing_active?: boolean | null
           email: string
+          free_dead_leads_quota?: number
+          free_dead_leads_used?: number
           google_review_link?: string | null
           id?: string
           industry?: string | null
@@ -2634,6 +2723,8 @@ export type Database = {
           created_at?: string | null
           dead_lead_billing_active?: boolean | null
           email?: string
+          free_dead_leads_quota?: number
+          free_dead_leads_used?: number
           google_review_link?: string | null
           id?: string
           industry?: string | null
@@ -2653,6 +2744,59 @@ export type Database = {
           trade?: string | null
         }
         Relationships: []
+      }
+      contractor_lead_boosts: {
+        Row: {
+          activated_at: string | null
+          boost_amount: number
+          boost_type: string
+          contractor_id: string
+          created_at: string
+          fee_amount: number
+          id: string
+          net_ad_spend: number
+          status: string
+          stripe_charge_id: string | null
+          stripe_session_id: string | null
+          stripe_subscription_id: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          boost_amount: number
+          boost_type?: string
+          contractor_id: string
+          created_at?: string
+          fee_amount: number
+          id?: string
+          net_ad_spend: number
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          boost_amount?: number
+          boost_type?: string
+          contractor_id?: string
+          created_at?: string
+          fee_amount?: number
+          id?: string
+          net_ad_spend?: number
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contractor_lead_boosts_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contractor_lead_purchases: {
         Row: {

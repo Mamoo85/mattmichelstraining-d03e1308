@@ -49,6 +49,9 @@ const AdminErrorLogs = lazy(() => import("@/components/dwa-admin/AdminErrorLogs"
 
 const AdminCoverageMap = lazy(() => import("@/components/admin/AdminCoverageMap"));
 const AdminCRMDashboard = lazy(() => import("@/components/admin/AdminCRMDashboard"));
+const AdminContractorOnboarding = lazy(() => import("@/components/dwa-admin/AdminContractorOnboarding"));
+const AdminAdSpendTracker = lazy(() => import("@/components/dwa-admin/AdminAdSpendTracker"));
+const AdminAdOptimizerLog = lazy(() => import("@/components/dwa-admin/AdminAdOptimizerLog"));
 
 type Tab =
   | "dwa-overview" | "revenue" | "agent-toolkit"
@@ -61,7 +64,8 @@ type Tab =
   | "agency-outreach" | "demand-radar" | "supplier-outreach" | "hvb"
   | "medicare-intel" | "industrial-intel" | "techalert-prospects"
   | "lara-health" | "growth-signals" | "trojan-log" | "coverage-map" | "crm-dashboard"
-  | "sms-inbox" | "ad-launcher" | "blocklist" | "error-logs";
+  | "sms-inbox" | "ad-launcher" | "blocklist" | "error-logs"
+  | "contractor-onboarding" | "ad-spend" | "ad-optimizer";
 
 const GROUPS: SidebarGroup[] = [
   {
@@ -95,6 +99,9 @@ const GROUPS: SidebarGroup[] = [
     items: [
       { id: "dead-leads",       label: "♻️ Dead Leads" },
       { id: "contractor-leads", label: "🏗️ Contractor Leads" },
+      { id: "contractor-onboarding", label: "🤝 New Contractor Setup" },
+      { id: "ad-spend",         label: "💰 Ad Spend Tracker" },
+      { id: "ad-optimizer",     label: "🤖 Ad Optimizer Log" },
       { id: "fielddesk",        label: "🛠️ FieldDesk Clients" },
       { id: "clients",          label: "👥 All Clients" },
       { id: "crm-dashboard",    label: "📇 CRM Dashboard" },
@@ -209,6 +216,9 @@ export default function DWAAdmin() {
           
           {activeTab === "coverage-map"     && <Suspense fallback={lazyFallback("coverage map")}><AdminCoverageMap /></Suspense>}
           {activeTab === "crm-dashboard"    && <Suspense fallback={lazyFallback("CRM dashboard")}><AdminCRMDashboard /></Suspense>}
+          {activeTab === "contractor-onboarding" && <Suspense fallback={lazyFallback("contractor onboarding")}><AdminContractorOnboarding /></Suspense>}
+          {activeTab === "ad-spend"         && <Suspense fallback={lazyFallback("ad spend")}><AdminAdSpendTracker /></Suspense>}
+          {activeTab === "ad-optimizer"     && <Suspense fallback={lazyFallback("ad optimizer")}><AdminAdOptimizerLog /></Suspense>}
 
           {activeTab === "field-stats" && (
             <div className="space-y-6">

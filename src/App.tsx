@@ -138,6 +138,8 @@ const MyContractorLeads = lazyRetry(() => import("./pages/MyContractorLeads"));
 const DeadLeadStats = lazyRetry(() => import("./pages/DeadLeadStats"));
 const MyTechAlert = lazyRetry(() => import("./pages/MyTechAlert"));
 const DeadLeadIntake = lazyRetry(() => import("./pages/DeadLeadIntake"));
+const ContractorQuoteLanding = lazyRetry(() => import("./pages/ContractorQuoteLanding"));
+const ContractorTrustDashboard = lazyRetry(() => import("./pages/ContractorTrustDashboard"));
 const TheWire = lazyRetry(() => import("./pages/TheWire"));
 const PostcardLanding = lazyRetry(() => import("./pages/PostcardLanding"));
 const GetQuote = lazyRetry(() => import("./pages/GetQuote"));
@@ -583,6 +585,8 @@ const App = () => (
                     <Route path="/dead-lead-stats" element={<DeadLeadStats />} />
                     <Route path="/my-techalert" element={<Navigate to="/talent-radar/dashboard" replace />} />
                     <Route path="/dead-lead-intake" element={<DeadLeadIntake />} />
+                    <Route path="/quote/:trade/:city" element={<ContractorQuoteLanding />} />
+                    <Route path="/contractor-portal/:token" element={<ContractorTrustDashboard />} />
                     <Route path="/postcard" element={<PostcardLanding />} />
                     <Route path="/the-wire" element={<TheWire />} />
                     <Route path="/get-quote/:trade/:city" element={<GetQuote />} />
