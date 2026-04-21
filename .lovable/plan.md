@@ -1,95 +1,97 @@
 
 
-# Livonia Onboarding — Premium Offer + Dashboard Upgrade
+## Goal
 
-## What changes in the SMS to the electrician
-- **No 7-day free trial** (we're spending on ads — pay starts day 1)
-- **Cancel anytime + 30-day money-back guarantee** if zero leads delivered
-- **Bonus stack** included free with the $399/mo:
-  - 🎁 Missed Call Text-Back ($99/mo value) — never lose another caller
-  - 🎁 Review Monitor ($25/mo value) — Google review alerts + reply drafts
-  - 🎁 After-Job Drip ($29/mo value) — auto follow-up on completed jobs
-  - 🎁 Lead dashboard with 1-tap call/hire/dispute tracking
-- **Add-on shop in dashboard** at heavy bundle discount (30% off all DWA add-ons for active lead-network clients)
-- **Honesty line**: "The dashboard is brand new — we're shipping upgrades almost daily. Bare with us as it gets better."
+Make sure +17346207178 / our new Livonia electrician gets removed from all cold outreach, and add a 90-day grace period rule so we never double-pitch the same business across any of our outreach engines.
 
-## Dashboard changes (MyContractorLeads.tsx)
+## What's broken today
 
-### 1. Add "🎁 Included Free" strip at top
-Shows the 3 bonus services bundled in (Missed Call, Reviews, After-Job Drip) with a one-click "Activate" link that pre-fills their info into each product's $0 internal checkout (no separate card capture — flagged as "bundled" in DB).
+1. **No "is this already a paying client" check** in `contractor-prospector`, `dead-lead-outreach-drip`, `tom-autonomous`, or any cold outreach. A signup in `contractor_clients` / `field_crm_clients` / `hire_alert_clients` does NOT auto-suppress that business or phone from future cold pitches.
+2. **Dedupe is weak** — `contractor-prospector` only checks `outreach_leads` by `business_name + city`. If the same business appears under a slightly different name, or via a different engine (Tom, dead-lead drip), it gets pitched again.
+3. **No 90-day cooldown** — `outreach_cooldowns` exists but is only used by `dwa-closer`. It has no `expires_at` and isn't checked by any other prospector.
+4. **The new electrician is not yet protected.** He hasn't paid (no `contractor_clients` row yet), so even after he pays, today's code would still cold-email him next week if his business shows up in a Google Places scan.
 
-### 2. Add "🛒 Upgrade Shop" section (collapsible)
-Card grid with bundle-discounted DWA add-ons:
+## The fix — 3 parts
 
-| Add-on | Standalone | Bundled (30% off) |
-|---|---|---|
-| TechAlert (hiring monitor) | $149/mo | $104/mo |
-| FieldDesk (dispatch CRM) | $199/mo | $139/mo |
-| SiteRadar (visitor intel) | $49/mo | $34/mo |
-| Seasonal Promo Blaster | $29/mo | $20/mo |
-| Estimate Follow-Up Drip | $39/mo | $27/mo |
-| Weekly SMS Blast | $19/mo | $13/mo |
+### Part 1: Suppress the new electrician immediately
 
-Each card → "Add to my plan" button that fires the existing `create-*-checkout` edge function with a `?bundle_discount=lead_network` flag and prefilled email.
+- Add his phone (`+17346207178`) to `sms_opt_outs` with `source = 'manual_client_protection'`.
+- If/when we learn his email + business name, add to `suppressed_emails` + insert into a new `outreach_blocklist` table (below).
+- Texts already sent stay; he just won't get any future cold/drip outreach.
 
-### 3. Add "🚧 New Dashboard — Shipping Upgrades Daily" banner
-Subtle amber banner under the header. Sets honest expectations + builds goodwill.
+### Part 2: Build a unified `outreach_blocklist` table (90-day grace)
 
-### 4. Fix dashboard test
-Before sending SMS, hit the live `contractor-leads-dashboard` endpoint with the electrician's `roi_token` (created on Stripe checkout success) and confirm:
-- Loads without error
-- Shows his business name + Livonia + Electrical
-- Stats display (will be 0/0 — that's correct for new account)
-- Filter buttons render
-- Empty state copy reads correctly
+New table — one row per business/phone/email/domain we should not cold-contact:
 
-If anything fails, fix before sending.
+```text
+outreach_blocklist
+├── id uuid pk
+├── business_name text (lowercase, trimmed)
+├── phone text (E.164)
+├── email text (lowercase)
+├── domain text (lowercase, no www)
+├── reason text  -- 'paying_client' | 'manual_client_protection' | 'replied' | 'opted_out' | 'recent_outreach'
+├── source_table text  -- e.g. 'contractor_clients', 'hire_alert_clients'
+├── blocked_until timestamptz  -- NULL = forever, else 90 days from now
+└── created_at timestamptz default now()
+```
 
-## Backend changes
+Indexes on `phone`, `email`, `domain`, `lower(business_name)`.
 
-### `create-contractor-checkout/index.ts`
-- Remove `subscription_data: { trial_period_days: 7 }` (line 60)
-- Update product description to mention bonus stack:
-  > "Exclusive {trade} territory in {city}. Includes free Missed Call Text-Back ($99/mo), Review Monitor ($25/mo), After-Job Drip ($29/mo). Cancel anytime. 30-day money-back guarantee if zero leads delivered."
-- Keep $399/mo pricing
-
-### `stripe-webhook` `contractor_lead_subscription` handler
-- On successful checkout, **auto-provision** the 3 free add-ons:
-  - Insert row into `missed_call_clients` with `bundled_from = 'contractor_leads'`, `business_phone = contractor.phone`, `business_name`
-  - Insert row into `review_monitor_clients` (bundled flag)
-  - Insert row into `afterjob_drip_clients` (bundled flag)
-- Each gets `monthly_price = 0` so they don't bill separately
-- Welcome email lists all 4 things they got + dashboard link
-
-### Migration: `bundled_from` columns
-Add nullable `bundled_from text` to:
+**Auto-population via DB triggers** — on insert into any of these tables, write a `forever`-block row (no expiry, reason `paying_client`):
+- `contractor_clients`
+- `field_crm_clients`
+- `hire_alert_clients`
 - `missed_call_clients`
-- `review_monitor_clients`
-- `afterjob_drip_clients`
+- All `*_clients` tables for paying products (one trigger function reused).
 
-Allows tracking which freebies came from a lead-network sub. If they cancel the lead sub, we can downgrade or notify (later — V1 just leaves them active as goodwill).
+**Auto-population from outreach itself** — every time `contractor-prospector`, `tom-autonomous`, `dead-lead-outreach-drip`, `dwa-closer`, `pipeline-batch-drip` sends a cold message, also upsert into `outreach_blocklist` with `reason='recent_outreach'` and `blocked_until = now() + 90 days`. This is the 90-day grace period.
 
-### `contractor-leads-dashboard/index.ts`
-Extend the GET response to include:
-- `bundled_services: { missed_call: bool, reviews: bool, afterjob: bool }` — checks the 3 client tables for matching email
-- `available_upgrades: [...]` — static list of add-ons with bundled price
+### Part 3: Add a shared `isBlocked()` helper and call it everywhere
 
-## SMS draft for Livonia (after all of above)
+New file: `supabase/functions/_shared/outreach-blocklist.ts`
 
-> Locked in 1 sec. Livonia electrical leads = $399/mo flat — no setup fee, no contract, cancel anytime. **30-day refund if you don't get a single lead.** Plus you get free: Missed Call Text-Back ($99 value), Review Monitor ($25), After-Job Follow-Up ($29). Total bundled value $552/mo, you pay $399. Card link: [Stripe checkout]. Once paid, dashboard link comes via text + email — track every lead, mark hires, request refund on junk leads in 1 tap. Dashboard is brand new so bare with us, shipping updates daily. — Matt, Detroit Web Agency
+```text
+isBlocked(sb, { phone?, email?, business_name?, domain? }): Promise<{blocked: boolean, reason?: string}>
+recordOutreach(sb, { ...identifiers, agent }): write 90-day block
+```
 
-## Order of operations after approval
-1. Build migration + edge function changes + UI
-2. Test the dashboard with a real fake `roi_token` (insert + GET + verify response)
-3. Text Matt the final SMS draft to approve
-4. On Matt's "A" → send to electrician
-5. Update memory: `mem://business/contractor-leads-pricing` (no trial, 30-day guarantee, bundled stack)
+Wire `isBlocked()` into the front of every outreach loop:
+- `contractor-prospector` — before sending each pitch
+- `tom-autonomous` — before queueing a draft
+- `dead-lead-outreach-drip` — before D4/D8 follow-ups (so paying clients don't get follow-ups to the original cold pitch)
+- `dwa-closer` — replace its current 7-day `outreach_cooldowns` check with the unified 90-day one
+- `pipeline-batch-drip` — before each batch send
 
-## Files changed
-- `supabase/functions/create-contractor-checkout/index.ts` — remove trial, update copy
-- `supabase/functions/stripe-webhook/index.ts` — auto-provision 3 free add-ons in `contractor_lead_subscription` handler
-- `supabase/functions/contractor-leads-dashboard/index.ts` — return bundled + upgrade data
-- `src/pages/MyContractorLeads.tsx` — add "Included Free" strip, "Upgrade Shop" section, "Shipping Upgrades Daily" banner
-- New migration: `bundled_from` columns on 3 client tables
-- `mem://business/contractor-leads-pricing` — update pricing rules
+Also keep the existing `sms_opt_outs` and `suppressed_emails` checks — `_shared/twilio.ts` and email senders already honor those.
+
+### Part 4: Backfill
+
+One-time migration step:
+- Insert a `forever` block row for every existing record in `contractor_clients`, `field_crm_clients`, `hire_alert_clients`, `missed_call_clients`, etc.
+- Insert a 90-day block row for every email in `prospect_email_log` / `system_comms_log` sent in the last 90 days.
+
+This guarantees no current client or recently-contacted prospect gets re-pitched.
+
+## What the user will see
+
+- Dashboard: a new "🛡️ Outreach Blocklist" card in DWA Admin showing total blocked, expiring soon, and reasons breakdown.
+- Daily prospector logs will show a `blocked_by_grace_period` count alongside the existing `skipped` count.
+- Zero risk of cold-pitching the new Livonia electrician — both his phone (immediate) and his business+domain (the moment Stripe webhook fires `contractor_lead_subscription`) will be permanently blocked.
+
+## Files touched
+
+- `supabase/migrations/<new>.sql` — `outreach_blocklist` table + indexes + triggers on 5–8 client tables + backfill
+- `supabase/functions/_shared/outreach-blocklist.ts` — new helper
+- `supabase/functions/contractor-prospector/index.ts` — add `isBlocked()` + `recordOutreach()`
+- `supabase/functions/tom-autonomous/index.ts` — same
+- `supabase/functions/dead-lead-outreach-drip/index.ts` — same
+- `supabase/functions/dwa-closer/index.ts` — replace old cooldown logic
+- `supabase/functions/pipeline-batch-drip/index.ts` — same
+- `src/components/dwa-admin/AdminOutreachBlocklist.tsx` — new admin tab
+- `src/pages/DWAAdmin.tsx` — register tab
+
+## Immediate action (independent of full build)
+
+Even before approving the full plan, I'll insert the electrician's phone into `sms_opt_outs` so today's drips can't touch him.
 
