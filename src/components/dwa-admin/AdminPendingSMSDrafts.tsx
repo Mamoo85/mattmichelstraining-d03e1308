@@ -25,6 +25,35 @@ const formatPhone = (e164: string) => {
   return m ? `(${m[1]}) ${m[2]}-${m[3]}` : e164;
 };
 
+const URL_REGEX = /(https?:\/\/[^\s]+)/gi;
+
+const renderWithHighlightedUrl = (body: string) => {
+  const parts = body.split(URL_REGEX);
+  return parts.map((part, i) => {
+    if (URL_REGEX.test(part)) {
+      // reset regex state (test() is stateful with /g)
+      URL_REGEX.lastIndex = 0;
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-block px-1.5 py-0.5 mx-0.5 rounded bg-[#00d4ff]/20 text-[#00d4ff] font-semibold border border-[#00d4ff]/40 hover:bg-[#00d4ff]/30 break-all"
+        >
+          🔗 {part}
+        </a>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+};
+
+const extractUrl = (body: string): string | null => {
+  const m = body.match(/https?:\/\/[^\s]+/i);
+  return m ? m[0] : null;
+};
+
 const timeAgo = (iso: string) => {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
   if (diff < 60) return `${Math.floor(diff)}s ago`;
