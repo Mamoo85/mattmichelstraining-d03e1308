@@ -8,6 +8,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
+import { renderTemplate } from "../_shared/sms-templates.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
@@ -76,15 +77,36 @@ serve(async (req) => {
       }
     }
 
-    // 3. Parse + validate body
-    const { to, body } = await req.json() as { to?: string; body?: string };
-    if (!to || !body) {
-      return json(400, { error: "Missing 'to' or 'body'" });
+    // 3. Parse + validate body — supports either:
+    //    a) { to, body }                       — raw mode (back-compat)
+    //    b) { to, template_id, vars }          — registry render (byte-identical)
+    const payload = await req.json() as {
+      to?: string;
+      body?: string;
+      template_id?: string;
+      vars?: Record<string, string>;
+      product?: string;
+    };
+
+    if (!payload.to) return json(400, { error: "Missing 'to'" });
+    const toE164 = normalizeUS(payload.to);
+    if (!toE164) return json(400, { error: `Invalid US phone number: ${payload.to}` });
+
+    let body = payload.body ?? "";
+    let product = payload.product ?? "dwa_admin_reply";
+
+    if (payload.template_id) {
+      try {
+        const rendered = renderTemplate(payload.template_id, payload.vars ?? {});
+        body = rendered.body;        // server-rendered always wins over client body
+        product = rendered.product;  // template's product slug overrides
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        return json(400, { error: `Template render failed: ${msg}` });
+      }
     }
-    const toE164 = normalizeUS(to);
-    if (!toE164) {
-      return json(400, { error: `Invalid US phone number: ${to}` });
-    }
+
+    if (!body) return json(400, { error: "Missing 'body' (or invalid template_id)" });
     if (body.length > 8000) {
       return json(400, { error: "Message exceeds 8000 chars (too long even split)" });
     }
@@ -118,7 +140,7 @@ serve(async (req) => {
         toE164,
         TWILIO_PHONE_NUMBER,
         prefix + chunks[i],
-        "dwa_admin_reply",
+        product,
         false,
         { bypassQuietHours: true }
       );
@@ -135,7 +157,7 @@ serve(async (req) => {
       if (i < chunks.length - 1) await new Promise((r) => setTimeout(r, 400));
     }
 
-    return json(200, { success: true, sids, chunks: total });
+    return json(200, { success: true, sids, chunks: total, product, template_id: payload.template_id ?? null });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[dwa-send-sms] error:", msg);
