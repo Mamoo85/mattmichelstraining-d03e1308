@@ -88,8 +88,8 @@ Deno.test("ambiguous: bare 'crm' (overlaps fielddesk + general)", () => {
 
 // --- Tied-product detection ---
 
-Deno.test("tie: 'I need leads and want to hire techs' flags ambiguous tie", () => {
-  const r = classifySignupProduct("I need leads and want to hire techs");
+Deno.test("tie: 'hire techs and dispatch them' flags ambiguous tie", () => {
+  const r = classifySignupProduct("hire techs and dispatch them");
   assert(r.ambiguous);
   assert(
     (r.tiedWith && r.tiedWith.length > 0) || r.confidence < 0.45,

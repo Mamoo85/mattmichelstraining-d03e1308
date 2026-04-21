@@ -74,6 +74,7 @@ const RULES: Array<{
   // --- Missed Call Catch ---
   { product: "missed_call", weight: 1.0, pattern: /\bmissed[\s-]?call(?:s)?\b/i, label: "missed calls" },
   { product: "missed_call", weight: 1.0, pattern: /\bmissed\s+call\s+(?:catch|text\s*back)\b/i, label: "missed call catch" },
+  { product: "missed_call", weight: 0.9, pattern: /\b(?:miss(?:ing|ed)?|losing)\s+(?:a\s+lot\s+of\s+)?calls?\b/i, label: "missing calls" },
   { product: "missed_call", weight: 0.8, pattern: /\b(?:auto|automatic)[\s-]?text(?:ing|back)?\b/i, label: "auto text-back" },
   { product: "missed_call", weight: 0.7, pattern: /\btext\s*back\b/i, label: "text back" },
   { product: "missed_call", weight: 0.6, pattern: /\bcalls?\s+(?:i|we)\s+miss\b/i, label: "calls I miss" },
