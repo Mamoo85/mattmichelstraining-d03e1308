@@ -12375,6 +12375,48 @@ export type Database = {
         }
         Relationships: []
       }
+      schema_validation_failures: {
+        Row: {
+          component: string
+          detected_at: string
+          forbidden: string[] | null
+          id: string
+          missing: string[] | null
+          raw_error: string | null
+          reason: string
+          route: string | null
+          select_fields: string | null
+          table_name: string
+          user_agent: string | null
+        }
+        Insert: {
+          component: string
+          detected_at?: string
+          forbidden?: string[] | null
+          id?: string
+          missing?: string[] | null
+          raw_error?: string | null
+          reason: string
+          route?: string | null
+          select_fields?: string | null
+          table_name: string
+          user_agent?: string | null
+        }
+        Update: {
+          component?: string
+          detected_at?: string
+          forbidden?: string[] | null
+          id?: string
+          missing?: string[] | null
+          raw_error?: string | null
+          reason?: string
+          route?: string | null
+          select_fields?: string | null
+          table_name?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       scrape_errors: {
         Row: {
           created_at: string
