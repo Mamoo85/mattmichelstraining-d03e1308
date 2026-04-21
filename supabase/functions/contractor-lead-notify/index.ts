@@ -344,7 +344,7 @@ serve(async (req) => {
         if (contractor.phone) {
           // Build checkout URL — they tap it to claim for $50
           const claimUrl = `${SITE_URL}/claim-lead?lead_id=${lead.id}&contractor_id=${contractor.id}&email=${encodeURIComponent(contractor.email || "")}`;
-          const smsBody = `🚨 HOT LEAD in ${site?.city || "Metro Detroit"}: ${lead.project_type || site?.trade || "service request"}.\nEXCLUSIVE — first contractor to claim it gets it.\n\n⚡ Reply CLAIM to buy instantly ($50) or tap:\n${claimUrl}`;
+          const smsBody = `🚨 HOT LEAD in ${site?.city || "Metro Detroit"}: ${lead.project_type || site?.trade || "service request"}.\nEXCLUSIVE — first contractor to claim it gets it.\n\n⚡ Reply CLAIM to buy instantly ($50) or tap:\n${claimUrl}\n\nReply STOP to opt out.`;
           await sendSMS(contractor.phone, TWILIO_PHONE, smsBody, "contractor_leads");
         }
       }
