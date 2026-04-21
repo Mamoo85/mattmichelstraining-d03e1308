@@ -15,21 +15,29 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 
+// Canonical sign-up URLs — keep in sync with App.tsx routes
+const SIGNUP_URLS = {
+  contractor_leads: "https://detroitwebagent.com/contractor-leads",
+  techalert: "https://detroitwebagent.com/hire-alert",
+  fielddesk: "https://detroitwebagent.com/field-service",
+  missed_call: "https://detroitwebagent.com/missed-call-catch",
+};
+
 const SYSTEM_PROMPT = `You are drafting an SMS reply on behalf of Matt Michels, owner of Detroit Web Agency (DWA).
 Tone: warm, direct, blue-collar friendly. No corporate-speak. No "I hope this finds you well."
 Length: 1–2 short sentences MAX. Under 320 characters. SMS, not email.
 
 DWA product context (use only if the contractor asks):
-- Contractor Leads: $399/mo flat. Exclusive territory (one contractor per trade per city). No per-lead fees, no contracts. Cancel anytime.
-- TechAlert: $149/mo. Hiring monitor — alerts when licensed tradespeople become available.
-- FieldDesk: $199/mo. Field service CRM (dispatch, mobile tech app, GPS).
-- Missed Call Catch: $99/mo. Auto-texts callers you missed.
+- Contractor Leads (PPL): $399/mo flat. Exclusive territory (one contractor per trade per city). No per-lead fees, no contracts. Cancel anytime. Sign up: ${SIGNUP_URLS.contractor_leads}
+- TechAlert: $149/mo. Hiring monitor — alerts when licensed tradespeople become available. Sign up: ${SIGNUP_URLS.techalert}
+- FieldDesk: $199/mo. Field service CRM (dispatch, mobile tech app, GPS). Sign up: ${SIGNUP_URLS.fielddesk}
+- Missed Call Catch: $99/mo. Auto-texts callers you missed. Sign up: ${SIGNUP_URLS.missed_call}
 - Demo / call: (313) 992-1219.
 
 Rules:
 - Never invent prices, terms, or promises.
 - If they ask "how does it work" → explain in plain English: pick trade + city, get instant SMS when a homeowner requests a quote.
-- If they want to sign up → offer to send the link or jump on a 5-min call.
+- If they want to sign up, want a link, ask "where do I sign up", "send me the link", "how do I get started", etc. → INCLUDE THE FULL SIGN-UP URL in the reply. Never say "I'll send the link" without pasting it. Default to the Contractor Leads URL unless they clearly asked about a different product.
 - If unclear what they want → ask one short clarifying question.
 - Never say "AI" or "as an AI." Write as Matt.
 - No emojis unless the contractor uses them first.`;
@@ -125,7 +133,31 @@ Draft Matt's next reply. 1–2 short sentences. SMS only.`;
     }
 
     const aiData = await aiRes.json();
-    const draft = (aiData?.choices?.[0]?.message?.content || "").trim();
+    let draft = (aiData?.choices?.[0]?.message?.content || "").trim();
+
+    // Deterministic safety net: if the contractor's latest inbound asked for a sign-up
+    // link (or the draft promises one) but no URL is present, force-append the right URL.
+    const latestInbound = [...matches].reverse().find((r: any) => {
+      const meta = (r.metadata || {}) as Record<string, unknown>;
+      return r.status === "inbound" || meta.direction === "inbound" || r.product === "inbound";
+    });
+    const inboundText = ((latestInbound as any)?.body_preview || "").toLowerCase();
+    const draftLower = draft.toLowerCase();
+
+    const wantsLink =
+      /\b(sign\s*up|signup|sign me up|link|get started|how do i (start|join|sign)|where do i (sign|start)|enroll|register|join)\b/.test(inboundText) ||
+      /\b(send (you )?(the|a) link|i'?ll send|here'?s the link|sign[- ]?up link)\b/.test(draftLower);
+
+    const hasUrl = /https?:\/\//i.test(draft);
+
+    if (wantsLink && !hasUrl) {
+      // Pick the right product URL based on inbound keywords; default to contractor leads.
+      let url = SIGNUP_URLS.contractor_leads;
+      if (/\btech\s*alert|hiring|hire\b/.test(inboundText)) url = SIGNUP_URLS.techalert;
+      else if (/\bfield\s*desk|dispatch|crm\b/.test(inboundText)) url = SIGNUP_URLS.fielddesk;
+      else if (/\bmissed\s*call\b/.test(inboundText)) url = SIGNUP_URLS.missed_call;
+      draft = `${draft} ${url}`.trim();
+    }
 
     return new Response(JSON.stringify({ draft, transcript_lines: matches.length }), {
       headers: { ...CORS, "Content-Type": "application/json" },
