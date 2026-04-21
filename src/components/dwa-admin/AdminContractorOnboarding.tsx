@@ -13,6 +13,7 @@ interface Contractor {
   roi_token: string | null;
   free_dead_leads_quota: number;
   created_at: string;
+  stripe_customer_id: string | null;
 }
 
 export default function AdminContractorOnboarding() {
