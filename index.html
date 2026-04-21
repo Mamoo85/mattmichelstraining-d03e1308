@@ -181,13 +181,43 @@
       <script>
         (function(){
           var h=window.location.hostname;
+          var p=window.location.pathname||'/';
           window.__isDWA=(h==='detroitwebagent.com'||h==='www.detroitwebagent.com');
-          // Kill PWA install prompt on Detroit Web Agency domain — it's a B2B site, not an installable app
-          if(window.__isDWA){
-            // Remove manifest link so browser never offers "Install M² Training"
+
+          // Multi-app manifest selector — same codebase, different installable PWAs by URL.
+          // Each tool gets its own icon, name, and start_url on the home screen.
+          var manifestUrl=null, themeColor=null, appTitle=null;
+          if(p.indexOf('/dwa-admin')===0){
+            manifestUrl='/manifest-dwa-admin.webmanifest';
+            themeColor='#0a1628';
+            appTitle='DWA Admin';
+          } else if(p.indexOf('/field-service')===0){
+            manifestUrl='/manifest-fielddesk.webmanifest';
+            themeColor='#ea580c';
+            appTitle='FieldDesk';
+          } else if(p.indexOf('/my-techalert')===0||p.indexOf('/my-siteradar')===0||p.indexOf('/my-missed-call')===0||p.indexOf('/my-contractor-leads')===0||p.indexOf('/my-industry-pulse')===0){
+            manifestUrl='/manifest-dwa-client.webmanifest';
+            themeColor='#0a1628';
+            appTitle='DWA Client';
+          }
+
+          if(manifestUrl){
+            var existing=document.querySelector('link[rel="manifest"]');
+            if(existing)existing.parentNode.removeChild(existing);
+            var link=document.createElement('link');
+            link.rel='manifest';
+            link.href=manifestUrl;
+            document.head.appendChild(link);
+            var tc=document.querySelector('meta[name="theme-color"]');
+            if(tc)tc.setAttribute('content',themeColor);
+            var atc=document.querySelector('meta[name="apple-mobile-web-app-title"]');
+            if(atc)atc.setAttribute('content',appTitle);
+          }
+
+          // Kill PWA install prompt on DWA marketing root only — tool subpaths above stay installable
+          if(window.__isDWA && !manifestUrl){
             var m=document.querySelector('link[rel="manifest"]');
             if(m)m.parentNode.removeChild(m);
-            // Suppress beforeinstallprompt globally on DWA
             window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();return false;},true);
           }
         })();
