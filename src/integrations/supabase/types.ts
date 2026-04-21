@@ -3148,6 +3148,69 @@ export type Database = {
           },
         ]
       }
+      cron_job_health: {
+        Row: {
+          consecutive_failures: number
+          jobname: string
+          last_error: string | null
+          last_failure_at: string | null
+          last_success_at: string | null
+          next_run_at: string | null
+          total_runs: number
+          updated_at: string
+        }
+        Insert: {
+          consecutive_failures?: number
+          jobname: string
+          last_error?: string | null
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          next_run_at?: string | null
+          total_runs?: number
+          updated_at?: string
+        }
+        Update: {
+          consecutive_failures?: number
+          jobname?: string
+          last_error?: string | null
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          next_run_at?: string | null
+          total_runs?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cron_schedule_history: {
+        Row: {
+          active: boolean
+          command: string
+          id: string
+          jobname: string
+          replaced_at: string
+          replaced_by: string
+          schedule: string
+        }
+        Insert: {
+          active?: boolean
+          command: string
+          id?: string
+          jobname: string
+          replaced_at?: string
+          replaced_by?: string
+          schedule: string
+        }
+        Update: {
+          active?: boolean
+          command?: string
+          id?: string
+          jobname?: string
+          replaced_at?: string
+          replaced_by?: string
+          schedule?: string
+        }
+        Relationships: []
+      }
       cron_sentinel_alerts: {
         Row: {
           checked_at: string
@@ -16567,6 +16630,11 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      rollback_cron: { Args: { p_jobname: string }; Returns: number }
+      safe_cron_schedule: {
+        Args: { p_command: string; p_jobname: string; p_schedule: string }
+        Returns: number
       }
       search_candidates_hybrid: {
         Args: {
