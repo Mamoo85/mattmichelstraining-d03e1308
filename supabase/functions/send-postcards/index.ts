@@ -14,6 +14,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { qrcode } from "https://deno.land/x/qrcode@v2.0.0/mod.ts";
+import {
+  POSTCARD_ASSETS,
+  POSTCARD_ASSET_VERSION,
+  resolveAssetUrl,
+  buildQrUrl,
+} from "../_shared/postcard-assets.ts";
 
 const MAX_PER_RUN = 500;
 const MAX_PER_MONTH = 2000;
@@ -25,9 +31,6 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const LOB_API_KEY = Deno.env.get("LOB_API_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const ADMIN_EMAIL = "matt@detroitwebagent.com";
-
-const MATT_PHOTO = "https://customer-assets.emergentagent.com/job_docs-claude-v2/artifacts/6z5o71kv_19405.jpg";
-const DWA_BADGE = "https://customer-assets.emergentagent.com/job_docs-claude-v2/artifacts/1dhqg3eh_25239.png";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
