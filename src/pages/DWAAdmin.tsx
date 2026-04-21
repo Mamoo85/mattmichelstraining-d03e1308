@@ -44,6 +44,7 @@ const AdminLaraHealth = lazy(() => import("@/components/admin/AdminLaraHealth"))
 const AdminGrowthSignals = lazy(() => import("@/components/admin/AdminGrowthSignals"));
 const AdminTrojanHorseLog = lazy(() => import("@/components/admin/AdminTrojanHorseLog"));
 const AdminSMSInbox = lazy(() => import("@/components/dwa-admin/AdminSMSInbox"));
+const AdminPendingSMSDrafts = lazy(() => import("@/components/dwa-admin/AdminPendingSMSDrafts"));
 const AdminAdLauncher = lazy(() => import("@/components/dwa-admin/AdminAdLauncher"));
 const AdminOutreachBlocklist = lazy(() => import("@/components/dwa-admin/AdminOutreachBlocklist"));
 const AdminErrorLogs = lazy(() => import("@/components/dwa-admin/AdminErrorLogs"));
@@ -66,7 +67,7 @@ type Tab =
   | "agency-outreach" | "demand-radar" | "supplier-outreach" | "hvb"
   | "medicare-intel" | "industrial-intel" | "techalert-prospects"
   | "lara-health" | "growth-signals" | "trojan-log" | "coverage-map" | "crm-dashboard"
-  | "sms-inbox" | "ad-launcher" | "blocklist" | "error-logs"
+  | "sms-inbox" | "sms-drafts" | "ad-launcher" | "blocklist" | "error-logs"
   | "contractor-onboarding" | "ad-spend" | "ad-optimizer" | "leads-e2e";
 
 const GROUPS: SidebarGroup[] = [
@@ -114,6 +115,7 @@ const GROUPS: SidebarGroup[] = [
     label: "Outreach",
     items: [
       { id: "sms-inbox",        label: "💬 SMS Inbox" },
+      { id: "sms-drafts",       label: "✍️ Pending Drafts" },
       { id: "ad-launcher",      label: "🚀 Ad Launcher" },
       { id: "postcards",        label: "📬 Postcards" },
       { id: "faxes",            label: "📠 Fax Campaigns" },
@@ -215,6 +217,7 @@ export default function DWAAdmin() {
           {activeTab === "growth-signals"   && <Suspense fallback={lazyFallback("growth signals")}><AdminGrowthSignals /></Suspense>}
           {activeTab === "trojan-log"       && <Suspense fallback={lazyFallback("trojan horse log")}><AdminTrojanHorseLog /></Suspense>}
           {activeTab === "sms-inbox"        && <Suspense fallback={lazyFallback("SMS inbox")}><AdminSMSInbox /></Suspense>}
+          {activeTab === "sms-drafts"       && <Suspense fallback={lazyFallback("pending drafts")}><AdminPendingSMSDrafts /></Suspense>}
           {activeTab === "ad-launcher"      && <Suspense fallback={lazyFallback("Ad Launcher")}><AdminAdLauncher /></Suspense>}
           {activeTab === "blocklist"        && <Suspense fallback={lazyFallback("blocklist")}><AdminOutreachBlocklist /></Suspense>}
           {activeTab === "error-logs"       && <Suspense fallback={lazyFallback("error logs")}><AdminErrorLogs /></Suspense>}
