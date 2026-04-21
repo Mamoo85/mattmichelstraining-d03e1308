@@ -132,6 +132,13 @@ export default function TermsOfService() {
       </section>
 
       <section className="mb-8">
+        <h2 className="text-xl font-bold mb-3">14a. Lead Boost Add-Ons (Detroit Web Agency)</h2>
+        <p className="leading-relaxed text-slate-700">
+          Optional "Lead Boost" purchases (one-time or recurring) made through your Detroit Web Agency dashboard increase the advertising budget allocated to your account. <strong>Lead Boost purchases include a 20% management fee covering ad-platform setup, daily optimization, keyword research, and reporting; the remaining 80% is applied directly to ad spend on your behalf.</strong> Boost is entirely optional. Your base $399/mo plan delivers leads at no additional cost. Recurring Boost subscriptions can be cancelled at any time from your portal.
+        </p>
+      </section>
+
+      <section className="mb-8">
         <h2 className="text-xl font-bold mb-3">15. Contact</h2>
         <p className="leading-relaxed text-slate-700">
           Matt Michels — Matt Michels Training / M2 Development<br />
