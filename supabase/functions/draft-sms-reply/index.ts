@@ -133,7 +133,31 @@ Draft Matt's next reply. 1–2 short sentences. SMS only.`;
     }
 
     const aiData = await aiRes.json();
-    const draft = (aiData?.choices?.[0]?.message?.content || "").trim();
+    let draft = (aiData?.choices?.[0]?.message?.content || "").trim();
+
+    // Deterministic safety net: if the contractor's latest inbound asked for a sign-up
+    // link (or the draft promises one) but no URL is present, force-append the right URL.
+    const latestInbound = [...matches].reverse().find((r: any) => {
+      const meta = (r.metadata || {}) as Record<string, unknown>;
+      return r.status === "inbound" || meta.direction === "inbound" || r.product === "inbound";
+    });
+    const inboundText = ((latestInbound as any)?.body_preview || "").toLowerCase();
+    const draftLower = draft.toLowerCase();
+
+    const wantsLink =
+      /\b(sign\s*up|signup|sign me up|link|get started|how do i (start|join|sign)|where do i (sign|start)|enroll|register|join)\b/.test(inboundText) ||
+      /\b(send (you )?(the|a) link|i'?ll send|here'?s the link|sign[- ]?up link)\b/.test(draftLower);
+
+    const hasUrl = /https?:\/\//i.test(draft);
+
+    if (wantsLink && !hasUrl) {
+      // Pick the right product URL based on inbound keywords; default to contractor leads.
+      let url = SIGNUP_URLS.contractor_leads;
+      if (/\btech\s*alert|hiring|hire\b/.test(inboundText)) url = SIGNUP_URLS.techalert;
+      else if (/\bfield\s*desk|dispatch|crm\b/.test(inboundText)) url = SIGNUP_URLS.fielddesk;
+      else if (/\bmissed\s*call\b/.test(inboundText)) url = SIGNUP_URLS.missed_call;
+      draft = `${draft} ${url}`.trim();
+    }
 
     return new Response(JSON.stringify({ draft, transcript_lines: matches.length }), {
       headers: { ...CORS, "Content-Type": "application/json" },
