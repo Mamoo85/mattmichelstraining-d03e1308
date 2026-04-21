@@ -985,7 +985,7 @@ serve(async (req) => {
     <p style="color:#475569;font-size:15px;line-height:1.8;margin:0 0 8px;">Each candidate alert includes their <strong>name, trade, city, license info, contact details</strong> (when available), and our proprietary availability score.</p>
     <p style="color:#475569;font-size:15px;line-height:1.8;margin:0 0 8px;">Candidate profiles include verified phone and email data from industry databases. Staffing alerts use public CMS data to identify hiring opportunities.</p>
     <p style="color:#475569;font-size:14px;line-height:1.8;margin:0 0 20px;">Want to adjust your target roles or zip codes? Just reply to this email.</p>
-    ${dashboardToken ? `<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:0 0 8px;"><a href="https://detroitwebagent.com/my-techalert?token=${dashboardToken}" style="display:inline-block;padding:14px 32px;background:#00d4ff;color:#0a1628;font-weight:800;font-size:15px;border-radius:8px;text-decoration:none;letter-spacing:0.3px;">Open Your Dashboard →</a></td></tr></table>` : ""}
+    ${dashboardToken ? `<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:0 0 8px;"><a href="https://detroitwebagent.com/talent-radar/dashboard?token=${dashboardToken}" style="display:inline-block;padding:14px 32px;background:#00d4ff;color:#0a1628;font-weight:800;font-size:15px;border-radius:8px;text-decoration:none;letter-spacing:0.3px;">Open Your Dashboard →</a></td></tr><tr><td align="center" style="padding:14px 0 0;"><p style="margin:0;color:#475569;font-size:13px;line-height:1.6;">📲 <strong>Open this link on your phone</strong> and tap "Install" when it appears — your TechAlert dashboard lives on your home screen, one tap away from every new candidate alert.</p></td></tr></table>` : ""}
   </td></tr>
 
   <!-- FOOTER -->
@@ -3614,12 +3614,12 @@ ${isPro ? `<p style="margin:0 0 8px">⭐ <strong>Review requests</strong> (Pro) 
             fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, {
               method: "POST",
               headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json" },
-              body: JSON.stringify({ service_type: "field_service_subscription", client_email: email, business_name: company || name || email, company, plan }),
+              body: JSON.stringify({ service_type: "field_service_subscription", client_email: email, business_name: company || name || email, company, plan, dispatch_url: dispatchUrl }),
             }).catch((e: unknown) => console.error("[WEBHOOK] auto-onboard field_service error:", e)),
             ownerPhone ? sendSMS(
               ownerPhone,
               Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219",
-              `Welcome to FieldDesk! Your dispatch board is ready: ${dispatchUrl} — Text (313) 992-1219 with any questions.`,
+              `Welcome to FieldDesk! Open on your phone and tap "Install" to add it to your home screen — one-tap dispatch from the truck. ${dispatchUrl}`,
               "field_service_onboard"
             ).catch(() => {}) : Promise.resolve(),
           ]);

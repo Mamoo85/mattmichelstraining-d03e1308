@@ -100,6 +100,7 @@ export default defineConfig(({ mode }) => {
             /[?#].*type=recovery/,
             /^\/dwa-admin/,
             /^\/field-service/,
+            /^\/talent-radar/,
             /^\/my-techalert/,
             /^\/my-siteradar/,
             /^\/my-missed-call/,

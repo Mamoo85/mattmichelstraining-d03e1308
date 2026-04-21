@@ -572,6 +572,12 @@ function buildFieldServiceBody(
       <p style="margin:0;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:12px;padding:2px 8px;border-radius:4px;margin-right:10px">STEP 3</span><strong>Send your customer list</strong> (even a messy spreadsheet or just a list of names is fine). I'll import them so you can start creating jobs right away.</p>
     </div>
 
+    <div style="background:#0d1f3c;border:1px solid #00d4ff40;border-radius:12px;padding:20px 24px;margin:0 0 24px">
+      <p style="color:#00d4ff;font-weight:800;font-size:13px;margin:0 0 8px;letter-spacing:1px;text-transform:uppercase">📲 Install FieldDesk on your phone</p>
+      <p style="color:#e2e8f0;font-size:14px;margin:0 0 10px;line-height:1.6">Open your dispatch board link <strong>on your phone's browser</strong> and tap "Install" when the prompt appears (or use Share → Add to Home Screen on iPhone). FieldDesk will sit on your home screen like a real app — one tap to dispatch, no logging in every time.</p>
+      <p style="color:#94a3b8;font-size:12px;margin:0">Tell your techs to do the same with the Tech App link above.</p>
+    </div>
+
     <div style="margin:0 0 24px">
       <p style="color:#94a3b8;font-size:12px;margin:0 0 4px">Your personal dispatch board link (save this or bookmark it):</p>
       <a href="${dispatchUrl}" style="color:#00d4ff;font-size:12px;word-break:break-all">${dispatchUrl}</a>
