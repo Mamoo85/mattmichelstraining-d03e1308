@@ -3345,6 +3345,23 @@ serve(async (req) => {
         } catch (e) {
           console.error("[WEBHOOK] contractor_lead_subscription error:", e);
           notifyMatt("⚠️ Contractor lead webhook DB failure", `<p>${String(e)}</p>`).catch(() => {});
+          // Audit the failure so admin can see why this contractor wasn't provisioned
+          try {
+            const auditSb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+            await auditSb.from("contractor_provisioning_audit" as any).insert({
+              contractor_id: meta.contractor_id || null,
+              contractor_email: customerEmail || null,
+              business_name: meta.business_name || null,
+              stripe_event_id: event.id,
+              stripe_event_type: event.type,
+              stripe_session_id: (session as any).id || null,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+              outcome: "failed",
+              reason: String(e).slice(0, 500),
+              metadata: { meta },
+            });
+          } catch { /* audit best-effort */ }
           return new Response(JSON.stringify({ error: String(e) }), { status: 500 });
         }
       }
