@@ -1,106 +1,113 @@
 
 
-## Plan: Cron Health & Safety Layer
+## Plan: Cron Safety Layer — Phase 2 (Dry-Run, Audit Log, Stale Window Per-Job)
 
-Build a defense-in-depth system around cron scheduling so silent failures (like the vault-lookup NULL bug that killed 21 crons for weeks) become impossible to ship and trivial to debug.
+Three additions on top of the existing safety layer. No breaking changes.
 
-### 1. Server-side guard: SQL function that REJECTS bad cron schedules
+### 1. Dry-run mode for `safe_cron_schedule`
 
-New migration creates `public.safe_cron_schedule(jobname, schedule, command)` — a `SECURITY DEFINER` wrapper that:
+Add a new SQL function `public.safe_cron_validate(jobname, schedule, command)` — runs the **exact same validation** as `safe_cron_schedule` (forbidden-pattern checks, canonical URL check, Bearer length check, schedule format check) and returns a JSON result instead of scheduling:
 
-- Validates `command` does NOT contain forbidden patterns:
-  - `current_setting('app.supabase_url')`
-  - `vault.decrypted_secrets WHERE name = 'SUPABASE_URL'`
-  - `vault.decrypted_secrets WHERE name = 'SUPABASE_SERVICE_ROLE_KEY'`
-  - Literal `NULL` substituted into `url :=` or `Authorization`
-- Validates command contains the canonical hardcoded URL `https://eauvubfpanpeuxsrqesu.supabase.co`
-- Validates command contains an `Authorization: Bearer eyJ...` header (length ≥ 100 chars after Bearer)
-- On any failure: `RAISE EXCEPTION 'safe_cron_schedule: <reason>'` — migration aborts, never deploys
-- Before scheduling: snapshots the previous job (if exists) into `cron_schedule_history`, then `cron.unschedule` + `cron.schedule`
+```json
+{ "ok": true, "warnings": [], "would_replace": { "schedule": "...", "command": "..." } }
+```
 
-All future cron migrations call `PERFORM safe_cron_schedule(...)` instead of raw `cron.schedule(...)`. Updates `mem://tech/cron-sentinel-and-monitoring.md` to mandate this.
+or on failure:
 
-### 2. Versioning + rollback table
+```json
+{ "ok": false, "error": "safe_cron_validate: forbidden vault lookup ...", "rule": "vault_supabase_url" }
+```
 
-New table `public.cron_schedule_history`:
+Refactor: extract all validation logic from `safe_cron_schedule` into a private helper `_validate_cron_command(jobname, schedule, command)` returning `(ok boolean, error text, rule text)`. Both `safe_cron_schedule` and `safe_cron_validate` call it. Zero duplication.
+
+**UI surface**: New tab section "🧪 Dry-Run Validator" inside `AdminCronStatus.tsx`:
+- Three inputs: jobname, schedule, command (textarea)
+- "Validate" button calls a new edge function `cron-validate` (admin-gated) which invokes `safe_cron_validate` RPC
+- Shows green ✅ pass with the would-replace diff, or red ❌ with the rule that failed and a one-line fix hint
+
+### 2. Audit log of every `safe_cron_schedule` attempt
+
+New table `public.cron_schedule_audit`:
 
 ```text
 ├── id              uuid PK
 ├── jobname         text
-├── schedule        text       (cron expression)
-├── command         text       (full SQL command)
-├── replaced_at     timestamptz default now()
-├── replaced_by     text       (current_user)
-└── active          boolean    (true = currently scheduled)
+├── schedule        text
+├── command         text
+├── attempted_by    text       (current_user / auth.uid() if available)
+├── outcome         text       ('success' | 'rejected' | 'rolled_back')
+├── error_rule      text       (which rule fired, e.g. 'vault_supabase_url')
+├── error_message   text
+├── mode            text       ('schedule' | 'validate' | 'rollback')
+└── attempted_at    timestamptz default now()
 ```
 
-Every call to `safe_cron_schedule` archives the prior version (`active=false`) and inserts the new one (`active=true`).
+Populated automatically by:
+- `safe_cron_schedule` — INSERT row at start, UPDATE outcome on success/failure (uses `EXCEPTION WHEN OTHERS` block to capture rejections)
+- `safe_cron_validate` — INSERT with `mode='validate'`
+- `rollback_cron` — INSERT with `mode='rollback'`
 
-New function `public.rollback_cron(jobname text)` — finds the most recent inactive history row for that job, calls `safe_cron_schedule` with those values, flips `active` flags. One-click revert.
+RLS: SELECT for admins, INSERT/UPDATE for service_role only.
 
-### 3. Cron health tracking table
+**UI surface**: New "📜 Audit Log" section at the bottom of `AdminCronStatus.tsx`:
+- Last 50 attempts, newest first
+- Columns: timestamp, mode (badge), jobname, outcome (✅/❌/↩), error_rule (chip), attempted_by, expandable command
+- Filter chips: All / Rejected only / Last 24h
+- Backed by extending the existing `cron-status` edge function to also return `audit: [...]`
 
-New table `public.cron_job_health`:
+### 3. Per-job stale window from cron expression
+
+Currently Sentinel uses a hardcoded 26-hour staleness threshold for everything — wrong for a 4h cron, generous for a weekly cron.
+
+Add a small Deno helper `supabase/functions/_shared/cron-window.ts`:
 
 ```text
-├── jobname               text PK
-├── last_success_at       timestamptz
-├── last_failure_at       timestamptz
-├── last_error            text
-├── next_run_at           timestamptz   (computed from cron expression + now)
-├── consecutive_failures  int default 0
-├── total_runs            int default 0
-└── updated_at            timestamptz
+parseCronWindow(expr) -> { intervalMinutes: number, staleAfterMinutes: number, nextRunAt: Date }
 ```
 
-Populated two ways:
-- **Pull**: `cron-sentinel` (already runs every 6h) reads `cron.job_run_details` for each watchlist job, upserts latest success/failure/error into `cron_job_health`. Computes `next_run_at` using a small `pg_cron` expression parser (cron-parser deno lib in the edge function).
-- **Push**: any edge function fired by cron writes `last_success_at = now()` to its own row at the end of a successful run (optional, additive — Sentinel pull is the source of truth).
+Logic:
+- Parse standard 5-field cron expressions (minute, hour, dom, month, dow)
+- Detect canonical patterns: `*/N * * * *` → N minutes; `0 */N * * *` → N hours; `0 H * * *` → 24h; `0 H * * D` → 7d; `0 H D * *` → ~30d
+- `staleAfterMinutes = intervalMinutes * 2 + 30` (give one full cycle of slack + 30 min grace)
+- `nextRunAt`: walk forward minute-by-minute (capped at 60 days lookahead) checking each field — small helper, no external deps
+- Fallback: if expression doesn't parse, return `{ intervalMinutes: 1440, staleAfterMinutes: 1560 }` (24h + slack)
 
-### 4. Admin "Cron Status" screen
+Wire into `cron-sentinel`:
+- For each job in scan, call `parseCronWindow(job.schedule)`
+- Replace hardcoded 26h staleness check with per-job `staleAfterMinutes`
+- Upsert `next_run_at = parseCronWindow(...).nextRunAt` and a new column `expected_interval_minutes` into `cron_job_health`
 
-New component `src/components/dwa-admin/AdminCronStatus.tsx` — added as a tab in `/dwa-admin`:
+Migration adds two columns to `cron_job_health`:
+```text
+expected_interval_minutes int
+stale_after_minutes int
+```
 
-- **Top KPI strip**: Total jobs / Healthy / Failing / Stale (no run in expected window)
-- **Failing jobs table** (red): jobname, `last_error` (truncated, expandable), `last_failure_at`, `consecutive_failures`, current `command` (collapsed `<details>`), **Rollback** button
-- **All jobs table**: jobname, schedule, `last_success_at`, `next_run_at`, `total_runs`, `Show command` button
-- Rollback button calls a new edge function `cron-rollback` (admin-only) which invokes `public.rollback_cron(jobname)` and refreshes the table.
-
-Backed by a new edge function `cron-status` (admin-gated via `has_role`):
-- Reads `cron.job` joined with `cron_job_health` and most recent 5 rows from `cron.job_run_details`
-- Returns a single JSON payload the React component renders
-
-### 5. Wire Sentinel into the new tables
-
-Update `supabase/functions/cron-sentinel/index.ts`:
-- After existing watchlist scan, query `cron.job_run_details` for last run of each watchlist job (last 24h)
-- Upsert into `cron_job_health` with `last_success_at` / `last_failure_at` / `last_error` / `consecutive_failures`
-- Compute `next_run_at` from cron expression
-- Existing SMS/email alert flow unchanged — but the Cron Status screen now has the receipts
+**UI surface**: `AdminCronStatus.tsx` table additions:
+- New column "Expected gap" — shows `Every 4h`, `Every 24h`, `Every 7d` (formatted from `expected_interval_minutes`)
+- "Next Run" column gets a relative timestamp ("in 2h 14m") plus absolute time on hover
+- Stale jobs (now() > last_success_at + stale_after_minutes) get an amber dot instead of green
+- KPI "Stale" count uses the new per-job threshold
 
 ### Files to create / edit
 
 | File | Change |
 |---|---|
-| `supabase/migrations/<ts>_cron_safety_layer.sql` | **New** — `safe_cron_schedule`, `rollback_cron`, `cron_schedule_history`, `cron_job_health` tables + RLS (admin-only SELECT, service_role full access) |
-| `supabase/functions/cron-sentinel/index.ts` | Extend to upsert `cron_job_health` from `cron.job_run_details` |
-| `supabase/functions/cron-status/index.ts` | **New** — admin-gated read endpoint |
-| `supabase/functions/cron-rollback/index.ts` | **New** — admin-gated rollback trigger |
-| `src/components/dwa-admin/AdminCronStatus.tsx` | **New** — Cron Status tab UI |
-| `src/pages/DWAAdmin.tsx` | Add "🛡️ Cron Status" tab |
-| `mem://tech/cron-sentinel-and-monitoring.md` | Update — mandate `safe_cron_schedule()` for ALL future cron migrations; add 4th absolute ban (raw `cron.schedule` outside of approved wrapper) |
-| `mem://index.md` | Add reference to new "Cron Safety Layer" memory |
-| `mem://tech/cron-safety-layer.md` | **New** — describes the wrapper function, history table, rollback flow, health table |
+| `supabase/migrations/<ts>_cron_safety_phase2.sql` | **New** — `_validate_cron_command` helper, `safe_cron_validate` function, `cron_schedule_audit` table + RLS, two new columns on `cron_job_health`, refactor `safe_cron_schedule` to use helper + write audit rows |
+| `supabase/functions/_shared/cron-window.ts` | **New** — cron expression parser + next-run computer |
+| `supabase/functions/cron-validate/index.ts` | **New** — admin-gated, calls `safe_cron_validate` RPC |
+| `supabase/functions/cron-status/index.ts` | Extend response payload with `audit: [...]` + `expected_interval_minutes` per job |
+| `supabase/functions/cron-sentinel/index.ts` | Use `parseCronWindow()` for per-job staleness; upsert `next_run_at` + `expected_interval_minutes` |
+| `src/components/dwa-admin/AdminCronStatus.tsx` | Add Dry-Run Validator section, Audit Log section, Expected Gap column, relative-time Next Run |
+| `mem://tech/cron-safety-layer.md` | Update — document `safe_cron_validate`, `cron_schedule_audit`, per-job stale window |
 
 ### RLS
 
-- `cron_schedule_history`: SELECT for admins, INSERT/UPDATE for service_role only
-- `cron_job_health`: SELECT for admins, INSERT/UPDATE for service_role only
+- `cron_schedule_audit`: SELECT for admins, INSERT/UPDATE for service_role only
 
-### Out of scope (not doing unless asked)
+### Out of scope
 
-- No automatic rollback on Sentinel alert (Matt approves manually via the Cron Status button — automatic rollback could mask a real bug)
-- No Slack/Discord webhook for cron alerts (SMS + email already exist)
-- No backfill of `cron_schedule_history` for the 100+ existing crons — starts tracking from migration forward
-- No UI for `cron_schedule_history` browsing beyond the most-recent rollback target (can add later if Matt needs full audit trail)
+- No Slack/Discord webhook on rejected validations (audit log is the trail)
+- No client-side dry-run for schedules generated by other tools (only the admin UI form)
+- No retroactive backfill of audit log for the existing 100+ crons — starts now
 
