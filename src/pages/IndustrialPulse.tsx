@@ -143,39 +143,39 @@ export default function IndustrialPulse() {
         </section>
 
         {/* Teasers */}
-        <section className="px-6 py-12">
+        <section className="px-4 sm:px-6 py-8 sm:py-12">
           <div className="max-w-4xl mx-auto">
-            <div className="text-xs tracking-widest text-slate-500 font-bold uppercase mb-6">
+            <div className="text-xs tracking-widest text-slate-500 font-bold uppercase mb-4 sm:mb-6">
               ↓ This week's signals (3 of {totalCount || "many"})
             </div>
 
             {loadingTeasers ? (
-              <div className="text-center py-16">
+              <div className="text-center py-12 sm:py-16">
                 <Loader2 className="w-8 h-8 animate-spin text-[#00d4ff] mx-auto" />
               </div>
             ) : teasers.length === 0 ? (
-              <div className="text-center py-16 text-slate-500 text-sm">
+              <div className="text-center py-12 sm:py-16 text-slate-500 text-sm">
                 Radar is still warming up — first digest goes out Tuesday.
               </div>
             ) : (
-              <div className="grid gap-4">
+              <div className="grid gap-3 sm:gap-4">
                 {teasers.map((t) => (
-                  <div key={t.id} className="border border-[#1e3a5f] bg-[#0a1628] p-5 rounded-md">
-                    <div className="flex items-start justify-between gap-4 mb-3">
-                      <div className="font-mono text-xl text-[#00d4ff] font-semibold tracking-wider">
+                  <div key={t.id} className="border border-[#1e3a5f] bg-[#0a1628] p-4 sm:p-5 rounded-md">
+                    <div className="flex items-start justify-between gap-3 sm:gap-4 mb-2 sm:mb-3">
+                      <div className="font-mono text-lg sm:text-xl text-[#00d4ff] font-semibold tracking-wider break-all">
                         {t.redacted_company}
                       </div>
-                      <div className="bg-[#00d4ff] text-[#0a1628] text-[10px] font-bold px-2 py-1 rounded">
+                      <div className="bg-[#00d4ff] text-[#0a1628] text-[10px] font-bold px-2 py-1 rounded shrink-0">
                         {t.confidence}/10
                       </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-400 mb-3">
+                    <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1.5 sm:gap-y-2 text-xs text-slate-400 mb-2 sm:mb-3">
                       {t.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {t.location}</span>}
                       {t.industry && <span>· {t.industry}</span>}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-200 mb-3">
-                      <Briefcase className="w-3.5 h-3.5 text-[#00d4ff]" />
-                      Hiring <strong className="text-white">{t.hiring_count || "multiple"}× {t.hiring_roles.join(", ") || "trades"}</strong>
+                    <div className="flex items-center gap-2 text-sm text-slate-200 mb-2 sm:mb-3">
+                      <Briefcase className="w-3.5 h-3.5 text-[#00d4ff] shrink-0" />
+                      <span className="break-words">Hiring <strong className="text-white">{t.hiring_count || "multiple"}× {t.hiring_roles.join(", ") || "trades"}</strong></span>
                     </div>
                     {t.predicted_needs.length > 0 && (
                       <div className="text-xs text-slate-500">
@@ -183,7 +183,7 @@ export default function IndustrialPulse() {
                       </div>
                     )}
                     <div className="mt-3 pt-3 border-t border-[#1e3a5f] flex items-center gap-2 text-xs text-slate-500">
-                      <Lock className="w-3 h-3" />
+                      <Lock className="w-3 h-3 shrink-0" />
                       Company name unlocks for subscribers
                     </div>
                   </div>
