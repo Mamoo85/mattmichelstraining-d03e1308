@@ -48,6 +48,7 @@ const GROUPS: SidebarGroup[] = [
   {
     label: "Revenue",
     items: [
+      { id: "ai-command",       label: "🧠 AI Command" },
       { id: "dwa-overview",     label: "📊 Overview" },
       { id: "revenue",          label: "💰 Revenue" },
       { id: "leads-e2e",        label: "🟢 Leads E2E" },
