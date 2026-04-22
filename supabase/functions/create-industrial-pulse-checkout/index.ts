@@ -96,7 +96,7 @@ serve(async (req) => {
         business_name: business_name || "",
         unlock_id: pending?.id || "",
       },
-      success_url: `${origin}/industrial-pulse?unlocked=1&plan=${selectedPlan}`,
+      success_url: `${origin}/industrial-pulse?unlocked=1&plan=${selectedPlan}&email=${encodeURIComponent(email.trim().toLowerCase())}`,
       cancel_url: `${origin}/industrial-pulse`,
     });
 
