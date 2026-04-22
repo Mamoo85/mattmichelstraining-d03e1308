@@ -16778,6 +16778,15 @@ export type Database = {
         }[]
       }
       get_agency_role: { Args: { _user_id: string }; Returns: string }
+      get_last_net_response_for_url: {
+        Args: { p_since: string; p_url: string }
+        Returns: {
+          created: string
+          error_msg: string
+          status_code: number
+          url: string
+        }[]
+      }
       get_my_pending_actions: {
         Args: never
         Returns: {
