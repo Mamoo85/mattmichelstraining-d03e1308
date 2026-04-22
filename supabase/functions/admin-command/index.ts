@@ -309,6 +309,29 @@ Output STRICT JSON: { "drafts": [ { "to_phone": "...", "to_name": "...", "body":
       recipients: [recipient], product, tone, hook, channel,
     });
   },
+
+  async regenerate_single_draft({ recipient, product, tone = "direct", angle = null, hook = null, channel = "email" }) {
+    if (!recipient) return { ok: false, error: "recipient required" };
+    const productInfo = (PRODUCTS as any)[product] || { name: product || "DWA service", angle: "" };
+    const sys = `You are Matt Michels writing ONE personal cold ${channel} for Detroit Web Agency (DWA).
+Brand voice: industrial, direct, "Digital Engines / Bare Metal." NEVER use "AI", "artificial intelligence", or fitness/training language.
+NEVER offer 5-minute calls. NEVER reference Matt Michels Training.
+Sender: matt@detroitwebagent.com | Phone: (313) 992-1219
+Product: ${productInfo.name} (${productInfo.price || ""}). Angle: ${productInfo.angle}.
+Tone: ${tone}.
+${angle ? `Specific angle to lead with: ${String(angle).slice(0, 400)}` : ""}
+${hook ? `Hook context (real data — reference specifically): ${JSON.stringify(hook).slice(0, 1500)}` : ""}
+Output STRICT JSON: { "drafts": [ { "to_email": "...", "to_name": "...", "subject": "...", "body": "..." } ] }
+Body: 4–7 short lines, no fluff, ends with one specific question or single CTA.`;
+    const usr = `Generate ONE ${channel} for this recipient:\n${JSON.stringify(recipient).slice(0, 2000)}`;
+    try {
+      const out = await geminiJSON("google/gemini-2.5-flash", sys, usr);
+      const drafts = Array.isArray(out?.drafts) ? out.drafts : [];
+      return { ok: true, rows: drafts.slice(0, 1), count: Math.min(drafts.length, 1), data: { product } };
+    } catch (e) {
+      return { ok: false, error: String((e as Error).message) };
+    }
+  },
 };
 
 const TOOL_NAMES = Object.keys(TOOLS);
