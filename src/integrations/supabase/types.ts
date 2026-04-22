@@ -4457,7 +4457,9 @@ export type Database = {
       }
       dossier_outreach_log: {
         Row: {
+          body_preview: string | null
           created_at: string
+          draft_id: string | null
           id: string
           notes: string | null
           reply_received_at: string | null
@@ -4465,12 +4467,15 @@ export type Database = {
           signal_company: string
           signal_id: string | null
           status: string
+          subject: string | null
           target_company: string
           target_contact_name: string | null
           target_email: string | null
         }
         Insert: {
+          body_preview?: string | null
           created_at?: string
+          draft_id?: string | null
           id?: string
           notes?: string | null
           reply_received_at?: string | null
@@ -4478,12 +4483,15 @@ export type Database = {
           signal_company: string
           signal_id?: string | null
           status?: string
+          subject?: string | null
           target_company: string
           target_contact_name?: string | null
           target_email?: string | null
         }
         Update: {
+          body_preview?: string | null
           created_at?: string
+          draft_id?: string | null
           id?: string
           notes?: string | null
           reply_received_at?: string | null
@@ -4491,6 +4499,7 @@ export type Database = {
           signal_company?: string
           signal_id?: string | null
           status?: string
+          subject?: string | null
           target_company?: string
           target_contact_name?: string | null
           target_email?: string | null
@@ -7151,6 +7160,48 @@ export type Database = {
           token?: string
           used_at?: string | null
           used_by?: string | null
+        }
+        Relationships: []
+      }
+      industrial_pulse_subscribers: {
+        Row: {
+          business_name: string | null
+          confirmed: boolean
+          created_at: string
+          email: string
+          id: string
+          last_sent_at: string | null
+          send_count: number
+          source: string | null
+          unsubscribed: boolean
+          unsubscribed_at: string | null
+          vertical_interest: string | null
+        }
+        Insert: {
+          business_name?: string | null
+          confirmed?: boolean
+          created_at?: string
+          email: string
+          id?: string
+          last_sent_at?: string | null
+          send_count?: number
+          source?: string | null
+          unsubscribed?: boolean
+          unsubscribed_at?: string | null
+          vertical_interest?: string | null
+        }
+        Update: {
+          business_name?: string | null
+          confirmed?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          last_sent_at?: string | null
+          send_count?: number
+          source?: string | null
+          unsubscribed?: boolean
+          unsubscribed_at?: string | null
+          vertical_interest?: string | null
         }
         Relationships: []
       }
