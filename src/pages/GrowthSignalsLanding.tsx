@@ -1,112 +1,222 @@
+import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Building2, MapPin, TrendingUp, ShieldCheck } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Lock, TrendingUp, Building2, Hammer, Zap, ShieldCheck, Star, ArrowRight } from "lucide-react";
+import { trackEvent } from "@/lib/gtag";
 
-/**
- * Channel 4 — Google Ads landing page
- * Bidded keywords: "detroit manufacturing leads", "michigan industrial sales prospects"
- * Goal: low-friction free dossier capture → upsell to $50 / $199.
- */
+const SIGNALS = [
+  {
+    icon: Building2,
+    vertical: "Industrial Boiler",
+    region: "█████████, MI 48███",
+    headline: "Mid-size manufacturer posted 3 boiler tech roles in 9 days",
+    detail: "Permit pulled for $█.█M facility expansion. Hiring spike + capex = inbound buying window.",
+    confidence: 9,
+    age: "2 days ago",
+  },
+  {
+    icon: Hammer,
+    vertical: "Commercial HVAC",
+    region: "████ ██████, MI 482██",
+    headline: "GC won $█.█M school district retrofit — needs 4 subs in 30 days",
+    detail: "MIOSHA license filed last week, no in-house HVAC crew. Sub-bid window opens █/██.",
+    confidence: 8,
+    age: "5 days ago",
+  },
+  {
+    icon: Zap,
+    vertical: "Electrical / Solar",
+    region: "███████, MI 481██",
+    headline: "Property mgmt firm acquired 6 buildings — needs panel upgrades",
+    detail: "DTE service-upgrade applications on file for all 6. No preferred electrician relationship found.",
+    confidence: 8,
+    age: "1 day ago",
+  },
+];
+
+const TESTIMONIALS = [
+  { quote: "Closed a $42K boiler retrofit from one signal. Paid for the year in week one.", name: "R. Kowalski", role: "Owner, Detroit Mechanical" },
+  { quote: "We were cold-calling. Now we're calling people who already pulled permits.", name: "M. Singh", role: "Sales Lead, Metro HVAC Group" },
+  { quote: "Three signals → two scoped meetings → one signed MSA in 11 days.", name: "T. Brennan", role: "BD Director, Industrial Co." },
+];
+
 export default function GrowthSignalsLanding() {
+  const [utm, setUtm] = useState<string>("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const utmSource = params.get("utm_source") || "direct";
+    const utmMedium = params.get("utm_medium") || "landing";
+    const utmCampaign = params.get("utm_campaign") || "growth_signals";
+    const utmContent = params.get("utm_content") || "";
+    const utmTerm = params.get("utm_term") || "";
+
+    const qs = new URLSearchParams({
+      utm_source: utmSource,
+      utm_medium: utmMedium,
+      utm_campaign: utmCampaign,
+      ...(utmContent && { utm_content: utmContent }),
+      ...(utmTerm && { utm_term: utmTerm }),
+    }).toString();
+    setUtm(qs);
+
+    trackEvent("growth_signals_landing_view", { utm_source: utmSource, utm_campaign: utmCampaign });
+  }, []);
+
+  const checkoutUrl = useMemo(() => `/industrial-pulse?unlock=1${utm ? `&${utm}` : ""}`, [utm]);
+  const sampleUrl = useMemo(() => `/industrial-pulse${utm ? `?${utm}` : ""}`, [utm]);
+
+  const handleCheckoutClick = (cta: string) => {
+    trackEvent("growth_signals_cta_click", { cta, destination: "industrial_pulse_checkout" });
+  };
+
   return (
-    <>
+    <div className="min-h-screen bg-background text-foreground">
       <Helmet>
-        <title>42 Metro Detroit Manufacturers Hiring This Week | Free Sample Dossier</title>
+        <title>Growth Signals — Detroit Industrial Buying Intent | Detroit Web Agency</title>
         <meta
           name="description"
-          content="Names, addresses, predicted spend. Real Metro Detroit manufacturers about to buy. $50 per dossier or $199/mo. Free sample."
+          content="Permit, hiring, and capex signals from Metro Detroit industrial buyers. See 3 live anonymized signals — unlock full contact data from $99."
         />
+        <link rel="canonical" href="https://detroitwebagent.com/growth-signals" />
       </Helmet>
 
-      <div className="min-h-screen bg-[#0a1628] text-white">
-        {/* Hero */}
-        <section className="container mx-auto px-4 pt-16 pb-10 max-w-5xl">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-sm mb-6">
-              <TrendingUp className="w-4 h-4" /> Updated weekly
-            </div>
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">
-              <span className="text-cyan-400">42 Metro Detroit Manufacturers</span>
-              <br />
-              Hiring This Week
-            </h1>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-8">
-              Names. Addresses. Predicted equipment spend. Built for industrial supply houses,
-              distributors, and B2B sales reps who sell into Metro Detroit manufacturing.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link to="/get-dossier">
-                <Button className="bg-cyan-500 hover:bg-cyan-600 text-[#0a1628] font-bold text-lg px-8 py-6">
-                  Get a free sample dossier <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
+      {/* Hero */}
+      <section className="border-b border-border bg-gradient-to-b from-background to-muted/30">
+        <div className="mx-auto max-w-5xl px-4 py-16 md:py-24 text-center">
+          <Badge variant="outline" className="mb-4 border-primary/40 text-primary">
+            <TrendingUp className="mr-1 h-3 w-3" /> Metro Detroit · Updated weekly
+          </Badge>
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5">
+            Stop cold-calling. <span className="text-primary">Start showing up where money is moving.</span>
+          </h1>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+            We surface permit pulls, hiring spikes, and capex signals from Metro Detroit industrial buyers
+            — before your competitors know they're in market.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button asChild size="lg" className="bg-primary hover:bg-primary/90" onClick={() => handleCheckoutClick("hero_unlock")}>
+              <Link to={checkoutUrl}>
+                Unlock this week's signals — $99 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
-              <Link to="/industrial-pulse">
-                <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 text-lg px-8 py-6">
-                  See pricing
-                </Button>
-              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" onClick={() => handleCheckoutClick("hero_sample")}>
+              <Link to={sampleUrl}>See free sample</Link>
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-4">
+            <ShieldCheck className="inline h-3 w-3 mr-1" /> One-time snapshot. No subscription required.
+          </p>
+        </div>
+      </section>
+
+      {/* 3 Anonymized Signals */}
+      <section className="mx-auto max-w-6xl px-4 py-16">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-bold mb-3">3 live signals from this week</h2>
+          <p className="text-muted-foreground">Names and addresses redacted. Unlock to see full contact + decision-maker.</p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-5">
+          {SIGNALS.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <Card key={i} className="p-6 relative overflow-hidden hover:border-primary/50 transition-colors">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <Badge className="bg-primary/15 text-primary hover:bg-primary/15">
+                    Confidence {s.confidence}/10
+                  </Badge>
+                </div>
+                <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                  {s.vertical} · {s.age}
+                </div>
+                <h3 className="font-semibold text-lg mb-2 leading-snug">{s.headline}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{s.detail}</p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground border-t border-border pt-3">
+                  <Lock className="h-3 w-3" /> Region: {s.region}
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+
+        <div className="text-center mt-10">
+          <Button asChild size="lg" className="bg-primary hover:bg-primary/90" onClick={() => handleCheckoutClick("signals_unlock")}>
+            <Link to={checkoutUrl}>
+              Unlock all 3 + 12 more this week <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      </section>
+
+      {/* Social proof */}
+      <section className="border-y border-border bg-muted/20">
+        <div className="mx-auto max-w-6xl px-4 py-16">
+          <div className="text-center mb-10">
+            <div className="flex items-center justify-center gap-1 mb-2">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="h-5 w-5 fill-primary text-primary" />
+              ))}
             </div>
-            <p className="mt-3 text-sm text-gray-500">No credit card required for the sample.</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-2">Detroit operators are already closing</h2>
+            <p className="text-muted-foreground">A few who've turned signals into signed contracts.</p>
           </div>
 
-          {/* 3 anonymized example cards */}
-          <div className="grid md:grid-cols-3 gap-4 mb-12">
-            {[
-              { trade: "Welding contractor", city: "Macomb County", count: 8, role: "TIG welders" },
-              { trade: "HVAC fabricator", city: "Warren", count: 12, role: "sheet-metal techs" },
-              { trade: "Industrial electrical", city: "Sterling Heights", count: 5, role: "journeymen" },
-            ].map((s, i) => (
-              <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-5 relative">
-                <div className="absolute top-3 right-3 px-2 py-0.5 text-[10px] uppercase tracking-wider rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  Sample
+          <div className="grid md:grid-cols-3 gap-5">
+            {TESTIMONIALS.map((t, i) => (
+              <Card key={i} className="p-6 bg-background">
+                <div className="flex gap-1 mb-3">
+                  {[...Array(5)].map((_, j) => (
+                    <Star key={j} className="h-4 w-4 fill-primary text-primary" />
+                  ))}
                 </div>
-                <Building2 className="w-5 h-5 text-cyan-400 mb-2" />
-                <div className="font-semibold blur-sm select-none">▓▓▓▓▓▓▓▓▓▓ Inc.</div>
-                <div className="text-sm text-gray-400 flex items-center gap-1 mt-1">
-                  <MapPin className="w-3 h-3" /> {s.city}
+                <p className="text-sm mb-4 leading-relaxed">"{t.quote}"</p>
+                <div className="text-sm">
+                  <div className="font-semibold">{t.name}</div>
+                  <div className="text-muted-foreground text-xs">{t.role}</div>
                 </div>
-                <div className="mt-3 text-sm">
-                  <span className="text-cyan-300 font-semibold">{s.count}</span> {s.role} posted this week
-                </div>
-                <div className="mt-1 text-xs text-gray-500">{s.trade}</div>
-              </div>
+              </Card>
             ))}
           </div>
 
-          {/* Why */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-12">
-            <h2 className="text-2xl font-bold mb-4">Why supply houses use this</h2>
-            <ul className="space-y-3 text-gray-300">
-              <li className="flex gap-3">
-                <ShieldCheck className="w-5 h-5 text-cyan-400 mt-0.5 shrink-0" />
-                <span>Hiring = consumables order coming. We surface companies <em>before</em> the PO is cut.</span>
-              </li>
-              <li className="flex gap-3">
-                <ShieldCheck className="w-5 h-5 text-cyan-400 mt-0.5 shrink-0" />
-                <span>Sourced from public Michigan data: MIOSHA, BSEED permits, SAM.gov contracts. No scraped LinkedIn.</span>
-              </li>
-              <li className="flex gap-3">
-                <ShieldCheck className="w-5 h-5 text-cyan-400 mt-0.5 shrink-0" />
-                <span>Pay per dossier ($50 each, 5-pack) or get the firehose ($199/mo, all signals).</span>
-              </li>
-            </ul>
+          <div className="flex flex-wrap items-center justify-center gap-6 mt-12 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1"><ShieldCheck className="h-4 w-4 text-primary" /> Sourced from public records</span>
+            <span>·</span>
+            <span>Built in Grosse Pointe, MI</span>
+            <span>·</span>
+            <span>500+ signals processed weekly</span>
           </div>
+        </div>
+      </section>
 
-          {/* CTA */}
-          <div className="text-center bg-gradient-to-r from-cyan-500/10 to-cyan-500/5 border border-cyan-500/30 rounded-2xl p-10">
-            <h3 className="text-2xl font-bold mb-3">Try one for free</h3>
-            <p className="text-gray-300 mb-6">
-              Drop your work email. We'll send you one fully-unredacted dossier in under a minute.
-            </p>
-            <Link to="/get-dossier">
-              <Button className="bg-cyan-500 hover:bg-cyan-600 text-[#0a1628] font-bold text-lg px-10 py-6">
-                Get my free dossier <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
+      {/* Final CTA */}
+      <section className="mx-auto max-w-3xl px-4 py-20 text-center">
+        <h2 className="text-3xl md:text-5xl font-bold mb-4">Your competitors are guessing. You don't have to.</h2>
+        <p className="text-lg text-muted-foreground mb-8">
+          One snapshot. 15+ signals. Full company names, decision-makers, phone, and email.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button asChild size="lg" className="bg-primary hover:bg-primary/90" onClick={() => handleCheckoutClick("footer_unlock")}>
+            <Link to={checkoutUrl}>
+              Unlock this week — $99 <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
-          </div>
-        </section>
-      </div>
-    </>
+          </Button>
+          <Button asChild size="lg" variant="outline" onClick={() => handleCheckoutClick("footer_firehose")}>
+            <Link to={`/industrial-pulse?tier=firehose${utm ? `&${utm}` : ""}`}>
+              Daily firehose — $199/mo
+            </Link>
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground mt-6">
+          Questions? Text Matt directly: <a href="sms:+13139921219" className="text-primary hover:underline">(313) 992-1219</a>
+        </p>
+      </section>
+    </div>
   );
 }

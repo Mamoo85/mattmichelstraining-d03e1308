@@ -135,8 +135,6 @@ const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
 const GrowthRadarDashboard = lazyRetry(() => import("./pages/GrowthRadarDashboard"));
 const GetDossier = lazyRetry(() => import("./pages/GetDossier"));
-const GrowthSignalsLanding = lazyRetry(() => import("./pages/GrowthSignalsLanding"));
-const PulseAlerts = lazyRetry(() => import("./pages/PulseAlerts"));
 const ContractorROIReport = lazyRetry(() => import("./pages/ContractorROIReport"));
 const MyContractorLeads = lazyRetry(() => import("./pages/MyContractorLeads"));
 const DeadLeadStats = lazyRetry(() => import("./pages/DeadLeadStats"));
@@ -304,7 +302,7 @@ const WebsiteSpeedAudits = lazyRetry(() => import("./pages/WebsiteSpeedAudits"))
 const CrimeDigest = lazyRetry(() => import("./pages/CrimeDigest"));
 const IndustryPulse = lazyRetry(() => import("./pages/IndustryPulse"));
 const IndustrialPulse = lazyRetry(() => import("./pages/IndustrialPulse"));
-const IndustrialPulseReceipt = lazyRetry(() => import("./pages/IndustrialPulseReceipt"));
+const GrowthSignalsLanding = lazyRetry(() => import("./pages/GrowthSignalsLanding"));
 const MyIndustryPulse = lazyRetry(() => import("./pages/MyIndustryPulse"));
 const DemandRadar = lazyRetry(() => import("./pages/DemandRadar"));
 const HighVolumeBuyerAlerts = lazyRetry(() => import("./pages/HighVolumeBuyerAlerts"));
@@ -765,11 +763,9 @@ const App = () => (
                     <Route path="/growth-radar" element={<IndustryPulse />} />
                     <Route path="/growth-radar-dashboard" element={<GrowthRadarDashboard />} />
                     <Route path="/get-dossier" element={<GetDossier />} />
-                    <Route path="/growth-signals" element={<GrowthSignalsLanding />} />
-                    <Route path="/pulse-alerts" element={<PulseAlerts />} />
                     <Route path="/industry-pulse" element={<Navigate to="/growth-radar" replace />} />
                     <Route path="/industrial-pulse" element={<IndustrialPulse />} />
-                    <Route path="/industrial-pulse/receipt" element={<IndustrialPulseReceipt />} />
+                    <Route path="/growth-signals" element={<GrowthSignalsLanding />} />
                     <Route path="/my-industry-pulse" element={<MyIndustryPulse />} />
                     <Route path="/lead-radar" element={<ContractorLeads />} />
                     <Route path="/free-leads" element={<FreeLeadsQR />} />

@@ -75,8 +75,8 @@ serve(async (req) => {
         phone: phone || "",
         target_industries: Array.isArray(target_industries) ? target_industries.join(",") : "boiler,hvac,manufacturing",
       },
-      success_url: `${origin}/industrial-pulse/receipt?success=1&tier=${selectedTier}&email=${encodeURIComponent(email)}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/industrial-pulse?canceled=1`,
+      success_url: `${origin}/industry-pulse?success=1&tier=${selectedTier}`,
+      cancel_url: `${origin}/industry-pulse`,
     };
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
