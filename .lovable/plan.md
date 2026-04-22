@@ -1,113 +1,74 @@
 
 
-## Plan: Outreach Command Center + Admin Sidebar Cleanup
+## Fix: Postcard Campaigns Are Mismatched (HVAC copy on nursing-home campaign, mails to wrong businesses)
 
-You've got most of the pieces already (`prospect_pool`, `targeting-prospect-scraper`, postcard, fax, SMS drafts, LinkedIn Blitz, blocklist) — they're just scattered across **~50 sidebar tabs in 7 groups**. This plan bolts them into one **Contractor/Prospect Outreach Command Center** and trims the sidebar to ~25 tabs in 5 groups.
+### Root cause (3 layered bugs)
 
----
+1. **Prospects table has no `audience_type` column.** `postcard_prospects` only stores `county` + `source` (`lara_bpl`, `cms_nursing_home`, etc.). When you click *Confirm & Send*, `send-postcards` queries `WHERE county ILIKE 'macomb' AND postcard_sent_at IS NULL` — it does **not filter by audience**. So a nursing-home campaign in Macomb mails to every unsent Macomb prospect (HVAC, plumbers, contractors, supply houses — all of them).
 
-### Part 1 — New: "Outreach Command Center" tab
+2. **Recipient count uses the same unfiltered query** (`unsentByCounty(c.county)` on line 456 of `AdminPostcardCampaigns.tsx`). The "Will mail to 15 addresses" number is the wrong 15.
 
-A single screen built around `prospect_pool` (shared targeting brain) with 4 sub-tabs:
+3. **AI-generated copy can mismatch the audience badge.** `generate-postcard-copy` writes the AI's `copy_front` text into the campaign row but uses the badge's `audience_type` — and the AI sometimes produces trades copy under a nursing-home prompt or vice versa. Combined with bug #1, you get the screenshot: badge says `nursing-home`, front copy says "HVAC, Plumbing, Electrical: 26 Hot Candidates", recipients are a random Macomb mix.
 
-**Sub-tab 1 — Find Prospects (Targeting Engine)**
-- Search filters: **audience** (HVAC / Plumbing / Roofing / Electrical / Nursing Home / Supply House / Healthcare Staffing / Industrial Mfg / Senior Care), **county** (any US county, not just MI), **city/zip**, **min lead_score**, **channel hint** (email / postcard / fax / phone), **has email**, **has fax**, **has mailable address**, **has phone**, **suppression-clean**.
-- "Run Scrape" button → invokes `targeting-prospect-scraper` for the chosen audience+geo (existing function), then re-queries `prospect_pool`.
-- Re-uses existing `score-prospects` edge function to refresh lead_score on demand.
+### The fix — 3 parts, no destructive migration
 
-**Sub-tab 2 — Ranked Pool (results table)**
-- Sortable, paginated table of prospects (business, city, score, channels available, intel notes, last contacted, status).
-- Bulk-select + bulk action bar: **Add to Email Campaign · Add to Postcard Campaign · Add to Fax Campaign · Add to Call Sheet · Suppress · Export CSV**.
-- Row click → side drawer with full contact card, comms history (`system_comms_log` join), and per-channel "Draft now" buttons.
+**Part 1 — Database (1 migration):**
+- Add `audience_type TEXT` column to `postcard_prospects` (nullable, indexed).
+- Backfill existing rows from `source`:
+  - `cms_nursing_home` → `nursing-home`
+  - `lara_bpl`, `lara_accela` → `contractor`
+  - `healthcare_staffing` → `healthcare-agency`
+  - `trades_staffing` → `trades-agency`
+  - `supply_house` → `supply-house`
+  - everything else stays NULL (won't be auto-mailed)
+- Update `targeting-prospect-scraper` and `lara-business-scraper` / `lara-accela-scraper` / `enrich-postcard-addresses` to write `audience_type` on every insert going forward.
 
-**Sub-tab 3 — Active Campaigns**
-- Single unified campaign list across **email / postcard / fax / SMS** with channel badges, send counts, delivered/opened/replied, cost-to-date, "Resend Failed", "Pause".
-- Reads from existing tables (`postcard_campaigns`, `fax_campaigns`, `email_send_log`, `system_comms_log`) — no new schema.
+**Part 2 — `send-postcards` audience filter (the real safety fix):**
+- Line 347 query becomes:
+  ```ts
+  prospectQuery = prospectQuery
+    .ilike("county", campaign.county)
+    .eq("audience_type", campaign.audience_type)  // ← NEW
+    .is("postcard_sent_at", null)
+    .limit(MAX_PER_RUN);
+  ```
+- If `campaign.audience_type` is NULL or no prospects match → fail loudly with the exact reason (so "draft mailed wrong people" can never happen again).
+- `diagnose()` (`dry_run`) shows the same audience-filtered count.
 
-**Sub-tab 4 — Compliance & Suppression**
-- Combined view of `sms_opt_outs`, `suppressed_emails`, `fax_opt_outs`, postcard returns.
-- Single "Add to all blocklists" input.
-- Pulls TCPA quiet-hours stats from existing `compliance-stats` function.
+**Part 3 — Admin UI clarity (`AdminPostcardCampaigns.tsx`):**
+- `unsentByCounty` becomes `unsentForCampaign(c)` — filters by both `county` AND `audience_type`.
+- Each campaign card header is rebuilt to make the mismatch visually impossible:
+  ```
+  ┌─────────────────────────────────────────────────────────┐
+  │ 📮 NURSING-HOME · Macomb County · DRAFT                 │
+  │ ─────────────────────────────────────────────────────── │
+  │ Audience: Nursing Home / Facility (emerald)             │
+  │ Will mail to: 8 nursing homes in Macomb                 │
+  │ Cost: $6.80 · QR target: /postcard?audience=...         │
+  │                                                          │
+  │ FRONT COPY:                                              │
+  │ "Struggling to Find Nurses? We Find Them First."        │
+  │   ⚠️ Auto-flag if copy mentions HVAC/plumbing/electrical │
+  │      while audience is nursing-home/healthcare           │
+  │      → "Copy/audience mismatch — regenerate"             │
+  │                                                          │
+  │ [🔍 Diagnose] [✏️ Regenerate Copy] [Confirm & Send]     │
+  └─────────────────────────────────────────────────────────┘
+  ```
+- Add a **Regenerate Copy** button that re-invokes `generate-postcard-copy` for that exact campaign (replaces front/back without creating a new draft).
+- Add a **mismatch detector** (client-side string check: if audience is healthcare/nursing-home and `copy_front` contains "HVAC|Plumbing|Electrical|Tradespeople" — show an inline red warning + disable Send until regenerated).
+- "Confirm & Send" button text becomes: `Send 8 postcards to nursing-homes in Macomb · $6.80` (audience name + count + cost together).
+- Group the campaigns list by audience (collapsible sections: 🩺 Healthcare · 🔧 Trades · 🏥 Nursing Homes · 📦 Supply Houses) so you can see at a glance what's queued for each vertical.
 
-**File**: `src/components/dwa-admin/OutreachCommandCenter.tsx` (~600 lines, uses existing tables + edge functions; no DB migration needed).
-
----
-
-### Part 2 — Sidebar consolidation (50 → ~25 tabs)
-
-Current sidebar has duplicates and dead-weight. New structure:
-
-```text
-REVENUE
-  📊 Overview          (AdminDWAOverview)
-  💰 Revenue           (AdminDWARevenueDashboard)
-  🟢 Leads E2E         (AdminContractorLeadsStatus)
-  📍 Prospect Tracker  (AdminProspectTracker)
-  🤖 Agent Toolkit     (AgentToolkit)
-
-OUTREACH  ← NEW unified hub replaces 9 separate tabs
-  🎯 Command Center    (NEW — Find/Ranked/Campaigns/Compliance)
-  💬 SMS Inbox         (AdminSMSInbox)
-  ✍️ Pending Drafts    (AdminPendingSMSDrafts)
-  📞 Daily Call Sheet  (AdminCallList)
-  💼 LinkedIn Blitz    (AdminLinkedInBlitz)
-  🚀 Ad Launcher       (AdminAdLauncher)
-  📨 Agency Outreach   (AdminAgencyOutreach)
-
-CUSTOMERS  ← consolidated
-  🏗️ Contractor Leads        (AdminContractorLeads)
-  🤝 Contractor Onboarding   (AdminContractorOnboarding)
-  ♻️ Dead Leads              (AdminDeadLeads)
-  🛠️ FieldDesk Clients       (AdminFieldCRMClients)
-  🎯 TechAlert Clients       (AdminHireAlertClients via TalentRadarHub)
-  👥 All Clients / CRM       (DWAClientRoster + AdminCRMDashboard merged into one tab)
-
-INTEL & RADARS  ← merge "Radars" + "Market Intel" + "Intel"
-  🎯 Talent Radar      (TalentRadarHub)
-  📈 Demand Radar      (DemandRadarHub)
-  📦 High-Volume Buyers(AdminHighVolumeBuyer)
-  📡 Growth Signals    (AdminGrowthSignals — also absorbs Medicare + Industrial intel as filters)
-  👁️ Visitor Intel     (VisitorIntelFeed)
-  📡 The Wire          (AdminTheWire)
-  🗺️ Coverage Map      (AdminCoverageMap)
-
-OPS & TOOLS  ← collapsed from "Tools" (was 16 items)
-  🛡️ Health & Compliance  (NEW wrapper tab with 4 sub-tabs:
-                           Service Resilience · Cron Sentinel + Status · TCPA · LARA Health · Error Logs)
-  🧪 Simulation Suite     (AdminSimulationSuite — also absorbs Labs as a sub-tab)
-  📖 Playbook & Strategy  (NEW wrapper: Playbook · Strategy · Sales Guide as sub-tabs)
-  ⚙️ Field Ops            (NEW wrapper: Field Stats · Jobs · Assets · Contracts · Import as sub-tabs)
-  🎛️ Command Deck         (DWACommandDeck)
-```
-
-**Removed from sidebar (still exist as components, just not top-level tabs):**
-- `Postcards`, `Faxes`, `Targeting`, `Outbox`, `Supplier Outreach`, `Blocklist`, `TechAlert Prospects`, `Trojan Log`, `Community Drop`, `Referral Kickback`, `Ad Spend Tracker`, `Ad Optimizer Log`, `Medicare Intel`, `Industrial Intel` → all reachable as sub-tabs inside Command Center, Growth Signals, or Outreach hub.
-
-Net effect: **7 groups → 5 groups**, **~50 tabs → 25 tabs**.
-
----
-
-### Part 3 — Audit findings on top products (no rebuild needed, fixes only)
-
-| Product | Outreach gap | Fix in this plan |
-|---|---|---|
-| Contractor Leads ($399/mo) | No way to find/cold-pitch HVAC/plumbing contractors at scale across cities | Command Center → Find Prospects audience = "Contractor", multi-city, push to email + postcard + fax in one flow |
-| TechAlert ($149/mo) | Nursing home / staffing agency targeting was siloed in 2 separate tabs | Command Center audience = "Nursing Home" / "Healthcare Staffing" → unified |
-| FieldDesk ($199/mo) | No prospect pipeline at all | Command Center audience = "Industrial Mfg" / "Trades" → fed into existing pipelines |
-| Dead Lead Reactivation | Self-serve `/dead-lead-intake` works, but no admin-driven outbound to *new* contractors | Command Center → Contractor audience → "Add to Email Campaign" with dead-lead-pitch template (existing in `contractor-prospector`) |
-
-No new edge functions or DB migrations needed — the targeting brain (`prospect_pool` + `targeting-prospect-scraper` + `score-prospects`) is already built and producing data.
-
----
+### What won't change
+- Cost guardrails, Lob send loop, send_log tracking, conversion tracking — all unchanged.
+- Existing draft campaigns stay; after the migration runs, the audience filter will simply scope them to the right prospects (or fail fast with "0 nursing-home prospects in Macomb" if the pool is empty — at which point you click *Find Prospects* on the Find tab).
 
 ### Files touched
+- **NEW migration**: `supabase/migrations/20260422XXXXXX_postcard_prospects_audience.sql`
+- **EDITED**: `supabase/functions/send-postcards/index.ts` (audience filter on lines 342–348 + dry_run path)
+- **EDITED**: `supabase/functions/targeting-prospect-scraper/index.ts`, `lara-business-scraper/index.ts`, `lara-accela-scraper/index.ts`, `enrich-postcard-addresses/index.ts` (write `audience_type` on insert/upsert)
+- **EDITED**: `src/components/admin/AdminPostcardCampaigns.tsx` (filtered count, regenerate button, mismatch warning, grouped layout, clearer Send label)
 
-- **NEW**: `src/components/dwa-admin/OutreachCommandCenter.tsx`
-- **NEW**: `src/components/dwa-admin/HealthComplianceHub.tsx` (wrapper tab)
-- **NEW**: `src/components/dwa-admin/PlaybookHub.tsx` (wrapper tab)
-- **NEW**: `src/components/dwa-admin/FieldOpsHub.tsx` (wrapper tab)
-- **EDITED**: `src/pages/DWAAdmin.tsx` — sidebar groups + tab routing
-- No DB migrations, no new edge functions, no Stripe changes
-
-Estimated build: 1 pass, ~700 lines of new TSX, ~80 lines removed from `DWAAdmin.tsx`.
+No Stripe, no edge function config, no breaking changes to existing send_log rows.
 
