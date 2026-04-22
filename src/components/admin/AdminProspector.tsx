@@ -1814,6 +1814,7 @@ export default function AdminProspector() {
                     onDelete={deletePipelineLead}
                     onReEnrich={reEnrichLead}
                     onViewTimeline={setTimelineLead}
+                    onScheduleFollowUp={scheduleFollowUp}
                     auditingId={auditingId}
                     sendingId={sendingId}
                     researchingId={researchingId}
