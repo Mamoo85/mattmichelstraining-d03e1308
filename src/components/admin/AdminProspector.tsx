@@ -497,7 +497,7 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
 }
 
 // ── Kanban Column ──
-function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, onReEnrich, onViewTimeline, auditingId, sendingId, researchingId, drippingId, reEnrichingId }: {
+function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, onReEnrich, onViewTimeline, onScheduleFollowUp, auditingId, sendingId, researchingId, drippingId, reEnrichingId }: {
   stage: typeof PIPELINE_STAGES[0];
   leads: PipelineLead[];
   onAudit: (lead: PipelineLead) => void;
@@ -509,6 +509,7 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepRes
   onDelete: (lead: PipelineLead) => void;
   onReEnrich: (lead: PipelineLead) => void;
   onViewTimeline: (lead: PipelineLead) => void;
+  onScheduleFollowUp: (lead: PipelineLead, hours: number) => void;
   auditingId: string | null;
   sendingId: string | null;
   researchingId: string | null;
