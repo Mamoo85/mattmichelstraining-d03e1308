@@ -570,7 +570,7 @@ export default function AdminSMSInbox() {
         </div>
 
         {/* Conversation panel — hidden on mobile when on list */}
-        <div className={`${showConvoOnMobile ? "flex" : "hidden"} md:flex border border-white/10 rounded-lg bg-white/[0.02] flex-col min-h-0`}>
+        <div className={`${showConvoOnMobile ? "flex" : "hidden"} md:flex border border-white/10 rounded-lg bg-white/[0.02] flex-col min-h-0 relative`}>
           {!activeThread && !composing && (
             <div className="flex-1 flex items-center justify-center text-white/40 text-sm">
               Select a conversation or tap ✏️ New
