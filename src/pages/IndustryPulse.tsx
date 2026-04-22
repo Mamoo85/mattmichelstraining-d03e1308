@@ -73,6 +73,7 @@ export default function IndustryPulse() {
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [phone, setPhone] = useState("");
+  const [supplierType, setSupplierType] = useState<SupplierType>("");
   const [loading, setLoading] = useState<Tier | null>(null);
 
   useEffect(() => {
@@ -81,10 +82,11 @@ export default function IndustryPulse() {
 
   const handleCheckout = async (tier: Tier) => {
     if (!email) { toast.error("Email is required"); return; }
+    if (!supplierType) { toast.error("Please select your supply vertical so we send you the right signals"); return; }
     setLoading(tier);
     try {
       const { data, error } = await supabase.functions.invoke("create-industry-pulse-checkout", {
-        body: { email, company_name: company, phone, contact_name: company, tier },
+        body: { email, company_name: company, phone, contact_name: company, tier, supplier_type: supplierType },
       });
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
