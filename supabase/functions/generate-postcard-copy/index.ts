@@ -33,7 +33,7 @@ serve(async (req) => {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   try {
-    const { county, audience_type } = await req.json();
+    const { county, audience_type, replace_campaign_id } = await req.json();
     const targetCounty = county || "Macomb";
     const audience = audience_type || "trades";
     const audienceDesc = AUDIENCE_PROMPTS[audience] || AUDIENCE_PROMPTS.trades;
@@ -122,19 +122,33 @@ Only return the JSON array.`,
       ];
     }
 
-    // Store campaign drafts
+    // If replacing an existing draft, update it in place with the first variant.
+    // Otherwise insert all variants as new drafts.
     const inserted = [];
-    for (const v of variants) {
-      const { data, error } = await sb.from("postcard_campaigns").insert({
-        county: targetCounty,
+    if (replace_campaign_id && variants[0]) {
+      const v = variants[0];
+      const { data, error } = await sb.from("postcard_campaigns").update({
         copy_front: v.copy_front,
         copy_back: v.copy_back,
         qr_url: qrUrl,
-        status: "draft",
         audience_type: audience,
-      }).select().single();
-
+        last_error: null,
+      }).eq("id", replace_campaign_id).select().single();
       if (data) inserted.push(data);
+      if (error) console.error("[generate-postcard-copy] replace failed:", error);
+    } else {
+      for (const v of variants) {
+        const { data } = await sb.from("postcard_campaigns").insert({
+          county: targetCounty,
+          copy_front: v.copy_front,
+          copy_back: v.copy_back,
+          qr_url: qrUrl,
+          status: "draft",
+          audience_type: audience,
+        }).select().single();
+
+        if (data) inserted.push(data);
+      }
     }
 
     return new Response(
