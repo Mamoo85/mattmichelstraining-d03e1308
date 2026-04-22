@@ -137,6 +137,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "supplier-outreach",label: "🏭 Supplier Outreach" },
       { id: "blocklist",        label: "🛡️ Outreach Blocklist" },
       { id: "outreach-log",     label: "📡 Outreach Log" },
+    ],
   },
   {
     label: "Intel",
