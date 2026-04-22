@@ -337,6 +337,57 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_command_log: {
+        Row: {
+          admin_email: string
+          brand: string | null
+          created_at: string
+          draft_output: Json | null
+          error_message: string | null
+          id: string
+          plan_json: Json | null
+          prompt: string
+          rows_returned: number | null
+          steps: Json | null
+          tools_used: string[] | null
+          total_cost_usd: number | null
+          user_action: string | null
+          web_calls: number | null
+        }
+        Insert: {
+          admin_email: string
+          brand?: string | null
+          created_at?: string
+          draft_output?: Json | null
+          error_message?: string | null
+          id?: string
+          plan_json?: Json | null
+          prompt: string
+          rows_returned?: number | null
+          steps?: Json | null
+          tools_used?: string[] | null
+          total_cost_usd?: number | null
+          user_action?: string | null
+          web_calls?: number | null
+        }
+        Update: {
+          admin_email?: string
+          brand?: string | null
+          created_at?: string
+          draft_output?: Json | null
+          error_message?: string | null
+          id?: string
+          plan_json?: Json | null
+          prompt?: string
+          rows_returned?: number | null
+          steps?: Json | null
+          tools_used?: string[] | null
+          total_cost_usd?: number | null
+          user_action?: string | null
+          web_calls?: number | null
+        }
+        Relationships: []
+      }
       admin_media_files: {
         Row: {
           created_at: string
