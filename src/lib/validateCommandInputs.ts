@@ -120,7 +120,7 @@ export function validateQueuePayload(
       return { ok: false, reason: `Draft #${i + 1} subject too long (max ${SUBJECT_MAX}).` };
     }
     const recipientCheck = validateRecipient({ to_email: d.to_email, to_phone: d.to_phone });
-    if (!recipientCheck.ok) {
+    if (recipientCheck.ok === false) {
       return { ok: false, reason: `Draft #${i + 1}: ${recipientCheck.reason}` };
     }
   }
