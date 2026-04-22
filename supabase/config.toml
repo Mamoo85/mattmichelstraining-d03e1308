@@ -1699,3 +1699,12 @@ verify_jwt = false
 
 [functions.postcard-tracking-digest]
 verify_jwt = false
+
+[functions.prospect-nudge-status-callback]
+verify_jwt = false
+
+[functions.prospect-nudge-retry]
+verify_jwt = false
+
+[functions.prospect-nudge-request-approval]
+verify_jwt = false
