@@ -139,6 +139,11 @@ export default function AdminGrowthSignals() {
     return list;
   }, [signals, confidenceFilter, industryFilter, watchlist]);
 
+  const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+
+  // Reset pagination when filters change
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [confidenceFilter, industryFilter]);
+
   const stats = useMemo(() => ({
     total: signals.length,
     highConf: signals.filter(s => s.confidence >= 7).length,
