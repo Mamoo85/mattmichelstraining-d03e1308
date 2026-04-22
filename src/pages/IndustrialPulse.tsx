@@ -42,48 +42,6 @@ export default function IndustrialPulse() {
   const [unlockPlan, setUnlockPlan] = useState<"snapshot_50" | "firehose_199">("snapshot_50");
   const [unlocking, setUnlocking] = useState(false);
 
-  type EntitlementStatus =
-    | "active_firehose"
-    | "active_snapshot"
-    | "expired_snapshot"
-    | "pending"
-    | "none";
-  interface Entitlement {
-    status: EntitlementStatus;
-    plan: "snapshot_50" | "firehose_199" | null;
-    week_start: string | null;
-    days_remaining: number;
-    expires_on: string | null;
-    message: string;
-  }
-  const [entitlement, setEntitlement] = useState<Entitlement | null>(null);
-  const [checkingEntitlement, setCheckingEntitlement] = useState(false);
-
-  // Check entitlement for whatever email the user has typed
-  // (debounced lightly via setTimeout in the effect below).
-  async function checkEntitlement(emailToCheck: string) {
-    if (!emailToCheck || !emailToCheck.includes("@")) {
-      setEntitlement(null);
-      return;
-    }
-    setCheckingEntitlement(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("industrial-pulse-entitlement", {
-        body: { email: emailToCheck.trim().toLowerCase() },
-      });
-      if (error) throw error;
-      if (data?.ok) {
-        setEntitlement(data as Entitlement);
-      } else {
-        setEntitlement(null);
-      }
-    } catch {
-      setEntitlement(null);
-    } finally {
-      setCheckingEntitlement(false);
-    }
-  }
-
   useEffect(() => {
     // Auto-open unlock modal if ?unlock=1 in URL (from email CTA)
     const params = new URLSearchParams(window.location.search);
@@ -91,22 +49,7 @@ export default function IndustrialPulse() {
     if (params.get("unlocked") === "1") {
       toast.success("Payment received — check your inbox in the next 5 minutes for the full list.");
     }
-    // Pre-fill from ?email= and immediately check entitlement
-    const prefillEmail = params.get("email");
-    if (prefillEmail) {
-      setEmail(prefillEmail);
-      setUnlockEmail(prefillEmail);
-      checkEntitlement(prefillEmail);
-    }
   }, []);
-
-  // Re-check entitlement when the email in either input settles
-  useEffect(() => {
-    const target = unlockEmail.trim() || email.trim();
-    if (!target) { setEntitlement(null); return; }
-    const t = setTimeout(() => checkEntitlement(target), 500);
-    return () => clearTimeout(t);
-  }, [email, unlockEmail]);
 
   async function handleUnlock(e: React.FormEvent) {
     e.preventDefault();
@@ -181,17 +124,17 @@ export default function IndustrialPulse() {
 
       <main className="min-h-screen bg-[#020617] text-white">
         {/* Hero */}
-        <section className="border-b border-[#1e3a5f] px-6 py-16 md:py-24">
+        <section className="border-b border-[#1e3a5f] px-4 sm:px-6 py-10 sm:py-16 md:py-24">
           <div className="max-w-4xl mx-auto">
-            <div className="text-[10px] md:text-xs tracking-[0.3em] text-[#00d4ff] font-bold uppercase mb-4">
+            <div className="text-[10px] md:text-xs tracking-[0.3em] text-[#00d4ff] font-bold uppercase mb-3 sm:mb-4">
               DETROIT INDUSTRIAL PULSE · FREE WEEKLY DIGEST
             </div>
-            <h1 className="text-3xl md:text-5xl font-bold leading-tight mb-6">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold leading-tight mb-4 sm:mb-6">
               {totalCount > 0 ? totalCount : "42"} Metro Detroit manufacturers
               <br />
               <span className="text-[#00d4ff]">hired this week.</span>
             </h1>
-            <p className="text-base md:text-lg text-slate-300 leading-relaxed max-w-2xl mb-8">
+            <p className="text-sm sm:text-base md:text-lg text-slate-300 leading-relaxed max-w-2xl mb-6 sm:mb-8">
               New crews mean new orders for consumables, equipment, and services within 30 days.
               Every Tuesday at 7am, we send 3 of this week's signals — company name blurred until you unlock.
               No fluff. Built for branch managers at industrial supply houses.
@@ -200,39 +143,39 @@ export default function IndustrialPulse() {
         </section>
 
         {/* Teasers */}
-        <section className="px-6 py-12">
+        <section className="px-4 sm:px-6 py-8 sm:py-12">
           <div className="max-w-4xl mx-auto">
-            <div className="text-xs tracking-widest text-slate-500 font-bold uppercase mb-6">
+            <div className="text-xs tracking-widest text-slate-500 font-bold uppercase mb-4 sm:mb-6">
               ↓ This week's signals (3 of {totalCount || "many"})
             </div>
 
             {loadingTeasers ? (
-              <div className="text-center py-16">
+              <div className="text-center py-12 sm:py-16">
                 <Loader2 className="w-8 h-8 animate-spin text-[#00d4ff] mx-auto" />
               </div>
             ) : teasers.length === 0 ? (
-              <div className="text-center py-16 text-slate-500 text-sm">
+              <div className="text-center py-12 sm:py-16 text-slate-500 text-sm">
                 Radar is still warming up — first digest goes out Tuesday.
               </div>
             ) : (
-              <div className="grid gap-4">
+              <div className="grid gap-3 sm:gap-4">
                 {teasers.map((t) => (
-                  <div key={t.id} className="border border-[#1e3a5f] bg-[#0a1628] p-5 rounded-md">
-                    <div className="flex items-start justify-between gap-4 mb-3">
-                      <div className="font-mono text-xl text-[#00d4ff] font-semibold tracking-wider">
+                  <div key={t.id} className="border border-[#1e3a5f] bg-[#0a1628] p-4 sm:p-5 rounded-md">
+                    <div className="flex items-start justify-between gap-3 sm:gap-4 mb-2 sm:mb-3">
+                      <div className="font-mono text-lg sm:text-xl text-[#00d4ff] font-semibold tracking-wider break-all">
                         {t.redacted_company}
                       </div>
-                      <div className="bg-[#00d4ff] text-[#0a1628] text-[10px] font-bold px-2 py-1 rounded">
+                      <div className="bg-[#00d4ff] text-[#0a1628] text-[10px] font-bold px-2 py-1 rounded shrink-0">
                         {t.confidence}/10
                       </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-400 mb-3">
+                    <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1.5 sm:gap-y-2 text-xs text-slate-400 mb-2 sm:mb-3">
                       {t.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {t.location}</span>}
                       {t.industry && <span>· {t.industry}</span>}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-200 mb-3">
-                      <Briefcase className="w-3.5 h-3.5 text-[#00d4ff]" />
-                      Hiring <strong className="text-white">{t.hiring_count || "multiple"}× {t.hiring_roles.join(", ") || "trades"}</strong>
+                    <div className="flex items-center gap-2 text-sm text-slate-200 mb-2 sm:mb-3">
+                      <Briefcase className="w-3.5 h-3.5 text-[#00d4ff] shrink-0" />
+                      <span className="break-words">Hiring <strong className="text-white">{t.hiring_count || "multiple"}× {t.hiring_roles.join(", ") || "trades"}</strong></span>
                     </div>
                     {t.predicted_needs.length > 0 && (
                       <div className="text-xs text-slate-500">
@@ -240,7 +183,7 @@ export default function IndustrialPulse() {
                       </div>
                     )}
                     <div className="mt-3 pt-3 border-t border-[#1e3a5f] flex items-center gap-2 text-xs text-slate-500">
-                      <Lock className="w-3 h-3" />
+                      <Lock className="w-3 h-3 shrink-0" />
                       Company name unlocks for subscribers
                     </div>
                   </div>
@@ -248,80 +191,30 @@ export default function IndustrialPulse() {
               </div>
             )}
 
-            {/* Unlock CTA strip — shown right under teasers; messaging reflects current entitlement */}
+            {/* Unlock CTA strip — shown right under teasers */}
             {teasers.length > 0 && (
-              <div className="mt-8 border-2 border-[#00d4ff] bg-[#0a1628] rounded-md p-6 text-center">
-                {entitlement?.status === "active_firehose" ? (
-                  <>
-                    <div className="text-xs tracking-widest text-[#00d4ff] font-bold uppercase mb-2">
-                      ✓ Firehose active
-                    </div>
-                    <div className="text-lg md:text-xl font-bold text-white mb-2">
-                      You already have full access to every signal.
-                    </div>
-                    <div className="text-sm text-slate-400">
-                      Daily digests are landing in <span className="text-white font-semibold">{(unlockEmail || email).trim()}</span>.
-                      No need to unlock anything else.
-                    </div>
-                  </>
-                ) : entitlement?.status === "active_snapshot" ? (
-                  <>
-                    <div className="text-xs tracking-widest text-[#00d4ff] font-bold uppercase mb-2">
-                      ✓ This week's snapshot is unlocked
-                    </div>
-                    <div className="text-lg md:text-xl font-bold text-white mb-2">
-                      Active for {entitlement.days_remaining} more day{entitlement.days_remaining === 1 ? "" : "s"}
-                      {entitlement.expires_on ? ` · expires ${entitlement.expires_on}` : ""}
-                    </div>
-                    <div className="text-sm text-slate-400 mb-4">
-                      Want this every week without re-buying? Upgrade to the daily firehose.
-                    </div>
-                    <button
-                      onClick={() => { setUnlockPlan("firehose_199"); setUnlockOpen(true); }}
-                      className="border-2 border-[#00d4ff] text-[#00d4ff] font-bold px-6 py-3 rounded-md hover:bg-[#00d4ff]/10 transition text-sm uppercase tracking-wider"
-                    >
-                      Upgrade to firehose · $199/mo
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-xs tracking-widest text-[#00d4ff] font-bold uppercase mb-2">
-                      {entitlement?.status === "expired_snapshot"
-                        ? "Your last snapshot has expired"
-                        : entitlement?.status === "pending"
-                          ? "Pending checkout — finish payment to unlock"
-                          : "Want the company names?"}
-                    </div>
-                    <div className="text-lg md:text-xl font-bold text-white mb-4">
-                      {entitlement?.status === "expired_snapshot"
-                        ? `Unlock this week's ${totalCount || 3} new signals`
-                        : `Unlock all ${totalCount || 3} signals from this week`}
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                      <button
-                        onClick={() => { setUnlockPlan("snapshot_50"); setUnlockOpen(true); }}
-                        className="bg-[#00d4ff] text-[#0a1628] font-bold px-6 py-3 rounded-md hover:bg-[#00d4ff]/90 transition text-sm uppercase tracking-wider flex items-center justify-center gap-2"
-                      >
-                        <Zap className="w-4 h-4" />
-                        {entitlement?.status === "expired_snapshot" ? "Unlock new week · $50" : "Unlock this week · $50"}
-                      </button>
-                      <button
-                        onClick={() => { setUnlockPlan("firehose_199"); setUnlockOpen(true); }}
-                        className="border-2 border-[#00d4ff] text-[#00d4ff] font-bold px-6 py-3 rounded-md hover:bg-[#00d4ff]/10 transition text-sm uppercase tracking-wider"
-                      >
-                        Daily firehose · $199/mo
-                      </button>
-                    </div>
-                    <div className="text-[11px] text-slate-500 mt-3">
-                      {entitlement?.status === "expired_snapshot"
-                        ? "Snapshots cover one week (Mon–Sun). Firehose never expires."
-                        : "One-time or cancel anytime · Instant email delivery"}
-                    </div>
-                  </>
-                )}
-                {checkingEntitlement && (
-                  <div className="text-[10px] text-slate-600 mt-2 uppercase tracking-widest">checking access…</div>
-                )}
+              <div className="mt-6 sm:mt-8 border-2 border-[#00d4ff] bg-[#0a1628] rounded-md p-4 sm:p-6 text-center">
+                <div className="text-xs tracking-widest text-[#00d4ff] font-bold uppercase mb-2">
+                  Want the company names?
+                </div>
+                <div className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">
+                  Unlock all {totalCount || 3} signals from this week
+                </div>
+                <div className="flex flex-col gap-2 sm:gap-3">
+                  <button
+                    onClick={() => { setUnlockPlan("snapshot_50"); setUnlockOpen(true); }}
+                    className="bg-[#00d4ff] text-[#0a1628] font-bold px-4 sm:px-6 py-3 sm:py-4 rounded-md hover:bg-[#00d4ff]/90 transition text-sm uppercase tracking-wider flex items-center justify-center gap-2 min-h-[48px]"
+                  >
+                    <Zap className="w-4 h-4" /> Unlock this week · $50
+                  </button>
+                  <button
+                    onClick={() => { setUnlockPlan("firehose_199"); setUnlockOpen(true); }}
+                    className="border-2 border-[#00d4ff] text-[#00d4ff] font-bold px-4 sm:px-6 py-3 sm:py-4 rounded-md hover:bg-[#00d4ff]/10 transition text-sm uppercase tracking-wider min-h-[48px]"
+                  >
+                    Daily firehose · $199/mo
+                  </button>
+                </div>
+                <div className="text-[10px] sm:text-[11px] text-slate-500 mt-3">One-time or cancel anytime · Instant email delivery</div>
               </div>
             )}
           </div>
@@ -330,16 +223,16 @@ export default function IndustrialPulse() {
         {/* Unlock modal */}
         {unlockOpen && (
           <div
-            className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center px-4"
+            className="fixed inset-0 z-50 bg-black/90 sm:bg-black/80 flex items-end sm:items-center justify-center px-0 sm:px-4"
             onClick={() => !unlocking && setUnlockOpen(false)}
           >
             <div
-              className="bg-[#020617] border-2 border-[#00d4ff] rounded-lg max-w-md w-full p-6 relative"
+              className="bg-[#020617] border-2 border-[#00d4ff] rounded-t-xl sm:rounded-lg w-full max-w-md p-4 sm:p-6 relative max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => !unlocking && setUnlockOpen(false)}
-                className="absolute top-3 right-3 text-slate-400 hover:text-white"
+                className="absolute top-3 right-3 text-slate-400 hover:text-white p-1"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
@@ -347,7 +240,7 @@ export default function IndustrialPulse() {
               <div className="text-xs tracking-widest text-[#00d4ff] font-bold uppercase mb-2">
                 {unlockPlan === "snapshot_50" ? "This Week's Unlock" : "Firehose Subscription"}
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
                 {unlockPlan === "snapshot_50" ? "$50 — one-time" : "$199/mo — cancel anytime"}
               </h3>
               <p className="text-sm text-slate-400 mb-5 leading-relaxed">
@@ -360,14 +253,14 @@ export default function IndustrialPulse() {
                 <button
                   type="button"
                   onClick={() => setUnlockPlan("snapshot_50")}
-                  className={`flex-1 px-3 py-2 rounded font-semibold uppercase tracking-wider ${unlockPlan === "snapshot_50" ? "bg-[#00d4ff] text-[#0a1628]" : "border border-[#1e3a5f] text-slate-400"}`}
+                  className={`flex-1 px-3 py-3 rounded font-semibold uppercase tracking-wider min-h-[44px] ${unlockPlan === "snapshot_50" ? "bg-[#00d4ff] text-[#0a1628]" : "border border-[#1e3a5f] text-slate-400"}`}
                 >
                   Snapshot $50
                 </button>
                 <button
                   type="button"
                   onClick={() => setUnlockPlan("firehose_199")}
-                  className={`flex-1 px-3 py-2 rounded font-semibold uppercase tracking-wider ${unlockPlan === "firehose_199" ? "bg-[#00d4ff] text-[#0a1628]" : "border border-[#1e3a5f] text-slate-400"}`}
+                  className={`flex-1 px-3 py-3 rounded font-semibold uppercase tracking-wider min-h-[44px] ${unlockPlan === "firehose_199" ? "bg-[#00d4ff] text-[#0a1628]" : "border border-[#1e3a5f] text-slate-400"}`}
                 >
                   Firehose $199/mo
                 </button>
@@ -380,17 +273,17 @@ export default function IndustrialPulse() {
                   onChange={(e) => setUnlockEmail(e.target.value)}
                   required
                   placeholder="Work email"
-                  className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#00d4ff] text-white px-4 py-3 rounded-md outline-none text-sm"
+                  className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#00d4ff] text-white px-4 py-3 sm:py-4 rounded-md outline-none text-sm min-h-[48px]"
                 />
                 <button
                   type="submit"
                   disabled={unlocking || !unlockEmail.trim()}
-                  className="w-full bg-[#00d4ff] text-[#0a1628] font-bold py-3 rounded-md hover:bg-[#00d4ff]/90 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm uppercase tracking-wider"
+                  className="w-full bg-[#00d4ff] text-[#0a1628] font-bold py-3 sm:py-4 rounded-md hover:bg-[#00d4ff]/90 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm uppercase tracking-wider min-h-[48px]"
                 >
                   {unlocking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                   {unlocking ? "Redirecting…" : "Continue to checkout"}
                 </button>
-                <p className="text-[10px] text-slate-500 text-center">
+                <p className="text-[10px] sm:text-[11px] text-slate-500 text-center">
                   Secure Stripe checkout · No account required
                 </p>
               </form>
@@ -398,21 +291,21 @@ export default function IndustrialPulse() {
           </div>
         )}
         {/* Signup form */}
-        <section id="signup" className="px-6 py-16 border-t border-[#1e3a5f]">
+        <section id="signup" className="px-4 sm:px-6 py-10 sm:py-16 border-t border-[#1e3a5f]">
           <div className="max-w-xl mx-auto">
             <div className="text-xs tracking-widest text-[#00d4ff] font-bold uppercase mb-3">
               ↓ Get this week's full list
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4">
               Free weekly digest. Unlock company names anytime.
             </h2>
-            <p className="text-sm text-slate-400 mb-8 leading-relaxed">
+            <p className="text-sm text-slate-400 mb-6 sm:mb-8 leading-relaxed">
               No credit card. No spam. Tuesday 7am ET. Unsubscribe one click. If a signal turns into a sale,
               you can unlock the full week ($50) or every signal across every vertical ($199/mo).
             </p>
 
             {done ? (
-              <div className="border border-[#00d4ff] bg-[#00d4ff]/10 p-6 rounded-md flex items-start gap-3">
+              <div className="border border-[#00d4ff] bg-[#00d4ff]/10 p-4 sm:p-6 rounded-md flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-[#00d4ff] mt-0.5 flex-shrink-0" />
                 <div>
                   <div className="font-semibold text-white mb-1">You're on the list.</div>
@@ -429,7 +322,7 @@ export default function IndustrialPulse() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="branch.manager@supplyco.com"
-                    className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#00d4ff] text-white px-4 py-3 rounded-md outline-none text-sm"
+                    className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#00d4ff] text-white px-4 py-3 sm:py-4 rounded-md outline-none text-sm min-h-[48px]"
                   />
                 </div>
                 <div>
@@ -439,7 +332,7 @@ export default function IndustrialPulse() {
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
                     placeholder="Behler-Young, Standard Supply, etc."
-                    className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#00d4ff] text-white px-4 py-3 rounded-md outline-none text-sm"
+                    className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#00d4ff] text-white px-4 py-3 sm:py-4 rounded-md outline-none text-sm min-h-[48px]"
                   />
                 </div>
                 <div>
@@ -447,7 +340,7 @@ export default function IndustrialPulse() {
                   <select
                     value={vertical}
                     onChange={(e) => setVertical(e.target.value)}
-                    className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#00d4ff] text-white px-4 py-3 rounded-md outline-none text-sm"
+                    className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#00d4ff] text-white px-4 py-3 sm:py-4 rounded-md outline-none text-sm min-h-[48px]"
                   >
                     <option value="">— Select vertical —</option>
                     {VERTICALS.map((v) => <option key={v} value={v}>{v}</option>)}
@@ -456,12 +349,12 @@ export default function IndustrialPulse() {
                 <button
                   type="submit"
                   disabled={submitting || !email.trim()}
-                  className="w-full bg-[#00d4ff] text-[#0a1628] font-bold py-4 rounded-md hover:bg-[#00d4ff]/90 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm uppercase tracking-wider"
+                  className="w-full bg-[#00d4ff] text-[#0a1628] font-bold py-4 sm:py-5 rounded-md hover:bg-[#00d4ff]/90 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm uppercase tracking-wider min-h-[52px]"
                 >
                   {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
                   {submitting ? "Subscribing..." : "Get the weekly digest"}
                 </button>
-                <p className="text-[11px] text-slate-500 text-center">
+                <p className="text-[10px] sm:text-[11px] text-slate-500 text-center">
                   Built by Matt Michels · Detroit Web Agency · Grosse Pointe, MI · (313) 992-1219
                 </p>
               </form>
@@ -470,24 +363,24 @@ export default function IndustrialPulse() {
         </section>
 
         {/* How it works */}
-        <section className="px-6 py-16 border-t border-[#1e3a5f] bg-[#0a1628]/40">
+        <section className="px-4 sm:px-6 py-10 sm:py-16 border-t border-[#1e3a5f] bg-[#0a1628]/40">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-xl font-bold mb-8 text-center">How the radar works</h2>
-            <div className="grid md:grid-cols-3 gap-6 text-sm">
-              <div>
+            <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 text-center">How the radar works</h2>
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 text-sm">
+              <div className="p-3 sm:p-0">
                 <div className="text-[#00d4ff] mb-2"><TrendingUp className="w-5 h-5" /></div>
                 <div className="font-semibold mb-1 text-white">16 public sources</div>
-                <div className="text-slate-400 leading-relaxed">MIOSHA permits, BSEED filings, SAM.gov contracts, job boards, business filings, NOAA weather correlations.</div>
+                <div className="text-slate-400 leading-relaxed text-xs sm:text-sm">MIOSHA permits, BSEED filings, SAM.gov contracts, job boards, business filings, NOAA weather correlations.</div>
               </div>
-              <div>
+              <div className="p-3 sm:p-0">
                 <div className="text-[#00d4ff] mb-2"><Briefcase className="w-5 h-5" /></div>
                 <div className="font-semibold mb-1 text-white">Cross-referenced scoring</div>
-                <div className="text-slate-400 leading-relaxed">Signals must triple-confirm across at least 2 sources to clear the 7/10 confidence threshold for a digest.</div>
+                <div className="text-slate-400 leading-relaxed text-xs sm:text-sm">Signals must triple-confirm across at least 2 sources to clear the 7/10 confidence threshold for a digest.</div>
               </div>
-              <div>
+              <div className="p-3 sm:p-0 sm:col-span-2 md:col-span-1">
                 <div className="text-[#00d4ff] mb-2"><MapPin className="w-5 h-5" /></div>
                 <div className="font-semibold mb-1 text-white">Metro Detroit only</div>
-                <div className="text-slate-400 leading-relaxed">Wayne, Oakland, Macomb, Washtenaw, St. Clair, Livingston, Monroe. Real local intel, not national list scraping.</div>
+                <div className="text-slate-400 leading-relaxed text-xs sm:text-sm">Wayne, Oakland, Macomb, Washtenaw, St. Clair, Livingston, Monroe. Real local intel, not national list scraping.</div>
               </div>
             </div>
           </div>

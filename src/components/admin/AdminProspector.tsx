@@ -593,13 +593,6 @@ export default function AdminProspector() {
   const [pipelineFilter, setPipelineFilter] = useState<PipelineFilter>("all");
   const [pipelineSort, setPipelineSort] = useState<PipelineSort>("newest");
   const [previewLead, setPreviewLead] = useState<PipelineLead | null>(null);
-  // Advanced search/filter
-  const [pipelineSearch, setPipelineSearch] = useState("");
-  const [tradeFilter, setTradeFilter] = useState<string>("all");
-  const [cityFilter, setCityFilter] = useState<string>("all");
-  const [stageFilterAdv, setStageFilterAdv] = useState<string>("all");
-  const [pipelinePageSize, setPipelinePageSize] = useState<number>(25);
-  const [stagePages, setStagePages] = useState<Record<string, number>>({});
   const [selectedPipelineIds, setSelectedPipelineIds] = useState<Set<string>>(new Set());
   const [batchProcessing, setBatchProcessing] = useState(false);
 
@@ -754,86 +747,6 @@ export default function AdminProspector() {
       toast.success(`Deleted ${ids.length} leads`);
     } catch { toast.error("Bulk delete failed"); }
     finally { setBatchProcessing(false); }
-  };
-
-  const exportPipelineCSV = async () => {
-    const rows = filteredPipelineLeads;
-    if (rows.length === 0) { toast.error("No prospects to export"); return; }
-    setBatchProcessing(true);
-    try {
-      const ids = rows.map(r => r.id);
-      // Fetch all activities for these leads to derive milestone timestamps
-      const { data: acts } = await (supabase as any)
-        .from("lead_activities")
-        .select("lead_id,type,created_at")
-        .eq("lead_table", "prospect_pipeline")
-        .in("lead_id", ids)
-        .order("created_at", { ascending: true });
-
-      // Earliest timestamp per (lead_id, type)
-      const milestones = new Map<string, Record<string, string>>();
-      for (const a of (acts || []) as Array<{ lead_id: string; type: string; created_at: string }>) {
-        const m = milestones.get(a.lead_id) || {};
-        if (!m[a.type]) m[a.type] = a.created_at;
-        milestones.set(a.lead_id, m);
-      }
-
-      const MILESTONE_KEYS = [
-        "link_clicked",
-        "signup_started",
-        "account_created",
-        "profile_completed",
-        "paid",
-        "deal_won",
-        "converted",
-      ];
-
-      const headers = [
-        "id", "business_name", "contact_name", "email", "phone", "website",
-        "city", "state", "industry", "pipeline_stage", "lead_score",
-        "google_rating", "review_count", "drip_step", "drip_status",
-        "last_drip_at", "n8n_sent_at", "paid_at", "source", "created_at",
-        ...MILESTONE_KEYS.map(k => `milestone_${k}_at`),
-        "last_activity_at", "notes",
-      ];
-
-      const esc = (v: any) => {
-        if (v === null || v === undefined) return "";
-        const s = String(v).replace(/"/g, '""');
-        return /[",\n\r]/.test(s) ? `"${s}"` : s;
-      };
-
-      const lines = [headers.join(",")];
-      for (const l of rows) {
-        const m = milestones.get(l.id) || {};
-        const lastActivity = Object.values(m).sort().slice(-1)[0] || "";
-        lines.push([
-          l.id, l.business_name, l.contact_name, l.email, l.phone, l.website,
-          l.city, l.state, l.industry, l.pipeline_stage, l.lead_score,
-          l.google_rating, l.review_count, l.drip_step, l.drip_status,
-          l.last_drip_at, l.n8n_sent_at, l.paid_at, l.source, l.created_at,
-          ...MILESTONE_KEYS.map(k => m[k] || ""),
-          lastActivity, l.notes,
-        ].map(esc).join(","));
-      }
-
-      const csv = lines.join("\n");
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      const stamp = new Date().toISOString().slice(0, 10);
-      a.href = url;
-      a.download = `prospect-tracker-${stamp}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success(`Exported ${rows.length} prospects`);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Export failed");
-    } finally {
-      setBatchProcessing(false);
-    }
   };
 
   const clearDuplicates = async () => {
@@ -1089,28 +1002,6 @@ export default function AdminProspector() {
       case "sent": result = result.filter(l => l.drip_step > 0 || l.pipeline_stage === "outreach_sent"); break;
       case "no_contact": result = result.filter(l => l.drip_step === 0 && l.drip_status === "not_started"); break;
     }
-    // Advanced search: name/phone/email/city/industry/notes
-    if (pipelineSearch.trim()) {
-      const q = pipelineSearch.trim().toLowerCase();
-      const digits = q.replace(/\D/g, "");
-      result = result.filter(l => {
-        if (l.business_name?.toLowerCase().includes(q)) return true;
-        if (l.email?.toLowerCase().includes(q)) return true;
-        if (l.city?.toLowerCase().includes(q)) return true;
-        if (l.industry?.toLowerCase().includes(q)) return true;
-        if (digits.length >= 3 && l.phone && l.phone.replace(/\D/g, "").includes(digits)) return true;
-        return false;
-      });
-    }
-    if (tradeFilter !== "all") {
-      result = result.filter(l => (l.industry || "").toLowerCase() === tradeFilter.toLowerCase());
-    }
-    if (cityFilter !== "all") {
-      result = result.filter(l => (l.city || "").toLowerCase() === cityFilter.toLowerCase());
-    }
-    if (stageFilterAdv !== "all") {
-      result = result.filter(l => l.pipeline_stage === stageFilterAdv);
-    }
     switch (pipelineSort) {
       case "score_desc": result.sort((a, b) => (b.lead_score || 0) - (a.lead_score || 0)); break;
       case "reviews_desc": result.sort((a, b) => (b.review_count || 0) - (a.review_count || 0)); break;
@@ -1120,26 +1011,9 @@ export default function AdminProspector() {
       default: result.sort((a, b) => (b.created_at || "").localeCompare(a.created_at || "")); break;
     }
     return result;
-  }, [pipelineLeads, pipelineFilter, pipelineSort, pipelineSearch, tradeFilter, cityFilter, stageFilterAdv]);
+  }, [pipelineLeads, pipelineFilter, pipelineSort]);
 
-  // Available trades + cities for dropdowns (from full set)
-  const availableTrades = useMemo(() => {
-    const set = new Set<string>();
-    pipelineLeads.forEach(l => { if (l.industry) set.add(l.industry); });
-    return Array.from(set).sort();
-  }, [pipelineLeads]);
-  const availableCities = useMemo(() => {
-    const set = new Set<string>();
-    pipelineLeads.forEach(l => { if (l.city) set.add(l.city); });
-    return Array.from(set).sort();
-  }, [pipelineLeads]);
-
-  // Reset pagination when filters change
-  useEffect(() => { setStagePages({}); }, [pipelineFilter, pipelineSearch, tradeFilter, cityFilter, stageFilterAdv, pipelinePageSize]);
-
-
-  // Full grouping (pre-pagination) — used for "x of y" counts
-  const pipelineByStageFull = useMemo(() => {
+  const pipelineByStage = useMemo(() => {
     const map: Record<string, PipelineLead[]> = {};
     PIPELINE_STAGES.forEach(s => { map[s.key] = []; });
     filteredPipelineLeads.forEach(l => {
@@ -1148,17 +1022,6 @@ export default function AdminProspector() {
     });
     return map;
   }, [filteredPipelineLeads]);
-
-  // Paginated view (per stage column)
-  const pipelineByStage = useMemo(() => {
-    const map: Record<string, PipelineLead[]> = {};
-    PIPELINE_STAGES.forEach(s => {
-      const shown = (stagePages[s.key] || 1) * pipelinePageSize;
-      map[s.key] = pipelineByStageFull[s.key].slice(0, shown);
-    });
-    return map;
-  }, [pipelineByStageFull, stagePages, pipelinePageSize]);
-
 
   // Pipeline stats
   const pipelineStats = useMemo(() => ({
@@ -1810,76 +1673,6 @@ export default function AdminProspector() {
             ))}
           </div>
 
-          {/* Advanced Search & Filters */}
-          <div className="flex items-center gap-2 flex-wrap p-2 bg-muted/10 rounded-lg border border-border/30">
-            <div className="relative flex-1 min-w-[220px]">
-              <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                value={pipelineSearch}
-                onChange={e => setPipelineSearch(e.target.value)}
-                placeholder="Search name, phone, email, city, industry…"
-                className="w-full h-7 pl-7 pr-7 text-xs bg-background border border-border rounded focus:outline-none focus:border-primary/50"
-              />
-              {pipelineSearch && (
-                <button
-                  onClick={() => setPipelineSearch("")}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  aria-label="Clear search"
-                >×</button>
-              )}
-            </div>
-            <Select value={tradeFilter} onValueChange={setTradeFilter}>
-              <SelectTrigger className="text-xs h-7 w-36"><SelectValue placeholder="Trade" /></SelectTrigger>
-              <SelectContent className="max-h-72">
-                <SelectItem value="all" className="text-xs">All Trades ({availableTrades.length})</SelectItem>
-                {availableTrades.map(t => (
-                  <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={cityFilter} onValueChange={setCityFilter}>
-              <SelectTrigger className="text-xs h-7 w-36"><SelectValue placeholder="City" /></SelectTrigger>
-              <SelectContent className="max-h-72">
-                <SelectItem value="all" className="text-xs">All Cities ({availableCities.length})</SelectItem>
-                {availableCities.map(c => (
-                  <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={stageFilterAdv} onValueChange={setStageFilterAdv}>
-              <SelectTrigger className="text-xs h-7 w-36"><SelectValue placeholder="Stage" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all" className="text-xs">All Stages</SelectItem>
-                {PIPELINE_STAGES.map(s => (
-                  <SelectItem key={s.key} value={s.key} className="text-xs">{s.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={String(pipelinePageSize)} onValueChange={v => setPipelinePageSize(Number(v))}>
-              <SelectTrigger className="text-xs h-7 w-28"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10" className="text-xs">10 / column</SelectItem>
-                <SelectItem value="25" className="text-xs">25 / column</SelectItem>
-                <SelectItem value="50" className="text-xs">50 / column</SelectItem>
-                <SelectItem value="100" className="text-xs">100 / column</SelectItem>
-              </SelectContent>
-            </Select>
-            {(pipelineSearch || tradeFilter !== "all" || cityFilter !== "all" || stageFilterAdv !== "all") && (
-              <Button
-                variant="ghost" size="sm" className="text-xs h-7 gap-1 text-muted-foreground hover:text-foreground"
-                onClick={() => {
-                  setPipelineSearch("");
-                  setTradeFilter("all");
-                  setCityFilter("all");
-                  setStageFilterAdv("all");
-                }}
-              >
-                Reset
-              </Button>
-            )}
-          </div>
-
           {/* Filter & Sort bar */}
           <div className="flex items-center gap-2 flex-wrap">
             <Select value={pipelineFilter} onValueChange={(v) => setPipelineFilter(v as PipelineFilter)}>
@@ -1959,14 +1752,6 @@ export default function AdminProspector() {
             </Button>
             <div className="ml-auto flex items-center gap-1.5">
               <Button
-                variant="outline" size="sm" className="text-xs h-7 gap-1 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
-                disabled={batchProcessing}
-                onClick={exportPipelineCSV}
-                title="Download all displayed prospects with milestone timestamps"
-              >
-                <FileText size={10} /> Export CSV ({filteredPipelineLeads.length})
-              </Button>
-              <Button
                 variant="outline" size="sm" className="text-xs h-7 gap-1 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
                 disabled={batchProcessing}
                 onClick={clearDuplicates}
@@ -2015,52 +1800,29 @@ export default function AdminProspector() {
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div className="flex gap-3 overflow-x-auto pb-4">
-              {PIPELINE_STAGES.map(stage => {
-                const fullCount = pipelineByStageFull[stage.key]?.length || 0;
-                const shownCount = pipelineByStage[stage.key]?.length || 0;
-                const hasMore = shownCount < fullCount;
-                return (
-                  <div key={stage.key} className="flex flex-col">
-                    <SortableContext id={stage.key} items={pipelineByStage[stage.key]?.map(l => l.id) || []} strategy={verticalListSortingStrategy}>
-                      <KanbanColumn
-                        stage={stage}
-                        leads={pipelineByStage[stage.key] || []}
-                        onAudit={auditWebsite}
-                        onSendN8n={sendToN8n}
-                        onMoveStage={(lead, s) => updatePipelineStage(lead.id, s)}
-                        onDeepResearch={deepResearch}
-                        onDrip={runPipelineDrip}
-                        onPreviewDrip={setPreviewLead}
-                        onDelete={deletePipelineLead}
-                        onReEnrich={reEnrichLead}
-                        onViewTimeline={setTimelineLead}
-                        onScheduleFollowUp={scheduleFollowUp}
-                        auditingId={auditingId}
-                        sendingId={sendingId}
-                        researchingId={researchingId}
-                        drippingId={drippingId}
-                        reEnrichingId={reEnrichingId}
-                      />
-                    </SortableContext>
-                    {(fullCount > 0) && (
-                      <div className="mt-1 px-2 py-1.5 text-[10px] text-muted-foreground flex items-center justify-between gap-2">
-                        <span>{shownCount} of {fullCount}</span>
-                        {hasMore ? (
-                          <button
-                            onClick={() => setStagePages(p => ({ ...p, [stage.key]: (p[stage.key] || 1) + 1 }))}
-                            className="px-2 py-0.5 rounded border border-border hover:bg-muted/40 text-foreground"
-                          >Load more</button>
-                        ) : (stagePages[stage.key] || 1) > 1 ? (
-                          <button
-                            onClick={() => setStagePages(p => ({ ...p, [stage.key]: 1 }))}
-                            className="px-2 py-0.5 rounded border border-border hover:bg-muted/40"
-                          >Collapse</button>
-                        ) : null}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+              {PIPELINE_STAGES.map(stage => (
+                <SortableContext key={stage.key} id={stage.key} items={pipelineByStage[stage.key]?.map(l => l.id) || []} strategy={verticalListSortingStrategy}>
+                  <KanbanColumn
+                    stage={stage}
+                    leads={pipelineByStage[stage.key] || []}
+                    onAudit={auditWebsite}
+                    onSendN8n={sendToN8n}
+                    onMoveStage={(lead, s) => updatePipelineStage(lead.id, s)}
+                    onDeepResearch={deepResearch}
+                    onDrip={runPipelineDrip}
+                    onPreviewDrip={setPreviewLead}
+                    onDelete={deletePipelineLead}
+                    onReEnrich={reEnrichLead}
+                    onViewTimeline={setTimelineLead}
+                    onScheduleFollowUp={scheduleFollowUp}
+                    auditingId={auditingId}
+                    sendingId={sendingId}
+                    researchingId={researchingId}
+                    drippingId={drippingId}
+                    reEnrichingId={reEnrichingId}
+                  />
+                </SortableContext>
+              ))}
             </div>
           </DndContext>
 
