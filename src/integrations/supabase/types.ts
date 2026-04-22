@@ -16668,6 +16668,7 @@ export type Database = {
       }
     }
     Functions: {
+      _extract_vault_keys: { Args: { p_command: string }; Returns: string[] }
       _validate_cron_command: {
         Args: { p_command: string; p_jobname: string; p_schedule: string }
         Returns: {
@@ -16676,6 +16677,7 @@ export type Database = {
           rule: string
         }[]
       }
+      _vault_key_exists: { Args: { p_name: string }; Returns: boolean }
       award_points: {
         Args: {
           _action: string
