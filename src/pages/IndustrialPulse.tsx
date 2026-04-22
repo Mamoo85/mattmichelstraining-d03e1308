@@ -291,21 +291,21 @@ export default function IndustrialPulse() {
           </div>
         )}
         {/* Signup form */}
-        <section id="signup" className="px-6 py-16 border-t border-[#1e3a5f]">
+        <section id="signup" className="px-4 sm:px-6 py-10 sm:py-16 border-t border-[#1e3a5f]">
           <div className="max-w-xl mx-auto">
             <div className="text-xs tracking-widest text-[#00d4ff] font-bold uppercase mb-3">
               ↓ Get this week's full list
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4">
               Free weekly digest. Unlock company names anytime.
             </h2>
-            <p className="text-sm text-slate-400 mb-8 leading-relaxed">
+            <p className="text-sm text-slate-400 mb-6 sm:mb-8 leading-relaxed">
               No credit card. No spam. Tuesday 7am ET. Unsubscribe one click. If a signal turns into a sale,
               you can unlock the full week ($50) or every signal across every vertical ($199/mo).
             </p>
 
             {done ? (
-              <div className="border border-[#00d4ff] bg-[#00d4ff]/10 p-6 rounded-md flex items-start gap-3">
+              <div className="border border-[#00d4ff] bg-[#00d4ff]/10 p-4 sm:p-6 rounded-md flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-[#00d4ff] mt-0.5 flex-shrink-0" />
                 <div>
                   <div className="font-semibold text-white mb-1">You're on the list.</div>
@@ -322,7 +322,7 @@ export default function IndustrialPulse() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="branch.manager@supplyco.com"
-                    className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#00d4ff] text-white px-4 py-3 rounded-md outline-none text-sm"
+                    className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#00d4ff] text-white px-4 py-3 sm:py-4 rounded-md outline-none text-sm min-h-[48px]"
                   />
                 </div>
                 <div>
@@ -332,7 +332,7 @@ export default function IndustrialPulse() {
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
                     placeholder="Behler-Young, Standard Supply, etc."
-                    className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#00d4ff] text-white px-4 py-3 rounded-md outline-none text-sm"
+                    className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#00d4ff] text-white px-4 py-3 sm:py-4 rounded-md outline-none text-sm min-h-[48px]"
                   />
                 </div>
                 <div>
@@ -340,7 +340,7 @@ export default function IndustrialPulse() {
                   <select
                     value={vertical}
                     onChange={(e) => setVertical(e.target.value)}
-                    className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#00d4ff] text-white px-4 py-3 rounded-md outline-none text-sm"
+                    className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#00d4ff] text-white px-4 py-3 sm:py-4 rounded-md outline-none text-sm min-h-[48px]"
                   >
                     <option value="">— Select vertical —</option>
                     {VERTICALS.map((v) => <option key={v} value={v}>{v}</option>)}
@@ -349,12 +349,12 @@ export default function IndustrialPulse() {
                 <button
                   type="submit"
                   disabled={submitting || !email.trim()}
-                  className="w-full bg-[#00d4ff] text-[#0a1628] font-bold py-4 rounded-md hover:bg-[#00d4ff]/90 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm uppercase tracking-wider"
+                  className="w-full bg-[#00d4ff] text-[#0a1628] font-bold py-4 sm:py-5 rounded-md hover:bg-[#00d4ff]/90 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm uppercase tracking-wider min-h-[52px]"
                 >
                   {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
                   {submitting ? "Subscribing..." : "Get the weekly digest"}
                 </button>
-                <p className="text-[11px] text-slate-500 text-center">
+                <p className="text-[10px] sm:text-[11px] text-slate-500 text-center">
                   Built by Matt Michels · Detroit Web Agency · Grosse Pointe, MI · (313) 992-1219
                 </p>
               </form>
