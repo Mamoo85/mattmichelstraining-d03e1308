@@ -100,6 +100,7 @@ interface PipelineLead {
   lead_score: number | null;
   breach_count: number | null;
   notes: string | null;
+  paid_at: string | null;
 }
 
 // ── DataForSEO Result ──
@@ -452,6 +453,18 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
         </div>
       </div>
       {lead.n8n_sent_at && <Badge className="text-[8px] bg-green-500/20 text-green-400 border-0">n8n sent</Badge>}
+      {lead.paid_at && (
+        <div
+          className="flex items-center gap-1 mt-1 px-2 py-1 rounded border border-emerald-500/40 bg-emerald-500/10"
+          title={`Paid on ${new Date(lead.paid_at).toLocaleString()}`}
+        >
+          <CheckCircle size={11} className="text-emerald-400" />
+          <span className="text-[9px] font-bold text-emerald-300 uppercase tracking-wide">Paid</span>
+          <span className="text-[9px] text-emerald-400/80 ml-auto">
+            {new Date(lead.paid_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+          </span>
+        </div>
+      )}
       {/* Stale indicator: in outreach_sent with no activity for 7+ days */}
       {lead.pipeline_stage === "outreach_sent" && lead.last_drip_at && (() => {
         const days = Math.floor((Date.now() - new Date(lead.last_drip_at).getTime()) / 86400000);
