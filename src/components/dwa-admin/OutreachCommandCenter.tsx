@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Loader2, Search, Download, Shield, Mail, Phone, Printer, MessageSquare } from "lucide-react";
+import { Loader2, Search, Download, Shield, Mail, Phone, Printer, MessageSquare, Sparkles, Zap } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // ---------- Types ----------
 type Prospect = {
@@ -31,7 +32,28 @@ type Prospect = {
   last_sent_at: string | null;
   send_count: number;
   source: string;
+  google_rating?: number | null;
+  review_count?: number | null;
+  phone_carrier_type?: string | null;
+  has_breach?: boolean | null;
+  last_enriched_at?: string | null;
+  enrichment_status?: string | null;
+  meta?: Record<string, any> | null;
 };
+
+type EnrichTrace = { source: string; filled: string[]; cost_usd: number; duration_ms: number; ok: boolean; error?: string };
+
+function getTrace(p: Prospect): EnrichTrace[] {
+  const t = p.meta?.enrichment_trace;
+  return Array.isArray(t) ? t : [];
+}
+
+function sourceFor(p: Prospect, field: string): string | null {
+  for (const t of getTrace(p)) {
+    if (t.filled.includes(field)) return t.source;
+  }
+  return null;
+}
 
 const AUDIENCES = [
   { id: "hvac", label: "HVAC" },
