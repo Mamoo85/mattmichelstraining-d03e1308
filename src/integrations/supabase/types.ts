@@ -11291,16 +11291,22 @@ export type Database = {
           county: string | null
           created_at: string
           email: string | null
+          enrichment_status: string | null
           fax_number: string | null
+          google_rating: number | null
           has_active_job_postings: boolean | null
+          has_breach: boolean | null
           has_demand_signal: boolean | null
           id: string
           intel_notes: Json | null
+          last_enriched_at: string | null
           last_sent_at: string | null
           lead_score: number | null
           meta: Json | null
           phone: string | null
+          phone_carrier_type: string | null
           recent_federal_contract: boolean | null
+          review_count: number | null
           score_breakdown: Json | null
           scored_at: string | null
           send_count: number | null
@@ -11327,16 +11333,22 @@ export type Database = {
           county?: string | null
           created_at?: string
           email?: string | null
+          enrichment_status?: string | null
           fax_number?: string | null
+          google_rating?: number | null
           has_active_job_postings?: boolean | null
+          has_breach?: boolean | null
           has_demand_signal?: boolean | null
           id?: string
           intel_notes?: Json | null
+          last_enriched_at?: string | null
           last_sent_at?: string | null
           lead_score?: number | null
           meta?: Json | null
           phone?: string | null
+          phone_carrier_type?: string | null
           recent_federal_contract?: boolean | null
+          review_count?: number | null
           score_breakdown?: Json | null
           scored_at?: string | null
           send_count?: number | null
@@ -11363,16 +11375,22 @@ export type Database = {
           county?: string | null
           created_at?: string
           email?: string | null
+          enrichment_status?: string | null
           fax_number?: string | null
+          google_rating?: number | null
           has_active_job_postings?: boolean | null
+          has_breach?: boolean | null
           has_demand_signal?: boolean | null
           id?: string
           intel_notes?: Json | null
+          last_enriched_at?: string | null
           last_sent_at?: string | null
           lead_score?: number | null
           meta?: Json | null
           phone?: string | null
+          phone_carrier_type?: string | null
           recent_federal_contract?: boolean | null
+          review_count?: number | null
           score_breakdown?: Json | null
           scored_at?: string | null
           send_count?: number | null
