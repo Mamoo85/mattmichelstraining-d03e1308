@@ -42,6 +42,48 @@ export default function IndustrialPulse() {
   const [unlockPlan, setUnlockPlan] = useState<"snapshot_50" | "firehose_199">("snapshot_50");
   const [unlocking, setUnlocking] = useState(false);
 
+  type EntitlementStatus =
+    | "active_firehose"
+    | "active_snapshot"
+    | "expired_snapshot"
+    | "pending"
+    | "none";
+  interface Entitlement {
+    status: EntitlementStatus;
+    plan: "snapshot_50" | "firehose_199" | null;
+    week_start: string | null;
+    days_remaining: number;
+    expires_on: string | null;
+    message: string;
+  }
+  const [entitlement, setEntitlement] = useState<Entitlement | null>(null);
+  const [checkingEntitlement, setCheckingEntitlement] = useState(false);
+
+  // Check entitlement for whatever email the user has typed
+  // (debounced lightly via setTimeout in the effect below).
+  async function checkEntitlement(emailToCheck: string) {
+    if (!emailToCheck || !emailToCheck.includes("@")) {
+      setEntitlement(null);
+      return;
+    }
+    setCheckingEntitlement(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("industrial-pulse-entitlement", {
+        body: { email: emailToCheck.trim().toLowerCase() },
+      });
+      if (error) throw error;
+      if (data?.ok) {
+        setEntitlement(data as Entitlement);
+      } else {
+        setEntitlement(null);
+      }
+    } catch {
+      setEntitlement(null);
+    } finally {
+      setCheckingEntitlement(false);
+    }
+  }
+
   useEffect(() => {
     // Auto-open unlock modal if ?unlock=1 in URL (from email CTA)
     const params = new URLSearchParams(window.location.search);
@@ -49,7 +91,22 @@ export default function IndustrialPulse() {
     if (params.get("unlocked") === "1") {
       toast.success("Payment received — check your inbox in the next 5 minutes for the full list.");
     }
+    // Pre-fill from ?email= and immediately check entitlement
+    const prefillEmail = params.get("email");
+    if (prefillEmail) {
+      setEmail(prefillEmail);
+      setUnlockEmail(prefillEmail);
+      checkEntitlement(prefillEmail);
+    }
   }, []);
+
+  // Re-check entitlement when the email in either input settles
+  useEffect(() => {
+    const target = unlockEmail.trim() || email.trim();
+    if (!target) { setEntitlement(null); return; }
+    const t = setTimeout(() => checkEntitlement(target), 500);
+    return () => clearTimeout(t);
+  }, [email, unlockEmail]);
 
   async function handleUnlock(e: React.FormEvent) {
     e.preventDefault();
