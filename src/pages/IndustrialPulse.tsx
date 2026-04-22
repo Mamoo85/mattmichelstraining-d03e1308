@@ -124,17 +124,17 @@ export default function IndustrialPulse() {
 
       <main className="min-h-screen bg-[#020617] text-white">
         {/* Hero */}
-        <section className="border-b border-[#1e3a5f] px-6 py-16 md:py-24">
+        <section className="border-b border-[#1e3a5f] px-4 sm:px-6 py-10 sm:py-16 md:py-24">
           <div className="max-w-4xl mx-auto">
-            <div className="text-[10px] md:text-xs tracking-[0.3em] text-[#00d4ff] font-bold uppercase mb-4">
+            <div className="text-[10px] md:text-xs tracking-[0.3em] text-[#00d4ff] font-bold uppercase mb-3 sm:mb-4">
               DETROIT INDUSTRIAL PULSE · FREE WEEKLY DIGEST
             </div>
-            <h1 className="text-3xl md:text-5xl font-bold leading-tight mb-6">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold leading-tight mb-4 sm:mb-6">
               {totalCount > 0 ? totalCount : "42"} Metro Detroit manufacturers
               <br />
               <span className="text-[#00d4ff]">hired this week.</span>
             </h1>
-            <p className="text-base md:text-lg text-slate-300 leading-relaxed max-w-2xl mb-8">
+            <p className="text-sm sm:text-base md:text-lg text-slate-300 leading-relaxed max-w-2xl mb-6 sm:mb-8">
               New crews mean new orders for consumables, equipment, and services within 30 days.
               Every Tuesday at 7am, we send 3 of this week's signals — company name blurred until you unlock.
               No fluff. Built for branch managers at industrial supply houses.
