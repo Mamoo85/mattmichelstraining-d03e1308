@@ -52,6 +52,7 @@ const AdminPendingSMSDrafts = lazy(() => import("@/components/dwa-admin/AdminPen
 const AdminAdLauncher = lazy(() => import("@/components/dwa-admin/AdminAdLauncher"));
 const AdminOutreachBlocklist = lazy(() => import("@/components/dwa-admin/AdminOutreachBlocklist"));
 const AdminOutreachLog = lazy(() => import("@/components/admin/AdminOutreachLog"));
+const AdminIndustrialPulseUnlocks = lazy(() => import("@/components/admin/AdminIndustrialPulseUnlocks"));
 const AdminErrorLogs = lazy(() => import("@/components/dwa-admin/AdminErrorLogs"));
 
 const AdminCoverageMap = lazy(() => import("@/components/admin/AdminCoverageMap"));
@@ -75,7 +76,8 @@ type Tab =
   | "lara-health" | "growth-signals" | "trojan-log" | "coverage-map" | "crm-dashboard"
   | "sms-inbox" | "sms-drafts" | "ad-launcher" | "blocklist" | "error-logs" | "outreach-log"
   | "contractor-onboarding" | "ad-spend" | "ad-optimizer" | "leads-e2e" | "prospect-tracker"
-  | "linkedin-blitz" | "call-list" | "community-drop" | "referral-kickback";
+  | "linkedin-blitz" | "call-list" | "community-drop" | "referral-kickback"
+  | "ipulse-unlocks";
 
 const GROUPS: SidebarGroup[] = [
   {
@@ -103,6 +105,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "industrial-intel",   label: "🏭 Industrial Intel" },
       { id: "techalert-prospects",label: "🎯 TechAlert Prospects" },
       { id: "growth-signals",     label: "📡 Growth Signals" },
+      { id: "ipulse-unlocks",     label: "🔓 Pulse Unlocks" },
       { id: "coverage-map",       label: "🗺️ Coverage Map" },
     ],
   },
@@ -234,6 +237,7 @@ export default function DWAAdmin() {
           {activeTab === "ad-launcher"      && <Suspense fallback={lazyFallback("Ad Launcher")}><AdminAdLauncher /></Suspense>}
           {activeTab === "blocklist"        && <Suspense fallback={lazyFallback("blocklist")}><AdminOutreachBlocklist /></Suspense>}
           {activeTab === "outreach-log"     && <Suspense fallback={lazyFallback("outreach log")}><AdminOutreachLog /></Suspense>}
+          {activeTab === "ipulse-unlocks"   && <Suspense fallback={lazyFallback("Pulse unlocks")}><AdminIndustrialPulseUnlocks /></Suspense>}
           {activeTab === "error-logs"       && <Suspense fallback={lazyFallback("error logs")}><AdminErrorLogs /></Suspense>}
           
           {activeTab === "coverage-map"     && <Suspense fallback={lazyFallback("coverage map")}><AdminCoverageMap /></Suspense>}
