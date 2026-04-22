@@ -1727,3 +1727,6 @@ verify_jwt = false
 
 [functions.activate-idle-prospects]
 verify_jwt = false
+
+[functions.enrich-prospect-pool]
+verify_jwt = false

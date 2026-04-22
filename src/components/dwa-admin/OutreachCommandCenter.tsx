@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Loader2, Search, Download, Shield, Mail, Phone, Printer, MessageSquare } from "lucide-react";
+import { Loader2, Search, Download, Shield, Mail, Phone, Printer, MessageSquare, Sparkles, Zap } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // ---------- Types ----------
 type Prospect = {
@@ -31,7 +32,28 @@ type Prospect = {
   last_sent_at: string | null;
   send_count: number;
   source: string;
+  google_rating?: number | null;
+  review_count?: number | null;
+  phone_carrier_type?: string | null;
+  has_breach?: boolean | null;
+  last_enriched_at?: string | null;
+  enrichment_status?: string | null;
+  meta?: Record<string, any> | null;
 };
+
+type EnrichTrace = { source: string; filled: string[]; cost_usd: number; duration_ms: number; ok: boolean; error?: string };
+
+function getTrace(p: Prospect): EnrichTrace[] {
+  const t = p.meta?.enrichment_trace;
+  return Array.isArray(t) ? t : [];
+}
+
+function sourceFor(p: Prospect, field: string): string | null {
+  for (const t of getTrace(p)) {
+    if (t.filled.includes(field)) return t.source;
+  }
+  return null;
+}
 
 const AUDIENCES = [
   { id: "hvac", label: "HVAC" },
@@ -404,6 +426,51 @@ function RankedPool() {
     },
   });
 
+  const [enrichingId, setEnrichingId] = useState<string | null>(null);
+  const [enrichingAll, setEnrichingAll] = useState(false);
+  const qc = useQueryClient();
+
+  // Coverage stats — counted client-side from currently loaded rows
+  const coverage = (() => {
+    const total = prospects.length || 1;
+    const c = (fn: (p: Prospect) => boolean) => Math.round((prospects.filter(fn).length / total) * 100);
+    return {
+      email: c((p) => !!p.email),
+      contact: c((p) => !!p.contact_name),
+      reviews: c((p) => p.review_count != null && p.review_count > 0),
+      carrier: c((p) => !!p.phone_carrier_type),
+    };
+  })();
+
+  async function enrichOne(id: string) {
+    setEnrichingId(id);
+    try {
+      const { data, error } = await supabase.functions.invoke("enrich-prospect-pool", { body: { id } });
+      if (error) throw error;
+      const filled = data?.results?.[0]?.filled ?? [];
+      toast.success(filled.length ? `Filled: ${filled.join(", ")}` : "No new data found");
+      qc.invalidateQueries({ queryKey: ["prospect_pool"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Enrichment failed");
+    } finally {
+      setEnrichingId(null);
+    }
+  }
+
+  async function enrichAll() {
+    setEnrichingAll(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("enrich-prospect-pool", { body: { limit: 25 } });
+      if (error) throw error;
+      toast.success(`Enriched ${data?.enriched ?? 0} of ${data?.processed ?? 0} prospects`);
+      qc.invalidateQueries({ queryKey: ["prospect_pool"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Batch enrichment failed");
+    } finally {
+      setEnrichingAll(false);
+    }
+  }
+
   function toggle(id: string) {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -451,9 +518,33 @@ function RankedPool() {
   }
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="space-y-3">
+      {/* Coverage strip + Enrich All */}
+      <div className="bg-white/5 border border-white/10 rounded-lg p-3 flex flex-wrap items-center gap-3">
+        <div className="text-white/60 text-xs uppercase tracking-wide font-semibold mr-2">Coverage</div>
+        {[
+          { k: "Email", v: coverage.email, c: "text-emerald-400" },
+          { k: "Contact", v: coverage.contact, c: "text-blue-400" },
+          { k: "Reviews", v: coverage.reviews, c: "text-amber-400" },
+          { k: "Carrier", v: coverage.carrier, c: "text-purple-400" },
+        ].map((s) => (
+          <div key={s.k} className="text-xs">
+            <span className="text-white/50">{s.k}:</span>{" "}
+            <span className={cn("font-bold", s.c)}>{s.v}%</span>
+          </div>
+        ))}
+        <div className="ml-auto">
+          <Button size="sm" onClick={enrichAll} disabled={enrichingAll} className="bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-[#0a1628]">
+            {enrichingAll ? <Loader2 className="animate-spin mr-1" size={12} /> : <Sparkles size={12} className="mr-1" />}
+            Enrich All (25)
+          </Button>
+        </div>
+      </div>
+
       {/* Filters */}
       <div className="bg-white/5 border border-white/10 rounded-lg p-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+
         <select value={audienceFilter} onChange={(e) => setAudienceFilter(e.target.value)} className="bg-[#0a1628] border border-white/15 rounded px-2 py-1.5 text-white">
           <option value="all">All audiences</option>
           {AUDIENCES.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}
