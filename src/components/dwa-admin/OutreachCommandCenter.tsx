@@ -518,9 +518,33 @@ function RankedPool() {
   }
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="space-y-3">
+      {/* Coverage strip + Enrich All */}
+      <div className="bg-white/5 border border-white/10 rounded-lg p-3 flex flex-wrap items-center gap-3">
+        <div className="text-white/60 text-xs uppercase tracking-wide font-semibold mr-2">Coverage</div>
+        {[
+          { k: "Email", v: coverage.email, c: "text-emerald-400" },
+          { k: "Contact", v: coverage.contact, c: "text-blue-400" },
+          { k: "Reviews", v: coverage.reviews, c: "text-amber-400" },
+          { k: "Carrier", v: coverage.carrier, c: "text-purple-400" },
+        ].map((s) => (
+          <div key={s.k} className="text-xs">
+            <span className="text-white/50">{s.k}:</span>{" "}
+            <span className={cn("font-bold", s.c)}>{s.v}%</span>
+          </div>
+        ))}
+        <div className="ml-auto">
+          <Button size="sm" onClick={enrichAll} disabled={enrichingAll} className="bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-[#0a1628]">
+            {enrichingAll ? <Loader2 className="animate-spin mr-1" size={12} /> : <Sparkles size={12} className="mr-1" />}
+            Enrich All (25)
+          </Button>
+        </div>
+      </div>
+
       {/* Filters */}
       <div className="bg-white/5 border border-white/10 rounded-lg p-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+
         <select value={audienceFilter} onChange={(e) => setAudienceFilter(e.target.value)} className="bg-[#0a1628] border border-white/15 rounded px-2 py-1.5 text-white">
           <option value="all">All audiences</option>
           {AUDIENCES.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}
