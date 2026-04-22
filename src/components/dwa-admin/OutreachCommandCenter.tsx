@@ -436,14 +436,14 @@ function ActiveCampaigns() {
   const { data: emails = [] } = useQuery({
     queryKey: ["email_send_log_recent"],
     queryFn: async () => {
-      const { data } = await supabase.from("email_send_log").select("id, recipient_email, subject, status, created_at, campaign_id").order("created_at", { ascending: false }).limit(30);
+      const { data } = await supabase.from("email_send_log").select("id, recipient_email, template_name, status, created_at").order("created_at", { ascending: false }).limit(30);
       return data ?? [];
     },
   });
   const { data: sms = [] } = useQuery({
     queryKey: ["sms_recent"],
     queryFn: async () => {
-      const { data } = await supabase.from("system_comms_log").select("id, to_phone, body, status, created_at, product").eq("channel", "sms").order("created_at", { ascending: false }).limit(30);
+      const { data } = await supabase.from("system_comms_log").select("id, recipient, body_preview, status, created_at, product").eq("channel", "sms").order("created_at", { ascending: false }).limit(30);
       return data ?? [];
     },
   });
