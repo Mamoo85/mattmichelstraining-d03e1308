@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle, XCircle, Loader2, ArrowRight } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, ArrowRight, Lock } from "lucide-react";
 import DWAStickyNav from "@/components/shared/DWAStickyNav";
 import WallOfLove, { Testimonial } from "@/components/shared/WallOfLove";
 import EnterpriseFooterBlock from "@/components/shared/EnterpriseFooterBlock";
@@ -18,13 +18,14 @@ const TRADES = [
   { value: "siding", label: "Siding", monthly: 299 },
 ];
 
-// Common Metro Detroit cities — free text also accepted via "Other".
-const CITIES = [
-  "Metro Detroit", "Detroit", "Livonia", "Royal Oak", "Warren", "Sterling Heights",
-  "Troy", "Farmington Hills", "Dearborn", "Novi", "Canton", "Westland",
-  "Southfield", "Rochester Hills", "Pontiac", "Taylor", "Grosse Pointe",
-  "Birmingham", "Bloomfield Hills", "Ann Arbor",
-];
+type Territory = {
+  id: string;
+  city: string;
+  trade: string;
+  slug: string;
+  active: boolean;
+  active_contractor_id: string | null;
+};
 
 const WINS = [
   "Every lead is exclusive — you're the only contractor who gets it",
