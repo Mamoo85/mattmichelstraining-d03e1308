@@ -37,6 +37,7 @@ const AdminProspectTracker = lazy(() => import("@/components/dwa-admin/AdminPros
 const AdminCommandBar = lazy(() => import("@/components/dwa-admin/AdminCommandBar"));
 
 type Tab =
+  | "ai-command"
   | "dwa-overview" | "revenue" | "leads-e2e" | "prospect-tracker" | "agent-toolkit"
   | "command-center" | "sms-inbox" | "sms-drafts" | "call-list" | "linkedin-blitz" | "ad-launcher" | "agency-outreach"
   | "contractor-leads" | "contractor-onboarding" | "dead-leads" | "fielddesk" | "techalert" | "clients-all"
@@ -47,6 +48,7 @@ const GROUPS: SidebarGroup[] = [
   {
     label: "Revenue",
     items: [
+      { id: "ai-command",       label: "🧠 AI Command" },
       { id: "dwa-overview",     label: "📊 Overview" },
       { id: "revenue",          label: "💰 Revenue" },
       { id: "leads-e2e",        label: "🟢 Leads E2E" },
@@ -104,7 +106,7 @@ const GROUPS: SidebarGroup[] = [
 const lazyFallback = (label: string) => <div className="text-white/40 text-sm p-6">Loading {label}…</div>;
 
 export default function DWAAdmin() {
-  const [activeTab, setActiveTab] = useState<Tab>("dwa-overview");
+  const [activeTab, setActiveTab] = useState<Tab>("ai-command");
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -130,8 +132,7 @@ export default function DWAAdmin() {
         <div className="px-3 sm:px-6 py-6">
           <InstallAppBanner app="dwa-admin" />
 
-          <Suspense fallback={null}><AdminCommandBar /></Suspense>
-
+          {activeTab === "ai-command"       && <Suspense fallback={lazyFallback("AI Command")}><AdminCommandBar /></Suspense>}
           {activeTab === "dwa-overview"     && <Suspense fallback={lazyFallback("overview")}><AdminDWAOverview /></Suspense>}
           {activeTab === "revenue"          && <Suspense fallback={lazyFallback("revenue")}><AdminDWARevenueDashboard /></Suspense>}
           {activeTab === "leads-e2e"        && <Suspense fallback={lazyFallback("Leads E2E")}><AdminContractorLeadsStatus /></Suspense>}
