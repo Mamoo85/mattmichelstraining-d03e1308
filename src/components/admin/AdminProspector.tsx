@@ -18,8 +18,9 @@ import {
   Building2, Wrench, Stethoscope, Globe, Phone, MapPin, Star,
   Expand, Minimize, Megaphone, Rss, MessageSquare, Receipt, CalendarX,
   Hammer, Home, UserPlus, Plus, CheckCircle, ExternalLink, GripVertical,
-  Crosshair, BarChart3, Kanban, FileText, Eye, EyeOff, Info, X, ShieldCheck
+  Crosshair, BarChart3, Kanban, FileText, Eye, EyeOff, Info, X, ShieldCheck, Activity
 } from "lucide-react";
+import ProspectTimelineModal from "./ProspectTimelineModal";
 import {
   DndContext,
   closestCenter,
@@ -235,7 +236,7 @@ function parseEnrichmentSource(notes: string | null): string | null {
 }
 
 // ── Kanban Lead Card ──
-function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, onReEnrich, auditing, sending, researching, dripping, reEnriching }: {
+function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, onReEnrich, onViewTimeline, auditing, sending, researching, dripping, reEnriching }: {
   lead: PipelineLead;
   onAudit: (lead: PipelineLead) => void;
   onSendN8n: (lead: PipelineLead) => void;
@@ -245,6 +246,7 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
   onPreviewDrip: (lead: PipelineLead) => void;
   onDelete: (lead: PipelineLead) => void;
   onReEnrich: (lead: PipelineLead) => void;
+  onViewTimeline: (lead: PipelineLead) => void;
   auditing: boolean;
   sending: boolean;
   researching: boolean;
@@ -429,6 +431,15 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
             <CheckCircle size={10} /> Booked
           </Button>
         )}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 text-[9px] px-2 gap-1 text-cyan-400 hover:bg-cyan-500/10"
+          onClick={() => onViewTimeline(lead)}
+          title="View full event timeline for this prospect"
+        >
+          <Activity size={10} /> Timeline
+        </Button>
         <div className="ml-auto flex items-center gap-1">
           {lead.website && (
             <a href={lead.website.startsWith("http") ? lead.website : `https://${lead.website}`} target="_blank" rel="noopener noreferrer">
@@ -455,7 +466,7 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
 }
 
 // ── Kanban Column ──
-function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, onReEnrich, auditingId, sendingId, researchingId, drippingId, reEnrichingId }: {
+function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, onReEnrich, onViewTimeline, auditingId, sendingId, researchingId, drippingId, reEnrichingId }: {
   stage: typeof PIPELINE_STAGES[0];
   leads: PipelineLead[];
   onAudit: (lead: PipelineLead) => void;
@@ -466,6 +477,7 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepRes
   onPreviewDrip: (lead: PipelineLead) => void;
   onDelete: (lead: PipelineLead) => void;
   onReEnrich: (lead: PipelineLead) => void;
+  onViewTimeline: (lead: PipelineLead) => void;
   auditingId: string | null;
   sendingId: string | null;
   researchingId: string | null;
@@ -492,6 +504,7 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepRes
               onPreviewDrip={onPreviewDrip}
               onDelete={onDelete}
               onReEnrich={onReEnrich}
+              onViewTimeline={onViewTimeline}
               auditing={auditingId === lead.id}
               sending={sendingId === lead.id}
               researching={researchingId === lead.id}
@@ -543,6 +556,7 @@ export default function AdminProspector() {
   const [researchingId, setResearchingId] = useState<string | null>(null);
   const [reEnrichingId, setReEnrichingId] = useState<string | null>(null);
   const [drippingId, setDrippingId] = useState<string | null>(null);
+  const [timelineLead, setTimelineLead] = useState<PipelineLead | null>(null);
   const [pipelineFilter, setPipelineFilter] = useState<PipelineFilter>("all");
   const [pipelineSort, setPipelineSort] = useState<PipelineSort>("newest");
   const [previewLead, setPreviewLead] = useState<PipelineLead | null>(null);
@@ -1741,6 +1755,7 @@ export default function AdminProspector() {
                     onPreviewDrip={setPreviewLead}
                     onDelete={deletePipelineLead}
                     onReEnrich={reEnrichLead}
+                    onViewTimeline={setTimelineLead}
                     auditingId={auditingId}
                     sendingId={sendingId}
                     researchingId={researchingId}
@@ -2069,6 +2084,14 @@ export default function AdminProspector() {
           )}
         </DialogContent>
       </Dialog>
+      {timelineLead && (
+        <ProspectTimelineModal
+          open={!!timelineLead}
+          onClose={() => setTimelineLead(null)}
+          leadId={timelineLead.id}
+          leadName={timelineLead.business_name}
+        />
+      )}
     </div>
   );
 }
