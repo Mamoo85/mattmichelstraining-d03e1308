@@ -593,6 +593,13 @@ export default function AdminProspector() {
   const [pipelineFilter, setPipelineFilter] = useState<PipelineFilter>("all");
   const [pipelineSort, setPipelineSort] = useState<PipelineSort>("newest");
   const [previewLead, setPreviewLead] = useState<PipelineLead | null>(null);
+  // Advanced search/filter
+  const [pipelineSearch, setPipelineSearch] = useState("");
+  const [tradeFilter, setTradeFilter] = useState<string>("all");
+  const [cityFilter, setCityFilter] = useState<string>("all");
+  const [stageFilterAdv, setStageFilterAdv] = useState<string>("all");
+  const [pipelinePageSize, setPipelinePageSize] = useState<number>(25);
+  const [stagePages, setStagePages] = useState<Record<string, number>>({});
   const [selectedPipelineIds, setSelectedPipelineIds] = useState<Set<string>>(new Set());
   const [batchProcessing, setBatchProcessing] = useState(false);
 
