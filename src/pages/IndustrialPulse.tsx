@@ -363,24 +363,24 @@ export default function IndustrialPulse() {
         </section>
 
         {/* How it works */}
-        <section className="px-6 py-16 border-t border-[#1e3a5f] bg-[#0a1628]/40">
+        <section className="px-4 sm:px-6 py-10 sm:py-16 border-t border-[#1e3a5f] bg-[#0a1628]/40">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-xl font-bold mb-8 text-center">How the radar works</h2>
-            <div className="grid md:grid-cols-3 gap-6 text-sm">
-              <div>
+            <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 text-center">How the radar works</h2>
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 text-sm">
+              <div className="p-3 sm:p-0">
                 <div className="text-[#00d4ff] mb-2"><TrendingUp className="w-5 h-5" /></div>
                 <div className="font-semibold mb-1 text-white">16 public sources</div>
-                <div className="text-slate-400 leading-relaxed">MIOSHA permits, BSEED filings, SAM.gov contracts, job boards, business filings, NOAA weather correlations.</div>
+                <div className="text-slate-400 leading-relaxed text-xs sm:text-sm">MIOSHA permits, BSEED filings, SAM.gov contracts, job boards, business filings, NOAA weather correlations.</div>
               </div>
-              <div>
+              <div className="p-3 sm:p-0">
                 <div className="text-[#00d4ff] mb-2"><Briefcase className="w-5 h-5" /></div>
                 <div className="font-semibold mb-1 text-white">Cross-referenced scoring</div>
-                <div className="text-slate-400 leading-relaxed">Signals must triple-confirm across at least 2 sources to clear the 7/10 confidence threshold for a digest.</div>
+                <div className="text-slate-400 leading-relaxed text-xs sm:text-sm">Signals must triple-confirm across at least 2 sources to clear the 7/10 confidence threshold for a digest.</div>
               </div>
-              <div>
+              <div className="p-3 sm:p-0 sm:col-span-2 md:col-span-1">
                 <div className="text-[#00d4ff] mb-2"><MapPin className="w-5 h-5" /></div>
                 <div className="font-semibold mb-1 text-white">Metro Detroit only</div>
-                <div className="text-slate-400 leading-relaxed">Wayne, Oakland, Macomb, Washtenaw, St. Clair, Livingston, Monroe. Real local intel, not national list scraping.</div>
+                <div className="text-slate-400 leading-relaxed text-xs sm:text-sm">Wayne, Oakland, Macomb, Washtenaw, St. Clair, Livingston, Monroe. Real local intel, not national list scraping.</div>
               </div>
             </div>
           </div>
