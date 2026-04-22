@@ -416,6 +416,26 @@ detroitwebagent.com`;
                         {generatingDossier === signal.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileText className="w-3 h-3" />}
                         Dossier
                       </button>
+                      <button
+                        onClick={() => {
+                          const target_company = window.prompt(`Cold-email a buyer about ${signal.company_name}.\n\nSupply house / company name?`);
+                          if (!target_company) return;
+                          const target_email = window.prompt("Buyer email address?");
+                          if (!target_email) return;
+                          const target_contact_name = window.prompt("Buyer contact name (optional)?") || "";
+                          supabase.functions.invoke("dossier-cold-outreach", {
+                            body: { signal_id: signal.id, target_company, target_email, target_contact_name, vertical: signal.industry },
+                          }).then(({ data, error }) => {
+                            if (error) { toast.error("Queue failed: " + error.message); return; }
+                            if (data?.skipped) { toast.warning(data.reason || "Skipped (already contacted)"); return; }
+                            if (data?.error) { toast.error(data.error); return; }
+                            toast.success(`Email queued — sends in 10 min. Check your phone for cancel link.`);
+                          });
+                        }}
+                        className="px-3 py-1.5 rounded bg-amber-500/10 text-amber-400 text-xs font-medium hover:bg-amber-500/20 transition-colors border border-amber-500/20 flex items-center gap-1"
+                      >
+                        <Mail className="w-3 h-3" /> Cold Email
+                      </button>
                       {signal.confidence >= 6 && (
                         <span className="text-[10px] text-white/20 flex items-center gap-1 ml-auto">
                           <Users className="w-3 h-3" /> {competitorCount(signal.id)} watching
