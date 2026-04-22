@@ -240,21 +240,28 @@ export default function AdminSMSInbox() {
       const phones = Array.from(map.keys());
       const labelMap = await fetchContactLabels(phones);
 
-      const built: Thread[] = phones.map((phone) => {
-        const messages = map.get(phone)!;
-        const last = messages[messages.length - 1];
-        const unreadCount = messages.filter(
-          (m) => m.direction === "inbound" && !readSet().has(m.id)
-        ).length;
-        return {
-          phone,
-          display: formatPhone(phone),
-          lastMessage: last,
-          unreadCount,
-          contactLabel: labelMap.get(phone),
-          messages,
-        };
-      });
+      const built: Thread[] = phones
+        .filter((phone) => {
+          if (!inboundOnlyMode) return true;
+          const msgs = map.get(phone)!;
+          // Only show threads where THEY texted us first
+          return msgs[0]?.direction === "inbound";
+        })
+        .map((phone) => {
+          const messages = map.get(phone)!;
+          const last = messages[messages.length - 1];
+          const unreadCount = messages.filter(
+            (m) => m.direction === "inbound" && !readSet().has(m.id)
+          ).length;
+          return {
+            phone,
+            display: formatPhone(phone),
+            lastMessage: last,
+            unreadCount,
+            contactLabel: labelMap.get(phone),
+            messages,
+          };
+        });
 
       // Sort by last message desc
       built.sort(
