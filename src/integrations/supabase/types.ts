@@ -11060,6 +11060,7 @@ export type Database = {
           n8n_sent_at: string | null
           next_action: string | null
           next_action_date: string | null
+          paid_at: string | null
           pain_points: Json | null
           phone: string | null
           pipeline_stage: string
@@ -11101,6 +11102,7 @@ export type Database = {
           n8n_sent_at?: string | null
           next_action?: string | null
           next_action_date?: string | null
+          paid_at?: string | null
           pain_points?: Json | null
           phone?: string | null
           pipeline_stage?: string
@@ -11142,6 +11144,7 @@ export type Database = {
           n8n_sent_at?: string | null
           next_action?: string | null
           next_action_date?: string | null
+          paid_at?: string | null
           pain_points?: Json | null
           phone?: string | null
           pipeline_stage?: string
