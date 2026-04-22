@@ -1810,6 +1810,76 @@ export default function AdminProspector() {
             ))}
           </div>
 
+          {/* Advanced Search & Filters */}
+          <div className="flex items-center gap-2 flex-wrap p-2 bg-muted/10 rounded-lg border border-border/30">
+            <div className="relative flex-1 min-w-[220px]">
+              <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                value={pipelineSearch}
+                onChange={e => setPipelineSearch(e.target.value)}
+                placeholder="Search name, phone, email, city, industry…"
+                className="w-full h-7 pl-7 pr-7 text-xs bg-background border border-border rounded focus:outline-none focus:border-primary/50"
+              />
+              {pipelineSearch && (
+                <button
+                  onClick={() => setPipelineSearch("")}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label="Clear search"
+                >×</button>
+              )}
+            </div>
+            <Select value={tradeFilter} onValueChange={setTradeFilter}>
+              <SelectTrigger className="text-xs h-7 w-36"><SelectValue placeholder="Trade" /></SelectTrigger>
+              <SelectContent className="max-h-72">
+                <SelectItem value="all" className="text-xs">All Trades ({availableTrades.length})</SelectItem>
+                {availableTrades.map(t => (
+                  <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={cityFilter} onValueChange={setCityFilter}>
+              <SelectTrigger className="text-xs h-7 w-36"><SelectValue placeholder="City" /></SelectTrigger>
+              <SelectContent className="max-h-72">
+                <SelectItem value="all" className="text-xs">All Cities ({availableCities.length})</SelectItem>
+                {availableCities.map(c => (
+                  <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={stageFilterAdv} onValueChange={setStageFilterAdv}>
+              <SelectTrigger className="text-xs h-7 w-36"><SelectValue placeholder="Stage" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="text-xs">All Stages</SelectItem>
+                {PIPELINE_STAGES.map(s => (
+                  <SelectItem key={s.key} value={s.key} className="text-xs">{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={String(pipelinePageSize)} onValueChange={v => setPipelinePageSize(Number(v))}>
+              <SelectTrigger className="text-xs h-7 w-28"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10" className="text-xs">10 / column</SelectItem>
+                <SelectItem value="25" className="text-xs">25 / column</SelectItem>
+                <SelectItem value="50" className="text-xs">50 / column</SelectItem>
+                <SelectItem value="100" className="text-xs">100 / column</SelectItem>
+              </SelectContent>
+            </Select>
+            {(pipelineSearch || tradeFilter !== "all" || cityFilter !== "all" || stageFilterAdv !== "all") && (
+              <Button
+                variant="ghost" size="sm" className="text-xs h-7 gap-1 text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  setPipelineSearch("");
+                  setTradeFilter("all");
+                  setCityFilter("all");
+                  setStageFilterAdv("all");
+                }}
+              >
+                Reset
+              </Button>
+            )}
+          </div>
+
           {/* Filter & Sort bar */}
           <div className="flex items-center gap-2 flex-wrap">
             <Select value={pipelineFilter} onValueChange={(v) => setPipelineFilter(v as PipelineFilter)}>
