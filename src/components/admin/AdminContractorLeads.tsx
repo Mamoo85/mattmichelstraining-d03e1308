@@ -224,6 +224,9 @@ export default function AdminContractorLeads() {
   return (
     <div className="space-y-8 pb-12">
 
+      {/* ── Territory Signup Link Generator ──────────────────────────────── */}
+      <TerritoryLinkGenerator />
+
       {/* ── Quick Lead Entry ─────────────────────────────────────────────── */}
       <div>
         <div className="flex items-center justify-between mb-3">
