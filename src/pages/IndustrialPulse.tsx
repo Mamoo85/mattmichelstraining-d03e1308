@@ -212,6 +212,76 @@ export default function IndustrialPulse() {
           </div>
         </section>
 
+        {/* Stripe-verified receipt — appears immediately after success redirect */}
+        {(verifying || verifiedPlan) && (
+          <section className="px-4 sm:px-6 py-6 sm:py-8 bg-gradient-to-b from-emerald-500/5 to-transparent border-b border-emerald-500/20">
+            <div className="max-w-4xl mx-auto">
+              {verifying && !verifiedPlan && (
+                <div className="flex items-center gap-3 text-sm text-slate-400">
+                  <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                  Verifying your purchase with Stripe…
+                </div>
+              )}
+
+              {verifiedPlan && verifiedPlan.verified && (
+                <div className="border border-emerald-500/40 bg-[#0a1628] rounded-md p-4 sm:p-6 ring-1 ring-emerald-500/10">
+                  <div className="flex items-start justify-between gap-3 sm:gap-4 flex-wrap">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 shrink-0" />
+                        <div className="text-[10px] sm:text-xs font-bold tracking-widest uppercase text-emerald-400">
+                          Payment confirmed
+                        </div>
+                      </div>
+                      <div className="text-lg sm:text-xl md:text-2xl font-bold text-white tracking-tight break-words">
+                        {verifiedPlan.product_name || verifiedPlan.plan_label}
+                      </div>
+                      {verifiedPlan.plan_cadence && (
+                        <div className="text-xs sm:text-sm text-slate-400 mt-1">{verifiedPlan.plan_cadence}</div>
+                      )}
+                      {verifiedPlan.plan_description && (
+                        <p className="text-xs sm:text-sm text-slate-300 mt-3 leading-relaxed max-w-2xl break-words">
+                          {verifiedPlan.plan_description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-2xl sm:text-3xl font-bold text-white tabular-nums">
+                        {verifiedPlan.amount_formatted}
+                      </div>
+                      <div className="text-[10px] sm:text-xs text-slate-500 uppercase tracking-wider">
+                        {verifiedPlan.currency}{verifiedPlan.interval ? ` · per ${verifiedPlan.interval}` : ""}
+                      </div>
+                    </div>
+                  </div>
+
+                  {(verifiedPlan.customer_email || verifiedPlan.week_start) && (
+                    <div className="mt-4 pt-4 border-t border-emerald-500/15 flex flex-wrap gap-x-5 gap-y-1.5 text-[11px] sm:text-xs text-slate-400">
+                      {verifiedPlan.customer_email && (
+                        <span className="flex items-center gap-1.5 break-all">
+                          <Mail className="w-3 h-3 shrink-0" /> {verifiedPlan.customer_email}
+                        </span>
+                      )}
+                      {verifiedPlan.week_start && (
+                        <span>Week of {new Date(verifiedPlan.week_start).toLocaleDateString()}</span>
+                      )}
+                      {verifiedPlan.unlock_status && (
+                        <span className="uppercase tracking-wider">Status · {verifiedPlan.unlock_status}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {verifiedPlan && !verifiedPlan.verified && (
+                <div className="border border-amber-500/40 bg-amber-950/20 rounded-md p-4 text-xs sm:text-sm text-amber-200">
+                  We received your checkout but Stripe hasn't confirmed payment yet (status: {verifiedPlan.payment_status}). Refresh in a moment.
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* Gated Preview — shown after successful unlock with ?unlocked=1&email=... */}
         {(loadingUnlocked || unlockedSignals.length > 0) && (
           <section className="px-4 sm:px-6 py-8 sm:py-12 bg-gradient-to-b from-emerald-950/20 to-transparent border-b border-emerald-500/20">
