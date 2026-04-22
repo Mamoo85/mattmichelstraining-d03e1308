@@ -2084,6 +2084,14 @@ export default function AdminProspector() {
           )}
         </DialogContent>
       </Dialog>
+      {timelineLead && (
+        <ProspectTimelineModal
+          open={!!timelineLead}
+          onClose={() => setTimelineLead(null)}
+          leadId={timelineLead.id}
+          leadName={timelineLead.business_name}
+        />
+      )}
     </div>
   );
 }
