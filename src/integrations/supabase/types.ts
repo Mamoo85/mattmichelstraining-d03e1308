@@ -17090,6 +17090,7 @@ export type Database = {
         Args: { _candidate_id: string; _stage: string }
         Returns: number
       }
+      expire_industrial_pulse_snapshots: { Args: never; Returns: number }
       extract_domain: { Args: { input: string }; Returns: string }
       get_active_training_programs: {
         Args: never
