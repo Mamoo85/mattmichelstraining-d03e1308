@@ -765,6 +765,8 @@ const App = () => (
                     <Route path="/growth-radar" element={<IndustryPulse />} />
                     <Route path="/growth-radar-dashboard" element={<GrowthRadarDashboard />} />
                     <Route path="/get-dossier" element={<GetDossier />} />
+                    <Route path="/growth-signals" element={<GrowthSignalsLanding />} />
+                    <Route path="/pulse-alerts" element={<PulseAlerts />} />
                     <Route path="/industry-pulse" element={<Navigate to="/growth-radar" replace />} />
                     <Route path="/industrial-pulse" element={<IndustrialPulse />} />
                     <Route path="/industrial-pulse/receipt" element={<IndustrialPulseReceipt />} />
