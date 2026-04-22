@@ -132,8 +132,7 @@ export default function DWAAdmin() {
         <div className="px-3 sm:px-6 py-6">
           <InstallAppBanner app="dwa-admin" />
 
-          <Suspense fallback={null}><AdminCommandBar /></Suspense>
-
+          {activeTab === "ai-command"       && <Suspense fallback={lazyFallback("AI Command")}><AdminCommandBar /></Suspense>}
           {activeTab === "dwa-overview"     && <Suspense fallback={lazyFallback("overview")}><AdminDWAOverview /></Suspense>}
           {activeTab === "revenue"          && <Suspense fallback={lazyFallback("revenue")}><AdminDWARevenueDashboard /></Suspense>}
           {activeTab === "leads-e2e"        && <Suspense fallback={lazyFallback("Leads E2E")}><AdminContractorLeadsStatus /></Suspense>}
