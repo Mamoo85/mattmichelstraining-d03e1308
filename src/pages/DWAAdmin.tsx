@@ -37,6 +37,7 @@ const AdminProspectTracker = lazy(() => import("@/components/dwa-admin/AdminPros
 const AdminCommandBar = lazy(() => import("@/components/dwa-admin/AdminCommandBar"));
 
 type Tab =
+  | "ai-command"
   | "dwa-overview" | "revenue" | "leads-e2e" | "prospect-tracker" | "agent-toolkit"
   | "command-center" | "sms-inbox" | "sms-drafts" | "call-list" | "linkedin-blitz" | "ad-launcher" | "agency-outreach"
   | "contractor-leads" | "contractor-onboarding" | "dead-leads" | "fielddesk" | "techalert" | "clients-all"
