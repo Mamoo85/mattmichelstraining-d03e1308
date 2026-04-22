@@ -459,6 +459,20 @@ serve(async (req) => {
             .eq("zip", p.zip)
             .maybeSingle();
           if (!pcExisting) {
+            // Map scraper audience_type → postcard audience_type (campaign filter)
+            const POSTCARD_AUDIENCE_MAP: Record<string, string> = {
+              healthcare_staffing: "healthcare-agency",
+              trades_staffing: "trades-agency",
+              nursing_home: "nursing-home",
+              supply_house: "supply-house",
+              contractor: "contractor",
+              hvac: "contractor",
+              plumbing: "contractor",
+              electrical: "contractor",
+              boiler: "contractor",
+              roofing: "contractor",
+            };
+            const postcardAudience = POSTCARD_AUDIENCE_MAP[p.audience_type] || "contractor";
             const { error: pcErr } = await sb.from("postcard_prospects").insert({
               business_name: p.business_name,
               address_line1: p.address_line1,
@@ -471,6 +485,7 @@ serve(async (req) => {
               phone: p.phone || null,
               email: p.email || null,
               source: `targeting_${p.audience_type}`,
+              audience_type: postcardAudience,
             });
             if (!pcErr) postcardInserted++;
             else console.error("[postcard insert]", pcErr.message);
