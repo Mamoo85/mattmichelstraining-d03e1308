@@ -50,6 +50,7 @@ const GROUPS: SidebarGroup[] = [
   {
     label: "Revenue",
     items: [
+      { id: "sales-hub",        label: "💬 Sales Hub" },
       { id: "ai-command",       label: "🧠 AI Command" },
       { id: "dwa-overview",     label: "📊 Overview" },
       { id: "revenue",          label: "💰 Revenue" },
