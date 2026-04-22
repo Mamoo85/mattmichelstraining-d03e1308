@@ -51,6 +51,7 @@ const AdminSMSInbox = lazy(() => import("@/components/dwa-admin/AdminSMSInbox"))
 const AdminPendingSMSDrafts = lazy(() => import("@/components/dwa-admin/AdminPendingSMSDrafts"));
 const AdminAdLauncher = lazy(() => import("@/components/dwa-admin/AdminAdLauncher"));
 const AdminOutreachBlocklist = lazy(() => import("@/components/dwa-admin/AdminOutreachBlocklist"));
+const AdminOutreachLog = lazy(() => import("@/components/admin/AdminOutreachLog"));
 const AdminErrorLogs = lazy(() => import("@/components/dwa-admin/AdminErrorLogs"));
 
 const AdminCoverageMap = lazy(() => import("@/components/admin/AdminCoverageMap"));
@@ -72,7 +73,7 @@ type Tab =
   | "agency-outreach" | "demand-radar" | "supplier-outreach" | "hvb"
   | "medicare-intel" | "industrial-intel" | "techalert-prospects"
   | "lara-health" | "growth-signals" | "trojan-log" | "coverage-map" | "crm-dashboard"
-  | "sms-inbox" | "sms-drafts" | "ad-launcher" | "blocklist" | "error-logs"
+  | "sms-inbox" | "sms-drafts" | "ad-launcher" | "blocklist" | "error-logs" | "outreach-log"
   | "contractor-onboarding" | "ad-spend" | "ad-optimizer" | "leads-e2e" | "prospect-tracker"
   | "linkedin-blitz" | "call-list" | "community-drop" | "referral-kickback";
 
@@ -135,6 +136,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "agency-outreach",  label: "📨 Agency Outreach" },
       { id: "supplier-outreach",label: "🏭 Supplier Outreach" },
       { id: "blocklist",        label: "🛡️ Outreach Blocklist" },
+      { id: "outreach-log",     label: "📡 Outreach Log" },
     ],
   },
   {
@@ -231,6 +233,7 @@ export default function DWAAdmin() {
           {activeTab === "sms-drafts"       && <Suspense fallback={lazyFallback("pending drafts")}><AdminPendingSMSDrafts /></Suspense>}
           {activeTab === "ad-launcher"      && <Suspense fallback={lazyFallback("Ad Launcher")}><AdminAdLauncher /></Suspense>}
           {activeTab === "blocklist"        && <Suspense fallback={lazyFallback("blocklist")}><AdminOutreachBlocklist /></Suspense>}
+          {activeTab === "outreach-log"     && <Suspense fallback={lazyFallback("outreach log")}><AdminOutreachLog /></Suspense>}
           {activeTab === "error-logs"       && <Suspense fallback={lazyFallback("error logs")}><AdminErrorLogs /></Suspense>}
           
           {activeTab === "coverage-map"     && <Suspense fallback={lazyFallback("coverage map")}><AdminCoverageMap /></Suspense>}
