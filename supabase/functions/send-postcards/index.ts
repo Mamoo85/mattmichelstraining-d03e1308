@@ -407,7 +407,7 @@ serve(async (req) => {
       };
 
       try {
-        const frontHTML = await buildFrontHTML(design, prospect.city || city, prospect.business_name || "", campaign_id, audienceType, resolvedAssets);
+        const frontHTML = await buildFrontHTML(design, prospect.city || city, prospect.business_name || "", campaign_id, audienceType, resolvedAssets, prospect.id);
         const backHTML = buildBackHTML(prospect.city || city);
 
         const lobRes = await fetch("https://api.lob.com/v1/postcards", {
