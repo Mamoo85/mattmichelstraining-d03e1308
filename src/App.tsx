@@ -135,6 +135,8 @@ const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
 const GrowthRadarDashboard = lazyRetry(() => import("./pages/GrowthRadarDashboard"));
 const GetDossier = lazyRetry(() => import("./pages/GetDossier"));
+const GrowthSignalsLanding = lazyRetry(() => import("./pages/GrowthSignalsLanding"));
+const PulseAlerts = lazyRetry(() => import("./pages/PulseAlerts"));
 const ContractorROIReport = lazyRetry(() => import("./pages/ContractorROIReport"));
 const MyContractorLeads = lazyRetry(() => import("./pages/MyContractorLeads"));
 const DeadLeadStats = lazyRetry(() => import("./pages/DeadLeadStats"));
