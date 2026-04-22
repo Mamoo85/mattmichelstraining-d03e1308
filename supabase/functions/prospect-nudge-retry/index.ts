@@ -166,8 +166,3 @@ serve(async (_req) => {
     { headers: { "Content-Type": "application/json" } }
   );
 });
-  return new Response(
-    JSON.stringify({ retried, skipped_dedup: skippedDedup, skipped_lock: skippedLock, marked_dead: markedDead, scanned: candidates.length }),
-    { headers: { "Content-Type": "application/json" } }
-  );
-});
