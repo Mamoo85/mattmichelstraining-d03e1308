@@ -1138,7 +1138,8 @@ export default function AdminProspector() {
   useEffect(() => { setStagePages({}); }, [pipelineFilter, pipelineSearch, tradeFilter, cityFilter, stageFilterAdv, pipelinePageSize]);
 
 
-  const pipelineByStage = useMemo(() => {
+  // Full grouping (pre-pagination) — used for "x of y" counts
+  const pipelineByStageFull = useMemo(() => {
     const map: Record<string, PipelineLead[]> = {};
     PIPELINE_STAGES.forEach(s => { map[s.key] = []; });
     filteredPipelineLeads.forEach(l => {
@@ -1147,6 +1148,17 @@ export default function AdminProspector() {
     });
     return map;
   }, [filteredPipelineLeads]);
+
+  // Paginated view (per stage column)
+  const pipelineByStage = useMemo(() => {
+    const map: Record<string, PipelineLead[]> = {};
+    PIPELINE_STAGES.forEach(s => {
+      const shown = (stagePages[s.key] || 1) * pipelinePageSize;
+      map[s.key] = pipelineByStageFull[s.key].slice(0, shown);
+    });
+    return map;
+  }, [pipelineByStageFull, stagePages, pipelinePageSize]);
+
 
   // Pipeline stats
   const pipelineStats = useMemo(() => ({
