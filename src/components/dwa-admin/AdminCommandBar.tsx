@@ -249,6 +249,22 @@ export default function AdminCommandBar() {
     const d = drafts[i];
     if (!d || d._regenerating) return;
     const productKey = productKeyFromPrompt(prompt || (history[0]?.prompt ?? ""));
+    const channel = d.to_phone && !d.to_email ? "sms" : "email";
+    const tone = d._tone || "direct";
+    const angle = d._angle || null;
+
+    // Client-side guard: validate recipient + params before invoking edge fn.
+    const recipientCheck = validateRecipient({ to_email: d.to_email, to_phone: d.to_phone, to_name: d.to_name });
+    if (recipientCheck.ok === false) {
+      setQueueMsg(`❌ Draft #${i + 1}: ${recipientCheck.reason}`);
+      return;
+    }
+    const paramCheck = validateRegenerateParams({ product: productKey, tone, channel, angle });
+    if (paramCheck.ok === false) {
+      setQueueMsg(`❌ ${paramCheck.reason}`);
+      return;
+    }
+
     updateDraft(i, { _regenerating: true });
     try {
       const data = await callCommand({
