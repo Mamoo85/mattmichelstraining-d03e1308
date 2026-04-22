@@ -298,92 +298,120 @@ export default function ContractorLeads() {
             </div>
           )}
 
-          {isPrefilled && (
+          {isPrefilled && city && selectedTerritory && !selectedTerritory.active_contractor_id && (
             <div className="bg-primary/10 border-l-4 border-primary p-3 mb-4">
               <p className="text-sm font-bold text-foreground">
-                You're signing up for: {tradeLabel} — {city}, MI
-              </p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                Trade and territory preselected from your link. Just fill in your contact info below.
+                ✅ {tradeLabel} — {city}, MI is available. Fill in your info below to claim it.
               </p>
             </div>
           )}
 
+          {isPrefilled && city && selectedTerritory?.active_contractor_id && (
+            <div className="bg-yellow-500/10 border-l-4 border-yellow-500 p-3 mb-4">
+              <p className="text-sm font-bold text-foreground">⚠️ {tradeLabel} — {city} is already claimed.</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Pick another city below, or <a href="sms:+13139921219" className="text-primary underline">text Matt</a> to get on the waitlist.</p>
+            </div>
+          )}
+
           <div className="bg-card border border-border p-6">
-            <form onSubmit={handleSubmit} className="space-y-3">
-              {/* Trade + City dropdowns */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Profession *</label>
-                  <select
-                    value={trade}
-                    onChange={(e) => setTrade(e.target.value)}
-                    required
-                    className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
-                  >
-                    <option value="">Select trade…</option>
-                    {TRADES.map(t => (
-                      <option key={t.value} value={t.value}>{t.label} (${t.monthly}/mo)</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Territory (City) *</label>
-                  {cityIsCustom ? (
-                    <input
-                      type="text"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      placeholder="Enter city name"
-                      required
-                      autoFocus
-                      className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary"
-                    />
-                  ) : (
-                    <select
-                      value={city}
-                      onChange={(e) => handleCityChange(e.target.value)}
-                      required
-                      className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Step 1: Trade */}
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">Step 1 — Select your profession *</label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {TRADES.map(t => (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => { setTrade(t.value); setCity(""); }}
+                      className={`px-3 py-2 text-xs font-bold border transition-colors text-left ${trade === t.value ? "bg-primary text-white border-primary" : "bg-background border-border text-foreground hover:border-primary"}`}
                     >
-                      <option value="">Select city…</option>
-                      {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                      <option value="__other__">Other (enter manually)</option>
-                    </select>
-                  )}
+                      {t.label}<br /><span className="font-normal opacity-70">${t.monthly}/mo</span>
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {trade && city && (
-                <div className="bg-primary/5 border border-primary/20 px-3 py-2 text-[12px] font-bold text-foreground">
-                  ✓ {tradeLabel} leads in {city}, MI — ${monthly}/mo, cancel anytime
+              {/* Step 2: Territory — live from DB */}
+              {trade && (
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">
+                    Step 2 — Pick your territory *
+                    {territoriesLoading && <span className="ml-2 text-muted-foreground font-normal normal-case">Loading…</span>}
+                  </label>
+
+                  {!territoriesLoading && territories.length === 0 && (
+                    <div className="bg-yellow-500/10 border border-yellow-500/30 p-4 text-sm">
+                      <p className="font-bold text-foreground mb-1">No territories configured yet for {tradeLabel}.</p>
+                      <p className="text-muted-foreground text-xs">Text Matt at <a href="sms:+13139921219" className="text-primary underline">(313) 992-1219</a> — he'll set up your city and send you a direct link.</p>
+                    </div>
+                  )}
+
+                  {!territoriesLoading && territories.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {availableTerritories.map(t => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => setCity(t.city)}
+                          className={`px-3 py-2.5 text-xs font-bold border transition-colors text-left ${city === t.city ? "bg-primary text-white border-primary" : "bg-background border-green-600/40 text-foreground hover:border-primary"}`}
+                        >
+                          {t.city}
+                          <span className={`block text-[10px] font-normal mt-0.5 ${city === t.city ? "text-white/80" : "text-green-500"}`}>● OPEN</span>
+                        </button>
+                      ))}
+                      {claimedTerritories.map(t => (
+                        <div key={t.id} className="px-3 py-2.5 text-xs font-bold border border-border bg-muted/30 text-muted-foreground cursor-not-allowed select-none">
+                          {t.city}
+                          <span className="block text-[10px] font-normal mt-0.5 text-red-400 flex items-center gap-1"><Lock size={8} className="inline" /> CLAIMED</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Your Name *</label>
-                  <input type="text" value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} placeholder="First Last" required className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary" />
+              {/* Confirmation bar */}
+              {trade && city && selectedTerritory && !selectedTerritory.active_contractor_id && (
+                <div className="bg-primary/5 border border-primary/20 px-3 py-2 text-[12px] font-bold text-foreground">
+                  ✓ {tradeLabel} leads in {city}, MI — ${monthly}/mo, exclusive territory, cancel anytime
                 </div>
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Business Name</label>
-                  <input type="text" value={form.business_name} onChange={(e) => setForm(f => ({ ...f, business_name: e.target.value }))} placeholder="Your company name" className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Email *</label>
-                  <input type="email" value={form.email} onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))} placeholder="you@yourcompany.com" required className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Phone</label>
-                  <input type="tel" value={form.phone} onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="(555) 555-5555" className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary" />
-                </div>
-              </div>
+              )}
 
-              <button type="submit" disabled={loading || !trade || !city} className="w-full bg-primary text-white font-bold py-3 text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              {/* Step 3: Contact info — only shown once a valid territory is selected */}
+              {trade && city && selectedTerritory && !selectedTerritory.active_contractor_id && (
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-2">Step 3 — Your contact info</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] text-muted-foreground block mb-1">Your Name *</label>
+                      <input type="text" value={form.name} onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} placeholder="First Last" required className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary" />
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-muted-foreground block mb-1">Business Name</label>
+                      <input type="text" value={form.business_name} onChange={(e) => setForm(f => ({ ...f, business_name: e.target.value }))} placeholder="Your company name" className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary" />
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-muted-foreground block mb-1">Email *</label>
+                      <input type="email" value={form.email} onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))} placeholder="you@yourcompany.com" required className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary" />
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-muted-foreground block mb-1">Phone</label>
+                      <input type="tel" value={form.phone} onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="(555) 555-5555" className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || !trade || !city || !selectedTerritory || !!selectedTerritory?.active_contractor_id}
+                className="w-full bg-primary text-white font-bold py-3 text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
                 {loading ? (
                   <><Loader2 size={14} className="animate-spin" /> Opening checkout…</>
                 ) : (
-                  <>{trade && city ? `Claim ${tradeLabel} — ${city} ($${monthly}/mo)` : "Claim My Territory"} <ArrowRight size={14} /></>
+                  <>{trade && city && selectedTerritory && !selectedTerritory.active_contractor_id ? `Claim ${tradeLabel} — ${city} ($${monthly}/mo)` : trade && !city ? "← Select a territory above" : "Claim My Territory"} <ArrowRight size={14} /></>
                 )}
               </button>
               <p className="text-[10px] text-muted-foreground text-center">
