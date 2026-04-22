@@ -592,15 +592,39 @@ function RankedPool() {
                 <th className="p-2">Channels</th>
                 <th className="p-2">Status</th>
                 <th className="p-2 text-right">Sends</th>
+                <th className="p-2 text-right">Enrich</th>
               </tr>
             </thead>
             <tbody>
-              {prospects.map((p) => (
+              {prospects.map((p) => {
+                const trace = getTrace(p);
+                const sourceFor = (field: string) => trace.find((t) => t.ok && t.filled?.includes(field))?.source;
+                const badge = (filled: boolean, field: string, cls: string, icon: string) => {
+                  if (!filled) return null;
+                  const src = sourceFor(field);
+                  const el = <Badge variant="outline" className={cn("text-[10px] cursor-help", cls)}>{icon}</Badge>;
+                  return src ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>{el}</TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">via {src}</TooltipContent>
+                    </Tooltip>
+                  ) : el;
+                };
+                return (
                 <tr key={p.id} className="border-t border-white/5 hover:bg-white/5">
                   <td className="p-2"><Checkbox checked={selected.has(p.id)} onCheckedChange={() => toggle(p.id)} /></td>
                   <td className="p-2 text-white font-medium">
                     {p.business_name}
-                    {p.contact_name && <div className="text-white/40 text-[10px]">{p.contact_name}</div>}
+                    {p.contact_name && (
+                      sourceFor("contact_name") ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-white/40 text-[10px] cursor-help">{p.contact_name}</div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs">via {sourceFor("contact_name")}</TooltipContent>
+                        </Tooltip>
+                      ) : <div className="text-white/40 text-[10px]">{p.contact_name}</div>
+                    )}
                   </td>
                   <td className="p-2 text-white/70">{p.audience_type}</td>
                   <td className="p-2 text-white/70">{p.city ?? "—"}{p.state ? `, ${p.state}` : ""}</td>
@@ -613,17 +637,51 @@ function RankedPool() {
                     )}>{p.lead_score}</span>
                   </td>
                   <td className="p-2 space-x-1">
-                    {p.email && <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-400">📧</Badge>}
-                    {p.fax_number && <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-400">📠</Badge>}
-                    {p.phone && <Badge variant="outline" className="text-[10px] border-blue-500/40 text-blue-400">📞</Badge>}
-                    {p.address_line1 && <Badge variant="outline" className="text-[10px] border-purple-500/40 text-purple-400">📬</Badge>}
+                    {badge(!!p.email, "email", "border-emerald-500/40 text-emerald-400", "📧")}
+                    {badge(!!p.fax_number, "fax_number", "border-amber-500/40 text-amber-400", "📠")}
+                    {badge(!!p.phone, "phone", "border-blue-500/40 text-blue-400", "📞")}
+                    {badge(!!p.address_line1, "address_line1", "border-purple-500/40 text-purple-400", "📬")}
+                    {p.review_count != null && p.review_count > 0 && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant="outline" className="text-[10px] cursor-help border-yellow-500/40 text-yellow-400">⭐{p.google_rating ?? "?"}</Badge>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs">{p.review_count} reviews via Google Places</TooltipContent>
+                      </Tooltip>
+                    )}
+                    {p.phone_carrier_type && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant="outline" className="text-[10px] cursor-help border-cyan-500/40 text-cyan-400">{p.phone_carrier_type === "mobile" ? "📱" : "☎️"}</Badge>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs">{p.phone_carrier_type} via Twilio Lookup</TooltipContent>
+                      </Tooltip>
+                    )}
                   </td>
-                  <td className="p-2 text-white/60">{p.status}</td>
+                  <td className="p-2 text-white/60">
+                    {p.status}
+                    {p.enrichment_status && (
+                      <div className="text-white/30 text-[10px]">{p.enrichment_status}</div>
+                    )}
+                  </td>
                   <td className="p-2 text-right text-white/50">{p.send_count}</td>
+                  <td className="p-2 text-right">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => enrichOne(p.id)}
+                      disabled={enrichingId === p.id}
+                      className="h-7 px-2 text-[10px] text-[#00d4ff] hover:bg-[#00d4ff]/10"
+                      title={trace.length ? `Last enriched: ${trace.filter(t=>t.ok).map(t=>t.source).join(", ")}` : "Run enrichment waterfall"}
+                    >
+                      {enrichingId === p.id ? <Loader2 className="animate-spin" size={12} /> : <>🔄 {trace.length ? "Re-enrich" : "Enrich"}</>}
+                    </Button>
+                  </td>
                 </tr>
-              ))}
+                );
+              })}
               {!isLoading && prospects.length === 0 && (
-                <tr><td colSpan={8} className="p-8 text-center text-white/40">No prospects match these filters. Run a scrape from the Find tab.</td></tr>
+                <tr><td colSpan={9} className="p-8 text-center text-white/40">No prospects match these filters. Run a scrape from the Find tab.</td></tr>
               )}
             </tbody>
           </table>
