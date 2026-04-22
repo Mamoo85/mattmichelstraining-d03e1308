@@ -9311,6 +9311,36 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_signal_log: {
+        Row: {
+          admin_id: string | null
+          audience: string | null
+          id: string
+          play: string
+          sent_at: string
+          signal_id: string
+          target_company: string | null
+        }
+        Insert: {
+          admin_id?: string | null
+          audience?: string | null
+          id?: string
+          play: string
+          sent_at?: string
+          signal_id: string
+          target_company?: string | null
+        }
+        Update: {
+          admin_id?: string | null
+          audience?: string | null
+          id?: string
+          play?: string
+          sent_at?: string
+          signal_id?: string
+          target_company?: string | null
+        }
+        Relationships: []
+      }
       parent_child_links: {
         Row: {
           child_user_id: string
