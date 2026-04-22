@@ -475,41 +475,49 @@ export default function AdminSMSInbox() {
   const isUnknownContact = activeThread && !activeThread.contactLabel;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="min-w-0">
-          <h2 className="text-lg sm:text-xl font-bold text-white">💬 SMS Inbox</h2>
-          <p className="text-white/50 text-[11px] sm:text-xs">
-            (313) 992-1219 · last 30 days
-            {totalUnread > 0 && (
-              <span className="ml-2 px-2 py-0.5 rounded bg-[#00d4ff]/20 text-[#00d4ff] text-[10px] font-semibold">
-                {totalUnread} unread
-              </span>
-            )}
-          </p>
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <h2 className="text-base sm:text-lg font-bold text-white shrink-0">💬 SMS</h2>
+          {totalUnread > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full bg-[#00d4ff] text-[#0a1628] text-[10px] font-bold shrink-0">
+              {totalUnread}
+            </span>
+          )}
+          <button
+            onClick={() => setInboundOnlyMode((v) => !v)}
+            className={`text-[10px] px-2 py-1 rounded-full font-semibold border transition shrink-0 ${
+              inboundOnlyMode
+                ? "bg-[#00d4ff]/15 text-[#00d4ff] border-[#00d4ff]/30"
+                : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10"
+            }`}
+            title={inboundOnlyMode ? "Showing only people who texted me first" : "Showing all threads"}
+          >
+            {inboundOnlyMode ? "📥 Inbound only" : "📤 Show all"}
+          </button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={startCompose}
-            className="px-3 py-1.5 rounded text-xs font-bold bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/90"
+            className="px-2.5 py-1 rounded text-xs font-bold bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/90"
           >
             ✏️ New
           </button>
           <button
             onClick={async () => {
               await loadInbox();
-              toast.success("Inbox refreshed");
+              toast.success("Refreshed");
             }}
             disabled={loading}
-            className="px-3 py-1.5 rounded text-xs font-semibold bg-white/5 hover:bg-white/10 text-white border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Refresh inbox"
+            className="px-2 py-1 rounded text-xs font-semibold bg-white/5 hover:bg-white/10 text-white border border-white/10 disabled:opacity-50"
+            title="Refresh"
           >
             <span className={loading ? "inline-block animate-spin" : "inline-block"}>↻</span>
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 h-[calc(100vh-200px)] md:h-[70vh] min-h-[500px]">
+      <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-3 h-[calc(100vh-140px)] md:h-[78vh] min-h-[520px]">
         {/* Thread list — hidden on mobile when a convo/compose is open */}
         <div className={`${showListOnMobile ? "block" : "hidden"} md:block border border-white/10 rounded-lg bg-white/[0.02] overflow-y-auto`}>
           {loading && threads.length === 0 && (
@@ -517,7 +525,9 @@ export default function AdminSMSInbox() {
           )}
           {!loading && threads.length === 0 && (
             <div className="p-4 text-white/40 text-sm">
-              No SMS conversations yet. Tap <b>✏️ New</b> to text any number.
+              {inboundOnlyMode
+                ? "No inbound conversations yet. Toggle 📤 Show all to see outbound history."
+                : "No SMS conversations yet. Tap ✏️ New to text any number."}
             </div>
           )}
           {threads.map((t) => {
