@@ -69,6 +69,7 @@ export default function ContractorLeads() {
   const success = params.get("success") === "1";
   const successCid = params.get("cid") || "";
   const refToken = params.get("ref") || "";
+  const expired = params.get("expired") === "1";
 
   const initialTrade = normalizeTradeParam(params.get("trade"));
   const initialCity = normalizeCityParam(params.get("city"));
@@ -142,20 +143,63 @@ export default function ContractorLeads() {
     const statusUrl = successCid
       ? `/contractor-onboarding-status?contractor_id=${encodeURIComponent(successCid)}`
       : `/contractor-onboarding-status`;
+    const successTradeLabel = tradeLabel || "your trade";
+    const successCity = city || "your territory";
+    const bookmarkUrl = (initialTrade && initialCity)
+      ? `https://detroitwebagent.com/contractor-leads?trade=${encodeURIComponent(initialTrade)}&city=${encodeURIComponent(initialCity)}`
+      : `https://detroitwebagent.com/contractor-leads`;
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-6">
-        <div className="text-center max-w-sm">
-          <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle size={32} className="text-green-500" />
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-10">
+        <div className="max-w-lg w-full">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle size={32} className="text-green-500" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-foreground mb-2">
+              ✅ You're all set for {successTradeLabel} — {successCity}
+            </h1>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Your territory is reserved. Welcome email is on its way.
+            </p>
           </div>
-          <h1 className="text-2xl font-black text-foreground mb-3">You're locked in!</h1>
-          <p className="text-muted-foreground leading-relaxed mb-4">Your territory is reserved. You'll receive an onboarding email within 24 hours with your lead capture page details and go-live date.</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+            <a href="sms:+13139921219" className="bg-card border border-border rounded-lg p-4 text-left hover:border-primary transition-colors">
+              <div className="text-2xl mb-1">📱</div>
+              <div className="text-[11px] font-bold uppercase tracking-widest text-primary mb-1">Save Matt's #</div>
+              <div className="text-sm font-bold text-foreground">(313) 992-1219</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5">Tap to text</div>
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(bookmarkUrl);
+                toast.success("Bookmark URL copied");
+              }}
+              className="bg-card border border-border rounded-lg p-4 text-left hover:border-primary transition-colors"
+            >
+              <div className="text-2xl mb-1">🔖</div>
+              <div className="text-[11px] font-bold uppercase tracking-widest text-primary mb-1">Bookmark page</div>
+              <div className="text-[11px] text-foreground font-mono break-all leading-tight">{bookmarkUrl}</div>
+              <div className="text-[11px] text-muted-foreground mt-1">Tap to copy</div>
+            </button>
+            <div className="bg-card border border-border rounded-lg p-4">
+              <div className="text-2xl mb-1">📧</div>
+              <div className="text-[11px] font-bold uppercase tracking-widest text-primary mb-1">Check email</div>
+              <div className="text-sm font-bold text-foreground">Welcome guide</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5">Arrives in ~2 min</div>
+            </div>
+          </div>
+
           <a href={statusUrl} className="block bg-primary/10 border border-primary/30 rounded-lg p-4 mb-4 text-left hover:bg-primary/15 transition-colors">
             <div className="text-[11px] font-bold uppercase tracking-widest text-primary mb-1">Track activation</div>
             <div className="text-sm font-bold text-foreground mb-1">Payment pending → Ready</div>
             <div className="text-xs text-muted-foreground leading-relaxed">See real-time activation status and when your welcome SMS will arrive →</div>
           </a>
-          <p className="text-sm text-muted-foreground">Questions? <a href="sms:+13139921219" className="text-primary font-bold hover:underline">Text Matt at (313) 992-1219</a></p>
+
+          <p className="text-xs text-muted-foreground text-center">
+            First lead usually arrives within 3–7 days. Questions? <a href="sms:+13139921219" className="text-primary font-bold hover:underline">Text Matt</a>
+          </p>
         </div>
       </div>
     );
@@ -230,6 +274,17 @@ export default function ContractorLeads() {
         <div className="max-w-3xl mx-auto px-6 py-12">
           <h2 id="territory" className="text-lg font-black text-foreground mb-2 uppercase tracking-wide">Pick your territory</h2>
           <p className="text-sm text-muted-foreground mb-4">One contractor per trade per city. Choose your profession and city below.</p>
+
+          {expired && (
+            <div className="bg-yellow-500/10 border-l-4 border-yellow-500 p-3 mb-4">
+              <p className="text-sm font-bold text-foreground">
+                ⏰ This signup link has expired.
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Pick your trade and city below to continue — or text Matt at (313) 992-1219 for a fresh link.
+              </p>
+            </div>
+          )}
 
           {isPrefilled && (
             <div className="bg-primary/10 border-l-4 border-primary p-3 mb-4">

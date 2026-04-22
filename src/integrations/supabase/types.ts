@@ -11018,9 +11018,12 @@ export type Database = {
           business: string | null
           city: string | null
           clicked_at: string | null
+          consumed_at: string | null
           created_at: string
+          expires_at: string | null
           follow_up_sent_at: string | null
           follow_up_status: string | null
+          generated_by_admin: boolean
           id: string
           last_nudge_error: string | null
           last_nudge_sid: string | null
@@ -11044,9 +11047,12 @@ export type Database = {
           business?: string | null
           city?: string | null
           clicked_at?: string | null
+          consumed_at?: string | null
           created_at?: string
+          expires_at?: string | null
           follow_up_sent_at?: string | null
           follow_up_status?: string | null
+          generated_by_admin?: boolean
           id?: string
           last_nudge_error?: string | null
           last_nudge_sid?: string | null
@@ -11070,9 +11076,12 @@ export type Database = {
           business?: string | null
           city?: string | null
           clicked_at?: string | null
+          consumed_at?: string | null
           created_at?: string
+          expires_at?: string | null
           follow_up_sent_at?: string | null
           follow_up_status?: string | null
+          generated_by_admin?: boolean
           id?: string
           last_nudge_error?: string | null
           last_nudge_sid?: string | null

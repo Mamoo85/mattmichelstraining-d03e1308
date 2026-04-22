@@ -1315,6 +1315,19 @@ serve(async (req) => {
         } catch { /* non-critical */ }
       }
 
+      // ── PROSPECT NUDGE CONVERSION TRACKING ─────────────────────────────────
+      // If contractor checkout came from an admin-generated tracked link, set paid_at.
+      if (meta.type === "contractor_lead_subscription" && meta.ref) {
+        try {
+          await sb.from("prospect_nudges")
+            .update({ paid_at: new Date().toISOString(), status: "converted" })
+            .eq("link_token", meta.ref)
+            .is("paid_at", null);
+        } catch (e) {
+          console.error("[WEBHOOK] prospect_nudges paid_at update failed:", e);
+        }
+      }
+
       // ── REFERRAL TRACKING (B2B + Session) ──────────────────────────────────
       try {
         const refCode = meta.referral_code || meta.ref || "";

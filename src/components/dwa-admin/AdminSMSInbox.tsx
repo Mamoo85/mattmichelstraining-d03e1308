@@ -729,13 +729,50 @@ export default function AdminSMSInbox() {
                     )}
                   </div>
                 </div>
-                <a
-                  href={`tel:${activeThread.phone}`}
-                  className="text-base text-white/70 hover:text-white px-2 py-1 rounded shrink-0"
-                  aria-label="Call"
-                >
-                  📞
-                </a>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const digits = activeThread.phone.replace(/\D/g, "");
+                        const variants = [activeThread.phone, digits, digits.replace(/^1/, "")];
+                        const { data } = await supabase
+                          .from("prospect_nudges")
+                          .select("trade, city, name, business, link_token")
+                          .or(variants.map(v => `phone.eq.${v}`).join(","))
+                          .order("created_at", { ascending: false })
+                          .limit(1)
+                          .maybeSingle();
+                        if (!data?.trade || !data?.city) {
+                          toast.error("No territory context — use Territory Generator");
+                          return;
+                        }
+                        const params = new URLSearchParams();
+                        params.set("trade", String(data.trade).toLowerCase());
+                        params.set("city", String(data.city));
+                        if (data.name) params.set("name", String(data.name));
+                        if (data.business) params.set("business_name", String(data.business));
+                        params.set("phone", activeThread.phone);
+                        const link = `https://detroitwebagent.com/contractor-leads?${params.toString()}`;
+                        await navigator.clipboard.writeText(link);
+                        toast.success(`Signup link copied — ${data.trade}, ${data.city}`);
+                      } catch {
+                        toast.error("Couldn't look up territory");
+                      }
+                    }}
+                    title="Copy deep signup link with this prospect's trade + city preselected"
+                    className="text-[10px] font-bold text-[#00d4ff] border border-[#00d4ff]/40 px-2 py-1 rounded hover:bg-[#00d4ff]/10"
+                  >
+                    🔗 Copy Link
+                  </button>
+                  <a
+                    href={`tel:${activeThread.phone}`}
+                    className="text-base text-white/70 hover:text-white px-2 py-1 rounded shrink-0"
+                    aria-label="Call"
+                  >
+                    📞
+                  </a>
+                </div>
               </div>
 
               {/* Messages — grouped by sender, day separators, dense bubbles */}
