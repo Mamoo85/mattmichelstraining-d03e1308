@@ -749,6 +749,86 @@ export default function AdminProspector() {
     finally { setBatchProcessing(false); }
   };
 
+  const exportPipelineCSV = async () => {
+    const rows = filteredPipelineLeads;
+    if (rows.length === 0) { toast.error("No prospects to export"); return; }
+    setBatchProcessing(true);
+    try {
+      const ids = rows.map(r => r.id);
+      // Fetch all activities for these leads to derive milestone timestamps
+      const { data: acts } = await (supabase as any)
+        .from("lead_activities")
+        .select("lead_id,type,created_at")
+        .eq("lead_table", "prospect_pipeline")
+        .in("lead_id", ids)
+        .order("created_at", { ascending: true });
+
+      // Earliest timestamp per (lead_id, type)
+      const milestones = new Map<string, Record<string, string>>();
+      for (const a of (acts || []) as Array<{ lead_id: string; type: string; created_at: string }>) {
+        const m = milestones.get(a.lead_id) || {};
+        if (!m[a.type]) m[a.type] = a.created_at;
+        milestones.set(a.lead_id, m);
+      }
+
+      const MILESTONE_KEYS = [
+        "link_clicked",
+        "signup_started",
+        "account_created",
+        "profile_completed",
+        "paid",
+        "deal_won",
+        "converted",
+      ];
+
+      const headers = [
+        "id", "business_name", "contact_name", "email", "phone", "website",
+        "city", "state", "industry", "pipeline_stage", "lead_score",
+        "google_rating", "review_count", "drip_step", "drip_status",
+        "last_drip_at", "n8n_sent_at", "paid_at", "source", "created_at",
+        ...MILESTONE_KEYS.map(k => `milestone_${k}_at`),
+        "last_activity_at", "notes",
+      ];
+
+      const esc = (v: any) => {
+        if (v === null || v === undefined) return "";
+        const s = String(v).replace(/"/g, '""');
+        return /[",\n\r]/.test(s) ? `"${s}"` : s;
+      };
+
+      const lines = [headers.join(",")];
+      for (const l of rows) {
+        const m = milestones.get(l.id) || {};
+        const lastActivity = Object.values(m).sort().slice(-1)[0] || "";
+        lines.push([
+          l.id, l.business_name, l.contact_name, l.email, l.phone, l.website,
+          l.city, l.state, l.industry, l.pipeline_stage, l.lead_score,
+          l.google_rating, l.review_count, l.drip_step, l.drip_status,
+          l.last_drip_at, l.n8n_sent_at, l.paid_at, l.source, l.created_at,
+          ...MILESTONE_KEYS.map(k => m[k] || ""),
+          lastActivity, l.notes,
+        ].map(esc).join(","));
+      }
+
+      const csv = lines.join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const stamp = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `prospect-tracker-${stamp}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(`Exported ${rows.length} prospects`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Export failed");
+    } finally {
+      setBatchProcessing(false);
+    }
+  };
+
   const clearDuplicates = async () => {
     const seen = new Map<string, PipelineLead>();
     const dupeIds: string[] = [];
@@ -1751,6 +1831,14 @@ export default function AdminProspector() {
               Generate & Send {selectedPipelineIds.size > 0 ? selectedPipelineIds.size : "All"}
             </Button>
             <div className="ml-auto flex items-center gap-1.5">
+              <Button
+                variant="outline" size="sm" className="text-xs h-7 gap-1 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                disabled={batchProcessing}
+                onClick={exportPipelineCSV}
+                title="Download all displayed prospects with milestone timestamps"
+              >
+                <FileText size={10} /> Export CSV ({filteredPipelineLeads.length})
+              </Button>
               <Button
                 variant="outline" size="sm" className="text-xs h-7 gap-1 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
                 disabled={batchProcessing}
