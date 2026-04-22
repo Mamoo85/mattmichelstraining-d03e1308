@@ -193,28 +193,28 @@ export default function IndustrialPulse() {
 
             {/* Unlock CTA strip — shown right under teasers */}
             {teasers.length > 0 && (
-              <div className="mt-8 border-2 border-[#00d4ff] bg-[#0a1628] rounded-md p-6 text-center">
+              <div className="mt-6 sm:mt-8 border-2 border-[#00d4ff] bg-[#0a1628] rounded-md p-4 sm:p-6 text-center">
                 <div className="text-xs tracking-widest text-[#00d4ff] font-bold uppercase mb-2">
                   Want the company names?
                 </div>
-                <div className="text-lg md:text-xl font-bold text-white mb-4">
+                <div className="text-base sm:text-lg md:text-xl font-bold text-white mb-4">
                   Unlock all {totalCount || 3} signals from this week
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <div className="flex flex-col gap-2 sm:gap-3">
                   <button
                     onClick={() => { setUnlockPlan("snapshot_50"); setUnlockOpen(true); }}
-                    className="bg-[#00d4ff] text-[#0a1628] font-bold px-6 py-3 rounded-md hover:bg-[#00d4ff]/90 transition text-sm uppercase tracking-wider flex items-center justify-center gap-2"
+                    className="bg-[#00d4ff] text-[#0a1628] font-bold px-4 sm:px-6 py-3 sm:py-4 rounded-md hover:bg-[#00d4ff]/90 transition text-sm uppercase tracking-wider flex items-center justify-center gap-2 min-h-[48px]"
                   >
                     <Zap className="w-4 h-4" /> Unlock this week · $50
                   </button>
                   <button
                     onClick={() => { setUnlockPlan("firehose_199"); setUnlockOpen(true); }}
-                    className="border-2 border-[#00d4ff] text-[#00d4ff] font-bold px-6 py-3 rounded-md hover:bg-[#00d4ff]/10 transition text-sm uppercase tracking-wider"
+                    className="border-2 border-[#00d4ff] text-[#00d4ff] font-bold px-4 sm:px-6 py-3 sm:py-4 rounded-md hover:bg-[#00d4ff]/10 transition text-sm uppercase tracking-wider min-h-[48px]"
                   >
                     Daily firehose · $199/mo
                   </button>
                 </div>
-                <div className="text-[11px] text-slate-500 mt-3">One-time or cancel anytime · Instant email delivery</div>
+                <div className="text-[10px] sm:text-[11px] text-slate-500 mt-3">One-time or cancel anytime · Instant email delivery</div>
               </div>
             )}
           </div>
