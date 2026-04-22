@@ -35,6 +35,7 @@ const AdminContractorOnboarding = lazy(() => import("@/components/dwa-admin/Admi
 const AdminContractorLeadsStatus = lazy(() => import("@/components/dwa-admin/AdminContractorLeadsStatus"));
 const AdminProspectTracker = lazy(() => import("@/components/dwa-admin/AdminProspectTracker"));
 const AdminCommandBar = lazy(() => import("@/components/dwa-admin/AdminCommandBar"));
+const ProductSalesHub = lazy(() => import("@/components/dwa-admin/ProductSalesHub"));
 
 type Tab =
   | "ai-command"
