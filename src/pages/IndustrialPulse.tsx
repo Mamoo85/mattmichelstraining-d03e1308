@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Loader2, Mail, Lock, TrendingUp, MapPin, Briefcase, CheckCircle2 } from "lucide-react";
+import { Loader2, Mail, Lock, TrendingUp, MapPin, Briefcase, CheckCircle2, Zap, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -37,6 +37,40 @@ export default function IndustrialPulse() {
   const [vertical, setVertical] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [unlockOpen, setUnlockOpen] = useState(false);
+  const [unlockEmail, setUnlockEmail] = useState("");
+  const [unlockPlan, setUnlockPlan] = useState<"snapshot_50" | "firehose_199">("snapshot_50");
+  const [unlocking, setUnlocking] = useState(false);
+
+  useEffect(() => {
+    // Auto-open unlock modal if ?unlock=1 in URL (from email CTA)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("unlock") === "1") setUnlockOpen(true);
+    if (params.get("unlocked") === "1") {
+      toast.success("Payment received — check your inbox in the next 5 minutes for the full list.");
+    }
+  }, []);
+
+  async function handleUnlock(e: React.FormEvent) {
+    e.preventDefault();
+    if (!unlockEmail.trim()) return;
+    setUnlocking(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-industrial-pulse-checkout", {
+        body: { email: unlockEmail.trim(), plan: unlockPlan, business_name: businessName.trim() || undefined },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Checkout failed — try again");
+      setUnlocking(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
