@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { safeLocalStorage } from "@/lib/browserStorage";
 import ResendSmsModal, { type ResendTarget } from "./ResendSmsModal";
 
 type CommsRow = {
@@ -148,6 +149,31 @@ const ONBOARDING_FAQ: Array<{ q: string; a: string }> = [
   },
 ];
 
+// Quick-action chips — one-tap canned replies above the composer.
+// Sourced from ONBOARDING_FAQ where possible + 2 short fixed entries.
+const QUICK_ACTIONS: Array<{ label: string; body: string }> = [
+  {
+    label: "⏰ Availability",
+    body: "I'll get back to you within the hour — usually faster.\n\n— Matt | (313) 992-1219",
+  },
+  {
+    label: "💵 Pricing",
+    body: ONBOARDING_FAQ.find((x) => x.q === "How much / what's the price?")?.a ?? "",
+  },
+  {
+    label: "🔗 Booking link",
+    body: "Grab a slot here: detroitwebagent.com/book — pick anything that works.\n\n— Matt | (313) 992-1219",
+  },
+  {
+    label: "📋 Full pitch",
+    body: ONBOARDING_FAQ.find((x) => x.q.startsWith("🔥"))?.a ?? "",
+  },
+  {
+    label: "♻️ Refund",
+    body: ONBOARDING_FAQ.find((x) => x.q === "Refund / guarantee?")?.a ?? "",
+  },
+];
+
 export default function AdminSMSInbox() {
   const [loading, setLoading] = useState(true);
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -158,7 +184,9 @@ export default function AdminSMSInbox() {
   const [composeTo, setComposeTo] = useState("");
   const [drafting, setDrafting] = useState(false);
   const [showCheatsheet, setShowCheatsheet] = useState(false);
-  const [inboundOnlyMode, setInboundOnlyMode] = useState(true);
+  const [inboundOnlyMode, setInboundOnlyMode] = useState(
+    () => safeLocalStorage.getItem("dwa_sms_inbound_only") !== "false"
+  );
   const [composerFocused, setComposerFocused] = useState(false);
   const [resendTarget, setResendTarget] = useState<ResendTarget | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -329,11 +357,17 @@ export default function AdminSMSInbox() {
   // Local "read" tracking via localStorage (no DB column needed yet)
   function readSet(): Set<string> {
     try {
-      const raw = localStorage.getItem("dwa_sms_read") ?? "[]";
+      const raw = safeLocalStorage.getItem("dwa_sms_read") ?? "[]";
       return new Set(JSON.parse(raw));
     } catch {
       return new Set();
     }
+  }
+  function writeReadSet(set: Set<string>) {
+    // Cap stored set at most recent 5,000 IDs to prevent unbounded growth
+    const arr = Array.from(set);
+    const capped = arr.length > 5000 ? arr.slice(arr.length - 5000) : arr;
+    safeLocalStorage.setItem("dwa_sms_read", JSON.stringify(capped));
   }
   function markThreadRead(thread: Thread) {
     const set = readSet();
@@ -345,7 +379,7 @@ export default function AdminSMSInbox() {
       }
     }
     if (changed) {
-      localStorage.setItem("dwa_sms_read", JSON.stringify(Array.from(set)));
+      writeReadSet(set);
       // Recompute unread count for this thread without a full reload
       setThreads((prev) =>
         prev.map((t) => (t.phone === thread.phone ? { ...t, unreadCount: 0 } : t))
@@ -373,21 +407,37 @@ export default function AdminSMSInbox() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Reload when filter mode flips
+  // Persist inboundOnlyMode + reload when it flips
   useEffect(() => {
+    safeLocalStorage.setItem("dwa_sms_inbound_only", String(inboundOnlyMode));
     loadInbox();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inboundOnlyMode]);
 
-  // Mark active thread as read + autoscroll on change
+  // Keep a ref of latest threads so the activePhone-only effect can read fresh data
+  const threadsRef = useRef<Thread[]>([]);
   useEffect(() => {
-    const t = threads.find((x) => x.phone === activePhone);
+    threadsRef.current = threads;
+  }, [threads]);
+
+  // Mark active thread as read + autoscroll when activePhone changes
+  useEffect(() => {
+    if (!activePhone) return;
+    const t = threadsRef.current.find((x) => x.phone === activePhone);
     if (t) markThreadRead(t);
     requestAnimationFrame(() => {
       scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePhone, threads.length]);
+  }, [activePhone]);
+
+  // Mark-on-arrive: when threads update and the active thread has new inbound, clear it instantly
+  useEffect(() => {
+    if (!activePhone) return;
+    const t = threads.find((x) => x.phone === activePhone);
+    if (t && t.unreadCount > 0) markThreadRead(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threads, activePhone]);
 
   const activeThread = useMemo(
     () => threads.find((t) => t.phone === activePhone) ?? null,
@@ -480,7 +530,10 @@ export default function AdminSMSInbox() {
         <div className="flex items-center gap-2 min-w-0">
           <h2 className="text-base sm:text-lg font-bold text-white shrink-0">💬 SMS</h2>
           {totalUnread > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full bg-[#00d4ff] text-[#0a1628] text-[10px] font-bold shrink-0">
+            <span
+              className="px-1.5 py-0.5 rounded-full bg-[#00d4ff] text-[#0a1628] text-[10px] font-bold shrink-0"
+              title={`${totalUnread} unread across visible threads`}
+            >
               {totalUnread}
             </span>
           )}
@@ -690,15 +743,20 @@ export default function AdminSMSInbox() {
                   const mine = m.direction === "outbound";
                   const prev = activeThread.messages[idx - 1];
                   const next = activeThread.messages[idx + 1];
-                  const sameSenderAsPrev = prev && prev.direction === m.direction;
-                  const sameSenderAsNext = next && next.direction === m.direction;
-                  const isLastInRun = !sameSenderAsNext;
-                  const isFirstInRun = !sameSenderAsPrev;
 
                   // Day separator if day changed since previous message
                   const showDay =
                     !prev ||
                     new Date(prev.created_at).toDateString() !== new Date(m.created_at).toDateString();
+                  // Next message crosses day boundary?
+                  const nextCrossesDay =
+                    next &&
+                    new Date(next.created_at).toDateString() !== new Date(m.created_at).toDateString();
+
+                  // Day boundary resets the run on both sides
+                  const sameSenderAsPrev = prev && prev.direction === m.direction && !showDay;
+                  const sameSenderAsNext = next && next.direction === m.direction && !nextCrossesDay;
+                  const isLastInRun = !sameSenderAsNext;
 
                   // Spacing: tight within run, loose between sender changes
                   const topGap = showDay ? "mt-3" : sameSenderAsPrev ? "mt-0.5" : "mt-3";
@@ -759,6 +817,11 @@ export default function AdminSMSInbox() {
                             </div>
                           )}
                         </div>
+                        {mine && (
+                          <div className={`w-6 h-6 rounded-full bg-[#00d4ff]/20 border border-[#00d4ff]/40 flex items-center justify-center text-[9px] font-bold text-[#00d4ff] shrink-0 ${isLastInRun ? "opacity-100" : "opacity-0"}`}>
+                            M
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -791,8 +854,27 @@ export default function AdminSMSInbox() {
                 </div>
               )}
 
+              {/* Quick-action chips — one-tap canned replies */}
+              <div className="border-t border-white/10 px-2 pt-1.5 pb-1 shrink-0 overflow-x-auto">
+                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                  {QUICK_ACTIONS.map((qa) => (
+                    <button
+                      key={qa.label}
+                      onClick={() => {
+                        setDraft(qa.body);
+                        textareaRef.current?.focus();
+                      }}
+                      className="px-2 py-1 rounded-full bg-white/5 hover:bg-[#00d4ff]/15 hover:border-[#00d4ff]/40 border border-white/10 text-[11px] text-white/80 shrink-0 transition"
+                      title={qa.body.slice(0, 80) + (qa.body.length > 80 ? "…" : "")}
+                    >
+                      {qa.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Instagram-style pill composer */}
-              <div className="border-t border-white/10 px-2 py-2 shrink-0 relative">
+              <div className="px-2 py-2 shrink-0 relative">
                 {(composerFocused || draft.length > 100) && (
                   <div className="px-2 pb-1 text-[10px] text-white/40 flex items-center justify-between">
                     <span>From (313) 992-1219</span>
