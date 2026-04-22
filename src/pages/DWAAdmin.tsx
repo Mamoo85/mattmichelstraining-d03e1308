@@ -76,7 +76,8 @@ type Tab =
   | "lara-health" | "growth-signals" | "trojan-log" | "coverage-map" | "crm-dashboard"
   | "sms-inbox" | "sms-drafts" | "ad-launcher" | "blocklist" | "error-logs" | "outreach-log"
   | "contractor-onboarding" | "ad-spend" | "ad-optimizer" | "leads-e2e" | "prospect-tracker"
-  | "linkedin-blitz" | "call-list" | "community-drop" | "referral-kickback";
+  | "linkedin-blitz" | "call-list" | "community-drop" | "referral-kickback"
+  | "ipulse-unlocks";
 
 const GROUPS: SidebarGroup[] = [
   {
