@@ -11,6 +11,15 @@ import {
 } from "lucide-react";
 
 type Tier = "snapshot" | "weekly" | "enterprise";
+type SupplierType = "plumbing" | "hvac" | "electrical" | "industrial" | "roofing" | "";
+
+const SUPPLIER_TYPES: { value: SupplierType; label: string; example: string }[] = [
+  { value: "plumbing", label: "Plumbing Supply", example: "Ferguson, Hajoca, Winsupply" },
+  { value: "hvac", label: "HVAC / Mechanical", example: "Watsco, Johnstone, Carrier dist." },
+  { value: "electrical", label: "Electrical Supply", example: "Graybar, Rexel, Anixter" },
+  { value: "industrial", label: "Industrial / MRO", example: "Grainger, Fastenal, MSC" },
+  { value: "roofing", label: "Roofing / Building", example: "ABC Supply, Beacon, SRS" },
+];
 
 const TIERS: { id: Tier; price: string; cadence: string; name: string; tagline: string; features: string[]; cta: string; highlight?: boolean }[] = [
   {
@@ -20,9 +29,9 @@ const TIERS: { id: Tier; price: string; cadence: string; name: string; tagline: 
     name: "Snapshot",
     tagline: "Current signals delivered once.",
     features: [
-      "PDF report of all current Metro Detroit signals",
-      "CSV export for your CRM",
-      "MIOSHA compliance gaps + expansion hiring patterns",
+      "PDF report of all current Metro Detroit contractor signals",
+      "CSV export ready for your sales CRM",
+      "Permit surge activity + hiring expansion patterns",
       "No subscription — pay once, use forever",
     ],
     cta: "Get the Snapshot",
@@ -32,11 +41,11 @@ const TIERS: { id: Tier; price: string; cadence: string; name: string; tagline: 
     price: "$199",
     cadence: "/mo",
     name: "Weekly Digest",
-    tagline: "Fresh signals every Monday.",
+    tagline: "Fresh contractor signals every Monday.",
     features: [
-      "Weekly email digest with the top 10 new signals",
-      "Live dashboard access",
-      "Cross-referenced high-priority alerts",
+      "Weekly email: top 10 growing contractors in your vertical",
+      "Live dashboard with decision-maker contacts",
+      "Cross-referenced HIGH-PRIORITY alerts (3+ signals = same company)",
       "Cancel anytime — no contracts",
     ],
     cta: "Start Weekly Digest",
@@ -50,9 +59,9 @@ const TIERS: { id: Tier; price: string; cadence: string; name: string; tagline: 
     tagline: "Daily signals + statewide coverage.",
     features: [
       "Daily updates across all of Michigan",
-      "API access for your sales tools",
-      "Priority cross-referenced alerts",
-      "Dedicated onboarding call",
+      "API access to pipe signals into your sales tools",
+      "Priority cross-referenced alerts with owner contact info",
+      "Dedicated onboarding call with Matt",
     ],
     cta: "Go Enterprise",
   },
