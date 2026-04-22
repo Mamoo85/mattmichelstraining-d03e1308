@@ -2015,29 +2015,52 @@ export default function AdminProspector() {
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div className="flex gap-3 overflow-x-auto pb-4">
-              {PIPELINE_STAGES.map(stage => (
-                <SortableContext key={stage.key} id={stage.key} items={pipelineByStage[stage.key]?.map(l => l.id) || []} strategy={verticalListSortingStrategy}>
-                  <KanbanColumn
-                    stage={stage}
-                    leads={pipelineByStage[stage.key] || []}
-                    onAudit={auditWebsite}
-                    onSendN8n={sendToN8n}
-                    onMoveStage={(lead, s) => updatePipelineStage(lead.id, s)}
-                    onDeepResearch={deepResearch}
-                    onDrip={runPipelineDrip}
-                    onPreviewDrip={setPreviewLead}
-                    onDelete={deletePipelineLead}
-                    onReEnrich={reEnrichLead}
-                    onViewTimeline={setTimelineLead}
-                    onScheduleFollowUp={scheduleFollowUp}
-                    auditingId={auditingId}
-                    sendingId={sendingId}
-                    researchingId={researchingId}
-                    drippingId={drippingId}
-                    reEnrichingId={reEnrichingId}
-                  />
-                </SortableContext>
-              ))}
+              {PIPELINE_STAGES.map(stage => {
+                const fullCount = pipelineByStageFull[stage.key]?.length || 0;
+                const shownCount = pipelineByStage[stage.key]?.length || 0;
+                const hasMore = shownCount < fullCount;
+                return (
+                  <div key={stage.key} className="flex flex-col">
+                    <SortableContext id={stage.key} items={pipelineByStage[stage.key]?.map(l => l.id) || []} strategy={verticalListSortingStrategy}>
+                      <KanbanColumn
+                        stage={stage}
+                        leads={pipelineByStage[stage.key] || []}
+                        onAudit={auditWebsite}
+                        onSendN8n={sendToN8n}
+                        onMoveStage={(lead, s) => updatePipelineStage(lead.id, s)}
+                        onDeepResearch={deepResearch}
+                        onDrip={runPipelineDrip}
+                        onPreviewDrip={setPreviewLead}
+                        onDelete={deletePipelineLead}
+                        onReEnrich={reEnrichLead}
+                        onViewTimeline={setTimelineLead}
+                        onScheduleFollowUp={scheduleFollowUp}
+                        auditingId={auditingId}
+                        sendingId={sendingId}
+                        researchingId={researchingId}
+                        drippingId={drippingId}
+                        reEnrichingId={reEnrichingId}
+                      />
+                    </SortableContext>
+                    {(fullCount > 0) && (
+                      <div className="mt-1 px-2 py-1.5 text-[10px] text-muted-foreground flex items-center justify-between gap-2">
+                        <span>{shownCount} of {fullCount}</span>
+                        {hasMore ? (
+                          <button
+                            onClick={() => setStagePages(p => ({ ...p, [stage.key]: (p[stage.key] || 1) + 1 }))}
+                            className="px-2 py-0.5 rounded border border-border hover:bg-muted/40 text-foreground"
+                          >Load more</button>
+                        ) : (stagePages[stage.key] || 1) > 1 ? (
+                          <button
+                            onClick={() => setStagePages(p => ({ ...p, [stage.key]: 1 }))}
+                            className="px-2 py-0.5 rounded border border-border hover:bg-muted/40"
+                          >Collapse</button>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </DndContext>
 
