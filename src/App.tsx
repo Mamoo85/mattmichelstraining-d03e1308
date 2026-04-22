@@ -134,6 +134,7 @@ const NewsletterSponsor = lazyRetry(() => import("./pages/NewsletterSponsor"));
 const CampDirectory = lazyRetry(() => import("./pages/CampDirectory"));
 const ContractorLeads = lazyRetry(() => import("./pages/ContractorLeads"));
 const GrowthRadarDashboard = lazyRetry(() => import("./pages/GrowthRadarDashboard"));
+const GetDossier = lazyRetry(() => import("./pages/GetDossier"));
 const ContractorROIReport = lazyRetry(() => import("./pages/ContractorROIReport"));
 const MyContractorLeads = lazyRetry(() => import("./pages/MyContractorLeads"));
 const DeadLeadStats = lazyRetry(() => import("./pages/DeadLeadStats"));
@@ -759,6 +760,7 @@ const App = () => (
                     {/* Growth Radar (company-side intelligence — separate product) */}
                     <Route path="/growth-radar" element={<IndustryPulse />} />
                     <Route path="/growth-radar-dashboard" element={<GrowthRadarDashboard />} />
+                    <Route path="/get-dossier" element={<GetDossier />} />
                     <Route path="/industry-pulse" element={<Navigate to="/growth-radar" replace />} />
                     <Route path="/my-industry-pulse" element={<MyIndustryPulse />} />
                     <Route path="/lead-radar" element={<ContractorLeads />} />
