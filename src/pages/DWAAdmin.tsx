@@ -237,6 +237,7 @@ export default function DWAAdmin() {
           {activeTab === "ad-launcher"      && <Suspense fallback={lazyFallback("Ad Launcher")}><AdminAdLauncher /></Suspense>}
           {activeTab === "blocklist"        && <Suspense fallback={lazyFallback("blocklist")}><AdminOutreachBlocklist /></Suspense>}
           {activeTab === "outreach-log"     && <Suspense fallback={lazyFallback("outreach log")}><AdminOutreachLog /></Suspense>}
+          {activeTab === "ipulse-unlocks"   && <Suspense fallback={lazyFallback("Pulse unlocks")}><AdminIndustrialPulseUnlocks /></Suspense>}
           {activeTab === "error-logs"       && <Suspense fallback={lazyFallback("error logs")}><AdminErrorLogs /></Suspense>}
           
           {activeTab === "coverage-map"     && <Suspense fallback={lazyFallback("coverage map")}><AdminCoverageMap /></Suspense>}
