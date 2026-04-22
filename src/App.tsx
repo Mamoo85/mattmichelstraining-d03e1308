@@ -302,6 +302,7 @@ const WebsiteSpeedAudits = lazyRetry(() => import("./pages/WebsiteSpeedAudits"))
 const CrimeDigest = lazyRetry(() => import("./pages/CrimeDigest"));
 const IndustryPulse = lazyRetry(() => import("./pages/IndustryPulse"));
 const IndustrialPulse = lazyRetry(() => import("./pages/IndustrialPulse"));
+const IndustrialPulseReceipt = lazyRetry(() => import("./pages/IndustrialPulseReceipt"));
 const MyIndustryPulse = lazyRetry(() => import("./pages/MyIndustryPulse"));
 const DemandRadar = lazyRetry(() => import("./pages/DemandRadar"));
 const HighVolumeBuyerAlerts = lazyRetry(() => import("./pages/HighVolumeBuyerAlerts"));
@@ -764,6 +765,7 @@ const App = () => (
                     <Route path="/get-dossier" element={<GetDossier />} />
                     <Route path="/industry-pulse" element={<Navigate to="/growth-radar" replace />} />
                     <Route path="/industrial-pulse" element={<IndustrialPulse />} />
+                    <Route path="/industrial-pulse/receipt" element={<IndustrialPulseReceipt />} />
                     <Route path="/my-industry-pulse" element={<MyIndustryPulse />} />
                     <Route path="/lead-radar" element={<ContractorLeads />} />
                     <Route path="/free-leads" element={<FreeLeadsQR />} />
