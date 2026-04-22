@@ -1,141 +1,94 @@
 
 
-## Plan: Admin Command Bar v4 — Safety Banner, Inline Edits, E2E Tests, Mobile QA, Replay
+## Plan: Territory Deep-Link Generator + Contractor Signup Fix
 
-All 5 enhancements are additive. Zero breaking changes to existing scanners, crons, Stripe, or admin tabs. Touches the same 2 files (edge function + UI component) plus a small migration to extend `admin_command_log`.
-
----
-
-### 1. Safety banner — pre-flight whitelist guard
-
-**Where:** new "preview" action in `admin-command/index.ts` runs the planner ONLY (no executor) and returns the plan + risk assessment.
-
-**Server-side risk scan** of plan JSON before any execution:
-- Detects `table` args not in `WHITELIST_TABLES` → `risk: "block"`
-- Detects `product` args not in `PRODUCTS` → `risk: "block"`
-- Detects M2 keywords in reasoning ("training", "athlete", "coach", "M2", "fitness") → `risk: "block"`
-- Detects `web_research` / `firecrawl_url` → `risk: "warn"` (cost notice)
-- Detects bulk size >25 → `risk: "warn"`
-
-**UI flow:**
-1. User taps **Run** → bar calls `action: "preview"` first
-2. If `risk: "block"` → red banner appears above results: `🚫 Blocked: Tries to access "training_programs" (M2 territory). Refine your prompt.` No executor runs. No tokens past planner spent.
-3. If `risk: "warn"` → amber banner with **[Proceed]** / **[Cancel]** buttons. Tapping Proceed sends `action: "run"` with `confirmed: true`.
-4. If `risk: "ok"` → executes immediately (current behavior, no extra click).
-
-Banner is sticky-styled, full-width on mobile, uses existing teal/amber/red palette.
+Two-part build: (1) fix the public `/contractor-leads` page so a deep link auto-selects trade + city, (2) give admin a one-tap "Generate Signup Link" tool so Matt can text the right URL in 3 seconds.
 
 ---
 
-### 2. Inline per-recipient regeneration
+### Part 1 — Public page accepts deep links
 
-**New tool:** `regenerate_single_draft({ recipient, product, tone, hook })` — same prompt as `generate_bulk_outreach` but for ONE recipient. Returns `{ ok, rows: [draft] }`. Cost ~$0.0005.
+**File:** `src/pages/ContractorLeads.tsx`
 
-**UI:** in each draft card's edit mode, add a small toolbar above the textarea:
-- **Tone:** pill selector → `direct | warm | urgent | curious`
-- **Angle:** free-text input (e.g. "lead with their recent permit", "focus on cost savings")
-- **🔄 Regenerate this one** button → calls `action: "regenerate"` with that single recipient + new tone/angle + original hook from result
-- Spinner on that card only; siblings untouched
-- Returned draft replaces only that index in `drafts` state via existing `updateDraft(i, patch)`
-- Manual text edits (typing in textarea) continue to work and persist as today
-
-No state-shape changes to the bulk array, so Queue All / Skip / Copy keep working unchanged.
+- Replace the static "Metro Detroit" hero with a **Profession** + **Territory** dropdown pair driving the signup form.
+- On mount, read URL params:
+  - `?trade=electrical&city=Livonia` → preselect both dropdowns, swap heading to `Claim Electrical leads in Livonia, MI`, scroll to form.
+  - Optional `&prefilled_email=`, `&name=`, `&business_name=`, `&phone=` → prefill form.
+  - Optional `&ref=<token>` → pass through to checkout metadata for click attribution.
+- Form submits the **selected** `trade` + `city` + `state` to `create-contractor-checkout` (no more hardcoded "Metro Detroit").
+- Shows a clear banner above the form when params are present: `You're signing up for: Electrical — Livonia, MI`.
 
 ---
 
-### 3. End-to-end test mode (5 products)
+### Part 2 — Admin "Territory Link Generator" panel
 
-**New tab in command bar:** small `🧪 Test Mode` link in the sticky bar header (admin-only, no extra route).
+**File:** `src/components/dwa-admin/AdminContractorLeads.tsx` (existing) — add a new card at the top: **🔗 Territory Signup Link Generator**
 
-**5 hardcoded test prompts** — one per flagship product:
-| # | Product | Test prompt |
-|---|---|---|
-| 1 | Demand Radar | `Find 3 high-confidence demand radar signals and draft outreach to one buyer per signal` |
-| 2 | Talent Radar | `Find 3 hot Talent Radar candidates and draft pitches to matching clients` |
-| 3 | Contractor Leads | `Find 3 unclaimed plumbing leads and draft 5 buyer pitches` |
-| 4 | FieldDesk | `Find 3 HVAC shops and draft FieldDesk pitches` |
-| 5 | Missed Call Catch | `Find 3 small businesses with no website and draft Missed Call Catch pitches` |
+UI:
+- **Trade** dropdown — Electrical, HVAC, Plumbing, Roofing, Gutters, Siding (matches `create-contractor-checkout` price map)
+- **City** input with autocomplete from existing `contractor_lead_sites` rows (Livonia, Royal Oak, etc.) — also accepts free text for new cities
+- **Optional**: prospect name, business name, email, phone (for prefill)
+- **[🔗 Generate Link]** button → builds: `https://detroitwebagent.com/contractor-leads?trade=electrical&city=Livonia&prefilled_email=...`
+- **[📋 Copy]** button — copies to clipboard
+- **[📱 Copy SMS Draft]** button — copies a ready-to-paste text:
+  > `Hey [name] — direct signup link for the Livonia electrical territory: https://... (Electrical + Livonia preselected, $399/mo, cancel anytime). — Matt`
+- **[📧 Copy Apology Draft]** button — second variant for the "sorry I sent the wrong link" message
+- Shows price badge live (`$399/mo` or `$299/mo` for Gutters/Siding) so Matt knows what he's quoting
 
-**Test runner:**
-- Tapping `🧪 Test Mode` opens an accordion with 5 rows (one per product)
-- Each row: product name + status dot (⚪ idle / 🟡 running / ✅ pass / ❌ fail) + collapsible details
-- **[Run All]** button executes sequentially (not parallel — keeps cost predictable, ~$0.05 total)
-- For each test, runs a full mini-flow client-side: `preview → run → assert drafts.length > 0 → simulate edit → simulate queue (dry-run flag, no DB insert)`
-- `dry_run: true` flag added to queue action — skips actual `email_reply_drafts` insert, just validates shape
-- Results render as: ✅ `5 drafts generated · edit applied · queue validated · $0.012` or ❌ with the failing step's error
-- All 5 results saved to `admin_command_log` with `is_test: true` for history
-
-Audit "What stays the same": tests use the same code paths as live commands → if tests pass, live works. No mocks.
+**Persistence (optional, lightweight):** log each generated link to existing `prospect_nudges` table (already has `link_token`, `trade`, `city` columns) so click-throughs land in admin SMS context per the existing `track-prospect-link` flow. No schema change needed.
 
 ---
 
-### 4. 396px mobile QA hardening
+### Part 3 — Tracked-link redirect fix (one small edge function tweak)
 
-Specific fixes against current component (already mostly mobile-friendly, this closes the gaps):
+**File:** `supabase/functions/track-prospect-link/index.ts`
 
-| Element | Current | Fix |
-|---|---|---|
-| Sticky bar `top-14` | Can collide with mobile nav | Use `top-[env(safe-area-inset-top,0)]` + check `useIsMobile` to set `top-12` on mobile |
-| Textarea `rows={2}` | Fine on mobile | Add `text-base` (prevents iOS auto-zoom on focus) |
-| Quick chips horizontal scroll | Already good | Add `scroll-snap-type: x mandatory` for thumb-flick precision |
-| Step pills | Wrap fine | No change — keep |
-| Data accordion rows | `min-w-[80px]` label | Stacks `flex-col` under 480px (key on top, value below) — prevents truncation |
-| Draft card buttons (`Skip`, `Edit`, `Copy`) `min-h-[32px]` | Below 44px target | Bump to `min-h-[44px]` and `px-3` |
-| Edit mode textarea `rows={6}` | Can push card off screen | Switch to bottom-sheet drawer on mobile (full-height, swipe-down close) using a native `<dialog>` element — no new dep |
-| Preview drawer | None today | Add a read-only drawer for `[👁 Preview]` (rendered email view with subject + body in a styled card) — same drawer mechanism |
-| Queue All / Copy All buttons | `flex-col sm:flex-row` already | Add `safe-area-inset-bottom` padding so they don't sit under iOS home bar |
-| Layout shift | Drafts accordion auto-opens after run | Reserve `min-h-[120px]` on result container to prevent jump |
-
-**QA checklist component:** small `✅ Mobile QA` badge in test mode that runs `window.matchMedia` checks + reports any element under 44px tap-target. Pure client-side, dev aid.
+Currently always redirects to bare `/contractor-leads`. Update to:
+- Look up the `prospect_nudges` row by `link_token`
+- If row has `trade` + `city`, redirect to `/contractor-leads?trade=<trade>&city=<city>&ref=<token>`
+- Otherwise fall back to current generic redirect (no breakage for legacy links)
+- Keep the existing `clicked_at` update and fail-open behavior
 
 ---
 
-### 5. Command logging + one-click replay
+### Part 4 — Checkout server-side guard (no behavior change for valid inputs)
 
-**Migration `<ts>_admin_command_log_v2.sql`:**
-- Add columns to `admin_command_log`: `is_test boolean default false`, `replay_of_log_id uuid null references admin_command_log(id)`, `result_summary jsonb` (stores the final response shape so replays can diff)
-- No data loss, no breaking changes
+**File:** `supabase/functions/create-contractor-checkout/index.ts`
 
-**New action:** `action: "history"` returns last 20 commands for current admin (id, prompt, cost, draft count, created_at, is_test).
-
-**UI — new accordion `📜 History`:** 
-- Lists last 10 commands as cards: prompt preview · cost · time ago · draft count
-- Each card has **[🔁 Replay]** button → re-runs the exact prompt, sets `replay_of_log_id` on the new log row
-- After replay finishes, shows a **diff strip**: 
-  - `Cost: $0.012 → $0.011 (−8%)`  
-  - `Drafts: 5 → 5 (same count)`  
-  - `Steps: 3 → 3 (same plan)`  
-  - `Top recipient changed: 2 of 5`
-- Diff is a simple count comparison (rows returned, drafts generated, steps, cost) — no deep semantic diff
-
-**Storage:** result_summary stays under 4KB (just counts + first 3 recipient names). Full results stay queryable in `draft_output` jsonb as today.
+- Already normalizes trade and looks up trade-specific pricing — only addition: validate that `trade` is in the known set (Electrical, HVAC, Plumbing, Roofing, Gutters, Siding) and `city` is non-empty before creating Stripe session. Returns 400 with clear message if invalid.
+- Stripe product title already uses `Exclusive ${tradeLabel} Leads — ${city}, ${state}` — no change, just confirms it now reflects the real selected territory.
 
 ---
 
-### Files
+### What stays the same (no risk)
+
+- Stripe price map, webhook handlers, `contractor_clients` upsert logic — untouched
+- Existing generic `/contractor-leads` visits without query params still work (dropdowns just show empty, user picks manually)
+- `prospect_nudges`, `track-prospect-link` table schema unchanged
+- Admin SMS inbox, all other admin tabs, all other DWA products untouched
+- Lead notification flow (`contractor-lead-notify`) untouched
+- Mobile-first layout preserved (under 396px the dropdowns + form stack `grid-cols-1`)
+
+---
+
+### Files touched
 
 | File | Change |
 |---|---|
-| `supabase/functions/admin-command/index.ts` | +`action: "preview"`, +`action: "regenerate"`, +`action: "history"`, +`dry_run` flag on queue, +risk-scan helper, +`regenerate_single_draft` tool, +`is_test`/`replay_of_log_id` writes |
-| `src/components/dwa-admin/AdminCommandBar.tsx` | +SafetyBanner, +PreviewGate logic, +per-card tone/angle toolbar + regenerate, +TestMode panel (5 product runners), +HistoryAccordion with Replay + Diff, +mobile drawer for edit/preview, tap-target bumps |
-| `supabase/migrations/<ts>_admin_command_log_v2.sql` | +3 columns on `admin_command_log` |
+| `src/pages/ContractorLeads.tsx` | Add trade/city dropdowns, URL param parsing, banner, prefill |
+| `src/components/dwa-admin/AdminContractorLeads.tsx` | Add Territory Link Generator card at top |
+| `supabase/functions/track-prospect-link/index.ts` | Resolve trade/city from `prospect_nudges` and append to redirect |
+| `supabase/functions/create-contractor-checkout/index.ts` | Add trade/city validation guard |
 
-### Audit — what won't break
+No migration. No new tables. No new secrets. No Stripe product changes.
 
-- All 14 existing tools untouched — only ADD `regenerate_single_draft`
-- Queue action unchanged unless `dry_run: true` passed
-- Existing `action: "run"` and `action: "queue"` keep current behavior when no new fields supplied
-- All scanners, crons, webhooks, Stripe, M2 site untouched
-- Cost cap ($5/24h) still enforced; preview action is cheap (~$0.005, planner only)
-- Test mode uses real code paths but `dry_run` flag prevents actual queue inserts
+---
 
-### Cost ceiling (updated)
+### Acceptance test
 
-| Action | Cost |
-|---|---|
-| Preview only (block path) | ~$0.005 |
-| Single regenerate | ~$0.0005 |
-| Full test suite (all 5) | ~$0.05 |
-| Replay | same as original command |
-| Daily cap | $5 (unchanged) |
+1. In `/dwa-admin → Contractor Leads`, pick `Electrical` + `Livonia`, hit Generate → get `https://detroitwebagent.com/contractor-leads?trade=electrical&city=Livonia`
+2. Open that link in a new tab → page shows `Claim Electrical leads in Livonia, MI`, dropdowns preselected, $399/mo price visible
+3. Submit form with test email → Stripe checkout title reads `Exclusive Electrical Leads — Livonia, MI`
+4. Existing `/contractor-leads` link with no params still loads (dropdowns empty, manual select works)
+5. Send the apology SMS draft to the electrician
 
