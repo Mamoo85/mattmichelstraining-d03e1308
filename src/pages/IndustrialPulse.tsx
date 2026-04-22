@@ -54,13 +54,31 @@ export default function IndustrialPulse() {
   const [unlockEmail, setUnlockEmail] = useState("");
   const [unlockPlan, setUnlockPlan] = useState<"snapshot_50" | "firehose_199">("snapshot_50");
   const [unlocking, setUnlocking] = useState(false);
+  const [unlockedSignals, setUnlockedSignals] = useState<UnlockedSignal[]>([]);
+  const [unlockedEmail, setUnlockedEmail] = useState<string>("");
+  const [loadingUnlocked, setLoadingUnlocked] = useState(false);
 
   useEffect(() => {
     // Auto-open unlock modal if ?unlock=1 in URL (from email CTA)
     const params = new URLSearchParams(window.location.search);
     if (params.get("unlock") === "1") setUnlockOpen(true);
     if (params.get("unlocked") === "1") {
-      toast.success("Payment received — check your inbox in the next 5 minutes for the full list.");
+      toast.success("Payment received — here's a preview while your full digest is being delivered.");
+      const buyerEmail = params.get("email")?.trim().toLowerCase();
+      if (buyerEmail) {
+        setUnlockedEmail(buyerEmail);
+        setLoadingUnlocked(true);
+        supabase.functions
+          .invoke("industrial-pulse-unlock-preview", { body: { email: buyerEmail } })
+          .then(({ data, error }) => {
+            if (error) throw error;
+            if (data?.entitled && Array.isArray(data?.signals)) {
+              setUnlockedSignals(data.signals);
+            }
+          })
+          .catch((err) => console.error("[unlock-preview]", err))
+          .finally(() => setLoadingUnlocked(false));
+      }
     }
   }, []);
 
