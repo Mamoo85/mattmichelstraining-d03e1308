@@ -42,6 +42,10 @@ const AdminIndustrialIntel = lazy(() => import("@/components/admin/AdminIndustri
 const AdminTechAlertProspects = lazy(() => import("@/components/dwa-admin/AdminTechAlertProspects"));
 const AdminLaraHealth = lazy(() => import("@/components/admin/AdminLaraHealth"));
 const AdminGrowthSignals = lazy(() => import("@/components/admin/AdminGrowthSignals"));
+const AdminLinkedInBlitz = lazy(() => import("@/components/admin/AdminLinkedInBlitz"));
+const AdminCallList = lazy(() => import("@/components/admin/AdminCallList"));
+const AdminCommunityDrop = lazy(() => import("@/components/admin/AdminCommunityDrop"));
+const AdminReferralKickback = lazy(() => import("@/components/admin/AdminReferralKickback"));
 const AdminTrojanHorseLog = lazy(() => import("@/components/admin/AdminTrojanHorseLog"));
 const AdminSMSInbox = lazy(() => import("@/components/dwa-admin/AdminSMSInbox"));
 const AdminPendingSMSDrafts = lazy(() => import("@/components/dwa-admin/AdminPendingSMSDrafts"));
@@ -69,7 +73,8 @@ type Tab =
   | "medicare-intel" | "industrial-intel" | "techalert-prospects"
   | "lara-health" | "growth-signals" | "trojan-log" | "coverage-map" | "crm-dashboard"
   | "sms-inbox" | "sms-drafts" | "ad-launcher" | "blocklist" | "error-logs"
-  | "contractor-onboarding" | "ad-spend" | "ad-optimizer" | "leads-e2e" | "prospect-tracker";
+  | "contractor-onboarding" | "ad-spend" | "ad-optimizer" | "leads-e2e" | "prospect-tracker"
+  | "linkedin-blitz" | "call-list" | "community-drop" | "referral-kickback";
 
 const GROUPS: SidebarGroup[] = [
   {
@@ -116,6 +121,10 @@ const GROUPS: SidebarGroup[] = [
   {
     label: "Outreach",
     items: [
+      { id: "linkedin-blitz",   label: "💼 LinkedIn Blitz" },
+      { id: "call-list",        label: "📞 Daily Call Sheet" },
+      { id: "community-drop",   label: "💬 Community Drop" },
+      { id: "referral-kickback",label: "🎁 Referral Kickback" },
       { id: "sms-inbox",        label: "💬 SMS Inbox" },
       { id: "sms-drafts",       label: "✍️ Pending Drafts" },
       { id: "ad-launcher",      label: "🚀 Ad Launcher" },
@@ -231,6 +240,10 @@ export default function DWAAdmin() {
           {activeTab === "ad-optimizer"     && <Suspense fallback={lazyFallback("ad optimizer")}><AdminAdOptimizerLog /></Suspense>}
           {activeTab === "leads-e2e"        && <Suspense fallback={lazyFallback("Leads E2E status")}><AdminContractorLeadsStatus /></Suspense>}
           {activeTab === "prospect-tracker" && <Suspense fallback={lazyFallback("prospect tracker")}><AdminProspectTracker /></Suspense>}
+          {activeTab === "linkedin-blitz"   && <Suspense fallback={lazyFallback("LinkedIn blitz")}><AdminLinkedInBlitz /></Suspense>}
+          {activeTab === "call-list"        && <Suspense fallback={lazyFallback("call sheet")}><AdminCallList /></Suspense>}
+          {activeTab === "community-drop"   && <Suspense fallback={lazyFallback("community drop")}><AdminCommunityDrop /></Suspense>}
+          {activeTab === "referral-kickback"&& <Suspense fallback={lazyFallback("referral kickback")}><AdminReferralKickback /></Suspense>}
 
           {activeTab === "field-stats" && (
             <div className="space-y-6">
