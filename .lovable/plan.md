@@ -1,73 +1,95 @@
 
 
-## Plan: Territory Deep-Link Generator + Contractor Signup Fix
+## Plan: Territory Generator v2 — Tracking, Bulk Mode, Expiry, Test, Confirmation
 
-Two-part build: (1) fix the public `/contractor-leads` page so a deep link auto-selects trade + city, (2) give admin a one-tap "Generate Signup Link" tool so Matt can text the right URL in 3 seconds.
-
----
-
-### Part 1 — Public page accepts deep links
-
-**File:** `src/pages/ContractorLeads.tsx`
-
-- Replace the static "Metro Detroit" hero with a **Profession** + **Territory** dropdown pair driving the signup form.
-- On mount, read URL params:
-  - `?trade=electrical&city=Livonia` → preselect both dropdowns, swap heading to `Claim Electrical leads in Livonia, MI`, scroll to form.
-  - Optional `&prefilled_email=`, `&name=`, `&business_name=`, `&phone=` → prefill form.
-  - Optional `&ref=<token>` → pass through to checkout metadata for click attribution.
-- Form submits the **selected** `trade` + `city` + `state` to `create-contractor-checkout` (no more hardcoded "Metro Detroit").
-- Shows a clear banner above the form when params are present: `You're signing up for: Electrical — Livonia, MI`.
+All 7 enhancements layered onto the existing `TerritoryLinkGenerator`, `prospect_nudges` table, public `/contractor-leads` page, and Stripe webhook. No breaking changes to existing flows.
 
 ---
 
-### Part 2 — Admin "Territory Link Generator" panel
+### 1. Conversion tracking + Signups counter
 
-**File:** `src/components/dwa-admin/AdminContractorLeads.tsx` (existing) — add a new card at the top: **🔗 Territory Signup Link Generator**
+**Migration** — add to `prospect_nudges`:
+- `generated_by_admin boolean default false` — flags rows created from the admin generator
+- `expires_at timestamptz null` — for one-time/24h expiry option
+- `consumed_at timestamptz null` — set when a one-time link is used
 
-UI:
-- **Trade** dropdown — Electrical, HVAC, Plumbing, Roofing, Gutters, Siding (matches `create-contractor-checkout` price map)
-- **City** input with autocomplete from existing `contractor_lead_sites` rows (Livonia, Royal Oak, etc.) — also accepts free text for new cities
-- **Optional**: prospect name, business name, email, phone (for prefill)
-- **[🔗 Generate Link]** button → builds: `https://detroitwebagent.com/contractor-leads?trade=electrical&city=Livonia&prefilled_email=...`
-- **[📋 Copy]** button — copies to clipboard
-- **[📱 Copy SMS Draft]** button — copies a ready-to-paste text:
-  > `Hey [name] — direct signup link for the Livonia electrical territory: https://... (Electrical + Livonia preselected, $399/mo, cancel anytime). — Matt`
-- **[📧 Copy Apology Draft]** button — second variant for the "sorry I sent the wrong link" message
-- Shows price badge live (`$399/mo` or `$299/mo` for Gutters/Siding) so Matt knows what he's quoting
+`paid_at` already exists — that's our "signup completed" signal (set by Stripe webhook).
 
-**Persistence (optional, lightweight):** log each generated link to existing `prospect_nudges` table (already has `link_token`, `trade`, `city` columns) so click-throughs land in admin SMS context per the existing `track-prospect-link` flow. No schema change needed.
+**Generator panel** — add a small stat strip at top:
+- `Links generated: 12 · Clicked: 8 · Signed up: 3` — pulls counts from `prospect_nudges WHERE generated_by_admin = true` over last 30 days
+- Auto-refreshes when a new link is generated
+
+**Stripe webhook** (`stripe-webhook/index.ts`, `contractor_lead_subscription` handler) — on success, look up `prospect_nudges` by the `ref` token (already passed through Stripe metadata via the page) and set `paid_at = now()`. Wrap in try/catch so existing flow never breaks.
 
 ---
 
-### Part 3 — Tracked-link redirect fix (one small edge function tweak)
+### 2. Better SMS / Apology drafts (`{customer_name}` placeholder)
 
-**File:** `supabase/functions/track-prospect-link/index.ts`
-
-Currently always redirects to bare `/contractor-leads`. Update to:
-- Look up the `prospect_nudges` row by `link_token`
-- If row has `trade` + `city`, redirect to `/contractor-leads?trade=<trade>&city=<city>&ref=<token>`
-- Otherwise fall back to current generic redirect (no breakage for legacy links)
-- Keep the existing `clicked_at` update and fail-open behavior
+Update both draft templates in `TerritoryLinkGenerator.tsx`:
+- Always include trade label + city + `$<monthly>/mo` (already there but fragile when fields empty)
+- Use `{customer_name}` literal placeholder when no name is entered, so Matt can search-and-replace before sending: `Hey {customer_name} — direct signup link...`
+- Add expiry note when 24h option is enabled: `(Link expires in 24 hours.)`
+- Currency consistently rendered as `$399/mo` or `$299/mo` based on selected trade
 
 ---
 
-### Part 4 — Checkout server-side guard (no behavior change for valid inputs)
+### 3. Territory list / bulk mode
 
-**File:** `supabase/functions/create-contractor-checkout/index.ts`
+Add a toggle: **[Single City] / [Bulk Cities]**
 
-- Already normalizes trade and looks up trade-specific pricing — only addition: validate that `trade` is in the known set (Electrical, HVAC, Plumbing, Roofing, Gutters, Siding) and `city` is non-empty before creating Stripe session. Returns 400 with clear message if invalid.
-- Stripe product title already uses `Exclusive ${tradeLabel} Leads — ${city}, ${state}` — no change, just confirms it now reflects the real selected territory.
+Bulk mode UI:
+- Multi-line textarea: `Livonia, Redford, Westland` (comma or newline separated)
+- One trade dropdown (applies to all)
+- **[Generate All]** button → creates N `prospect_nudges` rows, one per city
+- Output: a table with one row per city showing `City | Link | [Copy] [Copy SMS]`
+- **[Copy All as List]** button → copies all links as a clean text block
 
 ---
 
-### What stays the same (no risk)
+### 4. One-time / 24h expiry option
 
-- Stripe price map, webhook handlers, `contractor_clients` upsert logic — untouched
-- Existing generic `/contractor-leads` visits without query params still work (dropdowns just show empty, user picks manually)
-- `prospect_nudges`, `track-prospect-link` table schema unchanged
-- Admin SMS inbox, all other admin tabs, all other DWA products untouched
-- Lead notification flow (`contractor-lead-notify`) untouched
-- Mobile-first layout preserved (under 396px the dropdowns + form stack `grid-cols-1`)
+In the generator:
+- Checkbox: `☐ One-time use / expires in 24h`
+- When checked, the new `prospect_nudges` row gets `expires_at = now() + 24h`
+- `track-prospect-link` edge function — before redirecting:
+  - If `expires_at` is in the past → redirect to `/contractor-leads?expired=1` (no preselect)
+  - If `consumed_at` is already set → same expired redirect
+  - Otherwise set `consumed_at = now()` (fire-and-forget) and proceed
+- `ContractorLeads.tsx` — when `?expired=1`, show a small banner: `This signup link has expired. Pick your trade and city below to continue.`
+
+Backward compatible: links without `expires_at` behave exactly as today.
+
+---
+
+### 5. "Test link" button
+
+Add **[🔍 Test Link]** button next to Copy:
+- Opens the generated URL in a new tab (no token consumption — uses a `?test=1` query so `track-prospect-link` skips the consume step)
+- Actually, simpler: the deep link already works without a token. `Test Link` opens the bare `?trade=&city=` URL (no `ref` token) so the test never burns the real one-time link. Tooltip explains this.
+
+---
+
+### 6. Admin SMS inbox: one-tap "Copy correct signup link"
+
+In `src/components/dwa-admin/AdminSMSInbox.tsx`:
+- For threads matched to a `prospect_nudges` row (already shows trade/city context per the existing fix), add a **[🔗 Copy Signup Link]** button in the thread header
+- Click → builds the deep link from the nudge's trade + city + phone + name and copies to clipboard
+- Toast: `Signup link copied — Electrical, Livonia`
+- For threads with no nudge match, button is disabled with tooltip: `No territory context — use Territory Generator`
+
+---
+
+### 7. Post-checkout confirmation page
+
+`ContractorLeads.tsx` already shows a `success=1` state. Upgrade it:
+- When `success=1&trade=Electrical&city=Livonia` is present, render a dedicated confirmation card:
+  - **`✅ You're all set for Electrical — Livonia`**
+  - Three next-action tiles:
+    1. `📱 Save Matt's number: (313) 992-1219` (tap to call/text)
+    2. `🔖 Bookmark your signup page: https://detroitwebagent.com/contractor-leads?trade=electrical&city=Livonia` with [Copy] button
+    3. `📧 Check your email for the welcome guide`
+  - Faint reminder: `First lead usually arrives within 3–7 days.`
+- Mobile-first: stacks `grid-cols-1` under 640px
 
 ---
 
@@ -75,20 +97,25 @@ Currently always redirects to bare `/contractor-leads`. Update to:
 
 | File | Change |
 |---|---|
-| `src/pages/ContractorLeads.tsx` | Add trade/city dropdowns, URL param parsing, banner, prefill |
-| `src/components/dwa-admin/AdminContractorLeads.tsx` | Add Territory Link Generator card at top |
-| `supabase/functions/track-prospect-link/index.ts` | Resolve trade/city from `prospect_nudges` and append to redirect |
-| `supabase/functions/create-contractor-checkout/index.ts` | Add trade/city validation guard |
+| `supabase/migrations/<new>.sql` | Add `generated_by_admin`, `expires_at`, `consumed_at` to `prospect_nudges` |
+| `src/components/dwa-admin/TerritoryLinkGenerator.tsx` | Stats strip, bulk mode toggle, expiry checkbox, Test button, `{customer_name}` placeholder, persists rows to `prospect_nudges` |
+| `src/components/dwa-admin/AdminSMSInbox.tsx` | "Copy Signup Link" button on prospect threads |
+| `src/pages/ContractorLeads.tsx` | Expanded success-state card, `?expired=1` banner |
+| `supabase/functions/track-prospect-link/index.ts` | Honor `expires_at` + `consumed_at` |
+| `supabase/functions/stripe-webhook/index.ts` | Set `paid_at` on `prospect_nudges` when `contractor_lead_subscription` completes (best-effort) |
 
-No migration. No new tables. No new secrets. No Stripe product changes.
+No new secrets. No Stripe product changes. All changes are additive / backward compatible.
 
 ---
 
 ### Acceptance test
 
-1. In `/dwa-admin → Contractor Leads`, pick `Electrical` + `Livonia`, hit Generate → get `https://detroitwebagent.com/contractor-leads?trade=electrical&city=Livonia`
-2. Open that link in a new tab → page shows `Claim Electrical leads in Livonia, MI`, dropdowns preselected, $399/mo price visible
-3. Submit form with test email → Stripe checkout title reads `Exclusive Electrical Leads — Livonia, MI`
-4. Existing `/contractor-leads` link with no params still loads (dropdowns empty, manual select works)
-5. Send the apology SMS draft to the electrician
+1. Open generator → see `Links: 0 · Clicked: 0 · Signed up: 0`
+2. Pick Electrical + Livonia, check expiry box, click Generate → row appears in `prospect_nudges` with `expires_at` and `generated_by_admin = true`
+3. Click [Test Link] → opens new tab, dropdowns preselect, no token consumed
+4. Click [Copy] and open the real link in incognito → page loads with banner; refresh → "expired" banner shows
+5. Switch to Bulk mode, paste `Livonia, Redford, Westland`, hit Generate All → 3 rows + 3 links
+6. Complete a real Stripe checkout via a generated link → `paid_at` populates → counter shows `Signed up: 1`
+7. After payment, success page shows `You're all set for Electrical — Livonia` with bookmark link
+8. In SMS inbox, prospect thread shows [Copy Signup Link] → click copies correct deep link
 
