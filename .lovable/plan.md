@@ -1,178 +1,141 @@
 
 
-## Plan: Admin Command Bar v3 — Mobile-First, DWA-Only, Bulk Outreach Generator
+## Plan: Admin Command Bar v4 — Safety Banner, Inline Edits, E2E Tests, Mobile QA, Replay
 
-### Locked-in from v2 (no changes)
-- 3-layer agent: Planner (Gemini 2.5 Pro) → Tool executor → Draft generator
-- 14 whitelisted tools, 16 whitelisted tables, no raw SQL, no auto-send
-- Reuses `openrouter-research` (Sonar) + `_shared/scraper.ts` (Firecrawl)
-- All safety guardrails (admin-only, cost cap, audit log, TCPA Manual-Only)
-
-### What's new in v3 (your 4 push-backs)
+All 5 enhancements are additive. Zero breaking changes to existing scanners, crons, Stripe, or admin tabs. Touches the same 2 files (edge function + UI component) plus a small migration to extend `admin_command_log`.
 
 ---
 
-### 1. Mobile-first UI (396px viewport — your actual screen)
+### 1. Safety banner — pre-flight whitelist guard
 
-**Layout rules baked in from `mem://ux/mobile-conversion-and-design-standards`:**
-- Single column under 768px (`grid-cols-1`)
-- Sticky command bar pinned to top of `/dwa-admin` — collapses to icon `🧠` after scroll, tap to re-expand
-- Result card uses **stacked accordion sections**, not side-by-side tabs:
-  ```
-  ┌──────────────────────────────┐
-  │ 🧠 Reasoning      ▾ (closed) │
-  │ 📊 Data (10 rows) ▾ (closed) │
-  │ 📧 Email Draft    ▾ (open)   │
-  │   ┌────────────────────────┐ │
-  │   │ Subject: ...           │ │
-  │   │ Body: ...              │ │
-  │   │ [Edit] [Copy] [Queue]  │ │
-  │   └────────────────────────┘ │
-  │ 📱 SMS Draft      ▾ (closed) │
-  └──────────────────────────────┘
-  ```
-- Recipient table → **card stack** under 768px (one card per recipient, not a horizontal table)
-- Progress stream uses one-line status pills (`🔍 Pulling 10 plumbing leads…`), no walls of text
-- Big tap targets: 44px minimum (Apple HIG), full-width buttons on mobile
-- Quick-prompt chips wrap to 2 lines max, horizontal-scroll if needed
-- All copy is short — labels, not sentences
+**Where:** new "preview" action in `admin-command/index.ts` runs the planner ONLY (no executor) and returns the plan + risk assessment.
+
+**Server-side risk scan** of plan JSON before any execution:
+- Detects `table` args not in `WHITELIST_TABLES` → `risk: "block"`
+- Detects `product` args not in `PRODUCTS` → `risk: "block"`
+- Detects M2 keywords in reasoning ("training", "athlete", "coach", "M2", "fitness") → `risk: "block"`
+- Detects `web_research` / `firecrawl_url` → `risk: "warn"` (cost notice)
+- Detects bulk size >25 → `risk: "warn"`
+
+**UI flow:**
+1. User taps **Run** → bar calls `action: "preview"` first
+2. If `risk: "block"` → red banner appears above results: `🚫 Blocked: Tries to access "training_programs" (M2 territory). Refine your prompt.` No executor runs. No tokens past planner spent.
+3. If `risk: "warn"` → amber banner with **[Proceed]** / **[Cancel]** buttons. Tapping Proceed sends `action: "run"` with `confirmed: true`.
+4. If `risk: "ok"` → executes immediately (current behavior, no extra click).
+
+Banner is sticky-styled, full-width on mobile, uses existing teal/amber/red palette.
 
 ---
 
-### 2. Don't break anything (full pre-flight audit)
+### 2. Inline per-recipient regeneration
 
-**Read-only — verified before any code ships:**
+**New tool:** `regenerate_single_draft({ recipient, product, tone, hook })` — same prompt as `generate_bulk_outreach` but for ONE recipient. Returns `{ ok, rows: [draft] }`. Cost ~$0.0005.
 
-| Check | How I verify | Status |
+**UI:** in each draft card's edit mode, add a small toolbar above the textarea:
+- **Tone:** pill selector → `direct | warm | urgent | curious`
+- **Angle:** free-text input (e.g. "lead with their recent permit", "focus on cost savings")
+- **🔄 Regenerate this one** button → calls `action: "regenerate"` with that single recipient + new tone/angle + original hook from result
+- Spinner on that card only; siblings untouched
+- Returned draft replaces only that index in `drafts` state via existing `updateDraft(i, patch)`
+- Manual text edits (typing in textarea) continue to work and persist as today
+
+No state-shape changes to the bulk array, so Queue All / Skip / Copy keep working unchanged.
+
+---
+
+### 3. End-to-end test mode (5 products)
+
+**New tab in command bar:** small `🧪 Test Mode` link in the sticky bar header (admin-only, no extra route).
+
+**5 hardcoded test prompts** — one per flagship product:
+| # | Product | Test prompt |
 |---|---|---|
-| All 16 whitelisted tables read-only | Grep tool resolvers for `.insert/.update/.delete/.upsert` — must be ZERO | Will run pre-merge |
-| No new RLS policies needed | Service role already has read on all 16 tables (per `mem://security/backend-access-policy`) | Confirmed in memory |
-| Existing 6 background scanners untouched | New function is a separate edge function — does not modify any scanner code | By design |
-| Existing crons untouched | New function is invoked on-demand only — no cron entries | By design |
-| `openrouter-research` still works | Read its current signature, call it with same shape | Will verify before merge |
-| `_shared/scraper.ts` interface stable | Read its current export, use existing `scrape(url)` signature | Will verify before merge |
-| `email_reply_drafts` accepts our queue insert | Read its schema + existing inserter function for shape | Will verify before merge |
-| TCPA Manual-Only mandate intact | Zero send tools. Only `draft_outreach`. Queueing routes through existing approval gate. | By design |
-| Stripe / webhooks / payments | Untouched — this function never reads/writes any Stripe/billing tables | By design |
-| Mobile preview at 396px | Will test via browser tool at the user's actual viewport before declaring done | Post-build QA |
+| 1 | Demand Radar | `Find 3 high-confidence demand radar signals and draft outreach to one buyer per signal` |
+| 2 | Talent Radar | `Find 3 hot Talent Radar candidates and draft pitches to matching clients` |
+| 3 | Contractor Leads | `Find 3 unclaimed plumbing leads and draft 5 buyer pitches` |
+| 4 | FieldDesk | `Find 3 HVAC shops and draft FieldDesk pitches` |
+| 5 | Missed Call Catch | `Find 3 small businesses with no website and draft Missed Call Catch pitches` |
 
-**One additional safeguard**: if the executor errors on any step, the function returns a partial result + error (never crashes the UI). User sees "Step 3 failed: contact lookup timed out — here's what I found in steps 1-2."
+**Test runner:**
+- Tapping `🧪 Test Mode` opens an accordion with 5 rows (one per product)
+- Each row: product name + status dot (⚪ idle / 🟡 running / ✅ pass / ❌ fail) + collapsible details
+- **[Run All]** button executes sequentially (not parallel — keeps cost predictable, ~$0.05 total)
+- For each test, runs a full mini-flow client-side: `preview → run → assert drafts.length > 0 → simulate edit → simulate queue (dry-run flag, no DB insert)`
+- `dry_run: true` flag added to queue action — skips actual `email_reply_drafts` insert, just validates shape
+- Results render as: ✅ `5 drafts generated · edit applied · queue validated · $0.012` or ❌ with the failing step's error
+- All 5 results saved to `admin_command_log` with `is_test: true` for history
+
+Audit "What stays the same": tests use the same code paths as live commands → if tests pass, live works. No mocks.
 
 ---
 
-### 3. NEW: Bulk outreach generator (the "10 emails at once" feature)
+### 4. 396px mobile QA hardening
 
-**Two new tools added to the executor:**
+Specific fixes against current component (already mostly mobile-friendly, this closes the gaps):
 
-| Tool | What it does |
+| Element | Current | Fix |
+|---|---|---|
+| Sticky bar `top-14` | Can collide with mobile nav | Use `top-[env(safe-area-inset-top,0)]` + check `useIsMobile` to set `top-12` on mobile |
+| Textarea `rows={2}` | Fine on mobile | Add `text-base` (prevents iOS auto-zoom on focus) |
+| Quick chips horizontal scroll | Already good | Add `scroll-snap-type: x mandatory` for thumb-flick precision |
+| Step pills | Wrap fine | No change — keep |
+| Data accordion rows | `min-w-[80px]` label | Stacks `flex-col` under 480px (key on top, value below) — prevents truncation |
+| Draft card buttons (`Skip`, `Edit`, `Copy`) `min-h-[32px]` | Below 44px target | Bump to `min-h-[44px]` and `px-3` |
+| Edit mode textarea `rows={6}` | Can push card off screen | Switch to bottom-sheet drawer on mobile (full-height, swipe-down close) using a native `<dialog>` element — no new dep |
+| Preview drawer | None today | Add a read-only drawer for `[👁 Preview]` (rendered email view with subject + body in a styled card) — same drawer mechanism |
+| Queue All / Copy All buttons | `flex-col sm:flex-row` already | Add `safe-area-inset-bottom` padding so they don't sit under iOS home bar |
+| Layout shift | Drafts accordion auto-opens after run | Reserve `min-h-[120px]` on result container to prevent jump |
+
+**QA checklist component:** small `✅ Mobile QA` badge in test mode that runs `window.matchMedia` checks + reports any element under 44px tap-target. Pure client-side, dev aid.
+
+---
+
+### 5. Command logging + one-click replay
+
+**Migration `<ts>_admin_command_log_v2.sql`:**
+- Add columns to `admin_command_log`: `is_test boolean default false`, `replay_of_log_id uuid null references admin_command_log(id)`, `result_summary jsonb` (stores the final response shape so replays can diff)
+- No data loss, no breaking changes
+
+**New action:** `action: "history"` returns last 20 commands for current admin (id, prompt, cost, draft count, created_at, is_test).
+
+**UI — new accordion `📜 History`:** 
+- Lists last 10 commands as cards: prompt preview · cost · time ago · draft count
+- Each card has **[🔁 Replay]** button → re-runs the exact prompt, sets `replay_of_log_id` on the new log row
+- After replay finishes, shows a **diff strip**: 
+  - `Cost: $0.012 → $0.011 (−8%)`  
+  - `Drafts: 5 → 5 (same count)`  
+  - `Steps: 3 → 3 (same plan)`  
+  - `Top recipient changed: 2 of 5`
+- Diff is a simple count comparison (rows returned, drafts generated, steps, cost) — no deep semantic diff
+
+**Storage:** result_summary stays under 4KB (just counts + first 3 recipient names). Full results stay queryable in `draft_output` jsonb as today.
+
+---
+
+### Files
+
+| File | Change |
 |---|---|
-| `generate_bulk_outreach` | Takes a list of N recipients + a single product/angle + tone → generates **N personalized emails** in one Gemini call (Flash, structured JSON output, ~$0.003 for 10 emails). Each email references that recipient's specific data fields (city, trade, signal, employer, etc). |
-| `generate_bulk_sms` | Same but for SMS — 160-char limit, no greeting/signature waste, TCPA disclaimer footer. |
+| `supabase/functions/admin-command/index.ts` | +`action: "preview"`, +`action: "regenerate"`, +`action: "history"`, +`dry_run` flag on queue, +risk-scan helper, +`regenerate_single_draft` tool, +`is_test`/`replay_of_log_id` writes |
+| `src/components/dwa-admin/AdminCommandBar.tsx` | +SafetyBanner, +PreviewGate logic, +per-card tone/angle toolbar + regenerate, +TestMode panel (5 product runners), +HistoryAccordion with Replay + Diff, +mobile drawer for edit/preview, tap-target bumps |
+| `supabase/migrations/<ts>_admin_command_log_v2.sql` | +3 columns on `admin_command_log` |
 
-**UX flow when you say "email 10 companies that could hire the 10 plumbers we found":**
+### Audit — what won't break
 
-1. Planner produces 3 steps:
-   - `list_records(contractor_leads, trade=plumbing, claimed_at=null, limit=10)`
-   - `find_buyers_in_area(trade=plumbing, city=<from step 1>, limit=10)`
-   - `generate_bulk_outreach(recipients=<step 2>, product=contractor_leads, tone=urgent, hook=<step 1 leads>)`
+- All 14 existing tools untouched — only ADD `regenerate_single_draft`
+- Queue action unchanged unless `dry_run: true` passed
+- Existing `action: "run"` and `action: "queue"` keep current behavior when no new fields supplied
+- All scanners, crons, webhooks, Stripe, M2 site untouched
+- Cost cap ($5/24h) still enforced; preview action is cheap (~$0.005, planner only)
+- Test mode uses real code paths but `dry_run` flag prevents actual queue inserts
 
-2. Result card renders a **bulk drafts table**:
-   ```
-   ┌────────────────────────────────────────────────┐
-   │ ✅ 10 emails ready                  [Queue All]│
-   ├────────────────────────────────────────────────┤
-   │ ☐ ABC Plumbing     [Edit] [Preview] [Skip]   │
-   │ ☐ Joe's Drain      [Edit] [Preview] [Skip]   │
-   │ ☐ Detroit Pipe Co  [Edit] [Preview] [Skip]   │
-   │ … 7 more                                      │
-   ├────────────────────────────────────────────────┤
-   │ [Queue Selected (10)] [Copy All to Clipboard] │
-   └────────────────────────────────────────────────┘
-   ```
+### Cost ceiling (updated)
 
-3. Tap **Edit** → inline editor for that specific email (subject + body, mobile-friendly textareas)
-4. Tap **Preview** → see the rendered email
-5. Tap **Skip** → removes from batch
-6. **Queue All** / **Queue Selected** → inserts each into `email_reply_drafts` with `approval_required=true` → routes through your existing 10-min ghost delay + admin approval gate
-7. **Copy All** → clipboard gets a formatted block of all 10 emails for manual paste if you'd rather
-
-**Bulk SMS flow** identical but lands in your existing SMS approval queue (no auto-send, ever).
-
-**Cost cap on bulk:** max 25 emails or 25 SMS per single command. If you ask for more, you get a "split into 2 commands" prompt. Per-email cost ~$0.0003 → 25 emails ≈ $0.008.
-
----
-
-### 4. DWA-only isolation (zero connection to M2 Training)
-
-**Hard rules baked into the system prompt + code:**
-
-- Sender identity: ALWAYS `matt@detroitwebagent.com` (never `matt@mattmichelstraining.com`)
-- Phone: ALWAYS `(313) 992-1219` (never personal cell)
-- Email wrapper: ALWAYS `dwaEmail()` (never `m2Email()`) — enforced in queue insert
-- Brand voice: "Digital Engines / Bare Metal" industrial tone (per `mem://brand/dual-brand-strategy`)
-- Strict copy bans (per memory): no "AI" jargon, no 5-min call offers, no fitness/training references
-- Whitelisted product set is the **5 DWA flagship products only**:
-  1. Demand Radar (formerly Industry Pulse) — $149/mo
-  2. Talent Radar (formerly TechAlert / HireAlert) — $149/mo
-  3. Contractor Leads (PPL) — $399/mo
-  4. FieldDesk — $199/mo
-  5. Missed Call Catch — $99/mo
-- Tool resolvers will **refuse** to query M2 tables (`training_programs`, `purchased_programs`, `team_rosters`, `coach_profiles`, `b2b_subscribers`, etc.) — not in the whitelist
-- All output rendered in DWA dark teal theme (`#00d4ff` on `#0a1628`)
-- Audit log records `brand="DWA"` on every command — if the planner ever drifts to M2 territory, function aborts
-
-**End-to-end verification per product (will run before declaring done):**
-
-| Product | Tool path tested | Recipient table | Draft template | Approval queue |
-|---|---|---|---|---|
-| Demand Radar | `find_high_confidence_signals` → `find_company_contact` → `generate_bulk_outreach` | `industry_pulse_signals` | demand_radar pitch | `email_reply_drafts` |
-| Talent Radar | `find_hot_candidates_for_client` → `find_company_contact` → `generate_bulk_outreach` | `hire_alert_candidates` + `hire_alert_clients` | talent_radar pitch | `email_reply_drafts` |
-| Contractor Leads | `find_unclaimed_leads` → `find_buyers_in_area` → `generate_bulk_outreach` | `contractor_leads` + `contractor_clients` | contractor_leads pitch | `email_reply_drafts` |
-| FieldDesk | `find_company_contact` (HVAC/plumbing 3-15 techs) → `web_research` → `draft_outreach` | `field_crm_clients` + `business_listings_public` | fielddesk pitch | `email_reply_drafts` |
-| Missed Call Catch | `find_stale_prospects` (no website / small biz) → `draft_outreach` | `business_listings_public` + `prospect_contacts` | missed_call pitch | `email_reply_drafts` |
-
-Each one gets a dedicated "test prompt" in the function's QA suite that I'll run via the test endpoint before merging:
-- *"Show me 5 demand radar signals and draft outreach to one buyer for each"*
-- *"Find 5 nursing homes with low staffing and draft talent radar pitches"*
-- *"Match 5 plumbing leads to 10 buyers and draft bulk emails"*
-- *"Find 5 HVAC shops 3-15 techs and draft fielddesk pitches"*
-- *"Find 10 small Detroit businesses with no missed-call system, draft pitches"*
-
----
-
-### Files (unchanged from v2 + 2 small additions)
-
-**NEW edge function**: `supabase/functions/admin-command/index.ts` (~700 LOC, was 600)
-- Adds `generate_bulk_outreach` + `generate_bulk_sms` tool resolvers
-- DWA-only system prompt + table whitelist + product whitelist
-- Strict M2 table refusal logic
-- Partial-result error handling
-
-**NEW migration**: `<ts>_admin_command_log.sql` — same as v2
-
-**NEW component**: `src/components/dwa-admin/AdminCommandBar.tsx` (~450 LOC, was 350)
-- Mobile-first accordion result card
-- Bulk drafts table with per-row edit/preview/skip + Queue All
-- Recipient cards (not tables) under 768px
-- Sticky-collapsing command bar
-
-**EDITED**: `src/pages/DWAAdmin.tsx` — mount `<AdminCommandBar />` above tab strip (~5 LOC)
-
-### What stays the same (verified non-breaking)
-- All 6 background scanners
-- All cron jobs
-- All client-facing pages
-- All existing admin tabs
-- TCPA Manual-Only mandate
-- Approval gate flow
-- Stripe / webhooks / payments
-- M2 Training site (zero touch — separate domain logic via `domainConfig.ts` already isolates them)
-- All existing edge functions (only ADDS one new one)
-
-### Cost ceiling (with bulk)
-- Single command (no bulk): ~$0.01
-- Bulk command (10 emails): ~$0.013
-- Bulk command (25 emails): ~$0.018
-- Daily cap: 100 commands → max ~$2/day
-- Hard cutoff: refuse if >$5 spent in 24h
+| Action | Cost |
+|---|---|
+| Preview only (block path) | ~$0.005 |
+| Single regenerate | ~$0.0005 |
+| Full test suite (all 5) | ~$0.05 |
+| Replay | same as original command |
+| Daily cap | $5 (unchanged) |
 
