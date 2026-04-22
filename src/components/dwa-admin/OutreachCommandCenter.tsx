@@ -426,6 +426,51 @@ function RankedPool() {
     },
   });
 
+  const [enrichingId, setEnrichingId] = useState<string | null>(null);
+  const [enrichingAll, setEnrichingAll] = useState(false);
+  const qc = useQueryClient();
+
+  // Coverage stats — counted client-side from currently loaded rows
+  const coverage = (() => {
+    const total = prospects.length || 1;
+    const c = (fn: (p: Prospect) => boolean) => Math.round((prospects.filter(fn).length / total) * 100);
+    return {
+      email: c((p) => !!p.email),
+      contact: c((p) => !!p.contact_name),
+      reviews: c((p) => p.review_count != null && p.review_count > 0),
+      carrier: c((p) => !!p.phone_carrier_type),
+    };
+  })();
+
+  async function enrichOne(id: string) {
+    setEnrichingId(id);
+    try {
+      const { data, error } = await supabase.functions.invoke("enrich-prospect-pool", { body: { id } });
+      if (error) throw error;
+      const filled = data?.results?.[0]?.filled ?? [];
+      toast.success(filled.length ? `Filled: ${filled.join(", ")}` : "No new data found");
+      qc.invalidateQueries({ queryKey: ["prospect_pool"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Enrichment failed");
+    } finally {
+      setEnrichingId(null);
+    }
+  }
+
+  async function enrichAll() {
+    setEnrichingAll(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("enrich-prospect-pool", { body: { limit: 25 } });
+      if (error) throw error;
+      toast.success(`Enriched ${data?.enriched ?? 0} of ${data?.processed ?? 0} prospects`);
+      qc.invalidateQueries({ queryKey: ["prospect_pool"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Batch enrichment failed");
+    } finally {
+      setEnrichingAll(false);
+    }
+  }
+
   function toggle(id: string) {
     setSelected((prev) => {
       const next = new Set(prev);
