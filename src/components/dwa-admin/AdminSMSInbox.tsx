@@ -414,15 +414,30 @@ export default function AdminSMSInbox() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inboundOnlyMode]);
 
-  // Mark active thread as read + autoscroll on change
+  // Keep a ref of latest threads so the activePhone-only effect can read fresh data
+  const threadsRef = useRef<Thread[]>([]);
   useEffect(() => {
-    const t = threads.find((x) => x.phone === activePhone);
+    threadsRef.current = threads;
+  }, [threads]);
+
+  // Mark active thread as read + autoscroll when activePhone changes
+  useEffect(() => {
+    if (!activePhone) return;
+    const t = threadsRef.current.find((x) => x.phone === activePhone);
     if (t) markThreadRead(t);
     requestAnimationFrame(() => {
       scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePhone, threads.length]);
+  }, [activePhone]);
+
+  // Mark-on-arrive: when threads update and the active thread has new inbound, clear it instantly
+  useEffect(() => {
+    if (!activePhone) return;
+    const t = threads.find((x) => x.phone === activePhone);
+    if (t && t.unreadCount > 0) markThreadRead(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threads, activePhone]);
 
   const activeThread = useMemo(
     () => threads.find((t) => t.phone === activePhone) ?? null,
