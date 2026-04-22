@@ -126,6 +126,7 @@ serve(async (req) => {
           email: p.email || null,
           source: p.source,
           license_count: p.license_types.length,
+          audience_type: "contractor",
         });
         if (!error) newCount++;
       }

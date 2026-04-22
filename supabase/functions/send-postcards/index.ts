@@ -280,11 +280,13 @@ serve(async (req) => {
       const { data: campaign } = await sb.from("postcard_campaigns").select("*").eq("id", campaign_id).single();
       if (!campaign) return new Response(JSON.stringify({ error: "Campaign not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-      // Pull all prospects in this county to build a diagnostic breakdown
-      const { data: allInCounty } = await sb
+      // Pull all prospects in this county AND audience_type to build a diagnostic breakdown
+      let diagQuery = sb
         .from("postcard_prospects")
-        .select("id, business_name, city, address_line1, zip, postcard_sent_at, county")
+        .select("id, business_name, city, address_line1, zip, postcard_sent_at, county, audience_type")
         .ilike("county", campaign.county);
+      if (campaign.audience_type) diagQuery = diagQuery.eq("audience_type", campaign.audience_type);
+      const { data: allInCounty } = await diagQuery;
 
       const total = allInCounty?.length || 0;
       const noAddress = allInCounty?.filter((p: any) => !p.address_line1).length || 0;
@@ -313,6 +315,8 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         diagnose: true,
         campaign_county: campaign.county,
+        campaign_audience: campaign.audience_type || null,
+        audience_filter_active: !!campaign.audience_type,
         prospects_in_county: total,
         no_address: noAddress,
         already_sent: alreadySent,
@@ -344,14 +348,27 @@ serve(async (req) => {
     if (prospect_ids?.length) {
       prospectQuery = prospectQuery.in("id", prospect_ids);
     } else {
-      prospectQuery = prospectQuery.ilike("county", campaign.county).is("postcard_sent_at", null).limit(MAX_PER_RUN);
+      // SAFETY FIX 2026-04-22: filter prospects by audience_type so a nursing-home
+      // campaign can never accidentally mail HVAC contractors in the same county.
+      if (!campaign.audience_type) {
+        const reason = `Campaign ${campaign_id} has no audience_type set — refusing to send to avoid mailing wrong businesses.`;
+        await sb.from("postcard_campaigns").update({ status: "failed", last_error: reason }).eq("id", campaign_id);
+        return new Response(JSON.stringify({ error: reason, sent: 0 }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      prospectQuery = prospectQuery
+        .ilike("county", campaign.county)
+        .eq("audience_type", campaign.audience_type)
+        .is("postcard_sent_at", null)
+        .limit(MAX_PER_RUN);
     }
 
     const { data: prospects } = await prospectQuery;
 
     if (!prospects?.length) {
       // Honest failure: mark campaign failed, log reason
-      const reason = prospect_ids?.length ? "No matching prospects with valid addresses" : `No unsent prospects in ${campaign.county} County with valid addresses`;
+      const reason = prospect_ids?.length
+        ? "No matching prospects with valid addresses"
+        : `No unsent ${campaign.audience_type} prospects in ${campaign.county} County with valid addresses. Run "Find Prospects" for this audience first.`;
       await sb.from("postcard_campaigns").update({ status: "failed", last_error: reason }).eq("id", campaign_id);
       return new Response(JSON.stringify({ error: reason, sent: 0 }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }

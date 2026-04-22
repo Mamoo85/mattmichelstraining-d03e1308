@@ -238,6 +238,7 @@ Deno.serve(async (req) => {
           owner_name: b.owner_name || null,
           source: "lara_accela_scraper",
           license_count: 1,
+          audience_type: "contractor",
         });
         if (!error) newCount++;
       }
