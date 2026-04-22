@@ -1,90 +1,75 @@
 
 
-## Plan: Audit & Harden SECURITY DEFINER Views and Functions
+## Reimagine SMS Inbox — Instagram-Style DM Layout, Inbound-First Filter
 
-### Goal
-Find every database view and function that runs with elevated privileges (`SECURITY DEFINER` for functions, default-definer behavior for views) and confirm each one is either:
-- A function with `SET search_path` locked (already the project standard), OR
-- A view explicitly created with `WITH (security_invoker = true)` so RLS is enforced as the calling user, not the view owner.
+### What's wrong today (from your screenshot)
 
-Then surface a single report of anything missing and fix the gaps.
+1. **Message bubbles are huge** — `text-sm` (14px) bubbles stack vertically with `space-y-2`, eating ~75% of the right pane. On your 396px viewport one message fills the screen.
+2. **Reply box is tiny** — `<textarea rows={3}>` with default font size, so it shows ~3 lines max while a single bubble shows 4+ lines.
+3. **Outbound-only threads dominate the list** — every cold drip / web-design pitch you've sent shows as a "thread" even though that person never wrote back. That's why your inbox is full of `(313) 562-7625 · You: Matt Michels again…` with no reply ever coming.
+4. **Header eats vertical space** — `(313) 992-1219 · last 30 days · unread` chip + h2 + outer page padding wastes ~120px before the conversation even starts.
 
-### Why this matters
-A `SECURITY DEFINER` function or a default `SECURITY DEFINER` view bypasses the caller's RLS. If a public-facing view exposes data through such a view without `security_invoker=true`, any anon user can read everything in the underlying table — this is the #1 silent data leak risk in Supabase projects.
+### The fix — 3 changes
 
-### Audit steps (read-only — runs in plan mode)
+**1. Filter rule: only show threads where THEY texted first**
+- After building the `Map<phone, Message[]>`, drop any thread whose **earliest** message is `direction === "outbound"`.
+- Result: inbox only shows real two-way conversations + true cold inbounds. All your one-way blast history disappears from this view.
+- A small toggle at the top (`Inbound only ▾ | Show all`) lets you flip back to the old "everything I've sent" view if you ever need to find an outbound message — defaults to **Inbound only**.
 
-1. **Run Supabase linter** — catches `security_definer_view` and `function_search_path_mutable` warnings out of the box.
-2. **Query `pg_views` + `pg_class.reloptions`** for every view in `public` schema — flag any view whose `reloptions` does NOT contain `security_invoker=true`.
-3. **Query `pg_proc`** for every function with `prosecdef = true` in `public` — confirm each has `proconfig` containing `search_path=`.
-4. **Cross-check with the `db-functions` list already in context** — 200+ functions, most are pgvector/cube/pg_trgm extension functions (safe, owned by extensions). Only audit the project's own functions (the ones with `SET search_path TO 'public'`).
-5. **Check for `system_comms_log`, `hire_alert_*`, `contractor_*`, `dead_lead_*`, `prospect_*`, `industry_pulse_*` views** specifically — these are the highest-risk surfaces because they back public dashboards and magic-link pages (no auth).
+**2. Instagram-style DM layout (mobile-first, dense)**
+Reference: Instagram DM, iMessage, WhatsApp Web. All share the same proportions:
+- Tight bubbles: `text-[13px] leading-snug px-3 py-1.5 rounded-2xl` (not `rounded-lg`)
+- Bubble max width `max-w-[78%]`, tight `space-y-1` between consecutive same-sender bubbles, `space-y-3` between sender changes
+- **Group consecutive bubbles** from the same sender — only show the timestamp under the LAST bubble of a run, not under every bubble (this alone reclaims ~40% vertical space)
+- Avatar/initial circle next to each inbound run (first bubble only)
+- Sticky compact header: just `display name + 📞` in a 44px bar (was 76px)
+- Day separators: `Today`, `Yesterday`, `Apr 21` pills centered between message groups
+- Auto-scroll pinned to bottom on thread open (already wired)
 
-### Report format (delivered after audit)
+**3. Bigger, smarter composer**
+- Composer row pinned to bottom of conversation pane, rounded pill input (Instagram-style), `min-h-[44px] max-h-[160px]` auto-grow textarea — starts as ONE line, grows up to ~6 lines as you type
+- Send button = circular icon button on the right side INSIDE the pill (not a separate row)
+- Char counter + "From (313) 992-1219" moves to a `text-[10px]` micro line ABOVE the input, only visible when focused or `draft.length > 100`
+- 🤖 Draft button collapses into a small chip to the left of the input (icon only on mobile, "🤖 Draft" on desktop)
+- Onboarding cheatsheet stays but auto-collapsed; opens as a bottom sheet that overlays the conversation rather than pushing the composer up
 
+### Visual proportions (target on 396px viewport)
 ```
-SECURITY DEFINER AUDIT — <date>
-─────────────────────────────────────────────
-✅ SAFE FUNCTIONS (NN):       has SECURITY DEFINER + locked search_path
-✅ SAFE VIEWS (NN):           has security_invoker=true
-⚠️  MISSING search_path (NN): function list — fix required
-🚨 DEFINER VIEWS w/o invoker (NN): view list — CRITICAL, fix immediately
-
-Per finding:
-  - Object name
-  - Schema
-  - Why it's risky (1 line)
-  - Exact ALTER statement to fix
+┌──────────────────────────────┐
+│ ← (734) 620-7178      📞    │ 44px header
+├──────────────────────────────┤
+│                              │
+│  ┌──────────────┐           │
+│  │ inbound      │           │  ~580px conversation
+│  └──────────────┘           │  (was ~360px)
+│                              │
+│           ┌──────────────┐  │
+│           │ outbound     │  │
+│           └──────────────┘  │
+│                              │
+├──────────────────────────────┤
+│ 🤖 [type a message…]    ⬆️ │ 52px composer
+└──────────────────────────────┘
 ```
-
-### Fix phase (after report — requires default mode)
-
-For each gap, generate one migration:
-- **Views**: `ALTER VIEW public.<name> SET (security_invoker = true);`
-- **Functions missing `search_path`**: `ALTER FUNCTION public.<name>(args) SET search_path TO 'public';`
-- **Definer views that should actually be invoker** (vast majority): convert in place — no schema change needed.
-- **Definer views that intentionally bypass RLS** (e.g. `vw_public_*` views that expose sanitized columns): document in a migration comment why and leave as-is. These are rare and only legitimate when the view itself filters/redacts columns the underlying table protects.
-
-Each fix logged to a single migration: `supabase/migrations/<timestamp>_security_definer_hardening.sql` with one `ALTER` per object + a comment block at the top listing every change.
-
-### Ongoing guardrail (added in same migration)
-
-Add a `pg_event_trigger` that fires on `CREATE VIEW` / `CREATE OR REPLACE VIEW` and **rejects** any new view in `public` that doesn't have `security_invoker=true` set. This prevents regression — no future migration can ship a definer view without an explicit override.
-
-```sql
-CREATE OR REPLACE FUNCTION public.enforce_security_invoker_views()
-RETURNS event_trigger LANGUAGE plpgsql AS $$
-DECLARE r record;
-BEGIN
-  FOR r IN SELECT * FROM pg_event_trigger_ddl_commands()
-           WHERE command_tag IN ('CREATE VIEW','CREATE OR REPLACE VIEW')
-             AND schema_name = 'public'
-  LOOP
-    IF NOT EXISTS (
-      SELECT 1 FROM pg_class c
-      WHERE c.oid = r.objid
-        AND 'security_invoker=true' = ANY(c.reloptions)
-    ) THEN
-      RAISE EXCEPTION 'View %.% must be created WITH (security_invoker = true) — see CLAUDE.md security rules', r.schema_name, r.object_identity;
-    END IF;
-  END LOOP;
-END $$;
-
-CREATE EVENT TRIGGER enforce_invoker_views
-  ON ddl_command_end WHEN TAG IN ('CREATE VIEW','CREATE OR REPLACE VIEW')
-  EXECUTE FUNCTION public.enforce_security_invoker_views();
-```
+Currently composer + header take ~280px of a 762px screen. Target: ~96px combined.
 
 ### Files touched
-- **NEW migration**: `supabase/migrations/<ts>_security_definer_hardening.sql` — one ALTER per finding + the event trigger
-- **NEW memory file**: `mem://security/definer-views-and-functions` — records the current safe list + the rule "all new public views must include `WITH (security_invoker = true)`"
-- **EDITED**: `mem://index.md` — add the new memory to the index
 
-No edge function changes. No frontend changes. No data changes.
+- **EDITED**: `src/components/dwa-admin/AdminSMSInbox.tsx`
+  - Add `inboundOnlyMode` state (default `true`) + toggle in header
+  - In `loadInbox()`: after building thread map, filter `messages[0].direction === "inbound"` when toggle is on
+  - Rewrite the conversation render block: bubble grouping, day separators, tighter typography
+  - Replace the bottom textarea block with the auto-grow pill composer
+  - Slim down header (remove "last 30 days" subline; keep unread chip inline with title)
 
-### What I'll deliver to you
-1. A clean report (markdown, in chat) of everything audited
-2. The single migration that fixes the gaps
-3. The event trigger that prevents the same gap from being reintroduced
-4. A memory entry so future sessions enforce the same rule automatically
+No DB changes. No edge function changes. No new files. ~150 LOC change in one component.
+
+### What stays the same
+- `system_comms_log` query, realtime channel, 20s poll, `dwa-send-sms` invoke, AI draft button, ResendSmsModal, onboarding cheatsheet content, contact-label cross-reference, "skip Matt's personal cell" filter, mobile back button.
+
+### What you'll see after
+- Inbox list drops from ~30 threads (mostly your own outbound blasts) to ~5–10 real two-way conversations
+- The (734) 620-7178 thread you have open will show ~6–8 message bubbles on screen instead of 2.5
+- Typing area is the right size — composer takes ~50px instead of ~140px
+- Looks/feels like Instagram DMs
 
