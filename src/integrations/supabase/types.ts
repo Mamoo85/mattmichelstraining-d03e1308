@@ -11421,6 +11421,54 @@ export type Database = {
           },
         ]
       }
+      pulse_alert_clients: {
+        Row: {
+          active: boolean
+          alert_count: number
+          business_name: string | null
+          city_filter: string | null
+          created_at: string
+          email: string
+          id: string
+          last_alert_at: string | null
+          phone: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          vertical_filter: string | null
+        }
+        Insert: {
+          active?: boolean
+          alert_count?: number
+          business_name?: string | null
+          city_filter?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          last_alert_at?: string | null
+          phone: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          vertical_filter?: string | null
+        }
+        Update: {
+          active?: boolean
+          alert_count?: number
+          business_name?: string | null
+          city_filter?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          last_alert_at?: string | null
+          phone?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          vertical_filter?: string | null
+        }
+        Relationships: []
+      }
       purchased_guides: {
         Row: {
           guide_id: string
