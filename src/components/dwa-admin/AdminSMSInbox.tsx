@@ -272,8 +272,9 @@ export default function AdminSMSInbox() {
         .filter((phone) => {
           if (!inboundOnlyMode) return true;
           const msgs = map.get(phone)!;
-          // Only show threads where THEY texted us first
-          return msgs[0]?.direction === "inbound";
+          // Show any thread that has at least one inbound message —
+          // i.e. a real human texted us at some point in the conversation.
+          return msgs.some((m) => m.direction === "inbound");
         })
         .map((phone) => {
           const messages = map.get(phone)!;
