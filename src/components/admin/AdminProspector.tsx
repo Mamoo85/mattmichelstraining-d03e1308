@@ -1832,6 +1832,14 @@ export default function AdminProspector() {
             </Button>
             <div className="ml-auto flex items-center gap-1.5">
               <Button
+                variant="outline" size="sm" className="text-xs h-7 gap-1 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                disabled={batchProcessing}
+                onClick={exportPipelineCSV}
+                title="Download all displayed prospects with milestone timestamps"
+              >
+                <FileText size={10} /> Export CSV ({filteredPipelineLeads.length})
+              </Button>
+              <Button
                 variant="outline" size="sm" className="text-xs h-7 gap-1 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
                 disabled={batchProcessing}
                 onClick={clearDuplicates}
