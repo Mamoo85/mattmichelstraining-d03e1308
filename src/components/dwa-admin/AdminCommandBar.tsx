@@ -153,6 +153,14 @@ export default function AdminCommandBar() {
   const run = useCallback(async (text?: string, opts?: { confirmed?: boolean; isTest?: boolean; replayOf?: string }) => {
     const q = (text ?? prompt).trim();
     if (!q || running) return null;
+
+    // Client-side guard: stop bad prompts before they hit the edge function.
+    const promptCheck = validatePrompt(q);
+    if (promptCheck.ok === false) {
+      setResult({ error: promptCheck.reason, blocked: true, risk: "block", risk_reasons: [promptCheck.reason] });
+      return null;
+    }
+
     setRunning(true);
     setResult(null);
     setQueueMsg(null);
