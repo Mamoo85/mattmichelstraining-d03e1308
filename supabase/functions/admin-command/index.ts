@@ -19,6 +19,7 @@ const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const ADMIN_EMAILS = new Set([
   "matt@detroitwebagent.com",
   "matt@mattmichelstraining.com",
+  "matthewmichels4@gmail.com",
 ]);
 
 const WHITELIST_TABLES = new Set([
@@ -508,6 +509,7 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace(/^Bearer\s+/i, "");
     let adminEmail = "";
+    let adminUserId = "";
     if (token) {
       try {
         const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY") || "", {
@@ -515,10 +517,24 @@ serve(async (req) => {
         });
         const { data } = await userClient.auth.getUser();
         adminEmail = data?.user?.email || "";
+        adminUserId = data?.user?.id || "";
       } catch (_) { /* ignore */ }
     }
-    if (!ADMIN_EMAILS.has(adminEmail)) {
-      return new Response(JSON.stringify({ error: "Admin only" }), {
+    let isAdmin = ADMIN_EMAILS.has(adminEmail);
+    if (!isAdmin && adminUserId) {
+      // Fallback: DB role check so any user with admin role can use the command bar
+      try {
+        const { data: roleRow } = await supa
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", adminUserId)
+          .eq("role", "admin")
+          .maybeSingle();
+        if (roleRow) isAdmin = true;
+      } catch (_) { /* ignore */ }
+    }
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ error: "Admin only", email: adminEmail || null }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
