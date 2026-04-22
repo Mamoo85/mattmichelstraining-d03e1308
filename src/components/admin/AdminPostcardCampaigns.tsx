@@ -513,22 +513,35 @@ export default function AdminPostcardCampaigns() {
               const mismatch = detectCopyMismatch(c);
               const audienceColor = AUDIENCE_OPTIONS.find(o => o.value === c.audience_type)?.color || "text-gray-300";
               return (
-                <Card key={c.id} className="bg-white/5 border-white/10">
+                <Card key={c.id} className={`bg-white/5 border-white/10 ${mismatch ? "ring-1 ring-red-500/50" : ""}`}>
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-3 flex-wrap gap-2">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Badge className="bg-[#00d4ff]/20 text-[#00d4ff] text-xs">{c.county} County</Badge>
-                        {c.audience_type && <Badge variant="outline" className="text-xs">{c.audience_type}</Badge>}
+                        <Badge className="bg-[#00d4ff]/20 text-[#00d4ff] text-xs">📮 {c.county} County</Badge>
+                        <Badge variant="outline" className={`text-xs ${audienceColor} border-current`}>
+                          {c.audience_type ? audienceLabel(c.audience_type) : "⚠️ NO AUDIENCE"}
+                        </Badge>
                         <Badge variant="outline" className={`text-xs ${
                           c.status === "mailed" ? "border-emerald-500 text-emerald-400" :
                           c.status === "failed" ? "border-red-500 text-red-400" :
                           "border-white/20"
                         }`}>{c.status}</Badge>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         <Button size="sm" variant="outline" onClick={() => diagnose(c.id)} disabled={diagnosing === c.id} className="text-xs h-7">
                           🔍 {diagnosing === c.id ? "Checking..." : "Diagnose"}
                         </Button>
+                        {c.status === "draft" && c.audience_type && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => regenerateCopy(c.id, c.audience_type, c.county)}
+                            disabled={generating}
+                            className="text-xs h-7 border-purple-500/40 text-purple-300"
+                          >
+                            ✏️ Regenerate Copy
+                          </Button>
+                        )}
                         {stats.failed > 0 && (
                           <Button size="sm" variant="outline" onClick={() => resendFailed(c.id)} disabled={resending === c.id} className="text-xs h-7 border-amber-500/40 text-amber-300">
                             🔁 {resending === c.id ? "Resending..." : `Resend ${stats.failed} Failed`}
@@ -536,6 +549,13 @@ export default function AdminPostcardCampaigns() {
                         )}
                       </div>
                     </div>
+
+                    {/* Mismatch warning — disables Send below */}
+                    {mismatch && (
+                      <div className="text-[12px] text-red-200 bg-red-500/15 border border-red-500/40 rounded p-2 mb-3 font-medium">
+                        ⚠️ Copy / audience mismatch: {mismatch}
+                      </div>
+                    )}
 
                     {/* Honest stat strip */}
                     {stats.total > 0 && (
@@ -567,11 +587,24 @@ export default function AdminPostcardCampaigns() {
                     {c.status === "draft" && (
                       <div className="space-y-2 mb-3">
                         <div className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded p-2">
-                          💰 Will mail to <strong>{recipientCount}</strong> {recipientCount === 1 ? "address" : "addresses"} at $0.85 each = <strong>${estCost}</strong>
+                          💰 Will mail to <strong>{recipientCount}</strong> {audienceLabel(c.audience_type).toLowerCase()} {recipientCount === 1 ? "address" : "addresses"} in <strong>{c.county}</strong> at $0.85 each = <strong>${estCost}</strong>
+                          {recipientCount === 0 && c.audience_type && (
+                            <div className="text-[10px] text-red-300 mt-1">No matching prospects yet — open the Find tab and search for {audienceLabel(c.audience_type)} in {c.county} County first.</div>
+                          )}
                           <div className="text-[10px] text-amber-200/70 mt-1">Tip: Click Diagnose first to verify Lob API + match counts before sending.</div>
                         </div>
-                        <Button size="sm" onClick={() => sendPostcards(c.id)} disabled={sending === c.id || recipientCount === 0} className="bg-emerald-500 text-white hover:bg-emerald-600">
-                          <Send className="w-3 h-3 mr-1" /> {sending === c.id ? "Sending..." : `Confirm & Send $${estCost}`}
+                        <Button
+                          size="sm"
+                          onClick={() => sendPostcards(c.id)}
+                          disabled={sending === c.id || recipientCount === 0 || !!mismatch || !c.audience_type}
+                          className="bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50"
+                        >
+                          <Send className="w-3 h-3 mr-1" />
+                          {sending === c.id
+                            ? "Sending..."
+                            : mismatch
+                              ? "Fix mismatch first"
+                              : `Send ${recipientCount} postcards to ${audienceLabel(c.audience_type).toLowerCase()} in ${c.county} · $${estCost}`}
                         </Button>
                       </div>
                     )}
@@ -631,11 +664,42 @@ export default function AdminPostcardCampaigns() {
                   </CardContent>
                 </Card>
               );
-            })}
-            {campaigns.length === 0 && (
-              <p className="text-gray-500 text-center py-8">No campaigns yet. Select audience + county and generate copy.</p>
-            )}
-          </div>
+            };
+
+            // Group campaigns by audience for clarity. Unspecified audience falls into its own bucket.
+            const grouped = AUDIENCE_GROUPS.map(g => ({
+              ...g,
+              items: campaigns.filter((c: any) => c.audience_type === g.key),
+            }));
+            const orphan = campaigns.filter((c: any) => !c.audience_type || !AUDIENCE_GROUPS.some(g => g.key === c.audience_type));
+
+            return (
+              <div className="space-y-5">
+                {grouped.map(g => g.items.length === 0 ? null : (
+                  <div key={g.key} className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-bold text-white/80 uppercase tracking-wide border-b border-white/10 pb-1">
+                      <span>{g.emoji}</span>
+                      <span>{g.label}</span>
+                      <Badge variant="outline" className="text-[10px] ml-1">{g.items.length}</Badge>
+                    </div>
+                    <div className="space-y-3">{g.items.map(renderCampaign)}</div>
+                  </div>
+                ))}
+                {orphan.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-bold text-red-300 uppercase tracking-wide border-b border-red-500/30 pb-1">
+                      ⚠️ <span>Unspecified Audience — won't auto-send</span>
+                      <Badge variant="outline" className="text-[10px] ml-1 border-red-500/50 text-red-300">{orphan.length}</Badge>
+                    </div>
+                    <div className="space-y-3">{orphan.map(renderCampaign)}</div>
+                  </div>
+                )}
+                {campaigns.length === 0 && (
+                  <p className="text-gray-500 text-center py-8">No campaigns yet. Select audience + county and generate copy.</p>
+                )}
+              </div>
+            );
+          })()}
         </TabsContent>
 
         {/* Prospects Tab */}
