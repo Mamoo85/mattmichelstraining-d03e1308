@@ -29,6 +29,23 @@ interface UnlockedSignal {
   recommended_pitch: string | null;
 }
 
+interface VerifiedPlan {
+  verified: boolean;
+  payment_status: string;
+  plan: string;
+  plan_label: string;
+  plan_cadence: string;
+  plan_description: string;
+  product_name: string | null;
+  amount_cents: number;
+  amount_formatted: string;
+  currency: string;
+  interval: string | null;
+  customer_email: string | null;
+  unlock_status: string | null;
+  week_start: string | null;
+}
+
 const VERTICALS = [
   "HVAC supply",
   "Industrial steel",
@@ -57,6 +74,8 @@ export default function IndustrialPulse() {
   const [unlockedSignals, setUnlockedSignals] = useState<UnlockedSignal[]>([]);
   const [unlockedEmail, setUnlockedEmail] = useState<string>("");
   const [loadingUnlocked, setLoadingUnlocked] = useState(false);
+  const [verifiedPlan, setVerifiedPlan] = useState<VerifiedPlan | null>(null);
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
     // Auto-open unlock modal if ?unlock=1 in URL (from email CTA)
@@ -64,7 +83,27 @@ export default function IndustrialPulse() {
     if (params.get("unlock") === "1") setUnlockOpen(true);
     if (params.get("unlocked") === "1") {
       toast.success("Payment received — here's a preview while your full digest is being delivered.");
+      const sessionId = params.get("session_id");
       const buyerEmail = params.get("email")?.trim().toLowerCase();
+
+      // Verify the Stripe session — source of truth for what they actually bought
+      if (sessionId) {
+        setVerifying(true);
+        supabase.functions
+          .invoke("verify-industrial-pulse-session", { body: { session_id: sessionId } })
+          .then(({ data, error }) => {
+            if (error) throw error;
+            if (data && !data.error) {
+              setVerifiedPlan(data as VerifiedPlan);
+              if (data.customer_email && !buyerEmail) {
+                setUnlockedEmail(data.customer_email);
+              }
+            }
+          })
+          .catch((err) => console.error("[verify-session]", err))
+          .finally(() => setVerifying(false));
+      }
+
       if (buyerEmail) {
         setUnlockedEmail(buyerEmail);
         setLoadingUnlocked(true);
