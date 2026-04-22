@@ -332,6 +332,18 @@ export default function AdminPostcardCampaigns() {
     loadData();
   };
 
+  const campaignStats = (campaignId: string) => {
+    const logs = sendLogs[campaignId] || [];
+    return {
+      total: logs.length,
+      queued: logs.filter((r: any) => ["queued", "rendered", "processed"].includes(r.delivery_status)).length,
+      inTransit: logs.filter((r: any) => r.delivery_status === "in_transit").length,
+      delivered: logs.filter((r: any) => r.delivery_status === "delivered").length,
+      returned: logs.filter((r: any) => r.delivery_status === "returned").length,
+      failed: logs.filter((r: any) => r.status === "failed").length,
+      cost: logs.reduce((s: number, r: any) => s + (r.cost_cents || 0), 0) / 100,
+    };
+  };
   return (
     <div className="space-y-6">
       {/* Stats Bar */}
