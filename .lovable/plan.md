@@ -1,69 +1,104 @@
 
-## Live Prospect Status Tracker
+## Three Additions to the Prospect Tracker
 
-A minimal, isolated system to watch the Livonia electrician (and every future nudge prospect) move from **link click → account → profile complete → paid**. Zero edits to existing webhooks, pages, or Stripe handlers.
+All three pieces reuse existing patterns — the approval flow already works for dead-lead replies (Matt texts "A" or "E ..." back), and the StatusCallback pattern already works for contractor welcome SMS. We're cloning those into the prospect-nudge lane.
 
-### What you'll see
-A new **📍 Prospect Tracker** tab in `/dwa-admin` showing every nudged prospect as a card with a 4-step progress bar:
+---
 
-```
-(734) 620-7178 · Livonia electrician
-[●━━━●━━━○━━━○]  Clicked → Account → Profile → Paid
-Last activity: clicked link 12m ago
-[Copy tracked link]  [Send fresh nudge]  [Mark dead]
-```
+### 1. Twilio Delivery Callbacks → Prospect Log (no duplicate retries)
 
-Updates live (Supabase realtime). Green dot = done, gray = pending, amber = stalled 24h+.
+**New edge function** `prospect-nudge-status-callback` (verify_jwt = false)
+- Receives Twilio's POST (`MessageSid`, `MessageStatus`, `ErrorCode`)
+- Looks up `system_comms_log` row by `provider_id = MessageSid` and updates a new column `twilio_status` + `twilio_error_code`
+- Also updates `prospect_nudges` (matched via `last_nudge_sid`): writes `last_nudge_status` (`queued`/`sent`/`delivered`/`undelivered`/`failed`)
 
-### How tracking works (the 4 milestones)
+**Modify `dwa-send-sms`** (one-line additive change)
+- When `product === "dwa_prospect_nudge"`, append `StatusCallback=<function-url>` to the Twilio POST body. No other product paths touched.
 
-| Step | How we detect it |
-|---|---|
-| 1. **Clicked link** | New `/r/{token}` redirect — logs hit, then 302s to `/contractor-leads?ref={token}` |
-| 2. **Account created** | Stripe Checkout session started (webhook event already fires — DB trigger watches it) |
-| 3. **Profile complete** | Stripe Checkout completed + `contractor_clients` row inserted (existing flow) |
-| 4. **Paid** | `contractor_lead_subscription` active in `contractor_clients` (existing flow) |
+**New columns** on `prospect_nudges`: `last_nudge_sid text`, `last_nudge_status text`, `last_nudge_error text`, `nudge_retry_count int default 0`
 
-A **DB trigger** on `contractor_clients` matches new signups to `prospect_nudges` rows by phone number and stamps the milestone columns. The existing `stripe-webhook` is **not modified** — the trigger fires automatically when the webhook inserts the row.
+**Retry logic — duplicate-safe** (new edge function `prospect-nudge-retry`, cron every 30 min)
+- Picks rows where `last_nudge_status IN ('undelivered','failed')` AND `nudge_retry_count < 2` AND `nudge_sent_at < now() - 30 min`
+- Hard guard: skips any row whose latest `system_comms_log` entry for that phone in the last 24h is `status='sent'` or `twilio_status='delivered'` (prevents double-sends if Twilio's callback was just slow)
+- Re-sends via `dwa-send-sms`, increments `nudge_retry_count`, updates `last_nudge_sid` to the new SID
+- Uses Postgres advisory lock per `prospect_nudges.id` so two cron runs can't double-fire
+- After 2 failed retries → marks `status='dead_undeliverable'` and SMSes Matt
 
-### Files added (all new — nothing edited)
+**Why no duplicates:**
+- Only retries when Twilio confirms `undelivered`/`failed` (not on missing callback — silent gaps are NOT retried)
+- 24h dedup against `system_comms_log` blocks accidental re-sends
+- Advisory lock blocks concurrent cron overlap
+- Hard cap at 2 retries
 
-**1 migration** — `supabase/migrations/20260421000000_prospect_nudges.sql`
-- `prospect_nudges` table: `id`, `phone`, `name`, `business`, `city`, `trade`, `link_token` (random 12-char), `notes`, `clicked_at`, `signup_started_at`, `account_created_at`, `profile_completed_at`, `paid_at`, `status` (active/dead/converted), `created_at`
-- RLS: service_role + admin only
-- Trigger `match_prospect_on_contractor_signup` on `contractor_clients` AFTER INSERT — looks up phone in `prospect_nudges`, stamps `account_created_at` + `paid_at`. Uses `ON CONFLICT DO NOTHING` semantics — never errors out, never blocks the existing insert.
-- Seeds Livonia row: `('+17346207178', null, null, 'Livonia', 'electrical', ...)`
+---
 
-**1 edge function** — `supabase/functions/track-prospect-link/index.ts`
-- `verify_jwt = false`, GET `/r/{token}`
-- Updates `clicked_at` if null, then 302 redirect to `/contractor-leads?ref={token}`
-- Fail-open: bad token → still redirects to `/contractor-leads` (never breaks prospect's flow)
+### 2. Admin Grid View
 
-**1 admin component** — `src/components/dwa-admin/AdminProspectTracker.tsx`
-- Card grid, 4-step progress bar per prospect, realtime subscription on `prospect_nudges`
-- "Copy tracked link" button → `https://detroitwebagent.com/r/{token}`
-- "Add prospect" form (phone + optional name/city/trade)
-- Filter: All / Active / Stalled (24h+) / Converted
+**Modify** `src/components/dwa-admin/AdminProspectTracker.tsx` — add a **"📊 Grid"** view toggle next to the existing card view.
 
-**1 wiring change** — `src/pages/DWAAdmin.tsx` adds new tab `📍 Prospect Tracker`
+Grid columns:
+| Phone · City | Trade | Last Contact | Status | Nudges | Delivery | Action |
+|---|---|---|---|---|---|---|
+| (734) 620-7178 · Livonia | electrical | 12m ago | 🟢 active / 🟠 stalled / 🔴 dead | 2× | ✓ delivered / ✗ failed / ⏳ queued | **[Send Next Nudge]** |
 
-**1 route** — `/r/:token` in `src/App.tsx` → tiny client component that calls the edge function and redirects (or we route directly to the edge function URL — even cleaner)
+- Sortable by Last Contact / Status / Nudge count
+- Quick filter chips reuse existing All / Active / Stalled / Converted
+- "Send Next Nudge" button = same handler as today, but routes through the new approval queue (see #3)
+- Delivery column reads `last_nudge_status` (live via existing realtime subscription)
+- Toggle (cards ↔ grid) persisted in `localStorage`
 
-### Why this is code-safe
-- ✅ **Zero edits** to `stripe-webhook/index.ts`, `contractor-lead-notify`, or any existing function
-- ✅ **Zero edits** to `/contractor-leads` page or checkout flow
-- ✅ New table is fully isolated; nothing else queries it
-- ✅ DB trigger is wrapped in `EXCEPTION WHEN OTHERS THEN RETURN NEW` (matches your existing pattern in `auto_block_paying_client`) — can never break contractor signups
-- ✅ Tracked redirect is brand-new route, no collisions
-- ✅ Follows your project rules: RLS + service_role policy, `verify_jwt = false` for public function, dark DWA branding
+---
 
-### After it ships
-1. Livonia row is pre-seeded — tracker is live for him immediately.
-2. I'll text him a fresh tracked link (`/r/{token}` instead of bare URL) so the click registers.
-3. Future nudges: just add the prospect in the admin, copy the tracked link, paste into your draft.
+### 3. Y/Approval Workflow for Outbound Nudges
 
-### Technical notes
-- Token: 12-char base62 via `gen_random_uuid()` substring — collision-safe at our scale
-- Realtime: `ALTER PUBLICATION supabase_realtime ADD TABLE public.prospect_nudges;`
-- Phone matching uses `regexp_replace(phone, '\D', '', 'g')` on both sides for E.164 vs raw normalization
-- Trigger only fires on INSERT (not UPDATE) — no double-stamping
+**Reuses** the existing `sms_reply_drafts` table + `inbound-sms-relay` "A"/"E …" handler — same flow Matt already uses for dead-lead replies. No new approval infrastructure.
+
+**Change to `sendNudge()` in `AdminProspectTracker.tsx`:**
+1. Replace `window.confirm` + direct `dwa-send-sms` call with a draft insert:
+   ```ts
+   supabase.from("sms_reply_drafts").insert({
+     phone: p.phone,
+     draft_body: body,
+     status: "pending",
+     metadata: { source: "prospect_nudge", prospect_id: p.id, template: "dwa_prospect_nudge" }
+   })
+   ```
+2. Then call new edge function `prospect-nudge-request-approval` which texts Matt:
+   > 📋 NUDGE DRAFT for (734) 620-7178 · Livonia electrical:
+   > "Hey — Matt with Detroit Web Agency..."
+   >
+   > Reply **Y** or **A** to send · **E <new text>** to edit · **N** to cancel
+
+**Modify `inbound-sms-relay`** (additive, ~15 lines):
+- Accept **Y** as alias for **A** (matches the user's request wording)
+- Add **N** (cancel) handler: marks draft `status='cancelled'`, replies "❌ Cancelled, nothing sent"
+- When the approved draft has `metadata.source === 'prospect_nudge'`, after successful send: stamp `prospect_nudges.nudge_sent_at`, increment `nudge_count`, store the returned `sid` to `last_nudge_sid` (so the StatusCallback in #1 can match it)
+
+**UI feedback in tracker:**
+- Card/grid shows "⏳ Awaiting your Y" badge while a `pending` draft exists for that prospect
+- Realtime subscription on `sms_reply_drafts` flips badge to "✅ Sent" or "❌ Cancelled"
+- "Send Next Nudge" button disabled while a pending draft exists (no double-queueing)
+
+---
+
+### Files
+
+**New (5):**
+- `supabase/functions/prospect-nudge-status-callback/index.ts`
+- `supabase/functions/prospect-nudge-retry/index.ts`
+- `supabase/functions/prospect-nudge-request-approval/index.ts`
+- `supabase/migrations/<ts>_prospect_nudge_delivery.sql` — 4 new columns on `prospect_nudges`, 2 new columns on `system_comms_log` (`twilio_status`, `twilio_error_code`) only if missing, cron schedule for retry function
+- `supabase/config.toml` entries: `verify_jwt = false` for the 3 new functions
+
+**Edited (3):**
+- `supabase/functions/dwa-send-sms/index.ts` — adds StatusCallback URL only when `product === "dwa_prospect_nudge"` (one conditional, every other code path unchanged)
+- `supabase/functions/inbound-sms-relay/index.ts` — adds Y alias, N cancel, prospect_nudge post-send hook (~15 additive lines, existing dead-lead flow untouched)
+- `src/components/dwa-admin/AdminProspectTracker.tsx` — grid view toggle, approval flow swap, pending-draft badge
+
+### Code-safety guarantees
+- ✅ Zero changes to `stripe-webhook` or any contractor signup path
+- ✅ `dwa-send-sms` change is product-gated — only `dwa_prospect_nudge` product gets the new StatusCallback; all 80+ other callers unaffected
+- ✅ `inbound-sms-relay` changes are additive (Y alias, N handler, post-send hook) — existing "A" approval flow for dead-lead drafts works identically
+- ✅ Retry function has 4 layers of duplicate prevention: terminal-status gate, 24h log dedup, advisory lock, hard cap
+- ✅ All new functions use `verify_jwt = false` per project standard for webhook/cron endpoints
+- ✅ RLS on new columns inherits existing `prospect_nudges` policies (admin + service_role)
