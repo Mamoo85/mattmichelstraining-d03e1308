@@ -24,7 +24,7 @@ const VisitorIntelFeed = lazy(() => import("@/components/admin/VisitorIntelFeed"
 const AdminSimulationSuite = lazy(() => import("@/components/admin/AdminSimulationSuite"));
 const AdminTheWire = lazy(() => import("@/components/admin/AdminTheWire"));
 const AdminGrowthSignals = lazy(() => import("@/components/admin/AdminGrowthSignals"));
-const AdminLinkedInBlitz = lazy(() => import("@/components/admin/AdminLinkedInBlitz"));
+const AdminGrowthSignalOutreach = lazy(() => import("@/components/admin/AdminGrowthSignalOutreach"));
 const AdminCallList = lazy(() => import("@/components/admin/AdminCallList"));
 const AdminSMSInbox = lazy(() => import("@/components/dwa-admin/AdminSMSInbox"));
 const AdminPendingSMSDrafts = lazy(() => import("@/components/dwa-admin/AdminPendingSMSDrafts"));
@@ -60,7 +60,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "sms-inbox",        label: "💬 SMS Inbox" },
       { id: "sms-drafts",       label: "✍️ Pending Drafts" },
       { id: "call-list",        label: "📞 Daily Call Sheet" },
-      { id: "linkedin-blitz",   label: "💼 LinkedIn Blitz" },
+      { id: "linkedin-blitz",   label: "🎯 Growth Outreach" },
       { id: "ad-launcher",      label: "🚀 Ad Launcher" },
       { id: "agency-outreach",  label: "📨 Agency Outreach" },
     ],
@@ -139,7 +139,7 @@ export default function DWAAdmin() {
           {activeTab === "sms-inbox"        && <Suspense fallback={lazyFallback("SMS inbox")}><AdminSMSInbox /></Suspense>}
           {activeTab === "sms-drafts"       && <Suspense fallback={lazyFallback("pending drafts")}><AdminPendingSMSDrafts /></Suspense>}
           {activeTab === "call-list"        && <Suspense fallback={lazyFallback("call sheet")}><AdminCallList /></Suspense>}
-          {activeTab === "linkedin-blitz"   && <Suspense fallback={lazyFallback("LinkedIn blitz")}><AdminLinkedInBlitz /></Suspense>}
+          {activeTab === "linkedin-blitz"   && <Suspense fallback={lazyFallback("Growth Outreach")}><AdminGrowthSignalOutreach /></Suspense>}
           {activeTab === "ad-launcher"      && <Suspense fallback={lazyFallback("Ad Launcher")}><AdminAdLauncher /></Suspense>}
           {activeTab === "agency-outreach"  && <Suspense fallback={lazyFallback("agency outreach")}><AdminAgencyOutreach /></Suspense>}
 
