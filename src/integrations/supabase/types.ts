@@ -1397,6 +1397,42 @@ export type Database = {
         }
         Relationships: []
       }
+      call_outreach_log: {
+        Row: {
+          call_date: string
+          created_at: string
+          decision_maker: string | null
+          id: string
+          notes: string | null
+          outcome: string
+          signal_id: string | null
+          target_company: string
+          target_phone: string | null
+        }
+        Insert: {
+          call_date?: string
+          created_at?: string
+          decision_maker?: string | null
+          id?: string
+          notes?: string | null
+          outcome?: string
+          signal_id?: string | null
+          target_company: string
+          target_phone?: string | null
+        }
+        Update: {
+          call_date?: string
+          created_at?: string
+          decision_maker?: string | null
+          id?: string
+          notes?: string | null
+          outcome?: string
+          signal_id?: string | null
+          target_company?: string
+          target_phone?: string | null
+        }
+        Relationships: []
+      }
       call_summaries: {
         Row: {
           callback_needed: boolean | null
@@ -4416,6 +4452,48 @@ export type Database = {
           raw_data?: Json | null
           state?: string | null
           violation_count?: number | null
+        }
+        Relationships: []
+      }
+      dossier_outreach_log: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          reply_received_at: string | null
+          sent_at: string | null
+          signal_company: string
+          signal_id: string | null
+          status: string
+          target_company: string
+          target_contact_name: string | null
+          target_email: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reply_received_at?: string | null
+          sent_at?: string | null
+          signal_company: string
+          signal_id?: string | null
+          status?: string
+          target_company: string
+          target_contact_name?: string | null
+          target_email?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reply_received_at?: string | null
+          sent_at?: string | null
+          signal_company?: string
+          signal_id?: string | null
+          status?: string
+          target_company?: string
+          target_contact_name?: string | null
+          target_email?: string | null
         }
         Relationships: []
       }
@@ -11894,6 +11972,48 @@ export type Database = {
           referred_user_id?: string
           referrer_user_id?: string
           subscription_tier?: string | null
+        }
+        Relationships: []
+      }
+      referral_kickback: {
+        Row: {
+          contractor_id: string | null
+          contractor_phone: string | null
+          created_at: string
+          id: string
+          kickback_amount_cents: number
+          paid_at: string | null
+          referred_company: string | null
+          referred_contact_email: string | null
+          referred_contact_name: string | null
+          referred_contact_phone: string | null
+          status: string
+        }
+        Insert: {
+          contractor_id?: string | null
+          contractor_phone?: string | null
+          created_at?: string
+          id?: string
+          kickback_amount_cents?: number
+          paid_at?: string | null
+          referred_company?: string | null
+          referred_contact_email?: string | null
+          referred_contact_name?: string | null
+          referred_contact_phone?: string | null
+          status?: string
+        }
+        Update: {
+          contractor_id?: string | null
+          contractor_phone?: string | null
+          created_at?: string
+          id?: string
+          kickback_amount_cents?: number
+          paid_at?: string | null
+          referred_company?: string | null
+          referred_contact_email?: string | null
+          referred_contact_name?: string | null
+          referred_contact_phone?: string | null
+          status?: string
         }
         Relationships: []
       }

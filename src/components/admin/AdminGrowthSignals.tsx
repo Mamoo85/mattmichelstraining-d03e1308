@@ -8,7 +8,12 @@ import {
   Factory, Zap, TrendingUp, RefreshCw, Loader2, ArrowUpRight,
   Briefcase, Target, Copy, X, Mail, Download, ExternalLink,
   CheckCircle2, MessageSquare, Bookmark, BookmarkCheck, Users,
+  ChevronDown, ChevronUp, FileText,
 } from "lucide-react";
+
+const PAGE_SIZE = 25;
+const FETCH_LIMIT = 80;
+const VISIBLE_NEED_CHIPS = 3;
 
 interface PulseSignal {
   id: string;
@@ -37,9 +42,43 @@ export default function AdminGrowthSignals() {
   const [industryFilter, setIndustryFilter] = useState("All");
   const [pitchSignal, setPitchSignal] = useState<PulseSignal | null>(null);
   const [copied, setCopied] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [expandedDetails, setExpandedDetails] = useState<Set<string>>(new Set());
+  const [generatingDossier, setGeneratingDossier] = useState<string | null>(null);
   const [watchlist, setWatchlist] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem("dwa_radar_watchlist") || "[]"); } catch { return []; }
   });
+
+  function toggleDetails(id: string) {
+    setExpandedDetails(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  async function generateDossier(s: PulseSignal) {
+    setGeneratingDossier(s.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-signal-dossier", {
+        body: { signal_id: s.id },
+      });
+      if (error) throw error;
+      if (data?.html) {
+        const w = window.open("", "_blank");
+        if (w) {
+          w.document.write(data.html);
+          w.document.close();
+          setTimeout(() => w.print(), 500);
+        }
+      }
+      toast.success(`Dossier ready for ${s.company_name}`);
+    } catch (e: any) {
+      toast.error("Dossier failed: " + (e.message || "unknown"));
+    } finally {
+      setGeneratingDossier(null);
+    }
+  }
 
   function toggleWatch(company: string) {
     const updated = watchlist.includes(company) ? watchlist.filter(c => c !== company) : [...watchlist, company];
@@ -64,7 +103,7 @@ export default function AdminGrowthSignals() {
       .select("*")
       .order("confidence", { ascending: false })
       .order("detected_at", { ascending: false })
-      .limit(200);
+      .limit(FETCH_LIMIT);
 
     if (!error && data) {
       const JUNK = ["indeed", "ziprecruiter", "linkedin", "multiple employers", "various", "confidential"];
@@ -99,6 +138,11 @@ export default function AdminGrowthSignals() {
     }
     return list;
   }, [signals, confidenceFilter, industryFilter, watchlist]);
+
+  const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+
+  // Reset pagination when filters change
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [confidenceFilter, industryFilter]);
 
   const stats = useMemo(() => ({
     total: signals.length,
@@ -288,7 +332,11 @@ detroitwebagent.com`;
         </Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map(signal => (
+          {visible.map(signal => {
+            const isExpanded = expandedDetails.has(signal.id);
+            const visibleNeeds = isExpanded ? signal.predicted_needs : signal.predicted_needs.slice(0, VISIBLE_NEED_CHIPS);
+            const hiddenNeedsCount = Math.max(0, signal.predicted_needs.length - VISIBLE_NEED_CHIPS);
+            return (
             <Card key={signal.id} className={`bg-[#0f1f35] border-white/10 ${signal.cross_referenced ? "ring-1 ring-amber-500/20" : signal.confidence >= 7 ? "ring-1 ring-emerald-500/10" : ""}`}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -319,21 +367,34 @@ detroitwebagent.com`;
                     </div>
 
                     <div className="flex flex-wrap gap-1 mb-2">
-                      {signal.predicted_needs.map((need, i) => (
+                      {visibleNeeds.map((need, i) => (
                         <Badge key={i} variant="outline" className="text-[10px] border-[#00d4ff]/20 text-[#00d4ff]/70 bg-[#00d4ff]/5">
                           {need}
                         </Badge>
                       ))}
+                      {!isExpanded && hiddenNeedsCount > 0 && (
+                        <Badge variant="outline" className="text-[10px] border-white/10 text-white/40 bg-white/5">
+                          +{hiddenNeedsCount} more
+                        </Badge>
+                      )}
                     </div>
 
-                    {signal.recommended_pitch && (
+                    {/* Details (collapsed by default for DOM weight) */}
+                    {isExpanded && signal.recommended_pitch && (
                       <p className="text-[11px] text-white/50 italic leading-relaxed mb-2">
                         {signal.recommended_pitch}
                       </p>
                     )}
 
                     {/* Action row */}
-                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5">
+                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5 flex-wrap">
+                      <button
+                        onClick={() => toggleDetails(signal.id)}
+                        className="px-2 py-1.5 rounded text-xs font-medium flex items-center gap-1 transition-colors border bg-white/5 text-white/40 border-white/10 hover:bg-white/10"
+                      >
+                        {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        Details
+                      </button>
                       <button
                         onClick={() => toggleWatch(signal.company_name)}
                         className={`px-2.5 py-1.5 rounded text-xs font-medium flex items-center gap-1 transition-colors border ${watchlist.includes(signal.company_name) ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-white/5 text-white/30 border-white/10 hover:bg-white/10"}`}
@@ -348,40 +409,47 @@ detroitwebagent.com`;
                         <MessageSquare className="w-3 h-3" /> Pitch
                       </button>
                       <button
-                        onClick={() => copyPitch(signal.recommended_pitch || "")}
-                        className="px-3 py-1.5 rounded bg-white/5 text-white/40 text-xs font-medium hover:bg-white/10 transition-colors border border-white/10 flex items-center gap-1"
+                        onClick={() => generateDossier(signal)}
+                        disabled={generatingDossier === signal.id}
+                        className="px-3 py-1.5 rounded bg-emerald-500/10 text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-colors border border-emerald-500/20 flex items-center gap-1 disabled:opacity-50"
                       >
-                        <Copy className="w-3 h-3" /> Copy
+                        {generatingDossier === signal.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileText className="w-3 h-3" />}
+                        Dossier
                       </button>
-                      {/* Competitor watchers — FOMO */}
                       {signal.confidence >= 6 && (
                         <span className="text-[10px] text-white/20 flex items-center gap-1 ml-auto">
-                          <Users className="w-3 h-3" /> {competitorCount(signal.id)} others watching
+                          <Users className="w-3 h-3" /> {competitorCount(signal.id)} watching
                         </span>
                       )}
-                      {signal.source_urls.map((url, i) => {
-                        const fullUrl = url.startsWith("http") ? url : `https://${url}`;
-                        const isGeneric = fullUrl === "https://www.indeed.com" || fullUrl === "http://www.indeed.com" || url === "www.indeed.com";
-                        const linkUrl = isGeneric
-                          ? `https://www.indeed.com/jobs?q=${encodeURIComponent(signal.company_name)}&l=${encodeURIComponent(signal.location || "Michigan")}`
-                          : fullUrl;
-                        let displayHost = "Source";
-                        try { displayHost = new URL(fullUrl).hostname.replace("www.", ""); } catch {}
-                        return (
-                          <a key={i} href={linkUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#00d4ff]/50 hover:text-[#00d4ff] flex items-center gap-1">
-                            <ArrowUpRight className="h-2.5 w-2.5" /> {isGeneric ? `Indeed jobs` : displayHost}
-                          </a>
-                        );
-                      })}
-                      <a
-                        href={`https://www.google.com/search?q=${encodeURIComponent(signal.company_name + " " + (signal.location || "Michigan") + " hiring")}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[10px] text-white/30 hover:text-[#00d4ff] flex items-center gap-1"
-                      >
-                        <ArrowUpRight className="h-2.5 w-2.5" /> Google
-                      </a>
                     </div>
+
+                    {/* Source links — only when expanded (DOM weight reduction) */}
+                    {isExpanded && (
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        {signal.source_urls.map((url, i) => {
+                          const fullUrl = url.startsWith("http") ? url : `https://${url}`;
+                          const isGeneric = fullUrl === "https://www.indeed.com" || fullUrl === "http://www.indeed.com" || url === "www.indeed.com";
+                          const linkUrl = isGeneric
+                            ? `https://www.indeed.com/jobs?q=${encodeURIComponent(signal.company_name)}&l=${encodeURIComponent(signal.location || "Michigan")}`
+                            : fullUrl;
+                          let displayHost = "Source";
+                          try { displayHost = new URL(fullUrl).hostname.replace("www.", ""); } catch {}
+                          return (
+                            <a key={i} href={linkUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#00d4ff]/50 hover:text-[#00d4ff] flex items-center gap-1">
+                              <ArrowUpRight className="h-2.5 w-2.5" /> {isGeneric ? `Indeed jobs` : displayHost}
+                            </a>
+                          );
+                        })}
+                        <a
+                          href={`https://www.google.com/search?q=${encodeURIComponent(signal.company_name + " " + (signal.location || "Michigan") + " hiring")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] text-white/30 hover:text-[#00d4ff] flex items-center gap-1"
+                        >
+                          <ArrowUpRight className="h-2.5 w-2.5" /> Google
+                        </a>
+                      </div>
+                    )}
                   </div>
 
                   {/* Confidence meter */}
@@ -398,7 +466,19 @@ detroitwebagent.com`;
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
+          {visibleCount < filtered.length && (
+            <div className="flex justify-center pt-2">
+              <Button
+                size="sm"
+                onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
+                className="bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
+              >
+                Show {Math.min(PAGE_SIZE, filtered.length - visibleCount)} more ({filtered.length - visibleCount} remaining)
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
