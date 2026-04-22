@@ -163,7 +163,14 @@ export default function AdminSMSInbox() {
         .limit(2000);
 
       if (error) throw error;
-      const rows = (data ?? []) as CommsRow[];
+      // Only show messages that actually went out (or came in).
+      // Filter out: skipped (bad phone numbers, opt-outs, no-cold-text policy),
+      // failed sends, and any other non-delivered status — those are noise.
+      const allRows = (data ?? []) as CommsRow[];
+      const rows = allRows.filter((r) => {
+        const s = (r.status ?? "").toLowerCase();
+        return s === "sent" || s === "inbound" || s === "delivered";
+      });
 
       // Build threads keyed by counterparty phone
       const map = new Map<string, Message[]>();
