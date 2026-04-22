@@ -158,8 +158,19 @@ export default function AdminSMSInbox() {
   const [composeTo, setComposeTo] = useState("");
   const [drafting, setDrafting] = useState(false);
   const [showCheatsheet, setShowCheatsheet] = useState(false);
+  const [inboundOnlyMode, setInboundOnlyMode] = useState(true);
+  const [composerFocused, setComposerFocused] = useState(false);
   const [resendTarget, setResendTarget] = useState<ResendTarget | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-grow textarea
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
+  }, [draft]);
 
   // Mobile: when a thread is picked, hide the list. Back button returns to list.
   const showListOnMobile = !activePhone && !composing;
