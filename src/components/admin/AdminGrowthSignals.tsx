@@ -8,7 +8,12 @@ import {
   Factory, Zap, TrendingUp, RefreshCw, Loader2, ArrowUpRight,
   Briefcase, Target, Copy, X, Mail, Download, ExternalLink,
   CheckCircle2, MessageSquare, Bookmark, BookmarkCheck, Users,
+  ChevronDown, ChevronUp, FileText,
 } from "lucide-react";
+
+const PAGE_SIZE = 25;
+const FETCH_LIMIT = 80;
+const VISIBLE_NEED_CHIPS = 3;
 
 interface PulseSignal {
   id: string;
@@ -37,9 +42,43 @@ export default function AdminGrowthSignals() {
   const [industryFilter, setIndustryFilter] = useState("All");
   const [pitchSignal, setPitchSignal] = useState<PulseSignal | null>(null);
   const [copied, setCopied] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [expandedDetails, setExpandedDetails] = useState<Set<string>>(new Set());
+  const [generatingDossier, setGeneratingDossier] = useState<string | null>(null);
   const [watchlist, setWatchlist] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem("dwa_radar_watchlist") || "[]"); } catch { return []; }
   });
+
+  function toggleDetails(id: string) {
+    setExpandedDetails(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  async function generateDossier(s: PulseSignal) {
+    setGeneratingDossier(s.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-signal-dossier", {
+        body: { signal_id: s.id },
+      });
+      if (error) throw error;
+      if (data?.html) {
+        const w = window.open("", "_blank");
+        if (w) {
+          w.document.write(data.html);
+          w.document.close();
+          setTimeout(() => w.print(), 500);
+        }
+      }
+      toast.success(`Dossier ready for ${s.company_name}`);
+    } catch (e: any) {
+      toast.error("Dossier failed: " + (e.message || "unknown"));
+    } finally {
+      setGeneratingDossier(null);
+    }
+  }
 
   function toggleWatch(company: string) {
     const updated = watchlist.includes(company) ? watchlist.filter(c => c !== company) : [...watchlist, company];
@@ -64,7 +103,7 @@ export default function AdminGrowthSignals() {
       .select("*")
       .order("confidence", { ascending: false })
       .order("detected_at", { ascending: false })
-      .limit(200);
+      .limit(FETCH_LIMIT);
 
     if (!error && data) {
       const JUNK = ["indeed", "ziprecruiter", "linkedin", "multiple employers", "various", "confidential"];
