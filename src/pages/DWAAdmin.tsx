@@ -105,6 +105,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "industrial-intel",   label: "🏭 Industrial Intel" },
       { id: "techalert-prospects",label: "🎯 TechAlert Prospects" },
       { id: "growth-signals",     label: "📡 Growth Signals" },
+      { id: "ipulse-unlocks",     label: "🔓 Pulse Unlocks" },
       { id: "coverage-map",       label: "🗺️ Coverage Map" },
     ],
   },
