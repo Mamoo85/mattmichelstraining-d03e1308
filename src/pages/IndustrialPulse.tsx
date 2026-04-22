@@ -173,6 +173,73 @@ export default function IndustrialPulse() {
           </div>
         </section>
 
+        {/* Gated Preview — shown after successful unlock with ?unlocked=1&email=... */}
+        {(loadingUnlocked || unlockedSignals.length > 0) && (
+          <section className="px-4 sm:px-6 py-8 sm:py-12 bg-gradient-to-b from-emerald-950/20 to-transparent border-b border-emerald-500/20">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-center gap-2 mb-4 sm:mb-6">
+                <div className="bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] sm:text-xs font-bold tracking-widest uppercase px-2 sm:px-3 py-1 rounded flex items-center gap-1.5">
+                  <Unlock className="w-3 h-3" /> Unlocked
+                </div>
+                <div className="text-xs sm:text-sm text-slate-300">
+                  Sneak peek while your full digest is being delivered
+                  {unlockedEmail && <span className="hidden sm:inline text-slate-500"> · sent to {unlockedEmail}</span>}
+                </div>
+              </div>
+
+              {loadingUnlocked ? (
+                <div className="text-center py-10 sm:py-12">
+                  <Loader2 className="w-7 h-7 animate-spin text-emerald-400 mx-auto mb-3" />
+                  <div className="text-xs sm:text-sm text-slate-400">Loading your preview signals…</div>
+                </div>
+              ) : (
+                <div className="grid gap-3 sm:gap-4">
+                  {unlockedSignals.map((s) => (
+                    <div key={s.id} className="border border-emerald-500/30 bg-[#0a1628] p-4 sm:p-5 rounded-md ring-1 ring-emerald-500/10">
+                      <div className="flex items-start justify-between gap-3 sm:gap-4 mb-2 sm:mb-3">
+                        <div>
+                          <div className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight break-words">
+                            {s.company_name}
+                          </div>
+                          <div className="text-[10px] text-emerald-400 font-bold tracking-widest uppercase mt-0.5">✓ Verified signal</div>
+                        </div>
+                        <div className="bg-emerald-500 text-[#0a1628] text-[10px] font-bold px-2 py-1 rounded shrink-0">
+                          {s.confidence}/10
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1.5 sm:gap-y-2 text-xs text-slate-400 mb-2 sm:mb-3">
+                        {s.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {s.location}</span>}
+                        {s.industry && <span>· {s.industry}</span>}
+                      </div>
+                      {s.hiring_count > 0 && (
+                        <div className="flex items-center gap-2 text-sm text-slate-200 mb-2 sm:mb-3">
+                          <Briefcase className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <span className="break-words">
+                            Hiring <strong className="text-white">{s.hiring_count}× {s.hiring_roles.slice(0, 3).join(", ") || "trades"}</strong>
+                          </span>
+                        </div>
+                      )}
+                      {s.predicted_needs.length > 0 && (
+                        <div className="text-xs text-slate-500 mb-2">
+                          <span className="text-slate-400">Predicted spend:</span> {s.predicted_needs.slice(0, 3).join(" · ")}
+                        </div>
+                      )}
+                      {s.recommended_pitch && (
+                        <div className="mt-3 pt-3 border-t border-emerald-500/20 text-xs sm:text-[13px] text-slate-300 leading-relaxed italic">
+                          💡 {s.recommended_pitch}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  <div className="text-[11px] sm:text-xs text-slate-500 text-center mt-2">
+                    Full list (with addresses, contact angles, and source links) is in your inbox within 5 minutes.
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* Teasers */}
         <section className="px-4 sm:px-6 py-8 sm:py-12">
           <div className="max-w-4xl mx-auto">
