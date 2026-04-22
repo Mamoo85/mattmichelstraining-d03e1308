@@ -149,6 +149,31 @@ const ONBOARDING_FAQ: Array<{ q: string; a: string }> = [
   },
 ];
 
+// Quick-action chips — one-tap canned replies above the composer.
+// Sourced from ONBOARDING_FAQ where possible + 2 short fixed entries.
+const QUICK_ACTIONS: Array<{ label: string; body: string }> = [
+  {
+    label: "⏰ Availability",
+    body: "I'll get back to you within the hour — usually faster.\n\n— Matt | (313) 992-1219",
+  },
+  {
+    label: "💵 Pricing",
+    body: ONBOARDING_FAQ.find((x) => x.q === "How much / what's the price?")?.a ?? "",
+  },
+  {
+    label: "🔗 Booking link",
+    body: "Grab a slot here: detroitwebagent.com/book — pick anything that works.\n\n— Matt | (313) 992-1219",
+  },
+  {
+    label: "📋 Full pitch",
+    body: ONBOARDING_FAQ.find((x) => x.q.startsWith("🔥"))?.a ?? "",
+  },
+  {
+    label: "♻️ Refund",
+    body: ONBOARDING_FAQ.find((x) => x.q === "Refund / guarantee?")?.a ?? "",
+  },
+];
+
 export default function AdminSMSInbox() {
   const [loading, setLoading] = useState(true);
   const [threads, setThreads] = useState<Thread[]>([]);
