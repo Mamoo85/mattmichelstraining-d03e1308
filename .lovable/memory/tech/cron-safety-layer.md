@@ -21,11 +21,13 @@ PERFORM public.safe_cron_schedule(
 
 The wrapper rejects, at deploy time:
 - `current_setting('app.supabase_url')` (returns NULL in pg_cron)
-- `vault.decrypted_secrets WHERE name = 'SUPABASE_URL'` or `'SUPABASE_SERVICE_ROLE_KEY'` (don't exist in this vault)
+- **Any `vault.decrypted_secrets WHERE name = 'X'` reference where `X` doesn't exist or is empty in this project's vault** (rule: `vault_key_missing`). Validated dynamically via `_vault_key_exists(name)` + regex-extracted via `_extract_vault_keys(command)` — catches Phase 17/20 bug class for any future vault key, not just `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY`.
 - Literal `NULL` in `url :=` or `Bearer NULL`
 - Missing canonical URL `https://eauvubfpanpeuxsrqesu.supabase.co`
 - Missing/short Bearer token (must be `eyJ...` 100+ chars)
 - Missing/empty/non-5-field schedule
+
+**Note**: the only vault key that currently exists in this project is `email_queue_service_role_key`. All other secrets are env vars on edge functions, not vault entries.
 
 On rejection: `RAISE EXCEPTION` aborts the migration. On success: archives prior `cron_schedule_history` row to `active=false`, inserts new `active=true`, runs `cron.unschedule` + `cron.schedule`.
 
