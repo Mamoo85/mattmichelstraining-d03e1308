@@ -501,16 +501,17 @@ export default function AdminPostcardCampaigns() {
           </div>
         </TabsContent>
 
-        {/* Campaigns Tab — now with Send Log + Diagnose + Resend */}
+        {/* Campaigns Tab — grouped by audience, with mismatch detector + regenerate */}
         <TabsContent value="campaigns">
-          <div className="space-y-3">
-            {campaigns.map((c: any) => {
+          {(() => {
+            const renderCampaign = (c: any) => {
               const stats = campaignStats(c.id);
               const logs = sendLogs[c.id] || [];
               const isExpanded = expandedLog === c.id;
-              const recipientCount = unsentByCounty(c.county || selectedCounty).length;
+              const recipientCount = unsentForCampaign(c).length;
               const estCost = (recipientCount * 0.85).toFixed(2);
-
+              const mismatch = detectCopyMismatch(c);
+              const audienceColor = AUDIENCE_OPTIONS.find(o => o.value === c.audience_type)?.color || "text-gray-300";
               return (
                 <Card key={c.id} className="bg-white/5 border-white/10">
                   <CardContent className="p-4">
