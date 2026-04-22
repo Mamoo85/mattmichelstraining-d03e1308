@@ -1,96 +1,133 @@
 
 
-## Plan: Activate the 178 Idle Leads in Industry Breakdown
+## Reimagine: LinkedIn Blitz → "Growth Signal Outreach" with Real Pitch Clarity
 
-### Yes — they're 100% real
+### What's actually happening (and why the message is confusing)
 
-I queried `prospect_pipeline` directly. There are **178 active prospects** scraped between Apr 8–11 by your `omni-lead-engine`, `dataforseo`, and `hybrid` engines:
+The McKinley Mechanical card you circled is from `AdminLinkedInBlitz.tsx`. Here's the truth:
 
-| Industry | Leads | Has Email | Outreached |
-|---|---|---|---|
-| Law Firm | 27 | **0** | 0 |
-| Roofing | 26 | 10 | 10 |
-| Insurance Agency | 26 | **0** | 0 |
-| Home Inspector | 21 | **0** | 0 |
-| Machine Shop | 15 | **0** | 0 |
-| Accounting / CPA | 14 | **0** | 0 |
-| Electrical | 14 | **0** | 0 |
-| Septic Service | 13 | **0** | 0 |
-| HVAC | 12 | **0** | 0 |
-| Restaurant | 12 | **0** | 0 |
+1. **The data is real.** `industry_pulse_signals` is your **Supply Radar** scanner — it watches BSEED permits + job postings and flags Metro Detroit companies that are *expanding* (a contractor pulling 8 HVAC permits + posting jobs = they're about to spend on HVAC equipment in the next 30–60 days).
 
-**163 of 178 have no email captured and have never been emailed.** They were scraped from Google Places, dropped into the pipeline, then nothing happened because the email-enrichment + outreach steps in `omni-lead-engine` are gated to a tiny whitelist (mostly roofing/HVAC/appliance repair).
+2. **The pitch the AI built is wrong for that data.** The current copy ("free sample dossier", "I track Detroit-area manufacturers", "found 42 of these this week") is pitching **Supply Radar** ($199/mo product for industrial distributors / supply houses who want to know which contractors are about to buy stock). It is **NOT** pitching Talent Radar / hiring help.
 
-### And yes — every one of these maps to a product you already sell
+3. **Why it sounds AI-slop:** The 3 templates are static `${variable}` mad-libs. Every DM follows the exact same sentence structure. "Hey — quick one. Saw {company} just posted X… free sample dossier" — repeated 40 times in your feed. That's why it reads like a bot.
 
-`web-design-drip/index.ts` already has the routing built (lines 14–44):
+4. **Wrong audience target:** The "Find decision-maker on LinkedIn" link searches for `"{company} operations director"` — but if the signal is McKinley Mechanical (a **contractor** doing the hiring), you don't want to DM their ops director. You want to DM ops directors at **supply houses** (your actual Supply Radar customer) and tell them "McKinley is about to buy a lot of HVAC equipment — get in front of them."
 
-| Industry | Existing DWA product | Price |
-|---|---|---|
-| Law Firm | `/legal-web-design` | $1,499 + $99/mo |
-| Insurance Agency, Accounting/CPA, Vet | `/healthcare-web-design` | $1,499 + $99/mo |
-| Home Inspector | `/detroit-web-design` (default) | $499 + $49/mo |
-| HVAC, Electrical, Roofing, Septic, Tree, Appliance | Contractor Leads $399/mo + FieldDesk $199/mo + TechAlert $149/mo |
-| Machine Shop, Tool & Die | FieldDesk $199/mo + Industrial Pulse |
-| Restaurant | `/restaurant-web-design` $799 + $79/mo + Holiday SMS / Review Monitor |
-| Medical Spa, Financial Advisor | `/healthcare-web-design` / generic web design |
-
-So: the pipeline is real, the product fit is already mapped — the leads were just abandoned mid-funnel.
+The whole tab is targeting the wrong end of the transaction.
 
 ---
 
-### Fix — 3 parts, ships in one pass
+### The reimagining — "Growth Signal Outreach" tab
 
-**Part 1 — Backfill emails on the 163 missing-email leads** *(one-shot script)*
-- New edge function: `prospect-email-backfill` (admin-only, manual trigger).
-- Loops every `prospect_pipeline` row where `email IS NULL` and `pipeline_stage != 'archived'`.
-- Uses the existing email extraction logic from `contractor-prospector` (Hunter.io → Firecrawl scrape of website → domain guess) — same logic, just applied to the un-enriched rows.
-- Hunter confidence ≥ 50 gate (already a project standard).
-- Updates row with `email`, `email_source`, `email_confidence`. Skips rows with no website.
-- Expected hit rate based on industry mix: ~60% (98 of 163) get an email, similar to current Roofing coverage.
+**New structure: pick the play first, then the message writes itself for the right audience.**
 
-**Part 2 — Wire the broader industries into the existing drip engine**
-- `web-design-drip/index.ts` already has the industry→landing-page map. Currently it only fires for prospects already in `pipeline_stage='outreach_sent'`.
-- New helper edge function: `activate-idle-prospects` (admin-trigger) — flips eligible prospects (has email, not yet contacted, industry has a mapped landing page) from `new_lead` → `outreach_sent` and stamps `last_drip_at = null` so the existing `web-design-drip` cron picks them up tomorrow morning.
-- Uses the existing 4-step Day 1/4/8/15 sequence, existing copy, existing sender (`matt@detroitwebagent.com`).
-- TCPA/suppression checks already built in — no new compliance surface.
+```
+┌───────────────────────────────────────────────────────────────────┐
+│ 💼 Growth Signal Outreach              [↻ Refresh] [⚙ Templates]  │
+│ ─────────────────────────────────────────────────────────────────│
+│ 42 fresh growth signals · last scan 2h ago · Detroit · Macomb    │
+│                                                                    │
+│ STEP 1 — What are you selling today?                              │
+│ ┌─────────────────┬──────────────────┬───────────────────────────┐│
+│ │ 📦 Supply Radar │ 🎯 Talent Radar  │ 🏗 FieldDesk + Web Design ││
+│ │ $199/mo         │ $149/mo           │ $1,499 + $199/mo          ││
+│ │ → DM supply hou-│ → DM the hiring   │ → DM the contractor       ││
+│ │   ses about THIS│   contractor for  │   directly — they're       ││
+│ │   contractor's  │   help filling    │   growing, need ops infra  ││
+│ │   incoming spend│   the roles       │                            ││
+│ └─────────────────┴──────────────────┴───────────────────────────┘│
+│  ↑ user picks ONE — everything below reshapes to match            │
+└───────────────────────────────────────────────────────────────────┘
+```
 
-**Part 3 — Outreach Command Center "Activate Idle Pool" button**
-- Add a new card at the top of `OutreachCommandCenter.tsx` → Find Prospects sub-tab:
-  ```
-  ┌────────────────────────────────────────────────────┐
-  │ ⚠️  178 Idle Prospects Detected                    │
-  │ 163 missing emails · 168 never contacted           │
-  │                                                    │
-  │ Top idle industries:                               │
-  │  • 27 Law Firms       → /legal-web-design          │
-  │  • 26 Insurance       → /healthcare-web-design     │
-  │  • 21 Home Inspectors → /detroit-web-design        │
-  │  • 15 Machine Shops   → FieldDesk + Industrial     │
-  │                                                    │
-  │ [🔍 Backfill Emails]  [✉️ Activate Drip]          │
-  └────────────────────────────────────────────────────┘
-  ```
-- "Backfill Emails" → invokes `prospect-email-backfill`, shows progress toast, refreshes count.
-- "Activate Drip" → invokes `activate-idle-prospects`, defaults to "only prospects with email + mapped landing page", shows preview ("will contact 98 prospects across 7 industries — confirm?").
+After play is picked, each signal card rebuilds for that play:
 
-### What this unlocks
+**Play 1 — Supply Radar (DM supply houses):**
+```
+🎯 OPPORTUNITY: McKinley Mechanical
+   Detroit · Commercial HVAC · Pulled 12 permits + 8 hires last 30d
+   → Predicted spend: HVAC commercial equipment, copper pipe, refrigerant
+   → Estimated value: $80k–$200k over next 60 days
 
-Conservative math: 178 leads × 60% email hit (107) × 1.5% reply rate to cold drip (1.6 replies) × 25% close → ~0.4 close per backfill cycle. At average $1,499 web design + $99/mo retainer, **one close per quarter from this batch pays for itself many times over** — and right now they're earning $0.
+WHO TO DM: Sales managers at:
+   • Behler-Young (Detroit HVAC distributor) [LinkedIn ↗]
+   • Johnstone Supply Detroit              [LinkedIn ↗]
+   • Standard Plumbing & Heating           [LinkedIn ↗]
 
-### What won't change
+DM TO SEND (NOT mad-libs — actually written):
+┌──────────────────────────────────────────────────────────┐
+│ Hi {Name} — heads up, McKinley Mechanical pulled 12      │
+│ commercial HVAC permits in Detroit this month and is     │
+│ hiring 8 techs. They're about to need a lot of equipment │
+│ fast. If you want a heads-up list of contractors like    │
+│ this every Monday, we run a tracker → $199/mo, 7-day     │
+│ free trial. Worth a look?                                 │
+└──────────────────────────────────────────────────────────┘
+[Copy DM]  [Open LinkedIn search]  [Mark "sent"]  [Skip]
+```
 
-- No new Stripe products, no new pricing, no new landing pages (all already exist).
-- No DB migration — uses existing `prospect_pipeline`, `prospect_email_log`, `lead_activities` tables.
-- No change to existing scraping crons (they keep filling the pool; the new backfill closes the gap on the *idle* portion).
-- Compliance: still uses existing `sms_opt_outs` / `suppressed_emails` checks in `web-design-drip`.
+**Play 2 — Talent Radar (DM the contractor):**
+```
+🎯 OPPORTUNITY: McKinley Mechanical (HIRING)
+   8 HVAC techs needed · Detroit · Posted 4 days ago
+   → Pain: takes 60+ days to fill licensed HVAC roles in MI
+
+WHO TO DM:
+   • Owner / GM at McKinley Mechanical [LinkedIn ↗]
+
+DM:
+┌──────────────────────────────────────────────────────────┐
+│ Hi {Name} — saw your 8 HVAC tech postings. We monitor    │
+│ MIOSHA license issues + permit activity across Michigan  │
+│ and ping you the moment a licensed tech becomes          │
+│ available. Detroit Web Agency, $149/mo, runs in the      │
+│ background. Want me to send you 3 candidates we already  │
+│ have on file?                                             │
+└──────────────────────────────────────────────────────────┘
+```
+
+**Play 3 — FieldDesk + Web Design (DM the contractor):**
+Same target as Play 2 but pitch is operational infra ("you're scaling — your dispatch board / website is going to be the bottleneck").
+
+---
+
+### What changes technically
+
+**Single file rewrite:** `src/components/admin/AdminLinkedInBlitz.tsx` becomes `AdminGrowthSignalOutreach.tsx` (keep the old file as a redirect for one release).
+
+1. **Top of file: "Play Selector"** — three big cards (Supply Radar / Talent Radar / FieldDesk+Web). Stored in `useState<Play>`.
+
+2. **DM templates moved to a real registry** — `src/lib/outreachTemplates.ts`:
+   - 3 plays × 3 tones each (direct / curious / value-first) = 9 hand-written templates
+   - Each template has `audience` field (`supply_house | contractor_owner | contractor_ops`) so the wrong template can never be paired with the wrong target
+   - Templates are written like a human wrote them — no "I track 42 of these this week" filler, no forced "free dossier" CTA on every line
+
+3. **Signal card rewrites itself based on play:**
+   - **Supply Radar play** → header shows estimated $ spend + commodity list, "Who to DM" lists 3 nearby supply houses (hardcoded distributor list per metro, starting with Detroit's 8 majors), DM is supply-house-targeted
+   - **Talent Radar play** → header shows role + days-on-market, "Who to DM" is the contractor's owner, DM is hiring-help-targeted  
+   - **FieldDesk play** → header shows growth indicators (permits + hires), DM is ops-infrastructure-targeted
+
+4. **"Find decision-maker on LinkedIn"** link gets smarter — searches for the right title at the right company per play (e.g., `"Behler-Young" "sales manager"` for Supply Radar, `"McKinley Mechanical" owner OR president` for Talent Radar).
+
+5. **Mark-sent tracking** — new local state + optional DB row in `outreach_log` so a signal you've already DM'd gets greyed out and dropped to the bottom (no more re-DMing the same 40 leads every time you open the tab).
+
+6. **Tab rename in `DWAAdmin.tsx`:** `💼 LinkedIn Blitz` → `🎯 Growth Outreach` and tooltip explains "Pick what you're selling, get the right DM for the right person."
+
+---
+
+### What this fixes vs. your screenshot
+
+- ❌ Today: McKinley card has identical copy to every other card, pitches "dossier" with no clear product, links to the wrong person on LinkedIn
+- ✅ After: McKinley card shows "$80–200k incoming HVAC spend" up top, lists 3 Detroit supply houses to DM, and the DM clearly pitches Supply Radar at $199/mo with a real ask
 
 ### Files touched
 
-- **NEW**: `supabase/functions/prospect-email-backfill/index.ts` (~200 lines)
-- **NEW**: `supabase/functions/activate-idle-prospects/index.ts` (~120 lines)
-- **EDITED**: `src/components/dwa-admin/OutreachCommandCenter.tsx` (add Idle Pool card to Find Prospects sub-tab)
-- **EDITED**: `supabase/config.toml` (register the 2 new functions with `verify_jwt = false`)
+- **NEW**: `src/lib/outreachTemplates.ts` (~150 lines — 9 hand-written templates, audience-typed)
+- **NEW**: `src/lib/metroDistributors.ts` (~80 lines — Detroit/DFW/Phoenix HVAC + plumbing + electrical distributor lists with LinkedIn URLs)
+- **REWRITTEN**: `src/components/admin/AdminLinkedInBlitz.tsx` → renamed/refactored to `AdminGrowthSignalOutreach.tsx` (~400 lines)
+- **EDITED**: `src/pages/DWAAdmin.tsx` (rename tab label, swap import)
+- **NEW migration** (small): `outreach_signal_log` table — 4 columns (signal_id, play, sent_at, admin_id) for "mark sent" persistence
 
-No changes to `omni-lead-engine`, `web-design-drip`, or any existing data — the new functions are purely additive and reversible (just don't click the button if you change your mind).
+No edge function changes, no Stripe changes, no scanner changes — all 42 signals in your screenshot stay; they just get presented in a way that actually tells you what to do with each one.
 
