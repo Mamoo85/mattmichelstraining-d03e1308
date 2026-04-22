@@ -1718,3 +1718,6 @@ verify_jwt = false
 [functions.verify-industrial-pulse-session]
 verify_jwt = false
 
+[functions.generate-signal-dossier]
+verify_jwt = false
+
