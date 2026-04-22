@@ -66,8 +66,7 @@ export default function IndustrialPulseReceipt() {
   useEffect(() => {
     if (!success) return;
     try {
-      // @ts-expect-error gtag may not be typed
-      window.gtag?.("event", "purchase", {
+      (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag?.("event", "purchase", {
         transaction_id: sessionId || `pulse_${Date.now()}`,
         value: tier === "snapshot" ? 99 : tier === "weekly" ? 199 : 499,
         currency: "USD",
