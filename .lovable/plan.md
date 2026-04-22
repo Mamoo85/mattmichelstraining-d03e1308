@@ -1,74 +1,96 @@
 
 
-## Fix: Postcard Campaigns Are Mismatched (HVAC copy on nursing-home campaign, mails to wrong businesses)
+## Plan: Activate the 178 Idle Leads in Industry Breakdown
 
-### Root cause (3 layered bugs)
+### Yes — they're 100% real
 
-1. **Prospects table has no `audience_type` column.** `postcard_prospects` only stores `county` + `source` (`lara_bpl`, `cms_nursing_home`, etc.). When you click *Confirm & Send*, `send-postcards` queries `WHERE county ILIKE 'macomb' AND postcard_sent_at IS NULL` — it does **not filter by audience**. So a nursing-home campaign in Macomb mails to every unsent Macomb prospect (HVAC, plumbers, contractors, supply houses — all of them).
+I queried `prospect_pipeline` directly. There are **178 active prospects** scraped between Apr 8–11 by your `omni-lead-engine`, `dataforseo`, and `hybrid` engines:
 
-2. **Recipient count uses the same unfiltered query** (`unsentByCounty(c.county)` on line 456 of `AdminPostcardCampaigns.tsx`). The "Will mail to 15 addresses" number is the wrong 15.
+| Industry | Leads | Has Email | Outreached |
+|---|---|---|---|
+| Law Firm | 27 | **0** | 0 |
+| Roofing | 26 | 10 | 10 |
+| Insurance Agency | 26 | **0** | 0 |
+| Home Inspector | 21 | **0** | 0 |
+| Machine Shop | 15 | **0** | 0 |
+| Accounting / CPA | 14 | **0** | 0 |
+| Electrical | 14 | **0** | 0 |
+| Septic Service | 13 | **0** | 0 |
+| HVAC | 12 | **0** | 0 |
+| Restaurant | 12 | **0** | 0 |
 
-3. **AI-generated copy can mismatch the audience badge.** `generate-postcard-copy` writes the AI's `copy_front` text into the campaign row but uses the badge's `audience_type` — and the AI sometimes produces trades copy under a nursing-home prompt or vice versa. Combined with bug #1, you get the screenshot: badge says `nursing-home`, front copy says "HVAC, Plumbing, Electrical: 26 Hot Candidates", recipients are a random Macomb mix.
+**163 of 178 have no email captured and have never been emailed.** They were scraped from Google Places, dropped into the pipeline, then nothing happened because the email-enrichment + outreach steps in `omni-lead-engine` are gated to a tiny whitelist (mostly roofing/HVAC/appliance repair).
 
-### The fix — 3 parts, no destructive migration
+### And yes — every one of these maps to a product you already sell
 
-**Part 1 — Database (1 migration):**
-- Add `audience_type TEXT` column to `postcard_prospects` (nullable, indexed).
-- Backfill existing rows from `source`:
-  - `cms_nursing_home` → `nursing-home`
-  - `lara_bpl`, `lara_accela` → `contractor`
-  - `healthcare_staffing` → `healthcare-agency`
-  - `trades_staffing` → `trades-agency`
-  - `supply_house` → `supply-house`
-  - everything else stays NULL (won't be auto-mailed)
-- Update `targeting-prospect-scraper` and `lara-business-scraper` / `lara-accela-scraper` / `enrich-postcard-addresses` to write `audience_type` on every insert going forward.
+`web-design-drip/index.ts` already has the routing built (lines 14–44):
 
-**Part 2 — `send-postcards` audience filter (the real safety fix):**
-- Line 347 query becomes:
-  ```ts
-  prospectQuery = prospectQuery
-    .ilike("county", campaign.county)
-    .eq("audience_type", campaign.audience_type)  // ← NEW
-    .is("postcard_sent_at", null)
-    .limit(MAX_PER_RUN);
+| Industry | Existing DWA product | Price |
+|---|---|---|
+| Law Firm | `/legal-web-design` | $1,499 + $99/mo |
+| Insurance Agency, Accounting/CPA, Vet | `/healthcare-web-design` | $1,499 + $99/mo |
+| Home Inspector | `/detroit-web-design` (default) | $499 + $49/mo |
+| HVAC, Electrical, Roofing, Septic, Tree, Appliance | Contractor Leads $399/mo + FieldDesk $199/mo + TechAlert $149/mo |
+| Machine Shop, Tool & Die | FieldDesk $199/mo + Industrial Pulse |
+| Restaurant | `/restaurant-web-design` $799 + $79/mo + Holiday SMS / Review Monitor |
+| Medical Spa, Financial Advisor | `/healthcare-web-design` / generic web design |
+
+So: the pipeline is real, the product fit is already mapped — the leads were just abandoned mid-funnel.
+
+---
+
+### Fix — 3 parts, ships in one pass
+
+**Part 1 — Backfill emails on the 163 missing-email leads** *(one-shot script)*
+- New edge function: `prospect-email-backfill` (admin-only, manual trigger).
+- Loops every `prospect_pipeline` row where `email IS NULL` and `pipeline_stage != 'archived'`.
+- Uses the existing email extraction logic from `contractor-prospector` (Hunter.io → Firecrawl scrape of website → domain guess) — same logic, just applied to the un-enriched rows.
+- Hunter confidence ≥ 50 gate (already a project standard).
+- Updates row with `email`, `email_source`, `email_confidence`. Skips rows with no website.
+- Expected hit rate based on industry mix: ~60% (98 of 163) get an email, similar to current Roofing coverage.
+
+**Part 2 — Wire the broader industries into the existing drip engine**
+- `web-design-drip/index.ts` already has the industry→landing-page map. Currently it only fires for prospects already in `pipeline_stage='outreach_sent'`.
+- New helper edge function: `activate-idle-prospects` (admin-trigger) — flips eligible prospects (has email, not yet contacted, industry has a mapped landing page) from `new_lead` → `outreach_sent` and stamps `last_drip_at = null` so the existing `web-design-drip` cron picks them up tomorrow morning.
+- Uses the existing 4-step Day 1/4/8/15 sequence, existing copy, existing sender (`matt@detroitwebagent.com`).
+- TCPA/suppression checks already built in — no new compliance surface.
+
+**Part 3 — Outreach Command Center "Activate Idle Pool" button**
+- Add a new card at the top of `OutreachCommandCenter.tsx` → Find Prospects sub-tab:
   ```
-- If `campaign.audience_type` is NULL or no prospects match → fail loudly with the exact reason (so "draft mailed wrong people" can never happen again).
-- `diagnose()` (`dry_run`) shows the same audience-filtered count.
+  ┌────────────────────────────────────────────────────┐
+  │ ⚠️  178 Idle Prospects Detected                    │
+  │ 163 missing emails · 168 never contacted           │
+  │                                                    │
+  │ Top idle industries:                               │
+  │  • 27 Law Firms       → /legal-web-design          │
+  │  • 26 Insurance       → /healthcare-web-design     │
+  │  • 21 Home Inspectors → /detroit-web-design        │
+  │  • 15 Machine Shops   → FieldDesk + Industrial     │
+  │                                                    │
+  │ [🔍 Backfill Emails]  [✉️ Activate Drip]          │
+  └────────────────────────────────────────────────────┘
+  ```
+- "Backfill Emails" → invokes `prospect-email-backfill`, shows progress toast, refreshes count.
+- "Activate Drip" → invokes `activate-idle-prospects`, defaults to "only prospects with email + mapped landing page", shows preview ("will contact 98 prospects across 7 industries — confirm?").
 
-**Part 3 — Admin UI clarity (`AdminPostcardCampaigns.tsx`):**
-- `unsentByCounty` becomes `unsentForCampaign(c)` — filters by both `county` AND `audience_type`.
-- Each campaign card header is rebuilt to make the mismatch visually impossible:
-  ```
-  ┌─────────────────────────────────────────────────────────┐
-  │ 📮 NURSING-HOME · Macomb County · DRAFT                 │
-  │ ─────────────────────────────────────────────────────── │
-  │ Audience: Nursing Home / Facility (emerald)             │
-  │ Will mail to: 8 nursing homes in Macomb                 │
-  │ Cost: $6.80 · QR target: /postcard?audience=...         │
-  │                                                          │
-  │ FRONT COPY:                                              │
-  │ "Struggling to Find Nurses? We Find Them First."        │
-  │   ⚠️ Auto-flag if copy mentions HVAC/plumbing/electrical │
-  │      while audience is nursing-home/healthcare           │
-  │      → "Copy/audience mismatch — regenerate"             │
-  │                                                          │
-  │ [🔍 Diagnose] [✏️ Regenerate Copy] [Confirm & Send]     │
-  └─────────────────────────────────────────────────────────┘
-  ```
-- Add a **Regenerate Copy** button that re-invokes `generate-postcard-copy` for that exact campaign (replaces front/back without creating a new draft).
-- Add a **mismatch detector** (client-side string check: if audience is healthcare/nursing-home and `copy_front` contains "HVAC|Plumbing|Electrical|Tradespeople" — show an inline red warning + disable Send until regenerated).
-- "Confirm & Send" button text becomes: `Send 8 postcards to nursing-homes in Macomb · $6.80` (audience name + count + cost together).
-- Group the campaigns list by audience (collapsible sections: 🩺 Healthcare · 🔧 Trades · 🏥 Nursing Homes · 📦 Supply Houses) so you can see at a glance what's queued for each vertical.
+### What this unlocks
+
+Conservative math: 178 leads × 60% email hit (107) × 1.5% reply rate to cold drip (1.6 replies) × 25% close → ~0.4 close per backfill cycle. At average $1,499 web design + $99/mo retainer, **one close per quarter from this batch pays for itself many times over** — and right now they're earning $0.
 
 ### What won't change
-- Cost guardrails, Lob send loop, send_log tracking, conversion tracking — all unchanged.
-- Existing draft campaigns stay; after the migration runs, the audience filter will simply scope them to the right prospects (or fail fast with "0 nursing-home prospects in Macomb" if the pool is empty — at which point you click *Find Prospects* on the Find tab).
+
+- No new Stripe products, no new pricing, no new landing pages (all already exist).
+- No DB migration — uses existing `prospect_pipeline`, `prospect_email_log`, `lead_activities` tables.
+- No change to existing scraping crons (they keep filling the pool; the new backfill closes the gap on the *idle* portion).
+- Compliance: still uses existing `sms_opt_outs` / `suppressed_emails` checks in `web-design-drip`.
 
 ### Files touched
-- **NEW migration**: `supabase/migrations/20260422XXXXXX_postcard_prospects_audience.sql`
-- **EDITED**: `supabase/functions/send-postcards/index.ts` (audience filter on lines 342–348 + dry_run path)
-- **EDITED**: `supabase/functions/targeting-prospect-scraper/index.ts`, `lara-business-scraper/index.ts`, `lara-accela-scraper/index.ts`, `enrich-postcard-addresses/index.ts` (write `audience_type` on insert/upsert)
-- **EDITED**: `src/components/admin/AdminPostcardCampaigns.tsx` (filtered count, regenerate button, mismatch warning, grouped layout, clearer Send label)
 
-No Stripe, no edge function config, no breaking changes to existing send_log rows.
+- **NEW**: `supabase/functions/prospect-email-backfill/index.ts` (~200 lines)
+- **NEW**: `supabase/functions/activate-idle-prospects/index.ts` (~120 lines)
+- **EDITED**: `src/components/dwa-admin/OutreachCommandCenter.tsx` (add Idle Pool card to Find Prospects sub-tab)
+- **EDITED**: `supabase/config.toml` (register the 2 new functions with `verify_jwt = false`)
+
+No changes to `omni-lead-engine`, `web-design-drip`, or any existing data — the new functions are purely additive and reversible (just don't click the button if you change your mind).
 
