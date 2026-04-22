@@ -116,10 +116,12 @@ async function buildFrontHTML(
   recipientName: string,
   campaignId: string,
   audienceType: AudienceType,
-  resolved: { photoUrl: string; badgeUrl: string }
+  resolved: { photoUrl: string; badgeUrl: string },
+  prospectId?: string,
 ): Promise<string> {
-  // ONE QR per postcard → multi-offer landing page (/postcard) for clean attribution.
-  const qrUrl = buildQrUrl(audienceType, campaignId, city);
+  // ONE QR per postcard → personalized landing page (/postcard) when prospectId is set,
+  // otherwise the multi-offer fallback. pid lets the page show "Welcome, {Company}".
+  const qrUrl = buildQrUrl(audienceType, campaignId, city, prospectId);
   const c = design.accentColor;
   const qrDataUri = await qrcode(qrUrl, { size: 260 }) as string;
   const { photoUrl, badgeUrl } = resolved;
@@ -405,7 +407,7 @@ serve(async (req) => {
       };
 
       try {
-        const frontHTML = await buildFrontHTML(design, prospect.city || city, prospect.business_name || "", campaign_id, audienceType, resolvedAssets);
+        const frontHTML = await buildFrontHTML(design, prospect.city || city, prospect.business_name || "", campaign_id, audienceType, resolvedAssets, prospect.id);
         const backHTML = buildBackHTML(prospect.city || city);
 
         const lobRes = await fetch("https://api.lob.com/v1/postcards", {

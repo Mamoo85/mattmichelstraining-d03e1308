@@ -68,10 +68,16 @@ export const POSTCARD_ASSETS: Record<"matt_photo" | "dwa_badge", PostcardAsset> 
   },
 };
 
-export function buildQrUrl(audienceType: string, campaignId: string, city: string): string {
-  return `https://detroitwebagent.com/postcard?audience=${audienceType}&utm_campaign=${campaignId}&city=${city
+export function buildQrUrl(
+  audienceType: string,
+  campaignId: string,
+  city: string,
+  prospectId?: string,
+): string {
+  const base = `https://detroitwebagent.com/postcard?audience=${audienceType}&utm_campaign=${campaignId}&city=${city
     .toLowerCase()
     .replace(/\s+/g, "-")}`;
+  return prospectId ? `${base}&pid=${prospectId}` : base;
 }
 
 /**
