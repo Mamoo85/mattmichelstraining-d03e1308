@@ -19,9 +19,15 @@ function normalizeTrade(trade: string): string {
     plumbing: "Plumbing",
     electrical: "Electrical",
     roofing: "Roofing",
+    boiler: "Boiler",
+    gutters: "Gutters",
+    siding: "Siding",
   };
   return map[trade.toLowerCase()] || (trade.charAt(0).toUpperCase() + trade.slice(1));
 }
+
+// Allowed trade slugs (lowercase) — must match TRADES in src/pages/ContractorLeads.tsx.
+const VALID_TRADE_SLUGS = new Set(["hvac", "plumbing", "electrical", "roofing", "boiler", "gutters", "siding"]);
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -33,7 +39,25 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "email, trade, and city are required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const normalizedTrade = normalizeTrade(trade);
+    // Validate trade against allowlist (mirrors public page dropdown).
+    const tradeSlug = String(trade).toLowerCase().trim();
+    if (!VALID_TRADE_SLUGS.has(tradeSlug)) {
+      return new Response(
+        JSON.stringify({ error: `Unsupported trade '${trade}'. Must be one of: ${[...VALID_TRADE_SLUGS].join(", ")}` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // Validate city is non-empty after trim.
+    const cityClean = String(city).trim();
+    if (!cityClean) {
+      return new Response(
+        JSON.stringify({ error: "city must be a non-empty string" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const normalizedTrade = normalizeTrade(tradeSlug);
     const tradeLabel = normalizedTrade;
     // Trade-specific pricing — Gutters/Siding at $299, all others $399
     const TRADE_PRICES: Record<string, number> = {
