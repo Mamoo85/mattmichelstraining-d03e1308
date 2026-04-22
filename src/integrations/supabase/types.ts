@@ -345,8 +345,11 @@ export type Database = {
           draft_output: Json | null
           error_message: string | null
           id: string
+          is_test: boolean
           plan_json: Json | null
           prompt: string
+          replay_of_log_id: string | null
+          result_summary: Json | null
           rows_returned: number | null
           steps: Json | null
           tools_used: string[] | null
@@ -361,8 +364,11 @@ export type Database = {
           draft_output?: Json | null
           error_message?: string | null
           id?: string
+          is_test?: boolean
           plan_json?: Json | null
           prompt: string
+          replay_of_log_id?: string | null
+          result_summary?: Json | null
           rows_returned?: number | null
           steps?: Json | null
           tools_used?: string[] | null
@@ -377,8 +383,11 @@ export type Database = {
           draft_output?: Json | null
           error_message?: string | null
           id?: string
+          is_test?: boolean
           plan_json?: Json | null
           prompt?: string
+          replay_of_log_id?: string | null
+          result_summary?: Json | null
           rows_returned?: number | null
           steps?: Json | null
           tools_used?: string[] | null
@@ -386,7 +395,15 @@ export type Database = {
           user_action?: string | null
           web_calls?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "admin_command_log_replay_of_log_id_fkey"
+            columns: ["replay_of_log_id"]
+            isOneToOne: false
+            referencedRelation: "admin_command_log"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       admin_media_files: {
         Row: {
