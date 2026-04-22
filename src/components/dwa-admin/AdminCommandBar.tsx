@@ -215,6 +215,11 @@ export default function AdminCommandBar() {
       setQueueMsg("No emails to queue (skipped or no email address).");
       return;
     }
+    const queueCheck = validateQueuePayload(toQueue);
+    if (queueCheck.ok === false) {
+      setQueueMsg(`❌ ${queueCheck.reason}`);
+      return;
+    }
     setQueuing(true);
     setQueueMsg(null);
     try {
