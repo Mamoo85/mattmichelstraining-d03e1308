@@ -2,6 +2,12 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { safeLocalStorage } from "@/lib/browserStorage";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  validatePrompt,
+  validateRecipient,
+  validateRegenerateParams,
+  validateQueuePayload,
+} from "@/lib/validateCommandInputs";
 
 type Draft = {
   to_email?: string;
