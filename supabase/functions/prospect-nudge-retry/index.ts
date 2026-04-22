@@ -60,124 +60,112 @@ serve(async (_req) => {
 
   let retried = 0;
   let skippedDedup = 0;
-  let skippedLock = 0;
+  let skippedClaim = 0;
   let markedDead = 0;
 
   for (const p of candidates) {
-    // 2. Per-prospect advisory lock
-    const key = await lockKey(p.id);
-    const { data: lockResult } = await sb.rpc("pg_try_advisory_lock", { key } as any).single();
-    // pg_try_advisory_lock returns boolean; if RPC isn't exposed, fall back to no-lock
-    // (RLS-safe fallback — dedup gate below still prevents duplicates)
-    const locked = (lockResult as any) === true || lockResult === null;
-    if (lockResult === false) {
-      skippedLock++;
+    const expectedRetry = p.nudge_retry_count ?? 0;
+    const newRetryCount = expectedRetry + 1;
+
+    // 2. Optimistic claim — only one cron run can win this row.
+    //    The .eq("nudge_retry_count", expectedRetry) makes the UPDATE a no-op
+    //    if another concurrent run already incremented the counter.
+    const { data: claimed, error: claimErr } = await sb
+      .from("prospect_nudges")
+      .update({ nudge_retry_count: newRetryCount })
+      .eq("id", p.id)
+      .eq("nudge_retry_count", expectedRetry)
+      .select("id")
+      .maybeSingle();
+
+    if (claimErr || !claimed) {
+      skippedClaim++;
       continue;
     }
 
-    try {
-      // 3. 24h dedup against system_comms_log — skip if a sent/delivered exists for this phone
-      const dayAgo = new Date(Date.now() - 24 * 60 * 60_000).toISOString();
-      const { data: recentSent } = await sb
-        .from("system_comms_log")
-        .select("id, status, twilio_status")
-        .eq("recipient", p.phone)
-        .eq("product", "dwa_prospect_nudge")
-        .gte("created_at", dayAgo)
-        .order("created_at", { ascending: false })
-        .limit(5);
+    // 3. 24h dedup against system_comms_log — skip if a sent/delivered exists for this phone
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60_000).toISOString();
+    const { data: recentSent } = await sb
+      .from("system_comms_log")
+      .select("id, status, twilio_status")
+      .eq("recipient", p.phone)
+      .eq("product", "dwa_prospect_nudge")
+      .gte("created_at", dayAgo)
+      .order("created_at", { ascending: false })
+      .limit(5);
 
-      const hasFreshSuccess = (recentSent ?? []).some(
-        (r: any) => r.status === "sent" || r.twilio_status === "delivered" || r.twilio_status === "sent"
-      );
-      if (hasFreshSuccess) {
-        // Twilio callback was just slow — don't double-send.
-        skippedDedup++;
-        // Sync the prospect row so we stop trying.
+    const hasFreshSuccess = (recentSent ?? []).some(
+      (r: any) => r.status === "sent" || r.twilio_status === "delivered" || r.twilio_status === "sent"
+    );
+    if (hasFreshSuccess) {
+      skippedDedup++;
+      await sb
+        .from("prospect_nudges")
+        .update({ last_nudge_status: "delivered" })
+        .eq("id", p.id);
+      continue;
+    }
+
+    // 4. Re-send via Twilio (with StatusCallback)
+    const trackedUrl = `https://detroitwebagent.com/r/${p.link_token}`;
+    const body = NUDGE_TEMPLATE(trackedUrl, p.city, p.trade);
+    const statusCallback = `${SUPABASE_URL}/functions/v1/prospect-nudge-status-callback`;
+
+    const result = await sendSMS(
+      p.phone,
+      TWILIO_PHONE_NUMBER,
+      body,
+      "dwa_prospect_nudge",
+      false,
+      { bypassQuietHours: false, statusCallback }
+    );
+
+    if (result.success && result.sid) {
+      await sb
+        .from("prospect_nudges")
+        .update({
+          last_nudge_sid: result.sid,
+          last_nudge_status: "queued",
+          last_nudge_error: null,
+          nudge_sent_at: new Date().toISOString(),
+        })
+        .eq("id", p.id);
+      retried++;
+    } else if (result.skipped) {
+      // Quiet hours / opt-out — roll back the claim so next cron tries again.
+      await sb
+        .from("prospect_nudges")
+        .update({ nudge_retry_count: expectedRetry })
+        .eq("id", p.id);
+    } else {
+      await sb
+        .from("prospect_nudges")
+        .update({ last_nudge_error: result.error || "send failed" })
+        .eq("id", p.id);
+
+      if (newRetryCount >= 2) {
         await sb
           .from("prospect_nudges")
-          .update({ last_nudge_status: "delivered" })
+          .update({ status: "dead_undeliverable" })
           .eq("id", p.id);
-        continue;
-      }
-
-      // 4. Re-send via Twilio (with StatusCallback)
-      const trackedUrl = `https://detroitwebagent.com/r/${p.link_token}`;
-      const body = NUDGE_TEMPLATE(trackedUrl, p.city, p.trade);
-      const statusCallback = `${SUPABASE_URL}/functions/v1/prospect-nudge-status-callback`;
-
-      const result = await sendSMS(
-        p.phone,
-        TWILIO_PHONE_NUMBER,
-        body,
-        "dwa_prospect_nudge",
-        false,
-        { bypassQuietHours: false, statusCallback }
-      );
-
-      const newRetryCount = (p.nudge_retry_count ?? 0) + 1;
-
-      if (result.success && result.sid) {
-        await sb
-          .from("prospect_nudges")
-          .update({
-            last_nudge_sid: result.sid,
-            last_nudge_status: "queued",
-            last_nudge_error: null,
-            nudge_retry_count: newRetryCount,
-            nudge_sent_at: new Date().toISOString(),
-          })
-          .eq("id", p.id);
-        retried++;
-      } else if (result.skipped) {
-        // Quiet hours / opt-out — don't count as a retry, leave for next cron
-        continue;
-      } else {
-        // Send itself failed — still count as a retry attempt
-        await sb
-          .from("prospect_nudges")
-          .update({
-            nudge_retry_count: newRetryCount,
-            last_nudge_error: result.error || "send failed",
-          })
-          .eq("id", p.id);
-
-        if (newRetryCount >= 2) {
-          await sb
-            .from("prospect_nudges")
-            .update({ status: "dead_undeliverable" })
-            .eq("id", p.id);
-          markedDead++;
-          await sendSMS(
-            ADMIN_PHONE,
-            TWILIO_PHONE_NUMBER,
-            `⚠️ Prospect ${p.phone} undeliverable after 2 retries. Marked dead.`,
-            "dwa_admin_reply",
-            false,
-            { bypassQuietHours: true }
-          );
-        }
-      }
-
-      // After this attempt — if we hit cap and Twilio status was already terminal, mark dead.
-      if (newRetryCount >= 2 && (p.last_nudge_status === "undelivered" || p.last_nudge_status === "failed")) {
-        // Don't double-mark if we already did above
-        const { data: cur } = await sb
-          .from("prospect_nudges")
-          .select("status")
-          .eq("id", p.id)
-          .maybeSingle();
-        if (cur && (cur as any).status !== "dead_undeliverable") {
-          // Wait for the next callback cycle — keep status active until we know the new SID's outcome.
-        }
-      }
-    } finally {
-      if (locked && lockResult !== null) {
-        await sb.rpc("pg_advisory_unlock", { key } as any);
+        markedDead++;
+        await sendSMS(
+          ADMIN_PHONE,
+          TWILIO_PHONE_NUMBER,
+          `⚠️ Prospect ${p.phone} undeliverable after 2 retries. Marked dead.`,
+          "dwa_admin_reply",
+          false,
+          { bypassQuietHours: true }
+        );
       }
     }
   }
 
+  return new Response(
+    JSON.stringify({ retried, skipped_dedup: skippedDedup, skipped_claim: skippedClaim, marked_dead: markedDead, scanned: candidates.length }),
+    { headers: { "Content-Type": "application/json" } }
+  );
+});
   return new Response(
     JSON.stringify({ retried, skipped_dedup: skippedDedup, skipped_lock: skippedLock, marked_dead: markedDead, scanned: candidates.length }),
     { headers: { "Content-Type": "application/json" } }
