@@ -10694,10 +10694,14 @@ export type Database = {
           clicked_at: string | null
           created_at: string
           id: string
+          last_nudge_error: string | null
+          last_nudge_sid: string | null
+          last_nudge_status: string | null
           link_token: string
           name: string | null
           notes: string | null
           nudge_count: number
+          nudge_retry_count: number
           nudge_sent_at: string | null
           paid_at: string | null
           phone: string
@@ -10713,10 +10717,14 @@ export type Database = {
           clicked_at?: string | null
           created_at?: string
           id?: string
+          last_nudge_error?: string | null
+          last_nudge_sid?: string | null
+          last_nudge_status?: string | null
           link_token?: string
           name?: string | null
           notes?: string | null
           nudge_count?: number
+          nudge_retry_count?: number
           nudge_sent_at?: string | null
           paid_at?: string | null
           phone: string
@@ -10732,10 +10740,14 @@ export type Database = {
           clicked_at?: string | null
           created_at?: string
           id?: string
+          last_nudge_error?: string | null
+          last_nudge_sid?: string | null
+          last_nudge_status?: string | null
           link_token?: string
           name?: string | null
           notes?: string | null
           nudge_count?: number
+          nudge_retry_count?: number
           nudge_sent_at?: string | null
           paid_at?: string | null
           phone?: string
@@ -13638,6 +13650,7 @@ export type Database = {
           id: string
           inbound_body: string | null
           inbound_message_id: string | null
+          metadata: Json
           phone: string
           sent_at: string | null
           status: string
@@ -13648,6 +13661,7 @@ export type Database = {
           id?: string
           inbound_body?: string | null
           inbound_message_id?: string | null
+          metadata?: Json
           phone: string
           sent_at?: string | null
           status?: string
@@ -13658,6 +13672,7 @@ export type Database = {
           id?: string
           inbound_body?: string | null
           inbound_message_id?: string | null
+          metadata?: Json
           phone?: string
           sent_at?: string | null
           status?: string
@@ -14233,6 +14248,8 @@ export type Database = {
           provider_id: string | null
           recipient: string
           status: string
+          twilio_error_code: string | null
+          twilio_status: string | null
         }
         Insert: {
           body_full?: string | null
@@ -14247,6 +14264,8 @@ export type Database = {
           provider_id?: string | null
           recipient: string
           status?: string
+          twilio_error_code?: string | null
+          twilio_status?: string | null
         }
         Update: {
           body_full?: string | null
@@ -14261,6 +14280,8 @@ export type Database = {
           provider_id?: string | null
           recipient?: string
           status?: string
+          twilio_error_code?: string | null
+          twilio_status?: string | null
         }
         Relationships: []
       }

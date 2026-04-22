@@ -132,6 +132,13 @@ serve(async (req) => {
       if (remaining.length > 0) chunks.push(remaining);
     }
 
+    // Product-gated StatusCallback — only prospect nudges get delivery callbacks.
+    // All 80+ other product paths remain unchanged.
+    const statusCallback =
+      product === "dwa_prospect_nudge"
+        ? `${SUPABASE_URL}/functions/v1/prospect-nudge-status-callback`
+        : undefined;
+
     const total = chunks.length;
     const sids: string[] = [];
     for (let i = 0; i < chunks.length; i++) {
@@ -142,7 +149,7 @@ serve(async (req) => {
         prefix + chunks[i],
         product,
         false,
-        { bypassQuietHours: true, templateId: payload.template_id }
+        { bypassQuietHours: true, templateId: payload.template_id, statusCallback }
       );
       if (!result.success) {
         return json(result.skipped ? 200 : 500, {

@@ -225,6 +225,12 @@ export interface SMSOptions {
    * (e.g. onboarding vs sales) by querying which template fired which send.
    */
   templateId?: string;
+  /**
+   * Optional Twilio StatusCallback URL — Twilio will POST delivery updates
+   * (queued/sent/delivered/undelivered/failed) here. Used by prospect-nudge
+   * lane to track deliverability and trigger duplicate-safe retries.
+   */
+  statusCallback?: string;
 }
 
 /**
@@ -356,6 +362,8 @@ export async function sendSMS(
   // 6. Send via Twilio
   try {
     const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
+    const params: Record<string, string> = { To: to, From: from, Body: body };
+    if (options?.statusCallback) params.StatusCallback = options.statusCallback;
     const res = await fetch(
       `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
       {
@@ -364,7 +372,7 @@ export async function sendSMS(
           Authorization: `Basic ${credentials}`,
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: new URLSearchParams({ To: to, From: from, Body: body }),
+        body: new URLSearchParams(params),
         signal: AbortSignal.timeout(15_000),
       }
     );

@@ -2,10 +2,15 @@
 //
 // Behavior:
 // 1. Logs every inbound message to system_comms_log so the admin inbox renders threads.
-// 2. If the message is from Matt's personal cell and starts with "A" or "E ..." → treats
-//    it as approval/edit of the latest pending sms_reply_drafts entry and SENDS that to
-//    the original contractor.
+// 2. If the message is from Matt's personal cell:
+//    - "A" or "Y"        → approve latest pending draft and SEND it
+//    - "E <new text>"    → edit + send latest pending draft
+//    - "N"               → cancel latest pending draft (nothing sent)
 // 3. Otherwise forwards a preview to Matt's personal cell so he sees the reply on his phone.
+//
+// Post-send hook: when an approved draft has metadata.source === "prospect_nudge",
+// stamps prospect_nudges (nudge_sent_at, nudge_count, last_nudge_sid) so the
+// StatusCallback can match deliverability.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -64,20 +69,18 @@ serve(async (req) => {
         });
     }
 
-    // 2. Approval/edit routing — only when Matt himself texts in
+    // 2. Approval/edit/cancel routing — only when Matt himself texts in
     const fromNormalized = normalize(from);
     const trimmed = body.trim();
-    const isApprove = /^a$/i.test(trimmed);
+    const isApprove = /^[ay]$/i.test(trimmed); // Y or A both approve
+    const isCancel = /^n$/i.test(trimmed);
     const editMatch = trimmed.match(/^e\s+([\s\S]+)$/i);
     const isEdit = !!editMatch;
 
-    if (sb && fromNormalized === MATT_PERSONAL && (isApprove || isEdit)) {
-      // Find the latest pending OR previously-failed draft (any phone — most
-      // recent wins). Including "failed" lets Matt simply text "A" again
-      // after a transient Twilio error.
+    if (sb && fromNormalized === MATT_PERSONAL && (isApprove || isEdit || isCancel)) {
       const { data: pending } = await sb
         .from("sms_reply_drafts")
-        .select("id, phone, draft_body")
+        .select("id, phone, draft_body, metadata")
         .in("status", ["pending", "failed"])
         .order("created_at", { ascending: false })
         .limit(1)
@@ -88,13 +91,35 @@ serve(async (req) => {
           MATT_PERSONAL,
           TWILIO_PHONE_NUMBER,
           "No pending draft to send. Type your reply normally and I'll forward it.",
-          "draft_approval"
+          "dwa_admin_reply",
+          false,
+          { bypassQuietHours: true }
+        );
+        return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
+      }
+
+      // Cancel branch — no SMS to recipient, just mark cancelled
+      if (isCancel) {
+        await sb
+          .from("sms_reply_drafts")
+          .update({ status: "cancelled" })
+          .eq("id", (pending as any).id);
+        await sendSMS(
+          MATT_PERSONAL,
+          TWILIO_PHONE_NUMBER,
+          `❌ Cancelled draft for ${(pending as any).phone}. Nothing sent.`,
+          "dwa_admin_reply",
+          false,
+          { bypassQuietHours: true }
         );
         return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
       }
 
       const finalBody = isEdit ? editMatch![1].trim() : (pending as any).draft_body;
       const targetPhone = (pending as any).phone;
+      const meta = (pending as any).metadata ?? {};
+      const isProspectNudge = meta.source === "prospect_nudge";
+      const product = isProspectNudge ? "dwa_prospect_nudge" : undefined;
 
       // Send via dwa-send-sms so it logs to system_comms_log + checks opt-outs
       const sendRes = await fetch(`${SUPABASE_URL}/functions/v1/dwa-send-sms`, {
@@ -103,7 +128,7 @@ serve(async (req) => {
           Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ to: targetPhone, body: finalBody }),
+        body: JSON.stringify({ to: targetPhone, body: finalBody, product }),
       });
 
       const result = await sendRes.json().catch(() => ({}));
@@ -118,13 +143,35 @@ serve(async (req) => {
         })
         .eq("id", (pending as any).id);
 
+      // Post-send hook: stamp prospect_nudges so StatusCallback can match
+      if (ok && isProspectNudge && meta.prospect_id) {
+        const sid = Array.isArray(result?.sids) && result.sids.length > 0 ? result.sids[0] : null;
+        const { data: existing } = await sb
+          .from("prospect_nudges")
+          .select("nudge_count")
+          .eq("id", meta.prospect_id)
+          .maybeSingle();
+        await sb
+          .from("prospect_nudges")
+          .update({
+            nudge_sent_at: new Date().toISOString(),
+            nudge_count: ((existing as any)?.nudge_count ?? 0) + 1,
+            last_nudge_sid: sid,
+            last_nudge_status: "queued",
+            last_nudge_error: null,
+          })
+          .eq("id", meta.prospect_id);
+      }
+
       await sendSMS(
         MATT_PERSONAL,
         TWILIO_PHONE_NUMBER,
         ok
           ? `✅ Sent to ${targetPhone}: "${finalBody.slice(0, 120)}"`
           : `❌ Send failed to ${targetPhone}. ${result?.error || sendRes.status}`,
-        "draft_approval"
+        "dwa_admin_reply",
+        false,
+        { bypassQuietHours: true }
       );
 
       return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
@@ -135,7 +182,9 @@ serve(async (req) => {
       MATT_PERSONAL,
       TWILIO_PHONE_NUMBER,
       `DWA msg from ${from}: ${body}`,
-      "sms_relay"
+      "dwa_admin_reply",
+      false,
+      { bypassQuietHours: true }
     );
   } catch (e: unknown) {
     console.error("[inbound-sms-relay] Error:", e instanceof Error ? e.message : String(e));

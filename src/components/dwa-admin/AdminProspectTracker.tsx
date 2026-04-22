@@ -22,6 +22,18 @@ type Prospect = {
   created_at: string;
   nudge_sent_at: string | null;
   nudge_count: number | null;
+  last_nudge_sid: string | null;
+  last_nudge_status: string | null;
+  last_nudge_error: string | null;
+  nudge_retry_count: number | null;
+};
+
+type DraftRow = {
+  id: string;
+  phone: string;
+  status: string;
+  metadata: any;
+  created_at: string;
 };
 
 const NUDGE_TEMPLATE = (trackedUrl: string, city: string | null, trade: string | null) => {
@@ -31,6 +43,8 @@ const NUDGE_TEMPLATE = (trackedUrl: string, city: string | null, trade: string |
 };
 
 type FilterKey = "all" | "active" | "stalled" | "converted";
+type ViewMode = "cards" | "grid";
+type SortKey = "last_contact" | "status" | "nudge_count";
 
 const STEPS = [
   { key: "clicked_at", label: "Clicked" },
@@ -57,58 +71,117 @@ function lastActivity(p: Prospect): { label: string; iso: string } | null {
     { iso: p.profile_completed_at, label: "completed profile" },
     { iso: p.account_created_at, label: "created account" },
     { iso: p.clicked_at, label: "clicked link" },
+    { iso: p.nudge_sent_at, label: "nudge sent" },
   ].filter((e) => e.iso) as { iso: string; label: string }[];
   if (!events.length) return null;
   events.sort((a, b) => new Date(b.iso).getTime() - new Date(a.iso).getTime());
   return events[0];
 }
 
+function lastContactIso(p: Prospect): string {
+  const last = lastActivity(p);
+  return last ? last.iso : p.created_at;
+}
+
 function isStalled(p: Prospect): boolean {
   if (p.status !== "active") return false;
   if (p.paid_at) return false;
-  const last = lastActivity(p);
-  const ref = last ? last.iso : p.created_at;
-  return Date.now() - new Date(ref).getTime() > 24 * 60 * 60 * 1000;
+  return Date.now() - new Date(lastContactIso(p)).getTime() > 24 * 60 * 60 * 1000;
+}
+
+function isDead(p: Prospect): boolean {
+  return p.status === "dead" || p.status === "dead_undeliverable";
+}
+
+function deliveryBadge(p: Prospect): { label: string; cls: string } | null {
+  const s = p.last_nudge_status;
+  if (!s) return null;
+  if (s === "delivered") return { label: "✓ delivered", cls: "text-emerald-300 border-emerald-400/40" };
+  if (s === "sent") return { label: "✓ sent", cls: "text-emerald-300/80 border-emerald-400/30" };
+  if (s === "queued") return { label: "⏳ queued", cls: "text-[#00d4ff] border-[#00d4ff]/40" };
+  if (s === "undelivered") return { label: "✗ undelivered", cls: "text-amber-300 border-amber-400/40" };
+  if (s === "failed") return { label: "✗ failed", cls: "text-red-300 border-red-400/40" };
+  return { label: s, cls: "text-white/60 border-white/15" };
 }
 
 export default function AdminProspectTracker() {
   const { toast } = useToast();
   const [rows, setRows] = useState<Prospect[]>([]);
+  const [drafts, setDrafts] = useState<DraftRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterKey>("all");
+  const [view, setView] = useState<ViewMode>(() => {
+    const saved = typeof window !== "undefined" ? localStorage.getItem("prospect_tracker_view") : null;
+    return saved === "grid" ? "grid" : "cards";
+  });
+  const [sortKey, setSortKey] = useState<SortKey>("last_contact");
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ phone: "", name: "", business: "", city: "", trade: "", notes: "" });
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem("prospect_tracker_view", view);
+  }, [view]);
+
   async function load() {
-    const { data, error } = await supabase
-      .from("prospect_nudges")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (!error && data) setRows(data as Prospect[]);
+    const [{ data: pData }, { data: dData }] = await Promise.all([
+      supabase.from("prospect_nudges").select("*").order("created_at", { ascending: false }),
+      supabase
+        .from("sms_reply_drafts")
+        .select("id, phone, status, metadata, created_at")
+        .eq("status", "pending"),
+    ]);
+    if (pData) setRows(pData as Prospect[]);
+    if (dData) setDrafts(dData as DraftRow[]);
     setLoading(false);
   }
 
   useEffect(() => {
     load();
-    const channel = supabase
+    const ch1 = supabase
       .channel("prospect_nudges_live")
       .on("postgres_changes", { event: "*", schema: "public", table: "prospect_nudges" }, () => load())
       .subscribe();
+    const ch2 = supabase
+      .channel("sms_reply_drafts_live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "sms_reply_drafts" }, () => load())
+      .subscribe();
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(ch1);
+      supabase.removeChannel(ch2);
     };
   }, []);
 
+  // Map prospect_id → pending draft
+  const pendingByProspect = useMemo(() => {
+    const m = new Map<string, DraftRow>();
+    for (const d of drafts) {
+      const pid = d.metadata?.prospect_id as string | undefined;
+      if (pid && d.metadata?.source === "prospect_nudge") m.set(pid, d);
+    }
+    return m;
+  }, [drafts]);
+
   const filtered = useMemo(() => {
-    return rows.filter((p) => {
+    const f = rows.filter((p) => {
       if (filter === "all") return true;
       if (filter === "active") return p.status === "active" && !p.paid_at;
       if (filter === "stalled") return isStalled(p);
       if (filter === "converted") return !!p.paid_at || p.status === "converted";
       return true;
     });
-  }, [rows, filter]);
+    const sorted = [...f].sort((a, b) => {
+      if (sortKey === "last_contact") {
+        return new Date(lastContactIso(b)).getTime() - new Date(lastContactIso(a)).getTime();
+      }
+      if (sortKey === "nudge_count") return (b.nudge_count ?? 0) - (a.nudge_count ?? 0);
+      // status: active → stalled → converted → dead
+      const rank = (p: Prospect) =>
+        isDead(p) ? 4 : !!p.paid_at || p.status === "converted" ? 3 : isStalled(p) ? 2 : 1;
+      return rank(a) - rank(b);
+    });
+    return sorted;
+  }, [rows, filter, sortKey]);
 
   const counts = useMemo(() => ({
     all: rows.length,
@@ -128,42 +201,45 @@ export default function AdminProspectTracker() {
   }
 
   async function sendNudge(p: Prospect) {
-    const trackedUrl = `https://detroitwebagent.com/r/${p.link_token}`;
-    const body = NUDGE_TEMPLATE(trackedUrl, p.city, p.trade);
-    const confirmMsg = `Send tracked nudge SMS to ${p.phone}?\n\n${body}`;
-    if (!window.confirm(confirmMsg)) return;
-    const { data, error } = await supabase.functions.invoke("dwa-send-sms", {
-      body: { to: p.phone, body, product: "dwa_prospect_nudge" },
-    });
-    if (error || !data?.success) {
-      toast({
-        title: "Send failed",
-        description: error?.message || data?.error || "Unknown error",
-        variant: "destructive",
-      });
+    if (pendingByProspect.has(p.id)) {
+      toast({ title: "Already awaiting your Y", description: "A draft is already pending for this prospect." });
       return;
     }
-    const { error: upErr } = await supabase
-      .from("prospect_nudges")
-      .update({
-        nudge_sent_at: new Date().toISOString(),
-        nudge_count: (p.nudge_count ?? 0) + 1,
+    const trackedUrl = `https://detroitwebagent.com/r/${p.link_token}`;
+    const body = NUDGE_TEMPLATE(trackedUrl, p.city, p.trade);
+
+    // 1. Insert pending draft
+    const { data: draft, error: dErr } = await supabase
+      .from("sms_reply_drafts")
+      .insert({
+        phone: p.phone,
+        draft_body: body,
+        status: "pending",
+        metadata: { source: "prospect_nudge", prospect_id: p.id, template: "dwa_prospect_nudge" },
       })
-      .eq("id", p.id);
-    if (upErr) {
-      toast({ title: "Sent, but log failed", description: upErr.message, variant: "destructive" });
-    } else {
-      toast({ title: "Nudge sent ✓", description: p.phone });
+      .select("id")
+      .single();
+
+    if (dErr || !draft) {
+      toast({ title: "Draft failed", description: dErr?.message || "Unknown error", variant: "destructive" });
+      return;
     }
+
+    // 2. Ask Matt to approve via SMS
+    const { error: aErr } = await supabase.functions.invoke("prospect-nudge-request-approval", {
+      body: { draft_id: (draft as any).id },
+    });
+    if (aErr) {
+      toast({ title: "Approval text failed", description: aErr.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "📋 Approval requested", description: `Matt will get a Y/N text for ${p.phone}` });
   }
 
   async function setStatus(id: string, status: string) {
     const { error } = await supabase.from("prospect_nudges").update({ status }).eq("id", id);
-    if (error) {
-      toast({ title: "Update failed", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: `Marked ${status}` });
-    }
+    if (error) toast({ title: "Update failed", description: error.message, variant: "destructive" });
+    else toast({ title: `Marked ${status}` });
   }
 
   async function addProspect(e: React.FormEvent) {
@@ -198,12 +274,28 @@ export default function AdminProspectTracker() {
           <h1 className="text-xl font-bold">📍 Prospect Tracker</h1>
           <p className="text-white/50 text-sm mt-1">Live status of nudged contractor prospects.</p>
         </div>
-        <Button
-          onClick={() => setShowAdd((v) => !v)}
-          className="bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/80"
-        >
-          {showAdd ? "Cancel" : "+ Add Prospect"}
-        </Button>
+        <div className="flex gap-2">
+          <div className="flex rounded-md border border-white/15 overflow-hidden">
+            <button
+              onClick={() => setView("cards")}
+              className={`px-3 py-1.5 text-xs ${view === "cards" ? "bg-[#00d4ff] text-[#0a1628]" : "bg-white/5 text-white/70 hover:bg-white/10"}`}
+            >
+              🗂 Cards
+            </button>
+            <button
+              onClick={() => setView("grid")}
+              className={`px-3 py-1.5 text-xs ${view === "grid" ? "bg-[#00d4ff] text-[#0a1628]" : "bg-white/5 text-white/70 hover:bg-white/10"}`}
+            >
+              📊 Grid
+            </button>
+          </div>
+          <Button
+            onClick={() => setShowAdd((v) => !v)}
+            className="bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/80"
+          >
+            {showAdd ? "Cancel" : "+ Add Prospect"}
+          </Button>
+        </div>
       </div>
 
       {showAdd && (
@@ -211,42 +303,12 @@ export default function AdminProspectTracker() {
           onSubmit={addProspect}
           className="rounded-lg border border-white/10 bg-white/5 p-4 grid grid-cols-1 sm:grid-cols-2 gap-3"
         >
-          <Input
-            placeholder="Phone (required) e.g. +17346207178"
-            value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            className="bg-[#0a1628] border-white/20 text-white"
-          />
-          <Input
-            placeholder="Name"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="bg-[#0a1628] border-white/20 text-white"
-          />
-          <Input
-            placeholder="Business"
-            value={form.business}
-            onChange={(e) => setForm({ ...form, business: e.target.value })}
-            className="bg-[#0a1628] border-white/20 text-white"
-          />
-          <Input
-            placeholder="City"
-            value={form.city}
-            onChange={(e) => setForm({ ...form, city: e.target.value })}
-            className="bg-[#0a1628] border-white/20 text-white"
-          />
-          <Input
-            placeholder="Trade (electrical, hvac, plumbing…)"
-            value={form.trade}
-            onChange={(e) => setForm({ ...form, trade: e.target.value })}
-            className="bg-[#0a1628] border-white/20 text-white"
-          />
-          <Input
-            placeholder="Notes"
-            value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            className="bg-[#0a1628] border-white/20 text-white"
-          />
+          <Input placeholder="Phone (required) e.g. +17346207178" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="bg-[#0a1628] border-white/20 text-white" />
+          <Input placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="bg-[#0a1628] border-white/20 text-white" />
+          <Input placeholder="Business" value={form.business} onChange={(e) => setForm({ ...form, business: e.target.value })} className="bg-[#0a1628] border-white/20 text-white" />
+          <Input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="bg-[#0a1628] border-white/20 text-white" />
+          <Input placeholder="Trade (electrical, hvac, plumbing…)" value={form.trade} onChange={(e) => setForm({ ...form, trade: e.target.value })} className="bg-[#0a1628] border-white/20 text-white" />
+          <Input placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="bg-[#0a1628] border-white/20 text-white" />
           <div className="sm:col-span-2 flex justify-end">
             <Button type="submit" disabled={submitting} className="bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/80">
               {submitting ? "Adding…" : "Add"}
@@ -255,7 +317,7 @@ export default function AdminProspectTracker() {
         </form>
       )}
 
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2 flex-wrap items-center">
         {(["all", "active", "stalled", "converted"] as FilterKey[]).map((k) => (
           <button
             key={k}
@@ -269,6 +331,20 @@ export default function AdminProspectTracker() {
             {k} <span className="opacity-70">({counts[k]})</span>
           </button>
         ))}
+        {view === "grid" && (
+          <div className="ml-auto flex items-center gap-2 text-xs text-white/60">
+            Sort:
+            <select
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value as SortKey)}
+              className="bg-[#0a1628] border border-white/15 text-white rounded px-2 py-1"
+            >
+              <option value="last_contact">Last Contact</option>
+              <option value="status">Status</option>
+              <option value="nudge_count">Nudge Count</option>
+            </select>
+          </div>
+        )}
       </div>
 
       {loading ? (
@@ -277,13 +353,84 @@ export default function AdminProspectTracker() {
         <div className="rounded-lg border border-white/10 bg-white/5 p-8 text-center text-white/50 text-sm">
           No prospects in this view.
         </div>
+      ) : view === "grid" ? (
+        <div className="overflow-x-auto rounded-lg border border-white/10">
+          <table className="w-full text-sm">
+            <thead className="bg-white/5 text-white/60 text-[10px] uppercase tracking-wide">
+              <tr>
+                <th className="text-left p-2">Phone · City</th>
+                <th className="text-left p-2">Trade</th>
+                <th className="text-left p-2">Last Contact</th>
+                <th className="text-left p-2">Status</th>
+                <th className="text-left p-2">Nudges</th>
+                <th className="text-left p-2">Delivery</th>
+                <th className="text-right p-2">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((p) => {
+                const stalled = isStalled(p);
+                const dead = isDead(p);
+                const converted = !!p.paid_at || p.status === "converted";
+                const status = converted ? "converted" : dead ? "dead" : stalled ? "stalled" : "active";
+                const statusCls = converted
+                  ? "text-emerald-300"
+                  : dead
+                  ? "text-white/40"
+                  : stalled
+                  ? "text-amber-300"
+                  : "text-[#00d4ff]";
+                const dot = converted ? "🟢" : dead ? "🔴" : stalled ? "🟠" : "🟢";
+                const delivery = deliveryBadge(p);
+                const pendingDraft = pendingByProspect.get(p.id);
+                return (
+                  <tr key={p.id} className="border-t border-white/5 hover:bg-white/5">
+                    <td className="p-2 text-white">
+                      <div className="font-medium">{p.phone}</div>
+                      <div className="text-white/50 text-xs">{p.city || "—"}</div>
+                    </td>
+                    <td className="p-2 text-white/80">{p.trade || "—"}</td>
+                    <td className="p-2 text-white/70 text-xs">{timeAgo(lastContactIso(p)) || "—"}</td>
+                    <td className={`p-2 text-xs ${statusCls}`}>
+                      {dot} {status}
+                    </td>
+                    <td className="p-2 text-white/80 text-xs">{p.nudge_count ?? 0}×</td>
+                    <td className="p-2 text-xs">
+                      {delivery ? (
+                        <span className={`px-1.5 py-0.5 rounded border ${delivery.cls}`}>{delivery.label}</span>
+                      ) : (
+                        <span className="text-white/30">—</span>
+                      )}
+                    </td>
+                    <td className="p-2 text-right">
+                      {pendingDraft ? (
+                        <span className="text-amber-300 text-[10px] uppercase tracking-wide">⏳ Awaiting Y</span>
+                      ) : (
+                        <Button
+                          onClick={() => sendNudge(p)}
+                          size="sm"
+                          disabled={dead}
+                          className="bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/80 disabled:opacity-40 h-7 px-2 text-xs"
+                        >
+                          📤 Send Next
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {filtered.map((p) => {
             const last = lastActivity(p);
             const stalled = isStalled(p);
             const converted = !!p.paid_at || p.status === "converted";
-            const dead = p.status === "dead";
+            const dead = isDead(p);
+            const delivery = deliveryBadge(p);
+            const pendingDraft = pendingByProspect.get(p.id);
             return (
               <div
                 key={p.id}
@@ -322,7 +469,7 @@ export default function AdminProspectTracker() {
                         : "border-[#00d4ff]/40 text-[#00d4ff]"
                     }`}
                   >
-                    {converted ? "converted" : dead ? "dead" : stalled ? "stalled" : "active"}
+                    {converted ? "converted" : dead ? p.status : stalled ? "stalled" : "active"}
                   </span>
                 </div>
 
@@ -374,9 +521,21 @@ export default function AdminProspectTracker() {
                 </div>
 
                 {p.nudge_sent_at && (
-                  <div className="mt-1 text-[11px] text-white/40">
-                    📤 Last nudge: {timeAgo(p.nudge_sent_at)}
-                    {(p.nudge_count ?? 0) > 1 && <span className="ml-1">· sent {p.nudge_count}×</span>}
+                  <div className="mt-1 flex items-center gap-2 text-[11px] text-white/40 flex-wrap">
+                    <span>📤 Last nudge: {timeAgo(p.nudge_sent_at)}</span>
+                    {(p.nudge_count ?? 0) > 1 && <span>· sent {p.nudge_count}×</span>}
+                    {delivery && (
+                      <span className={`px-1.5 py-0.5 rounded border ${delivery.cls}`}>{delivery.label}</span>
+                    )}
+                    {(p.nudge_retry_count ?? 0) > 0 && (
+                      <span className="text-amber-300/80">· {p.nudge_retry_count} retry</span>
+                    )}
+                  </div>
+                )}
+
+                {pendingDraft && (
+                  <div className="mt-2 inline-block text-[11px] px-2 py-0.5 rounded border border-amber-400/40 text-amber-300">
+                    ⏳ Awaiting your Y · sent {timeAgo(pendingDraft.created_at)}
                   </div>
                 )}
 
@@ -388,10 +547,10 @@ export default function AdminProspectTracker() {
                   <Button
                     onClick={() => sendNudge(p)}
                     size="sm"
-                    disabled={dead}
+                    disabled={dead || !!pendingDraft}
                     className="bg-[#00d4ff] text-[#0a1628] hover:bg-[#00d4ff]/80 disabled:opacity-40"
                   >
-                    📤 {p.nudge_sent_at ? "Send again" : "Send nudge SMS"}
+                    📤 {pendingDraft ? "Awaiting Y…" : p.nudge_sent_at ? "Send again" : "Send nudge SMS"}
                   </Button>
                   <Button
                     onClick={() => copyLink(p.link_token)}
