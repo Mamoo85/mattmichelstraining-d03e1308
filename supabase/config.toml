@@ -186,6 +186,12 @@ verify_jwt = false
 [functions.create-aged-lead-checkout]
 verify_jwt = false
 
+[functions.create-buyer-radar-checkout]
+verify_jwt = false
+
+[functions.rfq-bid-scanner]
+verify_jwt = false
+
 [functions.contractor-fomo-mailer]
 verify_jwt = false
 

@@ -1465,6 +1465,126 @@ export type Database = {
         }
         Relationships: []
       }
+      buyer_radar_accounts: {
+        Row: {
+          business_name: string
+          city: string | null
+          client_id: string
+          created_at: string
+          domain: string | null
+          id: string
+          last_scanned_at: string | null
+          last_signal: Json | null
+          monitor_until: string | null
+          naics_codes: string[] | null
+          notes: string | null
+          state: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_name: string
+          city?: string | null
+          client_id: string
+          created_at?: string
+          domain?: string | null
+          id?: string
+          last_scanned_at?: string | null
+          last_signal?: Json | null
+          monitor_until?: string | null
+          naics_codes?: string[] | null
+          notes?: string | null
+          state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_name?: string
+          city?: string | null
+          client_id?: string
+          created_at?: string
+          domain?: string | null
+          id?: string
+          last_scanned_at?: string | null
+          last_signal?: Json | null
+          monitor_until?: string | null
+          naics_codes?: string[] | null
+          notes?: string | null
+          state?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyer_radar_accounts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "growth_radar_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyer_radar_accounts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "industry_pulse_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buyer_radar_rfqs: {
+        Row: {
+          agency: string | null
+          city: string | null
+          description: string | null
+          detected_at: string
+          due_at: string | null
+          estimated_value: number | null
+          id: string
+          naics: string | null
+          notified_client_ids: string[] | null
+          posted_at: string | null
+          raw: Json | null
+          source: string
+          source_id: string | null
+          state: string | null
+          title: string
+          url: string | null
+        }
+        Insert: {
+          agency?: string | null
+          city?: string | null
+          description?: string | null
+          detected_at?: string
+          due_at?: string | null
+          estimated_value?: number | null
+          id?: string
+          naics?: string | null
+          notified_client_ids?: string[] | null
+          posted_at?: string | null
+          raw?: Json | null
+          source: string
+          source_id?: string | null
+          state?: string | null
+          title: string
+          url?: string | null
+        }
+        Update: {
+          agency?: string | null
+          city?: string | null
+          description?: string | null
+          detected_at?: string
+          due_at?: string | null
+          estimated_value?: number | null
+          id?: string
+          naics?: string | null
+          notified_client_ids?: string[] | null
+          posted_at?: string | null
+          raw?: Json | null
+          source?: string
+          source_id?: string | null
+          state?: string | null
+          title?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       call_outreach_log: {
         Row: {
           call_date: string
