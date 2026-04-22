@@ -67,7 +67,7 @@ const WATCHLIST: ZeroCheck[] = [
   },
   {
     cron: "contractor-prospector-daily",
-    outputTable: "web_design_leads",
+    outputTable: "outreach_leads",
     outputColumn: "created_at",
     windowHours: 30,
     description: "Contractor prospecting",
