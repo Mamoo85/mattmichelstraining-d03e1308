@@ -5804,6 +5804,51 @@ export type Database = {
         }
         Relationships: []
       }
+      free_dossier_requests: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string
+          id: string
+          ip_hash: string | null
+          signal_company: string | null
+          signal_id: string | null
+          source: string | null
+          status: string
+          stripe_session_id: string | null
+          upgraded_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          ip_hash?: string | null
+          signal_company?: string | null
+          signal_id?: string | null
+          source?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          upgraded_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          ip_hash?: string | null
+          signal_company?: string | null
+          signal_id?: string | null
+          source?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          upgraded_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       free_generation_log: {
         Row: {
           created_at: string
