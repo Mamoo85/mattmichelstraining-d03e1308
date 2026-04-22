@@ -271,9 +271,9 @@ export default function AdminCommandBar() {
         action: "regenerate",
         recipient: { to_email: d.to_email, to_phone: d.to_phone, to_name: d.to_name },
         product: productKey,
-        tone: d._tone || "direct",
-        angle: d._angle || null,
-        channel: d.to_phone && !d.to_email ? "sms" : "email",
+        tone,
+        angle,
+        channel,
       });
       if ((data as any)?.ok && (data as any).draft) {
         const nd = (data as any).draft;
