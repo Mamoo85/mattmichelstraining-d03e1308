@@ -1721,3 +1721,9 @@ verify_jwt = false
 [functions.generate-signal-dossier]
 verify_jwt = false
 
+
+[functions.prospect-email-backfill]
+verify_jwt = false
+
+[functions.activate-idle-prospects]
+verify_jwt = false

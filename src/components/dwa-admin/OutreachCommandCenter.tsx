@@ -111,6 +111,85 @@ function FindProspects() {
   const [scoring, setScoring] = useState(false);
   const qc = useQueryClient();
 
+  // Idle Pool counts
+  const { data: idleStats, refetch: refetchIdle } = useQuery({
+    queryKey: ["idle-prospect-pool"],
+    queryFn: async () => {
+      const { data: all } = await supabase
+        .from("prospect_pipeline")
+        .select("industry, email, last_drip_at, pipeline_stage")
+        .neq("pipeline_stage", "archived")
+        .limit(1000);
+      const rows = all ?? [];
+      const total = rows.length;
+      const missingEmail = rows.filter((r: any) => !r.email).length;
+      const neverContacted = rows.filter((r: any) => !r.last_drip_at).length;
+      const byIndustry: Record<string, { total: number; hasEmail: number }> = {};
+      for (const r of rows as any[]) {
+        const k = r.industry || "Unknown";
+        if (!byIndustry[k]) byIndustry[k] = { total: 0, hasEmail: 0 };
+        byIndustry[k].total++;
+        if (r.email) byIndustry[k].hasEmail++;
+      }
+      const top = Object.entries(byIndustry)
+        .sort((a, b) => b[1].total - a[1].total)
+        .slice(0, 6);
+      return { total, missingEmail, neverContacted, top };
+    },
+  });
+
+  const [backfilling, setBackfilling] = useState(false);
+  const [activating, setActivating] = useState(false);
+
+  async function runBackfill() {
+    setBackfilling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("prospect-email-backfill", {
+        body: { limit: 50 },
+      });
+      if (error) throw error;
+      toast.success(
+        `Enriched ${data?.enriched ?? 0} of ${data?.processed ?? 0} prospects (Hunter: ${data?.hunter_hits ?? 0}, scrape: ${data?.scrape_hits ?? 0})`
+      );
+      refetchIdle();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Backfill failed");
+    } finally {
+      setBackfilling(false);
+    }
+  }
+
+  async function runActivate() {
+    // Dry run first to preview
+    const { data: preview, error: pErr } = await supabase.functions.invoke("activate-idle-prospects", {
+      body: { dry_run: true },
+    });
+    if (pErr) {
+      toast.error(pErr.message || "Preview failed");
+      return;
+    }
+    const count = preview?.eligible_count ?? 0;
+    if (count === 0) {
+      toast.info("No eligible prospects (need email + mapped industry)");
+      return;
+    }
+    if (!confirm(`Activate drip for ${count} prospects across ${Object.keys(preview?.by_industry || {}).length} industries? They'll get emailed starting tomorrow morning.`)) return;
+
+    setActivating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("activate-idle-prospects", {
+        body: {},
+      });
+      if (error) throw error;
+      toast.success(`Activated ${data?.activated ?? 0} prospects — drip starts tomorrow AM`);
+      refetchIdle();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Activation failed");
+    } finally {
+      setActivating(false);
+    }
+  }
+
   async function runScrape() {
     setRunning(true);
     try {
@@ -145,6 +224,54 @@ function FindProspects() {
 
   return (
     <div className="space-y-4">
+      {/* ── Idle Pool Activator ── */}
+      {idleStats && idleStats.total > 0 && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 space-y-3">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <h3 className="text-amber-300 font-bold text-sm flex items-center gap-2">
+                ⚠️ {idleStats.total} Idle Prospects Detected
+              </h3>
+              <p className="text-white/60 text-xs mt-1">
+                {idleStats.missingEmail} missing emails · {idleStats.neverContacted} never contacted
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={runBackfill}
+                disabled={backfilling}
+                className="border-amber-500/40 text-amber-200 hover:bg-amber-500/20"
+              >
+                {backfilling ? <Loader2 className="animate-spin" size={14} /> : "🔍"} Backfill Emails
+              </Button>
+              <Button
+                size="sm"
+                onClick={runActivate}
+                disabled={activating}
+                className="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
+              >
+                {activating ? <Loader2 className="animate-spin" size={14} /> : "✉️"} Activate Drip
+              </Button>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+            {idleStats.top.map(([industry, stats]) => (
+              <div key={industry} className="bg-black/20 rounded px-2 py-1.5 flex justify-between gap-2">
+                <span className="text-white/80 truncate">{industry}</span>
+                <span className="text-white/50 shrink-0">
+                  {stats.total} <span className="text-emerald-400">({stats.hasEmail}✉)</span>
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="text-white/40 text-[11px]">
+            Backfill uses Hunter.io + site scrape. Activate flips eligible leads into the daily web-design drip cron.
+          </p>
+        </div>
+      )}
+
       <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-4">
         <h3 className="text-white font-bold text-sm flex items-center gap-2">
           <Search size={14} /> Targeting Engine
