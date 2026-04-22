@@ -38,7 +38,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { email, company_name, phone, contact_name, target_industries, tier } = await req.json();
+    const { email, company_name, phone, contact_name, target_industries, tier, supplier_type } = await req.json();
 
     if (!email) {
       return new Response(JSON.stringify({ error: "email is required" }), {
@@ -73,7 +73,8 @@ serve(async (req) => {
         company_name: company_name || "",
         contact_name: contact_name || "",
         phone: phone || "",
-        target_industries: Array.isArray(target_industries) ? target_industries.join(",") : "boiler,hvac,manufacturing",
+        target_industries: Array.isArray(target_industries) ? target_industries.join(",") : (supplier_type || "general"),
+        supplier_type: supplier_type || "",
       },
       success_url: `${origin}/industry-pulse?success=1&tier=${selectedTier}`,
       cancel_url: `${origin}/industry-pulse`,
