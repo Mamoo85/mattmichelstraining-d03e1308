@@ -1,12 +1,17 @@
 /**
- * PostcardLanding — Multi-offer landing page for postcard QR scans.
- * Public, no auth. URL: /postcard?audience=nursing-home&utm_campaign=<id>
+ * PostcardLanding — QR landing page for physical postcard scans.
+ * Public, no auth. URL: /postcard?audience=...&utm_campaign=<id>&pid=<prospect_id>
  *
- * One QR per postcard → here. Hero offer matches their audience.
- * 3 secondary offers below sell the rest of the product line.
- * Every click logs to postcard_conversions for attribution.
+ * When `pid` is present (the QR was generated for a specific recipient), the page
+ * personalizes the hero with the recipient's company name and unlocks an inline
+ * free Growth Signals dossier preview + a $50 "5 More Dossiers" purchase CTA —
+ * the same offer they'd get on /get-dossier, but pre-unlocked because the
+ * physical postcard already qualified them as the lead.
+ *
+ * When `pid` is missing or lookup fails, falls back to the original multi-offer
+ * layout so old QR codes still work.
  */
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/layout/SEOHead";
