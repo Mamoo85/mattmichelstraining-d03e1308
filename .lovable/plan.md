@@ -1,95 +1,73 @@
 
 
-## Plan: Territory Generator v2 — Tracking, Bulk Mode, Expiry, Test, Confirmation
+## Plan: Fill the Data Gaps — Tier 1 + Tier 2 Only (Zero New Secrets)
 
-All 7 enhancements layered onto the existing `TerritoryLinkGenerator`, `prospect_nudges` table, public `/contractor-leads` page, and Stripe webhook. No breaking changes to existing flows.
-
----
-
-### 1. Conversion tracking + Signups counter
-
-**Migration** — add to `prospect_nudges`:
-- `generated_by_admin boolean default false` — flags rows created from the admin generator
-- `expires_at timestamptz null` — for one-time/24h expiry option
-- `consumed_at timestamptz null` — set when a one-time link is used
-
-`paid_at` already exists — that's our "signup completed" signal (set by Stripe webhook).
-
-**Generator panel** — add a small stat strip at top:
-- `Links generated: 12 · Clicked: 8 · Signed up: 3` — pulls counts from `prospect_nudges WHERE generated_by_admin = true` over last 30 days
-- Auto-refreshes when a new link is generated
-
-**Stripe webhook** (`stripe-webhook/index.ts`, `contractor_lead_subscription` handler) — on success, look up `prospect_nudges` by the `ref` token (already passed through Stripe metadata via the page) and set `paid_at = now()`. Wrap in try/catch so existing flow never breaks.
+Ship 16 enrichment tactics using **only keys already in Lovable**. Skip Snov / Crustdata / NinjaPear (Tier 3). All work is **additive** — touches a new edge function, adds nullable columns, and a small admin UI block. No existing edge function, scoring rule, scraper, or table behavior changes.
 
 ---
 
-### 2. Better SMS / Apology drafts (`{customer_name}` placeholder)
+### What ships
 
-Update both draft templates in `TerritoryLinkGenerator.tsx`:
-- Always include trade label + city + `$<monthly>/mo` (already there but fragile when fields empty)
-- Use `{customer_name}` literal placeholder when no name is entered, so Matt can search-and-replace before sending: `Hey {customer_name} — direct signup link...`
-- Add expiry note when 24h option is enabled: `(Link expires in 24 hours.)`
-- Currency consistently rendered as `$399/mo` or `$299/mo` based on selected trade
+**1 new edge function:** `enrich-prospect-pool`
+- Reads up to 25 `prospect_pool` rows per run where `email IS NULL OR contact_name IS NULL OR last_enriched_at IS NULL OR last_enriched_at < now() - interval '14 days'`
+- Per-audience waterfall — stops as soon as email + contact_name are filled (cost control):
 
----
+| Audience | Waterfall order |
+|---|---|
+| `senior_care` | NPI Registry → CMS Care Compare (`medicare-staffing-intel` reuse) → Sonar OSINT → Google Places |
+| `industrial_mfg` / `supply_house` | Hunter `/domain-search` → Apollo people-search (extends existing `apolloOrgEnrich`) → Firecrawl `/contact` `/about` `/team` (capped 1 page, 5s timeout) → SAM.gov name match → DataForSEO SERP "owner OR president" → Sonar |
+| `trade_contractor` / `healthcare_staffing` | Sonar → Hunter → Firecrawl |
+| **all audiences (always run last)** | Google Places (rating, review_count) → Twilio Lookup carrier classification → HIBP domain breach |
 
-### 3. Territory list / bulk mode
+- Each stage writes its result into a new `meta.enrichment_trace` JSONB key (which API filled which field, cost, duration) — full transparency
+- Fire-and-forget calls existing `score-prospects` for the row after enrichment
 
-Add a toggle: **[Single City] / [Bulk Cities]**
+**1 migration** (additive only, all nullable):
+- `prospect_pool.google_rating numeric`
+- `prospect_pool.review_count int`
+- `prospect_pool.phone_carrier_type text`
+- `prospect_pool.has_breach boolean`
+- `prospect_pool.last_enriched_at timestamptz`
+- `prospect_pool.enrichment_status text` (`pending` | `partial` | `enriched` | `dead_end`)
+- Index: `CREATE INDEX idx_prospect_pool_enrichment_due ON prospect_pool (last_enriched_at NULLS FIRST) WHERE enrichment_status != 'dead_end';`
 
-Bulk mode UI:
-- Multi-line textarea: `Livonia, Redford, Westland` (comma or newline separated)
-- One trade dropdown (applies to all)
-- **[Generate All]** button → creates N `prospect_nudges` rows, one per city
-- Output: a table with one row per city showing `City | Link | [Copy] [Copy SMS]`
-- **[Copy All as List]** button → copies all links as a clean text block
+**1 cron** via `safe_cron_schedule()` (per the Cron Safety Layer rule):
+- `enrich-prospect-pool-hourly` — runs every hour, processes 25 rows, ~$1/hr at full Firecrawl cost (capped at 200 Firecrawl scrapes/day via in-function counter against `ai_call_log`)
 
----
-
-### 4. One-time / 24h expiry option
-
-In the generator:
-- Checkbox: `☐ One-time use / expires in 24h`
-- When checked, the new `prospect_nudges` row gets `expires_at = now() + 24h`
-- `track-prospect-link` edge function — before redirecting:
-  - If `expires_at` is in the past → redirect to `/contractor-leads?expired=1` (no preselect)
-  - If `consumed_at` is already set → same expired redirect
-  - Otherwise set `consumed_at = now()` (fire-and-forget) and proceed
-- `ContractorLeads.tsx` — when `?expired=1`, show a small banner: `This signup link has expired. Pick your trade and city below to continue.`
-
-Backward compatible: links without `expires_at` behave exactly as today.
+**1 admin UI block** in `OutreachCommandCenter.tsx`:
+- **Coverage strip** at top: `Email: 0% · Contact: 0% · Reviews: 0% · Carrier: 0%` — live counts so Matt watches the gaps close
+- **"🔄 Enrich Now"** button per row → invokes `enrich-prospect-pool` for that single ID, shows trace inline
+- **"Enrich All"** button → kicks off a batch of 25 immediately (in addition to the cron)
+- Tooltip on each filled field shows source (`Hunter` / `Sonar` / `NPI` / `Firecrawl` etc.) — comes free from the trace blob
 
 ---
 
-### 5. "Test link" button
+### What stays untouched (the "do not break" guarantee)
 
-Add **[🔍 Test Link]** button next to Copy:
-- Opens the generated URL in a new tab (no token consumption — uses a `?test=1` query so `track-prospect-link` skips the consume step)
-- Actually, simpler: the deep link already works without a token. `Test Link` opens the bare `?trade=&city=` URL (no `ref` token) so the test never burns the real one-time link. Tooltip explains this.
-
----
-
-### 6. Admin SMS inbox: one-tap "Copy correct signup link"
-
-In `src/components/dwa-admin/AdminSMSInbox.tsx`:
-- For threads matched to a `prospect_nudges` row (already shows trade/city context per the existing fix), add a **[🔗 Copy Signup Link]** button in the thread header
-- Click → builds the deep link from the nudge's trade + city + phone + name and copies to clipboard
-- Toast: `Signup link copied — Electrical, Livonia`
-- For threads with no nudge match, button is disabled with tooltip: `No territory context — use Territory Generator`
+- `score-prospects` — **no changes**. New columns are populated; if/when scoring is rewritten later, they're ready. For now, the 30-floor stays — but the *data* underneath now exists, so any future scoring tweak instantly produces a real spread.
+- All 17+ existing scrapers (`contractor-prospector`, `industry-pulse-scanner`, `miosha-license-scraper`, `medicare-staffing-intel`, etc.) — **no changes**
+- `_shared/ai.ts`, `_shared/twilio.ts`, `_shared/scraper.ts`, `cheap-extract.ts` — used as-is, not modified
+- `prospect_pool` existing columns + RLS — **no changes** (migration only ADDs nullable columns)
+- Stripe, webhooks, drip sequences, all client-facing pages — untouched
+- TCPA suppression, opt-outs, `system_comms_log` — untouched
+- Source-protection rule: enrichment trace is **admin-only** (never surfaces to client dashboards / emails / PDFs) — already enforced by `OutreachCommandCenter` being inside `/dwa-admin`
 
 ---
 
-### 7. Post-checkout confirmation page
+### Cost guardrails (zero-surprise budget)
 
-`ContractorLeads.tsx` already shows a `success=1` state. Upgrade it:
-- When `success=1&trade=Electrical&city=Livonia` is present, render a dedicated confirmation card:
-  - **`✅ You're all set for Electrical — Livonia`**
-  - Three next-action tiles:
-    1. `📱 Save Matt's number: (313) 992-1219` (tap to call/text)
-    2. `🔖 Bookmark your signup page: https://detroitwebagent.com/contractor-leads?trade=electrical&city=Livonia` with [Copy] button
-    3. `📧 Check your email for the welcome guide`
-  - Faint reminder: `First lead usually arrives within 3–7 days.`
-- Mobile-first: stacks `grid-cols-1` under 640px
+| API | Per-row cost | Daily cap | Monthly worst case |
+|---|---|---|---|
+| Hunter domain-search | ~$0.04 | covered by existing plan | — |
+| Apollo people-search | covered by existing plan | — | — |
+| Sonar (Perplexity) | ~$0.005 | unbounded but cheap | <$5 |
+| Firecrawl | ~$0.15 | **hard cap 200/day** in code | ~$30 |
+| Google Places Details | ~$0.017 | unbounded | <$10 |
+| Twilio Lookup | $0.005 | unbounded | <$3 |
+| DataForSEO SERP | ~$0.0006 | unbounded | <$2 |
+| NPI / CMS / SAM.gov / HIBP | free | — | $0 |
+
+**Worst-case ceiling: ~$50/mo** to fully enrich the entire 186-prospect pool + ongoing top-ups.
 
 ---
 
@@ -97,25 +75,23 @@ In `src/components/dwa-admin/AdminSMSInbox.tsx`:
 
 | File | Change |
 |---|---|
-| `supabase/migrations/<new>.sql` | Add `generated_by_admin`, `expires_at`, `consumed_at` to `prospect_nudges` |
-| `src/components/dwa-admin/TerritoryLinkGenerator.tsx` | Stats strip, bulk mode toggle, expiry checkbox, Test button, `{customer_name}` placeholder, persists rows to `prospect_nudges` |
-| `src/components/dwa-admin/AdminSMSInbox.tsx` | "Copy Signup Link" button on prospect threads |
-| `src/pages/ContractorLeads.tsx` | Expanded success-state card, `?expired=1` banner |
-| `supabase/functions/track-prospect-link/index.ts` | Honor `expires_at` + `consumed_at` |
-| `supabase/functions/stripe-webhook/index.ts` | Set `paid_at` on `prospect_nudges` when `contractor_lead_subscription` completes (best-effort) |
+| `supabase/functions/enrich-prospect-pool/index.ts` | NEW — waterfall enricher, per-audience routing, trace logging, Firecrawl daily cap |
+| `supabase/migrations/<new>.sql` | Add 6 nullable columns + 1 index to `prospect_pool` |
+| `supabase/migrations/<new>_cron.sql` | `safe_cron_schedule()` for hourly enrichment |
+| `src/components/dwa-admin/OutreachCommandCenter.tsx` | Coverage strip, Enrich Now / Enrich All buttons, source tooltips |
+| `supabase/config.toml` | `verify_jwt = false` for `enrich-prospect-pool` (admin-invoked + cron) |
 
-No new secrets. No Stripe product changes. All changes are additive / backward compatible.
+No new secrets. No existing edge function modified. No existing scraper modified. No scoring change. No client-facing change.
 
 ---
 
 ### Acceptance test
 
-1. Open generator → see `Links: 0 · Clicked: 0 · Signed up: 0`
-2. Pick Electrical + Livonia, check expiry box, click Generate → row appears in `prospect_nudges` with `expires_at` and `generated_by_admin = true`
-3. Click [Test Link] → opens new tab, dropdowns preselect, no token consumed
-4. Click [Copy] and open the real link in incognito → page loads with banner; refresh → "expired" banner shows
-5. Switch to Bulk mode, paste `Livonia, Redford, Westland`, hit Generate All → 3 rows + 3 links
-6. Complete a real Stripe checkout via a generated link → `paid_at` populates → counter shows `Signed up: 1`
-7. After payment, success page shows `You're all set for Electrical — Livonia` with bookmark link
-8. In SMS inbox, prospect thread shows [Copy Signup Link] → click copies correct deep link
+1. Apply migration → 186 rows show `last_enriched_at = null`, `enrichment_status = null`
+2. Click **Enrich All** in OutreachCommandCenter → 25 rows process; coverage strip jumps from 0% → ~10–15% within 60s
+3. Click any enriched row → tooltip shows `Email via Hunter (180ms, $0.04) · Reviews via Google Places · Carrier via Twilio`
+4. Wait 8 hours (or invoke cron manually) → all 186 rows enriched at least once
+5. Spot-check `prospect_pool` in DB → `google_rating`, `review_count`, `phone_carrier_type` populated for ~80%; `email`/`contact_name` populated for ~40–60% (industrial higher than senior_care)
+6. Re-run `score-prospects` manually on the pool → scores still cluster at 30 (expected — scoring not changed yet) **but** `score_breakdown` now includes the new fields, ready for a one-line scoring tweak when you want it
+7. Confirm no existing prospect/lead workflow broke: trigger `contractor-prospector` and `hire-alert-scanner` manually → both run clean, write to their normal tables, no errors
 
