@@ -1089,6 +1089,28 @@ export default function AdminProspector() {
       case "sent": result = result.filter(l => l.drip_step > 0 || l.pipeline_stage === "outreach_sent"); break;
       case "no_contact": result = result.filter(l => l.drip_step === 0 && l.drip_status === "not_started"); break;
     }
+    // Advanced search: name/phone/email/city/industry/notes
+    if (pipelineSearch.trim()) {
+      const q = pipelineSearch.trim().toLowerCase();
+      const digits = q.replace(/\D/g, "");
+      result = result.filter(l => {
+        if (l.business_name?.toLowerCase().includes(q)) return true;
+        if (l.email?.toLowerCase().includes(q)) return true;
+        if (l.city?.toLowerCase().includes(q)) return true;
+        if (l.industry?.toLowerCase().includes(q)) return true;
+        if (digits.length >= 3 && l.phone && l.phone.replace(/\D/g, "").includes(digits)) return true;
+        return false;
+      });
+    }
+    if (tradeFilter !== "all") {
+      result = result.filter(l => (l.industry || "").toLowerCase() === tradeFilter.toLowerCase());
+    }
+    if (cityFilter !== "all") {
+      result = result.filter(l => (l.city || "").toLowerCase() === cityFilter.toLowerCase());
+    }
+    if (stageFilterAdv !== "all") {
+      result = result.filter(l => l.pipeline_stage === stageFilterAdv);
+    }
     switch (pipelineSort) {
       case "score_desc": result.sort((a, b) => (b.lead_score || 0) - (a.lead_score || 0)); break;
       case "reviews_desc": result.sort((a, b) => (b.review_count || 0) - (a.review_count || 0)); break;
@@ -1098,7 +1120,23 @@ export default function AdminProspector() {
       default: result.sort((a, b) => (b.created_at || "").localeCompare(a.created_at || "")); break;
     }
     return result;
-  }, [pipelineLeads, pipelineFilter, pipelineSort]);
+  }, [pipelineLeads, pipelineFilter, pipelineSort, pipelineSearch, tradeFilter, cityFilter, stageFilterAdv]);
+
+  // Available trades + cities for dropdowns (from full set)
+  const availableTrades = useMemo(() => {
+    const set = new Set<string>();
+    pipelineLeads.forEach(l => { if (l.industry) set.add(l.industry); });
+    return Array.from(set).sort();
+  }, [pipelineLeads]);
+  const availableCities = useMemo(() => {
+    const set = new Set<string>();
+    pipelineLeads.forEach(l => { if (l.city) set.add(l.city); });
+    return Array.from(set).sort();
+  }, [pipelineLeads]);
+
+  // Reset pagination when filters change
+  useEffect(() => { setStagePages({}); }, [pipelineFilter, pipelineSearch, tradeFilter, cityFilter, stageFilterAdv, pipelinePageSize]);
+
 
   const pipelineByStage = useMemo(() => {
     const map: Record<string, PipelineLead[]> = {};
