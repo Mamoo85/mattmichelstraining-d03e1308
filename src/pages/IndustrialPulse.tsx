@@ -223,16 +223,16 @@ export default function IndustrialPulse() {
         {/* Unlock modal */}
         {unlockOpen && (
           <div
-            className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center px-4"
+            className="fixed inset-0 z-50 bg-black/90 sm:bg-black/80 flex items-end sm:items-center justify-center px-0 sm:px-4"
             onClick={() => !unlocking && setUnlockOpen(false)}
           >
             <div
-              className="bg-[#020617] border-2 border-[#00d4ff] rounded-lg max-w-md w-full p-6 relative"
+              className="bg-[#020617] border-2 border-[#00d4ff] rounded-t-xl sm:rounded-lg w-full max-w-md p-4 sm:p-6 relative max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => !unlocking && setUnlockOpen(false)}
-                className="absolute top-3 right-3 text-slate-400 hover:text-white"
+                className="absolute top-3 right-3 text-slate-400 hover:text-white p-1"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
@@ -240,7 +240,7 @@ export default function IndustrialPulse() {
               <div className="text-xs tracking-widest text-[#00d4ff] font-bold uppercase mb-2">
                 {unlockPlan === "snapshot_50" ? "This Week's Unlock" : "Firehose Subscription"}
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
                 {unlockPlan === "snapshot_50" ? "$50 — one-time" : "$199/mo — cancel anytime"}
               </h3>
               <p className="text-sm text-slate-400 mb-5 leading-relaxed">
@@ -253,14 +253,14 @@ export default function IndustrialPulse() {
                 <button
                   type="button"
                   onClick={() => setUnlockPlan("snapshot_50")}
-                  className={`flex-1 px-3 py-2 rounded font-semibold uppercase tracking-wider ${unlockPlan === "snapshot_50" ? "bg-[#00d4ff] text-[#0a1628]" : "border border-[#1e3a5f] text-slate-400"}`}
+                  className={`flex-1 px-3 py-3 rounded font-semibold uppercase tracking-wider min-h-[44px] ${unlockPlan === "snapshot_50" ? "bg-[#00d4ff] text-[#0a1628]" : "border border-[#1e3a5f] text-slate-400"}`}
                 >
                   Snapshot $50
                 </button>
                 <button
                   type="button"
                   onClick={() => setUnlockPlan("firehose_199")}
-                  className={`flex-1 px-3 py-2 rounded font-semibold uppercase tracking-wider ${unlockPlan === "firehose_199" ? "bg-[#00d4ff] text-[#0a1628]" : "border border-[#1e3a5f] text-slate-400"}`}
+                  className={`flex-1 px-3 py-3 rounded font-semibold uppercase tracking-wider min-h-[44px] ${unlockPlan === "firehose_199" ? "bg-[#00d4ff] text-[#0a1628]" : "border border-[#1e3a5f] text-slate-400"}`}
                 >
                   Firehose $199/mo
                 </button>
@@ -273,17 +273,17 @@ export default function IndustrialPulse() {
                   onChange={(e) => setUnlockEmail(e.target.value)}
                   required
                   placeholder="Work email"
-                  className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#00d4ff] text-white px-4 py-3 rounded-md outline-none text-sm"
+                  className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#00d4ff] text-white px-4 py-3 sm:py-4 rounded-md outline-none text-sm min-h-[48px]"
                 />
                 <button
                   type="submit"
                   disabled={unlocking || !unlockEmail.trim()}
-                  className="w-full bg-[#00d4ff] text-[#0a1628] font-bold py-3 rounded-md hover:bg-[#00d4ff]/90 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm uppercase tracking-wider"
+                  className="w-full bg-[#00d4ff] text-[#0a1628] font-bold py-3 sm:py-4 rounded-md hover:bg-[#00d4ff]/90 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm uppercase tracking-wider min-h-[48px]"
                 >
                   {unlocking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                   {unlocking ? "Redirecting…" : "Continue to checkout"}
                 </button>
-                <p className="text-[10px] text-slate-500 text-center">
+                <p className="text-[10px] sm:text-[11px] text-slate-500 text-center">
                   Secure Stripe checkout · No account required
                 </p>
               </form>
