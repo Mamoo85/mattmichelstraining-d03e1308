@@ -43,7 +43,8 @@ type Tab =
   | "command-center" | "sms-inbox" | "sms-drafts" | "call-list" | "linkedin-blitz" | "ad-launcher" | "agency-outreach"
   | "contractor-leads" | "contractor-onboarding" | "dead-leads" | "fielddesk" | "techalert" | "clients-all"
   | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map"
-  | "health" | "simulation" | "playbook-hub" | "field-ops" | "command";
+  | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
+  | "sales-hub";
 
 const GROUPS: SidebarGroup[] = [
   {
