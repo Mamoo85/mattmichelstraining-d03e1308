@@ -464,17 +464,17 @@ function ActiveCampaigns() {
         meta: `${c.total_sent ?? 0} sent`,
         date: c.created_at as string,
       }))} />
-      <CampaignCard title="📧 Recent Emails" badge="email" rows={emails.map((e: Record<string, unknown>) => ({
+      <CampaignCard title="📧 Recent Emails" badge="email" rows={(emails as unknown as Record<string, unknown>[]).map((e) => ({
         id: e.id as string,
-        primary: (e.subject ?? "—") as string,
+        primary: (e.template_name ?? "—") as string,
         secondary: (e.recipient_email ?? "—") as string,
         meta: (e.status ?? "—") as string,
         date: e.created_at as string,
       }))} />
-      <CampaignCard title="💬 Recent SMS" badge="sms" rows={sms.map((s: Record<string, unknown>) => ({
+      <CampaignCard title="💬 Recent SMS" badge="sms" rows={(sms as unknown as Record<string, unknown>[]).map((s) => ({
         id: s.id as string,
-        primary: ((s.body as string)?.slice(0, 60) ?? "—") as string,
-        secondary: (s.to_phone ?? "—") as string,
+        primary: ((s.body_preview as string)?.slice(0, 60) ?? "—") as string,
+        secondary: (s.recipient ?? "—") as string,
         meta: (s.status ?? "—") as string,
         date: s.created_at as string,
       }))} />
