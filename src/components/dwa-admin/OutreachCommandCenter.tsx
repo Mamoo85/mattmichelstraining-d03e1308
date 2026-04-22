@@ -224,6 +224,54 @@ function FindProspects() {
 
   return (
     <div className="space-y-4">
+      {/* ── Idle Pool Activator ── */}
+      {idleStats && idleStats.total > 0 && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 space-y-3">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <h3 className="text-amber-300 font-bold text-sm flex items-center gap-2">
+                ⚠️ {idleStats.total} Idle Prospects Detected
+              </h3>
+              <p className="text-white/60 text-xs mt-1">
+                {idleStats.missingEmail} missing emails · {idleStats.neverContacted} never contacted
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={runBackfill}
+                disabled={backfilling}
+                className="border-amber-500/40 text-amber-200 hover:bg-amber-500/20"
+              >
+                {backfilling ? <Loader2 className="animate-spin" size={14} /> : "🔍"} Backfill Emails
+              </Button>
+              <Button
+                size="sm"
+                onClick={runActivate}
+                disabled={activating}
+                className="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
+              >
+                {activating ? <Loader2 className="animate-spin" size={14} /> : "✉️"} Activate Drip
+              </Button>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+            {idleStats.top.map(([industry, stats]) => (
+              <div key={industry} className="bg-black/20 rounded px-2 py-1.5 flex justify-between gap-2">
+                <span className="text-white/80 truncate">{industry}</span>
+                <span className="text-white/50 shrink-0">
+                  {stats.total} <span className="text-emerald-400">({stats.hasEmail}✉)</span>
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="text-white/40 text-[11px]">
+            Backfill uses Hunter.io + site scrape. Activate flips eligible leads into the daily web-design drip cron.
+          </p>
+        </div>
+      )}
+
       <div className="bg-white/5 border border-white/10 rounded-lg p-4 space-y-4">
         <h3 className="text-white font-bold text-sm flex items-center gap-2">
           <Search size={14} /> Targeting Engine
