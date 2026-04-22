@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Loader2, Mail, Lock, TrendingUp, MapPin, Briefcase, CheckCircle2 } from "lucide-react";
+import { Loader2, Mail, Lock, TrendingUp, MapPin, Briefcase, CheckCircle2, Zap, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -37,6 +37,40 @@ export default function IndustrialPulse() {
   const [vertical, setVertical] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [unlockOpen, setUnlockOpen] = useState(false);
+  const [unlockEmail, setUnlockEmail] = useState("");
+  const [unlockPlan, setUnlockPlan] = useState<"snapshot_50" | "firehose_199">("snapshot_50");
+  const [unlocking, setUnlocking] = useState(false);
+
+  useEffect(() => {
+    // Auto-open unlock modal if ?unlock=1 in URL (from email CTA)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("unlock") === "1") setUnlockOpen(true);
+    if (params.get("unlocked") === "1") {
+      toast.success("Payment received — check your inbox in the next 5 minutes for the full list.");
+    }
+  }, []);
+
+  async function handleUnlock(e: React.FormEvent) {
+    e.preventDefault();
+    if (!unlockEmail.trim()) return;
+    setUnlocking(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-industrial-pulse-checkout", {
+        body: { email: unlockEmail.trim(), plan: unlockPlan, business_name: businessName.trim() || undefined },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Checkout failed — try again");
+      setUnlocking(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -156,9 +190,106 @@ export default function IndustrialPulse() {
                 ))}
               </div>
             )}
+
+            {/* Unlock CTA strip — shown right under teasers */}
+            {teasers.length > 0 && (
+              <div className="mt-8 border-2 border-[#00d4ff] bg-[#0a1628] rounded-md p-6 text-center">
+                <div className="text-xs tracking-widest text-[#00d4ff] font-bold uppercase mb-2">
+                  Want the company names?
+                </div>
+                <div className="text-lg md:text-xl font-bold text-white mb-4">
+                  Unlock all {totalCount || 3} signals from this week
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    onClick={() => { setUnlockPlan("snapshot_50"); setUnlockOpen(true); }}
+                    className="bg-[#00d4ff] text-[#0a1628] font-bold px-6 py-3 rounded-md hover:bg-[#00d4ff]/90 transition text-sm uppercase tracking-wider flex items-center justify-center gap-2"
+                  >
+                    <Zap className="w-4 h-4" /> Unlock this week · $50
+                  </button>
+                  <button
+                    onClick={() => { setUnlockPlan("firehose_199"); setUnlockOpen(true); }}
+                    className="border-2 border-[#00d4ff] text-[#00d4ff] font-bold px-6 py-3 rounded-md hover:bg-[#00d4ff]/10 transition text-sm uppercase tracking-wider"
+                  >
+                    Daily firehose · $199/mo
+                  </button>
+                </div>
+                <div className="text-[11px] text-slate-500 mt-3">One-time or cancel anytime · Instant email delivery</div>
+              </div>
+            )}
           </div>
         </section>
 
+        {/* Unlock modal */}
+        {unlockOpen && (
+          <div
+            className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center px-4"
+            onClick={() => !unlocking && setUnlockOpen(false)}
+          >
+            <div
+              className="bg-[#020617] border-2 border-[#00d4ff] rounded-lg max-w-md w-full p-6 relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => !unlocking && setUnlockOpen(false)}
+                className="absolute top-3 right-3 text-slate-400 hover:text-white"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="text-xs tracking-widest text-[#00d4ff] font-bold uppercase mb-2">
+                {unlockPlan === "snapshot_50" ? "This Week's Unlock" : "Firehose Subscription"}
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">
+                {unlockPlan === "snapshot_50" ? "$50 — one-time" : "$199/mo — cancel anytime"}
+              </h3>
+              <p className="text-sm text-slate-400 mb-5 leading-relaxed">
+                {unlockPlan === "snapshot_50"
+                  ? `Get all ${totalCount || 3} of this week's signals: full company name, address, hiring count, predicted spend window. Delivered to your inbox within 5 minutes.`
+                  : "Daily access to every Metro Detroit hiring signal across every vertical — boiler, HVAC, welding, steel, lumber, electrical, plumbing. Cancel anytime."}
+              </p>
+
+              <div className="flex gap-2 mb-4 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setUnlockPlan("snapshot_50")}
+                  className={`flex-1 px-3 py-2 rounded font-semibold uppercase tracking-wider ${unlockPlan === "snapshot_50" ? "bg-[#00d4ff] text-[#0a1628]" : "border border-[#1e3a5f] text-slate-400"}`}
+                >
+                  Snapshot $50
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUnlockPlan("firehose_199")}
+                  className={`flex-1 px-3 py-2 rounded font-semibold uppercase tracking-wider ${unlockPlan === "firehose_199" ? "bg-[#00d4ff] text-[#0a1628]" : "border border-[#1e3a5f] text-slate-400"}`}
+                >
+                  Firehose $199/mo
+                </button>
+              </div>
+
+              <form onSubmit={handleUnlock} className="space-y-3">
+                <input
+                  type="email"
+                  value={unlockEmail}
+                  onChange={(e) => setUnlockEmail(e.target.value)}
+                  required
+                  placeholder="Work email"
+                  className="w-full bg-[#0a1628] border border-[#1e3a5f] focus:border-[#00d4ff] text-white px-4 py-3 rounded-md outline-none text-sm"
+                />
+                <button
+                  type="submit"
+                  disabled={unlocking || !unlockEmail.trim()}
+                  className="w-full bg-[#00d4ff] text-[#0a1628] font-bold py-3 rounded-md hover:bg-[#00d4ff]/90 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm uppercase tracking-wider"
+                >
+                  {unlocking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                  {unlocking ? "Redirecting…" : "Continue to checkout"}
+                </button>
+                <p className="text-[10px] text-slate-500 text-center">
+                  Secure Stripe checkout · No account required
+                </p>
+              </form>
+            </div>
+          </div>
+        )}
         {/* Signup form */}
         <section id="signup" className="px-6 py-16 border-t border-[#1e3a5f]">
           <div className="max-w-xl mx-auto">

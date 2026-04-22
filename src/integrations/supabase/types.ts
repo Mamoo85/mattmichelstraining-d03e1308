@@ -7250,6 +7250,57 @@ export type Database = {
         }
         Relationships: []
       }
+      industrial_pulse_unlocks: {
+        Row: {
+          activated_at: string | null
+          amount_cents: number | null
+          canceled_at: string | null
+          created_at: string
+          email: string
+          id: string
+          metadata: Json | null
+          plan: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_session_id: string | null
+          stripe_subscription_id: string | null
+          unlocked_signal_ids: string[] | null
+          week_start: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          amount_cents?: number | null
+          canceled_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          metadata?: Json | null
+          plan: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+          unlocked_signal_ids?: string[] | null
+          week_start?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          amount_cents?: number | null
+          canceled_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          metadata?: Json | null
+          plan?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+          unlocked_signal_ids?: string[] | null
+          week_start?: string | null
+        }
+        Relationships: []
+      }
       industry_pulse_client_actions: {
         Row: {
           action: string
