@@ -630,6 +630,7 @@ function RankedPool() {
         </div>
       </div>
     </div>
+    </TooltipProvider>
   );
 }
 
