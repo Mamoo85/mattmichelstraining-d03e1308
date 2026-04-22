@@ -69,6 +69,7 @@ export default function ContractorLeads() {
   const success = params.get("success") === "1";
   const successCid = params.get("cid") || "";
   const refToken = params.get("ref") || "";
+  const expired = params.get("expired") === "1";
 
   const initialTrade = normalizeTradeParam(params.get("trade"));
   const initialCity = normalizeCityParam(params.get("city"));

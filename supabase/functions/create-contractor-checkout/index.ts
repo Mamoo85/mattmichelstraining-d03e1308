@@ -33,7 +33,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   try {
-    const { email, name, business_name, phone, trade, city, state = "MI" } = await req.json();
+    const { email, name, business_name, phone, trade, city, state = "MI", ref } = await req.json();
 
     if (!email || !trade || !city) {
       return new Response(JSON.stringify({ error: "email, trade, and city are required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -104,6 +104,7 @@ serve(async (req) => {
         state,
         contractor_id: contractor?.id || "",
         business_name: business_name || name,
+        ...(ref ? { ref: String(ref).slice(0, 64) } : {}),
       },
       success_url: `${origin}/contractor-leads?success=1&trade=${encodeURIComponent(normalizedTrade)}&city=${encodeURIComponent(city)}&cid=${encodeURIComponent(contractor?.id || "")}`,
       cancel_url: `${origin}/contractor-leads`,
