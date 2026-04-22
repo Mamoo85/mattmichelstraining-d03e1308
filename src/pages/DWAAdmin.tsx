@@ -51,6 +51,7 @@ const AdminSMSInbox = lazy(() => import("@/components/dwa-admin/AdminSMSInbox"))
 const AdminPendingSMSDrafts = lazy(() => import("@/components/dwa-admin/AdminPendingSMSDrafts"));
 const AdminAdLauncher = lazy(() => import("@/components/dwa-admin/AdminAdLauncher"));
 const AdminOutreachBlocklist = lazy(() => import("@/components/dwa-admin/AdminOutreachBlocklist"));
+const AdminOutreachLog = lazy(() => import("@/components/admin/AdminOutreachLog"));
 const AdminErrorLogs = lazy(() => import("@/components/dwa-admin/AdminErrorLogs"));
 
 const AdminCoverageMap = lazy(() => import("@/components/admin/AdminCoverageMap"));
