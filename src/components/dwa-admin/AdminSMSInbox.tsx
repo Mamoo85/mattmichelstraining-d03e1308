@@ -530,7 +530,10 @@ export default function AdminSMSInbox() {
         <div className="flex items-center gap-2 min-w-0">
           <h2 className="text-base sm:text-lg font-bold text-white shrink-0">💬 SMS</h2>
           {totalUnread > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full bg-[#00d4ff] text-[#0a1628] text-[10px] font-bold shrink-0">
+            <span
+              className="px-1.5 py-0.5 rounded-full bg-[#00d4ff] text-[#0a1628] text-[10px] font-bold shrink-0"
+              title={`${totalUnread} unread across visible threads`}
+            >
               {totalUnread}
             </span>
           )}
