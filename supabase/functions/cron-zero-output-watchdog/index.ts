@@ -33,6 +33,7 @@ const CORS = {
 
 interface ZeroCheck {
   cron: string;
+  functionName: string;       // edge function the cron calls — used as URL fallback
   outputTable: string;
   outputColumn: string;       // timestamp column to filter on
   windowHours: number;        // raise alert if 0 rows in last N hours
@@ -43,6 +44,7 @@ interface ZeroCheck {
 const WATCHLIST: ZeroCheck[] = [
   {
     cron: "hire-alert-healthcare-1am-et",
+    functionName: "hire-alert-scanner",
     outputTable: "hire_alert_runs",
     outputColumn: "started_at",
     windowHours: 30,
@@ -51,6 +53,7 @@ const WATCHLIST: ZeroCheck[] = [
   },
   {
     cron: "hire-alert-industrial-2am-et",
+    functionName: "hire-alert-scanner",
     outputTable: "hire_alert_runs",
     outputColumn: "started_at",
     windowHours: 30,
@@ -59,6 +62,7 @@ const WATCHLIST: ZeroCheck[] = [
   },
   {
     cron: "industry-pulse-commercial-3am-et",
+    functionName: "industry-pulse-scanner",
     outputTable: "industry_pulse_signals",
     outputColumn: "created_at",
     windowHours: 30,
@@ -67,6 +71,7 @@ const WATCHLIST: ZeroCheck[] = [
   },
   {
     cron: "contractor-prospector-daily",
+    functionName: "contractor-prospector",
     outputTable: "outreach_leads",
     outputColumn: "created_at",
     windowHours: 30,
