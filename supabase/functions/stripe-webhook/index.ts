@@ -1244,8 +1244,36 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // === Channel 7 — Pulse Alerts SMS subscription ($29/mo) ===
+      if (meta.type === "pulse_alerts_subscription") {
+        try {
+          const email = (meta.email || customerEmail || "").toLowerCase();
+          const phone = meta.phone || "";
+          if (!email || !phone) throw new Error("missing email or phone");
+          await (sb.from as any)("pulse_alert_clients").insert({
+            email,
+            phone,
+            business_name: meta.business_name || null,
+            vertical_filter: meta.vertical || null,
+            city_filter: meta.city || null,
+            active: true,
+            stripe_customer_id: session.customer as string || null,
+            stripe_subscription_id: session.subscription as string || null,
+          });
+          if (RESEND_API_KEY) {
+            await dwaEmail(email, "✅ Pulse Alerts active — first SMS within 24h",
+              `<p>You're subscribed to Pulse Alerts ($29/mo). The next high-confidence Metro Detroit hiring signal will arrive by SMS at ${phone}.</p><p>Reply STOP at any time to opt out.</p><p>— Matt, Detroit Web Agency</p>`).catch(() => {});
+          }
+          await notifyMatt(`💰 New Pulse Alerts subscriber — ${email}`, `<p>${email} · ${phone} · vertical: ${meta.vertical || "any"}</p>`).catch(() => {});
+        } catch (e) {
+          console.error("[WEBHOOK] pulse_alerts_subscription error:", e);
+          await notifyMatt(`🚨 Pulse Alerts fulfillment FAILED`, `<p>${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
+          return new Response(JSON.stringify({ error: "fulfillment failed" }), { status: 500 });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
 
-      // ── DOMAIN BREACH REPORT — $19 one-time ──────────────────────────────────
+
       if (meta.type === "domain_breach_report") {
         try {
           const email = meta.customer_email || meta.email || customerEmail;
