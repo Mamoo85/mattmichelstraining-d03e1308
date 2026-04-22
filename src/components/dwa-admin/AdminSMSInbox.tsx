@@ -184,7 +184,9 @@ export default function AdminSMSInbox() {
   const [composeTo, setComposeTo] = useState("");
   const [drafting, setDrafting] = useState(false);
   const [showCheatsheet, setShowCheatsheet] = useState(false);
-  const [inboundOnlyMode, setInboundOnlyMode] = useState(true);
+  const [inboundOnlyMode, setInboundOnlyMode] = useState(
+    () => safeLocalStorage.getItem("dwa_sms_inbound_only") !== "false"
+  );
   const [composerFocused, setComposerFocused] = useState(false);
   const [resendTarget, setResendTarget] = useState<ResendTarget | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
