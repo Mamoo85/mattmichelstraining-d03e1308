@@ -357,11 +357,17 @@ export default function AdminSMSInbox() {
   // Local "read" tracking via localStorage (no DB column needed yet)
   function readSet(): Set<string> {
     try {
-      const raw = localStorage.getItem("dwa_sms_read") ?? "[]";
+      const raw = safeLocalStorage.getItem("dwa_sms_read") ?? "[]";
       return new Set(JSON.parse(raw));
     } catch {
       return new Set();
     }
+  }
+  function writeReadSet(set: Set<string>) {
+    // Cap stored set at most recent 5,000 IDs to prevent unbounded growth
+    const arr = Array.from(set);
+    const capped = arr.length > 5000 ? arr.slice(arr.length - 5000) : arr;
+    safeLocalStorage.setItem("dwa_sms_read", JSON.stringify(capped));
   }
   function markThreadRead(thread: Thread) {
     const set = readSet();
@@ -373,7 +379,7 @@ export default function AdminSMSInbox() {
       }
     }
     if (changed) {
-      localStorage.setItem("dwa_sms_read", JSON.stringify(Array.from(set)));
+      writeReadSet(set);
       // Recompute unread count for this thread without a full reload
       setThreads((prev) =>
         prev.map((t) => (t.phone === thread.phone ? { ...t, unreadCount: 0 } : t))
@@ -401,8 +407,9 @@ export default function AdminSMSInbox() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Reload when filter mode flips
+  // Persist inboundOnlyMode + reload when it flips
   useEffect(() => {
+    safeLocalStorage.setItem("dwa_sms_inbound_only", String(inboundOnlyMode));
     loadInbox();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inboundOnlyMode]);
