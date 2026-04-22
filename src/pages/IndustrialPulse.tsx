@@ -248,30 +248,80 @@ export default function IndustrialPulse() {
               </div>
             )}
 
-            {/* Unlock CTA strip — shown right under teasers */}
+            {/* Unlock CTA strip — shown right under teasers; messaging reflects current entitlement */}
             {teasers.length > 0 && (
               <div className="mt-8 border-2 border-[#00d4ff] bg-[#0a1628] rounded-md p-6 text-center">
-                <div className="text-xs tracking-widest text-[#00d4ff] font-bold uppercase mb-2">
-                  Want the company names?
-                </div>
-                <div className="text-lg md:text-xl font-bold text-white mb-4">
-                  Unlock all {totalCount || 3} signals from this week
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <button
-                    onClick={() => { setUnlockPlan("snapshot_50"); setUnlockOpen(true); }}
-                    className="bg-[#00d4ff] text-[#0a1628] font-bold px-6 py-3 rounded-md hover:bg-[#00d4ff]/90 transition text-sm uppercase tracking-wider flex items-center justify-center gap-2"
-                  >
-                    <Zap className="w-4 h-4" /> Unlock this week · $50
-                  </button>
-                  <button
-                    onClick={() => { setUnlockPlan("firehose_199"); setUnlockOpen(true); }}
-                    className="border-2 border-[#00d4ff] text-[#00d4ff] font-bold px-6 py-3 rounded-md hover:bg-[#00d4ff]/10 transition text-sm uppercase tracking-wider"
-                  >
-                    Daily firehose · $199/mo
-                  </button>
-                </div>
-                <div className="text-[11px] text-slate-500 mt-3">One-time or cancel anytime · Instant email delivery</div>
+                {entitlement?.status === "active_firehose" ? (
+                  <>
+                    <div className="text-xs tracking-widest text-[#00d4ff] font-bold uppercase mb-2">
+                      ✓ Firehose active
+                    </div>
+                    <div className="text-lg md:text-xl font-bold text-white mb-2">
+                      You already have full access to every signal.
+                    </div>
+                    <div className="text-sm text-slate-400">
+                      Daily digests are landing in <span className="text-white font-semibold">{(unlockEmail || email).trim()}</span>.
+                      No need to unlock anything else.
+                    </div>
+                  </>
+                ) : entitlement?.status === "active_snapshot" ? (
+                  <>
+                    <div className="text-xs tracking-widest text-[#00d4ff] font-bold uppercase mb-2">
+                      ✓ This week's snapshot is unlocked
+                    </div>
+                    <div className="text-lg md:text-xl font-bold text-white mb-2">
+                      Active for {entitlement.days_remaining} more day{entitlement.days_remaining === 1 ? "" : "s"}
+                      {entitlement.expires_on ? ` · expires ${entitlement.expires_on}` : ""}
+                    </div>
+                    <div className="text-sm text-slate-400 mb-4">
+                      Want this every week without re-buying? Upgrade to the daily firehose.
+                    </div>
+                    <button
+                      onClick={() => { setUnlockPlan("firehose_199"); setUnlockOpen(true); }}
+                      className="border-2 border-[#00d4ff] text-[#00d4ff] font-bold px-6 py-3 rounded-md hover:bg-[#00d4ff]/10 transition text-sm uppercase tracking-wider"
+                    >
+                      Upgrade to firehose · $199/mo
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-xs tracking-widest text-[#00d4ff] font-bold uppercase mb-2">
+                      {entitlement?.status === "expired_snapshot"
+                        ? "Your last snapshot has expired"
+                        : entitlement?.status === "pending"
+                          ? "Pending checkout — finish payment to unlock"
+                          : "Want the company names?"}
+                    </div>
+                    <div className="text-lg md:text-xl font-bold text-white mb-4">
+                      {entitlement?.status === "expired_snapshot"
+                        ? `Unlock this week's ${totalCount || 3} new signals`
+                        : `Unlock all ${totalCount || 3} signals from this week`}
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <button
+                        onClick={() => { setUnlockPlan("snapshot_50"); setUnlockOpen(true); }}
+                        className="bg-[#00d4ff] text-[#0a1628] font-bold px-6 py-3 rounded-md hover:bg-[#00d4ff]/90 transition text-sm uppercase tracking-wider flex items-center justify-center gap-2"
+                      >
+                        <Zap className="w-4 h-4" />
+                        {entitlement?.status === "expired_snapshot" ? "Unlock new week · $50" : "Unlock this week · $50"}
+                      </button>
+                      <button
+                        onClick={() => { setUnlockPlan("firehose_199"); setUnlockOpen(true); }}
+                        className="border-2 border-[#00d4ff] text-[#00d4ff] font-bold px-6 py-3 rounded-md hover:bg-[#00d4ff]/10 transition text-sm uppercase tracking-wider"
+                      >
+                        Daily firehose · $199/mo
+                      </button>
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-3">
+                      {entitlement?.status === "expired_snapshot"
+                        ? "Snapshots cover one week (Mon–Sun). Firehose never expires."
+                        : "One-time or cancel anytime · Instant email delivery"}
+                    </div>
+                  </>
+                )}
+                {checkingEntitlement && (
+                  <div className="text-[10px] text-slate-600 mt-2 uppercase tracking-widest">checking access…</div>
+                )}
               </div>
             )}
           </div>
