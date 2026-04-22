@@ -439,6 +439,65 @@ async function executePlan(planObj: any) {
   return { stepResults, stepLog };
 }
 
+// ─────────────────── risk scan ───────────────────
+
+const M2_KEYWORDS = ["training", "athlete", "coach", "fitness", "workout", "m2 ", "m² ", "matt michels training"];
+
+function scanRisk(planObj: any, prompt: string): { risk: "ok" | "warn" | "block"; reasons: string[] } {
+  const reasons: string[] = [];
+  let level: "ok" | "warn" | "block" = "ok";
+
+  const promptLc = (prompt || "").toLowerCase();
+  for (const kw of M2_KEYWORDS) {
+    if (promptLc.includes(kw)) {
+      reasons.push(`Prompt mentions "${kw.trim()}" — M2 territory.`);
+      level = "block";
+    }
+  }
+
+  const reasoningLc = String(planObj?.reasoning || "").toLowerCase();
+  for (const kw of M2_KEYWORDS) {
+    if (reasoningLc.includes(kw)) {
+      reasons.push(`Plan reasoning mentions "${kw.trim()}" — M2 territory.`);
+      level = "block";
+    }
+  }
+
+  const steps = Array.isArray(planObj?.steps) ? planObj.steps : [];
+  for (const s of steps) {
+    const args = s?.args || {};
+    if (args.table && !WHITELIST_TABLES.has(args.table)) {
+      reasons.push(`Tries to access table "${args.table}" (not in DWA whitelist).`);
+      level = "block";
+    }
+    if (args.product && !(args.product in PRODUCTS)) {
+      reasons.push(`Tries to pitch product "${args.product}" (not a DWA product).`);
+      level = "block";
+    }
+    if (s.tool === "web_research" || s.tool === "firecrawl_url") {
+      reasons.push(`Uses ${s.tool} — extra cost (~$0.01).`);
+      if (level === "ok") level = "warn";
+    }
+    if (Array.isArray(args.recipients) && args.recipients.length > 25) {
+      reasons.push(`Bulk size ${args.recipients.length} exceeds 25 — will be capped.`);
+      if (level === "ok") level = "warn";
+    }
+  }
+
+  return { risk: level, reasons };
+}
+
+function summarizeResult(opts: { drafts: any[] | null; dataRows: any[]; steps: any[]; cost: number }): any {
+  const top = (opts.drafts || []).slice(0, 3).map((d: any) => d?.to_email || d?.to_phone || d?.to_name || "—");
+  return {
+    drafts_count: opts.drafts?.length || 0,
+    data_rows_count: opts.dataRows.length,
+    steps_count: opts.steps.length,
+    cost_usd: opts.cost,
+    top_recipients: top,
+  };
+}
+
 // ─────────────────── main handler ───────────────────
 
 serve(async (req) => {
@@ -476,7 +535,54 @@ serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { action = "run", prompt = "", queue_drafts = null, log_id = null } = body;
+    const {
+      action = "run",
+      prompt = "",
+      queue_drafts = null,
+      log_id = null,
+      dry_run = false,
+      is_test = false,
+      replay_of_log_id = null,
+      confirmed = false,
+      recipient = null,
+      product = null,
+      tone = "direct",
+      angle = null,
+      hook = null,
+      channel = "email",
+    } = body;
+
+    // ── History: last 20 commands for this admin ──
+    if (action === "history") {
+      const { data: rows, error } = await supa.from("admin_command_log")
+        .select("id, prompt, total_cost_usd, rows_returned, created_at, is_test, result_summary, replay_of_log_id, user_action")
+        .eq("admin_email", adminEmail)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ ok: true, history: rows || [] }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Regenerate a single draft ──
+    if (action === "regenerate") {
+      if (!recipient || !product) {
+        return new Response(JSON.stringify({ error: "recipient + product required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const r = await TOOLS.regenerate_single_draft({ recipient, product, tone, angle, hook, channel });
+      const draft = r.ok && r.rows && r.rows[0] ? r.rows[0] : null;
+      return new Response(JSON.stringify({ ok: r.ok, draft, error: r.error }), {
+        status: r.ok ? 200 : 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // ── Queue drafts to email_reply_drafts (approval gate) ──
     if (action === "queue") {
@@ -485,7 +591,14 @@ serve(async (req) => {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const sendAfter = new Date(Date.now() + 10 * 60_000).toISOString(); // 10-min ghost delay
+      // Dry-run: validate shape only, no DB insert (used by Test Mode)
+      if (dry_run) {
+        const valid = queue_drafts.filter((d: any) => !!(d.to_email || d.lead_email) && !!d.body);
+        return new Response(JSON.stringify({ ok: true, queued: 0, validated: valid.length, dry_run: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const sendAfter = new Date(Date.now() + 10 * 60_000).toISOString();
       const inserts = queue_drafts.slice(0, 25).map((d: any) => ({
         lead_email: d.to_email || d.lead_email,
         draft_subject: d.subject || "",
@@ -515,14 +628,19 @@ serve(async (req) => {
       });
     }
 
-    // ── Run command ──
+    // ── Preview & Run share planner + risk scan ──
+    if (action !== "preview" && action !== "run") {
+      return new Response(JSON.stringify({ error: `Unknown action "${action}"` }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (!prompt || prompt.length < 3) {
       return new Response(JSON.stringify({ error: "prompt required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Plan
     let planObj: any;
     try {
       planObj = await plan(prompt);
@@ -534,17 +652,54 @@ serve(async (req) => {
 
     if (planObj?.abort) {
       const { data: logRow } = await supa.from("admin_command_log").insert({
-        admin_email: adminEmail, prompt, plan_json: planObj, user_action: "aborted_m2", error_message: planObj.reason,
+        admin_email: adminEmail, prompt, plan_json: planObj, user_action: "aborted_m2",
+        error_message: planObj.reason, is_test, replay_of_log_id,
       }).select("id").single();
       return new Response(JSON.stringify({
         ok: false, aborted: true, reason: planObj.reason || "M2 territory", log_id: logRow?.id,
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    const risk = scanRisk(planObj, prompt);
+
+    // Preview action: return plan + risk only (no executor)
+    if (action === "preview") {
+      return new Response(JSON.stringify({
+        ok: true,
+        preview: true,
+        risk: risk.risk,
+        risk_reasons: risk.reasons,
+        reasoning: planObj.reasoning || "",
+        steps: (planObj.steps || []).map((s: any, i: number) => ({
+          step: i + 1, tool: s.tool, args_preview: JSON.stringify(s.args || {}).slice(0, 200),
+        })),
+        cost_estimate_usd: 0.005 + (planObj.steps?.length || 0) * 0.001,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Run action: enforce risk gate
+    if (risk.risk === "block") {
+      const { data: logRow } = await supa.from("admin_command_log").insert({
+        admin_email: adminEmail, prompt, plan_json: planObj, user_action: "blocked_risk",
+        error_message: risk.reasons.join(" | "), is_test, replay_of_log_id,
+      }).select("id").single();
+      return new Response(JSON.stringify({
+        ok: false, blocked: true, risk: "block", risk_reasons: risk.reasons, log_id: logRow?.id,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (risk.risk === "warn" && !confirmed) {
+      return new Response(JSON.stringify({
+        ok: false, needs_confirm: true, risk: "warn", risk_reasons: risk.reasons,
+        reasoning: planObj.reasoning || "",
+        steps: (planObj.steps || []).map((s: any, i: number) => ({
+          step: i + 1, tool: s.tool, args_preview: JSON.stringify(s.args || {}).slice(0, 200),
+        })),
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     // Execute
     const { stepResults, stepLog } = await executePlan(planObj);
 
-    // Build response
     const lastResult = stepResults[stepResults.length - 1] || {};
     const drafts = (lastResult.rows && stepLog[stepLog.length - 1]?.tool?.includes("outreach")) || stepLog[stepLog.length - 1]?.tool?.includes("sms")
       ? lastResult.rows
@@ -555,6 +710,7 @@ serve(async (req) => {
     const totalCost = 0.01 + (planObj.steps?.length || 0) * 0.001;
     const toolsUsed = (planObj.steps || []).map((s: any) => s.tool);
     const webCalls = toolsUsed.filter((t: string) => t === "web_research" || t === "firecrawl_url").length;
+    const summary = summarizeResult({ drafts: drafts || null, dataRows, steps: stepLog, cost: totalCost });
 
     const { data: logRow } = await supa.from("admin_command_log").insert({
       admin_email: adminEmail,
@@ -566,6 +722,9 @@ serve(async (req) => {
       web_calls: webCalls,
       total_cost_usd: totalCost,
       draft_output: drafts ? { drafts } : null,
+      is_test,
+      replay_of_log_id,
+      result_summary: summary,
     }).select("id").single();
 
     return new Response(JSON.stringify({
@@ -578,6 +737,7 @@ serve(async (req) => {
       drafts,
       partial: stepResults.some((r) => !r.ok),
       cost_usd: totalCost,
+      result_summary: summary,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("[admin-command] error", e);
