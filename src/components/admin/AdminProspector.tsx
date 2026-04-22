@@ -18,7 +18,7 @@ import {
   Building2, Wrench, Stethoscope, Globe, Phone, MapPin, Star,
   Expand, Minimize, Megaphone, Rss, MessageSquare, Receipt, CalendarX,
   Hammer, Home, UserPlus, Plus, CheckCircle, ExternalLink, GripVertical,
-  Crosshair, BarChart3, Kanban, FileText, Eye, EyeOff, Info, X, ShieldCheck, Activity
+  Crosshair, BarChart3, Kanban, FileText, Eye, EyeOff, Info, X, ShieldCheck, Activity, Clock
 } from "lucide-react";
 import ProspectTimelineModal from "./ProspectTimelineModal";
 import {
@@ -237,7 +237,7 @@ function parseEnrichmentSource(notes: string | null): string | null {
 }
 
 // ── Kanban Lead Card ──
-function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, onReEnrich, onViewTimeline, auditing, sending, researching, dripping, reEnriching }: {
+function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, onReEnrich, onViewTimeline, onScheduleFollowUp, auditing, sending, researching, dripping, reEnriching }: {
   lead: PipelineLead;
   onAudit: (lead: PipelineLead) => void;
   onSendN8n: (lead: PipelineLead) => void;
@@ -248,6 +248,7 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
   onDelete: (lead: PipelineLead) => void;
   onReEnrich: (lead: PipelineLead) => void;
   onViewTimeline: (lead: PipelineLead) => void;
+  onScheduleFollowUp: (lead: PipelineLead, hours: number) => void;
   auditing: boolean;
   sending: boolean;
   researching: boolean;
@@ -441,6 +442,23 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
         >
           <Activity size={10} /> Timeline
         </Button>
+        {lead.phone && (
+          <Select onValueChange={(v) => onScheduleFollowUp(lead, parseInt(v, 10))}>
+            <SelectTrigger
+              className="h-6 w-auto px-2 gap-1 text-[9px] bg-transparent border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 [&>svg]:hidden"
+              title="Schedule a tracked follow-up SMS in 24-48h if they haven't re-clicked"
+            >
+              <Clock size={10} />
+              <span className="ml-0.5">Follow-up</span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="24" className="text-xs">In 24 hours</SelectItem>
+              <SelectItem value="36" className="text-xs">In 36 hours</SelectItem>
+              <SelectItem value="48" className="text-xs">In 48 hours</SelectItem>
+              <SelectItem value="72" className="text-xs">In 72 hours</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
         <div className="ml-auto flex items-center gap-1">
           {lead.website && (
             <a href={lead.website.startsWith("http") ? lead.website : `https://${lead.website}`} target="_blank" rel="noopener noreferrer">
@@ -518,6 +536,7 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepRes
               onDelete={onDelete}
               onReEnrich={onReEnrich}
               onViewTimeline={onViewTimeline}
+              onScheduleFollowUp={onScheduleFollowUp}
               auditing={auditingId === lead.id}
               sending={sendingId === lead.id}
               researching={researchingId === lead.id}
