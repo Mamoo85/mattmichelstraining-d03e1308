@@ -854,8 +854,27 @@ export default function AdminSMSInbox() {
                 </div>
               )}
 
+              {/* Quick-action chips — one-tap canned replies */}
+              <div className="border-t border-white/10 px-2 pt-1.5 pb-1 shrink-0 overflow-x-auto">
+                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                  {QUICK_ACTIONS.map((qa) => (
+                    <button
+                      key={qa.label}
+                      onClick={() => {
+                        setDraft(qa.body);
+                        textareaRef.current?.focus();
+                      }}
+                      className="px-2 py-1 rounded-full bg-white/5 hover:bg-[#00d4ff]/15 hover:border-[#00d4ff]/40 border border-white/10 text-[11px] text-white/80 shrink-0 transition"
+                      title={qa.body.slice(0, 80) + (qa.body.length > 80 ? "…" : "")}
+                    >
+                      {qa.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Instagram-style pill composer */}
-              <div className="border-t border-white/10 px-2 py-2 shrink-0 relative">
+              <div className="px-2 py-2 shrink-0 relative">
                 {(composerFocused || draft.length > 100) && (
                   <div className="px-2 pb-1 text-[10px] text-white/40 flex items-center justify-between">
                     <span>From (313) 992-1219</span>
