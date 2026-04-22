@@ -18,8 +18,9 @@ import {
   Building2, Wrench, Stethoscope, Globe, Phone, MapPin, Star,
   Expand, Minimize, Megaphone, Rss, MessageSquare, Receipt, CalendarX,
   Hammer, Home, UserPlus, Plus, CheckCircle, ExternalLink, GripVertical,
-  Crosshair, BarChart3, Kanban, FileText, Eye, EyeOff, Info, X, ShieldCheck
+  Crosshair, BarChart3, Kanban, FileText, Eye, EyeOff, Info, X, ShieldCheck, Activity
 } from "lucide-react";
+import ProspectTimelineModal from "./ProspectTimelineModal";
 import {
   DndContext,
   closestCenter,
@@ -555,6 +556,7 @@ export default function AdminProspector() {
   const [researchingId, setResearchingId] = useState<string | null>(null);
   const [reEnrichingId, setReEnrichingId] = useState<string | null>(null);
   const [drippingId, setDrippingId] = useState<string | null>(null);
+  const [timelineLead, setTimelineLead] = useState<PipelineLead | null>(null);
   const [pipelineFilter, setPipelineFilter] = useState<PipelineFilter>("all");
   const [pipelineSort, setPipelineSort] = useState<PipelineSort>("newest");
   const [previewLead, setPreviewLead] = useState<PipelineLead | null>(null);
@@ -1753,6 +1755,7 @@ export default function AdminProspector() {
                     onPreviewDrip={setPreviewLead}
                     onDelete={deletePipelineLead}
                     onReEnrich={reEnrichLead}
+                    onViewTimeline={setTimelineLead}
                     auditingId={auditingId}
                     sendingId={sendingId}
                     researchingId={researchingId}
