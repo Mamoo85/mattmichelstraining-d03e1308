@@ -743,15 +743,20 @@ export default function AdminSMSInbox() {
                   const mine = m.direction === "outbound";
                   const prev = activeThread.messages[idx - 1];
                   const next = activeThread.messages[idx + 1];
-                  const sameSenderAsPrev = prev && prev.direction === m.direction;
-                  const sameSenderAsNext = next && next.direction === m.direction;
-                  const isLastInRun = !sameSenderAsNext;
-                  const isFirstInRun = !sameSenderAsPrev;
 
                   // Day separator if day changed since previous message
                   const showDay =
                     !prev ||
                     new Date(prev.created_at).toDateString() !== new Date(m.created_at).toDateString();
+                  // Next message crosses day boundary?
+                  const nextCrossesDay =
+                    next &&
+                    new Date(next.created_at).toDateString() !== new Date(m.created_at).toDateString();
+
+                  // Day boundary resets the run on both sides
+                  const sameSenderAsPrev = prev && prev.direction === m.direction && !showDay;
+                  const sameSenderAsNext = next && next.direction === m.direction && !nextCrossesDay;
+                  const isLastInRun = !sameSenderAsNext;
 
                   // Spacing: tight within run, loose between sender changes
                   const topGap = showDay ? "mt-3" : sameSenderAsPrev ? "mt-0.5" : "mt-3";
@@ -812,6 +817,11 @@ export default function AdminSMSInbox() {
                             </div>
                           )}
                         </div>
+                        {mine && (
+                          <div className={`w-6 h-6 rounded-full bg-[#00d4ff]/20 border border-[#00d4ff]/40 flex items-center justify-center text-[9px] font-bold text-[#00d4ff] shrink-0 ${isLastInRun ? "opacity-100" : "opacity-0"}`}>
+                            M
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
