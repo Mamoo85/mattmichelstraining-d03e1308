@@ -58,11 +58,7 @@ function normalizeTradeParam(raw: string | null): string {
 
 function normalizeCityParam(raw: string | null): string {
   if (!raw) return "";
-  const trimmed = raw.trim();
-  // Case-insensitive match against known cities, otherwise return cleaned title-case input.
-  const match = CITIES.find(c => c.toLowerCase() === trimmed.toLowerCase());
-  if (match) return match;
-  return trimmed.replace(/\b\w/g, l => l.toUpperCase());
+  return raw.trim().replace(/\b\w/g, l => l.toUpperCase());
 }
 
 export default function ContractorLeads() {
@@ -77,9 +73,8 @@ export default function ContractorLeads() {
 
   const [trade, setTrade] = useState<string>(initialTrade);
   const [city, setCity] = useState<string>(initialCity);
-  const [cityIsCustom, setCityIsCustom] = useState<boolean>(
-    !!initialCity && !CITIES.includes(initialCity),
-  );
+  const [territories, setTerritories] = useState<Territory[]>([]);
+  const [territoriesLoading, setTerritoriesLoading] = useState(false);
   const [form, setForm] = useState({
     name: params.get("name") || "",
     business_name: params.get("business_name") || "",
@@ -93,6 +88,28 @@ export default function ContractorLeads() {
   const tradeLabel = selectedTrade?.label || "";
   const isPrefilled = !!(initialTrade && initialCity);
 
+  // Load territories from DB whenever trade changes.
+  useEffect(() => {
+    if (!trade) { setTerritories([]); return; }
+    setTerritoriesLoading(true);
+    // Trade stored as title-case in DB (HVAC, Plumbing, etc.)
+    const dbTrade = TRADES.find(t => t.value === trade)?.label || trade;
+    supabase
+      .from("contractor_lead_sites")
+      .select("id, city, trade, slug, active, active_contractor_id")
+      .ilike("trade", dbTrade)
+      .eq("active", true)
+      .order("city")
+      .then(({ data }) => {
+        setTerritories(data || []);
+        setTerritoriesLoading(false);
+        // If the city from URL params is NOT in the list, clear it so user must pick a real one.
+        if (initialCity && data && !data.find(t => t.city.toLowerCase() === initialCity.toLowerCase())) {
+          setCity("");
+        }
+      });
+  }, [trade]);
+
   // Auto-scroll to form when arriving with deep-link params.
   useEffect(() => {
     if (isPrefilled && !success) {
@@ -102,15 +119,9 @@ export default function ContractorLeads() {
 
   const scrollToTerritory = () => document.getElementById("territory")?.scrollIntoView({ behavior: "smooth" });
 
-  const handleCityChange = (val: string) => {
-    if (val === "__other__") {
-      setCityIsCustom(true);
-      setCity("");
-    } else {
-      setCityIsCustom(false);
-      setCity(val);
-    }
-  };
+  const availableTerritories = territories.filter(t => !t.active_contractor_id);
+  const claimedTerritories = territories.filter(t => !!t.active_contractor_id);
+  const selectedTerritory = territories.find(t => t.city.toLowerCase() === city.toLowerCase());
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
