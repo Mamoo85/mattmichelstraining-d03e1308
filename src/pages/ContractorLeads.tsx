@@ -275,6 +275,17 @@ export default function ContractorLeads() {
           <h2 id="territory" className="text-lg font-black text-foreground mb-2 uppercase tracking-wide">Pick your territory</h2>
           <p className="text-sm text-muted-foreground mb-4">One contractor per trade per city. Choose your profession and city below.</p>
 
+          {expired && (
+            <div className="bg-yellow-500/10 border-l-4 border-yellow-500 p-3 mb-4">
+              <p className="text-sm font-bold text-foreground">
+                ⏰ This signup link has expired.
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Pick your trade and city below to continue — or text Matt at (313) 992-1219 for a fresh link.
+              </p>
+            </div>
+          )}
+
           {isPrefilled && (
             <div className="bg-primary/10 border-l-4 border-primary p-3 mb-4">
               <p className="text-sm font-bold text-foreground">
