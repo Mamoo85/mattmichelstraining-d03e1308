@@ -73,7 +73,7 @@ type Tab =
   | "agency-outreach" | "demand-radar" | "supplier-outreach" | "hvb"
   | "medicare-intel" | "industrial-intel" | "techalert-prospects"
   | "lara-health" | "growth-signals" | "trojan-log" | "coverage-map" | "crm-dashboard"
-  | "sms-inbox" | "sms-drafts" | "ad-launcher" | "blocklist" | "error-logs"
+  | "sms-inbox" | "sms-drafts" | "ad-launcher" | "blocklist" | "error-logs" | "outreach-log"
   | "contractor-onboarding" | "ad-spend" | "ad-optimizer" | "leads-e2e" | "prospect-tracker"
   | "linkedin-blitz" | "call-list" | "community-drop" | "referral-kickback";
 
