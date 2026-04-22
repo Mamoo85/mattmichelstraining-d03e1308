@@ -275,18 +275,61 @@ export default function AdminPostcardCampaigns() {
   const totalConversions = conversions.filter((c: any) => c.event === "paid").length;
   const prospectsByCounty = (county: string) => prospects.filter((p: any) => p.county?.toLowerCase() === county.toLowerCase());
   const unsentByCounty = (county: string) => prospects.filter((p: any) => p.county?.toLowerCase() === county.toLowerCase() && !p.postcard_sent_at && p.address_line1);
+  // Filter prospects by BOTH county and the campaign's audience_type so the
+  // recipient count matches what send-postcards will actually mail.
+  const unsentForCampaign = (c: any) => prospects.filter((p: any) =>
+    p.county?.toLowerCase() === (c.county || "").toLowerCase()
+    && !p.postcard_sent_at
+    && p.address_line1
+    && (!c.audience_type || p.audience_type === c.audience_type)
+  );
 
-  const campaignStats = (campaignId: string) => {
-    const logs = sendLogs[campaignId] || [];
-    return {
-      total: logs.length,
-      queued: logs.filter((r: any) => ["queued", "rendered", "processed"].includes(r.delivery_status)).length,
-      inTransit: logs.filter((r: any) => r.delivery_status === "in_transit").length,
-      delivered: logs.filter((r: any) => r.delivery_status === "delivered").length,
-      returned: logs.filter((r: any) => r.delivery_status === "returned").length,
-      failed: logs.filter((r: any) => r.status === "failed").length,
-      cost: logs.reduce((s: number, r: any) => s + (r.cost_cents || 0), 0) / 100,
-    };
+  // Auto-flag obvious copy/audience mismatches before mailing wrong businesses.
+  // Healthcare/nursing campaigns must NOT contain trades terms (and vice versa).
+  const TRADES_TERMS = /\b(HVAC|plumbing|plumber|electrical|electrician|tradespeople|tradesmen|boiler|roofing|roofer)\b/i;
+  const HEALTHCARE_TERMS = /\b(nurse|nurses|nursing|CNA|LPN|RN|caregiver|home health|assisted living)\b/i;
+  const detectCopyMismatch = (c: any): string | null => {
+    if (!c.audience_type || !c.copy_front) return null;
+    const text = `${c.copy_front} ${c.copy_back || ""}`;
+    const isHealthcare = ["nursing-home", "healthcare-agency"].includes(c.audience_type);
+    const isTrades = ["contractor", "trades-agency"].includes(c.audience_type);
+    if (isHealthcare && TRADES_TERMS.test(text)) return "Copy mentions trades (HVAC/plumbing/etc.) but audience is healthcare — regenerate.";
+    if (isTrades && HEALTHCARE_TERMS.test(text)) return "Copy mentions nursing/healthcare but audience is trades — regenerate.";
+    return null;
+  };
+
+  // Group campaigns by audience for the new grouped layout.
+  const AUDIENCE_GROUPS: { key: AudienceType; emoji: string; label: string }[] = [
+    { key: "nursing-home",       emoji: "🏥", label: "Nursing Homes" },
+    { key: "healthcare-agency",  emoji: "🩺", label: "Healthcare Staffing" },
+    { key: "contractor",         emoji: "🔧", label: "Trades (HVAC / Plumbing / Electrical)" },
+    { key: "trades-agency",      emoji: "🛠️", label: "Trades Staffing" },
+    { key: "supply-house",       emoji: "📦", label: "Supply Houses" },
+  ];
+  const audienceLabel = (a?: string) => AUDIENCE_OPTIONS.find(o => o.value === a)?.label || a || "Unspecified";
+
+  const regenerateCopy = async (campaignId: string, audience: string, county: string) => {
+    if (!audience) { toast.error("Campaign has no audience_type — cannot regenerate"); return; }
+    setGenerating(true);
+    toast.info(`Regenerating ${audience} copy for ${county}...`);
+    const { data, error } = await supabase.functions.invoke("generate-postcard-copy", {
+      body: { county, audience_type: audience, replace_campaign_id: campaignId },
+    });
+    setGenerating(false);
+    if (error) { toast.error("Regenerate failed: " + error.message); return; }
+    // The edge function inserts new variants; copy the first variant's text into THIS draft.
+    const newCopy = data?.variants?.[0];
+    if (newCopy?.copy_front) {
+      const { error: upErr } = await supabase
+        .from("postcard_campaigns" as any)
+        .update({ copy_front: newCopy.copy_front, copy_back: newCopy.copy_back, last_error: null })
+        .eq("id", campaignId);
+      if (upErr) toast.error("Saved variants but failed to update draft: " + upErr.message);
+      else toast.success("✅ Copy regenerated for this draft");
+    } else {
+      toast.message("New variants generated — pick one from the list");
+    }
+    loadData();
   };
 
   return (
