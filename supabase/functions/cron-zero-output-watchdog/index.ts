@@ -33,6 +33,7 @@ const CORS = {
 
 interface ZeroCheck {
   cron: string;
+  functionName: string;       // edge function the cron calls — used as URL fallback
   outputTable: string;
   outputColumn: string;       // timestamp column to filter on
   windowHours: number;        // raise alert if 0 rows in last N hours
@@ -43,6 +44,7 @@ interface ZeroCheck {
 const WATCHLIST: ZeroCheck[] = [
   {
     cron: "hire-alert-healthcare-1am-et",
+    functionName: "hire-alert-scanner",
     outputTable: "hire_alert_runs",
     outputColumn: "started_at",
     windowHours: 30,
@@ -51,6 +53,7 @@ const WATCHLIST: ZeroCheck[] = [
   },
   {
     cron: "hire-alert-industrial-2am-et",
+    functionName: "hire-alert-scanner",
     outputTable: "hire_alert_runs",
     outputColumn: "started_at",
     windowHours: 30,
@@ -59,6 +62,7 @@ const WATCHLIST: ZeroCheck[] = [
   },
   {
     cron: "industry-pulse-commercial-3am-et",
+    functionName: "industry-pulse-scanner",
     outputTable: "industry_pulse_signals",
     outputColumn: "created_at",
     windowHours: 30,
@@ -67,7 +71,8 @@ const WATCHLIST: ZeroCheck[] = [
   },
   {
     cron: "contractor-prospector-daily",
-    outputTable: "web_design_leads",
+    functionName: "contractor-prospector",
+    outputTable: "outreach_leads",
     outputColumn: "created_at",
     windowHours: 30,
     description: "Contractor prospecting",
@@ -141,6 +146,14 @@ async function checkOne(sb: any, w: ZeroCheck): Promise<ZeroResult> {
     .limit(1)
     .maybeSingle();
   out.requestUrl = extractUrlFromCommand((hist as any)?.command);
+
+  // Fallback: if the cron wasn't logged in cron_schedule_history (e.g. scheduled
+  // directly via cron.schedule() without history insert), derive the URL from the
+  // known function name so the alert email is actionable instead of saying
+  // "URL missing from cron schedule".
+  if (!out.requestUrl && w.functionName) {
+    out.requestUrl = `${SUPABASE_URL}/functions/v1/${w.functionName}`;
+  }
 
   // Pull last net._http_response for that URL via a custom RPC (we can't query
   // the net schema through PostgREST directly — needs a SECURITY DEFINER fn).
