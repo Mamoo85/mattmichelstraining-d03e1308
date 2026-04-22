@@ -332,7 +332,11 @@ detroitwebagent.com`;
         </Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map(signal => (
+          {visible.map(signal => {
+            const isExpanded = expandedDetails.has(signal.id);
+            const visibleNeeds = isExpanded ? signal.predicted_needs : signal.predicted_needs.slice(0, VISIBLE_NEED_CHIPS);
+            const hiddenNeedsCount = Math.max(0, signal.predicted_needs.length - VISIBLE_NEED_CHIPS);
+            return (
             <Card key={signal.id} className={`bg-[#0f1f35] border-white/10 ${signal.cross_referenced ? "ring-1 ring-amber-500/20" : signal.confidence >= 7 ? "ring-1 ring-emerald-500/10" : ""}`}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-3">
