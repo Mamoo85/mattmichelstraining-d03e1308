@@ -10918,6 +10918,8 @@ export type Database = {
           city: string | null
           clicked_at: string | null
           created_at: string
+          follow_up_sent_at: string | null
+          follow_up_status: string | null
           id: string
           last_nudge_error: string | null
           last_nudge_sid: string | null
@@ -10931,6 +10933,7 @@ export type Database = {
           paid_at: string | null
           phone: string
           profile_completed_at: string | null
+          scheduled_follow_up_at: string | null
           signup_started_at: string | null
           status: string
           trade: string | null
@@ -10941,6 +10944,8 @@ export type Database = {
           city?: string | null
           clicked_at?: string | null
           created_at?: string
+          follow_up_sent_at?: string | null
+          follow_up_status?: string | null
           id?: string
           last_nudge_error?: string | null
           last_nudge_sid?: string | null
@@ -10954,6 +10959,7 @@ export type Database = {
           paid_at?: string | null
           phone: string
           profile_completed_at?: string | null
+          scheduled_follow_up_at?: string | null
           signup_started_at?: string | null
           status?: string
           trade?: string | null
@@ -10964,6 +10970,8 @@ export type Database = {
           city?: string | null
           clicked_at?: string | null
           created_at?: string
+          follow_up_sent_at?: string | null
+          follow_up_status?: string | null
           id?: string
           last_nudge_error?: string | null
           last_nudge_sid?: string | null
@@ -10977,6 +10985,7 @@ export type Database = {
           paid_at?: string | null
           phone?: string
           profile_completed_at?: string | null
+          scheduled_follow_up_at?: string | null
           signup_started_at?: string | null
           status?: string
           trade?: string | null
