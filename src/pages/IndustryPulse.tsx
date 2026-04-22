@@ -98,10 +98,10 @@ export default function IndustryPulse() {
   };
 
   const signals = [
-    { icon: Shield, title: "MIOSHA Compliance Gaps", desc: "Expired or expiring boiler operator licenses flagged before your competitors notice." },
-    { icon: Factory, title: "Municipal Bond Funding", desc: "New facility bonds that signal upcoming boiler, HVAC, and mechanical work." },
-    { icon: TrendingUp, title: "Expansion Hiring Patterns", desc: "Companies hiring boiler engineers, HVAC techs, welders — they need YOUR services next." },
-    { icon: Target, title: "Cross-Referenced Intel", desc: "When multiple signals point to the same company, you get a HIGH-PRIORITY alert." },
+    { icon: Shield, title: "Permit Surge Activity", desc: "Contractors pulling 3+ commercial permits in 30 days are buying more supplies. You get their name and contact before anyone else calls." },
+    { icon: Factory, title: "Expansion Hiring Patterns", desc: "When a contractor posts jobs for additional techs, their supply volume is about to jump. That's your opening." },
+    { icon: TrendingUp, title: "New Business Registrations", desc: "New HVAC/plumbing/electrical companies just registered with Michigan SOS. No distributor relationship yet — perfect timing." },
+    { icon: Target, title: "Triple-Confirmed Accounts", desc: "When the same company shows up in permits + hiring + SOS registrations, confidence score hits 9–10. These are your highest-priority calls." },
   ];
 
   return (
