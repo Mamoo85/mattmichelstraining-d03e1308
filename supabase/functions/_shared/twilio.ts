@@ -225,6 +225,12 @@ export interface SMSOptions {
    * (e.g. onboarding vs sales) by querying which template fired which send.
    */
   templateId?: string;
+  /**
+   * Optional Twilio StatusCallback URL — Twilio will POST delivery updates
+   * (queued/sent/delivered/undelivered/failed) here. Used by prospect-nudge
+   * lane to track deliverability and trigger duplicate-safe retries.
+   */
+  statusCallback?: string;
 }
 
 /**
