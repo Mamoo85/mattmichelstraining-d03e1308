@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Loader2, Mail, Lock, TrendingUp, MapPin, Briefcase, CheckCircle2, Zap, X } from "lucide-react";
+import { Loader2, Mail, Lock, TrendingUp, MapPin, Briefcase, CheckCircle2, Zap, X, Unlock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -14,6 +14,19 @@ interface Teaser {
   predicted_needs: string[];
   confidence: number;
   detected_at: string;
+}
+
+interface UnlockedSignal {
+  id: string;
+  company_name: string;
+  location: string | null;
+  industry: string | null;
+  hiring_roles: string[];
+  hiring_count: number;
+  predicted_needs: string[];
+  confidence: number;
+  detected_at: string;
+  recommended_pitch: string | null;
 }
 
 const VERTICALS = [
