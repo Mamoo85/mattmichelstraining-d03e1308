@@ -13650,6 +13650,7 @@ export type Database = {
           id: string
           inbound_body: string | null
           inbound_message_id: string | null
+          metadata: Json
           phone: string
           sent_at: string | null
           status: string
@@ -13660,6 +13661,7 @@ export type Database = {
           id?: string
           inbound_body?: string | null
           inbound_message_id?: string | null
+          metadata?: Json
           phone: string
           sent_at?: string | null
           status?: string
@@ -13670,6 +13672,7 @@ export type Database = {
           id?: string
           inbound_body?: string | null
           inbound_message_id?: string | null
+          metadata?: Json
           phone?: string
           sent_at?: string | null
           status?: string
