@@ -34,6 +34,7 @@ const AdminCRMDashboard = lazy(() => import("@/components/admin/AdminCRMDashboar
 const AdminContractorOnboarding = lazy(() => import("@/components/dwa-admin/AdminContractorOnboarding"));
 const AdminContractorLeadsStatus = lazy(() => import("@/components/dwa-admin/AdminContractorLeadsStatus"));
 const AdminProspectTracker = lazy(() => import("@/components/dwa-admin/AdminProspectTracker"));
+const AdminCommandBar = lazy(() => import("@/components/dwa-admin/AdminCommandBar"));
 
 type Tab =
   | "dwa-overview" | "revenue" | "leads-e2e" | "prospect-tracker" | "agent-toolkit"
@@ -128,6 +129,8 @@ export default function DWAAdmin() {
 
         <div className="px-3 sm:px-6 py-6">
           <InstallAppBanner app="dwa-admin" />
+
+          <Suspense fallback={null}><AdminCommandBar /></Suspense>
 
           {activeTab === "dwa-overview"     && <Suspense fallback={lazyFallback("overview")}><AdminDWAOverview /></Suspense>}
           {activeTab === "revenue"          && <Suspense fallback={lazyFallback("revenue")}><AdminDWARevenueDashboard /></Suspense>}
