@@ -2,6 +2,12 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { safeLocalStorage } from "@/lib/browserStorage";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  validatePrompt,
+  validateRecipient,
+  validateRegenerateParams,
+  validateQueuePayload,
+} from "@/lib/validateCommandInputs";
 
 type Draft = {
   to_email?: string;
@@ -147,6 +153,14 @@ export default function AdminCommandBar() {
   const run = useCallback(async (text?: string, opts?: { confirmed?: boolean; isTest?: boolean; replayOf?: string }) => {
     const q = (text ?? prompt).trim();
     if (!q || running) return null;
+
+    // Client-side guard: stop bad prompts before they hit the edge function.
+    const promptCheck = validatePrompt(q);
+    if (promptCheck.ok === false) {
+      setResult({ error: promptCheck.reason, blocked: true, risk: "block", risk_reasons: [promptCheck.reason] });
+      return null;
+    }
+
     setRunning(true);
     setResult(null);
     setQueueMsg(null);
@@ -201,6 +215,11 @@ export default function AdminCommandBar() {
       setQueueMsg("No emails to queue (skipped or no email address).");
       return;
     }
+    const queueCheck = validateQueuePayload(toQueue);
+    if (queueCheck.ok === false) {
+      setQueueMsg(`❌ ${queueCheck.reason}`);
+      return;
+    }
     setQueuing(true);
     setQueueMsg(null);
     try {
@@ -230,15 +249,31 @@ export default function AdminCommandBar() {
     const d = drafts[i];
     if (!d || d._regenerating) return;
     const productKey = productKeyFromPrompt(prompt || (history[0]?.prompt ?? ""));
+    const channel = d.to_phone && !d.to_email ? "sms" : "email";
+    const tone = d._tone || "direct";
+    const angle = d._angle || null;
+
+    // Client-side guard: validate recipient + params before invoking edge fn.
+    const recipientCheck = validateRecipient({ to_email: d.to_email, to_phone: d.to_phone, to_name: d.to_name });
+    if (recipientCheck.ok === false) {
+      setQueueMsg(`❌ Draft #${i + 1}: ${recipientCheck.reason}`);
+      return;
+    }
+    const paramCheck = validateRegenerateParams({ product: productKey, tone, channel, angle });
+    if (paramCheck.ok === false) {
+      setQueueMsg(`❌ ${paramCheck.reason}`);
+      return;
+    }
+
     updateDraft(i, { _regenerating: true });
     try {
       const data = await callCommand({
         action: "regenerate",
         recipient: { to_email: d.to_email, to_phone: d.to_phone, to_name: d.to_name },
         product: productKey,
-        tone: d._tone || "direct",
-        angle: d._angle || null,
-        channel: d.to_phone && !d.to_email ? "sms" : "email",
+        tone,
+        angle,
+        channel,
       });
       if ((data as any)?.ok && (data as any).draft) {
         const nd = (data as any).draft;
