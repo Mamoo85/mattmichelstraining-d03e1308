@@ -23,14 +23,9 @@ const NUDGE_TEMPLATE = (trackedUrl: string, city: string | null, trade: string |
   return `Hey — Matt with Detroit Web Agency. We send exclusive${what}leads to contractors${where} (no shared leads, no contracts). Quick look: ${trackedUrl} — reply STOP to opt out.`;
 };
 
-// Hash to a stable bigint for pg_advisory_xact_lock (one lock per prospect id).
-async function lockKey(id: string): Promise<bigint> {
-  const buf = new TextEncoder().encode(id);
-  const hashBuf = await crypto.subtle.digest("SHA-256", buf);
-  const view = new DataView(hashBuf);
-  // Use first 8 bytes as signed bigint
-  return view.getBigInt64(0, false);
-}
+// Note: We use an optimistic claim (incrementing nudge_retry_count BEFORE sending,
+// only proceeding if the increment matched the expected previous count) instead of
+// a Postgres advisory lock — this works without exposing pg_advisory_lock RPCs.
 
 serve(async (_req) => {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
