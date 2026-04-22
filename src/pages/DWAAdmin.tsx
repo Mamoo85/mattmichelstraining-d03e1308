@@ -34,6 +34,7 @@ const AdminCRMDashboard = lazy(() => import("@/components/admin/AdminCRMDashboar
 const AdminContractorOnboarding = lazy(() => import("@/components/dwa-admin/AdminContractorOnboarding"));
 const AdminContractorLeadsStatus = lazy(() => import("@/components/dwa-admin/AdminContractorLeadsStatus"));
 const AdminProspectTracker = lazy(() => import("@/components/dwa-admin/AdminProspectTracker"));
+const AdminCommandBar = lazy(() => import("@/components/dwa-admin/AdminCommandBar"));
 
 type Tab =
   | "dwa-overview" | "revenue" | "leads-e2e" | "prospect-tracker" | "agent-toolkit"
