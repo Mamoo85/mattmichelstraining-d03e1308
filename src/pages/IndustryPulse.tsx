@@ -107,8 +107,8 @@ export default function IndustryPulse() {
   return (
     <>
       <SEOHead
-        title="Demand Radar — Predictive Sales Intelligence | Detroit Web Agency"
-        description="Predictive sales signals for industrial service companies. Know which companies need your services before they start looking."
+        title="Demand Radar — Contractor Growth Intelligence for Suppliers | Detroit Web Agency"
+        description="Know which Michigan contractors are growing before they call your competitors. Permit surges, hiring signals, and expansion intel for plumbing, HVAC, and electrical supply houses."
       />
       <div className="min-h-screen bg-[#030711] text-white">
         {/* Hero */}
@@ -117,15 +117,15 @@ export default function IndustryPulse() {
           <div className="max-w-4xl mx-auto text-center relative z-10">
             <div className="inline-flex items-center gap-2 bg-[#00d4ff]/10 border border-[#00d4ff]/20 rounded-full px-4 py-1.5 mb-6">
               <Zap className="h-3.5 w-3.5 text-[#00d4ff]" />
-              <span className="text-[#00d4ff] text-xs font-semibold tracking-wide">DEMAND RADAR — PREDICTIVE SALES INTELLIGENCE</span>
+              <span className="text-[#00d4ff] text-xs font-semibold tracking-wide">DEMAND RADAR — CONTRACTOR GROWTH INTELLIGENCE</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-black mb-4 leading-tight">
-              Know Which Companies Need You
-              <span className="text-[#00d4ff]"> Before They Start Looking</span>
+              Know Which Contractors Are About to Buy
+              <span className="text-[#00d4ff]"> From Your Competitors</span>
             </h1>
             <p className="text-lg text-white/60 max-w-2xl mx-auto mb-8">
-              Daily scans of MIOSHA compliance databases, municipal bond filings, and hiring patterns across Metro Detroit.
-              Get actionable signals that tell you exactly who needs your industrial services — and when to call.
+              Daily scans of Metro Detroit permit filings, hiring patterns, and expansion signals.
+              Built for plumbing wholesalers, HVAC distributors, and electrical supply houses who want to win accounts before the competition gets the call.
             </p>
 
             {success ? (
@@ -136,8 +136,22 @@ export default function IndustryPulse() {
               </div>
             ) : (
               <div className="bg-[#0a1628] border border-[#1e3a5f] rounded-xl p-6 max-w-lg mx-auto space-y-3">
+                <p className="text-xs text-white/50 font-semibold uppercase tracking-wider text-left">Your supply vertical *</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {SUPPLIER_TYPES.map(s => (
+                    <button
+                      key={s.value}
+                      type="button"
+                      onClick={() => setSupplierType(s.value)}
+                      className={`px-3 py-2 text-xs font-bold border rounded transition-colors text-left ${supplierType === s.value ? "bg-[#00d4ff] text-black border-[#00d4ff]" : "bg-[#0f1f35] border-[#1e3a5f] text-white/70 hover:border-[#00d4ff]/50"}`}
+                    >
+                      {s.label}
+                      <span className="block text-[9px] font-normal mt-0.5 opacity-60">{s.example}</span>
+                    </button>
+                  ))}
+                </div>
                 <Input
-                  placeholder="Business email"
+                  placeholder="Business email *"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="bg-[#0f1f35] border-[#1e3a5f] text-white placeholder:text-white/30"
@@ -154,7 +168,7 @@ export default function IndustryPulse() {
                   onChange={(e) => setPhone(e.target.value)}
                   className="bg-[#0f1f35] border-[#1e3a5f] text-white placeholder:text-white/30"
                 />
-                <p className="text-[11px] text-white/40 text-center">Pick your tier below ↓</p>
+                <p className="text-[11px] text-white/40 text-center">Pick your tier below — signals filtered to your vertical ↓</p>
               </div>
             )}
           </div>
@@ -163,9 +177,10 @@ export default function IndustryPulse() {
         {/* Signal Types */}
         <section className="py-16 px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl font-black text-center mb-10">
-              Four Signal Types. <span className="text-[#00d4ff]">Zero Guesswork.</span>
+            <h2 className="text-2xl font-black text-center mb-4">
+              Four Signal Types. <span className="text-[#00d4ff]">All Filtered to Your Vertical.</span>
             </h2>
+            <p className="text-center text-white/40 text-sm mb-10">A plumbing wholesaler only sees plumbing contractor signals. An HVAC distributor only sees HVAC. No noise.</p>
             <div className="grid md:grid-cols-2 gap-4">
               {signals.map((s, i) => (
                 <div key={i} className="bg-[#0a1628] border border-[#1e3a5f] rounded-xl p-6 hover:border-[#00d4ff]/30 transition-colors">
@@ -181,12 +196,12 @@ export default function IndustryPulse() {
         {/* How It Works */}
         <section className="py-16 px-4 bg-[#0a1628]/50">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-2xl font-black mb-10">How It Works</h2>
+            <h2 className="text-2xl font-black mb-10">How It Works for Distributors</h2>
             <div className="grid md:grid-cols-3 gap-8">
               {[
-                { icon: Eye, title: "We Scan Daily", desc: "MIOSHA databases, bond filings, job postings — 16+ data sources scanned every morning." },
-                { icon: BarChart3, title: "AI Scores & Ranks", desc: "Each signal gets a 1-10 confidence score. Cross-referenced signals = highest priority." },
-                { icon: Zap, title: "You Act First", desc: "Get email alerts + a live dashboard. Call the right company before your competitors know they exist." },
+                { icon: Eye, title: "We Scan Daily", desc: "BSEED permit filings, H-2B visa applications, new company registrations — 16+ sources scanned every morning." },
+                { icon: BarChart3, title: "AI Scores & Routes", desc: "Each signal scored 1–10. Filtered to your supply vertical. Cross-referenced signals get priority." },
+                { icon: Zap, title: "Your Rep Calls First", desc: "Signal lands in your inbox before the contractor hits your competitor's website. Win the account before the bid." },
               ].map((step, i) => (
                 <div key={i} className="text-center">
                   <div className="w-14 h-14 rounded-full bg-[#00d4ff]/10 border border-[#00d4ff]/20 flex items-center justify-center mx-auto mb-4">
