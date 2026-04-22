@@ -99,6 +99,7 @@ interface PipelineLead {
   lead_score: number | null;
   breach_count: number | null;
   notes: string | null;
+  paid_at: string | null;
 }
 
 // ── DataForSEO Result ──
