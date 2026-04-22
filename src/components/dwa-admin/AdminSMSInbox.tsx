@@ -373,6 +373,12 @@ export default function AdminSMSInbox() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Reload when filter mode flips
+  useEffect(() => {
+    loadInbox();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inboundOnlyMode]);
+
   // Mark active thread as read + autoscroll on change
   useEffect(() => {
     const t = threads.find((x) => x.phone === activePhone);
