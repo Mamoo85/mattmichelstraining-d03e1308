@@ -235,7 +235,7 @@ function parseEnrichmentSource(notes: string | null): string | null {
 }
 
 // ── Kanban Lead Card ──
-function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, onReEnrich, auditing, sending, researching, dripping, reEnriching }: {
+function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, onReEnrich, onViewTimeline, auditing, sending, researching, dripping, reEnriching }: {
   lead: PipelineLead;
   onAudit: (lead: PipelineLead) => void;
   onSendN8n: (lead: PipelineLead) => void;
@@ -245,6 +245,7 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
   onPreviewDrip: (lead: PipelineLead) => void;
   onDelete: (lead: PipelineLead) => void;
   onReEnrich: (lead: PipelineLead) => void;
+  onViewTimeline: (lead: PipelineLead) => void;
   auditing: boolean;
   sending: boolean;
   researching: boolean;
@@ -429,6 +430,15 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
             <CheckCircle size={10} /> Booked
           </Button>
         )}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 text-[9px] px-2 gap-1 text-cyan-400 hover:bg-cyan-500/10"
+          onClick={() => onViewTimeline(lead)}
+          title="View full event timeline for this prospect"
+        >
+          <Activity size={10} /> Timeline
+        </Button>
         <div className="ml-auto flex items-center gap-1">
           {lead.website && (
             <a href={lead.website.startsWith("http") ? lead.website : `https://${lead.website}`} target="_blank" rel="noopener noreferrer">
@@ -455,7 +465,7 @@ function KanbanCard({ lead, onAudit, onSendN8n, onMoveStage, onDeepResearch, onD
 }
 
 // ── Kanban Column ──
-function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, onReEnrich, auditingId, sendingId, researchingId, drippingId, reEnrichingId }: {
+function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepResearch, onDrip, onPreviewDrip, onDelete, onReEnrich, onViewTimeline, auditingId, sendingId, researchingId, drippingId, reEnrichingId }: {
   stage: typeof PIPELINE_STAGES[0];
   leads: PipelineLead[];
   onAudit: (lead: PipelineLead) => void;
@@ -466,6 +476,7 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepRes
   onPreviewDrip: (lead: PipelineLead) => void;
   onDelete: (lead: PipelineLead) => void;
   onReEnrich: (lead: PipelineLead) => void;
+  onViewTimeline: (lead: PipelineLead) => void;
   auditingId: string | null;
   sendingId: string | null;
   researchingId: string | null;
@@ -492,6 +503,7 @@ function KanbanColumn({ stage, leads, onAudit, onSendN8n, onMoveStage, onDeepRes
               onPreviewDrip={onPreviewDrip}
               onDelete={onDelete}
               onReEnrich={onReEnrich}
+              onViewTimeline={onViewTimeline}
               auditing={auditingId === lead.id}
               sending={sendingId === lead.id}
               researching={researchingId === lead.id}
