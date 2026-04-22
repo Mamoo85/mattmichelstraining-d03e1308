@@ -942,7 +942,32 @@ export default function AdminProspector() {
     finally { setSendingId(null); }
   };
 
-  // ── Drag & Drop ──
+  // ── Schedule follow-up nudge ──
+  const scheduleFollowUp = async (lead: PipelineLead, hours: number) => {
+    if (!lead.phone) {
+      toast.error("No phone number on this prospect");
+      return;
+    }
+    try {
+      const { data, error } = await supabase.functions.invoke("schedule-prospect-followup", {
+        body: {
+          phone: lead.phone,
+          hours,
+          business: lead.business_name,
+          city: lead.city,
+          trade: lead.industry,
+        },
+      });
+      if (error) throw error;
+      const when = new Date(Date.now() + hours * 60 * 60_000);
+      toast.success(
+        `Follow-up scheduled for ${when.toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" })} — only fires if they don't click again.`
+      );
+      void data;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to schedule follow-up");
+    }
+  };
   const handleDragStart = (event: DragStartEvent) => setActiveDragId(event.active.id as string);
 
   const handleDragEnd = (event: DragEndEvent) => {
