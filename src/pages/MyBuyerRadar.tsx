@@ -223,7 +223,7 @@ export default function MyBuyerRadar() {
           )}
         </section>
 
-        <section>
+        <section id="rfqs" className="scroll-mt-20">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-xl font-bold tracking-tight">RFQ Intercept</h2>
