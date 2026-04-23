@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/layout/SEOHead";
-import { Factory, Loader2, ExternalLink, Clock } from "lucide-react";
+import { Factory, Loader2, ExternalLink, Clock, Zap, TrendingUp, Radar } from "lucide-react";
 
 type Signal = {
   id: string;
@@ -67,7 +67,11 @@ export default function MyBuyerRadar() {
   if (!token) {
     return (
       <div className="min-h-screen bg-[#030711] text-white flex items-center justify-center p-6">
-        <p>Missing access token. Use the link from your welcome email.</p>
+        <div className="max-w-sm text-center">
+          <Radar className="w-10 h-10 text-[#00d4ff] mx-auto mb-3" />
+          <p className="text-white font-semibold mb-1">Missing access token</p>
+          <p className="text-sm text-[#94a3b8]">Use the dashboard link from your welcome email.</p>
+        </div>
       </div>
     );
   }
@@ -80,46 +84,124 @@ export default function MyBuyerRadar() {
     );
   }
 
+  const hotSignals = signals.filter((s) => (s.confidence ?? 0) >= 8).length;
+  const warmSignals = signals.filter((s) => (s.confidence ?? 0) >= 5 && (s.confidence ?? 0) < 8).length;
+
   return (
     <div className="min-h-screen bg-[#030711] text-white">
       <SEOHead title="Your Buyer Radar Dashboard" description="Live buyer-intent signals" />
-      <header className="border-b border-[#1e3a5f] bg-[#0a1628]/80 backdrop-blur">
+
+      <header className="border-b border-[#1e3a5f] bg-[#0a1628]/80 backdrop-blur sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Factory className="w-5 h-5 text-[#00d4ff]" />
-            <span className="font-bold">Buyer Radar</span>
+            <div className="relative">
+              <Factory className="w-5 h-5 text-[#00d4ff]" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#00d4ff] rounded-full animate-pulse" />
+            </div>
+            <span className="font-bold tracking-tight">Buyer Radar</span>
           </div>
-          <span className="text-sm text-[#94a3b8]">{client?.company_name || "Welcome"}</span>
+          <span className="text-sm text-[#94a3b8] truncate max-w-[50%]">{client?.company_name || "Welcome"}</span>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-10">
+        {/* Hero glow band with KPI cards */}
+        <section className="relative">
+          <div
+            className="absolute inset-0 rounded-2xl opacity-40 blur-3xl pointer-events-none"
+            style={{ background: "radial-gradient(60% 80% at 50% 0%, rgba(0,212,255,0.18), transparent 70%)" }}
+          />
+          <div className="relative grid sm:grid-cols-3 gap-3">
+            <div className="bg-gradient-to-br from-[#0a1628] to-[#0a1628]/60 border border-[#00d4ff]/30 rounded-xl p-5 shadow-[0_0_24px_-12px_rgba(0,212,255,0.4)]">
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="w-3.5 h-3.5 text-[#00d4ff]" />
+                <p className="text-[10px] uppercase tracking-widest text-[#00d4ff] font-bold">Hot signals</p>
+              </div>
+              <p className="text-4xl font-black text-white tabular-nums">{hotSignals}</p>
+              <p className="text-[11px] text-[#64748b] mt-0.5">Confidence 8–10</p>
+            </div>
+            <div className="bg-[#0a1628] border border-[#1e3a5f] rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-3.5 h-3.5 text-[#94a3b8]" />
+                <p className="text-[10px] uppercase tracking-widest text-[#94a3b8] font-bold">Warm signals</p>
+              </div>
+              <p className="text-4xl font-black text-white tabular-nums">{warmSignals}</p>
+              <p className="text-[11px] text-[#64748b] mt-0.5">Confidence 5–7</p>
+            </div>
+            <div className="bg-[#0a1628] border border-[#1e3a5f] rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <Radar className="w-3.5 h-3.5 text-[#94a3b8]" />
+                <p className="text-[10px] uppercase tracking-widest text-[#94a3b8] font-bold">Active RFQs</p>
+              </div>
+              <p className="text-4xl font-black text-white tabular-nums">{rfqs.length}</p>
+              <p className="text-[11px] text-[#64748b] mt-0.5">In your filter window</p>
+            </div>
+          </div>
+        </section>
+
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Buyer Signals (last 14 days)</h2>
-            <span className="text-xs text-[#64748b]">{signals.length} signals</span>
+            <div>
+              <h2 className="text-xl font-bold tracking-tight">Buyer Signals</h2>
+              <p className="text-[11px] text-[#64748b] mt-0.5">Last 14 days · sorted by confidence</p>
+            </div>
+            <span className="text-xs text-[#64748b] tabular-nums">{signals.length} signals</span>
           </div>
           {signals.length === 0 ? (
-            <p className="text-[#94a3b8] text-sm">No signals yet. New data flows in daily — check back tomorrow.</p>
+            <div className="bg-[#0a1628] border border-dashed border-[#1e3a5f] rounded-xl p-8 text-center">
+              <Radar className="w-7 h-7 text-[#1e3a5f] mx-auto mb-2" />
+              <p className="text-[#cbd5e1] text-sm font-semibold mb-1">Scanner is warming up</p>
+              <p className="text-[#94a3b8] text-xs">No signals yet. New data flows in daily — check back tomorrow.</p>
+            </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid gap-3">
               {signals.map((s) => {
                 const conf = s.confidence ?? 0;
-                const color = conf >= 8 ? "#22c55e" : conf >= 5 ? "#00d4ff" : "#94a3b8";
+                const isHot = conf >= 8;
+                const isWarm = conf >= 5 && conf < 8;
+                const color = isHot ? "#22c55e" : isWarm ? "#00d4ff" : "#94a3b8";
                 return (
-                  <div key={s.id} className="bg-[#0a1628] border border-[#1e3a5f] rounded-lg p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <h3 className="font-bold text-white truncate">{s.company_name}</h3>
-                        <p className="text-xs text-[#94a3b8]">{[s.industry, s.location].filter(Boolean).join(" · ")}</p>
-                        {s.source_summary && <p className="text-sm text-[#cbd5e1] mt-2">{s.source_summary}</p>}
+                  <div
+                    key={s.id}
+                    className={`group relative bg-[#0a1628] border rounded-xl p-4 transition-all hover:border-[#00d4ff]/40 hover:-translate-y-0.5 ${
+                      isHot ? "border-[#22c55e]/40" : "border-[#1e3a5f]"
+                    }`}
+                    style={isHot ? { boxShadow: "0 0 0 1px rgba(34,197,94,0.08), 0 0 24px -8px rgba(34,197,94,0.25)" } : undefined}
+                  >
+                    {/* Left accent bar */}
+                    <span
+                      className="absolute left-0 top-3 bottom-3 w-0.5 rounded-r"
+                      style={{ background: color }}
+                    />
+                    <div className="flex items-start justify-between gap-4 pl-2">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-bold text-white truncate text-[15px]">{s.company_name}</h3>
+                        <p className="text-[11px] text-[#94a3b8] mt-0.5">{[s.industry, s.location].filter(Boolean).join(" · ")}</p>
+                        {s.source_summary && <p className="text-sm text-[#cbd5e1] mt-2 leading-relaxed">{s.source_summary}</p>}
                         {s.predicted_needs && s.predicted_needs.length > 0 && (
-                          <p className="text-xs text-[#00d4ff] mt-2">Predicted needs: {s.predicted_needs.slice(0, 4).join(", ")}</p>
+                          <div className="flex flex-wrap gap-1.5 mt-2.5">
+                            {s.predicted_needs.slice(0, 5).map((n) => (
+                              <span
+                                key={n}
+                                className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#00d4ff]/10 text-[#00d4ff] border border-[#00d4ff]/20"
+                              >
+                                {n}
+                              </span>
+                            ))}
+                          </div>
                         )}
                       </div>
-                      <span style={{ background: `${color}20`, color }} className="text-xs font-extrabold px-2 py-1 rounded whitespace-nowrap">
-                        {conf}/10
-                      </span>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <span
+                          style={{ background: `${color}1a`, color, borderColor: `${color}40` }}
+                          className="text-[11px] font-extrabold px-2.5 py-1 rounded-md whitespace-nowrap border tabular-nums"
+                        >
+                          {conf}/10
+                        </span>
+                        {isHot && (
+                          <span className="text-[9px] uppercase tracking-widest font-bold text-[#22c55e]">● HOT</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -130,32 +212,59 @@ export default function MyBuyerRadar() {
 
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">RFQ Intercept (recent fab-metal bids)</h2>
-            <span className="text-xs text-[#64748b]">{rfqs.length} bids</span>
+            <div>
+              <h2 className="text-xl font-bold tracking-tight">RFQ Intercept</h2>
+              <p className="text-[11px] text-[#64748b] mt-0.5">Recent fab-metal bids · NAICS 332/333/336</p>
+            </div>
+            <span className="text-xs text-[#64748b] tabular-nums">{rfqs.length} bids</span>
           </div>
           {rfqs.length === 0 ? (
-            <p className="text-[#94a3b8] text-sm">No active RFQs in your filter window. Scanner runs daily.</p>
+            <div className="bg-[#0a1628] border border-dashed border-[#1e3a5f] rounded-xl p-8 text-center">
+              <Clock className="w-7 h-7 text-[#1e3a5f] mx-auto mb-2" />
+              <p className="text-[#cbd5e1] text-sm font-semibold mb-1">No active RFQs</p>
+              <p className="text-[#94a3b8] text-xs">Scanner runs daily across federal + state portals.</p>
+            </div>
           ) : (
-            <div className="space-y-3">
-              {rfqs.map((r) => (
-                <div key={r.id} className="bg-[#0a1628] border border-[#1e3a5f] rounded-lg p-4">
-                  <h3 className="font-bold text-white">{r.title}</h3>
-                  <p className="text-xs text-[#94a3b8] mt-1">
-                    {[r.agency, r.naics ? `NAICS ${r.naics}` : null, [r.city, r.state].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
-                  </p>
-                  <div className="flex items-center gap-4 mt-3 text-xs">
-                    {r.due_at && <span className="flex items-center gap-1 text-amber-400"><Clock className="w-3 h-3" /> Due {new Date(r.due_at).toLocaleDateString()}</span>}
-                    {r.url && (
-                      <a href={r.url} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-[#00d4ff] font-semibold">
-                        Open bid <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
+            <div className="grid gap-3">
+              {rfqs.map((r) => {
+                const dueSoon = r.due_at && (new Date(r.due_at).getTime() - Date.now()) < 7 * 86_400_000;
+                return (
+                  <div
+                    key={r.id}
+                    className="bg-[#0a1628] border border-[#1e3a5f] rounded-xl p-4 transition-all hover:border-[#00d4ff]/40 hover:-translate-y-0.5"
+                  >
+                    <h3 className="font-bold text-white text-[15px] leading-tight">{r.title}</h3>
+                    <p className="text-[11px] text-[#94a3b8] mt-1.5">
+                      {[r.agency, r.naics ? `NAICS ${r.naics}` : null, [r.city, r.state].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}
+                    </p>
+                    <div className="flex items-center gap-4 mt-3 text-xs">
+                      {r.due_at && (
+                        <span className={`flex items-center gap-1 font-semibold ${dueSoon ? "text-amber-400" : "text-[#94a3b8]"}`}>
+                          <Clock className="w-3 h-3" /> Due {new Date(r.due_at).toLocaleDateString()}
+                          {dueSoon && <span className="ml-1 text-[9px] uppercase tracking-widest text-amber-400">soon</span>}
+                        </span>
+                      )}
+                      {r.url && (
+                        <a
+                          href={r.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-1 text-[#00d4ff] font-semibold hover:underline ml-auto"
+                        >
+                          Open bid <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
+
+        <p className="text-[10px] text-[#64748b] text-center max-w-2xl mx-auto pt-4">
+          Buyer Radar uses public records, government bid portals, and behavioral signals only.
+        </p>
       </main>
     </div>
   );
