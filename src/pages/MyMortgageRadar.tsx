@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import SEOHead from "@/components/layout/SEOHead";
-import { Home, Lock, Phone, MessageSquare, MapPin, Bell } from "lucide-react";
+import { Home, Lock, Phone, MessageSquare, MapPin, Bell, Download, Send, Check, X } from "lucide-react";
 
 type Lead = {
   id: string;
@@ -12,53 +14,194 @@ type Lead = {
   address: string | null;
   city: string | null;
   zip: string | null;
+  phone: string | null;
+  email: string | null;
   signal_type: string;
   signal_source: string;
   signal_detail: string | null;
   signal_date: string | null;
   score: number;
+  signal_count: number | null;
   suggested_opener: string | null;
   best_call_window: string | null;
   created_at: string;
 };
 
+type Outreach = {
+  id: string;
+  lead_id: string;
+  channel: string;
+  draft_subject: string | null;
+  draft_body: string;
+  approved_body: string | null;
+  status: string;
+  created_at: string;
+  approved_at: string | null;
+  sent_at: string | null;
+  send_error: string | null;
+};
+
+const DEMO_CLIENT_ID = "00000000-0000-0000-0000-000000000000";
+
 export default function MyMortgageRadar() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [draftFor, setDraftFor] = useState<Lead | null>(null);
+  const [draftChannel, setDraftChannel] = useState<"sms" | "email" | "call_note">("sms");
+  const [draftSubject, setDraftSubject] = useState("");
+  const [draftBody, setDraftBody] = useState("");
+  const [outreach, setOutreach] = useState<Outreach[]>([]);
+  const [filterScore, setFilterScore] = useState<number>(0);
+  const [filterZip, setFilterZip] = useState<string>("");
+  const [filterType, setFilterType] = useState<string>("");
 
   useEffect(() => {
     (async () => {
-      // Admin-only fallback view: pulls all hot leads from last 14 days.
-      // (LO portal magic-link auth wires in next iteration; matching admin RLS now.)
       const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
       const { data, error } = await (supabase.from as any)("mortgage_radar_leads")
-        .select("id, full_name, address, city, zip, signal_type, signal_source, signal_detail, signal_date, score, suggested_opener, best_call_window, created_at")
+        .select("id, full_name, address, city, zip, phone, email, signal_type, signal_source, signal_detail, signal_date, score, signal_count, suggested_opener, best_call_window, created_at")
         .gte("created_at", since)
         .order("score", { ascending: false })
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(200);
       if (error) {
         toast.error("Could not load leads — admin access required");
       } else {
         setLeads(data || []);
       }
       setLoading(false);
+      // Load outreach queue
+      try {
+        const { data: orData } = await supabase.functions.invoke("mortgage-radar-outreach", {
+          body: { action: "list", client_id: DEMO_CLIENT_ID },
+        });
+        if (orData?.outreach) setOutreach(orData.outreach);
+      } catch {
+        // outreach is optional UI; ignore
+      }
     })();
   }, []);
 
-  const hotCount = useMemo(() => leads.filter(l => l.score >= 9).length, [leads]);
-  const warmCount = useMemo(() => leads.filter(l => l.score >= 7 && l.score < 9).length, [leads]);
+  const filtered = useMemo(() => {
+    return leads.filter(l => {
+      if (filterScore > 0 && l.score < filterScore) return false;
+      if (filterZip && (l.zip || "").indexOf(filterZip.trim()) === -1) return false;
+      if (filterType && l.signal_type !== filterType) return false;
+      return true;
+    });
+  }, [leads, filterScore, filterZip, filterType]);
 
-  const claimLead = async (leadId: string) => {
-    toast.info("Claim system requires LO login — coming next iteration. For now, copy the suggested opener.");
+  const hotCount = useMemo(() => filtered.filter(l => l.score >= 9).length, [filtered]);
+  const warmCount = useMemo(() => filtered.filter(l => l.score >= 7 && l.score < 9).length, [filtered]);
+  const types = useMemo(() => Array.from(new Set(leads.map(l => l.signal_type))), [leads]);
+
+  const claimLead = async (_leadId: string) => {
+    toast.info("Claim system requires LO login — coming next iteration. For now, draft your outreach.");
   };
+
+  const exportCsv = () => {
+    if (!filtered.length) {
+      toast.error("No leads to export");
+      return;
+    }
+    const headers = ["Score", "Address", "City", "ZIP", "Name", "Phone", "Email", "Signal", "Source", "Detail", "Best Call Window", "Suggested Opener", "Detected"];
+    const rows = filtered.map(l => [
+      l.score,
+      l.address || "",
+      l.city || "",
+      l.zip || "",
+      l.full_name || "",
+      l.phone || "",
+      l.email || "",
+      l.signal_type,
+      l.signal_source,
+      (l.signal_detail || "").replace(/\s+/g, " "),
+      l.best_call_window || "",
+      (l.suggested_opener || "")
+        .replace(/\{name\}/g, l.full_name || "there")
+        .replace(/\{address\}/g, l.address || "your property"),
+      l.signal_date || l.created_at?.slice(0, 10) || "",
+    ]);
+    const csv = [headers, ...rows]
+      .map(r => r.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `mortgage-radar-leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${filtered.length} leads`);
+  };
+
+  const openDraft = (l: Lead, channel: "sms" | "email" | "call_note") => {
+    setDraftFor(l);
+    setDraftChannel(channel);
+    const body = (l.suggested_opener || "")
+      .replace(/\{name\}/g, l.full_name || "there")
+      .replace(/\{address\}/g, l.address || "your property");
+    setDraftBody(body);
+    setDraftSubject(channel === "email" ? `Quick question about ${l.address || "your property"}` : "");
+  };
+
+  const submitDraft = async () => {
+    if (!draftFor || !draftBody.trim()) {
+      toast.error("Draft body required");
+      return;
+    }
+    try {
+      const { data, error } = await supabase.functions.invoke("mortgage-radar-outreach", {
+        body: {
+          action: "create",
+          lead_id: draftFor.id,
+          client_id: DEMO_CLIENT_ID,
+          channel: draftChannel,
+          draft_subject: draftSubject || undefined,
+          draft_body: draftBody,
+        },
+      });
+      if (error) throw error;
+      toast.success("Draft queued for your approval");
+      setOutreach(prev => [data.outreach, ...prev]);
+      setDraftFor(null);
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to queue draft");
+    }
+  };
+
+  const approveAndSend = async (id: string, send: boolean) => {
+    try {
+      const { error } = await supabase.functions.invoke("mortgage-radar-outreach", {
+        body: { action: "approve", outreach_id: id, send_now: send },
+      });
+      if (error) throw error;
+      toast.success(send ? "Approved & sent" : "Approved");
+      setOutreach(prev => prev.map(o => o.id === id ? { ...o, status: send ? "sent" : "approved", sent_at: send ? new Date().toISOString() : null } : o));
+    } catch (e: any) {
+      toast.error(e?.message || "Failed");
+    }
+  };
+
+  const rejectDraft = async (id: string) => {
+    try {
+      await supabase.functions.invoke("mortgage-radar-outreach", {
+        body: { action: "reject", outreach_id: id },
+      });
+      setOutreach(prev => prev.map(o => o.id === id ? { ...o, status: "rejected" } : o));
+      toast.success("Draft rejected");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed");
+    }
+  };
+
+  const pendingApproval = outreach.filter(o => o.status === "pending_approval" || o.status === "approved");
 
   return (
     <div className="min-h-screen bg-[#030711] text-foreground">
       <SEOHead title="My Mortgage Radar — Loan Officer Dashboard" description="Daily in-market mortgage leads from public records." />
 
-      <header className="border-b border-[#1e3a5f] bg-[#0a1628]/80 backdrop-blur">
+      <header className="border-b border-[#1e3a5f] bg-[#0a1628]/80 backdrop-blur sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Home className="w-5 h-5 text-[#00d4ff]" />
@@ -69,7 +212,7 @@ export default function MyMortgageRadar() {
       </header>
 
       <section className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid sm:grid-cols-3 gap-4 mb-8">
+        <div className="grid sm:grid-cols-3 gap-4 mb-6">
           <Card className="bg-[#0a1628] border-[#1e3a5f]"><CardContent className="p-5">
             <p className="text-xs uppercase tracking-widest text-[#00d4ff] mb-1">Hot leads (9–10)</p>
             <p className="text-3xl font-extrabold text-white">{hotCount}</p>
@@ -79,22 +222,90 @@ export default function MyMortgageRadar() {
             <p className="text-3xl font-extrabold text-white">{warmCount}</p>
           </CardContent></Card>
           <Card className="bg-[#0a1628] border-[#1e3a5f]"><CardContent className="p-5">
-            <p className="text-xs uppercase tracking-widest text-[#00d4ff] mb-1">Total (14d)</p>
-            <p className="text-3xl font-extrabold text-white">{leads.length}</p>
+            <p className="text-xs uppercase tracking-widest text-[#00d4ff] mb-1">Total filtered</p>
+            <p className="text-3xl font-extrabold text-white">{filtered.length}</p>
           </CardContent></Card>
         </div>
 
+        {/* Filter + Export bar */}
+        <Card className="bg-[#0a1628] border-[#1e3a5f] mb-6">
+          <CardContent className="p-4 flex flex-wrap items-end gap-3">
+            <div className="flex-1 min-w-[120px]">
+              <label className="text-[10px] uppercase tracking-widest text-[#94a3b8] block mb-1">Min score</label>
+              <select
+                value={filterScore}
+                onChange={(e) => setFilterScore(Number(e.target.value))}
+                className="w-full bg-[#030711] border border-[#1e3a5f] rounded h-9 px-2 text-white text-sm"
+              >
+                <option value={0}>All</option>
+                <option value={7}>7+ (warm)</option>
+                <option value={9}>9+ (hot)</option>
+              </select>
+            </div>
+            <div className="flex-1 min-w-[120px]">
+              <label className="text-[10px] uppercase tracking-widest text-[#94a3b8] block mb-1">ZIP</label>
+              <Input value={filterZip} onChange={(e) => setFilterZip(e.target.value)} placeholder="48226" className="bg-[#030711] border-[#1e3a5f] text-white h-9" />
+            </div>
+            <div className="flex-1 min-w-[160px]">
+              <label className="text-[10px] uppercase tracking-widest text-[#94a3b8] block mb-1">Signal type</label>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="w-full bg-[#030711] border border-[#1e3a5f] rounded h-9 px-2 text-white text-sm"
+              >
+                <option value="">All</option>
+                {types.map(t => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
+              </select>
+            </div>
+            <Button onClick={exportCsv} className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold h-9">
+              <Download className="w-4 h-4 mr-1" /> Export CSV
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Approval queue */}
+        {pendingApproval.length > 0 && (
+          <Card className="bg-[#0a1628] border-[#00d4ff] mb-6">
+            <CardHeader><CardTitle className="text-white text-base">📋 Approval queue ({pendingApproval.length})</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {pendingApproval.map(o => (
+                <div key={o.id} className="bg-[#030711] border border-[#1e3a5f] rounded p-3">
+                  <div className="flex justify-between items-start mb-2 gap-2">
+                    <span className="text-[10px] uppercase tracking-widest text-[#00d4ff]">{o.channel} · {o.status}</span>
+                    {o.send_error && <span className="text-[10px] text-red-400">{o.send_error}</span>}
+                  </div>
+                  {o.draft_subject && <p className="text-sm text-white font-semibold mb-1">{o.draft_subject}</p>}
+                  <p className="text-sm text-[#cbd5e1] whitespace-pre-wrap mb-3">{o.approved_body || o.draft_body}</p>
+                  {o.status === "pending_approval" && (
+                    <div className="flex gap-2 flex-wrap">
+                      <Button size="sm" onClick={() => approveAndSend(o.id, true)} className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold">
+                        <Send className="w-3 h-3 mr-1" /> Approve & Send
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => approveAndSend(o.id, false)} className="border-[#1e3a5f] text-white hover:bg-[#1e3a5f]/40">
+                        <Check className="w-3 h-3 mr-1" /> Approve only
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => rejectDraft(o.id)} className="border-red-900 text-red-400 hover:bg-red-950/40">
+                        <X className="w-3 h-3 mr-1" /> Reject
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
         {loading ? (
           <p className="text-[#94a3b8]">Loading leads…</p>
-        ) : leads.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <Card className="bg-[#0a1628] border-[#1e3a5f]"><CardContent className="p-8 text-center">
             <Bell className="w-8 h-8 text-[#00d4ff] mx-auto mb-3" />
-            <p className="text-white font-semibold mb-1">No leads yet</p>
-            <p className="text-sm text-[#94a3b8]">The scanner runs daily. New permits, FSBO, and foreclosure signals will appear here within 24 hours.</p>
+            <p className="text-white font-semibold mb-1">No leads match your filters</p>
+            <p className="text-sm text-[#94a3b8]">Try lowering the score threshold or clearing the ZIP filter.</p>
           </CardContent></Card>
         ) : (
           <div className="grid gap-4">
-            {leads.map((l) => (
+            {filtered.map((l) => (
               <Card key={l.id} className={`bg-[#0a1628] border ${l.score >= 9 ? "border-[#00d4ff]" : "border-[#1e3a5f]"}`}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-3">
@@ -102,6 +313,9 @@ export default function MyMortgageRadar() {
                       <CardTitle className="text-white text-lg">{l.address || "Address pending"}</CardTitle>
                       <p className="text-xs text-[#94a3b8] mt-1 flex items-center gap-1">
                         <MapPin className="w-3 h-3" /> {l.city || ""} {l.zip || ""} · {l.signal_source}
+                        {(l.signal_count || 1) > 1 && (
+                          <span className="ml-2 px-1.5 py-0.5 rounded bg-[#00d4ff]/20 text-[#00d4ff] font-bold">×{l.signal_count} signals</span>
+                        )}
                       </p>
                     </div>
                     <div className="text-right">
@@ -122,8 +336,11 @@ export default function MyMortgageRadar() {
                     <Button size="sm" onClick={() => claimLead(l.id)} className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold">
                       <Lock className="w-3 h-3 mr-1" /> Claim 7d
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => setDraftFor(l)} className="border-[#1e3a5f] text-white hover:bg-[#1e3a5f]/40">
-                      <MessageSquare className="w-3 h-3 mr-1" /> Draft outreach
+                    <Button size="sm" variant="outline" onClick={() => openDraft(l, "sms")} className="border-[#1e3a5f] text-white hover:bg-[#1e3a5f]/40">
+                      <MessageSquare className="w-3 h-3 mr-1" /> Draft SMS
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => openDraft(l, "email")} className="border-[#1e3a5f] text-white hover:bg-[#1e3a5f]/40">
+                      ✉️ Draft email
                     </Button>
                     {l.best_call_window && (
                       <span className="text-xs text-[#94a3b8] flex items-center gap-1 ml-auto">
@@ -138,23 +355,37 @@ export default function MyMortgageRadar() {
         )}
 
         <p className="text-[10px] text-[#64748b] text-center mt-10 max-w-2xl mx-auto">
-          Mortgage Radar uses public records and behavioral signals only. We do not access, purchase, or resell credit-bureau trigger leads. All outreach must be sent manually by you in compliance with TCPA + FCRA.
+          Mortgage Radar uses public records and behavioral signals only. We do not access, purchase, or resell credit-bureau trigger leads. Every outreach requires your explicit approval before send (TCPA + FCRA).
         </p>
       </section>
 
+      {/* Draft modal — LO must explicitly submit, then approve in queue before send */}
       {draftFor && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50" onClick={() => setDraftFor(null)}>
           <Card className="max-w-lg w-full bg-[#0a1628] border-[#1e3a5f]" onClick={(e) => e.stopPropagation()}>
-            <CardHeader><CardTitle className="text-white">Outreach draft</CardTitle></CardHeader>
-            <CardContent>
-              <p className="text-xs text-[#00d4ff] uppercase tracking-widest mb-1">SMS / Phone opener</p>
-              <textarea
-                readOnly
-                className="w-full h-32 bg-[#030711] border border-[#1e3a5f] rounded p-3 text-sm text-[#cbd5e1]"
-                value={(draftFor.suggested_opener || "").replace(/\{name\}/g, draftFor.full_name || "there").replace(/\{address\}/g, draftFor.address || "your property")}
-              />
-              <p className="text-[10px] text-[#64748b] mt-2">Copy and send manually. Do not text numbers on your DNC list.</p>
-              <Button onClick={() => setDraftFor(null)} className="mt-3 w-full bg-[#1e3a5f] text-white">Close</Button>
+            <CardHeader>
+              <CardTitle className="text-white">Draft outreach — {draftChannel}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {draftChannel === "email" && (
+                <div>
+                  <label className="text-[10px] uppercase tracking-widest text-[#94a3b8] block mb-1">Subject</label>
+                  <Input value={draftSubject} onChange={(e) => setDraftSubject(e.target.value)} className="bg-[#030711] border-[#1e3a5f] text-white" />
+                </div>
+              )}
+              <div>
+                <label className="text-[10px] uppercase tracking-widest text-[#94a3b8] block mb-1">Message body</label>
+                <Textarea value={draftBody} onChange={(e) => setDraftBody(e.target.value)} rows={6} className="bg-[#030711] border-[#1e3a5f] text-[#cbd5e1]" />
+              </div>
+              <p className="text-[10px] text-[#64748b]">This will be added to your approval queue. Nothing sends until you click "Approve & Send".</p>
+              <div className="flex gap-2">
+                <Button onClick={submitDraft} className="flex-1 bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold">
+                  Queue for approval
+                </Button>
+                <Button variant="outline" onClick={() => setDraftFor(null)} className="border-[#1e3a5f] text-white">
+                  Cancel
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
