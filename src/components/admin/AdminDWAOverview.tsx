@@ -225,6 +225,9 @@ export default function AdminDWAOverview() {
         ))}
       </div>
 
+      {/* Free Taste Funnel — sneak peek signups & trial conversions */}
+      <FreeTasteFunnelRow />
+
       {/* Quick Links */}
       <div>
         <p className="text-white/50 text-xs font-bold uppercase tracking-wider mb-3">Quick Links</p>
