@@ -75,6 +75,16 @@ const STAGE_ICONS: Record<string, React.ReactNode> = {
   "Cancelled": <AlertCircle className="w-4 h-4" />,
 };
 
+// Product filter options — maps friendly label → service_type substring match
+const PRODUCT_FILTERS: { label: string; match: (s: string) => boolean }[] = [
+  { label: "All Products", match: () => true },
+  { label: "Mortgage Radar", match: (s) => s.toLowerCase().includes("mortgage") },
+  { label: "Talent Radar / TechAlert", match: (s) => /hire_alert|talent_radar|techalert/i.test(s) },
+  { label: "FieldDesk", match: (s) => /field_service|field_crm|fielddesk/i.test(s) },
+  { label: "Dead Lead", match: (s) => /dead_lead/i.test(s) },
+  { label: "Web Design", match: (s) => /web_design|website|seo_guard/i.test(s) },
+];
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AdminB2BPipeline() {
@@ -82,6 +92,7 @@ export default function AdminB2BPipeline() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<string>("all");
+  const [productFilter, setProductFilter] = useState<string>("All Products");
   const [selected, setSelected] = useState<PipelineItem | null>(null);
   const [editNotes, setEditNotes] = useState("");
   const [editStage, setEditStage] = useState("");
@@ -145,6 +156,8 @@ export default function AdminB2BPipeline() {
     }
   };
 
+  const productMatcher = PRODUCT_FILTERS.find(p => p.label === productFilter)?.match ?? (() => true);
+
   const filtered = items.filter((i) => {
     const matchesSearch =
       !search ||
@@ -152,7 +165,8 @@ export default function AdminB2BPipeline() {
       i.client.email.toLowerCase().includes(search.toLowerCase()) ||
       i.service_type.toLowerCase().includes(search.toLowerCase());
     const matchesStage = stageFilter === "all" || i.fulfillment_stage === stageFilter;
-    return matchesSearch && matchesStage;
+    const matchesProduct = productMatcher(i.service_type);
+    return matchesSearch && matchesStage && matchesProduct;
   });
 
   // Stats
@@ -210,13 +224,23 @@ export default function AdminB2BPipeline() {
           />
         </div>
         <Select value={stageFilter} onValueChange={setStageFilter}>
-          <SelectTrigger className="w-[220px] bg-card">
+          <SelectTrigger className="w-[200px] bg-card">
             <SelectValue placeholder="Filter by stage" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Stages</SelectItem>
             {STAGES.map((s) => (
               <SelectItem key={s} value={s}>{s}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={productFilter} onValueChange={setProductFilter}>
+          <SelectTrigger className="w-[200px] bg-card">
+            <SelectValue placeholder="Filter by product" />
+          </SelectTrigger>
+          <SelectContent>
+            {PRODUCT_FILTERS.map((p) => (
+              <SelectItem key={p.label} value={p.label}>{p.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
