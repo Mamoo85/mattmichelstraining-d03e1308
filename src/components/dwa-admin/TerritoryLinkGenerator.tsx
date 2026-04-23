@@ -466,17 +466,39 @@ export default function TerritoryLinkGenerator() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => copy(smsDraft, "SMS draft")}
-                  className="flex items-center justify-center gap-1.5 text-xs font-semibold px-3 py-2 rounded border border-border bg-background hover:bg-accent text-foreground"
+                  onClick={() => {
+                    const idKey = persistedToken || `untracked:${linkForCopy}`;
+                    const isOverride = !!overrideKeys["sms"];
+                    const ok = copySmsDraftGuarded({
+                      text: smsDraft,
+                      idKey,
+                      label: "SMS draft",
+                      forceOverride: isOverride,
+                      onBlocked: () => setOverrideKeys(o => ({ ...o, sms: true })),
+                    });
+                    if (ok) setOverrideKeys(o => ({ ...o, sms: false }));
+                  }}
+                  className={`flex items-center justify-center gap-1.5 text-xs font-semibold px-3 py-2 rounded border bg-background hover:bg-accent text-foreground ${overrideKeys["sms"] ? "border-yellow-500 text-yellow-600" : "border-border"}`}
                 >
-                  <MessageSquare size={12} /> Copy SMS Draft
+                  <MessageSquare size={12} /> {overrideKeys["sms"] ? "Click again to override" : "Copy SMS Draft"}
                 </button>
                 <button
                   type="button"
-                  onClick={() => copy(apologyDraft, "Apology draft")}
-                  className="flex items-center justify-center gap-1.5 text-xs font-semibold px-3 py-2 rounded border border-border bg-background hover:bg-accent text-foreground"
+                  onClick={() => {
+                    const idKey = persistedToken || `untracked:${linkForCopy}`;
+                    const isOverride = !!overrideKeys["apology"];
+                    const ok = copySmsDraftGuarded({
+                      text: apologyDraft,
+                      idKey,
+                      label: "Apology draft",
+                      forceOverride: isOverride,
+                      onBlocked: () => setOverrideKeys(o => ({ ...o, apology: true })),
+                    });
+                    if (ok) setOverrideKeys(o => ({ ...o, apology: false }));
+                  }}
+                  className={`flex items-center justify-center gap-1.5 text-xs font-semibold px-3 py-2 rounded border bg-background hover:bg-accent text-foreground ${overrideKeys["apology"] ? "border-yellow-500 text-yellow-600" : "border-border"}`}
                 >
-                  <Mail size={12} /> Copy Apology Draft
+                  <Mail size={12} /> {overrideKeys["apology"] ? "Click again to override" : "Copy Apology Draft"}
                 </button>
               </div>
 
