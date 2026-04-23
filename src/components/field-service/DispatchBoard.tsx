@@ -234,10 +234,17 @@ const DispatchBoard: React.FC<DispatchBoardProps> = ({ clientId }) => {
   );
   const monthRevenue = completedThisMonth.reduce((sum, j) => sum + (j.estimated_value || 0), 0);
 
+  // Status counts for KPI row + quick filters
+  const statusCounts = COLUMNS.reduce<Record<string, number>>((acc, col) => {
+    acc[col.key] = jobs.filter((j) => j.status === col.key).length;
+    return acc;
+  }, {});
+  const totalJobs = jobs.length;
+
   return (
     <div className="min-h-screen bg-[#0a1628] text-white">
       {/* Revenue strip */}
-      <div className="flex items-center gap-6 px-4 py-2.5 bg-[#051020] border-b border-[#1e3a5f]">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-2.5 bg-[#051020] border-b border-[#1e3a5f]">
         <div className="flex items-center gap-2">
           <span className="text-[10px] text-white/40 uppercase tracking-wide">This Month</span>
           <span className="text-[#00d4ff] font-black text-lg">
@@ -258,14 +265,54 @@ const DispatchBoard: React.FC<DispatchBoardProps> = ({ clientId }) => {
         )}
       </div>
 
-      {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#1e3a5f]">
+      {/* KPI summary by status — total + per-column counts as quick filters */}
+      <div className="px-3 sm:px-4 py-3 bg-[#071426] border-b border-[#1e3a5f] overflow-x-auto">
+        <div className="flex items-stretch gap-2 min-w-max">
+          <button
+            onClick={() => setStatusFilter(null)}
+            className={`flex flex-col items-start px-3 py-2 rounded-lg border min-w-[88px] transition-all ${
+              statusFilter === null
+                ? "bg-[#0f1f35] border-[#00d4ff] shadow-[0_0_0_1px_rgba(0,212,255,0.25)]"
+                : "bg-[#0a1628] border-[#1e3a5f] hover:border-[#00d4ff]/50"
+            }`}
+          >
+            <span className="text-[9px] uppercase tracking-widest text-gray-400 font-bold">All</span>
+            <span className="text-white font-black text-xl tabular-nums leading-none mt-1">{totalJobs}</span>
+          </button>
+          {COLUMNS.map((col) => {
+            const active = statusFilter === col.key;
+            return (
+              <button
+                key={col.key}
+                onClick={() => setStatusFilter(active ? null : col.key)}
+                className={`flex flex-col items-start px-3 py-2 rounded-lg border min-w-[88px] transition-all ${
+                  active
+                    ? "bg-[#0f1f35] shadow-[0_0_0_1px_rgba(0,212,255,0.25)]"
+                    : "bg-[#0a1628] hover:bg-[#0f1f35]"
+                }`}
+                style={{ borderColor: active ? col.accent : "#1e3a5f" }}
+              >
+                <span className="flex items-center gap-1.5 text-[9px] uppercase tracking-widest font-bold" style={{ color: col.accent }}>
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: col.accent }} />
+                  {col.label}
+                </span>
+                <span className="text-white font-black text-xl tabular-nums leading-none mt-1">
+                  {statusCounts[col.key] ?? 0}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Sticky toolbar */}
+      <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 border-b border-[#1e3a5f] bg-[#0a1628]/95 backdrop-blur">
         <h2 className="text-white font-bold text-lg">Dispatch Board</h2>
         <div className="flex gap-2">
-          <button onClick={() => refetch()} className="px-3 py-2 rounded-lg bg-[#0f1f35] border border-[#1e3a5f] text-gray-300 text-sm hover:border-[#00d4ff] transition-colors">
-            ↻ Refresh
+          <button onClick={() => refetch()} className="px-3 py-2 rounded-lg bg-[#0f1f35] border border-[#1e3a5f] text-gray-300 text-sm hover:border-[#00d4ff] transition-colors min-h-[40px]">
+            ↻ <span className="hidden sm:inline">Refresh</span>
           </button>
-          <button onClick={() => setShowCreateModal(true)} className="px-4 py-2 rounded-lg bg-[#00d4ff] text-[#0a1628] font-bold text-sm hover:bg-[#00bce8] transition-colors">
+          <button onClick={() => setShowCreateModal(true)} className="px-4 py-2 rounded-lg bg-[#00d4ff] text-[#0a1628] font-bold text-sm hover:bg-[#00bce8] transition-colors min-h-[40px]">
             + New Job
           </button>
         </div>
