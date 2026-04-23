@@ -36,8 +36,8 @@ function formatElapsed(seconds: number): string {
 }
 
 /** Capture GPS and write to tech_locations */
-async function captureGPS(techId: string, clientId: string | undefined) {
-  if (!navigator.geolocation || techId === "demo") return;
+async function captureGPS(techId: string, clientId: string | undefined, techName?: string) {
+  if (!navigator.geolocation || techId === "demo" || !clientId) return;
   try {
     const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
       navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -46,16 +46,13 @@ async function captureGPS(techId: string, clientId: string | undefined) {
         maximumAge: 0,
       })
     );
-    await supabase.from("tech_locations").upsert(
-      {
-        tech_id: techId,
-        client_id: clientId || null,
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "tech_id" }
-    );
+    await (supabase.from("tech_locations") as any).upsert({
+      client_id: clientId,
+      tech_name: techName || techId,
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
+      updated_at: new Date().toISOString(),
+    });
   } catch (err) {
     console.warn("GPS capture failed:", err);
   }
