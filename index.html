@@ -34,7 +34,38 @@
       body { margin: 0; background: hsl(0 0% 5%); color: hsl(0 0% 93%); font-family: 'Geist Mono', ui-monospace, monospace; }
       #root { min-height: 100vh; }
     </style>
-    <script type="application/ld+json">
+    <script type="application/ld+json" id="ld-default">
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfessionalService",
+      "name": "Detroit Web Agency",
+      "description": "Professional websites, CRM systems, and automated lead generation for contractors, HVAC, plumbers, and local service businesses in metro Detroit.",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Grosse Pointe",
+        "addressRegion": "MI",
+        "postalCode": "48230",
+        "addressCountry": "US"
+      },
+      "telephone": "+13139921219",
+      "email": "matt@detroitwebagent.com",
+      "areaServed": ["Detroit", "Grosse Pointe", "Warren", "Sterling Heights", "Troy", "Royal Oak", "Metro Detroit", "Michigan"],
+      "priceRange": "$$",
+      "url": "https://www.detroitwebagent.com",
+      "image": "https://www.detroitwebagent.com/dwa-og-image.png",
+      "knowsAbout": [
+        "Web Design",
+        "Website Development",
+        "Local SEO",
+        "Lead Generation",
+        "CRM Systems",
+        "Marketing Automation",
+        "Field Service Software",
+        "Contractor Websites"
+      ]
+    }
+    </script>
+    <script type="application/ld+json" id="ld-m2-training" data-brand="m2" data-disabled="true">
     {
       "@context": "https://schema.org",
       "@type": "HealthAndBeautyBusiness",
@@ -49,6 +80,7 @@
         "postalCode": "48230"
       },
       "founder": "Matt Michels",
+      "telephone": "+13139921219",
       "areaServed": ["Grosse Pointe", "Grosse Pointe Park", "Grosse Pointe Farms", "Grosse Pointe Woods", "Detroit", "St. Clair Shores", "Michigan", "United States"],
       "knowsAbout": [
         "Personal Training",
@@ -64,45 +96,10 @@
       ],
       "priceRange": "$$",
       "url": "https://www.mattmichelstraining.com",
-      "hasOfferCatalog": {
-        "@type": "OfferCatalog",
-        "name": "Training Programs",
-        "itemListElement": [
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Service",
-              "name": "Sport-Specific Strength Training Guides",
-              "description": "Affordable youth strength training guides for baseball, soccer, hockey, volleyball, and more. Written by a 20-year veteran trainer."
-            },
-            "price": "9.00",
-            "priceCurrency": "USD"
-          },
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Service",
-              "name": "Custom Strength Training Program",
-              "description": "Personalized strength training program for youth athletes, built from scratch based on sport, goals, and equipment."
-            },
-            "price": "20.00",
-            "priceCurrency": "USD"
-          },
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Service",
-              "name": "Online Strength Training Subscription",
-              "description": "Monthly online strength training for middle school and high school athletes. Includes exercise library, progress tracking, and coach notes."
-            },
-            "price": "14.99",
-            "priceCurrency": "USD"
-          }
-        ]
-      }
+      "image": "https://www.mattmichelstraining.com/og-image.png"
     }
     </script>
-    <script type="application/ld+json">
+    <script type="application/ld+json" id="ld-m2-studio" data-brand="m2" data-disabled="true">
     {
       "@context": "https://schema.org",
       "@type": "SportsActivityLocation",
