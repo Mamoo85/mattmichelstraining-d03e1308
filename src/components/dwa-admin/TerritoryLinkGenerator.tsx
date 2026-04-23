@@ -548,8 +548,23 @@ export default function TerritoryLinkGenerator() {
                       <button onClick={() => copy(r.trackedLink, `${r.city} link`)} className="px-2 py-1 text-[11px] font-semibold rounded bg-primary text-primary-foreground hover:opacity-90 flex items-center gap-1">
                         <Copy size={10} /> Copy
                       </button>
-                      <button onClick={() => copy(bulkSmsForRow(r), `${r.city} SMS`)} className="px-2 py-1 text-[11px] font-semibold rounded border border-border bg-background hover:bg-accent text-foreground flex items-center gap-1">
-                        <MessageSquare size={10} /> SMS
+                      <button
+                        onClick={() => {
+                          const idKey = r.token || `untracked:${r.trackedLink}`;
+                          const stateKey = `bulk:${idKey}`;
+                          const isOverride = !!overrideKeys[stateKey];
+                          const ok = copySmsDraftGuarded({
+                            text: bulkSmsForRow(r),
+                            idKey,
+                            label: `${r.city} SMS`,
+                            forceOverride: isOverride,
+                            onBlocked: () => setOverrideKeys(o => ({ ...o, [stateKey]: true })),
+                          });
+                          if (ok) setOverrideKeys(o => ({ ...o, [stateKey]: false }));
+                        }}
+                        className={`px-2 py-1 text-[11px] font-semibold rounded border bg-background hover:bg-accent text-foreground flex items-center gap-1 ${overrideKeys[`bulk:${r.token || `untracked:${r.trackedLink}`}`] ? "border-yellow-500 text-yellow-600" : "border-border"}`}
+                      >
+                        <MessageSquare size={10} /> {overrideKeys[`bulk:${r.token || `untracked:${r.trackedLink}`}`] ? "Override?" : "SMS"}
                       </button>
                     </div>
                   </div>
