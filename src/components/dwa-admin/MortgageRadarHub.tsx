@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Home, Play, RefreshCw, Users, MapPin } from "lucide-react";
+import { Home, Play, RefreshCw, Users, MapPin, Sparkles, Copy, Send } from "lucide-react";
 
 type Client = {
   id: string;
@@ -22,6 +22,9 @@ type Lead = {
   address: string | null;
   city: string | null;
   zip: string | null;
+  full_name: string | null;
+  phone: string | null;
+  email: string | null;
   signal_type: string;
   signal_source: string;
   score: number;
@@ -29,17 +32,25 @@ type Lead = {
   created_at: string;
 };
 
+const ONBOARD_URL = "https://detroitwebagent.com/mortgage-radar";
+
 export default function MortgageRadarHub() {
   const [clients, setClients] = useState<Client[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
+  const [enrichingAll, setEnrichingAll] = useState(false);
+  const [enrichingId, setEnrichingId] = useState<string | null>(null);
+  const [trace, setTrace] = useState<Array<Record<string, unknown>> | null>(null);
 
   const load = async () => {
     setLoading(true);
     const [c, l] = await Promise.all([
       (supabase.from as any)("mortgage_radar_clients").select("*").order("created_at", { ascending: false }),
-      (supabase.from as any)("mortgage_radar_leads").select("id, address, city, zip, signal_type, signal_source, score, signal_date, created_at").order("created_at", { ascending: false }).limit(50),
+      (supabase.from as any)("mortgage_radar_leads")
+        .select("id, address, city, zip, full_name, phone, email, signal_type, signal_source, score, signal_date, created_at")
+        .order("created_at", { ascending: false })
+        .limit(50),
     ]);
     setClients(c.data || []);
     setLeads(l.data || []);
@@ -72,23 +83,84 @@ export default function MortgageRadarHub() {
     }
   };
 
+  const enrichAll = async () => {
+    setEnrichingAll(true);
+    setTrace(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("mortgage-radar-enrich", { body: { limit: 10 } });
+      if (error) throw error;
+      toast.success(`Enriched ${data?.enriched ?? 0} of ${data?.processed ?? 0} leads`);
+      setTrace(data?.trace || []);
+      await load();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Enrich failed");
+    } finally {
+      setEnrichingAll(false);
+    }
+  };
+
+  const enrichOne = async (id: string) => {
+    setEnrichingId(id);
+    setTrace(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("mortgage-radar-enrich", { body: { lead_id: id } });
+      if (error) throw error;
+      const hit = (data?.enriched ?? 0) > 0;
+      toast[hit ? "success" : "info"](hit ? "Lead enriched" : "No enrichment data found");
+      setTrace(data?.trace || []);
+      await load();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Enrich failed");
+    } finally {
+      setEnrichingId(null);
+    }
+  };
+
+  const copyOnboardLink = async () => {
+    const message = `Hey — built you the Mortgage Radar founder seat. Free for you.\n\nSign up here: ${ONBOARD_URL}\n\nIt scans Metro Detroit public records (FSBO, foreclosure notices, estate sales, BSEED permits, SBA approvals) for in-market borrowers in your ZIPs and emails you a weekly digest. FCRA-clean — no trigger leads, no credit-bureau data.`;
+    try {
+      await navigator.clipboard.writeText(message);
+      toast.success("Onboarding message copied — text it to your brother");
+    } catch {
+      toast.error("Copy failed — link: " + ONBOARD_URL);
+    }
+  };
+
+  const missingInfo = (l: Lead) => !l.full_name || !l.phone || !l.email;
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <Home className="w-6 h-6 text-[#00d4ff]" />
         <div>
           <h1 className="text-2xl font-bold text-white">Mortgage Radar</h1>
           <p className="text-sm text-[#94a3b8]">Pre-trigger mortgage lead intelligence — FCRA-clean public records pipeline</p>
         </div>
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex gap-2 flex-wrap">
           <Button onClick={runScanner} disabled={scanning} className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold">
             <Play className="w-3 h-3 mr-1" /> {scanning ? "Scanning…" : "Run scanner"}
+          </Button>
+          <Button onClick={enrichAll} disabled={enrichingAll} className="bg-amber-500 text-black hover:bg-amber-400 font-bold">
+            <Sparkles className="w-3 h-3 mr-1" /> {enrichingAll ? "Enriching…" : "Enrich top 10"}
           </Button>
           <Button onClick={sendDigest} variant="outline" className="border-[#1e3a5f] text-white hover:bg-[#1e3a5f]/40">
             <RefreshCw className="w-3 h-3 mr-1" /> Send weekly digest
           </Button>
         </div>
       </div>
+
+      <Card className="bg-gradient-to-r from-[#0a1628] to-[#0a2440] border-[#00d4ff]/40">
+        <CardContent className="p-5 flex items-center gap-4 flex-wrap">
+          <Send className="w-5 h-5 text-[#00d4ff] shrink-0" />
+          <div className="flex-1 min-w-[240px]">
+            <p className="text-white font-bold text-sm">Onboard your brother (founder seat)</p>
+            <p className="text-[#94a3b8] text-xs break-all">{ONBOARD_URL}</p>
+          </div>
+          <Button onClick={copyOnboardLink} className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold">
+            <Copy className="w-3 h-3 mr-1" /> Copy SMS
+          </Button>
+        </CardContent>
+      </Card>
 
       <div className="grid sm:grid-cols-3 gap-4">
         <Card className="bg-[#0a1628] border-[#1e3a5f]"><CardContent className="p-5">
@@ -100,8 +172,10 @@ export default function MortgageRadarHub() {
           <p className="text-3xl font-extrabold text-white">{leads.length}</p>
         </CardContent></Card>
         <Card className="bg-[#0a1628] border-[#1e3a5f]"><CardContent className="p-5">
-          <p className="text-xs uppercase tracking-widest text-[#00d4ff] mb-1">Hot leads (9–10)</p>
-          <p className="text-3xl font-extrabold text-white">{leads.filter(l => l.score >= 9).length}</p>
+          <p className="text-xs uppercase tracking-widest text-[#00d4ff] mb-1">Enriched / total</p>
+          <p className="text-3xl font-extrabold text-white">
+            {leads.filter(l => !missingInfo(l)).length}<span className="text-[#64748b] text-lg">/{leads.length}</span>
+          </p>
         </CardContent></Card>
       </div>
 
@@ -109,7 +183,7 @@ export default function MortgageRadarHub() {
         <CardHeader><CardTitle className="text-white flex items-center gap-2"><Users className="w-4 h-4 text-[#00d4ff]" /> Loan Officer Roster</CardTitle></CardHeader>
         <CardContent>
           {loading ? <p className="text-[#94a3b8]">Loading…</p> : clients.length === 0 ? (
-            <p className="text-[#94a3b8] text-sm">No clients yet. Send the /mortgage-radar link to your brother to onboard the founder seat.</p>
+            <p className="text-[#94a3b8] text-sm">No clients yet. Click "Copy SMS" above and text the onboarding message to your brother.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -143,17 +217,33 @@ export default function MortgageRadarHub() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="text-[#00d4ff] text-left text-xs uppercase tracking-widest">
-                  <th className="py-2">Address</th><th>ZIP</th><th>Signal</th><th>Source</th><th>Score</th><th>Date</th>
+                  <th className="py-2">Address</th><th>Owner</th><th>Phone / Email</th><th>ZIP</th><th>Signal</th><th>Score</th><th></th>
                 </tr></thead>
                 <tbody>
                   {leads.map(l => (
                     <tr key={l.id} className="border-t border-[#1e3a5f]">
                       <td className="py-2 text-white">{l.address || "—"}</td>
+                      <td className="text-[#cbd5e1]">{l.full_name || <span className="text-[#64748b]">—</span>}</td>
+                      <td className="text-[#cbd5e1] text-xs">
+                        {l.phone || <span className="text-[#64748b]">no phone</span>}
+                        <br />
+                        {l.email || <span className="text-[#64748b]">no email</span>}
+                      </td>
                       <td className="text-[#94a3b8]">{l.zip || "—"}</td>
                       <td className="text-[#cbd5e1]">{l.signal_type.replace(/_/g, " ")}</td>
-                      <td className="text-[#94a3b8]">{l.signal_source}</td>
                       <td className={l.score >= 9 ? "text-[#00d4ff] font-bold" : "text-white"}>{l.score}</td>
-                      <td className="text-[#64748b]">{l.signal_date || new Date(l.created_at).toISOString().slice(0, 10)}</td>
+                      <td>
+                        {missingInfo(l) && (
+                          <Button
+                            size="sm"
+                            onClick={() => enrichOne(l.id)}
+                            disabled={enrichingId === l.id}
+                            className="h-7 px-2 bg-amber-500/20 text-amber-300 hover:bg-amber-500/40 border border-amber-500/40"
+                          >
+                            <Sparkles className="w-3 h-3 mr-1" /> {enrichingId === l.id ? "…" : "Enrich"}
+                          </Button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -162,6 +252,15 @@ export default function MortgageRadarHub() {
           )}
         </CardContent>
       </Card>
+
+      {trace && trace.length > 0 && (
+        <Card className="bg-[#0a1628] border-[#1e3a5f]">
+          <CardHeader><CardTitle className="text-white text-sm">Last enrichment trace</CardTitle></CardHeader>
+          <CardContent>
+            <pre className="text-[#94a3b8] text-xs overflow-x-auto whitespace-pre-wrap">{JSON.stringify(trace, null, 2)}</pre>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
