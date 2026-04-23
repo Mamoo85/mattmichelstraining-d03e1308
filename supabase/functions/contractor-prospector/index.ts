@@ -665,6 +665,84 @@ serve(async (req) => {
     let totalScoutRejected = 0;
     const maxToSend = Math.min(15, remainingCap);
 
+    // ── CARE ALERT DAY: search nursing homes instead of trade combos ──
+    if (pitchRotation === "care_alert" && !manualTrade) {
+      const nursingSearches = [
+        "nursing home in Detroit MI", "assisted living in Grosse Pointe MI",
+        "skilled nursing facility in Warren MI", "nursing home in Sterling Heights MI",
+        "assisted living in Troy MI",
+      ];
+      for (const query of nursingSearches) {
+        if (careAlertSent >= CARE_ALERT_CAP || isTimedOut()) break;
+        const city = query.split(" in ").pop() || "Detroit MI";
+        const places = await searchGoogleMaps(query, GOOGLE_MAPS_API_KEY);
+        totalFound += places.length;
+        for (const place of places.slice(0, 5)) {
+          if (careAlertSent >= CARE_ALERT_CAP || isTimedOut()) break;
+          const name = place.displayName?.text || "Unknown Facility";
+          const phone = place.nationalPhoneNumber || null;
+          const website = place.websiteUri || null;
+
+          const { data: existing } = await sb.from("outreach_leads").select("id")
+            .ilike("business_name", name).ilike("city", city.replace(" MI", "")).limit(1);
+          if (existing && existing.length > 0) { totalSkipped++; continue; }
+
+          const blockCheck = await isBlocked(sb, { business_name: name, phone });
+          if (blockCheck.blocked) { totalSkipped++; continue; }
+
+          let email: string | null = null;
+          if (website) email = await scrapeEmail(website);
+          if (!email) { totalSkipped++; continue; }
+
+          const emailBlock = await isBlocked(sb, { email, business_name: name });
+          if (emailBlock.blocked) { totalSkipped++; continue; }
+
+          let caSubject: string, caBody: string;
+          try {
+            ({ subject: caSubject, body: caBody } = await sniperCareAlertEmail(name, city));
+          } catch (caErr) {
+            log("CareAlert sniper failed", { name, error: String(caErr) });
+            continue;
+          }
+          if (!caSubject || !caBody) continue;
+
+          const caHtml = buildCareAlertEmailHtml(caBody);
+          const caRes = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: "Matt Michels <matt@detroitwebagent.com>",
+              to: [email],
+              bcc: ["matt@detroitwebagent.com"],
+              subject: caSubject,
+              html: caHtml,
+            }),
+          });
+          if (caRes.ok) {
+            await sb.from("outreach_leads").insert({
+              business_name: name,
+              city: city.replace(" MI", ""),
+              industry: "Nursing Home",
+              phone, email, website: website || null,
+              status: "emailed", channel: "email",
+              offer_pitched: "care_alert",
+              last_contact_date: new Date().toISOString().split("T")[0],
+              drip_campaign_status: { d0_sent: true, d0_sent_at: new Date().toISOString() },
+              notes: `CareAlert pitch. Nursing home/assisted living.`,
+            });
+            await sb.from("email_send_log" as any).insert({
+              recipient_email: email, template_name: "contractor_care_alert_d0",
+              status: "sent", message_id: `ca_d0_${Date.now()}_${email}`,
+            });
+            careAlertSent++;
+            totalEmailed++;
+            log("CareAlert pitch sent", { name, email, city });
+            await new Promise(r => setTimeout(r, 500));
+          }
+        }
+      }
+    }
+
     for (const { trade, city } of combos) {
       log("Searching", { trade, city });
       const places = await searchGoogleMaps(`${trade} in ${city}`, GOOGLE_MAPS_API_KEY);
