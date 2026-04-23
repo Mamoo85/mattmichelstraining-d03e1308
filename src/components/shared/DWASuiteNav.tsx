@@ -15,7 +15,7 @@ interface DWASuiteNavProps {
 const PRODUCTS: Omit<Product, "active">[] = [
   { key: "contractor_leads", label: "Contractor Leads", icon: "🏗️", path: "/my-contractor-leads", upgradeHref: "/contractor-leads" },
   { key: "mortgage_radar", label: "Mortgage Radar", icon: "🏠", path: "/my-mortgage-radar", upgradeHref: "/mortgage-radar" },
-  { key: "techalert", label: "TechAlert", icon: "⚡", path: "/my-tech-alert", upgradeHref: "/hire-alert" },
+  { key: "techalert", label: "TechAlert", icon: "⚡", path: "/talent-radar/dashboard", upgradeHref: "/hire-alert" },
   { key: "industry_pulse", label: "Growth Radar", icon: "📈", path: "/my-industry-pulse", upgradeHref: "/industry-pulse" },
   { key: "fielddesk", label: "FieldDesk", icon: "🔧", path: "/field-service/dispatch", upgradeHref: "/field-service" },
 ];
