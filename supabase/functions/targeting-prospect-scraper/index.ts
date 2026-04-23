@@ -297,6 +297,37 @@ async function fetchIndustrialMfg(county: string | undefined, limit: number): Pr
   })).filter((p) => p.business_name).slice(0, limit);
 }
 
+// ── Source: Sonar — local trade contractors (HVAC/plumbing/roofing/electrical/GC) ──
+async function fetchTradeContractors(audience: string, county: string | undefined, limit: number): Promise<Prospect[]> {
+  const TRADE_LABELS: Record<string, string> = {
+    hvac: "HVAC contractors (heating, cooling, furnace, boiler installers)",
+    plumbing: "plumbing contractors and plumbers",
+    roofing: "roofing contractors and roofers",
+    electrical: "electrical contractors and electricians",
+    general_contractor: "general contractors and home remodeling firms",
+  };
+  const label = TRADE_LABELS[audience] || audience;
+  const prompt = `Real licensed ${label} with offices in ${county || "Metro Detroit"}, Michigan. Mid-size local businesses (5-50 employees), not national chains. Return JSON array of {business_name, address, city, state, zip, phone, fax, website, owner_name}. Max ${limit}.`;
+  const sonar = await sonarSearch(prompt);
+  return sonar.map((s: any): Prospect => ({
+    business_name: s.business_name || s.name,
+    contact_name: s.owner_name || undefined,
+    audience_type: audience,
+    channel_hint: "both",
+    address_line1: s.address,
+    city: s.city,
+    state: s.state || "MI",
+    zip: (s.zip || "").toString().slice(0, 5),
+    county,
+    phone: normPhone(s.phone || "") || undefined,
+    fax_number: normPhone(s.fax || "") || undefined,
+    website: s.website,
+    source: "sonar_b2b",
+    verified_address: !!(s.address && s.city),
+    verified_fax: !!normPhone(s.fax || ""),
+  })).filter((p) => p.business_name).slice(0, limit);
+}
+
 // ── Source: CMS senior care (home health + assisted living proxy) ────────────
 async function fetchSeniorCare(county: string | undefined, limit: number): Promise<Prospect[]> {
   const zipPrefixes = zipsForCounty(county);
