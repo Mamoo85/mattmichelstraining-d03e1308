@@ -420,7 +420,19 @@ export default function AdminContractorLeads() {
 
       {/* ── Section 3: Territory Grid ─────────────────────────────────────── */}
       <div>
-        <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-3">Territory Status (20 Territories)</h2>
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Territory Status ({territories.length} Territories)</h2>
+          <div className="flex items-center gap-2">
+            <select value={newTrade} onChange={e => setNewTrade(e.target.value)} className="bg-background border border-border text-xs text-foreground px-2 py-1.5 rounded focus:outline-none focus:border-primary">
+              <option value="">Trade…</option>
+              {ALL_TRADES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+            <input type="text" value={newCity} onChange={e => setNewCity(e.target.value)} placeholder="City name" className="bg-background border border-border text-xs text-foreground px-2 py-1.5 rounded focus:outline-none focus:border-primary w-32" onKeyDown={e => e.key === "Enter" && addTerritory()} />
+            <button onClick={addTerritory} disabled={addingTerritory || !newTrade || !newCity.trim()} className="text-xs font-bold px-3 py-1.5 rounded bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40">
+              {addingTerritory ? "…" : "+ Add"}
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {territories.map((t) => {
             const contractor = contractorFor(t);
