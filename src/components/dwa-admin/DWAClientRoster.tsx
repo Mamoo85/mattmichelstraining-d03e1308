@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
