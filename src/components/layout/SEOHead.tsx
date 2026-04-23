@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
 import { getDomainBrand } from "@/lib/domainConfig";
+import { isDeprecatedPath } from "@/lib/deprecated-skus";
 
 interface SEOHeadProps {
   title: string;
@@ -58,6 +59,8 @@ const SEOHead = ({
 }: SEOHeadProps) => {
   const location = useLocation();
   const isDWA = isDWAPage(location.pathname);
+  // Auto-noindex deprecated SKU routes (single source of truth: src/lib/deprecated-skus.ts)
+  const effectiveNoindex = noindex || isDeprecatedPath(location.pathname);
   const brandName = isDWA ? "Detroit Web Agency" : "Matt Michels Training";
   const siteUrl = isDWA ? DWA_SITE_URL : M2_SITE_URL;
 
