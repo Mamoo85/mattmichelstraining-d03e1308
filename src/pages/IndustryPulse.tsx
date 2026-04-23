@@ -77,7 +77,7 @@ export default function IndustryPulse() {
   const [loading, setLoading] = useState<Tier | null>(null);
 
   useEffect(() => {
-    if (success) toast.success("Welcome to Demand Radar! Check your email for dashboard access.");
+    if (success) toast.success("Welcome to Growth Radar! Check your email for dashboard access.");
   }, [success]);
 
   const handleCheckout = async (tier: Tier) => {
@@ -107,7 +107,7 @@ export default function IndustryPulse() {
   return (
     <>
       <SEOHead
-        title="Demand Radar — Contractor Growth Intelligence for Suppliers | Detroit Web Agency"
+        title="Growth Radar — Contractor Growth Intelligence for Suppliers | Detroit Web Agency"
         description="Know which Michigan contractors are growing before they call your competitors. Permit surges, hiring signals, and expansion intel for plumbing, HVAC, and electrical supply houses."
       />
       <div className="min-h-screen bg-[#030711] text-white">
@@ -117,7 +117,7 @@ export default function IndustryPulse() {
           <div className="max-w-4xl mx-auto text-center relative z-10">
             <div className="inline-flex items-center gap-2 bg-[#00d4ff]/10 border border-[#00d4ff]/20 rounded-full px-4 py-1.5 mb-6">
               <Zap className="h-3.5 w-3.5 text-[#00d4ff]" />
-              <span className="text-[#00d4ff] text-xs font-semibold tracking-wide">DEMAND RADAR — CONTRACTOR GROWTH INTELLIGENCE</span>
+              <span className="text-[#00d4ff] text-xs font-semibold tracking-wide">GROWTH RADAR — CONTRACTOR GROWTH INTELLIGENCE</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-black mb-4 leading-tight">
               Know Which Contractors Are About to Buy
@@ -272,10 +272,10 @@ export default function IndustryPulse() {
             </h3>
             <ul className="text-white/60 text-xs space-y-2 leading-relaxed">
               <li>
-                <strong className="text-white/80">B2B market intelligence — not a consumer report.</strong> Demand Radar is a business-to-business sales intelligence tool. It is <strong>not</strong> a consumer report under the Fair Credit Reporting Act (FCRA).
+                <strong className="text-white/80">B2B market intelligence — not a consumer report.</strong> Growth Radar is a business-to-business sales intelligence tool. It is <strong>not</strong> a consumer report under the Fair Credit Reporting Act (FCRA).
               </li>
               <li>
-                <strong className="text-white/80">Not for FCRA-regulated decisions.</strong> Do not use Demand Radar signals to make decisions about employment, credit, insurance, housing, or any other purpose covered by the FCRA.
+                <strong className="text-white/80">Not for FCRA-regulated decisions.</strong> Do not use Growth Radar signals to make decisions about employment, credit, insurance, housing, or any other purpose covered by the FCRA.
               </li>
               <li>
                 <strong className="text-white/80">Public-source data.</strong> Signals are derived from publicly available sources (MIOSHA license database, municipal bond filings, public job postings, news releases). Accuracy is not guaranteed — independently verify before commercial action.
