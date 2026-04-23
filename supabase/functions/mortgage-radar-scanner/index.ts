@@ -19,6 +19,34 @@ const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const ADMIN_EMAIL = "matt@detroitwebagent.com";
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
+const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
+const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
+const DWA_PHONE = "+13139921219";
+
+function streetViewUrl(address: string, city: string, zip: string): string {
+  if (!GOOGLE_MAPS_API_KEY || !address) return "";
+  const loc = encodeURIComponent(`${address}, ${city || ""} ${zip || ""}, MI`);
+  return `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${loc}&fov=80&key=${GOOGLE_MAPS_API_KEY}`;
+}
+
+async function sendHotLeadSMS(to: string, businessName: string, address: string, score: number, signalType: string) {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !to) return;
+  try {
+    const body = `🔥 Mortgage Radar HOT lead (${score}/10): ${address} — ${signalType.replace(/_/g, " ")}. Open dashboard for full intel + draft outreach. Manual send only — TCPA. — DWA`;
+    const params = new URLSearchParams({ To: to, From: DWA_PHONE, Body: body });
+    await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: params,
+    });
+  } catch (e) {
+    console.warn("[sendHotLeadSMS]", e instanceof Error ? e.message : String(e));
+  }
+}
 
 interface RawSignal {
   full_name?: string;
