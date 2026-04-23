@@ -1791,7 +1791,7 @@ serve(async (req) => {
               stripe_subscription_id: session.subscription as string || null,
             }, { onConflict: "email" });
             await Promise.all([
-              supabase.functions.invoke("auto-onboard", { body: { email, type: "storm_lead_subscription", name: meta.business_name || meta.name } }),
+              fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` }, body: JSON.stringify({ email, type: "storm_lead_subscription", name: meta.business_name || meta.name }) }),
               notifyMatt(
                 `💰 New Storm Damage Leads client — ${meta.business_name || email} ($29/mo)`,
                 `<p><strong>${meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>Trade: ${meta.trade || "—"} | Zips: ${meta.zip_codes || "—"}</p>`
@@ -1820,7 +1820,7 @@ serve(async (req) => {
               stripe_subscription_id: session.subscription as string || null,
             }, { onConflict: "email" });
             await Promise.all([
-              supabase.functions.invoke("auto-onboard", { body: { email, type: "recall_alert_subscription", name: meta.business_name || meta.name } }),
+              fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` }, body: JSON.stringify({ email, type: "recall_alert_subscription", name: meta.business_name || meta.name }) }),
               notifyMatt(
                 `💰 New Recall Alert client — ${meta.business_name || email} ($19/mo)`,
                 `<p><strong>${meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>Industry: ${meta.industry || "—"}</p>`
@@ -1850,7 +1850,7 @@ serve(async (req) => {
               stripe_subscription_id: session.subscription as string || null,
             }, { onConflict: "email" });
             await Promise.all([
-              supabase.functions.invoke("auto-onboard", { body: { email, type: "permit_watch_subscription", name: meta.business_name || meta.name } }),
+              fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` }, body: JSON.stringify({ email, type: "permit_watch_subscription", name: meta.business_name || meta.name }) }),
               notifyMatt(
                 `💰 New Permit Watch client — ${meta.business_name || email} ($29/mo)`,
                 `<p><strong>${meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>Location: ${meta.city || "—"}, ${meta.state || "MI"} | Trades: ${meta.trades || "—"}</p>`
@@ -1877,7 +1877,7 @@ serve(async (req) => {
               stripe_subscription_id: session.subscription as string || null,
             }, { onConflict: "email" });
             await Promise.all([
-              supabase.functions.invoke("auto-onboard", { body: { email, type: "speed_audit_subscription", name: meta.business_name || meta.name } }),
+              fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` }, body: JSON.stringify({ email, type: "speed_audit_subscription", name: meta.business_name || meta.name }) }),
               notifyMatt(
                 `💰 New Website Speed Audit client — ${meta.business_name || email} ($29/mo)`,
                 `<p><strong>${meta.business_name || email}</strong><br>${email}<br>URL: ${meta.website_url || "—"}</p>`
@@ -1905,7 +1905,7 @@ serve(async (req) => {
               stripe_subscription_id: session.subscription as string || null,
             }, { onConflict: "parent_email" });
             await Promise.all([
-              supabase.functions.invoke("auto-onboard", { body: { email, type: "bedtime_story_subscription", name: meta.child_name || "your child" } }),
+              fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` }, body: JSON.stringify({ email, type: "bedtime_story_subscription", name: meta.child_name || "your child" }) }),
               notifyMatt(
                 `💰 New AI Bedtime Stories subscriber — ${email} ($4.99/mo)`,
                 `<p>${email}<br>Child: ${meta.child_name || "—"}, age ${meta.child_age || "5"}<br>Interests: ${meta.interests || "—"}</p>`
@@ -1936,7 +1936,7 @@ serve(async (req) => {
               stripe_subscription_id: session.subscription as string || null,
             }, { onConflict: "email" });
             await Promise.all([
-              supabase.functions.invoke("auto-onboard", { body: { email, type: "crime_digest_subscription", name: meta.business_name || meta.name } }),
+              fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` }, body: JSON.stringify({ email, type: "crime_digest_subscription", name: meta.business_name || meta.name }) }),
               notifyMatt(
                 `💰 New Crime Digest subscriber — ${meta.business_name || email} ($19/mo)`,
                 `<p><strong>${meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>Zip: ${meta.zip_code || "—"} | ${meta.city || "—"}, ${meta.state || "MI"}</p>`
@@ -1965,7 +1965,7 @@ serve(async (req) => {
               stripe_subscription_id: session.subscription as string || null,
             }, { onConflict: "email" });
             await Promise.all([
-              supabase.functions.invoke("auto-onboard", { body: { email, type: "license_monitor_subscription", name: meta.business_name || meta.name } }),
+              fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` }, body: JSON.stringify({ email, type: "license_monitor_subscription", name: meta.business_name || meta.name }) }),
               notifyMatt(
                 `💰 New License Monitor client — ${meta.business_name || email} ($25/mo)`,
                 `<p><strong>${meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>State: ${meta.state || "MI"} | License types: ${meta.license_types || "—"}</p>`
@@ -2089,6 +2089,68 @@ serve(async (req) => {
           }
         } catch (e) {
           console.error("[WEBHOOK] contractor_lead_subscription welcome email error:", e);
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── GBP SAAS — $49-99/mo Google Business Profile automation ─────────────
+      if (meta.type === "gbp_subscription") {
+        const email = meta.email || customerEmail;
+        if (email) {
+          try {
+            await sb.from("gbp_saas_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || meta.name || null,
+              phone: meta.phone || null,
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            await Promise.all([
+              fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` }, body: JSON.stringify({ email, type: "gbp_saas_subscription", name: meta.business_name || meta.name }) }),
+              notifyMatt(`💰 New GBP Saas client — ${meta.business_name || email}`, `<p>${email} | ${meta.phone || "no phone"}</p>`),
+            ]);
+          } catch (e) { console.error("[WEBHOOK] gbp_subscription error:", e); }
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── SOCIAL MEDIA AI — $199-299/mo ────────────────────────────────────────
+      if (meta.type === "social_media_subscription") {
+        const email = meta.email || customerEmail;
+        if (email) {
+          try {
+            await sb.from("social_media_clients" as any).upsert({
+              email,
+              business_name: meta.business_name || meta.name || null,
+              phone: meta.phone || null,
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            await Promise.all([
+              fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` }, body: JSON.stringify({ email, type: "social_media_subscription", name: meta.business_name || meta.name }) }),
+              notifyMatt(`💰 New Social Media AI client — ${meta.business_name || email}`, `<p>${email} | ${meta.phone || "no phone"}</p>`),
+            ]);
+          } catch (e) { console.error("[WEBHOOK] social_media_subscription error:", e); }
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── FIELD REP TOOLS — $29/mo AI tool suite ───────────────────────────────
+      if (meta.type === "field_rep_subscription") {
+        const email = meta.email || customerEmail;
+        if (email) {
+          try {
+            await sb.from("b2b_subscribers" as any).upsert({
+              email,
+              niche: "field_rep_tools",
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            await Promise.all([
+              fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` }, body: JSON.stringify({ email, type: "field_rep_subscription", name: meta.name }) }),
+              notifyMatt(`💰 New Field Rep Tools subscriber — ${email} ($29/mo)`, `<p>${email}</p>`),
+            ]);
+          } catch (e) { console.error("[WEBHOOK] field_rep_subscription error:", e); }
         }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }

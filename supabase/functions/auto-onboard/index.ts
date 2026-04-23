@@ -84,6 +84,21 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
       </ul>
       <p>Don't worry if you don't have all of this yet — just reply with what you have and we'll figure out the rest together.</p>`,
   },
+  field_rep_subscription: {
+    subject: "Welcome to Field Rep AI Tools — You're All Set",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p>Hey ${name || "there"}!</p>
+      <p>Welcome to Field Rep AI Tools. Your 4 AI-powered tools are live right now:</p>
+      <ul>
+        <li><strong>Proposal Generator</strong> — paste job details, get a professional proposal in seconds</li>
+        <li><strong>Objection Handler</strong> — script answers to any sales objection</li>
+        <li><strong>Follow-Up Writer</strong> — AI follow-up emails for any lead type</li>
+        <li><strong>Cold Intro Builder</strong> — personalized first-contact scripts for door-to-door and phone</li>
+      </ul>
+      <p>Log in at <a href="https://mattmichelstraining.com/field-rep-tools">mattmichelstraining.com/field-rep-tools</a> to start using them.</p>
+      <p>Questions? Reply to this email anytime. — Matt</p>`,
+  },
   contractor_leads: {
     subject: "You're Locked In — Exclusive Lead Territory Reserved",
     nextStage: "📧 Welcome Email Sent",
@@ -371,9 +386,21 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
       <p>Reply with your market details!</p>`,
   },
   field_service_subscription: {
-    subject: "Your Field Service App is Live — Click Here to Log In",
+    subject: "FieldDesk is Live — Your Dispatch Board is Ready",
     nextStage: "📧 Welcome Email Sent",
-    body: (name) => `<p>Hey ${name} — your dispatch board is live. Reply with your tech list and I'll have everything set up within 24 hours. — Matt</p>`,
+    body: (name) => `
+      <p style="font-size:22px;font-weight:800;color:#ffffff;margin:0 0 6px;line-height:1.2">FieldDesk is live, ${name}.</p>
+      <p style="color:#4a6fa5;font-size:13px;margin:0 0 24px">Your dispatch board, job tracking, and tech mobile app are ready.</p>
+      <div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:24px;margin:0 0 24px;text-align:center">
+        <a href="https://detroitwebagent.com/field-service/dispatch" style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:15px;padding:14px 40px;border-radius:8px;text-decoration:none;">Open Dispatch Board →</a>
+        <p style="color:#64748b;font-size:12px;margin:12px 0 0">Log in with the email you used to sign up.</p>
+      </div>
+      <div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:20px;margin:0 0 24px">
+        <p style="color:#ffffff;font-weight:700;font-size:13px;margin:0 0 12px;letter-spacing:0.5px;">TWO QUICK SETUP STEPS:</p>
+        <p style="margin:0 0 10px;color:#e2e8f0;font-size:13px;"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:8px;">STEP 1</span>Reply with your tech list — names and cell numbers</p>
+        <p style="margin:0;color:#e2e8f0;font-size:13px;"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:8px;">STEP 2</span>Your techs install the mobile app: <a href="https://detroitwebagent.com/field-service/tech" style="color:#00d4ff;">detroitwebagent.com/field-service/tech</a></p>
+      </div>
+      ${DWA_SIG}`,
   },
   hire_alert_subscription: {
     subject: "⚡ Talent Radar is Live — Your Hiring Advantage Starts Tomorrow",
@@ -400,13 +427,14 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
       </div>`,
   },
   industry_pulse_subscription: {
-    subject: "Welcome to Demand Radar — Your Feed Is Live",
+    subject: "Welcome to Growth Radar — Your Feed Is Live",
     nextStage: "📧 Welcome Email Sent",
     body: (name) => `
       <p style="font-size:22px;font-weight:800;color:#ffffff;margin:0 0 6px;line-height:1.2">You're in, ${name}.</p>
-      <p style="color:#4a6fa5;font-size:13px;margin:0 0 6px">Demand Radar is now monitoring growth signals statewide for you.</p>
+      <p style="color:#4a6fa5;font-size:13px;margin:0 0 6px">Growth Radar is now monitoring industrial expansion signals statewide for you.</p>
       <p style="color:#00d4ff;font-size:12px;margin:0 0 24px;font-weight:700">📍 STATEWIDE MICHIGAN — every county, every expansion signal</p>
       <p style="color:#e2e8f0;font-size:14px;margin:0 0 16px">You'll receive weekly intelligence digests covering expansion signals, hiring patterns, and cross-referenced opportunities. High-confidence signals (≥7) arrive as standalone alerts.</p>
+      <p style="color:#e2e8f0;font-size:14px;margin:0 0 16px"><a href="https://detroitwebagent.com/my-industry-pulse" style="color:#00d4ff;font-weight:700">Open Your Dashboard →</a></p>
       <p style="color:#e2e8f0;font-size:14px;margin:0 0 16px"><strong>First signal ETA:</strong> within 48 hours. If you don't see one in 72h, reply and I'll check.</p>
       <p style="color:#e2e8f0;font-size:14px;margin:0 0 20px">Reply to this email if you want to tune your industry focus. — Matt</p>
       ${DWA_SIG}`,
