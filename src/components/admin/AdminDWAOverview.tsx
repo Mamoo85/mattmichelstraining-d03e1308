@@ -444,3 +444,91 @@ export default function AdminDWAOverview() {
     </div>
   );
 }
+
+// ── Free Taste Funnel ─────────────────────────────────────────────────────
+// Counts sneak-peek signups (last 7d) per product and shows conversion %.
+function FreeTasteFunnelRow() {
+  const [rows, setRows] = useState<Array<{ product: string; signups: number; converted: number; color: string }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      const { count: buyerPeeks } = await (supabase as any)
+        .from("buyer_radar_custom_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "sneak_peek")
+        .gte("created_at", since);
+
+      const { count: demandPeeks } = await (supabase as any)
+        .from("capture_submissions")
+        .select("id", { count: "exact", head: true })
+        .ilike("source_url", "%demand-radar-preview%")
+        .gte("created_at", since);
+
+      const { count: talentPeeks } = await (supabase as any)
+        .from("hire_alert_clients")
+        .select("id", { count: "exact", head: true })
+        .eq("trial_active", true)
+        .gte("created_at", since);
+
+      const { count: buyerConv } = await (supabase as any)
+        .from("buyer_radar_custom_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "converted")
+        .gte("created_at", since);
+
+      const { count: demandConv } = await (supabase as any)
+        .from("industry_pulse_clients")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", since);
+
+      const { count: talentConv } = await (supabase as any)
+        .from("hire_alert_clients")
+        .select("id", { count: "exact", head: true })
+        .eq("active", true)
+        .gte("created_at", since);
+
+      setRows([
+        { product: "Buyer Radar",  signups: buyerPeeks || 0,  converted: buyerConv || 0,  color: "#00d4ff" },
+        { product: "Demand Radar", signups: demandPeeks || 0, converted: demandConv || 0, color: "#a78bfa" },
+        { product: "Talent Radar", signups: talentPeeks || 0, converted: talentConv || 0, color: "#f59e0b" },
+      ]);
+      setLoading(false);
+    })();
+  }, []);
+
+  return (
+    <div style={{ background: "#0d1f3c", border: "1px solid #1e3a5f", borderRadius: 12, padding: "20px 24px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
+        <p style={{ margin: 0, color: "#00d4ff", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>Free Taste Funnel · Last 7 Days</p>
+        <p style={{ margin: 0, color: "#64748b", fontSize: 11 }}>Sneak peeks → paid conversions</p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {rows.map((r) => {
+          const pct = r.signups > 0 ? Math.round((r.converted / r.signups) * 100) : 0;
+          return (
+            <div key={r.product} style={{ background: `${r.color}0d`, border: `1px solid ${r.color}25`, borderRadius: 10, padding: 14 }}>
+              <p style={{ margin: 0, color: r.color, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>{r.product}</p>
+              <div style={{ display: "flex", gap: 16, alignItems: "baseline", marginTop: 6 }}>
+                <div>
+                  <div style={{ color: "#fff", fontSize: 22, fontWeight: 900, lineHeight: 1 }}>{loading ? "—" : r.signups}</div>
+                  <div style={{ color: "#94a3b8", fontSize: 10 }}>signups</div>
+                </div>
+                <div>
+                  <div style={{ color: "#fff", fontSize: 22, fontWeight: 900, lineHeight: 1 }}>{loading ? "—" : r.converted}</div>
+                  <div style={{ color: "#94a3b8", fontSize: 10 }}>paid</div>
+                </div>
+                <div style={{ marginLeft: "auto" }}>
+                  <div style={{ color: pct >= 10 ? "#22c55e" : pct > 0 ? "#f59e0b" : "#64748b", fontSize: 18, fontWeight: 900 }}>{pct}%</div>
+                  <div style={{ color: "#94a3b8", fontSize: 10 }}>conv.</div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
