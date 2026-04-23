@@ -117,12 +117,17 @@ export default function MortgageRadar() {
       </header>
 
       <section className="max-w-6xl mx-auto px-4 py-16 sm:py-24 text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6 border border-red-500/30 bg-red-500/10">
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+          <span className="text-red-300 text-xs font-bold tracking-widest uppercase">H.R. 2808 — In Effect Since March 4, 2026</span>
+        </div>
         <p className="text-[#00d4ff] text-xs font-extrabold tracking-[0.4em] uppercase mb-4">For Mortgage Loan Officers</p>
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight mb-6 text-white">
-          Catch borrowers <span className="text-[#00d4ff]">before they pull credit.</span>
+          H.R. 2808 killed trigger leads.<br />
+          <span className="text-[#00d4ff]">Here's what replaced them.</span>
         </h1>
         <p className="text-lg sm:text-xl text-[#94a3b8] max-w-2xl mx-auto mb-6">
-          Trigger leads are dead — HR 2808 killed bureau resale in 2026. Mortgage Radar finds in-market borrowers <strong className="text-white">weeks earlier</strong> using public records: permits, FSBO, foreclosures, divorces, new LLCs, job changes.
+          Bureaus can no longer resell trigger leads without consumer consent. Mortgage Radar finds the same in-market borrowers <strong className="text-white">weeks earlier</strong> using public records: permits, FSBO, foreclosures, divorces, new LLCs, job changes.
         </p>
         <p className="text-sm text-[#64748b] max-w-xl mx-auto mb-10">
           You see them while there are still 0 other LOs calling — not after 47 of them already did.
@@ -142,6 +147,61 @@ export default function MortgageRadar() {
           </Button>
         </div>
       </section>
+
+      {/* Trigger Leads vs Mortgage Radar comparison */}
+      <section className="max-w-5xl mx-auto px-4 py-12">
+        <h2 className="text-2xl sm:text-3xl font-bold text-center text-white mb-2">
+          Trigger Leads <span className="text-red-400">(Banned)</span> vs <span className="text-[#00d4ff]">Mortgage Radar</span>
+        </h2>
+        <p className="text-center text-[#94a3b8] mb-10 text-sm max-w-2xl mx-auto">
+          The Homebuyers Privacy Protection Act ended the credit-bureau resale model. The intent signal didn't disappear — it just moved upstream.
+        </p>
+        <div className="grid md:grid-cols-2 gap-5">
+          <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-6">
+            <div className="inline-block bg-red-500/20 text-red-300 text-[10px] font-extrabold tracking-widest px-2 py-1 rounded mb-3 uppercase">
+              ⛔ Banned March 4, 2026
+            </div>
+            <h3 className="text-lg font-bold text-white mb-3">Trigger Leads</h3>
+            <ul className="space-y-2 text-sm text-[#cbd5e1]">
+              <li>✗ Required consumer to apply for credit first</li>
+              <li>✗ Sold to 8–47 competing LOs simultaneously</li>
+              <li>✗ Borrower already shopping — race to the bottom</li>
+              <li>✗ FCRA-restricted — illegal without explicit opt-in (H.R. 2808)</li>
+              <li>✗ 1–2% conversion typical</li>
+            </ul>
+          </div>
+          <div className="rounded-xl border-2 border-[#00d4ff] bg-[#00d4ff]/5 p-6">
+            <div className="inline-block bg-[#00d4ff] text-black text-[10px] font-extrabold tracking-widest px-2 py-1 rounded mb-3 uppercase">
+              ✓ FCRA-Clean Replacement
+            </div>
+            <h3 className="text-lg font-bold text-white mb-3">Mortgage Radar</h3>
+            <ul className="space-y-2 text-sm text-[#cbd5e1]">
+              <li>✓ 100% public records + behavioral signals</li>
+              <li>✓ ZIP-exclusive — first LO in your ZIP gets it</li>
+              <li>✓ Catch borrowers 1–6 weeks BEFORE they pull credit</li>
+              <li>✓ FCRA-clean, no bureau dependency, no consent landmine</li>
+              <li>✓ Real reason to call ("saw the kitchen permit")</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Brother case-study placeholder */}
+        <div className="mt-6 rounded-xl border border-[#1e3a5f] bg-[#0a1628] p-6">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#00d4ff]/20 flex items-center justify-center flex-shrink-0">
+              <span className="text-[#00d4ff] font-bold">📈</span>
+            </div>
+            <div>
+              <p className="text-[10px] tracking-widest uppercase font-bold text-[#00d4ff] mb-1">Active Pilot — Metro Detroit</p>
+              <h4 className="text-white font-bold mb-1">Licensed loan officer running 5 ZIPs</h4>
+              <p className="text-sm text-[#94a3b8] leading-relaxed">
+                Real numbers from our active 30-day pilot drop here once the case study completes. In the meantime, talk to Matt to see the live dashboard.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
 
       <section className="max-w-6xl mx-auto px-4 py-12">
         <h2 className="text-2xl sm:text-3xl font-bold text-center text-white mb-2">The signals we hunt</h2>

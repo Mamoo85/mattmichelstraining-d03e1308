@@ -1357,6 +1357,39 @@ export type Database = {
         }
         Relationships: []
       }
+      brother_claimed_domains: {
+        Row: {
+          active: boolean
+          claimed_by_email: string
+          company_name: string | null
+          created_at: string
+          domain: string
+          id: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          claimed_by_email?: string
+          company_name?: string | null
+          created_at?: string
+          domain: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          claimed_by_email?: string
+          company_name?: string | null
+          created_at?: string
+          domain?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       business_listings: {
         Row: {
           business_name: string
@@ -5052,6 +5085,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      enterprise_consultation_requests: {
+        Row: {
+          admin_notes: string | null
+          company: string
+          created_at: string
+          email: string
+          id: string
+          message: string | null
+          name: string
+          phone: string | null
+          product_interest: string
+          source_url: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          company: string
+          created_at?: string
+          email: string
+          id?: string
+          message?: string | null
+          name: string
+          phone?: string | null
+          product_interest: string
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          company?: string
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string | null
+          name?: string
+          phone?: string | null
+          product_interest?: string
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       error_logs: {
         Row: {

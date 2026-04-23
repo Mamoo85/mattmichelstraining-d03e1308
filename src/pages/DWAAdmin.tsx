@@ -38,10 +38,11 @@ const AdminCommandBar = lazy(() => import("@/components/dwa-admin/AdminCommandBa
 const ProductSalesHub = lazy(() => import("@/components/dwa-admin/ProductSalesHub"));
 const BuyerRadarQAChecklist = lazy(() => import("@/components/dwa-admin/BuyerRadarQAChecklist"));
 const MortgageRadarHub = lazy(() => import("@/components/dwa-admin/MortgageRadarHub"));
+const PipelineVelocityDashboard = lazy(() => import("@/components/dwa-admin/PipelineVelocityDashboard"));
 
 type Tab =
   | "ai-command"
-  | "dwa-overview" | "revenue" | "leads-e2e" | "prospect-tracker" | "agent-toolkit"
+  | "dwa-overview" | "revenue" | "leads-e2e" | "prospect-tracker" | "agent-toolkit" | "pipeline-velocity"
   | "command-center" | "sms-inbox" | "sms-drafts" | "call-list" | "linkedin-blitz" | "ad-launcher" | "agency-outreach"
   | "contractor-leads" | "contractor-onboarding" | "dead-leads" | "fielddesk" | "techalert" | "clients-all"
   | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map"
@@ -52,13 +53,14 @@ const GROUPS: SidebarGroup[] = [
   {
     label: "Revenue",
     items: [
-      { id: "sales-hub",        label: "💬 Sales Hub" },
-      { id: "ai-command",       label: "🧠 AI Command" },
-      { id: "dwa-overview",     label: "📊 Overview" },
-      { id: "revenue",          label: "💰 Revenue" },
-      { id: "leads-e2e",        label: "🟢 Leads E2E" },
-      { id: "prospect-tracker", label: "📍 Prospect Tracker" },
-      { id: "agent-toolkit",    label: "🤖 Agent Toolkit" },
+      { id: "sales-hub",         label: "💬 Sales Hub" },
+      { id: "ai-command",        label: "🧠 AI Command" },
+      { id: "dwa-overview",      label: "📊 Overview" },
+      { id: "pipeline-velocity", label: "📈 Pipeline Velocity" },
+      { id: "revenue",           label: "💰 Revenue" },
+      { id: "leads-e2e",         label: "🟢 Leads E2E" },
+      { id: "prospect-tracker",  label: "📍 Prospect Tracker" },
+      { id: "agent-toolkit",     label: "🤖 Agent Toolkit" },
     ],
   },
   {
@@ -141,8 +143,9 @@ export default function DWAAdmin() {
 
           {activeTab === "sales-hub"        && <Suspense fallback={lazyFallback("Sales Hub")}><ProductSalesHub /></Suspense>}
           {activeTab === "ai-command"       && <Suspense fallback={lazyFallback("AI Command")}><AdminCommandBar /></Suspense>}
-          {activeTab === "dwa-overview"     && <Suspense fallback={lazyFallback("overview")}><AdminDWAOverview /></Suspense>}
-          {activeTab === "revenue"          && <Suspense fallback={lazyFallback("revenue")}><AdminDWARevenueDashboard /></Suspense>}
+          {activeTab === "dwa-overview"      && <Suspense fallback={lazyFallback("overview")}><AdminDWAOverview /></Suspense>}
+          {activeTab === "pipeline-velocity" && <Suspense fallback={lazyFallback("pipeline velocity")}><PipelineVelocityDashboard /></Suspense>}
+          {activeTab === "revenue"           && <Suspense fallback={lazyFallback("revenue")}><AdminDWARevenueDashboard /></Suspense>}
           {activeTab === "leads-e2e"        && <Suspense fallback={lazyFallback("Leads E2E")}><AdminContractorLeadsStatus /></Suspense>}
           {activeTab === "prospect-tracker" && <Suspense fallback={lazyFallback("prospect tracker")}><AdminProspectTracker /></Suspense>}
           {activeTab === "agent-toolkit"    && <Suspense fallback={lazyFallback("agent toolkit")}><AgentToolkit /></Suspense>}
