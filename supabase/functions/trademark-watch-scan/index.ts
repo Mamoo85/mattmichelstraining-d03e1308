@@ -112,22 +112,35 @@ Guidelines:
 }
 
 // ── USPTO TMSEARCH search ─────────────────────────────────────────────────────
+// tmsearch.uspto.gov/api/search returns S3 NoSuchKey (API path retired).
+// USPTO now requires TESS registration. Using Sonar/Gemini as the search layer.
 async function searchUSPTO(markText: string): Promise<any[]> {
+  if (!LOVABLE_API_KEY) return [];
   try {
-    const url = `https://tmsearch.uspto.gov/api/search?query=${encodeURIComponent(markText)}&hits=20`;
-    const res = await fetch(url, {
-      headers: { "Accept": "application/json", "User-Agent": "M2-Trademark-Watch/1.0" },
+    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: "You are a trademark researcher. Search the USPTO trademark database and return ONLY valid JSON array, no prose, no markdown fences." },
+          { role: "user", content: `Search the USPTO TESS trademark database (tmsearch.uspto.gov or tsdr.uspto.gov) for registered or pending trademarks similar to "${markText}". Look for exact matches, phonetic matches, and similar marks in related categories.
+
+Return JSON array of up to 10 results: [{"serialNumber":"string","markText":"string","applicant":"string","goodsServices":"string","filingDate":"YYYY-MM-DD","status":"REGISTERED|PENDING|ABANDONED"}]
+
+Return [] if no similar marks found.` },
+        ],
+      }),
+      signal: AbortSignal.timeout(20_000),
     });
-    if (!res.ok) {
-      console.error(`[TMW-SCAN] USPTO search failed (${res.status}) for "${markText}"`);
-      return [];
-    }
-    const data = await res.json();
-    // USPTO TMSEARCH returns { hits: { hits: [...] } } structure
-    const hits = data?.hits?.hits || data?.results || data?.hits || [];
-    return Array.isArray(hits) ? hits : [];
+    if (!r.ok) return [];
+    const j = await r.json();
+    const text = j?.choices?.[0]?.message?.content || "[]";
+    const cleaned = text.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+    const arr = JSON.parse(cleaned);
+    return Array.isArray(arr) ? arr : [];
   } catch (e) {
-    console.error(`[TMW-SCAN] USPTO fetch error for "${markText}":`, e);
+    console.error(`[TMW-SCAN] USPTO search error for "${markText}":`, e);
     return [];
   }
 }

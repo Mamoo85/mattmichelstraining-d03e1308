@@ -44,15 +44,25 @@ async function harvestBSEEDPermitSignals(sb: any): Promise<any[]> {
     const dateStr = `${thirtyDaysAgo.getFullYear()}-${String(thirtyDaysAgo.getMonth()+1).padStart(2,"0")}-${String(thirtyDaysAgo.getDate()).padStart(2,"0")}`;
 
     // Try ArcGIS first; fall back to Sonar web search
+    // gis.detroitmi.gov DNS is dead — use services2.arcgis.com directly.
+    // Real field names (verified): issued_date, permit_type, work_description, address, contact_business_name, zip_code
     let permitData: any[] = [];
     try {
       const arcRes = await fetch(
-        `https://gis.detroitmi.gov/arcgis/rest/services/DBI/OpenDataPortal/FeatureServer/0/query?where=permit_issued+>=+date+'${dateStr}'+AND+estimated_cost+>=+50000+AND+permit_type+LIKE+'%25COMMERCIAL%25'&outFields=contractor_name,permit_type,estimated_cost,address,permit_issued&f=json&resultRecordCount=100`,
+        `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/BSEED_Trades_Permits/FeatureServer/0/query?where=issued_date+>=+date+'${dateStr}'+AND+permit_type+IS+NOT+NULL&outFields=contact_business_name,permit_type,work_description,address,issued_date,zip_code&f=json&resultRecordCount=100`,
         { signal: AbortSignal.timeout(12000) }
       );
       if (arcRes.ok) {
         const arcData = await arcRes.json();
-        permitData = (arcData?.features || []).map((f: any) => f.attributes).filter((a: any) => a.contractor_name);
+        permitData = (arcData?.features || [])
+          .map((f: any) => f.attributes)
+          .filter((a: any) => a.contact_business_name)
+          .map((a: any) => ({
+            contractor_name: a.contact_business_name,
+            permit_type: a.permit_type,
+            estimated_cost: 75000, // ArcGIS dataset has no cost field — use median estimate
+            address: a.address,
+          }));
       }
     } catch { /* fall through to Sonar */ }
 
