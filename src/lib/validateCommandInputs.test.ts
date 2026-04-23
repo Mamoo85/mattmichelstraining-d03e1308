@@ -14,16 +14,20 @@ import {
   validateRecipient,
   validateRegenerateParams,
   validateQueuePayload,
+  type ValidationResult,
 } from "./validateCommandInputs";
 
-/** Helper: assert a validation result is a failure with a non-empty reason. */
-function expectFailure(result: { ok: boolean; reason?: string }, contains?: string) {
+/** Narrow a ValidationResult to its failure branch + assert actionable reason. */
+function expectFailure(
+  result: ValidationResult,
+  contains?: string,
+): asserts result is { ok: false; reason: string } {
   expect(result.ok).toBe(false);
-  expect(result).toHaveProperty("reason");
+  if (result.ok) throw new Error("expected failure");
   expect(typeof result.reason).toBe("string");
-  expect((result.reason || "").length).toBeGreaterThan(0);
+  expect(result.reason.length).toBeGreaterThan(0);
   if (contains) {
-    expect(result.reason!.toLowerCase()).toContain(contains.toLowerCase());
+    expect(result.reason.toLowerCase()).toContain(contains.toLowerCase());
   }
 }
 
