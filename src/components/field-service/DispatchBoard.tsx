@@ -29,11 +29,11 @@ interface DispatchJob {
 }
 
 const COLUMNS = [
-  { key: "open", label: "Open" },
-  { key: "assigned", label: "Assigned" },
-  { key: "en_route", label: "En Route" },
-  { key: "on_site", label: "On Site" },
-  { key: "completed", label: "Completed" },
+  { key: "open",      label: "Open",      accent: "#94a3b8", glow: "rgba(148,163,184,0.15)" },
+  { key: "assigned",  label: "Assigned",  accent: "#a78bfa", glow: "rgba(167,139,250,0.18)" },
+  { key: "en_route",  label: "En Route",  accent: "#00d4ff", glow: "rgba(0,212,255,0.20)" },
+  { key: "on_site",   label: "On Site",   accent: "#f59e0b", glow: "rgba(245,158,11,0.20)" },
+  { key: "completed", label: "Completed", accent: "#22c55e", glow: "rgba(34,197,94,0.18)" },
 ] as const;
 
 const priorityBadge: Record<string, string> = {
@@ -63,6 +63,7 @@ function DraggableJobCard({ job, isSelected, onClick }: { job: DispatchJob; isSe
       ? `${Math.floor(job.estimated_duration_minutes / 60)}h${job.estimated_duration_minutes % 60 > 0 ? ` ${job.estimated_duration_minutes % 60}m` : ""}`
       : `${job.estimated_duration_minutes}m`
     : null;
+  const isEmergency = job.priority === "emergency";
 
   return (
     <button
@@ -70,8 +71,14 @@ function DraggableJobCard({ job, isSelected, onClick }: { job: DispatchJob; isSe
       {...listeners}
       {...attributes}
       onClick={onClick}
-      className={`w-full text-left bg-[#0f1f35] border rounded-xl p-3 transition-all ${
-        isDragging ? "opacity-40 border-[#00d4ff]" : isSelected ? "border-[#00d4ff]" : "border-[#1e3a5f] hover:border-[#00d4ff]"
+      className={`group w-full text-left bg-gradient-to-br from-[#0f1f35] to-[#0a1628] border rounded-xl p-3 transition-all duration-200 ${
+        isDragging
+          ? "opacity-40 border-[#00d4ff] scale-105"
+          : isSelected
+          ? "border-[#00d4ff] shadow-[0_0_0_1px_rgba(0,212,255,0.3),0_8px_24px_-12px_rgba(0,212,255,0.4)]"
+          : isEmergency
+          ? "border-red-500/40 hover:border-red-400 hover:-translate-y-0.5 shadow-[0_0_16px_-8px_rgba(239,68,68,0.4)]"
+          : "border-[#1e3a5f] hover:border-[#00d4ff]/60 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_rgba(0,212,255,0.25)]"
       }`}
     >
       <p className="text-white text-sm font-semibold leading-tight">{job.title}</p>
@@ -82,11 +89,14 @@ function DraggableJobCard({ job, isSelected, onClick }: { job: DispatchJob; isSe
         {job.field_service_techs?.name ?? "Unassigned"}
       </p>
       <div className="flex items-center gap-2 mt-1">
-        {job.scheduled_time && <span className="text-[#00d4ff] text-xs">{job.scheduled_time}</span>}
-        {durationLabel && <span className="text-gray-500 text-xs">({durationLabel})</span>}
+        {job.scheduled_time && <span className="text-[#00d4ff] text-xs font-semibold tabular-nums">{job.scheduled_time}</span>}
+        {durationLabel && <span className="text-gray-500 text-xs tabular-nums">({durationLabel})</span>}
+        {job.estimated_value && job.estimated_value > 0 && (
+          <span className="ml-auto text-emerald-400 text-xs font-bold tabular-nums">${(job.estimated_value / 1000).toFixed(1)}k</span>
+        )}
       </div>
       <div className="flex items-center gap-2 mt-2">
-        <span className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full uppercase ${priorityBadge[job.priority] ?? priorityBadge.normal}`}>
+        <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${priorityBadge[job.priority] ?? priorityBadge.normal}`}>
           {job.priority}
         </span>
         {job.notes && <span className="text-amber-400 text-xs" title="Has dispatcher notes">📋</span>}
@@ -96,18 +106,28 @@ function DraggableJobCard({ job, isSelected, onClick }: { job: DispatchJob; isSe
 }
 
 // Droppable column
-function DroppableColumn({ status, label, children }: { status: string; label: string; children: React.ReactNode }) {
+function DroppableColumn({ status, label, accent, glow, children }: { status: string; label: string; accent: string; glow: string; children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const count = React.Children.count(children);
   return (
-    <div ref={setNodeRef} className="flex-1 min-w-[160px]">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-gray-300 font-semibold text-sm uppercase tracking-wide">{label}</h3>
-        <span className="text-xs bg-[#1e3a5f] text-gray-300 rounded-full px-2 py-0.5">{count}</span>
+    <div ref={setNodeRef} className="flex-1 min-w-[180px]">
+      <div className="flex items-center justify-between mb-3 pl-2 border-l-2" style={{ borderColor: accent }}>
+        <h3 className="text-gray-200 font-bold text-xs uppercase tracking-widest">{label}</h3>
+        <span
+          className="text-[10px] font-bold rounded-full px-2 py-0.5 tabular-nums"
+          style={{ background: glow, color: accent }}
+        >
+          {count}
+        </span>
       </div>
-      <div className={`space-y-3 min-h-[100px] rounded-xl p-1 transition-colors ${isOver ? "bg-[#00d4ff]/10 border border-dashed border-[#00d4ff]" : ""}`}>
+      <div
+        className={`space-y-3 min-h-[120px] rounded-xl p-1.5 transition-all duration-200 ${
+          isOver ? "border border-dashed" : "border border-transparent"
+        }`}
+        style={isOver ? { background: glow, borderColor: accent } : undefined}
+      >
         {count === 0 && !isOver && (
-          <div className="rounded-xl border border-dashed border-[#1e3a5f] p-4 text-center text-gray-600 text-xs">Empty</div>
+          <div className="rounded-xl border border-dashed border-[#1e3a5f] p-6 text-center text-gray-600 text-xs">Empty</div>
         )}
         {children}
       </div>
