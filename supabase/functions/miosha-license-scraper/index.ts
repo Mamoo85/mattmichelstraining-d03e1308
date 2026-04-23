@@ -2766,15 +2766,16 @@ async function scanMBOADirectory(): Promise<LicenseCandidate[]> {
   return candidates;
 }
 
-// ===== S43: LinkedIn "Open to Work" Posts (Sonar) =====
-// Different angle from S8 (general search) — specifically targets #opentowork posts.
+// ===== S43: Public Job Board "Open to Work" Posts (Sonar) =====
+// DATA SOURCE: Indeed/ZipRecruiter — legal basis: public job boards permit search indexing.
+// (Replaced site:linkedin.com/in queries 2026-04-23 — hiQ v. LinkedIn established LinkedIn ToS protection.)
 async function scanLinkedInOpenToWork(): Promise<LicenseCandidate[]> {
   if (!OPENROUTER_API_KEY) return [];
   const queries = [
-    { q: `site:linkedin.com/in Michigan HVAC technician OR boiler operator OR stationary engineer "#opentowork" OR "open to work" OR "seeking new opportunities" 2025 OR 2026`, trade: "HVAC Technician" },
-    { q: `site:linkedin.com/in Michigan licensed electrician journeyman master "#opentowork" OR "open to work" OR "available for hire" Metro Detroit 2025 OR 2026`, trade: "Electrician" },
-    { q: `site:linkedin.com/in Michigan licensed plumber journeyman master "#opentowork" OR "seeking" 2025 OR 2026`, trade: "Plumber" },
-    { q: `site:linkedin.com/in Michigan CNA LPN RN "open to work" OR "seeking" OR "available" Metro Detroit healthcare nursing 2025 OR 2026`, trade: "Nursing" },
+    { q: `(site:indeed.com OR site:ziprecruiter.com) Michigan HVAC technician OR boiler operator OR stationary engineer "open to work" OR "seeking new opportunities" 2025 OR 2026`, trade: "HVAC Technician" },
+    { q: `(site:indeed.com OR site:ziprecruiter.com) Michigan licensed electrician journeyman master "open to work" OR "available for hire" Metro Detroit 2025 OR 2026`, trade: "Electrician" },
+    { q: `(site:indeed.com OR site:ziprecruiter.com) Michigan licensed plumber journeyman master "open to work" OR "seeking" 2025 OR 2026`, trade: "Plumber" },
+    { q: `(site:indeed.com OR site:ziprecruiter.com) Michigan CNA LPN RN "open to work" OR "seeking" OR "available" Metro Detroit healthcare nursing 2025 OR 2026`, trade: "Nursing" },
   ];
   const candidates: LicenseCandidate[] = [];
   const seen = new Set<string>();
