@@ -79,7 +79,7 @@ export default function StrategyModeHub() {
 
   async function loadTemplates() {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("strategy_mode_templates")
       .select("*")
       .order("created_at", { ascending: false });
@@ -113,14 +113,14 @@ export default function StrategyModeHub() {
       updated_at: new Date().toISOString(),
     };
     if (editingId) {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("strategy_mode_templates")
         .update(payload)
         .eq("id", editingId);
       if (error) return toast.error(error.message);
       toast.success("Template updated");
     } else {
-      const { error } = await supabase.from("strategy_mode_templates").insert(payload);
+      const { error } = await (supabase as any).from("strategy_mode_templates").insert(payload);
       if (error) return toast.error(error.message);
       toast.success("Template saved");
     }
@@ -130,7 +130,7 @@ export default function StrategyModeHub() {
 
   async function deleteTemplate(id: string) {
     if (!confirm("Delete this template?")) return;
-    const { error } = await supabase.from("strategy_mode_templates").delete().eq("id", id);
+    const { error } = await (supabase as any).from("strategy_mode_templates").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Deleted");
     loadTemplates();
