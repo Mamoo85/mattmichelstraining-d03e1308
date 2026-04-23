@@ -305,6 +305,8 @@ const IndustrialPulse = lazyRetry(() => import("./pages/IndustrialPulse"));
 const GrowthSignalsLanding = lazyRetry(() => import("./pages/GrowthSignalsLanding"));
 const MyIndustryPulse = lazyRetry(() => import("./pages/MyIndustryPulse"));
 const DemandRadar = lazyRetry(() => import("./pages/DemandRadar"));
+const MortgageRadar = lazyRetry(() => import("./pages/MortgageRadar"));
+const MyMortgageRadar = lazyRetry(() => import("./pages/MyMortgageRadar"));
 const BuyerRadar = lazyRetry(() => import("./pages/BuyerRadar"));
 const MyBuyerRadar = lazyRetry(() => import("./pages/MyBuyerRadar"));
 const BuyerRadarDemo = lazyRetry(() => import("./pages/BuyerRadarDemo"));
@@ -776,6 +778,8 @@ const App = () => (
                     <Route path="/website-speed-audit" element={<WebsiteSpeedAudits />} />
                     <Route path="/crime-digest" element={<CrimeDigest />} />
                     <Route path="/demand-radar" element={<DemandRadar />} />
+                    <Route path="/mortgage-radar" element={<MortgageRadar />} />
+                    <Route path="/my-mortgage-radar" element={<MyMortgageRadar />} />
                     <Route path="/buyer-radar" element={<BuyerRadar />} />
                     <Route path="/buyer-radar/demo" element={<BuyerRadarDemo />} />
                     <Route path="/buyer-radar/pricing" element={<BuyerRadarPricing />} />
