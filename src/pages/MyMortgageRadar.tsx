@@ -241,19 +241,35 @@ export default function MyMortgageRadar() {
       </header>
 
       <section className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid sm:grid-cols-3 gap-4 mb-6">
-          <Card className="bg-[#0a1628] border-[#1e3a5f]"><CardContent className="p-5">
-            <p className="text-xs uppercase tracking-widest text-[#00d4ff] mb-1">Hot leads (9–10)</p>
-            <p className="text-3xl font-extrabold text-white">{hotCount}</p>
-          </CardContent></Card>
-          <Card className="bg-[#0a1628] border-[#1e3a5f]"><CardContent className="p-5">
-            <p className="text-xs uppercase tracking-widest text-[#00d4ff] mb-1">Warm (7–8)</p>
-            <p className="text-3xl font-extrabold text-white">{warmCount}</p>
-          </CardContent></Card>
-          <Card className="bg-[#0a1628] border-[#1e3a5f]"><CardContent className="p-5">
-            <p className="text-xs uppercase tracking-widest text-[#00d4ff] mb-1">Total filtered</p>
-            <p className="text-3xl font-extrabold text-white">{filtered.length}</p>
-          </CardContent></Card>
+        {/* KPI cards with hero glow */}
+        <div className="relative mb-6">
+          <div
+            className="absolute inset-0 rounded-2xl opacity-40 blur-3xl pointer-events-none"
+            style={{ background: "radial-gradient(60% 80% at 50% 0%, rgba(0,212,255,0.18), transparent 70%)" }}
+          />
+          <div className="relative grid sm:grid-cols-3 gap-3">
+            <Card className="bg-gradient-to-br from-[#0a1628] to-[#0a1628]/60 border-[#00d4ff]/30 shadow-[0_0_24px_-12px_rgba(0,212,255,0.4)]">
+              <CardContent className="p-5">
+                <p className="text-[10px] uppercase tracking-widest text-[#00d4ff] mb-1.5 font-bold">● Hot leads (9–10)</p>
+                <p className="text-4xl font-black text-white tabular-nums">{hotCount}</p>
+                <p className="text-[11px] text-[#64748b] mt-1">Highest-intent in-market</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-[#0a1628] border-[#1e3a5f]">
+              <CardContent className="p-5">
+                <p className="text-[10px] uppercase tracking-widest text-[#94a3b8] mb-1.5 font-bold">Warm (7–8)</p>
+                <p className="text-4xl font-black text-white tabular-nums">{warmCount}</p>
+                <p className="text-[11px] text-[#64748b] mt-1">Worth a same-week call</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-[#0a1628] border-[#1e3a5f]">
+              <CardContent className="p-5">
+                <p className="text-[10px] uppercase tracking-widest text-[#94a3b8] mb-1.5 font-bold">Total filtered</p>
+                <p className="text-4xl font-black text-white tabular-nums">{filtered.length}</p>
+                <p className="text-[11px] text-[#64748b] mt-1">Matching your criteria</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Filter + Export bar */}
