@@ -3,6 +3,12 @@ project_id = "zmyczlfuufhngzovkjdh"
 [functions.new-business-radar]
 verify_jwt = false
 
+[functions.buyer-radar-sneak-peek]
+verify_jwt = false
+
+[functions.industry-pulse-sneak-peek]
+verify_jwt = false
+
 [functions.apify-results-handler]
 verify_jwt = false
 
