@@ -361,61 +361,92 @@ export default function MyMortgageRadar() {
 
         {loading ? (
           <p className="text-[#94a3b8]">Loading leads…</p>
-        ) : filtered.length === 0 ? (
-          <Card className="bg-[#0a1628] border-[#1e3a5f]"><CardContent className="p-8 text-center">
-            <Bell className="w-8 h-8 text-[#00d4ff] mx-auto mb-3" />
-            <p className="text-white font-semibold mb-1">No leads match your filters</p>
-            <p className="text-sm text-[#94a3b8]">Try lowering the score threshold or clearing the ZIP filter.</p>
-          </CardContent></Card>
         ) : (
-          <div className="grid gap-4">
-            {filtered.map((l) => (
-              <Card key={l.id} className={`bg-[#0a1628] border ${l.score >= 9 ? "border-[#00d4ff]" : "border-[#1e3a5f]"}`}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <CardTitle className="text-white text-lg">{l.address || "Address pending"}</CardTitle>
-                      <p className="text-xs text-[#94a3b8] mt-1 flex items-center gap-1">
-                        <MapPin className="w-3 h-3" /> {l.city || ""} {l.zip || ""} · {l.signal_source}
-                        {(l.signal_count || 1) > 1 && (
-                          <span className="ml-2 px-1.5 py-0.5 rounded bg-[#00d4ff]/20 text-[#00d4ff] font-bold">×{l.signal_count} signals</span>
+          <Tabs defaultValue="list" className="w-full">
+            <TabsList className="bg-[#0a1628] border border-[#1e3a5f] mb-4">
+              <TabsTrigger value="list" className="data-[state=active]:bg-[#00d4ff] data-[state=active]:text-black text-[#94a3b8] gap-1.5">
+                <List className="w-3.5 h-3.5" /> List
+              </TabsTrigger>
+              <TabsTrigger value="map" className="data-[state=active]:bg-[#00d4ff] data-[state=active]:text-black text-[#94a3b8] gap-1.5">
+                <MapIcon className="w-3.5 h-3.5" /> Map
+              </TabsTrigger>
+              <TabsTrigger value="pipeline" className="data-[state=active]:bg-[#00d4ff] data-[state=active]:text-black text-[#94a3b8] gap-1.5">
+                <Columns className="w-3.5 h-3.5" /> Pipeline
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="list" className="mt-0">
+              {filtered.length === 0 ? (
+                <Card className="bg-[#0a1628] border-[#1e3a5f]"><CardContent className="p-8 text-center">
+                  <Bell className="w-8 h-8 text-[#00d4ff] mx-auto mb-3" />
+                  <p className="text-white font-semibold mb-1">No leads match your filters</p>
+                  <p className="text-sm text-[#94a3b8]">Try lowering the score threshold or clearing the ZIP filter.</p>
+                </CardContent></Card>
+              ) : (
+                <div className="grid gap-4">
+                  {filtered.map((l) => (
+                    <Card key={l.id} className={`bg-[#0a1628] border ${l.score >= 9 ? "border-[#00d4ff]" : "border-[#1e3a5f]"}`}>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <CardTitle className="text-white text-lg">{l.address || "Address pending"}</CardTitle>
+                            <p className="text-xs text-[#94a3b8] mt-1 flex items-center gap-1">
+                              <MapPin className="w-3 h-3" /> {l.city || ""} {l.zip || ""} · {l.signal_source}
+                              {(l.signal_count || 1) > 1 && (
+                                <span className="ml-2 px-1.5 py-0.5 rounded bg-[#00d4ff]/20 text-[#00d4ff] font-bold">×{l.signal_count} signals</span>
+                              )}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className={`text-2xl font-extrabold ${l.score >= 9 ? "text-[#00d4ff]" : "text-white"}`}>{l.score}/10</p>
+                            <p className="text-[10px] text-[#64748b] uppercase tracking-widest">{l.signal_type.replace(/_/g, " ")}</p>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {l.signal_detail && <p className="text-sm text-[#cbd5e1] mb-3">{l.signal_detail}</p>}
+                        {l.suggested_opener && (
+                          <div className="bg-[#030711] border border-[#1e3a5f] rounded p-3 mb-3">
+                            <p className="text-[10px] uppercase tracking-widest text-[#00d4ff] mb-1">Suggested opener</p>
+                            <p className="text-sm text-[#cbd5e1] italic">"{l.suggested_opener}"</p>
+                          </div>
                         )}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className={`text-2xl font-extrabold ${l.score >= 9 ? "text-[#00d4ff]" : "text-white"}`}>{l.score}/10</p>
-                      <p className="text-[10px] text-[#64748b] uppercase tracking-widest">{l.signal_type.replace(/_/g, " ")}</p>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {l.signal_detail && <p className="text-sm text-[#cbd5e1] mb-3">{l.signal_detail}</p>}
-                  {l.suggested_opener && (
-                    <div className="bg-[#030711] border border-[#1e3a5f] rounded p-3 mb-3">
-                      <p className="text-[10px] uppercase tracking-widest text-[#00d4ff] mb-1">Suggested opener</p>
-                      <p className="text-sm text-[#cbd5e1] italic">"{l.suggested_opener}"</p>
-                    </div>
-                  )}
-                  <div className="flex flex-wrap gap-2">
-                    <Button size="sm" onClick={() => claimLead(l.id)} className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold">
-                      <Lock className="w-3 h-3 mr-1" /> Claim 7d
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => openDraft(l, "sms")} className="border-[#1e3a5f] text-white hover:bg-[#1e3a5f]/40">
-                      <MessageSquare className="w-3 h-3 mr-1" /> Draft SMS
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => openDraft(l, "email")} className="border-[#1e3a5f] text-white hover:bg-[#1e3a5f]/40">
-                      ✉️ Draft email
-                    </Button>
-                    {l.best_call_window && (
-                      <span className="text-xs text-[#94a3b8] flex items-center gap-1 ml-auto">
-                        <Phone className="w-3 h-3" /> Best: {l.best_call_window}
-                      </span>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button size="sm" onClick={() => claimLead(l.id)} className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold">
+                            <Lock className="w-3 h-3 mr-1" /> Claim 7d
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => openDraft(l, "sms")} className="border-[#1e3a5f] text-white hover:bg-[#1e3a5f]/40">
+                            <MessageSquare className="w-3 h-3 mr-1" /> Draft SMS
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => openDraft(l, "email")} className="border-[#1e3a5f] text-white hover:bg-[#1e3a5f]/40">
+                            ✉️ Draft email
+                          </Button>
+                          {l.best_call_window && (
+                            <span className="text-xs text-[#94a3b8] flex items-center gap-1 ml-auto">
+                              <Phone className="w-3 h-3" /> Best: {l.best_call_window}
+                            </span>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="map" className="mt-0">
+              <MortgageRadarMap leads={filtered} />
+            </TabsContent>
+
+            <TabsContent value="pipeline" className="mt-0">
+              <MortgageRadarPipeline
+                leads={filtered}
+                onChange={(id, stage) =>
+                  setLeads(prev => prev.map(l => l.id === id ? { ...l, pipeline_stage: stage } : l))
+                }
+              />
+            </TabsContent>
+          </Tabs>
         )}
 
         <p className="text-[10px] text-[#64748b] text-center mt-10 max-w-2xl mx-auto">
