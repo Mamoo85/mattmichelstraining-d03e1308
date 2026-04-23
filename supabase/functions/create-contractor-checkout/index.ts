@@ -74,6 +74,40 @@ serve(async (req) => {
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+    // Server-side city allowlist: must match an active contractor_lead_sites row for the chosen trade.
+    // Reject early so we don't create a Stripe session for a territory we can't actually fulfill.
+    const { data: territoryRow, error: territoryErr } = await sb
+      .from("contractor_lead_sites")
+      .select("id, active, active_contractor_id")
+      .ilike("trade", normalizedTrade)
+      .ilike("city", cityClean)
+      .eq("active", true)
+      .maybeSingle();
+
+    if (territoryErr) {
+      console.error("[CREATE-CONTRACTOR-CHECKOUT] territory lookup error:", territoryErr);
+    }
+
+    if (!territoryRow) {
+      return new Response(
+        JSON.stringify({
+          error: `'${cityClean}' isn't an active ${normalizedTrade} territory. Pick an open city on the page or text Matt at (313) 992-1219 to request it.`,
+          code: "unknown_territory",
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    if (territoryRow.active_contractor_id) {
+      return new Response(
+        JSON.stringify({
+          error: `${normalizedTrade} — ${cityClean} is already claimed. Pick another city or text Matt at (313) 992-1219 for the waitlist.`,
+          code: "territory_claimed",
+        }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     // Upsert pending contractor record (prevents duplicates on double-submit)
     const { data: contractor } = await sb
       .from("contractor_clients")
