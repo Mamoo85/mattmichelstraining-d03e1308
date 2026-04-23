@@ -39,6 +39,7 @@ const ProductSalesHub = lazy(() => import("@/components/dwa-admin/ProductSalesHu
 const BuyerRadarQAChecklist = lazy(() => import("@/components/dwa-admin/BuyerRadarQAChecklist"));
 const MortgageRadarHub = lazy(() => import("@/components/dwa-admin/MortgageRadarHub"));
 const PipelineVelocityDashboard = lazy(() => import("@/components/dwa-admin/PipelineVelocityDashboard"));
+const StrategyModeHub = lazy(() => import("@/components/dwa-admin/StrategyModeHub"));
 
 type Tab =
   | "ai-command"
@@ -47,7 +48,7 @@ type Tab =
   | "contractor-leads" | "contractor-onboarding" | "dead-leads" | "fielddesk" | "techalert" | "clients-all"
   | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
-  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar";
+  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode";
 
 const GROUPS: SidebarGroup[] = [
   {
@@ -106,6 +107,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "buyer-radar-qa",  label: "🛡️ Buyer Radar QA" },
       { id: "simulation",      label: "🧪 Simulation Suite" },
       { id: "playbook-hub",  label: "📖 Playbook & Strategy" },
+      { id: "strategy-mode", label: "🧠 Strategy Mode" },
       { id: "field-ops",     label: "⚙️ Field Ops" },
       { id: "command",       label: "🎛️ Command Deck" },
     ],
@@ -182,6 +184,7 @@ export default function DWAAdmin() {
           {activeTab === "buyer-radar-qa"  && <Suspense fallback={lazyFallback("Buyer Radar QA")}><BuyerRadarQAChecklist /></Suspense>}
           {activeTab === "simulation"      && <Suspense fallback={lazyFallback("simulation")}><AdminSimulationSuite /></Suspense>}
           {activeTab === "playbook-hub"  && <Suspense fallback={lazyFallback("playbook")}><PlaybookHub /></Suspense>}
+          {activeTab === "strategy-mode" && <Suspense fallback={lazyFallback("strategy mode")}><StrategyModeHub /></Suspense>}
           {activeTab === "field-ops"     && <Suspense fallback={lazyFallback("field ops")}><FieldOpsHub /></Suspense>}
           {activeTab === "command"       && <DWACommandDeck />}
         </div>

@@ -15055,6 +15055,39 @@ export type Database = {
         }
         Relationships: []
       }
+      strategy_mode_templates: {
+        Row: {
+          audit_checklist: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          system_prompt: string
+          updated_at: string
+        }
+        Insert: {
+          audit_checklist?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          system_prompt: string
+          updated_at?: string
+        }
+        Update: {
+          audit_checklist?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          system_prompt?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       studio_checkins: {
         Row: {
           checked_in_at: string
