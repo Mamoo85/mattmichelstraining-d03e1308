@@ -641,15 +641,17 @@ serve(async (req) => {
       );
     }
 
-    // Check dead lead, TechAlert, and Missed-Call daily caps
+    // Check daily caps for all pitch types
     const deadLeadSentToday = await getDailyDeadLeadCount(sb);
     const techAlertSentToday = await getDailyTechAlertCount(sb);
     const missedCallSentToday = await getDailyMissedCallCount(sb);
+    const careAlertSentToday = await getDailyCareAlertCount(sb);
     let deadLeadSent = deadLeadSentToday;
     let techAlertSent = techAlertSentToday;
     let missedCallSent = missedCallSentToday;
+    let careAlertSent = careAlertSentToday;
     const pitchRotation = getTodayPitchRotation();
-    log("Pitch rotation today", { pitchRotation, deadLeadSent, techAlertSent, missedCallSent });
+    log("Pitch rotation today", { pitchRotation, deadLeadSent, techAlertSent, missedCallSent, careAlertSent });
 
     // Optional manual override — allows dashboard to target a specific trade + city
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
