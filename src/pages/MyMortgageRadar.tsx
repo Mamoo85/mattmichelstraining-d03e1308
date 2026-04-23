@@ -30,6 +30,7 @@ type Lead = {
   suggested_opener: string | null;
   best_call_window: string | null;
   created_at: string;
+  pipeline_stage?: string | null;
 };
 
 type Outreach = {
