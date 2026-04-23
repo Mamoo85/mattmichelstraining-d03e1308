@@ -116,6 +116,29 @@ Be direct and tactical. These are experienced reps who hate fluff. Write like yo
   const issueNum = (weekNumber % 52) + 1;
   const dateStr = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
+  // Rotating Detroit Web Agency "free taste" CTA — feeds radar product funnels.
+  const radarCTAs = [
+    {
+      tag: "Buyer Radar",
+      headline: "See 5 live Detroit buyer signals — free, no card",
+      body: "Wholesale distributors: get a 1-week sample feed of metal-fab and machine-shop accounts pulling permits, opening credit lines, and winning contracts.",
+      url: "https://www.detroitwebagent.com/buyer-radar-preview",
+    },
+    {
+      tag: "Demand Radar",
+      headline: "5 free supplier-demand signals — emailed instantly",
+      body: "Plumbing, HVAC, electrical, industrial suppliers: see which Metro Detroit contractors are about to need feedstock. No card, 7-day preview.",
+      url: "https://www.detroitwebagent.com/demand-radar-preview",
+    },
+    {
+      tag: "Talent Radar",
+      headline: "3 days of licensed-tradesperson alerts — free preview",
+      body: "Watch newly-licensed boiler ops, electricians, plumbers, and HVAC techs hit the Michigan market in real time. No card.",
+      url: "https://www.detroitwebagent.com/hire-alert-trial",
+    },
+  ];
+  const radarCTA = radarCTAs[weekNumber % radarCTAs.length];
+
   const html = `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -173,6 +196,14 @@ Be direct and tactical. These are experienced reps who hate fluff. Write like yo
         <img src="https://www.mattmichelstraining.com/images/m2-development-logo.png" alt="M2 Development" style="width:36px;height:36px;margin-left:auto;object-fit:contain;" />
     </div>
   </td></tr>
+  <!-- Detroit Web Agency Free Taste CTA (rotating) -->
+  <tr><td style="background:#0a1628;padding:20px 28px;border:1px solid #1e3a5f;border-top:none;">
+    <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:2px;color:#00d4ff;text-transform:uppercase;">From Detroit Web Agency · ${radarCTA.tag}</p>
+    <p style="margin:0 0 8px;font-size:15px;font-weight:700;color:#ffffff;line-height:1.4;">${radarCTA.headline}</p>
+    <p style="margin:0 0 12px;font-size:13px;color:#94a3b8;line-height:1.6;">${radarCTA.body}</p>
+    <a href="${radarCTA.url}" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:10px 20px;border-radius:6px;font-weight:800;font-size:13px;text-decoration:none;">Get the free preview →</a>
+  </td></tr>
+
   <!-- Footer -->
   <tr><td style="background:#f8fafc;padding:16px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;font-size:12px;color:#94a3b8;line-height:1.6;">
     M2 Development · <a href="mailto:matt@mattmichelstraining.com" style="color:#e8621a;">matt@mattmichelstraining.com</a><br>
