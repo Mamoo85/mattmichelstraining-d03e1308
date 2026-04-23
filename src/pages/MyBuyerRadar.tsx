@@ -104,42 +104,55 @@ export default function MyBuyerRadar() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-8 space-y-10">
-        {/* Hero glow band with KPI cards */}
+      <main className="max-w-6xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-8 sm:space-y-10">
+        {/* Hero glow band with KPI cards — tap to jump to section on mobile */}
         <section className="relative">
           <div
             className="absolute inset-0 rounded-2xl opacity-40 blur-3xl pointer-events-none"
             style={{ background: "radial-gradient(60% 80% at 50% 0%, rgba(0,212,255,0.18), transparent 70%)" }}
           />
-          <div className="relative grid sm:grid-cols-3 gap-3">
-            <div className="bg-gradient-to-br from-[#0a1628] to-[#0a1628]/60 border border-[#00d4ff]/30 rounded-xl p-5 shadow-[0_0_24px_-12px_rgba(0,212,255,0.4)]">
+          <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <a
+              href="#signals"
+              title="Highest-confidence buyer-intent signals — work these first"
+              className="bg-gradient-to-br from-[#0a1628] to-[#0a1628]/60 border border-[#00d4ff]/40 rounded-xl p-5 shadow-[0_0_32px_-10px_rgba(0,212,255,0.5)] no-underline relative overflow-hidden hover:border-[#00d4ff]/70 transition-colors"
+            >
+              <span className="absolute top-2 right-2 text-[9px] font-black text-[#00d4ff]/70 uppercase tracking-widest">#1</span>
               <div className="flex items-center gap-2 mb-2">
                 <Zap className="w-3.5 h-3.5 text-[#00d4ff]" />
                 <p className="text-[10px] uppercase tracking-widest text-[#00d4ff] font-bold">Hot signals</p>
               </div>
-              <p className="text-4xl font-black text-white tabular-nums">{hotSignals}</p>
-              <p className="text-[11px] text-[#64748b] mt-0.5">Confidence 8–10</p>
-            </div>
-            <div className="bg-[#0a1628] border border-[#1e3a5f] rounded-xl p-5">
+              <p className="text-4xl sm:text-5xl font-black text-white tabular-nums leading-none">{hotSignals}</p>
+              <p className="text-[11px] text-[#94a3b8] mt-2">Confidence 8–10 — call today</p>
+            </a>
+            <a
+              href="#signals"
+              title="Moderate-intent — same-week follow-up"
+              className="bg-[#0a1628] border border-[#1e3a5f] rounded-xl p-5 no-underline hover:border-[#00d4ff]/40 transition-colors"
+            >
               <div className="flex items-center gap-2 mb-2">
                 <TrendingUp className="w-3.5 h-3.5 text-[#94a3b8]" />
                 <p className="text-[10px] uppercase tracking-widest text-[#94a3b8] font-bold">Warm signals</p>
               </div>
-              <p className="text-4xl font-black text-white tabular-nums">{warmSignals}</p>
-              <p className="text-[11px] text-[#64748b] mt-0.5">Confidence 5–7</p>
-            </div>
-            <div className="bg-[#0a1628] border border-[#1e3a5f] rounded-xl p-5">
+              <p className="text-3xl sm:text-4xl font-black text-white tabular-nums leading-none">{warmSignals}</p>
+              <p className="text-[11px] text-[#64748b] mt-2">Confidence 5–7</p>
+            </a>
+            <a
+              href="#rfqs"
+              title="Active fab-metal bid opportunities (NAICS 332/333/336)"
+              className="bg-[#0a1628] border border-[#1e3a5f] rounded-xl p-5 no-underline hover:border-[#00d4ff]/40 transition-colors"
+            >
               <div className="flex items-center gap-2 mb-2">
                 <Radar className="w-3.5 h-3.5 text-[#94a3b8]" />
                 <p className="text-[10px] uppercase tracking-widest text-[#94a3b8] font-bold">Active RFQs</p>
               </div>
-              <p className="text-4xl font-black text-white tabular-nums">{rfqs.length}</p>
-              <p className="text-[11px] text-[#64748b] mt-0.5">In your filter window</p>
-            </div>
+              <p className="text-3xl sm:text-4xl font-black text-white tabular-nums leading-none">{rfqs.length}</p>
+              <p className="text-[11px] text-[#64748b] mt-2">In your filter window</p>
+            </a>
           </div>
         </section>
 
-        <section>
+        <section id="signals" className="scroll-mt-20">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-xl font-bold tracking-tight">Buyer Signals</h2>
