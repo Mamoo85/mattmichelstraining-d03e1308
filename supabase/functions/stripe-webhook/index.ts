@@ -1432,6 +1432,43 @@ serve(async (req) => {
         } catch { /* non-critical */ }
       }
 
+      // ── CONTRACTOR TERRITORY LOCK — set active_contractor_id on payment ────
+      if (meta.type === "contractor_lead_subscription" && meta.contractor_id && meta.trade && meta.city) {
+        try {
+          const slug = `${String(meta.trade).toLowerCase()}-${String(meta.city).toLowerCase().replace(/\s+/g, "-")}`;
+          // Ensure contractor_clients row is active and has stripe subscription ID
+          await sb.from("contractor_clients")
+            .update({ active: true, stripe_subscription_id: session.subscription as string || null })
+            .eq("id", meta.contractor_id);
+          // Lock the territory — find by slug first, fall back to trade+city match
+          const { data: site } = await sb.from("contractor_lead_sites")
+            .select("id, active_contractor_id")
+            .or(`slug.eq.${slug},and(trade.ilike.${meta.trade},city.ilike.${meta.city})`)
+            .maybeSingle();
+          if (site) {
+            await sb.from("contractor_lead_sites")
+              .update({ active_contractor_id: meta.contractor_id, active: true })
+              .eq("id", site.id);
+            console.log(`[WEBHOOK] Territory locked: ${meta.trade} in ${meta.city} → contractor ${meta.contractor_id}`);
+          } else {
+            // Territory row doesn't exist yet — insert it
+            await sb.from("contractor_lead_sites").insert({
+              trade: meta.trade,
+              city: meta.city,
+              state: meta.state || "MI",
+              slug,
+              active_contractor_id: meta.contractor_id,
+              active: true,
+              monthly_fee_cents: session.amount_total || 39900,
+            });
+            console.log(`[WEBHOOK] New territory created and locked: ${slug}`);
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] contractor territory lock failed:", e instanceof Error ? e.message : String(e));
+          await notifyMatt(`⚠️ Territory lock failed for ${meta.trade}/${meta.city} — contractor ${meta.contractor_id}. Fix manually in admin.`);
+        }
+      }
+
       // ── PROSPECT NUDGE CONVERSION TRACKING ─────────────────────────────────
       // If contractor checkout came from an admin-generated tracked link, set paid_at.
       if (meta.type === "contractor_lead_subscription" && meta.ref) {
