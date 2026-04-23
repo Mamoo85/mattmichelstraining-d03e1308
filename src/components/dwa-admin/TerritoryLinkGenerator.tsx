@@ -150,19 +150,30 @@ export default function TerritoryLinkGenerator() {
   // When a guarded copy is blocked by cooldown, we flip that key to true so the next click overrides.
   const [overrideKeys, setOverrideKeys] = useState<Record<string, boolean>>({});
 
-  // Pull existing cities for autocomplete
+  // Pull existing territory cities (filtered by trade if one is selected)
+  const [siteRows, setSiteRows] = useState<Array<{ city: string; trade: string }>>([]);
   useEffect(() => {
     (async () => {
       const { data } = await supabase
         .from("contractor_lead_sites")
-        .select("city")
-        .limit(200);
+        .select("city, trade")
+        .limit(500);
       if (data) {
+        setSiteRows(data as Array<{ city: string; trade: string }>);
         const unique = Array.from(new Set(data.map((r: any) => r.city).filter(Boolean))).sort();
         setKnownCities(unique as string[]);
       }
     })();
   }, []);
+
+  // Cities available for the currently-selected trade (falls back to all if no trade picked)
+  const citiesForTrade = (() => {
+    if (!trade) return knownCities;
+    const filtered = Array.from(
+      new Set(siteRows.filter(r => r.trade === trade).map(r => r.city).filter(Boolean))
+    ).sort();
+    return filtered.length > 0 ? filtered : knownCities;
+  })();
 
   const loadStats = useCallback(async () => {
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -348,17 +359,18 @@ export default function TerritoryLinkGenerator() {
         {mode === "single" ? (
           <div>
             <label className="block text-[10px] text-muted-foreground font-semibold mb-1 uppercase">City / Territory *</label>
-            <input
-              list="known-cities"
-              type="text"
+            <select
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              placeholder="Livonia"
-              className="w-full bg-background border border-border px-2 py-1.5 text-sm text-foreground focus:outline-none focus:border-primary rounded"
-            />
-            <datalist id="known-cities">
-              {knownCities.map(c => <option key={c} value={c} />)}
-            </datalist>
+              disabled={!trade}
+              className="w-full bg-background border border-border px-2 py-1.5 text-sm text-foreground focus:outline-none focus:border-primary rounded disabled:opacity-50"
+            >
+              <option value="">{trade ? `Select city… (${citiesForTrade.length} available)` : "Pick a trade first"}</option>
+              {citiesForTrade.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            {trade && citiesForTrade.length === 0 && (
+              <p className="text-[10px] text-destructive mt-1">No territories seeded for {tradeLabel}. Add one in the "Territory Status" section above.</p>
+            )}
           </div>
         ) : (
           <div>
