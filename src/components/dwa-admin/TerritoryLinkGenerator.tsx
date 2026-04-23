@@ -146,6 +146,10 @@ export default function TerritoryLinkGenerator() {
   // Stats strip
   const [stats, setStats] = useState({ generated: 0, clicked: 0, signedUp: 0 });
 
+  // Per-button cooldown override flags. Key = "sms" | "apology" | `bulk:<token-or-link>`.
+  // When a guarded copy is blocked by cooldown, we flip that key to true so the next click overrides.
+  const [overrideKeys, setOverrideKeys] = useState<Record<string, boolean>>({});
+
   // Pull existing cities for autocomplete
   useEffect(() => {
     (async () => {
