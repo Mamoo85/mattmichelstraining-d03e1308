@@ -463,17 +463,30 @@ Return ONLY valid JSON:
 }
 
 // SBA loan approvals — Metro Detroit companies that just received capital are expanding
-// This is one of the highest-confidence buying signals available for free
+// Source: USASpending.gov API (verified working — SBA CKAN datastore is not active/queryable)
 async function harvestSBACapitalSignals(): Promise<any[]> {
   try {
     const cutoff = new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10);
-    const url = `https://data.sba.gov/api/3/action/datastore_search?resource_id=aab80ac8-f89e-4a8d-8f14-3b0a50b0e5ff&filters={"BorrState":"MI"}&limit=500`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(12_000) });
+    const today = new Date().toISOString().slice(0, 10);
+    const body = {
+      subawards: false, page: 1, limit: 50, sort: "Issued Date", order: "desc",
+      fields: ["Award ID", "Recipient Name", "Loan Value", "Issued Date", "recipient_location_city_name", "recipient_location_state_code", "naics_code", "naics_description"],
+      filters: {
+        award_type_codes: ["08"], // SBA 7(a) guaranteed loans
+        place_of_performance_locations: [{ country: "USA", state: "MI" }],
+        time_period: [{ start_date: cutoff, end_date: today }],
+      },
+    };
+    const r = await fetch("https://api.usaspending.gov/api/v2/search/spending_by_award/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(12_000),
+    });
     if (!r.ok) return [];
     const j = await r.json();
-    const records: any[] = j?.result?.records || [];
+    const records: any[] = j?.results || [];
 
-    // Focus: Metro Detroit, trade/construction/manufacturing NAICS, $50K+
     const targetNAICS: Record<string, string> = {
       "238": "Construction Trades",
       "237": "Heavy Construction",
@@ -491,24 +504,23 @@ async function harvestSBACapitalSignals(): Promise<any[]> {
 
     return records
       .filter((rec: any) =>
-        metro.test(rec.BorrCity || "") &&
-        Number(rec.GrossApproval || 0) >= 50_000 &&
-        Object.keys(targetNAICS).some((code) => String(rec.NAICSCode || "").startsWith(code)) &&
-        (!rec.ApprovalDate || rec.ApprovalDate >= cutoff)
+        metro.test(rec.recipient_location_city_name || "") &&
+        Number(rec["Loan Value"] || 0) >= 50_000 &&
+        Object.keys(targetNAICS).some((code) => String(rec.naics_code || "").startsWith(code))
       )
       .slice(0, 25)
       .map((rec: any) => {
-        const industry = Object.entries(targetNAICS).find(([code]) => String(rec.NAICSCode || "").startsWith(code))?.[1] || "Trade/Construction";
-        const amount = Number(rec.GrossApproval || 0);
+        const industry = Object.entries(targetNAICS).find(([code]) => String(rec.naics_code || "").startsWith(code))?.[1] || "Trade/Construction";
+        const amount = Number(rec["Loan Value"] || 0);
         return {
-          company_name: rec.BorrName || "Unknown",
-          location: `${rec.BorrCity || "Metro Detroit"}, MI`,
+          company_name: rec["Recipient Name"] || "Unknown",
+          location: `${rec.recipient_location_city_name || "Metro Detroit"}, MI`,
           industry,
           hiring_roles: ["Equipment purchases", "Workforce expansion", "Facility upgrades"],
           hiring_count: 1,
           predicted_needs: ["Equipment financing", "Tech stack", "Field service software", "Insurance"],
           confidence: amount >= 500_000 ? 9 : amount >= 100_000 ? 8 : 7,
-          recommended_pitch: `💰 SBA CAPITAL: ${rec.BorrName} received $${amount.toLocaleString()} SBA loan (${rec.ApprovalDate?.slice(0, 10) || "recent"}). Company is in active expansion — ideal window for TechAlert, FieldDesk, or Growth Radar pitch.`,
+          recommended_pitch: `💰 SBA CAPITAL: ${rec["Recipient Name"]} received $${amount.toLocaleString()} SBA loan (${rec["Issued Date"]?.slice(0, 10) || "recent"}). Company is in active expansion — ideal window for TechAlert, FieldDesk, or Growth Radar pitch.`,
           source_urls: [],
           cross_referenced: false,
           signal_type: "sba_capital",

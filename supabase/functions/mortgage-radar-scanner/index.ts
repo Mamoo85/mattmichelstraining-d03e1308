@@ -357,31 +357,48 @@ async function scanFixerUpperListings(): Promise<RawSignal[]> {
   })).filter(s => s.address);
 }
 
-// SBA loan approvals — new business owner who just got capital needs a home purchase or HELOC
+// SBA loan approvals via USASpending.gov — new self-employed owner who just got capital
+// needs a home purchase or HELOC. USASpending is the verified working federal API.
 async function scanSBAApprovals(): Promise<RawSignal[]> {
   try {
-    // SBA publishes approved loans via public API
-    const cutoff = new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10);
-    const url = `https://data.sba.gov/api/3/action/datastore_search?resource_id=aab80ac8-f89e-4a8d-8f14-3b0a50b0e5ff&filters={"BorrState":"MI","ApprovalDate":{"$gte":"${cutoff}"}}&limit=100`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    const cutoff = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
+    const body = {
+      subawards: false,
+      page: 1,
+      limit: 50,
+      sort: "Issued Date",
+      order: "desc",
+      fields: ["Award ID", "Recipient Name", "Loan Value", "Issued Date", "recipient_location_city_name", "recipient_location_state_code", "recipient_location_address_line1"],
+      filters: {
+        award_type_codes: ["08"], // SBA loan guarantees
+        place_of_performance_locations: [{ country: "USA", state: "MI" }],
+        time_period: [{ start_date: cutoff, end_date: new Date().toISOString().slice(0, 10) }],
+      },
+    };
+    const r = await fetch("https://api.usaspending.gov/api/v2/search/spending_by_award/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(12_000),
+    });
     if (!r.ok) return [];
     const j = await r.json();
-    const records = j?.result?.records || [];
+    const records: any[] = j?.results || [];
+    const metro = /detroit|dearborn|livonia|warren|sterling|troy|pontiac|southfield|ann arbor|canton|westland|farmington|royal oak|grosse pointe|hamtramck/i;
     return records
-      .filter((rec: any) => rec.BorrCity && /detroit|dearborn|livonia|warren|sterling heights|troy|pontiac|southfield|ann arbor|canton|westland|farmington|royal oak/i.test(rec.BorrCity))
+      .filter((rec: any) => metro.test(rec.recipient_location_city_name || "") && Number(rec["Loan Value"] || 0) >= 50_000)
       .map((rec: any) => ({
-        full_name: rec.BorrName || undefined,
-        address: rec.BorrStreet || "",
-        city: rec.BorrCity || undefined,
-        zip: typeof rec.BorrZip === "string" ? rec.BorrZip.slice(0, 5) : undefined,
+        full_name: rec["Recipient Name"] || undefined,
+        address: rec.recipient_location_address_line1 || "",
+        city: rec.recipient_location_city_name || undefined,
         signal_type: "sba_loan_approved",
-        signal_source: "SBA_API",
-        signal_detail: `SBA loan approved: $${Number(rec.GrossApproval || 0).toLocaleString()} for ${rec.BorrName || "business"}`,
-        signal_date: rec.ApprovalDate ? String(rec.ApprovalDate).slice(0, 10) : undefined,
-        estimated_loan_amount: rec.GrossApproval ? Math.round(Number(rec.GrossApproval) * 0.7) : undefined,
+        signal_source: "USASpending",
+        signal_detail: `SBA loan: $${Number(rec["Loan Value"] || 0).toLocaleString()} approved for ${rec["Recipient Name"] || "business"} in ${rec.recipient_location_city_name || "MI"}`,
+        signal_date: rec["Issued Date"] ? String(rec["Issued Date"]).slice(0, 10) : undefined,
+        estimated_loan_amount: rec["Loan Value"] ? Math.round(Number(rec["Loan Value"]) * 0.7) : undefined,
       }))
       .filter((s: RawSignal) => s.address)
-      .slice(0, 40);
+      .slice(0, 30);
   } catch (e) {
     console.warn("[scanSBAApprovals]", e instanceof Error ? e.message : String(e));
     return [];

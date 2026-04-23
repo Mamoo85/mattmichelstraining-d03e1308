@@ -646,38 +646,48 @@ async function extractJobSeekersFromProse(prose: string): Promise<Array<{ name: 
 }
 
 // OSHA serious injury/illness reports — company had incident = worker left or is injured = they're hiring
-// Source: OSHA Severe Injury Report API (public, no auth)
+// Source: Sonar web search (data.dol.gov switched to React SPA — no queryable JSON endpoint)
 async function scanOSHAIncidents(): Promise<RawCandidate[]> {
+  if (!LOVABLE_API_KEY) return [];
   try {
-    const cutoff = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
-    const url = `https://data.dol.gov/resource/fjbs-c3ne.json?$where=event_date>='${cutoff}'&$limit=200&$order=event_date DESC`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: "You are a public records researcher. Return ONLY valid JSON array, no prose, no markdown fences." },
+          { role: "user", content: `Search for OSHA severe injury reports or workplace safety incidents in Michigan (Metro Detroit area: Detroit, Dearborn, Warren, Livonia, Sterling Heights, Troy, Pontiac, Southfield) in the last 30 days. Focus on construction, HVAC, electrical, plumbing, manufacturing, boiler, healthcare companies. Sources: osha.gov severe injury reports, Michigan MIOSHA news, local news reports.
+
+Return JSON array: [{"company_name":"string","city":"string","incident_type":"string","naics_description":"string","incident_date":"YYYY-MM-DD","source_url":"string"}]
+
+Each incident = company had a worker seriously injured = they need a replacement hire = TechAlert prospect. Return [] if nothing found. Maximum 15 results.` },
+        ],
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
     if (!r.ok) return [];
-    const records: any[] = await r.json();
-    // Filter to Michigan trade establishments
-    const tradeNAICS = ["238", "237", "236", "622", "623", "811"]; // construction, healthcare, repair
-    const miRecords = records.filter((rec: any) =>
-      rec.establishment_state === "MI" &&
-      tradeNAICS.some((code) => String(rec.naics_code || "").startsWith(code)) &&
-      /detroit|dearborn|warren|livonia|sterling|troy|pontiac|southfield|ann arbor|canton|westland|farmington/i.test(rec.establishment_city || "")
-    );
-    // Each incident = the employer is a potential TechAlert client needing a replacement hire
-    // Return as candidates where full_name = company name (we're selling TO employers, not seeking workers)
-    return miRecords.slice(0, 20).map((rec: any) => ({
-      full_name: rec.establishment_name || "Unknown employer",
-      city: rec.establishment_city || undefined,
-      zip: undefined,
-      source: "firecrawl" as const,
-      license_type: "osha_incident_employer",
-      raw_data: {
-        osha_case: rec.case_id || rec.id,
-        incident_type: rec.nature_of_injury || rec.hospitalization || "Serious injury",
-        naics: rec.naics_code,
-        naics_title: rec.naics_title,
-        event_date: rec.event_date,
-        is_employer_lead: true,
-      },
-    }));
+    const j = await r.json();
+    const text = j?.choices?.[0]?.message?.content || "[]";
+    const cleaned = text.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+    const arr = JSON.parse(cleaned);
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .filter((rec: any) => rec.company_name?.length > 2)
+      .map((rec: any) => ({
+        full_name: rec.company_name,
+        city: rec.city || undefined,
+        zip: undefined,
+        source: "firecrawl" as const,
+        license_type: "osha_incident_employer",
+        raw_data: {
+          incident_type: rec.incident_type || "Serious injury",
+          naics_title: rec.naics_description,
+          event_date: rec.incident_date,
+          source_url: rec.source_url,
+          is_employer_lead: true,
+        },
+      }));
   } catch (e) {
     console.warn("[scanOSHAIncidents]", e instanceof Error ? e.message : String(e));
     return [];
@@ -685,30 +695,47 @@ async function scanOSHAIncidents(): Promise<RawCandidate[]> {
 }
 
 // SBA loan approvals — Metro Detroit companies that just got capital are expanding = need to hire
+// Source: USASpending.gov API (verified working — SBA CKAN datastore is not active/queryable)
 async function scanSBALoanApprovals(): Promise<RawCandidate[]> {
   try {
     const cutoff = new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10);
-    const url = `https://data.sba.gov/api/3/action/datastore_search?resource_id=aab80ac8-f89e-4a8d-8f14-3b0a50b0e5ff&filters={"BorrState":"MI","ApprovalDate":{"$gte":"${cutoff}"}}&limit=200`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    const today = new Date().toISOString().slice(0, 10);
+    const body = {
+      subawards: false, page: 1, limit: 50, sort: "Issued Date", order: "desc",
+      fields: ["Award ID", "Recipient Name", "Loan Value", "Issued Date", "recipient_location_city_name", "recipient_location_state_code", "recipient_location_address_line1", "naics_code", "naics_description"],
+      filters: {
+        award_type_codes: ["08"], // SBA 7(a) guaranteed loans
+        place_of_performance_locations: [{ country: "USA", state: "MI" }],
+        time_period: [{ start_date: cutoff, end_date: today }],
+      },
+    };
+    const r = await fetch("https://api.usaspending.gov/api/v2/search/spending_by_award/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(12_000),
+    });
     if (!r.ok) return [];
     const j = await r.json();
-    const records: any[] = j?.result?.records || [];
-    const tradeNAICS = ["238", "237", "236", "622", "623", "811", "484", "441", "423"];
+    const records: any[] = j?.results || [];
+    const tradeNAICS = ["238", "237", "236", "622", "623", "811", "484", "441", "423", "333", "332"];
+    const metro = /detroit|dearborn|warren|livonia|sterling|troy|pontiac|southfield|ann arbor|canton|westland|farmington|grosse pointe/i;
     const miTrade = records.filter((rec: any) =>
-      /detroit|dearborn|warren|livonia|sterling|troy|pontiac|southfield|ann arbor|canton|westland|farmington|grosse pointe/i.test(rec.BorrCity || "") &&
-      tradeNAICS.some((code) => String(rec.NAICSCode || "").startsWith(code)) &&
-      Number(rec.GrossApproval || 0) >= 50_000
+      metro.test(rec.recipient_location_city_name || "") &&
+      tradeNAICS.some((code) => String(rec.naics_code || "").startsWith(code)) &&
+      Number(rec["Loan Value"] || 0) >= 50_000
     );
     return miTrade.slice(0, 20).map((rec: any) => ({
-      full_name: rec.BorrName || "Unknown company",
-      city: rec.BorrCity || undefined,
-      zip: typeof rec.BorrZip === "string" ? rec.BorrZip.slice(0, 5) : undefined,
+      full_name: rec["Recipient Name"] || "Unknown company",
+      city: rec.recipient_location_city_name || undefined,
+      zip: undefined,
       source: "firecrawl" as const,
       license_type: "sba_expansion_employer",
       raw_data: {
-        sba_amount: rec.GrossApproval,
-        naics: rec.NAICSCode,
-        approval_date: rec.ApprovalDate,
+        sba_amount: rec["Loan Value"],
+        naics: rec.naics_code,
+        naics_title: rec.naics_description,
+        approval_date: rec["Issued Date"],
         is_employer_lead: true,
       },
     }));
@@ -720,10 +747,9 @@ async function scanSBALoanApprovals(): Promise<RawCandidate[]> {
 
 // USDOL registered apprenticeship completions — fresh-licensed tradespeople entering the market
 async function scanApprenticeshipCompletions(): Promise<RawCandidate[]> {
-  // RAPIDS (Registered Apprenticeship Partners Information Data System) — DOL public data
+  // RAPIDS API requires registration; DOL website is a React SPA with no queryable endpoint.
+  // Using Sonar/Gemini to surface recent MI apprenticeship completions from public announcements.
   try {
-    const url = "https://www.dol.gov/agencies/eta/apprenticeship/about/statisticsdata";
-    // Sonar fallback — RAPIDS API requires registration. Use Sonar to find recent MI completions.
     if (!LOVABLE_API_KEY) return [];
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
