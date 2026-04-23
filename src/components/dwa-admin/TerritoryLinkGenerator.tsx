@@ -166,11 +166,13 @@ export default function TerritoryLinkGenerator() {
     })();
   }, []);
 
-  // Cities available for the currently-selected trade (falls back to all if no trade picked)
+  // Cities available for the currently-selected trade (case-insensitive — DB has mixed-case
+  // legacy rows like "Electrical" alongside canonical "electrical"). Falls back to all if no trade picked.
   const citiesForTrade = (() => {
     if (!trade) return knownCities;
+    const tradeLower = trade.toLowerCase();
     const filtered = Array.from(
-      new Set(siteRows.filter(r => r.trade === trade).map(r => r.city).filter(Boolean))
+      new Set(siteRows.filter(r => (r.trade || "").toLowerCase() === tradeLower).map(r => r.city).filter(Boolean))
     ).sort();
     return filtered.length > 0 ? filtered : knownCities;
   })();
