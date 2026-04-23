@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import DWAStickyNav from "@/components/shared/DWAStickyNav";
 import WallOfLove, { Testimonial } from "@/components/shared/WallOfLove";
 import EnterpriseFooterBlock from "@/components/shared/EnterpriseFooterBlock";
+import TechAlertROICalculator from "@/components/agency/TechAlertROICalculator";
 import { US_METROS, DEFAULT_METRO_ID, getMetroById, getMetroPricing } from "@/lib/usMetros";
 
 const ROLE_OPTIONS = [
@@ -461,6 +462,9 @@ export default function HireAlert() {
         </div>
       </section>
 
+      {/* Interactive ROI Calculator */}
+      <TechAlertROICalculator />
+
       {/* Target Roles */}
       <section style={{ background: "#0d2137", padding: "60px 24px", marginBottom: 80 }}>
         <div style={{ maxWidth: 700, margin: "0 auto", textAlign: "center" }}>
@@ -475,7 +479,7 @@ export default function HireAlert() {
       </section>
 
       {/* Pricing */}
-      <section style={{ maxWidth: 800, margin: "0 auto 80px", padding: "0 16px" }}>
+      <section id="hire-alert-pricing" style={{ maxWidth: 800, margin: "0 auto 80px", padding: "0 16px" }}>
         <h2 style={{ textAlign: "center", fontSize: 32, fontWeight: 800, marginBottom: 48 }}>Simple Pricing</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
           <div style={{ background: "#0d2137", border: "1px solid #1e3a5f", borderRadius: 14, padding: 32 }}>
