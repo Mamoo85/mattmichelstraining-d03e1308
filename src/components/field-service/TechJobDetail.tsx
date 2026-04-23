@@ -205,7 +205,7 @@ const TechJobDetail: React.FC<TechJobDetailProps> = ({ job, techId, onBack, onSt
         .upload(path, file, { contentType: "image/jpeg", upsert: false });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from("job-photos").getPublicUrl(path);
-      const { error: insertError } = await supabase.from("job_photos").insert({
+      const { error: insertError } = await (supabase.from("job_photos") as any).insert({
         job_id: job.id,
         tech_id: techId,
         storage_path: path,
