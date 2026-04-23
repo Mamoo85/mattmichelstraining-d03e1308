@@ -307,6 +307,8 @@ const MyIndustryPulse = lazyRetry(() => import("./pages/MyIndustryPulse"));
 const DemandRadar = lazyRetry(() => import("./pages/DemandRadar"));
 const BuyerRadar = lazyRetry(() => import("./pages/BuyerRadar"));
 const MyBuyerRadar = lazyRetry(() => import("./pages/MyBuyerRadar"));
+const BuyerRadarDemo = lazyRetry(() => import("./pages/BuyerRadarDemo"));
+const BuyerRadarPricing = lazyRetry(() => import("./pages/BuyerRadarPricing"));
 const HighVolumeBuyerAlerts = lazyRetry(() => import("./pages/HighVolumeBuyerAlerts"));
 const StaffingAgency = lazyRetry(() => import("./pages/StaffingAgency"));
 
@@ -775,6 +777,8 @@ const App = () => (
                     <Route path="/crime-digest" element={<CrimeDigest />} />
                     <Route path="/demand-radar" element={<DemandRadar />} />
                     <Route path="/buyer-radar" element={<BuyerRadar />} />
+                    <Route path="/buyer-radar/demo" element={<BuyerRadarDemo />} />
+                    <Route path="/buyer-radar/pricing" element={<BuyerRadarPricing />} />
                     <Route path="/my-buyer-radar" element={<MyBuyerRadar />} />
                     <Route path="/high-volume-buyer-alerts" element={<HighVolumeBuyerAlerts />} />
                     <Route path="/staffing" element={<StaffingAgency />} />
