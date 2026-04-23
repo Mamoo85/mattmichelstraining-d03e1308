@@ -240,73 +240,86 @@ export default function MyMortgageRadar() {
         </div>
       </header>
 
-      <section className="max-w-7xl mx-auto px-4 py-8">
-        {/* KPI cards with hero glow */}
-        <div className="relative mb-6">
+      <section className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+        {/* KPI cards with hero glow — explicit 1-2-3 hierarchy */}
+        <div className="relative mb-5 sm:mb-6">
           <div
             className="absolute inset-0 rounded-2xl opacity-40 blur-3xl pointer-events-none"
             style={{ background: "radial-gradient(60% 80% at 50% 0%, rgba(0,212,255,0.18), transparent 70%)" }}
           />
-          <div className="relative grid sm:grid-cols-3 gap-3">
-            <Card className="bg-gradient-to-br from-[#0a1628] to-[#0a1628]/60 border-[#00d4ff]/30 shadow-[0_0_24px_-12px_rgba(0,212,255,0.4)]">
+          <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Tier 1 — biggest, glowing, ranked #1 */}
+            <Card
+              className="bg-gradient-to-br from-[#0a1628] to-[#0a1628]/60 border-[#00d4ff]/40 shadow-[0_0_32px_-10px_rgba(0,212,255,0.5)] sm:col-span-1 relative overflow-hidden"
+              title="Highest-intent mortgage signals from public records — call these first."
+            >
+              <span className="absolute top-2 right-2 text-[9px] font-black text-[#00d4ff]/70 uppercase tracking-widest">#1 Priority</span>
               <CardContent className="p-5">
                 <p className="text-[10px] uppercase tracking-widest text-[#00d4ff] mb-1.5 font-bold">● Hot leads (9–10)</p>
-                <p className="text-4xl font-black text-white tabular-nums">{hotCount}</p>
-                <p className="text-[11px] text-[#64748b] mt-1">Highest-intent in-market</p>
+                <p className="text-4xl sm:text-5xl font-black text-white tabular-nums leading-none">{hotCount}</p>
+                <p className="text-[11px] text-[#94a3b8] mt-2">Highest-intent in-market — call today</p>
               </CardContent>
             </Card>
-            <Card className="bg-[#0a1628] border-[#1e3a5f]">
+            {/* Tier 2 */}
+            <Card
+              className="bg-[#0a1628] border-[#1e3a5f] hover:border-[#00d4ff]/30 transition-colors"
+              title="Worth a same-week call — moderate-intent prospects."
+            >
               <CardContent className="p-5">
-                <p className="text-[10px] uppercase tracking-widest text-[#94a3b8] mb-1.5 font-bold">Warm (7–8)</p>
-                <p className="text-4xl font-black text-white tabular-nums">{warmCount}</p>
-                <p className="text-[11px] text-[#64748b] mt-1">Worth a same-week call</p>
+                <p className="text-[10px] uppercase tracking-widest text-[#94a3b8] mb-1.5 font-bold">○ Warm (7–8)</p>
+                <p className="text-3xl sm:text-4xl font-black text-white tabular-nums leading-none">{warmCount}</p>
+                <p className="text-[11px] text-[#64748b] mt-2">Worth a same-week call</p>
               </CardContent>
             </Card>
-            <Card className="bg-[#0a1628] border-[#1e3a5f]">
+            {/* Tier 3 */}
+            <Card
+              className="bg-[#0a1628] border-[#1e3a5f] hover:border-[#00d4ff]/30 transition-colors"
+              title="Total leads matching your filters."
+            >
               <CardContent className="p-5">
                 <p className="text-[10px] uppercase tracking-widest text-[#94a3b8] mb-1.5 font-bold">Total filtered</p>
-                <p className="text-4xl font-black text-white tabular-nums">{filtered.length}</p>
-                <p className="text-[11px] text-[#64748b] mt-1">Matching your criteria</p>
+                <p className="text-3xl sm:text-4xl font-black text-white tabular-nums leading-none">{filtered.length}</p>
+                <p className="text-[11px] text-[#64748b] mt-2">Matching your criteria</p>
               </CardContent>
             </Card>
           </div>
         </div>
 
-        {/* Filter + Export bar */}
-        <Card className="bg-[#0a1628] border-[#1e3a5f] mb-6">
-          <CardContent className="p-4 flex flex-wrap items-end gap-3">
-            <div className="flex-1 min-w-[120px]">
+        {/* Sticky filter + Export bar — stays visible while scrolling lead list */}
+        <div className="sticky top-[60px] z-20 -mx-3 sm:-mx-4 px-3 sm:px-4 py-3 mb-5 bg-[#030711]/95 backdrop-blur border-y border-[#1e3a5f]">
+          <div className="flex flex-wrap items-end gap-2 sm:gap-3">
+            <div className="flex-1 min-w-[110px]">
               <label className="text-[10px] uppercase tracking-widest text-[#94a3b8] block mb-1">Min score</label>
               <select
                 value={filterScore}
                 onChange={(e) => setFilterScore(Number(e.target.value))}
-                className="w-full bg-[#030711] border border-[#1e3a5f] rounded h-9 px-2 text-white text-sm"
+                className="w-full bg-[#0a1628] border border-[#1e3a5f] rounded-md h-10 sm:h-9 px-2 text-white text-sm"
               >
                 <option value={0}>All</option>
                 <option value={7}>7+ (warm)</option>
                 <option value={9}>9+ (hot)</option>
               </select>
             </div>
-            <div className="flex-1 min-w-[120px]">
+            <div className="flex-1 min-w-[110px]">
               <label className="text-[10px] uppercase tracking-widest text-[#94a3b8] block mb-1">ZIP</label>
-              <Input value={filterZip} onChange={(e) => setFilterZip(e.target.value)} placeholder="48226" className="bg-[#030711] border-[#1e3a5f] text-white h-9" />
+              <Input value={filterZip} onChange={(e) => setFilterZip(e.target.value)} placeholder="48226" className="bg-[#0a1628] border-[#1e3a5f] text-white h-10 sm:h-9" />
             </div>
-            <div className="flex-1 min-w-[160px]">
+            <div className="flex-1 min-w-[140px]">
               <label className="text-[10px] uppercase tracking-widest text-[#94a3b8] block mb-1">Signal type</label>
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="w-full bg-[#030711] border border-[#1e3a5f] rounded h-9 px-2 text-white text-sm"
+                className="w-full bg-[#0a1628] border border-[#1e3a5f] rounded-md h-10 sm:h-9 px-2 text-white text-sm"
               >
                 <option value="">All</option>
                 {types.map(t => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
               </select>
             </div>
-            <Button onClick={exportCsv} className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold h-9">
+            <Button onClick={exportCsv} className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold h-10 sm:h-9 w-full sm:w-auto">
               <Download className="w-4 h-4 mr-1" /> Export CSV
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Approval queue */}
         {pendingApproval.length > 0 && (
