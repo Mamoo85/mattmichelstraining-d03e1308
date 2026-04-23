@@ -263,6 +263,15 @@ export default function HireAlert() {
           {betaFull ? `Join at $${standalonePrice}/mo →` : `Claim Beta Slot — $${standalonePrice}/mo →`}
         </button>
 
+        <div style={{ marginTop: 18 }}>
+          <a
+            href="/hire-alert-trial"
+            style={{ display: "inline-block", background: "transparent", color: ACCENT, padding: "12px 24px", borderRadius: 8, fontWeight: 700, fontSize: 14, border: `1px solid ${ACCENT}66`, textDecoration: "none" }}
+          >
+            👀 See 3 days of alerts FREE — no card →
+          </a>
+        </div>
+
         {!betaFull && slotsRemaining !== null && slotsRemaining <= 3 && (
           <p style={{ marginTop: 12, fontSize: 13, color: "#f97316", fontWeight: 700 }}>
             🔥 {slotsRemaining} slot{slotsRemaining === 1 ? "" : "s"} left — price jumps to $149/mo when full

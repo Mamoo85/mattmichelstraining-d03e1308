@@ -789,6 +789,8 @@ const App = () => (
                     <Route path="/buyer-radar" element={<BuyerRadar />} />
                     <Route path="/buyer-radar/demo" element={<BuyerRadarDemo />} />
                     <Route path="/buyer-radar/pricing" element={<BuyerRadarPricing />} />
+                    <Route path="/buyer-radar-preview" element={<BuyerRadarPreview />} />
+                    <Route path="/demand-radar-preview" element={<DemandRadarPreview />} />
                     <Route path="/my-buyer-radar" element={<MyBuyerRadar />} />
                     <Route path="/high-volume-buyer-alerts" element={<HighVolumeBuyerAlerts />} />
                     <Route path="/staffing" element={<StaffingAgency />} />
