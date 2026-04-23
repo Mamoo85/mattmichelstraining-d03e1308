@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import {
   createSupabaseMock,
   mockInvoke,
@@ -19,9 +20,11 @@ import BuyerRadar from "../BuyerRadar";
 
 const renderPage = () =>
   render(
-    <MemoryRouter>
-      <BuyerRadar />
-    </MemoryRouter>,
+    <HelmetProvider>
+      <MemoryRouter>
+        <BuyerRadar />
+      </MemoryRouter>
+    </HelmetProvider>,
   );
 
 describe("BuyerRadar landing page", () => {

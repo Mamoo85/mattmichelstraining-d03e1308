@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { createSupabaseMock, setupNoSessionMocks } from "@/test/mocks/supabase";
 
 vi.mock("@/integrations/supabase/client", () => ({
@@ -16,9 +17,11 @@ import BuyerRadarDemo from "../BuyerRadarDemo";
 
 const renderPage = () =>
   render(
-    <MemoryRouter>
-      <BuyerRadarDemo />
-    </MemoryRouter>,
+    <HelmetProvider>
+      <MemoryRouter>
+        <BuyerRadarDemo />
+      </MemoryRouter>
+    </HelmetProvider>,
   );
 
 describe("BuyerRadarDemo", () => {
