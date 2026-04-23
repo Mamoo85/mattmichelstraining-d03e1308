@@ -20,6 +20,70 @@ function copy(text: string, label: string) {
   navigator.clipboard.writeText(text).then(() => toast.success(`${label} copied`));
 }
 
+// Per-(link/token) cooldown to prevent accidental double-sends of the same generated SMS.
+// Stored in localStorage so it survives navigation; key includes a short hash of the text so
+// re-copying a *different* draft for the same link is allowed.
+const SMS_COOLDOWN_MS = 60 * 1000; // 60 seconds
+const SMS_COOLDOWN_PREFIX = "dwa_sms_cooldown_";
+
+function hashText(s: string): string {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return Math.abs(h).toString(36);
+}
+
+function cooldownKey(idKey: string, text: string): string {
+  return `${SMS_COOLDOWN_PREFIX}${idKey}_${hashText(text)}`;
+}
+
+/** Returns ms remaining if still in cooldown, else 0. */
+function cooldownRemaining(idKey: string, text: string): number {
+  try {
+    const raw = localStorage.getItem(cooldownKey(idKey, text));
+    if (!raw) return 0;
+    const sentAt = Number(raw);
+    if (!Number.isFinite(sentAt)) return 0;
+    const remaining = SMS_COOLDOWN_MS - (Date.now() - sentAt);
+    return remaining > 0 ? remaining : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function markSent(idKey: string, text: string) {
+  try {
+    localStorage.setItem(cooldownKey(idKey, text), String(Date.now()));
+  } catch { /* localStorage unavailable */ }
+}
+
+/**
+ * Copy an SMS draft with a per-link cooldown. If the same link+text was copied
+ * within SMS_COOLDOWN_MS, block by default and require a second click to override.
+ * Returns true if the copy actually happened.
+ */
+function copySmsDraftGuarded(opts: {
+  text: string;
+  idKey: string; // unique per generated link (prefer token, fall back to URL)
+  label: string;
+  forceOverride?: boolean;
+  onBlocked?: (secondsLeft: number) => void;
+}): boolean {
+  const remaining = cooldownRemaining(opts.idKey, opts.text);
+  if (remaining > 0 && !opts.forceOverride) {
+    const seconds = Math.ceil(remaining / 1000);
+    opts.onBlocked?.(seconds);
+    toast.warning(
+      `You already sent this exact SMS for this link ${Math.round((SMS_COOLDOWN_MS - remaining) / 1000)}s ago. Wait ${seconds}s or click again to override.`,
+    );
+    return false;
+  }
+  navigator.clipboard.writeText(opts.text).then(() => {
+    markSent(opts.idKey, opts.text);
+    toast.success(opts.forceOverride ? `${opts.label} copied (override)` : `${opts.label} copied`);
+  });
+  return true;
+}
+
 function buildLink(opts: {
   trade: string;
   city: string;
@@ -82,6 +146,10 @@ export default function TerritoryLinkGenerator() {
   // Stats strip
   const [stats, setStats] = useState({ generated: 0, clicked: 0, signedUp: 0 });
 
+  // Per-button cooldown override flags. Key = "sms" | "apology" | `bulk:<token-or-link>`.
+  // When a guarded copy is blocked by cooldown, we flip that key to true so the next click overrides.
+  const [overrideKeys, setOverrideKeys] = useState<Record<string, boolean>>({});
+
   // Pull existing cities for autocomplete
   useEffect(() => {
     (async () => {
@@ -116,8 +184,11 @@ export default function TerritoryLinkGenerator() {
   const monthly = tradeMeta?.monthly || 399;
   const tradeLabel = tradeMeta?.label || "";
 
-  // Reset persisted token when inputs change
-  useEffect(() => { setPersistedToken(null); }, [trade, city, name, businessName, email, phone, expires24h]);
+  // Reset persisted token + override flags when inputs change
+  useEffect(() => {
+    setPersistedToken(null);
+    setOverrideKeys({});
+  }, [trade, city, name, businessName, email, phone, expires24h]);
 
   const rawLink = buildLink({ trade, city, email, name, businessName, phone });
   const trackedLink = persistedToken ? `${TRACK_URL}?token=${persistedToken}` : "";
@@ -395,17 +466,39 @@ export default function TerritoryLinkGenerator() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => copy(smsDraft, "SMS draft")}
-                  className="flex items-center justify-center gap-1.5 text-xs font-semibold px-3 py-2 rounded border border-border bg-background hover:bg-accent text-foreground"
+                  onClick={() => {
+                    const idKey = persistedToken || `untracked:${linkForCopy}`;
+                    const isOverride = !!overrideKeys["sms"];
+                    const ok = copySmsDraftGuarded({
+                      text: smsDraft,
+                      idKey,
+                      label: "SMS draft",
+                      forceOverride: isOverride,
+                      onBlocked: () => setOverrideKeys(o => ({ ...o, sms: true })),
+                    });
+                    if (ok) setOverrideKeys(o => ({ ...o, sms: false }));
+                  }}
+                  className={`flex items-center justify-center gap-1.5 text-xs font-semibold px-3 py-2 rounded border bg-background hover:bg-accent text-foreground ${overrideKeys["sms"] ? "border-yellow-500 text-yellow-600" : "border-border"}`}
                 >
-                  <MessageSquare size={12} /> Copy SMS Draft
+                  <MessageSquare size={12} /> {overrideKeys["sms"] ? "Click again to override" : "Copy SMS Draft"}
                 </button>
                 <button
                   type="button"
-                  onClick={() => copy(apologyDraft, "Apology draft")}
-                  className="flex items-center justify-center gap-1.5 text-xs font-semibold px-3 py-2 rounded border border-border bg-background hover:bg-accent text-foreground"
+                  onClick={() => {
+                    const idKey = persistedToken || `untracked:${linkForCopy}`;
+                    const isOverride = !!overrideKeys["apology"];
+                    const ok = copySmsDraftGuarded({
+                      text: apologyDraft,
+                      idKey,
+                      label: "Apology draft",
+                      forceOverride: isOverride,
+                      onBlocked: () => setOverrideKeys(o => ({ ...o, apology: true })),
+                    });
+                    if (ok) setOverrideKeys(o => ({ ...o, apology: false }));
+                  }}
+                  className={`flex items-center justify-center gap-1.5 text-xs font-semibold px-3 py-2 rounded border bg-background hover:bg-accent text-foreground ${overrideKeys["apology"] ? "border-yellow-500 text-yellow-600" : "border-border"}`}
                 >
-                  <Mail size={12} /> Copy Apology Draft
+                  <Mail size={12} /> {overrideKeys["apology"] ? "Click again to override" : "Copy Apology Draft"}
                 </button>
               </div>
 
@@ -455,8 +548,23 @@ export default function TerritoryLinkGenerator() {
                       <button onClick={() => copy(r.trackedLink, `${r.city} link`)} className="px-2 py-1 text-[11px] font-semibold rounded bg-primary text-primary-foreground hover:opacity-90 flex items-center gap-1">
                         <Copy size={10} /> Copy
                       </button>
-                      <button onClick={() => copy(bulkSmsForRow(r), `${r.city} SMS`)} className="px-2 py-1 text-[11px] font-semibold rounded border border-border bg-background hover:bg-accent text-foreground flex items-center gap-1">
-                        <MessageSquare size={10} /> SMS
+                      <button
+                        onClick={() => {
+                          const idKey = r.token || `untracked:${r.trackedLink}`;
+                          const stateKey = `bulk:${idKey}`;
+                          const isOverride = !!overrideKeys[stateKey];
+                          const ok = copySmsDraftGuarded({
+                            text: bulkSmsForRow(r),
+                            idKey,
+                            label: `${r.city} SMS`,
+                            forceOverride: isOverride,
+                            onBlocked: () => setOverrideKeys(o => ({ ...o, [stateKey]: true })),
+                          });
+                          if (ok) setOverrideKeys(o => ({ ...o, [stateKey]: false }));
+                        }}
+                        className={`px-2 py-1 text-[11px] font-semibold rounded border bg-background hover:bg-accent text-foreground flex items-center gap-1 ${overrideKeys[`bulk:${r.token || `untracked:${r.trackedLink}`}`] ? "border-yellow-500 text-yellow-600" : "border-border"}`}
+                      >
+                        <MessageSquare size={10} /> {overrideKeys[`bulk:${r.token || `untracked:${r.trackedLink}`}`] ? "Override?" : "SMS"}
                       </button>
                     </div>
                   </div>

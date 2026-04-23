@@ -68,13 +68,19 @@ export default function ContractorLeads() {
   const refToken = params.get("ref") || "";
   const expired = params.get("expired") === "1";
 
-  const initialTrade = normalizeTradeParam(params.get("trade"));
-  const initialCity = normalizeCityParam(params.get("city"));
+  const rawTradeParam = params.get("trade");
+  const rawCityParam = params.get("city");
+  const initialTrade = normalizeTradeParam(rawTradeParam);
+  const initialCity = normalizeCityParam(rawCityParam);
+  // If a trade= param was supplied but didn't match the allowlist, flag it so we can show a friendly banner.
+  const unknownTradeParam = !!rawTradeParam && !initialTrade ? rawTradeParam : "";
 
   const [trade, setTrade] = useState<string>(initialTrade);
   const [city, setCity] = useState<string>(initialCity);
   const [territories, setTerritories] = useState<Territory[]>([]);
   const [territoriesLoading, setTerritoriesLoading] = useState(false);
+  // Set when the URL ?city= param doesn't match any active territory for the selected trade.
+  const [unknownCity, setUnknownCity] = useState<string>("");
   const [form, setForm] = useState({
     name: params.get("name") || "",
     business_name: params.get("business_name") || "",
@@ -103,19 +109,23 @@ export default function ContractorLeads() {
       .then(({ data }) => {
         setTerritories(data || []);
         setTerritoriesLoading(false);
-        // If the city from URL params is NOT in the list, clear it so user must pick a real one.
+        // If the city from URL params is NOT in the active list, surface a friendly banner
+        // and clear the selection so the user falls back to manually picking one.
         if (initialCity && data && !data.find(t => t.city.toLowerCase() === initialCity.toLowerCase())) {
+          setUnknownCity(initialCity);
           setCity("");
+        } else {
+          setUnknownCity("");
         }
       });
   }, [trade]);
 
   // Auto-scroll to form when arriving with deep-link params.
   useEffect(() => {
-    if (isPrefilled && !success) {
+    if ((isPrefilled || unknownTradeParam || unknownCity) && !success) {
       setTimeout(() => document.getElementById("territory")?.scrollIntoView({ behavior: "smooth", block: "start" }), 200);
     }
-  }, [isPrefilled, success]);
+  }, [isPrefilled, unknownTradeParam, unknownCity, success]);
 
   const scrollToTerritory = () => document.getElementById("territory")?.scrollIntoView({ behavior: "smooth" });
 
@@ -294,6 +304,28 @@ export default function ContractorLeads() {
               </p>
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 Pick your trade and city below to continue — or text Matt at (313) 992-1219 for a fresh link.
+              </p>
+            </div>
+          )}
+
+          {unknownTradeParam && (
+            <div className="bg-yellow-500/10 border-l-4 border-yellow-500 p-3 mb-4">
+              <p className="text-sm font-bold text-foreground">
+                ⚠️ We couldn't find a trade called "{unknownTradeParam}".
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Pick your profession from the list below — or text Matt at <a href="sms:+13139921219" className="text-primary underline">(313) 992-1219</a> for help.
+              </p>
+            </div>
+          )}
+
+          {unknownCity && trade && (
+            <div className="bg-yellow-500/10 border-l-4 border-yellow-500 p-3 mb-4">
+              <p className="text-sm font-bold text-foreground">
+                ⚠️ "{unknownCity}" isn't an active {tradeLabel || "territory"} city right now.
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Pick an open city below, or <a href="sms:+13139921219" className="text-primary underline">text Matt</a> to request {unknownCity} as a new territory.
               </p>
             </div>
           )}
