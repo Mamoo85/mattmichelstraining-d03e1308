@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import SEOHead from "@/components/layout/SEOHead";
+import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import { Home, Lock, Phone, MessageSquare, MapPin, Bell, Download, Send, Check, X } from "lucide-react";
 
 type Lead = {
@@ -227,6 +228,7 @@ export default function MyMortgageRadar() {
   return (
     <div className="min-h-screen bg-[#030711] text-foreground">
       <SEOHead title="My Mortgage Radar — Loan Officer Dashboard" description="Daily in-market mortgage leads from public records." />
+      <DWASuiteNav activeProduct="mortgage_radar" email={clientEmail || undefined} />
 
       <header className="border-b border-[#1e3a5f] bg-[#0a1628]/80 backdrop-blur sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">

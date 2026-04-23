@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/layout/SEOHead";
+import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import {
   TrendingUp, Zap, Target, Factory, Briefcase,
   RefreshCw, Loader2, ArrowUpRight, BarChart3,
@@ -187,6 +188,7 @@ export default function MyIndustryPulse() {
   return (
     <>
       <SEOHead title={`Demand Radar — ${data.company_name}`} description="Your predictive sales intelligence dashboard." />
+      <DWASuiteNav activeProduct="industry_pulse" />
       <div className="min-h-screen bg-[#030711] text-white">
         {/* Header */}
         <header className="border-b border-white/5 bg-[#0a1628]/80 backdrop-blur-md sticky top-0 z-50">

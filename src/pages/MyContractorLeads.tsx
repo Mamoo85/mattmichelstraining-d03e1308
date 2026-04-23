@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import LeadProbabilityCard from "@/components/contractor/LeadProbabilityCard";
 import FreeBoostCard from "@/components/contractor/FreeBoostCard";
+import DWASuiteNav from "@/components/shared/DWASuiteNav";
 
 interface Lead {
   id: string;
@@ -174,6 +175,7 @@ export default function MyContractorLeads() {
         title={`My Leads — ${contractor.business_name}`}
         description="Your exclusive contractor lead dashboard"
       />
+      <DWASuiteNav activeProduct="contractor_leads" email={data?.contractor?.email} />
       <div className="min-h-screen bg-[#030711] text-white">
         {/* Header */}
         <header className="border-b border-white/5 bg-[#0a1628]/90 backdrop-blur-md sticky top-0 z-50">
