@@ -2113,11 +2113,31 @@ serve(async (req) => {
             `<p>Invoice <strong>${invoice.id}</strong> failed ${attemptCount} times.<br>Customer: ${customerEmail || "unknown"}<br>Amount: $${((invoice.amount_due || 0) / 100).toFixed(2)}<br>Subscription: ${subscriptionId}</p><p>Product clients deactivated. Customer needs to update payment method.</p>`
           ).catch(() => {});
         } else if (attemptCount === 1) {
-          // First failure — just notify, don't deactivate yet
+          // First failure — notify Matt, then SMS the customer if we have their phone
           await notifyMatt(
             `⚠️ Payment Failed (1st attempt) — ${customerEmail || subscriptionId}`,
             `<p>Invoice ${invoice.id} failed. Stripe will retry automatically. No action needed yet.</p>`
           ).catch(() => {});
+          // Look up customer phone from any product table
+          if (customerEmail) {
+            const [haResult, fcResult, mcResult, ccResult] = await Promise.all([
+              sb.from("hire_alert_clients").select("owner_phone").eq("owner_email", customerEmail).maybeSingle(),
+              sb.from("field_crm_clients").select("owner_phone").eq("owner_email", customerEmail).maybeSingle(),
+              sb.from("missed_call_clients" as any).select("owner_phone").eq("owner_email", customerEmail).maybeSingle(),
+              sb.from("contractor_clients").select("phone").eq("email", customerEmail).maybeSingle(),
+            ]);
+            const customerPhone = haResult.data?.owner_phone || fcResult.data?.owner_phone ||
+              mcResult.data?.owner_phone || ccResult.data?.phone || null;
+            if (customerPhone) {
+              const portalUrl = `https://billing.stripe.com/p/login/test_00g`;
+              await sendSMS(
+                customerPhone,
+                Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219",
+                `Hey — looks like your card didn't go through for your Detroit Web Agency subscription. Quick fix: update your payment info here: https://detroitwebagent.com/billing — or reply and I'll help. — Matt`,
+                "payment_failed_sms"
+              ).catch(() => {});
+            }
+          }
         }
       } catch (e) {
         console.error("[WEBHOOK] invoice.payment_failed error:", e);

@@ -45,6 +45,7 @@ const DAILY_SEND_CAP = 30;
 const DEAD_LEAD_CAP = 5;      // dead lead reactivation pitches/day
 const TECH_ALERT_CAP = 5;     // TechAlert trial pitches/day
 const MISSED_CALL_CAP = 5;    // Missed-Call Text-Back pitches/day
+const CARE_ALERT_CAP = 3;     // CareAlert (healthcare TechAlert) pitches/day
 
 // ── Metro Detroit targets only ──
 const TRADES = ["roofer", "HVAC contractor", "plumber", "electrician", "dentist"];
@@ -395,11 +396,15 @@ async function getDailyTechAlertCount(sb: any): Promise<number> {
   return count || 0;
 }
 
-// Pitch rotation by day-of-year: 0=dead lead, 1=tech alert, 2=missed call, 3=web design
-function getTodayPitchRotation(): "dead_lead" | "tech_alert" | "missed_call" | "web_design" {
+// Pitch rotation by day-of-year: 0=dead lead, 1=tech alert, 2=missed call, 3=web design, 4=care alert
+function getTodayPitchRotation(): "dead_lead" | "tech_alert" | "missed_call" | "web_design" | "care_alert" {
   const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-  const r = dayOfYear % 4;
-  return r === 0 ? "dead_lead" : r === 1 ? "tech_alert" : r === 2 ? "missed_call" : "web_design";
+  const r = dayOfYear % 5;
+  if (r === 0) return "dead_lead";
+  if (r === 1) return "tech_alert";
+  if (r === 2) return "missed_call";
+  if (r === 3) return "web_design";
+  return "care_alert";
 }
 
 // Map trade → TechAlert target_roles
@@ -533,6 +538,73 @@ Detroit Web Agency · Grosse Pointe, MI
 </table></td></tr></table></body></html>`;
 }
 
+async function getDailyCareAlertCount(sb: any): Promise<number> {
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+  const { count } = await sb
+    .from("outreach_leads")
+    .select("id", { count: "exact", head: true })
+    .eq("offer_pitched", "care_alert")
+    .gte("created_at", todayStart.toISOString());
+  return count || 0;
+}
+
+// ── AGENT 5: SNIPER_CARE — CareAlert cold pitch (nursing homes / assisted living) ──
+async function sniperCareAlertEmail(
+  businessName: string,
+  city: string,
+): Promise<{ subject: string; body: string }> {
+  const cityShort = city.replace(" MI", "");
+  const prompt = `You are writing a 4-sentence cold email from Matt Michels at Detroit Web Agency to the Director of Nursing (DON) or HR Director at "${businessName}", a nursing home or assisted living facility in ${cityShort}, MI.
+
+The offer: CareAlert — a service that monitors Michigan's nursing license database daily and texts them the moment a licensed CNA, LPN, or RN becomes available in their area. $99/mo, cancel anytime. No recruiter fees. No job boards. Just a text when a newly licensed nurse shows up in your zip code.
+
+Rules:
+1. EXACTLY 4 sentences
+2. Sentence 1: Acknowledge the staffing crisis — Michigan nursing homes are cited every week for insufficient staffing
+3. Sentence 2: Position CareAlert — we monitor Michigan's CNA/LPN/RN license database daily; the moment a new nurse gets licensed near ${cityShort}, you get a text before any recruiter does
+4. Sentence 3: No recruiter fees, no job board bidding wars — $99/mo flat, cancel anytime
+5. Sentence 4: MUST include this exact self-serve link on its own line: https://www.detroitwebagent.com/hire-alert — then add "or call/text (313) 992-1219"
+6. Start with "Hi —"
+7. Sign off: "— Matt, Detroit Web Agency"
+8. Conversational, direct. Not salesy. Empathetic to staffing pressure.
+9. Subject line: Under 40 chars, reference staffing or nurses
+
+Format:
+SUBJECT: [subject line]
+BODY:
+[4-sentence email]`;
+
+  const text = await generateText(prompt, 400);
+  const subjectMatch = text.match(/SUBJECT:\s*(.+)/);
+  const bodyMatch = text.match(/BODY:\s*([\s\S]+)/);
+  return {
+    subject: subjectMatch?.[1]?.trim() || `licensed CNAs in ${cityShort}`,
+    body: bodyMatch?.[1]?.trim() || text,
+  };
+}
+
+function buildCareAlertEmailHtml(body: string): string {
+  const htmlBody = body.replace(/\n/g, "<br>");
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a1628;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#0f172a;border:1px solid #22c55e30;border-radius:8px;overflow:hidden;">
+<tr><td style="background:#22c55e;padding:3px 0;"></td></tr>
+<tr><td style="padding:8px 24px 4px;background:#0a1628;">
+  <span style="font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#22c55e;">🏥 CareAlert · Detroit Web Agency</span>
+</td></tr>
+<tr><td style="padding:16px 24px 24px;color:#e2e8f0;font-size:15px;line-height:1.8;background:#0f172a;">
+${htmlBody}
+<div style="margin-top:20px;padding-top:16px;border-top:1px solid #1e3a5f;">
+<span style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13139921219" style="color:#22c55e;text-decoration:none;">(313) 992-1219</a> · <a href="https://detroitwebagent.com" style="color:#22c55e;text-decoration:none;">detroitwebagent.com</a></span>
+</div>
+</td></tr>
+<tr><td style="background:#0a1628;padding:12px 24px;border-top:1px solid #1e3a5f;font-size:11px;color:#475569;">
+Detroit Web Agency · Grosse Pointe, MI
+</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
 // ── Check how many emails sent today from this domain ──
 async function getDailySendCount(sb: any): Promise<number> {
   const todayStart = new Date();
@@ -569,15 +641,17 @@ serve(async (req) => {
       );
     }
 
-    // Check dead lead, TechAlert, and Missed-Call daily caps
+    // Check daily caps for all pitch types
     const deadLeadSentToday = await getDailyDeadLeadCount(sb);
     const techAlertSentToday = await getDailyTechAlertCount(sb);
     const missedCallSentToday = await getDailyMissedCallCount(sb);
+    const careAlertSentToday = await getDailyCareAlertCount(sb);
     let deadLeadSent = deadLeadSentToday;
     let techAlertSent = techAlertSentToday;
     let missedCallSent = missedCallSentToday;
+    let careAlertSent = careAlertSentToday;
     const pitchRotation = getTodayPitchRotation();
-    log("Pitch rotation today", { pitchRotation, deadLeadSent, techAlertSent, missedCallSent });
+    log("Pitch rotation today", { pitchRotation, deadLeadSent, techAlertSent, missedCallSent, careAlertSent });
 
     // Optional manual override — allows dashboard to target a specific trade + city
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
@@ -590,6 +664,84 @@ serve(async (req) => {
     let totalSkipped = 0;
     let totalScoutRejected = 0;
     const maxToSend = Math.min(15, remainingCap);
+
+    // ── CARE ALERT DAY: search nursing homes instead of trade combos ──
+    if (pitchRotation === "care_alert" && !manualTrade) {
+      const nursingSearches = [
+        "nursing home in Detroit MI", "assisted living in Grosse Pointe MI",
+        "skilled nursing facility in Warren MI", "nursing home in Sterling Heights MI",
+        "assisted living in Troy MI",
+      ];
+      for (const query of nursingSearches) {
+        if (careAlertSent >= CARE_ALERT_CAP || isTimedOut()) break;
+        const city = query.split(" in ").pop() || "Detroit MI";
+        const places = await searchGoogleMaps(query, GOOGLE_MAPS_API_KEY);
+        totalFound += places.length;
+        for (const place of places.slice(0, 5)) {
+          if (careAlertSent >= CARE_ALERT_CAP || isTimedOut()) break;
+          const name = place.displayName?.text || "Unknown Facility";
+          const phone = place.nationalPhoneNumber || null;
+          const website = place.websiteUri || null;
+
+          const { data: existing } = await sb.from("outreach_leads").select("id")
+            .ilike("business_name", name).ilike("city", city.replace(" MI", "")).limit(1);
+          if (existing && existing.length > 0) { totalSkipped++; continue; }
+
+          const blockCheck = await isBlocked(sb, { business_name: name, phone });
+          if (blockCheck.blocked) { totalSkipped++; continue; }
+
+          let email: string | null = null;
+          if (website) email = await scrapeEmail(website);
+          if (!email) { totalSkipped++; continue; }
+
+          const emailBlock = await isBlocked(sb, { email, business_name: name });
+          if (emailBlock.blocked) { totalSkipped++; continue; }
+
+          let caSubject: string, caBody: string;
+          try {
+            ({ subject: caSubject, body: caBody } = await sniperCareAlertEmail(name, city));
+          } catch (caErr) {
+            log("CareAlert sniper failed", { name, error: String(caErr) });
+            continue;
+          }
+          if (!caSubject || !caBody) continue;
+
+          const caHtml = buildCareAlertEmailHtml(caBody);
+          const caRes = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: "Matt Michels <matt@detroitwebagent.com>",
+              to: [email],
+              bcc: ["matt@detroitwebagent.com"],
+              subject: caSubject,
+              html: caHtml,
+            }),
+          });
+          if (caRes.ok) {
+            await sb.from("outreach_leads").insert({
+              business_name: name,
+              city: city.replace(" MI", ""),
+              industry: "Nursing Home",
+              phone, email, website: website || null,
+              status: "emailed", channel: "email",
+              offer_pitched: "care_alert",
+              last_contact_date: new Date().toISOString().split("T")[0],
+              drip_campaign_status: { d0_sent: true, d0_sent_at: new Date().toISOString() },
+              notes: `CareAlert pitch. Nursing home/assisted living.`,
+            });
+            await sb.from("email_send_log" as any).insert({
+              recipient_email: email, template_name: "contractor_care_alert_d0",
+              status: "sent", message_id: `ca_d0_${Date.now()}_${email}`,
+            });
+            careAlertSent++;
+            totalEmailed++;
+            log("CareAlert pitch sent", { name, email, city });
+            await new Promise(r => setTimeout(r, 500));
+          }
+        }
+      }
+    }
 
     for (const { trade, city } of combos) {
       log("Searching", { trade, city });
@@ -938,6 +1090,117 @@ serve(async (req) => {
       if (totalEmailed >= maxToSend || isTimedOut()) break;
     }
 
+    // ── Michigan SOS new business → Contractor Leads pitch ──
+    // Reads unprocessed new_business signals from industry_pulse_signals and
+    // pitches Contractor Leads to newly registered trade companies (2/day max).
+    let sosLeadsSent = 0;
+    if (!isTimedOut()) {
+      try {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        const TRADE_KEYWORDS = ["hvac", "plumb", "electr", "roof", "boiler", "mechanical", "heating", "cooling", "siding", "gutter"];
+        const { data: sosSignals } = await sb
+          .from("industry_pulse_signals" as any)
+          .select("id, company_name, location, industry, recommended_pitch")
+          .eq("signal_type", "new_business")
+          .gte("detected_at", sevenDaysAgo)
+          .is("pitched_contractor_leads_at", null)
+          .limit(5);
+
+        for (const sig of (sosSignals || []) as any[]) {
+          if (sosLeadsSent >= 2 || isTimedOut()) break;
+          const industryLower = (sig.industry || "").toLowerCase();
+          if (!TRADE_KEYWORDS.some(k => industryLower.includes(k))) continue;
+
+          // Search Google Maps for this specific company to get contact info
+          const searchQuery = `${sig.company_name} ${sig.location || "Michigan"}`;
+          const places = await searchGoogleMaps(searchQuery, GOOGLE_MAPS_API_KEY);
+          const place = places?.[0];
+          if (!place) {
+            await sb.from("industry_pulse_signals" as any).update({ pitched_contractor_leads_at: new Date().toISOString() }).eq("id", sig.id);
+            continue;
+          }
+
+          const name = place.displayName?.text || sig.company_name;
+          const website = place.websiteUri || null;
+          let email: string | null = null;
+          if (website) email = await scrapeEmail(website);
+          if (!email) {
+            await sb.from("industry_pulse_signals" as any).update({ pitched_contractor_leads_at: new Date().toISOString() }).eq("id", sig.id);
+            continue;
+          }
+
+          const blockCheck = await isBlocked(sb, { email, business_name: name });
+          if (blockCheck.blocked) {
+            await sb.from("industry_pulse_signals" as any).update({ pitched_contractor_leads_at: new Date().toISOString() }).eq("id", sig.id);
+            continue;
+          }
+
+          const cityShort = (sig.location || "Michigan").replace(/ MI$/, "");
+          const tradeClean = sig.industry || "contractor";
+          const clPrompt = `You are writing a 4-sentence cold email from Matt Michels at Detroit Web Agency to the owner of "${name}", a new ${tradeClean} business in ${cityShort}, MI that just registered with the state.
+
+The offer: Contractor Leads — exclusive homeowner leads for ${tradeClean} contractors in ${cityShort}. They'd be the ONLY ${tradeClean} company in their territory. $399/mo. First lead within 48 hours.
+
+Rules:
+1. EXACTLY 4 sentences
+2. Sentence 1: Congratulate them on the new business — you saw they just registered in Michigan
+3. Sentence 2: Mention that getting the first customers is the hardest part — and you already have homeowners in ${cityShort} looking for ${tradeClean} work with no contractor to send them to
+4. Sentence 3: Exclusive territory — one contractor per city, $399/mo, first lead within 48 hours
+5. Sentence 4: MUST include this exact link: https://www.detroitwebagent.com/contractor-leads?trade=${tradeClean.toLowerCase().replace(/\s+/g, "-")}&city=${encodeURIComponent(cityShort)} — then "or reply / text (313) 992-1219"
+6. Start with "Hey —"
+7. Sign off: "— Matt, Detroit Web Agency"
+8. Subject line: Under 40 chars
+
+Format:
+SUBJECT: [subject line]
+BODY:
+[4-sentence email]`;
+
+          try {
+            const clText = await generateText(clPrompt, 400);
+            const subjectMatch = clText.match(/SUBJECT:\s*(.+)/);
+            const bodyMatch = clText.match(/BODY:\s*([\s\S]+)/);
+            const clSubject = subjectMatch?.[1]?.trim();
+            const clBody = bodyMatch?.[1]?.trim();
+            if (clSubject && clBody) {
+              const clHtml = buildTechAlertEmailHtml(clBody);
+              const clRes = await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  from: "Matt Michels <matt@detroitwebagent.com>",
+                  to: [email],
+                  bcc: ["matt@detroitwebagent.com"],
+                  subject: clSubject,
+                  html: clHtml,
+                }),
+              });
+              if (clRes.ok) {
+                await Promise.all([
+                  sb.from("outreach_leads").insert({
+                    business_name: name, city: cityShort, industry: sig.industry,
+                    email, website: website || null, status: "emailed", channel: "email",
+                    offer_pitched: "contractor_leads",
+                    last_contact_date: new Date().toISOString().split("T")[0],
+                    drip_campaign_status: { d0_sent: true, d0_sent_at: new Date().toISOString() },
+                    notes: `SOS new business pitch. Industry: ${sig.industry}`,
+                  }),
+                  sb.from("industry_pulse_signals" as any).update({ pitched_contractor_leads_at: new Date().toISOString() }).eq("id", sig.id),
+                ]);
+                sosLeadsSent++;
+                log("SOS new business → Contractor Leads pitch sent", { name, email, city: cityShort });
+              }
+            }
+          } catch (clErr) {
+            log("SOS CL pitch failed", { name, error: String(clErr) });
+          }
+          await new Promise(r => setTimeout(r, 500));
+        }
+      } catch (sosErr) {
+        log("SOS new business pitch block failed", { error: String(sosErr) });
+      }
+    }
+
     return new Response(
       JSON.stringify({
         ok: true,
@@ -948,6 +1211,7 @@ serve(async (req) => {
         emailed: totalEmailed,
         deadLeadEmailed: totalDeadLeadEmailed,
         techAlertEmailed: techAlertSent - techAlertSentToday,
+        sosLeadsSent,
         skipped: totalSkipped,
         scoutRejected: totalScoutRejected,
         pitchRotation,

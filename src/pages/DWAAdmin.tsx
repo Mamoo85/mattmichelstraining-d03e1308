@@ -35,6 +35,7 @@ const AdminContractorOnboarding = lazy(() => import("@/components/dwa-admin/Admi
 const AdminContractorLeadsStatus = lazy(() => import("@/components/dwa-admin/AdminContractorLeadsStatus"));
 const AdminProspectTracker = lazy(() => import("@/components/dwa-admin/AdminProspectTracker"));
 const AdminCommandBar = lazy(() => import("@/components/dwa-admin/AdminCommandBar"));
+const ProductSalesHub = lazy(() => import("@/components/dwa-admin/ProductSalesHub"));
 
 type Tab =
   | "ai-command"
@@ -42,12 +43,14 @@ type Tab =
   | "command-center" | "sms-inbox" | "sms-drafts" | "call-list" | "linkedin-blitz" | "ad-launcher" | "agency-outreach"
   | "contractor-leads" | "contractor-onboarding" | "dead-leads" | "fielddesk" | "techalert" | "clients-all"
   | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map"
-  | "health" | "simulation" | "playbook-hub" | "field-ops" | "command";
+  | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
+  | "sales-hub";
 
 const GROUPS: SidebarGroup[] = [
   {
     label: "Revenue",
     items: [
+      { id: "sales-hub",        label: "💬 Sales Hub" },
       { id: "ai-command",       label: "🧠 AI Command" },
       { id: "dwa-overview",     label: "📊 Overview" },
       { id: "revenue",          label: "💰 Revenue" },
@@ -132,6 +135,7 @@ export default function DWAAdmin() {
         <div className="px-3 sm:px-6 py-6">
           <InstallAppBanner app="dwa-admin" />
 
+          {activeTab === "sales-hub"        && <Suspense fallback={lazyFallback("Sales Hub")}><ProductSalesHub /></Suspense>}
           {activeTab === "ai-command"       && <Suspense fallback={lazyFallback("AI Command")}><AdminCommandBar /></Suspense>}
           {activeTab === "dwa-overview"     && <Suspense fallback={lazyFallback("overview")}><AdminDWAOverview /></Suspense>}
           {activeTab === "revenue"          && <Suspense fallback={lazyFallback("revenue")}><AdminDWARevenueDashboard /></Suspense>}

@@ -11,6 +11,15 @@ import {
 } from "lucide-react";
 
 type Tier = "snapshot" | "weekly" | "enterprise";
+type SupplierType = "plumbing" | "hvac" | "electrical" | "industrial" | "roofing" | "";
+
+const SUPPLIER_TYPES: { value: SupplierType; label: string; example: string }[] = [
+  { value: "plumbing", label: "Plumbing Supply", example: "Ferguson, Hajoca, Winsupply" },
+  { value: "hvac", label: "HVAC / Mechanical", example: "Watsco, Johnstone, Carrier dist." },
+  { value: "electrical", label: "Electrical Supply", example: "Graybar, Rexel, Anixter" },
+  { value: "industrial", label: "Industrial / MRO", example: "Grainger, Fastenal, MSC" },
+  { value: "roofing", label: "Roofing / Building", example: "ABC Supply, Beacon, SRS" },
+];
 
 const TIERS: { id: Tier; price: string; cadence: string; name: string; tagline: string; features: string[]; cta: string; highlight?: boolean }[] = [
   {
@@ -20,9 +29,9 @@ const TIERS: { id: Tier; price: string; cadence: string; name: string; tagline: 
     name: "Snapshot",
     tagline: "Current signals delivered once.",
     features: [
-      "PDF report of all current Metro Detroit signals",
-      "CSV export for your CRM",
-      "MIOSHA compliance gaps + expansion hiring patterns",
+      "PDF report of all current Metro Detroit contractor signals",
+      "CSV export ready for your sales CRM",
+      "Permit surge activity + hiring expansion patterns",
       "No subscription — pay once, use forever",
     ],
     cta: "Get the Snapshot",
@@ -32,11 +41,11 @@ const TIERS: { id: Tier; price: string; cadence: string; name: string; tagline: 
     price: "$199",
     cadence: "/mo",
     name: "Weekly Digest",
-    tagline: "Fresh signals every Monday.",
+    tagline: "Fresh contractor signals every Monday.",
     features: [
-      "Weekly email digest with the top 10 new signals",
-      "Live dashboard access",
-      "Cross-referenced high-priority alerts",
+      "Weekly email: top 10 growing contractors in your vertical",
+      "Live dashboard with decision-maker contacts",
+      "Cross-referenced HIGH-PRIORITY alerts (3+ signals = same company)",
       "Cancel anytime — no contracts",
     ],
     cta: "Start Weekly Digest",
@@ -50,9 +59,9 @@ const TIERS: { id: Tier; price: string; cadence: string; name: string; tagline: 
     tagline: "Daily signals + statewide coverage.",
     features: [
       "Daily updates across all of Michigan",
-      "API access for your sales tools",
-      "Priority cross-referenced alerts",
-      "Dedicated onboarding call",
+      "API access to pipe signals into your sales tools",
+      "Priority cross-referenced alerts with owner contact info",
+      "Dedicated onboarding call with Matt",
     ],
     cta: "Go Enterprise",
   },
@@ -64,6 +73,7 @@ export default function IndustryPulse() {
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [phone, setPhone] = useState("");
+  const [supplierType, setSupplierType] = useState<SupplierType>("");
   const [loading, setLoading] = useState<Tier | null>(null);
 
   useEffect(() => {
@@ -72,10 +82,11 @@ export default function IndustryPulse() {
 
   const handleCheckout = async (tier: Tier) => {
     if (!email) { toast.error("Email is required"); return; }
+    if (!supplierType) { toast.error("Please select your supply vertical so we send you the right signals"); return; }
     setLoading(tier);
     try {
       const { data, error } = await supabase.functions.invoke("create-industry-pulse-checkout", {
-        body: { email, company_name: company, phone, contact_name: company, tier },
+        body: { email, company_name: company, phone, contact_name: company, tier, supplier_type: supplierType },
       });
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
@@ -87,17 +98,17 @@ export default function IndustryPulse() {
   };
 
   const signals = [
-    { icon: Shield, title: "MIOSHA Compliance Gaps", desc: "Expired or expiring boiler operator licenses flagged before your competitors notice." },
-    { icon: Factory, title: "Municipal Bond Funding", desc: "New facility bonds that signal upcoming boiler, HVAC, and mechanical work." },
-    { icon: TrendingUp, title: "Expansion Hiring Patterns", desc: "Companies hiring boiler engineers, HVAC techs, welders — they need YOUR services next." },
-    { icon: Target, title: "Cross-Referenced Intel", desc: "When multiple signals point to the same company, you get a HIGH-PRIORITY alert." },
+    { icon: Shield, title: "Permit Surge Activity", desc: "Contractors pulling 3+ commercial permits in 30 days are buying more supplies. You get their name and contact before anyone else calls." },
+    { icon: Factory, title: "Expansion Hiring Patterns", desc: "When a contractor posts jobs for additional techs, their supply volume is about to jump. That's your opening." },
+    { icon: TrendingUp, title: "New Business Registrations", desc: "New HVAC/plumbing/electrical companies just registered with Michigan SOS. No distributor relationship yet — perfect timing." },
+    { icon: Target, title: "Triple-Confirmed Accounts", desc: "When the same company shows up in permits + hiring + SOS registrations, confidence score hits 9–10. These are your highest-priority calls." },
   ];
 
   return (
     <>
       <SEOHead
-        title="Demand Radar — Predictive Sales Intelligence | Detroit Web Agency"
-        description="Predictive sales signals for industrial service companies. Know which companies need your services before they start looking."
+        title="Demand Radar — Contractor Growth Intelligence for Suppliers | Detroit Web Agency"
+        description="Know which Michigan contractors are growing before they call your competitors. Permit surges, hiring signals, and expansion intel for plumbing, HVAC, and electrical supply houses."
       />
       <div className="min-h-screen bg-[#030711] text-white">
         {/* Hero */}
@@ -106,15 +117,15 @@ export default function IndustryPulse() {
           <div className="max-w-4xl mx-auto text-center relative z-10">
             <div className="inline-flex items-center gap-2 bg-[#00d4ff]/10 border border-[#00d4ff]/20 rounded-full px-4 py-1.5 mb-6">
               <Zap className="h-3.5 w-3.5 text-[#00d4ff]" />
-              <span className="text-[#00d4ff] text-xs font-semibold tracking-wide">DEMAND RADAR — PREDICTIVE SALES INTELLIGENCE</span>
+              <span className="text-[#00d4ff] text-xs font-semibold tracking-wide">DEMAND RADAR — CONTRACTOR GROWTH INTELLIGENCE</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-black mb-4 leading-tight">
-              Know Which Companies Need You
-              <span className="text-[#00d4ff]"> Before They Start Looking</span>
+              Know Which Contractors Are About to Buy
+              <span className="text-[#00d4ff]"> From Your Competitors</span>
             </h1>
             <p className="text-lg text-white/60 max-w-2xl mx-auto mb-8">
-              Daily scans of MIOSHA compliance databases, municipal bond filings, and hiring patterns across Metro Detroit.
-              Get actionable signals that tell you exactly who needs your industrial services — and when to call.
+              Daily scans of Metro Detroit permit filings, hiring patterns, and expansion signals.
+              Built for plumbing wholesalers, HVAC distributors, and electrical supply houses who want to win accounts before the competition gets the call.
             </p>
 
             {success ? (
@@ -125,8 +136,22 @@ export default function IndustryPulse() {
               </div>
             ) : (
               <div className="bg-[#0a1628] border border-[#1e3a5f] rounded-xl p-6 max-w-lg mx-auto space-y-3">
+                <p className="text-xs text-white/50 font-semibold uppercase tracking-wider text-left">Your supply vertical *</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {SUPPLIER_TYPES.map(s => (
+                    <button
+                      key={s.value}
+                      type="button"
+                      onClick={() => setSupplierType(s.value)}
+                      className={`px-3 py-2 text-xs font-bold border rounded transition-colors text-left ${supplierType === s.value ? "bg-[#00d4ff] text-black border-[#00d4ff]" : "bg-[#0f1f35] border-[#1e3a5f] text-white/70 hover:border-[#00d4ff]/50"}`}
+                    >
+                      {s.label}
+                      <span className="block text-[9px] font-normal mt-0.5 opacity-60">{s.example}</span>
+                    </button>
+                  ))}
+                </div>
                 <Input
-                  placeholder="Business email"
+                  placeholder="Business email *"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="bg-[#0f1f35] border-[#1e3a5f] text-white placeholder:text-white/30"
@@ -143,7 +168,7 @@ export default function IndustryPulse() {
                   onChange={(e) => setPhone(e.target.value)}
                   className="bg-[#0f1f35] border-[#1e3a5f] text-white placeholder:text-white/30"
                 />
-                <p className="text-[11px] text-white/40 text-center">Pick your tier below ↓</p>
+                <p className="text-[11px] text-white/40 text-center">Pick your tier below — signals filtered to your vertical ↓</p>
               </div>
             )}
           </div>
@@ -152,9 +177,10 @@ export default function IndustryPulse() {
         {/* Signal Types */}
         <section className="py-16 px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl font-black text-center mb-10">
-              Four Signal Types. <span className="text-[#00d4ff]">Zero Guesswork.</span>
+            <h2 className="text-2xl font-black text-center mb-4">
+              Four Signal Types. <span className="text-[#00d4ff]">All Filtered to Your Vertical.</span>
             </h2>
+            <p className="text-center text-white/40 text-sm mb-10">A plumbing wholesaler only sees plumbing contractor signals. An HVAC distributor only sees HVAC. No noise.</p>
             <div className="grid md:grid-cols-2 gap-4">
               {signals.map((s, i) => (
                 <div key={i} className="bg-[#0a1628] border border-[#1e3a5f] rounded-xl p-6 hover:border-[#00d4ff]/30 transition-colors">
@@ -170,12 +196,12 @@ export default function IndustryPulse() {
         {/* How It Works */}
         <section className="py-16 px-4 bg-[#0a1628]/50">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-2xl font-black mb-10">How It Works</h2>
+            <h2 className="text-2xl font-black mb-10">How It Works for Distributors</h2>
             <div className="grid md:grid-cols-3 gap-8">
               {[
-                { icon: Eye, title: "We Scan Daily", desc: "MIOSHA databases, bond filings, job postings — 16+ data sources scanned every morning." },
-                { icon: BarChart3, title: "AI Scores & Ranks", desc: "Each signal gets a 1-10 confidence score. Cross-referenced signals = highest priority." },
-                { icon: Zap, title: "You Act First", desc: "Get email alerts + a live dashboard. Call the right company before your competitors know they exist." },
+                { icon: Eye, title: "We Scan Daily", desc: "BSEED permit filings, H-2B visa applications, new company registrations — 16+ sources scanned every morning." },
+                { icon: BarChart3, title: "AI Scores & Routes", desc: "Each signal scored 1–10. Filtered to your supply vertical. Cross-referenced signals get priority." },
+                { icon: Zap, title: "Your Rep Calls First", desc: "Signal lands in your inbox before the contractor hits your competitor's website. Win the account before the bid." },
               ].map((step, i) => (
                 <div key={i} className="text-center">
                   <div className="w-14 h-14 rounded-full bg-[#00d4ff]/10 border border-[#00d4ff]/20 flex items-center justify-center mx-auto mb-4">

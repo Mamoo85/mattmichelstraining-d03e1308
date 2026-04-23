@@ -14,11 +14,16 @@ import TerritoryLinkGenerator from "@/components/dwa-admin/TerritoryLinkGenerato
 const PRIORITY_SLUGS = ["hvac-warren", "plumbing-detroit", "hvac-sterling-heights", "roofing-troy", "electrician-detroit"];
 
 const TRADE_COLORS: Record<string, string> = {
-  HVAC: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  Plumbing: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
+  HVAC:       "bg-blue-500/20 text-blue-300 border-blue-500/30",
+  Plumbing:   "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
   Electrical: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-  Roofing: "bg-orange-500/20 text-orange-300 border-orange-500/30",
+  Roofing:    "bg-orange-500/20 text-orange-300 border-orange-500/30",
+  Boiler:     "bg-red-500/20 text-red-300 border-red-500/30",
+  Gutters:    "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+  Siding:     "bg-purple-500/20 text-purple-300 border-purple-500/30",
 };
+
+const ALL_TRADES = ["HVAC", "Plumbing", "Electrical", "Roofing", "Boiler", "Gutters", "Siding"];
 
 function timeAgo(date: string | null): string {
   if (!date) return "Never";
@@ -77,6 +82,9 @@ export default function AdminContractorLeads() {
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickForm, setQuickForm] = useState({ site_id: "", name: "", phone: "", email: "", description: "" });
   const [submittingLead, setSubmittingLead] = useState(false);
+  const [newTrade, setNewTrade] = useState("");
+  const [newCity, setNewCity] = useState("");
+  const [addingTerritory, setAddingTerritory] = useState(false);
 
   const load = useCallback(async () => {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -107,6 +115,21 @@ export default function AdminContractorLeads() {
     const interval = setInterval(() => { load(); setLastRefresh(Date.now()); }, 60000);
     return () => clearInterval(interval);
   }, [load]);
+
+  // ── Add territory ─────────────────────────────────────────────────────────
+  async function addTerritory() {
+    if (!newTrade || !newCity.trim()) { toast.error("Trade and city are required"); return; }
+    setAddingTerritory(true);
+    const slug = `${newTrade.toLowerCase()}-${newCity.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}`;
+    const { error } = await supabase.from("contractor_lead_sites" as never).insert({
+      trade: newTrade, city: newCity.trim(), state: "MI", slug, active: true,
+    } as never);
+    setAddingTerritory(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${newTrade} — ${newCity} added`);
+    setNewTrade(""); setNewCity("");
+    load();
+  }
 
   // ── Derived values ─────────────────────────────────────────────────────────
   const activeClients = clients.filter((c) => c.active);
@@ -324,7 +347,7 @@ export default function AdminContractorLeads() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatCard label="Monthly MRR" value={`$${(activeClients.length * 399).toLocaleString()}`} sub={`${activeClients.length} active territories`} icon={DollarSign} color="#22c55e" />
-          <StatCard label="Open Upside" value={`$${((20 - activeClients.length) * 399).toLocaleString()}/mo`} sub={`${20 - activeClients.length} territories unclaimed`} icon={TrendingUp} color="#f59e0b" />
+          <StatCard label="Open Upside" value={`$${((territories.length - activeClients.length) * 399).toLocaleString()}/mo`} sub={`${territories.length - activeClients.length} territories unclaimed`} icon={TrendingUp} color="#f59e0b" />
           <StatCard label="Leads This Month" value={leadsThisMonth.length} sub="across all territories" icon={Users} color="#3b82f6" />
           <StatCard label="Delivered" value={deliveredCount} sub={`${leads.length > 0 ? Math.round((deliveredCount / leads.length) * 100) : 0}% delivery rate`} icon={CheckCircle} color="#e8621a" />
         </div>
@@ -397,7 +420,19 @@ export default function AdminContractorLeads() {
 
       {/* ── Section 3: Territory Grid ─────────────────────────────────────── */}
       <div>
-        <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-3">Territory Status (20 Territories)</h2>
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Territory Status ({territories.length} Territories)</h2>
+          <div className="flex items-center gap-2">
+            <select value={newTrade} onChange={e => setNewTrade(e.target.value)} className="bg-background border border-border text-xs text-foreground px-2 py-1.5 rounded focus:outline-none focus:border-primary">
+              <option value="">Trade…</option>
+              {ALL_TRADES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+            <input type="text" value={newCity} onChange={e => setNewCity(e.target.value)} placeholder="City name" className="bg-background border border-border text-xs text-foreground px-2 py-1.5 rounded focus:outline-none focus:border-primary w-32" onKeyDown={e => e.key === "Enter" && addTerritory()} />
+            <button onClick={addTerritory} disabled={addingTerritory || !newTrade || !newCity.trim()} className="text-xs font-bold px-3 py-1.5 rounded bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40">
+              {addingTerritory ? "…" : "+ Add"}
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {territories.map((t) => {
             const contractor = contractorFor(t);

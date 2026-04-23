@@ -2095,6 +2095,90 @@ serve(async (req: Request) => {
     });
   } catch (e) { console.warn("[hire-alert-scanner] raw dump failed:", e instanceof Error ? e.message : String(e)); }
 
+  // ── 7-day no-contact re-engagement email ──
+  // Active clients who haven't received any hire_alert comms in 7+ days get a
+  // "here's what we found this week" summary so they stay engaged.
+  try {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: activeClients } = await sb
+      .from("hire_alert_clients")
+      .select("id, company_name, owner_email, target_roles")
+      .eq("active", true)
+      .not("owner_email", "is", null)
+      .lt("created_at", sevenDaysAgo); // only clients older than 7 days
+
+    if (activeClients?.length) {
+      // Find which ones received a comms in last 7 days
+      const { data: recentComms } = await sb
+        .from("system_comms_log")
+        .select("recipient")
+        .eq("product", "hire_alert")
+        .gte("created_at", sevenDaysAgo);
+      const recentEmails = new Set((recentComms || []).map((r: any) => r.recipient).filter(Boolean));
+
+      const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
+      for (const client of activeClients) {
+        if (recentEmails.has(client.owner_email)) continue; // already heard from us
+
+        // Pull this week's top candidates matching their roles
+        const { data: weekCandidates } = await sb
+          .from("hire_alert_candidates")
+          .select("full_name, license_type, city, availability_score")
+          .gte("first_seen_at", sevenDaysAgo)
+          .overlaps("license_type", client.target_roles || [])
+          .order("availability_score", { ascending: false })
+          .limit(3);
+
+        const candidateRows = (weekCandidates || []).map((c: any) =>
+          `<tr><td style="padding:6px 12px;border-bottom:1px solid #1e3a5f;">${c.full_name || "—"}</td><td style="padding:6px 12px;border-bottom:1px solid #1e3a5f;">${c.license_type || "—"}</td><td style="padding:6px 12px;border-bottom:1px solid #1e3a5f;">${c.city || "—"}</td><td style="padding:6px 12px;border-bottom:1px solid #1e3a5f;text-align:center;">${c.availability_score || "—"}/10</td></tr>`
+        ).join("");
+
+        const totalThisWeek = (weekCandidates || []).length;
+        const html = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a1628;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
+<table width="100%" style="max-width:560px;background:#0f172a;border:1px solid #00d4ff30;border-radius:8px;overflow:hidden;">
+<tr><td style="background:#00d4ff;padding:3px 0;"></td></tr>
+<tr><td style="padding:12px 24px 4px;background:#0a1628;">
+  <span style="font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#00d4ff;">⚡ TechAlert Weekly Summary</span>
+</td></tr>
+<tr><td style="padding:16px 24px 24px;color:#e2e8f0;font-size:15px;line-height:1.8;background:#0f172a;">
+<p>Hey ${client.company_name || "there"} —</p>
+<p>TechAlert has been running in the background all week. Here's a snapshot of what we found in your area:</p>
+${totalThisWeek > 0 ? `<table width="100%" style="border-collapse:collapse;margin:12px 0;font-size:13px;">
+<tr style="background:#1e3a5f;"><th style="padding:6px 12px;text-align:left;color:#94a3b8;">Name</th><th style="padding:6px 12px;text-align:left;color:#94a3b8;">License</th><th style="padding:6px 12px;text-align:left;color:#94a3b8;">City</th><th style="padding:6px 12px;color:#94a3b8;">Score</th></tr>
+${candidateRows}
+</table>
+<p style="font-size:13px;color:#94a3b8;">Log in to see full contact info and claim candidates before they're gone.</p>` : `<p style="color:#94a3b8;font-size:14px;">It was a quiet week in your target area — the scanner ran every day and is ready to alert you the moment a new license shows up.</p>`}
+<p style="margin-top:20px;"><a href="https://www.detroitwebagent.com/my-tech-alert" style="background:#00d4ff;color:#0a1628;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:700;font-size:14px;">View My Dashboard →</a></p>
+<div style="margin-top:24px;padding-top:16px;border-top:1px solid #1e3a5f;font-size:13px;color:#94a3b8;">
+  <strong style="color:#e2e8f0;">Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;text-decoration:none;">(313) 992-1219</a>
+</div>
+</td></tr></table></td></tr></table></body></html>`;
+
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: "Matt Michels <matt@detroitwebagent.com>",
+            to: [client.owner_email],
+            subject: `TechAlert: ${totalThisWeek > 0 ? `${totalThisWeek} candidate${totalThisWeek > 1 ? "s" : ""} found this week` : "scanner update for your area"}`,
+            html,
+          }),
+        }).catch(() => {});
+
+        await sb.from("system_comms_log").insert({
+          channel: "email",
+          product: "hire_alert",
+          recipient: client.owner_email,
+          message_body: `Weekly re-engagement: ${totalThisWeek} candidates found`,
+          metadata: { client_id: client.id, type: "weekly_summary", candidates_found: totalThisWeek },
+        }).catch(() => {});
+      }
+    }
+  } catch (e) {
+    console.warn("[hire-alert-scanner] re-engagement email failed:", e instanceof Error ? e.message : String(e));
+  }
+
   return new Response(
     JSON.stringify({
       candidates_found: allRaw.length,

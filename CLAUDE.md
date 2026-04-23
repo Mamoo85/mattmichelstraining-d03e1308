@@ -12,7 +12,66 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-04-20. Update this section every session.*
+*Last updated: 2026-04-23. Update this section every session.*
+
+### Phase 20 — Revenue Blocking Fixes + Autonomous Marketing Expansion COMPLETE ✅
+*2026-04-23 — branch `claude/review-design-system-qRGjL`*
+
+**8 items shipped (all committed + pushed):**
+
+**1. Contractor Leads territory picker rewrite** (`ContractorLeads.tsx`)
+- Removed hardcoded 20-city list — now fetches live from `contractor_lead_sites` DB
+- Visual card grid: OPEN (green) vs CLAIMED (red lock icon)
+- Pre-fill via `?trade=hvac&city=warren` URL params validated against real DB
+- No-territories fallback: "Text Matt at (313) 992-1219" CTA
+
+**2. Demand Radar buyer targeting fix** (`IndustryPulse.tsx`, `create-industry-pulse-checkout`)
+- Rewrote hero + copy for wholesale distributors (Ferguson, Graybar, Watsco)
+- Added required `supplier_type` selector (plumbing/hvac/electrical/industrial/roofing)
+- `supplier_type` flows into Stripe metadata for future email segmentation
+
+**3. Product Sales Hub** (`src/components/dwa-admin/ProductSalesHub.tsx`, `DWAAdmin.tsx`)
+- New "💬 Sales Hub" tab (first in Revenue sidebar group)
+- 5 product tabs: Contractor Leads, TechAlert, Demand Radar, Missed Call, FieldDesk
+- Each tab: cold script, warm reply script, copy button, objection handlers
+- Territory Link Generator embedded in Contractor Leads tab
+
+**4. Territory seeding** (`20260423100000_seed_more_territories.sql`)
+- 54 new territories: Boiler (7), Gutters (7), Siding (7), +5 each for HVAC/Plumbing/Electrical/Roofing
+
+**5. Add Territory UI** (`AdminContractorLeads.tsx`)
+- Inline form in "Territory Status" section header: trade select + city input + Add button
+- `addTerritory()` generates slug and inserts to `contractor_lead_sites` — no migration needed
+
+**6. Contractor checkout nudge** (`contractor-checkout-nudge/index.ts`, `20260423110000_contractor_checkout_nudge_cron.sql`)
+- Hourly cron: finds `contractor_clients` where `active=false`, phone present, 1–24h old
+- Checks `system_comms_log` for existing nudge (deduplication)
+- Sends "I held your territory" SMS with pre-filled checkout link
+
+**7. CareAlert pitch rotation** (`contractor-prospector/index.ts`)
+- `getTodayPitchRotation()` expanded from 4-cycle to 5-cycle (adds `"care_alert"`)
+- `sniperCareAlertEmail()`: 4-sentence cold email to nursing home Directors of Nursing
+- `buildCareAlertEmailHtml()`: green-accented DWA dark template
+- On care_alert days: searches "nursing home [city]" in 5 Metro Detroit cities (3/day cap)
+
+**8. Stripe payment failed → SMS customer** (`stripe-webhook/index.ts`)
+- On first payment failure: looks up customer phone from hire_alert/field_crm/missed_call/contractor tables
+- Sends "your card didn't go through" SMS with detroitwebagent.com/billing link
+
+**9. 7-day no-contact re-engagement email** (`hire-alert-scanner/index.ts`)
+- After daily scan: finds active TechAlert clients with no comms in 7+ days
+- Emails a "here's what we found this week" summary with top 3 candidates + dashboard link
+- Logs to `system_comms_log` to prevent double-send
+
+**10. Michigan SOS new business → Contractor Leads** (`contractor-prospector/index.ts`, `20260423120000_industry_pulse_signals_cl_pitch.sql`)
+- After main loop: reads unprocessed `new_business` signals from `industry_pulse_signals`
+- Google Maps lookup → email scrape → Contractor Leads cold pitch (2/day max)
+- `pitched_contractor_leads_at` column added to `industry_pulse_signals` for deduplication
+
+**Working branch**: `claude/review-design-system-qRGjL`
+**Next**: Matt merges to main → Lovable deploys
+
+---
 
 ### Phase 19 — MiPLUS/LARA Fail-Proof Scraping Pipeline COMPLETE ✅
 *2026-04-20 — branch `claude/setup-talent-radar-knowledge-VbhqW`*
