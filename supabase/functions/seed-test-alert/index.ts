@@ -24,7 +24,7 @@ const corsHeaders = {
 
 // ─── JSON stripper ─────────────────────────────────────────────
 function extractJSON(raw: string): Record<string, unknown> | null {
-  let cleaned = raw.replace(/```(?:json)?\s*/gi, "").replace(/```\s*/g, "");
+  const cleaned = raw.replace(/```(?:json)?\s*/gi, "").replace(/```\s*/g, "");
   const match = cleaned.match(/\{[\s\S]*\}/);
   if (!match) return null;
   try { return JSON.parse(match[0]); } catch { return null; }

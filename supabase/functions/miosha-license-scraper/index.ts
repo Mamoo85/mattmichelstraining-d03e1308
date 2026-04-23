@@ -275,7 +275,7 @@ async function scanMichiganOpenData(): Promise<LicenseCandidate[]> {
         // Field-name fallback — Socrata schemas vary wildly across datasets
         const firstName = row.first_name || row.firstname || row.licensee_first_name || row.lic_first_name || row.f_name || row.first || "";
         const lastName = row.last_name || row.lastname || row.licensee_last_name || row.lic_last_name || row.l_name || row.last || row.surname || "";
-        let fullName = row.full_name || row.licensee_name || row.name || row.dba_name || `${firstName} ${lastName}`.trim();
+        const fullName = row.full_name || row.licensee_name || row.name || row.dba_name || `${firstName} ${lastName}`.trim();
         if (!fullName || !isPersonName(fullName)) continue;
 
         const licNum = row.license_number || row.license_no || row.licensee_number || row.lic_no || row.permit_number || null;
@@ -1782,7 +1782,7 @@ async function scanBPLContractorCompanies(): Promise<LicenseCandidate[]> {
   const seen = new Set<string>();
   const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-  let datasetIds: string[] = [];
+  const datasetIds: string[] = [];
   try {
     const meta = await fetch("https://data.michigan.gov/api/views/metadata/v1?q=contractor+license&limit=30", { signal: AbortSignal.timeout(10_000) });
     if (meta.ok) {

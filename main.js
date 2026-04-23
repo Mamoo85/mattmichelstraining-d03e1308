@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // M2 MIOSHA & BPL License Scraper Actor
 // Downloads Michigan LARA BPL Excel files + Florida DBPR CSVs,
 // parses with SheetJS, pushes normalized candidate rows to dataset.

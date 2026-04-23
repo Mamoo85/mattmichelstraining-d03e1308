@@ -43,7 +43,7 @@ const INDUSTRIAL_CANDIDATE: TestCandidate = {
 
 // ─── JSON Regex Stripper ───────────────────────────────────────
 function extractJSON(raw: string): string {
-  let cleaned = raw.replace(/```(?:json)?\s*/gi, "").replace(/```/g, "");
+  const cleaned = raw.replace(/```(?:json)?\s*/gi, "").replace(/```/g, "");
   const match = cleaned.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
   return match ? match[1] : cleaned.trim();
 }

@@ -816,7 +816,7 @@ async function scanJobBoardsFallback(): Promise<RawCandidate[]> {
 
 function extractJSON(text: string): Record<string, unknown> | null {
   // Strip markdown code fences before parsing
-  let cleaned = text.replace(/```(?:json)?\s*/gi, "").replace(/```\s*/g, "");
+  const cleaned = text.replace(/```(?:json)?\s*/gi, "").replace(/```\s*/g, "");
   const match = cleaned.match(/\{[\s\S]*\}/);
   if (!match) return null;
   try {

@@ -711,7 +711,7 @@ serve(async (req) => {
       const customerEmail = session.customer_details?.email || session.customer_email;
       const customerName = session.customer_details?.name || null;
       const userId = customerEmail ? await getUserIdByEmail(sb, customerEmail) : null;
-      let guide = priceId ? GUIDE_MAP[priceId] : null;
+      const guide = priceId ? GUIDE_MAP[priceId] : null;
       const txItemName = guide?.title || meta.item_name || "Purchase";
       const txItemType = meta.type === "gift_card" ? "gift_card" : guide ? "pdf" : (meta.item_type || "purchase");
 
