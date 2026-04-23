@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Phone } from "lucide-react";
 import SEOHead from "@/components/layout/SEOHead";
+import { isPublicSku } from "@/lib/deprecated-skus";
 
 interface Service {
   name: string;
@@ -93,7 +94,12 @@ const CATEGORIES: Category[] = [
   },
 ];
 
-const TOTAL_SERVICES = CATEGORIES.reduce((sum, cat) => sum + cat.services.length, 0);
+// Filter out deprecated SKUs from public selling (registry: src/lib/deprecated-skus.ts)
+const VISIBLE_CATEGORIES: Category[] = CATEGORIES
+  .map(cat => ({ ...cat, services: cat.services.filter(isPublicSku) }))
+  .filter(cat => cat.services.length > 0);
+
+const TOTAL_SERVICES = VISIBLE_CATEGORIES.reduce((sum, cat) => sum + cat.services.length, 0);
 
 export default function AllServices() {
   return (
@@ -126,7 +132,7 @@ export default function AllServices() {
 
       {/* Categories */}
       <main className="max-w-7xl mx-auto px-4 py-14 space-y-14">
-        {CATEGORIES.map((cat) => (
+        {VISIBLE_CATEGORIES.map((cat) => (
           <section key={cat.label}>
             <div className="flex items-center gap-3 mb-6">
               <h2 className="text-xl font-bold uppercase tracking-wider" style={{ color: "#f1f5f9" }}>
