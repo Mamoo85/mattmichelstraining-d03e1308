@@ -143,6 +143,7 @@ const DispatchBoard: React.FC<DispatchBoardProps> = ({ clientId }) => {
   const [notesValue, setNotesValue] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showInvoice, setShowInvoice] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
