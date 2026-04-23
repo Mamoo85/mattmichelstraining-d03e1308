@@ -396,11 +396,15 @@ async function getDailyTechAlertCount(sb: any): Promise<number> {
   return count || 0;
 }
 
-// Pitch rotation by day-of-year: 0=dead lead, 1=tech alert, 2=missed call, 3=web design
-function getTodayPitchRotation(): "dead_lead" | "tech_alert" | "missed_call" | "web_design" {
+// Pitch rotation by day-of-year: 0=dead lead, 1=tech alert, 2=missed call, 3=web design, 4=care alert
+function getTodayPitchRotation(): "dead_lead" | "tech_alert" | "missed_call" | "web_design" | "care_alert" {
   const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-  const r = dayOfYear % 4;
-  return r === 0 ? "dead_lead" : r === 1 ? "tech_alert" : r === 2 ? "missed_call" : "web_design";
+  const r = dayOfYear % 5;
+  if (r === 0) return "dead_lead";
+  if (r === 1) return "tech_alert";
+  if (r === 2) return "missed_call";
+  if (r === 3) return "web_design";
+  return "care_alert";
 }
 
 // Map trade → TechAlert target_roles
