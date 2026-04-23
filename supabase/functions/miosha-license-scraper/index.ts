@@ -1440,59 +1440,8 @@ async function scanLARABCCViaSonar(): Promise<LicenseCandidate[]> {
   return candidates;
 }
 
-// ===== S10C: LARA VAL ID Enumeration — INSTANT NEW LICENSE RADAR =====
-// Sequentially probes the next N license IDs. New license issued = new ID = caught within minutes.
-async function scanLARAValEnumeration(): Promise<LicenseCandidate[]> {
-  const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-  const candidates: LicenseCandidate[] = [];
-  // Get cursor
-  const { data: cursor } = await sb.from("lara_val_cursor").select("last_val_id").eq("id", 1).maybeSingle();
-  let lastId = cursor?.last_val_id || 6500000; // sensible LARA range starting point
-  const PROBE_COUNT = 30; // keep small per run; runs every 30 min
-  let probed = 0;
-  for (let i = 1; i <= PROBE_COUNT; i++) {
-    const valId = lastId + i;
-    probed++;
-    try {
-      const url = `https://aca-prod.accela.com/LARA/Cap/CapDetail.aspx?Module=Licensing&capID1=23VAL&capID2=00000&capID3=${valId}`;
-      const res = await fetch(url, {
-        headers: { "User-Agent": MIPLUS_USER_AGENTS[Math.floor(Math.random() * MIPLUS_USER_AGENTS.length)] },
-        signal: AbortSignal.timeout(8_000),
-      });
-      if (!res.ok) { await new Promise(r => setTimeout(r, 1000)); continue; }
-      const html = await res.text();
-      // Match licensee name in detail page
-      const nameMatch = html.match(/Licensee\s*[:<][^>]*>\s*([A-Z][A-Za-z'\-]+(?:\s+[A-Z][A-Za-z'\-]+){1,3})/i);
-      const licMatch = html.match(/License\s*Number[:<][^>]*>\s*([A-Z0-9\-]+)/i);
-      const typeMatch = html.match(/License\s*Type[:<][^>]*>\s*([A-Za-z\s]+?)</i);
-      const cityMatch = html.match(/(?:City|Address)[^<]*<[^>]*>\s*[^,]*,\s*([A-Za-z\s]+?),\s*MI/i);
-      if (nameMatch && isPersonName(nameMatch[1])) {
-        const lt = (typeMatch?.[1] || "").toUpperCase();
-        let mappedType = "Trade Professional";
-        if (lt.includes("ELECTR")) mappedType = "Electrician";
-        else if (lt.includes("PLUMB")) mappedType = "Plumber";
-        else if (lt.includes("BOILER")) mappedType = "Boiler Operator";
-        else if (lt.includes("HVAC") || lt.includes("MECHANIC")) mappedType = "HVAC Technician";
-        candidates.push({
-          full_name: nameMatch[1].trim(), license_type: mappedType,
-          license_number: licMatch?.[1] || `VAL-${valId}`,
-          license_expiry: null, city: cityMatch?.[1]?.trim() || null,
-          source: "lara_val",
-        });
-      }
-      await new Promise(r => setTimeout(r, 1000)); // 1 req/sec — be polite
-    } catch { /* skip */ }
-  }
-  // Update cursor
-  await sb.from("lara_val_cursor").upsert({ id: 1, last_val_id: lastId + probed, updated_at: new Date().toISOString() }, { onConflict: "id" });
-  console.log(`[S10C:VAL] Probed ${probed} IDs ${lastId + 1}-${lastId + probed}, found ${candidates.length}`);
-  return candidates;
-}
-
 // ===== S10 Wrapper: runs health probe + LARA BCC Sonar extractor =====
-// NOTE: VAL ID enumeration was moved to standalone `lara-fast-scanner` edge
-// function (30-min cron) for instant new-license detection. This wrapper now
-// only handles BCC Sonar so the main 4-hour scanner isn't slowed by VAL probes.
+// Handles BCC Sonar extraction. Direct Accela portal scraping has been removed.
 
 // ── Fix 1: Accela REST API — bypasses JS rendering on aca-prod.accela.com/LARA ─────
 // Layer 1 of scanMiPLUS(). Uses ACCELA_APP_ID + ACCELA_APP_SECRET (register free at
@@ -1576,7 +1525,7 @@ async function scanMiPLUS(): Promise<LicenseCandidate[]> {
   await probeLARAHealth();
   const bcc = await scanLARABCCViaSonar().catch(() => []);
   if (laraStatus !== "ok" && laraStatus !== "not_attempted") {
-    console.warn(`[MiPLUS] 🔄 LARA portal status: ${laraStatus}. Real-data extraction continues via BCC Sonar (VAL via lara-fast-scanner).`);
+    console.warn(`[MiPLUS] 🔄 LARA portal status: ${laraStatus}. Real-data extraction continues via BCC Sonar.`);
   }
   console.log(`[scanMiPLUS] Layer 2 (Sonar fallback): ${bcc.length} candidates`);
   return bcc;

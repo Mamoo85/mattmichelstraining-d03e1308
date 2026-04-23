@@ -457,10 +457,13 @@ function isPersonNameJobBoard(name: string): boolean {
 
 async function scanJobBoardsViaOpenRouter(apiKey: string): Promise<RawCandidate[]> {
   // Search for INDIVIDUAL PEOPLE seeking trade work — not job postings by companies
+  // DATA SOURCE: Public job board search via Sonar (Perplexity).
+  // Queries target public resume listings and trade association directories only.
+  // LinkedIn and Facebook are excluded — their ToS prohibits automated data collection.
   const searches = [
-    `Find LinkedIn profiles, Indeed public resumes, or trade union member pages for individual licensed boiler operators, stationary engineers, HVAC technicians, plumbers, pipefitters, or electricians in Metro Detroit Michigan who are actively job seeking or open to work. Search LinkedIn "open to work" profiles, Indeed public resumes, UA Local 636 directory, IBEW Local 58. Find specific individuals with their names, trade, and city. Do NOT return company job listings — only people seeking work.`,
-    `Find LinkedIn profiles, personal websites, or professional association listings for individual licensed HVAC technicians, plumbers, or electricians in Wayne County, Oakland County, Macomb County, Washtenaw County Michigan who are open to work or recently posted resumes. Search Indeed public resumes, ZipRecruiter profiles, trade association directories. Return individual person names only, not companies.`,
-    `Find LinkedIn profiles, Indeed public resumes, NurseFly profiles, or Vivian Health profiles for individual Certified Nursing Assistants (CNA), Licensed Practical Nurses (LPN), or Registered Nurses (RN) in Metro Detroit Michigan who are currently job seeking or open to work. Include any certification numbers visible on profiles. Individual people only.`,
+    `Find public job board listings, Indeed public resumes, or trade association member pages for individual licensed boiler operators, stationary engineers, HVAC technicians, plumbers, pipefitters, or electricians in Metro Detroit Michigan who are actively job seeking or open to work. Search Indeed public resumes, ZipRecruiter profiles, UA Local 636 directory, IBEW Local 58. Find specific individuals with their names, trade, and city. Do NOT return company job listings — only people seeking work.`,
+    `Find public resumes or professional association listings for individual licensed HVAC technicians, plumbers, or electricians in Wayne County, Oakland County, Macomb County, Washtenaw County Michigan who are open to work or recently posted resumes. Search Indeed public resumes, ZipRecruiter profiles, trade association directories. Return individual person names only, not companies.`,
+    `Find NurseFly profiles, Vivian Health listings, or Indeed public resumes for individual Certified Nursing Assistants (CNA), Licensed Practical Nurses (LPN), or Registered Nurses (RN) in Metro Detroit Michigan who are currently job seeking or open to work. Include any certification numbers visible on profiles. Individual people only.`,
   ];
 
   const allResults: RawCandidate[] = [];
@@ -847,20 +850,19 @@ async function enrichViaSonar(candidate: RawCandidate): Promise<Record<string, u
             role: "user",
             content: `Search the web using these boolean queries to find contact and professional information for "${candidate.full_name}", a ${tradeLabel} in ${locationLabel}:
 
-1. site:linkedin.com/in/ "${candidate.full_name}" "${candidate.city || "Michigan"}"
-2. site:indeed.com/r/ "${candidate.full_name}"
-3. site:facebook.com "${candidate.full_name}" "${candidate.city || "Michigan"}"
+1. site:indeed.com/r/ "${candidate.full_name}" "${candidate.city || "Michigan"}"
+2. site:ziprecruiter.com/candidate/ "${candidate.full_name}"
+3. "${candidate.full_name}" "${candidate.city || "Michigan"}" resume OR "open to work"
 
 From the search results, extract the following and return as a JSON object:
 {
-  "linkedin_url": "full LinkedIn profile URL or null",
-  "facebook_url": "full Facebook profile URL or null",
+  "profile_url": "full public profile URL from a job board or null",
   "email": "any public email found or null",
   "phone": "any public phone found or null",
   "current_employer": "company name or null",
   "current_title": "job title or null",
   "years_experience": number or null,
-  "last_job_board_seen": "ISO date string if resume/profile was recently updated on Indeed/LinkedIn (within 90 days), else null",
+  "last_job_board_seen": "ISO date string if resume/profile was recently updated on Indeed/ZipRecruiter (within 90 days), else null",
   "job_board_active": true or false
 }
 
@@ -999,7 +1001,7 @@ async function probeEmployerGrowth(employer: string): Promise<{ risk: string; pr
         }, {
           role: "user",
           content: `Search the web for recent job postings from the company "${employer}":
-site:linkedin.com/jobs "${employer}" OR site:indeed.com/cmp "${employer}" hiring 2025
+site:indeed.com/cmp "${employer}" hiring 2025 OR "${employer}" job openings Michigan
 
 Count the number of active job postings you find. Also check if this company shows signs of layoffs or downsizing.
 
@@ -1597,24 +1599,7 @@ serve(async (req: Request) => {
     console.warn("[hire-alert-scanner] zero-result check failed:", e instanceof Error ? e.message : String(e));
   }
 
-  // Fix 2: Apify Playwright fallback — fire-and-forget when LARA direct scan returns 0.
-  // Playwright run has no 150s limit; results stream back via webhook to apify-results-handler.
-  if (mioshaCandidates.length === 0 && APIFY_API_TOKEN) {
-    console.warn("[scanner] LARA/MIOSHA returned 0 — triggering Apify Playwright fallback run");
-    fetch(
-      `https://api.apify.com/v2/acts/${encodeURIComponent(APIFY_ACTORS.miosha)}/runs?token=${APIFY_API_TOKEN}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode: "lara_playwright",
-          tradeTypes: ["Boiler", "Electrical", "Plumbing", "HVAC", "Nursing"],
-          timeout: 300,
-        }),
-        signal: AbortSignal.timeout(10000),
-      }
-    ).catch(() => {});
-  }
+
   const sourceHealth: Record<string, string> = {
     miosha: mioshaCandidates.length > 0 ? "✅" : "⚠️ 0 results",
     sonar: jobBoardCandidates.length > 0 ? "✅" : "⚠️ 0 results",

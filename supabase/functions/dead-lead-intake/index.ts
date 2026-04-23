@@ -11,7 +11,7 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
-const SITE_URL = Deno.env.get("SITE_URL") || "https://detroitwebagent.com";
+const SITE_URL = Deno.env.get("SITE_URL") || "https://detroitwebagency.com";
 const FREE_TIER_LIMIT = 10; // max contacts allowed on the free trial
 
 const CORS = {
@@ -20,6 +20,7 @@ const CORS = {
 };
 
 
+<<<<<<< HEAD
 // ── Items 34 & 36: Twilio Lookup v2 — phone carrier classification ─────────────
 async function twilioCarrierLookup(phone: string): Promise<{ type: string; isDncRisk: boolean }> {
   if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) return { type: "unknown", isDncRisk: false };
@@ -39,12 +40,40 @@ async function twilioCarrierLookup(phone: string): Promise<{ type: string; isDnc
   } catch { return { type: "unknown", isDncRisk: false }; }
 }
 
+=======
+>>>>>>> b650fd72 (Fix dead-lead-intake: add RND check, remove duplicate functions, store is_reassigned)
 function normalizePhone(raw: string): string {
   const digits = raw.replace(/\D/g, "");
   if (digits.length === 10) return `+1${digits}`;
   if (digits.length === 11 && digits[0] === "1") return `+${digits}`;
   return raw;
 }
+async function twilioCarrierLookup(
+  phone: string,
+  lastContactDate: string,
+): Promise<{ type: string; isDncRisk: boolean; isReassigned: boolean }> {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN)
+    return { type: "unknown", isDncRisk: false, isReassigned: false };
+  try {
+    const res = await fetch(
+      `https://lookups.twilio.com/v2/PhoneNumbers/${encodeURIComponent(phone)}?Fields=line_type_intelligence,reassigned_number&LastContactDate=${lastContactDate}`,
+      {
+        headers: {
+          Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}`,
+        },
+        signal: AbortSignal.timeout(5000),
+      }
+    );
+    if (!res.ok) return { type: "unknown", isDncRisk: false, isReassigned: false };
+    const data = await res.json();
+    const type: string = data?.line_type_intelligence?.type || "unknown";
+    const isReassigned: boolean = data?.reassigned_number?.is_reassigned === true;
+    return { type, isDncRisk: type === "landline", isReassigned };
+  } catch {
+    return { type: "unknown", isDncRisk: false, isReassigned: false };
+  }
+}
+
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -161,9 +190,9 @@ serve(async (req) => {
     }
 
     // Items 34 & 36: carrier lookup on first 5 leads
-    const carrierMap: Record<string, { type: string; isDncRisk: boolean }> = {};
+    const carrierMap: Record<string, { type: string; isDncRisk: boolean; isReassigned: boolean }> = {};
     for (const l of parsedLeads.slice(0, 5)) {
-      carrierMap[l.phone] = await twilioCarrierLookup(l.phone);
+      carrierMap[l.phone] = await twilioCarrierLookup(l.phone, l.last_contact_date);
     }
 
     if (parsedLeads.length === 0) {
@@ -204,6 +233,7 @@ serve(async (req) => {
       status: "pending",
       phone_carrier_type: carrierMap[l.phone]?.type || null,
       is_dnc_risk: carrierMap[l.phone]?.isDncRisk || false,
+      is_reassigned: carrierMap[l.phone]?.isReassigned || false,
     }));
     const { error: contactErr } = await sb
       .from("dead_lead_contacts" as any)

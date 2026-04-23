@@ -18,6 +18,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const ADMIN_EMAIL = "matt@detroitwebagent.com";
+const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 
 interface RawSignal {
   full_name?: string;
@@ -31,6 +32,7 @@ interface RawSignal {
   signal_date?: string;
   estimated_equity?: number;
   estimated_loan_amount?: number;
+  source_id?: string;  // ID in originating table; marked after successful upsert
 }
 
 const BASE_SCORES: Record<string, number> = {
@@ -185,21 +187,46 @@ async function sonarSearch(prompt: string, schemaHint: string): Promise<any[]> {
 }
 
 async function scanForeclosureNotices(): Promise<RawSignal[]> {
-  const items = await sonarSearch(
-    "Find recent (last 14 days) lis pendens / foreclosure notices filed in Wayne, Oakland, or Macomb County Michigan public records. Include homeowner name, property address, city, ZIP, filing date, and source URL. Public county recorder data only.",
-    `{ "full_name": string, "address": string, "city": string, "zip": string, "signal_date": "YYYY-MM-DD", "signal_url": string, "signal_detail": string }`,
-  );
-  return items.map((i: any) => ({
-    full_name: i.full_name || undefined,
-    address: i.address || "",
-    city: i.city || undefined,
-    zip: typeof i.zip === "string" ? i.zip.slice(0, 5) : undefined,
-    signal_type: "lis_pendens",
-    signal_source: "CountyRecorder",
-    signal_detail: i.signal_detail || "Foreclosure / lis pendens filing",
-    signal_url: i.signal_url || undefined,
-    signal_date: i.signal_date || undefined,
-  })).filter(s => s.address);
+  if (!OPENROUTER_API_KEY) return [];
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "perplexity/sonar-pro",
+        messages: [{
+          role: "system",
+          content: "You are a public records researcher. Return ONLY valid JSON, no markdown.",
+        }, {
+          role: "user",
+          content: `Search for lis pendens filings, foreclosure notices, and sheriff sale listings in Wayne County, Oakland County, and Macomb County Michigan published in the last 7 days (before ${today}). Include Michigan legal newspapers, county recorder public notices, and court filings. Return a JSON array of up to 15 records. Each record: { "address": "full street address", "city": "city name", "zip": "5-digit zip or null", "owner_name": "owner name or null", "signal_detail": "brief description of the filing", "signal_date": "YYYY-MM-DD or null" }. If no results found return [].`,
+        }],
+        max_tokens: 1200,
+        temperature: 0.1,
+      }),
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const raw = data?.choices?.[0]?.message?.content?.trim() || "[]";
+    const jsonMatch = raw.match(/\[[\s\S]*\]/);
+    const cleaned = jsonMatch ? jsonMatch[0] : "[]";
+    const records: any[] = JSON.parse(cleaned);
+    return records.slice(0, 15).map((r: any) => ({
+      full_name: r.owner_name || undefined,
+      address: r.address || undefined,
+      city: r.city || undefined,
+      zip: r.zip || undefined,
+      signal_type: "lis_pendens" as const,
+      signal_source: "Sonar_PublicRecords",
+      signal_detail: r.signal_detail || "Lis pendens / foreclosure notice filed",
+      signal_date: r.signal_date || today,
+    }));
+  } catch (e) {
+    console.warn("[scanForeclosureNotices]", e instanceof Error ? e.message : String(e));
+    return [];
+  }
 }
 
 async function scanFSBOListings(): Promise<RawSignal[]> {
@@ -238,49 +265,73 @@ async function scanDivorceFilings(): Promise<RawSignal[]> {
   })).filter(s => s.address);
 }
 
+// DATA SOURCE: BSEED ArcGIS — Detroit Open Data. Filters for high-cost permits
+// (estimated construction value >= $100k). Large-dollar projects signal homeowners
+// with significant equity who may want cash-out refi instead of draining savings.
+async function scanHighEquityLowRate(): Promise<RawSignal[]> {
+  try {
+    const url = "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/BSEED_Trades_Permits/FeatureServer/0/query?where=CONSTRUCTION_COST+%3E%3D+100000&outFields=SITE_ADDRESS,SITE_CITY,SITE_ZIP,CONSTRUCTION_COST,WORK_DESCRIPTION,ISSUED_DATE,OWNER_NAME&resultRecordCount=30&f=json&orderByFields=ISSUED_DATE+DESC";
+    const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return [];
+    const j = await r.json();
+    const out: RawSignal[] = [];
+    for (const f of (j.features || [])) {
+      const a = f.attributes || {};
+      const cost = Number(a.CONSTRUCTION_COST || 0);
+      if (cost < 100000) continue;
+      const desc = String(a.WORK_DESCRIPTION || "Major renovation").slice(0, 200);
+      out.push({
+        full_name: a.OWNER_NAME || undefined,
+        address: a.SITE_ADDRESS || undefined,
+        city: a.SITE_CITY || "Detroit",
+        zip: String(a.SITE_ZIP || "").slice(0, 5) || undefined,
+        signal_type: "high_equity_renovation",
+        signal_source: "BSEED_HighValue",
+        signal_detail: `$${cost.toLocaleString()} permit — ${desc}`,
+        signal_date: a.ISSUED_DATE ? new Date(a.ISSUED_DATE).toISOString().slice(0, 10) : undefined,
+        estimated_equity: Math.round(cost * 2.5),
+      });
+    }
+    return out.slice(0, 20);
+  } catch (e) {
+    console.warn("[scanHighEquityLowRate]", e instanceof Error ? e.message : String(e));
+    return [];
+  }
+}
+
 async function scanNewMichiganLLCs(sb: ReturnType<typeof createClient>): Promise<RawSignal[]> {
-  // Pull from existing industry_pulse_signals where signal_type='new_business' and not yet flagged
   try {
     const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
     const { data } = await (sb.from as any)("industry_pulse_signals")
-      .select("entity_name, address, city, zip, signal_url, detected_at")
+      .select("id, business_name, city, created_at")
       .eq("signal_type", "new_business")
-      .gte("detected_at", since)
-      .limit(50);
-    return (data || []).map((r: any) => ({
-      full_name: r.entity_name || undefined,
-      address: r.address || "",
-      city: r.city || undefined,
-      zip: typeof r.zip === "string" ? r.zip.slice(0, 5) : undefined,
-      signal_type: "new_llc_self_employed",
-      signal_source: "MI_SOS",
-      signal_detail: `New Michigan LLC: ${r.entity_name || "(name pending)"}`,
-      signal_url: r.signal_url || undefined,
-      signal_date: r.detected_at ? new Date(r.detected_at).toISOString().slice(0, 10) : undefined,
-    })).filter((s: RawSignal) => s.address);
+      .gte("created_at", since)
+      .is("pitched_mortgage_radar_at", null)
+      .order("created_at", { ascending: false })
+      .limit(25);
+    const out: RawSignal[] = [];
+    for (const row of (data || [])) {
+      const city = row.city || "Metro Detroit";
+      const biz = row.business_name || "Unknown Business";
+      out.push({
+        full_name: biz,
+        address: `${biz}, ${city}`,
+        city,
+        signal_type: "new_llc_self_employed",
+        signal_source: "MI_SOS",
+        signal_detail: `New LLC: ${biz} — self-employed owner may need bank-statement or DSCR loan`,
+        signal_date: row.created_at?.slice(0, 10),
+        source_id: row.id,
+      });
+    }
+    return out;
   } catch (e) {
     console.warn("[scanNewMichiganLLCs]", e instanceof Error ? e.message : String(e));
     return [];
   }
 }
 
-async function scanJobChanges(): Promise<RawSignal[]> {
-  const items = await sonarSearch(
-    "Find recent (last 14 days) public LinkedIn or press-release announcements of executive / professional job changes (Director+, $100k+ roles) at Metro Detroit companies. Include person name, new employer, city, ZIP if known, source URL. Note: address may not be available — if not, set address to the new employer's office address.",
-    `{ "full_name": string, "address": string, "city": string, "zip": string, "signal_url": string, "signal_detail": string }`,
-  );
-  return items.map((i: any) => ({
-    full_name: i.full_name || undefined,
-    address: i.address || "",
-    city: i.city || undefined,
-    zip: typeof i.zip === "string" ? i.zip.slice(0, 5) : undefined,
-    signal_type: "job_change_high_income",
-    signal_source: "Sonar_LinkedIn",
-    signal_detail: i.signal_detail || "Executive job change",
-    signal_url: i.signal_url || undefined,
-    signal_date: new Date().toISOString().slice(0, 10),
-  })).filter(s => s.address);
-}
+async function scanJobChanges(): Promise<RawSignal[]> { return []; }
 
 // Probate filings — inherited property almost always sells within 12 months
 async function scanProbateFilings(): Promise<RawSignal[]> {
@@ -525,6 +576,7 @@ serve(async (req) => {
     scanFSBOListings(),
     scanDivorceFilings(),
     scanNewMichiganLLCs(sb),
+    scanHighEquityLowRate(),
     scanJobChanges(),
     scanProbateFilings(),
     scanEstateSales(),
@@ -553,6 +605,13 @@ serve(async (req) => {
     const res = await upsertWithDedup(sb, s);
     if (!res) continue;
     if (res.created) inserted += 1; else updated += 1;
+
+    // Mark originating row as processed after successful upsert
+    if (s.source_id) {
+      await (sb.from as any)("industry_pulse_signals")
+        .update({ pitched_mortgage_radar_at: new Date().toISOString() })
+        .eq("id", s.source_id);
+    }
 
     const matchedClientIds = await notifyClients(sb, s.zip, scoreFor(s.signal_type));
     if (matchedClientIds.length > 0) {

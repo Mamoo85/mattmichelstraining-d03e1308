@@ -207,8 +207,41 @@ async function handleReply(fromPhone: string, replyBody: string) {
     const trade = campaign?.trade || "service";
     const bizName = contractor?.business_name || "your contractor";
 
-    // ── OPT-OUT ───────────────────────────────────────────────────────────
-    if (OPT_OUT_KEYWORDS.includes(replyBody.toLowerCase())) {
+    // ── OPT-OUT — keyword check + AI catch for non-standard language ────────
+    // FCC April 2025 rule: opt-outs must be honored "in any reasonable manner,"
+    // not just standard STOP/UNSUBSCRIBE keywords. AI detects phrases like
+    // "leave me alone", "remove me", "don't text me", etc.
+    let isOptOut = OPT_OUT_KEYWORDS.includes(replyBody.toLowerCase());
+    if (!isOptOut && ANTHROPIC_API_KEY) {
+      try {
+        const optOutRes = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "x-api-key": ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 5,
+            messages: [{
+              role: "user",
+              content: `Does this SMS reply express a desire to stop receiving text messages, even indirectly? Reply with exactly one word: OPT_OUT or NO.
+
+Message: "${replyBody}"`,
+            }],
+          }),
+          signal: AbortSignal.timeout(5000),
+        });
+        if (optOutRes.ok) {
+          const optOutData = await optOutRes.json();
+          if ((optOutData.content?.[0]?.text?.trim().toUpperCase() || "") === "OPT_OUT") {
+            isOptOut = true;
+          }
+        }
+      } catch { /* treat as no opt-out if AI call fails */ }
+    }
+    if (isOptOut) {
       await Promise.all([
         sb.from("dead_lead_contacts" as any).update({ status: "opted_out", reply_text: replyBody }).eq("id", contact.id),
         sb.from("sms_opt_outs").upsert({ phone: fromPhone, source: "dead_lead_reply" }),

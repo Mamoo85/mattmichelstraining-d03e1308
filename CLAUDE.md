@@ -14,6 +14,77 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-04-23. Update this section every session.*
 
+### Phase 21 — Compliance Hardening + Mortgage Radar Bootstrap COMPLETE ✅
+*2026-04-23 — branch `claude/review-design-system-qRGjL`*
+
+**Two tracks shipped (all committed + pushed):**
+
+**Track 1: TCPA Compliance — Dead Lead Reactivation (7 files, 2 migrations)**
+
+**1. AI opt-out detection** (`handle-dead-lead-reply/index.ts`)
+- FCC April 2025 rule: must honor opt-outs "in any reasonable manner"
+- Before lead classification: Claude Haiku called with 5-token prompt — OPT_OUT or NO
+- If OPT_OUT: insert `sms_opt_outs`, set contact status=opted_out, skip classification entirely
+- Fallback: keyword list still catches standard words; AI call is additive defense layer
+
+**2. Reassigned number detection at intake** (`dead-lead-intake/index.ts`)
+- `twilioCarrierLookup()` now requests `reassigned_number` field + passes `LastContactDate`
+- `is_reassigned=true` stored on contact at intake (Twilio compares against EBR date)
+- `carrierMap` type updated to include `isReassigned: boolean`
+- Migration: `20260423130000_dead_lead_contacts_reassigned.sql` — adds `is_reassigned` column
+
+**3. Landline + reassigned number enforcement in drip** (`dead-lead-drip/index.ts`)
+- Loop A (D1 SMS): `.eq("is_reassigned", false)` + `.eq("is_dnc_risk", false)`
+- Loop B (D3 email): `.eq("is_reassigned", false)` + `.eq("is_dnc_risk", false)` ← added this session
+- Loop C (D7 SMS): `.eq("is_reassigned", false)` + `.eq("is_dnc_risk", false)`
+
+**Track 2: LARA Scraping Violations Removed (4 files)**
+
+**4. Removed Accela portal ID enumeration** (`miosha-license-scraper/index.ts`)
+- Deleted `scanLARAValEnumeration()` — was sequentially fetching `aca-prod.accela.com/LARA/Cap/CapDetail.aspx?capID3=N`
+- Direct government portal scraping without authorization
+
+**5. Disabled lara-fast-scanner** (`lara-fast-scanner/index.ts`)
+- Same ID enumeration pattern on 30-min cron — entire file replaced with disabled stub
+- Returns `{ ok: false, disabled: true, reason: "Accela API credentials required" }`
+
+**6. Removed Apify Playwright scraper** (`.actor/main.js`)
+- Removed `scrapeLARAPlaywright()` — headless Chrome + Apify residential proxies against LARA portal
+- Proxy masking = intentional evasion; removed `lara_playwright` mode dispatch
+- Excel mode (BPL public file downloads from michigan.gov) retained — legally clean
+
+**7. Removed LinkedIn/Facebook from Sonar queries** (`hire-alert-scanner/index.ts`)
+- Removed `site:linkedin.com/in/` and `site:facebook.com` from 3 Sonar query locations
+- Removed Apify Playwright fallback trigger (would have invoked the now-deleted actor mode)
+- Replaced LinkedIn searches with Indeed/ZipRecruiter public job board searches
+
+**Track 3: Mortgage Radar — 3 New Signal Sources Wired** (`mortgage-radar-scanner/index.ts`)
+
+**8. Michigan SOS LLCs** (`scanNewMichiganLLCs`)
+- Reads unprocessed `new_business` signals from `industry_pulse_signals` table (populated by contractor-prospector)
+- `source_id` propagated through to main loop so `pitched_mortgage_radar_at` is only set after successful upsert
+- Migration: `20260423140000_industry_pulse_signals_mortgage_radar.sql` — adds `pitched_mortgage_radar_at` column
+
+**9. Foreclosure / lis pendens notices** (`scanForeclosureNotices`)
+- Sonar (Perplexity via OpenRouter) searches Wayne/Oakland/Macomb county public legal notices
+- Returns up to 15 records per run; JSON parse hardened with `[\s\S]*` regex instead of fragile markdown-strip anchors
+- Requires `OPENROUTER_API_KEY` (confirmed live in Lovable secrets)
+
+**10. High-value BSEED permits as equity signal** (`scanHighEquityLowRate`)
+- Reuses working BSEED ArcGIS endpoint: `services2.arcgis.com/qvkbeam7Wirps6zC`
+- Filters `ESTIMATED_COST >= 100000` — large-dollar projects signal high-equity homeowners
+- Signal type: `high_equity_renovation`
+
+**Wayne County GIS note**: Data hub at `data-wayne.opendata.arcgis.com` blocks all server-side requests (403).
+Dataset `82c1ccab05414caab64129e7d09292db_0` (parcel data) confirmed to exist but requires browser auth.
+Current BSEED ArcGIS approach is the correct path for permit-based equity signals.
+
+**Working branch**: `claude/review-design-system-qRGjL`
+**PR #107**: All CI green. 4/6 review comments resolved (marked outdated). 1 model name comment left as-is — `claude-haiku-4-5-20251001` is correct (Claude 4.5 Haiku, not the old 3.5 Haiku the reviewer suggested).
+**Next**: Matt merges PR #107 to main → Lovable deploys
+
+---
+
 ### Phase 20 — Revenue Blocking Fixes + Autonomous Marketing Expansion COMPLETE ✅
 *2026-04-23 — branch `claude/review-design-system-qRGjL`*
 
