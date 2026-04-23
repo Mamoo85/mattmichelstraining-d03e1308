@@ -68,13 +68,19 @@ export default function ContractorLeads() {
   const refToken = params.get("ref") || "";
   const expired = params.get("expired") === "1";
 
-  const initialTrade = normalizeTradeParam(params.get("trade"));
-  const initialCity = normalizeCityParam(params.get("city"));
+  const rawTradeParam = params.get("trade");
+  const rawCityParam = params.get("city");
+  const initialTrade = normalizeTradeParam(rawTradeParam);
+  const initialCity = normalizeCityParam(rawCityParam);
+  // If a trade= param was supplied but didn't match the allowlist, flag it so we can show a friendly banner.
+  const unknownTradeParam = !!rawTradeParam && !initialTrade ? rawTradeParam : "";
 
   const [trade, setTrade] = useState<string>(initialTrade);
   const [city, setCity] = useState<string>(initialCity);
   const [territories, setTerritories] = useState<Territory[]>([]);
   const [territoriesLoading, setTerritoriesLoading] = useState(false);
+  // Set when the URL ?city= param doesn't match any active territory for the selected trade.
+  const [unknownCity, setUnknownCity] = useState<string>("");
   const [form, setForm] = useState({
     name: params.get("name") || "",
     business_name: params.get("business_name") || "",
