@@ -1158,6 +1158,62 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      if (meta.type === "mortgage_radar_subscription") {
+        const email = (meta.email || customerEmail || "").toLowerCase();
+        try {
+          if (!email) throw new Error("missing email");
+          const tier = meta.tier || "solo";
+          const zips = (meta.zip_codes || "").split(",").map((z: string) => z.trim()).filter(Boolean);
+          const { error: insertErr } = await (sb.from as any)("mortgage_radar_clients").insert({
+            email,
+            contact_name: meta.contact_name || null,
+            business_name: meta.business_name || null,
+            nmls_number: meta.nmls_number || null,
+            phone: meta.phone || null,
+            tier,
+            zip_codes: zips,
+            extra_zip_count: parseInt(meta.extra_zip_count || "0", 10) || 0,
+            stripe_customer_id: session.customer as string || null,
+            stripe_subscription_id: session.subscription as string || null,
+            active: true,
+          });
+          if (insertErr) throw new Error(`mortgage_radar_clients insert: ${insertErr.message}`);
+
+          const siteUrl = "https://detroitwebagent.com";
+          const dashLink = `${siteUrl}/my-mortgage-radar?email=${encodeURIComponent(email)}`;
+          const tierLabel = tier === "team" ? "$899/mo Team (15 ZIPs)" : "$399/mo Solo (5 ZIPs)";
+
+          if (RESEND_API_KEY) {
+            await dwaEmail(email, "🏠 Mortgage Radar is Live — Your In-Market Leads Start Today", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;text-align:center;">
+    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0;">🏠 MORTGAGE RADAR</p>
+    <h1 style="color:#fff;font-size:24px;margin:12px 0 8px;">You're In, ${meta.contact_name || "there"}.</h1>
+    <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Pre-trigger mortgage signals from public records — 100% FCRA-clean. Your first leads land within 24 hours.</p>
+    <a href="${dashLink}" style="display:inline-block;background:#00d4ff;color:#000;font-weight:700;padding:14px 40px;border-radius:8px;text-decoration:none;font-size:15px;">📊 Open Your Dashboard</a>
+    <p style="color:#64748b;font-size:12px;margin:20px 0 0;">ZIPs monitored: ${zips.join(", ") || "(set in dashboard)"}</p>
+  </div>
+  <p style="color:#64748b;font-size:11px;text-align:center;margin-top:16px;">Public + behavioral signals only. No bureau trigger leads. All outreach must be sent manually by you in compliance with TCPA + FCRA.</p>
+  <p style="color:#475569;font-size:12px;text-align:center;margin-top:16px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p>
+</div></body></html>`);
+            await notifyMatt(
+              `💰 New Mortgage Radar Client — ${meta.business_name || email} (${tierLabel})`,
+              `<p><strong>${meta.business_name || email}</strong><br>Contact: ${meta.contact_name || "n/a"}<br>NMLS: ${meta.nmls_number || "n/a"}<br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Tier: ${tierLabel}<br>ZIPs: ${zips.join(", ")}</p>`
+            );
+          }
+          if (meta.phone) {
+            await sendSMS(meta.phone, "+13139921219",
+              `Mortgage Radar is live. Dashboard: ${dashLink} — Reply STOP to opt out.`,
+              "mortgage_radar_welcome");
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] mortgage_radar_subscription error:", e);
+          await notifyMatt(`🚨 Mortgage Radar provision FAILED — ${email || "unknown"}`, `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       if (meta.type === "buyer_radar_subscription") {
         const email = (meta.email || customerEmail || "").toLowerCase();
         try {

@@ -37,6 +37,7 @@ const AdminProspectTracker = lazy(() => import("@/components/dwa-admin/AdminPros
 const AdminCommandBar = lazy(() => import("@/components/dwa-admin/AdminCommandBar"));
 const ProductSalesHub = lazy(() => import("@/components/dwa-admin/ProductSalesHub"));
 const BuyerRadarQAChecklist = lazy(() => import("@/components/dwa-admin/BuyerRadarQAChecklist"));
+const MortgageRadarHub = lazy(() => import("@/components/dwa-admin/MortgageRadarHub"));
 
 type Tab =
   | "ai-command"
@@ -45,7 +46,7 @@ type Tab =
   | "contractor-leads" | "contractor-onboarding" | "dead-leads" | "fielddesk" | "techalert" | "clients-all"
   | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
-  | "sales-hub" | "buyer-radar-qa";
+  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar";
 
 const GROUPS: SidebarGroup[] = [
   {
@@ -88,6 +89,7 @@ const GROUPS: SidebarGroup[] = [
     items: [
       { id: "techalert",       label: "🎯 Talent Radar" },
       { id: "demand-radar",    label: "📈 Demand Radar" },
+      { id: "mortgage-radar",  label: "🏠 Mortgage Radar" },
       { id: "hvb",             label: "📦 High-Volume Buyers" },
       { id: "growth-signals",  label: "📡 Growth Signals" },
       { id: "visitor-intel",   label: "👁️ Visitor Intel" },
@@ -166,6 +168,7 @@ export default function DWAAdmin() {
           )}
 
           {activeTab === "demand-radar"    && <Suspense fallback={lazyFallback("Demand Radar")}><DemandRadarHub /></Suspense>}
+          {activeTab === "mortgage-radar"  && <Suspense fallback={lazyFallback("Mortgage Radar")}><MortgageRadarHub /></Suspense>}
           {activeTab === "hvb"             && <Suspense fallback={lazyFallback("HVB")}><AdminHighVolumeBuyer /></Suspense>}
           {activeTab === "growth-signals"  && <Suspense fallback={lazyFallback("growth signals")}><AdminGrowthSignals /></Suspense>}
           {activeTab === "visitor-intel"   && <Suspense fallback={lazyFallback("visitor intel")}><VisitorIntelFeed /></Suspense>}
