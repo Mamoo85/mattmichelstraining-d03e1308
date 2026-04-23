@@ -437,7 +437,7 @@ function waterfallFor(audience: string): Array<(p: Prospect, sb: any) => Promise
 
 async function enrichOne(sb: any, p: Prospect): Promise<{ id: string; patches: Prospect; trace: TraceStage[] }> {
   const trace: TraceStage[] = [];
-  let working: Prospect = { ...p };
+  const working: Prospect = { ...p };
   const stages = waterfallFor(p.audience_type);
 
   for (const stage of stages) {

@@ -132,7 +132,7 @@ Respond with ONLY a JSON object: {"category": "...", "summary": "one sentence su
       const isDeadLeadObj = (objLead as any)?.offer_pitched === "dead_lead_reactivation";
 
       let draftBody = "";
-      let draftSubject = originalSubject
+      const draftSubject = originalSubject
         ? (originalSubject.startsWith("Re:") ? originalSubject : `Re: ${originalSubject}`)
         : "Re: Quick follow-up";
 
