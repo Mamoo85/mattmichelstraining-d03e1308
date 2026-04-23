@@ -137,7 +137,11 @@ serve(async (req) => {
         const actual = crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
         const expected = crypto.subtle.digest("SHA-256", new TextEncoder().encode(anonKey));
         const [actualDigest, expectedDigest] = await Promise.all([actual, expected]);
-        const isAnonKey = crypto.timingSafeEqual(new Uint8Array(actualDigest), new Uint8Array(expectedDigest));
+        const a = new Uint8Array(actualDigest);
+        const b = new Uint8Array(expectedDigest);
+        let diff = a.length ^ b.length;
+        for (let i = 0; i < a.length && i < b.length; i++) diff |= a[i] ^ b[i];
+        const isAnonKey = diff === 0;
         if (!isAnonKey) {
           const { data: userData } = await supabaseClient.auth.getUser(token);
           if (userData?.user) isAuthenticated = true;

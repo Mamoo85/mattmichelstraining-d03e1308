@@ -1205,12 +1205,12 @@ BODY:
     // Scrapes MLS/Zillow "as-is" listings in Metro Detroit and inserts them as
     // homeowner signals in contractor_leads. These homeowners need contractors NOW.
     let fixerLeadsInserted = 0;
-    if (!isTimedOut() && LOVABLE_API_KEY) {
+    const FIXER_LOVABLE_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+    if (!isTimedOut() && FIXER_LOVABLE_KEY) {
       try {
-        const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
         const fixerRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
-          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+          headers: { Authorization: `Bearer ${FIXER_LOVABLE_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             model: "google/gemini-2.5-flash",
             messages: [

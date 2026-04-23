@@ -544,7 +544,7 @@ async function runWaterfall(domain: string, businessName: string, options: { web
   // Step 4: Clay.com (disabled — API deprecated)
   if (!result.email || !result.direct_phone) {
     log("Step 4: Clay.com", { domain });
-    const clayResult = await clayEnrich(domain, businessName);
+    const clayResult = await clayEnrich(domain, businessName) as any;
     if (clayResult) {
       if (!result.email && clayResult.email) { result.email = clayResult.email; result.enrichment_source = "clay"; }
       if (!result.direct_phone && clayResult.phone) result.direct_phone = clayResult.phone;

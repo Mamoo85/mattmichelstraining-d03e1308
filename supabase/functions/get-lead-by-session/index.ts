@@ -71,11 +71,11 @@ serve(async (req) => {
       JSON.stringify({
         status: "ready",
         lead: {
-          name: lead.name,
-          phone: lead.phone,
-          email: lead.email,
-          project_type: lead.project_type,
-          message: lead.message,
+          name: l.name,
+          phone: l.phone,
+          email: l.email,
+          project_type: l.project_type,
+          message: l.message,
           contact_preference: l.contact_preference,
           trade: site?.trade,
           city: site?.city,

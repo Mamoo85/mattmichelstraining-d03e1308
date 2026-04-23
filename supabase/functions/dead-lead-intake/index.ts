@@ -9,6 +9,8 @@ import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
+const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 const SITE_URL = Deno.env.get("SITE_URL") || "https://detroitwebagent.com";
 const FREE_TIER_LIMIT = 10; // max contacts allowed on the free trial
 
@@ -16,26 +18,6 @@ const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "content-type",
 };
-
-
-// ── Items 34 & 36: Twilio Lookup v2 — phone carrier classification ─────────────
-async function twilioCarrierLookup(phone: string): Promise<{ type: string; isDncRisk: boolean }> {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) return { type: "unknown", isDncRisk: false };
-  try {
-    const res = await fetch(
-      `https://lookups.twilio.com/v2/PhoneNumbers/${encodeURIComponent(phone)}?Fields=line_type_intelligence`,
-      {
-        headers: { Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}` },
-        signal: AbortSignal.timeout(5000),
-      }
-    );
-    if (!res.ok) return { type: "unknown", isDncRisk: false };
-    const data = await res.json();
-    const type: string = data?.line_type_intelligence?.type || "unknown";
-    // Landlines are higher DNC-risk (can be on National DNC Registry)
-    return { type, isDncRisk: type === "landline" };
-  } catch { return { type: "unknown", isDncRisk: false }; }
-}
 
 
 // ── Items 34 & 36: Twilio Lookup v2 — phone carrier classification ─────────────
@@ -176,12 +158,6 @@ serve(async (req) => {
         continue;
       }
       parsedLeads.push({ phone: leadPhone, name: leadName, last_contact_date: lastContactDate });
-    }
-
-    // Items 34 & 36: carrier lookup on first 5 leads
-    const carrierMap: Record<string, { type: string; isDncRisk: boolean }> = {};
-    for (const l of parsedLeads.slice(0, 5)) {
-      carrierMap[l.phone] = await twilioCarrierLookup(l.phone);
     }
 
     // Items 34 & 36: carrier lookup on first 5 leads
