@@ -696,9 +696,9 @@ serve(async (req) => {
         body: JSON.stringify({
           from: "Detroit Web Agency <matt@detroitwebagent.com>",
           to: [ADMIN_EMAIL],
-          subject: `🏠 Mortgage Radar — ${inserted} new, ${updated} updated, ${alertsQueued} alerts`,
+          subject: `🏠 Mortgage Radar — ${inserted} new, ${updated} updated, ${alertsQueued} alerts, ${hotSmsFired} hot SMS`,
           html: `<p><strong>Mortgage Radar daily run</strong></p>
-            <p>Started: ${startedAt}<br>Signals fetched: ${signals.length}<br>New leads: ${inserted}<br>Updated (repeat signals): ${updated}<br>Client alerts queued: ${alertsQueued}</p>
+            <p>Started: ${startedAt}<br>Signals fetched: ${signals.length}<br>New leads: ${inserted}<br>Updated (repeat signals): ${updated}<br>Client alerts queued: ${alertsQueued}<br>Inline-enriched: ${inlineEnriched}<br>Queued for enrich: ${queuedForEnrich}<br>Hot lead SMS fired: ${hotSmsFired}</p>
             <pre>${JSON.stringify(sourceBreakdown, null, 2)}</pre>`,
         }),
       });
@@ -714,6 +714,9 @@ serve(async (req) => {
     inserted,
     updated,
     alerts_queued: alertsQueued,
+    inline_enriched: inlineEnriched,
+    queued_for_enrich: queuedForEnrich,
+    hot_sms_fired: hotSmsFired,
     source_breakdown: sourceBreakdown,
   }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });
