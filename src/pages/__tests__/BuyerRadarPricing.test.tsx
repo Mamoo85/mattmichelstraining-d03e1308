@@ -33,21 +33,20 @@ describe("BuyerRadarPricing", () => {
     setupNoSessionMocks();
   });
 
-  it("renders all three tier columns + Custom", () => {
+  it("renders pricing for all three tiers", () => {
     renderPage();
-    expect(screen.getByText("Core")).toBeInTheDocument();
-    expect(screen.getByText("Pro")).toBeInTheDocument();
-    expect(screen.getByText("Enterprise")).toBeInTheDocument();
     expect(screen.getByText(/\$399/)).toBeInTheDocument();
     expect(screen.getByText(/\$599/)).toBeInTheDocument();
     expect(screen.getByText(/\$799/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Start Core/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Start Pro/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Start Enterprise/i })).toBeInTheDocument();
   });
 
   it("requires email before checkout", async () => {
     const { toast } = await import("sonner");
     renderPage();
-    const startBtns = screen.getAllByRole("button", { name: /Start Core|Start Pro|Start Enterprise/i });
-    fireEvent.click(startBtns[0]);
+    fireEvent.click(screen.getByRole("button", { name: /Start Core/i }));
     await waitFor(() => expect(toast.error).toHaveBeenCalled());
     expect(mockInvoke).not.toHaveBeenCalled();
   });
@@ -55,11 +54,10 @@ describe("BuyerRadarPricing", () => {
   it("invokes create-buyer-radar-checkout with the right tier", async () => {
     mockInvoke.mockResolvedValue({ data: { url: "https://stripe/test" }, error: null });
     renderPage();
-    fireEvent.change(screen.getByPlaceholderText(/Work email/i), {
+    fireEvent.change(screen.getByPlaceholderText(/Work email \*/i), {
       target: { value: "buyer@acme.com" },
     });
-    const proBtn = screen.getByRole("button", { name: /Start Pro/i });
-    fireEvent.click(proBtn);
+    fireEvent.click(screen.getByRole("button", { name: /Start Pro/i }));
     await waitFor(() => {
       expect(mockInvoke).toHaveBeenCalledWith(
         "create-buyer-radar-checkout",
@@ -73,24 +71,22 @@ describe("BuyerRadarPricing", () => {
   it("validates custom plan form (company + email required)", async () => {
     const { toast } = await import("sonner");
     renderPage();
-    const submitBtn = screen.getByRole("button", { name: /Request custom plan/i });
-    fireEvent.click(submitBtn);
+    fireEvent.click(screen.getByRole("button", { name: /Send request/i }));
     await waitFor(() => expect(toast.error).toHaveBeenCalled());
   });
 
   it("submits custom request to request-buyer-radar-custom", async () => {
     mockInvoke.mockResolvedValue({ data: { ok: true }, error: null });
     renderPage();
-    const companyInputs = screen.getAllByPlaceholderText(/Company/i);
-    const emailInputs = screen.getAllByPlaceholderText(/email/i);
-    // Find the custom-form fields (last occurrences are inside the custom card)
-    fireEvent.change(companyInputs[companyInputs.length - 1], {
+    fireEvent.change(screen.getByPlaceholderText(/Company name \*/i), {
       target: { value: "Ameristeel" },
     });
-    fireEvent.change(emailInputs[emailInputs.length - 1], {
+    // Two "Work email *" placeholders exist (top capture + custom form). Use the second one.
+    const emails = screen.getAllByPlaceholderText(/Work email \*/i);
+    fireEvent.change(emails[emails.length - 1], {
       target: { value: "ops@ameristeel.com" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /Request custom plan/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Send request/i }));
     await waitFor(() => {
       expect(mockInvoke).toHaveBeenCalledWith(
         "request-buyer-radar-custom",
