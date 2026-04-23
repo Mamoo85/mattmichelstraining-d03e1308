@@ -438,10 +438,16 @@ serve(async (req) => {
         break;
       }
       case "senior_care":         prospects = await fetchSeniorCare(county, limit); break;
+      case "hvac":
+      case "plumbing":
+      case "roofing":
+      case "electrical":
+      case "general_contractor":
+        prospects = await fetchTradeContractors(audience, county, limit); break;
       default:
         return new Response(JSON.stringify({
           error: "unsupported_audience",
-          supported: ["nursing_home", "healthcare_staffing", "trades_staffing", "supply_house", "industrial_mfg", "senior_care"],
+          supported: ["nursing_home", "healthcare_staffing", "trades_staffing", "supply_house", "industrial_mfg", "senior_care", "hvac", "plumbing", "roofing", "electrical", "general_contractor"],
         }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
