@@ -36,8 +36,8 @@ function formatElapsed(seconds: number): string {
 }
 
 /** Capture GPS and write to tech_locations */
-async function captureGPS(techId: string, clientId: string | undefined) {
-  if (!navigator.geolocation || techId === "demo") return;
+async function captureGPS(techId: string, clientId: string | undefined, techName?: string) {
+  if (!navigator.geolocation || techId === "demo" || !clientId) return;
   try {
     const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
       navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -46,16 +46,13 @@ async function captureGPS(techId: string, clientId: string | undefined) {
         maximumAge: 0,
       })
     );
-    await supabase.from("tech_locations").upsert(
-      {
-        tech_id: techId,
-        client_id: clientId || null,
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "tech_id" }
-    );
+    await (supabase.from("tech_locations") as any).upsert({
+      client_id: clientId,
+      tech_name: techName || techId,
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
+      updated_at: new Date().toISOString(),
+    });
   } catch (err) {
     console.warn("GPS capture failed:", err);
   }
@@ -160,7 +157,7 @@ const TechJobDetail: React.FC<TechJobDetailProps> = ({ job, techId, onBack, onSt
       await supabase.from("field_service_jobs").update({ signature_url: urlData?.publicUrl }).eq("id", job.id);
 
       // Also save as a job photo
-      await supabase.from("job_photos").insert({
+      await (supabase.from("job_photos") as any).insert({
         job_id: job.id,
         tech_id: techId,
         storage_path: path,
@@ -208,7 +205,7 @@ const TechJobDetail: React.FC<TechJobDetailProps> = ({ job, techId, onBack, onSt
         .upload(path, file, { contentType: "image/jpeg", upsert: false });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from("job-photos").getPublicUrl(path);
-      const { error: insertError } = await supabase.from("job_photos").insert({
+      const { error: insertError } = await (supabase.from("job_photos") as any).insert({
         job_id: job.id,
         tech_id: techId,
         storage_path: path,

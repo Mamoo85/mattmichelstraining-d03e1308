@@ -42,45 +42,29 @@ export default function TechMap({ clientId }: TechMapProps) {
   const fetchLocations = useCallback(async () => {
     if (isDemo) return; // demo data already set in initial state
     try {
-      const { data: techs, error: techError } = await supabase
-        .from("field_service_techs")
-        .select("id, name")
+      const { data: locs, error: locErr } = await (supabase
+        .from("tech_locations") as any)
+        .select("tech_name, lat, lng, updated_at")
         .eq("client_id", clientId)
-        .eq("active", true);
+        .order("updated_at", { ascending: false });
 
-      if (techError) throw techError;
-      if (!techs || techs.length === 0) {
-        setLocations([]);
-        setLoading(false);
-        return;
-      }
+      if (locErr) throw locErr;
 
-      const techIds = techs.map((t) => t.id);
-
-      const locationPromises = techIds.map((techId) =>
-        supabase
-          .from("tech_locations")
-          .select("tech_id, lat, lng, recorded_at")
-          .eq("tech_id", techId)
-          .order("recorded_at", { ascending: false })
-          .limit(1)
-          .maybeSingle()
-      );
-
-      const results = await Promise.all(locationPromises);
-
+      // Dedupe by tech_name keeping the most recent
+      const seen = new Set<string>();
       const merged: TechLocation[] = [];
-      results.forEach((res, idx) => {
-        if (res.data && techs[idx]) {
-          merged.push({
-            tech_id: res.data.tech_id,
-            tech_name: techs[idx].name,
-            lat: res.data.lat,
-            lng: res.data.lng,
-            recorded_at: res.data.recorded_at,
-          });
-        }
-      });
+      for (const row of (locs || []) as Array<{ tech_name: string; lat: number; lng: number; updated_at: string }>) {
+        if (!row.tech_name || row.lat == null || row.lng == null) continue;
+        if (seen.has(row.tech_name)) continue;
+        seen.add(row.tech_name);
+        merged.push({
+          tech_id: row.tech_name,
+          tech_name: row.tech_name,
+          lat: Number(row.lat),
+          lng: Number(row.lng),
+          recorded_at: row.updated_at,
+        });
+      }
 
       setLocations(merged);
     } catch (err) {
@@ -88,7 +72,7 @@ export default function TechMap({ clientId }: TechMapProps) {
     } finally {
       setLoading(false);
     }
-  }, [clientId]);
+  }, [clientId, isDemo]);
 
   useEffect(() => {
     fetchLocations();

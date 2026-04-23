@@ -2,6 +2,7 @@ import React from "react";
 
 export interface FieldJob {
   id: string;
+  client_id?: string;
   title: string;
   description: string | null;
   priority: "emergency" | "high" | "normal" | "low";
