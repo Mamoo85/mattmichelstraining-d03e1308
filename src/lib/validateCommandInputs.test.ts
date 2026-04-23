@@ -22,8 +22,9 @@ function expectFailure(
   result: ValidationResult,
   contains?: string,
 ): asserts result is { ok: false; reason: string } {
-  expect(result.ok).toBe(false);
-  if (result.ok) throw new Error("expected failure");
+  if (result.ok !== false) {
+    throw new Error("expected failure but validator returned ok");
+  }
   expect(typeof result.reason).toBe("string");
   expect(result.reason.length).toBeGreaterThan(0);
   if (contains) {
