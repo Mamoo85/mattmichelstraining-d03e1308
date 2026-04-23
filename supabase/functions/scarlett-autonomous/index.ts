@@ -152,9 +152,9 @@ Deno.serve(async (req) => {
     const work = (async () => {
       try { await runScarlett(); } catch (e) { console.error("[scarlett bg]", e); }
     })();
-    // @ts-ignore — EdgeRuntime is available in Supabase Deno runtime
+    // @ts-expect-error — EdgeRuntime is available in Supabase Deno runtime
     if (typeof EdgeRuntime !== "undefined" && (EdgeRuntime as any).waitUntil) {
-      // @ts-ignore
+      // @ts-expect-error — EdgeRuntime is Supabase-only global
       (EdgeRuntime as any).waitUntil(work);
     }
     return new Response(JSON.stringify({ ok: true, dispatched: true, mode: "background" }), {
