@@ -65,7 +65,7 @@
       ]
     }
     </script>
-    <script type="application/ld+json" id="ld-m2-training" data-brand="m2" data-disabled="true">
+    <script type="application/ld+json-m2-disabled" id="ld-m2-training">
     {
       "@context": "https://schema.org",
       "@type": "HealthAndBeautyBusiness",
@@ -99,7 +99,7 @@
       "image": "https://www.mattmichelstraining.com/og-image.png"
     }
     </script>
-    <script type="application/ld+json" id="ld-m2-studio" data-brand="m2" data-disabled="true">
+    <script type="application/ld+json-m2-disabled" id="ld-m2-studio">
     {
       "@context": "https://schema.org",
       "@type": "SportsActivityLocation",
@@ -151,6 +151,10 @@
         s('name','twitter:title',m2.title);s('name','twitter:description',m2.desc);
         s('name','twitter:image',m2.img);
         s('name','description',m2.desc);
+        // Disable DWA JSON-LD and activate M² schemas
+        var dwaLd=d.getElementById('ld-default');if(dwaLd)dwaLd.type='application/ld+json-dwa-disabled';
+        var m2a=d.getElementById('ld-m2-training');if(m2a){var n1=d.createElement('script');n1.type='application/ld+json';n1.text=m2a.text;d.head.appendChild(n1);}
+        var m2b=d.getElementById('ld-m2-studio');if(m2b){var n2=d.createElement('script');n2.type='application/ld+json';n2.text=m2b.text;d.head.appendChild(n2);}
       }
     })();
   </script>
