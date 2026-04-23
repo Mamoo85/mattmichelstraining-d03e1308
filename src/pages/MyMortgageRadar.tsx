@@ -384,6 +384,38 @@ export default function MyMortgageRadar() {
         <p className="text-[10px] text-[#64748b] text-center mt-10 max-w-2xl mx-auto">
           Mortgage Radar uses public records and behavioral signals only. We do not access, purchase, or resell credit-bureau trigger leads. Every outreach requires your explicit approval before send (TCPA + FCRA).
         </p>
+
+        {/* Add-on suite */}
+        <div className="mt-12 max-w-2xl mx-auto">
+          <div className="bg-[#0a1628] border border-[#00d4ff20] rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-1">
+              <Bell className="w-4 h-4 text-[#00d4ff]" />
+              <p className="text-white font-bold text-sm">Add-Ons — 20% Off for Mortgage Radar Clients</p>
+              <span className="ml-auto text-[10px] font-bold text-[#00d4ff] bg-[#00d4ff10] border border-[#00d4ff30] px-2 py-0.5 rounded-full">Bundle pricing</span>
+            </div>
+            <p className="text-[#64748b] text-[11px] mb-4">Combine these with Mortgage Radar and everything runs from one relationship.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { name: "Growth Radar", tagline: "SAM.gov contract awards + permit surges = LO sales triggers", price: 159, was: 199, path: "/industry-pulse" },
+                { name: "TechAlert", tagline: "Licensed tradespeople entering the market — cash-out refi angle", price: 119, was: 149, path: "/hire-alert" },
+                { name: "SiteRadar", tagline: "See which businesses visit your website — real-time intel", price: 39, was: 49, path: "/visitor-intel" },
+                { name: "Missed Call Text-Back", tagline: "Auto-texts any referral or lead that hits your voicemail", price: 79, was: 99, path: "/missed-call-catch" },
+              ].map(a => (
+                <div key={a.name} className="bg-[#030711] border border-[#1e3a5f] rounded-lg p-3">
+                  <p className="text-white font-bold text-xs mb-0.5">{a.name}</p>
+                  <p className="text-[#475569] text-[10px] leading-relaxed mb-2">{a.tagline}</p>
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <span className="text-[#475569] line-through text-[10px]">${a.was}/mo</span>
+                    <span className="text-[#00d4ff] font-black text-lg">${a.price}</span>
+                    <span className="text-[#475569] text-[10px]">/mo</span>
+                    <span className="text-[#22c55e] text-[10px] ml-auto">save ${a.was - a.price}</span>
+                  </div>
+                  <a href={`${a.path}?bundle=mortgage_radar`} className="block text-center text-[10px] font-bold text-[#00d4ff] border border-[#00d4ff30] rounded-md py-1 hover:bg-[#00d4ff10] transition-colors no-underline">Add →</a>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Draft modal — LO must explicitly submit, then approve in queue before send */}

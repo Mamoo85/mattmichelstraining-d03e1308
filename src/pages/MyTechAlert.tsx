@@ -1105,29 +1105,44 @@ export default function MyTechAlert() {
           </div>
         )}
 
-        {/* Upsell Card */}
-        <Card className="border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e]">
+        {/* Add-on Suite — bundle discount for TechAlert clients */}
+        <Card className="border-[#00d4ff]/20 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e]">
           <CardContent className="p-5">
-            {isHealthcare ? (
-              <div className="flex items-start gap-3">
-                <Heart className="h-6 w-6 text-blue-400 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-white font-bold text-sm mb-1">Refer a Partner Facility</p>
-                  <p className="text-slate-400 text-xs mb-3">Know another facility struggling to find staff? Refer them and get 1 month free.</p>
-                  <a href="mailto:matt@detroitwebagent.com?subject=Talent%20Radar%20Referral" className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors">
-                    <Mail className="h-3.5 w-3.5" /> Refer Now
-                  </a>
+            <div className="flex items-center gap-2 mb-1">
+              <Zap className="h-4 w-4 text-[#00d4ff]" />
+              <p className="text-white font-bold text-sm">Add-Ons — 20% Off for TechAlert Clients</p>
+              <span className="ml-auto text-[10px] font-bold text-[#00d4ff] bg-[#00d4ff]/10 border border-[#00d4ff]/30 px-2 py-0.5 rounded-full">Bundle pricing</span>
+            </div>
+            <p className="text-slate-500 text-[11px] mb-4">All products below are 20% off when added to your existing TechAlert plan.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { name: "Contractor Lead Gen", tagline: "Exclusive homeowner leads in your trade + city", price: 319, was: 399, path: "/contractor-leads" },
+                { name: "FieldDesk CRM", tagline: "Dispatch board + mobile tech app — replaces eWay", price: 159, was: 199, path: "/field-service" },
+                { name: "Missed Call Text-Back", tagline: "Auto-texts callers who hit voicemail in 5 seconds", price: 79, was: 99, path: "/missed-call-catch" },
+                { name: "Growth Radar", tagline: "Daily industrial expansion signals — SAM.gov + permits", price: 159, was: 199, path: "/industry-pulse" },
+                { name: "Estimate Follow-Up Drip", tagline: "Auto-texts quotes that didn't book within 48 hrs", price: 31, was: 39, path: "/estimate-followup" },
+                { name: "Seasonal Promo Blaster", tagline: "Auto-text past customers when seasons change", price: 23, was: 29, path: "/seasonal-promo" },
+              ].map(a => (
+                <div key={a.name} className="bg-[#030711]/60 border border-white/5 rounded-lg p-3 hover:border-[#00d4ff]/20 transition-colors">
+                  <p className="text-white text-xs font-bold mb-0.5">{a.name}</p>
+                  <p className="text-slate-500 text-[10px] leading-relaxed mb-2">{a.tagline}</p>
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <span className="text-white/30 line-through text-[10px]">${a.was}/mo</span>
+                    <span className="text-[#00d4ff] font-black text-base">${a.price}</span>
+                    <span className="text-white/40 text-[10px]">/mo</span>
+                    <span className="text-emerald-400 text-[10px] ml-auto">save ${a.was - a.price}/mo</span>
+                  </div>
+                  <a href={`${a.path}?bundle=techalert`} className="block text-center text-[10px] font-bold text-[#00d4ff] border border-[#00d4ff]/30 rounded py-1 hover:bg-[#00d4ff]/10 transition-colors">Add →</a>
                 </div>
-              </div>
-            ) : (
-              <div className="flex items-start gap-3">
-                <Zap className="h-6 w-6 text-[#00d4ff] shrink-0 mt-0.5" />
+              ))}
+            </div>
+            {isHealthcare && (
+              <div className="mt-4 pt-3 border-t border-white/5 flex items-start gap-3">
+                <Heart className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-white font-bold text-sm mb-1">Need Exclusive Inbound Leads?</p>
-                  <p className="text-slate-400 text-xs mb-3">Get homeowner leads delivered directly to you — pay per lead, no contracts.</p>
-                  <a href="https://www.detroitwebagent.com/contractor-leads" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-black text-xs font-bold px-4 py-2 rounded-lg transition-colors">
-                    <ExternalLink className="h-3.5 w-3.5" /> Learn More
-                  </a>
+                  <p className="text-white font-bold text-xs mb-0.5">Refer a Partner Facility — Get 1 Month Free</p>
+                  <p className="text-slate-500 text-[10px] mb-2">Know another Director of Nursing or facility administrator struggling with staffing?</p>
+                  <a href="mailto:matt@detroitwebagent.com?subject=Talent%20Radar%20Referral" className="text-[10px] font-bold text-blue-400 border border-blue-500/30 rounded px-3 py-1 hover:bg-blue-500/10 transition-colors">Refer Now →</a>
                 </div>
               </div>
             )}

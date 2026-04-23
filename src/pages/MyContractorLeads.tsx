@@ -8,6 +8,8 @@ import {
   Wrench, TrendingUp, RefreshCw, AlertTriangle, Star,
   Gift, ShoppingBag, ChevronDown, ChevronUp, Sparkles, Hammer,
 } from "lucide-react";
+import LeadProbabilityCard from "@/components/contractor/LeadProbabilityCard";
+import FreeBoostCard from "@/components/contractor/FreeBoostCard";
 
 interface Lead {
   id: string;
@@ -33,6 +35,7 @@ interface Stats {
 }
 
 interface Contractor {
+  id: string;
   email: string;
   business_name: string;
   trade: string;
@@ -40,6 +43,8 @@ interface Contractor {
   state: string;
   active: boolean;
   member_since: string;
+  free_dead_leads_used: number;
+  free_dead_leads_quota: number;
 }
 
 interface BundledServices {
@@ -329,6 +334,20 @@ export default function MyContractorLeads() {
               </p>
             </div>
           )}
+
+          {/* Free dead-lead boost quota */}
+          <FreeBoostCard
+            contractorId={contractor.id}
+            used={contractor.free_dead_leads_used}
+            quota={contractor.free_dead_leads_quota}
+          />
+
+          {/* Lead probability / boost upsell */}
+          <LeadProbabilityCard
+            contractorId={contractor.id}
+            email={contractor.email}
+            leadsLast30={stats.this_month}
+          />
 
           {/* Filter tabs */}
           <div className="flex items-center gap-2 flex-wrap">

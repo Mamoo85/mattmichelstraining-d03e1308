@@ -111,7 +111,7 @@ serve(async (req) => {
     }
 
     const { data: contractor } = await sb.from("contractor_clients")
-      .select("id, name, business_name, email, phone, trade, city, state, active, created_at, roi_token")
+      .select("id, name, business_name, email, phone, trade, city, state, active, created_at, roi_token, free_dead_leads_used, free_dead_leads_quota")
       .eq("roi_token", token)
       .maybeSingle();
 
@@ -167,6 +167,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       contractor: {
+        id: contractor.id,
         email: contractor.email,
         business_name: contractor.business_name || contractor.name,
         trade: contractor.trade,
@@ -174,6 +175,8 @@ serve(async (req) => {
         state: contractor.state || "MI",
         active: contractor.active,
         member_since: contractor.created_at,
+        free_dead_leads_used: (contractor as any).free_dead_leads_used ?? 0,
+        free_dead_leads_quota: (contractor as any).free_dead_leads_quota ?? 40,
       },
       stats,
       bundled_services,

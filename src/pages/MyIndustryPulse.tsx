@@ -428,9 +428,41 @@ export default function MyIndustryPulse() {
           )}
         </main>
 
-        <footer className="py-8 border-t border-white/5 text-center">
+        {/* Add-on suite */}
+        <section style={{ maxWidth: 900, margin: "0 auto", padding: "32px 16px 0" }}>
+          <div style={{ background: "#0a1628", border: "1px solid #00d4ff20", borderRadius: 12, padding: 24 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <Zap size={14} style={{ color: "#00d4ff" }} />
+              <p style={{ color: "#fff", fontWeight: 700, fontSize: 13, margin: 0 }}>Add-Ons — 20% Off for Growth Radar Clients</p>
+              <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 700, color: "#00d4ff", background: "#00d4ff10", border: "1px solid #00d4ff30", padding: "2px 8px", borderRadius: 999 }}>Bundle pricing</span>
+            </div>
+            <p style={{ color: "#475569", fontSize: 11, marginBottom: 16 }}>Products below are discounted when added to your Growth Radar plan.</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+              {[
+                { name: "TechAlert", tagline: "Know when licensed tradespeople become available in your market", price: 119, was: 149, path: "/hire-alert" },
+                { name: "Contractor Lead Gen", tagline: "Exclusive homeowner leads for the contractors you sell to", price: 319, was: 399, path: "/contractor-leads" },
+                { name: "FieldDesk CRM", tagline: "Dispatch + mobile app for field service companies you serve", price: 159, was: 199, path: "/field-service" },
+                { name: "Mortgage Radar", tagline: "Renovation permits + lis pendens signals for LO outreach", price: 319, was: 399, path: "/mortgage-radar" },
+              ].map(a => (
+                <div key={a.name} style={{ background: "#030711", border: "1px solid #1e3a5f", borderRadius: 8, padding: 14 }}>
+                  <p style={{ color: "#fff", fontWeight: 700, fontSize: 12, marginBottom: 2 }}>{a.name}</p>
+                  <p style={{ color: "#475569", fontSize: 10, lineHeight: 1.5, marginBottom: 8 }}>{a.tagline}</p>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 8 }}>
+                    <span style={{ color: "#475569", textDecoration: "line-through", fontSize: 10 }}>${a.was}/mo</span>
+                    <span style={{ color: "#00d4ff", fontWeight: 900, fontSize: 18 }}>${a.price}</span>
+                    <span style={{ color: "#475569", fontSize: 10 }}>/mo</span>
+                    <span style={{ color: "#22c55e", fontSize: 10, marginLeft: "auto" }}>save ${a.was - a.price}</span>
+                  </div>
+                  <a href={`${a.path}?bundle=growth_radar`} style={{ display: "block", textAlign: "center", fontSize: 10, fontWeight: 700, color: "#00d4ff", border: "1px solid #00d4ff30", borderRadius: 6, padding: "4px 0", textDecoration: "none" }}>Add →</a>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <footer className="py-8 border-t border-white/5 text-center" style={{ marginTop: 32 }}>
           <p className="text-white/20 text-[10px]">
-            Detroit Web Agency — Demand Radar Intelligence
+            Detroit Web Agency — Growth Radar Intelligence
           </p>
         </footer>
       </div>
