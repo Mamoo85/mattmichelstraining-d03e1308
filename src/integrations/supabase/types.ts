@@ -1528,6 +1528,51 @@ export type Database = {
           },
         ]
       }
+      buyer_radar_custom_requests: {
+        Row: {
+          admin_notes: string | null
+          company_name: string
+          contact_name: string | null
+          created_at: string
+          email: string
+          geographic_radius: string | null
+          id: string
+          message: string | null
+          phone: string | null
+          status: string
+          target_accounts: number | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          company_name: string
+          contact_name?: string | null
+          created_at?: string
+          email: string
+          geographic_radius?: string | null
+          id?: string
+          message?: string | null
+          phone?: string | null
+          status?: string
+          target_accounts?: number | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          company_name?: string
+          contact_name?: string | null
+          created_at?: string
+          email?: string
+          geographic_radius?: string | null
+          id?: string
+          message?: string | null
+          phone?: string | null
+          status?: string
+          target_accounts?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       buyer_radar_rfqs: {
         Row: {
           agency: string | null
