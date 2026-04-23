@@ -347,7 +347,7 @@ export default function AdminContractorLeads() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatCard label="Monthly MRR" value={`$${(activeClients.length * 399).toLocaleString()}`} sub={`${activeClients.length} active territories`} icon={DollarSign} color="#22c55e" />
-          <StatCard label="Open Upside" value={`$${((20 - activeClients.length) * 399).toLocaleString()}/mo`} sub={`${20 - activeClients.length} territories unclaimed`} icon={TrendingUp} color="#f59e0b" />
+          <StatCard label="Open Upside" value={`$${((territories.length - activeClients.length) * 399).toLocaleString()}/mo`} sub={`${territories.length - activeClients.length} territories unclaimed`} icon={TrendingUp} color="#f59e0b" />
           <StatCard label="Leads This Month" value={leadsThisMonth.length} sub="across all territories" icon={Users} color="#3b82f6" />
           <StatCard label="Delivered" value={deliveredCount} sub={`${leads.length > 0 ? Math.round((deliveredCount / leads.length) * 100) : 0}% delivery rate`} icon={CheckCircle} color="#e8621a" />
         </div>
