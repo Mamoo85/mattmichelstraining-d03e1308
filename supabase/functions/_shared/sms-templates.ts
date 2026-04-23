@@ -15,7 +15,8 @@ export type TemplateId =
   | "contractor_renewal_v1"
   | "contractor_territory_lock_v1"
   | "contractor_dead_lead_pitch_v1"
-  | "contractor_pitch_generic_v1";
+  | "contractor_pitch_generic_v1"
+  | "dead_lead_free_first_v1";
 
 export interface SmsTemplate {
   id: TemplateId;
@@ -112,6 +113,18 @@ export const SMS_TEMPLATES: Record<TemplateId, SmsTemplate> = {
       "No setup fee, no contract, cancel anytime. 30-day refund if zero leads delivered. " +
       "All bonus services included free (missed-call catch, ROI scorecard, dead-lead reactivation — opt-in). " +
       "Want me to send the signup link so we can get you live today?",
+  },
+
+  dead_lead_free_first_v1: {
+    id: "dead_lead_free_first_v1",
+    product: "contractor_pitch",
+    description: "Dead Lead Reactivation — first reply FREE offer",
+    vars: ["business_name"],
+    body:
+      "Hey {business_name} — Matt with Detroit Web Agency. " +
+      "Quick offer: I'll text your old quote leads on your behalf with a 3-msg drip. " +
+      "Your FIRST positive reply is FREE. After that it's $50 per reply — only when someone says they still need the work. " +
+      "Zero monthly fee. Want me to send the upload link?",
   },
 };
 

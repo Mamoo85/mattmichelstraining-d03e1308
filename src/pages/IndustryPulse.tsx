@@ -41,14 +41,15 @@ const TIERS: { id: Tier; price: string; cadence: string; name: string; tagline: 
     price: "$199",
     cadence: "/mo",
     name: "Weekly Digest",
-    tagline: "Fresh contractor signals every Monday.",
+    tagline: "Fresh contractor signals every Monday. 7-day free trial.",
     features: [
+      "✨ 7-day free trial — cancel anytime, no charge",
       "Weekly email: top 10 growing contractors in your vertical",
       "Live dashboard with decision-maker contacts",
       "Cross-referenced HIGH-PRIORITY alerts (3+ signals = same company)",
-      "Cancel anytime — no contracts",
+      "Cancel anytime — $199 charges Day 8 unless you cancel",
     ],
-    cta: "Start Weekly Digest",
+    cta: "Start 7-Day Free Trial",
     highlight: true,
   },
   {
@@ -258,6 +259,11 @@ export default function IndustryPulse() {
                     {loading === tier.id ? "Loading..." : tier.cta}
                     {loading !== tier.id && <ArrowRight className="ml-2 h-4 w-4" />}
                   </Button>
+                  {tier.id === "weekly" && (
+                    <p className="text-[10px] text-white/40 text-center mt-2 leading-tight">
+                      Cancel anytime during trial — no charge. $199 charges Day 8 unless cancelled.
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

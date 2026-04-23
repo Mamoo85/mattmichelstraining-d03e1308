@@ -178,15 +178,13 @@ export default function DeadLeadIntake() {
     <Page>
       <SEOHead title="Dead Lead Reactivation — Detroit Web Agency" description="Upload your old unsold leads and let us text them for you. $50 per positive reply. No monthly fee, no contracts. We only get paid when you do." path="/dead-lead-intake" />
       <Card>
-        {cidFromUrl && (
-          <div style={{ marginBottom: 20, padding: "14px 16px", background: "linear-gradient(135deg, #00d4ff15, #00d4ff05)", border: "1px solid #00d4ff40", borderRadius: 10 }}>
-            <p style={{ color: "#00d4ff", fontSize: 12, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", margin: "0 0 4px" }}>🎁 Free Boost Gift</p>
-            <p style={{ color: "#fff", fontSize: 15, fontWeight: 700, margin: "0 0 4px" }}>Your first 40 dead-lead reactivations are FREE.</p>
-            <p style={{ color: "#94a3b8", fontSize: 13, margin: 0, lineHeight: 1.5 }}>
-              Paste up to 40 old quotes/leads below. We'll text them for you while your Google ads warm up — $0 charge, no card needed for the first 40 positive replies.
-            </p>
-          </div>
-        )}
+        <div style={{ marginBottom: 20, padding: "14px 16px", background: "linear-gradient(135deg, #00d4ff15, #00d4ff05)", border: "1px solid #00d4ff40", borderRadius: 10 }}>
+          <p style={{ color: "#00d4ff", fontSize: 12, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", margin: "0 0 4px" }}>🎁 First Reply FREE</p>
+          <p style={{ color: "#fff", fontSize: 15, fontWeight: 700, margin: "0 0 4px" }}>Your first positive reply is on the house.</p>
+          <p style={{ color: "#94a3b8", fontSize: 13, margin: 0, lineHeight: 1.5 }}>
+            Paste your old quotes below. We text them for you. <strong style={{ color: "#fff" }}>Zero charge until someone replies YES.</strong> First reply is free — after that, $50 per positive reply. No monthly fee, ever.
+          </p>
+        </div>
         <div style={{ marginBottom: 28 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
             <span style={{ fontSize: 28 }}>♻️</span>
@@ -196,7 +194,7 @@ export default function DeadLeadIntake() {
           </div>
           <p style={{ color: "#64748b", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
             Paste your old estimates and dead leads below. We'll send a 3-message SMS sequence
-            on your behalf — <strong style={{ color: "#fff" }}>{cidFromUrl ? "first 40 free, then $50 only when a lead replies YES" : "you pay $50 only when a lead replies YES"}</strong>.
+            on your behalf — <strong style={{ color: "#fff" }}>first positive reply is FREE, then $50 only when a lead replies YES</strong>.
           </p>
         </div>
 

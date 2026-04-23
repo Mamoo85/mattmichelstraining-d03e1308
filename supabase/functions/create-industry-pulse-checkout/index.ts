@@ -54,6 +54,9 @@ serve(async (req) => {
       mode: t.mode,
       payment_method_types: ["card"],
       customer_email: email,
+      // 7-day free trial on the $199/mo Weekly Digest tier only.
+      // Snapshot is one-time payment and Enterprise is high-touch sales.
+      ...(selectedTier === "weekly" ? { subscription_data: { trial_period_days: 7 } } : {}),
       line_items: [{
         quantity: 1,
         price_data: {
