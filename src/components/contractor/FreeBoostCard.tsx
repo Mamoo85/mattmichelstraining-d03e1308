@@ -14,8 +14,8 @@ export default function FreeBoostCard({ contractorId, used, quota }: Props) {
     <section className="bg-gradient-to-br from-[#0d1f3c] to-[#0a1f30] border border-[#00d4ff]/30 rounded-xl p-5">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div>
-          <div className="text-[#00d4ff] text-xs uppercase tracking-wider font-bold">🎁 Free Boost Gift</div>
-          <h2 className="text-lg font-bold mt-1">{remaining} free dead-lead reactivations left</h2>
+          <div className="text-[#00d4ff] text-xs uppercase tracking-wider font-bold">🎁 First Reply FREE</div>
+          <h2 className="text-lg font-bold mt-1">Your first positive reply is on us</h2>
         </div>
         <div className="text-right">
           <div className="text-2xl font-black text-[#00d4ff]">{used}/{quota}</div>
@@ -28,7 +28,7 @@ export default function FreeBoostCard({ contractorId, used, quota }: Props) {
       </div>
 
       <p className="text-white/60 text-sm mb-3">
-        Paste your old quotes — we SMS them on your behalf. Industry avg ~12% reply rate. Zero cost while you have free credits.
+        Paste your old quotes — we SMS them on your behalf. <strong className="text-white">Your first positive reply is FREE.</strong> After that, $50 per reply — only when a lead actually says they still need the work.
       </p>
 
       {remaining > 0 ? (
@@ -39,7 +39,7 @@ export default function FreeBoostCard({ contractorId, used, quota }: Props) {
           Add Dead Leads →
         </Link>
       ) : (
-        <p className="text-white/50 text-xs">Free quota used. After this, $50 charged only when a lead replies YES.</p>
+        <p className="text-white/50 text-xs">Free reply used. From here on: $50 charged only when a lead replies YES.</p>
       )}
     </section>
   );

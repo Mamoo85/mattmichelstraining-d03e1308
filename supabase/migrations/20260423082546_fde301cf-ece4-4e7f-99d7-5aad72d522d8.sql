@@ -1,0 +1,1 @@
+ALTER TABLE public.contractor_clients ALTER COLUMN free_dead_leads_quota SET DEFAULT 1;
