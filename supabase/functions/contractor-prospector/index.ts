@@ -1090,6 +1090,117 @@ serve(async (req) => {
       if (totalEmailed >= maxToSend || isTimedOut()) break;
     }
 
+    // ── Michigan SOS new business → Contractor Leads pitch ──
+    // Reads unprocessed new_business signals from industry_pulse_signals and
+    // pitches Contractor Leads to newly registered trade companies (2/day max).
+    let sosLeadsSent = 0;
+    if (!isTimedOut()) {
+      try {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        const TRADE_KEYWORDS = ["hvac", "plumb", "electr", "roof", "boiler", "mechanical", "heating", "cooling", "siding", "gutter"];
+        const { data: sosSignals } = await sb
+          .from("industry_pulse_signals" as any)
+          .select("id, company_name, location, industry, recommended_pitch")
+          .eq("signal_type", "new_business")
+          .gte("detected_at", sevenDaysAgo)
+          .is("pitched_contractor_leads_at", null)
+          .limit(5);
+
+        for (const sig of (sosSignals || []) as any[]) {
+          if (sosLeadsSent >= 2 || isTimedOut()) break;
+          const industryLower = (sig.industry || "").toLowerCase();
+          if (!TRADE_KEYWORDS.some(k => industryLower.includes(k))) continue;
+
+          // Search Google Maps for this specific company to get contact info
+          const searchQuery = `${sig.company_name} ${sig.location || "Michigan"}`;
+          const places = await searchGoogleMaps(searchQuery, GOOGLE_MAPS_API_KEY);
+          const place = places?.[0];
+          if (!place) {
+            await sb.from("industry_pulse_signals" as any).update({ pitched_contractor_leads_at: new Date().toISOString() }).eq("id", sig.id);
+            continue;
+          }
+
+          const name = place.displayName?.text || sig.company_name;
+          const website = place.websiteUri || null;
+          let email: string | null = null;
+          if (website) email = await scrapeEmail(website);
+          if (!email) {
+            await sb.from("industry_pulse_signals" as any).update({ pitched_contractor_leads_at: new Date().toISOString() }).eq("id", sig.id);
+            continue;
+          }
+
+          const blockCheck = await isBlocked(sb, { email, business_name: name });
+          if (blockCheck.blocked) {
+            await sb.from("industry_pulse_signals" as any).update({ pitched_contractor_leads_at: new Date().toISOString() }).eq("id", sig.id);
+            continue;
+          }
+
+          const cityShort = (sig.location || "Michigan").replace(/ MI$/, "");
+          const tradeClean = sig.industry || "contractor";
+          const clPrompt = `You are writing a 4-sentence cold email from Matt Michels at Detroit Web Agency to the owner of "${name}", a new ${tradeClean} business in ${cityShort}, MI that just registered with the state.
+
+The offer: Contractor Leads — exclusive homeowner leads for ${tradeClean} contractors in ${cityShort}. They'd be the ONLY ${tradeClean} company in their territory. $399/mo. First lead within 48 hours.
+
+Rules:
+1. EXACTLY 4 sentences
+2. Sentence 1: Congratulate them on the new business — you saw they just registered in Michigan
+3. Sentence 2: Mention that getting the first customers is the hardest part — and you already have homeowners in ${cityShort} looking for ${tradeClean} work with no contractor to send them to
+4. Sentence 3: Exclusive territory — one contractor per city, $399/mo, first lead within 48 hours
+5. Sentence 4: MUST include this exact link: https://www.detroitwebagent.com/contractor-leads?trade=${tradeClean.toLowerCase().replace(/\s+/g, "-")}&city=${encodeURIComponent(cityShort)} — then "or reply / text (313) 992-1219"
+6. Start with "Hey —"
+7. Sign off: "— Matt, Detroit Web Agency"
+8. Subject line: Under 40 chars
+
+Format:
+SUBJECT: [subject line]
+BODY:
+[4-sentence email]`;
+
+          try {
+            const clText = await generateText(clPrompt, 400);
+            const subjectMatch = clText.match(/SUBJECT:\s*(.+)/);
+            const bodyMatch = clText.match(/BODY:\s*([\s\S]+)/);
+            const clSubject = subjectMatch?.[1]?.trim();
+            const clBody = bodyMatch?.[1]?.trim();
+            if (clSubject && clBody) {
+              const clHtml = buildTechAlertEmailHtml(clBody);
+              const clRes = await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  from: "Matt Michels <matt@detroitwebagent.com>",
+                  to: [email],
+                  bcc: ["matt@detroitwebagent.com"],
+                  subject: clSubject,
+                  html: clHtml,
+                }),
+              });
+              if (clRes.ok) {
+                await Promise.all([
+                  sb.from("outreach_leads").insert({
+                    business_name: name, city: cityShort, industry: sig.industry,
+                    email, website: website || null, status: "emailed", channel: "email",
+                    offer_pitched: "contractor_leads",
+                    last_contact_date: new Date().toISOString().split("T")[0],
+                    drip_campaign_status: { d0_sent: true, d0_sent_at: new Date().toISOString() },
+                    notes: `SOS new business pitch. Industry: ${sig.industry}`,
+                  }),
+                  sb.from("industry_pulse_signals" as any).update({ pitched_contractor_leads_at: new Date().toISOString() }).eq("id", sig.id),
+                ]);
+                sosLeadsSent++;
+                log("SOS new business → Contractor Leads pitch sent", { name, email, city: cityShort });
+              }
+            }
+          } catch (clErr) {
+            log("SOS CL pitch failed", { name, error: String(clErr) });
+          }
+          await new Promise(r => setTimeout(r, 500));
+        }
+      } catch (sosErr) {
+        log("SOS new business pitch block failed", { error: String(sosErr) });
+      }
+    }
+
     return new Response(
       JSON.stringify({
         ok: true,
@@ -1100,6 +1211,7 @@ serve(async (req) => {
         emailed: totalEmailed,
         deadLeadEmailed: totalDeadLeadEmailed,
         techAlertEmailed: techAlertSent - techAlertSentToday,
+        sosLeadsSent,
         skipped: totalSkipped,
         scoutRejected: totalScoutRejected,
         pitchRotation,
