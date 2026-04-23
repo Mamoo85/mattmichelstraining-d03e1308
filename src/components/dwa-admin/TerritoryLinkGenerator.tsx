@@ -184,8 +184,11 @@ export default function TerritoryLinkGenerator() {
   const monthly = tradeMeta?.monthly || 399;
   const tradeLabel = tradeMeta?.label || "";
 
-  // Reset persisted token when inputs change
-  useEffect(() => { setPersistedToken(null); }, [trade, city, name, businessName, email, phone, expires24h]);
+  // Reset persisted token + override flags when inputs change
+  useEffect(() => {
+    setPersistedToken(null);
+    setOverrideKeys({});
+  }, [trade, city, name, businessName, email, phone, expires24h]);
 
   const rawLink = buildLink({ trade, city, email, name, businessName, phone });
   const trackedLink = persistedToken ? `${TRACK_URL}?token=${persistedToken}` : "";
