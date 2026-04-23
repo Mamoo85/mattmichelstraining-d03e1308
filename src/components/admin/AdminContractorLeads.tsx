@@ -14,11 +14,16 @@ import TerritoryLinkGenerator from "@/components/dwa-admin/TerritoryLinkGenerato
 const PRIORITY_SLUGS = ["hvac-warren", "plumbing-detroit", "hvac-sterling-heights", "roofing-troy", "electrician-detroit"];
 
 const TRADE_COLORS: Record<string, string> = {
-  HVAC: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  Plumbing: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
+  HVAC:       "bg-blue-500/20 text-blue-300 border-blue-500/30",
+  Plumbing:   "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
   Electrical: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-  Roofing: "bg-orange-500/20 text-orange-300 border-orange-500/30",
+  Roofing:    "bg-orange-500/20 text-orange-300 border-orange-500/30",
+  Boiler:     "bg-red-500/20 text-red-300 border-red-500/30",
+  Gutters:    "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+  Siding:     "bg-purple-500/20 text-purple-300 border-purple-500/30",
 };
+
+const ALL_TRADES = ["HVAC", "Plumbing", "Electrical", "Roofing", "Boiler", "Gutters", "Siding"];
 
 function timeAgo(date: string | null): string {
   if (!date) return "Never";
