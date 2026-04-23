@@ -1979,6 +1979,66 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── MISSED CALL TEXT-BACK — $99/mo with 7-day trial ──────────────────
+      if (meta.type === "missed_call_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("missed_call_clients" as any).upsert({
+              email,
+              contact_name: meta.name || null,
+              business_name: meta.businessName || meta.business_name || null,
+              business_phone: meta.phone || null,
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            await fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({ email, type: "missed_call_subscription", name: meta.businessName || meta.business_name || meta.name }),
+            });
+            await notifyMatt(
+              `💰 New Missed Call client — ${meta.businessName || meta.business_name || email} ($99/mo)`,
+              `<p><strong>${meta.businessName || meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}</p>`
+            );
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] missed_call_subscription error:", e);
+          return new Response(JSON.stringify({ error: "missed_call_subscription failed" }), { status: 500 });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── FIELDDESK — $199/mo field service CRM ────────────────────────────
+      if (meta.type === "field_service_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await sb.from("field_crm_clients" as any).upsert({
+              email,
+              contact_name: meta.name || null,
+              business_name: meta.company || meta.business_name || null,
+              industry: meta.industry || "field_service",
+              active: true,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            await fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({ email, type: "field_service_subscription", name: meta.company || meta.business_name || meta.name }),
+            });
+            await notifyMatt(
+              `💰 New FieldDesk client — ${meta.company || meta.business_name || email} ($199/mo)`,
+              `<p><strong>${meta.company || meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>Industry: ${meta.industry || "not specified"}<br>Plan: ${meta.plan || "standalone"}</p>`
+            );
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] field_service_subscription error:", e);
+          return new Response(JSON.stringify({ error: "field_service_subscription failed" }), { status: 500 });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── CATCH-ALL: any subscription type not explicitly handled above ──────
       // Writes to saas_subscriptions so no paid subscriber is ever lost.
       if (meta.type && meta.type.endsWith("_subscription") && (meta.email || customerEmail)) {

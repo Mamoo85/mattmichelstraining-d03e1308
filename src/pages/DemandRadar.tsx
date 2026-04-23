@@ -55,7 +55,7 @@ export default function DemandRadar() {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-industry-pulse-checkout", {
-        body: { email, company_name: company, phone, contact_name: company, target_industries: ["all"] },
+        body: { email, company_name: company, phone, contact_name: company, target_industries: ["all"], source_page: "demand-radar" },
       });
       if (error) throw error;
       if (data?.url) window.location.href = data.url;

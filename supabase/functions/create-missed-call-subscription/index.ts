@@ -54,7 +54,7 @@ serve(async (req) => {
           unit_amount: 9900,
           product_data: {
           name: "TextBack — $99/month standalone ($49/mo bundled with any Radar)",
-            description: "Automatically texts callers back within seconds of a missed call. Never lose a lead again. Statewide Michigan coverage. Bundle with Talent Radar, Demand Radar, Growth Radar, or Lead Radar to drop to $49/mo.",
+            description: "Automatically texts callers back within seconds of a missed call. Never lose a lead again. Statewide Michigan coverage. Bundle with Talent Radar, Growth Radar, or Demand Radar to drop to $49/mo.",
           },
         },
         quantity: 1,
