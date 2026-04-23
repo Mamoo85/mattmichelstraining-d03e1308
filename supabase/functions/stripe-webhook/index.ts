@@ -1102,7 +1102,7 @@ serve(async (req) => {
             const targetIndustries = meta.target_industries
               ? meta.target_industries.split(",").map((t: string) => t.trim()).filter(Boolean)
               : ["boiler", "hvac", "manufacturing"];
-            const { data: inserted, error: insertErr } = await (sb.from as any)("industry_pulse_clients").insert({
+            const { data: inserted, error: insertErr } = await (sb.from as any)("industry_pulse_clients").upsert({
               company_name: meta.company_name || email,
               email,
               phone: meta.phone || null,
@@ -1111,8 +1111,8 @@ serve(async (req) => {
               stripe_customer_id: session.customer as string || null,
               stripe_subscription_id: session.subscription as string || null,
               active: true,
-            }).select("dashboard_token").single();
-            if (insertErr) throw new Error(`industry_pulse_clients insert: ${insertErr.message}`);
+            }, { onConflict: "email" }).select("dashboard_token").single();
+            if (insertErr) throw new Error(`industry_pulse_clients upsert: ${insertErr.message}`);
 
             // Send welcome email + SMS with dashboard link
             const siteUrl = "https://detroitwebagent.com";
