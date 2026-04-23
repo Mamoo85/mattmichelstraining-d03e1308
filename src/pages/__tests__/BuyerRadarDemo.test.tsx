@@ -30,27 +30,27 @@ describe("BuyerRadarDemo", () => {
     setupNoSessionMocks();
   });
 
-  it("renders step 1 (Targeting) on initial load", () => {
+  it("renders step 1 (Targeting) heading on initial load", () => {
     renderPage();
-    expect(screen.getByText(/Targeting/i)).toBeInTheDocument();
-    expect(screen.getByText(/Step 1 of 5/i)).toBeInTheDocument();
+    const h1 = screen.getByRole("heading", { level: 1 });
+    expect(h1.textContent).toMatch(/Step\s*1\.\s*Targeting/i);
   });
 
   it("advances through all 5 steps via Next", () => {
     renderPage();
     const next = () => fireEvent.click(screen.getByRole("button", { name: /Next/i }));
-    next(); // 2
-    expect(screen.getByText(/Step 2 of 5/i)).toBeInTheDocument();
-    next(); next(); next(); // 5
-    expect(screen.getByText(/Step 5 of 5/i)).toBeInTheDocument();
+    next();
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toMatch(/Step\s*2/i);
+    next(); next(); next();
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toMatch(/Step\s*5/i);
   });
 
   it("Back button navigates to previous step", () => {
     renderPage();
     fireEvent.click(screen.getByRole("button", { name: /Next/i }));
-    expect(screen.getByText(/Step 2 of 5/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toMatch(/Step\s*2/i);
     fireEvent.click(screen.getByRole("button", { name: /Back/i }));
-    expect(screen.getByText(/Step 1 of 5/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toMatch(/Step\s*1/i);
   });
 
   it("hides the live-data toggle for non-admins", () => {
