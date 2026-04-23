@@ -77,7 +77,7 @@ export default function MyMortgageRadar() {
 
       const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
       let query = (supabase.from as any)("mortgage_radar_leads")
-        .select("id, full_name, address, city, zip, phone, email, signal_type, signal_source, signal_detail, signal_date, score, signal_count, suggested_opener, best_call_window, created_at")
+        .select("id, full_name, address, city, zip, phone, email, signal_type, signal_source, signal_detail, signal_date, score, signal_count, suggested_opener, best_call_window, created_at, pipeline_stage")
         .gte("created_at", since)
         .order("score", { ascending: false })
         .order("created_at", { ascending: false })
@@ -234,6 +234,7 @@ export default function MyMortgageRadar() {
     <div className="min-h-screen bg-[#030711] text-foreground">
       <SEOHead title="My Mortgage Radar — Loan Officer Dashboard" description="Daily in-market mortgage leads from public records." />
       <DWASuiteNav activeProduct="mortgage_radar" email={clientEmail || undefined} />
+      <MortgageRadarWelcome />
 
       <header className="border-b border-[#1e3a5f] bg-[#0a1628]/80 backdrop-blur sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
