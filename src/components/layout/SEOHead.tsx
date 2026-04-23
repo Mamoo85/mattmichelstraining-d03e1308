@@ -118,7 +118,7 @@ const SEOHead = ({
       <meta name="description" content={description} />
       {canonical && <link rel="canonical" href={canonical} />}
 
-      {noindex && <meta name="robots" content="noindex, nofollow" />}
+      {effectiveNoindex && <meta name="robots" content="noindex, nofollow" />}
 
       {/* Open Graph */}
       <meta property="og:type" content={type} />
