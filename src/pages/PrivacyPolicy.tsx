@@ -82,14 +82,36 @@ export default function PrivacyPolicy() {
       </section>
 
       <section className="mb-8">
-        <h2 className="text-xl font-bold mb-3">10. Changes to This Policy</h2>
+        <h2 className="text-xl font-bold mb-3">11. Google API Services & Third-Party Data Sharing</h2>
+        <p className="leading-relaxed text-slate-700 mb-3">
+          Our applications use Google API Services (including Google Maps Platform, Google Ads, Google Analytics 4, Google PageSpeed Insights, and Google OAuth where applicable). Use and transfer of information received from Google APIs to any other app adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy" className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">Google API Services User Data Policy</a>, including the Limited Use requirements.
+        </p>
+        <p className="leading-relaxed text-slate-700 mb-3">
+          We share data with the following third-party service providers strictly to operate our services. Each provider is bound by their own privacy policy and a data processing agreement:
+        </p>
+        <ul className="list-disc pl-6 space-y-1 text-slate-700 leading-relaxed text-sm">
+          <li><strong>Stripe, Inc.</strong> — payment processing</li>
+          <li><strong>Twilio Inc.</strong> — SMS and voice messaging</li>
+          <li><strong>Resend, Inc.</strong> — transactional and marketing email delivery</li>
+          <li><strong>Supabase, Inc.</strong> — database and authentication hosting</li>
+          <li><strong>Anthropic, PBC</strong> — AI text classification and message generation</li>
+          <li><strong>Google LLC</strong> — Maps, Ads, Analytics, and Street View imagery</li>
+          <li><strong>Perplexity AI / OpenRouter</strong> — public-data lookups for lead enrichment</li>
+        </ul>
+        <p className="leading-relaxed text-slate-700 mt-3 text-sm">
+          We do not sell, rent, or transfer personal data to third parties for their own marketing purposes. Data shared with the providers above is used only to fulfill the services you requested.
+        </p>
+      </section>
+
+      <section className="mb-8">
+        <h2 className="text-xl font-bold mb-3">12. Changes to This Policy</h2>
         <p className="leading-relaxed text-slate-700">
           We may update this policy. Changes will be posted on this page with an updated date. Continued use of our services after changes constitutes acceptance.
         </p>
       </section>
 
       <section className="mb-8">
-        <h2 className="text-xl font-bold mb-3">11. Contact</h2>
+        <h2 className="text-xl font-bold mb-3">13. Contact</h2>
         <p className="leading-relaxed text-slate-700">
           Matt Michels — Matt Michels Training / M2 Development<br />
           Grosse Pointe, MI<br />
