@@ -323,8 +323,8 @@ const DispatchBoard: React.FC<DispatchBoardProps> = ({ clientId }) => {
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={(e) => setActiveId(e.active.id as string)} onDragEnd={handleDragEnd}>
           <div className="overflow-x-auto">
-            <div className="flex gap-4 p-4" style={{ minWidth: "900px" }}>
-              {COLUMNS.map((col) => {
+            <div className="flex gap-3 sm:gap-4 p-3 sm:p-4 min-w-[760px] sm:min-w-[900px]">
+              {COLUMNS.filter((col) => !statusFilter || statusFilter === col.key).map((col) => {
                 const colJobs = jobs.filter((j) => j.status === col.key);
                 return (
                   <DroppableColumn key={col.key} status={col.key} label={col.label} accent={col.accent} glow={col.glow}>
