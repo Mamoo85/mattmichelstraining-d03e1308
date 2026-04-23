@@ -48,6 +48,32 @@ function normalizePhone(raw: string): string {
   if (digits.length === 11 && digits[0] === "1") return `+${digits}`;
   return raw;
 }
+async function twilioCarrierLookup(
+  phone: string,
+  lastContactDate: string,
+): Promise<{ type: string; isDncRisk: boolean; isReassigned: boolean }> {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN)
+    return { type: "unknown", isDncRisk: false, isReassigned: false };
+  try {
+    const res = await fetch(
+      `https://lookups.twilio.com/v2/PhoneNumbers/${encodeURIComponent(phone)}?Fields=line_type_intelligence,reassigned_number&LastContactDate=${lastContactDate}`,
+      {
+        headers: {
+          Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}`,
+        },
+        signal: AbortSignal.timeout(5000),
+      }
+    );
+    if (!res.ok) return { type: "unknown", isDncRisk: false, isReassigned: false };
+    const data = await res.json();
+    const type: string = data?.line_type_intelligence?.type || "unknown";
+    const isReassigned: boolean = data?.reassigned_number?.is_reassigned === true;
+    return { type, isDncRisk: type === "landline", isReassigned };
+  } catch {
+    return { type: "unknown", isDncRisk: false, isReassigned: false };
+  }
+}
+
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -164,9 +190,9 @@ serve(async (req) => {
     }
 
     // Items 34 & 36: carrier lookup on first 5 leads
-    const carrierMap: Record<string, { type: string; isDncRisk: boolean }> = {};
+    const carrierMap: Record<string, { type: string; isDncRisk: boolean; isReassigned: boolean }> = {};
     for (const l of parsedLeads.slice(0, 5)) {
-      carrierMap[l.phone] = await twilioCarrierLookup(l.phone);
+      carrierMap[l.phone] = await twilioCarrierLookup(l.phone, l.last_contact_date);
     }
 
     if (parsedLeads.length === 0) {

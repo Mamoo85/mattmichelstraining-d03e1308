@@ -247,6 +247,7 @@ async function runDripJob(): Promise<Response> {
       .eq("drip_step", 1)
       .neq("status", "opted_out")
       .eq("is_reassigned", false)
+      .eq("is_dnc_risk", false)
       .not("drip1_sent_at", "is", null)
       .lte("drip1_sent_at", threeDaysAgo)
       .not("email", "is", null)
