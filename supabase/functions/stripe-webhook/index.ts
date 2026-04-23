@@ -2039,6 +2039,60 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── CONTRACTOR LEADS — dedicated welcome email with dashboard link ─────
+      if (meta.type === "contractor_lead_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            // Fetch roi_token so we can include the dashboard link in the welcome email
+            const { data: contractorRow } = await sb
+              .from("contractor_clients")
+              .select("id, roi_token, business_name, trade, city")
+              .eq("email", email)
+              .maybeSingle();
+            const roiToken = (contractorRow as any)?.roi_token;
+            const dashUrl = roiToken
+              ? `https://detroitwebagent.com/contractor-portal/${roiToken}`
+              : `https://detroitwebagent.com/my-contractor-leads`;
+            const trade = (contractorRow as any)?.trade || meta.trade || "your trade";
+            const city = (contractorRow as any)?.city || meta.city || "your area";
+            const bizName = (contractorRow as any)?.business_name || meta.business_name || meta.name || "there";
+            await dwaEmail(
+              email,
+              "You're Locked In — Your Exclusive Lead Territory is Live",
+              `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;">
+    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">📍 CONTRACTOR LEAD NETWORK</p>
+    <h1 style="color:#fff;font-size:24px;margin:0 0 8px;">You're locked in, ${bizName}.</h1>
+    <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Your exclusive ${trade} territory in ${city} is reserved. Every lead that comes in goes straight to you — no other contractor gets it.</p>
+    <div style="text-align:center;margin:0 0 24px;">
+      <a href="${dashUrl}" style="display:inline-block;background:#00d4ff;color:#000;font-weight:700;padding:14px 40px;border-radius:8px;text-decoration:none;font-size:15px;">📊 Open Your Lead Dashboard</a>
+    </div>
+    <div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:20px;margin:0 0 20px;">
+      <p style="color:#fff;font-weight:700;font-size:13px;margin:0 0 12px;letter-spacing:0.5px;">WHAT HAPPENS NEXT:</p>
+      <p style="margin:0 0 10px;color:#e2e8f0;font-size:13px;"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:8px;">STEP 1</span>Reply with the best phone number to text leads to</p>
+      <p style="margin:0 0 10px;color:#e2e8f0;font-size:13px;"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:8px;">STEP 2</span>Your landing page goes live within 24–48 hours</p>
+      <p style="margin:0;color:#e2e8f0;font-size:13px;"><span style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:8px;">STEP 3</span>Leads arrive with name, phone, email + project details</p>
+    </div>
+    <div style="background:#0d1f3c;border-left:3px solid #00d4ff;padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;">
+      <p style="color:#94a3b8;font-size:13px;margin:0;">Unlike Angi or Thumbtack, every lead is exclusive to you. No bidding wars. No shared contacts. One contractor per trade per city — period.</p>
+    </div>
+    <p style="color:#64748b;font-size:12px;margin:0;">Questions? Text or call Matt: <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p>
+  </div>
+</div></body></html>`
+            );
+            await notifyMatt(
+              `💰 New Contractor Leads client — ${bizName} (${trade} in ${city})`,
+              `<p><strong>${bizName}</strong><br>Email: ${email}<br>Trade: ${trade}<br>City: ${city}<br>Phone: ${meta.phone || "n/a"}<br>Dashboard: <a href="${dashUrl}">${dashUrl}</a></p>`
+            );
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] contractor_lead_subscription welcome email error:", e);
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── CATCH-ALL: any subscription type not explicitly handled above ──────
       // Writes to saas_subscriptions so no paid subscriber is ever lost.
       if (meta.type && meta.type.endsWith("_subscription") && (meta.email || customerEmail)) {

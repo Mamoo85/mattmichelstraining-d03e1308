@@ -131,6 +131,14 @@ export default function AdminDWAOverview() {
     { label: "DJ Conley Demo", href: "/demo-djconley-2", color: "#ec4899" },
   ];
 
+  const CUSTOMER_VIEWS = [
+    { label: "📊 Contractor Dashboard (example)", href: "/contractor-portal/preview", color: "#00d4ff", note: "Contractor Leads clients see this — replace 'preview' with their roi_token" },
+    { label: "🏠 Mortgage Radar Dashboard (example)", href: "/my-mortgage-radar?email=test@example.com", color: "#6366f1", note: "Mortgage Radar clients see this — replace email with client email" },
+    { label: "🔧 TechAlert Dashboard (example)", href: "/my-tech-alert", color: "#f59e0b", note: "TechAlert clients see this after login" },
+    { label: "🏗️ FieldDesk Dispatch (example)", href: "/field-service/dispatch?demo=1", color: "#10b981", note: "FieldDesk clients see this — demo mode shows sample jobs" },
+    { label: "📈 Contractor ROI Report (example)", href: "/roi?token=REPLACE_WITH_ROI_TOKEN", color: "#22c55e", note: "Texted to contractors weekly on Fridays" },
+  ];
+
   const STAT_CARDS = [
     { label: "FieldDesk Clients", value: stats.fieldDeskClients, color: "#00d4ff", icon: Users },
     { label: "TechAlert Clients", value: stats.techAlertClients, color: "#f59e0b", icon: Bell },
@@ -228,6 +236,24 @@ export default function AdminDWAOverview() {
               <ExternalLink size={11} />
               {label}
             </a>
+          ))}
+        </div>
+      </div>
+
+      {/* Customer Dashboard Previews */}
+      <div style={{ background: "#0d1f3c", border: "1px solid #1e3a5f", borderRadius: 12, padding: "20px 24px" }}>
+        <p style={{ margin: "0 0 4px", color: "#00d4ff", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>What Your Customers See</p>
+        <p style={{ margin: "0 0 16px", color: "#64748b", fontSize: 12 }}>Click any link below to preview exactly what each product's dashboard looks like to a paying client.</p>
+        <div className="flex flex-col gap-3">
+          {CUSTOMER_VIEWS.map(({ label, href, color, note }) => (
+            <div key={href} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 14px", borderRadius: 8, background: `${color}08`, border: `1px solid ${color}20` }}>
+              <a href={href} target="_blank" rel="noopener noreferrer"
+                style={{ color, fontWeight: 700, fontSize: 13, textDecoration: "none", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
+                <ExternalLink size={12} />
+                {label}
+              </a>
+              <span style={{ color: "#64748b", fontSize: 12, lineHeight: 1.5 }}>{note}</span>
+            </div>
           ))}
         </div>
       </div>

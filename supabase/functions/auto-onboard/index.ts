@@ -452,7 +452,7 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
         <p style="color:#00d4ff;font-weight:700;font-size:13px;margin:0 0 8px;letter-spacing:1px;text-transform:uppercase">FCRA COMPLIANCE — IMPORTANT</p>
         <p style="color:#94a3b8;font-size:13px;margin:0">All signals are 100% public records and behavioral data. We do not access, purchase, or resell credit-bureau trigger leads. All outreach drafts in your dashboard must be manually approved and sent by you, the licensed loan officer. This service is H.R. 2808 compliant.</p>
       </div>
-      <p style="color:#e2e8f0;font-size:14px;margin:0 0 16px"><strong>Dashboard:</strong> <a href="https://detroitwebagent.com/my-mortgage-radar" style="color:#00d4ff">detroitwebagent.com/my-mortgage-radar</a></p>
+      <p style="color:#e2e8f0;font-size:14px;margin:0 0 16px"><strong>Dashboard:</strong> <a href="https://detroitwebagent.com/my-mortgage-radar" style="color:#00d4ff">detroitwebagent.com/my-mortgage-radar</a> <em style="color:#64748b;font-size:12px;">(opens with your email auto-filled)</em></p>
       <p style="color:#e2e8f0;font-size:14px;margin:0 0 20px">First signals ETA: tomorrow morning. If you don't see any in 48 hours, reply to this email and I'll check the scanner. — Matt</p>
       ${DWA_SIG}`,
   },
