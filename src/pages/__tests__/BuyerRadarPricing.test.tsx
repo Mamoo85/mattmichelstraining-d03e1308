@@ -54,7 +54,8 @@ describe("BuyerRadarPricing", () => {
   it("invokes create-buyer-radar-checkout with the right tier", async () => {
     mockInvoke.mockResolvedValue({ data: { url: "https://stripe/test" }, error: null });
     renderPage();
-    fireEvent.change(screen.getByPlaceholderText(/Work email \*/i), {
+    const emailInputs = screen.getAllByPlaceholderText(/Work email \*/i);
+    fireEvent.change(emailInputs[0], {
       target: { value: "buyer@acme.com" },
     });
     fireEvent.click(screen.getByRole("button", { name: /Start Pro/i }));
