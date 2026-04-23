@@ -45,6 +45,7 @@ const DAILY_SEND_CAP = 30;
 const DEAD_LEAD_CAP = 5;      // dead lead reactivation pitches/day
 const TECH_ALERT_CAP = 5;     // TechAlert trial pitches/day
 const MISSED_CALL_CAP = 5;    // Missed-Call Text-Back pitches/day
+const CARE_ALERT_CAP = 3;     // CareAlert (healthcare TechAlert) pitches/day
 
 // ── Metro Detroit targets only ──
 const TRADES = ["roofer", "HVAC contractor", "plumber", "electrician", "dentist"];
