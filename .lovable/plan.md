@@ -1,78 +1,88 @@
 
 
-# Lovable's Slice — Frontend, UI, Memory, PDFs
+## Free Taste Strategy — Per Product
 
-Claude Code handles the 3 backend items (Tom agent, auto-onboard email, enrichment refactor). I handle everything else from the combined plan. No overlap, no collisions.
+Plain English: each product gets the cheapest "free taste" mechanic that doesn't burn margin or break ad rules. No Stripe trials on Contractor Leads (you can't ad-spend trials). Free first-lead on Dead Reactivation. Sneak peeks (no card) on Buyer/Demand Radar. Real Stripe trials on Talent Radar + Industry Pulse. Newsletter stays free + becomes the top-of-funnel for everything.
 
-## What I'm building
+### What gets which offer
 
-### 1. Kill list — hide 20 SKUs from public selling
-- New `src/lib/deprecated-skus.ts` — single registry of slugs + reason + deprecated_at date
-- Filter `AllServices.tsx` and `AutomationHub.tsx` grids against the registry
-- Add `noindex` flag to each killed page's `SEOHead`
-- Routes stay in `App.tsx` (preserves SEO during transition, fully reversible)
-- Kill list (Claude's 20): SocialMediaAI, PetMemorial, B2BLeads, LocalTechSupport, EmployeeHandbook, BlogPostWriter, AINewsletter, InsuranceDrip, CreditDisputeFactory, HOALetters, MedicalBillDispute, MenuEngineering, TradeShowFollowUp, LatePaymentCollector, RealEstateNewsletter, AILinkedInGhostwriter, AISermonPrep, FAQRefresh, ChildrensStorySubscription, MeetingPrep
+| Product | Offer | Why |
+|---|---|---|
+| **Dead Lead Reactivation** | **First positive reply FREE, $50 each after** | Already wired — `free_dead_leads_quota` column exists. Just default to `1`. |
+| **Contractor Leads ($399/mo)** | No trial. Keep "30-day refund if zero leads" + 3 free seed leads on signup. | Can't run paid ads to trials. Refund guarantee = same psychology, no Stripe trial-end disputes. |
+| **Buyer Radar (Ameristeel)** | **Sneak Peek**: email-gated 1-week sample feed (no card), then $X/mo | Enterprise B2B — they want to see the data before card-on-file. |
+| **Demand Radar / Industry Pulse** | **Sneak Peek**: 5 free signals via magic link, then **7-day Stripe trial** on the $199 tier | Already has `snapshot` $99 one-time — keep it, add trial on `weekly` tier. |
+| **Talent Radar / TechAlert** | **3-day "phantom alert" preview** (already exists at `/hire-alert-trial`) → convert to paid | Don't touch — it works. Just surface it harder on the landing page. |
+| **Newsletter (Field Rep Weekly)** | Already free. Add **footer CTA** rotating between Buyer/Demand/Talent Radar sneak peeks. | Free top-of-funnel to feed the radar products. |
+| **Mortgage Radar** | Already has `trial_period_days: 7`. ✅ Leave alone. | |
 
-### 2. Mortgage Radar hero rewrite (`src/pages/MortgageRadar.tsx`)
-- New hero: "H.R. 2808 killed trigger leads on March 4. Here's what replaced them."
-- Comparison table: Trigger Leads (banned) vs Mortgage Radar (FCRA-clean public records)
-- Brother case-study placeholder card (real numbers slot in once he tests)
-- Keep existing checkout + ZIP picker untouched
+---
 
-### 3. TechAlert interactive ROI calculator
-- New `src/components/agency/TechAlertROICalculator.tsx`
-- 3 inputs: trade dropdown (HVAC/Plumber/Electrician/Boiler Op/CNA-RN), open positions, hours/week recruiting
-- Live output: "Annual vacancy cost $X,XXX vs Talent Radar $1,788/yr — save $Y,YYY"
-- Mounted on `HireAlert.tsx` above the existing static "The Math" section
-- Inline `useState`, no new deps, reuses existing trial signup CTA
+### What I'll build
 
-### 4. Pipeline Velocity Dashboard (`src/components/dwa-admin/PipelineVelocityDashboard.tsx`)
-- New tab "📊 Pipeline Velocity" in `DWAAdmin.tsx`
-- Product filter: All / Mortgage Radar / Talent Radar / FieldDesk / Dead Lead / Web Design
-- Pulls from `service_subscriptions` + `prospect_pipeline` + `outreach_cooldowns`
-- Shows: stage counts, demos booked, MRR added (30d), formula readout `Velocity = Opps × Value × Win Rate / Sales Cycle`
-- Also extends `AdminB2BPipeline.tsx` with the same product filter dropdown
+**1. Dead Lead — default quota = 1 + landing copy**
+- New migration: `ALTER TABLE contractor_clients ALTER COLUMN free_dead_leads_quota SET DEFAULT 1;`
+- Update `DeadLeadIntake.tsx` headline + `FreeBoostCard.tsx`: "Your first reply is FREE. $50 per reply after that."
+- Update outreach SMS template in `_shared/sms-templates.ts`: `dead_lead_free_first_v1`
+- Existing `handle-dead-lead-reply` charge logic already respects `used < quota` — no code change needed.
 
-### 5. Enterprise consultation flow (replaces self-serve on $199–$599/mo SKUs)
-- New `src/components/EnterpriseConsultationForm.tsx` (name, company, email, phone, product interest)
-- New table `enterprise_consultation_requests` (RLS service_role only) — created via migration
-- Form submit inserts row + SMSes Matt at +13138064952
-- Replace Stripe checkout button with "Book Strategy Call" on ~25 high-ticket B2B intel pages (Bid Intelligence, Reg Filing Monitor, Gov Contract Monitor, Patent Watch, etc.)
+**2. Buyer Radar Sneak Peek**
+- New page `/buyer-radar-preview` — email capture form, no auth.
+- New edge function `buyer-radar-sneak-peek` — generates a magic-link token, emails 5 sample signals (Detroit-area fab/metal NAICS) via Resend with "upgrade to see live feed" CTA.
+- Token gives 7-day read access to a stripped-down `MyBuyerRadar` view.
 
-### 6. Memory rule updates
-- **REVERSE** `mem://marketing/outreach-service-ratio` → 90% SaaS MRR / 10% Web Design (Gemini was right; old 80/20 sabotages the $10k MRR goal)
-- **NEW** `mem://business/sku-portfolio-discipline` — hard cap ~25 active public SKUs; new product requires killing one; "free ChatGPT in an hour" test
-- **NEW** `mem://business/mortgage-radar-90-day-trigger` — if Mortgage Radar < $5k MRR by 2026-07-22, demote to passive inbound, rotate effort back to FieldDesk + TechAlert
-- **NEW** `mem://workflow/feature-factory-guard` — before any new feature, ask "does Matt have 1 paying customer asking for it?" If no → sales not code
-- **UPDATE** `mem://index.md` Core to reference the inversion + feature-factory guard
+**3. Demand Radar / Industry Pulse — add trial on $199 tier**
+- Edit `create-industry-pulse-checkout/index.ts`: add `subscription_data: { trial_period_days: 7 }` to the `weekly` tier only.
+- Add 5-signal sneak peek edge function `industry-pulse-sneak-peek` mirroring Buyer Radar pattern.
+- New `/demand-radar-preview` landing.
 
-### 7. Brother free founder seat (operational, no money talk)
-- Add brother as `mortgage_radar_subscription` row via AdminSandbox $0 test checkout (Matt does this manually after I ship — I'll add a one-click button "Provision Brother Founder Seat" to AdminDWAOverview that pre-fills the form)
-- Brother gets 5 Metro Detroit ZIPs, dashboard access, can forward dossiers to LO friends
-- No JV agreement, no rev-share, no equity (per your call)
-- New `brother_claimed_domains` table so future Tom + DWA Closer agents skip whatever he's claimed (defensive — no behavior change today)
+**4. Talent Radar — boost existing trial visibility**
+- `HireAlert.tsx`: add a hero CTA strip "👀 See 3 days of alerts free, no card" above the pricing. Routes to existing `/hire-alert-trial`.
+- No backend changes.
 
-## What I'm NOT building (Claude Code owns these)
-- `Tom.agent.md` — Mortgage Radar pitch section
-- `auto-onboard/index.ts` — `mortgage_radar_subscription` welcome template
-- `_shared/enrichment.ts` — extract NPI→Sonar→Hunter→Snov→PDL→HIBP→Apollo→Twilio waterfall + wire into per-source workers
+**5. Newsletter footer CTA rotator**
+- Edit `newsletter-send/index.ts`: add `getRotatingRadarCTA()` helper that picks one of (Buyer/Demand/Talent) sneak-peek links per send. Inserts above unsubscribe.
 
-## What I'm NOT building (per your prior calls)
-- "Kill DWA" hard pivot
-- Brother JV PDF / equity / rev-share docs
-- New product SKUs
-- Ad spend
-- Page deletions or 404 redirects (use hide + noindex instead)
+**6. Admin visibility**
+- New row in `AdminDWAOverview.tsx`: "Free Taste Funnel" — counts of sneak-peek signups (last 7 days) per product, conversion %.
 
-## Files touched (estimate)
-- New: `src/lib/deprecated-skus.ts`, `src/components/agency/TechAlertROICalculator.tsx`, `src/components/dwa-admin/PipelineVelocityDashboard.tsx`, `src/components/EnterpriseConsultationForm.tsx`
-- Modified: `src/pages/MortgageRadar.tsx`, `src/pages/HireAlert.tsx`, `src/pages/AllServices.tsx`, `src/pages/AutomationHub.tsx`, `src/pages/DWAAdmin.tsx`, `src/components/admin/AdminB2BPipeline.tsx`, `src/components/dwa-admin/AdminDWAOverview.tsx`, ~25 enterprise SKU pages (button swap), 20 killed-SKU pages (SEOHead noindex flag)
-- 1 migration: `enterprise_consultation_requests` + `brother_claimed_domains` tables (RLS service_role only)
-- Memory: 1 reversal + 3 new files + 1 index update
-- No new edge functions, no Stripe changes, no secrets needed
+---
 
-## After I ship
-1. Tell Claude Code to build the 3 backend items (Tom agent, welcome email, enrichment refactor)
-2. Click "Provision Brother Founder Seat" in AdminDWAOverview → forward him the dashboard link
-3. Make Mortgage Radar cold calls — that's the actual revenue work no code can do for you
+### Legal / TCPA notes
+
+- **Dead Lead first-free**: same EBR rules apply. Already enforced (548-day cutoff in `dead-lead-intake` + `dead-lead-drip`). No new exposure.
+- **Sneak peek emails**: CAN-SPAM only (email, not SMS). Footer needs unsubscribe — `dwaEmail()` wrapper already includes it.
+- **Stripe trials on Industry Pulse**: must show "Cancel anytime — $199 charges Day 8" on checkout button per FTC ROSCA rule. Will add to `IndustryPulse.tsx` CTA.
+
+---
+
+### What I won't build (and why)
+
+- **Trial on Contractor Leads** — you said no, and I agree (ad-spend rules + chargeback risk).
+- **Trial on FieldDesk / Missed Call** — keep refund guarantee. Adding trials creates day-7 involuntary churn.
+- **New newsletter** — you already have the Field Rep Weekly Newsletter. We just need to use it as the funnel. No new product.
+
+---
+
+### Files touched (technical detail)
+
+**New:**
+- `supabase/migrations/20260423140000_dead_lead_default_quota_one.sql`
+- `supabase/functions/buyer-radar-sneak-peek/index.ts`
+- `supabase/functions/industry-pulse-sneak-peek/index.ts`
+- `src/pages/BuyerRadarPreview.tsx`
+- `src/pages/DemandRadarPreview.tsx`
+
+**Edited:**
+- `supabase/functions/_shared/sms-templates.ts` — add `dead_lead_free_first_v1`
+- `supabase/functions/create-industry-pulse-checkout/index.ts` — add `trial_period_days: 7` on weekly tier
+- `supabase/functions/newsletter-send/index.ts` — add rotating radar CTA
+- `src/pages/DeadLeadIntake.tsx` + `src/components/contractor/FreeBoostCard.tsx` — copy update
+- `src/pages/HireAlert.tsx` — surface trial CTA
+- `src/pages/IndustryPulse.tsx` — trial disclosure on weekly tier button
+- `src/components/dwa-admin/AdminDWAOverview.tsx` — sneak peek funnel row
+- `src/App.tsx` — 2 new public routes
+- `supabase/config.toml` — `verify_jwt = false` for 2 new functions
+
+Reply "go" and I'll ship it in build mode.
 
