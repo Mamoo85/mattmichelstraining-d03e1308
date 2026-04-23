@@ -9049,6 +9049,180 @@ export type Database = {
         }
         Relationships: []
       }
+      mortgage_radar_clients: {
+        Row: {
+          active: boolean | null
+          business_name: string | null
+          contact_name: string | null
+          created_at: string
+          email: string
+          extra_zip_count: number | null
+          id: string
+          is_founder: boolean | null
+          last_digest_sent_at: string | null
+          nmls_number: string | null
+          phone: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_ends_at: string | null
+          updated_at: string
+          zip_codes: string[] | null
+        }
+        Insert: {
+          active?: boolean | null
+          business_name?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email: string
+          extra_zip_count?: number | null
+          id?: string
+          is_founder?: boolean | null
+          last_digest_sent_at?: string | null
+          nmls_number?: string | null
+          phone?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+          zip_codes?: string[] | null
+        }
+        Update: {
+          active?: boolean | null
+          business_name?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string
+          extra_zip_count?: number | null
+          id?: string
+          is_founder?: boolean | null
+          last_digest_sent_at?: string | null
+          nmls_number?: string | null
+          phone?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+          zip_codes?: string[] | null
+        }
+        Relationships: []
+      }
+      mortgage_radar_lead_locks: {
+        Row: {
+          client_id: string
+          expires_at: string
+          id: string
+          lead_id: string
+          locked_at: string
+          notes: string | null
+          outcome: string | null
+        }
+        Insert: {
+          client_id: string
+          expires_at?: string
+          id?: string
+          lead_id: string
+          locked_at?: string
+          notes?: string | null
+          outcome?: string | null
+        }
+        Update: {
+          client_id?: string
+          expires_at?: string
+          id?: string
+          lead_id?: string
+          locked_at?: string
+          notes?: string | null
+          outcome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mortgage_radar_lead_locks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "mortgage_radar_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mortgage_radar_lead_locks_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: true
+            referencedRelation: "mortgage_radar_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mortgage_radar_leads: {
+        Row: {
+          address: string | null
+          best_call_window: string | null
+          city: string | null
+          created_at: string
+          email: string | null
+          estimated_equity: number | null
+          estimated_loan_amount: number | null
+          full_name: string | null
+          id: string
+          notified_client_ids: string[] | null
+          phone: string | null
+          raw: Json | null
+          score: number
+          signal_date: string | null
+          signal_detail: string | null
+          signal_source: string
+          signal_type: string
+          signal_url: string | null
+          state: string | null
+          suggested_opener: string | null
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          best_call_window?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          estimated_equity?: number | null
+          estimated_loan_amount?: number | null
+          full_name?: string | null
+          id?: string
+          notified_client_ids?: string[] | null
+          phone?: string | null
+          raw?: Json | null
+          score?: number
+          signal_date?: string | null
+          signal_detail?: string | null
+          signal_source: string
+          signal_type: string
+          signal_url?: string | null
+          state?: string | null
+          suggested_opener?: string | null
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          best_call_window?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          estimated_equity?: number | null
+          estimated_loan_amount?: number | null
+          full_name?: string | null
+          id?: string
+          notified_client_ids?: string[] | null
+          phone?: string | null
+          raw?: Json | null
+          score?: number
+          signal_date?: string | null
+          signal_detail?: string | null
+          signal_source?: string
+          signal_type?: string
+          signal_url?: string | null
+          state?: string | null
+          suggested_opener?: string | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
       new_mover_clients: {
         Row: {
           active: boolean | null
