@@ -138,8 +138,58 @@ export default function AdminDWAOverview() {
     { label: "Alerts Sent (hot)", value: stats.hotCandidates, color: "#ef4444", icon: Zap },
   ];
 
+  const mrrGoal = 5000;
+  const mrrStart = new Date("2026-04-23").getTime();
+  const mrrEnd = new Date("2026-07-22").getTime();
+  const now = Date.now();
+  const totalDays = Math.round((mrrEnd - mrrStart) / 86_400_000);
+  const elapsed = Math.min(totalDays, Math.round((now - mrrStart) / 86_400_000));
+  const daysLeft = Math.max(0, totalDays - elapsed);
+  const pctTime = elapsed / totalDays;
+
+  const [currentMrr, setCurrentMrr] = useState(0);
+  useEffect(() => {
+    (supabase as any)
+      .from("service_subscriptions")
+      .select("monthly_price")
+      .eq("status", "active")
+      .then(({ data }: { data: Array<{ monthly_price: number | null }> | null }) => {
+        if (data) setCurrentMrr(data.reduce((s, r) => s + (r.monthly_price || 0), 0));
+      });
+  }, []);
+
+  const mrrPct = Math.min(100, Math.round((currentMrr / mrrGoal) * 100));
+  const onPace = currentMrr / mrrGoal >= pctTime;
+  const barColor = daysLeft <= 30 && mrrPct < 25 ? "#ef4444" : onPace ? "#22c55e" : "#f59e0b";
+
   return (
     <div className="space-y-6 p-1">
+      {/* 90-day revenue clock */}
+      <div style={{ background: "#0d1f3c", border: "1px solid #1e3a5f", borderRadius: 12, padding: "20px 24px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+          <p style={{ margin: 0, color: "#00d4ff", fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>90-Day Revenue Clock</p>
+          <p style={{ margin: 0, color: "#64748b", fontSize: 12 }}>{daysLeft} days left · ends Jul 22</p>
+        </div>
+        <div style={{ display: "flex", gap: 32, flexWrap: "wrap", marginBottom: 14 }}>
+          <div>
+            <p style={{ margin: 0, color: "#94a3b8", fontSize: 11, textTransform: "uppercase", letterSpacing: 1 }}>Current MRR</p>
+            <p style={{ margin: 0, color: "#ffffff", fontSize: 26, fontWeight: 900 }}>${currentMrr.toLocaleString()}</p>
+          </div>
+          <div>
+            <p style={{ margin: 0, color: "#94a3b8", fontSize: 11, textTransform: "uppercase", letterSpacing: 1 }}>Goal</p>
+            <p style={{ margin: 0, color: "#ffffff", fontSize: 26, fontWeight: 900 }}>${mrrGoal.toLocaleString()}</p>
+          </div>
+          <div>
+            <p style={{ margin: 0, color: "#94a3b8", fontSize: 11, textTransform: "uppercase", letterSpacing: 1 }}>Remaining</p>
+            <p style={{ margin: 0, color: barColor, fontSize: 26, fontWeight: 900 }}>${Math.max(0, mrrGoal - currentMrr).toLocaleString()}</p>
+          </div>
+        </div>
+        <div style={{ background: "#1e3a5f", borderRadius: 6, height: 8, overflow: "hidden" }}>
+          <div style={{ width: `${mrrPct}%`, height: "100%", background: barColor, borderRadius: 6, transition: "width 0.6s ease" }} />
+        </div>
+        <p style={{ margin: "8px 0 0", color: "#64748b", fontSize: 11 }}>{mrrPct}% of goal · Day {elapsed} of {totalDays}</p>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>

@@ -305,6 +305,9 @@ const IndustrialPulse = lazyRetry(() => import("./pages/IndustrialPulse"));
 const GrowthSignalsLanding = lazyRetry(() => import("./pages/GrowthSignalsLanding"));
 const MyIndustryPulse = lazyRetry(() => import("./pages/MyIndustryPulse"));
 const DemandRadar = lazyRetry(() => import("./pages/DemandRadar"));
+const TalentRadarVsStaffing = lazyRetry(() => import("./pages/TalentRadarVsStaffing"));
+const FieldDeskVsEway = lazyRetry(() => import("./pages/FieldDeskVsEway"));
+const MortgageRadarVsTriggerLeads = lazyRetry(() => import("./pages/MortgageRadarVsTriggerLeads"));
 const MortgageRadar = lazyRetry(() => import("./pages/MortgageRadar"));
 const MyMortgageRadar = lazyRetry(() => import("./pages/MyMortgageRadar"));
 const BuyerRadar = lazyRetry(() => import("./pages/BuyerRadar"));
@@ -778,6 +781,9 @@ const App = () => (
                     <Route path="/website-speed-audit" element={<WebsiteSpeedAudits />} />
                     <Route path="/crime-digest" element={<CrimeDigest />} />
                     <Route path="/demand-radar" element={<DemandRadar />} />
+                    <Route path="/talent-radar-vs-staffing" element={<TalentRadarVsStaffing />} />
+                    <Route path="/fielddesk-vs-eway" element={<FieldDeskVsEway />} />
+                    <Route path="/mortgage-radar-vs-trigger-leads" element={<MortgageRadarVsTriggerLeads />} />
                     <Route path="/mortgage-radar" element={<MortgageRadar />} />
                     <Route path="/my-mortgage-radar" element={<MyMortgageRadar />} />
                     <Route path="/buyer-radar" element={<BuyerRadar />} />

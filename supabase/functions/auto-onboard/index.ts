@@ -429,6 +429,33 @@ const TEMPLATES: Record<string, OnboardTemplate> = {
       <p style="color:#e2e8f0;font-size:14px;margin:0 0 20px">Reply with your target verticals and territories so I can fine-tune the feed. — Matt</p>
       ${DWA_SIG}`,
   },
+  mortgage_radar_subscription: {
+    subject: "⚡ Mortgage Radar is Live — Your First Signals Run Tonight",
+    nextStage: "📧 Welcome Email Sent",
+    body: (name) => `
+      <p style="font-size:22px;font-weight:800;color:#ffffff;margin:0 0 6px;line-height:1.2">You're in, ${name}.</p>
+      <p style="color:#4a6fa5;font-size:13px;margin:0 0 6px">Mortgage Radar is scanning your ZIPs tonight. First signals arrive tomorrow morning.</p>
+      <div style="background:#0d1f3c;border-left:3px solid #00d4ff;padding:20px 24px;border-radius:0 8px 8px 0;margin:0 0 24px">
+        <p style="color:#ffffff;font-weight:700;font-size:14px;margin:0 0 12px;letter-spacing:0.5px">WHAT WE'RE SCANNING FOR YOU:</p>
+        <p style="margin:0 0 10px;color:#e2e8f0;font-size:14px">🏗️ <strong>Renovation permits</strong> — Kitchen/addition permits pulled in the last 7 days. Cash-out refi or HELOC candidates.</p>
+        <p style="margin:0 0 10px;color:#e2e8f0;font-size:14px">🏠 <strong>FSBO listings</strong> — For-sale-by-owner. They'll need a mortgage when the next purchase happens.</p>
+        <p style="margin:0 0 10px;color:#e2e8f0;font-size:14px">⚠️ <strong>Lis pendens / foreclosure filings</strong> — Pre-foreclosure notices at the county. Refi or short-sale candidates moving fast.</p>
+        <p style="margin:0;color:#e2e8f0;font-size:14px">💼 <strong>New self-employed LLCs</strong> — MI SOS registrations. Bank-statement loan candidates 12–18 months out.</p>
+      </div>
+      <div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:24px;margin:0 0 24px">
+        <p style="color:#ffffff;font-weight:700;font-size:14px;margin:0 0 16px;letter-spacing:0.5px">HOW SIGNALS WORK:</p>
+        <p style="margin:0 0 12px;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#ef4444;color:#fff;font-weight:800;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:10px">SCORE 9–10</span><strong>Instant SMS alert</strong> — act fast. These are the warmest signals.</p>
+        <p style="margin:0 0 12px;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#f59e0b;color:#0a1628;font-weight:800;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:10px">SCORE 7–8</span><strong>Daily morning digest</strong> — review and draft outreach from your dashboard.</p>
+        <p style="margin:0;color:#e2e8f0;font-size:14px"><span style="display:inline-block;background:#1e3a5f;color:#94a3b8;font-weight:800;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:10px">SCORE ≤ 6</span>Stored for reference. Worth a look when volume is low.</p>
+      </div>
+      <div style="background:#0d1f3c;border:1px solid #00d4ff33;border-radius:10px;padding:20px 24px;margin:0 0 24px">
+        <p style="color:#00d4ff;font-weight:700;font-size:13px;margin:0 0 8px;letter-spacing:1px;text-transform:uppercase">FCRA COMPLIANCE — IMPORTANT</p>
+        <p style="color:#94a3b8;font-size:13px;margin:0">All signals are 100% public records and behavioral data. We do not access, purchase, or resell credit-bureau trigger leads. All outreach drafts in your dashboard must be manually approved and sent by you, the licensed loan officer. This service is H.R. 2808 compliant.</p>
+      </div>
+      <p style="color:#e2e8f0;font-size:14px;margin:0 0 16px"><strong>Dashboard:</strong> <a href="https://detroitwebagent.com/my-mortgage-radar" style="color:#00d4ff">detroitwebagent.com/my-mortgage-radar</a></p>
+      <p style="color:#e2e8f0;font-size:14px;margin:0 0 20px">First signals ETA: tomorrow morning. If you don't see any in 48 hours, reply to this email and I'll check the scanner. — Matt</p>
+      ${DWA_SIG}`,
+  },
   contractor_lead_subscription: {
     subject: "You're Locked In — Lead Radar Territory Reserved",
     nextStage: "📧 Welcome Email Sent",
@@ -493,6 +520,7 @@ const DWA_PRODUCTS = new Set([
   "industry_pulse_subscription",
   "growth_radar_subscription",
   "field_service_subscription",
+  "mortgage_radar_subscription",
 ]);
 
 const DWA_SIG = `<div style="border-top:1px solid #1e3a5f;padding-top:20px">

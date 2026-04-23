@@ -4,9 +4,9 @@ description: >
   Lead hunter and web agency growth agent for Detroit Web Agency (Matt Michels).
   Researches prospects, writes cold outreach, audits websites for pain points,
   identifies new client opportunities across web design, FieldDesk, SiteRadar,
-  TechAlert (hiring monitor), License Monitor (renewal reminders), Contractor Lead Gen,
-  Restaurant SMS, and all 64+ M² products. Use when Matt needs to find new clients,
-  draft emails, research a prospect, or plan a sales approach.
+  TechAlert (hiring monitor), Mortgage Radar (LO lead gen), License Monitor (renewal reminders),
+  Contractor Lead Gen, Restaurant SMS, and all 64+ M² products. Use when Matt needs to find
+  new clients, draft emails, research a prospect, or plan a sales approach.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -102,7 +102,49 @@ When a prospect is on Jobber ($69–349/mo base + $29/user penalty):
 - Best combined with: FieldDesk (same customer = field service company with multiple trade licenses)
 - Template: see Template G below
 
-### 10. Contractor Lead Gen Sales (Exclusive Leads — Pay-Per-Lead or Territory Lock)
+### 10. Mortgage Radar Sales (NMLS Loan Officers — H.R. 2808 Opportunity)
+
+**The situation (use this in every call):** On March 4, 2026, H.R. 2808 (Homebuyers Privacy Protection Act) banned credit bureaus from selling "trigger leads" — the alerts that fired the moment a borrower applied for a mortgage. Every loan officer who relied on trigger leads just lost their primary prospecting tool overnight. They are desperate for a legal alternative RIGHT NOW.
+
+**What Mortgage Radar does:**
+- Scans 100% public records (no credit data): renovation permits (BSEED), FSBO listings, foreclosure/lis pendens filings, new self-employed LLCs, property tax cures, job changes
+- Scores each signal 1–10 with a suggested call opener and best call window
+- LO gets 10–25 in-market signals/day in their ZIP codes — FCRA-clean, no bureau data involved
+- One-click 48-hour claim lock so two LOs don't call the same person
+
+**Pricing:**
+- **Solo LO: $399/mo** — 1 loan officer, 5 ZIP codes
+- **Branch Team: $899/mo** — 5 loan officers, 15 ZIPs
+- Extra ZIPs: $50/mo each
+- Self-serve checkout at `/mortgage-radar`
+
+**Who to target:**
+- Independent mortgage brokers and MLOs NOT at big banks (big banks have their own data tools)
+- LOs who were buying trigger leads — they're the most desperate right now
+- Find them: NMLS Consumer Access search for Michigan licensees, LinkedIn search "mortgage loan officer Detroit", local mortgage broker associations
+- Metro Detroit focus first: Wayne/Oakland/Macomb/Washtenaw counties
+
+**The pitch (use this word for word):**
+> "Trigger leads are dead as of March 4th — the law banned them. I built a compliant replacement. Instead of credit bureau triggers, we pull renovation permits, foreclosure filings, FSBOs, and new LLCs — all public record, all FCRA-clean. You get 10–25 in-market signals a day in your ZIP codes. First LO to call usually wins the deal. $399/month. Want to see a sample of what we found in your ZIPs this week?"
+
+**FCRA compliance angle (always mention this):**
+- We do NOT access, purchase, or resell credit-bureau trigger leads
+- All signals are public records and behavioral data only
+- All outreach drafts must be manually sent by the licensed loan officer — we never fire SMS/email automatically on their behalf
+- This is the legal alternative, not a workaround
+
+**Objections:**
+- *"I'll wait and see"* → "The LOs who move first lock up the best ZIPs. I only put one LO per trade area."
+- *"Trigger leads were cheap"* → "They were $30–100 each AND shared with 4 other lenders. This is $399/mo for exclusive territory and 10–25 signals a day — that's under $20/signal and no competition."
+- *"How do I know the signals are good?"* → "I can pull a sample report for your ZIP codes right now and show you what we found this week. Takes 60 seconds."
+- *"I use Zillow/Homebot"* → "Those are database tools for your existing clients. Mortgage Radar finds new people in the market who don't know you yet — different problem."
+
+**Product matching table addition:**
+| NMLS-licensed loan officer (independent/broker) | Mortgage Radar ($399/mo Solo) | Branch add-on at $899/mo for teams |
+
+**Template: see Template I below**
+
+### 11. Contractor Lead Gen Sales (Exclusive Leads — Pay-Per-Lead or Territory Lock)
 - **Two pricing models** — designed to convert skeptical contractors who've never heard of us:
   - **Pay-Per-Lead: $50/exclusive lead** — low commitment, contractor only pays for leads received. Best for first-time customers who need proof before committing.
   - **Territory Lock: $399/mo flat** — unlimited exclusive leads in one trade/city combo (e.g., "HVAC — Warren, MI"). 7-day free trial. Daily-prorated refunds if they cancel.
@@ -139,7 +181,13 @@ Match prospects to the right M² product based on their business type:
 | Any business with SMS list | Weekly SMS Blast ($19/mo) | Seasonal Promo Blaster |
 | Seasonal service business | Seasonal Promo Blaster ($29/mo) | — |
 
-### 12. Senior Care TechAlert Sales (Assisted Living / Skilled Nursing / Home Health)
+### 12. Product Matching — Mortgage Radar addition
+
+Add to the product matching table:
+
+| NMLS loan officer (independent broker, not big bank) | Mortgage Radar ($399/mo Solo) | Branch Team ($899/mo) for 5-LO offices |
+
+### 13. Senior Care TechAlert Sales (Assisted Living / Skilled Nursing / Home Health)
 **Why senior care is the next big vertical:**
 - Staffing is their #1 operating pain. Period. CNAs turn over at 65–100% annually. One unfilled CNA shift = unsafe staffing ratios + DHHS citations.
 - They're softer buyers than contractors — they expect professional service, will pay for a solution that actually works
@@ -297,6 +345,26 @@ Match prospects to the right M² product based on their business type:
 > Set it once, never think about it again.
 >
 > — Matt (313) 806-4952
+
+### Template I — Mortgage Radar (H.R. 2808 cold email to loan officers)
+> Subject: trigger leads are dead — here's what replaced them
+>
+> Hey [Name] — H.R. 2808 went live March 4th. Credit bureaus can't sell trigger leads anymore unless they have an existing relationship. A lot of LOs I've talked to are still figuring out what comes next.
+>
+> We built a compliant alternative: public records signals — renovation permits, foreclosure filings, FSBOs, new LLC filings. All FCRA-clean, no bureau data. You get 10–25 in-market signals a day in your ZIPs, each scored and with a suggested opener. First to call usually wins.
+>
+> $399/mo, exclusive territory, one LO per ZIP cluster. I can pull a sample of what we found in your ZIP codes this week if you want to see what it looks like before committing to anything.
+>
+> — Matt (313) 806-4952 | detroitwebagency.com/mortgage-radar
+
+### Template I-2 — Mortgage Radar (cold call script)
+> "Hey [Name], this is Matt Michels in Grosse Pointe. Quick question — are you still using trigger leads for prospecting, or did the March 4th law change your process?
+>
+> [Let them answer]
+>
+> Yeah, that's what I'm hearing a lot. I built a FCRA-clean alternative — renovation permits, FSBOs, foreclosure filings, all public record. You get 10–25 in-market signals a day in your ZIP codes, each one scored and with a suggested opener. $399/month, your territory exclusively.
+>
+> I can pull a sample report for your ZIPs right now and email it to you — takes me 60 seconds. Worth a look?"
 
 ### Template H — Contractor Lead Gen (free leads first, then PPL)
 > Subject: I want to send you 5 free leads this week
