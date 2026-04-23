@@ -19,6 +19,34 @@ const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const ADMIN_EMAIL = "matt@detroitwebagent.com";
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
+const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
+const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
+const DWA_PHONE = "+13139921219";
+
+function streetViewUrl(address: string, city: string, zip: string): string {
+  if (!GOOGLE_MAPS_API_KEY || !address) return "";
+  const loc = encodeURIComponent(`${address}, ${city || ""} ${zip || ""}, MI`);
+  return `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${loc}&fov=80&key=${GOOGLE_MAPS_API_KEY}`;
+}
+
+async function sendHotLeadSMS(to: string, businessName: string, address: string, score: number, signalType: string) {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !to) return;
+  try {
+    const body = `🔥 Mortgage Radar HOT lead (${score}/10): ${address} — ${signalType.replace(/_/g, " ")}. Open dashboard for full intel + draft outreach. Manual send only — TCPA. — DWA`;
+    const params = new URLSearchParams({ To: to, From: DWA_PHONE, Body: body });
+    await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: params,
+    });
+  } catch (e) {
+    console.warn("[sendHotLeadSMS]", e instanceof Error ? e.message : String(e));
+  }
+}
 
 interface RawSignal {
   full_name?: string;
@@ -545,6 +573,7 @@ async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal
     }],
     suggested_opener: opener,
     best_call_window: window,
+    street_view_url: streetViewUrl(s.address, s.city || "", s.zip || ""),
     raw: s as unknown as Record<string, unknown>,
   };
   const { data: ins, error } = await (sb.from as any)("mortgage_radar_leads")
@@ -601,6 +630,11 @@ serve(async (req) => {
   let inserted = 0;
   let updated = 0;
   let alertsQueued = 0;
+  let inlineEnriched = 0;
+  let queuedForEnrich = 0;
+  let hotSmsFired = 0;
+  let inlineEnrichBudget = 5; // first 5 new leads per run get inline enrich; rest go to queue
+
   for (const s of signals) {
     const res = await upsertWithDedup(sb, s);
     if (!res) continue;
@@ -613,12 +647,44 @@ serve(async (req) => {
         .eq("id", s.source_id);
     }
 
-    const matchedClientIds = await notifyClients(sb, s.zip, scoreFor(s.signal_type));
+    // Enrichment: inline first 5 new leads, queue the rest
+    if (res.created) {
+      if (inlineEnrichBudget > 0) {
+        try {
+          const r = await fetch(`${SUPABASE_URL}/functions/v1/mortgage-radar-enrich`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${SERVICE_ROLE}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ lead_id: res.id }),
+          });
+          if (r.ok) { inlineEnriched += 1; inlineEnrichBudget -= 1; }
+        } catch (_) { /* fall through to queue */ }
+      } else {
+        await (sb.from as any)("mortgage_radar_enrich_queue")
+          .upsert({ lead_id: res.id, status: "pending" }, { onConflict: "lead_id" });
+        queuedForEnrich += 1;
+      }
+    }
+
+    const score = scoreFor(s.signal_type);
+    const matchedClientIds = await notifyClients(sb, s.zip, score);
     if (matchedClientIds.length > 0) {
       await (sb.from as any)("mortgage_radar_leads")
         .update({ notified_client_ids: matchedClientIds })
         .eq("id", res.id);
       alertsQueued += matchedClientIds.length;
+
+      // Hot lead SMS (score >= 9) to matched clients with phone on file
+      if (score >= 9 && res.created) {
+        const { data: hotClients } = await (sb.from as any)("mortgage_radar_clients")
+          .select("phone, business_name")
+          .in("id", matchedClientIds);
+        for (const c of (hotClients || [])) {
+          if (c.phone) {
+            await sendHotLeadSMS(c.phone, c.business_name || "", s.address || "", score, s.signal_type);
+            hotSmsFired += 1;
+          }
+        }
+      }
     }
   }
 
@@ -630,9 +696,9 @@ serve(async (req) => {
         body: JSON.stringify({
           from: "Detroit Web Agency <matt@detroitwebagent.com>",
           to: [ADMIN_EMAIL],
-          subject: `🏠 Mortgage Radar — ${inserted} new, ${updated} updated, ${alertsQueued} alerts`,
+          subject: `🏠 Mortgage Radar — ${inserted} new, ${updated} updated, ${alertsQueued} alerts, ${hotSmsFired} hot SMS`,
           html: `<p><strong>Mortgage Radar daily run</strong></p>
-            <p>Started: ${startedAt}<br>Signals fetched: ${signals.length}<br>New leads: ${inserted}<br>Updated (repeat signals): ${updated}<br>Client alerts queued: ${alertsQueued}</p>
+            <p>Started: ${startedAt}<br>Signals fetched: ${signals.length}<br>New leads: ${inserted}<br>Updated (repeat signals): ${updated}<br>Client alerts queued: ${alertsQueued}<br>Inline-enriched: ${inlineEnriched}<br>Queued for enrich: ${queuedForEnrich}<br>Hot lead SMS fired: ${hotSmsFired}</p>
             <pre>${JSON.stringify(sourceBreakdown, null, 2)}</pre>`,
         }),
       });
@@ -648,6 +714,9 @@ serve(async (req) => {
     inserted,
     updated,
     alerts_queued: alertsQueued,
+    inline_enriched: inlineEnriched,
+    queued_for_enrich: queuedForEnrich,
+    hot_sms_fired: hotSmsFired,
     source_breakdown: sourceBreakdown,
   }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });

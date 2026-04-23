@@ -9184,6 +9184,44 @@ export type Database = {
         }
         Relationships: []
       }
+      mortgage_radar_enrich_queue: {
+        Row: {
+          attempts: number
+          created_at: string
+          id: string
+          last_error: string | null
+          lead_id: string
+          processed_at: string | null
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          lead_id: string
+          processed_at?: string | null
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          lead_id?: string
+          processed_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mortgage_radar_enrich_queue_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: true
+            referencedRelation: "mortgage_radar_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mortgage_radar_lead_locks: {
         Row: {
           client_id: string
@@ -9240,9 +9278,11 @@ export type Database = {
           estimated_loan_amount: number | null
           full_name: string | null
           id: string
+          intel_highlights: Json | null
           last_signal_at: string
           notified_client_ids: string[] | null
           phone: string | null
+          pipeline_stage: string
           raw: Json | null
           score: number
           signal_count: number
@@ -9253,6 +9293,7 @@ export type Database = {
           signal_type: string
           signal_url: string | null
           state: string | null
+          street_view_url: string | null
           suggested_opener: string | null
           updated_at: string
           zip: string | null
@@ -9267,9 +9308,11 @@ export type Database = {
           estimated_loan_amount?: number | null
           full_name?: string | null
           id?: string
+          intel_highlights?: Json | null
           last_signal_at?: string
           notified_client_ids?: string[] | null
           phone?: string | null
+          pipeline_stage?: string
           raw?: Json | null
           score?: number
           signal_count?: number
@@ -9280,6 +9323,7 @@ export type Database = {
           signal_type: string
           signal_url?: string | null
           state?: string | null
+          street_view_url?: string | null
           suggested_opener?: string | null
           updated_at?: string
           zip?: string | null
@@ -9294,9 +9338,11 @@ export type Database = {
           estimated_loan_amount?: number | null
           full_name?: string | null
           id?: string
+          intel_highlights?: Json | null
           last_signal_at?: string
           notified_client_ids?: string[] | null
           phone?: string | null
+          pipeline_stage?: string
           raw?: Json | null
           score?: number
           signal_count?: number
@@ -9307,6 +9353,7 @@ export type Database = {
           signal_type?: string
           signal_url?: string | null
           state?: string | null
+          street_view_url?: string | null
           suggested_opener?: string | null
           updated_at?: string
           zip?: string | null
