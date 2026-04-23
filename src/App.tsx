@@ -293,6 +293,8 @@ const StormDamageLeads = lazyRetry(() => import("./pages/StormDamageLeads"));
 const RecallAlertService = lazyRetry(() => import("./pages/RecallAlertService"));
 const PermitWatch = lazyRetry(() => import("./pages/PermitWatch"));
 const HireAlert = lazyRetry(() => import("./pages/HireAlert"));
+const BuyerRadarPreview = lazyRetry(() => import("./pages/BuyerRadarPreview"));
+const DemandRadarPreview = lazyRetry(() => import("./pages/DemandRadarPreview"));
 const HireAlertMSPInquiry = lazyRetry(() => import("./pages/HireAlertMSPInquiry"));
 
 const FreeLeadsQR = lazyRetry(() => import("./pages/FreeLeadsQR"));
