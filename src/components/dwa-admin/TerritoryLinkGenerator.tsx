@@ -359,17 +359,18 @@ export default function TerritoryLinkGenerator() {
         {mode === "single" ? (
           <div>
             <label className="block text-[10px] text-muted-foreground font-semibold mb-1 uppercase">City / Territory *</label>
-            <input
-              list="known-cities"
-              type="text"
+            <select
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              placeholder="Livonia"
-              className="w-full bg-background border border-border px-2 py-1.5 text-sm text-foreground focus:outline-none focus:border-primary rounded"
-            />
-            <datalist id="known-cities">
-              {knownCities.map(c => <option key={c} value={c} />)}
-            </datalist>
+              disabled={!trade}
+              className="w-full bg-background border border-border px-2 py-1.5 text-sm text-foreground focus:outline-none focus:border-primary rounded disabled:opacity-50"
+            >
+              <option value="">{trade ? `Select city… (${citiesForTrade.length} available)` : "Pick a trade first"}</option>
+              {citiesForTrade.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            {trade && citiesForTrade.length === 0 && (
+              <p className="text-[10px] text-amber-500 mt-1">No territories seeded for {tradeLabel}. Add one in the "Territory Status" section above.</p>
+            )}
           </div>
         ) : (
           <div>
