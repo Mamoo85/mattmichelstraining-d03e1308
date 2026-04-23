@@ -630,6 +630,11 @@ serve(async (req) => {
   let inserted = 0;
   let updated = 0;
   let alertsQueued = 0;
+  let inlineEnriched = 0;
+  let queuedForEnrich = 0;
+  let hotSmsFired = 0;
+  let inlineEnrichBudget = 5; // first 5 new leads per run get inline enrich; rest go to queue
+
   for (const s of signals) {
     const res = await upsertWithDedup(sb, s);
     if (!res) continue;
@@ -642,12 +647,44 @@ serve(async (req) => {
         .eq("id", s.source_id);
     }
 
-    const matchedClientIds = await notifyClients(sb, s.zip, scoreFor(s.signal_type));
+    // Enrichment: inline first 5 new leads, queue the rest
+    if (res.created) {
+      if (inlineEnrichBudget > 0) {
+        try {
+          const r = await fetch(`${SUPABASE_URL}/functions/v1/mortgage-radar-enrich`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${SERVICE_ROLE}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ lead_id: res.id }),
+          });
+          if (r.ok) { inlineEnriched += 1; inlineEnrichBudget -= 1; }
+        } catch (_) { /* fall through to queue */ }
+      } else {
+        await (sb.from as any)("mortgage_radar_enrich_queue")
+          .upsert({ lead_id: res.id, status: "pending" }, { onConflict: "lead_id" });
+        queuedForEnrich += 1;
+      }
+    }
+
+    const score = scoreFor(s.signal_type);
+    const matchedClientIds = await notifyClients(sb, s.zip, score);
     if (matchedClientIds.length > 0) {
       await (sb.from as any)("mortgage_radar_leads")
         .update({ notified_client_ids: matchedClientIds })
         .eq("id", res.id);
       alertsQueued += matchedClientIds.length;
+
+      // Hot lead SMS (score >= 9) to matched clients with phone on file
+      if (score >= 9 && res.created) {
+        const { data: hotClients } = await (sb.from as any)("mortgage_radar_clients")
+          .select("phone, business_name")
+          .in("id", matchedClientIds);
+        for (const c of (hotClients || [])) {
+          if (c.phone) {
+            await sendHotLeadSMS(c.phone, c.business_name || "", s.address || "", score, s.signal_type);
+            hotSmsFired += 1;
+          }
+        }
+      }
     }
   }
 
