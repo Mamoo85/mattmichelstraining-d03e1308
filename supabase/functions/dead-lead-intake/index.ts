@@ -20,28 +20,6 @@ const CORS = {
 };
 
 
-<<<<<<< HEAD
-// ── Items 34 & 36: Twilio Lookup v2 — phone carrier classification ─────────────
-async function twilioCarrierLookup(phone: string): Promise<{ type: string; isDncRisk: boolean }> {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) return { type: "unknown", isDncRisk: false };
-  try {
-    const res = await fetch(
-      `https://lookups.twilio.com/v2/PhoneNumbers/${encodeURIComponent(phone)}?Fields=line_type_intelligence`,
-      {
-        headers: { Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}` },
-        signal: AbortSignal.timeout(5000),
-      }
-    );
-    if (!res.ok) return { type: "unknown", isDncRisk: false };
-    const data = await res.json();
-    const type: string = data?.line_type_intelligence?.type || "unknown";
-    // Landlines are higher DNC-risk (can be on National DNC Registry)
-    return { type, isDncRisk: type === "landline" };
-  } catch { return { type: "unknown", isDncRisk: false }; }
-}
-
-=======
->>>>>>> b650fd72 (Fix dead-lead-intake: add RND check, remove duplicate functions, store is_reassigned)
 function normalizePhone(raw: string): string {
   const digits = raw.replace(/\D/g, "");
   if (digits.length === 10) return `+1${digits}`;
