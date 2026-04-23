@@ -1687,11 +1687,18 @@ async function scanDOLApprenticeships(): Promise<LicenseCandidate[]> {
   return candidates;
 }
 
-// ===== SOURCE 19: LARA Cosmetology / Barbers (Socrata fallback to MiPLUS search HTML) =====
+// ===== SOURCE 19: LARA Cosmetology / Barbers =====
+// midl-yni7 dataset removed from data.michigan.gov (404). Using dynamic discovery same as S3/S21.
 async function scanLARACosmetology(): Promise<LicenseCandidate[]> {
   const candidates: LicenseCandidate[] = [];
   try {
-    const url = `https://data.michigan.gov/resource/midl-yni7.json?$where=upper(profession)%20like%20%27%25COSMETOL%25%27%20OR%20upper(profession)%20like%20%27%25BARBER%25%27&$limit=200`;
+    const meta = await fetch("https://data.michigan.gov/api/views/metadata/v1?q=cosmetology+barber+license&limit=20", { signal: AbortSignal.timeout(10_000) });
+    if (!meta.ok) return candidates;
+    const metaRows: any[] = await meta.json().then((d: any) => Array.isArray(d) ? d : (d?.results || []));
+    const dsId = metaRows.find((r: any) => /cosmetol|barber|beauti/i.test(r.name || ""))?.id
+      || metaRows.find((r: any) => r.id)?.id;
+    if (!dsId) return candidates;
+    const url = `https://data.michigan.gov/resource/${dsId}.json?$where=upper(profession)%20like%20%27%25COSMETOL%25%27%20OR%20upper(profession)%20like%20%27%25BARBER%25%27&$limit=200`;
     const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
     if (!res.ok) return candidates;
     const rows = await res.json();
@@ -1712,11 +1719,18 @@ async function scanLARACosmetology(): Promise<LicenseCandidate[]> {
   return candidates;
 }
 
-// ===== SOURCE 20: LARA Real Estate / Insurance (Socrata) =====
+// ===== SOURCE 20: LARA Real Estate / Insurance =====
+// midl-yni7 dataset removed from data.michigan.gov (404). Using dynamic discovery same as S3/S21.
 async function scanLARARealEstate(): Promise<LicenseCandidate[]> {
   const candidates: LicenseCandidate[] = [];
   try {
-    const url = `https://data.michigan.gov/resource/midl-yni7.json?$where=upper(profession)%20like%20%27%25REAL%20ESTATE%25%27%20OR%20upper(profession)%20like%20%27%25INSURANCE%25%27&$limit=200`;
+    const meta = await fetch("https://data.michigan.gov/api/views/metadata/v1?q=real+estate+insurance+license&limit=20", { signal: AbortSignal.timeout(10_000) });
+    if (!meta.ok) return candidates;
+    const metaRows: any[] = await meta.json().then((d: any) => Array.isArray(d) ? d : (d?.results || []));
+    const dsId = metaRows.find((r: any) => /real.estate|insurance/i.test(r.name || ""))?.id
+      || metaRows.find((r: any) => r.id)?.id;
+    if (!dsId) return candidates;
+    const url = `https://data.michigan.gov/resource/${dsId}.json?$where=upper(profession)%20like%20%27%25REAL%20ESTATE%25%27%20OR%20upper(profession)%20like%20%27%25INSURANCE%25%27&$limit=200`;
     const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
     if (!res.ok) return candidates;
     const rows = await res.json();
@@ -1873,57 +1887,52 @@ async function scanBPLContractorCompanies(): Promise<LicenseCandidate[]> {
 // OSHA publishes inspection data for all establishments via a free REST API.
 // Filters for Michigan + trade NAICS codes. Routes to techalert_business_prospects
 // (active employers with inspections = actively operating, likely hiring).
+// enforcements.osha.gov DNS does not resolve — domain retired.
+// Using Sonar/Gemini to surface Michigan trade employers with recent OSHA inspections.
 async function scanOSHAMichiganEstablishments(): Promise<LicenseCandidate[]> {
+  if (!DOL_API_KEY && !LOVABLE_API_KEY) return [];
   const candidates: LicenseCandidate[] = [];
-  const seen = new Set<string>();
-  // NAICS codes: 238210=Electrical, 238220=Plumbing+HVAC, 238290=Other building equipment (boilers)
-  const naicsCodes = ["238210", "238220", "238290", "238110"];
-  const cutoff = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  try {
+    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: "You are a public records researcher. Return ONLY valid JSON array, no prose, no markdown fences." },
+          { role: "user", content: `Search for Michigan trade companies (electrical, HVAC, plumbing, boiler, mechanical) that received OSHA inspection notices or workplace safety citations in the last 6 months in Metro Detroit (Wayne, Oakland, Macomb counties). Sources: osha.gov enforcement data, Michigan MIOSHA press releases, local news.
 
-  for (const naics of naicsCodes) {
-    try {
-      const url = `https://enforcements.osha.gov/api/search/inspections?state=MI&naics=${naics}&size=50&sort=open_date:desc`;
-      const res = await fetch(url, {
-        headers: { "Accept": "application/json", "User-Agent": "Mozilla/5.0 research" },
-        signal: AbortSignal.timeout(12_000),
+Return JSON array: [{"company_name":"string","trade":"Electrician|HVAC/Plumbing|Boiler/Mechanical|General Contractor","city":"string","inspection_date":"YYYY-MM-DD","citation_type":"string"}]
+
+Companies with recent OSHA activity are actively operating = ideal TechAlert prospects for hiring. Return [] if nothing found. Maximum 20 results.` },
+        ],
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!r.ok) return candidates;
+    const j = await r.json();
+    const text = j?.choices?.[0]?.message?.content || "[]";
+    const cleaned = text.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+    const arr = JSON.parse(cleaned);
+    if (!Array.isArray(arr)) return candidates;
+    const seen = new Set<string>();
+    for (const item of arr) {
+      const name = item.company_name || "";
+      if (!name || name.length < 3) continue;
+      const key = name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      candidates.push({
+        full_name: name,
+        license_type: item.trade || "Trade Professional",
+        license_number: null,
+        license_expiry: null,
+        city: item.city || null,
+        source: "osha_establishment",
       });
-      if (!res.ok) {
-        console.warn(`[S23:OSHA] HTTP ${res.status} for NAICS ${naics}`);
-        continue;
-      }
-      const data = await res.json();
-      const inspections: any[] = data?.hits?.hits?.map((h: any) => h._source) ||
-        data?.inspections || data?.results || data?.data || [];
-
-      for (const insp of inspections) {
-        const bizName = insp.estab_name || insp.establishment_name || insp.company || "";
-        if (!bizName || bizName.length < 3) continue;
-        const openDate = insp.open_date || insp.date_opened || "";
-        if (openDate && openDate < cutoff) continue;
-        const city = insp.site_city || insp.city || "";
-        const state = (insp.site_state || insp.state || "").toUpperCase();
-        if (state && state !== "MI") continue;
-        const key = bizName.toLowerCase();
-        if (seen.has(key)) continue;
-        seen.add(key);
-
-        let trade = "Trade Professional";
-        if (naics === "238210") trade = "Electrician";
-        else if (naics === "238220") trade = "HVAC/Plumbing";
-        else if (naics === "238290" || naics === "238110") trade = "Boiler/Mechanical";
-
-        candidates.push({
-          full_name: bizName,
-          license_type: trade,
-          license_number: insp.activity_nr ? String(insp.activity_nr) : null,
-          license_expiry: null,
-          city: city || null,
-          source: "osha_establishment",
-        });
-      }
-    } catch (e) {
-      console.warn(`[S23:OSHA] NAICS ${naics} error: ${e instanceof Error ? e.message : String(e)}`);
     }
+  } catch (e) {
+    console.warn(`[S23:OSHA] error: ${e instanceof Error ? e.message : String(e)}`);
   }
   console.log(`[S23:OSHA] Found ${candidates.length} active Michigan trade establishments`);
   return candidates;
