@@ -850,20 +850,19 @@ async function enrichViaSonar(candidate: RawCandidate): Promise<Record<string, u
             role: "user",
             content: `Search the web using these boolean queries to find contact and professional information for "${candidate.full_name}", a ${tradeLabel} in ${locationLabel}:
 
-1. site:linkedin.com/in/ "${candidate.full_name}" "${candidate.city || "Michigan"}"
-2. site:indeed.com/r/ "${candidate.full_name}"
-3. site:facebook.com "${candidate.full_name}" "${candidate.city || "Michigan"}"
+1. site:indeed.com/r/ "${candidate.full_name}" "${candidate.city || "Michigan"}"
+2. site:ziprecruiter.com/candidate/ "${candidate.full_name}"
+3. "${candidate.full_name}" "${candidate.city || "Michigan"}" resume OR "open to work"
 
 From the search results, extract the following and return as a JSON object:
 {
-  "linkedin_url": "full LinkedIn profile URL or null",
-  "facebook_url": "full Facebook profile URL or null",
+  "profile_url": "full public profile URL from a job board or null",
   "email": "any public email found or null",
   "phone": "any public phone found or null",
   "current_employer": "company name or null",
   "current_title": "job title or null",
   "years_experience": number or null,
-  "last_job_board_seen": "ISO date string if resume/profile was recently updated on Indeed/LinkedIn (within 90 days), else null",
+  "last_job_board_seen": "ISO date string if resume/profile was recently updated on Indeed/ZipRecruiter (within 90 days), else null",
   "job_board_active": true or false
 }
 
@@ -1002,7 +1001,7 @@ async function probeEmployerGrowth(employer: string): Promise<{ risk: string; pr
         }, {
           role: "user",
           content: `Search the web for recent job postings from the company "${employer}":
-site:linkedin.com/jobs "${employer}" OR site:indeed.com/cmp "${employer}" hiring 2025
+site:indeed.com/cmp "${employer}" hiring 2025 OR "${employer}" job openings Michigan
 
 Count the number of active job postings you find. Also check if this company shows signs of layoffs or downsizing.
 
