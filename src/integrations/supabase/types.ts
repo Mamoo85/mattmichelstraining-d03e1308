@@ -9162,17 +9162,21 @@ export type Database = {
           estimated_loan_amount: number | null
           full_name: string | null
           id: string
+          last_signal_at: string
           notified_client_ids: string[] | null
           phone: string | null
           raw: Json | null
           score: number
+          signal_count: number
           signal_date: string | null
           signal_detail: string | null
+          signal_history: Json
           signal_source: string
           signal_type: string
           signal_url: string | null
           state: string | null
           suggested_opener: string | null
+          updated_at: string
           zip: string | null
         }
         Insert: {
@@ -9185,17 +9189,21 @@ export type Database = {
           estimated_loan_amount?: number | null
           full_name?: string | null
           id?: string
+          last_signal_at?: string
           notified_client_ids?: string[] | null
           phone?: string | null
           raw?: Json | null
           score?: number
+          signal_count?: number
           signal_date?: string | null
           signal_detail?: string | null
+          signal_history?: Json
           signal_source: string
           signal_type: string
           signal_url?: string | null
           state?: string | null
           suggested_opener?: string | null
+          updated_at?: string
           zip?: string | null
         }
         Update: {
@@ -9208,20 +9216,84 @@ export type Database = {
           estimated_loan_amount?: number | null
           full_name?: string | null
           id?: string
+          last_signal_at?: string
           notified_client_ids?: string[] | null
           phone?: string | null
           raw?: Json | null
           score?: number
+          signal_count?: number
           signal_date?: string | null
           signal_detail?: string | null
+          signal_history?: Json
           signal_source?: string
           signal_type?: string
           signal_url?: string | null
           state?: string | null
           suggested_opener?: string | null
+          updated_at?: string
           zip?: string | null
         }
         Relationships: []
+      }
+      mortgage_radar_outreach: {
+        Row: {
+          approved_at: string | null
+          approved_body: string | null
+          channel: string
+          client_id: string
+          created_at: string
+          draft_body: string
+          draft_subject: string | null
+          id: string
+          lead_id: string
+          send_error: string | null
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_body?: string | null
+          channel: string
+          client_id: string
+          created_at?: string
+          draft_body: string
+          draft_subject?: string | null
+          id?: string
+          lead_id: string
+          send_error?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_body?: string | null
+          channel?: string
+          client_id?: string
+          created_at?: string
+          draft_body?: string
+          draft_subject?: string | null
+          id?: string
+          lead_id?: string
+          send_error?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mortgage_radar_outreach_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "mortgage_radar_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mortgage_radar_outreach_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "mortgage_radar_leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       new_mover_clients: {
         Row: {
