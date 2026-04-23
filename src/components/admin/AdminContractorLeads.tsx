@@ -82,6 +82,9 @@ export default function AdminContractorLeads() {
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickForm, setQuickForm] = useState({ site_id: "", name: "", phone: "", email: "", description: "" });
   const [submittingLead, setSubmittingLead] = useState(false);
+  const [newTrade, setNewTrade] = useState("");
+  const [newCity, setNewCity] = useState("");
+  const [addingTerritory, setAddingTerritory] = useState(false);
 
   const load = useCallback(async () => {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
