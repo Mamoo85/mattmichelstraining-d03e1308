@@ -2099,15 +2099,16 @@ async function scanZipRecruiterCandidates(): Promise<LicenseCandidate[]> {
   return candidates;
 }
 
-// ===== S28: Facebook Trade Community Posts (Sonar) =====
-// Public Facebook group posts from Michigan tradespeople announcing availability.
+// ===== S28: Public Job Board Trade Posts (Sonar) =====
+// DATA SOURCE: Indeed/ZipRecruiter/SimplyHired — legal basis: public job boards permit search indexing.
+// (Replaced site:facebook.com queries 2026-04-23 — Facebook ToS prohibits scraping.)
 async function scanFacebookTradePosts(): Promise<LicenseCandidate[]> {
   if (!OPENROUTER_API_KEY) return [];
   const queries = [
-    { q: `site:facebook.com Michigan HVAC technician "looking for work" OR "available" OR "just got my license" 2025 OR 2026 Detroit OR Warren OR Dearborn OR "Metro Detroit"`, trade: "HVAC Technician" },
-    { q: `site:facebook.com Michigan licensed electrician "open to work" OR "available" OR "seeking employment" 2025 OR 2026 Detroit OR Wayne County OR Oakland County`, trade: "Electrician" },
-    { q: `site:facebook.com Michigan licensed plumber "looking for work" OR "available" OR "new journeyman" 2025 OR 2026 Metro Detroit`, trade: "Plumber" },
-    { q: `site:facebook.com Michigan boiler operator stationary engineer "looking for work" OR "available" OR "certified" 2025 OR 2026`, trade: "Boiler Operator" },
+    { q: `(site:indeed.com OR site:ziprecruiter.com) Michigan HVAC technician "looking for work" OR "available" 2025 OR 2026 Detroit OR Warren OR Dearborn OR "Metro Detroit"`, trade: "HVAC Technician" },
+    { q: `(site:indeed.com OR site:ziprecruiter.com) Michigan licensed electrician "open to work" OR "available" 2025 OR 2026 Detroit OR Wayne County OR Oakland County`, trade: "Electrician" },
+    { q: `(site:indeed.com OR site:ziprecruiter.com) Michigan licensed plumber "looking for work" OR "available" OR "new journeyman" 2025 OR 2026 Metro Detroit`, trade: "Plumber" },
+    { q: `(site:indeed.com OR site:ziprecruiter.com) Michigan boiler operator stationary engineer "looking for work" OR "available" OR "certified" 2025 OR 2026`, trade: "Boiler Operator" },
   ];
   const candidates: LicenseCandidate[] = [];
   const seen = new Set<string>();
