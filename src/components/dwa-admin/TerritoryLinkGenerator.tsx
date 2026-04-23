@@ -20,6 +20,70 @@ function copy(text: string, label: string) {
   navigator.clipboard.writeText(text).then(() => toast.success(`${label} copied`));
 }
 
+// Per-(link/token) cooldown to prevent accidental double-sends of the same generated SMS.
+// Stored in localStorage so it survives navigation; key includes a short hash of the text so
+// re-copying a *different* draft for the same link is allowed.
+const SMS_COOLDOWN_MS = 60 * 1000; // 60 seconds
+const SMS_COOLDOWN_PREFIX = "dwa_sms_cooldown_";
+
+function hashText(s: string): string {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return Math.abs(h).toString(36);
+}
+
+function cooldownKey(idKey: string, text: string): string {
+  return `${SMS_COOLDOWN_PREFIX}${idKey}_${hashText(text)}`;
+}
+
+/** Returns ms remaining if still in cooldown, else 0. */
+function cooldownRemaining(idKey: string, text: string): number {
+  try {
+    const raw = localStorage.getItem(cooldownKey(idKey, text));
+    if (!raw) return 0;
+    const sentAt = Number(raw);
+    if (!Number.isFinite(sentAt)) return 0;
+    const remaining = SMS_COOLDOWN_MS - (Date.now() - sentAt);
+    return remaining > 0 ? remaining : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function markSent(idKey: string, text: string) {
+  try {
+    localStorage.setItem(cooldownKey(idKey, text), String(Date.now()));
+  } catch { /* localStorage unavailable */ }
+}
+
+/**
+ * Copy an SMS draft with a per-link cooldown. If the same link+text was copied
+ * within SMS_COOLDOWN_MS, block by default and require a second click to override.
+ * Returns true if the copy actually happened.
+ */
+function copySmsDraftGuarded(opts: {
+  text: string;
+  idKey: string; // unique per generated link (prefer token, fall back to URL)
+  label: string;
+  forceOverride?: boolean;
+  onBlocked?: (secondsLeft: number) => void;
+}): boolean {
+  const remaining = cooldownRemaining(opts.idKey, opts.text);
+  if (remaining > 0 && !opts.forceOverride) {
+    const seconds = Math.ceil(remaining / 1000);
+    opts.onBlocked?.(seconds);
+    toast.warning(
+      `You already sent this exact SMS for this link ${Math.round((SMS_COOLDOWN_MS - remaining) / 1000)}s ago. Wait ${seconds}s or click again to override.`,
+    );
+    return false;
+  }
+  navigator.clipboard.writeText(opts.text).then(() => {
+    markSent(opts.idKey, opts.text);
+    toast.success(opts.forceOverride ? `${opts.label} copied (override)` : `${opts.label} copied`);
+  });
+  return true;
+}
+
 function buildLink(opts: {
   trade: string;
   city: string;
