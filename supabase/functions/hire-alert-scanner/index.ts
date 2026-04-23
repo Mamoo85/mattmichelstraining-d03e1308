@@ -645,6 +645,121 @@ async function extractJobSeekersFromProse(prose: string): Promise<Array<{ name: 
   }
 }
 
+// OSHA serious injury/illness reports — company had incident = worker left or is injured = they're hiring
+// Source: OSHA Severe Injury Report API (public, no auth)
+async function scanOSHAIncidents(): Promise<RawCandidate[]> {
+  try {
+    const cutoff = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
+    const url = `https://data.dol.gov/resource/fjbs-c3ne.json?$where=event_date>='${cutoff}'&$limit=200&$order=event_date DESC`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    if (!r.ok) return [];
+    const records: any[] = await r.json();
+    // Filter to Michigan trade establishments
+    const tradeNAICS = ["238", "237", "236", "622", "623", "811"]; // construction, healthcare, repair
+    const miRecords = records.filter((rec: any) =>
+      rec.establishment_state === "MI" &&
+      tradeNAICS.some((code) => String(rec.naics_code || "").startsWith(code)) &&
+      /detroit|dearborn|warren|livonia|sterling|troy|pontiac|southfield|ann arbor|canton|westland|farmington/i.test(rec.establishment_city || "")
+    );
+    // Each incident = the employer is a potential TechAlert client needing a replacement hire
+    // Return as candidates where full_name = company name (we're selling TO employers, not seeking workers)
+    return miRecords.slice(0, 20).map((rec: any) => ({
+      full_name: rec.establishment_name || "Unknown employer",
+      city: rec.establishment_city || undefined,
+      zip: undefined,
+      source: "firecrawl" as const,
+      license_type: "osha_incident_employer",
+      raw_data: {
+        osha_case: rec.case_id || rec.id,
+        incident_type: rec.nature_of_injury || rec.hospitalization || "Serious injury",
+        naics: rec.naics_code,
+        naics_title: rec.naics_title,
+        event_date: rec.event_date,
+        is_employer_lead: true,
+      },
+    }));
+  } catch (e) {
+    console.warn("[scanOSHAIncidents]", e instanceof Error ? e.message : String(e));
+    return [];
+  }
+}
+
+// SBA loan approvals — Metro Detroit companies that just got capital are expanding = need to hire
+async function scanSBALoanApprovals(): Promise<RawCandidate[]> {
+  try {
+    const cutoff = new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10);
+    const url = `https://data.sba.gov/api/3/action/datastore_search?resource_id=aab80ac8-f89e-4a8d-8f14-3b0a50b0e5ff&filters={"BorrState":"MI","ApprovalDate":{"$gte":"${cutoff}"}}&limit=200`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    if (!r.ok) return [];
+    const j = await r.json();
+    const records: any[] = j?.result?.records || [];
+    const tradeNAICS = ["238", "237", "236", "622", "623", "811", "484", "441", "423"];
+    const miTrade = records.filter((rec: any) =>
+      /detroit|dearborn|warren|livonia|sterling|troy|pontiac|southfield|ann arbor|canton|westland|farmington|grosse pointe/i.test(rec.BorrCity || "") &&
+      tradeNAICS.some((code) => String(rec.NAICSCode || "").startsWith(code)) &&
+      Number(rec.GrossApproval || 0) >= 50_000
+    );
+    return miTrade.slice(0, 20).map((rec: any) => ({
+      full_name: rec.BorrName || "Unknown company",
+      city: rec.BorrCity || undefined,
+      zip: typeof rec.BorrZip === "string" ? rec.BorrZip.slice(0, 5) : undefined,
+      source: "firecrawl" as const,
+      license_type: "sba_expansion_employer",
+      raw_data: {
+        sba_amount: rec.GrossApproval,
+        naics: rec.NAICSCode,
+        approval_date: rec.ApprovalDate,
+        is_employer_lead: true,
+      },
+    }));
+  } catch (e) {
+    console.warn("[scanSBALoanApprovals]", e instanceof Error ? e.message : String(e));
+    return [];
+  }
+}
+
+// USDOL registered apprenticeship completions — fresh-licensed tradespeople entering the market
+async function scanApprenticeshipCompletions(): Promise<RawCandidate[]> {
+  // RAPIDS (Registered Apprenticeship Partners Information Data System) — DOL public data
+  try {
+    const url = "https://www.dol.gov/agencies/eta/apprenticeship/about/statisticsdata";
+    // Sonar fallback — RAPIDS API requires registration. Use Sonar to find recent MI completions.
+    if (!LOVABLE_API_KEY) return [];
+    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: "You are a public records researcher. Return ONLY valid JSON array, no prose, no markdown." },
+          { role: "user", content: `Search for recent (last 60 days) registered apprenticeship program completions or graduations in Michigan for trades: HVAC, boiler operator, electrician, plumber, pipefitter, welder. Sources: DOL RAPIDS database, union hall announcements, community college press releases. Return JSON: [{"full_name":"string","trade":"string","city":"string","completion_date":"YYYY-MM-DD","source_url":"string"}]. Return [] if nothing found.` },
+        ],
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!r.ok) return [];
+    const j = await r.json();
+    const text = j?.choices?.[0]?.message?.content || "[]";
+    const cleaned = text.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+    const arr = JSON.parse(cleaned);
+    if (!Array.isArray(arr)) return [];
+    return arr.map((item: any) => ({
+      full_name: item.full_name || "",
+      city: item.city || undefined,
+      source: "firecrawl" as const,
+      license_type: item.trade || "apprenticeship_completion",
+      raw_data: {
+        completion_date: item.completion_date,
+        source_url: item.source_url,
+        is_new_entrant: true,
+      },
+    })).filter((c: RawCandidate) => c.full_name);
+  } catch (e) {
+    console.warn("[scanApprenticeshipCompletions]", e instanceof Error ? e.message : String(e));
+    return [];
+  }
+}
+
 async function scanJobBoardsFallback(): Promise<RawCandidate[]> {
   const queries = [
     '"boiler operator" "looking for work" OR "seeking position" Michigan',
@@ -1387,10 +1502,20 @@ serve(async (req: Request) => {
   const results = await Promise.allSettled([
     scanMIOSHA(),
     scanJobBoards(),
+    scanOSHAIncidents(),
+    scanSBALoanApprovals(),
+    scanApprenticeshipCompletions(),
   ]);
 
   const mioshaCandidates = results[0].status === "fulfilled" ? results[0].value : [];
   const jobBoardCandidates = results[1].status === "fulfilled" ? results[1].value : [];
+  const oshaLeads = results[2].status === "fulfilled" ? results[2].value : [];
+  const sbaLeads = results[3].status === "fulfilled" ? results[3].value : [];
+  const apprenticeCandidates = results[4].status === "fulfilled" ? results[4].value : [];
+
+  // Log new source counts
+  console.log(`[hire-alert-scanner] OSHA incident employers: ${oshaLeads.length}, SBA expansion employers: ${sbaLeads.length}, Apprenticeship completions: ${apprenticeCandidates.length}`);
+
   const sourceErrors: Record<string, string> = {};
   if (results[0].status === "rejected") {
     const msg = results[0].reason instanceof Error ? results[0].reason.message : String(results[0].reason);
@@ -1416,7 +1541,7 @@ serve(async (req: Request) => {
       .then(() => {}, (e: unknown) => console.warn("[hire-alert-scanner] failed to stamp source errors:", e));
   }
 
-  const allRaw = [...mioshaCandidates, ...jobBoardCandidates];
+  const allRaw = [...mioshaCandidates, ...jobBoardCandidates, ...apprenticeCandidates, ...oshaLeads, ...sbaLeads];
 
   // Fix 4: 2-strike zero-result alert — only fires after 2 consecutive zero runs to avoid Sunday noise.
   try {

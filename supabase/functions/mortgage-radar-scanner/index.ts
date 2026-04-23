@@ -44,6 +44,11 @@ const BASE_SCORES: Record<string, number> = {
   property_tax_cure: 7,
   high_equity_low_rate: 6,
   job_change_high_income: 7,
+  probate_filing: 8,
+  estate_sale: 7,
+  tax_delinquency: 8,
+  fixer_upper_listing: 7,
+  sba_loan_approved: 6,
 };
 
 const OPENERS: Record<string, { opener: string; window: string }> = {
@@ -82,6 +87,26 @@ const OPENERS: Record<string, { opener: string; window: string }> = {
   job_change_high_income: {
     opener: "Hi {name} — congrats on the move. New role often means relocation or a step-up purchase. I help structure financing before the listing rush. Worth 10 min?",
     window: "lunch or evening",
+  },
+  probate_filing: {
+    opener: "Hi {name} — I work with families who inherited property and aren't sure of the best path forward financially. Whether that's a sale, a buyout, or an estate refi — I can walk through the options quietly. No rush.",
+    window: "10am–noon or 6pm+",
+  },
+  estate_sale: {
+    opener: "Hi {name} — saw the estate sale at {address}. If there's real property involved in the estate, I work with families on financing the transition — buyout, bridge, or cash-out. Worth a quick call?",
+    window: "10am–2pm",
+  },
+  tax_delinquency: {
+    opener: "Hi {name} — I work with homeowners who need to restructure their position fast. A cash-out refi can often clear tax delinquency and rebuild cushion at the same time. Can I run the numbers for you?",
+    window: "9am–11am",
+  },
+  fixer_upper_listing: {
+    opener: "Hi {name} — saw the listing on {address}. Buyers of fixer-uppers often use renovation loans (203k or Fannie HomeStyle) that roll purchase and rehab into one payment. Happy to explain if that's useful.",
+    window: "5pm–8pm weekdays / weekends",
+  },
+  sba_loan_approved: {
+    opener: "Hi {name} — congrats on the SBA approval. A lot of new business owners don't realize they can still qualify for a home purchase using bank-statement or business-bank lending programs even with a new LLC. Worth knowing about.",
+    window: "10am–noon",
   },
 };
 
@@ -257,6 +282,112 @@ async function scanJobChanges(): Promise<RawSignal[]> {
   })).filter(s => s.address);
 }
 
+// Probate filings — inherited property almost always sells within 12 months
+async function scanProbateFilings(): Promise<RawSignal[]> {
+  const items = await sonarSearch(
+    "Find recent (last 30 days) probate estate filings in Wayne, Oakland, or Macomb County Michigan probate court public records. Include decedent name or estate name, property address if available, city, ZIP, filing date, source URL. Look for estates that include real property.",
+    `{ "full_name": string, "address": string, "city": string, "zip": string, "signal_date": "YYYY-MM-DD", "signal_url": string, "signal_detail": string }`,
+  );
+  return items.map((i: any) => ({
+    full_name: i.full_name || undefined,
+    address: i.address || "",
+    city: i.city || undefined,
+    zip: typeof i.zip === "string" ? i.zip.slice(0, 5) : undefined,
+    signal_type: "probate_filing",
+    signal_source: "ProbateCourt",
+    signal_detail: i.signal_detail || "Probate estate filing with real property",
+    signal_url: i.signal_url || undefined,
+    signal_date: i.signal_date || undefined,
+  })).filter(s => s.address);
+}
+
+// Estate sales — property going to market, buyer needs financing
+async function scanEstateSales(): Promise<RawSignal[]> {
+  const items = await sonarSearch(
+    "Find current estate sales listed in Metro Detroit (Wayne, Oakland, Macomb counties) Michigan on estatesales.net or estatesale.com. Include address, city, ZIP, date of sale, and URL. Focus on ones that mention real property or large estates.",
+    `{ "address": string, "city": string, "zip": string, "signal_date": "YYYY-MM-DD", "signal_url": string, "signal_detail": string }`,
+  );
+  return items.map((i: any) => ({
+    address: i.address || "",
+    city: i.city || undefined,
+    zip: typeof i.zip === "string" ? i.zip.slice(0, 5) : undefined,
+    signal_type: "estate_sale",
+    signal_source: "EstateSales",
+    signal_detail: i.signal_detail || "Estate sale listing",
+    signal_url: i.signal_url || undefined,
+    signal_date: i.signal_date || undefined,
+  })).filter(s => s.address);
+}
+
+// Tax delinquency — county treasurers publish these publicly in Michigan
+async function scanTaxDelinquency(): Promise<RawSignal[]> {
+  const items = await sonarSearch(
+    "Find recent property tax delinquency notices published by Wayne County, Oakland County, or Macomb County Michigan treasurer's office for the current tax year. Include property owner name, property address, city, ZIP, amount owed, source URL. These are published public records.",
+    `{ "full_name": string, "address": string, "city": string, "zip": string, "signal_url": string, "signal_detail": string }`,
+  );
+  return items.map((i: any) => ({
+    full_name: i.full_name || undefined,
+    address: i.address || "",
+    city: i.city || undefined,
+    zip: typeof i.zip === "string" ? i.zip.slice(0, 5) : undefined,
+    signal_type: "tax_delinquency",
+    signal_source: "CountyTreasurer",
+    signal_detail: i.signal_detail || "Property tax delinquency",
+    signal_url: i.signal_url || undefined,
+    signal_date: new Date().toISOString().slice(0, 10),
+  })).filter(s => s.address);
+}
+
+// Fixer-upper listings — buyer needs renovation loan, seller may need bridge financing
+async function scanFixerUpperListings(): Promise<RawSignal[]> {
+  const items = await sonarSearch(
+    "Find current real estate listings in Metro Detroit (Wayne, Oakland, Macomb counties) Michigan that use terms like 'as-is', 'handyman special', 'TLC', 'fixer upper', 'needs work', or 'investor special'. Sources: Zillow, Realtor.com, Redfin. Include address, city, ZIP, list price, listing URL.",
+    `{ "address": string, "city": string, "zip": string, "signal_url": string, "signal_detail": string, "estimated_loan_amount": number }`,
+  );
+  return items.map((i: any) => ({
+    address: i.address || "",
+    city: i.city || undefined,
+    zip: typeof i.zip === "string" ? i.zip.slice(0, 5) : undefined,
+    signal_type: "fixer_upper_listing",
+    signal_source: "MLS_Fixer",
+    signal_detail: i.signal_detail || "As-is / fixer-upper listing",
+    signal_url: i.signal_url || undefined,
+    signal_date: new Date().toISOString().slice(0, 10),
+    estimated_loan_amount: typeof i.estimated_loan_amount === "number" ? i.estimated_loan_amount : undefined,
+  })).filter(s => s.address);
+}
+
+// SBA loan approvals — new business owner who just got capital needs a home purchase or HELOC
+async function scanSBAApprovals(): Promise<RawSignal[]> {
+  try {
+    // SBA publishes approved loans via public API
+    const cutoff = new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10);
+    const url = `https://data.sba.gov/api/3/action/datastore_search?resource_id=aab80ac8-f89e-4a8d-8f14-3b0a50b0e5ff&filters={"BorrState":"MI","ApprovalDate":{"$gte":"${cutoff}"}}&limit=100`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    if (!r.ok) return [];
+    const j = await r.json();
+    const records = j?.result?.records || [];
+    return records
+      .filter((rec: any) => rec.BorrCity && /detroit|dearborn|livonia|warren|sterling heights|troy|pontiac|southfield|ann arbor|canton|westland|farmington|royal oak/i.test(rec.BorrCity))
+      .map((rec: any) => ({
+        full_name: rec.BorrName || undefined,
+        address: rec.BorrStreet || "",
+        city: rec.BorrCity || undefined,
+        zip: typeof rec.BorrZip === "string" ? rec.BorrZip.slice(0, 5) : undefined,
+        signal_type: "sba_loan_approved",
+        signal_source: "SBA_API",
+        signal_detail: `SBA loan approved: $${Number(rec.GrossApproval || 0).toLocaleString()} for ${rec.BorrName || "business"}`,
+        signal_date: rec.ApprovalDate ? String(rec.ApprovalDate).slice(0, 10) : undefined,
+        estimated_loan_amount: rec.GrossApproval ? Math.round(Number(rec.GrossApproval) * 0.7) : undefined,
+      }))
+      .filter((s: RawSignal) => s.address)
+      .slice(0, 40);
+  } catch (e) {
+    console.warn("[scanSBAApprovals]", e instanceof Error ? e.message : String(e));
+    return [];
+  }
+}
+
 async function notifyClients(sb: ReturnType<typeof createClient>, zip: string | undefined, score: number): Promise<string[]> {
   if (!zip || score < 7) return [];
   const { data: clients } = await (sb.from as any)("mortgage_radar_clients")
@@ -378,6 +509,11 @@ serve(async (req) => {
     scanDivorceFilings(),
     scanNewMichiganLLCs(sb),
     scanJobChanges(),
+    scanProbateFilings(),
+    scanEstateSales(),
+    scanTaxDelinquency(),
+    scanFixerUpperListings(),
+    scanSBAApprovals(),
   ]);
 
   const signals: RawSignal[] = [];

@@ -462,6 +462,107 @@ Return ONLY valid JSON:
   }
 }
 
+// SBA loan approvals — Metro Detroit companies that just received capital are expanding
+// This is one of the highest-confidence buying signals available for free
+async function harvestSBACapitalSignals(): Promise<any[]> {
+  try {
+    const cutoff = new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10);
+    const url = `https://data.sba.gov/api/3/action/datastore_search?resource_id=aab80ac8-f89e-4a8d-8f14-3b0a50b0e5ff&filters={"BorrState":"MI"}&limit=500`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(12_000) });
+    if (!r.ok) return [];
+    const j = await r.json();
+    const records: any[] = j?.result?.records || [];
+
+    // Focus: Metro Detroit, trade/construction/manufacturing NAICS, $50K+
+    const targetNAICS: Record<string, string> = {
+      "238": "Construction Trades",
+      "237": "Heavy Construction",
+      "236": "Building Construction",
+      "333": "Machinery Manufacturing",
+      "332": "Fabricated Metal Products",
+      "336": "Transportation Equipment",
+      "484": "Trucking",
+      "811": "Repair & Maintenance",
+      "622": "Hospitals",
+      "623": "Nursing & Residential Care",
+    };
+
+    const metro = /detroit|dearborn|warren|livonia|sterling|troy|pontiac|southfield|ann arbor|canton|westland|farmington|grosse pointe|hamtramck|highland park/i;
+
+    return records
+      .filter((rec: any) =>
+        metro.test(rec.BorrCity || "") &&
+        Number(rec.GrossApproval || 0) >= 50_000 &&
+        Object.keys(targetNAICS).some((code) => String(rec.NAICSCode || "").startsWith(code)) &&
+        (!rec.ApprovalDate || rec.ApprovalDate >= cutoff)
+      )
+      .slice(0, 25)
+      .map((rec: any) => {
+        const industry = Object.entries(targetNAICS).find(([code]) => String(rec.NAICSCode || "").startsWith(code))?.[1] || "Trade/Construction";
+        const amount = Number(rec.GrossApproval || 0);
+        return {
+          company_name: rec.BorrName || "Unknown",
+          location: `${rec.BorrCity || "Metro Detroit"}, MI`,
+          industry,
+          hiring_roles: ["Equipment purchases", "Workforce expansion", "Facility upgrades"],
+          hiring_count: 1,
+          predicted_needs: ["Equipment financing", "Tech stack", "Field service software", "Insurance"],
+          confidence: amount >= 500_000 ? 9 : amount >= 100_000 ? 8 : 7,
+          recommended_pitch: `💰 SBA CAPITAL: ${rec.BorrName} received $${amount.toLocaleString()} SBA loan (${rec.ApprovalDate?.slice(0, 10) || "recent"}). Company is in active expansion — ideal window for TechAlert, FieldDesk, or Growth Radar pitch.`,
+          source_urls: [],
+          cross_referenced: false,
+          signal_type: "sba_capital",
+          sector: "sba_expansion",
+        };
+      });
+  } catch (e) {
+    console.warn("[industry-pulse] SBA capital harvest error:", e instanceof Error ? e.message : String(e));
+    return [];
+  }
+}
+
+// Michigan Economic Development Corporation grant recipients — state-funded expansion = buying mode
+async function harvestMEDCGrantSignals(): Promise<any[]> {
+  if (!LOVABLE_API_KEY) return [];
+  try {
+    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: "You are a public records researcher. Return ONLY valid JSON array, no prose, no markdown." },
+          { role: "user", content: `Search MEDC (Michigan Economic Development Corporation) press releases and public announcements from the last 60 days for Metro Detroit companies receiving grants, tax incentives, or Michigan Business Development Program awards. Focus on manufacturing, construction, healthcare, and trade companies. Return JSON: [{"company_name":"string","city":"string","grant_amount":0,"grant_type":"string","jobs_created":0,"industry":"string","source_url":"string"}]. Return [] if nothing found.` },
+        ],
+      }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!r.ok) return [];
+    const j = await r.json();
+    const text = j?.choices?.[0]?.message?.content || "[]";
+    const cleaned = text.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+    const arr = JSON.parse(cleaned);
+    if (!Array.isArray(arr)) return [];
+    return arr.map((item: any) => ({
+      company_name: item.company_name || "Unknown",
+      location: `${item.city || "Metro Detroit"}, MI`,
+      industry: item.industry || "Manufacturing",
+      hiring_roles: [`${item.jobs_created || "?"} jobs planned`],
+      hiring_count: item.jobs_created || 1,
+      predicted_needs: ["Equipment", "Tech stack", "Workforce management", "Field service software"],
+      confidence: 9,
+      recommended_pitch: `🏛️ MEDC GRANT: ${item.company_name} received ${item.grant_type || "state economic development grant"} ($${Number(item.grant_amount || 0).toLocaleString()}). Expansion is state-funded — very high buying probability. Jobs: ${item.jobs_created || "?"}. Source: ${item.source_url || "MEDC.michigan.gov"}`,
+      source_urls: item.source_url ? [item.source_url] : [],
+      cross_referenced: false,
+      signal_type: "medc_grant",
+      sector: "state_funded",
+    }));
+  } catch (e) {
+    console.warn("[industry-pulse] MEDC grant harvest error:", e instanceof Error ? e.message : String(e));
+    return [];
+  }
+}
+
 import { withRunLog } from "../_shared/demand-radar-log.ts";
 
 serve(withRunLog("industry-pulse-scanner", async (req) => {
@@ -529,8 +630,13 @@ serve(withRunLog("industry-pulse-scanner", async (req) => {
     signals.push(...bseedSignals);
 
     // Items 25 & 29: H-2B visa filings + Michigan SOS new business velocity
-    const [h2bSignals, sosSignals] = await Promise.all([harvestH2BSignals(), harvestSOSNewBusinessSignals()]);
-    signals.push(...h2bSignals, ...sosSignals);
+    const [h2bSignals, sosSignals, sbaCapitalSignals, medcSignals] = await Promise.all([
+      harvestH2BSignals(),
+      harvestSOSNewBusinessSignals(),
+      harvestSBACapitalSignals(),
+      harvestMEDCGrantSignals(),
+    ]);
+    signals.push(...h2bSignals, ...sosSignals, ...sbaCapitalSignals, ...medcSignals);
 
     // Item 30: Boost permit_surge signals when NOAA storm events detected
     await boostStormCorrelatedPermitSignals(signals);

@@ -1,5 +1,8 @@
 project_id = "zmyczlfuufhngzovkjdh"
 
+[functions.new-business-radar]
+verify_jwt = false
+
 [functions.apify-results-handler]
 verify_jwt = false
 

@@ -1201,6 +1201,70 @@ BODY:
       }
     }
 
+    // ── Fixer-upper listing scan → Contractor Leads homeowner signals ──
+    // Scrapes MLS/Zillow "as-is" listings in Metro Detroit and inserts them as
+    // homeowner signals in contractor_leads. These homeowners need contractors NOW.
+    let fixerLeadsInserted = 0;
+    if (!isTimedOut() && LOVABLE_API_KEY) {
+      try {
+        const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
+        const fixerRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            messages: [
+              { role: "system", content: "You are a real estate data researcher. Return ONLY valid JSON array, no prose, no markdown." },
+              { role: "user", content: `Search Zillow, Realtor.com, and Redfin for current real estate listings in Metro Detroit Michigan (Wayne, Oakland, Macomb counties) that use terms: "as-is", "handyman special", "TLC needed", "fixer upper", "investor special", "needs work", "priced to sell". Include full address, city, ZIP, list price, listing URL. Return JSON: [{"address":"string","city":"string","zip":"string","list_price":0,"listing_url":"string","description":"string"}]. Return [] if nothing found. Maximum 10 results.` },
+            ],
+          }),
+          signal: AbortSignal.timeout(20_000),
+        });
+        if (fixerRes.ok) {
+          const fixerJ = await fixerRes.json();
+          const fixerText = fixerJ?.choices?.[0]?.message?.content || "[]";
+          const fixerCleaned = fixerText.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+          let fixerListings: any[] = [];
+          try { fixerListings = JSON.parse(fixerCleaned); } catch { /* skip */ }
+          if (Array.isArray(fixerListings)) {
+            for (const listing of fixerListings.slice(0, 5)) {
+              if (!listing.address || !listing.city) continue;
+              // Check if already in contractor_leads
+              const { data: existingLead } = await sb
+                .from("contractor_leads" as any)
+                .select("id")
+                .ilike("address", listing.address)
+                .limit(1);
+              if (existingLead?.length) continue;
+              // Determine best trade for this property (roofing/hvac/general)
+              const descLower = (listing.description || "").toLowerCase();
+              const tradeForLead = descLower.includes("roof") ? "roofing"
+                : descLower.includes("hvac") || descLower.includes("heating") ? "hvac"
+                : descLower.includes("plumb") ? "plumbing"
+                : descLower.includes("electric") ? "electrical"
+                : "general";
+              await sb.from("contractor_leads" as any).insert({
+                address: listing.address,
+                city: listing.city,
+                zip: listing.zip || null,
+                trade: tradeForLead,
+                source: "fixer_upper_listing",
+                signal_detail: listing.description || "As-is / fixer-upper listing",
+                signal_url: listing.listing_url || null,
+                estimated_value: listing.list_price || null,
+                status: "new",
+                detected_at: new Date().toISOString(),
+              });
+              fixerLeadsInserted++;
+            }
+          }
+        }
+        log("Fixer-upper scan complete", { fixerLeadsInserted });
+      } catch (fixerErr) {
+        log("Fixer-upper scan failed", { error: String(fixerErr) });
+      }
+    }
+
     return new Response(
       JSON.stringify({
         ok: true,
@@ -1212,6 +1276,7 @@ BODY:
         deadLeadEmailed: totalDeadLeadEmailed,
         techAlertEmailed: techAlertSent - techAlertSentToday,
         sosLeadsSent,
+        fixerLeadsInserted,
         skipped: totalSkipped,
         scoutRejected: totalScoutRejected,
         pitchRotation,
