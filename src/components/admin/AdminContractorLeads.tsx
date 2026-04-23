@@ -116,6 +116,21 @@ export default function AdminContractorLeads() {
     return () => clearInterval(interval);
   }, [load]);
 
+  // ── Add territory ─────────────────────────────────────────────────────────
+  async function addTerritory() {
+    if (!newTrade || !newCity.trim()) { toast.error("Trade and city are required"); return; }
+    setAddingTerritory(true);
+    const slug = `${newTrade.toLowerCase()}-${newCity.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}`;
+    const { error } = await supabase.from("contractor_lead_sites" as never).insert({
+      trade: newTrade, city: newCity.trim(), state: "MI", slug, active: true,
+    } as never);
+    setAddingTerritory(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${newTrade} — ${newCity} added`);
+    setNewTrade(""); setNewCity("");
+    load();
+  }
+
   // ── Derived values ─────────────────────────────────────────────────────────
   const activeClients = clients.filter((c) => c.active);
   const trialClients = clients.filter(
