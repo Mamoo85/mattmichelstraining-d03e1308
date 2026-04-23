@@ -279,7 +279,7 @@ const DispatchBoard: React.FC<DispatchBoardProps> = ({ clientId }) => {
               {COLUMNS.map((col) => {
                 const colJobs = jobs.filter((j) => j.status === col.key);
                 return (
-                  <DroppableColumn key={col.key} status={col.key} label={col.label}>
+                  <DroppableColumn key={col.key} status={col.key} label={col.label} accent={col.accent} glow={col.glow}>
                     {colJobs.map((job) => (
                       <DraggableJobCard
                         key={job.id}
