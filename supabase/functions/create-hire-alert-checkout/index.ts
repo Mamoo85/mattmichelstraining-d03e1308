@@ -19,7 +19,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email, company_name, phone, plan, target_roles, ref, county, target_state, target_metro, target_zip_prefixes } = await req.json();
+    const { email, company_name, phone, plan, target_roles, ref, county, target_state, target_metro, target_zip_prefixes, source_page } = await req.json();
 
     if (!email) {
       return new Response(
@@ -122,8 +122,8 @@ serve(async (req) => {
         tos_version: "2026-04-fcra",
         data_classification: "b2b_market_intelligence_not_consumer_report",
       },
-      success_url: `${origin}/hire-alert?success=1`,
-      cancel_url: `${origin}/hire-alert`,
+      success_url: `${origin}/${source_page === "healthcare" ? "talent-radar/healthcare" : "hire-alert"}?success=1`,
+      cancel_url: `${origin}/${source_page === "healthcare" ? "talent-radar/healthcare" : "hire-alert"}`,
     });
 
     return new Response(

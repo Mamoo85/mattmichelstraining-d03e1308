@@ -57,6 +57,7 @@ export default function HealthcareHireAlert() {
   const [company, setCompany] = useState("");
   const [phone, setPhone] = useState("");
   const [selectedRoles, setSelectedRoles] = useState<string[]>(["cna", "rn"]);
+  const [tosAccepted, setTosAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
 
   if (isSuccess) {
@@ -92,6 +93,10 @@ export default function HealthcareHireAlert() {
       toast({ title: "Select at least one role to monitor", variant: "destructive" });
       return;
     }
+    if (!tosAccepted) {
+      toast({ title: "Please accept the compliance terms to continue", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-hire-alert-checkout", {
@@ -101,6 +106,8 @@ export default function HealthcareHireAlert() {
           phone,
           plan: "standalone",
           target_roles: selectedRoles,
+          tos_accepted: true,
+          source_page: "healthcare",
         },
       });
       if (error || !data?.url) throw new Error(error?.message || "Checkout failed");
@@ -253,11 +260,24 @@ export default function HealthcareHireAlert() {
               </div>
             </div>
 
+            {/* TOS / FCRA compliance */}
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", padding: "12px 14px", borderRadius: 8, background: tosAccepted ? "#00d4ff08" : "#001a33", border: `1px solid ${tosAccepted ? ACCENT : "rgba(255,255,255,0.1)"}`, fontSize: 13, color: "#94a3b8", lineHeight: 1.5 }}>
+              <input
+                type="checkbox"
+                checked={tosAccepted}
+                onChange={(e) => setTosAccepted(e.target.checked)}
+                style={{ accentColor: ACCENT, width: 16, height: 16, flexShrink: 0, marginTop: 2 }}
+              />
+              <span>
+                I acknowledge Talent Radar Healthcare is a <strong style={{ color: "#fff" }}>B2B Market Intelligence Feed and is NOT a Consumer Report under the FCRA</strong>. I will not use candidate data for FCRA-regulated employment screening or adverse action. TCPA: all outreach must be sent manually by me. No auto-dialing.
+              </span>
+            </label>
+
             <Button
               onClick={handleCheckout}
-              disabled={loading}
+              disabled={loading || !tosAccepted}
               className="w-full h-14 text-lg font-black mt-4"
-              style={{ background: ACCENT, color: BG }}
+              style={{ background: tosAccepted ? ACCENT : "#334155", color: tosAccepted ? BG : "#94a3b8", opacity: tosAccepted ? 1 : 0.7 }}
             >
               {loading ? "Redirecting to checkout..." : "Start Monitoring — $99/mo"}
             </Button>

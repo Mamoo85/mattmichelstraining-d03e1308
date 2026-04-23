@@ -68,10 +68,6 @@ export default function MortgageRadar() {
   const [extraZips, setExtraZips] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (success) toast.success("Welcome to Mortgage Radar! Check your email for your dashboard link.");
-  }, [success]);
-
   const handleCheckout = async (selected: Tier) => {
     if (!email) { toast.error("Email is required"); return; }
     const zip_codes = zipsInput.split(/[, ]+/).map(z => z.trim()).filter(z => /^\d{5}$/.test(z));
@@ -97,6 +93,49 @@ export default function MortgageRadar() {
       setLoading(false);
     }
   };
+
+  if (success) {
+    const tier = searchParams.get("tier") || "solo";
+    const tierLabel = tier === "team" ? "Branch Team ($899/mo)" : "Solo LO ($399/mo)";
+    return (
+      <div className="min-h-screen bg-[#030711] text-white flex items-center justify-center px-4">
+        <div className="max-w-lg w-full text-center">
+          <div className="text-6xl mb-6">🏠</div>
+          <h1 className="text-3xl font-extrabold text-white mb-3">Mortgage Radar is Live</h1>
+          <p className="text-[#00d4ff] text-lg font-bold mb-5">{tierLabel} · 7-day free trial started</p>
+          <p className="text-[#94a3b8] text-sm leading-relaxed mb-8">
+            Check your email — your dashboard link and first lead signals land within 24 hours. Your ZIPs are being activated now. Reply STOP to any SMS to opt out.
+          </p>
+          <div className="grid grid-cols-3 gap-3 mb-8">
+            <a href="sms:+13139921219" className="bg-[#0a1628] border border-[#1e3a5f] rounded-xl p-4 text-left hover:border-[#00d4ff] transition-colors">
+              <div className="text-xl mb-1">📱</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-[#00d4ff] mb-1">Text Matt</div>
+              <div className="text-xs text-white">(313) 992-1219</div>
+            </a>
+            <div className="bg-[#0a1628] border border-[#1e3a5f] rounded-xl p-4 text-left">
+              <div className="text-xl mb-1">📧</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-[#00d4ff] mb-1">Check email</div>
+              <div className="text-xs text-white">Dashboard link inside</div>
+            </div>
+            <div className="bg-[#0a1628] border border-[#1e3a5f] rounded-xl p-4 text-left">
+              <div className="text-xl mb-1">⏱️</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-[#00d4ff] mb-1">First leads</div>
+              <div className="text-xs text-white">Within 24 hours</div>
+            </div>
+          </div>
+          <a
+            href="/my-mortgage-radar"
+            className="inline-block bg-[#00d4ff] text-black font-bold px-8 py-4 rounded-lg text-base hover:bg-[#00d4ff]/90 transition-colors"
+          >
+            Open Your Dashboard →
+          </a>
+          <p className="text-xs text-[#64748b] mt-4">
+            All outreach drafts must be sent manually by you per TCPA. No auto-dialing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#030711] text-foreground">

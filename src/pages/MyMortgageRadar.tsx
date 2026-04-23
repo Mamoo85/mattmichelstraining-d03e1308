@@ -41,9 +41,9 @@ type Outreach = {
   send_error: string | null;
 };
 
-const DEMO_CLIENT_ID = "00000000-0000-0000-0000-000000000000";
-
 export default function MyMortgageRadar() {
+  const clientEmail = new URLSearchParams(window.location.search).get("email") || "";
+  const [clientId, setClientId] = useState<string | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [draftFor, setDraftFor] = useState<Lead | null>(null);
@@ -57,30 +57,57 @@ export default function MyMortgageRadar() {
 
   useEffect(() => {
     (async () => {
+      // Resolve real client ID from email param (sent in welcome email link)
+      let resolvedClientId = clientId;
+      if (clientEmail && !resolvedClientId) {
+        const { data: clientRow } = await (supabase.from as any)("mortgage_radar_clients")
+          .select("id")
+          .eq("email", clientEmail.toLowerCase())
+          .eq("active", true)
+          .maybeSingle();
+        resolvedClientId = clientRow?.id || null;
+        if (resolvedClientId) setClientId(resolvedClientId);
+      }
+
       const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
-      const { data, error } = await (supabase.from as any)("mortgage_radar_leads")
+      let query = (supabase.from as any)("mortgage_radar_leads")
         .select("id, full_name, address, city, zip, phone, email, signal_type, signal_source, signal_detail, signal_date, score, signal_count, suggested_opener, best_call_window, created_at")
         .gte("created_at", since)
         .order("score", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(200);
+
+      // Filter by client's ZIPs if we found their record
+      if (resolvedClientId) {
+        const { data: clientData } = await (supabase.from as any)("mortgage_radar_clients")
+          .select("zip_codes")
+          .eq("id", resolvedClientId)
+          .maybeSingle();
+        if (clientData?.zip_codes?.length) {
+          query = query.in("zip", clientData.zip_codes);
+        }
+      }
+
+      const { data, error } = await query;
       if (error) {
-        toast.error("Could not load leads — admin access required");
+        toast.error("Could not load leads — check your dashboard link");
       } else {
         setLeads(data || []);
       }
       setLoading(false);
       // Load outreach queue
-      try {
-        const { data: orData } = await supabase.functions.invoke("mortgage-radar-outreach", {
-          body: { action: "list", client_id: DEMO_CLIENT_ID },
-        });
-        if (orData?.outreach) setOutreach(orData.outreach);
-      } catch {
-        // outreach is optional UI; ignore
+      if (resolvedClientId) {
+        try {
+          const { data: orData } = await supabase.functions.invoke("mortgage-radar-outreach", {
+            body: { action: "list", client_id: resolvedClientId },
+          });
+          if (orData?.outreach) setOutreach(orData.outreach);
+        } catch {
+          // outreach is optional UI; ignore
+        }
       }
     })();
-  }, []);
+  }, [clientEmail]);
 
   const filtered = useMemo(() => {
     return leads.filter(l => {
@@ -155,7 +182,7 @@ export default function MyMortgageRadar() {
         body: {
           action: "create",
           lead_id: draftFor.id,
-          client_id: DEMO_CLIENT_ID,
+          client_id: clientId || "",
           channel: draftChannel,
           draft_subject: draftSubject || undefined,
           draft_body: draftBody,
