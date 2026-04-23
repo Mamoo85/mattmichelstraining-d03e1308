@@ -157,7 +157,7 @@ const TechJobDetail: React.FC<TechJobDetailProps> = ({ job, techId, onBack, onSt
       await supabase.from("field_service_jobs").update({ signature_url: urlData?.publicUrl }).eq("id", job.id);
 
       // Also save as a job photo
-      await supabase.from("job_photos").insert({
+      await (supabase.from("job_photos") as any).insert({
         job_id: job.id,
         tech_id: techId,
         storage_path: path,
