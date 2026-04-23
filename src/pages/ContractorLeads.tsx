@@ -308,6 +308,28 @@ export default function ContractorLeads() {
             </div>
           )}
 
+          {unknownTradeParam && (
+            <div className="bg-yellow-500/10 border-l-4 border-yellow-500 p-3 mb-4">
+              <p className="text-sm font-bold text-foreground">
+                ⚠️ We couldn't find a trade called "{unknownTradeParam}".
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Pick your profession from the list below — or text Matt at <a href="sms:+13139921219" className="text-primary underline">(313) 992-1219</a> for help.
+              </p>
+            </div>
+          )}
+
+          {unknownCity && trade && (
+            <div className="bg-yellow-500/10 border-l-4 border-yellow-500 p-3 mb-4">
+              <p className="text-sm font-bold text-foreground">
+                ⚠️ "{unknownCity}" isn't an active {tradeLabel || "territory"} city right now.
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Pick an open city below, or <a href="sms:+13139921219" className="text-primary underline">text Matt</a> to request {unknownCity} as a new territory.
+              </p>
+            </div>
+          )}
+
           {isPrefilled && city && selectedTerritory && !selectedTerritory.active_contractor_id && (
             <div className="bg-primary/10 border-l-4 border-primary p-3 mb-4">
               <p className="text-sm font-bold text-foreground">
