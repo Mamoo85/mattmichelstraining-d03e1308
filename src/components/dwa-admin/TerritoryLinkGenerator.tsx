@@ -369,7 +369,7 @@ export default function TerritoryLinkGenerator() {
               {citiesForTrade.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             {trade && citiesForTrade.length === 0 && (
-              <p className="text-[10px] text-amber-500 mt-1">No territories seeded for {tradeLabel}. Add one in the "Territory Status" section above.</p>
+              <p className="text-[10px] text-destructive mt-1">No territories seeded for {tradeLabel}. Add one in the "Territory Status" section above.</p>
             )}
           </div>
         ) : (
