@@ -109,19 +109,23 @@ export default function ContractorLeads() {
       .then(({ data }) => {
         setTerritories(data || []);
         setTerritoriesLoading(false);
-        // If the city from URL params is NOT in the list, clear it so user must pick a real one.
+        // If the city from URL params is NOT in the active list, surface a friendly banner
+        // and clear the selection so the user falls back to manually picking one.
         if (initialCity && data && !data.find(t => t.city.toLowerCase() === initialCity.toLowerCase())) {
+          setUnknownCity(initialCity);
           setCity("");
+        } else {
+          setUnknownCity("");
         }
       });
   }, [trade]);
 
   // Auto-scroll to form when arriving with deep-link params.
   useEffect(() => {
-    if (isPrefilled && !success) {
+    if ((isPrefilled || unknownTradeParam || unknownCity) && !success) {
       setTimeout(() => document.getElementById("territory")?.scrollIntoView({ behavior: "smooth", block: "start" }), 200);
     }
-  }, [isPrefilled, success]);
+  }, [isPrefilled, unknownTradeParam, unknownCity, success]);
 
   const scrollToTerritory = () => document.getElementById("territory")?.scrollIntoView({ behavior: "smooth" });
 
