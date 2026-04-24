@@ -3,7 +3,6 @@
 // PPL contractors (no active subscription): FOMO teaser SMS with $50 claim link.
 // Also releases expired soft locks so leads become available again.
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
 import { logError } from "../_shared/error-log.ts";
@@ -140,20 +139,9 @@ Output ONLY the sentence. No quotes, no preamble, no commentary.`;
   } catch { return ""; }
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
-  }
-
-  // Auth: require service-role key (cron) — prevents external invocation that would
-  // trigger duplicate Twilio sends and reveal credential metadata.
-  const authHeader = req.headers.get("authorization") || "";
-  const expected = `Bearer ${SUPABASE_SERVICE_KEY}`;
-  if (!SUPABASE_SERVICE_KEY || authHeader !== expected) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   }
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
