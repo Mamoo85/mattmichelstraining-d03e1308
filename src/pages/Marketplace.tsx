@@ -152,8 +152,9 @@ export default function Marketplace() {
     setBuyerEmail(email);
     setClaiming(lead.id);
     try {
+      const { getOrCreateAnonId } = await import("@/lib/anonSession");
       const { data, error } = await supabase.functions.invoke("create-marketplace-lead-checkout", {
-        body: { lead_id: lead.id, product, buyer_email: email },
+        body: { lead_id: lead.id, product, buyer_email: email, anon_session_id: getOrCreateAnonId() },
       });
       if (error) throw error;
       const url = (data as any)?.url;

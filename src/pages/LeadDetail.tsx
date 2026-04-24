@@ -10,15 +10,7 @@ import { Loader2, ArrowLeft, Download, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
-function getOrCreateAnonId(): string {
-  const KEY = "mp_anon_session_id";
-  let id = localStorage.getItem(KEY);
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem(KEY, id);
-  }
-  return id;
-}
+import { getOrCreateAnonId } from "@/lib/anonSession";
 
 export default function LeadDetail() {
   const { slug } = useParams<{ slug: string }>();
