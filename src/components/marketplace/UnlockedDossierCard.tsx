@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { BuyerChip, FreshnessBadge, TierBadge, ScoreBars, EquityPanel, MetricsRow, TcpaBadge, IntelPanel, type MarketplaceLead } from "./GoldenTicketCard";
+import { SourceIconRow } from "./SourceIconRow";
 import { cn } from "@/lib/utils";
 
 interface UnlockedLead extends MarketplaceLead {
@@ -105,14 +106,24 @@ export function UnlockedDossierCard({ lead, onExportPdf, onShare, className }: P
         {opener.sms && (
           <IntelPanel title="Suggested SMS Opener">
             <div className="font-mono text-xs text-foreground/90 leading-relaxed">{opener.sms}</div>
-            <div className="mt-2 flex justify-end"><CopyButton text={opener.sms} label="SMS" /></div>
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <SourceIconRow sources={lead.provenance_sources} />
+                <TcpaBadge clear={lead.tcpa_clear} />
+              </div>
+              <CopyButton text={opener.sms} label="SMS" />
+            </div>
           </IntelPanel>
         )}
         {opener.email_subject && opener.email_body && (
           <IntelPanel title="Suggested Email">
             <div className="text-xs font-bold text-foreground mb-1">{opener.email_subject}</div>
             <div className="font-mono text-xs text-foreground/80 leading-relaxed whitespace-pre-line">{opener.email_body}</div>
-            <div className="mt-2 flex justify-end">
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <SourceIconRow sources={lead.provenance_sources} />
+                <TcpaBadge clear={lead.tcpa_clear} />
+              </div>
               <CopyButton text={`Subject: ${opener.email_subject}\n\n${opener.email_body}`} label="Email" />
             </div>
           </IntelPanel>
@@ -123,7 +134,13 @@ export function UnlockedDossierCard({ lead, onExportPdf, onShare, className }: P
               <Voicemail className="w-4 h-4 text-intel-teal flex-shrink-0 mt-0.5" />
               <div className="font-mono text-xs text-foreground/90 leading-relaxed">{opener.voicemail}</div>
             </div>
-            <div className="mt-2 flex justify-end"><CopyButton text={opener.voicemail} label="Voicemail" /></div>
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <SourceIconRow sources={lead.provenance_sources} />
+                <TcpaBadge clear={lead.tcpa_clear} />
+              </div>
+              <CopyButton text={opener.voicemail} label="Voicemail" />
+            </div>
           </IntelPanel>
         )}
 
