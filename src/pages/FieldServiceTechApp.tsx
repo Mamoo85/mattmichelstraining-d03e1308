@@ -215,7 +215,7 @@ export default function FieldServiceTechApp() {
         </div>
         <div className="text-right">
           <p className="text-white text-sm font-semibold">{tech.name}</p>
-          <button onClick={() => setTech(null)} className="text-gray-500 text-xs hover:text-gray-300">Sign Out</button>
+          <button onClick={handleSignOut} className="text-gray-500 text-xs hover:text-gray-300">Sign Out</button>
         </div>
       </header>
 
