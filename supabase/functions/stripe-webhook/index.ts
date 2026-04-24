@@ -1464,7 +1464,7 @@ serve(async (req) => {
               <p><strong>Project:</strong> ${lead?.project_type || "—"}</p>
               <p><strong>Notes:</strong> ${lead?.message || "—"}</p>
               <p style="margin-top:24px;color:#64748b;">Call them within 5 minutes — that's how you win.</p>`;
-            await sendDwaEmail(buyerEmail, `🎯 You won: ${trade} lead in ${city}`, html).catch(()=>{});
+            await sendM2Email(buyerEmail, `🎯 You won: ${trade} lead in ${city}`, html).catch(()=>{});
             await notifyMatt(`💰 À la carte lead sold — ${buyerEmail} claimed ${trade}/${city}`, html).catch(()=>{});
           } else {
             // Refund — someone else got it first
@@ -1476,7 +1476,7 @@ serve(async (req) => {
             const refundHtml = `<h2>Refunded — lead already claimed</h2>
               <p>Another contractor paid for this lead seconds before you. Your card has been refunded in full.</p>
               <p>More leads coming — keep an eye on your phone.</p>`;
-            await sendDwaEmail(buyerEmail, `Refunded — lead already claimed`, refundHtml).catch(()=>{});
+            await sendM2Email(buyerEmail, `Refunded — lead already claimed`, refundHtml).catch(()=>{});
           }
         } catch (e) {
           console.error("[WEBHOOK] alacarte_lead_purchase error:", e);
