@@ -142,8 +142,27 @@ export default function AdminDeadLeads() {
         .limit(100);
       return data || [];
     },
-    refetchInterval: 60000,
+    refetchInterval: 15000,
   });
+
+  // Today's pitch rotation badge
+  const todayPitch = (() => {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    const r = dayOfYear % 5;
+    return ["dead_lead", "tech_alert", "missed_call", "web_design", "care_alert"][r];
+  })();
+  const pitchLabels: Record<string, string> = {
+    dead_lead: "♻️ Dead Lead",
+    tech_alert: "🎯 TechAlert",
+    missed_call: "📞 Missed-Call",
+    web_design: "🌐 Web Design",
+    care_alert: "🏥 CareAlert",
+  };
+  const daysUntilDeadLead = (() => {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    const r = dayOfYear % 5;
+    return r === 0 ? 0 : 5 - r;
+  })();
 
   const pipelineStats = {
     total: pipeline?.length || 0,
@@ -163,7 +182,8 @@ export default function AdminDeadLeads() {
     setProspecting(true);
     setLastProspectResult(null);
     try {
-      const body: Record<string, string> = {};
+      // Force dead-lead pitch from THIS tab regardless of daily rotation
+      const body: Record<string, string> = { pitch_override: "dead_lead" };
       if (prospectTrade) body.target_trade = prospectTrade;
       if (prospectCity) body.target_city = prospectCity;
 
@@ -561,6 +581,20 @@ export default function AdminDeadLeads() {
 
         {/* ── PROSPECTING PIPELINE TAB ─────────────────────────────── */}
         {tab === "pipeline" && <>
+          {/* Today's pitch rotation badge */}
+          <div style={{ background: todayPitch === "dead_lead" ? "#0f3a2e" : "#1f2937", border: `1px solid ${todayPitch === "dead_lead" ? "#10b981" : "#475569"}`, borderRadius: 8, padding: "10px 14px", marginBottom: 14, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase" }}>Today's Auto-Pitch:</span>
+            <span style={{ fontSize: 14, color: "#fff", fontWeight: 700 }}>{pitchLabels[todayPitch]}</span>
+            {todayPitch !== "dead_lead" && (
+              <span style={{ fontSize: 11, color: "#fbbf24", marginLeft: "auto" }}>
+                Dead-lead pitch returns in {daysUntilDeadLead} day{daysUntilDeadLead === 1 ? "" : "s"} — manual button below forces dead-lead
+              </span>
+            )}
+            {todayPitch === "dead_lead" && (
+              <span style={{ fontSize: 11, color: "#10b981", marginLeft: "auto", fontWeight: 600 }}>✓ Cron will send dead-lead today</span>
+            )}
+          </div>
+
           {/* Pipeline stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10, marginBottom: 16 }}>
             {[
