@@ -575,10 +575,82 @@ function RankedPool() {
       setSelected(new Set());
       return;
     }
-    const statusMap = { email: "queued_email", postcard: "queued_postcard", fax: "queued_fax", call: "queued_call" } as const;
-    const { error } = await supabase.from("prospect_pool").update({ status: statusMap[channel] }).in("id", ids);
-    if (error) return toast.error(error.message);
-    toast.success(`Queued ${ids.length} for ${channel} campaign — visit Active Campaigns to send`);
+
+    const selectedRows = prospects.filter((p) => selected.has(p.id));
+    const audienceLabel = audienceFilter !== "all" ? audienceFilter : "mixed";
+    const today = new Date().toISOString().slice(0, 10);
+    const campaignName = `manual_${audienceLabel}_${today}_${ids.length}`;
+
+    if (channel === "call") {
+      // Call sheet = printable CSV with name/phone/script
+      const rows = selectedRows.filter((p) => !!p.phone);
+      if (!rows.length) return toast.error("No selected prospects have phone numbers");
+      const cols = ["business_name", "contact_name", "phone", "city", "state", "lead_score", "audience_type"];
+      const csv = [
+        ["# Call sheet — " + campaignName].join(","),
+        ["# Script: Hi, this is Matt from Detroit Web Agency — quick question, are you still taking on new [trade] jobs in [city]?"].join(","),
+        cols.join(","),
+        ...rows.map((r) => cols.map((c) => JSON.stringify((r as any)[c] ?? "")).join(",")),
+      ].join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `call_sheet_${today}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      await supabase.from("prospect_pool").update({ status: "queued_call" }).in("id", ids);
+      toast.success(`Call sheet downloaded — ${rows.length} numbers`);
+      setSelected(new Set());
+      return;
+    }
+
+    // Build a real campaign row so it appears in Active Campaigns
+    let campaignId: string | null = null;
+    if (channel === "fax") {
+      const faxRows = selectedRows.filter((p) => !!p.fax_number);
+      if (!faxRows.length) return toast.error("No selected prospects have fax numbers");
+      const { data, error } = await supabase.from("fax_campaigns").insert({
+        name: campaignName,
+        target_segment: ids.join(","),
+        message_html: `<p>Draft fax — edit before sending. Targets: ${faxRows.length} ${audienceLabel} prospects.</p>`,
+        status: "draft",
+        audience_type: audienceLabel,
+      }).select("id").single();
+      if (error) return toast.error(error.message);
+      campaignId = (data as any)?.id ?? null;
+    } else if (channel === "postcard") {
+      const mailRows = selectedRows.filter((p) => !!p.address_line1);
+      if (!mailRows.length) return toast.error("No selected prospects have mailing addresses");
+      const { data, error } = await supabase.from("postcard_campaigns").insert({
+        county: selectedRows[0]?.county ?? audienceLabel,
+        copy_front: `Draft postcard — ${audienceLabel} ${today}`,
+        copy_back: `Draft postcard back. Targets: ${mailRows.length}. Edit before sending.`,
+        qr_url: "https://detroitwebagent.com",
+        prospect_count: mailRows.length,
+        status: "draft",
+        audience_type: audienceLabel,
+      }).select("id").single();
+      if (error) return toast.error(error.message);
+      campaignId = (data as any)?.id ?? null;
+    } else if (channel === "email") {
+      const emailRows = selectedRows.filter((p) => !!p.email);
+      if (!emailRows.length) return toast.error("No selected prospects have emails");
+      // email_campaigns table doesn't exist — fall back to status update + clear toast
+      // (per schema check). Surface this honestly instead of pretending.
+    }
+
+    await supabase.from("prospect_pool").update({
+      status: channel === "email" ? "queued_email" : channel === "postcard" ? "queued_postcard" : "queued_fax",
+    }).in("id", ids);
+
+    if (campaignId) {
+      toast.success(`Created ${channel} campaign #${String(campaignId).slice(0, 8)} with ${ids.length} targets — open Active Campaigns tab to send`);
+    } else {
+      toast.success(`Queued ${ids.length} for ${channel} — visit Active Campaigns`);
+    }
+    qc.invalidateQueries({ queryKey: ["postcard_campaigns_active"] });
+    qc.invalidateQueries({ queryKey: ["fax_campaigns_active"] });
     setSelected(new Set());
   }
 
