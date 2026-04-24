@@ -620,6 +620,24 @@ serve(async (req) => {
       const meta = session.metadata || {};
       const priceId = (session.line_items?.data?.[0] as any)?.price?.id as string | null;
 
+      // ── RECEIPT TRACKING (checkout hardening) ──
+      // Upsert a receipt row so the success page can poll fulfillment status.
+      // Status will be flipped to 'fulfilled' at the end of this handler.
+      try {
+        await sb.from("checkout_receipts").upsert({
+          stripe_session_id: session.id,
+          stripe_payment_intent_id: (session.payment_intent as string) || null,
+          customer_email: session.customer_details?.email || meta.email || null,
+          amount_total: session.amount_total ?? null,
+          currency: session.currency ?? null,
+          product_type: meta.type || "unknown",
+          status: "paid",
+          metadata: meta as any,
+        }, { onConflict: "stripe_session_id" });
+      } catch (e) {
+        console.error("[WEBHOOK] checkout_receipts upsert failed:", e);
+      }
+
       // ── TRAINING SESSION BOOKING FALLBACK ──
       // If user closes browser before verify-session-booking runs, the webhook ensures the booking is created
       if (meta.type === "training_session" && meta.user_id && meta.slot_ids) {
