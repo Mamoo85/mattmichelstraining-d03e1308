@@ -34,9 +34,25 @@ const DEMO_HISTORY_JOBS: FieldJob[] = [
   { id: "h2", title: "Safety Valve Replacement", description: "Replaced 150 PSI safety relief valve on Unit 1.", priority: "high", status: "completed", scheduled_date: new Date(Date.now() - 2 * 86400000).toISOString().split("T")[0], scheduled_time: "09:00", notes: null, customer: { company_name: "Ford Motor Co. — River Rouge", address: "3001 Miller Rd", city: "Dearborn", phone: "(313) 845-8540" } },
 ];
 
+const TECH_TOKEN_KEY = "fielddesk.tech_session_token";
+const TECH_INFO_KEY = "fielddesk.tech_info";
+
+function loadStoredSession(): { tech: Tech; token: string } | null {
+  try {
+    const token = localStorage.getItem(TECH_TOKEN_KEY);
+    const raw = localStorage.getItem(TECH_INFO_KEY);
+    if (!token || !raw) return null;
+    const tech = JSON.parse(raw) as Tech;
+    if (!tech?.id || !tech?.client_id) return null;
+    return { tech, token };
+  } catch { return null; }
+}
+
 export default function FieldServiceTechApp() {
   const isDemo = new URLSearchParams(window.location.search).get("demo") === "1";
-  const [tech, setTech] = useState<Tech | null>(isDemo ? DEMO_TECH : null);
+  const stored = loadStoredSession();
+  const [tech, setTech] = useState<Tech | null>(isDemo ? DEMO_TECH : (stored?.tech ?? null));
+  const [sessionToken, setSessionToken] = useState<string | null>(isDemo ? "demo" : (stored?.token ?? null));
   const [jobs, setJobs] = useState<FieldJob[]>([]);
   const [historyJobs, setHistoryJobs] = useState<FieldJob[]>([]);
   const [selectedJob, setSelectedJob] = useState<FieldJob | null>(null);
@@ -46,8 +62,6 @@ export default function FieldServiceTechApp() {
   const [syncing, setSyncing] = useState(false);
   const [activeTab, setActiveTab] = useState<AppTab>("today");
 
-  const today = new Date().toISOString().split("T")[0];
-
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -56,49 +70,57 @@ export default function FieldServiceTechApp() {
     return () => { window.removeEventListener("online", handleOnline); window.removeEventListener("offline", handleOffline); };
   }, []);
 
-  const syncOfflineQueue = useCallback(async (techId: string) => {
+  // Map raw row from edge function -> FieldJob
+  const mapRow = (row: Record<string, unknown>): FieldJob => {
+    const cust = row.field_service_customers as Record<string, string> | null;
+    return {
+      id: row.id as string, title: row.title as string, description: (row.description as string | null) ?? null,
+      priority: (row.priority as FieldJob["priority"]) ?? "normal", status: row.status as string,
+      scheduled_date: (row.scheduled_date as string | null) ?? null, scheduled_time: (row.scheduled_time as string | null) ?? null,
+      notes: (row.notes as string | null) ?? null,
+      customer: cust ? { company_name: cust.company_name ?? "", address: cust.address ?? "", city: cust.city ?? "", phone: cust.phone ?? "" } : null,
+    };
+  };
+
+  const handleSignOut = useCallback(() => {
+    localStorage.removeItem(TECH_TOKEN_KEY);
+    localStorage.removeItem(TECH_INFO_KEY);
+    setSessionToken(null);
+    setTech(null);
+  }, []);
+
+  const syncOfflineQueue = useCallback(async (techId: string, token: string) => {
     const queue = getOfflineQueue();
     if (queue.length === 0) return;
     setSyncing(true);
     try {
       for (const item of queue) {
-        const updates: Record<string, unknown> = { status: item.status };
-        if (item.status === "on_site") updates.started_at = item.timestamp;
-        if (item.status === "completed") updates.completed_at = item.timestamp;
-        await supabase.from("field_service_jobs").update(updates).eq("id", item.jobId);
+        await supabase.functions.invoke("tech-job-update", {
+          body: { token, job_id: item.jobId, status: item.status, timestamp: item.timestamp },
+        });
       }
       clearOfflineQueue();
-      await fetchJobs(techId);
+      await fetchJobs(techId, token);
     } catch (err) { console.error("Sync queue error:", err); }
     finally { setTimeout(() => setSyncing(false), 2000); }
   }, []);
 
   useEffect(() => {
-    if (isOnline && tech) syncOfflineQueue(tech.id);
-  }, [isOnline, tech, syncOfflineQueue]);
+    if (isOnline && tech && sessionToken && sessionToken !== "demo") {
+      syncOfflineQueue(tech.id, sessionToken);
+    }
+  }, [isOnline, tech, sessionToken, syncOfflineQueue]);
 
-  const fetchJobs = useCallback(async (techId: string) => {
+  const fetchJobs = useCallback(async (techId: string, token: string) => {
     if (techId === "demo") { setJobs(DEMO_TECH_JOBS); return; }
     setLoadingJobs(true);
     try {
-      const { data, error } = await supabase
-        .from("field_service_jobs")
-        .select("id, title, description, priority, status, scheduled_date, scheduled_time, notes, field_service_customers(company_name, address, city, phone)")
-        .eq("assigned_tech_id", techId)
-        .eq("scheduled_date", today)
-        .not("status", "in", '("completed","invoiced")')
-        .order("scheduled_time", { ascending: true });
-      if (error) throw error;
-      const mapped: FieldJob[] = (data ?? []).map((row: Record<string, unknown>) => {
-        const cust = row.field_service_customers as Record<string, string> | null;
-        return {
-          id: row.id as string, title: row.title as string, description: (row.description as string | null) ?? null,
-          priority: (row.priority as FieldJob["priority"]) ?? "normal", status: row.status as string,
-          scheduled_date: (row.scheduled_date as string | null) ?? null, scheduled_time: (row.scheduled_time as string | null) ?? null,
-          notes: (row.notes as string | null) ?? null,
-          customer: cust ? { company_name: cust.company_name ?? "", address: cust.address ?? "", city: cust.city ?? "", phone: cust.phone ?? "" } : null,
-        };
+      const { data, error } = await supabase.functions.invoke("tech-jobs-get", {
+        body: { token, scope: "today" },
       });
+      if (error) throw error;
+      if (data?.error === "invalid_session") { handleSignOut(); return; }
+      const mapped: FieldJob[] = (data?.jobs ?? []).map(mapRow);
       setJobs(mapped);
       cacheJobs(techId, mapped);
     } catch (err) {
@@ -108,64 +130,65 @@ export default function FieldServiceTechApp() {
         if (cached.length > 0) setJobs(cached);
       }
     } finally { setLoadingJobs(false); }
-  }, [today]);
+  }, [handleSignOut]);
 
-  const fetchHistory = useCallback(async (techId: string) => {
+  const fetchHistory = useCallback(async (techId: string, token: string) => {
     if (techId === "demo") { setHistoryJobs(DEMO_HISTORY_JOBS); return; }
     setLoadingHistory(true);
     try {
-      const fourteenDaysAgo = new Date(Date.now() - 14 * 86400000).toISOString().split("T")[0];
-      const { data, error } = await supabase
-        .from("field_service_jobs")
-        .select("id, title, description, priority, status, scheduled_date, scheduled_time, notes, field_service_customers(company_name, address, city, phone)")
-        .eq("assigned_tech_id", techId)
-        .in("status", ["completed", "invoiced"])
-        .gte("scheduled_date", fourteenDaysAgo)
-        .order("scheduled_date", { ascending: false });
-      if (error) throw error;
-      const mapped: FieldJob[] = (data ?? []).map((row: Record<string, unknown>) => {
-        const cust = row.field_service_customers as Record<string, string> | null;
-        return {
-          id: row.id as string, title: row.title as string, description: (row.description as string | null) ?? null,
-          priority: (row.priority as FieldJob["priority"]) ?? "normal", status: row.status as string,
-          scheduled_date: (row.scheduled_date as string | null) ?? null, scheduled_time: (row.scheduled_time as string | null) ?? null,
-          notes: (row.notes as string | null) ?? null,
-          customer: cust ? { company_name: cust.company_name ?? "", address: cust.address ?? "", city: cust.city ?? "", phone: cust.phone ?? "" } : null,
-        };
+      const { data, error } = await supabase.functions.invoke("tech-jobs-get", {
+        body: { token, scope: "history" },
       });
+      if (error) throw error;
+      if (data?.error === "invalid_session") { handleSignOut(); return; }
+      const mapped: FieldJob[] = (data?.jobs ?? []).map(mapRow);
       setHistoryJobs(mapped);
     } catch (err) { console.error("fetchHistory error:", err); }
     finally { setLoadingHistory(false); }
-  }, []);
+  }, [handleSignOut]);
 
   useEffect(() => {
-    if (tech) {
-      fetchJobs(tech.id);
-      fetchHistory(tech.id);
+    if (tech && sessionToken) {
+      fetchJobs(tech.id, sessionToken);
+      fetchHistory(tech.id, sessionToken);
     }
-  }, [tech, fetchJobs, fetchHistory]);
+  }, [tech, sessionToken, fetchJobs, fetchHistory]);
 
   const handleStatusChange = useCallback(
     async (jobId: string, status: string) => {
       setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, status } : j)));
       if (selectedJob?.id === jobId) setSelectedJob((prev) => (prev ? { ...prev, status } : prev));
-      if (!navigator.onLine) { addToOfflineQueue({ jobId, status, timestamp: new Date().toISOString() }); return; }
+      if (!navigator.onLine || !sessionToken || sessionToken === "demo") {
+        if (sessionToken !== "demo") {
+          addToOfflineQueue({ jobId, status, timestamp: new Date().toISOString() });
+        }
+        return;
+      }
       try {
-        const updates: Record<string, unknown> = { status };
-        if (status === "on_site") updates.started_at = new Date().toISOString();
-        if (status === "completed") updates.completed_at = new Date().toISOString();
-        const { error } = await supabase.from("field_service_jobs").update(updates).eq("id", jobId);
+        const { data, error } = await supabase.functions.invoke("tech-job-update", {
+          body: { token: sessionToken, job_id: jobId, status, timestamp: new Date().toISOString() },
+        });
         if (error) throw error;
-        if (tech) await fetchJobs(tech.id);
+        if (data?.error === "invalid_session") { handleSignOut(); return; }
+        if (tech) await fetchJobs(tech.id, sessionToken);
       } catch (err) {
         console.error("Status update error — queuing for offline sync:", err);
         addToOfflineQueue({ jobId, status, timestamp: new Date().toISOString() });
       }
     },
-    [selectedJob, tech, fetchJobs]
+    [selectedJob, tech, sessionToken, fetchJobs, handleSignOut]
   );
 
-  if (!tech) return <TechLogin onLogin={setTech} />;
+  const handleLogin = useCallback((newTech: Tech, token: string) => {
+    try {
+      localStorage.setItem(TECH_TOKEN_KEY, token);
+      localStorage.setItem(TECH_INFO_KEY, JSON.stringify(newTech));
+    } catch { /* storage may be disabled */ }
+    setSessionToken(token);
+    setTech(newTech);
+  }, []);
+
+  if (!tech) return <TechLogin onLogin={handleLogin} />;
 
   if (selectedJob) {
     return (
