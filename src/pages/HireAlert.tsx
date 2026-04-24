@@ -18,7 +18,7 @@ const ROLE_OPTIONS = [
   { key: "pressure_vessel", label: "Pressure Vessel Inspector" },
   { key: "hvac_tech", label: "HVAC Technician" },
   { key: "plumber", label: "Plumber / Master Plumber" },
-  { key: "pipefitter", label: "Pipefitter / Steamfitter (UA 636)" },
+  { key: "pipefitter", label: "Pipefitter / Steamfitter" },
   { key: "electrician", label: "Electrician" },
   { key: "industrial_mechanic", label: "Industrial Mechanic" },
   { key: "cna", label: "CNA (Certified Nursing Assistant)" },
@@ -117,7 +117,7 @@ export default function HireAlert() {
           <h1 style={{ color: "#fff", fontSize: 32, fontWeight: 800, margin: "0 0 12px" }}>Talent Radar is Live</h1>
           <p style={{ color: ACCENT, fontSize: 18, fontWeight: 700, margin: "0 0 20px" }}>Your hiring advantage starts tomorrow at 7am.</p>
           <p style={{ color: "#94a3b8", fontSize: 15, lineHeight: 1.7, margin: "0 0 32px" }}>
-            Check your email — we sent your welcome guide with everything you need to know. Our monitoring runs every morning at 7am and alerts you the moment a match appears.
+            We just emailed you your dashboard link. Save it. First candidate batch hits at 7am tomorrow.
           </p>
           <a href="https://detroitwebagent.com" style={{ background: ACCENT, color: BG, padding: "14px 32px", borderRadius: 8, fontWeight: 800, fontSize: 16, textDecoration: "none", display: "inline-block" }}>
             Back to Home

@@ -29,8 +29,8 @@ type Territory = {
 
 const WINS = [
   "Every lead is exclusive — you're the only contractor who gets it",
-  "Leads are real homeowners who searched for your service, filled out a form, and asked to be contacted",
-  "You get name, phone, email, and project details in your inbox within minutes",
+  "Real homeowners who asked us to send them a contractor",
+  "Name, phone, email in your inbox in minutes",
   "Flat monthly fee — no per-lead charges, no surprises",
   "Cancel anytime — no contracts, no minimums",
 ];
@@ -39,7 +39,6 @@ const PAIN = [
   { label: "Angi / HomeAdvisor", sub: "Same lead sold to 4–8 contractors. You're bidding against yourself." },
   { label: "Thumbtack", sub: "$10–$100/lead, shared. You still compete on price." },
   { label: "Facebook Ads", sub: "You pay for clicks. Most don't convert. Requires constant management." },
-  { label: "Word of mouth alone", sub: "Good but unpredictable. Feast or famine." },
 ];
 
 const TESTIMONIALS: Testimonial[] = [
