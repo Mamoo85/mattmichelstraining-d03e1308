@@ -486,17 +486,6 @@ export default function AdminContractorLeads() {
             <strong className="text-blue-300">What is "FB Page ID"?</strong> When a contractor wires their Facebook Lead Form to your territory, paste their Facebook Page ID here so incoming Facebook leads route to <em>them</em> automatically. Find it at <code className="bg-black/40 px-1 py-0.5 rounded text-[10px]">facebook.com/[their-page]/about</code> → Page Transparency. Without it, FB leads land in a generic bucket. Don't have a contractor for this slot yet? Use the Prospecting Pipeline below to find one.
           </div>
         )}
-        <div className="hidden">
-          <select>
-              <option value="">Trade…</option>
-              {ALL_TRADES.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-            <input type="text" value={newCity} onChange={e => setNewCity(e.target.value)} placeholder="City name" className="bg-background border border-border text-xs text-foreground px-2 py-1.5 rounded focus:outline-none focus:border-primary w-32" onKeyDown={e => e.key === "Enter" && addTerritory()} />
-            <button onClick={addTerritory} disabled={addingTerritory || !newTrade || !newCity.trim()} className="text-xs font-bold px-3 py-1.5 rounded bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40">
-              {addingTerritory ? "…" : "+ Add"}
-            </button>
-          </div>
-        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {territories.map((t) => {
             const contractor = contractorFor(t);
