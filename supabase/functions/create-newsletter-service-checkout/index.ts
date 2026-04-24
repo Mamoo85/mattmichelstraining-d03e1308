@@ -1,7 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { getStripeSecretKey } from "../_shared/stripe-key.ts";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
+const stripe = new Stripe(getStripeSecretKey(), { apiVersion: "2025-08-27.basil" });
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -19,7 +20,15 @@ serve(async (req) => {
       payment_method_types: ["card"],
       customer_email: email,
       subscription_data: { trial_period_days: 7 },
-      line_items: [{ price: "price_1THQqtD52tPWee46pxNgwmHh", quantity: 1 }],
+      line_items: [{
+        price_data: {
+          currency: "usd",
+          recurring: { interval: "month" },
+          unit_amount: 9900,
+          product_data: { name: "AI Newsletter Service", description: "AI writes and sends a monthly newsletter to your customers — stay top of mind on autopilot." },
+        },
+        quantity: 1,
+      }],
       metadata: { type: "newsletter_service_subscription", email, name: name || "", businessName, industry: industry || "" },
       success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-newsletter-service?status=success`,
       cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-newsletter-service`,
