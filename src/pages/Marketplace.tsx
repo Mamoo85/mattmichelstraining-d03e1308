@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Flame, Sun, Snowflake, Loader2, Search, ScrollText, Layers, Keyboard, PackageOpen, Bell, AlertTriangle } from "lucide-react";
 import { BuyerEmailDialog } from "@/components/marketplace/BuyerEmailDialog";
+import { LiveActivityTicker } from "@/components/marketplace/LiveActivityTicker";
+import { HowItWorksSheet } from "@/components/marketplace/HowItWorksSheet";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useSwipeable } from "react-swipeable";
