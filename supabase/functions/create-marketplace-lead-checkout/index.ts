@@ -41,6 +41,21 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // MALICIOUS-3: validate formats before any DB or Stripe work
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(String(lead_id))) {
+      return new Response(JSON.stringify({ error: "invalid lead_id format" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(String(buyer_email)) || String(buyer_email).length > 254) {
+      return new Response(JSON.stringify({ error: "invalid buyer_email format" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const unit = PRICE_MAP[product];
     if (!unit) {
       return new Response(JSON.stringify({ error: "invalid product" }), {

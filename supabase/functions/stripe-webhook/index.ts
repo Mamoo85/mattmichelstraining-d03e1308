@@ -1305,12 +1305,22 @@ serve(async (req) => {
             return new Response(JSON.stringify({ received: true, duplicate: true }), { status: 200 });
           }
 
-          // Fire PDF generation async (don't block webhook)
-          fetch(`${SUPABASE_URL}/functions/v1/marketplace-generate-dossier-pdf`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
-            body: JSON.stringify({ lead_id, product, buyer_email: email }),
-          }).catch((e) => console.error("[mp pdf trigger]", e));
+          // GHOST-3 fix: await PDF generation so failures alert Matt rather than silently dropping
+          try {
+            const pdfRes = await fetch(`${SUPABASE_URL}/functions/v1/marketplace-generate-dossier-pdf`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({ lead_id, product, buyer_email: email }),
+              signal: AbortSignal.timeout(25_000),
+            });
+            if (!pdfRes.ok) throw new Error(`PDF function returned ${pdfRes.status}`);
+          } catch (pdfErr) {
+            console.error("[mp pdf trigger] failed:", pdfErr);
+            await notifyMatt(
+              `⚠️ Marketplace PDF FAILED — ${lead_id.slice(0, 8)} for ${email}`,
+              `<p>Error: ${String(pdfErr)}</p><p>Manually trigger: POST /marketplace-generate-dossier-pdf with lead_id=${lead_id} product=${product} buyer_email=${email}</p>`
+            ).catch(() => {});
+          }
 
           // Fetch the unlocked lead for the email
           const { data: lead } = await (sb.from as any)("unified_lead_marketplace_view")
@@ -1320,6 +1330,7 @@ serve(async (req) => {
           const productLabel = ({mortgage:"Mortgage",talent:"Talent",demand:"Demand",growth:"Growth",supply:"Supply"} as any)[product] || product;
 
           if (RESEND_API_KEY) {
+            // GHOST-2 fix: stamp email_sent_at on success so reconcile cron knows delivery happened
             await dwaEmail(email, `🎟 Your ${productLabel} Dossier is Unlocked`, `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;">
 <div style="max-width:600px;margin:0 auto;padding:32px 16px;">
   <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;">
@@ -1334,6 +1345,12 @@ serve(async (req) => {
   <p style="color:#475569;font-size:11px;text-align:center;margin-top:16px;">Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p>
 </div></body></html>`);
           }
+          // GHOST-2 fix: stamp delivery timestamp so reconcile cron knows email was sent
+          await sb.from("marketplace_lead_locks" as any)
+            .update({ email_sent_at: new Date().toISOString() })
+            .eq("lead_id", lead_id)
+            .eq("product", product);
+
           await notifyMatt(
             `💰 Marketplace sale — ${productLabel} · ${email}`,
             `<p><strong>${email}</strong> bought ${productLabel} lead <code>${lead_id.slice(0,8)}</code><br>${(lead as any)?.city || ""} ${(lead as any)?.zip || ""} · score ${(lead as any)?.score || "?"}/10</p>`
