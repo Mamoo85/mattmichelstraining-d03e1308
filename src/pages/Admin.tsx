@@ -91,6 +91,7 @@ const AdminEnrichmentPanel    = lazyRetry(() => import("@/components/admin/Admin
 const AdminProductManager     = lazyRetry(() => import("@/components/admin/AdminProductManager"));
 const AdminPinnedNotes        = lazyRetry(() => import("@/components/admin/AdminPinnedNotes"));
 const AdminTestLab            = lazyRetry(() => import("@/components/admin/AdminTestLab"));
+const AdminMarketplaceAudit   = lazyRetry(() => import("@/components/admin/AdminMarketplaceAudit"));
 
 // Content
 const AdminFrontPage          = lazyRetry(() => import("@/components/admin/AdminFrontPage"));
@@ -451,6 +452,7 @@ const Admin = () => {
             { key: "migrations",   label: "DB Migrations",      content: <AdminMigrations /> },
             { key: "product-mgr",  label: "Products",           content: <AdminProductManager /> },
             { key: "notes",        label: "📌 Notes",           content: <AdminPinnedNotes /> },
+            { key: "mp-audit",     label: "🛒 Marketplace Audit", content: <AdminMarketplaceAudit /> },
           ]} />
         )}
 

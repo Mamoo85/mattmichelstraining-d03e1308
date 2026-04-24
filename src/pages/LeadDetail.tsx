@@ -10,6 +10,16 @@ import { Loader2, ArrowLeft, Download, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
+function getOrCreateAnonId(): string {
+  const KEY = "mp_anon_session_id";
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(KEY, id);
+  }
+  return id;
+}
+
 export default function LeadDetail() {
   const { slug } = useParams<{ slug: string }>();
   const [params] = useSearchParams();
@@ -17,6 +27,7 @@ export default function LeadDetail() {
   const [loading, setLoading] = useState(true);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [shareBusy, setShareBusy] = useState(false);
+  const [accessInfo, setAccessInfo] = useState<{ status?: string; access_expires_at?: string | null; revoked_at?: string | null }>({});
 
   const isPaid = params.get("paid") === "1" || params.get("print") === "1";
   const buyerEmail = params.get("buyer") || localStorage.getItem("mp_buyer_email") || "";
@@ -37,8 +48,25 @@ export default function LeadDetail() {
         setLead((data as unknown as MarketplaceLead) || null);
         setLoading(false);
       });
+    // Fetch access state for the lock (TTL / revoked)
+    if (isPaid && buyerEmail) {
+      supabase.from("marketplace_lead_locks" as any)
+        .select("status, access_expires_at, revoked_at")
+        .eq("lead_id", slug)
+        .eq("buyer_email", buyerEmail.toLowerCase())
+        .maybeSingle()
+        .then(({ data }) => {
+          if (!cancelled && data) setAccessInfo(data as any);
+        });
+    }
     return () => { cancelled = true; };
-  }, [slug]);
+  }, [slug, isPaid, buyerEmail]);
+
+  const accessExpired = !!accessInfo.revoked_at ||
+    (accessInfo.access_expires_at ? new Date(accessInfo.access_expires_at) < new Date() : false);
+  const daysLeft = accessInfo.access_expires_at
+    ? Math.max(0, Math.ceil((new Date(accessInfo.access_expires_at).getTime() - Date.now()) / 86_400_000))
+    : null;
 
   const handleClaim = (l: MarketplaceLead) => {
     setPendingClaimLead(l);
@@ -49,9 +77,10 @@ export default function LeadDetail() {
     const l = pendingClaimLead;
     if (!l) return;
     localStorage.setItem("mp_buyer_email", email);
+    const anonId = getOrCreateAnonId();
     try {
       const { data, error } = await supabase.functions.invoke("create-marketplace-lead-checkout", {
-        body: { lead_id: l.id, product: (l as any).product || "mortgage", buyer_email: email },
+        body: { lead_id: l.id, product: (l as any).product || "mortgage", buyer_email: email, anon_session_id: anonId },
       });
       if (error) throw error;
       const token = (data as any)?.buyer_token;
@@ -122,17 +151,36 @@ export default function LeadDetail() {
             <p className="text-muted-foreground">This lead has expired or been removed.</p>
             <Link to="/mortgage-leads" className="text-intel-teal underline text-sm mt-3 inline-block">View live marketplace</Link>
           </div>
+        ) : isPaid && accessExpired ? (
+          <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-6 text-center">
+            <p className="text-destructive font-semibold mb-2">
+              {accessInfo.revoked_at ? "Access revoked" : "Access expired"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {accessInfo.revoked_at
+                ? "This dossier was relocked after a payment reversal. Contact support if this looks wrong."
+                : "Your unlocked window has ended. Re-purchase to view this dossier again."}
+            </p>
+          </div>
         ) : isPaid ? (
-          <UnlockedDossierCard
-            lead={lead as any}
-            onExportPdf={handleExportPdf}
-            onShare={handleShare}
-          />
+          <>
+            {daysLeft !== null && (
+              <div className="mb-3 text-xs text-muted-foreground text-center">
+                ⏳ Access expires in <strong className="text-foreground">{daysLeft} day{daysLeft === 1 ? "" : "s"}</strong>
+                {accessInfo.access_expires_at && ` (${new Date(accessInfo.access_expires_at).toLocaleDateString()})`}
+              </div>
+            )}
+            <UnlockedDossierCard
+              lead={lead as any}
+              onExportPdf={handleExportPdf}
+              onShare={handleShare}
+            />
+          </>
         ) : (
           <LockedDossierCard lead={lead} onClaim={handleClaim} />
         )}
 
-        {isPaid && lead && !params.get("print") && (
+        {isPaid && lead && !accessExpired && !params.get("print") && (
           <div className="mt-4 flex gap-2 justify-center">
             <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={pdfBusy}>
               <Download className="w-3 h-3 mr-1" /> {pdfBusy ? "Generating…" : "Download PDF"}
