@@ -1,135 +1,107 @@
 /**
  * find-lo-prospects
- * Fetches Michigan MLOs from NMLS Consumer Access (free public API, no key).
- * Upserts into marketplace_prospects (keyed on nmls_id).
- * Skips anyone already in mortgage_radar_clients (paying subscribers).
+ * Finds Michigan mortgage loan originators via Apollo.io people search.
+ * NMLS Consumer Access API was Cloudflare-blocked (returns HTML, not JSON).
+ * Apollo free tier: 50 enrichments/mo. Returns up to 25 MI MLO prospects per run.
  *
  * POST {} → { ok, found, inserted, skipped }
- *
- * NOTE: Does NOT touch any scanner tables. Additive only.
  */
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
-const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// NMLS Consumer Access — free federal API, no key required
-// Docs: https://www.nmlsconsumeraccess.org/API/
-const NMLS_BASE = "https://api.nmlsconsumeraccess.org";
-
-async function fetchNMLSPage(page: number): Promise<any[]> {
-  const params = new URLSearchParams({
-    state: "MI",
-    licenseType: "MLO",
-    page: String(page),
-    pageSize: "100",
-  });
+async function searchApolloMLOs(): Promise<any[]> {
+  if (!APOLLO_API_KEY) return [];
   try {
-    const res = await fetch(`${NMLS_BASE}/api/Search/Licensees?${params}`, {
-      headers: { Accept: "application/json" },
+    const res = await fetch("https://api.apollo.io/api/v1/mixed_people/search", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": APOLLO_API_KEY,
+      },
+      body: JSON.stringify({
+        q_organization_locations: ["Michigan, US"],
+        q_not_person_titles: [],
+        person_titles: ["Mortgage Loan Originator", "MLO", "Loan Officer", "Mortgage Banker"],
+        page: 1,
+        per_page: 25,
+      }),
       signal: AbortSignal.timeout(12000),
     });
     if (!res.ok) return [];
     const data = await res.json();
-    // NMLS returns either { results: [...] } or a plain array
-    return Array.isArray(data) ? data : (data?.results ?? data?.Results ?? []);
-  } catch {
+    return data?.people ?? [];
+  } catch (e) {
+    console.warn("[find-lo-prospects apollo]", e instanceof Error ? e.message : String(e));
     return [];
   }
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   try {
-    const records: any[] = [];
+    const people = await searchApolloMLOs();
 
-    // Fetch up to 5 pages (500 MLOs) per run to stay within function timeout
-    for (let page = 1; page <= 5; page++) {
-      const batch = await fetchNMLSPage(page);
-      if (!batch.length) break;
-      records.push(...batch);
-      if (batch.length < 100) break; // last page reached
-    }
-
-    if (!records.length) {
+    if (!people.length) {
       return new Response(
-        JSON.stringify({ ok: true, found: 0, inserted: 0, skipped: 0, note: "NMLS returned no results for MI MLO" }),
+        JSON.stringify({ ok: true, found: 0, inserted: 0, skipped: 0, note: APOLLO_API_KEY ? "Apollo returned no results" : "APOLLO_API_KEY not configured" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    // Normalise field names — NMLS API response shape varies by version
-    const normalised = records.map((r: any) => ({
-      nmls_id: String(r.nmlsId ?? r.NmlsId ?? r.id ?? r.Id ?? ""),
-      full_name: (r.fullName ?? r.FullName ?? r.name ?? r.Name ?? "").trim(),
-      company_name: r.companyName ?? r.CompanyName ?? r.employer ?? r.Employer ?? null,
-      email: r.email ?? r.Email ?? null,
-      phone: r.phone ?? r.Phone ?? null,
-      fax: r.fax ?? r.Fax ?? null,
-      address: r.address ?? r.Address ?? null,
-    })).filter((r) => r.nmls_id && r.full_name);
-
-    // Pull existing nmls_ids so we only process new ones
-    const nmlsIds = normalised.map((r) => r.nmls_id);
-    const { data: existing } = await (sb.from as any)("marketplace_prospects")
-      .select("nmls_id")
-      .in("nmls_id", nmlsIds);
-    const existingSet = new Set((existing ?? []).map((e: any) => e.nmls_id));
-
-    // Exclude paying subscribers (they're already customers)
-    const emails = normalised.map((r) => r.email).filter(Boolean);
+    // Exclude paying subscribers
+    const emails = people.map((p: any) => p.email).filter(Boolean);
     let subscriberEmails = new Set<string>();
     if (emails.length) {
-      const { data: subs } = await (sb.from as any)("mortgage_radar_clients")
-        .select("email")
-        .in("email", emails);
+      const { data: subs } = await sb.from("mortgage_radar_clients").select("email").in("email", emails);
       subscriberEmails = new Set((subs ?? []).map((s: any) => s.email));
     }
 
     let inserted = 0;
     let skipped = 0;
 
-    for (const r of normalised) {
-      if (existingSet.has(r.nmls_id)) { skipped++; continue; }
-      if (r.email && subscriberEmails.has(r.email)) { skipped++; continue; }
+    for (const p of people) {
+      if (p.email && subscriberEmails.has(p.email)) { skipped++; continue; }
+
+      const apolloId = String(p.id || "");
+      if (!apolloId && !p.email) { skipped++; continue; }
 
       const row = {
-        nmls_id: r.nmls_id,
-        full_name: r.full_name,
-        company_name: r.company_name,
-        email: r.email,
-        phone: r.phone,
-        fax_number: r.fax,
-        mailing_address: r.address
-          ? {
-              street: r.address.street ?? r.address.line1 ?? null,
-              city: r.address.city ?? null,
-              state: r.address.state ?? "MI",
-              zip: r.address.zip ?? r.address.postalCode ?? null,
-            }
-          : null,
-        enrichment_source: "nmls",
+        nmls_id: `apollo_${apolloId}`,
+        full_name: [p.first_name, p.last_name].filter(Boolean).join(" ").trim() || "Unknown",
+        company_name: p.organization?.name ?? p.employment_history?.[0]?.organization_name ?? null,
+        email: p.email ?? null,
+        phone: p.phone_numbers?.[0]?.sanitized_number ?? null,
+        fax_number: null,
+        mailing_address: p.city || p.state ? {
+          city: p.city ?? null,
+          state: p.state ?? "MI",
+          zip: p.postal_code ?? null,
+        } : null,
+        linkedin_url: p.linkedin_url ?? null,
+        enrichment_source: "apollo",
         status: "active",
-        warmth_score: (r.fax ? 2 : 0) + (r.email ? 1 : 0) + (r.phone ? 1 : 0),
+        warmth_score: (p.email ? 2 : 0) + (p.phone_numbers?.length ? 2 : 0) + (p.linkedin_url ? 1 : 0),
       };
 
-      const { error } = await (sb.from as any)("marketplace_prospects")
+      const { error } = await sb.from("marketplace_prospects")
         .upsert(row, { onConflict: "nmls_id" });
       if (!error) inserted++;
-      else skipped++;
+      else { console.warn("[find-lo] upsert error", error.message); skipped++; }
     }
 
     return new Response(
-      JSON.stringify({ ok: true, found: normalised.length, inserted, skipped }),
+      JSON.stringify({ ok: true, found: people.length, inserted, skipped }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
