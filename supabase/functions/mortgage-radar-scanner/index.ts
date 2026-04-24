@@ -55,6 +55,7 @@ async function sendHotLeadSMS(to: string, businessName: string, address: string,
   }
 }
 
+
 interface RawSignal {
   full_name?: string;
   address?: string;
