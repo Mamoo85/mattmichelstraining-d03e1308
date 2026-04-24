@@ -144,10 +144,10 @@ export default function Marketplace() {
   }, [leads, dismissed, tierFilter, search, sort]);
 
   const [claiming, setClaiming] = useState<string | null>(null);
-  const handleClaim = async (lead: MarketplaceLead) => {
-    const stored = localStorage.getItem("mp_buyer_email") || "";
-    const email = window.prompt("Enter your email to receive the unlocked dossier:", stored);
-    if (!email || !email.includes("@")) return;
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [pendingClaimLead, setPendingClaimLead] = useState<MarketplaceLead | null>(null);
+
+  const startCheckout = async (lead: MarketplaceLead, email: string) => {
     localStorage.setItem("mp_buyer_email", email);
     setBuyerEmail(email);
     setClaiming(lead.id);
@@ -168,6 +168,16 @@ export default function Marketplace() {
     } finally {
       setClaiming(null);
     }
+  };
+
+  const handleClaim = async (lead: MarketplaceLead) => {
+    const stored = localStorage.getItem("mp_buyer_email") || buyerEmail || "";
+    if (stored && stored.includes("@")) {
+      await startCheckout(lead, stored);
+      return;
+    }
+    setPendingClaimLead(lead);
+    setEmailDialogOpen(true);
   };
 
   const toggleWatch = (lead: MarketplaceLead) => {

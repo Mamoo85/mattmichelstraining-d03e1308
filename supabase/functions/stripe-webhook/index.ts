@@ -2562,7 +2562,10 @@ serve(async (req) => {
       `STRIPE-WEBHOOK FATAL: ${msg.slice(0, 120)}`,
       "stripe_webhook_error"
     ).catch(() => {});
-    return new Response(JSON.stringify({ error: msg }), { status: 400 });
+    // Defense Protocol: signature verification failures = 400 (Stripe gives up).
+    // ALL other errors = 500 so Stripe retries with exponential backoff.
+    const isSignatureError = /signature|webhook secret/i.test(msg);
+    return new Response(JSON.stringify({ error: msg }), { status: isSignatureError ? 400 : 500 });
   }
 });
 
