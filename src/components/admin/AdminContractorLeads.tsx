@@ -564,6 +564,7 @@ export default function AdminContractorLeads() {
                 <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2 hidden md:table-cell">Territory</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2">Source</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2">Status</th>
+                <th className="text-right text-xs font-medium text-muted-foreground px-3 py-2">Sell</th>
               </tr>
             </thead>
             <tbody>
@@ -608,10 +609,24 @@ export default function AdminContractorLeads() {
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">New</span>
                       )}
                     </td>
+                    <td className="px-3 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                      {!l.client_id ? (
+                        <button
+                          onClick={() => sellLead(l.id)}
+                          disabled={sellingLeadId === l.id}
+                          className="text-[10px] font-bold px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50 whitespace-nowrap"
+                          title="Generate Stripe link + notify nearby contractors"
+                        >
+                          {sellingLeadId === l.id ? "…" : "💵 Sell"}
+                        </button>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground">claimed</span>
+                      )}
+                    </td>
                   </tr>,
                   isExpanded && (
                     <tr key={`${l.id}-expand`} className="border-t border-border bg-muted/10">
-                      <td colSpan={6} className="px-4 py-3">
+                      <td colSpan={7} className="px-4 py-3">
                         <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
                           {l.email && <span><strong className="text-foreground">Email:</strong> {l.email}</span>}
                           {l.project_type && <span><strong className="text-foreground">Project:</strong> {l.project_type}</span>}
@@ -626,7 +641,7 @@ export default function AdminContractorLeads() {
               })}
               {leads.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted-foreground">No leads yet — SEO pages are live, waiting for first homeowner.</td>
+                  <td colSpan={7} className="px-3 py-8 text-center text-sm text-muted-foreground">No leads yet — SEO pages are live, waiting for first homeowner.</td>
                 </tr>
               )}
             </tbody>
