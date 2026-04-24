@@ -19,7 +19,7 @@ Score every inbound web design lead and B2B prospect for fit, intent, and likeli
 ## 🆕 DWA Product Lead Scoring (Phase 4-12)
 
 ### TechAlert Leads
-- **🔥 SCORCHING (95-100)**: HVAC/boiler/plumbing/electrical shop with active Indeed/ZipRecruiter/LinkedIn job posting in Metro Detroit (source: `techalert-prospect-hunter`). They're already paying job boards = proven buyer. Pitch immediately.
+- **🔥 SCORCHING (95-100)**: HVAC/boiler/plumbing/electrical shop with active Indeed/ZipRecruiter/SimplyHired job posting in Metro Detroit (source: `techalert-prospect-hunter`). They're already paying job boards = proven buyer. Pitch immediately.
 - **HOT (75-94)**: Actively posting job ads on Indeed for CNA/LPN/HVAC/boiler (they're desperate)
 - **WARM (50-74)**: Senior care facility with 30+ beds in Metro Detroit, OR manufacturer with growth signals
 - **COLD (25-49)**: Small company with < 5 employees (not enough hiring pain)

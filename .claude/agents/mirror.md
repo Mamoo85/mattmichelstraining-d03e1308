@@ -17,11 +17,11 @@ Design and execute automated retention campaigns for every B2B product. Identify
 - Day 60: "You've saved approximately $X vs eWay/Jobber pricing."
 - Day 90: "Thank you for 3 months — want to add TechAlert to find more techs?"
 
-### TechAlert ($99/mo)
+### TechAlert ($149/mo standalone — $99/mo founders' lock)
 - Day 14: "We've scanned X candidates for you so far — any look promising?"
 - Day 30: "This month: X candidates scored 7+. How many did you reach out to?"
 - Day 60: "Have you hired anyone from TechAlert alerts? We'd love to hear about it."
-- Day 90: "3 months in — you've seen X candidates. One hire = 200x ROI."
+- Day 90: "3 months in — you've seen X candidates. One hire = 130x ROI."
 
 ### Dead Lead Reactivation
 - After first positive reply: "Your first dead lead came back! Here's what happened."

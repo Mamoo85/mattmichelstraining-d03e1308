@@ -32,8 +32,8 @@ Ensure every SMS product is actually sending messages. Catch stuck sequences, ov
 15. **Legacy vs New**: The old `hire-alert-scanner` still runs as backup — but per-source checkpoint rows are ground truth. Both should show activity; silence in both = total outage
 
 ### 📊 Unified Comms Check
-11. Query `system_comms_log` for last 24h — compare SMS vs email volume, flag if SMS drops to zero
-12. Check for any `status='failed'` entries in `system_comms_log` — these indicate Twilio delivery failures
+16. Query `system_comms_log` for last 24h — compare SMS vs email volume, flag if SMS drops to zero
+17. Check for any `status='failed'` entries in `system_comms_log` — these indicate Twilio delivery failures
 
 ## Edge Function
 `pulse-sms-monitor` — cron scheduled every 4 hours

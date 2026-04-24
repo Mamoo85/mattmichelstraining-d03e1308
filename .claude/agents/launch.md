@@ -46,7 +46,7 @@ Ensure every new B2B client gets set up, configured, and sees their first result
 - Day 3: Check `field_service_jobs` — any jobs created?
 - Day 7: First dispatch report (jobs completed, GPS tracking used, customer texts sent)
 
-### TechAlert ($99/mo)
+### TechAlert ($149/mo standalone — $99/mo founders' lock — $79/mo bundle)
 - Day 0: Welcome email with target role selection guide
 - Day 1: Check `target_roles` — configured?
 - Day 3: First scan results — candidates found? Score distribution?

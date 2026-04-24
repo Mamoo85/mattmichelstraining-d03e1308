@@ -204,12 +204,12 @@ Add to the product matching table:
 - Michigan's Bureau of Professional Licensing issues every LPN and RN license. We check it daily.
 - New license issued = someone just passed boards or transferred from another state = they're looking.
 - We text you the moment it happens: name, license number, issue date.
-- $99/mo vs. a staffing agency that charges 15–25% of annual salary ($8,000–15,000 per hire).
+- $149/mo vs. a staffing agency that charges 15–25% of annual salary ($8,000–15,000 per hire). First 10 clients get it locked at $99/mo forever.
 
-**The hook line (use this):** "You know how hard it is to find a CNA who's actually licensed and available right now? Michigan publishes every nursing license issued in the state. We check it every morning and text you when a new one goes active. For $99/month, you're always first to call."
+**The hook line (use this):** "You know how hard it is to find a CNA who's actually licensed and available right now? Michigan publishes every nursing license issued in the state. We check it every morning and text you when a new one goes active. For $149/month, you're always first to call."
 
 **Objections and rebuttals:**
-- *"We use staffing agencies"* → "That's $8,000–12,000 per hire in agency fees. We're $99/month whether we find you one or a hundred. One hire and we've paid for ourselves for 7 years."
+- *"We use staffing agencies"* → "That's $8,000–12,000 per hire in agency fees. We're $149/month whether we find you one or a hundred. One hire and we've paid for ourselves for 4 years."
 - *"We post on Indeed"* → "Indeed is reactive — you post, you wait, you compete with every other facility in Michigan. TechAlert is proactive — the moment a new CNA license drops, you know before anyone else posts."
 - *"We can't afford it right now"* → "One CNA shift you can't fill costs you $800–1,200 in agency temp fees. That's 8–12 months of TechAlert. One filled shift from our alert and it's paid for."
 - *"How do you get this data?"* → "Michigan LARA (Bureau of Professional Licensing) publishes it as public record. We just monitor it for you so you don't have to."
@@ -284,7 +284,7 @@ Add to the product matching table:
 >
 > We built a tool that checks it every morning. When a new license pops up or someone's status changes — usually means they just finished an apprenticeship or switched jobs — we text you their name and license info before anyone else knows they're available.
 >
-> $99/mo. No recruiter fees. First to call usually gets the hire.
+> $149/mo (founders' rate $99/mo for first 10 clients). No recruiter fees. First to call usually gets the hire.
 >
 > Local guy in Grosse Pointe — happy to talk this week. — Matt (313) 806-4952
 
@@ -295,7 +295,7 @@ Add to the product matching table:
 >
 > Michigan's Bureau of Professional Licensing publishes every nursing license issued in the state — LPN, RN, CNA — as public record. We built a tool that checks it every morning. When a new license goes active in your area, we text you the name and license number immediately, before anyone else posts a job ad.
 >
-> $99/mo. No recruiter fees. One hire pays for the whole year.
+> $149/mo (founders' rate $99/mo for first 10 clients). No recruiter fees. One hire pays for the whole year.
 >
 > Local guy in Grosse Pointe — happy to talk this week. — Matt (313) 806-4952
 
@@ -472,6 +472,6 @@ Target industries (in priority order):
 
 **Primary pain point to probe:** "What software do your techs use in the field right now?" If the answer is eWay, paper, or "just their phone," that's a FieldDesk sale. If they say they can't find good techs, that's TechAlert. If they mention license renewals or compliance, that's License Monitor.
 
-**For senior care:** "How are you finding CNAs right now?" If the answer is Indeed, staffing agencies, or word of mouth — that's a TechAlert sale. Use Template C2. Pitch is $99/mo vs. $8,000+ agency fees per hire.
+**For senior care:** "How are you finding CNAs right now?" If the answer is Indeed, staffing agencies, or word of mouth — that's a TechAlert sale. Use Template C2. Pitch is $149/mo (or $99/mo founders' lock) vs. $8,000+ agency fees per hire.
 
 Always pitch the website first — it unlocks the bundle discounts and builds the relationship before the recurring SaaS.

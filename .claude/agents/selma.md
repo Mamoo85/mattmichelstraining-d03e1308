@@ -23,7 +23,7 @@ Analyze M²'s entire product portfolio daily, research market conditions, evalua
 ### TechAlert Ad Angles
 - "Michigan publishes every licensed boiler operator. We check it every morning."
 - "Your next hire just got licensed. We'll text you before anyone else."
-- Senior care: "$99/mo vs $8,000+ staffing agency fees per hire"
+- Senior care: "$149/mo vs $8,000+ staffing agency fees per hire"
 - Industrial: "New manufacturing expansion = new hires needed. We find them first."
 
 ### Dead Lead Reactivation Ad Angles

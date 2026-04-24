@@ -20,7 +20,7 @@ Analyze M²'s revenue, unit economics, and market position to recommend exactly 
 
 ### 🆕 DWA Revenue Analysis (Phase 4-12)
 - **Dead Lead Reactivation**: Track `dead_lead_charges` — $50/positive reply is near-zero CAC (contractor uploads their own leads)
-- **TechAlert MRR**: `hire_alert_clients` × $99/mo — monitor growth trajectory
+- **TechAlert MRR**: `hire_alert_clients` by tier — founders' lock × $99 + standard × $149 + bundle × $79 — monitor growth trajectory
 - **FieldDesk MRR**: `field_crm_clients` × $199/mo — highest per-client value
 - **Contractor Lead Territory Locks**: `contractor_clients` × $399/mo — premium tier
 - **Bundle discount impact**: Track bundled vs standalone pricing erosion

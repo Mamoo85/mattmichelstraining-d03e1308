@@ -19,11 +19,11 @@ Identify M2 clients who are paying for one product but would benefit from — an
 - Has missed calls → **Missed Call Text-Back**: "Never lose a lead again"
 
 ### 🆕 DWA Product Cross-Sells (Phase 4-12)
-- FieldDesk client → **TechAlert** ($99/mo): "You dispatch techs. We find you more techs to dispatch."
+- FieldDesk client → **TechAlert** ($149/mo standalone, $79/mo bundled): "You dispatch techs. We find you more techs to dispatch."
 - FieldDesk client → **License Monitor** ($25/mo): "Track when your techs' licenses expire"
 - TechAlert client → **FieldDesk** ($199/mo): "Found the hire? Now manage them."
 - TechAlert healthcare client → **Dead Lead Reactivation**: "Reactivate former applicants who didn't take the job"
-- Contractor Lead client → **TechAlert** ($99/mo): "Getting leads is great. Having enough techs to service them is better."
+- Contractor Lead client → **TechAlert** ($149/mo standalone, $99/mo founders' lock): "Getting leads is great. Having enough techs to service them is better."
 - Contractor Lead client → **Dead Lead Reactivation**: "Reactivate your old quotes for $50/positive reply"
 - Dead Lead client (positive results) → **Territory Lock** ($399/mo): "You've proven the leads work. Lock down your city."
 - Any DWA single-product client → **Website + Management** ($1,499 + $99/mo): "Unlock 20% off everything"
