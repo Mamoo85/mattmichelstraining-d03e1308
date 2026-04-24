@@ -1,0 +1,111 @@
+import { useEffect, useState } from "react";
+import { Lock, Eye } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { BuyerChip, FreshnessBadge, TierBadge, ScoreBars, EquityPanel, MetricsRow, TcpaBadge, type MarketplaceLead } from "./GoldenTicketCard";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  lead: MarketplaceLead;
+  priceCents?: number;
+  onClaim?: (lead: MarketplaceLead) => void;
+  className?: string;
+}
+
+export function LockedDossierCard({ lead, priceCents = 4900, onClaim, className }: Props) {
+  const [viewers, setViewers] = useState<number>(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    const visitorHash = localStorage.getItem("mp_visitor") || crypto.randomUUID();
+    localStorage.setItem("mp_visitor", visitorHash);
+    supabase.functions.invoke("marketplace-track-view", {
+      body: { lead_id: lead.id, product: lead.product, visitor_hash: visitorHash },
+    }).then((res) => {
+      if (!cancelled && res.data?.viewers_now) setViewers(res.data.viewers_now);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [lead.id, lead.product]);
+
+  const price = (priceCents / 100).toFixed(0);
+  const locationLine = [lead.city, lead.state, lead.zip].filter(Boolean).join(", ");
+
+  return (
+    <Card className={cn(
+      "relative overflow-hidden bg-gradient-to-br from-card via-card to-background border-border/60",
+      "hover:border-intel-teal/50 transition-all duration-300",
+      lead.signal_strength_tier === "hot" && "animate-dossier-glow",
+      className
+    )}>
+      {/* Scanline shimmer overlay */}
+      <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
+        <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-intel-teal to-transparent animate-scanline" />
+      </div>
+
+      {/* Header */}
+      <div className="px-4 pt-4 pb-3 border-b border-border/40 flex items-start justify-between gap-2">
+        <div className="space-y-1.5 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <TierBadge tier={lead.signal_strength_tier} />
+            <FreshnessBadge days={lead.days_on_radar} />
+          </div>
+          {lead.buyer_type && <BuyerChip>{lead.buyer_type}</BuyerChip>}
+        </div>
+        <div className="text-right flex-shrink-0">
+          <div className="text-[10px] uppercase font-mono text-muted-foreground tracking-wider">Lead #{lead.id.slice(0, 6).toUpperCase()}</div>
+          {viewers > 1 && (
+            <div className="text-[10px] font-mono text-orange-400 mt-1 flex items-center gap-1 justify-end">
+              <Eye className="w-3 h-3" /> {viewers} viewing
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="p-4 space-y-3">
+        {/* Summary — the headline */}
+        {lead.human_summary && (
+          <p className="text-sm text-foreground leading-relaxed">
+            {lead.human_summary}
+          </p>
+        )}
+
+        {/* Location (intel-redacted) */}
+        <div className="flex items-center gap-2 text-xs font-mono">
+          <Lock className="w-3 h-3 text-seal-gold" />
+          <span className="text-muted-foreground">REDACTED ST,</span>
+          <span className="text-foreground">{locationLine || "Metro Detroit"}</span>
+        </div>
+
+        <ScoreBars score={lead.score} percentile={lead.score_percentile} />
+
+        <EquityPanel lead={lead} />
+
+        <MetricsRow lead={lead} />
+
+        <div className="flex items-center justify-between pt-1">
+          <TcpaBadge clear={lead.tcpa_clear} />
+          <span className="text-[10px] font-mono uppercase text-muted-foreground tracking-wider">
+            Source: DWA Scanner
+          </span>
+        </div>
+      </div>
+
+      {/* Wax seal CTA */}
+      <div className="px-4 pb-4 pt-2 border-t border-border/40 bg-gradient-to-b from-transparent to-seal-gold/5">
+        <Button
+          onClick={() => onClaim?.(lead)}
+          className="w-full bg-gradient-to-r from-seal-gold to-orange-500 hover:from-seal-gold hover:to-orange-400 text-background font-bold tracking-wide shadow-lg shadow-seal-gold/20"
+          size="lg"
+        >
+          <span className="text-lg mr-2">🎟</span>
+          Unlock Full Dossier · ${price}
+        </Button>
+        <p className="text-[10px] text-center text-muted-foreground font-mono mt-2 tracking-wider">
+          Single buyer · Once unlocked, this lead is yours
+        </p>
+      </div>
+    </Card>
+  );
+}
