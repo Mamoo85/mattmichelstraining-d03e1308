@@ -257,6 +257,11 @@ export default function MarketplaceReceipts() {
                             : <RefreshCw className="w-3.5 h-3.5 mr-1.5" />}
                           Regenerate
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleShare(r.lead_id, r.product)}
+                        >
                           <Share2 className="w-3.5 h-3.5 mr-1.5" />
                           Share (redacted)
                         </Button>
