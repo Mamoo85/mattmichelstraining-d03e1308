@@ -2616,10 +2616,18 @@ serve(async (req) => {
 
     // ── Unhandled event types (invoice.finalized, etc.) — acknowledge safely ──
     console.log(`[WEBHOOK] Unhandled event type: ${event.type} — acknowledging`);
+    await markFulfilled(true);
     return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("[STRIPE-WEBHOOK] Error:", msg);
+    // PARTIAL-1 fix: mark this event as failed so the reconcile cron can re-fire it.
+    // markFulfilled may not exist if the error happened before idempotency setup
+    // (e.g. signature verification) — guard with typeof check.
+    try {
+      // @ts-ignore — markFulfilled is in the closure scope when reachable
+      if (typeof markFulfilled === "function") await markFulfilled(false, msg);
+    } catch (_) { /* swallow — best-effort */ }
     // Alert Matt on fatal webhook failures (signature errors, crashes, etc.)
     sendSMS(
       ADMIN_PHONE,
