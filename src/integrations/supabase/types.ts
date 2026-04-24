@@ -9023,22 +9023,31 @@ export type Database = {
       }
       marketplace_buyer_views: {
         Row: {
+          anon_session_id: string | null
+          buyer_email: string | null
           id: string
           lead_id: string
+          merged_at: string | null
           product: string
           viewed_at: string
           visitor_hash: string | null
         }
         Insert: {
+          anon_session_id?: string | null
+          buyer_email?: string | null
           id?: string
           lead_id: string
+          merged_at?: string | null
           product: string
           viewed_at?: string
           visitor_hash?: string | null
         }
         Update: {
+          anon_session_id?: string | null
+          buyer_email?: string | null
           id?: string
           lead_id?: string
+          merged_at?: string | null
           product?: string
           viewed_at?: string
           visitor_hash?: string | null
@@ -9155,7 +9164,9 @@ export type Database = {
       }
       marketplace_lead_locks: {
         Row: {
+          access_expires_at: string | null
           amount_cents: number | null
+          anon_session_id: string | null
           buyer_email: string | null
           claimed_at: string | null
           created_at: string
@@ -9164,12 +9175,18 @@ export type Database = {
           lead_id: string
           locked_at: string
           product: string
+          revoke_reason: string | null
+          revoked_at: string | null
           sold_at: string | null
           status: string
+          stripe_charge_id: string | null
+          stripe_payment_intent_id: string | null
           stripe_session_id: string | null
         }
         Insert: {
+          access_expires_at?: string | null
           amount_cents?: number | null
+          anon_session_id?: string | null
           buyer_email?: string | null
           claimed_at?: string | null
           created_at?: string
@@ -9178,12 +9195,18 @@ export type Database = {
           lead_id: string
           locked_at?: string
           product: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
           sold_at?: string | null
           status?: string
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
         }
         Update: {
+          access_expires_at?: string | null
           amount_cents?: number | null
+          anon_session_id?: string | null
           buyer_email?: string | null
           claimed_at?: string | null
           created_at?: string
@@ -9192,8 +9215,12 @@ export type Database = {
           lead_id?: string
           locked_at?: string
           product?: string
+          revoke_reason?: string | null
+          revoked_at?: string | null
           sold_at?: string | null
           status?: string
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
         }
         Relationships: []
@@ -9237,11 +9264,15 @@ export type Database = {
           created_at: string
           expires_at: string
           id: string
+          last_redeem_at: string | null
+          last_redeem_ip_hash: string | null
           lead_id: string
           max_redeems: number
           product: string
+          redeem_attempts: number
           redeemed_at: string | null
           redeemed_count: number
+          revoked_at: string | null
           share_token: string
           shared_by_email: string
           shared_to_email: string | null
@@ -9251,11 +9282,15 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          last_redeem_at?: string | null
+          last_redeem_ip_hash?: string | null
           lead_id: string
           max_redeems?: number
           product: string
+          redeem_attempts?: number
           redeemed_at?: string | null
           redeemed_count?: number
+          revoked_at?: string | null
           share_token: string
           shared_by_email: string
           shared_to_email?: string | null
@@ -9265,14 +9300,42 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          last_redeem_at?: string | null
+          last_redeem_ip_hash?: string | null
           lead_id?: string
           max_redeems?: number
           product?: string
+          redeem_attempts?: number
           redeemed_at?: string | null
           redeemed_count?: number
+          revoked_at?: string | null
           share_token?: string
           shared_by_email?: string
           shared_to_email?: string | null
+        }
+        Relationships: []
+      }
+      marketplace_redeem_rate_limits: {
+        Row: {
+          attempts: number
+          blocked_until: string | null
+          ip_hash: string
+          updated_at: string
+          window_started_at: string
+        }
+        Insert: {
+          attempts?: number
+          blocked_until?: string | null
+          ip_hash: string
+          updated_at?: string
+          window_started_at?: string
+        }
+        Update: {
+          attempts?: number
+          blocked_until?: string | null
+          ip_hash?: string
+          updated_at?: string
+          window_started_at?: string
         }
         Relationships: []
       }
@@ -9315,6 +9378,60 @@ export type Database = {
           product?: string
           signal_types?: string[] | null
           zip_codes?: string[] | null
+        }
+        Relationships: []
+      }
+      marketplace_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value_int: number | null
+          value_text: string | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value_int?: number | null
+          value_text?: string | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value_int?: number | null
+          value_text?: string | null
+        }
+        Relationships: []
+      }
+      marketplace_share_redeem_log: {
+        Row: {
+          created_at: string
+          id: string
+          ip_hash: string | null
+          outcome: string
+          reason: string | null
+          share_id: string | null
+          token_hash: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          outcome: string
+          reason?: string | null
+          share_id?: string | null
+          token_hash: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          outcome?: string
+          reason?: string | null
+          share_id?: string | null
+          token_hash?: string
+          user_agent?: string | null
         }
         Relationships: []
       }
@@ -18536,6 +18653,7 @@ export type Database = {
         Returns: number
       }
       expire_industrial_pulse_snapshots: { Args: never; Returns: number }
+      expire_marketplace_access: { Args: never; Returns: number }
       extract_domain: { Args: { input: string }; Returns: string }
       get_active_training_programs: {
         Args: never
@@ -18562,6 +18680,7 @@ export type Database = {
           url: string
         }[]
       }
+      get_marketplace_access_ttl_days: { Args: never; Returns: number }
       get_my_pending_actions: {
         Args: never
         Returns: {
@@ -18648,6 +18767,10 @@ export type Database = {
           similarity: number
         }[]
       }
+      merge_anon_buyer_views: {
+        Args: { p_anon_session_id: string; p_buyer_email: string }
+        Returns: number
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -18684,6 +18807,18 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      revoke_marketplace_access: {
+        Args: { p_lead_id: string; p_product: string; p_reason: string }
+        Returns: number
+      }
+      revoke_marketplace_access_by_stripe: {
+        Args: {
+          p_charge_id: string
+          p_payment_intent_id: string
+          p_reason: string
+        }
+        Returns: number
       }
       rollback_cron: { Args: { p_jobname: string }; Returns: Json }
       safe_cron_schedule: {
