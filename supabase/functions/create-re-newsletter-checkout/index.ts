@@ -58,7 +58,7 @@ serve(async (req) => {
         type: "re_newsletter",
         agent_name,
         brokerage: brokerage || "",
-        zip_codes,
+        zip_codes: Array.isArray(zip_codes) ? zip_codes.join(",") : (zip_codes || ""),
         brand_color,
         phone: phone || "",
         website: website || "",

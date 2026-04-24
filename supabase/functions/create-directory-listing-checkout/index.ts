@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { getStripeSecretKey } from "../_shared/stripe-key.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,9 +19,8 @@ serve(async (req) => {
       });
     }
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
+    const stripe = new Stripe(getStripeSecretKey(), { apiVersion: "2025-08-27.basil" });
 
-    // Find or create customer
     const customers = await stripe.customers.list({ email, limit: 1 });
     let customerId: string;
     if (customers.data.length > 0) {
@@ -36,7 +36,15 @@ serve(async (req) => {
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      line_items: [{ price: "price_1THJ7aD52tPWee46BSq66WED", quantity: 1 }],
+      line_items: [{
+        price_data: {
+          currency: "usd",
+          recurring: { interval: "month" },
+          unit_amount: 2900,
+          product_data: { name: "Premium Directory Listing", description: "Featured placement in the Detroit Web Agency local business directory." },
+        },
+        quantity: 1,
+      }],
       mode: "subscription",
       success_url: `${origin}/business-directory?upgraded=true`,
       cancel_url: `${origin}/business-directory`,

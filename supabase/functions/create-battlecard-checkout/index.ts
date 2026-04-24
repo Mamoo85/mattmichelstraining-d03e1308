@@ -32,7 +32,7 @@ serve(async (req) => {
       metadata: {
         type: "battlecard_subscription",
         businessName, email, phone: phone || "", industry: industry || "",
-        competitorNames: (competitorNames || []).join(","), competitorUrls: (competitorUrls || []).join(","),
+        competitorNames: Array.isArray(competitorNames) ? competitorNames.join(",") : (competitorNames || ""), competitorUrls: Array.isArray(competitorUrls) ? competitorUrls.join(",") : (competitorUrls || ""),
       },
     });
 

@@ -1,8 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getStripeSecretKey } from "../_shared/stripe-key.ts";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
+const stripe = new Stripe(getStripeSecretKey(), { apiVersion: "2025-08-27.basil" });
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
@@ -46,12 +47,15 @@ serve(async (req) => {
       mode: "subscription",
       payment_method_types: ["card"],
       customer_email: email,
-      line_items: [
-        {
-          price: "price_1THQqyD52tPWee46qx5nBOwl",
-          quantity: 1,
+      line_items: [{
+        price_data: {
+          currency: "usd",
+          recurring: { interval: "month" },
+          unit_amount: 29900,
+          product_data: { name: "LinkedIn Ghostwriting Service", description: "Daily AI-written LinkedIn posts in your voice — built to grow your audience." },
         },
-      ],
+        quantity: 1,
+      }],
       metadata: {
         type: "linkedin_ghostwriting_subscription",
         email,

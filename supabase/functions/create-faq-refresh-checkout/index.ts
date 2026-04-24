@@ -11,7 +11,7 @@ serve(async (req) => {
       mode: "subscription", payment_method_types: ["card"], customer_email: email,
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 2900, product_data: { name: "AI FAQ & Website Copy Refresh — $29/month", description: "Monthly AI-refreshed FAQ and homepage copy. Better SEO, more conversions." } }, quantity: 1 }],
-      metadata: { type: "faq_refresh_subscription", email, name: name || "", businessName, industry: industry || "", city: city || "", services: services || "" },
+      metadata: { type: "faq_refresh_subscription", email, name: name || "", businessName, industry: industry || "", city: city || "", services: Array.isArray(services) ? services.join(",") : (services || "") },
       success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-faq-refresh?status=success`,
       cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-faq-refresh`,
     });

@@ -32,7 +32,7 @@ serve(async (req) => {
       metadata: {
         type: "market_intel_subscription",
         businessName, email, phone: phone || "", industry: industry || "",
-        focusTopics: (focusTopics || []).join(","), competitors: (competitors || []).join(","), location: location || "Michigan",
+        focusTopics: Array.isArray(focusTopics) ? focusTopics.join(",") : (focusTopics || ""), competitors: Array.isArray(competitors) ? competitors.join(",") : (competitors || ""), location: location || "Michigan",
       },
     });
 

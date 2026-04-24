@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
+import { getStripeSecretKey } from "../_shared/stripe-key.ts";
+const stripe = new Stripe(getStripeSecretKey(), { apiVersion: "2025-08-27.basil" });
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -10,7 +11,15 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription", payment_method_types: ["card"], customer_email: email,
       subscription_data: { trial_period_days: 7 },
-      line_items: [{ price: "price_1THQr3D52tPWee46NeM1EJjH", quantity: 1 }],
+      line_items: [{
+        price_data: {
+          currency: "usd",
+          recurring: { interval: "month" },
+          unit_amount: 7900,
+          product_data: { name: "AI Real Estate Drip", description: "AI-written monthly drip emails to your real estate leads and past clients." },
+        },
+        quantity: 1,
+      }],
       metadata: { type: "real_estate_drip", email, name: name || "", businessName, city: city || "" },
       success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-real-estate-drip?status=success`,
       cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-real-estate-drip`,

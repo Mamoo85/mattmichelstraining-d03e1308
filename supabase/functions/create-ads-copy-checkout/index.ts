@@ -20,7 +20,7 @@ serve(async (req) => {
       customer_email: email,
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 3900, product_data: { name: "AI Google Ads Copy Generator — $39/month", description: "10 AI-generated Google Ads copy variations delivered monthly." } }, quantity: 1 }],
-      metadata: { type: "ads_copy_subscription", email, name: name || "", businessName, city, services: services || "" },
+      metadata: { type: "ads_copy_subscription", email, name: name || "", businessName, city, services: Array.isArray(services) ? services.join(",") : (services || "") },
       success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-ads-copy?status=success`,
       cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-ads-copy`,
     });
