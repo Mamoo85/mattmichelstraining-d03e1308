@@ -4967,6 +4967,36 @@ export type Database = {
         }
         Relationships: []
       }
+      enrichment_provider_health: {
+        Row: {
+          credits_remaining: number | null
+          daily_calls: number
+          daily_hits: number
+          daily_reset_at: string
+          last_429_at: string | null
+          provider: string
+          updated_at: string
+        }
+        Insert: {
+          credits_remaining?: number | null
+          daily_calls?: number
+          daily_hits?: number
+          daily_reset_at?: string
+          last_429_at?: string | null
+          provider: string
+          updated_at?: string
+        }
+        Update: {
+          credits_remaining?: number | null
+          daily_calls?: number
+          daily_hits?: number
+          daily_reset_at?: string
+          last_429_at?: string | null
+          provider?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       enrichment_provider_routes: {
         Row: {
           call_order: number
@@ -17484,20 +17514,6 @@ export type Database = {
         }
         Relationships: []
       }
-      enrichment_provider_health: {
-        Row: {
-          avg_cost: number | null
-          avg_hits: number | null
-          calls_7d: number | null
-          last_call_at: string | null
-          provider: string | null
-          spent_7d: number | null
-          success_rate_pct: number | null
-          successes_7d: number | null
-          unique_candidates_7d: number | null
-        }
-        Relationships: []
-      }
       generated_sites_public: {
         Row: {
           business_name: string | null
@@ -17711,6 +17727,15 @@ export type Database = {
           _user_id: string
         }
         Returns: number
+      }
+      bump_provider_health: {
+        Args: {
+          _credits_remaining?: number
+          _hit: boolean
+          _provider: string
+          _was_429?: boolean
+        }
+        Returns: undefined
       }
       candidates_within_radius: {
         Args: {
