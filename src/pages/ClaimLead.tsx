@@ -4,6 +4,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import LeadQualityBadges, { LeadQualityData } from "@/components/contractor/LeadQualityBadges";
 
@@ -72,14 +73,19 @@ export default function ClaimLead() {
 
       if (data?.error === "lead_claimed") {
         setStatus("claimed");
+        toast.info("This lead was just claimed by another contractor.");
       } else if (data?.error === "locked") {
         setMinutesLeft(data.minutesLeft || 10);
         setStatus("locked");
+        toast.info(`Another contractor is reviewing this lead. Try again in ~${data.minutesLeft || 10} min.`);
       } else if (data?.url) {
         window.location.href = data.url;
+      } else {
+        throw new Error("Unexpected response from server");
       }
     } catch (e) {
       setStatus("error");
+      toast.error("Couldn't open checkout. Text Matt at (313) 992-1219 and we'll fix it instantly.");
     } finally {
       setLoading(false);
       claimLock.current = false;
@@ -197,17 +203,20 @@ export default function ClaimLead() {
             <button
               onClick={handleClaim}
               disabled={loading}
+              aria-busy={loading}
               style={{
                 width: "100%",
                 background: loading ? "#334155" : "#00d4ff",
                 color: loading ? "#94a3b8" : "#0a1628",
                 border: "none",
                 borderRadius: 8,
-                padding: "16px",
+                padding: "18px",
+                minHeight: 56,
                 fontSize: 17,
                 fontWeight: 800,
                 cursor: loading ? "not-allowed" : "pointer",
                 transition: "background 0.2s",
+                touchAction: "manipulation",
               }}
             >
               {loading ? "Locking lead..." : "Claim This Lead — $50"}

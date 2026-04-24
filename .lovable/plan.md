@@ -1,128 +1,84 @@
-# Checkout Hardening Plan
+## UI/UX & Onboarding Flawless Audit — Top 5 Products
 
-## Reality Check
+Scope: the screens a real customer hits from a postcard QR, an SMS link, a Stripe success redirect, or a cold-email CTA. Backend stays untouched (already audited last session).
 
-- **177 checkout edge functions** and **158 product pages** — touching them all is not realistic in one pass.
-- **Stripe live click-through testing is blocked** until you create a Stripe Sandbox (Accounts V2 doesn't allow testmode subscriptions in your account). I'll do everything that doesn't require live card flow now, and queue the rest for after Sandbox is set up.
+### Surfaces in scope
 
-## Scope Decision: "Top Products" = 9 Revenue-Critical Flows
+| Product | Entry pages | Why it matters |
+|---|---|---|
+| Contractor Leads (PPL) | ClaimLead.tsx, LeadClaimed.tsx, MyContractorLeads.tsx, ContractorLeads.tsx | SMS to claim to $50 Stripe |
+| TechAlert / HireRadar | HireAlert.tsx, HireAlertTrial.tsx, MyTechAlert.tsx, GoTechAlert.tsx | Postcard QR to trial signup |
+| Apex / Talent Intelligence | TalentIntelligence.tsx, TalentRadarVsStaffing.tsx | Cold email to enterprise consult |
+| Dead Lead Reactivation | DeadLeadIntake.tsx, DeadLeadStats.tsx | Owner uploads CSV to Stripe billing setup |
+| FieldDesk | FieldServiceManagement.tsx, FieldServiceTechApp.tsx, FieldServiceDispatch.tsx | Demo to checkout to tech PIN login |
 
-Per `CLAUDE.md` "Golden Paths" and revenue tables, the top products are:
+### Audit pass (read-only, produces issue list)
 
-1. Bundle Revenue Suite ($299/mo)
-2. FieldDesk ($199/mo)
-3. TechAlert / HireAlert ($149/mo)
-4. Contractor Leads PPL ($399/mo)
-5. Mortgage Radar ($149/mo)
-6. Missed-Call Catch ($99/mo)
-7. Marketplace Lead ($39–59/lead)
-8. Dead Lead Billing Setup ($50/reply)
-9. Hire Alert One-Time ($49)
+For each surface, scan for the 5 killer categories:
 
-These are the 9 cards I'll harden + test. Other 149 pages keep working; they get the same UX pattern in a follow-up sweep when you ask for it.
+1. **Mobile layout collapse** — fixed `w-[Npx]`, missing `flex-wrap`, unbounded `whitespace-nowrap`, tables without `overflow-x-auto`, modals taller than viewport. Spot-checks already flagged: MyTechAlert.tsx, MyMortgageRadar.tsx, Pricing.tsx, Marketplace.tsx use fixed pixel widths; ClaimLead.tsx uses inline-style hardcoded layouts.
+2. **Dead clicks** — every button calling `supabase.functions.invoke`, `fetch`, or table writes. Verify `disabled={loading}`, spinner/label swap, double-submit guard. ClaimLead.tsx already has `claimLock.current` — use as reference and propagate.
+3. **Link integrity** — every page reading `useSearchParams()` / `useParams()`. Confirm: missing param → friendly error (not blank), invalid UUID → friendly error, expired token → CTA back to working entry. ClaimLead.tsx does this correctly; audit the rest against that bar.
+4. **Onboarding friction** — count clicks/forms before a prospect sees value. Flag any flow forcing account creation before the offer is visible (especially /talent-intelligence and /contractor-leads).
+5. **Silent failures** — every `catch` in a button handler. Must surface a `sonner` toast or visible error. Many handlers currently swallow errors to console.
 
-## What I'll Build
+### Fix pass (the part that ships code)
 
-### 1. Shared Checkout UX Component — `useCheckoutFlow` hook + `<CheckoutButton />`
-One reusable hook + button that every product page can swap in. Replaces the ad-hoc `try/catch/setLoading` blocks (currently duplicated 158 times).
+Patched in this order so each surface ships independently:
 
-States:
-- **idle** — normal CTA
-- **submitting** — spinner + "Securing your checkout…"
-- **redirecting** — "Sending you to Stripe…" (after URL received, before navigation)
-- **error** — inline red banner with retry button + Matt's text link `(313) 992-1219` as fallback
-- **success** (on `?status=success` return) — green confirmation + receipt status pill
+1. **ClaimLead + LeadClaimed** (highest-value path: SMS to $50)
+   - Convert inline-style layouts to Tailwind responsive classes (currently `padding: "40px 24px"` style — switch to `px-6 py-10 sm:px-8`).
+   - Larger 56px tap target on Claim button, error toast on network failure (currently only sets `status="error"` with small red text).
+   - Add `aria-busy` for accessibility.
 
-Wire all 9 top product pages to use it. Keeps existing pages functional during rollout.
+2. **Contractor Leads landing + MyContractorLeads**
+   - Audit all 16 onClick/invoke sites. Add `disabled` + spinner where missing.
+   - Wrap data tables in `overflow-x-auto`; replace fixed widths with `max-w-*` + `w-full`.
+   - Sonner toast on every checkout/claim failure.
 
-### 2. Receipt Status Verification
+3. **TechAlert (HireAlert, MyTechAlert, HireAlertTrial)**
+   - Replace `w-[Npx]` fixed widths in MyTechAlert.tsx with responsive `w-full md:w-[Npx]`.
+   - Verify URL-token parsing (line ~112) handles missing/expired tokens with a friendly screen.
+   - Loading state on every Fast-Track / Contact button.
 
-**New table**: `checkout_receipts` (already partially modeled via `processed_stripe_events` — this table tracks the user-facing side):
+4. **Talent Intelligence**
+   - Move consult CTA above the fold on mobile.
+   - Form shows clear validation + a success state (not just an alert).
+   - Remove any "log in to see pricing" gates — replace with public pricing tiers.
 
-```text
-checkout_receipts
-  id (uuid, pk)
-  stripe_session_id (text, unique)
-  product_type (text)        -- matches metadata.type
-  email (text)
-  status (text)              -- 'pending' | 'paid' | 'fulfilled' | 'failed'
-  fulfilled_at (timestamptz)
-  webhook_event_id (text)    -- correlates to processed_stripe_events
-  created_at, updated_at
-```
+5. **Dead Lead Intake**
+   - CSV upload UX: file-size cap warning, parse-progress state, row-error toast (don't fail silently on malformed rows).
+   - Disabled + spinner on Stripe billing-setup button.
 
-**Edge function**: `get-receipt-status?session_id=cs_xxx` — public, returns `{ status, product_type, fulfilled_at }`.
+6. **FieldDesk**
+   - Tech PIN login screen mobile-first (where techs actually use it).
+   - Error toast on bad PIN (instead of silent reject).
+   - Stripe checkout button loading state.
 
-**Webhook update**: `stripe-webhook` upserts `checkout_receipts` on `checkout.session.completed` and again when fulfillment finishes.
+7. **Cross-cutting polish**
+   - Confirm global `<Toaster richColors position="top-center" />` in App.tsx.
+   - Replace any `window.alert()` on customer paths (found 2 in internal pages — verify none on customer routes).
+   - Add a shared `<ButtonBusy />` wrapper so future buttons inherit the pattern.
 
-**On success page**: poll `get-receipt-status` every 2s for up to 30s. Show:
-- "Payment received" (paid) → "Setting up your account…" (paid, not fulfilled) → "You're all set" (fulfilled).
-- If still `paid` after 30s, show "Payment confirmed — Matt is finishing setup. You'll get an email within 5 minutes."
+### Deliverable after fixes
 
-This is the explicit "receipt ready" state across all products.
+Short report with: each file touched, the UX failure fixed, and the route to manually test on a phone. Plus a phone-test checklist with exact URLs:
 
-### 3. Webhook Verification Function
+- `/claim-lead?lead_id=test&contractor_id=test&email=test@test.com` (test the missing-param + invalid-UUID screens)
+- `/contractor-leads`
+- `/hire-alert`
+- `/talent-intelligence`
+- `/dead-lead-intake`
+- `/field-service-management`
 
-**New edge function**: `verify-checkout-webhook` — admin-only utility you can call from `/admin` to:
+### Out of scope (intentionally)
 
-- Take a `session_id`, look up the latest `processed_stripe_events` row, the matching `checkout_receipts` row, and the product-specific table (e.g., `field_crm_clients`, `hire_alert_clients`).
-- Return JSON:
-  ```text
-  {
-    session_id,
-    webhook_received: true/false,
-    webhook_event_id,
-    receipt_status,
-    fulfillment_record_exists: true/false,
-    welcome_email_sent: true/false,
-    issues: [...]
-  }
-  ```
+- Backend logic, RLS, edge functions, Stripe code (already audited).
+- Brand redesigns — only fix what's broken or unprofessional.
+- Admin/internal dashboards.
 
-I'll add an "Audit Checkout" panel in `AdminOpsCenter` that takes a session ID and shows this report. This is your verification step — proves the webhook fired and unlocked access.
+### Answering your closing question
 
-### 4. QA Report (Markdown, written to `/mnt/documents/`)
+Both QR postcards and SMS links hit URL-parameter pages (ClaimLead.tsx and TechAlert flows). The **SMS contractor flow is the higher risk** — bigger purchase ($50 instant), 3 params must all be present, and a single typo or expired lead means a contractor sees a broken page right when you've trained them to act fast. The audit prioritizes that path first.
 
-After Sandbox is set up and click-through runs, I'll generate `/mnt/documents/checkout_qa_report.md`:
-
-```text
-| Product               | Mobile | Desktop | Failure step              |
-| Bundle Revenue Suite  | ✅     | ✅      | —                          |
-| FieldDesk             | ✅     | ❌      | Stripe redirect / popup    |
-| ...                   |        |         |                            |
-```
-
-Until Sandbox is ready I'll deliver the *template* + the static-analysis pass (form validation, edge function 4xx coverage, missing fields).
-
-### 5. End-to-End Test — Playwright
-
-Project already has `playwright.config.ts`. I'll add `tests/e2e/checkout.spec.ts`:
-
-- Loops over the 9 top products
-- For each: navigates to the page (mobile viewport 390x844 + desktop 1280x720), fills the form with a test email, clicks CTA, asserts the response from the create-checkout function returns a `cs_test_` URL, then directly hits `/?status=success&session_id=cs_test_xxx` and asserts the success card + receipt-status polling appears.
-- **Stops short of submitting card details** — that requires Stripe's hosted page in Sandbox mode. After Sandbox is enabled, I'll extend the test to drive Stripe's checkout iframe with `4242 4242 4242 4242`.
-
-Test runs locally with `bunx playwright test tests/e2e/checkout.spec.ts --project=chromium --project=mobile-chrome`.
-
-## What I'm NOT Doing in This Pass
-
-- Touching the other 149 product pages (huge churn risk; they keep working with their current UX). I'll roll the new component out to them in batches when you ask.
-- Live card-completion testing (blocked on Stripe Sandbox).
-- Refactoring 177 edge functions (only `stripe-webhook` gets the receipt upsert).
-
-## File Changes (estimated)
-
-- **New**: `src/hooks/useCheckoutFlow.ts`, `src/components/checkout/CheckoutButton.tsx`, `src/components/checkout/ReceiptStatus.tsx`, `supabase/functions/get-receipt-status/index.ts`, `supabase/functions/verify-checkout-webhook/index.ts`, `tests/e2e/checkout.spec.ts`, migration for `checkout_receipts`
-- **Edited**: 9 top product pages, `supabase/functions/stripe-webhook/index.ts`, `src/components/dwa-admin/AdminOpsCenter.tsx`
-- **Generated**: `/mnt/documents/checkout_qa_report.md`
-
-## Order of Execution
-
-1. Migration + `get-receipt-status` + webhook upsert
-2. `useCheckoutFlow` + `CheckoutButton` + `ReceiptStatus`
-3. Wire the 9 top product pages
-4. `verify-checkout-webhook` + admin panel
-5. Playwright E2E (form-fill + URL assertion only, until Sandbox)
-6. QA report (static-analysis version now; live click-through after Sandbox)
-
-Approve and I start with step 1.
+Approve and I'll execute steps 1–7, then hand you the phone-test checklist.

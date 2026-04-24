@@ -4,6 +4,7 @@
 // This page is the self-serve version for when we're ready to automate it.
 
 import { useState } from "react";
+import { toast } from "sonner";
 import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -49,7 +50,9 @@ export default function HireAlertTrial() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.email || form.target_roles.length === 0) {
-      setErrorMsg("Email and at least one trade type are required.");
+      const msg = "Email and at least one trade type are required.";
+      setErrorMsg(msg);
+      toast.error(msg);
       return;
     }
     setStatus("loading");
@@ -71,8 +74,11 @@ export default function HireAlertTrial() {
         }).then(() => {}, () => {});
       }
       setStatus("done");
+      toast.success("Trial activated — check your email for the dashboard link.");
     } catch (e) {
-      setErrorMsg(e instanceof Error ? e.message : "Something went wrong.");
+      const msg = e instanceof Error ? e.message : "Something went wrong.";
+      setErrorMsg(msg);
+      toast.error(`${msg} Text Matt at (313) 992-1219 if this keeps happening.`);
       setStatus("error");
     }
   };
@@ -215,6 +221,7 @@ export default function HireAlertTrial() {
             <button
               type="submit"
               disabled={status === "loading"}
+              aria-busy={status === "loading"}
               style={{
                 marginTop: 28,
                 width: "100%",
@@ -222,10 +229,12 @@ export default function HireAlertTrial() {
                 color: status === "loading" ? "#94a3b8" : "#0a1628",
                 border: "none",
                 borderRadius: 8,
-                padding: "15px",
+                padding: "18px",
+                minHeight: 56,
                 fontSize: 16,
                 fontWeight: 800,
                 cursor: status === "loading" ? "not-allowed" : "pointer",
+                touchAction: "manipulation",
               }}
             >
               {status === "loading" ? "Starting Trial..." : "Start My Free 3-Day Trial →"}
