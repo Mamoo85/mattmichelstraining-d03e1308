@@ -331,6 +331,13 @@ export default function MarketplaceReceipts() {
           )}
         </div>
       )}
+
+      <ShareLinkDialog
+        open={shareDialog.open}
+        onOpenChange={(v) => setShareDialog((s) => ({ ...s, open: v }))}
+        url={shareDialog.url}
+        expiresAt={shareDialog.expires_at}
+      />
     </div>
   );
 }
