@@ -30,6 +30,18 @@ serve(async (req) => {
   let notified = 0;
   const trace: any[] = [];
 
+  // Pre-load all active First Look subscribers (small table; one query is cheaper than per-search lookups)
+  const { data: subs } = await sb.from("marketplace_first_look_subscribers" as any)
+    .select("email, product").eq("status", "active");
+  const subscriberKeys = new Set<string>(
+    (subs || []).map((s: any) => `${(s.email || "").toLowerCase()}|${s.product}`)
+  );
+  const isSubscriber = (email: string, product: string) => {
+    const e = (email || "").toLowerCase();
+    return subscriberKeys.has(`${e}|all`) || subscriberKeys.has(`${e}|${product}`);
+  };
+  const ONE_HOUR_AGO = Date.now() - 60 * 60 * 1000;
+
   for (const s of searches as any[]) {
     if (!s.phone) continue;
     let q = sb.from("unified_lead_marketplace_view" as any)
