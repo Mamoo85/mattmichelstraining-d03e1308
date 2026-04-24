@@ -27,6 +27,8 @@ const PRODUCTS = [
 const TOTAL_STANDALONE = "$221";
 
 export default function BundleRevenueSuite() {
+  const [searchParams] = useSearchParams();
+  const isSuccess = searchParams.get("status") === "success";
   const [email, setEmail] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [phone, setPhone] = useState("");
