@@ -4,10 +4,12 @@ import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { LockedDossierCard } from "@/components/marketplace/LockedDossierCard";
 import { SoldDossierCard } from "@/components/marketplace/SoldDossierCard";
+import { FirstLookUpsellGate } from "@/components/marketplace/FirstLookUpsellGate";
 import type { MarketplaceLead } from "@/components/marketplace/GoldenTicketCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Flame, Sun, Snowflake, Loader2, Search } from "lucide-react";
+import { Flame, Sun, Snowflake, Loader2, Search, ScrollText } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 const PRODUCTS = [
@@ -32,28 +34,35 @@ export default function Marketplace() {
   const [tierFilter, setTierFilter] = useState<TierFilter>("all");
   const [search, setSearch] = useState("");
   const [dismissed, setDismissed] = useState<string[]>(() => JSON.parse(localStorage.getItem("mp_dismissed") || "[]"));
-  const [soldIds] = useState<string[]>([]); // session 2 will populate from marketplace_lead_locks
+  const [soldIds, setSoldIds] = useState<string[]>([]);
 
   const productMeta = PRODUCTS.find((p) => p.key === product) || PRODUCTS[0];
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    supabase
-      .from("unified_lead_marketplace_view" as any)
-      .select("*")
-      .eq("product", product)
-      .order("score", { ascending: false })
-      .limit(60)
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        if (error) {
-          toast.error("Could not load leads");
-          console.error(error);
-        }
-        setLeads((data || []) as unknown as MarketplaceLead[]);
-        setLoading(false);
-      });
+    Promise.all([
+      supabase
+        .from("unified_lead_marketplace_view" as any)
+        .select("*")
+        .eq("product", product)
+        .order("score", { ascending: false })
+        .limit(60),
+      (supabase as any)
+        .from("marketplace_lead_locks")
+        .select("lead_id")
+        .eq("product", product)
+        .eq("status", "sold"),
+    ]).then(([leadsRes, locksRes]: any[]) => {
+      if (cancelled) return;
+      if (leadsRes.error) {
+        toast.error("Could not load leads");
+        console.error(leadsRes.error);
+      }
+      setLeads((leadsRes.data || []) as unknown as MarketplaceLead[]);
+      setSoldIds(((locksRes.data || []) as Array<{ lead_id: string }>).map((r) => r.lead_id));
+      setLoading(false);
+    });
     return () => { cancelled = true; };
   }, [product]);
 
@@ -125,12 +134,22 @@ export default function Marketplace() {
       {/* Header */}
       <div className="border-b border-border/40 bg-gradient-to-b from-card to-background">
         <div className="container max-w-7xl mx-auto px-4 py-8">
-          <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-widest text-intel-teal mb-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-intel-teal animate-pulse" />
-            Live Marketplace · Refreshed continuously
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="flex-1 min-w-[260px]">
+              <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-widest text-intel-teal mb-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-intel-teal animate-pulse" />
+                Live Marketplace · Refreshed continuously
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">{productMeta.label}</h1>
+              <p className="text-muted-foreground max-w-2xl">{productMeta.tagline}</p>
+            </div>
+            <Link
+              to="/marketplace/receipts"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-wider rounded border border-border/40 text-muted-foreground hover:text-foreground hover:border-intel-teal/50 transition-colors"
+            >
+              <ScrollText className="w-3.5 h-3.5" /> My Receipts
+            </Link>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">{productMeta.label}</h1>
-          <p className="text-muted-foreground max-w-2xl">{productMeta.tagline}</p>
 
           {/* Product switcher */}
           <div className="flex flex-wrap gap-2 mt-6">
@@ -221,6 +240,8 @@ export default function Marketplace() {
           Showing {filtered.length} of {leads.length} live leads · Updated continuously
         </p>
       </div>
+
+      <FirstLookUpsellGate product={product} leads={leads as any} />
     </div>
   );
 }

@@ -312,6 +312,7 @@ const FieldDeskVsEway = lazyRetry(() => import("./pages/FieldDeskVsEway"));
 const MortgageRadarVsTriggerLeads = lazyRetry(() => import("./pages/MortgageRadarVsTriggerLeads"));
 const MortgageRadar = lazyRetry(() => import("./pages/MortgageRadar"));
 const Marketplace = lazyRetry(() => import("./pages/Marketplace"));
+const MarketplaceReceipts = lazyRetry(() => import("./pages/MarketplaceReceipts"));
 const LeadDetail = lazyRetry(() => import("./pages/LeadDetail"));
 const MyMortgageRadar = lazyRetry(() => import("./pages/MyMortgageRadar"));
 const BuyerRadar = lazyRetry(() => import("./pages/BuyerRadar"));
@@ -778,6 +779,7 @@ const App = () => (
                     <Route path="/demand-leads" element={<Marketplace />} />
                     <Route path="/growth-leads" element={<Marketplace />} />
                     <Route path="/supply-leads" element={<Marketplace />} />
+                    <Route path="/marketplace/receipts" element={<MarketplaceReceipts />} />
                     <Route path="/lead/:slug" element={<LeadDetail />} />
                     {/* Growth Radar (company-side intelligence — separate product) */}
                     <Route path="/growth-radar" element={<IndustryPulse />} />

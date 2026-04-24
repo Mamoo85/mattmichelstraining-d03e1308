@@ -8977,6 +8977,39 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_first_look_subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          product: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          product?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          product?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marketplace_lead_locks: {
         Row: {
           amount_cents: number | null

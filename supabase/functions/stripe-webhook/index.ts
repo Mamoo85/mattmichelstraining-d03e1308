@@ -1352,6 +1352,49 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // === Marketplace First Look subscription ($49/mo single, $129/mo all) ===
+      if (meta.type === "marketplace_first_look_subscription") {
+        const email = (meta.email || customerEmail || "").toLowerCase();
+        const productKey = meta.product || "all";
+        try {
+          const subscriptionId = (session as any).subscription || null;
+          const customerId = (session as any).customer || null;
+          const { error: upErr } = await (sb.from as any)("marketplace_first_look_subscribers")
+            .upsert({
+              email,
+              product: productKey,
+              stripe_customer_id: customerId,
+              stripe_subscription_id: subscriptionId,
+              status: "active",
+              updated_at: new Date().toISOString(),
+            }, { onConflict: "stripe_subscription_id" });
+          if (upErr) {
+            console.error("[WEBHOOK] first_look upsert error:", upErr);
+            return new Response(JSON.stringify({ error: "first_look_upsert_failed" }), { status: 500 });
+          }
+
+          const productLabel = productKey === "all" ? "all marketplace products" : `${productKey} leads`;
+          await sendM2Email(email,
+            "✅ First Look access activated",
+            `<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#0a1628;color:#e6f1ff;">
+              <h1 style="color:#00d4ff;font-size:22px;margin:0 0 12px;">First Look is live</h1>
+              <p>You'll now see brand-new <strong>hot</strong> leads in <strong>${productLabel}</strong> a full hour before everyone else.</p>
+              <p>New hot leads → SMS within 15 minutes (subscribers).<br/>Public marketplace → 1 hour later.</p>
+              <p style="margin-top:24px;"><a href="https://detroitwebagent.com/marketplace/receipts?email=${encodeURIComponent(email)}" style="background:#00d4ff;color:#0a1628;padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:600;">View your receipts</a></p>
+              <p style="font-size:11px;color:#7a8aa0;margin-top:24px;">Cancel anytime. Detroit Web Agency · matt@detroitwebagent.com</p>
+            </div>`).catch(()=>{});
+
+          await notifyMatt(`💎 First Look subscriber: ${email} (${productKey})`,
+            `<p>${email} subscribed to First Look — ${productKey}.</p>`).catch(()=>{});
+        } catch (e) {
+          console.error("[WEBHOOK] first_look error:", e);
+          await notifyMatt(`🚨 First Look subscription failed — ${email}`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(()=>{});
+          return new Response(JSON.stringify({ error: "first_look_failed" }), { status: 500 });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // === Channel 3 — Industrial Pulse public unlock ($50 snapshot OR $199/mo firehose) ===
       if (meta.type === "industrial_pulse_snapshot" || meta.type === "industrial_pulse_firehose") {
         const email = (meta.email || customerEmail || "").toLowerCase();

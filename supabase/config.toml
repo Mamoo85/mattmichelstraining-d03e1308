@@ -1763,3 +1763,9 @@ verify_jwt = false
 
 [functions.marketplace-lead-free-enrich-batch]
 verify_jwt = false
+
+[functions.marketplace-buyer-receipts]
+verify_jwt = false
+
+[functions.create-marketplace-first-look-checkout]
+verify_jwt = false
