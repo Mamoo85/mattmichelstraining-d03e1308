@@ -79,6 +79,8 @@ const HIDDEN_PATHS = [
   "/agency", "/all-services", "/free-tools", "/free-site-scanner",
   "/web-design-services", "/get-started", "/seo-guard",
   "/ai-phone-answering", "/manufacturing-web-design", "/real-estate-web-design",
+  "/marketplace", "/mortgage-leads", "/talent-leads", "/demand-leads",
+  "/growth-leads", "/supply-leads", "/lead/", "/b2b-leads", "/storm-damage-leads",
 ];
 
 const BottomTabBar = () => {
