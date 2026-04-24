@@ -35,7 +35,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { lead_id, product, buyer_email } = await req.json();
+    const { lead_id, product, buyer_email, anon_session_id } = await req.json();
     if (!lead_id || !product || !buyer_email) {
       return new Response(JSON.stringify({ error: "lead_id, product, buyer_email required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -118,6 +118,7 @@ serve(async (req) => {
       metadata: {
         type: "marketplace_lead_purchase",
         lead_id, product, buyer_email,
+        ...(anon_session_id ? { anon_session_id: String(anon_session_id).slice(0, 64) } : {}),
       },
       success_url: `${origin}/lead/${lead_id}?paid=1&session={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/${product}-leads?cancelled=1`,
