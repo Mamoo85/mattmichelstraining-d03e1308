@@ -1331,20 +1331,46 @@ serve(async (req) => {
         try {
           if (!email || !lead_id || !product) throw new Error("missing buyer_email/lead_id/product");
 
+          // Read configurable TTL (defaults to 30 days)
+          let ttlDays = 30;
+          try {
+            const { data: ttlRow } = await sb.from("marketplace_settings" as any)
+              .select("value_int").eq("key", "access_ttl_days").maybeSingle();
+            if (ttlRow && (ttlRow as any).value_int) ttlDays = (ttlRow as any).value_int;
+          } catch { /* default ok */ }
+          const accessExpiresAt = new Date(Date.now() + ttlDays * 24 * 60 * 60 * 1000).toISOString();
+
           // Atomic claim: only mark sold if we still own the pending lock
           const { data: claim, error: claimErr } = await (sb.from as any)("marketplace_lead_locks")
             .update({
               status: "sold",
               stripe_session_id: session.id,
-              stripe_payment_intent_id: session.payment_intent as string || null,
+              stripe_payment_intent_id: (session.payment_intent as string) || null,
+              stripe_charge_id: ((session as any).latest_charge as string) || null,
               sold_at: new Date().toISOString(),
+              access_expires_at: accessExpiresAt,
+              revoked_at: null,
+              revoke_reason: null,
             })
             .eq("lead_id", lead_id)
             .eq("product", product)
-            .in("status", ["pending"])
+            .in("status", ["pending", "soft_lock", "claimed"])
             .eq("buyer_email", email)
             .select("id");
           if (claimErr) throw new Error(`lock claim: ${claimErr.message}`);
+
+          // Merge any anonymous browsing history into this confirmed buyer
+          const anonId = (meta.anon_session_id as string) || null;
+          if (anonId) {
+            try {
+              await (sb.rpc as any)("merge_anon_buyer_views", {
+                p_anon_session_id: anonId,
+                p_buyer_email: email,
+              });
+            } catch (mergeErr) {
+              console.warn("[mp anon merge]", mergeErr);
+            }
+          }
 
           if (!claim || claim.length === 0) {
             // Race lost or already sold — treat as duplicate but don't 500 (would re-trigger Stripe retries)
