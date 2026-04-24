@@ -8397,6 +8397,68 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_alacarte_offers: {
+        Row: {
+          candidate_channels: Json
+          candidate_prospect_ids: string[]
+          claimed_at: string | null
+          claimed_by_email: string | null
+          claimed_by_prospect_id: string | null
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          lead_id: string
+          price_cents: number
+          status: string
+          stripe_payment_link: string | null
+          stripe_session_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          candidate_channels?: Json
+          candidate_prospect_ids?: string[]
+          claimed_at?: string | null
+          claimed_by_email?: string | null
+          claimed_by_prospect_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          lead_id: string
+          price_cents: number
+          status?: string
+          stripe_payment_link?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          candidate_channels?: Json
+          candidate_prospect_ids?: string[]
+          claimed_at?: string | null
+          claimed_by_email?: string | null
+          claimed_by_prospect_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          lead_id?: string
+          price_cents?: number
+          status?: string
+          stripe_payment_link?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_alacarte_offers_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_credit_packs: {
         Row: {
           activated_at: string | null
@@ -18404,6 +18466,15 @@ export type Database = {
       check_user_visibility: {
         Args: { _field: string; _target_user_id: string }
         Returns: boolean
+      }
+      claim_alacarte_lead: {
+        Args: {
+          _claimer_email: string
+          _claimer_prospect_id?: string
+          _offer_id: string
+          _stripe_session_id: string
+        }
+        Returns: Json
       }
       claim_lead_soft_lock: {
         Args: {
