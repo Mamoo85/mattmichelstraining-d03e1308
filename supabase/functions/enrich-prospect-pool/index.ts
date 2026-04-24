@@ -460,26 +460,46 @@ async function stageNPI(p: Prospect): Promise<{ patch: Prospect; trace: TraceSta
 }
 
 // ---------- waterfall router ----------
+//
+// Email finding is now centralized via stageEmailWaterfall (Snov → Apollo →
+// pattern_verify → Hunter → PDL → site_scrape). Audience-specific stages still
+// run for non-email enrichment (Sonar contact names, Google reviews, Twilio
+// carrier, HIBP breach flags, NPI, SAM.gov, DataForSEO, Firecrawl extras).
 
-function waterfallFor(audience: string): Array<(p: Prospect, sb: any) => Promise<{ patch: Prospect; trace: TraceStage }>> {
+type EnrichStage = (
+  p: Prospect,
+  sb: any,
+  counters: WaterfallCounters,
+) => Promise<{ patch: Prospect; trace: TraceStage }>;
+
+// Adapter so legacy stages (which ignore counters) match the EnrichStage signature
+const wrap = (
+  fn: (p: Prospect, sb: any) => Promise<{ patch: Prospect; trace: TraceStage }>,
+): EnrichStage => (p, sb, _c) => fn(p, sb);
+
+function waterfallFor(audience: string): EnrichStage[] {
   const seniorCare = ["nursing_home", "senior_care", "healthcare_staffing"];
   const industrial = ["industrial_mfg", "supply_house"];
   const trades = ["hvac", "plumbing", "roofing", "electrical", "general_contractor", "trades_staffing", "trade_contractor"];
 
   if (seniorCare.includes(audience)) {
-    return [stageNPI, stageSonar, stageHunter, stageGooglePlaces, stageTwilioCarrier, stageHIBP];
+    return [wrap(stageNPI), wrap(stageSonar), stageEmailWaterfall, wrap(stageGooglePlaces), wrap(stageTwilioCarrier), wrap(stageHIBP)];
   }
   if (industrial.includes(audience)) {
-    return [stageHunter, stageApolloPeople, stageFirecrawl, stageSAMGov, stageDataForSEO, stageSonar, stageGooglePlaces, stageTwilioCarrier, stageHIBP];
+    return [stageEmailWaterfall, wrap(stageFirecrawl), wrap(stageSAMGov), wrap(stageDataForSEO), wrap(stageSonar), wrap(stageGooglePlaces), wrap(stageTwilioCarrier), wrap(stageHIBP)];
   }
   if (trades.includes(audience)) {
-    return [stageSonar, stageHunter, stageFirecrawl, stageGooglePlaces, stageTwilioCarrier, stageHIBP];
+    return [wrap(stageSonar), stageEmailWaterfall, wrap(stageFirecrawl), wrap(stageGooglePlaces), wrap(stageTwilioCarrier), wrap(stageHIBP)];
   }
   // unknown → general
-  return [stageHunter, stageSonar, stageGooglePlaces, stageTwilioCarrier, stageHIBP];
+  return [stageEmailWaterfall, wrap(stageSonar), wrap(stageGooglePlaces), wrap(stageTwilioCarrier), wrap(stageHIBP)];
 }
 
-async function enrichOne(sb: any, p: Prospect): Promise<{ id: string; patches: Prospect; trace: TraceStage[] }> {
+async function enrichOne(
+  sb: any,
+  p: Prospect,
+  counters: WaterfallCounters,
+): Promise<{ id: string; patches: Prospect; trace: TraceStage[] }> {
   const trace: TraceStage[] = [];
   const working: Prospect = { ...p };
   const stages = waterfallFor(p.audience_type);
@@ -487,10 +507,13 @@ async function enrichOne(sb: any, p: Prospect): Promise<{ id: string; patches: P
   for (const stage of stages) {
     // stop early once we have email + contact_name (cost control), but always
     // run the "always-last" group (Google/Twilio/HIBP) since they fill different fields
-    const isQualityStage = stage === stageGooglePlaces || stage === stageTwilioCarrier || stage === stageHIBP;
+    const fnRef = (stage as any).__inner ?? stage;
+    const isQualityStage =
+      fnRef === stageGooglePlaces || fnRef === stageTwilioCarrier || fnRef === stageHIBP ||
+      stage === stageEmailWaterfall && working.email; // email waterfall self-skips when filled
     if (working.email && working.contact_name && !isQualityStage) continue;
 
-    const { patch, trace: t } = await stage(working, sb);
+    const { patch, trace: t } = await stage(working, sb, counters);
     trace.push(t);
     Object.assign(working, patch);
   }
@@ -501,12 +524,13 @@ async function enrichOne(sb: any, p: Prospect): Promise<{ id: string; patches: P
     if (working[k] != null && working[k] !== p[k]) patches[k] = working[k];
   }
 
-  // merge meta
+  // merge meta — append new trace entries to existing enrichment_trace history
   const existingMeta = (p.meta && typeof p.meta === "object") ? p.meta : {};
+  const existingTrace = Array.isArray((existingMeta as any).enrichment_trace) ? (existingMeta as any).enrichment_trace : [];
   const npiMeta = working.__meta_npi;
   patches.meta = {
     ...existingMeta,
-    enrichment_trace: trace,
+    enrichment_trace: [...existingTrace, ...trace.map((t) => ({ ...t, ts: new Date().toISOString(), flow: "enrich-prospect-pool" }))],
     ...(npiMeta ? { npi: npiMeta } : {}),
   };
 
