@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { BuyerEmailDialog } from "@/components/marketplace/BuyerEmailDialog";
 import { Flame, Zap, Clock, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -17,6 +18,7 @@ interface Props {
 
 export function FirstLookUpsellGate({ product, leads }: Props) {
   const [open, setOpen] = useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -49,10 +51,11 @@ export function FirstLookUpsellGate({ product, leads }: Props) {
     setOpen(false);
   };
 
-  const handleSubscribe = async () => {
-    const stored = localStorage.getItem(BUYER_EMAIL_KEY) || "";
-    const email = window.prompt("Enter your email for First Look access:", stored);
-    if (!email || !email.includes("@")) return;
+  const handleSubscribe = () => {
+    setEmailDialogOpen(true);
+  };
+
+  const handleEmailConfirm = async (email: string) => {
     localStorage.setItem(BUYER_EMAIL_KEY, email);
     setSubmitting(true);
     try {
@@ -127,5 +130,14 @@ export function FirstLookUpsellGate({ product, leads }: Props) {
         </p>
       </DialogContent>
     </Dialog>
+
+    <BuyerEmailDialog
+      open={emailDialogOpen}
+      onOpenChange={setEmailDialogOpen}
+      onConfirm={handleEmailConfirm}
+      defaultEmail={localStorage.getItem(BUYER_EMAIL_KEY) || ""}
+      title="Enter your email"
+      description="Where should we send your First Look access confirmation?"
+    />
   );
 }

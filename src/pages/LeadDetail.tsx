@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { LockedDossierCard } from "@/components/marketplace/LockedDossierCard";
 import { UnlockedDossierCard } from "@/components/marketplace/UnlockedDossierCard";
+import { BuyerEmailDialog } from "@/components/marketplace/BuyerEmailDialog";
 import type { MarketplaceLead } from "@/components/marketplace/GoldenTicketCard";
 import { Loader2, ArrowLeft, Download, Share2 } from "lucide-react";
 import { toast } from "sonner";
@@ -19,6 +20,8 @@ export default function LeadDetail() {
 
   const isPaid = params.get("paid") === "1" || params.get("print") === "1";
   const buyerEmail = params.get("buyer") || localStorage.getItem("mp_buyer_email") || "";
+  const [claimDialogOpen, setClaimDialogOpen] = useState(false);
+  const [pendingClaimLead, setPendingClaimLead] = useState<MarketplaceLead | null>(null);
 
   useEffect(() => {
     if (!slug) return;
@@ -37,10 +40,14 @@ export default function LeadDetail() {
     return () => { cancelled = true; };
   }, [slug]);
 
-  const handleClaim = async (l: MarketplaceLead) => {
-    const stored = localStorage.getItem("mp_buyer_email") || "";
-    const email = window.prompt("Enter your email to receive the unlocked dossier:", stored);
-    if (!email || !email.includes("@")) return;
+  const handleClaim = (l: MarketplaceLead) => {
+    setPendingClaimLead(l);
+    setClaimDialogOpen(true);
+  };
+
+  const handleClaimEmailConfirm = async (email: string) => {
+    const l = pendingClaimLead;
+    if (!l) return;
     localStorage.setItem("mp_buyer_email", email);
     try {
       const { data, error } = await supabase.functions.invoke("create-marketplace-lead-checkout", {
@@ -134,6 +141,15 @@ export default function LeadDetail() {
           </div>
         )}
       </div>
+
+      <BuyerEmailDialog
+        open={claimDialogOpen}
+        onOpenChange={setClaimDialogOpen}
+        onConfirm={handleClaimEmailConfirm}
+        defaultEmail={buyerEmail}
+        title="Enter your email"
+        description="Where should we send the unlocked dossier after payment?"
+      />
     </div>
   );
 }
