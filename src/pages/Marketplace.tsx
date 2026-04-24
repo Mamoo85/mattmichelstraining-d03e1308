@@ -291,7 +291,7 @@ export default function Marketplace() {
   }), [leads]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground pb-24 md:pb-0">
       <Helmet>
         <title>{productMeta.label} Marketplace · Detroit Web Agency</title>
         <meta name="description" content={`Live ${productMeta.label.toLowerCase()} for Metro Detroit. ${productMeta.tagline}`} />
@@ -327,21 +327,32 @@ export default function Marketplace() {
             </div>
           </div>
 
-          {/* Product switcher */}
-          <div className="flex flex-wrap gap-2 mt-6">
-            {PRODUCTS.map((p) => (
-              <button
-                key={p.key}
-                onClick={() => setParams({ product: p.key })}
-                className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider rounded border transition-colors ${
-                  p.key === product
-                    ? "bg-intel-teal/15 border-intel-teal/50 text-intel-teal"
-                    : "bg-card border-border/40 text-muted-foreground hover:border-border hover:text-foreground"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+          {/* Product switcher — horizontally scrollable on mobile with edge fade */}
+          <div className="relative mt-6 -mx-4 px-4">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none snap-x snap-mandatory">
+              {PRODUCTS.map((p) => (
+                <button
+                  key={p.key}
+                  onClick={() => setParams({ product: p.key })}
+                  className={`shrink-0 snap-start px-3 py-1.5 text-xs font-mono uppercase tracking-wider rounded border transition-colors ${
+                    p.key === product
+                      ? "bg-intel-teal/15 border-intel-teal/50 text-intel-teal"
+                      : "bg-card border-border/40 text-muted-foreground hover:border-border hover:text-foreground"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            {/* Right-edge fade hint */}
+            <div className="pointer-events-none absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-background to-transparent md:hidden" />
+          </div>
+
+          {/* Trust strip */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-4 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+            <span className="flex items-center gap-1"><span className="text-intel-teal">✓</span> Single-buyer guarantee</span>
+            <span className="flex items-center gap-1"><span className="text-intel-teal">✓</span> Refund if uncontactable</span>
+            <span className="flex items-center gap-1"><span className="text-intel-teal">✓</span> Cross-referenced sources</span>
           </div>
         </div>
       </div>
