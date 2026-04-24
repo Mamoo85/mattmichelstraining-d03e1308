@@ -40,7 +40,9 @@ Deno.serve(async (req) => {
   }
 
   let ok = 0;
+  const deadline = Date.now() + 110_000; // 110s budget — stay under 150s idle timeout
   for (const l of leads) {
+    if (Date.now() > deadline) break;
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/marketplace-lead-free-enrich`, {
         method: "POST",

@@ -50,6 +50,18 @@ serve(async (req) => {
 
     const sb = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
 
+    // Verify lead exists in the unified view before creating any Stripe session
+    const { data: leadCheck } = await sb
+      .from("unified_lead_marketplace_view")
+      .select("id")
+      .eq("id", lead_id)
+      .maybeSingle();
+    if (!leadCheck) {
+      return new Response(JSON.stringify({ error: "lead_not_found" }), {
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Atomic soft-lock: insert with status='pending'. Fails if already sold/locked-active.
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
     const { data: existing } = await sb
