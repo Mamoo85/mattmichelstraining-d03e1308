@@ -4,10 +4,12 @@ import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { LockedDossierCard } from "@/components/marketplace/LockedDossierCard";
 import { SoldDossierCard } from "@/components/marketplace/SoldDossierCard";
+import { FirstLookUpsellGate } from "@/components/marketplace/FirstLookUpsellGate";
 import type { MarketplaceLead } from "@/components/marketplace/GoldenTicketCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Flame, Sun, Snowflake, Loader2, Search } from "lucide-react";
+import { Flame, Sun, Snowflake, Loader2, Search, ScrollText } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 const PRODUCTS = [
@@ -32,7 +34,7 @@ export default function Marketplace() {
   const [tierFilter, setTierFilter] = useState<TierFilter>("all");
   const [search, setSearch] = useState("");
   const [dismissed, setDismissed] = useState<string[]>(() => JSON.parse(localStorage.getItem("mp_dismissed") || "[]"));
-  const [soldIds] = useState<string[]>([]); // session 2 will populate from marketplace_lead_locks
+  const [soldIds, setSoldIds] = useState<string[]>([]);
 
   const productMeta = PRODUCTS.find((p) => p.key === product) || PRODUCTS[0];
 
