@@ -235,6 +235,29 @@ export default function AdminContractorLeads() {
     setRunningProspector(false);
   };
 
+  // ── À la carte: sell a single unclaimed lead ──────────────────────────────
+  const [sellingLeadId, setSellingLeadId] = useState<string | null>(null);
+  const sellLead = async (leadId: string) => {
+    const priceStr = window.prompt("Price to charge contractors (USD)? Suggested: 39, 59, or 99", "59");
+    if (!priceStr) return;
+    const price = parseInt(priceStr, 10);
+    if (!Number.isFinite(price) || price < 1 || price > 1000) { toast.error("Price must be 1-1000"); return; }
+    setSellingLeadId(leadId);
+    try {
+      const { data, error } = await supabase.functions.invoke("sell-lead-alacarte", {
+        body: { lead_id: leadId, price_cents: price * 100, max_candidates: 3 },
+      });
+      if (error) throw error;
+      const d = data as any;
+      if (!d?.ok) throw new Error(d?.error || "sell failed");
+      toast.success(`💰 Offer sent — ${d.sent?.sms ?? 0} SMS · ${d.sent?.email ?? 0} email · ${d.candidates?.length ?? 0} contractors notified`);
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to sell lead");
+    } finally {
+      setSellingLeadId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
