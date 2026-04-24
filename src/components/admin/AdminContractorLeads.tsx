@@ -459,9 +459,33 @@ export default function AdminContractorLeads() {
       {/* ── Section 3: Territory Grid ─────────────────────────────────────── */}
       <div>
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Territory Status ({territories.length} Territories)</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Territory Status ({territories.length} Territories)</h2>
+            <button
+              type="button"
+              onClick={() => setShowFbGuide((v) => !v)}
+              className="text-blue-400 hover:text-blue-300"
+              title="What is FB Page ID?"
+            >
+              <HelpCircle size={14} />
+            </button>
+          </div>
           <div className="flex items-center gap-2">
             <select value={newTrade} onChange={e => setNewTrade(e.target.value)} className="bg-background border border-border text-xs text-foreground px-2 py-1.5 rounded focus:outline-none focus:border-primary">
+              <option value="">Trade…</option>
+              {ALL_TRADES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+            <input type="text" value={newCity} onChange={e => setNewCity(e.target.value)} placeholder="City name" className="bg-background border border-border text-xs text-foreground px-2 py-1.5 rounded focus:outline-none focus:border-primary w-32" onKeyDown={e => e.key === "Enter" && addTerritory()} />
+            <button onClick={addTerritory} disabled={addingTerritory || !newTrade || !newCity.trim()} className="text-xs font-bold px-3 py-1.5 rounded bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40">
+              {addingTerritory ? "…" : "+ Add"}
+            </button>
+          </div>
+        </div>
+        {showFbGuide && (
+          <div className="mb-3 bg-blue-950/30 border border-blue-500/30 rounded-lg p-3 text-xs text-blue-100 leading-relaxed">
+            <strong className="text-blue-300">What is "FB Page ID"?</strong> When a contractor wires their Facebook Lead Form to your territory, paste their Facebook Page ID here so incoming Facebook leads route to <em>them</em> automatically. Find it at <code className="bg-black/40 px-1 py-0.5 rounded text-[10px]">facebook.com/[their-page]/about</code> → Page Transparency. Without it, FB leads land in a generic bucket. Don't have a contractor for this slot yet? Use the Prospecting Pipeline below to find one.
+          </div>
+        )}
               <option value="">Trade…</option>
               {ALL_TRADES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
