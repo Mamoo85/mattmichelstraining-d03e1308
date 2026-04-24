@@ -94,10 +94,15 @@ export default function Marketplace() {
     }
   }, [product]);
 
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [restockOpen, setRestockOpen] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    Promise.all([
+    setLoadError(false);
+    Promise.allSettled([
       supabase
         .from("unified_lead_marketplace_view" as any)
         .select("*")
@@ -109,19 +114,28 @@ export default function Marketplace() {
         .select("lead_id")
         .eq("product", product)
         .eq("status", "sold"),
-    ]).then(([leadsRes, locksRes]: any[]) => {
+    ]).then((results: any[]) => {
       if (cancelled) return;
-      if (leadsRes.error) {
-        toast.error("Could not load leads");
-        console.error(leadsRes.error);
+      const [leadsRes, locksRes] = results;
+      if (leadsRes.status === "fulfilled" && !leadsRes.value.error) {
+        setLeads((leadsRes.value.data || []) as unknown as MarketplaceLead[]);
+      } else {
+        console.error("leads load failed", leadsRes);
+        setLeads([]);
+        setLoadError(true);
       }
-      setLeads((leadsRes.data || []) as unknown as MarketplaceLead[]);
-      setSoldIds(((locksRes.data || []) as Array<{ lead_id: string }>).map((r) => r.lead_id));
-      setLoading(false);
+      if (locksRes.status === "fulfilled" && !locksRes.value.error) {
+        setSoldIds(((locksRes.value.data || []) as Array<{ lead_id: string }>).map((r) => r.lead_id));
+      } else {
+        console.warn("locks load failed (non-blocking)", locksRes);
+        setSoldIds([]);
+      }
       setFocusIdx(0);
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [product]);
+  }, [product, reloadKey]);
 
   const filtered = useMemo(() => {
     let arr = leads.filter((l) => !dismissed.includes(l.id));
