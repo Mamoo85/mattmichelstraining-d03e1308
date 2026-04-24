@@ -1,5 +1,6 @@
 // marketplace-score-bump-alert — every 4h cron
-// Finds watched leads where score jumped +2 since last alert, notifies buyer.
+// Finds watched mortgage leads where score jumped +2 since last alert, notifies buyer.
+// Only mortgage_radar_leads has score_history — non-mortgage watches are skipped.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -26,36 +27,42 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
+  // Only consider mortgage watches — only mortgage_radar_leads has score_history.
   const { data: watches } = await supabase
     .from("marketplace_buyer_watches")
-    .select("buyer_email, lead_id, product");
+    .select("buyer_email, lead_id, product")
+    .eq("product", "mortgage");
 
   if (!watches?.length) {
-    return new Response(JSON.stringify({ ok: true, alerted: 0 }), {
+    return new Response(JSON.stringify({ ok: true, alerted: 0, reason: "no mortgage watches" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
-  const leadIds = [...new Set(watches.map((w) => w.lead_id))];
+  const leadIds = [...new Set((watches as any[]).map((w) => w.lead_id))];
   const { data: leads } = await supabase
     .from("mortgage_radar_leads")
     .select("id, score, score_history, last_score_alert_at, address, city, zip")
     .in("id", leadIds);
 
   let alerted = 0;
-  for (const lead of leads || []) {
-    const history: Array<{ score: number; at: string }> = Array.isArray(lead.score_history) ? lead.score_history : [];
+  for (const lead of (leads || []) as any[]) {
+    const history: Array<{ score: number; at: string }> = Array.isArray(lead.score_history)
+      ? lead.score_history
+      : [];
     if (history.length < 2) continue;
     const prev = history[history.length - 2]?.score ?? 0;
     const cur = lead.score ?? 0;
     if (cur - prev < 2) continue;
 
-    // Don't re-alert within 24h
-    if (lead.last_score_alert_at && Date.now() - new Date(lead.last_score_alert_at).getTime() < 24 * 3600 * 1000) {
+    if (
+      lead.last_score_alert_at &&
+      Date.now() - new Date(lead.last_score_alert_at).getTime() < 24 * 3600 * 1000
+    ) {
       continue;
     }
 
-    const buyersForLead = watches.filter((w) => w.lead_id === lead.id);
+    const buyersForLead = (watches as any[]).filter((w) => w.lead_id === lead.id);
     for (const w of buyersForLead) {
       const html = `
         <h2 style="font-family:system-ui">📈 Score Bump Alert</h2>
