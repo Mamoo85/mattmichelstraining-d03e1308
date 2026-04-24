@@ -178,11 +178,18 @@ export default function Marketplace() {
     });
     if (!watched.includes(lead.id)) {
       toast.success("Added to watch list");
-      // Server-side watch (for price-drop alerts)
-      const email = localStorage.getItem("mp_buyer_email");
+      const email = buyerEmail || localStorage.getItem("mp_buyer_email");
       if (email) {
         supabase.functions.invoke("marketplace-watch-add", {
           body: { buyer_email: email, lead_id: lead.id, product },
+        }).catch(() => {});
+      }
+    } else {
+      // Removing from watch — also remove from server
+      const email = buyerEmail || localStorage.getItem("mp_buyer_email");
+      if (email) {
+        supabase.functions.invoke("marketplace-watch-add", {
+          body: { buyer_email: email, lead_id: lead.id, product, action: "remove" },
         }).catch(() => {});
       }
     }
