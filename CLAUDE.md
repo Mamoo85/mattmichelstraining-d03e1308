@@ -4,1226 +4,253 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Git Behavior
 
-- **Auto-pull**: Always `git fetch` and `git pull` whenever needed — never ask for permission. Just do it.
+- **Auto-pull**: Always `git fetch` and `git pull` whenever needed — never ask for permission.
 - **Auto-push**: Push commits to the dev branch without asking.
 - **Knowledge files**: Always run `git fetch origin main && git checkout origin/main -- knowledge/` at session start.
-- **CLAUDE.md updates**: Update the "Current Session State" section below at the end of every session and whenever a significant decision is made. This file is the memory between sessions — keep it current.
+- **CLAUDE.md updates**: Update "Current Session State" at end of every session. This is the memory between sessions — keep it current.
 
 ---
 
 ## Current Session State
-*Last updated: 2026-04-24. Update this section every session.*
+*Last updated: 2026-04-24*
 
-### Phase 22 — Golden Ticket Marketplace Plan + LO Outreach System + Test Enrollments COMPLETE ✅
-*2026-04-24 — branch `claude/review-design-system-qRGjL`*
+### Phase 22 — Golden Ticket Marketplace + LO Outreach COMPLETE ✅
+*Branch: `claude/review-design-system-qRGjL`*
 
-**Status: All committed + pushed. Waiting on Matt to merge to main → Lovable deploys.**
+**Status: Committed + pushed. Waiting on Matt to merge → Lovable deploys.**
 
-**1. Matt enrolled as test customer in all 5 products** (`20260424110000_matt_test_enrollments.sql`)
-- `contractor_clients`: 5 rows (hvac/roofing/plumbing/electrical/general) — all active, each with unique `roi_token`
-- `hire_alert_clients`: TechAlert standalone, all trade roles, Metro Detroit ZIPs, `dashboard_token` set
-- `field_crm_clients`: FieldDesk standard plan, active
-- `missed_call_clients`: Missed Call active with DWA response message
-- `mortgage_radar_clients`: founder account, 9 Detroit ZIPs, `is_founder=true`
-- Dashboard links live in DWA Admin → Mortgage Radar tab → "🧪 Test Dashboards" card
-
-**2. LO Outreach System** (`src/components/dwa-admin/LeadSalesOutreachHub.tsx`)
-- 3-tab admin component inside Mortgage Radar hub:
-  - **Prospects**: pulls `marketplace_prospects`, NMLS refresh, per-row Apollo/Sonar enrich, warmth scores
-  - **Campaign Builder**: pick leads (score ≥7) + LO prospects, odds calculator (fax 5-8%/$0.07 · postcard 4-6%/$0.82 · email 2-3%/free), cost estimate, one-click blast
-  - **History**: campaign response rate tracking
-- SMS cold-prospecting disabled in UI (TCPA guardrail, tooltip explains why)
-- Calls existing edge functions: `find-lo-prospects`, `enrich-lo-prospect`, `marketplace-outreach-blast`
-
-**3. Golden Ticket Marketplace v2 Plan** (`/root/.claude/plans/whats-going-ok-structured-minsky.md`)
-- Full plan with 50 zero-cost enhancements across 5 groups (free govt APIs, DB-computed, UI/UX, notifications, trust)
-- LO outreach 50-enhancement extension (targeting, personalization, follow-up, analytics, UX, cost, legal, intelligence)
-- Ready to hand to Lovable for Session 1 (marketplace + card UI, no payment) then Session 2 (Stripe + PDF + share tokens)
-
-**Edge functions already built (previous sessions, in repo):**
-- `find-lo-prospects` — NMLS Consumer Access API → `marketplace_prospects` table
-- `enrich-lo-prospect` — Apollo/Sonar waterfall enrichment
-- `send-fax` — Twilio Programmable Fax (JFPA compliant, checks `fax_opt_outs`)
-- `send-postcard` — Lob.com API (4×6 B2B direct mail)
-- `marketplace-outreach-blast` — orchestrator, checks `outreach_cooldowns`, fires per-channel sends
+**Shipped:**
+- Matt enrolled as test customer in all 5 products (`20260424110000_matt_test_enrollments.sql`)
+- LO Outreach System (`src/components/dwa-admin/LeadSalesOutreachHub.tsx`) — 3-tab admin: Prospects / Campaign Builder / History
+- Golden Ticket Marketplace v2 plan at `/root/.claude/plans/whats-going-ok-structured-minsky.md`
+- Edge functions: `find-lo-prospects` (Apollo MI MLO search), `enrich-lo-prospect`, `send-fax`, `send-postcard`, `marketplace-outreach-blast`
 - Migration: `20260424100000_lo_outreach_system.sql` — `marketplace_prospects`, `lo_outreach_campaigns`, `lo_outreach_sends`
 
-**Secrets Matt needs to add before full functionality:**
-- `LOB_API_KEY` — lob.com free plan (300 postcards/mo for testing) — needed for postcard sends
-- `BROWSERLESS_API_KEY` — browserless.io free (1k renders/mo) — needed for dossier PDFs (Session 2)
-- `APOLLO_API_KEY` — apollo.io free tier (50 enrichments/mo) — needed for prospect enrichment
+**BSEED ArcGIS note**: `services2.arcgis.com/qvkbeam7Wirps6zC` is the only working server-side permit source. `data-wayne.opendata.arcgis.com` blocks all server requests (403). BSEED fields are **lowercase**: `address`, `issued_date`, `work_description`, `amt_estimated_contractor_cost`.
 
-**Wayne County GIS note** (confirmed this session):
-- `data-wayne.opendata.arcgis.com` blocks ALL server-side requests (403)
-- BSEED ArcGIS (`services2.arcgis.com/qvkbeam7Wirps6zC`) is the only working permit/property source
+**NMLS note**: `find-lo-prospects` uses Apollo.io (not NMLS Consumer Access — Cloudflare blocks it).
 
-**Working branch**: `claude/review-design-system-qRGjL`
+**Known unfixed bugs (from QA audit this session):**
+- CRITICAL: `chargeContractor()` in `handle-dead-lead-reply` — no `res.ok` check, silent $50 revenue loss
+- CRITICAL: `dead-lead-drip` — missing `await` on status updates → duplicate SMS (TCPA violation)
+- CRITICAL: `create-marketplace-lead-checkout` — race condition on soft-lock, double-sell possible (needs `claim_lead_soft_lock` RPC)
+- CRITICAL: `stripe-webhook` outer catch returns 200 on inner failures
+- HIGH: `Marketplace.tsx` uses `window.prompt()` — blocked on iOS
+- HIGH: `marketplace_buyer_watches` open RLS — email spoofing possible
+- HIGH: `contractor-lead-notify` — fire-and-forget Resend email
 
----
+**Secrets Matt needs to add:**
+- `LOB_API_KEY` — lob.com (postcards)
+- `BROWSERLESS_API_KEY` — dossier PDFs (Session 2)
+- `APOLLO_API_KEY` — prospect enrichment
 
 **WAITING ON MATT:**
-1. Merge `claude/review-design-system-qRGjL` → main → Lovable auto-deploys
-2. Add `LOB_API_KEY` + `BROWSERLESS_API_KEY` + `APOLLO_API_KEY` to Lovable secrets
-3. Give Lovable the plan from `/root/.claude/plans/whats-going-ok-structured-minsky.md` to build marketplace
-4. After Lovable builds marketplace: run end-to-end source verification on all marketplace data sources
-
----
-
-### Phase 21 — Compliance Hardening + Mortgage Radar Bootstrap COMPLETE ✅
-*2026-04-23 — branch `claude/review-design-system-qRGjL`*
-
-**Two tracks shipped (all committed + pushed):**
-
-**Track 1: TCPA Compliance — Dead Lead Reactivation (7 files, 2 migrations)**
-
-**1. AI opt-out detection** (`handle-dead-lead-reply/index.ts`)
-- FCC April 2025 rule: must honor opt-outs "in any reasonable manner"
-- Before lead classification: Claude Haiku called with 5-token prompt — OPT_OUT or NO
-- If OPT_OUT: insert `sms_opt_outs`, set contact status=opted_out, skip classification entirely
-- Fallback: keyword list still catches standard words; AI call is additive defense layer
-
-**2. Reassigned number detection at intake** (`dead-lead-intake/index.ts`)
-- `twilioCarrierLookup()` now requests `reassigned_number` field + passes `LastContactDate`
-- `is_reassigned=true` stored on contact at intake (Twilio compares against EBR date)
-- `carrierMap` type updated to include `isReassigned: boolean`
-- Migration: `20260423130000_dead_lead_contacts_reassigned.sql` — adds `is_reassigned` column
-
-**3. Landline + reassigned number enforcement in drip** (`dead-lead-drip/index.ts`)
-- Loop A (D1 SMS): `.eq("is_reassigned", false)` + `.eq("is_dnc_risk", false)`
-- Loop B (D3 email): `.eq("is_reassigned", false)` + `.eq("is_dnc_risk", false)` ← added this session
-- Loop C (D7 SMS): `.eq("is_reassigned", false)` + `.eq("is_dnc_risk", false)`
-
-**Track 2: LARA Scraping Violations Removed (4 files)**
-
-**4. Removed Accela portal ID enumeration** (`miosha-license-scraper/index.ts`)
-- Deleted `scanLARAValEnumeration()` — was sequentially fetching `aca-prod.accela.com/LARA/Cap/CapDetail.aspx?capID3=N`
-- Direct government portal scraping without authorization
-
-**5. Disabled lara-fast-scanner** (`lara-fast-scanner/index.ts`)
-- Same ID enumeration pattern on 30-min cron — entire file replaced with disabled stub
-- Returns `{ ok: false, disabled: true, reason: "Accela API credentials required" }`
-
-**6. Removed Apify Playwright scraper** (`.actor/main.js`)
-- Removed `scrapeLARAPlaywright()` — headless Chrome + Apify residential proxies against LARA portal
-- Proxy masking = intentional evasion; removed `lara_playwright` mode dispatch
-- Excel mode (BPL public file downloads from michigan.gov) retained — legally clean
-
-**7. Removed LinkedIn/Facebook from Sonar queries** (`hire-alert-scanner/index.ts`)
-- Removed `site:linkedin.com/in/` and `site:facebook.com` from 3 Sonar query locations
-- Removed Apify Playwright fallback trigger (would have invoked the now-deleted actor mode)
-- Replaced LinkedIn searches with Indeed/ZipRecruiter public job board searches
-
-**Track 3: Mortgage Radar — 3 New Signal Sources Wired** (`mortgage-radar-scanner/index.ts`)
-
-**8. Michigan SOS LLCs** (`scanNewMichiganLLCs`)
-- Reads unprocessed `new_business` signals from `industry_pulse_signals` table (populated by contractor-prospector)
-- `source_id` propagated through to main loop so `pitched_mortgage_radar_at` is only set after successful upsert
-- Migration: `20260423140000_industry_pulse_signals_mortgage_radar.sql` — adds `pitched_mortgage_radar_at` column
-
-**9. Foreclosure / lis pendens notices** (`scanForeclosureNotices`)
-- Sonar (Perplexity via OpenRouter) searches Wayne/Oakland/Macomb county public legal notices
-- Returns up to 15 records per run; JSON parse hardened with `[\s\S]*` regex instead of fragile markdown-strip anchors
-- Requires `OPENROUTER_API_KEY` (confirmed live in Lovable secrets)
-
-**10. High-value BSEED permits as equity signal** (`scanHighEquityLowRate`)
-- Reuses working BSEED ArcGIS endpoint: `services2.arcgis.com/qvkbeam7Wirps6zC`
-- Filters `ESTIMATED_COST >= 100000` — large-dollar projects signal high-equity homeowners
-- Signal type: `high_equity_renovation`
-
-**Wayne County GIS note**: Data hub at `data-wayne.opendata.arcgis.com` blocks all server-side requests (403).
-Dataset `82c1ccab05414caab64129e7d09292db_0` (parcel data) confirmed to exist but requires browser auth.
-Current BSEED ArcGIS approach is the correct path for permit-based equity signals.
-
-**Working branch**: `claude/review-design-system-qRGjL`
-**PR #107**: All CI green. 4/6 review comments resolved (marked outdated). 1 model name comment left as-is — `claude-haiku-4-5-20251001` is correct (Claude 4.5 Haiku, not the old 3.5 Haiku the reviewer suggested).
-**Next**: Matt merges PR #107 to main → Lovable deploys
-
----
-
-### Phase 21 — Compliance Hardening + Mortgage Radar Bootstrap COMPLETE ✅
-*2026-04-23 — branch `claude/review-design-system-qRGjL`*
-
-**Two tracks shipped (all committed + pushed):**
-
-**Track 1: TCPA Compliance — Dead Lead Reactivation (7 files, 2 migrations)**
-
-**1. AI opt-out detection** (`handle-dead-lead-reply/index.ts`)
-- FCC April 2025 rule: must honor opt-outs "in any reasonable manner"
-- Before lead classification: Claude Haiku called with 5-token prompt — OPT_OUT or NO
-- If OPT_OUT: insert `sms_opt_outs`, set contact status=opted_out, skip classification entirely
-- Fallback: keyword list still catches standard words; AI call is additive defense layer
-
-**2. Reassigned number detection at intake** (`dead-lead-intake/index.ts`)
-- `twilioCarrierLookup()` now requests `reassigned_number` field + passes `LastContactDate`
-- `is_reassigned=true` stored on contact at intake (Twilio compares against EBR date)
-- `carrierMap` type updated to include `isReassigned: boolean`
-- Migration: `20260423130000_dead_lead_contacts_reassigned.sql` — adds `is_reassigned` column
-
-**3. Landline + reassigned number enforcement in drip** (`dead-lead-drip/index.ts`)
-- Loop A (D1 SMS): `.eq("is_reassigned", false)` + `.eq("is_dnc_risk", false)`
-- Loop B (D3 email): `.eq("is_reassigned", false)` + `.eq("is_dnc_risk", false)` ← added this session
-- Loop C (D7 SMS): `.eq("is_reassigned", false)` + `.eq("is_dnc_risk", false)`
-
-**Track 2: LARA Scraping Violations Removed (4 files)**
-
-**4. Removed Accela portal ID enumeration** (`miosha-license-scraper/index.ts`)
-- Deleted `scanLARAValEnumeration()` — was sequentially fetching `aca-prod.accela.com/LARA/Cap/CapDetail.aspx?capID3=N`
-- Direct government portal scraping without authorization
-
-**5. Disabled lara-fast-scanner** (`lara-fast-scanner/index.ts`)
-- Same ID enumeration pattern on 30-min cron — entire file replaced with disabled stub
-- Returns `{ ok: false, disabled: true, reason: "Accela API credentials required" }`
-
-**6. Removed Apify Playwright scraper** (`.actor/main.js`)
-- Removed `scrapeLARAPlaywright()` — headless Chrome + Apify residential proxies against LARA portal
-- Proxy masking = intentional evasion; removed `lara_playwright` mode dispatch
-- Excel mode (BPL public file downloads from michigan.gov) retained — legally clean
-
-**7. Removed LinkedIn/Facebook from Sonar queries** (`hire-alert-scanner/index.ts`)
-- Removed `site:linkedin.com/in/` and `site:facebook.com` from 3 Sonar query locations
-- Removed Apify Playwright fallback trigger (would have invoked the now-deleted actor mode)
-- Replaced LinkedIn searches with Indeed/ZipRecruiter public job board searches
-
-**Track 3: Mortgage Radar — 3 New Signal Sources Wired** (`mortgage-radar-scanner/index.ts`)
-
-**8. Michigan SOS LLCs** (`scanNewMichiganLLCs`)
-- Reads unprocessed `new_business` signals from `industry_pulse_signals` table (populated by contractor-prospector)
-- `source_id` propagated through to main loop so `pitched_mortgage_radar_at` is only set after successful upsert
-- Migration: `20260423140000_industry_pulse_signals_mortgage_radar.sql` — adds `pitched_mortgage_radar_at` column
-
-**9. Foreclosure / lis pendens notices** (`scanForeclosureNotices`)
-- Sonar (Perplexity via OpenRouter) searches Wayne/Oakland/Macomb county public legal notices
-- Returns up to 15 records per run; JSON parse hardened with `[\s\S]*` regex instead of fragile markdown-strip anchors
-- Requires `OPENROUTER_API_KEY` (confirmed live in Lovable secrets)
-
-**10. High-value BSEED permits as equity signal** (`scanHighEquityLowRate`)
-- Reuses working BSEED ArcGIS endpoint: `services2.arcgis.com/qvkbeam7Wirps6zC`
-- Filters `ESTIMATED_COST >= 100000` — large-dollar projects signal high-equity homeowners
-- Signal type: `high_equity_renovation`
-
-**Wayne County GIS note**: Data hub at `data-wayne.opendata.arcgis.com` blocks all server-side requests (403).
-Dataset `82c1ccab05414caab64129e7d09292db_0` (parcel data) confirmed to exist but requires browser auth.
-Current BSEED ArcGIS approach is the correct path for permit-based equity signals.
-
-**Working branch**: `claude/review-design-system-qRGjL`
-**PR #107**: All CI green. 4/6 review comments resolved (marked outdated). 1 model name comment left as-is — `claude-haiku-4-5-20251001` is correct (Claude 4.5 Haiku, not the old 3.5 Haiku the reviewer suggested).
-**Next**: Matt merges PR #107 to main → Lovable deploys
-
----
-
-### Phase 20 — Revenue Blocking Fixes + Autonomous Marketing Expansion COMPLETE ✅
-*2026-04-23 — branch `claude/review-design-system-qRGjL`*
-
-**8 items shipped (all committed + pushed):**
-
-**1. Contractor Leads territory picker rewrite** (`ContractorLeads.tsx`)
-- Removed hardcoded 20-city list — now fetches live from `contractor_lead_sites` DB
-- Visual card grid: OPEN (green) vs CLAIMED (red lock icon)
-- Pre-fill via `?trade=hvac&city=warren` URL params validated against real DB
-- No-territories fallback: "Text Matt at (313) 992-1219" CTA
-
-**2. Demand Radar buyer targeting fix** (`IndustryPulse.tsx`, `create-industry-pulse-checkout`)
-- Rewrote hero + copy for wholesale distributors (Ferguson, Graybar, Watsco)
-- Added required `supplier_type` selector (plumbing/hvac/electrical/industrial/roofing)
-- `supplier_type` flows into Stripe metadata for future email segmentation
-
-**3. Product Sales Hub** (`src/components/dwa-admin/ProductSalesHub.tsx`, `DWAAdmin.tsx`)
-- New "💬 Sales Hub" tab (first in Revenue sidebar group)
-- 5 product tabs: Contractor Leads, TechAlert, Demand Radar, Missed Call, FieldDesk
-- Each tab: cold script, warm reply script, copy button, objection handlers
-- Territory Link Generator embedded in Contractor Leads tab
-
-**4. Territory seeding** (`20260423100000_seed_more_territories.sql`)
-- 54 new territories: Boiler (7), Gutters (7), Siding (7), +5 each for HVAC/Plumbing/Electrical/Roofing
-
-**5. Add Territory UI** (`AdminContractorLeads.tsx`)
-- Inline form in "Territory Status" section header: trade select + city input + Add button
-- `addTerritory()` generates slug and inserts to `contractor_lead_sites` — no migration needed
-
-**6. Contractor checkout nudge** (`contractor-checkout-nudge/index.ts`, `20260423110000_contractor_checkout_nudge_cron.sql`)
-- Hourly cron: finds `contractor_clients` where `active=false`, phone present, 1–24h old
-- Checks `system_comms_log` for existing nudge (deduplication)
-- Sends "I held your territory" SMS with pre-filled checkout link
-
-**7. CareAlert pitch rotation** (`contractor-prospector/index.ts`)
-- `getTodayPitchRotation()` expanded from 4-cycle to 5-cycle (adds `"care_alert"`)
-- `sniperCareAlertEmail()`: 4-sentence cold email to nursing home Directors of Nursing
-- `buildCareAlertEmailHtml()`: green-accented DWA dark template
-- On care_alert days: searches "nursing home [city]" in 5 Metro Detroit cities (3/day cap)
-
-**8. Stripe payment failed → SMS customer** (`stripe-webhook/index.ts`)
-- On first payment failure: looks up customer phone from hire_alert/field_crm/missed_call/contractor tables
-- Sends "your card didn't go through" SMS with detroitwebagent.com/billing link
-
-**9. 7-day no-contact re-engagement email** (`hire-alert-scanner/index.ts`)
-- After daily scan: finds active TechAlert clients with no comms in 7+ days
-- Emails a "here's what we found this week" summary with top 3 candidates + dashboard link
-- Logs to `system_comms_log` to prevent double-send
-
-**10. Michigan SOS new business → Contractor Leads** (`contractor-prospector/index.ts`, `20260423120000_industry_pulse_signals_cl_pitch.sql`)
-- After main loop: reads unprocessed `new_business` signals from `industry_pulse_signals`
-- Google Maps lookup → email scrape → Contractor Leads cold pitch (2/day max)
-- `pitched_contractor_leads_at` column added to `industry_pulse_signals` for deduplication
-
-**Working branch**: `claude/review-design-system-qRGjL`
-**Next**: Matt merges to main → Lovable deploys
-
----
-
-### Phase 19 — MiPLUS/LARA Fail-Proof Scraping Pipeline COMPLETE ✅
-*2026-04-20 — branch `claude/setup-talent-radar-knowledge-VbhqW`*
-
-**4 fixes shipped (all committed + pushed):**
-
-**Fix 4 (silent-zero SMS alerts)** — commits `054ead3`, `a649ab2`
-- Migration `20260420000000_hire_alert_runs_candidates_found.sql` — adds `source_breakdown JSONB` to `hire_alert_runs`
-- `hire-alert-scanner`: 2-strike zero-result SMS (fires only on 2nd consecutive 0 for MIOSHA and job boards separately); writes `source_breakdown` to run row; imports `ADMIN_PHONE`
-- `cron-sentinel`: 3-consecutive-zero "DEAD PIPE" SMS check before self-heartbeat
-
-**Fix 1 (Accela REST API)** — commit `e4339fb`
-- `miosha-license-scraper`: `ACCELA_APP_ID` + `ACCELA_APP_SECRET` constants; `getAccelaGuestToken()` OAuth2; `scanAccelaAPI()` queries `/v4/records` for 5 trade types
-- `scanMiPLUS()` rewired: Layer 1 = Accela REST, Layer 2 = Sonar fallback
-- **Matt action required**: register at developer.accela.com → add `ACCELA_APP_ID` + `ACCELA_APP_SECRET` to Lovable secrets
-
-**Fix 2 (Apify Playwright fallback)** — commit `b3fd2bd`
-- `.actor/Dockerfile`: upgraded to `apify/actor-node-playwright:20`
-- `actor-package.json`: added `playwright ^1.44.0`
-- `.actor/INPUT_SCHEMA.json`: added `lara_playwright` mode enum
-- `main.js`: `scrapeLARAPlaywright()` with Apify residential proxies (`RESIDENTIAL` group); mode dispatch
-- `hire-alert-scanner`: fire-and-forget Playwright run when `mioshaCandidates=0 && APIFY_API_TOKEN` set
-- **Matt action required**: verify Apify webhook in Actor settings → Webhooks → `apify-results-handler` URL
-
-**Fix 3 (proxy rotation)** — no code change. Apify residential proxies are built-in (already in Fix 2).
-
-**New secrets needed:**
-- `ACCELA_APP_ID` + `ACCELA_APP_SECRET` — from developer.accela.com (free tier, agency "LARA", env "PROD")
-
----
-
-### Phase 18 — 50-Item Revenue Operations Enhancement COMPLETE ✅
-*2026-04-19 — branch `claude/setup-talent-radar-knowledge-VbhqW`*
-
-**50-item Revenue Ops list — all Claude items shipped (4 batches):**
-
-Lovable handled: items 3, 5, 35, 37, 38, 39, 45, 46, 47, 50
-
-**Batch 1 (items 1–12) — TechAlert enrichment waterfall** *(prior session)*
-- Items 1–12 implemented in hire-alert-scanner (FCRA-safe AI prompts, NPI taxonomy premium map, job board freshness decay, Flight Risk Matrix, corroboration score, Hunter/Snov email enrichment, availability_signal, available_until, job_stability_index)
-
-**Batch 2 (items 13–22)** — commit `bd297e4`
-- hire-alert-scanner: apolloOrgEnrich, HIBP paste check, personal_email_primary, available_until, phases 3i–3l
-- industry-pulse-scanner: Apollo validation + size_tier, BSEED permit surge harvesting (ArcGIS + Sonar fallback), multi-permit aggregation
-- sam-gov-mi-pull: NAICS supply vertical map, contracts ≥$100k dual-upsert into industry_pulse_signals
-
-**Batch 3 (items 23–32)** — commit `8773925`
-- industry-pulse-scanner: Sonar competitor intel probe (item 23), DOL H-2B visa monitor (25), Google Places review score harvesting (26), Apollo decision-maker mapping (27), N-way cluster scoring TRIPLE-CONFIRMED (28), Michigan SOS new business velocity (29), NOAA storm × permit lag correlation (30), FieldDesk upsell flag (31), HIBP domain breach (32)
-
-**Batch 4 (items 33,34,36,40–44,48,49)** — commits `505eb46`, `9e52aa0`
-- sam-gov-mi-pull: naicsToVertical() for growth_radar_signals vertical (33), DOL prevailing wage estimate appended to pitch (49)
-- dead-lead-intake: Twilio Lookup v2 carrier classification (34+36), phone_carrier_type + is_dnc_risk on contacts
-- dead-lead-drip: Sonar re-enrichment before drip1 — skips project_complete contacts (42)
-- contractor-lead-notify: Hunter email validation (43), PDL person enrich badge (44), HIBP domain breach in subject (48), permit surge market context (40), Twilio carrier type in lead table (36)
-- migration: `20260419000001_dead_lead_contacts_phone_intel.sql` — phone_carrier_type, is_dnc_risk, project_completed_at
-
-**New secrets needed (not yet added to Lovable):**
-- `HUNTER_API_KEY` — Hunter.io email verification
-- `SNOV_USER_ID` + `SNOV_API_KEY` — Snov.io HR contact lookup
-- `HIBP_API_KEY` — HIBP paste/breach checks (already exists? confirm)
-- `NOAA_API_KEY` — storm event correlation (already exists)
-- `GOOGLE_MAPS_API_KEY` — already exists (used for review scores in industry-pulse-scanner)
-
----
-
-### Phase 17 — Apify Integration + TechAlert Pipeline Fix (IN PROGRESS)
-*2026-04-18 — branch `claude/setup-talent-radar-knowledge-VbhqW`*
-
-**Decisions made this session (not yet implemented — pick up tomorrow):**
-
-**Proxycurl: CONFIRMED DEAD**
-- LinkedIn filed suit January 2025; Proxycurl shut down July 2025
-- Team pivoted to NinjaPear. Do NOT reference Proxycurl anywhere.
-- All `candidate-deep-enrich` Proxycurl stages must be replaced.
-
-**Crustdata chosen as LinkedIn enrichment replacement**
-- YC F24, real-time data, 10 sources, good dev reviews (4.4/5 Product Hunt)
-- **Critical caveat**: weak coverage for blue-collar/trade workers (designed for white-collar B2B)
-- Good for healthcare vertical (nurses/NPs who use LinkedIn professionally)
-- Pricing: custom quote, estimated $500–$3k+/mo — contact sales before committing
-- For trade workers: Apify + Sonar carry the enrichment load (not Crustdata)
-
-**Apify connected (actor built, not wired in)**
-- Matt connected `mamoo85/m2training` repo to Apify
-- Actor `transparent_meteorite~m2training` built (Build 0.0.2, Running as of 2026-04-18 01:30)
-- No Dockerfile/input schema yet — Actor does nothing until Step 2 of plan
-
-**Full integration plan saved at**: `/root/.claude/plans/can-you-check-out-sleepy-tower.md`
-
-**Plan summary (9 steps, nothing committed yet):**
-1. Fix source label mismatch in `hire-alert-scanner` (`.eq("source","miosha")` returns 0 — highest impact bug)
-2. Add `.actor/actor.json`, `.actor/INPUT_SCHEMA.json`, `.actor/Dockerfile`, `actor/main.js` to configure M2training Actor for MIOSHA/BPL Excel parsing
-3. Matt manually adds `APIFY_API_TOKEN` + `APIFY_WEBHOOK_SECRET` to Lovable secrets
-4. Create `supabase/functions/apify-results-handler/index.ts` (receives Apify webhooks, scores candidates, sends alerts)
-5. New migration: `apify_run_batches` table
-6. Refactor `hire-alert-scanner` from 45s monolith → 3s dispatcher (starts 3 Apify runs and exits)
-7. Fix LARA stubs in `miosha-license-scraper` (replace `scanMiPLUS()` with real Sonar-based queries)
-8. Fix Socrata field names in `scanMichiganOpenData()` (`licensee_first_name` not `first_name`)
-9. New migration: change scanner cron from daily → every 4 hours
-
-**Apify Actor assignments:**
-- `transparent_meteorite~m2training` → MIOSHA/BPL Excel downloads (custom)
-- `bebity~indeed-scraper` → job board scraping with residential proxies (Apify Store)
-- `apify~linkedin-profile-scraper` → LinkedIn enrichment (Apify Store, replaces Proxycurl)
-
-**What Matt needs to do before next session:**
-1. Apify dashboard → Settings → Integrations → API tokens → create one → add to Lovable secrets as `APIFY_API_TOKEN`
-2. After code is committed → Apify Actor → Settings → Webhooks → add webhook URL + secret → add secret to Lovable as `APIFY_WEBHOOK_SECRET`
-
-**Known status:**
-- All services operational; no code changes this session
-- Phase 16 work still needs merge to main (`claude/add-claude-documentation-3yz9v`)
-
----
-
-### Phase 16 — Documentation Refresh COMPLETE ✅
-*2026-04-16 — branch `claude/add-claude-documentation-3yz9v`*
-
-**Work completed this session:**
-- Updated CLAUDE.md with accurate codebase scale (311 pages, 598 functions, 461 migrations, 338 routes)
-- Added `AgencyAdminRoute` to route guards section
-- Added new component directories (`agency/`, `dwa-admin/`, `field-service/`) and standalone components
-- Added new hooks (`useAgencyRole.tsx`, `useScrollReveal.ts`) to hooks inventory
-- Updated dev branch reference and knowledge file agent count
-- Phase 15 status corrected to COMPLETE
-
-**Next actions:**
-- Merge `claude/add-claude-documentation-3yz9v` to main
-
----
-
-### Phase 15 — DWA Branding & Security Hardening COMPLETE ✅
-*2026-04-16 — branch `claude/update-claude-md-89INK`*
-
-**Work completed:**
-- **DWA branding fixes** (`1c79c23`) — Fixed detroitwebagent.com domain routing and CSS branding consistency across all DWA product pages
-- **Full DWA click audit** (`0584c10`) — Verified all UI elements route correctly to intended pages (demo links, product CTAs, admin tabs)
-- **RLS policy hardening** (`42d6837`) — Restricted direct anonymous access to `system_comms_log` and `job-photos`; all reads now flow through edge functions
-- **Security issues from scan** (`543f75f`) — Fixed XSS vectors, input validation, and authentication gaps identified in code scan
-- **TechAlert field fixes** (`b41e95b`) — Corrected field validation and data serialization in candidate scoring
-
----
-
-### Phase 14 — Product Readiness Sprint COMPLETE ✅
-*2026-04-15 — branch `claude/fix-hire-alert-runs-table-JgJ3Y`*
-
-**6 builds shipped (all committed + pushed to main):**
-
-**Build 1: Multi-trade Dead Lead drip templates**
-- `supabase/functions/dead-lead-drip/index.ts` — `TRADE_TEMPLATES` map added (hvac/roofing/plumbing/electrical/general)
-- Each trade gets 3 drip messages (D1/D2/D3) with trade-specific angles: HVAC=seasonal, roofing=pre-winter, plumbing=escalation risk, electrical=safety
-- Custom copy variants still take priority; `getTradeTemplate(trade, drip)` helper used as fallback
-
-**Build 2: Dead Lead client stats magic link**
-- New edge function: `supabase/functions/dead-lead-stats/index.ts` — GET `?token=X`, returns campaign stats by `roi_token` (total contacts, texts sent, positive replies, opt-outs, revenue recovered)
-- New page: `src/pages/DeadLeadStats.tsx` — `/dead-lead-stats?token=X`, dark DWA branding, revenue hero card, stat grid, how-it-works section
-- Route added to `App.tsx`, `verify_jwt = false` in `config.toml`
-
-**Build 3: TechAlert scanner activity stats**
-- New edge function: `supabase/functions/hire-alert-public-stats/index.ts` — returns last 7 runs + 7-day aggregate (public, no auth)
-- `HireAlert.tsx` — live scanner activity strip below scarcity banner (candidates/new/alerts this week — shows only if data > 0)
-- `MyTechAlert.tsx` — "Scanner Activity" table after KPI strip (last 7 runs, date/scanned/new/alerts columns)
-- `verify_jwt = false` in `config.toml`
-
-**Build 4: FieldDesk invoice generator**
-- New component: `src/components/field-service/InvoiceGenerator.tsx` — modal with line items (qty/rate), client name/address, invoice #, dates, auto-calculates total
-- Generates styled HTML invoice in new tab with `window.print()` auto-triggered — works as browser PDF save
-- `🧾 Invoice` button added to job detail panel in `DispatchBoard.tsx` — ready for DJ Conley demo April 22
-
-**Build 5: DWA Admin quick access button**
-- `src/components/admin/AdminCommandDeck.tsx` — cyan `🏢 DWA ADMIN →` button in Sector F header row
-- One click from M2 admin command deck to `/dwa-admin`
-
-**Build 6: Step-by-step DWA Sales Guide**
-- New component: `src/components/dwa-admin/DWASalesGuide.tsx`
-- New tab "🎯 Sales Guide" in `src/pages/DWAAdmin.tsx`
-- Covers Dead Lead Reactivation, TechAlert, FieldDesk, Contractor Leads — each with: who to target, step-by-step process, copy-paste text scripts, expandable objection handlers
-- Matt's daily selling routine (8am-5pm) at the top
-
-**Lab product security fixes (this session, merged to main earlier):**
-- `deliver-domain-breach-report` + `deliver-keyword-gap-report`: Bearer auth, idempotency, Resend check, HIBP cap
-- `create-domain-breach-checkout` + `create-keyword-gap-checkout`: email/domain validation, session-first DB insert, removes order_id from Stripe metadata
-
-**Industry Pulse pulled from Lovable (do not touch):**
-- `src/pages/IndustryPulse.tsx`, `src/pages/MyIndustryPulse.tsx`
-- `supabase/functions/create-industry-pulse-checkout/index.ts`
-- `supabase/functions/get-industry-pulse-dashboard/index.ts`
-- `supabase/functions/industry-pulse-digest/index.ts`
-- stripe-webhook `industry_pulse_subscription` handler
-
----
-
-### Phase 13 — Bug Fix + Business Clarity COMPLETE ✅
-*2026-04-15 — branch `claude/fix-hire-alert-runs-table-JgJ3Y`*
-
-**hire_alert_runs table fix (PR #81 — merged to main):**
-- Root cause: `20260410300000_hire_alert_tables.sql` used `current_setting('app.supabase_url')` inside `cron.schedule()` — this returns NULL in pg_cron context, causing the migration transaction to roll back and leaving `hire_alert_runs` absent from the DB entirely
-- Fix: `20260415030000_fix_hire_alert_runs.sql` — creates `public.hire_alert_runs` with the schema the edge function and admin component actually use: `run_at`, `source`, `candidates_found`, `new_candidates`, `alerts_sent`, `errors` + RLS policies
-- Merged and deployed via Lovable
-
-**Agent Autonomy Audit — Completed this session:**
-- 13 agents are FULLY AUTONOMOUS (have deployed edge functions + crons running 24/7)
-- 17 agents are PROTOCOL-ONLY (have `.claude/agents/*.md` files with instructions but no edge function — they exist as plans/Claude Code subagents only, not running code)
-- See full breakdown in [knowledge/M2_Agent_Roster.md](knowledge/M2_Agent_Roster.md)
-
-**Business overview prompt created:**
-- Full business context document written for feeding into Gemini Deep Think for marketing/customer acquisition strategy
-- Covers: both brands, all flagship products, automation stack, revenue flow, current state, target market
-
----
-
-### Phase 12 — TechAlert Intelligence Expansion COMPLETE ✅
-*2026-04-14 — branch `claude/update-claude-md-K6Mue`*
-
-**Medicare Staffing Intelligence:**
-- New edge function: `medicare-staffing-intel` — queries free CMS Medicare Care Compare API for Metro Detroit nursing homes with 1–2 star staffing ratings; surfaces prospects for TechAlert CNA/LPN/RN pitch
-- New admin component: `AdminMedicareIntel` — added as "Medicare Intel" tab in `/dwa-admin`
-
-**Industrial Growth Intelligence:**
-- New edge function: `industrial-growth-intel` — Sonar OSINT scan for Metro Detroit manufacturing expansion signals (new plants, equipment acquisitions, contract awards, workforce expansion, facility upgrades)
-- New admin component: `AdminIndustrialIntel` — type-colored badges, integrated email pitch generator for TechAlert sales outreach; added as "Industrial Intel" tab in `/dwa-admin`
-
-**Healthcare Candidate Enrichment (NPI + PDL + Sonar waterfall):**
-- Enhanced `hire-alert-scanner`: waterfall enrichment — NPI Registry (free, no auth) → Sonar OSINT (LinkedIn/Facebook/Indeed boolean search) → People Data Labs (mobile phone + personal email resolution)
-- `ScoredCandidate` interface extended: `npi_number`, `npi_business_phone`, `npi_taxonomy`, `npi_practice_address`, `pdl_mobile_phone`, `pdl_personal_email`
-- AI synthesis combines all three sources into qualification summaries via Lovable AI Gateway
-- **New secret needed**: `PDL_API_KEY` (People Data Labs) — add to Lovable secrets
-
-**Modular Industry Pipeline Architecture:**
-- New edge function: `test-data-pipeline` — accepts `{ "industry_type": "healthcare" | "industrial_trades" }` param
-- Healthcare flow: NPI → Nursys → Sonar → PDL. Industrial flow: Michigan LARA → Sonar → PDL
-- Normalized `GovDataResult` interface feeds both paths into identical downstream enrichment
-
-**New Migration**: `20260414000000_hire_alert_client_candidates`
-- Tracks which candidates were shown to which TechAlert clients (enables competitive urgency: "2 other companies saw this candidate")
-- `client_action` enum: `viewed | contacted | hired`
-
-**Bug Fix**: `AnnouncementBanner` — fixed React hooks order violation; conditional domain exclusion moved to after `useQuery` call (was early-returning before hook, causing TypeError)
-
-**OSINT Privacy Rule (new — enforce going forward):**
-Sonar OSINT methodology is never disclosed to clients. Intelligence methods are proprietary. AI synthesis outputs never mention algorithms, data sources, or "AI."
-
-**PDL_API_KEY status**: Confirmed live in both Lovable secrets and Supabase secrets. No action needed.
-
----
-
-### TechAlert Roadmap — Approved for Next Build Cycle
-
-**Pricing decisions (finalized):**
-- TechAlert standalone: raise from $99/mo → **$149/mo** (LinkedIn Recruiter Lite = $170/mo with no MIOSHA monitoring)
-- Bundle with FieldDesk: **$79/mo** (was $49/mo — sharpens bundle discount, keeps FieldDesk sticky)
-- Introductory offer: **$99/mo grandfathered** for first 10 clients only — creates urgency, locks in early adopters
-
-**Three enhancements approved (Lovable build — sequenced):**
-1. **48-hour candidate claim system** — `claim-candidate` edge function + `claimed_at`/`claim_expires_at` columns on `hire_alert_client_candidates`. Atomic SQL: `WHERE claimed_at IS NULL OR claim_expires_at < now()` prevents race condition. Email alert links auto-fire claim via `?auto=1&claim=<id>` mount param.
-2. **One-click outreach draft** — `generate-outreach-draft` edge function calls Gemini via `LOVABLE_API_KEY`. Opens modal with SMS + email draft + copy buttons. MUST include TCPA nudge: "Copy-paste and send from your phone. Do not text numbers on your DNC list." Never fires SMS directly.
-3. **License expiry poaching** — `scanLicenseExpiries()` added to `hire-alert-scanner` parallel scan. Scores lapsed-license candidates one tier lower. Alert copy: "may be available — worth a check" (not "available now"). Badge: 🔄 amber.
-
-**Industry Pulse:**
-- Free for all TechAlert clients for 90 days (retention feature, not separate product)
-- Spin out at **$149/mo** once Matt has 2–3 client testimonials that a signal led to a sale
-- `AdminIndustrialIntel` + `AdminIndustryPulse` tabs: merge into single **"🏭 Growth Signals"** tab with sub-filters (Expansion News / Hiring Patterns / Cross-Referenced). Cross-referenced = highest confidence, shown first.
-
-**Intent-Driven Dashboard UX (approved direction):**
-- Positioning: "Command Center, not Data Viewer"
-- `MyTechAlert.tsx` top fold replaced with Market Signals feed (queries `industry_pulse_signals` where `confidence >= 7`, falls back to `hire_alert_candidates` score >= 8 if empty)
-- Every card gets action buttons: `⚡ Claim Candidate` + `✍️ Draft Outreach`
-- Revenue Recovered ledger in nav: real data from `hire_alert_client_candidates` (hired × $8k avg fee saved) + `dead_lead_charges`. Hidden entirely if value is $0. No animated counter — static with sparkline.
-- Full grounded Lovable prompt saved in `/root/.claude/plans/playful-splashing-barto.md`
-
----
-
-### Top 4 Products — 100% Launch Ready ✅
-Commit `25287d19` — merged to main, Lovable deploying now.
-
-**Contractor Leads ($399/mo):**
-- stripe-webhook `contractor_lead_subscription`: now returns 500 in catch (Stripe retries DB failures)
-- Welcome email upgraded to DWA dark teal/navy branding (was M2 Training orange)
-
-**Missed Call Catch ($99/mo) — Multi-tenant architecture fixed:**
-- `missed-call-handler`: looks up `missed_call_clients` by `To` number. Customer numbers forward to `business_phone`, use `business_name` in voice message. Falls back to Matt's DWA logic for +13139921219.
-- `missed-call-status`: looks up client by `Called` number. Texts caller with `response_message` or `"Hey! This is {business_name}..."`. Falls back to DWA text for Matt's number.
-- Welcome email switched to DWA dark branding (was M2 Training)
-
-**TechAlert ($99/mo):** `dwaEmail` unsubscribe footer fixed to `matt@detroitwebagent.com`
-
-**FieldDesk ($199/mo):** Was already 100% — no changes needed
-
-**Phase 11 — Sandbox Audit + Product Revival + 3 New Landing Pages COMPLETE ✅**
-Work on `claude/opusplan-setup-nmyYS`. Merged to main.
-
-**Product Filter Rule (established this session — enforce going forward):**
-Only build/sell products that FAIL this test: "Can a non-technical person replicate this with free ChatGPT in an hour?" Products that pass = automation infrastructure (Twilio 10DLC, cron scheduling, government data pipelines). Products that fail = content generation (LinkedIn posts, blog writing, collection letters, sermon prep, HOA letters, etc.). Kill or deprioritize anything that's just a wrapper around a prompt.
-
-**AdminSandbox cleanup (`src/components/admin/AdminSandbox.tsx`):**
-- Added search bar — filters all sections live
-- Added missing Detroit Web Agency section — FieldDesk + TechAlert were in PRODUCTS array but never rendered (invisible)
-- Added Wave 4 + High-Ticket sections
-- Added PRODUCT_FIELDS for `field_service_subscription` + `hire_alert_subscription`
-- Removed 2 duplicates: `regulatory_monitor_v2_subscription` + `competitor_pricing_subscription`
-- Sections auto-hide during search; product counts on each section header
-
-**Three dormant products activated:**
-- `/holiday-sms` — $39/mo, 8 AI-written holiday SMS blasts/year.
-- `/appointment-reminders` — $39/mo, 24hr+1hr reminders. Fixed critical bug: form sent `business_name` but checkout expected `businessName`.
-- `/warranty-reminders` — $29/mo, auto-texts customers 30 days before warranty expires.
-
-**Insurance Lead Drip — decided NOT to pursue:**
-- TCPA landmine: FCC 1:1 consent rule (Jan 2024). `insurance_drip_subscription` stays in codebase but do not market.
-
-### Phase 10 — Senior Care Vertical + Multi-State TechAlert COMPLETE ✅
-
-**Senior Care Vertical:**
-- `contractor-prospector` — added `sniperSeniorCareEmail()`. Assisted living/home health/skilled nursing route to TechAlert CNA/LPN/RN pitch (3/day cap).
-- `dead-lead-outreach-drip` — D4+D8 follow-up for `techalert_senior_care` leads.
-- `Tom.agent.md` — full senior care section added (section 12).
-
-**Multi-State TechAlert + BPL Excel downloads:**
-- `hire-alert-scanner` — `scanBPL()`: Michigan LARA BPL xlsx downloads for boiler/electrical/plumbing/HVAC/nursing, SheetJS parser.
-- `hire-alert-scanner` — `scanFloridaDBPR()`: Florida DBPR CSV downloads for construction/electrical/plumbing/HVAC.
-- All four sources run in parallel: BPL, Apollo, job boards, Florida DBPR.
-- CNA/LPN/RN/home_health_aide added to `ROLE_KEYWORDS`.
-
-### Phase 9 — Legal/Compliance Hardening + Dutch Auction COMPLETE ✅
-
-**TCPA Expiry Filter:**
-- Migration `20260412050000_tcpa_dutch_auction.sql` — `last_contact_date` on `dead_lead_contacts`
-- `dead-lead-drip` — 18-month EBR cutoff check. Expired → `status='tcpa_expired'` (terminal).
-- `dead-lead-intake` — scrubs 18mo+ leads at upload.
-
-**Dutch Auction for PPL Leads:**
-- `contractor-aged-lead-downsell` — 3-tier decay: 48-72h=$35, 72-96h=$20, 96h+=$10
-- `create-aged-lead-checkout` — price from `aged_tier` in DB (not URL params).
-
-### DWA Email Overhaul — COMPLETE ✅
-Commits: `8735ce32`, `cc134fff`
-
-All DWA product welcome emails and the contractor lead notification email upgraded to premium dark brand design.
-
-**Email wrapper routing:**
-- DWA products → `dwaEmail()` + `matt@detroitwebagent.com`
-- M2/all others → `m2Email()` + `matt@mattmichelstraining.com`
-- DWA products list: `contractor_leads`, `hire_alert_subscription`, `missed_call_subscription`
-
-### Phone Number Canonical Reference
-- DWA work: (313) 992-1219 / `+13139921219` — all customer-facing content
-- Matt personal: (313) 806-4952 / `+13138064952` — ADMIN_PHONE (internal alerts) + MATT_CELL (AT&T call-forwarding detection in ai-reply-detector) ONLY
-- M2 Training fitness pages (AthleteBlueprint, ForParents, Results) — use personal number intentionally
-
-### 20-Item TechAlert + Contractor Leads Overhaul — COMPLETE ✅
-Commits: `ce621aa2`, `f390b12f`, `40b48002`, `daf04014`
-
-**TechAlert (TA-1 through TA-10):** All done except TA-1 (MIOSHA CSV rewrite — deferred).
-**Contractor Leads (CL-1 through CL-10):** All done except CL-8 (admin billing dashboard — deferred).
-
-**Pending Matt actions:**
-- Resend failed Stripe checkout events in Stripe Dashboard → vibrant-glow → Event deliveries → Failed
-
-### Documentation Sync — 2026-04-12 ✅
-Updated CLAUDE.md to reflect accurate codebase scale (293 pages, 539 edge functions, 414 migrations).
-
-### Stripe Webhook — Critical Fix COMPLETE ✅
-Fixed tonight. Two issues found and resolved:
-
-1. **`constructEventAsync` bug** (root cause — 825/825 failures): `stripe.webhooks.constructEvent()` is synchronous and throws in Deno. Every webhook died before reading the event type. Lovable/Gemini applied the fix: `await stripe.webhooks.constructEventAsync()` on line 258 of `stripe-webhook/index.ts`.
-2. **Duplicate endpoint / wrong signing secret**: Two Stripe webhook destinations existed (`engaging-harmony` + `vibrant-glow`) each with different `whsec_` secrets. The env var `STRIPE_WEBHOOK_SECRET` only matched one. `engaging-harmony` deleted; `STRIPE_WEBHOOK_SECRET` in Lovable updated to match `vibrant-glow`'s secret.
-
-**Action still needed**: Resend failed events in Stripe → vibrant-glow → Event deliveries → Failed → Resend all `checkout.session.completed` failures to re-activate any customers who paid but weren't provisioned.
-
-**Known silent failure patterns (audit findings — partially fixed):**
-- `stripe-webhook` provisioning handlers now return 500 on DB failure + notifyMatt() fallback ✅ FIXED
-- `chargeContractor()` in `handle-dead-lead-reply` doesn't check `res.ok` before parsing Stripe response — NOT YET FIXED
-- Autonomous agents all have `agent_heartbeats` upserts ✅ (scarlett, selma, ops, hire-alert-scanner all verified)
-- Matt notification emails: critical ones have SMS fallback ✅ FIXED; others still fire-and-forget
-
-### Pre-Launch Audit — 2026-04-13 COMPLETE ✅
-Commit `9b6f92c3` — all merged to main and deployed.
-
-**Fixed:**
-- **19 broken crons** (`20260413000000_fix_broken_crons.sql`) — `current_setting('app.supabase_url')` produces NULL in pg_cron context; all affected crons recreated with `vault.decrypted_secrets` pattern. Also removed duplicate `license-expiry-checker-daily`.
-- **Wave 4 webhooks** already done (prior session) — 7 handlers in stripe-webhook for storm/recall/permit/speed/bedtime/crime/license
-- **Wave 4 crons** already done (prior session) — `20260412000000_wave4_crons.sql`
-- **AdminSandbox** — added Detroit Web Agency section (FieldDesk + TechAlert now visible/testable)
-- **AdminOpsCenter** — added missed_call_clients + tech_support_tickets, excluded Matt's emails from counts
-- **AdminClientHealth** — added seo_guard_clients + missed_call_clients + tech_support_tickets
-- **App.tsx** — /dwa-admin now uses AgencyAdminRoute (proper admin guard)
-- **auto-onboard** — SMS_TYPES now includes _subscription variants so webhook-keyed types resolve to SMS welcome template
-- **AnnouncementBanner** — hidden on detroitwebagent.com domain
-- **SEOHead** — added to HireAlert, HireAlertTrial, SeoGuard, AllServices, DeadLeadIntake
-- **GetStarted.tsx** — SEO title fixed to "Detroit Web Agency" (was "M2 Training")
-- **DarkWebMonitor.tsx** — checkout now uses `supabase.functions.invoke()` (was raw `fetch()`)
-- **AutomationHub** — added product page links to podcast/regulatory/competitor/re-newsletter cards
-
-**Remaining / not fixed:**
-- stripe-webhook handlers return 200 on DB upsert failures (Stripe won't retry)
-- `chargeContractor()` in handle-dead-lead-reply: no `res.ok` check
-- DJ Conley demo link in AdminDWAOverview — check if `/demo-djconley-2` is wired correctly (was `/demo-djconley-v2`)
-- AdminFieldCRMClients: no clickable client detail panel
-
-### Phase 8 — DWA Level 5 Autonomy Agents COMPLETE ✅
-Work on `claude/opusplan-setup-nmyYS`. Merge to main to deploy.
-
-**Phase 8 shipped:**
-- `dwa-operator` edge function — runs every 4h; auto-pauses zero-reply campaigns (40+ texts, 0 replies) and high opt-out (>15%) campaigns; generates A/B SMS copy alternatives via free Gemini (hardcoded fallbacks); texts Matt with previews + "Reply A or B to resume"; monitors billing (positive replies with no card on file); updates `agent_heartbeats`
-- `dwa-closer` edge function — runs daily 2pm ET; finds warm/exhausted dead lead prospects; context-aware (reads `system_comms_log` history); Firecrawl website scrape (max 3/run, 5s timeout, caches result); generates personalized bundle pitch (FieldDesk + TechAlert + dead lead) via free Gemini; routes 100% through `email_reply_drafts` ghost delay; texts Matt 10-min preview; records `outreach_cooldowns`
-- `handle-dead-lead-reply` — new admin routing block: Matt texts "A" or "B" → selects copy variant, resumes paused campaign, resets drip3_sent contacts back to pending with new copy
-- `dead-lead-drip` — all 3 loops now check `campaign_copy_variants` for selected variant before using default template; **also fixed production bug** (status was missing from dead_lead_campaigns select, making the active-campaign guard always skip all contacts)
-- Migration `20260412040000_dwa_agents_tables.sql` — `outreach_cooldowns` table (anti-collision, 7-day per-agent cooldown), `campaign_copy_variants` table (A/B SMS alternatives), `pause_reason`/`paused_at`/`completed_at` columns on `dead_lead_campaigns`, 2 cron schedules
-- `config.toml` — `verify_jwt = false` for `dwa-operator` + `dwa-closer`
-
-**DWA operator flow:**
-1. dwa-operator scans active campaigns every 4h
-2. Zero-reply or dead campaign → auto-pause + Gemini generates A/B copy → SMS Matt with previews
-3. Matt replies "A" or "B" → handle-dead-lead-reply selects variant, resumes campaign, re-queues exhausted contacts
-4. dead-lead-drip picks up resumed contacts using the selected custom copy
-
-**QA audit fixes applied this session:**
-- Zone 1 RED: Firecrawl fetch in dwa-closer has `AbortController` 5s timeout — hung scrapes no longer block the function
-- Zone 4 RED: dead-lead-drip was silently sending zero SMS (campaign.status always undefined) — fixed by adding `status` to dead_lead_campaigns select in all three drip loops
-- Zone 5 RED: dwa-closer AI prompt Rule 8 explicitly bans "AI"/"artificial intelligence" in client-facing output
-
-**Anti-collision architecture:**
-- `outreach_cooldowns` table — one row per prospect email/phone, tracks `last_agent` + `last_contacted_at`
-- dwa-closer checks cooldowns + `system_comms_log` + `suppressed_emails` before every send
-- 7-day cooldown window; Closer skips anyone contacted by Tom, prospector, or drip in last 7 days
-
-### Phase 7 — Self-Serve Intake + Stripe Auto-Billing COMPLETE ✅
-All work on `claude/opusplan-setup-nmyYS`. Merge to main to deploy.
-
-**Phase 7 shipped:**
-- `dead-lead-intake` edge function — public POST, creates contractor + campaign + contacts from self-serve form, SMSes Matt
-- `dead-lead-billing-setup` edge function — creates Stripe customer + Checkout Session in setup mode (card save)
-- `DeadLeadIntake.tsx` — public page at `/dead-lead-intake`, DWA dark branding, paste leads textarea, billing CTA after submit
-- `stripe-webhook` — `dead_lead_billing_setup` handler saves `stripe_payment_method_id` + sets `dead_lead_billing_active = true`
-- `handle-dead-lead-reply` — auto-charges $50 via Stripe PaymentIntent on POSITIVE reply (if card saved), logs to `dead_lead_charges`
-- Migration `20260412030000_dead_lead_billing.sql` — `stripe_payment_method_id` + `dead_lead_billing_active` on `contractor_clients`, new `dead_lead_charges` table
-- `App.tsx` — `/dead-lead-intake` route added (public, no auth)
-- `config.toml` — `verify_jwt = false` for `dead-lead-intake` + `dead-lead-billing-setup`
-
-**Dead lead billing flow:**
-1. Contractor submits intake form → campaign auto-creates → Matt gets SMS
-2. Contractor optionally saves card (Stripe hosted setup) → `dead_lead_billing_active = true`
-3. When homeowner replies YES → contractor gets instant SMS + $50 auto-charged (or manual invoice if no card)
-4. Matt gets email: "✅ $50 auto-charged" vs "⚠️ No card on file — invoice manually"
-
-**Matt's action when contractor replies interested to cold email:**
-- Text them: `detroitwebagent.com/dead-lead-intake` — they self-onboard, zero friction
-
-### Phase 6 — Dead Lead Prospecting + Monitoring Automation COMPLETE ✅
-All work merged to `main`. Lovable auto-deploys on merge.
-
-**Phase 6 shipped:**
-- `contractor-prospector` — now sends dead lead reactivation pitch to HVAC/plumbing/roofing/electrician contractors (5/day cap, separate from web design pitch). Uses `matt@detroitwebagent.com`, stored as `offer_pitched = "dead_lead_reactivation"`.
-- `dead-lead-outreach-drip` — D4 + D8 follow-up emails for prospected contractors who didn't reply. Runs daily noon ET.
-- `dead-lead-daily-notifier` — 5pm ET daily: SMS Matt if any leads revived, always emails full campaign digest with INVOICE NOW flags.
-- `AdminDeadLeads.tsx` — global stats bar + recent positive replies activity feed across ALL campaigns.
-- Migration: `20260412020000_dead_lead_outreach_crons.sql` — crons for 2 new functions.
-
-### Phase 5 — Dead Lead Reactivation + ROI Scorecard COMPLETE ✅
-All work merged to `main`. Lovable auto-deploys on merge.
-
-**Phase 5 shipped:**
-- `dead_lead_campaigns` + `dead_lead_contacts` tables (RLS + service_role policies)
-- `contractor_clients.google_review_link` + `contractor_clients.roi_token` columns (backfilled)
-- `dead-lead-drip` — white-labeled 3-msg SMS drip (contractor's business name, not DWA). Runs daily 10am ET.
-- `handle-dead-lead-reply` — Twilio inbound webhook: POSITIVE → instant SMS to contractor + email Matt; HARD_NO → Google review ask; OPT_OUT → sms_opt_outs
-- `contractor-roi-sms` — weekly Friday 9am ET, skips if all metrics = 0, uses `roi_token` not `client_id`
-- `contractor-roi-report` — GET edge function, token-secured, returns 7-day stats
-- `ContractorROIReport.tsx` — `/roi?token=XYZ` magic link page, 4 stat cards, no login required
-- `AdminDeadLeads.tsx` — CSV upload + campaign manager, "Run Drip Now" button
-- Quick Lead Entry form in `AdminContractorLeads.tsx` — trade+city dropdown, notifies contractors instantly
-- Admin.tsx: `♻️ Dead Leads` tab wired into DWA domain
-- App.tsx: `/roi` route added (public, no auth)
-- config.toml: `verify_jwt = false` for all 4 new functions
-
-### Contractor Leads — Credibility-First Rule
-- NEVER pitch contractors until ≥5 real leads exist in `contractor_leads` table — use Quick Lead Entry admin form
-- Facebook ads NOT the first move. CPL $45–60 in Metro Detroit, $75–100/day minimum, 4–8 weeks to optimize
-- Sequence: manual leads → outreach with proof → PPL → territory lock → ads to scale
-- **Dead Lead Reactivation is the REAL zero-ad-spend pitch**: contractor uploads their dead quotes → 3-msg SMS drip → $50/positive reply. No leads table needed — monetizes what contractors already own.
-- Missed-Call Catch is LIVE at `/missed-call-catch` ($99/mo)
-- ROI Scorecard: `/roi?token=XYZ` — texted weekly on Fridays, proves value without login, skips zero-value weeks
-
-### Phase 4 — Admin Command Center COMPLETE ✅
-All Phase 3+4 work merged to `main`. Lovable auto-deploys on merge.
-
-**Phase 4 shipped:**
-- `system_comms_log` table — unified SMS+email timeline with DB trigger from `email_send_log`
-- `_shared/twilio.ts` — auto-logs every SMS to `system_comms_log`, exports `ADMIN_PHONE` env var
-- Frictionless checkout: `?prefilled_email=` on TechAlert trial-convert + phantom-alert URLs
-- 3-lead territory lock upsell SMS in PPL webhook (7-day filter)
-- `contractor-aged-lead-downsell` — daily 2pm ET cron, blasts $15 cold leads after 48h unclaimed
-- `create-aged-lead-checkout` — GET redirect → Stripe $15 checkout, no frontend page needed
-- `aged_ppl_lead` stripe-webhook handler — delivers contact info on $15 payment
-- `test-license-vision` — admin OCR test (Haiku vision, no DB)
-- `generate-digital-audit` — Firecrawl + Haiku prospect SMS pitch generator
-- `missed-call-textback` — Twilio StatusCallback stub, looks up `missed_call_clients`
-- `missed_call_clients` table (stub — no product page yet)
-- Admin panels: `AdminDWARevenueDashboard`, `AdminSimulationSuite`, `AdminGhostDelayManager`, `AdminGlobalOutbox`
-- All 4 wired into `/admin` DWA tab with ghost delay badge
-
-### Phase 4 Revenue Automations Active
-- Aged lead downsell fires daily — $15 cold leads blasted to all active contractors
-- Territory lock upsell SMS fires on 3rd PPL lead purchase within 7 days
-- Frictionless checkout on all TechAlert conversion emails/SMS
-
-### April 22nd — DJ Conley / Pat Michels Presentation (READY)
-- **Demo page**: `/demo-djconley-2` (`src/pages/DJConleyDemo2.tsx`) — standalone, no login required
-- **Website mock**: `/demo-djconley-1` (`src/pages/DJConleyDemo1.tsx`) — has pulsing emergency button
-- **Demo flow**: `/demo-djconley-1` (website) → `/demo-djconley-2` (platform) → `/field-service/tech?demo=1` (mobile app)
-- **Competitor being replaced**: eWay-CRM ($300-400/mo Outlook plugin), not FieldServio
-- **Price**: FieldDesk $199/mo, saves $14,412 vs FieldServio if they drop it too
-
-### Demo Mode — FieldDesk
-- All field service demo data is hardcoded in components, no DB needed
-- `clientId === "demo"` bypasses all Supabase queries in DispatchBoard, TechMap
-- `?demo=1` URL param auto-logs in as "Mike Johnson" in FieldServiceTechApp
-- `/field-service/dispatch?demo=1` — dispatcher view with 7 realistic boiler jobs + 4 Metro Detroit tech pins
-
-### SiteRadar vs RB2B — Two Separate Systems
-- **RB2B** (rb2b.com): Third-party tracker on `detroitwebagent.com`. Matt's DWA tracker.
-- **M² SiteRadar** (`visitor-identify` edge function): ipinfo.io → `crm_visitor_events` → Admin DWA. What we SELL ($49/mo).
-
-### Products Killed (removed from routes + AllServices)
-- AI Blog Post Writing, AI Press Release Engine, AI Social Caption Pack, AI Proposal Generator, AI Sales Script Generator, AI Review Response, AI Bedtime Stories, AI Children's Stories, AI Sermon Prep, AI Obituary Service
-
-### TechAlert — FULLY AUTONOMOUS ✅
-- Self-serve checkout at `/hire-alert` → Stripe → webhook → DB insert → welcome email → daily scanner → alerts.
-- `hire-alert-scanner-daily` cron fixed via `20260411130000_fix_hire_alert_scanner_cron.sql`
-- Frictionless checkout URLs on all trial conversion emails/SMS
-
-### Remote Control — UPGRADED ✅
-- `supabase/functions/remote-control/index.ts` — 12 commands
-- Trigger: `POST /functions/v1/remote-control` with `Authorization: Bearer <REMOTE_CONTROL_SECRET>` and `{ "command": "oracle", "source": "phone" }`
-
-### Missed-Call Catch — LIVE ✅
-- Product page: `/missed-call-catch` (`src/pages/MissedCallCatch.tsx`)
-- Self-serve checkout → $99/mo subscription → webhook → `missed_call_clients` insert + welcome SMS
-- Edge function: `create-missed-call-checkout`, webhook type: `missed_call_subscription`
-- Twilio StatusCallback: `missed-call-textback` (already deployed) handles the actual text-back
-
-### Missed Lead FOMO Engine — LIVE ✅
-- `contractor_lead_views` table — logs every time a contractor tries to buy a lead that's already sold/locked
-- `contractor-fomo-mailer` — daily 3pm ET cron, emails contractors who missed 3+ leads in 7 days
-- Upgrade URL with `?prefilled_email=` for one-tap territory lock signup
-
-### Next Priority Items (in order)
-1. ~~**Merge to main**~~ ✅ Done
-2. ~~**TechAlert self-serve**~~ ✅ Done — fully autonomous
-3. ~~**Phase 4 Admin Command Center**~~ ✅ Done
-4. ~~**Tom.agent.md update**~~ ✅ Done (Jobber, Restaurant SMS, License Monitor all added)
-5. **Contractor leads — get first client** — Tom outreach drafts ready (see Tom agent). Hand 3-5 free leads → convert to $50/lead PPL → $399/mo territory lock
-6. **TechAlert first client** — Template C outreach ready via Tom
+1. Merge `claude/review-design-system-qRGjL` → main
+2. Add the 3 secrets above to Lovable
+3. Give Lovable the marketplace plan to build Sessions 1 + 2
 
 ---
 
 ## Commands
 
 ```bash
-npm run dev          # start Vite dev server
-npm run build        # production build (includes prerender-routes.js)
+npm run dev          # start Vite dev server (port 8080)
+npm run build        # production build
 npm run lint         # ESLint
 npm run test         # Vitest (single run)
-npm run test:watch   # Vitest in watch mode
+npm run test:watch   # Vitest watch mode
 npm run db:push      # push local migrations to Supabase
 npm run db:diff      # diff local schema vs remote
 npm run db:reset     # reset local DB to clean state
 ```
 
-Run a single test file: `npx vitest run src/path/to/file.test.ts`
-
-Tests live in `src/**/*.{test,spec}.{ts,tsx}`, use Vitest + jsdom + `@testing-library/react`. Setup file: `src/test/setup.ts`.
-
-## Code Architecture
-
-The repo serves two distinct purposes in one codebase:
-
-1. **Fitness Training App** — the core consumer product. React SPA with auth (`useAuth`), subscription gating (`SubscriptionGuard`), workout tracking, AI coaching, nutrition, progress.
-2. **B2B Revenue Machine** — ~100+ marketing/SaaS landing pages under `src/pages/` (AI*, Contractor*, Social*, Web*, etc.) each paired with Supabase Edge Functions and Stripe checkout flows.
-
-### Frontend Patterns
-- All pages are lazy-loaded via `lazyRetry()` (in `App.tsx`) — a retry wrapper around `React.lazy` for chunk-load resilience.
-- Path alias `@` → `src/`. Import as `import { supabase } from "@/integrations/supabase/client"`.
-- Supabase client: `src/integrations/supabase/client.ts`. TypeScript types auto-generated at `src/integrations/supabase/types.ts` — do not edit types.ts manually.
-- Auth state: `useAuth` hook (`src/hooks/useAuth.tsx`). Admin check: `useIsAdmin`.
-- React Query is used for all data fetching with a persisted cache (survives page refresh).
-
-### Edge Function Patterns
-- Every function lives at `supabase/functions/<name>/index.ts` and runs on Deno.
-- Each product's checkout function is named `create-<product>-checkout/index.ts`.
-- Stripe webhooks are routed by `metadata.type` — always set this on checkout sessions.
-- Service key (not anon key) is used inside edge functions for DB writes.
-
-### Migrations
-- Files: `supabase/migrations/YYYYMMDDHHMMSS_description.sql`
-- All new tables must have `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` + a `service_role` bypass policy.
-- **No manual SQL** — GitHub Actions runs `supabase db push` on every merge to main.
+Single test: `npx vitest run src/path/to/file.test.ts`
 
 ---
 
-# M² Performance Training — Claude Code Context
+## Owner & Brand
+
+**Matt Michels** — Grosse Pointe, MI | matt@mattmichelstraining.com | (313) 806-4952 (personal)
+**Goal**: $10k+/mo fully automated income. Matt's only job: return calls, texts, emails.
+
+### Phone Numbers — CRITICAL
+- **DWA Work**: (313) 992-1219 / `+13139921219` — A2P Twilio registered. Use in ALL customer-facing content.
+- **Matt personal**: (313) 806-4952 / `+13138064952` — `ADMIN_PHONE` env var (internal alerts to Matt) ONLY. Never customer-facing.
+
+### Brands
+- **M² Performance Training** — fitness SaaS. Orange `#e8621a` / dark slate `#1e293b`. Domain: mattmichelstraining.com
+- **Detroit Web Agency** — B2B automation. Teal `#00d4ff` / near-black `#0a1628`. Domain: detroitwebagent.com. Email: `matt@detroitwebagent.com`
+
+### Email Routing
+- DWA products → `dwaEmail()` + `matt@detroitwebagent.com`
+- M2/all others → `m2Email()` + `matt@mattmichelstraining.com`
+
+---
+
+## Stack
+
+- **Frontend**: React 18 + TypeScript + Vite + Tailwind CSS + shadcn/ui
+- **Backend**: Supabase Edge Functions (Deno/TypeScript) at `supabase/functions/`
+- **Database**: Supabase Postgres (RLS on all tables)
+- **Payments**: Stripe (inline `price_data` only, no pre-created prices)
+- **Email**: Resend API
+- **AI**: Claude Haiku (`claude-haiku-4-5` / `claude-haiku-4-5-20251001`) via Anthropic API
+- **Repo**: `mamoo85/m2training` (GitHub)
+- **Primary Supabase**: Lovable-managed (URL starts with `eauvubfpanpeuxsrqesu`)
+- **Secondary Supabase**: `zmyczlfuufhngzovkjdh` — GitHub Actions only. Do NOT apply migrations here via MCP.
+
+---
+
+## Codebase Scale
+
+- **311** frontend pages in `src/pages/`
+- **598** Supabase Edge Functions in `supabase/functions/`
+- **461** migration files
+- **31** AI agents in `.claude/agents/`
+- **67+** product lines across 5 waves + DWA suite
+
+New product checklist: 1 migration, 1–2 edge functions, 1 page, add to `AdminOpsCenter` + `AdminClientHealth`.
+
+---
+
+## Code Architecture
+
+Two purposes in one codebase:
+1. **Fitness Training App** — React SPA with auth, subscription gating, workout tracking, AI coaching.
+2. **B2B Revenue Machine** — 100+ landing pages, each with edge functions + Stripe checkouts.
+
+### Frontend Patterns
+- All pages lazy-loaded via `lazyRetry()` — never use plain `React.lazy()` directly (`src/lib/lazyRetry.ts`)
+- Path alias `@` → `src/`
+- Supabase client: `src/integrations/supabase/client.ts`. Types: `src/integrations/supabase/types.ts` — do not edit manually.
+- Auth: `useAuth` hook. Admin check: `useIsAdmin`.
+- Data fetching: TanStack Query v5 with localStorage persistence.
+
+### Provider Stack (`src/App.tsx`)
+`PersistQueryClientProvider` → `SplashScreen` → `AuthProvider` → `TimerProvider` → `OfflineSyncProvider` → `TooltipProvider`
+
+### Route Guards
+- `ProtectedRoute` — requires auth
+- `SubscriptionGuard` — requires active subscription
+- `BlurGate` — blurs content without subscription
+- `AgencyAdminRoute` — requires admin; wraps `/admin` and `/dwa-admin`
+
+### Build
+- Dev port: `8080`. Target: `es2020` + `safari14`
+- PWA: `vite-plugin-pwa` + workbox
+- Required env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+
+---
+
+## Edge Function Conventions
+
+- Every function: `supabase/functions/<name>/index.ts`, Deno runtime
+- Shared utilities: `_shared/ai.ts` (generateText, generateJSON), `_shared/twilio.ts` (sendSMS + TCPA), `_shared/email-templates/`
+- Checkout functions named `create-<product>-checkout/index.ts`
+- Stripe: always inline `price_data`, always set `metadata.type` for webhook routing
+- **SMS**: ALWAYS `import { sendSMS } from "../_shared/twilio.ts"` — never define a local sendSMS. The shared version checks `sms_opt_outs` (TCPA).
+- AI calls: Claude Haiku only, `max_tokens` 800–1200
+- Read env vars at module scope (top-level), not inside handlers
+- Parallelize independent async ops with `Promise.all()`
+
+---
+
+## Migrations
+
+- Files: `supabase/migrations/YYYYMMDDHHMMSS_description.sql`
+- All new tables: `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` + `service_role` bypass policy
+- **No manual SQL** — GitHub Actions runs `supabase db push` on every merge to main
+- pg_cron: use `vault.decrypted_secrets` pattern for URLs — `current_setting('app.supabase_url')` returns NULL in cron context
+
+---
+
+## Deployment
+
+- Claude commits to dev branch → Matt merges to main → Lovable auto-deploys
+- GitHub Actions deploys to secondary project `zmyczlfuufhngzovkjdh` (contractor-lead-notify + missed-call-handler only)
+- Secondary project is at free-tier function limit (~25) — don't add new functions there via MCP
+
+---
+
+## Secrets (all in Lovable Cloud)
+
+| Group | Keys |
+|---|---|
+| Core | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `ANTHROPIC_API_KEY`, `LOVABLE_API_KEY` |
+| Google | `GOOGLE_MAPS_API_KEY`, `GOOGLE_PAGESPEED_API_KEY`, `GOOGLE_SERVICE_ACCOUNT_KEY`, `GOOGLE_PRIVATE_KEY_B64`, `GOOGLE_CALENDAR_ID` |
+| Twilio | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`, `TWILIO_API_KEY` |
+| Social | `META_ACCESS_TOKEN`, `META_APP_ID`, `META_APP_SECRET`, `META_PAGE_ID`, `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` |
+| Data | `FIRECRAWL_API_KEY`, `DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD`, `HIBP_API_KEY`, `SAM_GOV_API_KEY`, `NOAA_API_KEY` |
+| Automation | `N8N_MCP_URL`, `N8N_ACCESS_TOKEN` |
+| Pending | `LOB_API_KEY`, `BROWSERLESS_API_KEY`, `APOLLO_API_KEY` |
+
+Twilio webhook (voice/missed call): `https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/missed-call-handler`
+
+---
+
+## Key Products Reference
+
+> Full details in `knowledge/M2_Product_Catalog.md`. Below is the lookup table for code navigation.
+
+### Detroit Web Agency (primary revenue focus)
+| Product | Price | Tables | Webhook type |
+|---|---|---|---|
+| FieldDesk | $199/mo | `field_crm_clients`, `field_service_jobs`, `tech_locations` | `field_service_subscription` |
+| TechAlert | $149/mo standalone · $79/mo bundle · $99/mo founders | `hire_alert_clients`, `hire_alert_candidates`, `hire_alert_runs` | `hire_alert_subscription` |
+| SiteRadar | $49/mo | `field_crm_clients` (visitor_script_key), `crm_visitor_events` | — |
+| Contractor Leads | $399/mo | `contractor_lead_sites`, `contractor_clients`, `contractor_leads` | `contractor_lead_subscription` |
+| Dead Lead Reactivation | $50/reply | `dead_lead_campaigns`, `dead_lead_contacts`, `dead_lead_charges` | `dead_lead_billing_setup` |
+| Missed-Call Catch | $99/mo | `missed_call_clients` | `missed_call_subscription` |
+| Mortgage Radar | $149/mo | `mortgage_radar_clients`, `mortgage_radar_leads` | `mortgage_radar_subscription` |
+| Golden Ticket Marketplace | $39–59/lead | `marketplace_prospects`, `marketplace_lead_locks`, `lo_outreach_campaigns` | `marketplace_lead_purchase` |
+
+### Wave product migrations (search by migration date for full schema)
+- Wave 1 (10 SMS/monitoring products): `20260403000000_ten_new_products.sql`
+- Wave 2 (10 products): `20260403xxxxxx`
+- Wave 3 (30 products): `20260404000000_thirty_new_products.sql`
+- Wave 4 (8 products): `20260405080000_seven_new_products.sql`
+- Wave 5 high-ticket: `20260405140000` + `20260405140001`
+
+---
+
+## Agents (31 total — `.claude/agents/`)
+
+**Autonomous loop agents** (paired edge functions running 24/7): `tom-autonomous`, `oz-autonomous`, `scarlett-autonomous`, `selma-autonomous`, `ops-autonomous`
+
+**Core**: Tom (lead hunter), Oracle (account watchdog), Ops (fulfillment)
+
+**Specialized**: Aff, Cashier, Comply, Critic, Drill, Guard, Hype, Invest, Launch, Luna, Mirror, Mute, Nova, Pulse, Red, Ref, Rev, Scout, Shield, Solo, Trim, Upsell, Vera, Zero
+
+> "Create an agent" = create `.md` file at `.claude/agents/[name].md`
+
+---
 
 ## Knowledge Base
-All internal reference documents live in `knowledge/` at the repo root.
-At the start of any session referencing agents, products, or admin tools, pull the latest:
+
 ```bash
 git fetch origin main && git checkout origin/main -- knowledge/
 ```
 
-- `knowledge/M2_Agent_Roster.md` — All 31 agents, status, schedules, improvement roadmap
-- `knowledge/M2_Admin_Controls_Guide.md` — Every admin tool with step-by-step guides and enhancements
-- `knowledge/M2_Product_Catalog.md` — All 36 products, pricing, margins, edge functions, flows
-- `knowledge/M2_Ad_Strategy_Action_Plan.md` — Paid ads roadmap and campaign blueprints
-- `knowledge/M2_Project_Hierarchy.mmd` — System architecture diagram (Mermaid)
-- `knowledge/M2_Project_Hierarchy_Clean.mmd` — Cleaned system architecture diagram (Mermaid)
-- `knowledge/TechAlert_Value_Proposition.md` — TechAlert pitch angles, objection handling, ROI math, market gap analysis, legal status
+- `knowledge/M2_Agent_Roster.md` — all 31 agents, status, schedules
+- `knowledge/M2_Admin_Controls_Guide.md` — every admin tool
+- `knowledge/M2_Product_Catalog.md` — all products, pricing, margins, flows
+- `knowledge/M2_Ad_Strategy_Action_Plan.md` — paid ads roadmap
+- `knowledge/TechAlert_Value_Proposition.md` — TechAlert pitch, objections, ROI math
 
-## Owner
-**Matt Michels** — Grosse Pointe, MI | matt@mattmichelstraining.com | (313) 806-4952 (personal)
-Family: wife + young son. Local guy. 10+ years B2B field sales background.
-
-## Phone Numbers — IMPORTANT
-- **DWA Work number**: (313) 992-1219 / `+13139921219` — Twilio A2P registered. Use in ALL customer-facing content: email signatures, SMS bodies shown to contractors/homeowners, product pages, website copy.
-- **Matt personal**: (313) 806-4952 / `+13138064952` — internal use only. Configured as `ADMIN_PHONE` env var (internal alerts TO Matt). Also used as `MATT_CELL` in `ai-reply-detector` for AT&T call-forwarding detection. NEVER show this in customer-facing content.
-
-## The Goal
-$10k+/mo fully automated income. Matt's only job: return calls, texts, and emails. Everything else runs itself.
-
-## Stack
-- **Frontend**: React 18 + TypeScript + Vite + Tailwind CSS + shadcn/ui
-- **Backend**: Supabase Edge Functions (Deno/TypeScript) at `supabase/functions/`
-- **Database**: Supabase Postgres (RLS enforced on all tables)
-- **Payments**: Stripe (inline `price_data`, no pre-created prices)
-- **Email**: Resend API (from: `matt@mattmichelstraining.com`)
-- **AI**: Claude Haiku (`claude-haiku-4-5` / `claude-haiku-4-5-20251001`) via Anthropic API
-- **Domain**: mattmichelstraining.com
-- **Repo**: `mamoo85/m2training` (GitHub)
-- **Supabase Project**: Managed by Lovable (primary — starts with 'e'). Secondary ref `zmyczlfuufhngzovkjdh` exists for GitHub Actions but migrations deploy automatically via Lovable on merge to main. Do NOT apply migrations manually via MCP to the secondary project.
-- **Dev branch**: `claude/add-claude-documentation-3yz9v` (current) — previous branches archived in session state below
-
-## Brand
-- Primary orange: `#e8621a`
-- Dark slate: `#1e293b`
-- Photos live at `/public/images/` (matt-boat.jpg, matt-family-cornfield.jpg, matt-family-summer.jpg)
-- Email signature: `matt-boat.jpg` (48px circle)
-
-## Revenue Streams — All Automated
-
-### 1. Contractor Lead Gen
-- **What**: Exclusive leads for local contractors (roofing, HVAC, plumbing, electrical)
-- **Price**: $399/mo
-- **Files**: `src/pages/ContractorLeads.tsx`, `supabase/functions/contractor-lead-notify/index.ts`
-- **Tables**: `contractor_lead_sites`, `contractor_clients`, `contractor_leads`
-- **Cron**: Every 15 min (lead notify), Daily 11am ET (prospecting)
-
-### 2. B2B Dental Database
-- **What**: Michigan dental office contacts ($49/mo access)
-- **Files**: `src/pages/B2BLeads.tsx`, `supabase/functions/b2b-dental-scraper/index.ts`
-- **Tables**: `b2b_contacts`, `b2b_subscribers`
-- **Cron**: Daily 6am ET
-
-### 3. GBP SaaS (Google Business Profile Automation)
-- **What**: AI posts 3x/week to Google Business Profile
-- **Price**: $49/mo basic, $99/mo pro
-- **Files**: `src/pages/LocalMarketing.tsx`, `supabase/functions/gbp-saas-poster/index.ts`
-- **Tables**: `gbp_saas_clients`
-- **Cron**: Mon/Wed/Fri 10am ET
-
-### 4. Field Rep Weekly Newsletter
-- **What**: Weekly B2B sales tips for field reps + 7 rotating affiliate tool spotlights
-- **Files**: `src/pages/NewsletterPage.tsx`, `supabase/functions/newsletter-send/index.ts`
-- **Tables**: `newsletter_subscribers`, `newsletter_sends`
-- **Cron**: Monday 8am ET
-- **Affiliates** (sign up at each): Writesonic (30% recurring), ElevenLabs (22%), Surfer SEO (125% CPA), Synthesia (25%), Apollo.io, Hunter.io, LinkedIn Sales Navigator
-
-### 5. Field Rep AI Tools SaaS
-- **What**: $29/mo access to 4 Claude-powered tools
-- **Price**: $29/mo
-- **Files**: `src/pages/FieldRepTools.tsx`, `supabase/functions/field-rep-ai-tool/index.ts`, `supabase/functions/create-field-rep-checkout/index.ts`
-- **Tables**: `b2b_subscribers` (niche = 'field_rep_tools')
-- **stripe-webhook**: `meta.type === "field_rep_subscription"`
-
-### 6. Social Media AI Service
-- **What**: AI-generated posts 3x/week to Facebook, Instagram, LinkedIn
-- **Price**: $199/mo standard, $299/mo pro, $149/mo trainer (fitness coaches)
-- **Files**: `src/pages/SocialMediaAI.tsx`, `src/pages/TrainerSocialAI.tsx`, `supabase/functions/social-media-poster/index.ts`, `supabase/functions/create-social-media-checkout/index.ts`
-- **Tables**: `social_media_clients`
-- **stripe-webhook**: `meta.type === "social_media_subscription"`
-- **TODO**: Need META_ACCESS_TOKEN and LINKEDIN_ACCESS_TOKEN in Supabase secrets
-
-### 7. Web Design Services
-- **Price**: $499 standard, $1,499 professional, $3,499 business + $49-199/mo retainer
-- **Files**: `src/pages/WebDesignServices.tsx`, `src/pages/ManufacturingWebDesign.tsx`, `src/pages/RealEstateWebDesign.tsx`
-- **Prospecting**: `supabase/functions/prospect-local-businesses/index.ts` (daily, 16 industries)
-- **Drip**: `supabase/functions/web-design-drip/index.ts`
-
-### 8–17. SMS & Monitoring Products (10 products)
-- **Review Monitor** ($25/mo) — `review_monitor_clients`, `supabase/functions/review-monitor/`
-- **Weekly SMS Blast** ($19/mo) — `sms_blast_clients`, `supabase/functions/weekly-sms-sender/`
-- **No-Show Re-Booker** ($25/mo) — `noshow_clients`, `supabase/functions/noshow-trigger/`, `noshow-followup/`
-- **Estimate Follow-Up Drip** ($39/mo) — `estimate_drip_clients`, `supabase/functions/estimate-drip-runner/`
-- **Invoice Chaser** ($29/mo) — `invoice_chaser_clients`, `supabase/functions/invoice-chaser-runner/`
-- **After-Job Drip** ($29/mo) — `afterjob_drip_clients`, `supabase/functions/afterjob-drip-runner/`
-- **Seasonal Promo Blaster** ($29/mo) — `promo_blaster_clients`
-- **Referral Program** ($39/mo) — `referral_program_clients`, `referrals`
-- **Slow Day SMS** ($25/mo) — `slow_day_clients`, `supabase/functions/slow-day-trigger/`
-- **New Homeowner Campaign** ($59/mo) — `homeowner_campaign_clients`
-- **Migration**: `supabase/migrations/20260403000000_ten_new_products.sql`
-- **Crons**: `supabase/migrations/20260403010000_new_product_crons.sql`
-
-### Wave 2 Products (April 2026 — migrations 20260403xxxxxx)
-- **Pet Memorial Service** — `pet_memorial_clients`
-- **Dark Web Monitor** — `dark_web_monitor_clients`
-- **Gov Contract Monitor** — `gov_contract_monitor_clients`
-- **Podcast Revenue Machine** — `podcast_revenue_clients`
-- **Regulatory Monitor** — `regulatory_monitor_clients`
-- **Competitor Pricing** — `competitor_pricing_clients`
-- **Real Estate Newsletter** — `real_estate_newsletter_clients`
-- **Trademark Watch** — `trademark_watch_clients`
-- **Employee Credential Audit** — `employee_credential_audit_clients`
-- **New Hire Breach Screen** — `new_hire_breach_clients`
-
-### Wave 3 Products (30 products — `20260404000000_thirty_new_products.sql`)
-Each product has a dedicated `*_clients` table with RLS + service_role policy.
-
-Products: Commercial Lease Abstractor, Patent Watch Intelligence, PE/Investor Sector Intelligence, Franchise Disclosure Analyzer, Regulatory Change Monitor, Nonprofit Grant Discovery, Government RFP Alert, AI Obituary Service, Competitor Price Intelligence, AI LinkedIn Ghostwriter, HOA Board Secretary AI, Local Gov Meeting Tracker, Agricultural Price Alert, Podcast Production Automation, Luxury Real Estate Intelligence, Trade Show Follow-Up, Corporate R&D Paper Intelligence, Insurance Agent Lead Drip, Credit Dispute Letter Factory, Airbnb/STR Reputation Manager, Restaurant Menu Engineering, AI Sermon Prep, Personal Trainer Progress Reports, Medical Bill Dispute Letters, HOA Violation Letter Generator, Multi-Location Citation Monitor, Supplement Stack Analyzer, Trade Association Intelligence, Children's Story Subscription, Landlord-Tenant Correspondence AI.
-
-**SMS Compliance Table**: `sms_opt_outs` (E.164 phone, `opted_out_at`, `source`) + `compliance_blocks` audit log — ALWAYS query before any Twilio send.
-
-### Wave 4 Products (April 2026 — `20260405080000_seven_new_products.sql`)
-- **Storm Damage Lead Blaster** ($29/mo) — `storm_lead_clients`, `storm_alerts_sent`, `supabase/functions/storm-lead-blaster/`, route: `/storm-leads`
-- **Recall Alert Service** ($19/mo) — `recall_alert_clients`, `supabase/functions/recall-alert-checker/`, route: `/recall-alerts`
-- **Permit Watch** ($29/mo) — `permit_watch_clients`, `supabase/functions/permit-watch-scanner/`, route: `/permit-watch`
-- **Website Speed Audit** ($29/mo) — `speed_audit_clients`, `supabase/functions/website-speed-audit/`, route: `/website-speed-audit`
-- **AI Bedtime Stories** ($4.99/mo) — `bedtime_story_clients`, `supabase/functions/bedtime-story-sender/`, route: `/bedtime-stories`
-- **Neighborhood Crime Digest** ($19/mo) — `crime_digest_clients`, `supabase/functions/crime-digest-sender/`, route: `/crime-digest`
-- **Business License Monitor** ($25/mo) — `license_monitor_clients`, `license_monitor_items`, `supabase/functions/license-expiry-checker/`, route: `/license-monitor`
-- **Local Tech Support** ($49 session / $29/mo) — `tech_support_tickets`, route: `/tech-support`
-
-### Wave 5 High-Ticket Products (April 2026 — `20260405140000` + `20260405140001`)
-- **Regulatory Filing Monitor** ($497/mo) — `reg_filing_clients`, `reg_filing_items`, `reg_filing_drafts`, `reg_filing_deadlines`, `supabase/functions/reg-filing-scan/`, `reg-filing-approve/`, `create-reg-filing-checkout/`, route: `/regulatory-filing-monitor`
-- **Bid Intelligence & Proposal Factory** ($599/mo) — `bid_intel_clients`, `bid_intel_opportunities`, `bid_intel_proposals`, `supabase/functions/bid-intel-scan/`, `bid-intel-approve/`, `create-bid-intel-checkout/`, route: `/bid-intelligence`
-- **Morning Digest** — `supabase/functions/morning-digest/` (daily 6:30am ET consolidated approval email to Matt)
-- **Crons**: `20260405140002_new_product_crons.sql` — reg-filing-scan 6am ET, deadline check 8am ET, bid-intel-scan 7am ET, morning-digest 6:30am ET
-
-### Detroit Web Agency Products (April 2026 — `20260410300000_hire_alert_tables.sql`)
-
-**Brand**: Detroit Web Agency — "We Handle The Tech." Dark teal (`#00d4ff`) on near-black (`#0a1628`). Domain: detroitwebagent.com
-
-**Named Product Suite (3 products + add-ons):**
-
-- **FieldDesk** ($199/mo standalone → $159/mo with website) — Field service CRM replacing eWay CRM ($27-40/user/mo). Dispatch board, GPS tech map, mobile tech app (PIN login, job status, photo upload), auto-SMS on status changes. Target: HVAC/plumbing/boiler/electrical companies 3-15 techs.
-  - Tables: `field_crm_clients`, `field_service_jobs`, `tech_locations`, etc.
-  - Route: `/field-service`, `/field-service/dispatch`, `/field-service/tech`
-  - Stripe webhook: `field_service_subscription`
-  - Key pitch: "eWay is an Outlook plugin. FieldDesk works in a boiler room."
-
-- **SiteRadar** ($49/mo standalone → $39/mo with website) — Visitor intelligence. Identifies businesses visiting client website by IP reverse lookup. Company name + page visited appears in real-time feed.
-  - Tables: `field_crm_clients` (visitor_script_key), `crm_visitor_events`
-  - Admin: `VisitorIntelFeed.tsx`, `AdminFieldCRMClients.tsx` (snippet generator)
-
-- **TechAlert** ($99/mo standalone → $49/mo bundle) — Hiring monitor. Daily cron scans Michigan MIOSHA public license DB + Apollo people search + job boards for available licensed tradespeople. Scores candidates 1-10 via Claude Haiku. Score 7+ = immediate SMS+email alert to matching clients. Score 5-6 = daily digest. Below 5 = stored only.
-  - Tables: `hire_alert_clients` (target_roles text[]), `hire_alert_candidates`, `hire_alert_runs`
-  - Functions: `supabase/functions/hire-alert-scanner/index.ts` (cron 7am ET), `supabase/functions/create-hire-alert-checkout/index.ts`
-  - Route: `/hire-alert`
-  - Stripe webhook: `hire_alert_subscription` (wired — self-serve checkout LIVE at `/hire-alert`)
-  - Migration: `supabase/migrations/20260410300000_hire_alert_tables.sql`
-  - Founder daily report: emails matt@mattmichelstraining.com each morning with dark navy/teal premium HTML email — KPI dashboard (scanned/new/hot/alerted), source breakdown, full candidate table
-  - Client alert emails: score-colored candidate cards, clickable contact links, urgency bar when hot candidates found
-  - Welcome email: premium HTML with three source cards (MIOSHA/Apollo/Job Boards) and tiered alert explainer
-  - Secret weapon: Michigan MIOSHA publishes every licensed boiler operator. New license issued = new talent entering market. No other recruiting tool monitors this.
-
-**DWA Add-Ons (20% off for website clients):**
-- Seasonal Promo Blaster: $29/mo → $23/mo bundled *(replaced GBP AI Posts in add-on list — GBP AI Posts still runs, folded into $99/mo management retainer silently)*
-- Review Monitor: $25/mo → $20/mo
-- After-Job Drip: $29/mo → $23/mo
-- No-Show Re-Booker: $25/mo → $20/mo
-- Estimate Follow-Up: $39/mo → $31/mo
-- Weekly SMS Blast: $19/mo → $15/mo
-
-**DWA Admin Tab** (`/admin` → "Detroit Web Agency" tab):
-- `AdminDWAOverview.tsx` — stats, $0 test checkout buttons, scanner invoke, quick links
-- `AdminHireAlertClients.tsx` — TechAlert client management + scanner run history + candidate table
-- `AdminFieldCRMClients.tsx` — FieldDesk clients + snippet generator
-- Plus: SiteRadar feed, Dispatch Map, Review Engine, Web Design CRM, Prospector, Demo Links, Scouting
-
-**Key marketing brief**: `knowledge/field-service-brief.md` — cold email angles, bundle math, eWay replacement talking points, MIOSHA hook, Pat demo sequence
-
-## Codebase Scale
-- **311** frontend pages in `src/pages/`
-- **598** Supabase Edge Functions in `supabase/functions/`
-- **461** migration files (all dated 2026)
-- **31** AI agents in `.claude/agents/`
-- **67+** product lines across 5 waves + DWA suite
-- **338** routes in `src/App.tsx`
-
-This is a large codebase. Navigate by product name patterns in this document — don't scan all files. New product checklist: 1 migration, 1–2 edge functions, 1 page, 1 admin CRM entry (AdminOpsCenter + AdminClientHealth).
-
-## Frontend Architecture
-
-### Page Loading
-All pages use `lazyRetry()` — a custom wrapper around `React.lazy()` that retries failed chunk loads 3 times. Never use plain `React.lazy()` directly.
-- **Location**: `src/lib/lazyRetry.ts`
-- **Import**: `import { lazyRetry } from "@/lib/lazyRetry"`
-
-### Provider Stack (outermost → innermost, `src/App.tsx`)
-`PersistQueryClientProvider` → `SplashScreen` → `AuthProvider` → `TimerProvider` → `OfflineSyncProvider` → `TooltipProvider`
-
-### Route Guards
-- `ProtectedRoute` — requires authentication
-- `SubscriptionGuard` — requires active subscription
-- `BlurGate` — blurs content without subscription
-- `AgencyAdminRoute` — requires admin role; wraps `/admin` and `/dwa-admin`
-
-### Component Directories (`src/components/`)
-`admin/`, `agency/`, `auth/`, `billing/`, `checkout/`, `dashboard/`, `dwa-admin/`, `exercise/`, `features/`, `field-service/`, `gamification/`, `generator/`, `landing/`, `layout/`, `marketing/`, `nutrition/`, `pricing/`, `profile/`, `programs/`, `progress/`, `sessions/`, `shared/`, `store/`, `teams/`, `ui/`, `workout/`, `zone/`
-
-**Standalone components** (root of `src/components/`): `DemoModeBadge.tsx`, `RevenueRecoveredLedger.tsx`, `WaitlistGate.tsx`
-
-### Utilities (`src/lib/`)
-`addons.ts`, `admin-guides.ts`, `browserStorage.ts`, `fbpixel.ts`, `fulfillment-guides.ts`, `gtag.ts`, `jwtErrors.ts`, `lazyRetry.ts`, `queryClient.ts`, `siteTemplates.ts`, `utils.ts`
-
-### Hooks (`src/hooks/`)
-`use-mobile.tsx`, `use-toast.ts`, `useAgencyRole.tsx`, `useAiStream.tsx`, `useAuth.tsx`, `useBrowserNotifications.tsx`, `useExerciseCount.tsx`, `useFamilyUserIds.tsx`, `useGeoState.tsx`, `useInView.tsx`, `useIsAdmin.tsx`, `useOfflineSync.tsx`, `usePoints.tsx`, `useReferral.tsx`, `useScrollReveal.ts`, `useSiteContent.tsx`, `useTierAccess.tsx`, `useTimer.tsx`, `useTrialStatus.tsx`, `useWorkoutSave.tsx`
-
-### Data Fetching
-TanStack Query v5 with localStorage persistence via `PersistQueryClientProvider`.
-
-### Build
-- Dev server: port `8080`
-- Build target: `es2020` + `safari14`
-- Code splitting: vendor chunks for react, supabase, query, ui, motion, charts
-- PWA: `vite-plugin-pwa` + workbox
-- Required env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
-
-## Edge Function Conventions
-- 598 functions in `supabase/functions/[name]/index.ts` — navigate by product name
-- Shared utilities: `supabase/functions/_shared/ai.ts` (generateText, generateJSON), `_shared/twilio.ts` (sendSMS with TCPA), `_shared/email-templates/`, `_shared/transactional-email-templates/`
-- Autonomous scheduled functions: `tom-autonomous`, `oz-autonomous`, `scarlett-autonomous`, `selma-autonomous`, `ops-autonomous`
-- AI calls: Claude Haiku only (`claude-haiku-4-5`), `max_tokens` 800–1200
-- Stripe: always inline `price_data`, always set `metadata.type` for webhook routing
-- SMS: query `sms_opt_outs` (by E.164 phone) before every Twilio send — TCPA compliance
-- New functions inherit secrets automatically via GitHub Actions on next merge to main
-
-## Deployment
-- **Primary**: Lovable Cloud — runs edge functions, hosts frontend, all secrets configured there
-- **Secondary**: Supabase project `zmyczlfuufhngzovkjdh` — deployed via GitHub Actions on merge to main. Only relevant if using this project directly.
-- Claude commits to dev branch → Matt merges to main → Lovable auto-deploys frontend + edge functions
-- GitHub Actions (`.github/workflows/deploy-supabase.yml`) deploys to the secondary project:
-  - Deploys `missed-call-handler` (with `continue-on-error: true` — function doesn't exist on secondary, silently skipped)
-  - Deploys `contractor-lead-notify` — the 15-min cron that SMS-notifies contractors of new leads
-  - Syncs all secrets (Twilio, Resend, Stripe, etc.) to the secondary project
-- **Secondary project function limit**: The secondary project is at its Supabase free-tier function limit (~25). Adding new functions via MCP `deploy_edge_function` will fail with "Max number of functions reached." Only update existing functions via GitHub Actions. To add a new function to secondary, remove an unused one first or upgrade the plan.
-
-## Secrets (all configured in Lovable Cloud)
-All secrets below are already set in Lovable Cloud and working. Do NOT add secrets to the secondary Supabase project unless specifically needed there.
-
-### Core
-- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` — payments
-- `RESEND_API_KEY` — all email sends
-- `ANTHROPIC_API_KEY` — AI features (Claude Haiku)
-- `LOVABLE_API_KEY` — used by many edge functions
-
-### Google
-- `GOOGLE_MAPS_API_KEY` — prospecting, GBP
-- `GOOGLE_PAGESPEED_API_KEY` — Website Speed Audit
-- `GOOGLE_SERVICE_ACCOUNT_KEY`, `GOOGLE_PRIVATE_KEY_B64`, `GOOGLE_CALENDAR_ID` — calendar
-
-### SMS (Twilio)
-- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`, `TWILIO_API_KEY`
-- **Approved phone number**: `+13139921219` — A2P 10DLC registered (Low Volume Mixed messaging service), approved April 2026
-- **Twilio webhook URL** (voice/missed call): `https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/missed-call-handler`
-- **Secondary project secrets**: Secrets are synced automatically to `zmyczlfuufhngzovkjdh` via the GitHub Actions workflow on every merge to main — no manual secret management needed. The secondary project handles webhook endpoints (`missed-call-handler`) and the contractor lead cron (`contractor-lead-notify`). All other functions run on the Lovable primary project.
-
-### Social Media
-- `META_ACCESS_TOKEN`, `META_APP_ID`, `META_APP_SECRET`, `META_PAGE_ID` — Facebook/Instagram
-- `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` — LinkedIn
-
-### Data & Monitoring
-- `FIRECRAWL_API_KEY` — web scraping (Grant Finder, Market Intel, etc.)
-- `DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD` — SEO agents
-- `HIBP_API_KEY` — Dark Web Monitor, Breach Screen
-- `SAM_GOV_API_KEY` — Government Contract Monitor
-- `NOAA_API_KEY` — Storm Damage Lead Blaster
-
-### Automation
-- `N8N_MCP_URL`, `N8N_ACCESS_TOKEN` — n8n integrations
-
-## Agents (31 total — in `.claude/agents/`)
-
-### Core (original)
-- **Tom** (`Tom.agent.md`) — lead hunter, web design client acquisition
-- **Oracle** (`Oracle.agent.md`) — account watchdog, queries all product tables for health issues
-- **Ops** (`ops-autonomous.md`) — project fulfillment, web design client onboarding
-- **Builder** (via `builder` skill) — website generation
-
-### Autonomous Loop Agents (paired edge functions)
-- **tom-autonomous** — continuous lead gen pipeline
-- **oz-autonomous** — growth + ops overseer
-- **scarlett-autonomous** — creative marketing & ad strategy
-- **selma-autonomous** — head of marketing & ad strategy
-
-### Specialized Agents
-- **Aff** — affiliate revenue tracker
-- **Cashier** — revenue & payment monitor
-- **Comply** — TCPA/CAN-SPAM/Stripe/Meta/Twilio compliance
-- **Critic** — negative feedback aggregator
-- **Drill** — content pipeline monitor
-- **Guard** — security & access guard
-- **Hype** — social proof & testimonial harvester
-- **Invest** — revenue reinvestment strategist
-- **Launch** — go-to-market orchestrator
-- **Luna** — victory monitor & growth celebrator
-- **Mirror** — retention creative strategist
-- **Mute** — SMS/email opt-out & TCPA compliance monitor
-- **Nova** — new client onboarding orchestrator
-- **Pulse** — SMS product health monitor
-- **Red** — security auditor & stress tester
-- **Ref** — referral program monitor
-- **Rev** — revenue operations
-- **Scout** — competitive intelligence monitor
-- **Shield** — churn prevention monitor
-- **Solo** — direct acquisition optimizer
-- **Trim** — content quality & freshness auditor
-- **Upsell** — cross-sell & upgrade identifier
-- **Vera** — lead qualification filter
-- **Zero** — ad spend auditor & campaign kill switch
-
-> **"Create an agent"** = create a `.md` file at `.claude/agents/[name].md`
-
-## Testing
-- **Admin Sandbox** (`/admin` → Sandbox tab) — $0 test checkout for every product
-- `supabase/functions/create-test-checkout/` — test session creator (Matt's email only)
-- `AdminOpsCenter` — CRM roster covering all 64+ product lines with MRR totals
+---
 
 ## Rules
-- Matt's only manual work: return messages
-- Never build features requiring ongoing manual operation
-- All new tables get RLS enabled + service_role policy
-- Stripe: always inline price_data, always set metadata.type for webhook routing
-- AI calls: Claude Haiku only (`claude-haiku-4-5`), max_tokens 800-1200
-- Always use project ref `zmyczlfuufhngzovkjdh`
-- **"Create an agent"** always means: create a `.md` file at `/home/user/m2training/.claude/agents/[name].md`
-- SMS sends: always query `sms_opt_outs` table (E.164 phone format) before sending — TCPA requires immediate opt-out honoring; failures logged to `compliance_blocks`
 
-## Code Quality Rules (enforced every session)
-- **stripe-webhook**: Always use `sendM2Email()` and `notifyMatt()` helpers — never raw `fetch()` to Resend
-- **stripe-webhook**: Always use `${SUPABASE_URL}/functions/v1/...` for function URLs — never hardcode the project ref in URLs
-- **Edge functions**: Read env vars at top-level (module scope), not inside request handlers
-- **Edge functions**: Parallelize independent async ops with `Promise.all()` — especially email sends
-- **Edge functions**: AI model in `_shared/ai.ts` is `claude-haiku-4-5` (equivalent to `claude-haiku-4-5-20251001`)
-- **Twilio**: ALWAYS use `import { sendSMS } from "../_shared/twilio.ts"` for SMS sends — NEVER define a local sendSMS function. The shared version checks `sms_opt_outs` before every send (TCPA compliance). Signature: `sendSMS(to, from, body, product?)`
-- **No dead code**: Delete unused imports, variables, and functions — don't comment them out
-- **Auto-onboard**: When adding new products, add a welcome email template to `supabase/functions/auto-onboard/index.ts` TEMPLATES dict
-- **Admin dashboards**: When adding new products, add entries to BOTH `AdminOpsCenter.tsx` ALL_SERVICES array AND `AdminClientHealth.tsx` SERVICE_TABLES array
-- **JWT verification**: Most edge functions have `verify_jwt = false` in `supabase/config.toml` — this is intentional for public checkout/webhook endpoints. Internal auth is handled within functions. Exception: `process-email-queue` uses `verify_jwt = true`.
-- **RLS security**: Anonymous insert policies on sensitive tables must be removed — use service_role via edge functions instead. Recent migrations (20260406+) tightened RLS on `contractor_leads`, `training_programs`, and `newsletter_subscribers`.
-- **Supabase URL**: The vite.config.ts fallback URL (`eauvubfpanpeuxsrqesu.supabase.co`) is the Lovable-hosted project. The secondary GitHub Actions project ref is `zmyczlfuufhngzovkjdh`. In edge functions always use `Deno.env.get("SUPABASE_URL")` — never hardcode either URL.
+- All new tables: RLS enabled + service_role bypass policy
+- Stripe: inline `price_data` always; always set `metadata.type`; always `constructEventAsync` (not sync) in webhooks
+- SMS: always use `_shared/twilio.ts` sendSMS — checks `sms_opt_outs` (TCPA)
+- AI: Claude Haiku only (`claude-haiku-4-5`), max_tokens 800–1200
+- stripe-webhook: use `sendM2Email()` and `notifyMatt()` helpers — never raw `fetch()` to Resend
+- stripe-webhook: use `${SUPABASE_URL}/functions/v1/...` for function URLs — never hardcode project ref
+- Auto-onboard: add welcome email template when adding new products
+- Admin dashboards: add to both `AdminOpsCenter.tsx` ALL_SERVICES array AND `AdminClientHealth.tsx` SERVICE_TABLES array
+- No dead code: delete unused imports/vars/functions — don't comment out
+- `verify_jwt = false` in `config.toml` for public checkout/webhook endpoints — intentional
+- Product filter rule: only build products that fail "Can a non-technical person replicate this with free ChatGPT in an hour?" Products that pass = content wrappers. Kill them.
+- OSINT methods are never disclosed to clients — intelligence sources are proprietary
+- Contractor leads: never pitch until ≥5 real leads in `contractor_leads` table
