@@ -4,6 +4,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import LeadQualityBadges, { LeadQualityData } from "@/components/contractor/LeadQualityBadges";
 
@@ -72,14 +73,19 @@ export default function ClaimLead() {
 
       if (data?.error === "lead_claimed") {
         setStatus("claimed");
+        toast.info("This lead was just claimed by another contractor.");
       } else if (data?.error === "locked") {
         setMinutesLeft(data.minutesLeft || 10);
         setStatus("locked");
+        toast.info(`Another contractor is reviewing this lead. Try again in ~${data.minutesLeft || 10} min.`);
       } else if (data?.url) {
         window.location.href = data.url;
+      } else {
+        throw new Error("Unexpected response from server");
       }
     } catch (e) {
       setStatus("error");
+      toast.error("Couldn't open checkout. Text Matt at (313) 992-1219 and we'll fix it instantly.");
     } finally {
       setLoading(false);
       claimLock.current = false;
