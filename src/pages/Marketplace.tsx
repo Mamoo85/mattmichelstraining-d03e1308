@@ -569,6 +569,27 @@ export default function Marketplace() {
       />
 
       <FirstLookUpsellGate product={product} leads={leads as any} />
+
+      <BuyerEmailDialog
+        open={restockOpen}
+        onOpenChange={setRestockOpen}
+        defaultEmail={buyerEmail}
+        title={`Notify me when ${productMeta.label.toLowerCase()} are restocked`}
+        description="We'll email you the moment new leads land in this vertical."
+        onConfirm={async (email) => {
+          localStorage.setItem("mp_buyer_email", email);
+          setBuyerEmail(email);
+          try {
+            await supabase.functions.invoke("marketplace-watch-add", {
+              body: { buyer_email: email, product, action: "restock_notify" },
+            });
+            toast.success("You're on the restock list.");
+          } catch (e) {
+            console.error(e);
+            toast.error("Couldn't save — try again.");
+          }
+        }}
+      />
     </div>
   );
 }
