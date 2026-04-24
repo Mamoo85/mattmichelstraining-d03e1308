@@ -1769,3 +1769,24 @@ verify_jwt = false
 
 [functions.create-marketplace-first-look-checkout]
 verify_jwt = false
+
+[functions.marketplace-lead-gov-enrich]
+verify_jwt = false
+
+[functions.marketplace-hot-zone-notifier]
+verify_jwt = false
+
+[functions.marketplace-score-bump-alert]
+verify_jwt = false
+
+[functions.marketplace-weekly-scorecard]
+verify_jwt = false
+
+[functions.marketplace-buyer-welcome]
+verify_jwt = false
+
+[functions.marketplace-watch-price-drop]
+verify_jwt = false
+
+[functions.marketplace-reengagement]
+verify_jwt = false

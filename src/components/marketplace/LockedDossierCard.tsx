@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { BuyerChip, FreshnessBadge, TierBadge, ScoreBars, EquityPanel, MetricsRow, TcpaBadge, type MarketplaceLead } from "./GoldenTicketCard";
+import { SourceIconRow } from "./SourceIconRow";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -78,7 +79,9 @@ export function LockedDossierCard({ lead, priceCents = 4900, onClaim, className 
           <span className="text-foreground">{locationLine || "Metro Detroit"}</span>
         </div>
 
-        <ScoreBars score={lead.score} percentile={lead.score_percentile} />
+        <ScoreBars score={lead.score} percentile={lead.score_percentile} history={lead.score_history} />
+
+        <SourceIconRow sources={lead.provenance_sources || lead.provenance_source_urls} />
 
         <EquityPanel lead={lead} />
 

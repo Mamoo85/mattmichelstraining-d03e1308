@@ -1,16 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { LockedDossierCard } from "@/components/marketplace/LockedDossierCard";
 import { SoldDossierCard } from "@/components/marketplace/SoldDossierCard";
 import { FirstLookUpsellGate } from "@/components/marketplace/FirstLookUpsellGate";
+import { CompareDrawer } from "@/components/marketplace/CompareDrawer";
+import { WatchedLeadsRail } from "@/components/marketplace/WatchedLeadsRail";
 import type { MarketplaceLead } from "@/components/marketplace/GoldenTicketCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Flame, Sun, Snowflake, Loader2, Search, ScrollText } from "lucide-react";
+import { Flame, Sun, Snowflake, Loader2, Search, ScrollText, Layers, Keyboard } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { useSwipeable } from "react-swipeable";
+import { cn } from "@/lib/utils";
 
 const PRODUCTS = [
   { key: "mortgage", label: "Mortgage Leads", tagline: "Refi-ready homeowners with verified equity signals." },
@@ -24,6 +28,27 @@ type ProductKey = typeof PRODUCTS[number]["key"];
 type SortKey = "score" | "freshness" | "tier";
 type TierFilter = "all" | "hot" | "warm" | "cool";
 
+function SwipeRow({
+  lead,
+  onWatch,
+  onDismiss,
+  children,
+}: {
+  lead: MarketplaceLead;
+  onWatch: (l: MarketplaceLead) => void;
+  onDismiss: (id: string) => void;
+  children: React.ReactNode;
+}) {
+  const handlers = useSwipeable({
+    onSwipedLeft: () => onDismiss(lead.id),
+    onSwipedRight: () => onWatch(lead),
+    trackMouse: false,
+    preventScrollOnSwipe: true,
+    delta: 50,
+  });
+  return <div {...handlers}>{children}</div>;
+}
+
 export default function Marketplace() {
   const [params, setParams] = useSearchParams();
   const pathProduct = (typeof window !== "undefined" ? window.location.pathname.replace("/", "").replace("-leads", "") : "") as ProductKey;
@@ -34,9 +59,25 @@ export default function Marketplace() {
   const [tierFilter, setTierFilter] = useState<TierFilter>("all");
   const [search, setSearch] = useState("");
   const [dismissed, setDismissed] = useState<string[]>(() => JSON.parse(localStorage.getItem("mp_dismissed") || "[]"));
+  const [watched, setWatched] = useState<string[]>(() => JSON.parse(localStorage.getItem("mp_watched") || "[]"));
   const [soldIds, setSoldIds] = useState<string[]>([]);
+  const [focusIdx, setFocusIdx] = useState(0);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [lastSeenAt, setLastSeenAt] = useState<number>(() => Number(localStorage.getItem("mp_last_seen") || "0"));
+  const buyerEmail = typeof window !== "undefined" ? localStorage.getItem("mp_buyer_email") || "" : "";
 
   const productMeta = PRODUCTS.find((p) => p.key === product) || PRODUCTS[0];
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Mark visit on mount, but keep previous "lastSeenAt" for NEW-badge comparison
+  useEffect(() => {
+    const now = Date.now();
+    return () => {
+      localStorage.setItem("mp_last_seen", String(now));
+    };
+  }, [product]);
 
   useEffect(() => {
     let cancelled = false;
@@ -62,6 +103,7 @@ export default function Marketplace() {
       setLeads((leadsRes.data || []) as unknown as MarketplaceLead[]);
       setSoldIds(((locksRes.data || []) as Array<{ lead_id: string }>).map((r) => r.lead_id));
       setLoading(false);
+      setFocusIdx(0);
     });
     return () => { cancelled = true; };
   }, [product]);
@@ -90,10 +132,7 @@ export default function Marketplace() {
   const [claiming, setClaiming] = useState<string | null>(null);
   const handleClaim = async (lead: MarketplaceLead) => {
     const stored = localStorage.getItem("mp_buyer_email") || "";
-    const email = window.prompt(
-      "Enter your email to receive the unlocked dossier:",
-      stored
-    );
+    const email = window.prompt("Enter your email to receive the unlocked dossier:", stored);
     if (!email || !email.includes("@")) return;
     localStorage.setItem("mp_buyer_email", email);
     setClaiming(lead.id);
@@ -115,6 +154,99 @@ export default function Marketplace() {
       setClaiming(null);
     }
   };
+
+  const toggleWatch = (lead: MarketplaceLead) => {
+    setWatched((prev) => {
+      const next = prev.includes(lead.id) ? prev.filter((x) => x !== lead.id) : [...prev, lead.id];
+      localStorage.setItem("mp_watched", JSON.stringify(next));
+      return next;
+    });
+    if (!watched.includes(lead.id)) {
+      toast.success("Added to watch list");
+      // Server-side watch (for price-drop alerts)
+      const email = localStorage.getItem("mp_buyer_email");
+      if (email) {
+        supabase.functions.invoke("marketplace-watch-add", {
+          body: { buyer_email: email, lead_id: lead.id, product },
+        }).catch(() => {});
+      }
+    }
+  };
+
+  const dismissLead = (id: string) => {
+    setDismissed((prev) => {
+      const next = [...prev, id];
+      localStorage.setItem("mp_dismissed", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const toggleCompare = (id: string) => {
+    setCompareIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= 3) {
+        toast.error("Compare up to 3 leads at once");
+        return prev;
+      }
+      return [...prev, id];
+    });
+  };
+
+  // Keyboard shortcuts: J/K nav · Enter open · C compare · B buy · W watch · X dismiss · Esc close · ? help
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      const lead = filtered[focusIdx];
+      switch (e.key.toLowerCase()) {
+        case "j":
+          e.preventDefault();
+          setFocusIdx((i) => Math.min(i + 1, filtered.length - 1));
+          break;
+        case "k":
+          e.preventDefault();
+          setFocusIdx((i) => Math.max(i - 1, 0));
+          break;
+        case "enter":
+          if (lead) window.open(`/lead/${lead.id}`, "_blank");
+          break;
+        case "c":
+          if (lead) toggleCompare(lead.id);
+          break;
+        case "b":
+          if (lead && !soldIds.includes(lead.id)) handleClaim(lead);
+          break;
+        case "w":
+          if (lead) toggleWatch(lead);
+          break;
+        case "x":
+          if (lead) dismissLead(lead.id);
+          break;
+        case "escape":
+          setCompareOpen(false);
+          setShowShortcuts(false);
+          break;
+        case "?":
+          setShowShortcuts((v) => !v);
+          break;
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtered, focusIdx, soldIds, watched]);
+
+  // Scroll focused card into view
+  useEffect(() => {
+    const lead = filtered[focusIdx];
+    if (!lead) return;
+    cardRefs.current[lead.id]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [focusIdx, filtered]);
+
+  const compareLeads = useMemo(
+    () => compareIds.map((id) => leads.find((l) => l.id === id)).filter(Boolean) as MarketplaceLead[],
+    [compareIds, leads]
+  );
 
   const tierCounts = useMemo(() => ({
     all: leads.length,
@@ -143,12 +275,21 @@ export default function Marketplace() {
               <h1 className="text-3xl md:text-4xl font-bold mb-2">{productMeta.label}</h1>
               <p className="text-muted-foreground max-w-2xl">{productMeta.tagline}</p>
             </div>
-            <Link
-              to="/marketplace/receipts"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-wider rounded border border-border/40 text-muted-foreground hover:text-foreground hover:border-intel-teal/50 transition-colors"
-            >
-              <ScrollText className="w-3.5 h-3.5" /> My Receipts
-            </Link>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowShortcuts((v) => !v)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-wider rounded border border-border/40 text-muted-foreground hover:text-foreground hover:border-intel-teal/50"
+                title="Keyboard shortcuts (?)"
+              >
+                <Keyboard className="w-3.5 h-3.5" /> ?
+              </button>
+              <Link
+                to="/marketplace/receipts"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-wider rounded border border-border/40 text-muted-foreground hover:text-foreground hover:border-intel-teal/50 transition-colors"
+              >
+                <ScrollText className="w-3.5 h-3.5" /> My Receipts
+              </Link>
+            </div>
           </div>
 
           {/* Product switcher */}
@@ -169,6 +310,21 @@ export default function Marketplace() {
           </div>
         </div>
       </div>
+
+      {/* Shortcuts panel */}
+      {showShortcuts && (
+        <div className="border-b border-intel-teal/30 bg-card/80">
+          <div className="container max-w-7xl mx-auto px-4 py-3 text-[11px] font-mono uppercase tracking-wider text-muted-foreground flex flex-wrap gap-x-6 gap-y-1">
+            <span><kbd className="text-intel-teal">J</kbd>/<kbd className="text-intel-teal">K</kbd> navigate</span>
+            <span><kbd className="text-intel-teal">Enter</kbd> open</span>
+            <span><kbd className="text-intel-teal">B</kbd> buy</span>
+            <span><kbd className="text-intel-teal">C</kbd> compare</span>
+            <span><kbd className="text-intel-teal">W</kbd> watch</span>
+            <span><kbd className="text-intel-teal">X</kbd> dismiss</span>
+            <span><kbd className="text-intel-teal">Esc</kbd> close</span>
+          </div>
+        </div>
+      )}
 
       {/* Filter bar */}
       <div className="border-b border-border/40 sticky top-0 bg-background/95 backdrop-blur z-10">
@@ -210,8 +366,20 @@ export default function Marketplace() {
             <option value="freshness">Sort: Freshness</option>
             <option value="tier">Sort: Tier</option>
           </select>
+
+          {compareIds.length > 0 && (
+            <button
+              onClick={() => setCompareOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-mono uppercase tracking-wider rounded bg-intel-teal/15 border border-intel-teal/50 text-intel-teal hover:bg-intel-teal/25"
+            >
+              <Layers className="w-3 h-3" /> Compare ({compareIds.length})
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Watched leads rail */}
+      {buyerEmail && <WatchedLeadsRail buyerEmail={buyerEmail} />}
 
       {/* Grid */}
       <div className="container max-w-7xl mx-auto px-4 py-6">
@@ -226,20 +394,78 @@ export default function Marketplace() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filtered.map((lead) =>
-              soldIds.includes(lead.id) ? (
-                <SoldDossierCard key={lead.id} lead={lead} />
-              ) : (
-                <LockedDossierCard key={lead.id} lead={lead} onClaim={handleClaim} />
-              )
-            )}
+            {filtered.map((lead, idx) => {
+              const isNew = lastSeenAt > 0 && new Date(lead.created_at).getTime() > lastSeenAt;
+              const isFocused = idx === focusIdx;
+              const isCompared = compareIds.includes(lead.id);
+              const isWatched = watched.includes(lead.id);
+
+              return (
+                <div
+                  key={lead.id}
+                  ref={(el) => { cardRefs.current[lead.id] = el; }}
+                  className={cn(
+                    "relative transition-all",
+                    isFocused && "ring-2 ring-intel-teal/50 rounded-lg",
+                  )}
+                >
+                  {isNew && (
+                    <span className="absolute -top-2 -left-2 z-20 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider bg-emerald-500 text-background shadow-lg">
+                      NEW
+                    </span>
+                  )}
+                  <div className="absolute top-2 right-2 z-20 flex gap-1">
+                    <button
+                      onClick={() => toggleCompare(lead.id)}
+                      className={cn(
+                        "px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider rounded border transition-colors",
+                        isCompared
+                          ? "bg-intel-teal/20 border-intel-teal/50 text-intel-teal"
+                          : "bg-card/80 border-border/40 text-muted-foreground hover:text-foreground"
+                      )}
+                      title="Compare (C)"
+                    >
+                      ⇄
+                    </button>
+                    <button
+                      onClick={() => toggleWatch(lead)}
+                      className={cn(
+                        "px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider rounded border transition-colors",
+                        isWatched
+                          ? "bg-seal-gold/20 border-seal-gold/50 text-seal-gold"
+                          : "bg-card/80 border-border/40 text-muted-foreground hover:text-foreground"
+                      )}
+                      title="Watch (W)"
+                    >
+                      ★
+                    </button>
+                  </div>
+                  <SwipeRow lead={lead} onWatch={toggleWatch} onDismiss={dismissLead}>
+                    {soldIds.includes(lead.id) ? (
+                      <SoldDossierCard lead={lead} />
+                    ) : (
+                      <LockedDossierCard lead={lead} onClaim={handleClaim} />
+                    )}
+                  </SwipeRow>
+                </div>
+              );
+            })}
           </div>
         )}
 
         <p className="text-center text-[11px] font-mono uppercase tracking-widest text-muted-foreground mt-10">
           Showing {filtered.length} of {leads.length} live leads · Updated continuously
+          <span className="md:hidden block mt-1 opacity-70">Swipe right = watch · left = dismiss</span>
         </p>
       </div>
+
+      <CompareDrawer
+        open={compareOpen}
+        onOpenChange={setCompareOpen}
+        leads={compareLeads}
+        onRemove={(id) => setCompareIds((prev) => prev.filter((x) => x !== id))}
+        onClaim={handleClaim}
+      />
 
       <FirstLookUpsellGate product={product} leads={leads as any} />
     </div>
