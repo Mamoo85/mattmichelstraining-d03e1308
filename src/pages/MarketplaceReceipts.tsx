@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Share2, ScrollText, Loader2, Mail, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { FileText, Share2, ScrollText, Loader2, Mail, ChevronDown, ChevronUp, ExternalLink, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { ShareLinkDialog } from "@/components/marketplace/ShareLinkDialog";
 
 interface Receipt {
   lead_id: string;
@@ -40,6 +41,10 @@ export default function MarketplaceReceipts() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [regenBusy, setRegenBusy] = useState<string | null>(null);
+  const [shareDialog, setShareDialog] = useState<{ open: boolean; url: string | null; expires_at: string | null }>({
+    open: false, url: null, expires_at: null,
+  });
 
   const fetchReceipts = async (lookupEmail: string) => {
     setLoading(true);
@@ -83,12 +88,33 @@ export default function MarketplaceReceipts() {
       });
       if (error) throw error;
       const url = (data as any)?.url;
+      const expires_at = (data as any)?.expires_at;
       if (!url) throw new Error("no url");
-      await navigator.clipboard.writeText(url);
-      toast.success("Redacted share link copied — expires in 7 days");
+      setShareDialog({ open: true, url, expires_at });
+      navigator.clipboard?.writeText(url).catch(() => {});
     } catch (e) {
       console.error(e);
       toast.error("Could not generate share link");
+    }
+  };
+
+  const handleRegeneratePdf = async (lead_id: string, product: string) => {
+    setRegenBusy(lead_id);
+    try {
+      const { data, error } = await supabase.functions.invoke("marketplace-generate-dossier-pdf", {
+        body: { lead_id, product, buyer_email: submittedEmail, force_regenerate: true },
+      });
+      if (error) throw error;
+      const url = (data as any)?.url;
+      if (!url) throw new Error("no url");
+      // Update local state with the fresh URL
+      setReceipts((prev) => prev.map((r) => r.lead_id === lead_id ? { ...r, pdf_url: url } : r));
+      window.open(url, "_blank");
+      toast.success("Fresh PDF generated");
+    } catch {
+      toast.error("Could not regenerate PDF");
+    } finally {
+      setRegenBusy(null);
     }
   };
 
@@ -221,6 +247,18 @@ export default function MarketplaceReceipts() {
                         </Button>
                         <Button
                           size="sm"
+                          variant="ghost"
+                          onClick={() => handleRegeneratePdf(r.lead_id, r.product)}
+                          disabled={regenBusy === r.lead_id}
+                          title="Force a fresh PDF if the download link is broken"
+                        >
+                          {regenBusy === r.lead_id
+                            ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                            : <RefreshCw className="w-3.5 h-3.5 mr-1.5" />}
+                          Regenerate
+                        </Button>
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => handleShare(r.lead_id, r.product)}
                         >
@@ -293,6 +331,13 @@ export default function MarketplaceReceipts() {
           )}
         </div>
       )}
+
+      <ShareLinkDialog
+        open={shareDialog.open}
+        onOpenChange={(v) => setShareDialog((s) => ({ ...s, open: v }))}
+        url={shareDialog.url}
+        expiresAt={shareDialog.expires_at}
+      />
     </div>
   );
 }

@@ -314,6 +314,7 @@ const MortgageRadar = lazyRetry(() => import("./pages/MortgageRadar"));
 const Marketplace = lazyRetry(() => import("./pages/Marketplace"));
 const MarketplaceReceipts = lazyRetry(() => import("./pages/MarketplaceReceipts"));
 const LeadDetail = lazyRetry(() => import("./pages/LeadDetail"));
+const SharedLead = lazyRetry(() => import("./pages/SharedLead"));
 const MyMortgageRadar = lazyRetry(() => import("./pages/MyMortgageRadar"));
 const BuyerRadar = lazyRetry(() => import("./pages/BuyerRadar"));
 const MyBuyerRadar = lazyRetry(() => import("./pages/MyBuyerRadar"));
@@ -780,6 +781,7 @@ const App = () => (
                     <Route path="/growth-leads" element={<Marketplace />} />
                     <Route path="/supply-leads" element={<Marketplace />} />
                     <Route path="/marketplace/receipts" element={<MarketplaceReceipts />} />
+                    <Route path="/lead/share/:token" element={<SharedLead />} />
                     <Route path="/lead/:slug" element={<LeadDetail />} />
                     {/* Growth Radar (company-side intelligence — separate product) */}
                     <Route path="/growth-radar" element={<IndustryPulse />} />

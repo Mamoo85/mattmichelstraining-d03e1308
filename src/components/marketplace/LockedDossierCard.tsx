@@ -93,6 +93,18 @@ export function LockedDossierCard({ lead, priceCents = 4900, onClaim, className 
             Source: DWA Scanner
           </span>
         </div>
+
+        {/* Trust footer — verified provenance count + freshness */}
+        {(() => {
+          const sourceCount = (lead.provenance_sources?.length || lead.provenance_source_urls?.length || 0);
+          if (sourceCount === 0) return null;
+          return (
+            <div className="pt-2 mt-1 border-t border-border/30 flex items-center justify-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+              <span className="text-intel-teal">✓</span>
+              Cross-referenced across {sourceCount} verified source{sourceCount === 1 ? "" : "s"}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Wax seal CTA */}
