@@ -130,6 +130,7 @@ export default function Marketplace() {
   const [loadError, setLoadError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [restockOpen, setRestockOpen] = useState(false);
+  const [viewersMap, setViewersMap] = useState<Record<string, number>>({});
 
   useEffect(() => {
     let cancelled = false;
