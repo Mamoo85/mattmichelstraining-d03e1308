@@ -78,9 +78,33 @@ export default function Marketplace() {
     return arr;
   }, [leads, dismissed, tierFilter, search, sort]);
 
-  const handleClaim = (lead: MarketplaceLead) => {
-    // Session 2 wires Stripe checkout. For now, surface the intent.
-    toast.info(`Checkout opening soon — lead #${lead.id.slice(0, 6).toUpperCase()}`);
+  const [claiming, setClaiming] = useState<string | null>(null);
+  const handleClaim = async (lead: MarketplaceLead) => {
+    const stored = localStorage.getItem("mp_buyer_email") || "";
+    const email = window.prompt(
+      "Enter your email to receive the unlocked dossier:",
+      stored
+    );
+    if (!email || !email.includes("@")) return;
+    localStorage.setItem("mp_buyer_email", email);
+    setClaiming(lead.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-marketplace-lead-checkout", {
+        body: { lead_id: lead.id, product, buyer_email: email },
+      });
+      if (error) throw error;
+      const url = (data as any)?.url;
+      if (!url) throw new Error("No checkout URL");
+      window.location.href = url;
+    } catch (e: any) {
+      const msg = e?.message || String(e);
+      if (msg.includes("already_sold")) toast.error("That lead just sold to someone else.");
+      else if (msg.includes("locked_by_other")) toast.error("Another buyer has a 10-min hold on this lead.");
+      else toast.error("Checkout failed — try again.");
+      console.error(e);
+    } finally {
+      setClaiming(null);
+    }
   };
 
   const tierCounts = useMemo(() => ({

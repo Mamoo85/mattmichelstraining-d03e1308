@@ -1745,3 +1745,15 @@ verify_jwt = false
 
 [functions.enrich-prospect-pool]
 verify_jwt = false
+
+[functions.create-marketplace-lead-checkout]
+verify_jwt = false
+
+[functions.marketplace-generate-dossier-pdf]
+verify_jwt = false
+
+[functions.marketplace-share-token]
+verify_jwt = false
+
+[functions.marketplace-saved-search-notifier]
+verify_jwt = false

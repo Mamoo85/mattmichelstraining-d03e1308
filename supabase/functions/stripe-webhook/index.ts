@@ -1275,6 +1275,83 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // === Golden Ticket Marketplace — a la carte lead purchase ===
+      if (meta.type === "marketplace_lead_purchase") {
+        const email = (meta.buyer_email || customerEmail || "").toLowerCase();
+        const lead_id = meta.lead_id;
+        const product = meta.product;
+        try {
+          if (!email || !lead_id || !product) throw new Error("missing buyer_email/lead_id/product");
+
+          // Atomic claim: only mark sold if we still own the pending lock
+          const { data: claim, error: claimErr } = await (sb.from as any)("marketplace_lead_locks")
+            .update({
+              status: "sold",
+              stripe_session_id: session.id,
+              stripe_payment_intent_id: session.payment_intent as string || null,
+              sold_at: new Date().toISOString(),
+            })
+            .eq("lead_id", lead_id)
+            .eq("product", product)
+            .in("status", ["pending"])
+            .eq("buyer_email", email)
+            .select("id");
+          if (claimErr) throw new Error(`lock claim: ${claimErr.message}`);
+
+          if (!claim || claim.length === 0) {
+            // Race lost or already sold — treat as duplicate but don't 500 (would re-trigger Stripe retries)
+            await notifyMatt(`⚠️ Marketplace duplicate claim — ${email} on ${lead_id}`,
+              `<p>Lead ${lead_id} (${product}) already sold or lock missing for ${email}. Refund check?</p>`).catch(()=>{});
+            return new Response(JSON.stringify({ received: true, duplicate: true }), { status: 200 });
+          }
+
+          // Fire PDF generation async (don't block webhook)
+          fetch(`${SUPABASE_URL}/functions/v1/marketplace-generate-dossier-pdf`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+            body: JSON.stringify({ lead_id, product, buyer_email: email }),
+          }).catch((e) => console.error("[mp pdf trigger]", e));
+
+          // Fetch the unlocked lead for the email
+          const { data: lead } = await (sb.from as any)("unified_lead_marketplace_view")
+            .select("*").eq("id", lead_id).maybeSingle();
+
+          const dashLink = `https://detroitwebagent.com/lead/${lead_id}?paid=1&buyer=${encodeURIComponent(email)}`;
+          const productLabel = ({mortgage:"Mortgage",talent:"Talent",demand:"Demand",growth:"Growth",supply:"Supply"} as any)[product] || product;
+
+          if (RESEND_API_KEY) {
+            await dwaEmail(email, `🎟 Your ${productLabel} Dossier is Unlocked`, `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;">
+    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0;">🎟 Golden Ticket · Unlocked</p>
+    <h1 style="color:#fff;font-size:22px;margin:8px 0 16px;">Your ${productLabel} dossier is ready.</h1>
+    <p style="color:#94a3b8;font-size:14px;margin:0 0 16px;">${(lead as any)?.human_summary || "Full intelligence, contact details, and suggested openers — ready to action now."}</p>
+    <div style="text-align:center;margin:24px 0">
+      <a href="${dashLink}" style="display:inline-block;background:#00d4ff;color:#000;font-weight:700;padding:14px 40px;border-radius:8px;text-decoration:none;font-size:15px;">📂 Open Dossier</a>
+    </div>
+    <p style="color:#fbbf24;font-size:12px;border-top:1px solid #1e3a5f;padding-top:16px;margin:16px 0 0;"><strong>TCPA reminder:</strong> Verify Established Business Relationship or written consent before texting. Manual send only — DWA never auto-texts on your behalf.</p>
+  </div>
+  <p style="color:#475569;font-size:11px;text-align:center;margin-top:16px;">Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p>
+</div></body></html>`);
+          }
+          await notifyMatt(
+            `💰 Marketplace sale — ${productLabel} · ${email}`,
+            `<p><strong>${email}</strong> bought ${productLabel} lead <code>${lead_id.slice(0,8)}</code><br>${(lead as any)?.city || ""} ${(lead as any)?.zip || ""} · score ${(lead as any)?.score || "?"}/10</p>`
+          ).catch(()=>{});
+
+          await sendSMS(ADMIN_PHONE, "+13139921219",
+            `💰 Marketplace: ${email} bought ${productLabel} lead. Score ${(lead as any)?.score || "?"}/10.`,
+            "marketplace_sale_admin").catch(()=>{});
+
+        } catch (e) {
+          console.error("[WEBHOOK] marketplace_lead_purchase error:", e);
+          await notifyMatt(`🚨 Marketplace fulfillment FAILED — ${email || "unknown"} / ${lead_id}`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(()=>{});
+          return new Response(JSON.stringify({ error: "marketplace_lead_purchase failed" }), { status: 500 });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // === Channel 3 — Industrial Pulse public unlock ($50 snapshot OR $199/mo firehose) ===
       if (meta.type === "industrial_pulse_snapshot" || meta.type === "industrial_pulse_firehose") {
         const email = (meta.email || customerEmail || "").toLowerCase();
