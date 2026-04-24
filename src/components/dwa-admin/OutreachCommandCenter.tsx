@@ -382,13 +382,17 @@ function FindProspects() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
           <Button onClick={runScrape} disabled={running} className="bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-[#0a1628]">
             {running ? <><Loader2 className="animate-spin mr-2" size={14} /> Scraping…</> : <>🚀 Run Scrape</>}
           </Button>
           <Button onClick={runScore} disabled={scoring} variant="outline" className="border-white/15 text-white hover:bg-white/10">
-            {scoring ? <><Loader2 className="animate-spin mr-2" size={14} /> Scoring…</> : <>⚡ Re-score Pool</>}
+            {scoring ? <><Loader2 className="animate-spin mr-2" size={14} /> {enrichFirst ? "Enriching + Scoring…" : "Scoring…"}</> : <>⚡ Re-score Pool</>}
           </Button>
+          <label className="flex items-center gap-2 text-white/70 text-xs ml-1 cursor-pointer">
+            <Checkbox checked={enrichFirst} onCheckedChange={(v) => setEnrichFirst(!!v)} />
+            Enrich missing fields first <span className="text-white/40">(slower)</span>
+          </label>
         </div>
 
         <div className="text-white/40 text-xs">
