@@ -134,9 +134,11 @@ export default function Marketplace() {
       {/* Header */}
       <div className="border-b border-border/40 bg-gradient-to-b from-card to-background">
         <div className="container max-w-7xl mx-auto px-4 py-8">
-          <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-widest text-intel-teal mb-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-intel-teal animate-pulse" />
-            Live Marketplace · Refreshed continuously
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-widest text-intel-teal mb-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-intel-teal animate-pulse" />
+                Live Marketplace · Refreshed continuously
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-2">{productMeta.label}</h1>
           <p className="text-muted-foreground max-w-2xl">{productMeta.tagline}</p>
