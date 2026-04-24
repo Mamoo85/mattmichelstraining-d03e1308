@@ -1,70 +1,65 @@
 
 
-# Paranoia Sweep Re-Audit — What's Fixed, What's Still Broken
+# Plan — Unified Enrichment Waterfall + Re-score-with-Enrich + Per-Provider Audit
 
-I checked Claude's 11 findings against the current codebase. Here's the honest scorecard:
+## What's already in place (no rebuild)
+- `supabase/functions/_shared/email-waterfall.ts` — shared 6-stage waterfall (site_scrape → snov → apollo → pattern_verify → hunter → pdl), stop at confidence ≥50, 429 cooldown via `enrichment_provider_health`, full per-step `trace`
+- `prospect-email-backfill` already uses it and returns `counters` (per-provider hit counts)
+- "Backfill Emails" toast already shows breakdown (line 211–217 of OutreachCommandCenter)
+- `prospect_pool.meta` jsonb exists for trace logging
 
-## ✅ Already fixed (8 of 11)
+## What's missing / to build
 
-| ID | Status | Evidence |
-|---|---|---|
-| GHOST-1 | ✅ Fixed | `agency-payment-reconcile/index.ts` covers TechAlert, FieldDesk, ContractorLeads, MortgageRadar |
-| GHOST-2 | ✅ Fixed | `email_sent_at` column + reconcile loop re-fires unsent dossiers |
-| GHOST-3 | ✅ Fixed | PDF call awaited with 25s `AbortSignal.timeout` + `notifyMatt` on failure (webhook line 1308–1323) |
-| MALICIOUS-1 | ✅ Fixed | `dead-lead-intake` 500-lead cap + field truncation (lines 16–17, 86–98) |
-| MALICIOUS-2 | ✅ Fixed | Campaign rollback on contacts insert failure wrapped in try/catch (lines 237–244) |
-| MALICIOUS-3 | ✅ Fixed | UUID + email regex validation in `create-marketplace-lead-checkout` (lines 45–57) |
-| TOKEN-1 | ✅ Fixed | `queryClient.ts` global 401/PGRST301 handler signs out expired sessions |
-| PARTIAL-2 | ✅ Fixed | `dead-lead-drip` already uses ONE atomic update (line 228–230) — was a false positive |
+### 1. Wire the shared waterfall into `enrich-prospect-pool`
+Currently `enrich-prospect-pool/index.ts` has its own `stageHunter` and ad-hoc email logic — Snov, Apollo, pattern-verify, PDL are NOT used here. Replace its email-finding block with a call to `runEmailWaterfall()` so the same ordered pipeline runs everywhere. Keep its non-email enrichment (Google reviews, Twilio carrier, HIBP, etc.) untouched. Trace entries from the waterfall get appended to `meta.enrichment_trace` in the same shape it already writes — every field gets a provider tag for audit.
 
-## 🔴 Still broken (3 of 11) — these are the ones to patch
+### 2. New flag: re-score with enrich-first
+Add `enrich_first: boolean` to `score-prospects`. When true:
+- For each row that's missing email/phone/contact, call `runEmailWaterfall()` first
+- Persist any fills to `prospect_pool` + append `{ts, flow:"score_with_enrich", winner, steps}` to `meta.enrichment_trace`
+- Then proceed with scoring (same logic — newly-filled email/phone now contributes to the score)
+- Return `{scored, enriched, counters}` so the UI can show the per-provider breakdown
 
-### PARTIAL-1 — Idempotency guard fires BEFORE fulfillment (architectural)
-**File**: `supabase/functions/stripe-webhook/index.ts` lines 281–297
-**Problem**: `processed_stripe_events` row is inserted FIRST. If provisioning fails after that, the function returns 500, Stripe retries, the dedupe guard fires "duplicate", returns 200, and the customer is **charged but never provisioned with no recovery path**.
-**Fix**: Add `fulfillment_status` column (`pending` / `completed` / `failed`). On entry: insert with `pending`. On success of each branch: update to `completed`. On dedupe hit, allow re-entry if existing row is still `pending` and older than 60 seconds. Reconcile cron re-fires `pending > 1h`.
+### 3. UI — "Enrich missing fields first" checkbox next to "Re-score Pool"
+In `OutreachCommandCenter.tsx` `FindProspects()`:
+- Add `<Checkbox>` "Enrich missing fields first (slower)" next to the Re-score button
+- `runScore()` passes `enrich_first` in body
+- Toast becomes `Re-scored X · Enriched Y — snov:n · apollo:n · pattern_verify:n · hunter:n · pdl:n · site_scrape:n` when enrich_first is on
+- Same per-provider breakdown style already used by backfill
 
-### PARTIAL-3 — TechAlert/FieldDesk/etc. provision but welcome email lost
-**File**: `supabase/functions/stripe-webhook/index.ts` lines ~883–1028 (TechAlert), and same shape for FieldDesk, Contractor, MortgageRadar branches
-**Problem**: Same root as PARTIAL-1. If `hire_alert_clients` insert succeeds but `auto-onboard` or Resend fails → 500 → Stripe retry → dedupe guard short-circuits → customer has a row but no welcome email, no dashboard setup.
-**Fix**: Same `fulfillment_status` pattern. The reconcile cron already re-fires `auto-onboard` for unprovisioned customers — extending it to also re-fire when `processed_stripe_events.fulfillment_status = 'pending'` closes the loop.
+### 4. Confirmed working / no change needed
+- "Backfill Emails" toast (already shows the per-provider breakdown — line 211–217)
+- Stop-at-confidence (built into the waterfall — returns at first hit ≥50)
+- 429 skip / provider health (already in waterfall)
+- Trace logging on `prospect_pipeline.meta.enrichment_trace` (already done by backfill)
 
-### TOKEN-2 — FieldDesk Tech App PIN auth uses anon key with no client_token gate
-**Files**: `src/pages/FieldServiceTechApp.tsx`, `src/components/field-service/DispatchBoard.tsx`
-**Problem**: PIN login bypasses Supabase auth. All `supabase.from("field_service_jobs")` calls run as anon. RLS on `field_service_jobs` is admin-only via `has_role()` — which means **the queries currently work only because of the service role being injected somewhere, or they silently fail**. Need to verify: either (a) tech app is actually broken in prod, or (b) RLS has a hidden policy allowing anon. Either way, the architecture is wrong: it should use a signed `tech_session_token` validated server-side.
-**Fix**: Create `tech-session-validate` edge function. PIN login mints a JWT-like token. All tech app queries go through edge functions (`tech-jobs-get`, `tech-job-update`) that validate the token. Strip direct `supabase.from()` calls from the tech app.
+### 5. Single small tweak to RankedPool's "Enrich All / Enrich One"
+These already call `enrich-prospect-pool`. Once #1 is done, they automatically use the shared waterfall — no UI change needed, but the success toast will get richer data (`counters` from the response). I'll surface a one-line breakdown in those toasts too.
 
-## What I'll ship
+## Files to create
+*(none — no new edge functions or migrations)*
 
-### New migration `<ts>_partial_failure_recovery.sql`
-- `ALTER TABLE processed_stripe_events ADD COLUMN fulfillment_status text DEFAULT 'pending'`
-- `ALTER TABLE processed_stripe_events ADD COLUMN fulfillment_completed_at timestamptz`
-- Partial index on `(processed_at) WHERE fulfillment_status = 'pending'`
-- New table `tech_sessions(token PK, tech_id, client_id, expires_at)`
+## Files to edit
 
-### Edge function changes
-- `stripe-webhook/index.ts`:
-  - Idempotency guard: allow re-entry on `pending` rows older than 60s (Stripe retries are ~immediate then exponential)
-  - On successful completion of each product branch: `UPDATE processed_stripe_events SET fulfillment_status='completed'`
-  - On caught error inside a branch: `UPDATE ... SET fulfillment_status='failed'` + `notifyMatt`
-- `agency-payment-reconcile/index.ts`:
-  - Add 4th check: query `processed_stripe_events WHERE fulfillment_status='pending' AND processed_at < now() - interval '1 hour'` → re-fire by event type
-- New `tech-session-create` (PIN → token), `tech-session-validate` (used by tech-jobs-* functions)
-- New `tech-jobs-get`, `tech-job-update` (proxies that validate token)
+| File | Change |
+|---|---|
+| `supabase/functions/_shared/email-waterfall.ts` | Add a small `runFieldWaterfall()` wrapper that returns the same shape but also reports which fields were filled (today only `email`; structure makes phone/contact extension trivial later) |
+| `supabase/functions/enrich-prospect-pool/index.ts` | Replace `stageHunter` email path with `runEmailWaterfall()`. Keep non-email stages. Trace entries for email get `source: <provider>` (snov/apollo/etc.) instead of just "Hunter" |
+| `supabase/functions/score-prospects/index.ts` | Accept `enrich_first` flag. When set, call `runEmailWaterfall()` for rows missing email, persist fills + trace, then score. Return `{scored, enriched, counters}` |
+| `src/components/dwa-admin/OutreachCommandCenter.tsx` | (a) Add `enrichFirst` checkbox next to Re-score button. (b) Pass `enrich_first` in `runScore()`. (c) When `enrich_first`, expand toast with per-provider breakdown (same format as backfill). (d) Expand `enrichOne` / `enrichAll` toasts to include counters when present |
 
-### Frontend
-- `src/pages/FieldServiceTechApp.tsx`: replace direct `supabase.from("field_service_jobs")` with `supabase.functions.invoke("tech-jobs-get" / "tech-job-update")`
-- `src/components/field-service/DispatchBoard.tsx`: same swap
-- Store `tech_session_token` in localStorage; pass in body of every call
-
-### Verification (live in build mode)
-1. Curl `stripe-webhook` with synthetic `checkout.session.completed`, force inner failure → confirm row in `processed_stripe_events` is `pending`, returns 500, Stripe-style retry → second call enters branch, completes, marks `completed`
-2. Curl reconcile cron → confirm it picks up old `pending` rows
-3. Run tech app PIN login → confirm token issued, jobs fetched via edge function, no direct DB access
+## Verification (after build)
+1. Curl `score-prospects` with `{enrich_first:true, limit:5}` → expect `{ok, scored, enriched, counters}`
+2. Curl `prospect-email-backfill` (sanity, unchanged) → still returns counters
+3. Open `prospect_pipeline` / `prospect_pool` row that just got enriched → confirm `meta.enrichment_trace` has new entry with `winner: <provider>` and `steps: [{source, ok}, …]`
+4. UI smoke: check checkbox, click Re-score Pool → toast reads `Re-scored N · Enriched M — snov:x · apollo:y · …`
 
 ## Honest scope
-~2 hours. One ship. After this, the 11 findings are 11/11 closed and the webhook is self-healing.
+~45 min. One ship. Single shared waterfall, audit trail on every fill, one new admin checkbox, richer toasts everywhere.
 
 ## Not touching
-The 8 already-fixed items. `dead-lead-drip` (false positive — was already atomic). Marketplace flow (already audited last session).
+- Provider order / confidence thresholds (already correct per spec)
+- Backfill toast (already breakdown-style)
+- Provider health / 429 logic (already in shared module)
+- Other enrichment fields beyond email (out of scope — phone/contact stays on `enrich-prospect-pool`'s existing per-stage logic)
 
