@@ -275,10 +275,18 @@ function FindProspects() {
     setScoring(true);
     try {
       const { data, error } = await supabase.functions.invoke("score-prospects", {
-        body: { audience_type: audience, limit: 200 },
+        body: { audience_type: audience, limit: 200, enrich_first: enrichFirst },
       });
       if (error) throw error;
-      toast.success(`Re-scored ${data?.scored ?? 0} prospects`);
+      if (enrichFirst) {
+        const c = data?.counters || {};
+        const breakdown = ["snov","apollo","pattern_verify","hunter","pdl","site_scrape"]
+          .map((k) => `${k.replace("_"," ")}:${c[k] ?? 0}`)
+          .join(" · ");
+        toast.success(`Re-scored ${data?.scored ?? 0} · Enriched ${data?.enriched ?? 0} — ${breakdown}`);
+      } else {
+        toast.success(`Re-scored ${data?.scored ?? 0} prospects`);
+      }
       qc.invalidateQueries({ queryKey: ["prospect_pool"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Scoring failed");
