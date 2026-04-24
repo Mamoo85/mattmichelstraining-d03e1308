@@ -1,9 +1,10 @@
-// prospect-email-backfill — Backfill emails on idle prospect_pipeline rows
-// Admin-triggered. Walks every prospect with no email + non-archived stage,
-// applies the same Hunter → website-scrape waterfall used by contractor-prospector,
-// and updates the row in place. Skips rows with no website.
+// prospect-email-backfill — Backfill emails on idle prospect_pipeline rows.
+// Walks the shared 6-stage email waterfall (site_scrape → snov → apollo →
+// pattern_verify → hunter → pdl). Records per-source hit counts and an
+// enrichment_trace into prospect_pipeline.meta.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { runEmailWaterfall, WATERFALL_PROVIDERS, type WaterfallCounters } from "../_shared/email-waterfall.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,96 +13,9 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const HUNTER_API_KEY = Deno.env.get("HUNTER_API_KEY") ?? "";
 
 const log = (s: string, d?: unknown) =>
   console.log(`[email-backfill] ${s}${d ? " " + JSON.stringify(d) : ""}`);
-
-const BLOCKLIST = [
-  "example.com","google.com","facebook.com","wix.com","squarespace.com","sentry.io","w3.org",
-  "wixpress.com","domain.com","yoursite.com","yourdomain.com","test.com","placeholder",
-  "wordpress.com","wordpress.org","github.com","jsdelivr","googleapis.com","gstatic.com",
-  "cloudflare","schema.org","gravatar.com","fontawesome","googleusercontent.com",
-  "creativecommons.org","mozilla.org","apple.com","microsoft.com","twitter.com",
-  "instagram.com","linkedin.com","youtube.com","tiktok.com","pinterest.com","yelp.com",
-  "bbb.org","angieslist.com","homeadvisor.com","thumbtack.com",
-];
-const BLOCKED_PREFIXES = [
-  "user@","admin@","test@","noreply@","no-reply@","webmaster@","postmaster@",
-  "name@","email@","someone@","nobody@","null@","root@","daemon@",
-];
-
-async function scrapeEmail(websiteUrl: string): Promise<string | null> {
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(websiteUrl, {
-      signal: controller.signal,
-      headers: { "User-Agent": "Mozilla/5.0" },
-    });
-    clearTimeout(timer);
-    if (!res.ok) return null;
-    const html = await res.text();
-
-    let siteDomain = "";
-    try { siteDomain = new URL(websiteUrl).hostname.replace(/^www\./, "").toLowerCase(); } catch {}
-
-    const emails = (html.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g) || [])
-      .filter((e) => {
-        const l = e.toLowerCase();
-        if (BLOCKLIST.some((d) => l.includes(d))) return false;
-        if (/\.(png|jpg|svg|js|css|gif|webp|woff|ttf|eot)$/i.test(l)) return false;
-        if (l.length > 60 || l.length < 6) return false;
-        const local = l.split("@")[0];
-        if (local.length > 20 && /[0-9a-f]{8,}/.test(local)) return false;
-        if (BLOCKED_PREFIXES.some((p) => l.startsWith(p))) return false;
-        if (!/\.(com|net|org|biz|us|co|io|info|email)$/.test(l)) return false;
-        return true;
-      });
-
-    if (!emails.length) return null;
-    if (siteDomain) {
-      const m = emails.find((e) => e.toLowerCase().endsWith(`@${siteDomain}`));
-      if (m) return m;
-    }
-    const bizPrefixes = ["info@","contact@","office@","hello@","sales@","service@","mail@"];
-    const biz = emails.find((e) => bizPrefixes.some((p) => e.toLowerCase().startsWith(p)));
-    return biz || emails[0];
-  } catch {
-    return null;
-  }
-}
-
-async function hunterDomainSearch(domain: string): Promise<{ email: string; confidence: number } | null> {
-  if (!HUNTER_API_KEY) return null;
-  try {
-    const url = `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&limit=5&api_key=${HUNTER_API_KEY}`;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timer);
-    if (!res.ok) return null;
-    const data = await res.json();
-    const emails = data?.data?.emails || [];
-    // Prefer highest confidence ≥ 50
-    const sorted = emails
-      .filter((e: any) => e.value && (e.confidence ?? 0) >= 50)
-      .sort((a: any, b: any) => (b.confidence ?? 0) - (a.confidence ?? 0));
-    if (!sorted.length) return null;
-    return { email: sorted[0].value, confidence: sorted[0].confidence ?? 50 };
-  } catch {
-    return null;
-  }
-}
-
-function normalizeUrl(raw: string): string | null {
-  if (!raw) return null;
-  try {
-    const u = raw.startsWith("http") ? raw : `https://${raw}`;
-    new URL(u);
-    return u;
-  } catch { return null; }
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -137,13 +51,12 @@ serve(async (req) => {
   const limit = Math.min(Number(body.limit) || 50, 100);
   const dryRun = body.dry_run === true;
 
-  // Idle prospects: no email, not archived, has a website
+  // Idle prospects: no email, not archived, has a website OR business_name+city (PDL fallback)
   const { data: prospects, error } = await supabase
     .from("prospect_pipeline")
-    .select("id, business_name, website, industry")
+    .select("id, business_name, website, industry, city, state, contact_name, meta")
     .is("email", null)
     .neq("pipeline_stage", "archived")
-    .not("website", "is", null)
     .limit(limit);
 
   if (error) {
@@ -155,38 +68,48 @@ serve(async (req) => {
 
   log("processing", { count: prospects?.length ?? 0, dryRun });
 
-  let scraped = 0, hunter = 0, skipped = 0;
+  const counters: WaterfallCounters = {};
+  for (const p of WATERFALL_PROVIDERS) counters[p] = 0;
+  let skipped = 0;
   const results: any[] = [];
 
   for (const p of prospects ?? []) {
-    const url = normalizeUrl(p.website || "");
-    if (!url) { skipped++; continue; }
+    if (!p.website && !(p.business_name && p.city)) { skipped++; continue; }
 
-    let email: string | null = null;
-    let source: "hunter" | "scrape" | null = null;
-    let confidence = 0;
+    const [first, ...rest] = (p.contact_name || "").trim().split(/\s+/);
+    const last = rest.length ? rest.join(" ") : null;
 
-    // 1. Hunter domain search
-    try {
-      const domain = new URL(url).hostname.replace(/^www\./, "");
-      const h = await hunterDomainSearch(domain);
-      if (h) { email = h.email; source = "hunter"; confidence = h.confidence; hunter++; }
-    } catch {}
+    const result = await runEmailWaterfall(supabase, {
+      website: p.website,
+      business_name: p.business_name,
+      city: p.city,
+      state: p.state,
+      contact_first_name: first || null,
+      contact_last_name: last,
+    }, counters);
 
-    // 2. Site scrape fallback
-    if (!email) {
-      const e = await scrapeEmail(url);
-      if (e) { email = e; source = "scrape"; confidence = 60; scraped++; }
-    }
+    if (!result.email) { skipped++; continue; }
 
-    if (!email) { skipped++; continue; }
-
-    results.push({ id: p.id, business_name: p.business_name, email, source, confidence });
+    results.push({
+      id: p.id,
+      business_name: p.business_name,
+      email: result.email,
+      source: result.source,
+      confidence: result.confidence,
+    });
 
     if (!dryRun) {
+      const existingTrace = Array.isArray(p.meta?.enrichment_trace) ? p.meta!.enrichment_trace : [];
+      const newTraceEntry = {
+        ts: new Date().toISOString(),
+        flow: "email_waterfall",
+        winner: result.source,
+        steps: result.trace,
+      };
+      const meta = { ...(p.meta || {}), enrichment_trace: [...existingTrace, newTraceEntry] };
       await supabase
         .from("prospect_pipeline")
-        .update({ email, updated_at: new Date().toISOString() })
+        .update({ email: result.email, meta, updated_at: new Date().toISOString() })
         .eq("id", p.id);
     }
   }
@@ -196,8 +119,11 @@ serve(async (req) => {
       ok: true,
       processed: prospects?.length ?? 0,
       enriched: results.length,
-      hunter_hits: hunter,
-      scrape_hits: scraped,
+      // legacy keys (UI back-compat)
+      hunter_hits: counters.hunter || 0,
+      scrape_hits: counters.site_scrape || 0,
+      // full breakdown
+      counters,
       skipped,
       dry_run: dryRun,
       sample: results.slice(0, 10),
