@@ -581,6 +581,20 @@ export default function AdminDeadLeads() {
 
         {/* ── PROSPECTING PIPELINE TAB ─────────────────────────────── */}
         {tab === "pipeline" && <>
+          {/* Today's pitch rotation badge */}
+          <div style={{ background: todayPitch === "dead_lead" ? "#0f3a2e" : "#1f2937", border: `1px solid ${todayPitch === "dead_lead" ? "#10b981" : "#475569"}`, borderRadius: 8, padding: "10px 14px", marginBottom: 14, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase" }}>Today's Auto-Pitch:</span>
+            <span style={{ fontSize: 14, color: "#fff", fontWeight: 700 }}>{pitchLabels[todayPitch]}</span>
+            {todayPitch !== "dead_lead" && (
+              <span style={{ fontSize: 11, color: "#fbbf24", marginLeft: "auto" }}>
+                Dead-lead pitch returns in {daysUntilDeadLead} day{daysUntilDeadLead === 1 ? "" : "s"} — manual button below forces dead-lead
+              </span>
+            )}
+            {todayPitch === "dead_lead" && (
+              <span style={{ fontSize: 11, color: "#10b981", marginLeft: "auto", fontWeight: 600 }}>✓ Cron will send dead-lead today</span>
+            )}
+          </div>
+
           {/* Pipeline stats */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10, marginBottom: 16 }}>
             {[
