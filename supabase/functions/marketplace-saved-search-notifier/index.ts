@@ -45,7 +45,7 @@ serve(async (req) => {
   for (const s of searches as any[]) {
     if (!s.phone) continue;
     let q = sb.from("unified_lead_marketplace_view" as any)
-      .select("id, score, city, zip, signal_type, signal_strength_tier, human_summary")
+      .select("id, score, city, zip, signal_type, signal_strength_tier, human_summary, created_at")
       .eq("product", s.product)
       .gte("score", s.min_score || 6)
       .gte("created_at", since)
@@ -58,9 +58,20 @@ serve(async (req) => {
     const { data: matches } = await q;
     if (!matches?.length) continue;
 
+    // First Look gate: non-subscribers wait 1 hour on hot leads. Subscribers see them immediately.
+    const subscribed = isSubscriber(s.email || "", s.product);
+    const gated = (matches as any[]).filter((m: any) => {
+      if (subscribed) return true;
+      const isHot = (m.signal_strength_tier || "").toLowerCase() === "hot";
+      if (!isHot) return true;
+      const createdMs = m.created_at ? new Date(m.created_at).getTime() : 0;
+      return createdMs <= ONE_HOUR_AGO;
+    });
+    if (!gated.length) continue;
+
     // Dedup against last_notified_lead_ids
     const already = new Set<string>(Array.isArray(s.last_notified_lead_ids) ? s.last_notified_lead_ids : []);
-    const fresh = (matches as any[]).filter(m => !already.has(m.id));
+    const fresh = gated.filter((m: any) => !already.has(m.id));
     if (!fresh.length) continue;
 
     const top = fresh[0];
