@@ -1790,3 +1790,8 @@ verify_jwt = false
 
 [functions.marketplace-reengagement]
 verify_jwt = false
+[functions.marketplace-watched-leads]
+verify_jwt = false
+
+[functions.marketplace-watch-add]
+verify_jwt = false
