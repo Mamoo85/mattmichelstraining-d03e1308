@@ -90,6 +90,58 @@ function applyFilters(q: any, filter: Record<string, any> = {}) {
   return q;
 }
 
+function normalizeJoinedSite(row: any) {
+  const site = Array.isArray(row?.contractor_lead_sites)
+    ? row.contractor_lead_sites[0]
+    : row?.contractor_lead_sites;
+  return {
+    ...row,
+    trade: site?.trade ?? row?.trade ?? row?.project_type ?? null,
+    city: site?.city ?? row?.city ?? null,
+    state: site?.state ?? row?.state ?? null,
+    slug: site?.slug ?? row?.slug ?? null,
+  };
+}
+
+function canonicalTrade(value: unknown): string {
+  const raw = String(value || "").toLowerCase().trim();
+  if (!raw) return "";
+  if (raw.includes("electr")) return "electrical";
+  if (raw.includes("plumb")) return "plumbing";
+  if (raw.includes("roof")) return "roofing";
+  if (raw.includes("hvac") || raw.includes("heating") || raw.includes("cooling")) return "hvac";
+  if (raw.includes("gutter")) return "gutters";
+  if (raw.includes("siding")) return "siding";
+  if (raw.includes("boiler")) return "boiler";
+  return raw;
+}
+
+function rowMatchesFilter(row: Record<string, any>, filter: Record<string, any> = {}) {
+  return Object.entries(filter).every(([k, v]) => {
+    const rowValue = row[k];
+    if (v === null) return rowValue == null;
+    if (typeof v === "object" && v !== null && "op" in v) {
+      const { op, value } = v as { op: string; value: any };
+      const left = rowValue == null ? null : String(rowValue).toLowerCase();
+      const right = value == null ? null : String(value).toLowerCase();
+      if (op === "ilike") return !!left && !!right && left.includes(right.replaceAll("%", ""));
+      if (op === "in") return Array.isArray(value) && value.some((entry) => String(entry).toLowerCase() === left);
+      if (["gte", "lte", "gt", "lt"].includes(op)) {
+        const l = rowValue == null ? null : Number(rowValue);
+        const r = Number(value);
+        if (l == null || Number.isNaN(l) || Number.isNaN(r)) return false;
+        if (op === "gte") return l >= r;
+        if (op === "lte") return l <= r;
+        if (op === "gt") return l > r;
+        return l < r;
+      }
+      if (op === "neq") return String(rowValue ?? "").toLowerCase() !== String(value ?? "").toLowerCase();
+    }
+    if (k === "trade") return canonicalTrade(rowValue) === canonicalTrade(v);
+    return String(rowValue ?? "").toLowerCase() === String(v ?? "").toLowerCase();
+  });
+}
+
 const TOOLS: Record<string, (args: any) => Promise<ToolResult>> = {
   async count_records({ table, filter }) {
     assertTable(table);
@@ -112,6 +164,24 @@ const TOOLS: Record<string, (args: any) => Promise<ToolResult>> = {
 
   async aggregate_records({ table, filter, group_by }) {
     assertTable(table);
+    if (table === "contractor_leads") {
+      const { data, error } = await supa
+        .from("contractor_leads")
+        .select("id, project_type, contractor_lead_sites(trade, city, state, slug)")
+        .limit(1000);
+      if (error) return { ok: false, error: error.message };
+      const rows = (data || []).map((row: any) => normalizeJoinedSite(row));
+      const filtered = rows.filter((row: any) => rowMatchesFilter(row, filter || {}));
+      const counts: Record<string, number> = {};
+      for (const row of filtered) {
+        const key = String((row as any)[group_by] ?? "—");
+        counts[key] = (counts[key] || 0) + 1;
+      }
+      const grouped = Object.entries(counts)
+        .map(([k, v]) => ({ [group_by]: k, count: v }))
+        .sort((a: any, b: any) => b.count - a.count);
+      return { ok: true, rows: grouped, count: grouped.length };
+    }
     // Simple group-by via fetch + JS aggregation (RPC-free, safe).
     let q = supa.from(table).select(group_by).limit(1000);
     q = applyFilters(q, filter || {});
@@ -150,13 +220,13 @@ const TOOLS: Record<string, (args: any) => Promise<ToolResult>> = {
 
   async find_high_confidence_signals({ industry = null, city = null, min_confidence = 7, limit = 10 }) {
     let q = supa.from("industry_pulse_signals")
-      .select("id, company_name, industry, city, state, signal_type, confidence, summary, source_url, created_at")
+      .select("id, company_name, industry, location, county, signal_type, confidence, human_summary, suggested_opener, created_at")
       .gte("confidence", Number(min_confidence) || 7)
       .order("confidence", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(Math.min(Number(limit) || 10, 50));
     if (industry) q = q.ilike("industry", `%${industry}%`);
-    if (city) q = q.ilike("city", `%${city}%`);
+    if (city) q = q.ilike("location", `%${city}%`);
     const { data, error } = await q;
     if (error) return { ok: false, error: error.message };
     return { ok: true, rows: data || [], count: (data || []).length };
@@ -164,15 +234,32 @@ const TOOLS: Record<string, (args: any) => Promise<ToolResult>> = {
 
   async find_unclaimed_leads({ trade = null, city = null, limit = 10 }) {
     let q = supa.from("contractor_leads")
-      .select("id, trade, city, state, customer_name, customer_phone, customer_email, job_description, created_at, claimed_at")
+      .select("id, name, phone, email, message, project_type, created_at, claimed_at, contractor_lead_sites(trade, city, state)")
       .is("claimed_at", null)
       .order("created_at", { ascending: false })
-      .limit(Math.min(Number(limit) || 10, 50));
-    if (trade) q = q.ilike("trade", `%${trade}%`);
-    if (city) q = q.ilike("city", `%${city}%`);
+      .limit(200);
     const { data, error } = await q;
     if (error) return { ok: false, error: error.message };
-    return { ok: true, rows: data || [], count: (data || []).length };
+    const rows = (data || []).map((row: any) => {
+      const normalized = normalizeJoinedSite(row);
+      return {
+        id: normalized.id,
+        trade: normalized.trade,
+        city: normalized.city,
+        state: normalized.state,
+        customer_name: normalized.name,
+        customer_phone: normalized.phone,
+        customer_email: normalized.email,
+        job_description: normalized.message ?? normalized.project_type,
+        created_at: normalized.created_at,
+        claimed_at: normalized.claimed_at,
+      };
+    }).filter((row: any) => {
+      if (trade && canonicalTrade(row.trade) !== canonicalTrade(trade)) return false;
+      if (city && String(row.city || "").toLowerCase() !== String(city).toLowerCase()) return false;
+      return true;
+    }).slice(0, Math.min(Number(limit) || 10, 50));
+    return { ok: true, rows, count: rows.length };
   },
 
   async find_buyers_in_area({ trade = null, city = null, limit = 20 }) {
