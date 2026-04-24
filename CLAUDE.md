@@ -14,40 +14,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-04-24*
 
-### Phase 22 — Golden Ticket Marketplace + LO Outreach COMPLETE ✅
-*Branch: `claude/review-design-system-qRGjL`*
+### Phase 22 — Golden Ticket Marketplace + LO Outreach + Paranoia Sweep COMPLETE ✅
+*Last updated: 2026-04-24*
 
-**Status: Committed + pushed. Waiting on Matt to merge → Lovable deploys.**
-
-**Shipped:**
-- Matt enrolled as test customer in all 5 products (`20260424110000_matt_test_enrollments.sql`)
-- LO Outreach System (`src/components/dwa-admin/LeadSalesOutreachHub.tsx`) — 3-tab admin: Prospects / Campaign Builder / History
-- Golden Ticket Marketplace v2 plan at `/root/.claude/plans/whats-going-ok-structured-minsky.md`
-- Edge functions: `find-lo-prospects` (Apollo MI MLO search), `enrich-lo-prospect`, `send-fax`, `send-postcard`, `marketplace-outreach-blast`
-- Migration: `20260424100000_lo_outreach_system.sql` — `marketplace_prospects`, `lo_outreach_campaigns`, `lo_outreach_sends`
+**Shipped this session (Paranoia Sweep):**
+- GHOST-1/2: `agency-payment-reconcile` covers all 5 DWA products + marketplace `email_sent_at` reconcile
+- GHOST-3: Stripe webhook PDF call awaited with 25s timeout + `notifyMatt` on failure
+- MALICIOUS-1/2: `dead-lead-intake` — 500-lead cap, field truncation, campaign rollback on contacts failure
+- MALICIOUS-3: `create-marketplace-lead-checkout` — UUID + email format validation
+- TOKEN-1: `queryClient.ts` — global 401/PGRST301 handler signs out expired sessions
+- iOS fix: `window.prompt()` replaced with `BuyerEmailDialog` in `FirstLookUpsellGate` + `LeadDetail`
+- Migration: `email_sent_at` column + partial index on `marketplace_lead_locks`
 
 **BSEED ArcGIS note**: `services2.arcgis.com/qvkbeam7Wirps6zC` is the only working server-side permit source. `data-wayne.opendata.arcgis.com` blocks all server requests (403). BSEED fields are **lowercase**: `address`, `issued_date`, `work_description`, `amt_estimated_contractor_cost`.
 
 **NMLS note**: `find-lo-prospects` uses Apollo.io (not NMLS Consumer Access — Cloudflare blocks it).
 
-**Known unfixed bugs (from QA audit this session):**
-- CRITICAL: `chargeContractor()` in `handle-dead-lead-reply` — no `res.ok` check, silent $50 revenue loss
-- CRITICAL: `dead-lead-drip` — missing `await` on status updates → duplicate SMS (TCPA violation)
-- CRITICAL: `create-marketplace-lead-checkout` — race condition on soft-lock, double-sell possible (needs `claim_lead_soft_lock` RPC)
-- CRITICAL: `stripe-webhook` outer catch returns 200 on inner failures
-- HIGH: `Marketplace.tsx` uses `window.prompt()` — blocked on iOS
-- HIGH: `marketplace_buyer_watches` open RLS — email spoofing possible
-- HIGH: `contractor-lead-notify` — fire-and-forget Resend email
+**Remaining open items:**
+- `marketplace_buyer_watches` RLS — email spoofing possible (needs auth-gated policy)
+- `create-marketplace-lead-checkout` soft-lock race condition — needs `claim_lead_soft_lock` DB RPC for true atomicity
+- `stripe-webhook` outer catch returns 200 on inner failures (architectural, low urgency — reconcile cron catches misses)
 
 **Secrets Matt needs to add:**
 - `LOB_API_KEY` — lob.com (postcards)
-- `BROWSERLESS_API_KEY` — dossier PDFs (Session 2)
+- `BROWSERLESS_API_KEY` — dossier PDFs
 - `APOLLO_API_KEY` — prospect enrichment
-
-**WAITING ON MATT:**
-1. Merge `claude/review-design-system-qRGjL` → main
-2. Add the 3 secrets above to Lovable
-3. Give Lovable the marketplace plan to build Sessions 1 + 2
 
 ---
 
