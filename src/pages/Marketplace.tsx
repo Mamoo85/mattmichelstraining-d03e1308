@@ -466,6 +466,28 @@ export default function Marketplace() {
           <div className="flex items-center justify-center py-20 text-muted-foreground">
             <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading leads…
           </div>
+        ) : loadError ? (
+          <div className="text-center py-20">
+            <AlertTriangle className="w-8 h-8 mx-auto mb-3 text-destructive" />
+            <p className="text-muted-foreground mb-4">Couldn't load this marketplace. Network or server hiccup.</p>
+            <Button variant="outline" onClick={() => setReloadKey((k) => k + 1)}>Retry</Button>
+          </div>
+        ) : leads.length === 0 ? (
+          <div className="text-center py-20 max-w-md mx-auto">
+            <PackageOpen className="w-10 h-10 mx-auto mb-3 text-intel-teal/70" />
+            <h2 className="text-xl font-bold mb-2">Restocking {productMeta.label.toLowerCase()}</h2>
+            <p className="text-muted-foreground text-sm mb-5">
+              Fresh leads are being scored right now. New batches drop every 15 min for First Look subscribers, every 60 min for everyone else.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              <Button onClick={() => setRestockOpen(true)} className="bg-intel-teal text-background hover:bg-intel-teal/90">
+                <Bell className="w-4 h-4 mr-1" /> Notify me when stocked
+              </Button>
+              <Button variant="outline" onClick={() => setParams({ product: "mortgage" })}>
+                Browse other verticals
+              </Button>
+            </div>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-muted-foreground mb-4">No leads match your filters.</p>
