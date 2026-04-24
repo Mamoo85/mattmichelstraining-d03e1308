@@ -240,6 +240,8 @@ export default function Marketplace() {
           Showing {filtered.length} of {leads.length} live leads · Updated continuously
         </p>
       </div>
+
+      <FirstLookUpsellGate product={product} leads={leads as any} />
     </div>
   );
 }
