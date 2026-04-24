@@ -236,7 +236,11 @@ serve(async (req) => {
     if (contactErr) {
       // MALICIOUS-2: rollback the campaign so it doesn't become an active orphan
       // that loops forever in the drip cron with 0 contacts.
-      await sb.from("dead_lead_campaigns" as any).delete().eq("id", campaign.id).catch(() => {});
+      try {
+        await sb.from("dead_lead_campaigns" as any).delete().eq("id", campaign.id);
+      } catch (rollbackErr) {
+        console.error("[dead-lead-intake] rollback failed", rollbackErr);
+      }
       throw new Error(`contacts insert: ${contactErr.message}`);
     }
 
