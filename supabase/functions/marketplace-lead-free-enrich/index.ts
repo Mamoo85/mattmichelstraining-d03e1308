@@ -88,6 +88,48 @@ async function fetchNoaaStorms(state: string, county: string): Promise<number | 
   } catch { return null; }
 }
 
+// NOAA Storm Events — ZIP-level recent hail/wind/tornado in last 90 days.
+// Writes the structure that marketplace-lead-summarize.applyScoreBoosts looks for:
+//   { recent_storm_count, last_event_date, types }
+// so a recent severe-weather hit in the lead's ZIP automatically boosts the lead score.
+async function fetchNoaaZipRecent(zip: string, lat: number, lon: number): Promise<any | null> {
+  if (!zip && !(lat && lon)) return null;
+  try {
+    // NOAA NCEI Storm Events public dataset, last 90d, ~50km bounding box around the lead.
+    const start = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
+    const end = new Date().toISOString().slice(0, 10);
+    const eventTypes = "Hail,Thunderstorm Wind,Tornado,High Wind,Heavy Snow,Ice Storm";
+    const params = new URLSearchParams({
+      dataset: "storm-events",
+      startDate: start,
+      endDate: end,
+      format: "json",
+      limit: "50",
+      eventType: eventTypes,
+    });
+    if (lat && lon) {
+      // ~0.45° ≈ 50km bounding box
+      const bbox = `${(lat - 0.45).toFixed(3)},${(lon - 0.45).toFixed(3)},${(lat + 0.45).toFixed(3)},${(lon + 0.45).toFixed(3)}`;
+      params.set("boundingBox", bbox);
+    }
+    const url = `https://www.ncei.noaa.gov/access/services/data/v1?${params.toString()}`;
+    const res = await fetch(url);
+    const data = await safeJson(res);
+    if (!Array.isArray(data) || data.length === 0) {
+      return { recent_storm_count: 0, types: [], last_event_date: null };
+    }
+    const types = Array.from(new Set(data.map((e: any) => e.EVENT_TYPE).filter(Boolean))).slice(0, 5);
+    const dates = data.map((e: any) => e.BEGIN_DATE_TIME || e.BEGIN_YEARMONTH).filter(Boolean).sort();
+    return {
+      recent_storm_count: data.length,
+      types,
+      last_event_date: dates[dates.length - 1] || null,
+      window_days: 90,
+      source: "NOAA NCEI Storm Events",
+    };
+  } catch { return null; }
+}
+
 async function fetchUsgsQuakes(lat: number, lon: number): Promise<number | null> {
   if (!lat || !lon) return null;
   try {
@@ -211,12 +253,13 @@ serve(async (req) => {
 
     console.log(`[FREE-ENRICH] Starting for lead ${lead_id}`);
 
-    // Run all 10 in parallel
+    // Run all 11 in parallel
     const [
       mortgageRate,
       treasury10y,
       census,
       noaaStorms,
+      noaaZipRecent,
       usgsQuakes,
       areaCode,
       neighborPermits,
@@ -228,6 +271,7 @@ serve(async (req) => {
       fetchTreasuryYield(),
       fetchCensusTract(lead.zip || ""),
       fetchNoaaStorms(lead.state || "", lead.county || ""),
+      fetchNoaaZipRecent(lead.zip || "", lead.lat || 0, lead.lon || 0),
       fetchUsgsQuakes(lead.lat || 0, lead.lon || 0),
       fetchFccAreaCode(lead.phone || ""),
       fetchDetroitNeighborPermits(lead.zip || ""),
@@ -241,6 +285,10 @@ serve(async (req) => {
       treasury_10y: treasury10y,
       census_tract: census,
       storm_events_12mo: noaaStorms,
+      // Surface NOAA recent-storm hit under enrich.noaa.* so applyScoreBoosts() in
+      // marketplace-lead-summarize automatically applies the +1 score boost.
+      noaa: noaaZipRecent,
+      storm_recent: !!(noaaZipRecent && (noaaZipRecent as any).recent_storm_count > 0),
       earthquakes_5yr_50km: usgsQuakes,
       area_code: areaCode,
       neighbor_permits_zip: neighborPermits,

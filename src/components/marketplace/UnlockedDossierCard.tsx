@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { BuyerChip, FreshnessBadge, TierBadge, ScoreBars, EquityPanel, MetricsRow, TcpaBadge, IntelPanel, type MarketplaceLead } from "./GoldenTicketCard";
+import { SourceIconRow } from "./SourceIconRow";
 import { cn } from "@/lib/utils";
 
 interface UnlockedLead extends MarketplaceLead {
