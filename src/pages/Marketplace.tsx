@@ -24,7 +24,8 @@ type TierFilter = "all" | "hot" | "warm" | "cool";
 
 export default function Marketplace() {
   const [params, setParams] = useSearchParams();
-  const product = (params.get("product") as ProductKey) || "mortgage";
+  const pathProduct = (typeof window !== "undefined" ? window.location.pathname.replace("/", "").replace("-leads", "") : "") as ProductKey;
+  const product = (params.get("product") as ProductKey) || (PRODUCTS.some((p) => p.key === pathProduct) ? pathProduct : "mortgage");
   const [leads, setLeads] = useState<MarketplaceLead[]>([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState<SortKey>("score");
