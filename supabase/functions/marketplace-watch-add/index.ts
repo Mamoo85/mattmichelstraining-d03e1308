@@ -6,15 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Pricing tiers — must match marketplace pricing logic in watch-price-drop & checkout
-function priceForLead(score: number, ageDays: number): number {
-  if (ageDays > 14) return 1500;
-  if (ageDays > 7) return 3500;
-  if (score >= 8) return 9900;
-  if (score >= 6) return 6900;
-  return 4900;
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -45,41 +36,31 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Snapshot current computed price for price-drop tracking.
-    // Source table varies by product; we use the unified view which is product-agnostic.
-    let snapshotPrice: number | null = null;
-    let resolvedProduct = product || "mortgage";
-    try {
-      const { data: lead } = await supabase
-        .from("unified_lead_marketplace_view")
-        .select("score, created_at, product")
-        .eq("id", lead_id)
-        .maybeSingle();
-      if (lead) {
-        const ageDays = (Date.now() - new Date(lead.created_at as string).getTime()) / 86_400_000;
-        snapshotPrice = priceForLead((lead.score as number) || 0, ageDays);
-        resolvedProduct = (lead.product as string) || resolvedProduct;
-      }
-    } catch (_e) {
-      // non-fatal — watch row will just have null snapshot
-    }
+    // Snapshot current price from lead lock (works for all product types)
+    const { data: lock } = await supabase
+      .from("marketplace_lead_locks")
+      .select("price_cents, product")
+      .eq("lead_id", lead_id)
+      .in("status", ["sold", "soft_locked"])
+      .order("created_at", { ascending: false })
+      .maybeSingle();
 
     await supabase.from("marketplace_buyer_watches").upsert(
       {
         buyer_email: email,
         lead_id,
-        product: resolvedProduct,
-        last_price_cents: snapshotPrice,
+        product: product || lock?.product || "mortgage",
+        last_price_cents: lock?.price_cents ?? null,
       },
       { onConflict: "buyer_email,lead_id" }
     );
 
-    return new Response(JSON.stringify({ ok: true, snapshot_price_cents: snapshotPrice }), {
+    return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     return new Response(JSON.stringify({ ok: false, error: String(e) }), {
-      status: 200,
+      status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

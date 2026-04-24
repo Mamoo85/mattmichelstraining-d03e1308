@@ -1,22 +1,42 @@
-// Batch wrapper: hourly cron picks up to 100 unenriched mortgage_radar_leads
+// Batch wrapper: hourly cron picks up to 100 unenriched leads across all product types
 // and fans out to marketplace-lead-free-enrich one at a time.
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
-const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
-serve(async (_req) => {
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-  const { data: leads } = await sb
-    .from("mortgage_radar_leads")
-    .select("id")
-    .is("free_enrich_at", null)
-    .order("created_at", { ascending: false })
-    .limit(100);
 
-  if (!leads?.length) {
-    return new Response(JSON.stringify({ ok: true, enriched: 0 }), { status: 200 });
+  // Pull unenriched leads from all three source tables
+  // mortgage uses free_enrich_at; talent+pulse use human_summary (null = not yet summarized)
+  const [mortgageRes, talentRes, pulseRes] = await Promise.all([
+    sb.from("mortgage_radar_leads").select("id").is("free_enrich_at", null)
+      .order("created_at", { ascending: false }).limit(34),
+    sb.from("hire_alert_candidates").select("id").is("human_summary", null)
+      .order("created_at", { ascending: false }).limit(33),
+    sb.from("industry_pulse_signals").select("id").is("human_summary", null)
+      .order("created_at", { ascending: false }).limit(33),
+  ]);
+
+  const leads = [
+    ...(mortgageRes.data || []),
+    ...(talentRes.data || []),
+    ...(pulseRes.data || []),
+  ];
+
+  if (!leads.length) {
+    return new Response(JSON.stringify({ ok: true, enriched: 0 }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   let ok = 0;
@@ -31,7 +51,7 @@ serve(async (_req) => {
         body: JSON.stringify({ lead_id: l.id }),
       });
       if (res.ok) ok++;
-      // Chain gov-enrich for the same lead (SAM.gov, USPS, HUD, EPA, NPI, MI SOS)
+      // Chain gov-enrich fire-and-forget
       fetch(`${SUPABASE_URL}/functions/v1/marketplace-lead-gov-enrich`, {
         method: "POST",
         headers: {
@@ -47,6 +67,6 @@ serve(async (_req) => {
 
   return new Response(JSON.stringify({ ok: true, enriched: ok, attempted: leads.length }), {
     status: 200,
-    headers: { "Content-Type": "application/json" },
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });

@@ -1795,3 +1795,6 @@ verify_jwt = false
 
 [functions.marketplace-watch-add]
 verify_jwt = false
+
+[functions.marketplace-lead-summarize]
+verify_jwt = false

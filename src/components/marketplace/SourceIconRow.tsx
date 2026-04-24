@@ -10,8 +10,8 @@ interface ProvenanceSource {
 const SOURCE_MAP: Record<string, { icon: string; label: string }> = {
   bseed: { icon: "🏗️", label: "BSEED Detroit Permits" },
   permit: { icon: "🏗️", label: "BSEED Detroit Permits" },
-  sonar: { icon: "📋", label: "Sonar OSINT" },
-  perplexity: { icon: "📋", label: "Sonar OSINT" },
+  sonar: { icon: "📋", label: "Public Record Scan" },
+  perplexity: { icon: "📋", label: "Public Record Scan" },
   mi_sos: { icon: "🏛️", label: "MI Secretary of State" },
   llc: { icon: "🏛️", label: "MI Secretary of State" },
   noaa: { icon: "☁️", label: "NOAA Storm Events" },
