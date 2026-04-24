@@ -1,123 +1,127 @@
 
 
-# Honest Audit — Your 50-Item Spec vs What's Actually Shipped
+# Defense Protocol + E2E Audit & Patch — Combined Plan
 
-You asked: "Did you already do this?" Short answer: **about 60% is shipped, 40% is missing.** Here's the receipts.
+## Part 1 — Lock the DWA Defensive Programming Protocol into the codebase
 
-## Constraints/architecture (top of your spec)
+This isn't just a verbal promise. It becomes a file the agents and I read on every session.
 
-| Item | Status |
-|---|---|
-| `mortgage-radar-enrich` exists, don't rebuild | ✅ Honored |
-| `mortgage-radar-outreach` exists | ✅ Honored |
-| `mortgage-radar-digest` weekly | ✅ Honored |
-| `_shared/cheap-extract.ts` for AI openers | ✅ Used in `marketplace-lead-summarize` |
-| `BROWSERLESS_API_KEY` in PDF gen | ✅ Wired in `marketplace-generate-dossier-pdf` |
-| Google Maps for Street View, no Mapbox | ✅ |
-| Model `claude-haiku-4-5-20251001` | ✅ |
-| Supabase Storage `lead-dossier-pdfs` | ✅ |
-| Anonymous viewer count | ✅ `marketplace-track-view` |
-| Hot/Warm/Cool deterministic tier | ✅ `signal_strength_rules` |
-| TCPA banner above opener | ✅ In `UnlockedDossierCard` |
-| Sold state on card | ✅ `SoldDossierCard` + sold-IDs query (last session) |
-| 30-day signed PDF URLs | ✅ In receipts function |
-| 2-session split (no payment in S1) | ✅ Stripe in S2 already done |
+**New file: `.lovable/memory/tech/dwa-defensive-programming-protocol.md`** (also referenced from `mem://index.md` Core)
 
-## The 50 enhancements
+```
+---
+name: DWA Defensive Programming Protocol
+description: Hard rules for any code that touches money, leads, or external APIs
+type: constraint
+---
 
-### Group A — Free Government APIs (10 items): **6/10 done**
-| # | Item | Status |
-|---|---|---|
-| 1 | FRED 30Y rate | ✅ in `marketplace-lead-free-enrich` |
-| 2 | Census ACS demographics | ✅ |
-| 3 | NOAA storm cross-ref + score boost | ⚠️ Storm count fetched, **score boost not applied** |
-| 4 | SAM.gov W-2 income badge | ❌ Missing |
-| 5 | BSEED full permit history on expand | ✅ Already live |
-| 6 | USPS address standardization | ❌ Missing |
-| 7 | HUD Fair Market Rents | ❌ Missing |
-| 8 | Michigan SOS LLC status via Sonar | ❌ Missing (Sonar exists for foreclosures only) |
-| 9 | EPA ECHO violations | ❌ Missing |
-| 10 | NPI Registry healthcare badge | ❌ Missing |
+Assume the network will fail, the DB will lock, the user will double-click.
 
-### Group B — DB-Computed (15 items): **~5/15 done**
-- ✅ #14 days_on_radar, #15 signal rarity, #19 lead age bucket, #20 deal size range, #21 score percentile (visible in `GoldenTicketCard`)
-- ❌ #11 signal velocity, #12 ZIP heat index, #13 stacking bonus (+2 cap 10), #16 nearby signal count, #17 ZIP purchase demand %, #18 score trend arrow, #22 break-even tracker, #23 time-to-expiry countdown, #24 "similar leads" rail, #25 buyer ROI history
+1. NO SWALLOWED ERRORS
+   - Forbidden: catch(e){} | catch(e){return null} without logging
+   - Required: console.error(`[fn-name] context`, e) + structured row in
+     system_error_log (or function-specific log table) before any return.
 
-### Group C — UI/UX (12 items): **3/12 done**
-- ✅ #27 sort, #28 filter chips, #29 watch bookmark + #37 dismissal memory (localStorage)
-- ❌ #26 keyboard shortcuts, #30 comparison mode, #31 mobile swipe gestures, #32 full-screen expand, #33 copy-all opener, #34 dark/light toggle, #35 "new since last visit", #36 inline score explainer hover
+2. NO BLIND FETCHES
+   - Every fetch() to Twilio, Resend, Stripe, Sonar, Anthropic, Apollo, Lob,
+     Browserless, Firecrawl, DataForSEO, Google APIs MUST:
+       a. wrap in try/catch
+       b. check `if (!res.ok) { const body = await res.text(); throw ... }`
+       c. log the upstream status + body to system_error_log
+       d. have a fallback (queue retry / skip / mark failed) — never silent.
 
-### Group D — Notifications (8 items): **1/8 done**
-- ✅ #38 saved search alerts (`marketplace-saved-search-notifier` + first-look gating)
-- ❌ #39 score-bump alert, #40 7-day re-engage email, #41 purchase confirmation SMS, #42 Hot Zone alert (3+ leads in ZIP/7d), #43 Friday scorecard, #44 D1/D3/D7 welcome sequence, #45 price-drop alert for watched leads
+3. CONCURRENCY FIRST
+   - Any money/lead exchange (claim, purchase, charge, soft-lock) MUST use a
+     SECURITY DEFINER Postgres RPC with SELECT ... FOR UPDATE or unique-index
+     guard. Never do "check then write" from the edge function or frontend.
+   - Stripe webhooks MUST be idempotent on (event.id) — store processed
+     event ids in stripe_webhook_events.
 
-### Group E — Trust + Compliance (5 items): **3/5 done**
-- ✅ #46 TCPA badge (`tcpa_clear` from `sms_opt_outs`), #48 scanner provenance tooltip, #49 freshness per field
-- ❌ #47 signal source icons (🏗️📋🏛️☁️🏛️) on cards, #50 free sample lead for logged-out visitors
+4. NO FIRE-AND-FORGET DB CALLS
+   - Every supabase.from(...).insert/update/upsert/delete MUST be awaited.
+   - Every `.then()` without `.catch()` is a bug.
+   - Background work uses EdgeRuntime.waitUntil(...) only — never naked
+     promises.
+
+5. WEBHOOK FAIL-FAST
+   - stripe-webhook returns HTTP 500 on ANY inner failure so Stripe retries.
+   - Never wrap the whole handler in a try/catch that returns 200.
+
+6. INPUT VALIDATION
+   - Every public edge function validates body with zod (or equivalent) and
+     returns 400 on failure — no untyped destructure.
+```
+
+The file is saved to memory so it appears in the index permanently and every future Lovable session is bound by it.
 
 ---
 
-## What I'll build to close the gap (Session 4)
+## Part 2 — End-to-End Production Audit & Patch (5 products × 4 phases)
 
-### Migration `<ts>_marketplace_50_gapfill.sql`
-- Add `mortgage_radar_leads.score_history JSONB` (for trend arrow)
-- Add `mortgage_radar_leads.last_score_alert_at TIMESTAMPTZ`
-- Add `marketplace_buyer_watches (buyer_email, lead_id, product, created_at, last_price)` table for price-drop alerts
-- Add `marketplace_buyer_visits (buyer_email, last_seen_at)` for "new since last visit"
-- DB function `mp_zip_heat_index(zip)` returning signals/30d count
-- DB function `mp_signal_velocity(lead_id)` returning per-30d delta
-- Backfill `signal_strength_rules` to add **+1 score** for `noaa_storm_recent` + cap stacking at 10
+Same plan as before, executed under Part 1 rules.
 
-### New edge functions
-- `marketplace-lead-gov-enrich` — adds SAM.gov, USPS, HUD, EPA ECHO, NPI, MI SOS Sonar (Group A items 4, 6, 7, 8, 9, 10) into `free_enrichment.gov` JSONB blob; runs in same hourly batch
-- `marketplace-hot-zone-notifier` — daily cron, finds ZIPs with 3+ new leads in 7d, emails saved-search subscribers (item 42)
-- `marketplace-score-bump-alert` — runs when `score_history` shows +2 jump for a watched lead, SMS/email buyer (item 39)
-- `marketplace-weekly-scorecard` — Friday 9am cron, emails buyers their week of activity + missed leads (item 43)
-- `marketplace-buyer-welcome` — D1/D3/D7 drip after first purchase (item 44)
-- `marketplace-watch-price-drop` — daily, compares current price to `last_price` on watch row, emails on drop (item 45)
-- `marketplace-reengagement` — daily, emails buyers with `last_seen_at > 7d` and unread leads (item 40)
-- Extend `stripe-webhook` `marketplace_lead_purchase` branch → SMS purchase confirmation (item 41)
+**Products audited:** Apex Talent Signal · Contractor Leads · Dead Lead Reactivation · FieldDesk · TechAlert/HireAlert
 
-### Frontend additions
-- **Marketplace.tsx**: keyboard shortcuts (J/K nav, Enter open, C compare, B buy, Esc close), dark/light toggle (uses existing theme system), comparison mode (Set of 2-3 selected ids → side-by-side drawer), full-screen expand modal, "NEW" badge driven by `last_seen_at`, copy-all opener button, free-sample-lead block for logged-out visitors (queries 1 lead score 6-7, age ≥7d, masks contact)
-- **GoldenTicketCard.tsx**: signal source emoji row (🏗️ BSEED · 📋 Sonar · 🏛️ MI SOS · ☁️ NOAA · 🏛️ SAM.gov) driven by `provenance_sources` array, inline score explainer Tooltip on hover over score bars, score trend arrow (↑↓→) from `score_history`
-- **New `WatchedLeadsRail.tsx`** + "Similar leads you bought" rail on receipts page (item 24), buyer ROI history strip (item 25), break-even meter (item 22), time-to-expiry countdown (item 23)
-- **MobileSwipe wrapper** around card list using `react-swipeable` (already common): right=watch, left=dismiss (item 31)
+**For each product, all 4 phases verified:**
 
-### Files
+| Phase | What I check |
+|---|---|
+| 1. Entry vectors | QR / SMS / email URLs hit production domain, params survive SPA, no auth-wall on claim links |
+| 2. Conversion gateway | Stripe checkout function returns `{url}`, sets `metadata.type`, dynamic `success_url`, mobile 390px viewport has reachable CTA |
+| 3. Webhook handshake | `stripe-webhook` branch exists per `metadata.type`, DB write awaited, returns 500 on failure, idempotent on `event.id` |
+| 4. Post-purchase | Portal page refetches, welcome email/SMS fires, `notifyMatt()` hits +13138064952 |
 
-**New (10):**
-- `supabase/functions/marketplace-lead-gov-enrich/index.ts`
-- `supabase/functions/marketplace-hot-zone-notifier/index.ts`
-- `supabase/functions/marketplace-score-bump-alert/index.ts`
-- `supabase/functions/marketplace-weekly-scorecard/index.ts`
-- `supabase/functions/marketplace-buyer-welcome/index.ts`
-- `supabase/functions/marketplace-watch-price-drop/index.ts`
-- `supabase/functions/marketplace-reengagement/index.ts`
-- `src/components/marketplace/WatchedLeadsRail.tsx`
-- `src/components/marketplace/CompareDrawer.tsx`
-- `supabase/migrations/<ts>_marketplace_50_gapfill.sql`
+## Known fragility being patched in this session
 
-**Edited (6):**
-- `src/pages/Marketplace.tsx` — keyboard shortcuts, compare, swipe, free-sample block, NEW badge, theme toggle
-- `src/pages/MarketplaceReceipts.tsx` — similar leads rail, ROI history, break-even
-- `src/components/marketplace/GoldenTicketCard.tsx` — source-icon row, trend arrow, hover explainer, copy-all button
-- `supabase/functions/marketplace-lead-free-enrich-batch/index.ts` — also call gov-enrich
-- `supabase/functions/stripe-webhook/index.ts` — purchase confirmation SMS branch
-- `supabase/config.toml` — `verify_jwt = false` for 7 new functions
-- `supabase/functions/marketplace-lead-summarize/index.ts` — apply NOAA score boost + multi-signal stacking cap
+From CLAUDE.md "Known unfixed bugs":
 
-### Cron schedules added
-- `marketplace-hot-zone-notifier` — daily 8am ET
-- `marketplace-score-bump-alert` — every 4h
-- `marketplace-weekly-scorecard` — Fri 9am ET
-- `marketplace-buyer-welcome` — every 6h (picks up new buyers)
-- `marketplace-watch-price-drop` — daily 7am ET
-- `marketplace-reengagement` — daily 11am ET
+| # | Bug | Patch |
+|---|---|---|
+| 1 | `chargeContractor()` in `handle-dead-lead-reply` — no `res.ok` check, silent $50 loss | Add `if (!res.ok)` + log + queue retry row |
+| 2 | `dead-lead-drip` — missing `await` → duplicate SMS (TCPA risk) | Await all status updates; add unique index on (campaign_id, contact_id, step) |
+| 3 | `create-marketplace-lead-checkout` — race on soft-lock | Replace inline check with new RPC `claim_lead_soft_lock(lead_id, buyer_email)` using `SELECT ... FOR UPDATE` |
+| 4 | `stripe-webhook` outer catch returns 200 | Remove outer try/catch swallow; per-branch try/catch that re-throws → 500 |
+| 5 | Stripe webhook idempotency | New table `stripe_webhook_events(event_id PK, processed_at)`; insert-or-skip at top of handler |
+| 6 | `Marketplace.tsx` uses `window.prompt()` (iOS-blocked) | Replace with shadcn `<Dialog>` + email input |
+| 7 | `marketplace_buyer_watches` RLS allows email spoofing | Tighten RLS to require signed buyer_session_token; add `buyer_session_tokens` table |
+| 8 | `contractor-lead-notify` — fire-and-forget Resend | Await + check `res.ok` + log on failure |
 
-### Honest scope
-~3 hours. One ship. After this, your spec is 50/50 + all architecture constraints honored.
+## Files to be created
 
-### What I'm explicitly NOT touching
-Existing `mortgage-radar-enrich`, `mortgage-radar-outreach`, `mortgage-radar-digest`, `_shared/cheap-extract.ts`, the dossier card components, PDF gen, share tokens, summarize, equity-enrich — all already correct.
+- `.lovable/memory/tech/dwa-defensive-programming-protocol.md`
+- `supabase/migrations/<ts>_defense_protocol_hardening.sql`
+  - `stripe_webhook_events` table (idempotency)
+  - `system_error_log` table (centralized error sink) if not present
+  - `claim_lead_soft_lock(lead_id, buyer_email)` RPC with row lock
+  - Unique index `dead_lead_drip(campaign_id, contact_id, step)`
+  - Tighten RLS on `marketplace_buyer_watches` (require token match)
+  - `buyer_session_tokens` table
+- `src/components/marketplace/BuyerEmailDialog.tsx` (replaces `window.prompt`)
+
+## Files to be edited
+
+- `mem://index.md` — add DWA Defensive Protocol to Core + Memories
+- `supabase/functions/stripe-webhook/index.ts` — idempotency check at top, remove outer 200-swallow, per-branch fail-fast
+- `supabase/functions/handle-dead-lead-reply/index.ts` — `chargeContractor` res.ok guard + retry row
+- `supabase/functions/dead-lead-drip/index.ts` — await all writes, dedupe via unique index
+- `supabase/functions/create-marketplace-lead-checkout/index.ts` — call new RPC
+- `supabase/functions/contractor-lead-notify/index.ts` — await Resend, res.ok guard
+- `supabase/functions/marketplace-watch-add/index.ts` + `marketplace-watched-leads/index.ts` — require buyer session token
+- `src/pages/Marketplace.tsx` — replace `window.prompt()` with `BuyerEmailDialog`
+
+## Verification (executed live in build mode)
+
+For each of the 5 products I run:
+1. `curl` the entry URL via deployed preview → 200 + correct route
+2. `supabase--curl_edge_functions` to checkout fn with test body → expect `{url}`
+3. Synthetic webhook event → confirm DB write + 500 on simulated failure + idempotency on duplicate event id
+4. Confirm row in `system_comms_log` (welcome) + row in admin notification log
+
+## Deliverable
+
+Single Pass/Fail table (5 products × 4 phases = 20 cells), every Fail patched in the same ship, list of every file changed, every curl + status code.
+
+## Honest scope
+
+~3-4 hours. One ship. Defense Protocol becomes permanent law via `mem://`.
 
