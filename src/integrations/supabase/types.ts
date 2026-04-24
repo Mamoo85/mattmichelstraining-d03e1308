@@ -6903,6 +6903,7 @@ export type Database = {
           availability_score: number | null
           availability_signal: string | null
           available_until: string | null
+          buyer_type: string | null
           city: string | null
           client_id: string | null
           corroboration_score: number | null
@@ -6912,6 +6913,7 @@ export type Database = {
           current_title: string | null
           cyber_hygiene_score: number | null
           data_completeness: number | null
+          days_on_radar: number | null
           do_not_contact: boolean
           do_not_contact_at: string | null
           email: string | null
@@ -6928,6 +6930,7 @@ export type Database = {
           freshness_score: number | null
           full_name: string | null
           hiring_recommendation: string | null
+          human_summary: string | null
           id: string
           is_company_name: boolean | null
           is_demo_record: boolean | null
@@ -6941,32 +6944,43 @@ export type Database = {
           license_type: string | null
           linkedin_url: string | null
           lng: number | null
+          marketplace_enriched_at: string | null
           metro: string | null
           name: string
+          nearby_signal_count: number | null
           password_compromised: boolean | null
           personal_email_primary: boolean | null
           phone: string | null
           profile_photo_url: string | null
+          provenance_screenshot_paths: Json | null
+          provenance_source_urls: Json | null
           qualifications_summary: string | null
           raw_data: Json | null
           score: number | null
+          score_percentile: number | null
           score_reason: string | null
           search_vector: unknown
+          signal_strength_tier: string | null
+          signal_velocity: number | null
           social_profiles: Json | null
           source: string | null
           source_count: number | null
           state: string | null
           status: string | null
+          suggested_opener: Json | null
+          tcpa_clear: boolean | null
           trade: string | null
           urgency_score: number | null
           years_experience: number | null
           zip: string | null
+          zip_heat_index: number | null
         }
         Insert: {
           alerted_at?: string | null
           availability_score?: number | null
           availability_signal?: string | null
           available_until?: string | null
+          buyer_type?: string | null
           city?: string | null
           client_id?: string | null
           corroboration_score?: number | null
@@ -6976,6 +6990,7 @@ export type Database = {
           current_title?: string | null
           cyber_hygiene_score?: number | null
           data_completeness?: number | null
+          days_on_radar?: number | null
           do_not_contact?: boolean
           do_not_contact_at?: string | null
           email?: string | null
@@ -6992,6 +7007,7 @@ export type Database = {
           freshness_score?: number | null
           full_name?: string | null
           hiring_recommendation?: string | null
+          human_summary?: string | null
           id?: string
           is_company_name?: boolean | null
           is_demo_record?: boolean | null
@@ -7005,32 +7021,43 @@ export type Database = {
           license_type?: string | null
           linkedin_url?: string | null
           lng?: number | null
+          marketplace_enriched_at?: string | null
           metro?: string | null
           name: string
+          nearby_signal_count?: number | null
           password_compromised?: boolean | null
           personal_email_primary?: boolean | null
           phone?: string | null
           profile_photo_url?: string | null
+          provenance_screenshot_paths?: Json | null
+          provenance_source_urls?: Json | null
           qualifications_summary?: string | null
           raw_data?: Json | null
           score?: number | null
+          score_percentile?: number | null
           score_reason?: string | null
           search_vector?: unknown
+          signal_strength_tier?: string | null
+          signal_velocity?: number | null
           social_profiles?: Json | null
           source?: string | null
           source_count?: number | null
           state?: string | null
           status?: string | null
+          suggested_opener?: Json | null
+          tcpa_clear?: boolean | null
           trade?: string | null
           urgency_score?: number | null
           years_experience?: number | null
           zip?: string | null
+          zip_heat_index?: number | null
         }
         Update: {
           alerted_at?: string | null
           availability_score?: number | null
           availability_signal?: string | null
           available_until?: string | null
+          buyer_type?: string | null
           city?: string | null
           client_id?: string | null
           corroboration_score?: number | null
@@ -7040,6 +7067,7 @@ export type Database = {
           current_title?: string | null
           cyber_hygiene_score?: number | null
           data_completeness?: number | null
+          days_on_radar?: number | null
           do_not_contact?: boolean
           do_not_contact_at?: string | null
           email?: string | null
@@ -7056,6 +7084,7 @@ export type Database = {
           freshness_score?: number | null
           full_name?: string | null
           hiring_recommendation?: string | null
+          human_summary?: string | null
           id?: string
           is_company_name?: boolean | null
           is_demo_record?: boolean | null
@@ -7069,26 +7098,36 @@ export type Database = {
           license_type?: string | null
           linkedin_url?: string | null
           lng?: number | null
+          marketplace_enriched_at?: string | null
           metro?: string | null
           name?: string
+          nearby_signal_count?: number | null
           password_compromised?: boolean | null
           personal_email_primary?: boolean | null
           phone?: string | null
           profile_photo_url?: string | null
+          provenance_screenshot_paths?: Json | null
+          provenance_source_urls?: Json | null
           qualifications_summary?: string | null
           raw_data?: Json | null
           score?: number | null
+          score_percentile?: number | null
           score_reason?: string | null
           search_vector?: unknown
+          signal_strength_tier?: string | null
+          signal_velocity?: number | null
           social_profiles?: Json | null
           source?: string | null
           source_count?: number | null
           state?: string | null
           status?: string | null
+          suggested_opener?: Json | null
+          tcpa_clear?: boolean | null
           trade?: string | null
           urgency_score?: number | null
           years_experience?: number | null
           zip?: string | null
+          zip_heat_index?: number | null
         }
         Relationships: [
           {
@@ -7773,88 +7812,148 @@ export type Database = {
       }
       industry_pulse_signals: {
         Row: {
+          buyer_type: string | null
           client_tag: string | null
           company_name: string
           confidence: number | null
           county: string | null
           created_at: string | null
           cross_referenced: boolean | null
+          days_on_radar: number | null
           decision_makers: Json | null
           decision_makers_enriched_at: string | null
           detected_at: string | null
           embedding: string | null
+          equity_range_high_cents: number | null
+          equity_range_low_cents: number | null
+          est_loan_high_cents: number | null
+          est_loan_low_cents: number | null
           expansion_type: string | null
           hiring_count: number | null
           hiring_roles: string[] | null
+          human_summary: string | null
           id: string
           industry: string | null
+          last_sale_date: string | null
+          last_sale_price_cents: number | null
           location: string | null
+          marketplace_enriched_at: string | null
+          nearby_signal_count: number | null
           predicted_needs: string[] | null
+          provenance_screenshot_paths: Json | null
+          provenance_source_urls: Json | null
           recommended_pitch: string | null
+          score_percentile: number | null
           search_vector: unknown
           sector: string | null
+          signal_strength_tier: string | null
           signal_type: string | null
+          signal_velocity: number | null
           source_urls: string[] | null
           spend_window: string | null
+          suggested_opener: Json | null
           target_buyer_type: string | null
+          tcpa_clear: boolean | null
           vendor_fit_score: number | null
           vertical: string | null
+          year_built: number | null
+          zip_heat_index: number | null
         }
         Insert: {
+          buyer_type?: string | null
           client_tag?: string | null
           company_name: string
           confidence?: number | null
           county?: string | null
           created_at?: string | null
           cross_referenced?: boolean | null
+          days_on_radar?: number | null
           decision_makers?: Json | null
           decision_makers_enriched_at?: string | null
           detected_at?: string | null
           embedding?: string | null
+          equity_range_high_cents?: number | null
+          equity_range_low_cents?: number | null
+          est_loan_high_cents?: number | null
+          est_loan_low_cents?: number | null
           expansion_type?: string | null
           hiring_count?: number | null
           hiring_roles?: string[] | null
+          human_summary?: string | null
           id?: string
           industry?: string | null
+          last_sale_date?: string | null
+          last_sale_price_cents?: number | null
           location?: string | null
+          marketplace_enriched_at?: string | null
+          nearby_signal_count?: number | null
           predicted_needs?: string[] | null
+          provenance_screenshot_paths?: Json | null
+          provenance_source_urls?: Json | null
           recommended_pitch?: string | null
+          score_percentile?: number | null
           search_vector?: unknown
           sector?: string | null
+          signal_strength_tier?: string | null
           signal_type?: string | null
+          signal_velocity?: number | null
           source_urls?: string[] | null
           spend_window?: string | null
+          suggested_opener?: Json | null
           target_buyer_type?: string | null
+          tcpa_clear?: boolean | null
           vendor_fit_score?: number | null
           vertical?: string | null
+          year_built?: number | null
+          zip_heat_index?: number | null
         }
         Update: {
+          buyer_type?: string | null
           client_tag?: string | null
           company_name?: string
           confidence?: number | null
           county?: string | null
           created_at?: string | null
           cross_referenced?: boolean | null
+          days_on_radar?: number | null
           decision_makers?: Json | null
           decision_makers_enriched_at?: string | null
           detected_at?: string | null
           embedding?: string | null
+          equity_range_high_cents?: number | null
+          equity_range_low_cents?: number | null
+          est_loan_high_cents?: number | null
+          est_loan_low_cents?: number | null
           expansion_type?: string | null
           hiring_count?: number | null
           hiring_roles?: string[] | null
+          human_summary?: string | null
           id?: string
           industry?: string | null
+          last_sale_date?: string | null
+          last_sale_price_cents?: number | null
           location?: string | null
+          marketplace_enriched_at?: string | null
+          nearby_signal_count?: number | null
           predicted_needs?: string[] | null
+          provenance_screenshot_paths?: Json | null
+          provenance_source_urls?: Json | null
           recommended_pitch?: string | null
+          score_percentile?: number | null
           search_vector?: unknown
           sector?: string | null
+          signal_strength_tier?: string | null
           signal_type?: string | null
+          signal_velocity?: number | null
           source_urls?: string[] | null
           spend_window?: string | null
+          suggested_opener?: Json | null
           target_buyer_type?: string | null
+          tcpa_clear?: boolean | null
           vendor_fit_score?: number | null
           vertical?: string | null
+          year_built?: number | null
+          zip_heat_index?: number | null
         }
         Relationships: []
       }
@@ -8830,6 +8929,243 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_buyer_views: {
+        Row: {
+          id: string
+          lead_id: string
+          product: string
+          viewed_at: string
+          visitor_hash: string | null
+        }
+        Insert: {
+          id?: string
+          lead_id: string
+          product: string
+          viewed_at?: string
+          visitor_hash?: string | null
+        }
+        Update: {
+          id?: string
+          lead_id?: string
+          product?: string
+          viewed_at?: string
+          visitor_hash?: string | null
+        }
+        Relationships: []
+      }
+      marketplace_dismissals: {
+        Row: {
+          buyer_email: string
+          dismissed_at: string
+          id: string
+          lead_id: string
+          product: string
+        }
+        Insert: {
+          buyer_email: string
+          dismissed_at?: string
+          id?: string
+          lead_id: string
+          product: string
+        }
+        Update: {
+          buyer_email?: string
+          dismissed_at?: string
+          id?: string
+          lead_id?: string
+          product?: string
+        }
+        Relationships: []
+      }
+      marketplace_lead_locks: {
+        Row: {
+          amount_cents: number | null
+          buyer_email: string | null
+          claimed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          lead_id: string
+          locked_at: string
+          product: string
+          sold_at: string | null
+          status: string
+          stripe_session_id: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          buyer_email?: string | null
+          claimed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          lead_id: string
+          locked_at?: string
+          product: string
+          sold_at?: string | null
+          status?: string
+          stripe_session_id?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          buyer_email?: string | null
+          claimed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          lead_id?: string
+          locked_at?: string
+          product?: string
+          sold_at?: string | null
+          status?: string
+          stripe_session_id?: string | null
+        }
+        Relationships: []
+      }
+      marketplace_lead_pdfs: {
+        Row: {
+          buyer_email: string
+          created_at: string
+          id: string
+          lead_id: string
+          product: string
+          signed_url: string | null
+          signed_url_expires_at: string | null
+          storage_path: string
+        }
+        Insert: {
+          buyer_email: string
+          created_at?: string
+          id?: string
+          lead_id: string
+          product: string
+          signed_url?: string | null
+          signed_url_expires_at?: string | null
+          storage_path: string
+        }
+        Update: {
+          buyer_email?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+          product?: string
+          signed_url?: string | null
+          signed_url_expires_at?: string | null
+          storage_path?: string
+        }
+        Relationships: []
+      }
+      marketplace_lead_shares: {
+        Row: {
+          contact_redacted: boolean
+          created_at: string
+          expires_at: string
+          id: string
+          lead_id: string
+          max_redeems: number
+          product: string
+          redeemed_at: string | null
+          redeemed_count: number
+          share_token: string
+          shared_by_email: string
+          shared_to_email: string | null
+        }
+        Insert: {
+          contact_redacted?: boolean
+          created_at?: string
+          expires_at?: string
+          id?: string
+          lead_id: string
+          max_redeems?: number
+          product: string
+          redeemed_at?: string | null
+          redeemed_count?: number
+          share_token: string
+          shared_by_email: string
+          shared_to_email?: string | null
+        }
+        Update: {
+          contact_redacted?: boolean
+          created_at?: string
+          expires_at?: string
+          id?: string
+          lead_id?: string
+          max_redeems?: number
+          product?: string
+          redeemed_at?: string | null
+          redeemed_count?: number
+          share_token?: string
+          shared_by_email?: string
+          shared_to_email?: string | null
+        }
+        Relationships: []
+      }
+      marketplace_saved_searches: {
+        Row: {
+          active: boolean
+          buyer_email: string
+          buyer_phone: string | null
+          cities: string[] | null
+          created_at: string
+          id: string
+          last_alerted_at: string | null
+          min_score: number | null
+          product: string
+          signal_types: string[] | null
+          zip_codes: string[] | null
+        }
+        Insert: {
+          active?: boolean
+          buyer_email: string
+          buyer_phone?: string | null
+          cities?: string[] | null
+          created_at?: string
+          id?: string
+          last_alerted_at?: string | null
+          min_score?: number | null
+          product: string
+          signal_types?: string[] | null
+          zip_codes?: string[] | null
+        }
+        Update: {
+          active?: boolean
+          buyer_email?: string
+          buyer_phone?: string | null
+          cities?: string[] | null
+          created_at?: string
+          id?: string
+          last_alerted_at?: string | null
+          min_score?: number | null
+          product?: string
+          signal_types?: string[] | null
+          zip_codes?: string[] | null
+        }
+        Relationships: []
+      }
+      marketplace_watches: {
+        Row: {
+          buyer_email: string
+          id: string
+          lead_id: string
+          product: string
+          watched_at: string
+        }
+        Insert: {
+          buyer_email: string
+          id?: string
+          lead_id: string
+          product: string
+          watched_at?: string
+        }
+        Update: {
+          buyer_email?: string
+          id?: string
+          lead_id?: string
+          product?: string
+          watched_at?: string
+        }
+        Relationships: []
+      }
       master_templates: {
         Row: {
           ai_findings: Json | null
@@ -9160,6 +9496,7 @@ export type Database = {
       mortgage_radar_clients: {
         Row: {
           active: boolean | null
+          alert_prefs: Json | null
           business_name: string | null
           contact_name: string | null
           created_at: string
@@ -9178,6 +9515,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          alert_prefs?: Json | null
           business_name?: string | null
           contact_name?: string | null
           created_at?: string
@@ -9196,6 +9534,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          alert_prefs?: Json | null
           business_name?: string | null
           contact_name?: string | null
           created_at?: string
@@ -9301,92 +9640,155 @@ export type Database = {
         Row: {
           address: string | null
           best_call_window: string | null
+          building_sqft: number | null
+          buyer_type: string | null
           city: string | null
           created_at: string
+          days_on_radar: number | null
           email: string | null
+          equity_range_high_cents: number | null
+          equity_range_low_cents: number | null
+          est_loan_high_cents: number | null
+          est_loan_low_cents: number | null
           estimated_equity: number | null
           estimated_loan_amount: number | null
           full_name: string | null
+          human_summary: string | null
           id: string
           intel_highlights: Json | null
+          last_sale_date: string | null
+          last_sale_price_cents: number | null
           last_signal_at: string
+          lot_sqft: number | null
+          marketplace_enriched_at: string | null
+          nearby_signal_count: number | null
           notified_client_ids: string[] | null
           phone: string | null
           pipeline_stage: string
+          provenance_screenshot_paths: Json | null
+          provenance_source_urls: Json | null
           raw: Json | null
           score: number
+          score_percentile: number | null
           signal_count: number
           signal_date: string | null
           signal_detail: string | null
           signal_history: Json
           signal_source: string
+          signal_strength_tier: string | null
           signal_type: string
           signal_url: string | null
+          signal_velocity: number | null
           state: string | null
           street_view_url: string | null
           suggested_opener: string | null
+          tcpa_clear: boolean | null
           updated_at: string
+          year_built: number | null
           zip: string | null
+          zip_heat_index: number | null
         }
         Insert: {
           address?: string | null
           best_call_window?: string | null
+          building_sqft?: number | null
+          buyer_type?: string | null
           city?: string | null
           created_at?: string
+          days_on_radar?: number | null
           email?: string | null
+          equity_range_high_cents?: number | null
+          equity_range_low_cents?: number | null
+          est_loan_high_cents?: number | null
+          est_loan_low_cents?: number | null
           estimated_equity?: number | null
           estimated_loan_amount?: number | null
           full_name?: string | null
+          human_summary?: string | null
           id?: string
           intel_highlights?: Json | null
+          last_sale_date?: string | null
+          last_sale_price_cents?: number | null
           last_signal_at?: string
+          lot_sqft?: number | null
+          marketplace_enriched_at?: string | null
+          nearby_signal_count?: number | null
           notified_client_ids?: string[] | null
           phone?: string | null
           pipeline_stage?: string
+          provenance_screenshot_paths?: Json | null
+          provenance_source_urls?: Json | null
           raw?: Json | null
           score?: number
+          score_percentile?: number | null
           signal_count?: number
           signal_date?: string | null
           signal_detail?: string | null
           signal_history?: Json
           signal_source: string
+          signal_strength_tier?: string | null
           signal_type: string
           signal_url?: string | null
+          signal_velocity?: number | null
           state?: string | null
           street_view_url?: string | null
           suggested_opener?: string | null
+          tcpa_clear?: boolean | null
           updated_at?: string
+          year_built?: number | null
           zip?: string | null
+          zip_heat_index?: number | null
         }
         Update: {
           address?: string | null
           best_call_window?: string | null
+          building_sqft?: number | null
+          buyer_type?: string | null
           city?: string | null
           created_at?: string
+          days_on_radar?: number | null
           email?: string | null
+          equity_range_high_cents?: number | null
+          equity_range_low_cents?: number | null
+          est_loan_high_cents?: number | null
+          est_loan_low_cents?: number | null
           estimated_equity?: number | null
           estimated_loan_amount?: number | null
           full_name?: string | null
+          human_summary?: string | null
           id?: string
           intel_highlights?: Json | null
+          last_sale_date?: string | null
+          last_sale_price_cents?: number | null
           last_signal_at?: string
+          lot_sqft?: number | null
+          marketplace_enriched_at?: string | null
+          nearby_signal_count?: number | null
           notified_client_ids?: string[] | null
           phone?: string | null
           pipeline_stage?: string
+          provenance_screenshot_paths?: Json | null
+          provenance_source_urls?: Json | null
           raw?: Json | null
           score?: number
+          score_percentile?: number | null
           signal_count?: number
           signal_date?: string | null
           signal_detail?: string | null
           signal_history?: Json
           signal_source?: string
+          signal_strength_tier?: string | null
           signal_type?: string
           signal_url?: string | null
+          signal_velocity?: number | null
           state?: string | null
           street_view_url?: string | null
           suggested_opener?: string | null
+          tcpa_clear?: boolean | null
           updated_at?: string
+          year_built?: number | null
           zip?: string | null
+          zip_heat_index?: number | null
         }
         Relationships: []
       }
@@ -14487,6 +14889,42 @@ export type Database = {
         }
         Relationships: []
       }
+      signal_strength_rules: {
+        Row: {
+          age_max_hours: number
+          created_at: string
+          display_label: string
+          id: string
+          min_score: number
+          priority: number
+          product: string
+          signal_type: string
+          tier: string
+        }
+        Insert: {
+          age_max_hours: number
+          created_at?: string
+          display_label: string
+          id?: string
+          min_score?: number
+          priority?: number
+          product: string
+          signal_type: string
+          tier: string
+        }
+        Update: {
+          age_max_hours?: number
+          created_at?: string
+          display_label?: string
+          id?: string
+          min_score?: number
+          priority?: number
+          product?: string
+          signal_type?: string
+          tier?: string
+        }
+        Relationships: []
+      }
       site_content: {
         Row: {
           content_key: string
@@ -17691,6 +18129,37 @@ export type Database = {
         }
         Relationships: []
       }
+      unified_lead_marketplace_view: {
+        Row: {
+          buyer_type: string | null
+          city: string | null
+          created_at: string | null
+          days_on_radar: number | null
+          equity_range_high_cents: number | null
+          equity_range_low_cents: number | null
+          est_loan_high_cents: number | null
+          est_loan_low_cents: number | null
+          human_summary: string | null
+          id: string | null
+          last_sale_date: string | null
+          last_sale_price_cents: number | null
+          nearby_signal_count: number | null
+          product: string | null
+          provenance_source_urls: Json | null
+          score: number | null
+          score_percentile: number | null
+          signal_strength_tier: string | null
+          signal_type: string | null
+          signal_velocity: number | null
+          state: string | null
+          suggested_opener: Json | null
+          tcpa_clear: boolean | null
+          year_built: number | null
+          zip: string | null
+          zip_heat_index: number | null
+        }
+        Relationships: []
+      }
       unified_signals: {
         Row: {
           city: string | null
@@ -17895,6 +18364,7 @@ export type Database = {
         Args: { _challenge_id: string; _user_id: string; _value: number }
         Returns: number
       }
+      marketplace_cleanup_expired_locks: { Args: never; Returns: undefined }
       match_llm_cache: {
         Args: {
           _content_type?: string
