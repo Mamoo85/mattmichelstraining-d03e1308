@@ -170,8 +170,12 @@ function FindProspects() {
         body: { limit: 50 },
       });
       if (error) throw error;
+      const c = data?.counters || {};
+      const breakdown = ["snov","apollo","pattern_verify","hunter","pdl","site_scrape"]
+        .map((k) => `${k.replace("_"," ")}: ${c[k] ?? 0}`)
+        .join(" · ");
       toast.success(
-        `Enriched ${data?.enriched ?? 0} of ${data?.processed ?? 0} prospects (Hunter: ${data?.hunter_hits ?? 0}, scrape: ${data?.scrape_hits ?? 0})`
+        `Enriched ${data?.enriched ?? 0} of ${data?.processed ?? 0} prospects — ${breakdown}`
       );
       refetchIdle();
     } catch (e) {
@@ -288,8 +292,9 @@ function FindProspects() {
               </div>
             ))}
           </div>
+          <ProviderHealthRow />
           <p className="text-white/40 text-[11px]">
-            Backfill uses Hunter.io + site scrape. Activate flips eligible leads into the daily web-design drip cron.
+            Backfill walks site scrape → Snov → Apollo → pattern-verify → Hunter → PDL. Cheapest providers first; auto-skips any provider that 429&apos;d in the last hour.
           </p>
         </div>
       )}
