@@ -504,7 +504,12 @@ function RankedPool() {
       const { data, error } = await supabase.functions.invoke("enrich-prospect-pool", { body: { id } });
       if (error) throw error;
       const filled = data?.results?.[0]?.filled ?? [];
-      toast.success(filled.length ? `Filled: ${filled.join(", ")}` : "No new data found");
+      const c = data?.counters || {};
+      const breakdownParts = ["snov","apollo","pattern_verify","hunter","pdl","site_scrape"]
+        .filter((k) => (c[k] ?? 0) > 0)
+        .map((k) => `${k.replace("_"," ")}:${c[k]}`);
+      const suffix = breakdownParts.length ? ` — ${breakdownParts.join(" · ")}` : "";
+      toast.success(filled.length ? `Filled: ${filled.join(", ")}${suffix}` : `No new data found${suffix}`);
       qc.invalidateQueries({ queryKey: ["prospect_pool"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Enrichment failed");
@@ -518,7 +523,11 @@ function RankedPool() {
     try {
       const { data, error } = await supabase.functions.invoke("enrich-prospect-pool", { body: { limit: 25 } });
       if (error) throw error;
-      toast.success(`Enriched ${data?.enriched ?? 0} of ${data?.processed ?? 0} prospects`);
+      const c = data?.counters || {};
+      const breakdown = ["snov","apollo","pattern_verify","hunter","pdl","site_scrape"]
+        .map((k) => `${k.replace("_"," ")}:${c[k] ?? 0}`)
+        .join(" · ");
+      toast.success(`Enriched ${data?.enriched ?? 0} of ${data?.processed ?? 0} — ${breakdown}`);
       qc.invalidateQueries({ queryKey: ["prospect_pool"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Batch enrichment failed");
