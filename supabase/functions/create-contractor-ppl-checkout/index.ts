@@ -83,12 +83,14 @@ serve(async (req) => {
     }
 
     // Atomic lock: only succeeds if lead is still available (eliminates TOCTOU race)
+    // Lock duration: 31 minutes — must match Stripe checkout expiry (30.5 min) with buffer
+    const lockToken = crypto.randomUUID();
     const { data: locked } = await sb
       .from("contractor_leads")
       .update({
         status: "pending_checkout",
         checkout_locked_by: contractor_id,
-        lock_expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+        lock_expires_at: new Date(Date.now() + 31 * 60 * 1000).toISOString(),
       })
       .eq("id", lead_id)
       .neq("status", "sold")
@@ -137,6 +139,7 @@ serve(async (req) => {
         lead_id,
         contractor_id,
         contractor_email,
+        lock_token: lockToken,
         trade: site?.trade || "",
         city: site?.city || "",
       },

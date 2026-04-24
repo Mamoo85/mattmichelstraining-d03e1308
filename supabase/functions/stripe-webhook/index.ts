@@ -281,10 +281,11 @@ serve(async (req) => {
     // Stripe retries webhooks on 5xx or timeout. The row is inserted with
     // fulfillment_status='pending' on first entry. Branches that succeed
     // call markFulfilled(true). The global catch calls markFulfilled(false).
-    // On retry: if the row exists but is still 'pending' AND >60s old (i.e.,
+    // On retry: if the row exists but is still 'pending' AND >180s old (i.e.,
     // the previous run failed mid-flight), we ALLOW re-entry. If it's
-    // 'completed', we skip. If 'pending' but recent (<60s), assume another
+    // 'completed', we skip. If 'pending' but recent (<180s), assume another
     // worker is still running and skip too.
+    // (Window bumped from 60s → 180s to cover slow PDF/email fulfillments.)
     const { error: dedupeError } = await sb
       .from("processed_stripe_events")
       .insert({ event_id: event.id, event_type: event.type, fulfillment_status: "pending" });
@@ -310,7 +311,7 @@ serve(async (req) => {
           });
         }
 
-        if (status === "pending" && ageMs < 60_000) {
+        if (status === "pending" && ageMs < 180_000) {
           console.log(`[WEBHOOK] Event ${event.id} still in-flight (${Math.round(ageMs / 1000)}s) — skipping retry`);
           return new Response(JSON.stringify({ received: true, in_flight: true }), {
             status: 200,
@@ -318,7 +319,7 @@ serve(async (req) => {
           });
         }
 
-        // status === 'failed' OR ('pending' AND >60s old) → allow re-entry to recover
+        // status === 'failed' OR ('pending' AND >180s old) → allow re-entry to recover
         console.log(`[WEBHOOK] Re-entering event ${event.id} (status=${status}, age=${Math.round(ageMs / 1000)}s) for recovery`);
         await sb
           .from("processed_stripe_events")
