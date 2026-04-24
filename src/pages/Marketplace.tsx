@@ -135,13 +135,21 @@ export default function Marketplace() {
       <div className="border-b border-border/40 bg-gradient-to-b from-card to-background">
         <div className="container max-w-7xl mx-auto px-4 py-8">
           <div className="flex items-start justify-between gap-3 flex-wrap">
-            <div>
+            <div className="flex-1 min-w-[260px]">
               <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-widest text-intel-teal mb-2">
                 <span className="inline-block w-2 h-2 rounded-full bg-intel-teal animate-pulse" />
                 Live Marketplace · Refreshed continuously
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">{productMeta.label}</h1>
+              <p className="text-muted-foreground max-w-2xl">{productMeta.tagline}</p>
+            </div>
+            <Link
+              to="/marketplace/receipts"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-wider rounded border border-border/40 text-muted-foreground hover:text-foreground hover:border-intel-teal/50 transition-colors"
+            >
+              <ScrollText className="w-3.5 h-3.5" /> My Receipts
+            </Link>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">{productMeta.label}</h1>
-          <p className="text-muted-foreground max-w-2xl">{productMeta.tagline}</p>
 
           {/* Product switcher */}
           <div className="flex flex-wrap gap-2 mt-6">
