@@ -1757,3 +1757,9 @@ verify_jwt = false
 
 [functions.marketplace-saved-search-notifier]
 verify_jwt = false
+
+[functions.marketplace-lead-free-enrich]
+verify_jwt = false
+
+[functions.marketplace-lead-free-enrich-batch]
+verify_jwt = false

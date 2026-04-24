@@ -9643,6 +9643,7 @@ export type Database = {
           building_sqft: number | null
           buyer_type: string | null
           city: string | null
+          county: string | null
           created_at: string
           days_on_radar: number | null
           email: string | null
@@ -9652,6 +9653,8 @@ export type Database = {
           est_loan_low_cents: number | null
           estimated_equity: number | null
           estimated_loan_amount: number | null
+          free_enrich_at: string | null
+          free_enrichment: Json | null
           full_name: string | null
           human_summary: string | null
           id: string
@@ -9659,6 +9662,8 @@ export type Database = {
           last_sale_date: string | null
           last_sale_price_cents: number | null
           last_signal_at: string
+          lat: number | null
+          lon: number | null
           lot_sqft: number | null
           marketplace_enriched_at: string | null
           nearby_signal_count: number | null
@@ -9694,6 +9699,7 @@ export type Database = {
           building_sqft?: number | null
           buyer_type?: string | null
           city?: string | null
+          county?: string | null
           created_at?: string
           days_on_radar?: number | null
           email?: string | null
@@ -9703,6 +9709,8 @@ export type Database = {
           est_loan_low_cents?: number | null
           estimated_equity?: number | null
           estimated_loan_amount?: number | null
+          free_enrich_at?: string | null
+          free_enrichment?: Json | null
           full_name?: string | null
           human_summary?: string | null
           id?: string
@@ -9710,6 +9718,8 @@ export type Database = {
           last_sale_date?: string | null
           last_sale_price_cents?: number | null
           last_signal_at?: string
+          lat?: number | null
+          lon?: number | null
           lot_sqft?: number | null
           marketplace_enriched_at?: string | null
           nearby_signal_count?: number | null
@@ -9745,6 +9755,7 @@ export type Database = {
           building_sqft?: number | null
           buyer_type?: string | null
           city?: string | null
+          county?: string | null
           created_at?: string
           days_on_radar?: number | null
           email?: string | null
@@ -9754,6 +9765,8 @@ export type Database = {
           est_loan_low_cents?: number | null
           estimated_equity?: number | null
           estimated_loan_amount?: number | null
+          free_enrich_at?: string | null
+          free_enrichment?: Json | null
           full_name?: string | null
           human_summary?: string | null
           id?: string
@@ -9761,6 +9774,8 @@ export type Database = {
           last_sale_date?: string | null
           last_sale_price_cents?: number | null
           last_signal_at?: string
+          lat?: number | null
+          lon?: number | null
           lot_sqft?: number | null
           marketplace_enriched_at?: string | null
           nearby_signal_count?: number | null
