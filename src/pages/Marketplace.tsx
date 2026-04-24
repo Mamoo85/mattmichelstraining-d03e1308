@@ -165,6 +165,21 @@ export default function Marketplace() {
         setSoldIds([]);
       }
       setFocusIdx(0);
+
+      // ONE bulk track-views call instead of N per-card calls
+      const leadIds = leadsRes.status === "fulfilled" && !leadsRes.value.error
+        ? ((leadsRes.value.data || []) as Array<{ id: string }>).map((l) => l.id)
+        : [];
+      if (leadIds.length > 0) {
+        const visitorHash = localStorage.getItem("mp_visitor") || crypto.randomUUID();
+        localStorage.setItem("mp_visitor", visitorHash);
+        supabase.functions.invoke("marketplace-track-views-bulk", {
+          body: { lead_ids: leadIds, product, visitor_hash: visitorHash },
+        }).then((res: any) => {
+          if (cancelled) return;
+          if (res?.data?.viewers) setViewersMap(res.data.viewers);
+        }).catch(() => {});
+      }
     }).finally(() => {
       if (!cancelled) setLoading(false);
     });
