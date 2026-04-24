@@ -29,6 +29,7 @@ const TOTAL_STANDALONE = "$221";
 export default function BundleRevenueSuite() {
   const [searchParams] = useSearchParams();
   const isSuccess = searchParams.get("status") === "success";
+  const sessionId = searchParams.get("session_id");
   const [email, setEmail] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [phone, setPhone] = useState("");
@@ -70,18 +71,21 @@ export default function BundleRevenueSuite() {
       <div className="min-h-screen bg-background pt-20 pb-24">
         <div className="container max-w-4xl mx-auto px-4">
           {isSuccess && (
-            <Card className="border-primary/40 bg-primary/5 mb-8">
-              <CardContent className="p-6 text-center">
-                <CheckCircle className="text-primary mx-auto mb-3" size={36} />
-                <h2 className="text-2xl font-bold mb-2">You're in. All 8 tools activating.</h2>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Welcome email is on its way. Matt will text you within 24 hours to finish setup.
-                </p>
-                <a href="sms:+13139921219" className="inline-flex items-center gap-2 text-primary font-semibold text-sm hover:underline">
-                  Text Matt now <ArrowRight size={14} />
-                </a>
-              </CardContent>
-            </Card>
+            <div className="mb-8 space-y-4">
+              <ReceiptStatusBanner sessionId={sessionId} productLabel="Revenue Suite" />
+              <Card className="border-primary/40 bg-primary/5">
+                <CardContent className="p-6 text-center">
+                  <CheckCircle className="text-primary mx-auto mb-3" size={36} />
+                  <h2 className="text-2xl font-bold mb-2">You're in. All 8 tools activating.</h2>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Welcome email is on its way. Matt will text you within 24 hours to finish setup.
+                  </p>
+                  <a href="sms:+13139921219" className="inline-flex items-center gap-2 text-primary font-semibold text-sm hover:underline">
+                    Text Matt now <ArrowRight size={14} />
+                  </a>
+                </CardContent>
+              </Card>
+            </div>
           )}
           {/* Hero */}
           <div className="text-center mb-12">
