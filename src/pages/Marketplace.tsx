@@ -375,22 +375,25 @@ export default function Marketplace() {
       {/* Filter bar */}
       <div className="border-b border-border/40 sticky top-0 bg-background/95 backdrop-blur z-10">
         <div className="container max-w-7xl mx-auto px-4 py-3 flex items-center gap-3 flex-wrap">
-          <div className="flex gap-1.5">
-            {(["all", "hot", "warm", "cool"] as TierFilter[]).map((t) => {
-              const Icon = t === "hot" ? Flame : t === "warm" ? Sun : t === "cool" ? Snowflake : null;
-              return (
-                <button
-                  key={t}
-                  onClick={() => setTierFilter(t)}
-                  className={`px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider rounded border flex items-center gap-1 ${
-                    tierFilter === t ? "bg-intel-teal/15 border-intel-teal/50 text-intel-teal" : "border-border/40 text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {Icon && <Icon className="w-3 h-3" />}
-                  {t} <span className="opacity-50">({tierCounts[t]})</span>
-                </button>
-              );
-            })}
+          <div className="relative flex-shrink-0 max-w-full overflow-hidden">
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-none pr-6">
+              {(["all", "hot", "warm", "cool"] as TierFilter[]).map((t) => {
+                const Icon = t === "hot" ? Flame : t === "warm" ? Sun : t === "cool" ? Snowflake : null;
+                return (
+                  <button
+                    key={t}
+                    onClick={() => setTierFilter(t)}
+                    className={`shrink-0 px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider rounded border flex items-center gap-1 ${
+                      tierFilter === t ? "bg-intel-teal/15 border-intel-teal/50 text-intel-teal" : "border-border/40 text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {Icon && <Icon className="w-3 h-3" />}
+                    {t} <span className="opacity-50">({tierCounts[t]})</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background/95 to-transparent md:hidden" />
           </div>
 
           <div className="flex-1 min-w-[200px] relative">
