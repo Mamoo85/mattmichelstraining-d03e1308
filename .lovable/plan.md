@@ -1,88 +1,73 @@
 
 
-## Free Taste Strategy — Per Product
+## Email Backfill Waterfall — Hunter Replacement Plan
 
-Plain English: each product gets the cheapest "free taste" mechanic that doesn't burn margin or break ad rules. No Stripe trials on Contractor Leads (you can't ad-spend trials). Free first-lead on Dead Reactivation. Sneak peeks (no card) on Buyer/Demand Radar. Real Stripe trials on Talent Radar + Industry Pulse. Newsletter stays free + becomes the top-of-funnel for everything.
+**Problem**: `prospect-email-backfill` only uses Hunter.io → site scrape. Hunter credits almost gone. Other "filling" buttons (Run Scrape, Re-score, contractor-prospector) only call Hunter on the email lookup step. We already have Snov.io, Apollo.io, Lusha, and PDL keys configured but they're not wired into the backfill button.
 
-### What gets which offer
+### Best Hunter alternatives — ranked
 
-| Product | Offer | Why |
-|---|---|---|
-| **Dead Lead Reactivation** | **First positive reply FREE, $50 each after** | Already wired — `free_dead_leads_quota` column exists. Just default to `1`. |
-| **Contractor Leads ($399/mo)** | No trial. Keep "30-day refund if zero leads" + 3 free seed leads on signup. | Can't run paid ads to trials. Refund guarantee = same psychology, no Stripe trial-end disputes. |
-| **Buyer Radar (Ameristeel)** | **Sneak Peek**: email-gated 1-week sample feed (no card), then $X/mo | Enterprise B2B — they want to see the data before card-on-file. |
-| **Demand Radar / Industry Pulse** | **Sneak Peek**: 5 free signals via magic link, then **7-day Stripe trial** on the $199 tier | Already has `snapshot` $99 one-time — keep it, add trial on `weekly` tier. |
-| **Talent Radar / TechAlert** | **3-day "phantom alert" preview** (already exists at `/hire-alert-trial`) → convert to paid | Don't touch — it works. Just surface it harder on the landing page. |
-| **Newsletter (Field Rep Weekly)** | Already free. Add **footer CTA** rotating between Buyer/Demand/Talent Radar sneak peeks. | Free top-of-funnel to feed the radar products. |
-| **Mortgage Radar** | Already has `trial_period_days: 7`. ✅ Leave alone. | |
+| Rank | Service | Why | Status |
+|---|---|---|---|
+| 1 | **Snov.io** | Domain search + email finder + verifier. ~50% cheaper than Hunter. Already paid for. | ✅ Key already in env |
+| 2 | **Apollo.io** | Free tier returns 1 verified email/match. Best for company → decision-maker name+email. | ✅ Key already in env |
+| 3 | **PDL (People Data Labs)** | Pay-per-result. Strong on personal/mobile fields when others miss. | ✅ Key already in env |
+| 4 | **Site scrape** (existing) | Free. Keep as final fallback. | ✅ Already working |
+| 5 | **MX-pattern guess + Snov verify** | Free generation, cheap verification. `info@`, `contact@`, `firstname.lastname@`. | New — uses existing Snov key |
 
----
+Hunter stays as **last paid step** so we drain it slowly instead of slamming it.
 
-### What I'll build
+### New waterfall order (cheapest → most expensive)
 
-**1. Dead Lead — default quota = 1 + landing copy**
-- New migration: `ALTER TABLE contractor_clients ALTER COLUMN free_dead_leads_quota SET DEFAULT 1;`
-- Update `DeadLeadIntake.tsx` headline + `FreeBoostCard.tsx`: "Your first reply is FREE. $50 per reply after that."
-- Update outreach SMS template in `_shared/sms-templates.ts`: `dead_lead_free_first_v1`
-- Existing `handle-dead-lead-reply` charge logic already respects `used < quota` — no code change needed.
+```text
+Site scrape (free)
+   └─→ Snov.io domain search (cheap, owned)
+         └─→ Apollo.io people/match (free tier)
+               └─→ Pattern guess + Snov verify (cheap)
+                     └─→ Hunter domain search (LAST RESORT)
+                           └─→ PDL person enrich (premium, only if business_name + city)
+```
 
-**2. Buyer Radar Sneak Peek**
-- New page `/buyer-radar-preview` — email capture form, no auth.
-- New edge function `buyer-radar-sneak-peek` — generates a magic-link token, emails 5 sample signals (Detroit-area fab/metal NAICS) via Resend with "upgrade to see live feed" CTA.
-- Token gives 7-day read access to a stripped-down `MyBuyerRadar` view.
+Stop at first hit with confidence ≥ 50. Log which provider filled the field into `prospect_pipeline.meta.enrichment_trace` (the schema already supports this).
 
-**3. Demand Radar / Industry Pulse — add trial on $199 tier**
-- Edit `create-industry-pulse-checkout/index.ts`: add `subscription_data: { trial_period_days: 7 }` to the `weekly` tier only.
-- Add 5-signal sneak peek edge function `industry-pulse-sneak-peek` mirroring Buyer Radar pattern.
-- New `/demand-radar-preview` landing.
+### Files to change
 
-**4. Talent Radar — boost existing trial visibility**
-- `HireAlert.tsx`: add a hero CTA strip "👀 See 3 days of alerts free, no card" above the pricing. Routes to existing `/hire-alert-trial`.
-- No backend changes.
+1. **`supabase/functions/prospect-email-backfill/index.ts`** — replace single Hunter call with 5-step waterfall. Add Snov + Apollo + pattern-verify functions (copy patterns from `lead-enrichment-waterfall/index.ts` which already has working Snov/Apollo code). Track per-source hit counts in response.
 
-**5. Newsletter footer CTA rotator**
-- Edit `newsletter-send/index.ts`: add `getRotatingRadarCTA()` helper that picks one of (Buyer/Demand/Talent) sneak-peek links per send. Inserts above unsubscribe.
+2. **`supabase/functions/_shared/email-waterfall.ts`** (NEW) — extract the waterfall into a shared module so:
+   - `prospect-email-backfill`
+   - `contractor-prospector` (currently Hunter-only on email step)
+   - `targeting-prospect-scraper`
+   - `enrich-prospect-pool`
+   - `candidate-deep-enrich`
+   
+   ...all use the same provider order. Single place to reorder providers when Snov runs low.
 
-**6. Admin visibility**
-- New row in `AdminDWAOverview.tsx`: "Free Taste Funnel" — counts of sneak-peek signups (last 7 days) per product, conversion %.
+3. **`src/components/dwa-admin/OutreachCommandCenter.tsx`** —
+   - Update the toast to show all 5 sources: `"Snov: 12 · Apollo: 8 · Pattern: 4 · Hunter: 2 · PDL: 1 · Scrape: 6"`
+   - Update the helper text under the panel: "Backfill walks Snov → Apollo → pattern-verify → Hunter → PDL → site scrape. Cheapest providers first."
+   - Add a small **Provider Health** chip row showing remaining credits per service (read from a new `enrichment_provider_health` table, see #5).
 
----
+4. **Other "filling" buttons audit** — extend the same waterfall into:
+   - **Run Scrape** (`targeting-prospect-scraper`) — currently only scrapes Google Places, no email enrichment on the way in. Add waterfall as a final pass before insert.
+   - **Re-score Pool** — score-only, no enrichment. Add an optional "enrich missing fields first" checkbox in the UI.
+   - **Contractor Prospector** cron — already does Hunter; swap to shared waterfall.
 
-### Legal / TCPA notes
+5. **Migration** `enrichment_provider_health` table — `provider TEXT PRIMARY KEY, credits_remaining INT, last_429_at TIMESTAMPTZ, daily_calls INT, daily_hits INT, updated_at TIMESTAMPTZ`. Updated on every call; surfaces in the admin Provider Health chip and lets the waterfall **auto-skip** any provider that 429'd in the last hour.
 
-- **Dead Lead first-free**: same EBR rules apply. Already enforced (548-day cutoff in `dead-lead-intake` + `dead-lead-drip`). No new exposure.
-- **Sneak peek emails**: CAN-SPAM only (email, not SMS). Footer needs unsubscribe — `dwaEmail()` wrapper already includes it.
-- **Stripe trials on Industry Pulse**: must show "Cancel anytime — $199 charges Day 8" on checkout button per FTC ROSCA rule. Will add to `IndustryPulse.tsx` CTA.
+### Behavior changes the user will see
 
----
+- "Backfill Emails" button now hits ~3× more prospects per run because it has 5 fallback sources instead of 1
+- Toast shows per-provider breakdown so you know which key to top up next
+- Provider Health row above the buttons: 🟢 Snov 1,847 · 🟢 Apollo 230 · 🟡 Hunter 47 · 🟢 PDL 12 · 🟢 Scrape free
+- When Hunter hits 0, the waterfall skips it silently — no broken runs
 
-### What I won't build (and why)
+### Out of scope (call out if you want them)
 
-- **Trial on Contractor Leads** — you said no, and I agree (ad-spend rules + chargeback risk).
-- **Trial on FieldDesk / Missed Call** — keep refund guarantee. Adding trials creates day-7 involuntary churn.
-- **New newsletter** — you already have the Field Rep Weekly Newsletter. We just need to use it as the funnel. No new product.
+- Adding **Dropcontact** or **Skrapp** as 6th/7th providers (would need new API keys + secrets — not free)
+- Auto-purchasing top-ups via Stripe when a provider goes red
+- Fax/postcard/phone field backfill (this plan is email-only — same waterfall pattern can be applied later for phone via Lusha + PDL + Apollo phone)
 
----
+### Recommendation on which to top up next
 
-### Files touched (technical detail)
-
-**New:**
-- `supabase/migrations/20260423140000_dead_lead_default_quota_one.sql`
-- `supabase/functions/buyer-radar-sneak-peek/index.ts`
-- `supabase/functions/industry-pulse-sneak-peek/index.ts`
-- `src/pages/BuyerRadarPreview.tsx`
-- `src/pages/DemandRadarPreview.tsx`
-
-**Edited:**
-- `supabase/functions/_shared/sms-templates.ts` — add `dead_lead_free_first_v1`
-- `supabase/functions/create-industry-pulse-checkout/index.ts` — add `trial_period_days: 7` on weekly tier
-- `supabase/functions/newsletter-send/index.ts` — add rotating radar CTA
-- `src/pages/DeadLeadIntake.tsx` + `src/components/contractor/FreeBoostCard.tsx` — copy update
-- `src/pages/HireAlert.tsx` — surface trial CTA
-- `src/pages/IndustryPulse.tsx` — trial disclosure on weekly tier button
-- `src/components/dwa-admin/AdminDWAOverview.tsx` — sneak peek funnel row
-- `src/App.tsx` — 2 new public routes
-- `supabase/config.toml` — `verify_jwt = false` for 2 new functions
-
-Reply "go" and I'll ship it in build mode.
+When Hunter runs dry: **don't replace it — top up Snov.io instead.** Snov's $40/mo Starter = 1,000 credits = ~5× more email finds per dollar than Hunter at the same tier. Apollo's free tier (50 credits/mo) covers the gravy on top.
 
