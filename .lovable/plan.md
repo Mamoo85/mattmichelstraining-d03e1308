@@ -1,49 +1,98 @@
+# Marketplace Polish — Finish the Remaining 4 Fixes
 
+We already shipped the FirstLookUpsellGate cooldown last turn. This plan closes the last 4 P0/P1 items so every à la carte vertical (`/mortgage-leads`, `/talent-leads`, `/demand-leads`, `/supply-leads`, `/growth-leads`) is sellable with confidence.
 
-# Plan — Make the Fax (and Postcard) Campaign cards clickable + sendable
+---
 
-## What's broken
-On the **Outreach Command Center → Active Campaigns** tab, each row in the **Fax Campaigns** and **Postcard Campaigns** cards is plain text. There is no click handler, no Send button, no Diagnose button. That's why clicking the "mixed / draft / 0 sent" fax row does nothing.
+## 1. Backfill `signal_strength_tier` (P0 — biggest confidence killer)
 
-The send logic already exists and works — it lives in `AdminFaxCampaigns.tsx` (calls `send-fax-phaxio`) and `AdminPostcardCampaigns.tsx` (calls `send-postcards-lob`). It was just never wired into the consolidated Command Center cards.
+**Problem (verified in DB):**
+```
+mortgage: 89 NULL / 1 warm
+talent:   229 NULL / 1 cool
+supply:   187 NULL
+demand:   14 NULL
+growth:   0 leads
+```
+Buyers click HOT/WARM/COOL filters → empty results. Looks broken.
 
-## The fix (one component edit)
+**Fix — derive tier from `score` at the view level so it's always populated:**
 
-**File:** `src/components/dwa-admin/OutreachCommandCenter.tsx`
+Migration that updates `unified_lead_marketplace_view` to compute tier when NULL:
+```sql
+COALESCE(
+  signal_strength_tier,
+  CASE
+    WHEN score >= 8 THEN 'hot'
+    WHEN score >= 5 THEN 'warm'
+    ELSE 'cool'
+  END
+) AS signal_strength_tier
+```
+No data writes — pure view logic, instantly correct for all 520 existing leads, and any new lead with a score gets a tier automatically.
 
-**Change 1 — Make `CampaignCard` action-aware.** Add an optional `actions` render-prop per row so fax/postcard rows can render Diagnose + Send buttons inline. Email/SMS rows stay read-only (they're logs, not drafts).
+---
 
-**Change 2 — Wire fax row actions:**
-- **🔍 Diagnose** button → `supabase.functions.invoke("send-fax-phaxio", { body: { campaign_id, dry_run: true } })` → toast the prospect/cap/Phaxio-key result (same diagnostic block already shown in `AdminFaxCampaigns`)
-- **📠 Send** button (only visible when `status === "draft"`) → confirm dialog → `send-fax-phaxio` with `{ campaign_id }` → toast `${sent} sent · ${failed} failed · $${cost}` → invalidate `fax_campaigns_active` query
-- **↻ Resend failed** button (only visible when `status === "sent"` and there are failures) → calls `send-fax-phaxio` with `prospect_ids` of failed rows
+## 2. Honest empty-inventory state for `growth-leads` (P0)
 
-**Change 3 — Wire postcard row actions** (mirror image):
-- Diagnose → `send-postcards-lob` with `dry_run: true`
-- Send → `send-postcards-lob` with `{ campaign_id }`
-- Resend failed → `send-postcards-lob` with `prospect_ids`
+**Problem:** Empty `growth` shows "No leads match your filters" + "Clear filters" — implies user error.
 
-**Change 4 — Show last error inline.** If `c.last_error` exists, render a small red `⚠ {error}` line under the row so you can see *why* a campaign failed without leaving the Command Center.
+**Fix in `src/pages/Marketplace.tsx`:** distinguish three states in the grid block:
+- `loading` → spinner (unchanged)
+- `leads.length === 0` (no inventory) → new "Restocking" state:
+  > "Fresh `Growth Leads` are being scored right now. New batches drop every 15 min for First Look subscribers, every 60 min for everyone else."  
+  > [Get notified when stocked] (uses `BuyerEmailDialog` → existing `marketplace-watch-add` w/ `product` only)  
+  > [Browse other verticals] → links to populated products
+- `filtered.length === 0` (filters too tight) → existing "No leads match" + Clear filters
 
-**Change 5 — Add a "✏️ Edit in full editor" link** on each fax/postcard row that deep-links to the dedicated `AdminFaxCampaigns` / `AdminPostcardCampaigns` tab (where you can edit subject/body, attach prospect lists, etc.) for anything more complex than send/resend.
+---
 
-## Why this is the right fix
-- **No new edge functions.** `send-fax-phaxio`, `send-postcards-lob`, and the diagnose `dry_run` paths all already exist and are tested.
-- **No schema changes.** `fax_campaigns.status`, `last_error`, `total_sent`, `total_cost` columns already drive the same UI in `AdminFaxCampaigns`.
-- **Safe by design.** Send is gated behind a `confirm()` dialog. Diagnose is free (dry_run). Both invalidate the React Query cache so the row updates immediately.
+## 3. Active-chip auto-scroll + clearer fade (P1)
 
-## After ship — what you'll be able to do from the Command Center
-1. Click **🔍 Diagnose** on the "mixed / draft / 0 sent" fax row → toast says *"3 ready to send · Phaxio API ✅ Working · cost $0.21"*
-2. Click **📠 Send** → confirm → toast says *"✅ 3 sent · 0 failed · $0.21"* → row flips to `sent`, counter goes 0 → 3
-3. Same flow works on the postcard cards (Lob)
-4. Email + SMS cards stay read-only (correctly — they're activity feeds, not draft queues)
+**Problem:** On 344px viewport, the active product chip gets hidden behind the right-edge fade and never scrolls into view.
 
-## Honest scope
-~25 minutes. Single-file edit to `OutreachCommandCenter.tsx`. No backend, no migrations, no new functions.
+**Fix in `src/pages/Marketplace.tsx` product switcher:**
+- Add `ref` to the active chip, `useEffect` on `product` change → `scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })`
+- Add a matching left-edge fade (currently only right) so it's symmetric
+- Add `aria-current="page"` for a11y
 
-## Not touching
-- The dedicated `AdminFaxCampaigns` / `AdminPostcardCampaigns` tabs (already work — staying as the "full editor")
-- `send-fax-phaxio` / `send-postcards-lob` edge functions (already correct)
-- The 5 cron jobs from the previous ship
-- The Stripe/Marketplace work (next session, as you said)
+Same treatment for the tier filter row.
 
+---
+
+## 4. Loading resilience — don't let one failure block both (P1)
+
+**Problem:** `Promise.all([leads, locks])` — if the locks query errors (e.g. RLS hiccup), the spinner stays forever and we never render leads.
+
+**Fix in `src/pages/Marketplace.tsx`:**
+- Switch to `Promise.allSettled`
+- Set `leads` and `soldIds` independently from each result
+- Always `setLoading(false)` in a `finally`
+- If leads errors, show an inline error banner + Retry button instead of an empty grid
+
+---
+
+## Technical Details
+
+| File | Change |
+|---|---|
+| `supabase/migrations/2026XXXX_marketplace_tier_fallback.sql` | `CREATE OR REPLACE VIEW public.unified_lead_marketplace_view` with `COALESCE(signal_strength_tier, CASE…)` derived from `score`. Re-grant SELECT to `anon, authenticated`. |
+| `src/pages/Marketplace.tsx` | (a) Empty-inventory branch with notify CTA; (b) active-chip ref + `scrollIntoView` for product + tier rows; (c) `Promise.allSettled` + error banner + Retry; (d) left-edge fade. |
+
+No new edge functions, no schema changes beyond the view, no breaking changes to existing buyer flow. Existing `marketplace-watch-add` already accepts a product-only watch (no `lead_id`) for "notify on restock" — we'll reuse it.
+
+---
+
+## What stays the same
+- Pricing logic (`src/lib/marketplacePricing.ts`)
+- Checkout flow (`create-marketplace-lead-checkout`)
+- FirstLookUpsellGate (already patched last turn)
+- Share-link flow (`/lead/share/:token`)
+
+## Out of scope
+- Building new `growth-leads` inventory (separate sourcing job — Tom agent territory)
+- Buyer dashboard / receipt UX (already audited clean)
+
+---
+
+**Approve and I'll ship all 4 in one pass.**
