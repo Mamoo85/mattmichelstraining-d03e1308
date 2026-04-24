@@ -169,6 +169,7 @@ function FindProspects() {
   const [limit, setLimit] = useState(50);
   const [running, setRunning] = useState(false);
   const [scoring, setScoring] = useState(false);
+  const [enrichFirst, setEnrichFirst] = useState(false);
   const qc = useQueryClient();
 
   // Idle Pool counts
