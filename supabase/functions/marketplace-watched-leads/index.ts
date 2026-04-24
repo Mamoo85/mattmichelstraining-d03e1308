@@ -6,6 +6,14 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+function priceForLead(score: number, ageDays: number): number {
+  if (ageDays > 14) return 1500;
+  if (ageDays > 7) return 3500;
+  if (score >= 8) return 9900;
+  if (score >= 6) return 6900;
+  return 4900;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -24,7 +32,7 @@ Deno.serve(async (req) => {
 
     const { data: watches } = await supabase
       .from("marketplace_buyer_watches")
-      .select("lead_id, product, last_price_cents")
+      .select("lead_id, product, last_price_cents, created_at")
       .eq("buyer_email", buyer_email.toLowerCase().trim())
       .order("created_at", { ascending: false })
       .limit(12);
@@ -35,20 +43,26 @@ Deno.serve(async (req) => {
       });
     }
 
-    const ids = watches.map((w) => w.lead_id);
+    const ids = (watches as any[]).map((w) => w.lead_id);
+    // Pull from the unified view — works across all products (mortgage/talent/demand/growth/supply).
     const { data: leads } = await supabase
-      .from("mortgage_radar_leads")
-      .select("id, product, human_summary, city, zip, score, list_price_cents")
+      .from("unified_lead_marketplace_view")
+      .select("id, product, human_summary, city, zip, score, created_at")
       .in("id", ids);
 
-    const byId = new Map((leads || []).map((l: any) => [l.id, l]));
-    const merged = watches.map((w) => {
+    const byId = new Map(((leads || []) as any[]).map((l) => [l.id, l]));
+    const merged = (watches as any[]).map((w) => {
       const l: any = byId.get(w.lead_id) || {};
+      const ageDays = l.created_at
+        ? (Date.now() - new Date(l.created_at).getTime()) / 86_400_000
+        : 0;
+      const currentPrice =
+        l.score !== undefined ? priceForLead(l.score || 0, ageDays) : (w.last_price_cents ?? null);
       return {
         lead_id: w.lead_id,
         product: w.product || l.product,
         last_price_cents: w.last_price_cents,
-        current_price_cents: l.list_price_cents ?? w.last_price_cents,
+        current_price_cents: currentPrice,
         human_summary: l.human_summary ?? null,
         city: l.city ?? null,
         zip: l.zip ?? null,

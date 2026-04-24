@@ -122,6 +122,17 @@ serve(async (req) => {
         update.suggested_opener = summary.suggested_opener;
       }
 
+      // Append to score_history when score changes — only for tables that have the column.
+      // Currently only mortgage_radar_leads has score_history.
+      if (src.table === "mortgage_radar_leads" && (row.score || 5) !== boostedScore) {
+        const prevHistory = Array.isArray(row.score_history) ? row.score_history : [];
+        const nextHistory = [
+          ...prevHistory,
+          { score: boostedScore, at: new Date().toISOString() },
+        ].slice(-20); // cap at last 20 entries
+        update.score_history = nextHistory;
+      }
+
       await (sb.from as any)(src.table).update(update).eq("id", row.id);
       trace.push({ table: src.table, id: row.id, tier, summarized: !!summary });
       processed++;
