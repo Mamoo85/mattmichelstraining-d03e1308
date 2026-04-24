@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Home, Play, RefreshCw, Users, MapPin, Sparkles, Copy, Send } from "lucide-react";
+import { Home, Play, RefreshCw, Users, MapPin, Sparkles, Copy, Send, ExternalLink } from "lucide-react";
+import LeadSalesOutreachHub from "./LeadSalesOutreachHub";
 
 type Client = {
   id: string;
@@ -261,6 +262,48 @@ export default function MortgageRadarHub() {
           </CardContent>
         </Card>
       )}
+
+      {/* ── Test Dashboard Links ── */}
+      <Card className="bg-[#0a1628] border-amber-500/30">
+        <CardHeader>
+          <CardTitle className="text-white text-sm flex items-center gap-2">
+            🧪 Your Test Dashboards — experience every product as a customer
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {[
+              { label: "Contractor — HVAC",       url: "/my-contractor-leads?token=matt-test-hvac-roi-token-00000001" },
+              { label: "Contractor — Roofing",    url: "/my-contractor-leads?token=matt-test-roofing-roi-token-000001" },
+              { label: "Contractor — Plumbing",   url: "/my-contractor-leads?token=matt-test-plumbing-roi-token-00001" },
+              { label: "Contractor — Electrical", url: "/my-contractor-leads?token=matt-test-electrical-roi-token-0001" },
+              { label: "Contractor — General",    url: "/my-contractor-leads?token=matt-test-general-roi-token-000001" },
+              { label: "TechAlert",               url: "/my-techalert?token=matt-test-techalert-dashboard-0001" },
+              { label: "FieldDesk (dispatch)",    url: "/field-service/dispatch?demo=1" },
+              { label: "FieldDesk (tech app)",    url: "/field-service/tech?demo=1" },
+              { label: "Mortgage Radar",          url: "/mortgage-radar" },
+            ].map(({ label, url }) => (
+              <a
+                key={url}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-[#1e3a5f] bg-[#0d1f35] text-sm text-white hover:border-amber-500/50 hover:bg-amber-500/5 transition-colors"
+              >
+                <span>{label}</span>
+                <ExternalLink className="w-3 h-3 text-[#64748b] shrink-0" />
+              </a>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── LO Outreach Hub ── */}
+      <Card className="bg-[#0a1628] border-[#1e3a5f]">
+        <CardContent className="p-6">
+          <LeadSalesOutreachHub />
+        </CardContent>
+      </Card>
     </div>
   );
 }
