@@ -1343,6 +1343,20 @@ serve(async (req) => {
             `💰 Marketplace: ${email} bought ${productLabel} lead. Score ${(lead as any)?.score || "?"}/10.`,
             "marketplace_sale_admin").catch(()=>{});
 
+          // Purchase confirmation SMS to the buyer (item 41)
+          try {
+            const { data: buyerProfile } = await (sb.from as any)("profiles")
+              .select("phone").eq("email", email).maybeSingle();
+            const buyerPhone = (buyerProfile as any)?.phone || (meta.buyer_phone as string) || null;
+            if (buyerPhone) {
+              await sendSMS(buyerPhone, "+13139921219",
+                `🎟 Detroit Web Agency: Your ${productLabel} dossier is unlocked. Open it: ${dashLink}  TCPA: verify EBR before texting. Reply STOP to opt out.`,
+                "marketplace_purchase_confirmation").catch(()=>{});
+            }
+          } catch (smsErr) {
+            console.warn("[mp purchase SMS]", smsErr);
+          }
+
         } catch (e) {
           console.error("[WEBHOOK] marketplace_lead_purchase error:", e);
           await notifyMatt(`🚨 Marketplace fulfillment FAILED — ${email || "unknown"} / ${lead_id}`,

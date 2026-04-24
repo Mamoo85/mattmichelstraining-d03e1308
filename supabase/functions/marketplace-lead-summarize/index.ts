@@ -25,6 +25,18 @@ const TIER_FROM_SCORE = (score: number, ageDays: number): "hot" | "warm" | "cool
   return "cool";
 };
 
+// Multi-signal stacking + NOAA storm boost (capped at 10).
+function applyScoreBoosts(baseScore: number, row: any): number {
+  let s = baseScore || 5;
+  const enrich = row.free_enrichment || {};
+  // NOAA storm in the last 90d adds +1
+  if (enrich?.noaa?.recent_storm_count > 0 || enrich?.storm_recent === true) s += 1;
+  // Multi-signal stacking: each extra signal_type beyond the first adds +1, cap +2
+  const stackCount = Array.isArray(row.signal_stack) ? row.signal_stack.length : 0;
+  if (stackCount > 1) s += Math.min(stackCount - 1, 2);
+  return Math.min(s, 10);
+}
+
 async function summarizeLead(sb: any, row: any, product: string, buyer: string) {
   const prompt = `You are formatting one lead for a marketplace dossier card. Output STRICT JSON only.
 
@@ -95,12 +107,14 @@ serve(async (req) => {
 
     for (const row of rows || []) {
       const ageDays = Math.floor((Date.now() - new Date(row.created_at).getTime()) / 86400000);
-      const tier = TIER_FROM_SCORE(row.score || 5, ageDays);
+      const boostedScore = applyScoreBoosts(row.score || 5, row);
+      const tier = TIER_FROM_SCORE(boostedScore, ageDays);
 
       const summary = await summarizeLead(sb, row, src.product, src.buyer);
       const update: Record<string, unknown> = {
         signal_strength_tier: tier,
         days_on_radar: ageDays,
+        score: boostedScore,
       };
       if (summary) {
         update.human_summary = summary.human_summary;

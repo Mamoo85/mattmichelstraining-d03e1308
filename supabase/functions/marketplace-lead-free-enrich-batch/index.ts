@@ -31,6 +31,15 @@ serve(async (_req) => {
         body: JSON.stringify({ lead_id: l.id }),
       });
       if (res.ok) ok++;
+      // Chain gov-enrich for the same lead (SAM.gov, USPS, HUD, EPA, NPI, MI SOS)
+      fetch(`${SUPABASE_URL}/functions/v1/marketplace-lead-gov-enrich`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+        },
+        body: JSON.stringify({ lead_id: l.id }),
+      }).catch((e) => console.error("[GOV-ENRICH chain]", e));
     } catch (e) {
       console.error("[FREE-ENRICH-BATCH]", e);
     }
