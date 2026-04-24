@@ -66,17 +66,31 @@ export default function Marketplace() {
   const [compareOpen, setCompareOpen] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [lastSeenAt, setLastSeenAt] = useState<number>(() => Number(localStorage.getItem("mp_last_seen") || "0"));
-  const buyerEmail = typeof window !== "undefined" ? localStorage.getItem("mp_buyer_email") || "" : "";
+  const [buyerEmail, setBuyerEmail] = useState<string>(() =>
+    typeof window !== "undefined" ? localStorage.getItem("mp_buyer_email") || "" : ""
+  );
 
   const productMeta = PRODUCTS.find((p) => p.key === product) || PRODUCTS[0];
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Mark visit on mount, but keep previous "lastSeenAt" for NEW-badge comparison
+  // Mark visit on mount: capture previous timestamp for NEW-badge comparison,
+  // then immediately stamp current visit. Also ping server for reengagement tracking.
   useEffect(() => {
+    const prev = Number(localStorage.getItem("mp_last_seen") || "0");
+    setLastSeenAt(prev);
     const now = Date.now();
-    return () => {
-      localStorage.setItem("mp_last_seen", String(now));
-    };
+    localStorage.setItem("mp_last_seen", String(now));
+    const email = localStorage.getItem("mp_buyer_email");
+    if (email) {
+      (supabase as any)
+        .from("marketplace_buyer_visits")
+        .upsert(
+          { buyer_email: email.toLowerCase().trim(), last_seen_at: new Date().toISOString() },
+          { onConflict: "buyer_email" },
+        )
+        .then(() => {})
+        .catch?.(() => {});
+    }
   }, [product]);
 
   useEffect(() => {
