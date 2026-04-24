@@ -71,6 +71,49 @@ function normPhone(p: string | null | undefined): string | null {
 
 // ---------- enrichment stages ----------
 
+// Shared email waterfall (Snov → Apollo → pattern_verify → Hunter → PDL → site_scrape).
+// Replaces the legacy single-provider stageHunter/stageApolloPeople email paths.
+async function stageEmailWaterfall(
+  p: Prospect,
+  sb: any,
+  counters: WaterfallCounters,
+): Promise<{ patch: Prospect; trace: TraceStage }> {
+  const t0 = Date.now();
+  const trace: TraceStage = { source: "EmailWaterfall", filled: [], cost_usd: 0, duration_ms: 0, ok: false };
+  const patch: Prospect = {};
+  if (p.email) {
+    trace.error = "already_filled";
+    trace.duration_ms = Date.now() - t0;
+    trace.ok = true;
+    return { patch, trace };
+  }
+  try {
+    const r = await runEmailWaterfall(sb, {
+      website: p.website,
+      business_name: p.business_name,
+      city: p.city,
+      state: p.state,
+      contact_first_name: p.contact_first_name ?? null,
+      contact_last_name: p.contact_last_name ?? null,
+    }, counters);
+    if (r.email) {
+      patch.email = r.email;
+      trace.filled.push("email");
+      trace.source = r.source ? `EmailWaterfall:${r.source}` : "EmailWaterfall";
+    }
+    // Persist per-step trace inside the parent trace's error slot for audit
+    if (r.trace?.length) {
+      (trace as any).steps = r.trace;
+    }
+    trace.ok = true;
+  } catch (e) {
+    trace.error = e instanceof Error ? e.message : String(e);
+  }
+  trace.duration_ms = Date.now() - t0;
+  return { patch, trace };
+}
+
+
 async function stageHunter(p: Prospect): Promise<{ patch: Prospect; trace: TraceStage }> {
   const t0 = Date.now();
   const trace: TraceStage = { source: "Hunter", filled: [], cost_usd: 0.04, duration_ms: 0, ok: false };
