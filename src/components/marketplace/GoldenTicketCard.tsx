@@ -1,6 +1,8 @@
 import { ReactNode } from "react";
-import { Flame, Snowflake, Sun, MapPin, Calendar, TrendingUp, ShieldCheck } from "lucide-react";
+import { Flame, Snowflake, Sun, MapPin, Calendar, TrendingUp, ShieldCheck, ArrowUp, ArrowDown, Minus, Copy } from "lucide-react";
 import { ProvenanceTooltip } from "./ProvenanceTooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export type SignalTier = "hot" | "warm" | "cool";
@@ -12,6 +14,7 @@ export interface MarketplaceLead {
   signal_strength_tier: SignalTier | null;
   score: number | null;
   score_percentile: number | null;
+  score_history?: Array<{ score: number; at: string }> | null;
   signal_velocity: number | null;
   zip_heat_index: number | null;
   days_on_radar: number | null;
@@ -28,6 +31,7 @@ export interface MarketplaceLead {
   buyer_type: string | null;
   suggested_opener: { sms?: string; email_subject?: string; email_body?: string; voicemail?: string } | null;
   provenance_source_urls: Array<{ field: string; url: string; fetched_at: string }> | null;
+  provenance_sources?: Array<{ source?: string; field?: string; url?: string; fetched_at?: string }> | null;
   created_at: string;
   city: string | null;
   state: string | null;
@@ -75,20 +79,75 @@ export function TierBadge({ tier }: { tier: SignalTier | null }) {
   );
 }
 
-export function ScoreBars({ score, percentile }: { score: number | null; percentile: number | null }) {
+export function ScoreTrend({ history }: { history?: Array<{ score: number; at: string }> | null }) {
+  if (!history || history.length < 2) return null;
+  const sorted = [...history].sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
+  const first = sorted[0].score;
+  const last = sorted[sorted.length - 1].score;
+  const delta = last - first;
+  const Icon = delta > 0 ? ArrowUp : delta < 0 ? ArrowDown : Minus;
+  const color = delta > 0 ? "text-emerald-400" : delta < 0 ? "text-orange-400" : "text-muted-foreground";
+  return (
+    <span className={cn("inline-flex items-center text-[10px] font-mono", color)} title={`Score trend: ${delta > 0 ? "+" : ""}${delta} over ${sorted.length} scans`}>
+      <Icon className="w-3 h-3" />
+    </span>
+  );
+}
+
+export function ScoreBars({ score, percentile, history }: { score: number | null; percentile: number | null; history?: Array<{ score: number; at: string }> | null }) {
   if (!score) return null;
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-        <span>Lead Score</span>
-        <span className="text-intel-teal font-bold">{score}/10{percentile && ` · top ${100 - percentile}%`}</span>
+    <TooltipProvider delayDuration={300}>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="cursor-help underline decoration-dotted decoration-muted-foreground/40 underline-offset-2">Lead Score</span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs bg-popover border-border">
+              <div className="text-xs space-y-1">
+                <div className="font-mono text-intel-teal">DWA Composite Score</div>
+                <p className="text-foreground/80">Combines signal strength, recency, equity confidence, NOAA storm history, and multi-signal stacking. Capped at 10. Updated each scanner run.</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+          <span className="text-intel-teal font-bold flex items-center gap-1">
+            {score}/10{percentile && ` · top ${100 - percentile}%`}
+            <ScoreTrend history={history} />
+          </span>
+        </div>
+        <div className="flex gap-0.5">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className={cn("h-1.5 flex-1 rounded-sm", i < score ? "bg-intel-teal" : "bg-muted/30")} />
+          ))}
+        </div>
       </div>
-      <div className="flex gap-0.5">
-        {Array.from({ length: 10 }).map((_, i) => (
-          <div key={i} className={cn("h-1.5 flex-1 rounded-sm", i < score ? "bg-intel-teal" : "bg-muted/30")} />
-        ))}
-      </div>
-    </div>
+    </TooltipProvider>
+  );
+}
+
+export function CopyAllOpenerButton({ opener }: { opener: MarketplaceLead["suggested_opener"] }) {
+  if (!opener) return null;
+  const handleCopy = async () => {
+    const block = [
+      opener.sms && `--- SMS ---\n${opener.sms}`,
+      opener.email_subject && `--- EMAIL ---\nSubject: ${opener.email_subject}\n${opener.email_body || ""}`,
+      opener.voicemail && `--- VOICEMAIL ---\n${opener.voicemail}`,
+    ].filter(Boolean).join("\n\n");
+    try {
+      await navigator.clipboard.writeText(block);
+      toast.success("All openers copied — paste & send manually (TCPA: verify EBR first).");
+    } catch {
+      toast.error("Could not copy");
+    }
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider rounded border border-intel-teal/40 text-intel-teal hover:bg-intel-teal/10 transition-colors"
+    >
+      <Copy className="w-3 h-3" /> Copy all openers
+    </button>
   );
 }
 
