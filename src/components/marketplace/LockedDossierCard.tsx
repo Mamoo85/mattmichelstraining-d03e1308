@@ -59,11 +59,20 @@ export function LockedDossierCard({ lead, priceCents = 4900, onClaim, className,
           </p>
         )}
 
-        {/* Location (intel-redacted) */}
-        <div className="flex items-center gap-2 text-xs font-mono flex-wrap">
-          <Lock className="w-3 h-3 text-seal-gold flex-shrink-0" />
-          <span className="text-muted-foreground">REDACTED ST,</span>
-          <span className="text-foreground truncate">{locationLine || "Metro Detroit"}</span>
+        {/* Location (intel-redacted, not a placeholder) */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-xs font-mono">
+            <Lock className="w-3 h-3 text-seal-gold flex-shrink-0" />
+            <span className="text-seal-gold uppercase tracking-wider">Address redacted</span>
+            <span className="text-muted-foreground">·</span>
+            <MapPin className="w-3 h-3 text-muted-foreground" />
+            <span className="text-foreground truncate">{locationLine || "Metro Detroit"}</span>
+          </div>
+          {(lead.nearby_signal_count ?? 0) > 0 && (
+            <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground pl-5">
+              {lead.nearby_signal_count} active signal{lead.nearby_signal_count === 1 ? "" : "s"} within this ZIP · unlocks at purchase
+            </p>
+          )}
         </div>
 
         <ScoreBars score={lead.score} percentile={lead.score_percentile} history={lead.score_history} />
