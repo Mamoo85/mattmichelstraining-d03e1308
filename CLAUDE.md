@@ -12,7 +12,62 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-04-23. Update this section every session.*
+*Last updated: 2026-04-24. Update this section every session.*
+
+### Phase 22 — Golden Ticket Marketplace Plan + LO Outreach System + Test Enrollments COMPLETE ✅
+*2026-04-24 — branch `claude/review-design-system-qRGjL`*
+
+**Status: All committed + pushed. Waiting on Matt to merge to main → Lovable deploys.**
+
+**1. Matt enrolled as test customer in all 5 products** (`20260424110000_matt_test_enrollments.sql`)
+- `contractor_clients`: 5 rows (hvac/roofing/plumbing/electrical/general) — all active, each with unique `roi_token`
+- `hire_alert_clients`: TechAlert standalone, all trade roles, Metro Detroit ZIPs, `dashboard_token` set
+- `field_crm_clients`: FieldDesk standard plan, active
+- `missed_call_clients`: Missed Call active with DWA response message
+- `mortgage_radar_clients`: founder account, 9 Detroit ZIPs, `is_founder=true`
+- Dashboard links live in DWA Admin → Mortgage Radar tab → "🧪 Test Dashboards" card
+
+**2. LO Outreach System** (`src/components/dwa-admin/LeadSalesOutreachHub.tsx`)
+- 3-tab admin component inside Mortgage Radar hub:
+  - **Prospects**: pulls `marketplace_prospects`, NMLS refresh, per-row Apollo/Sonar enrich, warmth scores
+  - **Campaign Builder**: pick leads (score ≥7) + LO prospects, odds calculator (fax 5-8%/$0.07 · postcard 4-6%/$0.82 · email 2-3%/free), cost estimate, one-click blast
+  - **History**: campaign response rate tracking
+- SMS cold-prospecting disabled in UI (TCPA guardrail, tooltip explains why)
+- Calls existing edge functions: `find-lo-prospects`, `enrich-lo-prospect`, `marketplace-outreach-blast`
+
+**3. Golden Ticket Marketplace v2 Plan** (`/root/.claude/plans/whats-going-ok-structured-minsky.md`)
+- Full plan with 50 zero-cost enhancements across 5 groups (free govt APIs, DB-computed, UI/UX, notifications, trust)
+- LO outreach 50-enhancement extension (targeting, personalization, follow-up, analytics, UX, cost, legal, intelligence)
+- Ready to hand to Lovable for Session 1 (marketplace + card UI, no payment) then Session 2 (Stripe + PDF + share tokens)
+
+**Edge functions already built (previous sessions, in repo):**
+- `find-lo-prospects` — NMLS Consumer Access API → `marketplace_prospects` table
+- `enrich-lo-prospect` — Apollo/Sonar waterfall enrichment
+- `send-fax` — Twilio Programmable Fax (JFPA compliant, checks `fax_opt_outs`)
+- `send-postcard` — Lob.com API (4×6 B2B direct mail)
+- `marketplace-outreach-blast` — orchestrator, checks `outreach_cooldowns`, fires per-channel sends
+- Migration: `20260424100000_lo_outreach_system.sql` — `marketplace_prospects`, `lo_outreach_campaigns`, `lo_outreach_sends`
+
+**Secrets Matt needs to add before full functionality:**
+- `LOB_API_KEY` — lob.com free plan (300 postcards/mo for testing) — needed for postcard sends
+- `BROWSERLESS_API_KEY` — browserless.io free (1k renders/mo) — needed for dossier PDFs (Session 2)
+- `APOLLO_API_KEY` — apollo.io free tier (50 enrichments/mo) — needed for prospect enrichment
+
+**Wayne County GIS note** (confirmed this session):
+- `data-wayne.opendata.arcgis.com` blocks ALL server-side requests (403)
+- BSEED ArcGIS (`services2.arcgis.com/qvkbeam7Wirps6zC`) is the only working permit/property source
+
+**Working branch**: `claude/review-design-system-qRGjL`
+
+---
+
+**WAITING ON MATT:**
+1. Merge `claude/review-design-system-qRGjL` → main → Lovable auto-deploys
+2. Add `LOB_API_KEY` + `BROWSERLESS_API_KEY` + `APOLLO_API_KEY` to Lovable secrets
+3. Give Lovable the plan from `/root/.claude/plans/whats-going-ok-structured-minsky.md` to build marketplace
+4. After Lovable builds marketplace: run end-to-end source verification on all marketplace data sources
+
+---
 
 ### Phase 21 — Compliance Hardening + Mortgage Radar Bootstrap COMPLETE ✅
 *2026-04-23 — branch `claude/review-design-system-qRGjL`*
