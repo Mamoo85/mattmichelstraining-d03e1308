@@ -342,26 +342,8 @@ export default function Marketplace() {
             </div>
           </div>
 
-          {/* Product switcher — horizontally scrollable on mobile with edge fade */}
-          <div className="relative mt-6 -mx-4 px-4">
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory">
-              {PRODUCTS.map((p) => (
-                <button
-                  key={p.key}
-                  onClick={() => setParams({ product: p.key })}
-                  className={`shrink-0 snap-start px-3 py-1.5 text-xs font-mono uppercase tracking-wider rounded border transition-colors ${
-                    p.key === product
-                      ? "bg-intel-teal/15 border-intel-teal/50 text-intel-teal"
-                      : "bg-card border-border/40 text-muted-foreground hover:border-border hover:text-foreground"
-                  }`}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-            {/* Right-edge fade hint */}
-            <div className="pointer-events-none absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-background to-transparent md:hidden" />
-          </div>
+          {/* Product switcher — horizontally scrollable on mobile with edge fades */}
+          <ProductChipRow product={product} onSelect={(k) => setParams({ product: k })} />
 
           {/* Trust strip */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-4 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
