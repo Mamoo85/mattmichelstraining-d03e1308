@@ -329,7 +329,7 @@ export default function Marketplace() {
 
           {/* Product switcher — horizontally scrollable on mobile with edge fade */}
           <div className="relative mt-6 -mx-4 px-4">
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none snap-x snap-mandatory">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory">
               {PRODUCTS.map((p) => (
                 <button
                   key={p.key}
@@ -376,7 +376,7 @@ export default function Marketplace() {
       <div className="border-b border-border/40 sticky top-0 bg-background/95 backdrop-blur z-10">
         <div className="container max-w-7xl mx-auto px-4 py-3 flex items-center gap-3 flex-wrap">
           <div className="relative flex-shrink-0 max-w-full overflow-hidden">
-            <div className="flex gap-1.5 overflow-x-auto scrollbar-none pr-6">
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pr-6">
               {(["all", "hot", "warm", "cool"] as TierFilter[]).map((t) => {
                 const Icon = t === "hot" ? Flame : t === "warm" ? Sun : t === "cool" ? Snowflake : null;
                 return (
