@@ -149,6 +149,7 @@ export default function Marketplace() {
     const email = window.prompt("Enter your email to receive the unlocked dossier:", stored);
     if (!email || !email.includes("@")) return;
     localStorage.setItem("mp_buyer_email", email);
+    setBuyerEmail(email);
     setClaiming(lead.id);
     try {
       const { data, error } = await supabase.functions.invoke("create-marketplace-lead-checkout", {
