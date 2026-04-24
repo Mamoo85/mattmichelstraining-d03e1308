@@ -247,9 +247,16 @@ export default function MarketplaceReceipts() {
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
-                          onClick={() => handleShare(r.lead_id, r.product)}
+                          variant="ghost"
+                          onClick={() => handleRegeneratePdf(r.lead_id, r.product)}
+                          disabled={regenBusy === r.lead_id}
+                          title="Force a fresh PDF if the download link is broken"
                         >
+                          {regenBusy === r.lead_id
+                            ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                            : <RefreshCw className="w-3.5 h-3.5 mr-1.5" />}
+                          Regenerate
+                        </Button>
                           <Share2 className="w-3.5 h-3.5 mr-1.5" />
                           Share (redacted)
                         </Button>
