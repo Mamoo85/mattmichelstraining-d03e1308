@@ -76,6 +76,7 @@ export function FirstLookUpsellGate({ product, leads }: Props) {
   if (!sample) return null;
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(o) => { if (!o) handleDismiss(); }}>
       <DialogContent className="max-w-lg bg-card border-intel-teal/30">
         <DialogHeader>
@@ -139,5 +140,6 @@ export function FirstLookUpsellGate({ product, leads }: Props) {
       title="Enter your email"
       description="Where should we send your First Look access confirmation?"
     />
+    </>
   );
 }
