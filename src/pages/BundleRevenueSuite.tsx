@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Helmet } from "react-helmet-async";
 import AppNavbar from "@/components/layout/AppNavbar";
+import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
 import {
   MessageSquare, Bell, CalendarX, FileText, Receipt, UserPlus, Megaphone, Clock,
   CheckCircle, ArrowRight, Loader2, Shield, Zap,
