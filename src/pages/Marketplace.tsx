@@ -41,21 +41,28 @@ export default function Marketplace() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    supabase
-      .from("unified_lead_marketplace_view" as any)
-      .select("*")
-      .eq("product", product)
-      .order("score", { ascending: false })
-      .limit(60)
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        if (error) {
-          toast.error("Could not load leads");
-          console.error(error);
-        }
-        setLeads((data || []) as unknown as MarketplaceLead[]);
-        setLoading(false);
-      });
+    Promise.all([
+      supabase
+        .from("unified_lead_marketplace_view" as any)
+        .select("*")
+        .eq("product", product)
+        .order("score", { ascending: false })
+        .limit(60),
+      (supabase as any)
+        .from("marketplace_lead_locks")
+        .select("lead_id")
+        .eq("product", product)
+        .eq("status", "sold"),
+    ]).then(([leadsRes, locksRes]: any[]) => {
+      if (cancelled) return;
+      if (leadsRes.error) {
+        toast.error("Could not load leads");
+        console.error(leadsRes.error);
+      }
+      setLeads((leadsRes.data || []) as unknown as MarketplaceLead[]);
+      setSoldIds(((locksRes.data || []) as Array<{ lead_id: string }>).map((r) => r.lead_id));
+      setLoading(false);
+    });
     return () => { cancelled = true; };
   }, [product]);
 
