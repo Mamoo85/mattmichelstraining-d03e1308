@@ -29,6 +29,39 @@ type ProductKey = typeof PRODUCTS[number]["key"];
 type SortKey = "score" | "freshness" | "tier";
 type TierFilter = "all" | "hot" | "warm" | "cool";
 
+function ProductChipRow({ product, onSelect }: { product: ProductKey; onSelect: (k: ProductKey) => void }) {
+  const activeRef = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  }, [product]);
+  return (
+    <div className="relative mt-6 -mx-4 px-4">
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory">
+        {PRODUCTS.map((p) => {
+          const active = p.key === product;
+          return (
+            <button
+              key={p.key}
+              ref={active ? activeRef : undefined}
+              aria-current={active ? "page" : undefined}
+              onClick={() => onSelect(p.key)}
+              className={`shrink-0 snap-center px-3 py-1.5 text-xs font-mono uppercase tracking-wider rounded border transition-colors ${
+                active
+                  ? "bg-intel-teal/15 border-intel-teal/50 text-intel-teal"
+                  : "bg-card border-border/40 text-muted-foreground hover:border-border hover:text-foreground"
+              }`}
+            >
+              {p.label}
+            </button>
+          );
+        })}
+      </div>
+      <div className="pointer-events-none absolute left-0 top-0 bottom-1 w-6 bg-gradient-to-r from-background to-transparent md:hidden" />
+      <div className="pointer-events-none absolute right-0 top-0 bottom-1 w-6 bg-gradient-to-l from-background to-transparent md:hidden" />
+    </div>
+  );
+}
+
 function SwipeRow({
   lead,
   onWatch,
