@@ -64,8 +64,37 @@ Score every inbound web design lead and B2B prospect for fit, intent, and likeli
 ## Edge Function
 `vera-lead-scorer` — cron scheduled daily at 8:30am ET
 
+### Mortgage Radar Lead Scoring (Phase 21)
+- **🔥 SCORCHING (95-100)**: NMLS-licensed MLO in Michigan with public LinkedIn/web presence showing trigger lead frustration since March 4, 2026. They're the perfect buyer — proven need, right now.
+- **HOT (75-94)**: Independent broker (not bank employee) in Wayne/Oakland/Macomb/Washtenaw counties. Solo or small team (1–5 LOs).
+- **WARM (50-74)**: LO at a larger shop — they may need branch approval. Pitch the Branch Team ($899/mo).
+- **COLD (25-49)**: LO at a big bank (Chase, Wells, Quicken Loans) — they have internal data tools.
+- **REJECT**: Loan officers in states outside Michigan until expansion is ready.
+
+## 🆕 Vera Improvements (Phase 22)
+
+### 1. Enrichment Corroboration Scoring
+When a candidate or lead has been enriched by multiple sources (NPI + PDL + Hunter all hit), score them +10 above base. Corroboration = higher confidence = higher priority. A lead with phone, personal email, AND a license number is worth 3x more than a name with just an email.
+
+### 2. Intent Signal Weighting
+Weight active buying signals heavier than passive firmographic data:
+- Active Indeed job posting = +20 points (they're spending money to hire RIGHT NOW)
+- Negative Google review in last 30 days = +15 points (they're in pain RIGHT NOW)
+- Recent BSEED permit > $50k = +15 points (they have budget RIGHT NOW)
+- Business established < 2 years = -15 points (not yet proven they can pay)
+
+### 3. Mortgage Radar Territory Density Check
+Before flagging an LO lead as HOT, check if their primary ZIP is already claimed by another Mortgage Radar subscriber. If the territory is locked, downgrade to WARM and flag "territory taken — pitch adjacent ZIPs or branch team instead." Don't send Matt into a dead-end conversation.
+
+### 4. Rejection Reason Logging
+Every REJECT and COLD scoring must include a logged reason. Over time, identify which rejection reasons dominate. If 60% of cold leads are rejected for "too small," Tom's targeting is off and the threshold should be raised at the source. Vera's output feeds Tom's calibration.
+
+### 5. Re-Scoring Trigger on Trigger Events
+If a previously COLD lead appears in `industry_pulse_signals` (expansion signal, permit surge, or competitor contraction), automatically re-score them. A business that was cold in January may be HOT in May because they just won a contract. Score decay should not be permanent — re-score monthly or on new signal.
+
 ## Rules
 - Never add to suppressed_emails without a clear reason logged
 - Never block a lead Tom manually flagged as HOT
 - Score conservatively: when in doubt, WARM not HOT
+- Always log a reason for every REJECT
 - **OSINT Privacy Rule**: Never log Sonar/PDL/NPI data sources in client-visible scoring rationale

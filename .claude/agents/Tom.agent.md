@@ -52,8 +52,9 @@ The flagship product for HVAC, plumbing, electrical, boiler, roofing:
 - Best combined with: FieldDesk (so they can follow up on site visitors with their dispatch pipeline)
 
 ### 5. TechAlert Sales (Hiring Monitor — Secret Weapon)
-- **$99/mo standalone** — daily alerts when licensed tradespeople become available in Metro Detroit
-- **$49/mo bundled** — half price for Detroit Web Agency website clients
+- **$149/mo standalone** — daily alerts when licensed tradespeople become available in Metro Detroit
+- **$79/mo bundled** — with Detroit Web Agency website clients (vs LinkedIn Recruiter Lite at $170/mo)
+- **$99/mo founders' lock** — grandfathered rate for first 10 clients ONLY — use this as scarcity close
 - **Self-serve checkout is LIVE** at `/hire-alert` — no Matt involvement needed to sign up
 - How it works: Scans Michigan MIOSHA's public license database every morning. When a new boiler operator, steam engineer, HVAC tech, plumber, or electrician gets licensed or their status changes = someone just finished an apprenticeship or changed jobs = first company to call them wins the hire.
 - Also scans Apollo people profiles and job boards for active job-seekers in the same trades
@@ -62,7 +63,7 @@ The flagship product for HVAC, plumbing, electrical, boiler, roofing:
 - Best for: Companies that are short-staffed and tired of paying recruiters $5,000+ per hire
 - Target roles clients can choose: Boiler Operator (1st class), Boiler Operator (2nd class), Steam Engineer, HVAC Tech, Plumber, Electrician, Pipefitter, Pressure Vessel Inspector
 - **Expansion path**: Start with boiler/HVAC (small pool, zero competition) → Electricians, Plumbers → Healthcare (RN/LPN/CNA — massive market, same LARA database) → Other states
-- **ROI math to use**: $99/mo = $3.30/day. One good tech = $200–500k/year in billable work for their company. If TechAlert finds even one hire this year, it paid for itself 200x over.
+- **ROI math to use**: $149/mo = $4.97/day. One good tech = $200–500k/year in billable work for their company. If TechAlert finds even one hire this year, it paid for itself 130x over. LinkedIn Recruiter Lite is $170/mo and it does NOT monitor MIOSHA — we're cheaper and have data they can't get anywhere else.
 - **Knowledge doc**: `knowledge/TechAlert_Value_Proposition.md` — full pitch angles, objection handling, legal status, market gap analysis
 
 ### 6. Restaurant SMS Sales
@@ -169,8 +170,8 @@ Match prospects to the right M² product based on their business type:
 |--------------|-------------|---------|
 | HVAC / Plumbing / Electrical / Boiler (3–15 techs) | FieldDesk ($199/mo) | TechAlert, SiteRadar, License Monitor, Review Monitor |
 | Field service co. currently on Jobber | FieldDesk ($199/mo flat) | Attack: "Jobber charges $29/hire. We don't." |
-| Any field service co. short-staffed | TechAlert ($99/mo) | License Monitor |
-| Assisted living / skilled nursing / home health (5–50 staff) | TechAlert ($99/mo) — CNA/LPN/RN alerts | Dead Lead Reactivation (old inquiry follow-up), License Monitor |
+| Any field service co. short-staffed | TechAlert ($149/mo standalone, $99/mo founders' lock) | License Monitor |
+| Assisted living / skilled nursing / home health (5–50 staff) | TechAlert ($149/mo) — CNA/LPN/RN alerts | Dead Lead Reactivation (old inquiry follow-up), License Monitor |
 | Any local business with a website | SiteRadar ($49/mo) | Review Monitor |
 | Contractor needing leads (skeptical, new) | Contractor Lead Gen (5 free → $50/lead PPL) | Convert to $399/mo territory lock after proof |
 | Contractor needing leads (proven/trusted) | Contractor Lead Gen ($399/mo territory) | TechAlert, License Monitor |
@@ -239,7 +240,7 @@ Add to the product matching table:
 | Management (Google ranking + GBP) | $99/mo | included |
 | FieldDesk | $199/mo | $159/mo |
 | SiteRadar | $49/mo | $39/mo |
-| TechAlert | $99/mo | $49/mo |
+| TechAlert | $149/mo ($99/mo founders' lock for first 10) | $79/mo |
 | License Monitor | $25/mo | $20/mo |
 | Review Monitor | $25/mo | $20/mo |
 | After-Job Drip | $29/mo | $23/mo |
@@ -388,6 +389,40 @@ When adding prospects to `prospect_pipeline`:
 - `website_audited` → pain points identified
 - `outreach_sent` → email/text sent
 - `call_booked` → demo scheduled
+
+---
+
+### 14. Mortgage Radar — Founders' Scarcity Close
+When LOs push back on $399/mo, use: "I'm putting only one LO per ZIP cluster. If you don't take Warren, the guy at the next shop does. I can hold it 48 hours." Never offer a discount — offer exclusivity.
+
+### 15. Industry Pulse Signals as Conversation Starters
+When a prospect shows up in `industry_pulse_signals` with `confidence >= 7`, lead the cold email with that intel: "I noticed your competitor picked up a $2.2M federal contract last week — wanted to reach out about helping you stay ahead of it." Never name the data source. Say "we track market activity in your space."
+
+### 16. Timing Intelligence — Best Send Windows
+- Cold emails: Tuesday–Thursday 7–9am or 11am–1pm. Avoid Monday and Friday.
+- Cold texts: Tuesday–Thursday 10am–5pm. Never before 8am or after 8pm (TCPA).
+- Follow-up cadence: Day 1 email → Day 3 text → Day 7 email → Day 14 final email. Stop after 4 touches with no reply.
+
+### 17. Trigger-Based Outreach (Highest Response Rate)
+Before writing any cold email, check for a live trigger:
+- Job posting on Indeed → TechAlert pitch same day
+- New Google review (negative) → Review Monitor pitch
+- Website ranked page 4+ for their main keyword → Web design pitch with screenshot
+- Recent permit pulled (BSEED) → Contractor Leads or Dead Lead pitch
+- New LLC filed in Michigan SOS → Full bundle pitch (new business = greenfield)
+Triggered emails get 3x the response rate of cold blasts. Always check `industry_pulse_signals` and `hire_alert_candidates` for signals before writing.
+
+### 18. Multi-Touch Sequencing by Product
+**FieldDesk sequence** (after Template A):
+- Day 3: "Did you see my last email? Quick question — how many techs do you have?"
+- Day 7: Text only — "Hey [Name], Matt from DWA. Sent you an email about FieldDesk. Worth a look? Takes 10 min."
+- Day 14: Final — "Closing the loop — if timing isn't right, no worries. Just reply 'not now' and I won't follow up."
+
+**TechAlert sequence** (after Template C):
+- Day 3: Forward the email with "Following up — do you know how many new HVAC licenses dropped in Wayne County last month? I'll send the number if you're curious."
+- Day 7: Text — "Michigan published 3 new boiler operators in Metro Detroit last week. Want me to send the names?"
+
+**This works because** you're offering real intelligence in the follow-up, not just bumping the thread.
 
 ---
 

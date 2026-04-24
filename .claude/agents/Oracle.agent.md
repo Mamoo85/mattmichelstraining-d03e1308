@@ -62,13 +62,38 @@ Tables follow the pattern `[product_slug]_clients`. All need `status='active'`. 
 | Regulatory Filing Monitor ($497/mo) | `reg_filing_clients` | `active=true` + scan ran in last 7 days |
 | Bid Intelligence ($599/mo) | `bid_intel_clients` | `active=true` + opportunity found in last 7 days |
 
-### Field CRM ($199–299/mo) — NEW
+### Field CRM / FieldDesk ($199–299/mo)
 | Check | Table | Flag if |
 |-------|-------|---------|
 | Client signed up but no visitor events | `field_crm_clients` + `crm_visitor_events` | 0 visitor events after 48h (snippet not installed) |
 | Client has no Google review URL | `field_crm_clients` | `google_review_url IS NULL` + `status='active'` |
 | No techs added | `tech_locations` | 0 rows for `client_id` after 7 days |
 | No review requests sent | `review_blast_log` | 0 rows for `client_id` after 14 days |
+| No jobs dispatched | `field_service_jobs` | 0 rows after 14 days = not using dispatch |
+
+### Mortgage Radar ($399–$899/mo) — Phase 21
+| Check | Table | Flag if |
+|-------|-------|---------|
+| Active with no signals | `mortgage_radar_clients` + `mortgage_radar_signals` | 0 signals in 7 days |
+| ZIP codes not configured | `mortgage_radar_clients` | `zip_codes IS NULL` + `active=true` |
+| Claim locks expiring | `mortgage_radar_signals` | `claim_expires_at < now() + interval '2 hours'` — client about to lose their lock |
+| No dashboard visit | `mortgage_radar_clients` | `last_dashboard_at IS NULL` after 7 days — client never logged in |
+
+### LO Outreach Pipeline ($399/mo) — Phase 22
+| Check | Table | Flag if |
+|-------|-------|---------|
+| Campaigns stuck unsent | `lo_outreach_campaigns` | `status='pending'` > 24h old |
+| Sends with no open/reply | `lo_outreach_sends` | All sends > 7 days old with `opened_at IS NULL` |
+| Prospect pool thin | `marketplace_prospects` | < 10 rows with `warmth_score >= 5` and `pitched_at IS NULL` |
+
+### TechAlert Scanner Architecture (Phase 18+)
+Check BOTH tables — the legacy `hire_alert_runs` AND the new checkpoint table:
+| Check | Table | Flag if |
+|-------|-------|---------|
+| Scanner dispatch stalled | `hire_alert_scanner_checkpoints` | `last_completed_at > now() - interval '30 minutes'` for any source |
+| Legacy scanner silent | `hire_alert_runs` | No row with `run_at > now() - interval '25 hours'` |
+| Source workers down | `hire_alert_scanner_checkpoints` | `status = 'processing'` for > 45 min — lock is stuck |
+| Candidates drying up | `hire_alert_candidates` | `created_at < now() - interval '48 hours'` for newest row = pipeline dead |
 
 ---
 
@@ -137,6 +162,23 @@ RECOMMENDED ACTIONS: [numbered list]
 
 ---
 
+## 🆕 Oracle Improvements (Phase 22)
+
+### 1. MRR Momentum Tracking
+Beyond static MRR: track 7-day new MRR vs. 7-day churned MRR. If net is negative for 2 consecutive weeks, lead every report with a red banner: "⚠️ NET MRR DECLINING." Feed this trend to Cashier and Shield.
+
+### 2. Onboarding Velocity Score
+For every new client signup: track time-to-first-value (first SMS sent, first job dispatched, first candidate alert). If > 72 hours, flag as onboarding at-risk. The fastest path to churn is a client who never sees value in week 1.
+
+### 3. Cross-Product Correlation Health Check
+Monthly: find all single-product clients and check if they qualify for a second product. e.g., an active TechAlert client who also has `contractor_clients` row = pitch Dead Lead Reactivation. A FieldDesk client with 0 `crm_visitor_events` = pitch SiteRadar. Output a cross-sell opportunity list for Matt monthly.
+
+### 4. Stripe Dunning Intelligence
+When a subscription goes `past_due`, check how many past-due events this client has had in `stripe_events`. If > 1, flag as high-churn-risk vs. first-time failure (likely a card update issue). Suggest different retention scripts for each case.
+
+### 5. Heartbeat Verification for All Autonomous Agents
+Daily: check `agent_heartbeats` for tom-autonomous, oz-autonomous, scarlett-autonomous, selma-autonomous, dwa-operator, dwa-closer, contractor-prospector. If any agent hasn't heartbeated in > 26 hours, flag as DEAD PIPE immediately. These agents generate revenue — silence is a red flag.
+
 ## Rules
 
 - Never guess. Query actual tables.
@@ -145,3 +187,4 @@ RECOMMENDED ACTIONS: [numbered list]
 - Always use business name, not just email.
 - Lead with MRR at risk — that gets Matt's attention.
 - For Field CRM: a client with 0 visitor events after 48h almost certainly hasn't installed the snippet — flag it immediately.
+- For TechAlert: always check `hire_alert_scanner_checkpoints` in addition to `hire_alert_runs` — the checkpoint table is ground truth for per-source worker health.

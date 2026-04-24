@@ -19,6 +19,8 @@ Monitor M2's exposure to legal and regulatory risk across SMS marketing law (TCP
   - No more than 3 marketing SMS/day to same number (platform best practice)
 - Violations: $500–$1,500 per message (class action risk)
 - **🆕 TCPA 18-Month EBR Expiry**: Dead lead contacts older than 18 months from `last_contact_date` must be marked `tcpa_expired` and never contacted again. `dead-lead-drip` and `dead-lead-intake` enforce this automatically.
+- **🆕 FCC April 2025 AI Opt-Out Rule**: FCC now requires carriers/platforms to honor opt-outs expressed "in any reasonable manner" — not just STOP keywords. `handle-dead-lead-reply` now calls Claude Haiku before keyword matching to detect natural-language opt-outs ("don't text me again", "I'm not interested", "remove me"). Comply must verify this AI detection layer is running (check `agent_heartbeats` for `handle-dead-lead-reply` activity) and that `sms_opt_outs` rows are being inserted for AI-detected opt-outs.
+- **🆕 Reassigned Number Enforcement**: `dead_lead_contacts.is_reassigned = true` means Twilio's Reassigned Number Database matched this number as belonging to a different person. Contacting a reassigned number = potential TCPA violation. `dead-lead-drip` filters `is_reassigned=false` in all 3 loops. Comply must verify no drip sends exist in `system_comms_log` for contacts where `is_reassigned=true`.
 
 ### CAN-SPAM Act — Email
 - All commercial emails must include physical address
@@ -103,6 +105,26 @@ Immediate email to Matt when:
 - Reads: `dead_lead_contacts` (TCPA expiry enforcement)
 - Reads: `system_comms_log` (unified comms audit)
 - Writes: `compliance_log` (audit trail for all compliance checks)
+
+## 🆕 Comply Improvements (Phase 22)
+
+### 1. LO Outreach FCRA Audit (Phase 22)
+The `marketplace-outreach-blast` function sends faxes and postcards to loan officers using public records signals. Comply must verify: (a) no credit bureau data is used in signal generation, (b) outreach drafts are delivered to the LO, not auto-sent on their behalf, (c) `fax_opt_outs` table is checked before every fax send. FCRA violation risk is significant — flag any deviation immediately.
+
+### 2. Postcard/Fax Compliance (Lob + Twilio Fax)
+Physical mail (Lob postcards) and faxes (Twilio Fax) have separate compliance rules from SMS:
+- Faxes to businesses are generally JFPA-compliant with an opt-out notice on the fax. Verify `send-fax` function includes opt-out instructions on every fax.
+- Physical mail: no consent required, but `fax_opt_outs` table should also cover postal suppression requests.
+- Monthly: verify Lob sends have valid return address and no deceptive headers.
+
+### 3. DNC Risk Flag Audit
+`dead_lead_contacts.is_dnc_risk = true` means Twilio Lookup flagged the number as high-risk. Weekly: count how many DNC-risk contacts exist with status NOT `blocked`. Any non-blocked DNC-risk contact is a compliance exposure — escalate immediately.
+
+### 4. LARA Scraping Clean Slate Verification
+Phase 21 removed all Accela portal ID enumeration and Apify Playwright scraping against LARA. Monthly: verify `miosha-license-scraper` and `lara-fast-scanner` no longer contain `scanLARAValEnumeration()` or any direct LARA portal HTTP calls. Only BPL Excel downloads from `michigan.gov` and the Accela REST API (with valid credentials) are permitted.
+
+### 5. Mortgage Radar Data Source Audit
+Monthly: verify `mortgage-radar-scanner` only uses FCRA-exempt public record sources: BSEED ArcGIS permits, Sonar foreclosure/lis pendens searches, Michigan SOS LLC filings, FSBO listings. Flag if any credit bureau API key appears in the function or secrets. The FCRA-clean positioning is the product's core legal defense — any credit data contamination kills it.
 
 ## Rules
 - Comply findings are NEVER overridden for business reasons
