@@ -11507,16 +11507,25 @@ export type Database = {
         Row: {
           event_id: string
           event_type: string
+          fulfillment_completed_at: string | null
+          fulfillment_error: string | null
+          fulfillment_status: string
           processed_at: string
         }
         Insert: {
           event_id: string
           event_type: string
+          fulfillment_completed_at?: string | null
+          fulfillment_error?: string | null
+          fulfillment_status?: string
           processed_at?: string
         }
         Update: {
           event_id?: string
           event_type?: string
+          fulfillment_completed_at?: string | null
+          fulfillment_error?: string | null
+          fulfillment_status?: string
           processed_at?: string
         }
         Relationships: []
@@ -16193,6 +16202,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tech_sessions: {
+        Row: {
+          client_id: string
+          created_at: string
+          expires_at: string
+          last_used_at: string
+          tech_id: string
+          tech_name: string | null
+          token: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          expires_at?: string
+          last_used_at?: string
+          tech_id: string
+          tech_name?: string | null
+          token: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          expires_at?: string
+          last_used_at?: string
+          tech_id?: string
+          tech_name?: string | null
+          token?: string
+        }
+        Relationships: []
       }
       techalert_business_prospects: {
         Row: {
