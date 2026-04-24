@@ -54,6 +54,8 @@ export default function LeadDetail() {
         body: { lead_id: l.id, product: (l as any).product || "mortgage", buyer_email: email },
       });
       if (error) throw error;
+      const token = (data as any)?.buyer_token;
+      if (token) localStorage.setItem("mp_buyer_token", token);
       const url = (data as any)?.url;
       if (url) window.location.href = url;
     } catch (e: any) {

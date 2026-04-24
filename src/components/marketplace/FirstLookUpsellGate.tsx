@@ -63,6 +63,8 @@ export function FirstLookUpsellGate({ product, leads }: Props) {
         body: { email, product },
       });
       if (error) throw error;
+      const token = (data as any)?.buyer_token;
+      if (token) localStorage.setItem("mp_buyer_token", token);
       const url = (data as any)?.url;
       if (!url) throw new Error("No checkout URL");
       window.location.href = url;

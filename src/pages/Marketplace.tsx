@@ -189,17 +189,19 @@ export default function Marketplace() {
     if (!watched.includes(lead.id)) {
       toast.success("Added to watch list");
       const email = buyerEmail || localStorage.getItem("mp_buyer_email");
-      if (email) {
+      const buyer_token = localStorage.getItem("mp_buyer_token");
+      if (email && buyer_token) {
         supabase.functions.invoke("marketplace-watch-add", {
-          body: { buyer_email: email, lead_id: lead.id, product },
+          body: { buyer_email: email, lead_id: lead.id, product, buyer_token },
         }).catch(() => {});
       }
     } else {
       // Removing from watch — also remove from server
       const email = buyerEmail || localStorage.getItem("mp_buyer_email");
-      if (email) {
+      const buyer_token = localStorage.getItem("mp_buyer_token");
+      if (email && buyer_token) {
         supabase.functions.invoke("marketplace-watch-add", {
-          body: { buyer_email: email, lead_id: lead.id, product, action: "remove" },
+          body: { buyer_email: email, lead_id: lead.id, product, action: "remove", buyer_token },
         }).catch(() => {});
       }
     }

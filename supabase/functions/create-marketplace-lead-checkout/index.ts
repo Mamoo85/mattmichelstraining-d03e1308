@@ -123,7 +123,22 @@ serve(async (req) => {
       cancel_url: `${origin}/${product}-leads?cancelled=1`,
     });
 
-    return new Response(JSON.stringify({ url: session.url, session_id: session.id }), {
+    // Issue a session token so the buyer can add server-side watches without spoofing.
+    // Token expires in 30 days. Frontend stores as mp_buyer_token in localStorage.
+    const { data: tokenRow } = await sb
+      .from("buyer_session_tokens")
+      .insert({
+        buyer_email,
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      })
+      .select("token")
+      .single();
+
+    return new Response(JSON.stringify({
+      url: session.url,
+      session_id: session.id,
+      buyer_token: tokenRow?.token ?? null,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

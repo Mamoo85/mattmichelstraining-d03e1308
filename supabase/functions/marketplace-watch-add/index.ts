@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { buyer_email, lead_id, product, action } = await req.json();
+    const { buyer_email, lead_id, product, action, buyer_token } = await req.json();
     if (!buyer_email || !lead_id) {
       return new Response(JSON.stringify({ ok: false, error: "missing buyer_email or lead_id" }), {
         status: 400,
@@ -24,6 +24,25 @@ Deno.serve(async (req) => {
     );
 
     const email = String(buyer_email).toLowerCase().trim();
+
+    // Verify buyer_token to prevent spoofing arbitrary email addresses
+    if (!buyer_token) {
+      return new Response(JSON.stringify({ ok: false, error: "buyer_token required" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { data: tokenRow } = await supabase
+      .from("buyer_session_tokens")
+      .select("buyer_email, expires_at")
+      .eq("token", String(buyer_token))
+      .maybeSingle();
+    if (!tokenRow || tokenRow.buyer_email !== email || tokenRow.expires_at < new Date().toISOString()) {
+      return new Response(JSON.stringify({ ok: false, error: "invalid or expired buyer_token" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (action === "remove") {
       await supabase

@@ -30,10 +30,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **NMLS note**: `find-lo-prospects` uses Apollo.io (not NMLS Consumer Access — Cloudflare blocks it).
 
-**Remaining open items:**
-- `marketplace_buyer_watches` RLS — email spoofing possible (needs auth-gated policy)
-- `create-marketplace-lead-checkout` soft-lock race condition — needs `claim_lead_soft_lock` DB RPC for true atomicity
-- `stripe-webhook` outer catch returns 200 on inner failures (architectural, low urgency — reconcile cron catches misses)
+**All known bugs resolved.** No open audit items.
 
 **Secrets Matt needs to add:**
 - `LOB_API_KEY` — lob.com (postcards)
