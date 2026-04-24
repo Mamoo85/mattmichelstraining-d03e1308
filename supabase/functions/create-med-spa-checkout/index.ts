@@ -11,7 +11,7 @@ serve(async (req) => {
       mode: "subscription", payment_method_types: ["card"], customer_email: email,
       subscription_data: { trial_period_days: 7 },
       line_items: [{ price_data: { currency: "usd", recurring: { interval: "month" }, unit_amount: 14900, product_data: { name: "AI Med Spa Marketing — $149/month", description: "Weekly social posts, monthly email campaign, and automated Google review requests for med spas." } }, quantity: 1 }],
-      metadata: { type: "med_spa_marketing", email, name: name || "", businessName, city: city || "", services: services || "" },
+      metadata: { type: "med_spa_marketing", email, name: name || "", businessName, city: city || "", services: Array.isArray(services) ? services.join(",") : (services || "") },
       success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-med-spa-marketing?status=success`,
       cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/ai-med-spa-marketing`,
     });
