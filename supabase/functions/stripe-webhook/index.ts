@@ -2,10 +2,13 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
+import { getStripeSecretKey, getStripeWebhookSecret, isStripeTestMode } from "../_shared/stripe-key.ts";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+const STRIPE_SECRET_KEY = getStripeSecretKey();
+const stripe = new Stripe(STRIPE_SECRET_KEY, {
   apiVersion: "2025-08-27.basil",
 });
+if (isStripeTestMode()) console.warn("[stripe-webhook] 🧪 TEST MODE");
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 // Helper: award M² Points via the award_points RPC
@@ -264,10 +267,10 @@ serve(async (req) => {
   try {
     const body = await req.text();
     const sig = req.headers.get("stripe-signature");
-    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+    const webhookSecret = getStripeWebhookSecret();
 
     if (!webhookSecret || !sig) {
-      console.error("Missing STRIPE_WEBHOOK_SECRET or stripe-signature header");
+      console.error("Missing webhook secret or stripe-signature header");
       return new Response("Webhook signature verification failed", { status: 400 });
     }
     const event: Stripe.Event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
