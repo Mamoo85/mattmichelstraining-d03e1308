@@ -267,8 +267,9 @@ export default function MortgageRadarHub() {
       <Card className="bg-[#0a1628] border-amber-500/30">
         <CardHeader>
           <CardTitle className="text-white text-sm flex items-center gap-2">
-            🧪 Your Test Dashboards — experience every product as a customer
+            🎬 Demo Dashboards (for sales calls)
           </CardTitle>
+          <p className="text-xs text-[#94a3b8] mt-1">Open these on a Zoom screen-share to show prospects exactly what they'd get as a paying customer.</p>
         </CardHeader>
         <CardContent>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
