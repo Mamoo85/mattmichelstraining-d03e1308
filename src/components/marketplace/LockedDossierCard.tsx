@@ -73,10 +73,10 @@ export function LockedDossierCard({ lead, priceCents = 4900, onClaim, className 
         )}
 
         {/* Location (intel-redacted) */}
-        <div className="flex items-center gap-2 text-xs font-mono">
-          <Lock className="w-3 h-3 text-seal-gold" />
+        <div className="flex items-center gap-2 text-xs font-mono flex-wrap">
+          <Lock className="w-3 h-3 text-seal-gold flex-shrink-0" />
           <span className="text-muted-foreground">REDACTED ST,</span>
-          <span className="text-foreground">{locationLine || "Metro Detroit"}</span>
+          <span className="text-foreground truncate">{locationLine || "Metro Detroit"}</span>
         </div>
 
         <ScoreBars score={lead.score} percentile={lead.score_percentile} history={lead.score_history} />

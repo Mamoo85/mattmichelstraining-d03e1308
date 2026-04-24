@@ -291,7 +291,7 @@ export default function Marketplace() {
   }), [leads]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground pb-24 md:pb-0">
       <Helmet>
         <title>{productMeta.label} Marketplace · Detroit Web Agency</title>
         <meta name="description" content={`Live ${productMeta.label.toLowerCase()} for Metro Detroit. ${productMeta.tagline}`} />
@@ -327,21 +327,32 @@ export default function Marketplace() {
             </div>
           </div>
 
-          {/* Product switcher */}
-          <div className="flex flex-wrap gap-2 mt-6">
-            {PRODUCTS.map((p) => (
-              <button
-                key={p.key}
-                onClick={() => setParams({ product: p.key })}
-                className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider rounded border transition-colors ${
-                  p.key === product
-                    ? "bg-intel-teal/15 border-intel-teal/50 text-intel-teal"
-                    : "bg-card border-border/40 text-muted-foreground hover:border-border hover:text-foreground"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+          {/* Product switcher — horizontally scrollable on mobile with edge fade */}
+          <div className="relative mt-6 -mx-4 px-4">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory">
+              {PRODUCTS.map((p) => (
+                <button
+                  key={p.key}
+                  onClick={() => setParams({ product: p.key })}
+                  className={`shrink-0 snap-start px-3 py-1.5 text-xs font-mono uppercase tracking-wider rounded border transition-colors ${
+                    p.key === product
+                      ? "bg-intel-teal/15 border-intel-teal/50 text-intel-teal"
+                      : "bg-card border-border/40 text-muted-foreground hover:border-border hover:text-foreground"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            {/* Right-edge fade hint */}
+            <div className="pointer-events-none absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-background to-transparent md:hidden" />
+          </div>
+
+          {/* Trust strip */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-4 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+            <span className="flex items-center gap-1"><span className="text-intel-teal">✓</span> Single-buyer guarantee</span>
+            <span className="flex items-center gap-1"><span className="text-intel-teal">✓</span> Refund if uncontactable</span>
+            <span className="flex items-center gap-1"><span className="text-intel-teal">✓</span> Cross-referenced sources</span>
           </div>
         </div>
       </div>
@@ -364,22 +375,25 @@ export default function Marketplace() {
       {/* Filter bar */}
       <div className="border-b border-border/40 sticky top-0 bg-background/95 backdrop-blur z-10">
         <div className="container max-w-7xl mx-auto px-4 py-3 flex items-center gap-3 flex-wrap">
-          <div className="flex gap-1.5">
-            {(["all", "hot", "warm", "cool"] as TierFilter[]).map((t) => {
-              const Icon = t === "hot" ? Flame : t === "warm" ? Sun : t === "cool" ? Snowflake : null;
-              return (
-                <button
-                  key={t}
-                  onClick={() => setTierFilter(t)}
-                  className={`px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider rounded border flex items-center gap-1 ${
-                    tierFilter === t ? "bg-intel-teal/15 border-intel-teal/50 text-intel-teal" : "border-border/40 text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {Icon && <Icon className="w-3 h-3" />}
-                  {t} <span className="opacity-50">({tierCounts[t]})</span>
-                </button>
-              );
-            })}
+          <div className="relative flex-shrink-0 max-w-full overflow-hidden">
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pr-6">
+              {(["all", "hot", "warm", "cool"] as TierFilter[]).map((t) => {
+                const Icon = t === "hot" ? Flame : t === "warm" ? Sun : t === "cool" ? Snowflake : null;
+                return (
+                  <button
+                    key={t}
+                    onClick={() => setTierFilter(t)}
+                    className={`shrink-0 px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider rounded border flex items-center gap-1 ${
+                      tierFilter === t ? "bg-intel-teal/15 border-intel-teal/50 text-intel-teal" : "border-border/40 text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {Icon && <Icon className="w-3 h-3" />}
+                    {t} <span className="opacity-50">({tierCounts[t]})</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background/95 to-transparent md:hidden" />
           </div>
 
           <div className="flex-1 min-w-[200px] relative">
