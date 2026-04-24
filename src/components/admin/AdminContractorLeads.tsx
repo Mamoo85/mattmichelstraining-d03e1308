@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   DollarSign, Users, TrendingUp, Zap, CheckCircle, AlertTriangle,
   Phone, Clock, RefreshCw, ChevronDown, ChevronUp, Lock, Unlock,
-  Copy, Facebook, Globe, Wrench, Activity, Send,
+  Copy, Facebook, Globe, Wrench, Activity, Send, HelpCircle, Info,
 } from "lucide-react";
 import { toast } from "sonner";
 import TerritoryLinkGenerator from "@/components/dwa-admin/TerritoryLinkGenerator";
@@ -270,6 +270,21 @@ export default function AdminContractorLeads() {
 
   return (
     <div className="space-y-8 pb-12">
+
+      {/* ── How leads come in (explainer) ────────────────────────────────── */}
+      <div className="bg-gradient-to-br from-blue-950/30 to-cyan-950/20 border border-blue-500/30 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <Info size={18} className="text-blue-400 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h3 className="text-sm font-bold text-blue-200">📍 How leads come in</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Leads arrive 3 ways: <span className="text-blue-300 font-semibold">(1)</span> homeowner fills <code className="text-[10px] bg-black/40 px-1 py-0.5 rounded">/contractor-leads/[trade-city]</code> SEO page,{" "}
+              <span className="text-blue-300 font-semibold">(2)</span> homeowner clicks a contractor's Facebook lead ad (requires FB Page ID wired below),{" "}
+              <span className="text-blue-300 font-semibold">(3)</span> you manually add via "Add Lead" button. Each new lead auto-SMSes the contractor who owns that territory. Unclaimed leads can be sold à la carte from the Live Lead Feed.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* ── Territory Signup Link Generator ──────────────────────────────── */}
       <TerritoryLinkGenerator />
