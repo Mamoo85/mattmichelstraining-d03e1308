@@ -1,82 +1,128 @@
-# Final Pre-Sale QA — Bugs Found + "Wow" Upgrades
+# Checkout Hardening Plan
 
-I ran a real customer click-through on `/mortgage-leads` (mobile, 390px, the viewport 70%+ of LO buyers will land on). Stopped after 4 actions because I had enough findings — all 5 verticals share `Marketplace.tsx`, so every fix below applies to all of them at once.
+## Reality Check
 
-## What's working (don't touch)
+- **177 checkout edge functions** and **158 product pages** — touching them all is not realistic in one pass.
+- **Stripe live click-through testing is blocked** until you create a Stripe Sandbox (Accounts V2 doesn't allow testmode subscriptions in your account). I'll do everything that doesn't require live card flow now, and queue the rest for after Sandbox is set up.
 
-- Tier backfill is live: HOT (34), WARM (26), COOL filters all populate ✓
-- 60 leads loaded fast, locks query parallel, no spinner hang
-- Card design (HOT badge + score bars + source provenance + wax-seal CTA) is genuinely strong
-- Trust strip ("Single-buyer guarantee · Refund if uncontactable · Cross-referenced sources") is good copy
-- Active product chip is centered and visible
+## Scope Decision: "Top Products" = 9 Revenue-Critical Flows
 
-## Bugs found (ranked by sale-killing severity)
+Per `CLAUDE.md` "Golden Paths" and revenue tables, the top products are:
 
-### P0 — Trust / brand confusion
-**The M² Training fitness bottom nav (`Home / Portal / Shop / Schedule / More`) renders on every marketplace page.** A loan officer paying $49 for a refi lead sees "Shop" and "Schedule a workout." Instant credibility hit. Plus it physically clips the orange "Unlock Full Dossier · $49" button. Fix: add the 5 marketplace routes + `/lead/` + `/marketplace` + `/b2b-leads` + `/storm-damage-leads` to the existing `HIDDEN_PATHS` array in `BottomTabBar.tsx`.
+1. Bundle Revenue Suite ($299/mo)
+2. FieldDesk ($199/mo)
+3. TechAlert / HireAlert ($149/mo)
+4. Contractor Leads PPL ($399/mo)
+5. Mortgage Radar ($149/mo)
+6. Missed-Call Catch ($99/mo)
+7. Marketplace Lead ($39–59/lead)
+8. Dead Lead Billing Setup ($50/reply)
+9. Hire Alert One-Time ($49)
 
-### P0 — Performance: N+1 edge function storm
-Every visible card fires its own `marketplace-track-view` POST on mount. **60 leads = 60 separate edge function invocations**, each 500–900ms, all racing in parallel, hammering Supabase. Fix:
-- New endpoint `marketplace-track-views-bulk` that accepts `{ visitor_hash, product, lead_ids: [...] }`, does ONE bulk insert + ONE viewer-count query.
-- `Marketplace.tsx` calls it once after leads load. Removes 59 round trips.
-- Keep per-card `viewers_now` by returning `{ [lead_id]: count }` map and passing into each `LockedDossierCard` via prop instead of the card fetching itself.
+These are the 9 cards I'll harden + test. Other 149 pages keep working; they get the same UX pattern in a follow-up sweep when you ask for it.
 
-### P1 — "REDACTED ST" looks like a placeholder bug
-Every locked card hard-codes the literal string `"REDACTED ST,"` next to the city. To a buyer this reads "broken template." Fix in `LockedDossierCard.tsx`:
-> 🔒 **REDACTED · Detroit, MI 48221** · 4 active equity signals nearby
+## What I'll Build
 
-Use the actual city/state/zip we already have, present the redaction as intentional intel-tradecraft (lock icon + "Address unlocks at purchase"), and add a contextual nearby-signals teaser — competitors don't do this.
+### 1. Shared Checkout UX Component — `useCheckoutFlow` hook + `<CheckoutButton />`
+One reusable hook + button that every product page can swap in. Replaces the ad-hoc `try/catch/setLoading` blocks (currently duplicated 158 times).
 
-## "Wow" visual upgrades — beat every competitor
+States:
+- **idle** — normal CTA
+- **submitting** — spinner + "Securing your checkout…"
+- **redirecting** — "Sending you to Stripe…" (after URL received, before navigation)
+- **error** — inline red banner with retry button + Matt's text link `(313) 992-1219` as fallback
+- **success** (on `?status=success` return) — green confirmation + receipt status pill
 
-### 1. Live activity ticker in hero
-Right now the hero is static text. Add a single line under the tagline that auto-rotates every 4s:
-> 🔴 LIVE · 3 leads sold in last hour · 12 LOs viewing now · Next batch drops in 14 min
+Wire all 9 top product pages to use it. Keeps existing pages functional during rollout.
 
-Pulls from existing `marketplace_buyer_views` + `marketplace_lead_locks` tables — no new schema. Creates urgency the moment they land.
+### 2. Receipt Status Verification
 
-### 2. Subtle hero animation
-Numbers in the trust strip count up on load (`0 → 60 live leads`, `0 → 34 HOT`). framer-motion already in deps. One-time on mount, never repeats — feels expensive, not gimmicky.
+**New table**: `checkout_receipts` (already partially modeled via `processed_stripe_events` — this table tracks the user-facing side):
 
-### 3. Floating "How it works" peek
-A tiny 32px chip in the corner: `?? How this works (15s)`. Opens a slide-up sheet:
-1. Pick a HOT lead (we score 1–10)
-2. Pay once — single buyer, refund if uncontactable
-3. Get full dossier + verified phone in 60 sec
-4. Call them while they're still hot
+```text
+checkout_receipts
+  id (uuid, pk)
+  stripe_session_id (text, unique)
+  product_type (text)        -- matches metadata.type
+  email (text)
+  status (text)              -- 'pending' | 'paid' | 'fulfilled' | 'failed'
+  fulfilled_at (timestamptz)
+  webhook_event_id (text)    -- correlates to processed_stripe_events
+  created_at, updated_at
+```
 
-Removes the #1 first-time-buyer hesitation: "what am I actually getting?"
+**Edge function**: `get-receipt-status?session_id=cs_xxx` — public, returns `{ status, product_type, fulfilled_at }`.
 
-### 4. Promote "My Receipts" to a real button
-Currently it's a small ghost outline. Make it primary-looking once `mp_buyer_email` exists in localStorage (returning buyer) — they want to find their purchases fast.
+**Webhook update**: `stripe-webhook` upserts `checkout_receipts` on `checkout.session.completed` and again when fulfillment finishes.
 
-### 5. Sold-card social proof
-When a `SoldDossierCard` is shown, replace "Sold" with `Sold to a Detroit LO · 2h ago`. Already have `created_at` on the lock — just expose anonymized tier+region. Makes empty slots feel like FOMO instead of dead inventory.
+**On success page**: poll `get-receipt-status` every 2s for up to 30s. Show:
+- "Payment received" (paid) → "Setting up your account…" (paid, not fulfilled) → "You're all set" (fulfilled).
+- If still `paid` after 30s, show "Payment confirmed — Matt is finishing setup. You'll get an email within 5 minutes."
 
-### 6. Sticky "What you get" mobile reassurance bar
-A 28px sticky bar pinned just above the (now-removed) bottom nav:
-> ✓ Verified phone · ✓ TCPA-clean · ✓ Refund if bad · 🔒 Single buyer
+This is the explicit "receipt ready" state across all products.
 
-Constant trust reinforcement during scroll. Disappears once user scrolls back to top.
+### 3. Webhook Verification Function
 
----
+**New edge function**: `verify-checkout-webhook` — admin-only utility you can call from `/admin` to:
 
-## Files I'll touch
+- Take a `session_id`, look up the latest `processed_stripe_events` row, the matching `checkout_receipts` row, and the product-specific table (e.g., `field_crm_clients`, `hire_alert_clients`).
+- Return JSON:
+  ```text
+  {
+    session_id,
+    webhook_received: true/false,
+    webhook_event_id,
+    receipt_status,
+    fulfillment_record_exists: true/false,
+    welcome_email_sent: true/false,
+    issues: [...]
+  }
+  ```
 
-| File | Change |
-|---|---|
-| `src/components/layout/BottomTabBar.tsx` | Add marketplace routes to `HIDDEN_PATHS` |
-| `supabase/functions/marketplace-track-views-bulk/index.ts` | NEW — bulk view tracker, returns viewer-count map |
-| `src/pages/Marketplace.tsx` | Single bulk call after leads load · live activity ticker · count-up trust strip · promoted Receipts CTA · sticky reassurance bar · How-it-works sheet |
-| `src/components/marketplace/LockedDossierCard.tsx` | Drop per-card track-view fetch · accept `viewersNow` prop · replace "REDACTED ST" with intel-styled redacted address + nearby-signal teaser |
-| `src/components/marketplace/SoldDossierCard.tsx` | "Sold to a Detroit LO · 2h ago" social-proof line |
-| `src/components/marketplace/HowItWorksSheet.tsx` | NEW — 15-second explainer slide-up |
-| `src/components/marketplace/LiveActivityTicker.tsx` | NEW — rotating live-stat strip |
+I'll add an "Audit Checkout" panel in `AdminOpsCenter` that takes a session ID and shows this report. This is your verification step — proves the webhook fired and unlocked access.
 
-No DB migrations. No new secrets. No breaking changes to checkout, share-link, or receipts flows.
+### 4. QA Report (Markdown, written to `/mnt/documents/`)
 
-## Out of scope
-- Adding inventory to `growth-leads` (sourcing job, not UI)
-- Stripe checkout itself — already verified working in prior tests
+After Sandbox is set up and click-through runs, I'll generate `/mnt/documents/checkout_qa_report.md`:
 
-**Approve and I'll ship all 9 in one pass.**
+```text
+| Product               | Mobile | Desktop | Failure step              |
+| Bundle Revenue Suite  | ✅     | ✅      | —                          |
+| FieldDesk             | ✅     | ❌      | Stripe redirect / popup    |
+| ...                   |        |         |                            |
+```
+
+Until Sandbox is ready I'll deliver the *template* + the static-analysis pass (form validation, edge function 4xx coverage, missing fields).
+
+### 5. End-to-End Test — Playwright
+
+Project already has `playwright.config.ts`. I'll add `tests/e2e/checkout.spec.ts`:
+
+- Loops over the 9 top products
+- For each: navigates to the page (mobile viewport 390x844 + desktop 1280x720), fills the form with a test email, clicks CTA, asserts the response from the create-checkout function returns a `cs_test_` URL, then directly hits `/?status=success&session_id=cs_test_xxx` and asserts the success card + receipt-status polling appears.
+- **Stops short of submitting card details** — that requires Stripe's hosted page in Sandbox mode. After Sandbox is enabled, I'll extend the test to drive Stripe's checkout iframe with `4242 4242 4242 4242`.
+
+Test runs locally with `bunx playwright test tests/e2e/checkout.spec.ts --project=chromium --project=mobile-chrome`.
+
+## What I'm NOT Doing in This Pass
+
+- Touching the other 149 product pages (huge churn risk; they keep working with their current UX). I'll roll the new component out to them in batches when you ask.
+- Live card-completion testing (blocked on Stripe Sandbox).
+- Refactoring 177 edge functions (only `stripe-webhook` gets the receipt upsert).
+
+## File Changes (estimated)
+
+- **New**: `src/hooks/useCheckoutFlow.ts`, `src/components/checkout/CheckoutButton.tsx`, `src/components/checkout/ReceiptStatus.tsx`, `supabase/functions/get-receipt-status/index.ts`, `supabase/functions/verify-checkout-webhook/index.ts`, `tests/e2e/checkout.spec.ts`, migration for `checkout_receipts`
+- **Edited**: 9 top product pages, `supabase/functions/stripe-webhook/index.ts`, `src/components/dwa-admin/AdminOpsCenter.tsx`
+- **Generated**: `/mnt/documents/checkout_qa_report.md`
+
+## Order of Execution
+
+1. Migration + `get-receipt-status` + webhook upsert
+2. `useCheckoutFlow` + `CheckoutButton` + `ReceiptStatus`
+3. Wire the 9 top product pages
+4. `verify-checkout-webhook` + admin panel
+5. Playwright E2E (form-fill + URL assertion only, until Sandbox)
+6. QA report (static-analysis version now; live click-through after Sandbox)
+
+Approve and I start with step 1.
