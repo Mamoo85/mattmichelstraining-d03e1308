@@ -163,24 +163,25 @@ function openerFor(signal_type: string): { opener: string; window: string } {
 
 async function scanBSEEDPermits(): Promise<RawSignal[]> {
   try {
-    const url = "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/BSEED_Trades_Permits/FeatureServer/0/query?where=1%3D1&outFields=*&resultRecordCount=100&f=json&orderByFields=ISSUED_DATE+DESC";
+    // Real field names verified against ArcGIS schema (lowercase)
+    const url = "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_trades_permits/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,permit_type,work_description,issued_date,contact_business_name&resultRecordCount=100&f=json&orderByFields=issued_date+DESC";
     const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!r.ok) return [];
     const j = await r.json();
     const out: RawSignal[] = [];
     for (const f of (j.features || [])) {
       const a = f.attributes || {};
-      const desc = String(a.WORK_DESCRIPTION || a.SCOPE_OF_WORK || "").toLowerCase();
+      const desc = String(a.work_description || "").toLowerCase();
       const isReno = /kitchen|addition|remodel|bath|whole house|finish basement|roof/.test(desc);
       if (!isReno) continue;
       out.push({
-        address: a.SITE_ADDRESS || a.ADDRESS || "",
-        city: a.SITE_CITY || "Detroit",
-        zip: String(a.SITE_ZIP || a.ZIP || "").slice(0, 5) || undefined,
+        address: a.address || "",
+        city: "Detroit",
+        zip: String(a.zip_code || "").slice(0, 5) || undefined,
         signal_type: "renovation_permit",
         signal_source: "BSEED",
-        signal_detail: String(a.WORK_DESCRIPTION || "Renovation permit").slice(0, 200),
-        signal_date: a.ISSUED_DATE ? new Date(a.ISSUED_DATE).toISOString().slice(0, 10) : undefined,
+        signal_detail: String(a.work_description || "Renovation permit").slice(0, 200),
+        signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : undefined,
       });
     }
     return out.slice(0, 50);
@@ -306,25 +307,25 @@ async function scanDivorceFilings(): Promise<RawSignal[]> {
 // with significant equity who may want cash-out refi instead of draining savings.
 async function scanHighEquityLowRate(): Promise<RawSignal[]> {
   try {
-    const url = "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/BSEED_Trades_Permits/FeatureServer/0/query?where=CONSTRUCTION_COST+%3E%3D+100000&outFields=SITE_ADDRESS,SITE_CITY,SITE_ZIP,CONSTRUCTION_COST,WORK_DESCRIPTION,ISSUED_DATE,OWNER_NAME&resultRecordCount=30&f=json&orderByFields=ISSUED_DATE+DESC";
+    // bseed_building_permits has amt_estimated_contractor_cost — correct layer for cost filtering
+    const url = "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permits/FeatureServer/0/query?where=amt_estimated_contractor_cost+%3E%3D+100000&outFields=address,zip_code,work_description,issued_date,amt_estimated_contractor_cost&resultRecordCount=30&f=json&orderByFields=issued_date+DESC";
     const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!r.ok) return [];
     const j = await r.json();
     const out: RawSignal[] = [];
     for (const f of (j.features || [])) {
       const a = f.attributes || {};
-      const cost = Number(a.CONSTRUCTION_COST || 0);
+      const cost = Number(a.amt_estimated_contractor_cost || 0);
       if (cost < 100000) continue;
-      const desc = String(a.WORK_DESCRIPTION || "Major renovation").slice(0, 200);
+      const desc = String(a.work_description || "Major renovation").slice(0, 200);
       out.push({
-        full_name: a.OWNER_NAME || undefined,
-        address: a.SITE_ADDRESS || undefined,
-        city: a.SITE_CITY || "Detroit",
-        zip: String(a.SITE_ZIP || "").slice(0, 5) || undefined,
+        address: a.address || undefined,
+        city: "Detroit",
+        zip: String(a.zip_code || "").slice(0, 5) || undefined,
         signal_type: "high_equity_renovation",
         signal_source: "BSEED_HighValue",
         signal_detail: `$${cost.toLocaleString()} permit — ${desc}`,
-        signal_date: a.ISSUED_DATE ? new Date(a.ISSUED_DATE).toISOString().slice(0, 10) : undefined,
+        signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : undefined,
         estimated_equity: Math.round(cost * 2.5),
       });
     }
