@@ -203,17 +203,20 @@ export default function ClaimLead() {
             <button
               onClick={handleClaim}
               disabled={loading}
+              aria-busy={loading}
               style={{
                 width: "100%",
                 background: loading ? "#334155" : "#00d4ff",
                 color: loading ? "#94a3b8" : "#0a1628",
                 border: "none",
                 borderRadius: 8,
-                padding: "16px",
+                padding: "18px",
+                minHeight: 56,
                 fontSize: 17,
                 fontWeight: 800,
                 cursor: loading ? "not-allowed" : "pointer",
                 transition: "background 0.2s",
+                touchAction: "manipulation",
               }}
             >
               {loading ? "Locking lead..." : "Claim This Lead — $50"}
