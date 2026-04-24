@@ -142,8 +142,27 @@ export default function AdminDeadLeads() {
         .limit(100);
       return data || [];
     },
-    refetchInterval: 60000,
+    refetchInterval: 15000,
   });
+
+  // Today's pitch rotation badge
+  const todayPitch = (() => {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    const r = dayOfYear % 5;
+    return ["dead_lead", "tech_alert", "missed_call", "web_design", "care_alert"][r];
+  })();
+  const pitchLabels: Record<string, string> = {
+    dead_lead: "♻️ Dead Lead",
+    tech_alert: "🎯 TechAlert",
+    missed_call: "📞 Missed-Call",
+    web_design: "🌐 Web Design",
+    care_alert: "🏥 CareAlert",
+  };
+  const daysUntilDeadLead = (() => {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    const r = dayOfYear % 5;
+    return r === 0 ? 0 : 5 - r;
+  })();
 
   const pipelineStats = {
     total: pipeline?.length || 0,
