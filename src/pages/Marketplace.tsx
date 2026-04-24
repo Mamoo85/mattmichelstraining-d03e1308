@@ -561,7 +561,7 @@ export default function Marketplace() {
                     {soldIds.includes(lead.id) ? (
                       <SoldDossierCard lead={lead} />
                     ) : (
-                      <LockedDossierCard lead={lead} onClaim={handleClaim} />
+                      <LockedDossierCard lead={lead} onClaim={handleClaim} viewersNow={viewersMap[lead.id] || 0} />
                     )}
                   </SwipeRow>
                 </div>
