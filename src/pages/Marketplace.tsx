@@ -588,6 +588,7 @@ export default function Marketplace() {
       />
 
       <FirstLookUpsellGate product={product} leads={leads as any} />
+      <HowItWorksSheet productLabel={productMeta.label} />
 
       <BuyerEmailDialog
         open={restockOpen}
