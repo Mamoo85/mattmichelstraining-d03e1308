@@ -311,6 +311,8 @@ const TalentRadarVsStaffing = lazyRetry(() => import("./pages/TalentRadarVsStaff
 const FieldDeskVsEway = lazyRetry(() => import("./pages/FieldDeskVsEway"));
 const MortgageRadarVsTriggerLeads = lazyRetry(() => import("./pages/MortgageRadarVsTriggerLeads"));
 const MortgageRadar = lazyRetry(() => import("./pages/MortgageRadar"));
+const Marketplace = lazyRetry(() => import("./pages/Marketplace"));
+const LeadDetail = lazyRetry(() => import("./pages/LeadDetail"));
 const MyMortgageRadar = lazyRetry(() => import("./pages/MyMortgageRadar"));
 const BuyerRadar = lazyRetry(() => import("./pages/BuyerRadar"));
 const MyBuyerRadar = lazyRetry(() => import("./pages/MyBuyerRadar"));
@@ -770,6 +772,13 @@ const App = () => (
                     <Route path="/go/techalert" element={<Navigate to="/talent-radar" replace />} />
                     <Route path="/radars" element={<Navigate to="/talent-radar" replace />} />
                     <Route path="/textback" element={<Navigate to="/missed-call-catch" replace />} />
+                    {/* Golden Ticket Marketplace v2 — single-buyer leads à la carte */}
+                    <Route path="/mortgage-leads" element={<Marketplace />} />
+                    <Route path="/talent-leads" element={<Marketplace />} />
+                    <Route path="/demand-leads" element={<Marketplace />} />
+                    <Route path="/growth-leads" element={<Marketplace />} />
+                    <Route path="/supply-leads" element={<Marketplace />} />
+                    <Route path="/lead/:slug" element={<LeadDetail />} />
                     {/* Growth Radar (company-side intelligence — separate product) */}
                     <Route path="/growth-radar" element={<IndustryPulse />} />
                     <Route path="/growth-radar-dashboard" element={<GrowthRadarDashboard />} />

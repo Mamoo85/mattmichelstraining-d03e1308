@@ -68,6 +68,8 @@ export default {
           "text-dim": "hsl(var(--m2-text-dim))",
           rust: "hsl(var(--m2-rust))",
         },
+        "intel-teal": "hsl(186 100% 47%)",
+        "seal-gold": "hsl(43 89% 55%)",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -115,6 +117,27 @@ export default {
           "25%": { transform: "translateX(-4px)" },
           "75%": { transform: "translateX(4px)" },
         },
+        "shimmer": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        "scanline": {
+          "0%": { transform: "translateY(-100%)" },
+          "100%": { transform: "translateY(100%)" },
+        },
+        "seal-stamp": {
+          "0%": { transform: "scale(2) rotate(-15deg)", opacity: "0" },
+          "60%": { transform: "scale(0.9) rotate(2deg)", opacity: "1" },
+          "100%": { transform: "scale(1) rotate(0deg)", opacity: "1" },
+        },
+        "dossier-glow": {
+          "0%, 100%": { boxShadow: "0 0 20px -5px hsl(186 100% 47% / 0.3)" },
+          "50%": { boxShadow: "0 0 40px -5px hsl(186 100% 47% / 0.6)" },
+        },
+        "pulse-flame": {
+          "0%, 100%": { opacity: "1", transform: "scale(1)" },
+          "50%": { opacity: "0.85", transform: "scale(1.08)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -124,6 +147,11 @@ export default {
         fadeInUp: "fadeInUp 0.4s ease-out 0.2s both",
         "set-pop": "set-pop 0.4s ease-out",
         "confetti-burst": "confetti-burst 0.8s ease-out forwards",
+        "shimmer": "shimmer 3s linear infinite",
+        "scanline": "scanline 4s ease-in-out infinite",
+        "seal-stamp": "seal-stamp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+        "dossier-glow": "dossier-glow 3s ease-in-out infinite",
+        "pulse-flame": "pulse-flame 1.5s ease-in-out infinite",
       },
     },
   },
