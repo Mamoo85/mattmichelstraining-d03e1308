@@ -18601,6 +18601,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      burn_fast_track_credit: {
+        Args: { p_agency_id: string }
+        Returns: boolean
+      }
       candidates_within_radius: {
         Args: {
           p_lat: number

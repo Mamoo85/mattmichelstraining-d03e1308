@@ -1,11 +1,14 @@
 // Agency clicks "Mark No-Show" → flags candidate as ghost, grants 1 free fast-track credit.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -55,23 +58,12 @@ serve(async (req) => {
       metadata: { assignment_id, agency_id, reason: reason || null },
     }).then(() => {}, () => {});
 
-    // SMS Matt (sinkhole respected)
-    const adminPhone = Deno.env.get("ADMIN_PHONE");
-    const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID");
-    const twilioAuth = Deno.env.get("TWILIO_AUTH_TOKEN");
-    const twilioFrom = Deno.env.get("TWILIO_PHONE_NUMBER");
-    if (adminPhone && twilioSid && twilioAuth && twilioFrom) {
+    // SMS Matt via shared sendSMS (TCPA + sinkhole compliant)
+    if (TWILIO_FROM) {
       const prefix = agency?.is_test_account ? "[TEST SINKHOLE] " : "";
       const msg = `${prefix}👻 ${agency?.agency_name || agency_id} reported ghost · 1 free fast-track credit granted (now ${newCredits})`;
       try {
-        await fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`, {
-          method: "POST",
-          headers: {
-            Authorization: "Basic " + btoa(`${twilioSid}:${twilioAuth}`),
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({ To: adminPhone, From: twilioFrom, Body: msg }),
-        });
+        await sendSMS(ADMIN_PHONE, TWILIO_FROM, msg, "dwa_admin_reply");
       } catch (_) {}
     }
 

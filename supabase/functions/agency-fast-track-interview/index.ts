@@ -1,11 +1,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
 /**
  * Fast-Track Interview button handler — called from /agency-portal.
@@ -77,21 +80,18 @@ serve(async (req) => {
       .eq("status", "delivered")
       .neq("agency_id", agency_id);
 
-    // 3. Burn ghost credit if available (free interview)
+    // 3. ATOMIC credit burn via RPC — prevents simultaneous-click bypass
     let chargeId: string | null = null;
     let chargeError: string | null = null;
     let creditBurned = false;
 
-    if ((agency.fast_track_credits ?? 0) > 0) {
-      await supabase
-        .from("staffing_agency_clients")
-        .update({ fast_track_credits: agency.fast_track_credits - 1 })
-        .eq("id", agency_id);
-      creditBurned = true;
-    } else if (agency.pricing_model === "performance" && agency.stripe_customer_id && agency.stripe_payment_method_id) {
-      // 4. Charge $250
+    const { data: burnResult } = await supabase.rpc("burn_fast_track_credit", { p_agency_id: agency_id });
+    creditBurned = burnResult === true;
+
+    if (!creditBurned && agency.pricing_model === "performance" && agency.stripe_customer_id && agency.stripe_payment_method_id) {
+      // 4. Charge $250 — record DB FIRST, then refund on DB failure
+      const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2025-08-27.basil" });
       try {
-        const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2025-08-27.basil" });
         const intent = await stripe.paymentIntents.create({
           amount: agency.per_interview_fee_cents || 25000,
           currency: "usd",
@@ -102,45 +102,48 @@ serve(async (req) => {
           description: `Fast-Track Interview · Assignment ${assignment_id.slice(0, 8)}`,
           metadata: { assignment_id, agency_id, type: "agency_interview_charge" },
         }, {
-          // Idempotency: a webhook retry or duplicate request must never double-charge
           idempotencyKey: `fast-track-${assignment_id}`,
         });
         chargeId = intent.id;
-        await supabase.from("agency_candidate_assignments").update({
+
+        // Record charge in DB — if this fails, refund Stripe to avoid double-bill on retry
+        const { error: dbErr } = await supabase.from("agency_candidate_assignments").update({
           charged_at: new Date().toISOString(),
           charge_amount_cents: agency.per_interview_fee_cents || 25000,
           stripe_charge_id: chargeId,
         }).eq("id", assignment_id);
+
+        if (dbErr) {
+          console.error("[fast-track] DB write failed after charge — refunding:", dbErr);
+          try {
+            await stripe.refunds.create(
+              { payment_intent: chargeId, reason: "duplicate" },
+              { idempotencyKey: `fast-track-refund-${assignment_id}` }
+            );
+            chargeError = `db_write_failed_refunded: ${dbErr.message}`;
+            chargeId = null;
+          } catch (refundErr) {
+            chargeError = `db_write_failed_refund_failed: ${dbErr.message} / ${String(refundErr)}`;
+          }
+        }
       } catch (e) {
-        chargeError = String(e);
+        chargeError = e instanceof Error ? e.message : String(e);
       }
     }
 
-    // 5. Notify Matt (sinkhole if test account)
-    const adminPhone = Deno.env.get("ADMIN_PHONE");
-    const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID");
-    const twilioAuth = Deno.env.get("TWILIO_AUTH_TOKEN");
-    const twilioFrom = Deno.env.get("TWILIO_PHONE_NUMBER");
-    if (adminPhone && twilioSid && twilioAuth && twilioFrom) {
+    // 5. Notify Matt via shared sendSMS (TCPA + sinkhole compliant)
+    if (TWILIO_FROM) {
       let msg: string;
-      if (agency.is_test_account) {
-        msg = `[TEST SINKHOLE] ${agency.agency_name} fast-track · ${creditBurned ? "credit burned" : chargeId ? "$250 charged" : "no charge"}`;
-      } else if (creditBurned) {
-        msg = `⚡ ${agency.agency_name} booked interview · ghost-credit burned (free)`;
+      const prefix = agency.is_test_account ? "[TEST SINKHOLE] " : "";
+      if (creditBurned) {
+        msg = `${prefix}⚡ ${agency.agency_name} booked interview · ghost-credit burned (free)`;
       } else if (chargeId) {
-        msg = `⚡ ${agency.agency_name} booked interview · $${((agency.per_interview_fee_cents || 25000) / 100).toFixed(0)} charged`;
+        msg = `${prefix}⚡ ${agency.agency_name} booked interview · $${((agency.per_interview_fee_cents || 25000) / 100).toFixed(0)} charged`;
       } else {
-        msg = `⚡ ${agency.agency_name} booked interview · ${chargeError ? "CHARGE FAILED — invoice manually" : "no charge (territory_lock or no card)"}`;
+        msg = `${prefix}⚡ ${agency.agency_name} booked interview · ${chargeError ? "CHARGE FAILED — invoice manually" : "no charge (territory_lock or no card)"}`;
       }
       try {
-        await fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`, {
-          method: "POST",
-          headers: {
-            Authorization: "Basic " + btoa(`${twilioSid}:${twilioAuth}`),
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({ To: adminPhone, From: twilioFrom, Body: msg }),
-        });
+        await sendSMS(ADMIN_PHONE, TWILIO_FROM, msg, "dwa_admin_reply");
       } catch (e) { console.error("SMS failed:", e); }
     }
 
