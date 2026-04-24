@@ -1431,7 +1431,62 @@ serve(async (req) => {
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
-      // === Marketplace First Look subscription ($49/mo single, $129/mo all) ===
+      // === Contractor Leads À La Carte purchase ===
+      if (meta.type === "alacarte_lead_purchase") {
+        const buyerEmail = (meta.buyer_email || customerEmail || "").toLowerCase();
+        const offerId = meta.offer_id;
+        const leadId = meta.lead_id;
+        try {
+          if (!offerId || !leadId || !buyerEmail) {
+            throw new Error("missing offer_id / lead_id / buyer_email");
+          }
+          // Atomic claim via RPC (first-payer-wins, refunds others)
+          const { data: claimResult, error: claimErr } = await (sb.rpc as any)("claim_alacarte_lead", {
+            _offer_id: offerId,
+            _lead_id: leadId,
+            _claimer_email: buyerEmail,
+            _stripe_session_id: session.id,
+          });
+          if (claimErr) throw claimErr;
+          const claimed = (claimResult as any)?.claimed === true;
+
+          if (claimed) {
+            // Fetch lead details to send to buyer
+            const { data: lead } = await (sb.from as any)("contractor_leads")
+              .select("name, phone, email, project_type, message, contractor_lead_sites(trade, city)")
+              .eq("id", leadId).single();
+            const trade = lead?.contractor_lead_sites?.trade || "Lead";
+            const city = lead?.contractor_lead_sites?.city || "";
+            const html = `<h2>You won the lead — ${trade} in ${city}</h2>
+              <p><strong>Homeowner:</strong> ${lead?.name || "—"}</p>
+              <p><strong>Phone:</strong> <a href="tel:${lead?.phone}">${lead?.phone || "—"}</a></p>
+              <p><strong>Email:</strong> ${lead?.email || "—"}</p>
+              <p><strong>Project:</strong> ${lead?.project_type || "—"}</p>
+              <p><strong>Notes:</strong> ${lead?.message || "—"}</p>
+              <p style="margin-top:24px;color:#64748b;">Call them within 5 minutes — that's how you win.</p>`;
+            await sendDwaEmail(buyerEmail, `🎯 You won: ${trade} lead in ${city}`, html).catch(()=>{});
+            await notifyMatt(`💰 À la carte lead sold — ${buyerEmail} claimed ${trade}/${city}`, html).catch(()=>{});
+          } else {
+            // Refund — someone else got it first
+            const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2025-08-27.basil" });
+            const paymentIntent = (session as any).payment_intent;
+            if (paymentIntent) {
+              await stripe.refunds.create({ payment_intent: paymentIntent, reason: "duplicate" }).catch(()=>{});
+            }
+            const refundHtml = `<h2>Refunded — lead already claimed</h2>
+              <p>Another contractor paid for this lead seconds before you. Your card has been refunded in full.</p>
+              <p>More leads coming — keep an eye on your phone.</p>`;
+            await sendDwaEmail(buyerEmail, `Refunded — lead already claimed`, refundHtml).catch(()=>{});
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] alacarte_lead_purchase error:", e);
+          await notifyMatt(`🚨 À la carte fulfillment FAILED — ${buyerEmail} / ${leadId}`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(()=>{});
+          return new Response(JSON.stringify({ error: "alacarte_lead_purchase failed" }), { status: 500 });
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       if (meta.type === "marketplace_first_look_subscription") {
         const email = (meta.email || customerEmail || "").toLowerCase();
         const productKey = meta.product || "all";
