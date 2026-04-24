@@ -180,7 +180,7 @@ serve(async (req) => {
       scoredCount++;
     }
 
-    return new Response(JSON.stringify({ ok: true, scored: scoredCount }), {
+    return new Response(JSON.stringify({ ok: true, scored: scoredCount, enriched: enrichedCount, counters }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
