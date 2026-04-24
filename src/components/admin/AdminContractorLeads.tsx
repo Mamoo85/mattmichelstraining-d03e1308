@@ -486,6 +486,8 @@ export default function AdminContractorLeads() {
             <strong className="text-blue-300">What is "FB Page ID"?</strong> When a contractor wires their Facebook Lead Form to your territory, paste their Facebook Page ID here so incoming Facebook leads route to <em>them</em> automatically. Find it at <code className="bg-black/40 px-1 py-0.5 rounded text-[10px]">facebook.com/[their-page]/about</code> → Page Transparency. Without it, FB leads land in a generic bucket. Don't have a contractor for this slot yet? Use the Prospecting Pipeline below to find one.
           </div>
         )}
+        <div className="hidden">
+          <select>
               <option value="">Trade…</option>
               {ALL_TRADES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
