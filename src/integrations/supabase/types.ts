@@ -8953,6 +8953,57 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_buyer_visits: {
+        Row: {
+          buyer_email: string
+          created_at: string
+          last_seen_at: string
+          visit_count: number
+        }
+        Insert: {
+          buyer_email: string
+          created_at?: string
+          last_seen_at?: string
+          visit_count?: number
+        }
+        Update: {
+          buyer_email?: string
+          created_at?: string
+          last_seen_at?: string
+          visit_count?: number
+        }
+        Relationships: []
+      }
+      marketplace_buyer_watches: {
+        Row: {
+          buyer_email: string
+          created_at: string
+          id: string
+          last_price_cents: number | null
+          lead_id: string
+          product: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_email: string
+          created_at?: string
+          id?: string
+          last_price_cents?: number | null
+          lead_id: string
+          product: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_email?: string
+          created_at?: string
+          id?: string
+          last_price_cents?: number | null
+          lead_id?: string
+          product?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marketplace_dismissals: {
         Row: {
           buyer_email: string
@@ -9694,6 +9745,7 @@ export type Database = {
           intel_highlights: Json | null
           last_sale_date: string | null
           last_sale_price_cents: number | null
+          last_score_alert_at: string | null
           last_signal_at: string
           lat: number | null
           lon: number | null
@@ -9707,6 +9759,7 @@ export type Database = {
           provenance_source_urls: Json | null
           raw: Json | null
           score: number
+          score_history: Json | null
           score_percentile: number | null
           signal_count: number
           signal_date: string | null
@@ -9750,6 +9803,7 @@ export type Database = {
           intel_highlights?: Json | null
           last_sale_date?: string | null
           last_sale_price_cents?: number | null
+          last_score_alert_at?: string | null
           last_signal_at?: string
           lat?: number | null
           lon?: number | null
@@ -9763,6 +9817,7 @@ export type Database = {
           provenance_source_urls?: Json | null
           raw?: Json | null
           score?: number
+          score_history?: Json | null
           score_percentile?: number | null
           signal_count?: number
           signal_date?: string | null
@@ -9806,6 +9861,7 @@ export type Database = {
           intel_highlights?: Json | null
           last_sale_date?: string | null
           last_sale_price_cents?: number | null
+          last_score_alert_at?: string | null
           last_signal_at?: string
           lat?: number | null
           lon?: number | null
@@ -9819,6 +9875,7 @@ export type Database = {
           provenance_source_urls?: Json | null
           raw?: Json | null
           score?: number
+          score_history?: Json | null
           score_percentile?: number | null
           signal_count?: number
           signal_date?: string | null
@@ -18451,6 +18508,8 @@ export type Database = {
         }
         Returns: number
       }
+      mp_signal_velocity: { Args: { p_lead_id: string }; Returns: number }
+      mp_zip_heat_index: { Args: { p_zip: string }; Returns: number }
       next_enrich_stage: { Args: { _candidate_id: string }; Returns: string }
       purge_expired_idempotency_keys: { Args: never; Returns: number }
       queue_depth_snapshot: {
