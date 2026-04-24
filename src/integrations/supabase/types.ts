@@ -1997,6 +1997,48 @@ export type Database = {
         }
         Relationships: []
       }
+      checkout_receipts: {
+        Row: {
+          created_at: string
+          email: string | null
+          error_message: string | null
+          fulfilled_at: string | null
+          id: string
+          metadata: Json | null
+          product_type: string | null
+          status: string
+          stripe_session_id: string
+          updated_at: string
+          webhook_event_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          error_message?: string | null
+          fulfilled_at?: string | null
+          id?: string
+          metadata?: Json | null
+          product_type?: string | null
+          status?: string
+          stripe_session_id: string
+          updated_at?: string
+          webhook_event_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          error_message?: string | null
+          fulfilled_at?: string | null
+          id?: string
+          metadata?: Json | null
+          product_type?: string | null
+          status?: string
+          stripe_session_id?: string
+          updated_at?: string
+          webhook_event_id?: string | null
+        }
+        Relationships: []
+      }
       citation_monitor_clients: {
         Row: {
           active: boolean | null
