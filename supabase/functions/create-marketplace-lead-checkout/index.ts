@@ -62,36 +62,31 @@ serve(async (req) => {
       });
     }
 
-    // Atomic soft-lock: insert with status='pending'. Fails if already sold/locked-active.
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-    const { data: existing } = await sb
-      .from("marketplace_lead_locks")
-      .select("status, expires_at, buyer_email")
-      .eq("lead_id", lead_id)
-      .eq("product", product)
-      .maybeSingle();
-
-    const now = new Date().toISOString();
-    if (existing) {
-      if (existing.status === "sold") {
-        return new Response(JSON.stringify({ error: "already_sold" }), {
-          status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (existing.status === "pending" && existing.expires_at && existing.expires_at > now && existing.buyer_email !== buyer_email) {
-        return new Response(JSON.stringify({ error: "locked_by_other" }), {
-          status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      // Refresh our own pending lock or take over expired
-      await sb.from("marketplace_lead_locks")
-        .update({ status: "pending", buyer_email, expires_at: expiresAt })
-        .eq("lead_id", lead_id).eq("product", product);
-    } else {
-      await sb.from("marketplace_lead_locks").insert({
-        lead_id, product, buyer_email, status: "pending", expires_at: expiresAt,
+    // ── ATOMIC SOFT-LOCK via SECURITY DEFINER RPC ─────────────────────────
+    // RPC uses SELECT ... FOR UPDATE so two concurrent buyers can't both win.
+    const { data: lockResult, error: lockErr } = await sb.rpc("claim_lead_soft_lock", {
+      _lead_id: lead_id,
+      _product: product,
+      _buyer_email: buyer_email,
+      _ttl_minutes: 10,
+    });
+    if (lockErr) {
+      console.error("[create-marketplace-lead-checkout] lock rpc error:", lockErr);
+      return new Response(JSON.stringify({ error: "lock_failed", detail: lockErr.message }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (lockResult === "already_sold") {
+      return new Response(JSON.stringify({ error: "already_sold" }), {
+        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (lockResult === "locked_by_other") {
+      return new Response(JSON.stringify({ error: "locked_by_other" }), {
+        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    // 'acquired' or 'refreshed' → proceed
 
     const origin = req.headers.get("origin") || "https://detroitwebagent.com";
     const session = await stripe.checkout.sessions.create({
