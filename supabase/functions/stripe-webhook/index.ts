@@ -842,7 +842,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] web_design_addon error:", e);
           return new Response(JSON.stringify({ error: "web_design_addon failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── B2B SUBSCRIPTION FULFILLMENT (handbook, grant finder, etc.) ──────
@@ -875,7 +875,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] handbook_subscription error:", e);
           return new Response(JSON.stringify({ error: "handbook_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── THE WIRE — contractor leads $99/mo ────────────────────────────────
@@ -1080,7 +1080,7 @@ serve(async (req) => {
           ).catch(() => {});
           return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       if (meta.type === "high_volume_buyer_subscription") {
@@ -1140,7 +1140,7 @@ serve(async (req) => {
           ).catch(() => {});
           return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       if (meta.type === "industry_pulse_subscription") {
@@ -1203,7 +1203,7 @@ serve(async (req) => {
           await notifyMatt(`🚨 Industry Pulse provision FAILED — ${email || "unknown"}`, `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
           return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       if (meta.type === "mortgage_radar_subscription") {
@@ -1259,7 +1259,7 @@ serve(async (req) => {
           await notifyMatt(`🚨 Mortgage Radar provision FAILED — ${email || "unknown"}`, `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
           return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       if (meta.type === "buyer_radar_subscription") {
@@ -1320,7 +1320,7 @@ serve(async (req) => {
           await notifyMatt(`🚨 Buyer Radar provision FAILED — ${email || "unknown"}`, `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
           return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // === Golden Ticket Marketplace — a la carte lead purchase ===
@@ -1428,7 +1428,7 @@ serve(async (req) => {
             `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(()=>{});
           return new Response(JSON.stringify({ error: "marketplace_lead_purchase failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // === Marketplace First Look subscription ($49/mo single, $129/mo all) ===
@@ -1471,7 +1471,7 @@ serve(async (req) => {
             `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(()=>{});
           return new Response(JSON.stringify({ error: "first_look_failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // === Channel 3 — Industrial Pulse public unlock ($50 snapshot OR $199/mo firehose) ===
@@ -1557,7 +1557,7 @@ serve(async (req) => {
           await notifyMatt(`🚨 Industrial Pulse fulfillment FAILED — ${email}`, `<p>${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
           return new Response(JSON.stringify({ error: "fulfillment failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
 
@@ -1577,7 +1577,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] domain_breach_report error:", e);
           return new Response(JSON.stringify({ error: "domain_breach_report failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── KEYWORD GAP REPORT — $19 one-time ────────────────────────────────────
@@ -1596,7 +1596,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] keyword_gap_report error:", e);
           return new Response(JSON.stringify({ error: "keyword_gap_report failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
       // ── LUKE — Mark cart as recovered when any instant product purchase completes ──
       const instantProducts = ["website_audit", "gbp_post_pack", "competitor_report"];
@@ -1808,7 +1808,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] dark_web_monitor error:", e);
           return new Response(JSON.stringify({ error: "dark_web_monitor failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── SEO GUARD — $29/mo with 7-day trial ──────────────────────────────
@@ -1850,7 +1850,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] seo_guard error:", e);
           return new Response(JSON.stringify({ error: "seo_guard failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── DARK WEB MONITOR RESELLER — MSP ($199/mo, 10 domains) ─────────────
@@ -1898,7 +1898,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] dark_web_monitor_reseller error:", e);
           return new Response(JSON.stringify({ error: "dark_web_monitor_reseller failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── EMPLOYEE CREDENTIAL AUDIT — $149 one-time ─────────────────────────
@@ -1917,7 +1917,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] employee_credential_audit session_id update error:", e);
           return new Response(JSON.stringify({ error: "employee_credential_audit session_id update failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── NEW HIRE BREACH CHECK — $9.99 one-time HIBP screen ───────────────────
@@ -1946,7 +1946,7 @@ serve(async (req) => {
           ).catch(() => {});
           return new Response(JSON.stringify({ error: "report delivery failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
     // ── LUKE — Capture abandoned checkouts for recovery emails ────────────────
@@ -1972,7 +1972,7 @@ serve(async (req) => {
           }
         }
       } catch (e) { console.error("[LUKE] cart_abandonment capture error:", e); }
-      return new Response(JSON.stringify({ received: true }), { status: 200 });
+      await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
       // ── WAVE 4: STORM DAMAGE LEAD BLASTER ──────────────────────────────────
@@ -2001,7 +2001,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] storm_lead_subscription error:", e);
           return new Response(JSON.stringify({ error: "storm_lead_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── WAVE 4: RECALL ALERT SERVICE ────────────────────────────────────────
@@ -2030,7 +2030,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] recall_alert_subscription error:", e);
           return new Response(JSON.stringify({ error: "recall_alert_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── WAVE 4: PERMIT WATCH ─────────────────────────────────────────────────
@@ -2060,7 +2060,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] permit_watch_subscription error:", e);
           return new Response(JSON.stringify({ error: "permit_watch_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── WAVE 4: WEBSITE SPEED AUDIT ──────────────────────────────────────────
@@ -2087,7 +2087,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] speed_audit_subscription error:", e);
           return new Response(JSON.stringify({ error: "speed_audit_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── WAVE 4: AI BEDTIME STORIES ───────────────────────────────────────────
@@ -2115,7 +2115,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] bedtime_story_subscription error:", e);
           return new Response(JSON.stringify({ error: "bedtime_story_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── WAVE 4: NEIGHBORHOOD CRIME DIGEST ───────────────────────────────────
@@ -2146,7 +2146,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] crime_digest_subscription error:", e);
           return new Response(JSON.stringify({ error: "crime_digest_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── WAVE 4: BUSINESS LICENSE MONITOR ────────────────────────────────────
@@ -2175,7 +2175,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] license_monitor_subscription error:", e);
           return new Response(JSON.stringify({ error: "license_monitor_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── MISSED CALL TEXT-BACK — $99/mo with 7-day trial ──────────────────
@@ -2205,7 +2205,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] missed_call_subscription error:", e);
           return new Response(JSON.stringify({ error: "missed_call_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── FIELDDESK — $199/mo field service CRM ────────────────────────────
@@ -2235,7 +2235,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] field_service_subscription error:", e);
           return new Response(JSON.stringify({ error: "field_service_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── CONTRACTOR LEADS — dedicated welcome email with dashboard link ─────
@@ -2289,7 +2289,7 @@ serve(async (req) => {
         } catch (e) {
           console.error("[WEBHOOK] contractor_lead_subscription welcome email error:", e);
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── GBP SAAS — $49-99/mo Google Business Profile automation ─────────────
@@ -2310,7 +2310,7 @@ serve(async (req) => {
             ]);
           } catch (e) { console.error("[WEBHOOK] gbp_subscription error:", e); }
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── SOCIAL MEDIA AI — $199-299/mo ────────────────────────────────────────
@@ -2331,7 +2331,7 @@ serve(async (req) => {
             ]);
           } catch (e) { console.error("[WEBHOOK] social_media_subscription error:", e); }
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── FIELD REP TOOLS — $29/mo AI tool suite ───────────────────────────────
@@ -2351,7 +2351,7 @@ serve(async (req) => {
             ]);
           } catch (e) { console.error("[WEBHOOK] field_rep_subscription error:", e); }
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── CATCH-ALL: any subscription type not explicitly handled above ──────
@@ -2399,7 +2399,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] catch-all subscription error:", e);
           return new Response(JSON.stringify({ error: "catch-all subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── Revenue Suite Bundle ──────────────────────────────────────────
@@ -2444,7 +2444,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] Revenue Suite error:", e);
           return new Response(JSON.stringify({ error: "Revenue Suite failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── AGENCY ANNUAL PREPAY ($25K Territory Lock) ───────────────────────
@@ -2488,7 +2488,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] Agency annual prepay error:", e);
           return new Response(JSON.stringify({ error: "agency_annual_prepay processing failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── AGENCY PERFORMANCE SETUP (card saved, no upfront charge) ─────────
@@ -2527,12 +2527,12 @@ serve(async (req) => {
           console.error("[WEBHOOK] Agency performance setup error:", e);
           return new Response(JSON.stringify({ error: "agency_performance_setup processing failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // Unmatched checkout.session.completed — log and acknowledge
       console.log(`[WEBHOOK] checkout.session.completed with unhandled meta.type: ${meta.type || "none"}`);
-      return new Response(JSON.stringify({ received: true }), { status: 200 });
+      await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
     // ── LUKE — Capture abandoned checkouts for recovery emails ────────────────
@@ -2558,7 +2558,7 @@ serve(async (req) => {
           }
         }
       } catch (e) { console.error("[LUKE] cart_abandonment capture error:", e); }
-      return new Response(JSON.stringify({ received: true }), { status: 200 });
+      await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
     // ── Invoice payment failed — deactivate product clients after 3 failures ──
@@ -2611,13 +2611,13 @@ serve(async (req) => {
         console.error("[WEBHOOK] invoice.payment_failed error:", e);
         return new Response(JSON.stringify({ error: "invoice.payment_failed failed" }), { status: 500 });
       }
-      return new Response(JSON.stringify({ received: true }), { status: 200 });
+      await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
     // ── Unhandled event types (invoice.finalized, etc.) — acknowledge safely ──
     console.log(`[WEBHOOK] Unhandled event type: ${event.type} — acknowledging`);
     await markFulfilled(true);
-    return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+    await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("[STRIPE-WEBHOOK] Error:", msg);
