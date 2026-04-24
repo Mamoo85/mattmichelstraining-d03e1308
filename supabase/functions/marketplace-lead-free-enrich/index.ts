@@ -1,5 +1,5 @@
 // Marketplace Lead Free-API Enrichment
-// 10 zero-cost public data sources layered onto a marketplace_leads row.
+// 10 zero-cost public data sources layered onto a mortgage_radar_leads row.
 // Sources: 1) FRED 30Y mortgage rate, 2) US Census ACS demographics,
 // 3) NOAA storm events, 4) USGS earthquake history, 5) FCC area code lookup,
 // 6) Detroit ArcGIS BSEED permits (neighbor activity), 7) FBI Crime Data API,
@@ -197,7 +197,7 @@ serve(async (req) => {
     }
 
     const { data: lead, error } = await sb
-      .from("marketplace_leads")
+      .from("mortgage_radar_leads")
       .select("id, zip, state, county, phone, lat, lon, free_enrich_at")
       .eq("id", lead_id)
       .maybeSingle();
@@ -254,7 +254,7 @@ serve(async (req) => {
     console.log(`[FREE-ENRICH] ${filledCount}/11 sources returned data`);
 
     const { error: updateErr } = await sb
-      .from("marketplace_leads")
+      .from("mortgage_radar_leads")
       .update({
         free_enrichment: enrichment,
         free_enrich_at: new Date().toISOString(),
