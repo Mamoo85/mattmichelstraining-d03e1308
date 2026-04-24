@@ -169,6 +169,7 @@ function FindProspects() {
   const [limit, setLimit] = useState(50);
   const [running, setRunning] = useState(false);
   const [scoring, setScoring] = useState(false);
+  const [enrichFirst, setEnrichFirst] = useState(false);
   const qc = useQueryClient();
 
   // Idle Pool counts
@@ -274,10 +275,18 @@ function FindProspects() {
     setScoring(true);
     try {
       const { data, error } = await supabase.functions.invoke("score-prospects", {
-        body: { audience_type: audience, limit: 200 },
+        body: { audience_type: audience, limit: 200, enrich_first: enrichFirst },
       });
       if (error) throw error;
-      toast.success(`Re-scored ${data?.scored ?? 0} prospects`);
+      if (enrichFirst) {
+        const c = data?.counters || {};
+        const breakdown = ["snov","apollo","pattern_verify","hunter","pdl","site_scrape"]
+          .map((k) => `${k.replace("_"," ")}:${c[k] ?? 0}`)
+          .join(" · ");
+        toast.success(`Re-scored ${data?.scored ?? 0} · Enriched ${data?.enriched ?? 0} — ${breakdown}`);
+      } else {
+        toast.success(`Re-scored ${data?.scored ?? 0} prospects`);
+      }
       qc.invalidateQueries({ queryKey: ["prospect_pool"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Scoring failed");
@@ -373,13 +382,17 @@ function FindProspects() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
           <Button onClick={runScrape} disabled={running} className="bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-[#0a1628]">
             {running ? <><Loader2 className="animate-spin mr-2" size={14} /> Scraping…</> : <>🚀 Run Scrape</>}
           </Button>
           <Button onClick={runScore} disabled={scoring} variant="outline" className="border-white/15 text-white hover:bg-white/10">
-            {scoring ? <><Loader2 className="animate-spin mr-2" size={14} /> Scoring…</> : <>⚡ Re-score Pool</>}
+            {scoring ? <><Loader2 className="animate-spin mr-2" size={14} /> {enrichFirst ? "Enriching + Scoring…" : "Scoring…"}</> : <>⚡ Re-score Pool</>}
           </Button>
+          <label className="flex items-center gap-2 text-white/70 text-xs ml-1 cursor-pointer">
+            <Checkbox checked={enrichFirst} onCheckedChange={(v) => setEnrichFirst(!!v)} />
+            Enrich missing fields first <span className="text-white/40">(slower)</span>
+          </label>
         </div>
 
         <div className="text-white/40 text-xs">
@@ -491,7 +504,12 @@ function RankedPool() {
       const { data, error } = await supabase.functions.invoke("enrich-prospect-pool", { body: { id } });
       if (error) throw error;
       const filled = data?.results?.[0]?.filled ?? [];
-      toast.success(filled.length ? `Filled: ${filled.join(", ")}` : "No new data found");
+      const c = data?.counters || {};
+      const breakdownParts = ["snov","apollo","pattern_verify","hunter","pdl","site_scrape"]
+        .filter((k) => (c[k] ?? 0) > 0)
+        .map((k) => `${k.replace("_"," ")}:${c[k]}`);
+      const suffix = breakdownParts.length ? ` — ${breakdownParts.join(" · ")}` : "";
+      toast.success(filled.length ? `Filled: ${filled.join(", ")}${suffix}` : `No new data found${suffix}`);
       qc.invalidateQueries({ queryKey: ["prospect_pool"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Enrichment failed");
@@ -505,7 +523,11 @@ function RankedPool() {
     try {
       const { data, error } = await supabase.functions.invoke("enrich-prospect-pool", { body: { limit: 25 } });
       if (error) throw error;
-      toast.success(`Enriched ${data?.enriched ?? 0} of ${data?.processed ?? 0} prospects`);
+      const c = data?.counters || {};
+      const breakdown = ["snov","apollo","pattern_verify","hunter","pdl","site_scrape"]
+        .map((k) => `${k.replace("_"," ")}:${c[k] ?? 0}`)
+        .join(" · ");
+      toast.success(`Enriched ${data?.enriched ?? 0} of ${data?.processed ?? 0} — ${breakdown}`);
       qc.invalidateQueries({ queryKey: ["prospect_pool"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Batch enrichment failed");

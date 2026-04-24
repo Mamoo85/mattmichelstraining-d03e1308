@@ -375,3 +375,30 @@ export async function runEmailWaterfall(
 }
 
 export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "hunter", "pdl"] as const;
+
+/**
+ * runFieldWaterfall — wrapper around runEmailWaterfall that reports which
+ * fields were filled. Currently only `email`, but the shape supports
+ * extending to phone/contact later without breaking callers.
+ *
+ * Returns: { filled: { email?: string }, source, confidence, trace, fields_filled: string[] }
+ */
+export type FieldWaterfallResult = EmailWaterfallResult & {
+  filled: { email?: string };
+  fields_filled: string[];
+};
+
+export async function runFieldWaterfall(
+  sb: SupabaseClient,
+  input: EmailWaterfallInput,
+  counters?: WaterfallCounters,
+): Promise<FieldWaterfallResult> {
+  const r = await runEmailWaterfall(sb, input, counters);
+  const filled: { email?: string } = {};
+  const fields_filled: string[] = [];
+  if (r.email) {
+    filled.email = r.email;
+    fields_filled.push("email");
+  }
+  return { ...r, filled, fields_filled };
+}
