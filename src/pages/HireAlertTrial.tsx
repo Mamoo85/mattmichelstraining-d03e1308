@@ -89,13 +89,13 @@ export default function HireAlertTrial() {
         <div style={{ maxWidth: 480, textAlign: "center" }}>
           <div style={{ fontSize: 64, marginBottom: 20 }}>⚡</div>
           <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 800, margin: "0 0 12px" }}>
-            Your Trial Is Live
+            You're in. First match by tomorrow morning.
           </h1>
           <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.8, margin: "0 0 16px" }}>
-            Our intelligence engine is scanning Metro Detroit for available licensed tradespeople in your trades right now.
+            We scan overnight and email the first qualified candidate to <strong style={{ color: "#fff" }}>{form.email}</strong> by 7am.
           </p>
           <p style={{ color: "#00d4ff", fontSize: 15, margin: "0 0 32px" }}>
-            Check your email for confirmation. Trial runs for 72 hours.
+            If we can't find one in 72 hours, we'll tell you straight up — no auto-charge, no upsell.
           </p>
           <p style={{ color: "#475569", fontSize: 14 }}>
             Questions? Text Matt at{" "}
@@ -118,9 +118,11 @@ export default function HireAlertTrial() {
           <h1 style={{ color: "#fff", fontSize: 32, fontWeight: 800, margin: "0 0 12px", lineHeight: 1.2 }}>
             3-Day Free Trial
           </h1>
-          <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.7, margin: 0 }}>
-            No credit card. We'll scan for available licensed tradespeople in Metro Detroit
-            and alert you when we find a match. Cancel anytime.
+          <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.7, margin: "0 0 12px" }}>
+            No credit card. We'll text you when we find someone.
+          </p>
+          <p style={{ color: "#00d4ff", fontSize: 13, fontWeight: 700, margin: 0 }}>
+            Takes 20 seconds.
           </p>
         </div>
 
@@ -131,34 +133,8 @@ export default function HireAlertTrial() {
 
             <div style={{ display: "grid", gap: 20 }}>
               <div>
-                <label style={{ color: "#94a3b8", fontSize: 12, fontWeight: 700, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-                  YOUR NAME
-                </label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  placeholder="Mike Johnson"
-                  style={{ width: "100%", background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 8, padding: "12px 14px", color: "#fff", fontSize: 15, boxSizing: "border-box" }}
-                />
-              </div>
-
-              <div>
-                <label style={{ color: "#94a3b8", fontSize: 12, fontWeight: 700, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-                  BUSINESS NAME
-                </label>
-                <input
-                  type="text"
-                  value={form.business_name}
-                  onChange={(e) => setForm((f) => ({ ...f, business_name: e.target.value }))}
-                  placeholder="Metro HVAC Solutions"
-                  style={{ width: "100%", background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 8, padding: "12px 14px", color: "#fff", fontSize: 15, boxSizing: "border-box" }}
-                />
-              </div>
-
-              <div>
-                <label style={{ color: "#94a3b8", fontSize: 12, fontWeight: 700, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-                  EMAIL <span style={{ color: "#e8621a" }}>*</span>
+                <label style={{ color: "#94a3b8", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>
+                  Email <span style={{ color: "#e8621a" }}>*</span>
                 </label>
                 <input
                   type="email"
@@ -171,8 +147,8 @@ export default function HireAlertTrial() {
               </div>
 
               <div>
-                <label style={{ color: "#94a3b8", fontSize: 12, fontWeight: 700, letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
-                  CELL (for SMS alerts)
+                <label style={{ color: "#94a3b8", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>
+                  Cell <span style={{ color: "#64748b", fontWeight: 400 }}>(we'll text matches)</span>
                 </label>
                 <input
                   type="tel"
@@ -184,8 +160,8 @@ export default function HireAlertTrial() {
               </div>
 
               <div>
-                <label style={{ color: "#94a3b8", fontSize: 12, fontWeight: 700, letterSpacing: 0.5, display: "block", marginBottom: 10 }}>
-                  TRADES TO MONITOR <span style={{ color: "#e8621a" }}>*</span>
+                <label style={{ color: "#94a3b8", fontSize: 13, fontWeight: 600, display: "block", marginBottom: 10 }}>
+                  Trades to monitor <span style={{ color: "#e8621a" }}>*</span>
                 </label>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {TRADE_OPTIONS.map((role) => {

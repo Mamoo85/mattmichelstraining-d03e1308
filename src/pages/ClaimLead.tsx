@@ -102,7 +102,7 @@ export default function ClaimLead() {
           <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.7, margin: "0 0 32px" }}>
             This link is missing required information. Please use the link from your text message.
           </p>
-          <p style={{ color: "#64748b", fontSize: 14 }}>Questions? Text Matt at (313) 992-1219</p>
+          <p style={{ color: "#64748b", fontSize: 14 }}>Questions? <a href="sms:+13139921219" style={{ color: "#00d4ff", textDecoration: "none" }}>Text Matt at (313) 992-1219</a></p>
         </div>
       </div>
     );
@@ -126,7 +126,7 @@ export default function ClaimLead() {
           <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.7, margin: "0 0 32px" }}>
             This lead may have expired or the link is incorrect. Check your latest text for a fresh link.
           </p>
-          <p style={{ color: "#64748b", fontSize: 14 }}>Questions? Text Matt at (313) 992-1219</p>
+          <p style={{ color: "#64748b", fontSize: 14 }}>Questions? <a href="sms:+13139921219" style={{ color: "#00d4ff", textDecoration: "none" }}>Text Matt at (313) 992-1219</a></p>
         </div>
       </div>
     );
@@ -138,10 +138,10 @@ export default function ClaimLead() {
         <div style={{ maxWidth: 480, textAlign: "center" }}>
           <div style={{ fontSize: 56, marginBottom: 16 }}>😔</div>
           <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 800, margin: "0 0 12px" }}>Lead Already Claimed</h1>
-          <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.7, margin: "0 0 32px" }}>
-            Another contractor got there first. We'll text you the next one as soon as it drops.
+          <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.7, margin: "0 0 24px" }}>
+            Beat to it this time. The next job in your area goes to the contractor who taps fastest — keep your phone close. We typically send 1 lead every 2–4 days per territory.
           </p>
-          <p style={{ color: "#64748b", fontSize: 14 }}>Questions? Text Matt at (313) 992-1219</p>
+          <p style={{ color: "#64748b", fontSize: 14 }}>Questions? <a href="sms:+13139921219" style={{ color: "#00d4ff", textDecoration: "none" }}>Text Matt at (313) 992-1219</a></p>
         </div>
       </div>
     );
@@ -157,7 +157,7 @@ export default function ClaimLead() {
             Another contractor is reviewing this lead right now. If they don't claim it,
             it'll unlock in approximately <strong style={{ color: "#00d4ff" }}>{minutesLeft} minute{minutesLeft !== 1 ? "s" : ""}</strong>.
           </p>
-          <p style={{ color: "#64748b", fontSize: 14 }}>Check back soon or text Matt at (313) 992-1219.</p>
+          <p style={{ color: "#64748b", fontSize: 14 }}>Check back soon or <a href="sms:+13139921219" style={{ color: "#00d4ff", textDecoration: "none" }}>text Matt at (313) 992-1219</a>.</p>
         </div>
       </div>
     );
@@ -198,6 +198,9 @@ export default function ClaimLead() {
               <p style={{ color: "#00d4ff", fontSize: 13, margin: "12px 0 0", fontWeight: 600 }}>
                 100% exclusive — no other contractor receives this lead.
               </p>
+              <p style={{ color: "#94a3b8", fontSize: 12, margin: "10px 0 0", lineHeight: 1.5 }}>
+                If the number's disconnected or it's a fake lead, text Matt and we refund it. No forms.
+              </p>
             </div>
 
             <button
@@ -219,7 +222,7 @@ export default function ClaimLead() {
                 touchAction: "manipulation",
               }}
             >
-              {loading ? "Locking lead..." : "Claim This Lead — $50"}
+              {loading ? "Locking lead..." : "Pay $50 — Get Their Phone Number"}
             </button>
 
             {status === "error" && (

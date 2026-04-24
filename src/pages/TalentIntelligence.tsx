@@ -68,13 +68,14 @@ export default function TalentIntelligence() {
             Invitation-Only · Metro Detroit
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-white max-w-4xl mx-auto leading-tight">
-            Pre-Market Talent Intelligence
+            Get the candidate's phone number
             <br />
-            <span className="text-[#00d4ff]">For Specialized Recruiters</span>
+            <span className="text-[#00d4ff]">48 hours before Indeed does.</span>
           </h1>
           <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto mt-6">
-            Our proprietary talent signal engine identifies candidates 48 hours before they reach open job boards.
-            Built for industrial and healthcare staffing agencies who win on speed.
+            We surface licensed industrial and healthcare candidates the moment their license posts,
+            their LinkedIn flips to #OpenToWork, or their employer files a WARN notice.
+            You call them first. That's the whole pitch.
           </p>
         </section>
 
@@ -83,9 +84,9 @@ export default function TalentIntelligence() {
           <div className="grid md:grid-cols-3 gap-6">
             {/* Proof Drop */}
             <div className="bg-[#0f1f35] border border-white/10 rounded-2xl p-8">
-              <div className="text-[#94a3b8] text-xs uppercase tracking-wider font-semibold mb-3">Tier 1 · Proof of Concept</div>
+              <div className="text-[#94a3b8] text-xs uppercase tracking-wider font-semibold mb-3">Free · 1 candidate, on us</div>
               <div className="text-white text-3xl font-bold mb-1">FREE</div>
-              <div className="text-slate-500 text-sm mb-6">One pre-vetted candidate</div>
+              <div className="text-slate-500 text-sm mb-6">One pre-vetted candidate. No card.</div>
               <ul className="space-y-3 text-slate-300 text-sm mb-8">
                 <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-[#00d4ff] mt-0.5 flex-shrink-0" />One free candidate matched to your active roles</li>
                 <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-[#00d4ff] mt-0.5 flex-shrink-0" />Keep the full placement fee — zero owed to us</li>
@@ -97,12 +98,12 @@ export default function TalentIntelligence() {
             {/* Performance */}
             <div className="bg-[#0f1f35] border-2 border-[#00d4ff] rounded-2xl p-8 relative shadow-[0_0_40px_rgba(0,212,255,0.15)]">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#00d4ff] text-[#0a1628] text-xs font-bold px-3 py-1 rounded-full">RECOMMENDED START</div>
-              <div className="text-[#00d4ff] text-xs uppercase tracking-wider font-semibold mb-3">Tier 2 · Performance Feed</div>
+              <div className="text-[#00d4ff] text-xs uppercase tracking-wider font-semibold mb-3">Pay-per-interview</div>
               <div className="text-white text-3xl font-bold mb-1">$250</div>
-              <div className="text-slate-500 text-sm mb-6">Per booked interview · Zero monthly</div>
+              <div className="text-slate-500 text-sm mb-6">Per interview that actually happens · Zero monthly</div>
               <ul className="space-y-3 text-slate-300 text-sm mb-8">
                 <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-[#00d4ff] mt-0.5 flex-shrink-0" />Daily candidate feed in your portal</li>
-                <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-[#00d4ff] mt-0.5 flex-shrink-0" />Charged ONLY when interview gets booked</li>
+                <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-[#00d4ff] mt-0.5 flex-shrink-0" />$250 only when the candidate shows up. Ghosts and reschedules are free.</li>
                 <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-[#00d4ff] mt-0.5 flex-shrink-0" />One-click Fast-Track Interview button</li>
                 <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-[#00d4ff] mt-0.5 flex-shrink-0" />Cancel anytime — pure performance</li>
               </ul>
@@ -111,7 +112,7 @@ export default function TalentIntelligence() {
 
             {/* Territory Lock */}
             <div className="bg-[#0f1f35] border border-white/10 rounded-2xl p-8">
-              <div className="text-[#94a3b8] text-xs uppercase tracking-wider font-semibold mb-3">Tier 3 · Territory Lock</div>
+              <div className="text-[#94a3b8] text-xs uppercase tracking-wider font-semibold mb-3">Lock your territory</div>
               <div className="text-white text-3xl font-bold mb-1">$25K<span className="text-base text-slate-500">/yr</span></div>
               <div className="text-slate-500 text-sm mb-6">Annual prepay · Save $17K vs monthly</div>
               <ul className="space-y-3 text-slate-300 text-sm mb-8">

@@ -30,10 +30,11 @@ interface Props {
   compact?: boolean;
 }
 
+// Tier labels — no pricing shown to contractor (they already see the price on the page).
 const tierConfig = {
   standard: { label: "Standard", icon: Star, classes: "border-slate-500/40 text-slate-300 bg-slate-500/10" },
-  premium: { label: "Premium · $75", icon: Star, classes: "border-amber-500/40 text-amber-300 bg-amber-500/10" },
-  vip: { label: "VIP · Mobile Direct", icon: Crown, classes: "border-fuchsia-500/40 text-fuchsia-300 bg-fuchsia-500/10" },
+  premium: { label: "Premium lead", icon: Star, classes: "border-amber-500/40 text-amber-300 bg-amber-500/10" },
+  vip: { label: "VIP — direct cell", icon: Crown, classes: "border-fuchsia-500/40 text-fuchsia-300 bg-fuchsia-500/10" },
 } as const;
 
 const Pill = ({ children, classes }: { children: React.ReactNode; classes: string }) => (
@@ -66,88 +67,73 @@ export const LeadQualityBadges = ({ data, compact = false }: Props) => {
   if (data.lead_type === "commercial") {
     badges.push(
       <Pill key="commercial" classes="border-cyan-500/40 text-cyan-300 bg-cyan-500/10">
-        <Building2 className="h-3 w-3" /> Commercial · $150
+        <Building2 className="h-3 w-3" /> Commercial job
       </Pill>
     );
   }
 
-  // Composite quality score
-  if (typeof data.quality_score === "number" && data.quality_score > 0) {
+  // Composite quality score — plain language, hide weak scores
+  if (typeof data.quality_score === "number" && data.quality_score >= 5) {
     const score = data.quality_score;
-    const cls =
-      score >= 8
-        ? "border-emerald-500/40 text-emerald-300 bg-emerald-500/10"
-        : score >= 5
-        ? "border-amber-500/40 text-amber-300 bg-amber-500/10"
-        : "border-slate-500/40 text-slate-400 bg-slate-500/10";
+    const isStrong = score >= 8;
+    const cls = isStrong
+      ? "border-emerald-500/40 text-emerald-300 bg-emerald-500/10"
+      : "border-amber-500/40 text-amber-300 bg-amber-500/10";
     badges.push(
       <Pill key="score" classes={cls}>
-        Quality {score}/10
+        {isStrong ? "Strong lead" : "Good lead"}
       </Pill>
     );
   }
 
-  // Phone carrier
+  // Phone carrier — plain English
   if (data.phone_carrier_type) {
     if (data.phone_carrier_type === "mobile") {
       badges.push(
         <Pill key="carrier" classes="border-emerald-500/40 text-emerald-300 bg-emerald-500/10">
-          <Phone className="h-3 w-3" /> Mobile
+          <Phone className="h-3 w-3" /> Cell phone ✓
         </Pill>
       );
     } else if (data.phone_carrier_type === "voip") {
       badges.push(
         <Pill key="carrier" classes="border-orange-500/40 text-orange-300 bg-orange-500/10">
-          <AlertTriangle className="h-3 w-3" /> VoIP — verify
+          <AlertTriangle className="h-3 w-3" /> Internet phone — may not text back
         </Pill>
       );
     } else {
       badges.push(
         <Pill key="carrier" classes="border-slate-500/40 text-slate-300 bg-slate-500/10">
-          <Phone className="h-3 w-3" /> Landline
+          <Phone className="h-3 w-3" /> Home phone
         </Pill>
       );
     }
   }
 
-  // Identity verified (PDL match)
+  // Identity verified (PDL match) — only show positive confirmation; "unconfirmed" creates doubt
   if (data.identity_verified === true) {
     badges.push(
       <Pill key="identity" classes="border-emerald-500/40 text-emerald-300 bg-emerald-500/10">
-        <Shield className="h-3 w-3" /> ID Verified
-      </Pill>
-    );
-  } else if (data.identity_verified === false) {
-    badges.push(
-      <Pill key="identity" classes="border-orange-500/40 text-orange-300 bg-orange-500/10">
-        <Shield className="h-3 w-3" /> ID Unconfirmed
+        <Shield className="h-3 w-3" /> Real person ✓
       </Pill>
     );
   }
 
-  // Email status
+  // Email status — plain English
   if (data.email_deliverable === true) {
     badges.push(
       <Pill key="email" classes="border-emerald-500/40 text-emerald-300 bg-emerald-500/10">
-        <Mail className="h-3 w-3" /> Email Verified
+        <Mail className="h-3 w-3" /> Email works ✓
       </Pill>
     );
   } else if (data.email_deliverable === false) {
     badges.push(
       <Pill key="email" classes="border-rose-500/40 text-rose-300 bg-rose-500/10">
-        <Mail className="h-3 w-3" /> Email Bad — call only
+        <Mail className="h-3 w-3" /> Email bounced — call them
       </Pill>
     );
   }
 
-  // Email breach (HIBP) — only flag if elevated risk
-  if (typeof data.email_breach_count === "number" && data.email_breach_count >= 3) {
-    badges.push(
-      <Pill key="breach" classes="border-amber-500/40 text-amber-300 bg-amber-500/10">
-        ⚠️ {data.email_breach_count} breach exposures
-      </Pill>
-    );
-  }
+  // Breach exposures intentionally hidden from contractor view — irrelevant to job decision.
 
   if (badges.length === 0 && !data.estimated_home_value && !data.ownership_years) {
     return null;
@@ -166,7 +152,7 @@ export const LeadQualityBadges = ({ data, compact = false }: Props) => {
         <div className="bg-slate-900/60 border border-slate-700 rounded-lg p-3 flex items-start gap-2.5">
           <Home className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
           <div className="text-xs text-slate-300 leading-relaxed">
-            <div className="font-bold text-slate-100 mb-0.5">Property Intelligence</div>
+            <div className="font-bold text-slate-100 mb-0.5">About the home</div>
             {data.estimated_home_value && (
               <span>
                 Est. value <strong className="text-cyan-300">${data.estimated_home_value.toLocaleString()}</strong>
