@@ -1,6 +1,7 @@
 import { useState } from "react";
 import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
+import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
 
 const TRADES = ["HVAC", "Plumbing", "Roofing", "Electrical", "General Contractor", "Landscaping", "Painting", "Other"];
 
@@ -33,6 +34,9 @@ export default function DeadLeadIntake() {
     return (
       <Page>
         <Card>
+          <div style={{ marginBottom: 16 }}>
+            <ReceiptStatusBanner sessionId={urlParams.get("session_id")} productLabel="Dead Lead Billing" />
+          </div>
           <div style={{ textAlign: "center", padding: "40px 0" }}>
             <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
             <h2 style={{ color: "#fff", fontSize: 24, fontWeight: 700, margin: "0 0 12px" }}>

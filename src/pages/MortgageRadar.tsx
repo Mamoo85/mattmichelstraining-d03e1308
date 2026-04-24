@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import SEOHead from "@/components/layout/SEOHead";
 import { Home, Target, Shield, FileText, TrendingUp, Bell, CheckCircle, ArrowRight, MapPin, Lock } from "lucide-react";
+import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
 
 type Tier = "solo" | "team";
 
@@ -100,6 +101,9 @@ export default function MortgageRadar() {
     return (
       <div className="min-h-screen bg-[#030711] text-white flex items-center justify-center px-4">
         <div className="max-w-lg w-full text-center">
+          <div className="mb-6">
+            <ReceiptStatusBanner sessionId={searchParams.get("session_id")} productLabel="Mortgage Radar" />
+          </div>
           <div className="text-6xl mb-6">🏠</div>
           <h1 className="text-3xl font-extrabold text-white mb-3">Mortgage Radar is Live</h1>
           <p className="text-[#00d4ff] text-lg font-bold mb-5">{tierLabel} · 7-day free trial started</p>
