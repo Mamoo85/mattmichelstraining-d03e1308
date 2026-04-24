@@ -490,13 +490,26 @@ export default function MyTechAlert() {
   }
 
   if (error || !data) {
+    const isMissingToken = !token;
     return (
       <div className="min-h-screen bg-[#0a1628] flex items-center justify-center p-4">
         <Card className="max-w-md border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e]">
           <CardContent className="pt-6 text-center">
             <Shield className="h-12 w-12 text-red-400 mx-auto mb-4" />
-            <h2 className="text-white text-lg font-bold mb-2">Access Denied</h2>
-            <p className="text-slate-400 text-sm">{error || "Invalid or expired token."}</p>
+            <h2 className="text-white text-lg font-bold mb-2">
+              {isMissingToken ? "Dashboard Link Required" : "Access Denied"}
+            </h2>
+            <p className="text-slate-400 text-sm mb-6">
+              {error || "Invalid or expired token. Check your latest email for a fresh dashboard link."}
+            </p>
+            <a
+              href="sms:+13139921219"
+              className="inline-block bg-[#00d4ff] text-black font-bold text-sm px-6 py-3 rounded-md hover:bg-[#00d4ff]/90 transition"
+              style={{ minHeight: 44, lineHeight: "1.25rem", touchAction: "manipulation" }}
+            >
+              Text Matt for a fresh link →
+            </a>
+            <p className="text-slate-500 text-xs mt-4">(313) 992-1219</p>
           </CardContent>
         </Card>
       </div>
