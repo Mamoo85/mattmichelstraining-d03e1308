@@ -1663,6 +1663,36 @@ export type Database = {
         }
         Relationships: []
       }
+      buyer_session_tokens: {
+        Row: {
+          buyer_email: string
+          created_at: string
+          expires_at: string
+          ip_hash: string | null
+          last_used_at: string | null
+          token: string
+          user_agent: string | null
+        }
+        Insert: {
+          buyer_email: string
+          created_at?: string
+          expires_at?: string
+          ip_hash?: string | null
+          last_used_at?: string | null
+          token?: string
+          user_agent?: string | null
+        }
+        Update: {
+          buyer_email?: string
+          created_at?: string
+          expires_at?: string
+          ip_hash?: string | null
+          last_used_at?: string | null
+          token?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       call_outreach_log: {
         Row: {
           call_date: string
@@ -18335,6 +18365,15 @@ export type Database = {
       check_user_visibility: {
         Args: { _field: string; _target_user_id: string }
         Returns: boolean
+      }
+      claim_lead_soft_lock: {
+        Args: {
+          _buyer_email: string
+          _lead_id: string
+          _product: string
+          _ttl_minutes?: number
+        }
+        Returns: string
       }
       compute_freshness_score: {
         Args: { p_created_at: string; p_half_life_days?: number }
