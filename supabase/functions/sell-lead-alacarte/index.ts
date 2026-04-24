@@ -23,6 +23,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
+const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -203,12 +204,12 @@ Deno.serve(async (req) => {
 
     for (const c of candidates) {
       if (channels.includes("sms") && c.phone) {
-        const r = await sendSMS(c.phone, smsBody, { product: "alacarte_lead", purpose: "alacarte_lead_offer" });
-        if (r?.ok) {
+        const r: any = await sendSMS(c.phone, TWILIO_FROM, smsBody, "alacarte_lead", false);
+        if (r?.success) {
           sent.sms++;
           channelLog.push({ prospect_id: c.id, channel: "sms", recipient: c.phone, sent_at: new Date().toISOString() });
         } else {
-          channelLog.push({ prospect_id: c.id, channel: "sms", recipient: c.phone, sent_at: null, error: r?.reason ?? "sms_failed" });
+          channelLog.push({ prospect_id: c.id, channel: "sms", recipient: c.phone, sent_at: null, error: r?.error ?? "sms_failed" });
         }
       }
       if (channels.includes("email") && c.email && isEmail(c.email)) {
