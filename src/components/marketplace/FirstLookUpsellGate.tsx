@@ -31,15 +31,20 @@ export function FirstLookUpsellGate({ product, leads }: Props) {
     const dismissUntil = Number(localStorage.getItem(DISMISS_KEY) || "0");
     if (dismissUntil > Date.now()) return;
 
-    // Increment view count for this session
+    // Increment page-visit count for this session (was firing on mount, felt aggressive)
     const views = Number(sessionStorage.getItem(VIEWS_KEY) || "0") + 1;
     sessionStorage.setItem(VIEWS_KEY, String(views));
 
-    if (views === 3) {
-      // Trigger on 3rd lead view
-      setTimeout(() => setOpen(true), 800);
+    // Only fire after buyer has browsed at least 4 marketplace pages this session
+    // AND wait long enough that it doesn't feel like an instant pop-up trap
+    if (views >= 4) {
+      const t = setTimeout(() => setOpen(true), 2500);
+      return () => clearTimeout(t);
     }
   }, [product]);
+
+  // Honest copy — show actual session view count instead of hardcoded "3"
+  const sessionViews = Number(sessionStorage.getItem(VIEWS_KEY) || "0");
 
   const sample = leads
     .filter((l) => l.signal_strength_tier === "hot")
@@ -113,7 +118,7 @@ export function FirstLookUpsellGate({ product, leads }: Props) {
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Clock className="w-3.5 h-3.5" />
-          You've viewed 3 leads this session — most hot leads sell within 2 hours.
+          You've browsed {sessionViews} marketplace {sessionViews === 1 ? "page" : "pages"} this session — most hot leads sell within 2 hours.
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 pt-2">
