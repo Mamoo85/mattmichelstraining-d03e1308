@@ -1,10 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getStripeSecretKey, isStripeTestMode } from "../_shared/stripe-key.ts";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
+const stripe = new Stripe(getStripeSecretKey(), { apiVersion: "2025-08-27.basil" });
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+if (isStripeTestMode()) console.warn("[create-contractor-ppl-checkout] 🧪 TEST MODE");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
