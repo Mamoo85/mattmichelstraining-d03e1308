@@ -274,26 +274,74 @@ serve(async (req) => {
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    // ─── IDEMPOTENCY GUARD ────────────────────────────────────────────────
-    // Stripe retries webhooks on 5xx or timeout. Without dedupe, every retry
-    // would re-run provisioning, double-SMS the customer, and double-charge.
-    // INSERT with PRIMARY KEY conflict acts as an atomic "claim" on event.id.
+    // ─── IDEMPOTENCY GUARD (PARTIAL-1 + PARTIAL-3 fix) ────────────────────
+    // Stripe retries webhooks on 5xx or timeout. The row is inserted with
+    // fulfillment_status='pending' on first entry. Branches that succeed
+    // call markFulfilled(true). The global catch calls markFulfilled(false).
+    // On retry: if the row exists but is still 'pending' AND >60s old (i.e.,
+    // the previous run failed mid-flight), we ALLOW re-entry. If it's
+    // 'completed', we skip. If 'pending' but recent (<60s), assume another
+    // worker is still running and skip too.
     const { error: dedupeError } = await sb
       .from("processed_stripe_events")
-      .insert({ event_id: event.id, event_type: event.type });
+      .insert({ event_id: event.id, event_type: event.type, fulfillment_status: "pending" });
 
     if (dedupeError) {
-      // Duplicate key (23505) = already processed → ack 200 so Stripe stops retrying
       if ((dedupeError as any).code === "23505") {
-        console.log(`[WEBHOOK] Duplicate event ${event.id} (${event.type}) — skipping`);
-        return new Response(JSON.stringify({ received: true, duplicate: true }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
+        // Row already exists — check its fulfillment_status
+        const { data: existing } = await sb
+          .from("processed_stripe_events")
+          .select("fulfillment_status, processed_at")
+          .eq("event_id", event.id)
+          .maybeSingle();
+        const status = existing?.fulfillment_status ?? "completed";
+        const ageMs = existing?.processed_at
+          ? Date.now() - new Date(existing.processed_at).getTime()
+          : Infinity;
+
+        if (status === "completed") {
+          console.log(`[WEBHOOK] Duplicate event ${event.id} (${event.type}) — already completed, skipping`);
+          return new Response(JSON.stringify({ received: true, duplicate: true }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        if (status === "pending" && ageMs < 60_000) {
+          console.log(`[WEBHOOK] Event ${event.id} still in-flight (${Math.round(ageMs / 1000)}s) — skipping retry`);
+          return new Response(JSON.stringify({ received: true, in_flight: true }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        // status === 'failed' OR ('pending' AND >60s old) → allow re-entry to recover
+        console.log(`[WEBHOOK] Re-entering event ${event.id} (status=${status}, age=${Math.round(ageMs / 1000)}s) for recovery`);
+        await sb
+          .from("processed_stripe_events")
+          .update({ fulfillment_status: "pending", fulfillment_error: null, processed_at: new Date().toISOString() })
+          .eq("event_id", event.id);
+      } else {
+        console.error(`[WEBHOOK] Idempotency insert failed:`, dedupeError);
+        return new Response("Idempotency check failed", { status: 500 });
       }
-      // Real DB error — let Stripe retry
-      console.error(`[WEBHOOK] Idempotency insert failed:`, dedupeError);
-      return new Response("Idempotency check failed", { status: 500 });
+    }
+
+    // Helper: mark the current Stripe event as completed/failed.
+    // Called by the success path at the end + by the global catch on failure.
+    async function markFulfilled(success: boolean, errMsg?: string) {
+      try {
+        await sb
+          .from("processed_stripe_events")
+          .update({
+            fulfillment_status: success ? "completed" : "failed",
+            fulfillment_completed_at: success ? new Date().toISOString() : null,
+            fulfillment_error: success ? null : (errMsg || "unknown error").slice(0, 500),
+          })
+          .eq("event_id", event.id);
+      } catch (e) {
+        console.error(`[WEBHOOK] markFulfilled(${success}) failed for ${event.id}:`, e);
+      }
     }
     // ─────────────────────────────────────────────────────────────────────
 
