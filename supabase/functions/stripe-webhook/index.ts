@@ -542,7 +542,53 @@ serve(async (req) => {
           customerName: charge.billing_details?.name || null,
         });
       }
+
+      // Revoke any marketplace dossier purchased with this charge / payment_intent
+      try {
+        const piId = typeof charge.payment_intent === "string" ? charge.payment_intent : null;
+        const { data: revokeCount } = await (sb.rpc as any)("revoke_marketplace_access_by_stripe", {
+          p_payment_intent_id: piId,
+          p_charge_id: charge.id,
+          p_reason: "charge.refunded",
+        });
+        if (revokeCount && Number(revokeCount) > 0) {
+          console.log(`[WEBHOOK] Revoked ${revokeCount} marketplace lock(s) due to refund ${charge.id}`);
+          await notifyMatt(
+            `🚫 Marketplace dossier revoked — refund ${charge.id}`,
+            `<p>${revokeCount} lock(s) revoked after Stripe refund. Buyer email: ${charge.billing_details?.email || "?"}</p>`
+          ).catch(() => {});
+        }
+      } catch (e) {
+        console.error("[WEBHOOK] revoke on refund failed:", e);
+      }
+
       console.log(`[WEBHOOK] Charge refunded: ${charge.id} — $${(refundedAmount / 100).toFixed(2)}`);
+    }
+
+    // Handle disputes (chargebacks) — relock dossier and notify
+    if (event.type === "charge.dispute.created" || event.type === "charge.dispute.funds_withdrawn") {
+      const dispute = event.data.object as Stripe.Dispute;
+      const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id || null;
+      try {
+        let piId: string | null = null;
+        if (chargeId) {
+          const ch = await stripe.charges.retrieve(chargeId);
+          piId = typeof ch.payment_intent === "string" ? ch.payment_intent : null;
+        }
+        const { data: revokeCount } = await (sb.rpc as any)("revoke_marketplace_access_by_stripe", {
+          p_payment_intent_id: piId,
+          p_charge_id: chargeId,
+          p_reason: `dispute.${dispute.reason || "chargeback"}`,
+        });
+        if (revokeCount && Number(revokeCount) > 0) {
+          await notifyMatt(
+            `⚠️ Chargeback — marketplace lock revoked (${dispute.id})`,
+            `<p>${revokeCount} marketplace lock(s) revoked after dispute ${dispute.id} (reason: ${dispute.reason}).</p>`
+          ).catch(() => {});
+        }
+      } catch (e) {
+        console.error("[WEBHOOK] dispute revoke failed:", e);
+      }
     }
 
     // Belt-and-suspenders: sync agency interview charges that succeed asynchronously
