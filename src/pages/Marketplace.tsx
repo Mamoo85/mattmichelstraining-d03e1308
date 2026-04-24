@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Flame, Sun, Snowflake, Loader2, Search, ScrollText, Layers, Keyboard, PackageOpen, Bell, AlertTriangle } from "lucide-react";
 import { BuyerEmailDialog } from "@/components/marketplace/BuyerEmailDialog";
+import { LiveActivityTicker } from "@/components/marketplace/LiveActivityTicker";
+import { HowItWorksSheet } from "@/components/marketplace/HowItWorksSheet";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useSwipeable } from "react-swipeable";
@@ -130,6 +132,7 @@ export default function Marketplace() {
   const [loadError, setLoadError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [restockOpen, setRestockOpen] = useState(false);
+  const [viewersMap, setViewersMap] = useState<Record<string, number>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -164,6 +167,21 @@ export default function Marketplace() {
         setSoldIds([]);
       }
       setFocusIdx(0);
+
+      // ONE bulk track-views call instead of N per-card calls
+      const leadIds = leadsRes.status === "fulfilled" && !leadsRes.value.error
+        ? ((leadsRes.value.data || []) as Array<{ id: string }>).map((l) => l.id)
+        : [];
+      if (leadIds.length > 0) {
+        const visitorHash = localStorage.getItem("mp_visitor") || crypto.randomUUID();
+        localStorage.setItem("mp_visitor", visitorHash);
+        supabase.functions.invoke("marketplace-track-views-bulk", {
+          body: { lead_ids: leadIds, product, visitor_hash: visitorHash },
+        }).then((res: any) => {
+          if (cancelled) return;
+          if (res?.data?.viewers) setViewersMap(res.data.viewers);
+        }).catch(() => {});
+      }
     }).finally(() => {
       if (!cancelled) setLoading(false);
     });
@@ -357,6 +375,7 @@ export default function Marketplace() {
               </div>
               <h1 className="text-3xl md:text-4xl font-bold mb-2">{productMeta.label}</h1>
               <p className="text-muted-foreground max-w-2xl">{productMeta.tagline}</p>
+              <LiveActivityTicker product={product} totalLeads={leads.length} hotCount={tierCounts.hot} />
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -545,7 +564,7 @@ export default function Marketplace() {
                     {soldIds.includes(lead.id) ? (
                       <SoldDossierCard lead={lead} />
                     ) : (
-                      <LockedDossierCard lead={lead} onClaim={handleClaim} />
+                      <LockedDossierCard lead={lead} onClaim={handleClaim} viewersNow={viewersMap[lead.id] || 0} />
                     )}
                   </SwipeRow>
                 </div>
@@ -569,6 +588,7 @@ export default function Marketplace() {
       />
 
       <FirstLookUpsellGate product={product} leads={leads as any} />
+      <HowItWorksSheet productLabel={productMeta.label} />
 
       <BuyerEmailDialog
         open={restockOpen}

@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
-import { Lock, Eye } from "lucide-react";
+import { Lock, Eye, MapPin } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { BuyerChip, FreshnessBadge, TierBadge, ScoreBars, EquityPanel, MetricsRow, TcpaBadge, type MarketplaceLead } from "./GoldenTicketCard";
 import { SourceIconRow } from "./SourceIconRow";
 import { cn } from "@/lib/utils";
@@ -12,22 +10,11 @@ interface Props {
   priceCents?: number;
   onClaim?: (lead: MarketplaceLead) => void;
   className?: string;
+  viewersNow?: number;
 }
 
-export function LockedDossierCard({ lead, priceCents = 4900, onClaim, className }: Props) {
-  const [viewers, setViewers] = useState<number>(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    const visitorHash = localStorage.getItem("mp_visitor") || crypto.randomUUID();
-    localStorage.setItem("mp_visitor", visitorHash);
-    supabase.functions.invoke("marketplace-track-view", {
-      body: { lead_id: lead.id, product: lead.product, visitor_hash: visitorHash },
-    }).then((res) => {
-      if (!cancelled && res.data?.viewers_now) setViewers(res.data.viewers_now);
-    }).catch(() => {});
-    return () => { cancelled = true; };
-  }, [lead.id, lead.product]);
+export function LockedDossierCard({ lead, priceCents = 4900, onClaim, className, viewersNow = 0 }: Props) {
+  const viewers = viewersNow;
 
   const price = (priceCents / 100).toFixed(0);
   const locationLine = [lead.city, lead.state, lead.zip].filter(Boolean).join(", ");
@@ -72,11 +59,20 @@ export function LockedDossierCard({ lead, priceCents = 4900, onClaim, className 
           </p>
         )}
 
-        {/* Location (intel-redacted) */}
-        <div className="flex items-center gap-2 text-xs font-mono flex-wrap">
-          <Lock className="w-3 h-3 text-seal-gold flex-shrink-0" />
-          <span className="text-muted-foreground">REDACTED ST,</span>
-          <span className="text-foreground truncate">{locationLine || "Metro Detroit"}</span>
+        {/* Location (intel-redacted, not a placeholder) */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-xs font-mono">
+            <Lock className="w-3 h-3 text-seal-gold flex-shrink-0" />
+            <span className="text-seal-gold uppercase tracking-wider">Address redacted</span>
+            <span className="text-muted-foreground">·</span>
+            <MapPin className="w-3 h-3 text-muted-foreground" />
+            <span className="text-foreground truncate">{locationLine || "Metro Detroit"}</span>
+          </div>
+          {(lead.nearby_signal_count ?? 0) > 0 && (
+            <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground pl-5">
+              {lead.nearby_signal_count} active signal{lead.nearby_signal_count === 1 ? "" : "s"} within this ZIP · unlocks at purchase
+            </p>
+          )}
         </div>
 
         <ScoreBars score={lead.score} percentile={lead.score_percentile} history={lead.score_history} />
