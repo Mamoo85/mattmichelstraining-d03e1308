@@ -10,7 +10,8 @@ import { WatchedLeadsRail } from "@/components/marketplace/WatchedLeadsRail";
 import type { MarketplaceLead } from "@/components/marketplace/GoldenTicketCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Flame, Sun, Snowflake, Loader2, Search, ScrollText, Layers, Keyboard } from "lucide-react";
+import { Flame, Sun, Snowflake, Loader2, Search, ScrollText, Layers, Keyboard, PackageOpen, Bell, AlertTriangle } from "lucide-react";
+import { BuyerEmailDialog } from "@/components/marketplace/BuyerEmailDialog";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useSwipeable } from "react-swipeable";
@@ -27,6 +28,39 @@ const PRODUCTS = [
 type ProductKey = typeof PRODUCTS[number]["key"];
 type SortKey = "score" | "freshness" | "tier";
 type TierFilter = "all" | "hot" | "warm" | "cool";
+
+function ProductChipRow({ product, onSelect }: { product: ProductKey; onSelect: (k: ProductKey) => void }) {
+  const activeRef = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  }, [product]);
+  return (
+    <div className="relative mt-6 -mx-4 px-4">
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory">
+        {PRODUCTS.map((p) => {
+          const active = p.key === product;
+          return (
+            <button
+              key={p.key}
+              ref={active ? activeRef : undefined}
+              aria-current={active ? "page" : undefined}
+              onClick={() => onSelect(p.key)}
+              className={`shrink-0 snap-center px-3 py-1.5 text-xs font-mono uppercase tracking-wider rounded border transition-colors ${
+                active
+                  ? "bg-intel-teal/15 border-intel-teal/50 text-intel-teal"
+                  : "bg-card border-border/40 text-muted-foreground hover:border-border hover:text-foreground"
+              }`}
+            >
+              {p.label}
+            </button>
+          );
+        })}
+      </div>
+      <div className="pointer-events-none absolute left-0 top-0 bottom-1 w-6 bg-gradient-to-r from-background to-transparent md:hidden" />
+      <div className="pointer-events-none absolute right-0 top-0 bottom-1 w-6 bg-gradient-to-l from-background to-transparent md:hidden" />
+    </div>
+  );
+}
 
 function SwipeRow({
   lead,
@@ -93,10 +127,15 @@ export default function Marketplace() {
     }
   }, [product]);
 
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [restockOpen, setRestockOpen] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    Promise.all([
+    setLoadError(false);
+    Promise.allSettled([
       supabase
         .from("unified_lead_marketplace_view" as any)
         .select("*")
@@ -108,19 +147,28 @@ export default function Marketplace() {
         .select("lead_id")
         .eq("product", product)
         .eq("status", "sold"),
-    ]).then(([leadsRes, locksRes]: any[]) => {
+    ]).then((results: any[]) => {
       if (cancelled) return;
-      if (leadsRes.error) {
-        toast.error("Could not load leads");
-        console.error(leadsRes.error);
+      const [leadsRes, locksRes] = results;
+      if (leadsRes.status === "fulfilled" && !leadsRes.value.error) {
+        setLeads((leadsRes.value.data || []) as unknown as MarketplaceLead[]);
+      } else {
+        console.error("leads load failed", leadsRes);
+        setLeads([]);
+        setLoadError(true);
       }
-      setLeads((leadsRes.data || []) as unknown as MarketplaceLead[]);
-      setSoldIds(((locksRes.data || []) as Array<{ lead_id: string }>).map((r) => r.lead_id));
-      setLoading(false);
+      if (locksRes.status === "fulfilled" && !locksRes.value.error) {
+        setSoldIds(((locksRes.value.data || []) as Array<{ lead_id: string }>).map((r) => r.lead_id));
+      } else {
+        console.warn("locks load failed (non-blocking)", locksRes);
+        setSoldIds([]);
+      }
       setFocusIdx(0);
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [product]);
+  }, [product, reloadKey]);
 
   const filtered = useMemo(() => {
     let arr = leads.filter((l) => !dismissed.includes(l.id));
@@ -327,26 +375,8 @@ export default function Marketplace() {
             </div>
           </div>
 
-          {/* Product switcher — horizontally scrollable on mobile with edge fade */}
-          <div className="relative mt-6 -mx-4 px-4">
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory">
-              {PRODUCTS.map((p) => (
-                <button
-                  key={p.key}
-                  onClick={() => setParams({ product: p.key })}
-                  className={`shrink-0 snap-start px-3 py-1.5 text-xs font-mono uppercase tracking-wider rounded border transition-colors ${
-                    p.key === product
-                      ? "bg-intel-teal/15 border-intel-teal/50 text-intel-teal"
-                      : "bg-card border-border/40 text-muted-foreground hover:border-border hover:text-foreground"
-                  }`}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-            {/* Right-edge fade hint */}
-            <div className="pointer-events-none absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-background to-transparent md:hidden" />
-          </div>
+          {/* Product switcher — horizontally scrollable on mobile with edge fades */}
+          <ProductChipRow product={product} onSelect={(k) => setParams({ product: k })} />
 
           {/* Trust strip */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-4 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
@@ -436,6 +466,28 @@ export default function Marketplace() {
           <div className="flex items-center justify-center py-20 text-muted-foreground">
             <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading leads…
           </div>
+        ) : loadError ? (
+          <div className="text-center py-20">
+            <AlertTriangle className="w-8 h-8 mx-auto mb-3 text-destructive" />
+            <p className="text-muted-foreground mb-4">Couldn't load this marketplace. Network or server hiccup.</p>
+            <Button variant="outline" onClick={() => setReloadKey((k) => k + 1)}>Retry</Button>
+          </div>
+        ) : leads.length === 0 ? (
+          <div className="text-center py-20 max-w-md mx-auto">
+            <PackageOpen className="w-10 h-10 mx-auto mb-3 text-intel-teal/70" />
+            <h2 className="text-xl font-bold mb-2">Restocking {productMeta.label.toLowerCase()}</h2>
+            <p className="text-muted-foreground text-sm mb-5">
+              Fresh leads are being scored right now. New batches drop every 15 min for First Look subscribers, every 60 min for everyone else.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              <Button onClick={() => setRestockOpen(true)} className="bg-intel-teal text-background hover:bg-intel-teal/90">
+                <Bell className="w-4 h-4 mr-1" /> Notify me when stocked
+              </Button>
+              <Button variant="outline" onClick={() => setParams({ product: "mortgage" })}>
+                Browse other verticals
+              </Button>
+            </div>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-muted-foreground mb-4">No leads match your filters.</p>
@@ -517,6 +569,27 @@ export default function Marketplace() {
       />
 
       <FirstLookUpsellGate product={product} leads={leads as any} />
+
+      <BuyerEmailDialog
+        open={restockOpen}
+        onOpenChange={setRestockOpen}
+        defaultEmail={buyerEmail}
+        title={`Notify me when ${productMeta.label.toLowerCase()} are restocked`}
+        description="We'll email you the moment new leads land in this vertical."
+        onConfirm={async (email) => {
+          localStorage.setItem("mp_buyer_email", email);
+          setBuyerEmail(email);
+          try {
+            await supabase.functions.invoke("marketplace-watch-add", {
+              body: { buyer_email: email, product, action: "restock_notify" },
+            });
+            toast.success("You're on the restock list.");
+          } catch (e) {
+            console.error(e);
+            toast.error("Couldn't save — try again.");
+          }
+        }}
+      />
     </div>
   );
 }
