@@ -182,7 +182,8 @@ export default function AdminDeadLeads() {
     setProspecting(true);
     setLastProspectResult(null);
     try {
-      const body: Record<string, string> = {};
+      // Force dead-lead pitch from THIS tab regardless of daily rotation
+      const body: Record<string, string> = { pitch_override: "dead_lead" };
       if (prospectTrade) body.target_trade = prospectTrade;
       if (prospectCity) body.target_city = prospectCity;
 
