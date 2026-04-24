@@ -123,6 +123,44 @@ export default function OutreachCommandCenter() {
 }
 
 // ============================================================
+// Provider Health chip row — shows credits + 429 status per email enrichment provider
+// ============================================================
+function ProviderHealthRow() {
+  const { data } = useQuery({
+    queryKey: ["enrichment-provider-health"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("enrichment_provider_health")
+        .select("provider, credits_remaining, last_429_at, daily_calls, daily_hits");
+      return data ?? [];
+    },
+    refetchInterval: 30_000,
+  });
+  if (!data || data.length === 0) return null;
+  const order = ["snov", "apollo", "pattern_verify", "hunter", "pdl", "site_scrape"];
+  const sorted = [...data].sort((a, b) => order.indexOf(a.provider) - order.indexOf(b.provider));
+  return (
+    <div className="flex flex-wrap gap-1.5 pt-1">
+      {sorted.map((p: any) => {
+        const recently429 = p.last_429_at && (Date.now() - new Date(p.last_429_at).getTime() < 60 * 60 * 1000);
+        const dead = typeof p.credits_remaining === "number" && p.credits_remaining <= 0;
+        const dot = dead ? "🔴" : recently429 ? "🟡" : "🟢";
+        const credits = typeof p.credits_remaining === "number" ? p.credits_remaining.toLocaleString() : "—";
+        return (
+          <span
+            key={p.provider}
+            title={`${p.daily_hits ?? 0}/${p.daily_calls ?? 0} hits today`}
+            className="text-[11px] px-2 py-0.5 rounded bg-black/30 border border-white/10 text-white/70"
+          >
+            {dot} {p.provider.replace("_", " ")} · {credits}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+// ============================================================
 // SUB-TAB 1 — Find Prospects (Targeting Engine)
 // ============================================================
 function FindProspects() {
