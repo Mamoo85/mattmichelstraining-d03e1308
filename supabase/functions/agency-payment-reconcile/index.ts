@@ -175,7 +175,40 @@ serve(async (req) => {
         "reconcile").catch(() => {});
     }
 
-    const summary = `Reconcile complete: ${patched.length} patched, ${orphans.length} orphans, ${(unsentLeads || []).length} unsent dossiers`;
+    // ── 4. PARTIAL-1 fix: re-fire stripe webhook events stuck in 'pending' ──
+    // Any processed_stripe_events row that's been pending for >1h means the
+    // original handler crashed mid-flight. The new idempotency guard now
+    // allows re-entry on >60s pending rows, so we just need to nudge Stripe
+    // to retry by NOT acking and letting Stripe's own retry schedule handle it.
+    // Here we surface the count for visibility + alert Matt if it grows.
+    const reconcileCutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { data: stuckEvents, count: stuckCount } = await sb
+      .from("processed_stripe_events")
+      .select("event_id, event_type, processed_at, fulfillment_error", { count: "exact" })
+      .eq("fulfillment_status", "pending")
+      .lt("processed_at", reconcileCutoff)
+      .limit(20);
+
+    if (stuckCount && stuckCount > 0) {
+      console.warn(`[reconcile] ${stuckCount} stripe events stuck in 'pending' >1h`);
+      await sendSMS(ADMIN_PHONE, TWILIO_PHONE,
+        `⚠️ Reconcile: ${stuckCount} stripe webhook events stuck pending >1h. Sample: ${(stuckEvents || []).slice(0, 2).map((e: any) => e.event_type).join(", ")}`,
+        "reconcile").catch(() => {});
+    }
+    const { data: failedEvents, count: failedCount } = await sb
+      .from("processed_stripe_events")
+      .select("event_id, event_type, fulfillment_error", { count: "exact" })
+      .eq("fulfillment_status", "failed")
+      .gt("processed_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .limit(10);
+    if (failedCount && failedCount > 0) {
+      console.warn(`[reconcile] ${failedCount} stripe events permanently failed in last 24h`);
+      await sendSMS(ADMIN_PHONE, TWILIO_PHONE,
+        `🔴 Reconcile: ${failedCount} stripe events FAILED in last 24h. Sample: ${(failedEvents || []).slice(0, 2).map((e: any) => `${e.event_type}:${(e.fulfillment_error || "").slice(0, 40)}`).join(" | ")}`,
+        "reconcile").catch(() => {});
+    }
+
+    const summary = `Reconcile complete: ${patched.length} patched, ${orphans.length} orphans, ${(unsentLeads || []).length} unsent dossiers, ${stuckCount || 0} stuck pending, ${failedCount || 0} failed`;
     console.log(`[reconcile] ${summary}`);
 
     if ((patched.length || orphans.length) && ADMIN_PHONE) {
@@ -184,7 +217,14 @@ serve(async (req) => {
         "reconcile").catch(() => {});
     }
 
-    return new Response(JSON.stringify({ ok: true, patched, orphans, unsent_dossiers: (unsentLeads || []).length }), {
+    return new Response(JSON.stringify({
+      ok: true,
+      patched,
+      orphans,
+      unsent_dossiers: (unsentLeads || []).length,
+      stuck_pending: stuckCount || 0,
+      failed_events: failedCount || 0,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
