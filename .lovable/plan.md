@@ -1,84 +1,241 @@
-## UI/UX & Onboarding Flawless Audit — Top 5 Products
 
-Scope: the screens a real customer hits from a postcard QR, an SMS link, a Stripe success redirect, or a cold-email CTA. Backend stays untouched (already audited last session).
+# Persona UX/Copy Audit — Exact Changes to Ship
 
-### Surfaces in scope
+I read the surfaces these two actually touch:
+- **Dave**: the FOMO SMS → `ClaimLead.tsx` + `LeadQualityBadges.tsx`, plus the `/contractor-leads` landing
+- **Sarah**: `TalentIntelligence.tsx`, `HireAlert.tsx`, `HireAlertTrial.tsx`
 
-| Product | Entry pages | Why it matters |
-|---|---|---|
-| Contractor Leads (PPL) | ClaimLead.tsx, LeadClaimed.tsx, MyContractorLeads.tsx, ContractorLeads.tsx | SMS to claim to $50 Stripe |
-| TechAlert / HireRadar | HireAlert.tsx, HireAlertTrial.tsx, MyTechAlert.tsx, GoTechAlert.tsx | Postcard QR to trial signup |
-| Apex / Talent Intelligence | TalentIntelligence.tsx, TalentRadarVsStaffing.tsx | Cold email to enterprise consult |
-| Dead Lead Reactivation | DeadLeadIntake.tsx, DeadLeadStats.tsx | Owner uploads CSV to Stripe billing setup |
-| FieldDesk | FieldServiceManagement.tsx, FieldServiceTechApp.tsx, FieldServiceDispatch.tsx | Demo to checkout to tech PIN login |
+Below is what each one would say out loud, then the **exact** copy/structure changes.
 
-### Audit pass (read-only, produces issue list)
+---
 
-For each surface, scan for the 5 killer categories:
+## DAVE THE PLUMBER — sitting in his truck, iPhone, dirty hands
 
-1. **Mobile layout collapse** — fixed `w-[Npx]`, missing `flex-wrap`, unbounded `whitespace-nowrap`, tables without `overflow-x-auto`, modals taller than viewport. Spot-checks already flagged: MyTechAlert.tsx, MyMortgageRadar.tsx, Pricing.tsx, Marketplace.tsx use fixed pixel widths; ClaimLead.tsx uses inline-style hardcoded layouts.
-2. **Dead clicks** — every button calling `supabase.functions.invoke`, `fetch`, or table writes. Verify `disabled={loading}`, spinner/label swap, double-submit guard. ClaimLead.tsx already has `claimLock.current` — use as reference and propagate.
-3. **Link integrity** — every page reading `useSearchParams()` / `useParams()`. Confirm: missing param → friendly error (not blank), invalid UUID → friendly error, expired token → CTA back to working entry. ClaimLead.tsx does this correctly; audit the rest against that bar.
-4. **Onboarding friction** — count clicks/forms before a prospect sees value. Flag any flow forcing account creation before the offer is visible (especially /talent-intelligence and /contractor-leads).
-5. **Silent failures** — every `catch` in a button handler. Must surface a `sonner` toast or visible error. Many handlers currently swallow errors to console.
+### What he sees that breaks trust
 
-### Fix pass (the part that ships code)
+**1. The teaser SMS itself** (`contractor-lead-notify/index.ts` line 335):
+> "🚨 HOT LEAD in Livonia: water heater. EXCLUSIVE — first contractor to claim it gets it. ⚡ Reply CLAIM to buy instantly ($50) or tap: [link]"
 
-Patched in this order so each surface ships independently:
+Dave's reaction: *"Buy a lead? Who is this? I don't know this number."* He's never heard of us. There's no signature.
 
-1. **ClaimLead + LeadClaimed** (highest-value path: SMS to $50)
-   - Convert inline-style layouts to Tailwind responsive classes (currently `padding: "40px 24px"` style — switch to `px-6 py-10 sm:px-8`).
-   - Larger 56px tap target on Claim button, error toast on network failure (currently only sets `status="error"` with small red text).
-   - Add `aria-busy` for accessibility.
+**Fix — replace SMS body with:**
+```
+Detroit Web Agency: New plumbing job in Livonia — water heater.
+Exclusive to the first contractor who grabs it. $50, one-time.
 
-2. **Contractor Leads landing + MyContractorLeads**
-   - Audit all 16 onClick/invoke sites. Add `disabled` + spinner where missing.
-   - Wrap data tables in `overflow-x-auto`; replace fixed widths with `max-w-*` + `w-full`.
-   - Sonner toast on every checkout/claim failure.
+See it: {claimUrl}
 
-3. **TechAlert (HireAlert, MyTechAlert, HireAlertTrial)**
-   - Replace `w-[Npx]` fixed widths in MyTechAlert.tsx with responsive `w-full md:w-[Npx]`.
-   - Verify URL-token parsing (line ~112) handles missing/expired tokens with a friendly screen.
-   - Loading state on every Fast-Track / Contact button.
+Reply STOP to stop. -Matt (313) 992-1219
+```
+Why: signs the message, names the trade, swaps "buy instantly" (sketchy) for "one-time" (clear), and keeps Matt's number visible so he can text a human if confused.
 
-4. **Talent Intelligence**
-   - Move consult CTA above the fold on mobile.
-   - Form shows clear validation + a success state (not just an alert).
-   - Remove any "log in to see pricing" gates — replace with public pricing tiers.
+---
 
-5. **Dead Lead Intake**
-   - CSV upload UX: file-size cap warning, parse-progress state, row-error toast (don't fail silently on malformed rows).
-   - Disabled + spinner on Stripe billing-setup button.
+**2. The Claim Lead page badges** (`LeadQualityBadges.tsx`)
 
-6. **FieldDesk**
-   - Tech PIN login screen mobile-first (where techs actually use it).
-   - Error toast on bad PIN (instead of silent reject).
-   - Stripe checkout button loading state.
+Dave sees badges saying:
+- "Quality 8/10"
+- "VoIP — verify"
+- "ID Verified"
+- "ID Unconfirmed"
+- "Email Bad — call only"
+- "⚠️ 3 breach exposures"
+- "Property Intelligence — Est. value $340,000"
 
-7. **Cross-cutting polish**
-   - Confirm global `<Toaster richColors position="top-center" />` in App.tsx.
-   - Replace any `window.alert()` on customer paths (found 2 in internal pages — verify none on customer routes).
-   - Add a shared `<ButtonBusy />` wrapper so future buttons inherit the pattern.
+Dave's reaction: *"What the hell is VoIP? Why are you showing me this person's data breaches? This feels like spying. I just want to know if they'll answer the phone."*
 
-### Deliverable after fixes
+**Fix — rewrite badge labels:**
+| Current | Replace with |
+|---|---|
+| `Mobile` | `Cell phone ✓` |
+| `VoIP — verify` | `Internet phone — may not text back` |
+| `Landline` | `Home phone` |
+| `ID Verified` | `Real person ✓` |
+| `ID Unconfirmed` | *(remove badge entirely — adds doubt for no reason)* |
+| `Email Verified` | `Email works ✓` |
+| `Email Bad — call only` | `Email bounced — call them` |
+| `⚠️ 3 breach exposures` | *(remove entirely — irrelevant to Dave, looks creepy)* |
+| `Quality 8/10` | `Strong lead` (≥8) / `Good lead` (5–7) / hide if <5 |
+| `Property Intelligence` | `About the home` |
+| `Premium · $75` / `VIP · Mobile Direct` | *(hide tier pricing on claim page — confusing when he's about to pay $50)* |
 
-Short report with: each file touched, the UX failure fixed, and the route to manually test on a phone. Plus a phone-test checklist with exact URLs:
+---
 
-- `/claim-lead?lead_id=test&contractor_id=test&email=test@test.com` (test the missing-param + invalid-UUID screens)
-- `/contractor-leads`
-- `/hire-alert`
-- `/talent-intelligence`
-- `/dead-lead-intake`
-- `/field-service-management`
+**3. ClaimLead "What you get for $50" block** (`ClaimLead.tsx` line 191)
 
-### Out of scope (intentionally)
+Currently reads like a feature list. Dave wants a guarantee.
 
-- Backend logic, RLS, edge functions, Stripe code (already audited).
-- Brand redesigns — only fix what's broken or unprofessional.
-- Admin/internal dashboards.
+**Add a line below the bullets:**
+```
+If the number's disconnected or it's a fake lead, text Matt and we refund it. No forms.
+```
 
-### Answering your closing question
+**Change button label** from generic claim:
+- Current button (line 203) lacks visible text in the snippet — confirm it says **"Pay $50 — Get Their Phone Number"** not "Claim Lead". Dave needs to see exactly what he's buying.
 
-Both QR postcards and SMS links hit URL-parameter pages (ClaimLead.tsx and TechAlert flows). The **SMS contractor flow is the higher risk** — bigger purchase ($50 instant), 3 params must all be present, and a single typo or expired lead means a contractor sees a broken page right when you've trained them to act fast. The audit prioritizes that path first.
+---
 
-Approve and I'll execute steps 1–7, then hand you the phone-test checklist.
+**4. "Lead Already Claimed" screen** (line 140)
+
+> "Another contractor got there first. We'll text you the next one as soon as it drops."
+
+Dave's reaction: *"So I rushed for nothing. Annoying."*
+
+**Fix — add a confidence builder:**
+```
+Beat to it this time. The next plumbing job in Livonia goes to the
+contractor who taps fastest — keep your phone close. Average time
+between leads in your area: 2–4 days.
+```
+
+---
+
+**5. ContractorLeads.tsx WINS list** (line 30) — line 32 is too long for a phone scan:
+
+> "Leads are real homeowners who searched for your service, filled out a form, and asked to be contacted"
+
+**Replace with:**
+> "Real homeowners who asked us to send them a plumber"
+
+Same edit pattern for line 33 → "Name, phone, email in your inbox in minutes."
+
+---
+
+**6. PAIN block** (line 38) — "Word of mouth alone … Feast or famine." Dave doesn't think word of mouth is bad. **Remove that row** — don't insult his existing book.
+
+---
+
+## SARAH THE RECRUITER — at her desk, three monitors, on hold with a candidate
+
+### What she sees that wastes her time
+
+**1. TalentIntelligence hero** (line 70):
+
+> "Pre-Market Talent Intelligence — For Specialized Recruiters. Our proprietary talent signal engine identifies candidates 48 hours before they reach open job boards."
+
+Sarah's reaction: *"'Talent signal engine' = marketing fluff. Tell me what I get."*
+
+**Fix:**
+```
+H1: Get the candidate's phone number 48 hours before Indeed does.
+Sub: We surface licensed industrial and healthcare candidates
+     the moment their license posts, their LinkedIn flips to
+     #OpenToWork, or their employer files a WARN notice. You
+     call them first. That's the whole pitch.
+```
+
+---
+
+**2. Tier 1 "Proof of Concept — FREE"** (line 86)
+
+Sarah's reaction: *"'Proof of Concept' is a vendor word. Just say what it is."*
+
+**Fix:**
+- Tier label: `FREE · 1 candidate, on us` (drop "Tier 1 · Proof of Concept")
+- Tier 2 label: `Pay-per-interview` (drop "Tier 2 · Performance Feed")
+- Tier 3 label: `Lock your territory` (drop "Tier 3 · Territory Lock")
+
+The word "Tier" makes her hunt for which one is for her. The new labels do the sorting work.
+
+---
+
+**3. Tier 2 wording** (line 105):
+
+> "Charged ONLY when interview gets booked"
+
+Sarah's reaction: *"Booked by whom? What if the candidate ghosts? Am I paying $250 for a no-show?"*
+
+**Fix — add clarification line:**
+```
+$250 only when the candidate actually shows up to the interview.
+Ghosts and reschedules are free.
+```
+
+---
+
+**4. ROI Calculator section header** (line 139):
+
+> "Run your own numbers."
+
+Good. Keep. But the `<Input>` form below the fold (`request-form`) likely asks for agency_name, contact_name, contact_email, contact_phone, vertical, counties (6 fields). For a free tier, that's friction.
+
+**Fix — for the FREE tier, collapse to 2 fields only:**
+```
+Email + Roles you're hiring for. That's it.
+We email you the candidate within 48 hours.
+```
+
+Counties + agency name can be captured **after** the candidate is delivered, when she's already invested.
+
+---
+
+**5. HireAlertTrial.tsx form labels** (line 134):
+
+> "YOUR NAME" / "BUSINESS NAME" / "EMAIL *" / "CELL (for SMS alerts)"
+
+Currently uses uppercase tracking-wide labels — looks like an enterprise SaaS form, not a 30-second sign-up. Sarah's eye reads it as "10-minute task."
+
+**Fix:**
+- Drop the all-caps labels. Use sentence case: `Your name`, `Company`, `Email`, `Cell (we'll text matches)`.
+- Make `Name` and `Business name` **optional** and visually de-emphasized. Email + trades is all that's actually required for the trial.
+- Above the form, add: **"Takes 20 seconds. We'll text you when we find someone."**
+
+---
+
+**6. HireAlertTrial confirmation screen** (line 91):
+
+> "Our intelligence engine is scanning Metro Detroit for available licensed tradespeople in your trades right now."
+
+Sarah's reaction: *"Cool, when do I get a name?"*
+
+**Fix:**
+```
+H1: You're in. First match by tomorrow morning.
+Body: We scan overnight and email the first qualified candidate
+      to {email} by 7am. If we can't find one in 72 hours, we'll
+      tell you straight up — no auto-charge, no upsell.
+```
+
+---
+
+**7. Role chips in HireAlertTrial** (line 11) say "Boiler Operator", "Pipefitter / Steamfitter" — perfect for Sarah's industrial side. **No change.**
+
+But `HireAlert.tsx` ROLE_OPTIONS line 21 says "Pipefitter / Steamfitter (UA 636)". UA 636 is a Detroit local — fine for Detroit, but if she's in Phoenix selecting that, it's confusing. **Change to:** "Pipefitter / Steamfitter" — drop the local number. Move union-local hint to a tooltip or hide outside Detroit metro.
+
+---
+
+**8. HireAlert success page** (line 117):
+
+> "Talent Radar is Live — Your hiring advantage starts tomorrow at 7am."
+
+This is good. **Keep.** Only tweak: line 120 says "Check your email — we sent your welcome guide with everything you need to know." Sarah doesn't read welcome guides. **Replace with:**
+```
+We just emailed you your dashboard link. Save it. First candidate
+batch hits at 7am tomorrow.
+```
+
+---
+
+## SHARED FIXES (both personas)
+
+**1. Stripe checkout page** — currently we hand off to Stripe Checkout. Both personas would feel safer if the redirect button said **"Continue to secure Stripe checkout →"** instead of just "Pay $50". The word "Stripe" is a trust anchor for both blue-collar and corporate buyers.
+
+**2. Phone number visibility** — every error screen already shows "Text Matt at (313) 992-1219". Good. But make the number a **`tel:` link** everywhere (some are plain text in `ClaimLead.tsx` lines 105, 129, 144, 160) so a thumb tap dials.
+
+**3. Remove the word "intelligence" from customer-facing copy** when speaking to Dave. Keep it for Sarah (she's a recruiter, that word sells her). On contractor pages, replace "intelligence engine" / "signal" / "proprietary" with "we find" / "we send" / "we built".
+
+---
+
+## SUMMARY — What ships when you approve
+
+A single copy patch across 6 files:
+1. `supabase/functions/contractor-lead-notify/index.ts` — rewrite teaser SMS body
+2. `src/components/contractor/LeadQualityBadges.tsx` — relabel/remove jargon badges
+3. `src/pages/ClaimLead.tsx` — refund-promise line, button label, "Lead Claimed" rewrite, tel: links
+4. `src/pages/ContractorLeads.tsx` — shorten WINS, drop "word of mouth" PAIN row
+5. `src/pages/TalentIntelligence.tsx` — new H1/sub, drop "Tier" prefixes, ghost/no-show clarifier, simplified free-tier form
+6. `src/pages/HireAlert.tsx` + `HireAlertTrial.tsx` — sentence-case labels, "20 seconds" header, rewritten success copy
+
+Estimated: ~150 lines of copy edits, zero schema changes, zero new components. Safe to ship before driving traffic.
+
+Approve and I'll switch to build mode and apply every change above verbatim.
