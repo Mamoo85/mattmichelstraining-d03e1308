@@ -576,10 +576,11 @@ serve(async (req) => {
   }
 
   const results: any[] = [];
+  const counters: WaterfallCounters = {};
   for (const row of rows ?? []) {
     if (Date.now() - startedAt > BUDGET_MS) break;
     try {
-      const { id, patches, trace } = await enrichOne(sb, row as Prospect);
+      const { id, patches, trace } = await enrichOne(sb, row as Prospect, counters);
       const { error: updErr } = await sb.from("prospect_pool").update(patches).eq("id", id);
       if (updErr) {
         results.push({ id, ok: false, error: updErr.message });
@@ -597,10 +598,11 @@ serve(async (req) => {
     ok: true,
     processed: results.length,
     enriched: results.filter((r) => r.ok).length,
+    counters,
     duration_ms: Date.now() - startedAt,
     results,
   };
-  console.log(`[enrich-prospect-pool] ${JSON.stringify({ processed: summary.processed, enriched: summary.enriched, ms: summary.duration_ms })}`);
+  console.log(`[enrich-prospect-pool] ${JSON.stringify({ processed: summary.processed, enriched: summary.enriched, counters, ms: summary.duration_ms })}`);
   return new Response(JSON.stringify(summary), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
