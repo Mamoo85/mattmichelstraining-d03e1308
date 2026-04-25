@@ -212,17 +212,32 @@ async function scanForeclosureNotices(): Promise<RawSignal[]> {
     const raw = data?.choices?.[0]?.message?.content?.trim() || "[]";
     const jsonMatch = raw.match(/\[[\s\S]*\]/);
     const cleaned = jsonMatch ? jsonMatch[0] : "[]";
-    const records: any[] = JSON.parse(cleaned);
-    return records.slice(0, 15).map((r: any) => ({
-      full_name: r.owner_name || undefined,
-      address: r.address || undefined,
-      city: r.city || undefined,
-      zip: r.zip || undefined,
-      signal_type: "lis_pendens" as const,
-      signal_source: "Sonar_PublicRecords",
-      signal_detail: r.signal_detail || "Lis pendens / foreclosure notice filed",
-      signal_date: r.signal_date || today,
-    }));
+    let records: any[];
+    try {
+      records = JSON.parse(cleaned);
+      if (!Array.isArray(records)) {
+        console.warn("[scanForeclosureNotices] Ingestion Pipeline returned non-array — raw:", cleaned.slice(0, 200));
+        records = [];
+      }
+    } catch (parseErr) {
+      console.warn("[scanForeclosureNotices] Ingestion Pipeline JSON parse failed:", String(parseErr), "raw:", cleaned.slice(0, 200));
+      records = [];
+    }
+    return records.slice(0, 15).map((r: any) => {
+      if (!r.address && !r.owner_name) {
+        console.warn("[scanForeclosureNotices] Schema drift — record missing expected fields:", JSON.stringify(r).slice(0, 100));
+      }
+      return {
+        full_name: r.owner_name || r.owner || r.full_name || undefined,
+        address: r.address || r.property_address || undefined,
+        city: r.city || undefined,
+        zip: r.zip || r.zip_code || undefined,
+        signal_type: "lis_pendens" as const,
+        signal_source: "Sonar_PublicRecords",
+        signal_detail: r.signal_detail || r.description || "Lis pendens / foreclosure notice filed",
+        signal_date: r.signal_date || r.date || today,
+      };
+    });
   } catch (e) {
     console.warn("[scanForeclosureNotices]", e instanceof Error ? e.message : String(e));
     return [];
@@ -434,13 +449,18 @@ async function scanSBAApprovals(): Promise<RawSignal[]> {
     });
     if (!r.ok) return [];
     const j = await r.json();
-    const records: any[] = j?.results || [];
+    // Normalize: USASpending API may return results under different keys
+    const rawArr = j?.results ?? j?.data ?? j?.awards ?? [];
+    const records: any[] = Array.isArray(rawArr) ? rawArr : [];
+    if (!records.length && j) {
+      console.warn("[scanSBAApprovals] Ingestion Pipeline — unexpected response shape, keys:", Object.keys(j).slice(0, 8).join(","));
+    }
     const metro = /detroit|dearborn|livonia|warren|sterling|troy|pontiac|southfield|ann arbor|canton|westland|farmington|royal oak|grosse pointe|hamtramck/i;
     return records
-      .filter((rec: any) => metro.test(rec.recipient_location_city_name || "") && Number(rec["Loan Value"] || 0) >= 50_000)
+      .filter((rec: any) => metro.test(rec.recipient_location_city_name || rec.city || "") && Number(rec["Loan Value"] ?? rec.loan_value ?? rec.award_amount ?? 0) >= 50_000)
       .map((rec: any) => ({
-        full_name: rec["Recipient Name"] || undefined,
-        address: rec.recipient_location_address_line1 || "",
+        full_name: rec["Recipient Name"] ?? rec.recipient_name ?? rec.awardee_name ?? undefined,
+        address: rec.recipient_location_address_line1 ?? rec.address ?? "",
         city: rec.recipient_location_city_name || undefined,
         signal_type: "sba_loan_approved",
         signal_source: "USASpending",
