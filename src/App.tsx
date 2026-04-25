@@ -210,25 +210,17 @@ const IndustrialNewsletter = lazyRetry(() => import("./pages/IndustrialNewslette
 const MissedCallSaaS = lazyRetry(() => import("./pages/MissedCallSaaS"));
 const MissedCallSetup = lazyRetry(() => import("./pages/MissedCallSetup"));
 const B2BPartnerPortal = lazyRetry(() => import("./pages/B2BPartnerPortal"));
-const AINewsletterService = lazyRetry(() => import("./pages/AINewsletterService"));
+// AINewsletterService — DELISTED (orphan, no live checkout). File preserved at src/pages/AINewsletterService.tsx
 const FreeTrendingProducts = lazyRetry(() => import("./pages/FreeTrendingProducts"));
 const FreeGrantDigest = lazyRetry(() => import("./pages/FreeGrantDigest"));
 const FreeRealEstateDigest = lazyRetry(() => import("./pages/FreeRealEstateDigest"));
-const AIMedSpaMarketing = lazyRetry(() => import("./pages/AIMedSpaMarketing"));
-const AIRealEstateDrip = lazyRetry(() => import("./pages/AIRealEstateDrip"));
-const AIPodcastShowNotes = lazyRetry(() => import("./pages/AIPodcastShowNotes"));
-const AIChurchNewsletter = lazyRetry(() => import("./pages/AIChurchNewsletter"));
-const AIPropertyManagement = lazyRetry(() => import("./pages/AIPropertyManagement"));
-const AIFranchiseOps = lazyRetry(() => import("./pages/AIFranchiseOps"));
-const AIEcommerceListings = lazyRetry(() => import("./pages/AIEcommerceListings"));
-const AIFinancialAdvisorContent = lazyRetry(() => import("./pages/AIFinancialAdvisorContent"));
-const AIVetMarketing = lazyRetry(() => import("./pages/AIVetMarketing"));
-const AITruckingDocs = lazyRetry(() => import("./pages/AITruckingDocs"));
+// AIMedSpaMarketing, AIRealEstateDrip, AIPodcastShowNotes, AIChurchNewsletter, AIPropertyManagement,
+// AIFranchiseOps, AIEcommerceListings, AIFinancialAdvisorContent, AIVetMarketing, AITruckingDocs,
+// AIJobPostingWriter — DELISTED (orphans, waitlist-only). Files preserved in src/pages/.
 const AIAdsCopyGenerator = lazyRetry(() => import("./pages/AIAdsCopyGenerator"));
-const AIJobPostingWriter = lazyRetry(() => import("./pages/AIJobPostingWriter"));
 const AIReputationDashboard = lazyRetry(() => import("./pages/AIReputationDashboard"));
 const ContractorInvoicing = lazyRetry(() => import("./pages/ContractorInvoicing"));
-const AIVoicemailTranscription = lazyRetry(() => import("./pages/AIVoicemailTranscription"));
+// AIVoicemailTranscription — DELISTED. File preserved.
 const AIPhoneAnswering = lazyRetry(() => import("./pages/AIPhoneAnswering"));
 const TextMessageMarketing = lazyRetry(() => import("./pages/TextMessageMarketing"));
 const ReviewRequestSMS = lazyRetry(() => import("./pages/ReviewRequestSMS"));
