@@ -2344,6 +2344,45 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── Dead Lead Billing Setup — card saved, activate auto-charge ─────────────
+      if (meta.type === "dead_lead_billing_setup") {
+        try {
+          const setupIntentId = (session as any).setup_intent as string | null;
+          let paymentMethodId: string | null = null;
+          if (setupIntentId) {
+            const si = await stripe.setupIntents.retrieve(setupIntentId);
+            paymentMethodId = si.payment_method as string | null;
+          }
+          if (paymentMethodId && meta.contractor_id) {
+            await (sb.from as any)("contractor_clients")
+              .update({ stripe_payment_method_id: paymentMethodId, dead_lead_billing_active: true })
+              .eq("id", meta.contractor_id);
+            const { data: cRow } = await (sb.from as any)("contractor_clients")
+              .select("email, business_name, roi_token")
+              .eq("id", meta.contractor_id)
+              .maybeSingle();
+            const cEmail = (cRow as any)?.email;
+            const cBiz = (cRow as any)?.business_name || "there";
+            const statsUrl = (cRow as any)?.roi_token
+              ? `https://detroitwebagent.com/dead-lead-stats?token=${(cRow as any).roi_token}`
+              : "https://detroitwebagent.com";
+            if (cEmail) {
+              await dwaEmail(cEmail, "You're Set — Auto-Billing is Active for Dead Lead Recovery",
+                `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">♻️ DEAD LEAD REACTIVATION</p><h1 style="color:#fff;font-size:22px;margin:0 0 8px;">Card saved, ${cBiz}.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Auto-billing is live. Every time one of your dead leads replies YES, you'll be notified instantly and $50 is charged automatically — no invoice, no waiting.</p><div style="text-align:center;margin:0 0 24px;"><a href="${statsUrl}" style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:15px;padding:14px 40px;border-radius:8px;text-decoration:none;">View Your Campaign Stats →</a></div><div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:20px;"><p style="color:#fff;font-weight:700;font-size:13px;margin:0 0 10px;">WHAT HAPPENS NEXT:</p><p style="margin:0 0 8px;color:#e2e8f0;font-size:13px;">• Your dead leads get a 3-text SMS drip starting tomorrow at 10am</p><p style="margin:0 0 8px;color:#e2e8f0;font-size:13px;">• You get an instant text when someone replies interested</p><p style="margin:0;color:#e2e8f0;font-size:13px;">• $50 is auto-charged only on positive replies — nothing if no one responds</p></div></div><p style="color:#475569;font-size:11px;text-align:center;margin-top:16px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p></div></body></html>`
+              );
+            }
+            await notifyMatt(
+              `💳 Dead lead card saved — ${cBiz}`,
+              `<p><strong>${cBiz}</strong> saved card. Auto-$50 fires on positive replies.<br>Contractor ID: ${meta.contractor_id}</p>`
+            );
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] dead_lead_billing_setup error:", e);
+          return new Response(JSON.stringify({ error: "dead_lead_billing_setup failed" }), { status: 500 });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── Marketplace lead purchase — promote soft_lock → sold ─────────────────
       if (meta.type === "marketplace_lead_purchase") {
         try {
