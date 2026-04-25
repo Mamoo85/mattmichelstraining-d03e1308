@@ -259,7 +259,10 @@ async function syncTierToProfile(sb: any, email: string, tier: string, stripeCus
   }
 }
 
-serve(async (req) => {
+// Exported for integration tests. The handler is a plain async function so
+// tests can call it without binding a port. `serve()` below wires it up
+// for the live Edge Function runtime.
+export const handler = async (req: Request): Promise<Response> => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
