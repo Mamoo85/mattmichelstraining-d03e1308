@@ -1,6 +1,6 @@
 import { Lock, Eye, MapPin } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import ActionButton from "@/components/ui/action-button";
 import { BuyerChip, FreshnessBadge, TierBadge, ScoreBars, EquityPanel, MetricsRow, TcpaBadge, type MarketplaceLead } from "./GoldenTicketCard";
 import { SourceIconRow } from "./SourceIconRow";
 import { cn } from "@/lib/utils";
@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 interface Props {
   lead: MarketplaceLead;
   priceCents?: number;
-  onClaim?: (lead: MarketplaceLead) => void;
+  onClaim?: (lead: MarketplaceLead) => void | Promise<unknown>;
   className?: string;
   viewersNow?: number;
 }
@@ -105,14 +105,16 @@ export function LockedDossierCard({ lead, priceCents = 4900, onClaim, className,
 
       {/* Wax seal CTA */}
       <div className="px-4 pb-4 pt-2 border-t border-border/40 bg-gradient-to-b from-transparent to-seal-gold/5">
-        <Button
+        <ActionButton
           onClick={() => onClaim?.(lead)}
+          busyLabel="Opening secure checkout…"
+          ariaLabel={`Unlock full dossier for $${price}`}
           className="w-full bg-gradient-to-r from-seal-gold to-orange-500 hover:from-seal-gold hover:to-orange-400 text-background font-bold tracking-wide shadow-lg shadow-seal-gold/20"
-          size="lg"
+          style={{ background: undefined, color: undefined, minHeight: 56, fontSize: 16 }}
         >
           <span className="text-lg mr-2">🎟</span>
           Unlock Full Dossier · ${price}
-        </Button>
+        </ActionButton>
         <p className="text-[10px] text-center text-muted-foreground font-mono mt-2 tracking-wider">
           Single buyer · Once unlocked, this lead is yours
         </p>
