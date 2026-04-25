@@ -93,7 +93,7 @@ async function dispatchApifyRuns(sb: ReturnType<typeof createClient>): Promise<v
   const webhookUrl = `${SUPABASE_URL}/functions/v1/apify-results-handler?secret=${encodeURIComponent(APIFY_WEBHOOK_SECRET)}&batch_id=${encodeURIComponent(batchId)}`;
 
   // Insert batch row up front so the webhook handler can find it
-  await sb.from("apify_run_batches").insert({ batch_id: batchId, run_at: new Date().toISOString() } as any);
+  await (sb.from("apify_run_batches") as any).insert({ batch_id: batchId, run_at: new Date().toISOString() });
 
   // Webhook spec — fires when run succeeds or fails. customData carries our batch_id.
   const webhooks = [{
@@ -132,7 +132,7 @@ async function dispatchApifyRuns(sb: ReturnType<typeof createClient>): Promise<v
         console.log(`[apify-dispatch] ${src} → ${runId} (HTTP ${res.status})`);
         const updates: Record<string, unknown> = {};
         updates[`${src}_run_id`] = runId;
-        await sb.from("apify_run_batches").update(updates as any).eq("batch_id", batchId);
+        await (sb.from("apify_run_batches") as any).update(updates).eq("batch_id", batchId);
       }
     } catch (e) {
       console.error(`[apify-dispatch] ${src} dispatch error:`, e instanceof Error ? e.message : String(e));
@@ -2303,13 +2303,13 @@ ${candidateRows}
         }).catch(() => {});
 
         try {
-          await sb.from("system_comms_log").insert({
+          await (sb.from("system_comms_log") as any).insert({
             channel: "email",
             product: "hire_alert",
             recipient: client.owner_email,
             message_body: `Weekly re-engagement: ${totalThisWeek} candidates found`,
             metadata: { client_id: client.id, type: "weekly_summary", candidates_found: totalThisWeek },
-          } as any);
+          });
         } catch { /* swallow log insert errors */ }
       }
     }
