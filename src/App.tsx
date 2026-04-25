@@ -312,6 +312,7 @@ const FieldDeskVsEway = lazyRetry(() => import("./pages/FieldDeskVsEway"));
 const MortgageRadarVsTriggerLeads = lazyRetry(() => import("./pages/MortgageRadarVsTriggerLeads"));
 const MortgageRadar = lazyRetry(() => import("./pages/MortgageRadar"));
 const MyMortgageRadar = lazyRetry(() => import("./pages/MyMortgageRadar"));
+const MyMissedCall = lazyRetry(() => import("./pages/MyMissedCall"));
 const BuyerRadar = lazyRetry(() => import("./pages/BuyerRadar"));
 const MyBuyerRadar = lazyRetry(() => import("./pages/MyBuyerRadar"));
 const BuyerRadarDemo = lazyRetry(() => import("./pages/BuyerRadarDemo"));
@@ -788,6 +789,7 @@ const App = () => (
                     <Route path="/mortgage-radar-vs-trigger-leads" element={<MortgageRadarVsTriggerLeads />} />
                     <Route path="/mortgage-radar" element={<MortgageRadar />} />
                     <Route path="/my-mortgage-radar" element={<MyMortgageRadar />} />
+                    <Route path="/my-missed-call" element={<MyMissedCall />} />
                     <Route path="/buyer-radar" element={<BuyerRadar />} />
                     <Route path="/buyer-radar/demo" element={<BuyerRadarDemo />} />
                     <Route path="/buyer-radar/pricing" element={<BuyerRadarPricing />} />
