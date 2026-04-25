@@ -8,7 +8,7 @@ import { BuyerEmailDialog } from "@/components/marketplace/BuyerEmailDialog";
 import { ShareLinkDialog } from "@/components/marketplace/ShareLinkDialog";
 import type { MarketplaceLead } from "@/components/marketplace/GoldenTicketCard";
 import { Loader2, ArrowLeft, Download, Share2, CheckCircle2, ScrollText, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
+import { toastSuccess, toastError } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { priceLabelFor } from "@/lib/marketplacePricing";
@@ -94,7 +94,7 @@ export default function LeadDetail() {
       if (!active) return;
       if (data?.status === "sold") {
         setPollingForSale(false);
-        toast.success("Payment confirmed — dossier unlocked");
+        toastSuccess("Payment confirmed — dossier unlocked");
         return;
       }
       if (Date.now() - startedAt > POLL_TIMEOUT_MS) {
@@ -139,14 +139,14 @@ export default function LeadDetail() {
       if (url) window.location.href = url;
     } catch (e: any) {
       const msg = e?.message || String(e);
-      if (msg.includes("already_sold")) toast.error("That lead just sold to someone else.");
-      else if (msg.includes("locked_by_other")) toast.error("Another buyer has a 10-min hold on this lead.");
-      else toast.error("Checkout failed — try again.");
+      if (msg.includes("already_sold")) toastError("That lead just sold to someone else.");
+      else if (msg.includes("locked_by_other")) toastError("Another buyer has a 10-min hold on this lead.");
+      else toastError("Checkout failed — try again.");
     }
   };
 
   const handleExportPdf = async (regen = false) => {
-    if (!lead || !buyerEmail) return toast.error("Missing buyer email");
+    if (!lead || !buyerEmail) return toastError("Missing buyer email");
     setPdfBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke("marketplace-generate-dossier-pdf", {
@@ -156,17 +156,17 @@ export default function LeadDetail() {
       const url = (data as any)?.url;
       if (url) {
         window.open(url, "_blank");
-        if (regen) toast.success("Fresh PDF generated");
+        if (regen) toastSuccess("Fresh PDF generated");
       } else {
         throw new Error("no url");
       }
     } catch {
-      toast.error("PDF generation failed — try Regenerate");
+      toastError("PDF generation failed — try Regenerate");
     } finally { setPdfBusy(false); }
   };
 
   const handleShare = async () => {
-    if (!lead || !buyerEmail) return toast.error("Missing buyer email");
+    if (!lead || !buyerEmail) return toastError("Missing buyer email");
     setShareBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke("marketplace-share-token", {
@@ -181,7 +181,7 @@ export default function LeadDetail() {
         navigator.clipboard?.writeText(url).catch(() => {});
       }
     } catch {
-      toast.error("Could not generate share link");
+      toastError("Could not generate share link");
     } finally { setShareBusy(false); }
   };
 

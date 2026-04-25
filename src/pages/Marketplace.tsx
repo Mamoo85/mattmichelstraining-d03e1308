@@ -15,7 +15,7 @@ import { BuyerEmailDialog } from "@/components/marketplace/BuyerEmailDialog";
 import { LiveActivityTicker } from "@/components/marketplace/LiveActivityTicker";
 import { HowItWorksSheet } from "@/components/marketplace/HowItWorksSheet";
 import { Link } from "react-router-dom";
-import { toast } from "sonner";
+import { toastSuccess, toastError } from "@/lib/toast";
 import { useSwipeable } from "react-swipeable";
 import { cn } from "@/lib/utils";
 
@@ -228,9 +228,9 @@ export default function Marketplace() {
       window.location.href = url;
     } catch (e: any) {
       const msg = e?.message || String(e);
-      if (msg.includes("already_sold")) toast.error("That lead just sold to someone else.");
-      else if (msg.includes("locked_by_other")) toast.error("Another buyer has a 10-min hold on this lead.");
-      else toast.error("Checkout failed — try again.");
+      if (msg.includes("already_sold")) toastError("That lead just sold to someone else.");
+      else if (msg.includes("locked_by_other")) toastError("Another buyer has a 10-min hold on this lead.");
+      else toastError("Checkout failed — try again.");
       console.error(e);
     } finally {
       setClaiming(null);
@@ -254,7 +254,7 @@ export default function Marketplace() {
       return next;
     });
     if (!watched.includes(lead.id)) {
-      toast.success("Added to watch list");
+      toastSuccess("Added to watch list");
       const email = buyerEmail || localStorage.getItem("mp_buyer_email");
       const buyer_token = localStorage.getItem("mp_buyer_token");
       if (email && buyer_token) {
@@ -286,7 +286,7 @@ export default function Marketplace() {
     setCompareIds((prev) => {
       if (prev.includes(id)) return prev.filter((x) => x !== id);
       if (prev.length >= 3) {
-        toast.error("Compare up to 3 leads at once");
+        toastError("Compare up to 3 leads at once");
         return prev;
       }
       return [...prev, id];
@@ -603,10 +603,10 @@ export default function Marketplace() {
             await supabase.functions.invoke("marketplace-watch-add", {
               body: { buyer_email: email, product, action: "restock_notify" },
             });
-            toast.success("You're on the restock list.");
+            toastSuccess("You're on the restock list.");
           } catch (e) {
             console.error(e);
-            toast.error("Couldn't save — try again.");
+            toastError("Couldn't save — try again.");
           }
         }}
       />

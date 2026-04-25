@@ -2,6 +2,7 @@ import { useState } from "react";
 import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
+import ActionButton from "@/components/ui/action-button";
 
 const TRADES = ["HVAC", "Plumbing", "Roofing", "Electrical", "General Contractor", "Landscaping", "Painting", "Other"];
 
@@ -147,23 +148,12 @@ export default function DeadLeadIntake() {
                 Save your card now and we'll auto-charge $50 the moment a lead says YES —
                 no invoices, no manual transfers. Skip this and Matt will invoice you manually.
               </p>
-              <button
+              <ActionButton
                 onClick={handleSetupBilling}
-                disabled={billingLoading}
-                style={{
-                  width: "100%",
-                  padding: "14px",
-                  background: billingLoading ? "#1e3a5f" : "#00d4ff",
-                  color: billingLoading ? "#64748b" : "#0a1628",
-                  border: "none",
-                  borderRadius: 8,
-                  fontWeight: 700,
-                  fontSize: 15,
-                  cursor: billingLoading ? "not-allowed" : "pointer",
-                }}
+                busyLabel="Loading…"
               >
-                {billingLoading ? "Loading…" : "Save Card — Auto-Bill $50/Revival"}
-              </button>
+                Save Card — Auto-Bill $50/Revival
+              </ActionButton>
             </div>
 
             {error && <p style={{ color: "#ef4444", fontSize: 13, marginBottom: 12 }}>{error}</p>}
