@@ -695,24 +695,11 @@ const App = () => (
                     <Route path="/refer" element={<ReferralPage />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                     <Route path="/terms" element={<TermsOfService />} />
-                    <Route path="/ai-onboarding-agent" element={<AIOnboardingAgent />} />
-                    <Route path="/ai-social-proof" element={<AISocialProof />} />
-                    <Route path="/ai-price-monitor" element={<AIPriceMonitor />} />
-                    <Route path="/ai-meeting-prep" element={<AIMeetingPrep />} />
-                    <Route path="/ai-directory-submitter" element={<AIDirectorySubmitter />} />
+                    {/* Orphaned AI product routes delisted. Pages preserved on disk. */}
                     <Route path="/m2-development" element={<M2Development />} />
                     <Route path="/business-directory" element={<BusinessDirectory />} />
-                    <Route path="/ai-handbook" element={<AIHandbook />} />
-                    <Route path="/ai-grant-finder" element={<AIGrantFinder />} />
-                    <Route path="/ai-battlecard" element={<AIBattlecard />} />
-                    <Route path="/ai-market-intel" element={<AIMarketIntel />} />
-                    <Route path="/ai-permit-monitor" element={<AIPermitMonitor />} />
-                    <Route path="/ai-osha-compliance" element={<AIOshaCompliance />} />
                     <Route path="/dark-web-monitor" element={<DarkWebMonitor />} />
                     <Route path="/dark-web-monitor/dashboard" element={<ProtectedRoute><DarkWebDashboard /></ProtectedRoute>} />
-                    <Route path="/ai-collections" element={<AICollections />} />
-                    <Route path="/ai-inventory-alerts" element={<AIInventoryAlerts />} />
-                    <Route path="/ai-birthday-campaign" element={<AIBirthdayCampaign />} />
                     <Route path="/linkedin-outreach" element={<LinkedInOutreach />} />
                     <Route path="/abandoned-cart-recovery" element={<AbandonedCartRecovery />} />
                     <Route path="/client-report-generator" element={<ClientReportGenerator />} />
