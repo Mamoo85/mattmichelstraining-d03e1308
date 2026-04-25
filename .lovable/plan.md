@@ -1,120 +1,114 @@
-# UI/UX Polish & Production Readiness Sprint
+# Receipt Banner Hardening + UX + Tests
 
-**Constraint honored:** Zero edits to `supabase/functions/`, migrations, or webhook logic. All work is inside `src/` (React, routing, Tailwind, inline styles).
-
-## Scope (high-traffic surfaces)
-SMS/QR/Email entry points and conversion screens for Apex Talent Signal + Contractor Leads:
-- `src/pages/ClaimLead.tsx` (PPL FOMO landing — primary $50 conversion)
-- `src/pages/HireAlertTrial.tsx` (trial signup)
-- `src/pages/HireAlert.tsx`, `src/pages/TalentIntelligence.tsx` (Apex marketing)
-- `src/pages/MyTechAlert.tsx` (client portal — Fast-Track, Mark Ghosted, Draft Outreach buttons)
-- `src/pages/AgencyClientPortal.tsx`, `src/pages/AgencyPortal.tsx`
-- `src/pages/MyContractorLeads.tsx`, `src/pages/ContractorLeads.tsx`, `src/pages/LeadClaimed.tsx`
-- `src/pages/DeadLeadIntake.tsx`, `src/pages/Marketplace.tsx`
-- `src/App.tsx` (routing fallback wiring), `src/pages/NotFound.tsx`
+Four-part sprint covering security, UX, fulfillment recovery, and test coverage for the Stripe success-page receipt flow. No changes to webhook fulfillment logic — strictly receipt **read path** + UI.
 
 ---
 
-## 1. Mobile Layout Lockdown
+## 1. Lock down `get-receipt-status` (security)
 
-**Audit pass on every page above:**
-- Replace any fixed `width: NNNpx` with `maxWidth` + `width: 100%` and `box-sizing: border-box`. (ClaimLead/HireAlertTrial already do this — sweep the rest.)
-- Ensure all inputs and `<button>` targets are min 44px tall (iOS HIG). Add `minHeight: 48` to any action button missing it.
-- Verify all primary containers wrap in a responsive shell: `padding: clamp(16px, 5vw, 32px)`.
-- Confirm long copy uses `overflow-wrap: anywhere` so emails/URLs don't overflow on 320px screens.
-- Add `touch-action: manipulation` to all action buttons to suppress 300ms tap delay.
-- Phone numbers wrapped in `tel:` / `sms:` links across all error and success states.
+**Problem:** `checkout_receipts` currently has `public_read_checkout_receipts USING (true)` for `anon, authenticated`. Anyone can scrape session IDs and read email + product_type for every customer. The edge function uses the service role and returns whatever is asked for.
 
-**Quick wins:** ClaimLead and HireAlertTrial are already mobile-clean — extend the same pattern (max-width card, vertical padding, single-column form) to MyTechAlert, AgencyClientPortal, MyContractorLeads, and Marketplace.
+**Fix:**
+- **Migration**: drop the public-read policy. Replace with two narrower policies:
+  - `select_own_receipt_by_email` for `authenticated` — `USING (email = auth.jwt() ->> 'email')`
+  - `service_role_all_checkout_receipts` stays.
+- **Edge function `get-receipt-status`**:
+  - Switch to **POST** with JSON body `{ session_id }` (the hook already invokes via `supabase.functions.invoke` with body — no caller change).
+  - Validate `session_id` matches `/^cs_(test|live)_[A-Za-z0-9]+$/`.
+  - Require `Authorization` header. Resolve the user with the anon client + bearer token.
+    - If **authenticated**: load the receipt with the service-role client, then return data **only if** `receipt.email === user.email` (or `receipt.metadata.user_id === user.id`). Otherwise return `{ status: "pending" }` (don't leak existence).
+    - If **anonymous**: return a minimal payload — `status` only (`pending | paid | fulfilled | failed`), no email, no product_type, no fulfilled_at. This preserves the guest-checkout success page UX without leaking PII.
+  - Add a simple per-IP rate limit (in-memory token bucket, 30 req/min) to blunt scraping.
 
-## 2. Dead-Click Prevention (Global Loading States)
+**Why this is safe for guest checkouts:** the success page already polls — anonymous callers still get the live status string they need to flip the banner; they just don't get email/product details back.
 
-Audit every action button on the in-scope pages. Standard pattern:
+---
 
-```tsx
-const [busy, setBusy] = useState(false);
-const lock = useRef(false);
+## 2. Timeout UX in `ReceiptStatusBanner`
 
-const onClick = async () => {
-  if (lock.current || busy) return;
-  lock.current = true; setBusy(true);
-  try { await action(); }
-  finally { lock.current = false; setBusy(false); }
-};
+When the 60s poll window elapses without `fulfilled` or `failed`:
 
-<button disabled={busy} aria-busy={busy} ...>
-  {busy ? <Spinner/> : "Pay $50 — Get Their Phone Number"}
-</button>
+- Banner switches to a new **"Taking longer than usual"** amber state with three actions:
+  1. **Retry** button — resets the hook (new poll window, fresh 60s).
+  2. **Email support** — `mailto:matt@detroitwebagent.com?subject=Receipt%20pending%20{session_id}` prefilled with the session id.
+  3. **Text Matt** — `sms:+13139921219?body=Receipt pending for session {session_id}`.
+- Copy: "Stripe confirmed your payment but our system hasn't finished provisioning. Your card is safe — we'll fix it personally."
+
+**Hook changes (`useReceiptStatus`)**:
+- Expose `timedOut: boolean` and `retry: () => void`.
+- `retry()` resets `startedAt`, clears timer, restarts polling.
+- Cap at 3 manual retries, then force the support state.
+
+---
+
+## 3. "Check your email" + resend-receipt section
+
+New component `src/components/checkout/CheckEmailCard.tsx`, rendered on success pages **whenever** banner status is `paid`, `fulfilled`, or `pending` (not on `failed` or hard-error states).
+
+Contents:
+- Headline: "Check your email for the receipt"
+- Body: lists the email Stripe sent it to (pulled from receipt response when authenticated; otherwise generic copy).
+- Primary button: **Resend receipt** → calls new edge function `resend-receipt`.
+- Secondary link: "Wrong email? Text Matt at (313) 992-1219."
+
+**New edge function `supabase/functions/resend-receipt/index.ts`**:
+- POST `{ session_id }`, validated.
+- Looks up `checkout_receipts` (service-role), enforces same auth check as `get-receipt-status` (owner or anon-with-cooldown).
+- Rate-limit: max 1 resend per session per 60s (tracked in `checkout_receipts.metadata.last_resend_at`).
+- Pulls Stripe `receipt_url` from the PaymentIntent; sends via Resend using existing `dwaEmail()` helper for DWA products, `m2Email()` otherwise (route by `product_type`).
+- Returns `{ ok: true, sent_to: "<email>" }` (mask domain for anon callers).
+
+Mounted in: `BundleRevenueSuite.tsx`, `DeadLeadIntake.tsx`, `HireAlert.tsx`, `MortgageRadar.tsx` (the same 4 pages that currently use `ReceiptStatusBanner`).
+
+---
+
+## 4. Playwright mobile tests with mocked polling
+
+Extend `tests/e2e/checkout.spec.ts` with a new `describe("Receipt banner state machine — mobile")` block using `devices["iPhone 13"]`.
+
+For each transition, intercept the edge function via `page.route("**/functions/v1/get-receipt-status", ...)`:
+
+```text
+test 1 — pending → paid → fulfilled
+  call 1: { status: "pending" }    → assert [data-testid=receipt-banner-pending] visible
+  call 2: { status: "paid" }       → assert pending banner shows "provisioning" copy
+  call 3: { status: "fulfilled", fulfilled_at: <iso> }
+                                    → assert [data-testid=receipt-banner-fulfilled]
+
+test 2 — pending → failed
+  call 1-2: pending; call 3: { status: "failed" }
+                                    → assert [data-testid=receipt-banner-failed]
+
+test 3 — timeout → support actions
+  always return { status: "pending" }; advance time past 60s
+                                    → assert "Taking longer than usual" + Retry + mailto
+
+test 4 — CheckEmailCard resend
+  fulfilled state; click Resend; assert toast success and POST to /resend-receipt fires
 ```
 
-**Targets:**
-- MyTechAlert: Fast-Track Interview, Mark Ghosted, Draft Outreach, Buy Credits
-- AgencyClientPortal / AgencyPortal: every CTA tied to an edge function
-- MyContractorLeads: claim/refund/mark-disconnected actions
-- DeadLeadIntake: file upload + submit button
-- Marketplace: buy-lead buttons (FirstLook + standard)
-
-Create one shared `<ActionButton busy onClick label busyLabel/>` in `src/components/ui/action-button.tsx` so the pattern is uniform and impossible to forget on new buttons.
-
-## 3. Bulletproof Routing + Branded Expired/Invalid State
-
-**New component:** `src/components/shared/LinkExpired.tsx`
-
-Dark-mode, branded card with:
-- Headline (configurable: "Lead no longer available" / "Link expired" / "Invalid link")
-- Explanation line
-- Two CTAs: primary "View Current Marketplace" → `/marketplace`, secondary `sms:+13139921219` "Text Matt"
-- Same `#0a1628` / `#00d4ff` aesthetic as ClaimLead
-
-**Wire it into:**
-- `ClaimLead.tsx`: replace the three inline error states (missing-params, lead-not-found, claimed) with `<LinkExpired variant="..."/>`
-- `LeadClaimed.tsx`, `MyContractorLeads.tsx`, `Marketplace.tsx`: same.
-- `App.tsx`: keep `NotFound` as the catch-all but route any `/claim-lead`, `/lead/:id`, `/marketplace/lead/:id` with no/invalid params through `<LinkExpired/>` instead of bouncing to 404.
-
-**Param parsing hardening:** Add a small helper `src/lib/parseSearchParams.ts` that validates UUIDs and emails from `useSearchParams`, returning `{ ok: true, ... } | { ok: false, reason }`. ClaimLead, DeadLeadIntake, and any token-driven page use it. Invalid → render `<LinkExpired/>`.
-
-## 4. Premium Toasts & Alerts
-
-Sonner is already mounted in `App.tsx` (line 477). Standardize usage:
-
-- Create `src/lib/toast.ts` exporting `toastSuccess(msg)`, `toastError(msg)`, `toastInfo(msg)` with consistent options (duration 4s, dismissible, top-center on mobile).
-- Replace ad-hoc `toast.error(...)` / inline error `<p>` strings on the in-scope pages with these helpers so every backend response has a visible outcome.
-- Success path on ClaimLead's redirect: fire `toastInfo("Locking lead… opening secure checkout")` before `window.location.href`.
-- Errors on Fast-Track / Mark Ghosted / Buy Credits in MyTechAlert: green toast on success, red toast on `409 already claimed` / `402 out of credits` with helpful next-step copy.
-
-## 5. Brand & Copy Enforcement
-
-Sweep user-facing strings on the in-scope pages for the bare word "AI". Confirmed hit:
-- `src/pages/MyTechAlert.tsx:595` — "AI-written SMS + email templates" → **"automated SMS + email templates"**
-
-Re-grep after edits to catch anything missed. Acceptable terms: "Apex Talent Signal", "Automated Routing", "Proprietary Infrastructure", "Intelligence Engine".
+Run on `BundleRevenueSuite` (`/bundle-revenue-suite?status=success&session_id=cs_test_synthetic`) since it has the cleanest banner mount.
 
 ---
 
-## Technical Notes (for implementation step)
+## Technical Details
 
-- **No edge function edits.** All "loading" states wrap existing `supabase.functions.invoke(...)` calls — no signature changes.
-- **No router restructuring** — only wrap the affected page components in graceful fallbacks; `<NotFound/>` stays as the global 404.
-- Sonner is already lazy-loaded; no provider changes required.
-- Inline-style pages (ClaimLead, HireAlertTrial) stay inline for consistency; new shared components use Tailwind + the dark palette `bg-[#0a1628] text-white border-[#1e3a5f] accent-[#00d4ff]`.
-- TypeScript: helper utilities and shared components ship with strict types and no `any`.
+**Files created**
+- `supabase/migrations/<ts>_lock_checkout_receipts_rls.sql`
+- `supabase/functions/resend-receipt/index.ts`
+- `src/components/checkout/CheckEmailCard.tsx`
+- `tests/e2e/receipt-banner.spec.ts` (separate file — the existing `checkout.spec.ts` is product-matrix focused)
 
-## Files Touched (estimate)
+**Files edited**
+- `supabase/functions/get-receipt-status/index.ts` — auth + scoping + rate limit
+- `src/hooks/useReceiptStatus.tsx` — `timedOut`, `retry`, retry counter
+- `src/components/checkout/ReceiptStatusBanner.tsx` — timeout state with action buttons
+- `src/pages/BundleRevenueSuite.tsx`, `DeadLeadIntake.tsx`, `HireAlert.tsx`, `MortgageRadar.tsx` — mount `<CheckEmailCard />` next to banner
 
-**New (3):**
-- `src/components/shared/LinkExpired.tsx`
-- `src/components/ui/action-button.tsx`
-- `src/lib/toast.ts`, `src/lib/parseSearchParams.ts`
-
-**Edited (~10):**
-- `src/App.tsx` (route param fallbacks only)
-- `src/pages/ClaimLead.tsx`, `HireAlertTrial.tsx`, `HireAlert.tsx`, `TalentIntelligence.tsx`
-- `src/pages/MyTechAlert.tsx`, `AgencyClientPortal.tsx`, `AgencyPortal.tsx`
-- `src/pages/MyContractorLeads.tsx`, `LeadClaimed.tsx`, `Marketplace.tsx`, `DeadLeadIntake.tsx`
-
-## Verification before handoff
-
-- `tsc --noEmit` passes
-- Manual checklist (Matt verifies on iPhone): tap each primary CTA, confirm spinner + disable; load `/claim-lead?lead_id=bogus` → branded expired card, not blank; trigger Fast-Track on an exhausted credit balance → red toast, no double-charge.
+**Constraints honored**
+- No changes to `stripe-webhook` or any fulfillment edge function.
+- No DB schema changes besides RLS policy swap (no new columns; `metadata.last_resend_at` is JSONB).
+- Continues to use shared `@/lib/toast` helpers and `<ActionButton />` for the resend button.
+- No "AI" terminology in any new copy.
 
 **Approve to execute.**
