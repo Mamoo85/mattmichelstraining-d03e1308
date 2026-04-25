@@ -38,6 +38,9 @@ export default function DeadLeadIntake() {
           <div style={{ marginBottom: 16 }}>
             <ReceiptStatusBanner sessionId={urlParams.get("session_id")} productLabel="Dead Lead Billing" />
           </div>
+          <div style={{ marginBottom: 16 }}>
+            <CheckEmailCard sessionId={urlParams.get("session_id")} />
+          </div>
           <div style={{ textAlign: "center", padding: "40px 0" }}>
             <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
             <h2 style={{ color: "#fff", fontSize: 24, fontWeight: 700, margin: "0 0 12px" }}>

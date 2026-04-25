@@ -110,8 +110,9 @@ export default function HireAlert() {
     return (
       <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
         <div style={{ maxWidth: 520, textAlign: "center" }}>
-          <div style={{ marginBottom: 24 }}>
+          <div style={{ marginBottom: 24, display: "flex", flexDirection: "column", gap: 12 }}>
             <ReceiptStatusBanner sessionId={searchParams.get("session_id")} productLabel="HireAlert" />
+            <CheckEmailCard sessionId={searchParams.get("session_id")} />
           </div>
           <div style={{ fontSize: 64, marginBottom: 24 }}>⚡</div>
           <h1 style={{ color: "#fff", fontSize: 32, fontWeight: 800, margin: "0 0 12px" }}>Talent Radar is Live</h1>

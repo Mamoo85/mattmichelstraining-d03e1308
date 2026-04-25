@@ -101,8 +101,9 @@ export default function MortgageRadar() {
     return (
       <div className="min-h-screen bg-[#030711] text-white flex items-center justify-center px-4">
         <div className="max-w-lg w-full text-center">
-          <div className="mb-6">
+          <div className="mb-6 space-y-3">
             <ReceiptStatusBanner sessionId={searchParams.get("session_id")} productLabel="Mortgage Radar" />
+            <CheckEmailCard sessionId={searchParams.get("session_id")} />
           </div>
           <div className="text-6xl mb-6">🏠</div>
           <h1 className="text-3xl font-extrabold text-white mb-3">Mortgage Radar is Live</h1>
