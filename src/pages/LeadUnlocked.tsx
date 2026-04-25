@@ -7,6 +7,12 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import LeadQualityBadges, { LeadQualityData } from "@/components/contractor/LeadQualityBadges";
+import LinkExpired from "@/components/shared/LinkExpired";
+
+// Stripe checkout session ids look like `cs_test_…` or `cs_live_…`
+// 30+ url-safe chars after the prefix. Reject anything else before
+// hitting the edge function so attackers can't probe with junk ids.
+const STRIPE_SESSION_RE = /^cs_(test|live)_[A-Za-z0-9]{20,}$/;
 
 interface LeadData extends LeadQualityData {
   name: string;
