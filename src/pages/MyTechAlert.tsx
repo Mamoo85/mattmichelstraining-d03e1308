@@ -592,7 +592,7 @@ export default function MyTechAlert() {
               {[
                 { icon: "⚡", text: "Claim candidates before competitors — 48-hour exclusivity locks them to you" },
                 { icon: "📞", text: "Mark candidates as Contacted to track your hiring pipeline" },
-                { icon: "✍️", text: "Use Draft Outreach on any card for AI-written SMS + email templates" },
+                { icon: "✍️", text: "Use Draft Outreach on any card for ready-to-send SMS + email templates" },
                 { icon: "🎯", text: "Filter by trade (Boiler / HVAC / Healthcare) or use the search bar" },
                 { icon: "🔔", text: "Scanner runs every morning at 7am — new matches appear here automatically and trigger an alert" },
               ].map((item, i) => (
