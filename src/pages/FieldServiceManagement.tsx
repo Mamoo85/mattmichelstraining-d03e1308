@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ActionButton from "@/components/ui/action-button";
 import TechTaxCalculator from "@/components/field-service/TechTaxCalculator";
+import ReceiptStatusBanner from "@/components/shared/ReceiptStatusBanner";
+import CheckEmailCard from "@/components/shared/CheckEmailCard";
 
 const COMPARE = [
   { name: "FieldServio", price: "$1,400/mo", users: "10 users", note: "Built for forklift rental companies", bad: true },
