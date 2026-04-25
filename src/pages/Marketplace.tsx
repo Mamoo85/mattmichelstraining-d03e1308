@@ -15,7 +15,7 @@ import { BuyerEmailDialog } from "@/components/marketplace/BuyerEmailDialog";
 import { LiveActivityTicker } from "@/components/marketplace/LiveActivityTicker";
 import { HowItWorksSheet } from "@/components/marketplace/HowItWorksSheet";
 import { Link } from "react-router-dom";
-import { toast } from "sonner";
+import { toastSuccess, toastError } from "@/lib/toast";
 import { useSwipeable } from "react-swipeable";
 import { cn } from "@/lib/utils";
 
