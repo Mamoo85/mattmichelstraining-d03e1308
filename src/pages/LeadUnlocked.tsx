@@ -34,12 +34,12 @@ export default function LeadUnlocked() {
   const [status, setStatus] = useState<"loading" | "ready" | "pending" | "error">("loading");
   const [pollCount, setPollCount] = useState(0);
 
+  const sessionIdValid = STRIPE_SESSION_RE.test(session_id);
+
   useEffect(() => {
-    if (!session_id) {
-      setStatus("error");
-      return;
-    }
+    if (!sessionIdValid) return;
     fetchLead();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session_id]);
 
   const fetchLead = async () => {
