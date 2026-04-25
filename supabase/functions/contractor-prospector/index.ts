@@ -107,6 +107,7 @@ async function searchGoogleMaps(query: string, apiKey: string): Promise<any[]> {
       "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,places.id",
     },
     body: JSON.stringify({ textQuery: query, maxResultCount: 20 }),
+    signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) throw new Error(`Google Maps error ${res.status}: ${await res.text()}`);
   const data = await res.json();

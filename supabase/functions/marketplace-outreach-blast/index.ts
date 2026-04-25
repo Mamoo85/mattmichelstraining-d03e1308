@@ -82,7 +82,8 @@ Detroit Web Agency<br/>
 }
 
 async function sendEmail(prospect: any, lead: any): Promise<string | null> {
-  if (!prospect.email || prospect.opt_out_email || !RESEND_API_KEY) return null;
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(prospect.email || "");
+  if (!emailOk || prospect.opt_out_email || !RESEND_API_KEY) return null;
   const { subject, html } = buildEmail(prospect, lead);
   try {
     const res = await fetch("https://api.resend.com/emails", {

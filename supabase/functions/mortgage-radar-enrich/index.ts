@@ -92,6 +92,7 @@ async function pdlEnrich(address: string, city: string, zip: string): Promise<En
       method: "POST",
       headers: { "X-Api-Key": PDL_API_KEY, "Content-Type": "application/json" },
       body: JSON.stringify(query),
+      signal: AbortSignal.timeout(15_000),
     });
     if (res.status === 402) throw new Error("PDL quota exceeded (402)");
     if (!res.ok) return null;

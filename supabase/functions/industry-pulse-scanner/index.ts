@@ -54,7 +54,7 @@ async function harvestBSEEDPermitSignals(sb: any): Promise<any[]> {
       );
       if (arcRes.ok) {
         const arcData = await arcRes.json();
-        permitData = (arcData?.features || [])
+        permitData = (Array.isArray(arcData?.features) ? arcData.features : [])
           .map((f: any) => f.attributes)
           .filter((a: any) => a && a.contact_business_name)
           .map((a: any) => ({
