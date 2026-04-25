@@ -2336,7 +2336,7 @@ serve(async (req) => {
         try {
           const { error: lockErr } = await sb
             .from("marketplace_lead_locks")
-            .update({ status: "sold", sold_at: new Date().toISOString() })
+            .update({ status: "sold" })
             .eq("lead_id", meta.lead_id)
             .eq("product", meta.product)
             .eq("buyer_email", meta.buyer_email)
