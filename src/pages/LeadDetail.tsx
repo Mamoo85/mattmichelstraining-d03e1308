@@ -8,7 +8,7 @@ import { BuyerEmailDialog } from "@/components/marketplace/BuyerEmailDialog";
 import { ShareLinkDialog } from "@/components/marketplace/ShareLinkDialog";
 import type { MarketplaceLead } from "@/components/marketplace/GoldenTicketCard";
 import { Loader2, ArrowLeft, Download, Share2, CheckCircle2, ScrollText, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
+import { toastSuccess, toastError } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { priceLabelFor } from "@/lib/marketplacePricing";
