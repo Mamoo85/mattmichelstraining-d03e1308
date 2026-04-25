@@ -66,7 +66,7 @@ serve(async (req) => {
           continue;
         }
 
-        const claimUrl = `https://detroitwebagent.com/my-tech-alert?token=${client.dashboard_token}&claim=${cand.id}`;
+        const claimUrl = `https://detroitwebagent.com/talent-radar/dashboard?token=${client.dashboard_token}&claim=${cand.id}`;
         const body = `🔥 SCORCHING ${cand.role} just surfaced in ${cand.location || "MI"}. Score ${cand.score}/10. CLAIM (48h lock): ${claimUrl}`;
 
         const result = await sendSMS(client.phone, TWILIO_FROM, body, "hire_alert");

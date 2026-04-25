@@ -1746,6 +1746,12 @@ verify_jwt = false
 [functions.enrich-prospect-pool]
 verify_jwt = false
 
+[functions.verify-dashboard-token]
+verify_jwt = false
+
+[functions.get-my-missed-call]
+verify_jwt = false
+
 [functions.create-marketplace-lead-checkout]
 verify_jwt = false
 
@@ -1790,6 +1796,7 @@ verify_jwt = false
 
 [functions.marketplace-reengagement]
 verify_jwt = false
+
 [functions.marketplace-watched-leads]
 verify_jwt = false
 

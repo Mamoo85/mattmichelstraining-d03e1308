@@ -7,6 +7,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 import { generateJSON } from "../_shared/ai.ts";
+import { withBreaker } from "../_shared/circuit-breaker.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -320,6 +321,9 @@ async function enrichWithPDL(candidate: ScoredCandidate): Promise<Record<string,
       signal: AbortSignal.timeout(10_000),
     });
 
+    if (res.status === 402) {
+      throw new Error(`PDL quota exceeded (402) for ${candidate.full_name}`);
+    }
     if (!res.ok) {
       const errText = await res.text();
       console.warn(`[hire-alert-scanner] PDL HTTP ${res.status} for ${candidate.full_name}: ${errText.slice(0, 200)}`);
@@ -1242,7 +1246,7 @@ Return JSON: { "score": number, "reason": "one sentence citing the top 1-2 signa
 
 function buildActionButtons(c: ScoredCandidate & { id?: string }, clientToken?: string): string {
   const buttons: string[] = [];
-  const dashBase = "https://m2training.lovable.app/my-techalert";
+  const dashBase = "https://detroitwebagent.com/talent-radar/dashboard";
 
   // Deep-link action buttons (Phase 4)
   if (clientToken && c.id) {
@@ -1427,7 +1431,7 @@ async function sendAlertEmail(
 
   <!-- DASHBOARD CTA -->
   ${client.dashboard_token ? `<tr><td style="background:#0a1628;padding:20px 28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;text-align:center;">
-    <a href="https://m2training.lovable.app/my-techalert?token=${client.dashboard_token}" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 32px;border-radius:10px;font-size:14px;font-weight:800;text-decoration:none;letter-spacing:0.5px;">📊 View Full Dossiers in Your Dashboard</a>
+    <a href="https://detroitwebagent.com/talent-radar/dashboard?token=${client.dashboard_token}" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 32px;border-radius:10px;font-size:14px;font-weight:800;text-decoration:none;letter-spacing:0.5px;">📊 View Full Dossiers in Your Dashboard</a>
     <p style="margin:10px 0 0;font-size:11px;color:#64748b;">Browse, filter, and track all candidates with complete contact information</p>
   </td></tr>` : ""}
 
@@ -1730,7 +1734,9 @@ serve(async (req: Request) => {
       // Phase 3: PDL Skip-Trace (only if we have LinkedIn or enough identity data)
       let pdlData: Record<string, unknown> = {};
       if (PDL_API_KEY && (candidate.linkedin_url || candidate.city)) {
-        pdlData = await enrichWithPDL(candidate);
+        const pdlRes = await withBreaker("pdl", () => enrichWithPDL(candidate));
+        if (pdlRes.skipped) console.warn("[hire-alert-scanner] PDL circuit open — skipping enrichment");
+        pdlData = pdlRes.ok ? (pdlRes.data ?? {}) : {};
         if (pdlData.pdl_mobile_phone || pdlData.pdl_personal_email) {
           pdlHits++;
           candidate.pdl_mobile_phone = pdlData.pdl_mobile_phone as string | undefined;
@@ -2093,7 +2099,7 @@ serve(async (req: Request) => {
 
       if (client.notify_sms && client.owner_phone && clientHotCandidates.length) {
         const top = clientHotCandidates[0];
-        const dashLink = client.dashboard_token ? ` View all: detroitwebagent.com/my-techalert?token=${client.dashboard_token}` : "";
+        const dashLink = client.dashboard_token ? ` View all: detroitwebagent.com/talent-radar/dashboard?token=${client.dashboard_token}` : "";
         const availLabel = top.availability_score >= 8 ? "High Availability" : top.availability_score >= 5 ? "Possible Availability" : "Monitor";
         const smsBody = clientHotCandidates.length === 1
           ? `Talent Radar: ${top.full_name} (${top.license_type || "licensed tech"}, ${top.city || "Metro Detroit"}) — ${availLabel}. You're the only one seeing this.${dashLink} Reply STOP to opt out.`
@@ -2285,7 +2291,7 @@ ${totalThisWeek > 0 ? `<table width="100%" style="border-collapse:collapse;margi
 ${candidateRows}
 </table>
 <p style="font-size:13px;color:#94a3b8;">Log in to see full contact info and claim candidates before they're gone.</p>` : `<p style="color:#94a3b8;font-size:14px;">It was a quiet week in your target area — the scanner ran every day and is ready to alert you the moment a new license shows up.</p>`}
-<p style="margin-top:20px;"><a href="https://www.detroitwebagent.com/my-tech-alert" style="background:#00d4ff;color:#0a1628;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:700;font-size:14px;">View My Dashboard →</a></p>
+<p style="margin-top:20px;"><a href="https://detroitwebagent.com/talent-radar/dashboard?token=${client.dashboard_token}" style="background:#00d4ff;color:#0a1628;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:700;font-size:14px;">View My Dashboard →</a></p>
 <div style="margin-top:24px;padding-top:16px;border-top:1px solid #1e3a5f;font-size:13px;color:#94a3b8;">
   <strong style="color:#e2e8f0;">Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;text-decoration:none;">(313) 992-1219</a>
 </div>

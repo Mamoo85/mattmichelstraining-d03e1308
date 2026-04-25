@@ -43,7 +43,10 @@ export default function LeadDetail() {
   });
   const pollTimerRef = useRef<number | null>(null);
 
-  const isPaid = params.get("paid") === "1" || params.get("print") === "1";
+  const isPrint = params.get("print") === "1";
+  // Server-side check replaces URL-param trust; ?print=1 is Browserless render (already gated by PDF fn).
+  const [isPaid, setIsPaid] = useState(isPrint);
+  const [verifying, setVerifying] = useState(!isPrint && params.get("paid") === "1");
   // Only honor the buyer email after passing email-shape validation; if the
   // URL value is bad we silently fall back to the stored one to preserve UX.
   const buyerEmail = buyerEmailValid ? buyerEmailCandidate : "";
@@ -65,6 +68,29 @@ export default function LeadDetail() {
     }
     return null;
   };
+
+  // Poll up to 30s for the Stripe webhook to mark the lock as sold after redirect.
+  useEffect(() => {
+    if (!verifying || !slug || !buyerEmail) { setVerifying(false); return; }
+    let attempts = 0;
+    const check = async () => {
+      const { data } = await supabase.functions.invoke("marketplace-verify-purchase", {
+        body: { lead_id: slug, buyer_email: buyerEmail },
+      });
+      if ((data as any)?.owned) {
+        setIsPaid(true);
+        setVerifying(false);
+      } else if (attempts < 6) {
+        attempts++;
+        setTimeout(check, 5000);
+      } else {
+        setVerifying(false);
+      }
+    };
+    check();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, buyerEmail]);
+
 
   useEffect(() => {
     if (!slug) return;
@@ -257,9 +283,9 @@ export default function LeadDetail() {
           </Card>
         )}
 
-        {loading ? (
+        {loading || verifying ? (
           <div className="flex items-center justify-center py-20 text-muted-foreground">
-            <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading dossier…
+            <Loader2 className="w-5 h-5 animate-spin mr-2" /> {verifying ? "Confirming payment…" : "Loading dossier…"}
           </div>
         ) : !lead ? (
           <div className="text-center py-20">

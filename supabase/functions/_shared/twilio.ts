@@ -213,6 +213,7 @@ export interface SMSResult {
   sid?: string;
   error?: string;
   skipped?: boolean;
+  twilio_code?: number;
 }
 
 export interface SMSOptions {
@@ -364,7 +365,7 @@ export async function sendSMS(
     const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
     const params: Record<string, string> = { To: to, From: from, Body: body };
     if (options?.statusCallback) params.StatusCallback = options.statusCallback;
-    const res = await fetch(
+    const res = await fetchWithRetry(
       `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
       {
         method: "POST",
@@ -374,7 +375,8 @@ export async function sendSMS(
         },
         body: new URLSearchParams(params),
         signal: AbortSignal.timeout(15_000),
-      }
+      },
+      { maxRetries: 2, baseDelayMs: 2_000, label: "Twilio" },
     );
 
     const data = await res.json();
@@ -404,7 +406,7 @@ export async function sendSMS(
         error_message: data?.message || `Twilio HTTP ${res.status}`,
         http_status: res.status,
       }).catch(() => {});
-      return { success: false, error: data?.message || "Twilio error" };
+      return { success: false, error: data?.message || "Twilio error", twilio_code: data?.code };
     }
 
     console.log(`[SMS] Sent to ${to} — SID: ${data.sid}`);

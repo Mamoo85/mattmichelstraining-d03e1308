@@ -155,7 +155,7 @@ serve(async (req) => {
   <div style="padding:0 24px 24px;">
     <div style="background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.1);border-radius:12px;padding:20px;text-align:center;">
       <p style="color:#00d4ff;font-size:13px;margin:0;">📊 Mark candidates as "Hired" in your dashboard to start tracking ROI.</p>
-      <a href="https://www.detroitwebagent.com/my-techalert?token=${client.dashboard_token}" style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:700;font-size:13px;padding:10px 24px;border-radius:8px;text-decoration:none;margin-top:12px;">Open Dashboard →</a>
+      <a href="https://detroitwebagent.com/talent-radar/dashboard?token=${client.dashboard_token}" style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:700;font-size:13px;padding:10px 24px;border-radius:8px;text-decoration:none;margin-top:12px;">Open Dashboard →</a>
     </div>
   </div>`}
 
@@ -172,7 +172,7 @@ serve(async (req) => {
 
   <!-- CTA -->
   <div style="padding:0 24px 32px;text-align:center;">
-    <a href="https://www.detroitwebagent.com/my-techalert?token=${client.dashboard_token}" style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:14px;padding:14px 32px;border-radius:10px;text-decoration:none;">Open Your Dashboard →</a>
+    <a href="https://detroitwebagent.com/talent-radar/dashboard?token=${client.dashboard_token}" style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:14px;padding:14px 32px;border-radius:10px;text-decoration:none;">Open Your Dashboard →</a>
   </div>
 
   <!-- Footer -->

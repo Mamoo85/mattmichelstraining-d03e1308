@@ -48,6 +48,22 @@ serve(async (req) => {
 
     console.log(`[RESEND-WEBHOOK] type=${type} resend_id=${resendId} matched=${updated?.length || 0}`, error ? `error: ${error.message}` : "");
 
+    // SECURITY: Hard-bounces and spam complaints suppress the address permanently.
+    // Prevents future Ingestion Pipeline sends to a known-dead or complaining endpoint.
+    if (status === "bounced" || status === "complained") {
+      const toAddress = Array.isArray(data?.to) ? data.to[0] : (data?.to || data?.email_address);
+      if (toAddress) {
+        await sb.from("suppressed_emails").upsert({
+          email: String(toAddress).toLowerCase().trim(),
+          reason: status === "bounced" ? "bounce" : "complaint",
+          metadata: { resend_email_id: resendId, event_type: type },
+        }, { onConflict: "email" }).catch((err: any) =>
+          console.warn("[RESEND-WEBHOOK] suppression upsert failed:", err.message)
+        );
+        console.log(`[RESEND-WEBHOOK] Suppressed ${toAddress} (${status})`);
+      }
+    }
+
     return new Response(JSON.stringify({ received: true, matched: updated?.length || 0 }), {
       status: 200,
       headers: { "Content-Type": "application/json" },

@@ -28,6 +28,22 @@ serve(async (req) => {
 
     const sb = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
 
+    // SECURITY: Verify caller holds a sold lock before generating any dossier.
+    // Prevents unauthenticated callers from rendering paid content via a known lead_id.
+    const { data: lock } = await sb
+      .from("marketplace_lead_locks")
+      .select("status")
+      .eq("lead_id", lead_id)
+      .eq("product", product)
+      .eq("buyer_email", buyer_email)
+      .eq("status", "sold")
+      .maybeSingle();
+    if (!lock) {
+      return new Response(JSON.stringify({ error: "purchase_not_found" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Cache check
     const { data: cached } = await sb.from("marketplace_lead_pdfs")
       .select("storage_path, signed_url, signed_url_expires_at")

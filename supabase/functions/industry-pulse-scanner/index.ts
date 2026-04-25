@@ -54,9 +54,9 @@ async function harvestBSEEDPermitSignals(sb: any): Promise<any[]> {
       );
       if (arcRes.ok) {
         const arcData = await arcRes.json();
-        permitData = (arcData?.features || [])
+        permitData = (Array.isArray(arcData?.features) ? arcData.features : [])
           .map((f: any) => f.attributes)
-          .filter((a: any) => a.contact_business_name)
+          .filter((a: any) => a && a.contact_business_name)
           .map((a: any) => ({
             contractor_name: a.contact_business_name,
             permit_type: a.permit_type,
@@ -245,7 +245,8 @@ export async function findDecisionMakers(
       return [];
     }
     const data = await res.json();
-    const people = (data?.people || []) as any[];
+    const rawPeople = data?.people ?? data?.contacts ?? data?.results ?? [];
+    const people = (Array.isArray(rawPeople) ? rawPeople : []) as any[];
     return people.slice(0, 3).map((p) => ({
       name: `${p.first_name || ""} ${p.last_name || ""}`.trim(),
       title: p.title || "",
@@ -314,7 +315,9 @@ async function boostStormCorrelatedPermitSignals(signals: any[]): Promise<void> 
     );
     if (!res.ok) return;
     const data = await res.json();
-    const stormEvents = (data?.results || []).filter((e: any) => /wind|hail|storm|tornado|flood/i.test(e.type || ""));
+    const stormRaw = data?.results ?? data?.data ?? [];
+    const stormEvents = (Array.isArray(stormRaw) ? stormRaw : []).filter((e: any) =>
+      /wind|hail|storm|tornado|flood/i.test(e.type || e.event_type || e.eventType || ""));
     if (!stormEvents.length) return;
     for (const sig of signals) {
       if (sig.signal_type === "permit_surge") {
@@ -371,7 +374,12 @@ const FALLBACK_MAPPINGS: Record<string, string[]> = {
 
 function extractJSON(raw: string): any {
   const cleaned = raw.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
-  return JSON.parse(cleaned);
+  try {
+    return JSON.parse(cleaned);
+  } catch (e) {
+    console.warn("[extractJSON] Ingestion Pipeline parse failed:", String(e), "raw prefix:", cleaned.slice(0, 150));
+    return [];
+  }
 }
 
 async function harvestHiringSignals(query: string): Promise<string> {
@@ -563,10 +571,16 @@ async function harvestMEDCGrantSignals(): Promise<any[]> {
     const j = await r.json();
     const text = j?.choices?.[0]?.message?.content || "[]";
     const cleaned = text.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
-    const arr = JSON.parse(cleaned);
-    if (!Array.isArray(arr)) return [];
+    let arr: any[];
+    try {
+      const parsed = JSON.parse(cleaned);
+      arr = Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.warn("[Ingestion Pipeline] JSON parse failed:", String(e), "raw:", cleaned.slice(0, 150));
+      arr = [];
+    }
     return arr.map((item: any) => ({
-      company_name: item.company_name || "Unknown",
+      company_name: item.company_name || item.name || "Unknown",
       location: `${item.city || "Metro Detroit"}, MI`,
       industry: item.industry || "Manufacturing",
       hiring_roles: [`${item.jobs_created || "?"} jobs planned`],

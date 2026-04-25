@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
+import { encode as base64url } from "https://deno.land/std@0.190.0/encoding/base64url.ts";
 import { getStripeSecretKey, getStripeWebhookSecret, isStripeTestMode } from "../_shared/stripe-key.ts";
 
 const STRIPE_SECRET_KEY = getStripeSecretKey();
@@ -34,6 +35,15 @@ async function getUserIdByEmail(sb: any, email: string): Promise<string | null> 
 }
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
+async function signMortgageToken(email: string): Promise<string> {
+  const payload = JSON.stringify({ email, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 });
+  const tokenB64 = base64url(new TextEncoder().encode(payload));
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(SUPABASE_SERVICE_KEY),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(tokenB64));
+  return `${tokenB64}.${base64url(new Uint8Array(sig))}`;
+}
 const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 
@@ -1269,7 +1279,8 @@ export const handler = async (req: Request): Promise<Response> => {
           if (insertErr) throw new Error(`mortgage_radar_clients insert: ${insertErr.message}`);
 
           const siteUrl = "https://detroitwebagent.com";
-          const dashLink = `${siteUrl}/my-mortgage-radar?email=${encodeURIComponent(email)}`;
+          const dashToken = await signMortgageToken(email);
+          const dashLink = `${siteUrl}/my-mortgage-radar?email=${encodeURIComponent(email)}&token=${encodeURIComponent(dashToken)}`;
           const tierLabel = tier === "team" ? "$899/mo Team (15 ZIPs)" : "$399/mo Solo (5 ZIPs)";
 
           if (RESEND_API_KEY) {
@@ -2313,11 +2324,12 @@ export const handler = async (req: Request): Promise<Response> => {
               active: true,
               stripe_subscription_id: session.subscription as string || null,
             }, { onConflict: "email" });
-            await fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
-              body: JSON.stringify({ email, type: "missed_call_subscription", name: meta.businessName || meta.business_name || meta.name }),
-            });
+            const { data: mcRow } = await sb.from("missed_call_clients" as any)
+              .select("dashboard_token").eq("email", email).maybeSingle();
+            const mcToken = (mcRow as any)?.dashboard_token || "";
+            const mcDashUrl = `https://detroitwebagent.com/my-missed-call${mcToken ? `?token=${mcToken}` : ""}`;
+            const mcBizName = meta.businessName || meta.business_name || meta.name || "there";
+            await dwaEmail(email, "Missed Call Catch is Active — Never Lose a Lead Again", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">📞 MISSED CALL CATCH</p><h1 style="color:#fff;font-size:24px;margin:0 0 8px;">You're live, ${mcBizName}.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Every missed call now gets an instant text-back from your business. No lead slips through.</p><div style="text-align:center;margin:0 0 24px;"><a href="${mcDashUrl}" style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:15px;padding:14px 40px;border-radius:8px;text-decoration:none;">View Your Dashboard →</a><p style="color:#64748b;font-size:12px;margin:10px 0 0;">See your call stats and current response message.</p></div><div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:20px;"><p style="color:#fff;font-weight:700;font-size:13px;margin:0 0 10px;">WHAT HAPPENS NEXT:</p><p style="margin:0 0 8px;color:#e2e8f0;font-size:13px;">• Calls to your number forward to our system automatically</p><p style="margin:0 0 8px;color:#e2e8f0;font-size:13px;">• Missed calls get an instant text-back with your custom message</p><p style="margin:0;color:#e2e8f0;font-size:13px;">• Reply to this email if you want to update your response message</p></div></div><p style="color:#475569;font-size:11px;text-align:center;margin-top:16px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p></div></body></html>`);
             await notifyMatt(
               `💰 New Missed Call client — ${meta.businessName || meta.business_name || email} ($99/mo)`,
               `<p><strong>${meta.businessName || meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}</p>`
@@ -2343,11 +2355,12 @@ export const handler = async (req: Request): Promise<Response> => {
               active: true,
               stripe_subscription_id: session.subscription as string || null,
             }, { onConflict: "email" });
-            await fetch(`${SUPABASE_URL}/functions/v1/auto-onboard`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
-              body: JSON.stringify({ email, type: "field_service_subscription", name: meta.company || meta.business_name || meta.name }),
-            });
+            const { data: fdRow } = await sb.from("field_crm_clients" as any)
+              .select("dispatch_token").eq("email", email).maybeSingle();
+            const dispatchToken = (fdRow as any)?.dispatch_token || "";
+            const dispatchUrl = `https://detroitwebagent.com/field-service/dispatch${dispatchToken ? `?token=${dispatchToken}` : ""}`;
+            const fdBizName = meta.company || meta.business_name || meta.name || "there";
+            await dwaEmail(email, "FieldDesk is Live — Your Dispatch Board is Ready", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">⚙️ FIELDDESK</p><h1 style="color:#fff;font-size:24px;margin:0 0 8px;">FieldDesk is live, ${fdBizName}.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Your dispatch board, job tracking, and tech mobile app are ready.</p><div style="text-align:center;margin:0 0 24px;"><a href="${dispatchUrl}" style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:15px;padding:14px 40px;border-radius:8px;text-decoration:none;">Open Dispatch Board →</a><p style="color:#64748b;font-size:12px;margin:10px 0 0;">Bookmark this link — it's your private dashboard access.</p></div><div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:20px;"><p style="color:#fff;font-weight:700;font-size:13px;margin:0 0 12px;">TWO QUICK SETUP STEPS:</p><p style="margin:0 0 10px;color:#e2e8f0;font-size:13px;"><span style="background:#00d4ff;color:#0a1628;font-weight:800;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:8px;">STEP 1</span>Reply with your tech list — names and cell numbers</p><p style="margin:0;color:#e2e8f0;font-size:13px;"><span style="background:#00d4ff;color:#0a1628;font-weight:800;font-size:11px;padding:2px 8px;border-radius:4px;margin-right:8px;">STEP 2</span>Techs install the mobile app: <a href="https://detroitwebagent.com/field-service/tech" style="color:#00d4ff;">detroitwebagent.com/field-service/tech</a></p></div></div><p style="color:#475569;font-size:11px;text-align:center;margin-top:16px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p></div></body></html>`);
             await notifyMatt(
               `💰 New FieldDesk client — ${meta.company || meta.business_name || email} ($199/mo)`,
               `<p><strong>${meta.company || meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>Industry: ${meta.industry || "not specified"}<br>Plan: ${meta.plan || "standalone"}</p>`
@@ -2650,6 +2663,64 @@ export const handler = async (req: Request): Promise<Response> => {
           return new Response(JSON.stringify({ error: "agency_performance_setup processing failed" }), { status: 500 });
         }
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── Dead Lead Billing Setup — card saved, activate auto-charge ─────────────
+      if (meta.type === "dead_lead_billing_setup") {
+        try {
+          const setupIntentId = (session as any).setup_intent as string | null;
+          let paymentMethodId: string | null = null;
+          if (setupIntentId) {
+            const si = await stripe.setupIntents.retrieve(setupIntentId);
+            paymentMethodId = si.payment_method as string | null;
+          }
+          if (paymentMethodId && meta.contractor_id) {
+            await (sb.from as any)("contractor_clients")
+              .update({ stripe_payment_method_id: paymentMethodId, dead_lead_billing_active: true })
+              .eq("id", meta.contractor_id);
+            const { data: cRow } = await (sb.from as any)("contractor_clients")
+              .select("email, business_name, roi_token")
+              .eq("id", meta.contractor_id)
+              .maybeSingle();
+            const cEmail = (cRow as any)?.email;
+            const cBiz = (cRow as any)?.business_name || "there";
+            const statsUrl = (cRow as any)?.roi_token
+              ? `https://detroitwebagent.com/dead-lead-stats?token=${(cRow as any).roi_token}`
+              : "https://detroitwebagent.com";
+            if (cEmail) {
+              await dwaEmail(cEmail, "You're Set — Auto-Billing is Active for Dead Lead Recovery",
+                `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">♻️ DEAD LEAD REACTIVATION</p><h1 style="color:#fff;font-size:22px;margin:0 0 8px;">Card saved, ${cBiz}.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Auto-billing is live. Every time one of your dead leads replies YES, you'll be notified instantly and $50 is charged automatically — no invoice, no waiting.</p><div style="text-align:center;margin:0 0 24px;"><a href="${statsUrl}" style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:800;font-size:15px;padding:14px 40px;border-radius:8px;text-decoration:none;">View Your Campaign Stats →</a></div><div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:20px;"><p style="color:#fff;font-weight:700;font-size:13px;margin:0 0 10px;">WHAT HAPPENS NEXT:</p><p style="margin:0 0 8px;color:#e2e8f0;font-size:13px;">• Your dead leads get a 3-text SMS drip starting tomorrow at 10am</p><p style="margin:0 0 8px;color:#e2e8f0;font-size:13px;">• You get an instant text when someone replies interested</p><p style="margin:0;color:#e2e8f0;font-size:13px;">• $50 is auto-charged only on positive replies — nothing if no one responds</p></div></div><p style="color:#475569;font-size:11px;text-align:center;margin-top:16px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p></div></body></html>`
+              );
+            }
+            await notifyMatt(
+              `💳 Dead lead card saved — ${cBiz}`,
+              `<p><strong>${cBiz}</strong> saved card. Auto-$50 fires on positive replies.<br>Contractor ID: ${meta.contractor_id}</p>`
+            );
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] dead_lead_billing_setup error:", e);
+          return new Response(JSON.stringify({ error: "dead_lead_billing_setup failed" }), { status: 500 });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── Marketplace lead purchase — promote soft_lock → sold ─────────────────
+      if (meta.type === "marketplace_lead_purchase") {
+        try {
+          const { error: lockErr } = await sb
+            .from("marketplace_lead_locks")
+            .update({ status: "sold", access_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() })
+            .eq("lead_id", meta.lead_id)
+            .eq("product", meta.product)
+            .eq("buyer_email", meta.buyer_email)
+            .eq("status", "soft_lock");
+          if (lockErr) throw lockErr;
+          console.log(`[WEBHOOK] marketplace sold: lead=${meta.lead_id} product=${meta.product} buyer=${meta.buyer_email}`);
+        } catch (e) {
+          console.error("[WEBHOOK] marketplace_lead_purchase error:", e);
+          return new Response(JSON.stringify({ error: "marketplace_lead_purchase processing failed" }), { status: 500 });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // Unmatched checkout.session.completed — log and acknowledge

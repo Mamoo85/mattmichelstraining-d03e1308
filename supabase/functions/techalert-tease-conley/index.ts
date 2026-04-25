@@ -115,7 +115,7 @@ function renderRichCard(c: any, i: number): string {
               <a href="${checkoutUrl}" style="display:block;background:linear-gradient(135deg,#00d4ff,#0066ff);color:#fff;font-size:12px;font-weight:700;padding:10px 0;border-radius:8px;text-decoration:none;text-align:center">⚡ Unlock All Candidates</a>
             </td>
             <td style="width:50%;padding-left:6px">
-              <a href="https://m2training.lovable.app/my-techalert?token=DEMO" style="display:block;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:12px;font-weight:700;padding:10px 0;border-radius:8px;text-decoration:none;text-align:center">📊 See Live Dashboard</a>
+              <a href="https://detroitwebagent.com/talent-radar/dashboard?token=DEMO" style="display:block;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:12px;font-weight:700;padding:10px 0;border-radius:8px;text-decoration:none;text-align:center">📊 See Live Dashboard</a>
             </td>
           </tr>
         </table>
