@@ -252,23 +252,12 @@ const AllServices = lazyRetry(() => import("./pages/AllServices"));
 const ReferralPage = lazyRetry(() => import("./pages/ReferralPage"));
 const PrivacyPolicy = lazyRetry(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazyRetry(() => import("./pages/TermsOfService"));
-const AIOnboardingAgent = lazyRetry(() => import("./pages/AIOnboardingAgent"));
-const AISocialProof = lazyRetry(() => import("./pages/AISocialProof"));
-const AIPriceMonitor = lazyRetry(() => import("./pages/AIPriceMonitor"));
-const AIMeetingPrep = lazyRetry(() => import("./pages/AIMeetingPrep"));
-const AIDirectorySubmitter = lazyRetry(() => import("./pages/AIDirectorySubmitter"));
+// AIOnboardingAgent, AISocialProof, AIPriceMonitor, AIMeetingPrep, AIDirectorySubmitter — DELISTED. Files preserved.
 const M2Development = lazyRetry(() => import("./pages/M2Development"));
-const AIHandbook = lazyRetry(() => import("./pages/AIHandbook"));
-const AIGrantFinder = lazyRetry(() => import("./pages/AIGrantFinder"));
-const AIBattlecard = lazyRetry(() => import("./pages/AIBattlecard"));
-const AIMarketIntel = lazyRetry(() => import("./pages/AIMarketIntel"));
-const AIPermitMonitor = lazyRetry(() => import("./pages/AIPermitMonitor"));
-const AIOshaCompliance = lazyRetry(() => import("./pages/AIOshaCompliance"));
+// AIHandbook, AIGrantFinder, AIBattlecard, AIMarketIntel, AIPermitMonitor, AIOshaCompliance — DELISTED. Files preserved.
 const DarkWebMonitor = lazyRetry(() => import("./pages/DarkWebMonitor"));
 const DarkWebDashboard = lazyRetry(() => import("./pages/DarkWebDashboard"));
-const AICollections = lazyRetry(() => import("./pages/AICollections"));
-const AIInventoryAlerts = lazyRetry(() => import("./pages/AIInventoryAlerts"));
-const AIBirthdayCampaign = lazyRetry(() => import("./pages/AIBirthdayCampaign"));
+// AICollections, AIInventoryAlerts, AIBirthdayCampaign — DELISTED. Files preserved.
 const LinkedInOutreach = lazyRetry(() => import("./pages/LinkedInOutreach"));
 const AbandonedCartRecovery = lazyRetry(() => import("./pages/AbandonedCartRecovery"));
 const ClientReportGenerator = lazyRetry(() => import("./pages/ClientReportGenerator"));
