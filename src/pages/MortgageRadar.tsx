@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import SEOHead from "@/components/layout/SEOHead";
 import { Home, Target, Shield, FileText, TrendingUp, Bell, CheckCircle, ArrowRight, MapPin, Lock } from "lucide-react";
 import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
+import CheckEmailCard from "@/components/checkout/CheckEmailCard";
 
 type Tier = "solo" | "team";
 
