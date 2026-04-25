@@ -5009,6 +5009,48 @@ export type Database = {
         }
         Relationships: []
       }
+      engine_logs: {
+        Row: {
+          duration_ms: number | null
+          error_message: string | null
+          finished_at: string | null
+          id: string
+          metadata: Json | null
+          pipeline: string
+          records_failed: number
+          records_processed: number
+          run_id: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          duration_ms?: number | null
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          metadata?: Json | null
+          pipeline: string
+          records_failed?: number
+          records_processed?: number
+          run_id?: string
+          started_at?: string
+          status: string
+        }
+        Update: {
+          duration_ms?: number | null
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          metadata?: Json | null
+          pipeline?: string
+          records_failed?: number
+          records_processed?: number
+          run_id?: string
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       enrichment_jitter_log: {
         Row: {
           created_at: string
@@ -16100,10 +16142,14 @@ export type Database = {
           created_at: string
           error_message: string | null
           id: string
+          last_retry_at: string | null
           metadata: Json | null
           product: string | null
           provider_id: string | null
           recipient: string
+          requires_retry: boolean
+          retry_count: number
+          retry_payload: Json | null
           status: string
           twilio_error_code: string | null
           twilio_status: string | null
@@ -16116,10 +16162,14 @@ export type Database = {
           created_at?: string
           error_message?: string | null
           id?: string
+          last_retry_at?: string | null
           metadata?: Json | null
           product?: string | null
           provider_id?: string | null
           recipient: string
+          requires_retry?: boolean
+          retry_count?: number
+          retry_payload?: Json | null
           status?: string
           twilio_error_code?: string | null
           twilio_status?: string | null
@@ -16132,10 +16182,14 @@ export type Database = {
           created_at?: string
           error_message?: string | null
           id?: string
+          last_retry_at?: string | null
           metadata?: Json | null
           product?: string | null
           provider_id?: string | null
           recipient?: string
+          requires_retry?: boolean
+          retry_count?: number
+          retry_payload?: Json | null
           status?: string
           twilio_error_code?: string | null
           twilio_status?: string | null

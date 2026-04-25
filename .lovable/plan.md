@@ -1,99 +1,103 @@
-## Code-Level Click-Test Audit — Findings + Fix Plan
+# Autonomous Engine & System Health Finalization
 
-I traced every flow specified in the mandate against the actual React component logic. No hallucinated browser testing — all findings come from reading the source.
+Extends existing telemetry (`system_comms_log`, `cron_job_health`, `cron-sentinel`, `HealthComplianceHub`) rather than duplicating it. Three additive layers — no UI restyling, strict DWA nomenclature ("Automated Systems," "Ingestion Pipelines," "Proprietary Infrastructure" — never "agents/bots").
 
----
+## 1. Centralized Heartbeat Log — `engine_logs` table
 
-### What I traced and found CLEAN (no fixes needed)
+New table capturing **per-execution** footprints (the existing `system_comms_log` is per-message; `cron_job_health` is rolling aggregate — neither captures "job X started at T, processed N records, finished OK").
 
-**Phase 1 — Admin panel sweep (200+ admin components):**
-- Pattern-scanned all 131 admin files that perform Supabase mutations.
-- Zero swallowed catches (`catch {}`, `catch(){}`).
-- Zero `supabase.functions.invoke` calls without an associated `toast` import.
-- The earlier "DWA Defensive Programming Protocol" sweep already eliminated this class of bug. Admin is solid.
-
-**Phase 2 — HireAlert + MyTechAlert + portal unlock:**
-- `handleCheckout` uses `ActionButton` (single-flight), validates email/roles/ToS, error toasts wired.
-- Token-based portal access (`MyTechAlert`) properly handles loading / error / missing-token / expired-token states.
-- No broken paths.
-
-**Phase 3 — ClaimLead + LeadDetail + LeadUnlocked:**
-- `?lead_id=` parsed via hardened `parseParams` validators (UUID, email, Stripe session regex).
-- Invalid params show `<LinkExpired />` recovery screen instead of crashing.
-- `$50 Claim` button uses `ActionButton` (double-tap proof).
-- Webhook race window handled with a polling banner ("Confirming payment with Stripe… 2–5s") before the unblur.
-- LeadDetail correctly transitions Locked → Unlocked dossier on `?paid=1` + sold lock.
-
----
-
-### REAL DEFECTS FOUND (will fix)
-
-**1. FieldDesk has no post-purchase receipt confirmation** (highest-impact bug — $199–299/mo product)
-
-- `create-field-service-checkout` `success_url` doesn't include `{CHECKOUT_SESSION_ID}`.
-- `FieldServiceManagement.tsx` success state has no `<ReceiptStatusBanner>` or `<CheckEmailCard>`.
-- After paying, the buyer sees a static "FieldDesk is Live!" page with no proof their card actually charged. They go to email and wait — bounce risk is high on mobile.
-
-**2. Four other top-flow checkouts also strip the session ID from success URLs**, so even if the destination page renders `<ReceiptStatusBanner>` it has nothing to poll:
-
-| Edge function | Current `success_url` | Fix |
-|---|---|---|
-| `create-field-service-checkout` | `?success=1` | append `&session_id={CHECKOUT_SESSION_ID}` |
-| `create-hire-alert-checkout` | `?success=1` | append `&session_id={CHECKOUT_SESSION_ID}` |
-| `create-mortgage-radar-checkout` | `?success=1&tier=...` | append `&session_id={CHECKOUT_SESSION_ID}` |
-| `create-bundle-revenue-suite-checkout` | `?status=success` | append `&session_id={CHECKOUT_SESSION_ID}` |
-| `create-contractor-checkout` | `?success=1&trade=...` | append `&session_id={CHECKOUT_SESSION_ID}` |
-
-(`create-marketplace-lead-checkout` and `create-contractor-ppl-checkout` already pass `{CHECKOUT_SESSION_ID}` correctly — leave them.)
-
-**3. FieldServiceManagement loading state uses `min-h-screen` (`100vh`)** instead of `100dvh`. Same iOS Safari toolbar clipping issue we already fixed on ClaimLead. Patch the success state at the same time.
-
----
-
-### Brand sweep — surgical "AI" rebrand (per your answer)
-
-Scope: rename only **visible UI labels** in JSX text, button copy, badge chips, and toast strings on the dedicated `/ai-*` landing pages. Keep route slugs, file names, SEO titles, meta descriptions, OG tags, and database product keys intact so SEO + analytics + product catalog don't break.
-
-Pages I'll touch (visible label rename):
-- `AIBirthdayCampaign`, `AIOnboardingAgent`, `AIReputationDashboard`, `AINewsletterService`, `AIGrantFinder`, `AIAdsCopyGenerator`, `AIEcommerceListings`, `AIBattlecard`, `AIRealEstateDrip`, `AIFranchiseOps`, `AICollections`, `AIMeetingPrep`, plus any visible "AI"-prefixed labels surfaced by a final ripgrep pass on the `/admin` and `/dashboard` regions.
-
-Replacement vocabulary (per brand rule): "Automated Routing", "Built-in Systems", "Automated Engine", "Smart Automation". Headlines like "Stop Guessing. Let AI Write Your Ads." → "Stop Guessing. Let Our Engine Write Your Ads." Badge chips like "AI Newsletter Service" → "Automated Newsletter Service".
-
-What I will NOT change (preserving production):
-- File paths, route paths, `path="/ai-…"` SEO routes
-- `<SEOHead title="AI X — $YY/mo" …>` titles + descriptions (search-indexed)
-- Database product keys, Stripe `metadata.type` values
-- Internal admin tools (already non-customer-facing)
-
----
-
-### Execution checklist
-
-```text
-1. supabase/functions/create-field-service-checkout/index.ts
-   └─ append &session_id={CHECKOUT_SESSION_ID}
-
-2. supabase/functions/create-hire-alert-checkout/index.ts
-   └─ append &session_id={CHECKOUT_SESSION_ID}
-
-3. supabase/functions/create-mortgage-radar-checkout/index.ts
-   └─ append &session_id={CHECKOUT_SESSION_ID}
-
-4. supabase/functions/create-bundle-revenue-suite-checkout/index.ts
-   └─ append &session_id={CHECKOUT_SESSION_ID}
-
-5. supabase/functions/create-contractor-checkout/index.ts
-   └─ append &session_id={CHECKOUT_SESSION_ID}
-
-6. src/pages/FieldServiceManagement.tsx
-   ├─ import ReceiptStatusBanner + CheckEmailCard
-   ├─ inject both into success-state header
-   └─ swap min-h-screen / 100vh → 100dvh
-
-7. Surgical AI-label rename across the 12 product pages
-   └─ visible JSX text + badge chips + button copy only
-
-8. tsc --noEmit verification + redeploy 5 edge functions
+```sql
+CREATE TABLE public.engine_logs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  pipeline text NOT NULL,              -- e.g. 'hire-alert-scanner'
+  run_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  status text NOT NULL,                -- 'started' | 'success' | 'partial' | 'failed'
+  records_processed int DEFAULT 0,
+  records_failed int DEFAULT 0,
+  duration_ms int,
+  error_message text,
+  metadata jsonb,
+  started_at timestamptz NOT NULL DEFAULT now(),
+  finished_at timestamptz
+);
+-- RLS: admin SELECT, service_role full
+-- Indexes on (pipeline, started_at DESC), (status) WHERE status IN ('failed','partial')
 ```
 
-No new tables. No new auth surfaces. No SEO regressions. No re-architecture. Approve and I'll execute.
+Shared helper `supabase/functions/_shared/engine-log.ts` exporting `startRun(pipeline)` → returns `{ runId, complete(records, opts), fail(error) }`. Wraps insert + update; never throws (telemetry must not break pipelines).
+
+**Instrumented pipelines (Phase 1 — top revenue paths):**
+- `hire-alert-scanner`
+- `contractor-lead-notify`
+- `dead-lead-drip`
+- `missed-call-handler`
+- `mortgage-radar-scanner`
+- `process-email-queue`
+- `cron-sentinel` itself
+
+Pattern: `const run = await startRun('hire-alert-scanner'); ... await run.complete(processed);` in the success path; `await run.fail(err)` in catch.
+
+## 2. Dead-Letter Queue & Self-Healing
+
+Add `requires_retry` columns to the existing comms log instead of a parallel table:
+
+```sql
+ALTER TABLE public.system_comms_log
+  ADD COLUMN requires_retry boolean NOT NULL DEFAULT false,
+  ADD COLUMN retry_count int NOT NULL DEFAULT 0,
+  ADD COLUMN last_retry_at timestamptz,
+  ADD COLUMN retry_payload jsonb;       -- enough to re-dispatch (to, body, product)
+CREATE INDEX idx_comms_retry_pending
+  ON public.system_comms_log (created_at)
+  WHERE requires_retry = true AND retry_count < 5;
+```
+
+**`_shared/twilio.ts` change**: on Twilio fetch failure or non-2xx, instead of just logging `status='error'`, write the row with `requires_retry=true` + `retry_payload={to,body,product}`. Same pattern in `_shared/stripe-helpers` for webhook dispatch failures (timeouts only — never duplicate paid charges; retries are scoped to *outbound notifications* and *idempotent edge-function invocations*, not Stripe API mutations).
+
+**New cron + function**: `dispatch-retry-queue` runs every 10 min. Selects up to 100 rows where `requires_retry=true AND retry_count < 5`, re-dispatches via the appropriate channel, increments `retry_count`, clears flag on success. After 5 attempts, sets `status='dead_letter'`, clears `requires_retry`, calls `notifyMatt` once. Each scanner cron also calls this **before** new work so stranded records drain first.
+
+Scheduled with `safe_cron_schedule` per the Cron Safety Layer rules — hardcoded URL + inlined anon JWT, NULL guards, no vault lookups.
+
+## 3. Admin Dashboard — "Automated Systems Heartbeat"
+
+New component `src/components/dwa-admin/AutomatedSystemsHeartbeat.tsx`. Mounted as the **first tile** inside the existing `HealthComplianceHub` "🛡️ Service Resilience" sub-tab (no nav restructure, no styling overrides — reuses the same glass-card / pill conventions as `EnrichmentHealthStrip`).
+
+Reads:
+- `engine_logs` — last run per pipeline, success rate (24h), avg duration
+- `system_comms_log WHERE requires_retry=true` — dead-letter backlog
+- `cron_job_health` — already-tracked freshness
+
+Renders one row per Ingestion Pipeline with a colored dot:
+- **Green**: last run succeeded AND within expected interval AND retry backlog < 10
+- **Amber**: stale (>2× expected interval) OR retry backlog 10–50 OR last run = `partial`
+- **Red**: last run = `failed` OR retry backlog > 50 OR pipeline silent > 24h
+
+Auto-refresh every 60s. Click a row → expandable panel showing last 10 `engine_logs` rows for that pipeline. Copy: "Automated Systems," "Ingestion Pipeline," "Proprietary Infrastructure." No "agent/bot/AI" terminology in any string, comment, or label.
+
+## Out of scope (intentionally)
+
+- No UI restyling outside the new heartbeat tile
+- No retries on Stripe charge mutations (idempotency risk) — only on outbound SMS/email and idempotent function invocations
+- Phase 2 instrumentation of the remaining ~580 edge functions follows the same pattern but is a follow-up sweep
+
+## File changes
+
+**New (5):**
+- `supabase/migrations/<ts>_engine_logs_and_dead_letter.sql`
+- `supabase/functions/_shared/engine-log.ts`
+- `supabase/functions/dispatch-retry-queue/index.ts`
+- `supabase/migrations/<ts>_dispatch_retry_queue_cron.sql`
+- `src/components/dwa-admin/AutomatedSystemsHeartbeat.tsx`
+
+**Edited (~9):**
+- `supabase/functions/_shared/twilio.ts` — write `requires_retry` on failure
+- `supabase/functions/hire-alert-scanner/index.ts`
+- `supabase/functions/contractor-lead-notify/index.ts`
+- `supabase/functions/dead-lead-drip/index.ts`
+- `supabase/functions/missed-call-handler/index.ts`
+- `supabase/functions/mortgage-radar-scanner/index.ts`
+- `supabase/functions/process-email-queue/index.ts`
+- `supabase/functions/cron-sentinel/index.ts`
+- `src/components/dwa-admin/HealthComplianceHub.tsx` — mount new tile
+
+Approve and I'll execute.
