@@ -1246,7 +1246,7 @@ Return JSON: { "score": number, "reason": "one sentence citing the top 1-2 signa
 
 function buildActionButtons(c: ScoredCandidate & { id?: string }, clientToken?: string): string {
   const buttons: string[] = [];
-  const dashBase = "https://m2training.lovable.app/my-techalert";
+  const dashBase = "https://detroitwebagent.com/talent-radar/dashboard";
 
   // Deep-link action buttons (Phase 4)
   if (clientToken && c.id) {
@@ -2099,7 +2099,7 @@ serve(async (req: Request) => {
 
       if (client.notify_sms && client.owner_phone && clientHotCandidates.length) {
         const top = clientHotCandidates[0];
-        const dashLink = client.dashboard_token ? ` View all: detroitwebagent.com/my-techalert?token=${client.dashboard_token}` : "";
+        const dashLink = client.dashboard_token ? ` View all: detroitwebagent.com/talent-radar/dashboard?token=${client.dashboard_token}` : "";
         const availLabel = top.availability_score >= 8 ? "High Availability" : top.availability_score >= 5 ? "Possible Availability" : "Monitor";
         const smsBody = clientHotCandidates.length === 1
           ? `Talent Radar: ${top.full_name} (${top.license_type || "licensed tech"}, ${top.city || "Metro Detroit"}) — ${availLabel}. You're the only one seeing this.${dashLink} Reply STOP to opt out.`
@@ -2291,7 +2291,7 @@ ${totalThisWeek > 0 ? `<table width="100%" style="border-collapse:collapse;margi
 ${candidateRows}
 </table>
 <p style="font-size:13px;color:#94a3b8;">Log in to see full contact info and claim candidates before they're gone.</p>` : `<p style="color:#94a3b8;font-size:14px;">It was a quiet week in your target area — the scanner ran every day and is ready to alert you the moment a new license shows up.</p>`}
-<p style="margin-top:20px;"><a href="https://www.detroitwebagent.com/my-tech-alert" style="background:#00d4ff;color:#0a1628;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:700;font-size:14px;">View My Dashboard →</a></p>
+<p style="margin-top:20px;"><a href="https://detroitwebagent.com/talent-radar/dashboard?token=${client.dashboard_token}" style="background:#00d4ff;color:#0a1628;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:700;font-size:14px;">View My Dashboard →</a></p>
 <div style="margin-top:24px;padding-top:16px;border-top:1px solid #1e3a5f;font-size:13px;color:#94a3b8;">
   <strong style="color:#e2e8f0;">Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;text-decoration:none;">(313) 992-1219</a>
 </div>
