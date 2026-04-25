@@ -2220,7 +2220,7 @@ serve(async (req: Request) => {
     await sb.from("raw_signals_dump").insert({
       scanner: "hire-alert-scanner",
       source: "all",
-      vertical: (typeof body === "object" && body && (body as any).vertical_filter) || "mixed",
+      vertical: "mixed",
       raw_payload: { source_health: sourceHealth, sample: allRaw.slice(0, 25) },
       pulled_count: allRaw.length,
       kept_after_gate: deduped.length,
