@@ -4,16 +4,23 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import LeadQualityBadges, { LeadQualityData } from "@/components/contractor/LeadQualityBadges";
+import LinkExpired from "@/components/shared/LinkExpired";
+import { parseParams } from "@/lib/parseSearchParams";
+import { toastError, toastInfo } from "@/lib/toast";
 
 export default function ClaimLead() {
   const [searchParams] = useSearchParams();
-  const lead_id = searchParams.get("lead_id") || "";
-  const contractor_id = searchParams.get("contractor_id") || "";
-  const contractor_email = searchParams.get("email") || "";
-  const hasMissingParams = !lead_id || !contractor_id || !contractor_email;
+  const parsed = parseParams(searchParams, {
+    lead_id: "uuid",
+    contractor_id: "uuid",
+    email: "email",
+  });
+  const lead_id = parsed.ok ? parsed.values.lead_id : "";
+  const contractor_id = parsed.ok ? parsed.values.contractor_id : "";
+  const contractor_email = parsed.ok ? parsed.values.email : "";
+  const hasMissingParams = !parsed.ok;
 
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"idle" | "locked" | "claimed" | "error">("idle");
