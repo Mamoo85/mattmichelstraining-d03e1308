@@ -6,6 +6,7 @@ import { CheckCircle, XCircle, Loader2, ArrowRight, Lock } from "lucide-react";
 import DWAStickyNav from "@/components/shared/DWAStickyNav";
 import WallOfLove, { Testimonial } from "@/components/shared/WallOfLove";
 import EnterpriseFooterBlock from "@/components/shared/EnterpriseFooterBlock";
+import ActionButton from "@/components/ui/action-button";
 
 // Trade catalog — must match create-contractor-checkout normalizeTrade map.
 const TRADES = [
@@ -29,8 +30,8 @@ type Territory = {
 
 const WINS = [
   "Every lead is exclusive — you're the only contractor who gets it",
-  "Leads are real homeowners who searched for your service, filled out a form, and asked to be contacted",
-  "You get name, phone, email, and project details in your inbox within minutes",
+  "Real homeowners who asked us to send them a contractor",
+  "Name, phone, email in your inbox in minutes",
   "Flat monthly fee — no per-lead charges, no surprises",
   "Cancel anytime — no contracts, no minimums",
 ];
@@ -39,7 +40,6 @@ const PAIN = [
   { label: "Angi / HomeAdvisor", sub: "Same lead sold to 4–8 contractors. You're bidding against yourself." },
   { label: "Thumbtack", sub: "$10–$100/lead, shared. You still compete on price." },
   { label: "Facebook Ads", sub: "You pay for clicks. Most don't convert. Requires constant management." },
-  { label: "Word of mouth alone", sub: "Good but unpredictable. Feast or famine." },
 ];
 
 const TESTIMONIALS: Testimonial[] = [
@@ -435,17 +435,20 @@ export default function ContractorLeads() {
                 </div>
               )}
 
-              <button
-                type="submit"
-                disabled={loading || !trade || !city || !selectedTerritory || !!selectedTerritory?.active_contractor_id}
-                className="w-full bg-primary text-white font-bold py-3 text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              <ActionButton
+                onClick={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
+                disabled={!trade || !city || !selectedTerritory || !!selectedTerritory?.active_contractor_id}
+                busyLabel="Opening checkout…"
+                ariaLabel="Claim territory"
+                style={{ background: "hsl(var(--primary))", color: "#fff", borderRadius: 0, padding: "12px", minHeight: 44, fontSize: 13 }}
               >
-                {loading ? (
-                  <><Loader2 size={14} className="animate-spin" /> Opening checkout…</>
-                ) : (
-                  <>{trade && city && selectedTerritory && !selectedTerritory.active_contractor_id ? `Claim ${tradeLabel} — ${city} ($${monthly}/mo)` : trade && !city ? "← Select a territory above" : "Claim My Territory"} <ArrowRight size={14} /></>
-                )}
-              </button>
+                {trade && city && selectedTerritory && !selectedTerritory.active_contractor_id
+                  ? `Claim ${tradeLabel} — ${city} ($${monthly}/mo)`
+                  : trade && !city
+                  ? "← Select a territory above"
+                  : "Claim My Territory"}{" "}
+                <ArrowRight size={14} />
+              </ActionButton>
               <p className="text-[10px] text-muted-foreground text-center">
                 Secure checkout via Stripe. Cancel anytime. First month begins on activation.
               </p>

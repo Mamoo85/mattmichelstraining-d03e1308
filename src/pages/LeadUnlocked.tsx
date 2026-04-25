@@ -7,6 +7,12 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import LeadQualityBadges, { LeadQualityData } from "@/components/contractor/LeadQualityBadges";
+import LinkExpired from "@/components/shared/LinkExpired";
+
+// Stripe checkout session ids look like `cs_test_…` or `cs_live_…`
+// 30+ url-safe chars after the prefix. Reject anything else before
+// hitting the edge function so attackers can't probe with junk ids.
+const STRIPE_SESSION_RE = /^cs_(test|live)_[A-Za-z0-9]{20,}$/;
 
 interface LeadData extends LeadQualityData {
   name: string;
@@ -28,12 +34,12 @@ export default function LeadUnlocked() {
   const [status, setStatus] = useState<"loading" | "ready" | "pending" | "error">("loading");
   const [pollCount, setPollCount] = useState(0);
 
+  const sessionIdValid = STRIPE_SESSION_RE.test(session_id);
+
   useEffect(() => {
-    if (!session_id) {
-      setStatus("error");
-      return;
-    }
+    if (!sessionIdValid) return;
     fetchLead();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session_id]);
 
   const fetchLead = async () => {
@@ -69,6 +75,22 @@ export default function LeadUnlocked() {
       setStatus("error");
     }
   };
+
+  if (!sessionIdValid) {
+    return (
+      <LinkExpired
+        variant={session_id ? "invalid" : "missing_params"}
+        headline={session_id ? "We couldn't read your receipt link" : "Missing checkout reference"}
+        message={
+          session_id
+            ? "The checkout reference in this URL doesn't look right — Stripe links can get truncated when copy/pasted. Use the link from your confirmation email or text, or reopen your purchase from the receipts page."
+            : "We didn't get a checkout reference. If you just paid, open the link from your Stripe confirmation email — it includes the receipt code we need."
+        }
+        primaryHref="/marketplace-receipts"
+        primaryLabel="Open my receipts"
+      />
+    );
+  }
 
   if (status === "loading" || status === "pending") {
     return (

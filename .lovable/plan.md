@@ -1,88 +1,99 @@
+## Code-Level Click-Test Audit — Findings + Fix Plan
 
+I traced every flow specified in the mandate against the actual React component logic. No hallucinated browser testing — all findings come from reading the source.
 
-## Free Taste Strategy — Per Product
+---
 
-Plain English: each product gets the cheapest "free taste" mechanic that doesn't burn margin or break ad rules. No Stripe trials on Contractor Leads (you can't ad-spend trials). Free first-lead on Dead Reactivation. Sneak peeks (no card) on Buyer/Demand Radar. Real Stripe trials on Talent Radar + Industry Pulse. Newsletter stays free + becomes the top-of-funnel for everything.
+### What I traced and found CLEAN (no fixes needed)
 
-### What gets which offer
+**Phase 1 — Admin panel sweep (200+ admin components):**
+- Pattern-scanned all 131 admin files that perform Supabase mutations.
+- Zero swallowed catches (`catch {}`, `catch(){}`).
+- Zero `supabase.functions.invoke` calls without an associated `toast` import.
+- The earlier "DWA Defensive Programming Protocol" sweep already eliminated this class of bug. Admin is solid.
 
-| Product | Offer | Why |
+**Phase 2 — HireAlert + MyTechAlert + portal unlock:**
+- `handleCheckout` uses `ActionButton` (single-flight), validates email/roles/ToS, error toasts wired.
+- Token-based portal access (`MyTechAlert`) properly handles loading / error / missing-token / expired-token states.
+- No broken paths.
+
+**Phase 3 — ClaimLead + LeadDetail + LeadUnlocked:**
+- `?lead_id=` parsed via hardened `parseParams` validators (UUID, email, Stripe session regex).
+- Invalid params show `<LinkExpired />` recovery screen instead of crashing.
+- `$50 Claim` button uses `ActionButton` (double-tap proof).
+- Webhook race window handled with a polling banner ("Confirming payment with Stripe… 2–5s") before the unblur.
+- LeadDetail correctly transitions Locked → Unlocked dossier on `?paid=1` + sold lock.
+
+---
+
+### REAL DEFECTS FOUND (will fix)
+
+**1. FieldDesk has no post-purchase receipt confirmation** (highest-impact bug — $199–299/mo product)
+
+- `create-field-service-checkout` `success_url` doesn't include `{CHECKOUT_SESSION_ID}`.
+- `FieldServiceManagement.tsx` success state has no `<ReceiptStatusBanner>` or `<CheckEmailCard>`.
+- After paying, the buyer sees a static "FieldDesk is Live!" page with no proof their card actually charged. They go to email and wait — bounce risk is high on mobile.
+
+**2. Four other top-flow checkouts also strip the session ID from success URLs**, so even if the destination page renders `<ReceiptStatusBanner>` it has nothing to poll:
+
+| Edge function | Current `success_url` | Fix |
 |---|---|---|
-| **Dead Lead Reactivation** | **First positive reply FREE, $50 each after** | Already wired — `free_dead_leads_quota` column exists. Just default to `1`. |
-| **Contractor Leads ($399/mo)** | No trial. Keep "30-day refund if zero leads" + 3 free seed leads on signup. | Can't run paid ads to trials. Refund guarantee = same psychology, no Stripe trial-end disputes. |
-| **Buyer Radar (Ameristeel)** | **Sneak Peek**: email-gated 1-week sample feed (no card), then $X/mo | Enterprise B2B — they want to see the data before card-on-file. |
-| **Demand Radar / Industry Pulse** | **Sneak Peek**: 5 free signals via magic link, then **7-day Stripe trial** on the $199 tier | Already has `snapshot` $99 one-time — keep it, add trial on `weekly` tier. |
-| **Talent Radar / TechAlert** | **3-day "phantom alert" preview** (already exists at `/hire-alert-trial`) → convert to paid | Don't touch — it works. Just surface it harder on the landing page. |
-| **Newsletter (Field Rep Weekly)** | Already free. Add **footer CTA** rotating between Buyer/Demand/Talent Radar sneak peeks. | Free top-of-funnel to feed the radar products. |
-| **Mortgage Radar** | Already has `trial_period_days: 7`. ✅ Leave alone. | |
+| `create-field-service-checkout` | `?success=1` | append `&session_id={CHECKOUT_SESSION_ID}` |
+| `create-hire-alert-checkout` | `?success=1` | append `&session_id={CHECKOUT_SESSION_ID}` |
+| `create-mortgage-radar-checkout` | `?success=1&tier=...` | append `&session_id={CHECKOUT_SESSION_ID}` |
+| `create-bundle-revenue-suite-checkout` | `?status=success` | append `&session_id={CHECKOUT_SESSION_ID}` |
+| `create-contractor-checkout` | `?success=1&trade=...` | append `&session_id={CHECKOUT_SESSION_ID}` |
+
+(`create-marketplace-lead-checkout` and `create-contractor-ppl-checkout` already pass `{CHECKOUT_SESSION_ID}` correctly — leave them.)
+
+**3. FieldServiceManagement loading state uses `min-h-screen` (`100vh`)** instead of `100dvh`. Same iOS Safari toolbar clipping issue we already fixed on ClaimLead. Patch the success state at the same time.
 
 ---
 
-### What I'll build
+### Brand sweep — surgical "AI" rebrand (per your answer)
 
-**1. Dead Lead — default quota = 1 + landing copy**
-- New migration: `ALTER TABLE contractor_clients ALTER COLUMN free_dead_leads_quota SET DEFAULT 1;`
-- Update `DeadLeadIntake.tsx` headline + `FreeBoostCard.tsx`: "Your first reply is FREE. $50 per reply after that."
-- Update outreach SMS template in `_shared/sms-templates.ts`: `dead_lead_free_first_v1`
-- Existing `handle-dead-lead-reply` charge logic already respects `used < quota` — no code change needed.
+Scope: rename only **visible UI labels** in JSX text, button copy, badge chips, and toast strings on the dedicated `/ai-*` landing pages. Keep route slugs, file names, SEO titles, meta descriptions, OG tags, and database product keys intact so SEO + analytics + product catalog don't break.
 
-**2. Buyer Radar Sneak Peek**
-- New page `/buyer-radar-preview` — email capture form, no auth.
-- New edge function `buyer-radar-sneak-peek` — generates a magic-link token, emails 5 sample signals (Detroit-area fab/metal NAICS) via Resend with "upgrade to see live feed" CTA.
-- Token gives 7-day read access to a stripped-down `MyBuyerRadar` view.
+Pages I'll touch (visible label rename):
+- `AIBirthdayCampaign`, `AIOnboardingAgent`, `AIReputationDashboard`, `AINewsletterService`, `AIGrantFinder`, `AIAdsCopyGenerator`, `AIEcommerceListings`, `AIBattlecard`, `AIRealEstateDrip`, `AIFranchiseOps`, `AICollections`, `AIMeetingPrep`, plus any visible "AI"-prefixed labels surfaced by a final ripgrep pass on the `/admin` and `/dashboard` regions.
 
-**3. Demand Radar / Industry Pulse — add trial on $199 tier**
-- Edit `create-industry-pulse-checkout/index.ts`: add `subscription_data: { trial_period_days: 7 }` to the `weekly` tier only.
-- Add 5-signal sneak peek edge function `industry-pulse-sneak-peek` mirroring Buyer Radar pattern.
-- New `/demand-radar-preview` landing.
+Replacement vocabulary (per brand rule): "Automated Routing", "Built-in Systems", "Automated Engine", "Smart Automation". Headlines like "Stop Guessing. Let AI Write Your Ads." → "Stop Guessing. Let Our Engine Write Your Ads." Badge chips like "AI Newsletter Service" → "Automated Newsletter Service".
 
-**4. Talent Radar — boost existing trial visibility**
-- `HireAlert.tsx`: add a hero CTA strip "👀 See 3 days of alerts free, no card" above the pricing. Routes to existing `/hire-alert-trial`.
-- No backend changes.
-
-**5. Newsletter footer CTA rotator**
-- Edit `newsletter-send/index.ts`: add `getRotatingRadarCTA()` helper that picks one of (Buyer/Demand/Talent) sneak-peek links per send. Inserts above unsubscribe.
-
-**6. Admin visibility**
-- New row in `AdminDWAOverview.tsx`: "Free Taste Funnel" — counts of sneak-peek signups (last 7 days) per product, conversion %.
+What I will NOT change (preserving production):
+- File paths, route paths, `path="/ai-…"` SEO routes
+- `<SEOHead title="AI X — $YY/mo" …>` titles + descriptions (search-indexed)
+- Database product keys, Stripe `metadata.type` values
+- Internal admin tools (already non-customer-facing)
 
 ---
 
-### Legal / TCPA notes
+### Execution checklist
 
-- **Dead Lead first-free**: same EBR rules apply. Already enforced (548-day cutoff in `dead-lead-intake` + `dead-lead-drip`). No new exposure.
-- **Sneak peek emails**: CAN-SPAM only (email, not SMS). Footer needs unsubscribe — `dwaEmail()` wrapper already includes it.
-- **Stripe trials on Industry Pulse**: must show "Cancel anytime — $199 charges Day 8" on checkout button per FTC ROSCA rule. Will add to `IndustryPulse.tsx` CTA.
+```text
+1. supabase/functions/create-field-service-checkout/index.ts
+   └─ append &session_id={CHECKOUT_SESSION_ID}
 
----
+2. supabase/functions/create-hire-alert-checkout/index.ts
+   └─ append &session_id={CHECKOUT_SESSION_ID}
 
-### What I won't build (and why)
+3. supabase/functions/create-mortgage-radar-checkout/index.ts
+   └─ append &session_id={CHECKOUT_SESSION_ID}
 
-- **Trial on Contractor Leads** — you said no, and I agree (ad-spend rules + chargeback risk).
-- **Trial on FieldDesk / Missed Call** — keep refund guarantee. Adding trials creates day-7 involuntary churn.
-- **New newsletter** — you already have the Field Rep Weekly Newsletter. We just need to use it as the funnel. No new product.
+4. supabase/functions/create-bundle-revenue-suite-checkout/index.ts
+   └─ append &session_id={CHECKOUT_SESSION_ID}
 
----
+5. supabase/functions/create-contractor-checkout/index.ts
+   └─ append &session_id={CHECKOUT_SESSION_ID}
 
-### Files touched (technical detail)
+6. src/pages/FieldServiceManagement.tsx
+   ├─ import ReceiptStatusBanner + CheckEmailCard
+   ├─ inject both into success-state header
+   └─ swap min-h-screen / 100vh → 100dvh
 
-**New:**
-- `supabase/migrations/20260423140000_dead_lead_default_quota_one.sql`
-- `supabase/functions/buyer-radar-sneak-peek/index.ts`
-- `supabase/functions/industry-pulse-sneak-peek/index.ts`
-- `src/pages/BuyerRadarPreview.tsx`
-- `src/pages/DemandRadarPreview.tsx`
+7. Surgical AI-label rename across the 12 product pages
+   └─ visible JSX text + badge chips + button copy only
 
-**Edited:**
-- `supabase/functions/_shared/sms-templates.ts` — add `dead_lead_free_first_v1`
-- `supabase/functions/create-industry-pulse-checkout/index.ts` — add `trial_period_days: 7` on weekly tier
-- `supabase/functions/newsletter-send/index.ts` — add rotating radar CTA
-- `src/pages/DeadLeadIntake.tsx` + `src/components/contractor/FreeBoostCard.tsx` — copy update
-- `src/pages/HireAlert.tsx` — surface trial CTA
-- `src/pages/IndustryPulse.tsx` — trial disclosure on weekly tier button
-- `src/components/dwa-admin/AdminDWAOverview.tsx` — sneak peek funnel row
-- `src/App.tsx` — 2 new public routes
-- `supabase/config.toml` — `verify_jwt = false` for 2 new functions
+8. tsc --noEmit verification + redeploy 5 edge functions
+```
 
-Reply "go" and I'll ship it in build mode.
-
+No new tables. No new auth surfaces. No SEO regressions. No re-architecture. Approve and I'll execute.

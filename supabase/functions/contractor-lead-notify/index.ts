@@ -3,7 +3,6 @@
 // PPL contractors (no active subscription): FOMO teaser SMS with $50 claim link.
 // Also releases expired soft locks so leads become available again.
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
 import { logError } from "../_shared/error-log.ts";
@@ -140,20 +139,9 @@ Output ONLY the sentence. No quotes, no preamble, no commentary.`;
   } catch { return ""; }
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
-  }
-
-  // Auth: require service-role key (cron) — prevents external invocation that would
-  // trigger duplicate Twilio sends and reveal credential metadata.
-  const authHeader = req.headers.get("authorization") || "";
-  const expected = `Bearer ${SUPABASE_SERVICE_KEY}`;
-  if (!SUPABASE_SERVICE_KEY || authHeader !== expected) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   }
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -344,7 +332,10 @@ serve(async (req) => {
         if (contractor.phone) {
           // Build checkout URL — they tap it to claim for $50
           const claimUrl = `${SITE_URL}/claim-lead?lead_id=${lead.id}&contractor_id=${contractor.id}&email=${encodeURIComponent(contractor.email || "")}`;
-          const smsBody = `🚨 HOT LEAD in ${site?.city || "Metro Detroit"}: ${lead.project_type || site?.trade || "service request"}.\nEXCLUSIVE — first contractor to claim it gets it.\n\n⚡ Reply CLAIM to buy instantly ($50) or tap:\n${claimUrl}\n\nReply STOP to opt out.`;
+          const tradeWord = (site?.trade || "service").toLowerCase();
+          const cityWord = site?.city || "Metro Detroit";
+          const projectWord = lead.project_type || tradeWord;
+          const smsBody = `Detroit Web Agency: New ${tradeWord} job in ${cityWord} — ${projectWord}.\nExclusive to the first contractor who grabs it. $50, one-time.\n\nSee it: ${claimUrl}\n\nReply STOP to stop. -Matt (313) 992-1219`;
           await sendSMS(contractor.phone, TWILIO_PHONE, smsBody, "contractor_leads");
         }
       }

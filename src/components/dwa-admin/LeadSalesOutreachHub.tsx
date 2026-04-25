@@ -340,20 +340,59 @@ export default function LeadSalesOutreachHub() {
 
           {/* Middle: select prospects */}
           <div className="space-y-2">
-            <p className="text-xs font-bold uppercase tracking-widest text-[#00d4ff]">2. Pick target LOs</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-widest text-[#00d4ff]">2. Pick target LOs</p>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!!enrichingId || prospects.length === 0}
+                onClick={async () => {
+                  const visible = prospects.filter(p => !p.opt_out_fax || !p.opt_out_email).slice(0, 25);
+                  if (!visible.length) return;
+                  setEnrichingId("__bulk__");
+                  try {
+                    const { data, error } = await supabase.functions.invoke("enrich-lo-prospect", {
+                      body: { prospect_ids: visible.map(v => v.id) },
+                    });
+                    if (error) throw error;
+                    toast.success(`Enriched ${data?.enriched ?? 0}/${visible.length} prospects`);
+                    qc.invalidateQueries({ queryKey: ["lo-prospects"] });
+                  } catch (e: unknown) {
+                    toast.error(e instanceof Error ? e.message : "Bulk enrich failed");
+                  } finally {
+                    setEnrichingId(null);
+                  }
+                }}
+                className="border-[#1e3a5f] text-[10px] text-white h-6 px-2"
+              >
+                {enrichingId === "__bulk__" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 mr-1" />}
+                Enrich visible
+              </Button>
+            </div>
             <p className="text-[10px] text-[#64748b]">Sorted by warmth score</p>
             <div className="max-h-64 overflow-y-auto space-y-1 border border-[#1e3a5f] rounded-lg p-2 bg-[#0a1628]">
               {loadingP ? <Loader2 className="w-4 h-4 animate-spin text-[#94a3b8]" /> : prospects.filter(p => !p.opt_out_fax || !p.opt_out_email).map(p => (
-                <label key={p.id} className="flex items-center gap-2 py-1 cursor-pointer hover:bg-[#1e3a5f]/30 rounded px-1">
-                  <input
-                    type="checkbox"
-                    checked={selectedProspects.includes(p.id)}
-                    onChange={() => toggleProspect(p.id)}
-                    className="accent-[#00d4ff]"
-                  />
-                  <span className="text-xs text-white flex-1 truncate">{p.full_name || p.company_name || "—"}</span>
-                  <span className={`text-xs font-bold ${warmthColor(p.warmth_score)}`}>{p.warmth_score ?? "?"}</span>
-                </label>
+                <div key={p.id} className="flex items-center gap-2 py-1 hover:bg-[#1e3a5f]/30 rounded px-1">
+                  <label className="flex items-center gap-2 flex-1 cursor-pointer min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedProspects.includes(p.id)}
+                      onChange={() => toggleProspect(p.id)}
+                      className="accent-[#00d4ff]"
+                    />
+                    <span className="text-xs text-white flex-1 truncate">{p.full_name || p.company_name || "—"}</span>
+                    <span className={`text-xs font-bold ${warmthColor(p.warmth_score)}`}>{p.warmth_score ?? "?"}</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); enrichOne(p.id); }}
+                    disabled={enrichingId === p.id}
+                    title="Enrich this prospect"
+                    className="text-[#00d4ff] hover:text-amber-400 disabled:opacity-50 shrink-0"
+                  >
+                    {enrichingId === p.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                  </button>
+                </div>
               ))}
               {prospects.length === 0 && !loadingP && <p className="text-xs text-[#64748b] p-2">No prospects. Refresh from NMLS first.</p>}
             </div>

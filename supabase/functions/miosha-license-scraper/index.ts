@@ -275,7 +275,7 @@ async function scanMichiganOpenData(): Promise<LicenseCandidate[]> {
         // Field-name fallback — Socrata schemas vary wildly across datasets
         const firstName = row.first_name || row.firstname || row.licensee_first_name || row.lic_first_name || row.f_name || row.first || "";
         const lastName = row.last_name || row.lastname || row.licensee_last_name || row.lic_last_name || row.l_name || row.last || row.surname || "";
-        let fullName = row.full_name || row.licensee_name || row.name || row.dba_name || `${firstName} ${lastName}`.trim();
+        const fullName = row.full_name || row.licensee_name || row.name || row.dba_name || `${firstName} ${lastName}`.trim();
         if (!fullName || !isPersonName(fullName)) continue;
 
         const licNum = row.license_number || row.license_no || row.licensee_number || row.lic_no || row.permit_number || null;
@@ -1782,7 +1782,7 @@ async function scanBPLContractorCompanies(): Promise<LicenseCandidate[]> {
   const seen = new Set<string>();
   const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-  let datasetIds: string[] = [];
+  const datasetIds: string[] = [];
   try {
     const meta = await fetch("https://data.michigan.gov/api/views/metadata/v1?q=contractor+license&limit=30", { signal: AbortSignal.timeout(10_000) });
     if (meta.ok) {
@@ -2099,15 +2099,16 @@ async function scanZipRecruiterCandidates(): Promise<LicenseCandidate[]> {
   return candidates;
 }
 
-// ===== S28: Facebook Trade Community Posts (Sonar) =====
-// Public Facebook group posts from Michigan tradespeople announcing availability.
+// ===== S28: Public Job Board Trade Posts (Sonar) =====
+// DATA SOURCE: Indeed/ZipRecruiter/SimplyHired — legal basis: public job boards permit search indexing.
+// (Replaced site:facebook.com queries 2026-04-23 — Facebook ToS prohibits scraping.)
 async function scanFacebookTradePosts(): Promise<LicenseCandidate[]> {
   if (!OPENROUTER_API_KEY) return [];
   const queries = [
-    { q: `site:facebook.com Michigan HVAC technician "looking for work" OR "available" OR "just got my license" 2025 OR 2026 Detroit OR Warren OR Dearborn OR "Metro Detroit"`, trade: "HVAC Technician" },
-    { q: `site:facebook.com Michigan licensed electrician "open to work" OR "available" OR "seeking employment" 2025 OR 2026 Detroit OR Wayne County OR Oakland County`, trade: "Electrician" },
-    { q: `site:facebook.com Michigan licensed plumber "looking for work" OR "available" OR "new journeyman" 2025 OR 2026 Metro Detroit`, trade: "Plumber" },
-    { q: `site:facebook.com Michigan boiler operator stationary engineer "looking for work" OR "available" OR "certified" 2025 OR 2026`, trade: "Boiler Operator" },
+    { q: `(site:indeed.com OR site:ziprecruiter.com) Michigan HVAC technician "looking for work" OR "available" 2025 OR 2026 Detroit OR Warren OR Dearborn OR "Metro Detroit"`, trade: "HVAC Technician" },
+    { q: `(site:indeed.com OR site:ziprecruiter.com) Michigan licensed electrician "open to work" OR "available" 2025 OR 2026 Detroit OR Wayne County OR Oakland County`, trade: "Electrician" },
+    { q: `(site:indeed.com OR site:ziprecruiter.com) Michigan licensed plumber "looking for work" OR "available" OR "new journeyman" 2025 OR 2026 Metro Detroit`, trade: "Plumber" },
+    { q: `(site:indeed.com OR site:ziprecruiter.com) Michigan boiler operator stationary engineer "looking for work" OR "available" OR "certified" 2025 OR 2026`, trade: "Boiler Operator" },
   ];
   const candidates: LicenseCandidate[] = [];
   const seen = new Set<string>();
@@ -2765,15 +2766,16 @@ async function scanMBOADirectory(): Promise<LicenseCandidate[]> {
   return candidates;
 }
 
-// ===== S43: LinkedIn "Open to Work" Posts (Sonar) =====
-// Different angle from S8 (general search) — specifically targets #opentowork posts.
+// ===== S43: Public Job Board "Open to Work" Posts (Sonar) =====
+// DATA SOURCE: Indeed/ZipRecruiter — legal basis: public job boards permit search indexing.
+// (Replaced site:linkedin.com/in queries 2026-04-23 — hiQ v. LinkedIn established LinkedIn ToS protection.)
 async function scanLinkedInOpenToWork(): Promise<LicenseCandidate[]> {
   if (!OPENROUTER_API_KEY) return [];
   const queries = [
-    { q: `site:linkedin.com/in Michigan HVAC technician OR boiler operator OR stationary engineer "#opentowork" OR "open to work" OR "seeking new opportunities" 2025 OR 2026`, trade: "HVAC Technician" },
-    { q: `site:linkedin.com/in Michigan licensed electrician journeyman master "#opentowork" OR "open to work" OR "available for hire" Metro Detroit 2025 OR 2026`, trade: "Electrician" },
-    { q: `site:linkedin.com/in Michigan licensed plumber journeyman master "#opentowork" OR "seeking" 2025 OR 2026`, trade: "Plumber" },
-    { q: `site:linkedin.com/in Michigan CNA LPN RN "open to work" OR "seeking" OR "available" Metro Detroit healthcare nursing 2025 OR 2026`, trade: "Nursing" },
+    { q: `(site:indeed.com OR site:ziprecruiter.com) Michigan HVAC technician OR boiler operator OR stationary engineer "open to work" OR "seeking new opportunities" 2025 OR 2026`, trade: "HVAC Technician" },
+    { q: `(site:indeed.com OR site:ziprecruiter.com) Michigan licensed electrician journeyman master "open to work" OR "available for hire" Metro Detroit 2025 OR 2026`, trade: "Electrician" },
+    { q: `(site:indeed.com OR site:ziprecruiter.com) Michigan licensed plumber journeyman master "open to work" OR "seeking" 2025 OR 2026`, trade: "Plumber" },
+    { q: `(site:indeed.com OR site:ziprecruiter.com) Michigan CNA LPN RN "open to work" OR "seeking" OR "available" Metro Detroit healthcare nursing 2025 OR 2026`, trade: "Nursing" },
   ];
   const candidates: LicenseCandidate[] = [];
   const seen = new Set<string>();

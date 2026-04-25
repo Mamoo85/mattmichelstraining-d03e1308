@@ -146,7 +146,7 @@ export default function AdminSimulationSuite() {
         <button
           onClick={() => { try { run("ai-reply-detector", JSON.parse(aiInput)); } catch { alert("Invalid JSON"); } }}
           disabled={!!running["ai-reply-detector"]}
-          style={{ marginTop: 8, background: !!running["ai-reply-detector"] ? "#1e3a5f" : "#0f2342", color: "#00d4ff", border: "1px solid #00d4ff", borderRadius: 6, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+          style={{ marginTop: 8, background: running["ai-reply-detector"] ? "#1e3a5f" : "#0f2342", color: "#00d4ff", border: "1px solid #00d4ff", borderRadius: 6, padding: "8px 16px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
         >{running["ai-reply-detector"] ? "Running…" : "Classify Reply"}</button>
       </div>
 

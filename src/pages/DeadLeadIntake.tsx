@@ -1,6 +1,9 @@
 import { useState } from "react";
 import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
+import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
+import CheckEmailCard from "@/components/checkout/CheckEmailCard";
+import ActionButton from "@/components/ui/action-button";
 
 const TRADES = ["HVAC", "Plumbing", "Roofing", "Electrical", "General Contractor", "Landscaping", "Painting", "Other"];
 
@@ -33,6 +36,12 @@ export default function DeadLeadIntake() {
     return (
       <Page>
         <Card>
+          <div style={{ marginBottom: 16 }}>
+            <ReceiptStatusBanner sessionId={urlParams.get("session_id")} productLabel="Dead Lead Billing" />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <CheckEmailCard sessionId={urlParams.get("session_id")} />
+          </div>
           <div style={{ textAlign: "center", padding: "40px 0" }}>
             <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
             <h2 style={{ color: "#fff", fontSize: 24, fontWeight: 700, margin: "0 0 12px" }}>
@@ -143,23 +152,12 @@ export default function DeadLeadIntake() {
                 Save your card now and we'll auto-charge $50 the moment a lead says YES —
                 no invoices, no manual transfers. Skip this and Matt will invoice you manually.
               </p>
-              <button
+              <ActionButton
                 onClick={handleSetupBilling}
-                disabled={billingLoading}
-                style={{
-                  width: "100%",
-                  padding: "14px",
-                  background: billingLoading ? "#1e3a5f" : "#00d4ff",
-                  color: billingLoading ? "#64748b" : "#0a1628",
-                  border: "none",
-                  borderRadius: 8,
-                  fontWeight: 700,
-                  fontSize: 15,
-                  cursor: billingLoading ? "not-allowed" : "pointer",
-                }}
+                busyLabel="Loading…"
               >
-                {billingLoading ? "Loading…" : "Save Card — Auto-Bill $50/Revival"}
-              </button>
+                Save Card — Auto-Bill $50/Revival
+              </ActionButton>
             </div>
 
             {error && <p style={{ color: "#ef4444", fontSize: 13, marginBottom: 12 }}>{error}</p>}
@@ -199,7 +197,7 @@ export default function DeadLeadIntake() {
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
             <Field label="Business Name *">
               <input
                 required
@@ -219,7 +217,7 @@ export default function DeadLeadIntake() {
             </Field>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
             <Field label="Your Phone *">
               <input
                 required

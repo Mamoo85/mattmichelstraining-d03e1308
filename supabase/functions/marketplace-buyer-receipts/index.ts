@@ -123,7 +123,7 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("[marketplace-buyer-receipts]", e);
-    return new Response(JSON.stringify({ error: "Internal error" }), {
+    return new Response(JSON.stringify({ error: String(e) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

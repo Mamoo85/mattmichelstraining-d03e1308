@@ -3,10 +3,13 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 import { encode as base64url } from "https://deno.land/std@0.190.0/encoding/base64url.ts";
+import { getStripeSecretKey, getStripeWebhookSecret, isStripeTestMode } from "../_shared/stripe-key.ts";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+const STRIPE_SECRET_KEY = getStripeSecretKey();
+const stripe = new Stripe(STRIPE_SECRET_KEY, {
   apiVersion: "2025-08-27.basil",
 });
+if (isStripeTestMode()) console.warn("[stripe-webhook] 🧪 TEST MODE");
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 // Helper: award M² Points via the award_points RPC
@@ -266,7 +269,10 @@ async function syncTierToProfile(sb: any, email: string, tier: string, stripeCus
   }
 }
 
-serve(async (req) => {
+// Exported for integration tests. The handler is a plain async function so
+// tests can call it without binding a port. `serve()` below wires it up
+// for the live Edge Function runtime.
+export const handler = async (req: Request): Promise<Response> => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
@@ -274,36 +280,85 @@ serve(async (req) => {
   try {
     const body = await req.text();
     const sig = req.headers.get("stripe-signature");
-    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+    const webhookSecret = getStripeWebhookSecret();
 
     if (!webhookSecret || !sig) {
-      console.error("Missing STRIPE_WEBHOOK_SECRET or stripe-signature header");
+      console.error("Missing webhook secret or stripe-signature header");
       return new Response("Webhook signature verification failed", { status: 400 });
     }
     const event: Stripe.Event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    // ─── IDEMPOTENCY GUARD ────────────────────────────────────────────────
-    // Stripe retries webhooks on 5xx or timeout. Without dedupe, every retry
-    // would re-run provisioning, double-SMS the customer, and double-charge.
-    // INSERT with PRIMARY KEY conflict acts as an atomic "claim" on event.id.
+    // ─── IDEMPOTENCY GUARD (PARTIAL-1 + PARTIAL-3 fix) ────────────────────
+    // Stripe retries webhooks on 5xx or timeout. The row is inserted with
+    // fulfillment_status='pending' on first entry. Branches that succeed
+    // call markFulfilled(true). The global catch calls markFulfilled(false).
+    // On retry: if the row exists but is still 'pending' AND >180s old (i.e.,
+    // the previous run failed mid-flight), we ALLOW re-entry. If it's
+    // 'completed', we skip. If 'pending' but recent (<180s), assume another
+    // worker is still running and skip too.
+    // (Window bumped from 60s → 180s to cover slow PDF/email fulfillments.)
     const { error: dedupeError } = await sb
       .from("processed_stripe_events")
-      .insert({ event_id: event.id, event_type: event.type });
+      .insert({ event_id: event.id, event_type: event.type, fulfillment_status: "pending" });
 
     if (dedupeError) {
-      // Duplicate key (23505) = already processed → ack 200 so Stripe stops retrying
       if ((dedupeError as any).code === "23505") {
-        console.log(`[WEBHOOK] Duplicate event ${event.id} (${event.type}) — skipping`);
-        return new Response(JSON.stringify({ received: true, duplicate: true }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
+        // Row already exists — check its fulfillment_status
+        const { data: existing } = await sb
+          .from("processed_stripe_events")
+          .select("fulfillment_status, processed_at")
+          .eq("event_id", event.id)
+          .maybeSingle();
+        const status = existing?.fulfillment_status ?? "completed";
+        const ageMs = existing?.processed_at
+          ? Date.now() - new Date(existing.processed_at).getTime()
+          : Infinity;
+
+        if (status === "completed") {
+          console.log(`[WEBHOOK] Duplicate event ${event.id} (${event.type}) — already completed, skipping`);
+          return new Response(JSON.stringify({ received: true, duplicate: true }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        if (status === "pending" && ageMs < 180_000) {
+          console.log(`[WEBHOOK] Event ${event.id} still in-flight (${Math.round(ageMs / 1000)}s) — skipping retry`);
+          return new Response(JSON.stringify({ received: true, in_flight: true }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        // status === 'failed' OR ('pending' AND >180s old) → allow re-entry to recover
+        console.log(`[WEBHOOK] Re-entering event ${event.id} (status=${status}, age=${Math.round(ageMs / 1000)}s) for recovery`);
+        await sb
+          .from("processed_stripe_events")
+          .update({ fulfillment_status: "pending", fulfillment_error: null, processed_at: new Date().toISOString() })
+          .eq("event_id", event.id);
+      } else {
+        console.error(`[WEBHOOK] Idempotency insert failed:`, dedupeError);
+        return new Response("Idempotency check failed", { status: 500 });
       }
-      // Real DB error — let Stripe retry
-      console.error(`[WEBHOOK] Idempotency insert failed:`, dedupeError);
-      return new Response("Idempotency check failed", { status: 500 });
+    }
+
+    // Helper: mark the current Stripe event as completed/failed.
+    // Called by the success path at the end + by the global catch on failure.
+    async function markFulfilled(success: boolean, errMsg?: string) {
+      try {
+        await sb
+          .from("processed_stripe_events")
+          .update({
+            fulfillment_status: success ? "completed" : "failed",
+            fulfillment_completed_at: success ? new Date().toISOString() : null,
+            fulfillment_error: success ? null : (errMsg || "unknown error").slice(0, 500),
+          })
+          .eq("event_id", event.id);
+      } catch (e) {
+        console.error(`[WEBHOOK] markFulfilled(${success}) failed for ${event.id}:`, e);
+      }
     }
     // ─────────────────────────────────────────────────────────────────────
 
@@ -504,7 +559,53 @@ serve(async (req) => {
           customerName: charge.billing_details?.name || null,
         });
       }
+
+      // Revoke any marketplace dossier purchased with this charge / payment_intent
+      try {
+        const piId = typeof charge.payment_intent === "string" ? charge.payment_intent : null;
+        const { data: revokeCount } = await (sb.rpc as any)("revoke_marketplace_access_by_stripe", {
+          p_payment_intent_id: piId,
+          p_charge_id: charge.id,
+          p_reason: "charge.refunded",
+        });
+        if (revokeCount && Number(revokeCount) > 0) {
+          console.log(`[WEBHOOK] Revoked ${revokeCount} marketplace lock(s) due to refund ${charge.id}`);
+          await notifyMatt(
+            `🚫 Marketplace dossier revoked — refund ${charge.id}`,
+            `<p>${revokeCount} lock(s) revoked after Stripe refund. Buyer email: ${charge.billing_details?.email || "?"}</p>`
+          ).catch(() => {});
+        }
+      } catch (e) {
+        console.error("[WEBHOOK] revoke on refund failed:", e);
+      }
+
       console.log(`[WEBHOOK] Charge refunded: ${charge.id} — $${(refundedAmount / 100).toFixed(2)}`);
+    }
+
+    // Handle disputes (chargebacks) — relock dossier and notify
+    if (event.type === "charge.dispute.created" || event.type === "charge.dispute.funds_withdrawn") {
+      const dispute = event.data.object as Stripe.Dispute;
+      const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id || null;
+      try {
+        let piId: string | null = null;
+        if (chargeId) {
+          const ch = await stripe.charges.retrieve(chargeId);
+          piId = typeof ch.payment_intent === "string" ? ch.payment_intent : null;
+        }
+        const { data: revokeCount } = await (sb.rpc as any)("revoke_marketplace_access_by_stripe", {
+          p_payment_intent_id: piId,
+          p_charge_id: chargeId,
+          p_reason: `dispute.${dispute.reason || "chargeback"}`,
+        });
+        if (revokeCount && Number(revokeCount) > 0) {
+          await notifyMatt(
+            `⚠️ Chargeback — marketplace lock revoked (${dispute.id})`,
+            `<p>${revokeCount} marketplace lock(s) revoked after dispute ${dispute.id} (reason: ${dispute.reason}).</p>`
+          ).catch(() => {});
+        }
+      } catch (e) {
+        console.error("[WEBHOOK] dispute revoke failed:", e);
+      }
     }
 
     // Belt-and-suspenders: sync agency interview charges that succeed asynchronously
@@ -532,6 +633,24 @@ serve(async (req) => {
       const session = event.data.object as Stripe.Checkout.Session;
       const meta = session.metadata || {};
       const priceId = (session.line_items?.data?.[0] as any)?.price?.id as string | null;
+
+      // ── RECEIPT TRACKING (checkout hardening) ──
+      // Upsert a receipt row so the success page can poll fulfillment status.
+      // Status will be flipped to 'fulfilled' at the end of this handler.
+      try {
+        await sb.from("checkout_receipts").upsert({
+          stripe_session_id: session.id,
+          stripe_payment_intent_id: (session.payment_intent as string) || null,
+          customer_email: session.customer_details?.email || meta.email || null,
+          amount_total: session.amount_total ?? null,
+          currency: session.currency ?? null,
+          product_type: meta.type || "unknown",
+          status: "paid",
+          metadata: meta as any,
+        }, { onConflict: "stripe_session_id" });
+      } catch (e) {
+        console.error("[WEBHOOK] checkout_receipts upsert failed:", e);
+      }
 
       // ── TRAINING SESSION BOOKING FALLBACK ──
       // If user closes browser before verify-session-booking runs, the webhook ensures the booking is created
@@ -721,7 +840,7 @@ serve(async (req) => {
       const customerEmail = session.customer_details?.email || session.customer_email;
       const customerName = session.customer_details?.name || null;
       const userId = customerEmail ? await getUserIdByEmail(sb, customerEmail) : null;
-      let guide = priceId ? GUIDE_MAP[priceId] : null;
+      const guide = priceId ? GUIDE_MAP[priceId] : null;
       const txItemName = guide?.title || meta.item_name || "Purchase";
       const txItemType = meta.type === "gift_card" ? "gift_card" : guide ? "pdf" : (meta.item_type || "purchase");
 
@@ -804,41 +923,11 @@ serve(async (req) => {
           console.error("[WEBHOOK] web_design_addon error:", e);
           return new Response(JSON.stringify({ error: "web_design_addon failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
-      // ── B2B SUBSCRIPTION FULFILLMENT (handbook, grant finder, etc.) ──────
-      if (meta.type === "handbook_subscription") {
-        try {
-          const email = meta.email || customerEmail;
-          if (email) {
-            await (sb.from as any)("handbook_clients").upsert({ email, business_name: meta.businessName || email, phone: meta.phone || null, industry: meta.industry || null, state: meta.state || "MI", employee_count: parseInt(meta.employeeCount) || null, active: true }, { onConflict: "email" });
-          }
-          if (RESEND_API_KEY && email) {
-            await sendM2Email(email, "Your AI Employee Handbook is Active — Here's What Happens Next", m2Email({
-              greeting: `Hey${meta.businessName ? " " + meta.businessName : ""} —`,
-              headline: "Your AI Employee Handbook is Active",
-              body: `<p style="margin:0 0 12px"><strong>You just made your HR life 10x easier.</strong> Here's exactly what you're getting:</p>
-<p style="margin:0 0 8px">📋 <strong>First handbook update</strong> — arrives within 48 hours, customized to your state (${meta.state || "MI"}) labor laws</p>
-<p style="margin:0 0 8px">📅 <strong>Monthly compliance updates</strong> — on the 1st of every month, your handbook gets refreshed with any new state regulations</p>
-<p style="margin:0 0 8px">🏢 <strong>Employee count-aware</strong> — policies calibrated for your team size (${meta.employeeCount || "your team"})</p>
-<p style="margin:0 0 16px">⚡ <strong>Industry-specific</strong> — language tailored to ${meta.industry || "your industry"}</p>
-<p style="margin:0 0 8px"><strong>What happens next:</strong></p>
-<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
-<li>Your first AI-generated handbook section arrives within 48 hours</li>
-<li>Review it — if anything needs adjusting, reply to this email</li>
-<li>Monthly updates auto-generate on the 1st</li>
-</ol>
-<p style="margin:0;color:#64748b;font-size:13px">Questions? Hit reply or text me. I read every message.</p>`,
-            }));
-            await notifyMatt(`💰 New Handbook Client — ${meta.businessName || email} ($99/mo)`, `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>State: ${meta.state || "MI"}<br>Employees: ${meta.employeeCount || "n/a"}</p>`);
-          }
-        } catch (e) {
-          console.error("[WEBHOOK] handbook_subscription error:", e);
-          return new Response(JSON.stringify({ error: "handbook_subscription failed" }), { status: 500 });
-        }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
-      }
+      // handbook_subscription branch removed 2026-04-25: AIHandbook page delisted, create-handbook-checkout deleted.
+      // `handbook_clients` table left in schema for any historical rows; safe to drop in a future cleanup migration.
 
       // ── THE WIRE — contractor leads $99/mo ────────────────────────────────
       if (meta.type === "wire_subscription") {
@@ -1042,7 +1131,7 @@ serve(async (req) => {
           ).catch(() => {});
           return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       if (meta.type === "high_volume_buyer_subscription") {
@@ -1102,7 +1191,7 @@ serve(async (req) => {
           ).catch(() => {});
           return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       if (meta.type === "industry_pulse_subscription") {
@@ -1165,7 +1254,7 @@ serve(async (req) => {
           await notifyMatt(`🚨 Industry Pulse provision FAILED — ${email || "unknown"}`, `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
           return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       if (meta.type === "mortgage_radar_subscription") {
@@ -1222,7 +1311,7 @@ serve(async (req) => {
           await notifyMatt(`🚨 Mortgage Radar provision FAILED — ${email || "unknown"}`, `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
           return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       if (meta.type === "buyer_radar_subscription") {
@@ -1283,7 +1372,239 @@ serve(async (req) => {
           await notifyMatt(`🚨 Buyer Radar provision FAILED — ${email || "unknown"}`, `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
           return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // === Golden Ticket Marketplace — a la carte lead purchase ===
+      if (meta.type === "marketplace_lead_purchase") {
+        const email = (meta.buyer_email || customerEmail || "").toLowerCase();
+        const lead_id = meta.lead_id;
+        const product = meta.product;
+        try {
+          if (!email || !lead_id || !product) throw new Error("missing buyer_email/lead_id/product");
+
+          // Read configurable TTL (defaults to 30 days)
+          let ttlDays = 30;
+          try {
+            const { data: ttlRow } = await sb.from("marketplace_settings" as any)
+              .select("value_int").eq("key", "access_ttl_days").maybeSingle();
+            if (ttlRow && (ttlRow as any).value_int) ttlDays = (ttlRow as any).value_int;
+          } catch { /* default ok */ }
+          const accessExpiresAt = new Date(Date.now() + ttlDays * 24 * 60 * 60 * 1000).toISOString();
+
+          // Atomic claim: only mark sold if we still own the pending lock
+          const { data: claim, error: claimErr } = await (sb.from as any)("marketplace_lead_locks")
+            .update({
+              status: "sold",
+              stripe_session_id: session.id,
+              stripe_payment_intent_id: (session.payment_intent as string) || null,
+              stripe_charge_id: ((session as any).latest_charge as string) || null,
+              sold_at: new Date().toISOString(),
+              access_expires_at: accessExpiresAt,
+              revoked_at: null,
+              revoke_reason: null,
+            })
+            .eq("lead_id", lead_id)
+            .eq("product", product)
+            .in("status", ["pending", "soft_lock", "claimed"])
+            .eq("buyer_email", email)
+            .select("id");
+          if (claimErr) throw new Error(`lock claim: ${claimErr.message}`);
+
+          // Merge any anonymous browsing history into this confirmed buyer
+          const anonId = (meta.anon_session_id as string) || null;
+          if (anonId) {
+            try {
+              await (sb.rpc as any)("merge_anon_buyer_views", {
+                p_anon_session_id: anonId,
+                p_buyer_email: email,
+              });
+            } catch (mergeErr) {
+              console.warn("[mp anon merge]", mergeErr);
+            }
+          }
+
+          if (!claim || claim.length === 0) {
+            // Race lost or already sold — treat as duplicate but don't 500 (would re-trigger Stripe retries)
+            await notifyMatt(`⚠️ Marketplace duplicate claim — ${email} on ${lead_id}`,
+              `<p>Lead ${lead_id} (${product}) already sold or lock missing for ${email}. Refund check?</p>`).catch(()=>{});
+            return new Response(JSON.stringify({ received: true, duplicate: true }), { status: 200 });
+          }
+
+          // GHOST-3 fix: await PDF generation so failures alert Matt rather than silently dropping
+          try {
+            const pdfRes = await fetch(`${SUPABASE_URL}/functions/v1/marketplace-generate-dossier-pdf`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({ lead_id, product, buyer_email: email }),
+              signal: AbortSignal.timeout(25_000),
+            });
+            if (!pdfRes.ok) throw new Error(`PDF function returned ${pdfRes.status}`);
+          } catch (pdfErr) {
+            console.error("[mp pdf trigger] failed:", pdfErr);
+            await notifyMatt(
+              `⚠️ Marketplace PDF FAILED — ${lead_id.slice(0, 8)} for ${email}`,
+              `<p>Error: ${String(pdfErr)}</p><p>Manually trigger: POST /marketplace-generate-dossier-pdf with lead_id=${lead_id} product=${product} buyer_email=${email}</p>`
+            ).catch(() => {});
+          }
+
+          // Fetch the unlocked lead for the email
+          const { data: lead } = await (sb.from as any)("unified_lead_marketplace_view")
+            .select("*").eq("id", lead_id).maybeSingle();
+
+          const dashLink = `https://detroitwebagent.com/lead/${lead_id}?paid=1&buyer=${encodeURIComponent(email)}`;
+          const productLabel = ({mortgage:"Mortgage",talent:"Talent",demand:"Demand",growth:"Growth",supply:"Supply"} as any)[product] || product;
+
+          if (RESEND_API_KEY) {
+            // GHOST-2 fix: stamp email_sent_at on success so reconcile cron knows delivery happened
+            await dwaEmail(email, `🎟 Your ${productLabel} Dossier is Unlocked`, `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;">
+    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0;">🎟 Golden Ticket · Unlocked</p>
+    <h1 style="color:#fff;font-size:22px;margin:8px 0 16px;">Your ${productLabel} dossier is ready.</h1>
+    <p style="color:#94a3b8;font-size:14px;margin:0 0 16px;">${(lead as any)?.human_summary || "Full intelligence, contact details, and suggested openers — ready to action now."}</p>
+    <div style="text-align:center;margin:24px 0">
+      <a href="${dashLink}" style="display:inline-block;background:#00d4ff;color:#000;font-weight:700;padding:14px 40px;border-radius:8px;text-decoration:none;font-size:15px;">📂 Open Dossier</a>
+    </div>
+    <p style="color:#fbbf24;font-size:12px;border-top:1px solid #1e3a5f;padding-top:16px;margin:16px 0 0;"><strong>TCPA reminder:</strong> Verify Established Business Relationship or written consent before texting. Manual send only — DWA never auto-texts on your behalf.</p>
+  </div>
+  <p style="color:#475569;font-size:11px;text-align:center;margin-top:16px;">Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p>
+</div></body></html>`);
+          }
+          // GHOST-2 fix: stamp delivery timestamp so reconcile cron knows email was sent
+          await sb.from("marketplace_lead_locks" as any)
+            .update({ email_sent_at: new Date().toISOString() })
+            .eq("lead_id", lead_id)
+            .eq("product", product);
+
+          await notifyMatt(
+            `💰 Marketplace sale — ${productLabel} · ${email}`,
+            `<p><strong>${email}</strong> bought ${productLabel} lead <code>${lead_id.slice(0,8)}</code><br>${(lead as any)?.city || ""} ${(lead as any)?.zip || ""} · score ${(lead as any)?.score || "?"}/10</p>`
+          ).catch(()=>{});
+
+          await sendSMS(ADMIN_PHONE, "+13139921219",
+            `💰 Marketplace: ${email} bought ${productLabel} lead. Score ${(lead as any)?.score || "?"}/10.`,
+            "marketplace_sale_admin").catch(()=>{});
+
+          // Purchase confirmation SMS to the buyer (item 41)
+          try {
+            const { data: buyerProfile } = await (sb.from as any)("profiles")
+              .select("phone").eq("email", email).maybeSingle();
+            const buyerPhone = (buyerProfile as any)?.phone || (meta.buyer_phone as string) || null;
+            if (buyerPhone) {
+              await sendSMS(buyerPhone, "+13139921219",
+                `🎟 Detroit Web Agency: Your ${productLabel} dossier is unlocked. Open it: ${dashLink}  TCPA: verify EBR before texting. Reply STOP to opt out.`,
+                "marketplace_purchase_confirmation").catch(()=>{});
+            }
+          } catch (smsErr) {
+            console.warn("[mp purchase SMS]", smsErr);
+          }
+
+        } catch (e) {
+          console.error("[WEBHOOK] marketplace_lead_purchase error:", e);
+          await notifyMatt(`🚨 Marketplace fulfillment FAILED — ${email || "unknown"} / ${lead_id}`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(()=>{});
+          return new Response(JSON.stringify({ error: "marketplace_lead_purchase failed" }), { status: 500 });
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // === Contractor Leads À La Carte purchase ===
+      if (meta.type === "alacarte_lead_purchase") {
+        const buyerEmail = (meta.buyer_email || customerEmail || "").toLowerCase();
+        const offerId = meta.offer_id;
+        const leadId = meta.lead_id;
+        try {
+          if (!offerId || !leadId || !buyerEmail) {
+            throw new Error("missing offer_id / lead_id / buyer_email");
+          }
+          // Atomic claim via RPC (first-payer-wins, refunds others)
+          const { data: claimResult, error: claimErr } = await (sb.rpc as any)("claim_alacarte_lead", {
+            _offer_id: offerId,
+            _lead_id: leadId,
+            _claimer_email: buyerEmail,
+            _stripe_session_id: session.id,
+          });
+          if (claimErr) throw claimErr;
+          const claimed = (claimResult as any)?.claimed === true;
+
+          if (claimed) {
+            // Fetch lead details to send to buyer
+            const { data: lead } = await (sb.from as any)("contractor_leads")
+              .select("name, phone, email, project_type, message, contractor_lead_sites(trade, city)")
+              .eq("id", leadId).single();
+            const trade = lead?.contractor_lead_sites?.trade || "Lead";
+            const city = lead?.contractor_lead_sites?.city || "";
+            const html = `<h2>You won the lead — ${trade} in ${city}</h2>
+              <p><strong>Homeowner:</strong> ${lead?.name || "—"}</p>
+              <p><strong>Phone:</strong> <a href="tel:${lead?.phone}">${lead?.phone || "—"}</a></p>
+              <p><strong>Email:</strong> ${lead?.email || "—"}</p>
+              <p><strong>Project:</strong> ${lead?.project_type || "—"}</p>
+              <p><strong>Notes:</strong> ${lead?.message || "—"}</p>
+              <p style="margin-top:24px;color:#64748b;">Call them within 5 minutes — that's how you win.</p>`;
+            await sendM2Email(buyerEmail, `🎯 You won: ${trade} lead in ${city}`, html).catch(()=>{});
+            await notifyMatt(`💰 À la carte lead sold — ${buyerEmail} claimed ${trade}/${city}`, html).catch(()=>{});
+          } else {
+            // Refund — someone else got it first
+            const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2025-08-27.basil" });
+            const paymentIntent = (session as any).payment_intent;
+            if (paymentIntent) {
+              await stripe.refunds.create({ payment_intent: paymentIntent, reason: "duplicate" }).catch(()=>{});
+            }
+            const refundHtml = `<h2>Refunded — lead already claimed</h2>
+              <p>Another contractor paid for this lead seconds before you. Your card has been refunded in full.</p>
+              <p>More leads coming — keep an eye on your phone.</p>`;
+            await sendM2Email(buyerEmail, `Refunded — lead already claimed`, refundHtml).catch(()=>{});
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] alacarte_lead_purchase error:", e);
+          await notifyMatt(`🚨 À la carte fulfillment FAILED — ${buyerEmail} / ${leadId}`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(()=>{});
+          return new Response(JSON.stringify({ error: "alacarte_lead_purchase failed" }), { status: 500 });
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      if (meta.type === "marketplace_first_look_subscription") {
+        const email = (meta.email || customerEmail || "").toLowerCase();
+        const productKey = meta.product || "all";
+        try {
+          const subscriptionId = (session as any).subscription || null;
+          const customerId = (session as any).customer || null;
+          const { error: upErr } = await (sb.from as any)("marketplace_first_look_subscribers")
+            .upsert({
+              email,
+              product: productKey,
+              stripe_customer_id: customerId,
+              stripe_subscription_id: subscriptionId,
+              status: "active",
+              updated_at: new Date().toISOString(),
+            }, { onConflict: "stripe_subscription_id" });
+          if (upErr) {
+            console.error("[WEBHOOK] first_look upsert error:", upErr);
+            return new Response(JSON.stringify({ error: "first_look_upsert_failed" }), { status: 500 });
+          }
+
+          const productLabel = productKey === "all" ? "all marketplace products" : `${productKey} leads`;
+          await sendM2Email(email,
+            "✅ First Look access activated",
+            `<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#0a1628;color:#e6f1ff;">
+              <h1 style="color:#00d4ff;font-size:22px;margin:0 0 12px;">First Look is live</h1>
+              <p>You'll now see brand-new <strong>hot</strong> leads in <strong>${productLabel}</strong> a full hour before everyone else.</p>
+              <p>New hot leads → SMS within 15 minutes (subscribers).<br/>Public marketplace → 1 hour later.</p>
+              <p style="margin-top:24px;"><a href="https://detroitwebagent.com/marketplace/receipts?email=${encodeURIComponent(email)}" style="background:#00d4ff;color:#0a1628;padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:600;">View your receipts</a></p>
+              <p style="font-size:11px;color:#7a8aa0;margin-top:24px;">Cancel anytime. Detroit Web Agency · matt@detroitwebagent.com</p>
+            </div>`).catch(()=>{});
+
+          await notifyMatt(`💎 First Look subscriber: ${email} (${productKey})`,
+            `<p>${email} subscribed to First Look — ${productKey}.</p>`).catch(()=>{});
+        } catch (e) {
+          console.error("[WEBHOOK] first_look error:", e);
+          await notifyMatt(`🚨 First Look subscription failed — ${email}`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(()=>{});
+          return new Response(JSON.stringify({ error: "first_look_failed" }), { status: 500 });
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // === Channel 3 — Industrial Pulse public unlock ($50 snapshot OR $199/mo firehose) ===
@@ -1369,7 +1690,7 @@ serve(async (req) => {
           await notifyMatt(`🚨 Industrial Pulse fulfillment FAILED — ${email}`, `<p>${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
           return new Response(JSON.stringify({ error: "fulfillment failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
 
@@ -1389,7 +1710,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] domain_breach_report error:", e);
           return new Response(JSON.stringify({ error: "domain_breach_report failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── KEYWORD GAP REPORT — $19 one-time ────────────────────────────────────
@@ -1408,7 +1729,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] keyword_gap_report error:", e);
           return new Response(JSON.stringify({ error: "keyword_gap_report failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
       // ── LUKE — Mark cart as recovered when any instant product purchase completes ──
       const instantProducts = ["website_audit", "gbp_post_pack", "competitor_report"];
@@ -1620,7 +1941,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] dark_web_monitor error:", e);
           return new Response(JSON.stringify({ error: "dark_web_monitor failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── SEO GUARD — $29/mo with 7-day trial ──────────────────────────────
@@ -1662,7 +1983,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] seo_guard error:", e);
           return new Response(JSON.stringify({ error: "seo_guard failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── DARK WEB MONITOR RESELLER — MSP ($199/mo, 10 domains) ─────────────
@@ -1710,7 +2031,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] dark_web_monitor_reseller error:", e);
           return new Response(JSON.stringify({ error: "dark_web_monitor_reseller failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── EMPLOYEE CREDENTIAL AUDIT — $149 one-time ─────────────────────────
@@ -1729,7 +2050,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] employee_credential_audit session_id update error:", e);
           return new Response(JSON.stringify({ error: "employee_credential_audit session_id update failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── NEW HIRE BREACH CHECK — $9.99 one-time HIBP screen ───────────────────
@@ -1758,7 +2079,7 @@ serve(async (req) => {
           ).catch(() => {});
           return new Response(JSON.stringify({ error: "report delivery failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
     // ── LUKE — Capture abandoned checkouts for recovery emails ────────────────
@@ -1784,7 +2105,7 @@ serve(async (req) => {
           }
         }
       } catch (e) { console.error("[LUKE] cart_abandonment capture error:", e); }
-      return new Response(JSON.stringify({ received: true }), { status: 200 });
+      await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
       // ── WAVE 4: STORM DAMAGE LEAD BLASTER ──────────────────────────────────
@@ -1813,7 +2134,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] storm_lead_subscription error:", e);
           return new Response(JSON.stringify({ error: "storm_lead_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── WAVE 4: RECALL ALERT SERVICE ────────────────────────────────────────
@@ -1842,7 +2163,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] recall_alert_subscription error:", e);
           return new Response(JSON.stringify({ error: "recall_alert_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── WAVE 4: PERMIT WATCH ─────────────────────────────────────────────────
@@ -1872,7 +2193,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] permit_watch_subscription error:", e);
           return new Response(JSON.stringify({ error: "permit_watch_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── WAVE 4: WEBSITE SPEED AUDIT ──────────────────────────────────────────
@@ -1899,7 +2220,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] speed_audit_subscription error:", e);
           return new Response(JSON.stringify({ error: "speed_audit_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── WAVE 4: AI BEDTIME STORIES ───────────────────────────────────────────
@@ -1927,7 +2248,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] bedtime_story_subscription error:", e);
           return new Response(JSON.stringify({ error: "bedtime_story_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── WAVE 4: NEIGHBORHOOD CRIME DIGEST ───────────────────────────────────
@@ -1958,7 +2279,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] crime_digest_subscription error:", e);
           return new Response(JSON.stringify({ error: "crime_digest_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── WAVE 4: BUSINESS LICENSE MONITOR ────────────────────────────────────
@@ -1987,7 +2308,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] license_monitor_subscription error:", e);
           return new Response(JSON.stringify({ error: "license_monitor_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── MISSED CALL TEXT-BACK — $99/mo with 7-day trial ──────────────────
@@ -2018,7 +2339,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] missed_call_subscription error:", e);
           return new Response(JSON.stringify({ error: "missed_call_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── FIELDDESK — $199/mo field service CRM ────────────────────────────
@@ -2049,7 +2370,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] field_service_subscription error:", e);
           return new Response(JSON.stringify({ error: "field_service_subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── CONTRACTOR LEADS — dedicated welcome email with dashboard link ─────
@@ -2103,7 +2424,7 @@ serve(async (req) => {
         } catch (e) {
           console.error("[WEBHOOK] contractor_lead_subscription welcome email error:", e);
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── GBP SAAS — $49-99/mo Google Business Profile automation ─────────────
@@ -2124,7 +2445,7 @@ serve(async (req) => {
             ]);
           } catch (e) { console.error("[WEBHOOK] gbp_subscription error:", e); }
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── SOCIAL MEDIA AI — $199-299/mo ────────────────────────────────────────
@@ -2145,7 +2466,7 @@ serve(async (req) => {
             ]);
           } catch (e) { console.error("[WEBHOOK] social_media_subscription error:", e); }
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── FIELD REP TOOLS — $29/mo AI tool suite ───────────────────────────────
@@ -2165,7 +2486,7 @@ serve(async (req) => {
             ]);
           } catch (e) { console.error("[WEBHOOK] field_rep_subscription error:", e); }
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── CATCH-ALL: any subscription type not explicitly handled above ──────
@@ -2213,7 +2534,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] catch-all subscription error:", e);
           return new Response(JSON.stringify({ error: "catch-all subscription failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── Revenue Suite Bundle ──────────────────────────────────────────
@@ -2258,7 +2579,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] Revenue Suite error:", e);
           return new Response(JSON.stringify({ error: "Revenue Suite failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── AGENCY ANNUAL PREPAY ($25K Territory Lock) ───────────────────────
@@ -2302,7 +2623,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] Agency annual prepay error:", e);
           return new Response(JSON.stringify({ error: "agency_annual_prepay processing failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── AGENCY PERFORMANCE SETUP (card saved, no upfront charge) ─────────
@@ -2341,7 +2662,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] Agency performance setup error:", e);
           return new Response(JSON.stringify({ error: "agency_performance_setup processing failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── Dead Lead Billing Setup — card saved, activate auto-charge ─────────────
@@ -2404,7 +2725,7 @@ serve(async (req) => {
 
       // Unmatched checkout.session.completed — log and acknowledge
       console.log(`[WEBHOOK] checkout.session.completed with unhandled meta.type: ${meta.type || "none"}`);
-      return new Response(JSON.stringify({ received: true }), { status: 200 });
+      await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
     // ── LUKE — Capture abandoned checkouts for recovery emails ────────────────
@@ -2430,7 +2751,7 @@ serve(async (req) => {
           }
         }
       } catch (e) { console.error("[LUKE] cart_abandonment capture error:", e); }
-      return new Response(JSON.stringify({ received: true }), { status: 200 });
+      await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
     // ── Invoice payment failed — deactivate product clients after 3 failures ──
@@ -2483,15 +2804,23 @@ serve(async (req) => {
         console.error("[WEBHOOK] invoice.payment_failed error:", e);
         return new Response(JSON.stringify({ error: "invoice.payment_failed failed" }), { status: 500 });
       }
-      return new Response(JSON.stringify({ received: true }), { status: 200 });
+      await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
     // ── Unhandled event types (invoice.finalized, etc.) — acknowledge safely ──
     console.log(`[WEBHOOK] Unhandled event type: ${event.type} — acknowledging`);
-    return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+    await markFulfilled(true);
+    await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("[STRIPE-WEBHOOK] Error:", msg);
+    // PARTIAL-1 fix: mark this event as failed so the reconcile cron can re-fire it.
+    // markFulfilled may not exist if the error happened before idempotency setup
+    // (e.g. signature verification) — guard with typeof check.
+    try {
+      // @ts-ignore — markFulfilled is in the closure scope when reachable
+      if (typeof markFulfilled === "function") await markFulfilled(false, msg);
+    } catch (_) { /* swallow — best-effort */ }
     // Alert Matt on fatal webhook failures (signature errors, crashes, etc.)
     sendSMS(
       ADMIN_PHONE,
@@ -2499,9 +2828,14 @@ serve(async (req) => {
       `STRIPE-WEBHOOK FATAL: ${msg.slice(0, 120)}`,
       "stripe_webhook_error"
     ).catch(() => {});
-    return new Response(JSON.stringify({ error: msg }), { status: 400 });
+    // Defense Protocol: signature verification failures = 400 (Stripe gives up).
+    // ALL other errors = 500 so Stripe retries with exponential backoff.
+    const isSignatureError = /signature|webhook secret/i.test(msg);
+    return new Response(JSON.stringify({ error: msg }), { status: isSignatureError ? 400 : 500 });
   }
-});
+};
+
+serve(handler);
 
 function parseGuideExercises(html: string): { name: string; sets: string; reps: string; notes: string }[] {
   const exercises: { name: string; sets: string; reps: string; notes: string }[] = [];

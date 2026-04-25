@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface Props {
-  onLogin: (tech: { id: string; name: string; client_id: string }) => void;
+  onLogin: (tech: { id: string; name: string; client_id: string }, token: string) => void;
 }
 
 export default function TechLogin({ onLogin }: Props) {
@@ -14,17 +15,21 @@ export default function TechLogin({ onLogin }: Props) {
   async function handleSubmit(pinValue: string) {
     if (pinValue.length !== 4) { toast.error("Enter your 4-digit PIN"); return; }
     setLoading(true);
-    const { data, error } = await supabase
-      .rpc("verify_tech_pin", { _pin: pinValue })
-      .maybeSingle();
 
-    if (error || !data) {
+    // TOKEN-2 fix: PIN now goes through tech-session-create edge function which
+    // validates the PIN server-side and mints a session token. The token is
+    // required for all subsequent tech-jobs-* calls — direct DB access is gone.
+    const { data, error } = await supabase.functions.invoke("tech-session-create", {
+      body: { pin: pinValue },
+    });
+
+    if (error || !data?.token || !data?.tech) {
       toast.error("Invalid PIN. Try again.");
       setPin("");
       setLoading(false);
       return;
     }
-    onLogin(data);
+    onLogin(data.tech, data.token);
     setLoading(false);
   }
 

@@ -18,6 +18,7 @@
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { runEmailWaterfall, WaterfallCounters } from "../_shared/email-waterfall.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -32,6 +33,7 @@ serve(async (req) => {
   try {
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    const enrichFirst: boolean = !!body.enrich_first;
 
     // Pull rows to score
     let q = sb.from("prospect_pool").select("*");
@@ -39,12 +41,55 @@ serve(async (req) => {
     else {
       if (body.audience_type) q = q.eq("audience_type", body.audience_type);
       if (body.county) q = q.eq("county", body.county);
-      q = q.is("scored_at", null).order("created_at", { ascending: false }).limit(body.limit || 200);
+      // When enrich_first, also pick up rows that have been scored but lack contact info
+      if (enrichFirst) q = q.or("scored_at.is.null,email.is.null");
+      else q = q.is("scored_at", null);
+      q = q.order("created_at", { ascending: false }).limit(body.limit || 200);
     }
     const { data: rows, error } = await q;
     if (error) throw error;
     if (!rows || rows.length === 0) {
-      return new Response(JSON.stringify({ ok: true, scored: 0 }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ ok: true, scored: 0, enriched: 0, counters: {} }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── Enrich-first pass: fill missing emails via shared waterfall ─────────
+    const counters: WaterfallCounters = {};
+    let enrichedCount = 0;
+    if (enrichFirst) {
+      for (const r of rows as any[]) {
+        if (r.email) continue;
+        try {
+          const wf = await runEmailWaterfall(sb, {
+            website: r.website,
+            business_name: r.business_name,
+            city: r.city,
+            state: r.state,
+            contact_first_name: r.contact_first_name ?? null,
+            contact_last_name: r.contact_last_name ?? null,
+          }, counters);
+          if (wf.email) {
+            const existingMeta = (r.meta && typeof r.meta === "object") ? r.meta : {};
+            const existingTrace = Array.isArray((existingMeta as any).enrichment_trace) ? (existingMeta as any).enrichment_trace : [];
+            const newMeta = {
+              ...existingMeta,
+              enrichment_trace: [
+                ...existingTrace,
+                { ts: new Date().toISOString(), flow: "score_with_enrich", winner: wf.source, confidence: wf.confidence, steps: wf.trace, filled: ["email"] },
+              ],
+            };
+            await sb.from("prospect_pool").update({
+              email: wf.email,
+              meta: newMeta,
+              last_enriched_at: new Date().toISOString(),
+            }).eq("id", r.id);
+            r.email = wf.email; // mutate so scoring sees it
+            r.meta = newMeta;
+            enrichedCount++;
+          }
+        } catch (e) {
+          console.warn(`[score-prospects] enrich failed for ${r.id}:`, e);
+        }
+      }
     }
 
     // Pull supporting signals once
@@ -70,6 +115,7 @@ serve(async (req) => {
       const { data: s } = await sb.from("suppressed_emails" as any).select("email");
       (s as any[] || []).forEach((r) => r.email && suppressedEmail.add(r.email.toLowerCase()));
     } catch (_e) { /* table may not exist */ }
+
 
     let scoredCount = 0;
     for (const r of rows as any[]) {
@@ -134,7 +180,7 @@ serve(async (req) => {
       scoredCount++;
     }
 
-    return new Response(JSON.stringify({ ok: true, scored: scoredCount }), {
+    return new Response(JSON.stringify({ ok: true, scored: scoredCount, enriched: enrichedCount, counters }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

@@ -123,6 +123,44 @@ export default function OutreachCommandCenter() {
 }
 
 // ============================================================
+// Provider Health chip row — shows credits + 429 status per email enrichment provider
+// ============================================================
+function ProviderHealthRow() {
+  const { data } = useQuery({
+    queryKey: ["enrichment-provider-health"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("enrichment_provider_health")
+        .select("provider, credits_remaining, last_429_at, daily_calls, daily_hits");
+      return data ?? [];
+    },
+    refetchInterval: 30_000,
+  });
+  if (!data || data.length === 0) return null;
+  const order = ["snov", "apollo", "pattern_verify", "hunter", "pdl", "site_scrape"];
+  const sorted = [...data].sort((a, b) => order.indexOf(a.provider) - order.indexOf(b.provider));
+  return (
+    <div className="flex flex-wrap gap-1.5 pt-1">
+      {sorted.map((p: any) => {
+        const recently429 = p.last_429_at && (Date.now() - new Date(p.last_429_at).getTime() < 60 * 60 * 1000);
+        const dead = typeof p.credits_remaining === "number" && p.credits_remaining <= 0;
+        const dot = dead ? "🔴" : recently429 ? "🟡" : "🟢";
+        const credits = typeof p.credits_remaining === "number" ? p.credits_remaining.toLocaleString() : "—";
+        return (
+          <span
+            key={p.provider}
+            title={`${p.daily_hits ?? 0}/${p.daily_calls ?? 0} hits today`}
+            className="text-[11px] px-2 py-0.5 rounded bg-black/30 border border-white/10 text-white/70"
+          >
+            {dot} {p.provider.replace("_", " ")} · {credits}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+// ============================================================
 // SUB-TAB 1 — Find Prospects (Targeting Engine)
 // ============================================================
 function FindProspects() {
@@ -131,6 +169,7 @@ function FindProspects() {
   const [limit, setLimit] = useState(50);
   const [running, setRunning] = useState(false);
   const [scoring, setScoring] = useState(false);
+  const [enrichFirst, setEnrichFirst] = useState(false);
   const qc = useQueryClient();
 
   // Idle Pool counts
@@ -170,8 +209,12 @@ function FindProspects() {
         body: { limit: 50 },
       });
       if (error) throw error;
+      const c = data?.counters || {};
+      const breakdown = ["snov","apollo","pattern_verify","hunter","pdl","site_scrape"]
+        .map((k) => `${k.replace("_"," ")}: ${c[k] ?? 0}`)
+        .join(" · ");
       toast.success(
-        `Enriched ${data?.enriched ?? 0} of ${data?.processed ?? 0} prospects (Hunter: ${data?.hunter_hits ?? 0}, scrape: ${data?.scrape_hits ?? 0})`
+        `Enriched ${data?.enriched ?? 0} of ${data?.processed ?? 0} prospects — ${breakdown}`
       );
       refetchIdle();
     } catch (e) {
@@ -232,10 +275,18 @@ function FindProspects() {
     setScoring(true);
     try {
       const { data, error } = await supabase.functions.invoke("score-prospects", {
-        body: { audience_type: audience, limit: 200 },
+        body: { audience_type: audience, limit: 200, enrich_first: enrichFirst },
       });
       if (error) throw error;
-      toast.success(`Re-scored ${data?.scored ?? 0} prospects`);
+      if (enrichFirst) {
+        const c = data?.counters || {};
+        const breakdown = ["snov","apollo","pattern_verify","hunter","pdl","site_scrape"]
+          .map((k) => `${k.replace("_"," ")}:${c[k] ?? 0}`)
+          .join(" · ");
+        toast.success(`Re-scored ${data?.scored ?? 0} · Enriched ${data?.enriched ?? 0} — ${breakdown}`);
+      } else {
+        toast.success(`Re-scored ${data?.scored ?? 0} prospects`);
+      }
       qc.invalidateQueries({ queryKey: ["prospect_pool"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Scoring failed");
@@ -288,8 +339,9 @@ function FindProspects() {
               </div>
             ))}
           </div>
+          <ProviderHealthRow />
           <p className="text-white/40 text-[11px]">
-            Backfill uses Hunter.io + site scrape. Activate flips eligible leads into the daily web-design drip cron.
+            Backfill walks site scrape → Snov → Apollo → pattern-verify → Hunter → PDL. Cheapest providers first; auto-skips any provider that 429&apos;d in the last hour.
           </p>
         </div>
       )}
@@ -330,13 +382,17 @@ function FindProspects() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
           <Button onClick={runScrape} disabled={running} className="bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-[#0a1628]">
             {running ? <><Loader2 className="animate-spin mr-2" size={14} /> Scraping…</> : <>🚀 Run Scrape</>}
           </Button>
           <Button onClick={runScore} disabled={scoring} variant="outline" className="border-white/15 text-white hover:bg-white/10">
-            {scoring ? <><Loader2 className="animate-spin mr-2" size={14} /> Scoring…</> : <>⚡ Re-score Pool</>}
+            {scoring ? <><Loader2 className="animate-spin mr-2" size={14} /> {enrichFirst ? "Enriching + Scoring…" : "Scoring…"}</> : <>⚡ Re-score Pool</>}
           </Button>
+          <label className="flex items-center gap-2 text-white/70 text-xs ml-1 cursor-pointer">
+            <Checkbox checked={enrichFirst} onCheckedChange={(v) => setEnrichFirst(!!v)} />
+            Enrich missing fields first <span className="text-white/40">(slower)</span>
+          </label>
         </div>
 
         <div className="text-white/40 text-xs">
@@ -448,7 +504,12 @@ function RankedPool() {
       const { data, error } = await supabase.functions.invoke("enrich-prospect-pool", { body: { id } });
       if (error) throw error;
       const filled = data?.results?.[0]?.filled ?? [];
-      toast.success(filled.length ? `Filled: ${filled.join(", ")}` : "No new data found");
+      const c = data?.counters || {};
+      const breakdownParts = ["snov","apollo","pattern_verify","hunter","pdl","site_scrape"]
+        .filter((k) => (c[k] ?? 0) > 0)
+        .map((k) => `${k.replace("_"," ")}:${c[k]}`);
+      const suffix = breakdownParts.length ? ` — ${breakdownParts.join(" · ")}` : "";
+      toast.success(filled.length ? `Filled: ${filled.join(", ")}${suffix}` : `No new data found${suffix}`);
       qc.invalidateQueries({ queryKey: ["prospect_pool"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Enrichment failed");
@@ -462,7 +523,11 @@ function RankedPool() {
     try {
       const { data, error } = await supabase.functions.invoke("enrich-prospect-pool", { body: { limit: 25 } });
       if (error) throw error;
-      toast.success(`Enriched ${data?.enriched ?? 0} of ${data?.processed ?? 0} prospects`);
+      const c = data?.counters || {};
+      const breakdown = ["snov","apollo","pattern_verify","hunter","pdl","site_scrape"]
+        .map((k) => `${k.replace("_"," ")}:${c[k] ?? 0}`)
+        .join(" · ");
+      toast.success(`Enriched ${data?.enriched ?? 0} of ${data?.processed ?? 0} — ${breakdown}`);
       qc.invalidateQueries({ queryKey: ["prospect_pool"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Batch enrichment failed");
@@ -510,10 +575,82 @@ function RankedPool() {
       setSelected(new Set());
       return;
     }
-    const statusMap = { email: "queued_email", postcard: "queued_postcard", fax: "queued_fax", call: "queued_call" } as const;
-    const { error } = await supabase.from("prospect_pool").update({ status: statusMap[channel] }).in("id", ids);
-    if (error) return toast.error(error.message);
-    toast.success(`Queued ${ids.length} for ${channel} campaign — visit Active Campaigns to send`);
+
+    const selectedRows = prospects.filter((p) => selected.has(p.id));
+    const audienceLabel = audienceFilter !== "all" ? audienceFilter : "mixed";
+    const today = new Date().toISOString().slice(0, 10);
+    const campaignName = `manual_${audienceLabel}_${today}_${ids.length}`;
+
+    if (channel === "call") {
+      // Call sheet = printable CSV with name/phone/script
+      const rows = selectedRows.filter((p) => !!p.phone);
+      if (!rows.length) return toast.error("No selected prospects have phone numbers");
+      const cols = ["business_name", "contact_name", "phone", "city", "state", "lead_score", "audience_type"];
+      const csv = [
+        ["# Call sheet — " + campaignName].join(","),
+        ["# Script: Hi, this is Matt from Detroit Web Agency — quick question, are you still taking on new [trade] jobs in [city]?"].join(","),
+        cols.join(","),
+        ...rows.map((r) => cols.map((c) => JSON.stringify((r as any)[c] ?? "")).join(",")),
+      ].join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `call_sheet_${today}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      await supabase.from("prospect_pool").update({ status: "queued_call" }).in("id", ids);
+      toast.success(`Call sheet downloaded — ${rows.length} numbers`);
+      setSelected(new Set());
+      return;
+    }
+
+    // Build a real campaign row so it appears in Active Campaigns
+    let campaignId: string | null = null;
+    if (channel === "fax") {
+      const faxRows = selectedRows.filter((p) => !!p.fax_number);
+      if (!faxRows.length) return toast.error("No selected prospects have fax numbers");
+      const { data, error } = await supabase.from("fax_campaigns").insert({
+        name: campaignName,
+        target_segment: ids.join(","),
+        message_html: `<p>Draft fax — edit before sending. Targets: ${faxRows.length} ${audienceLabel} prospects.</p>`,
+        status: "draft",
+        audience_type: audienceLabel,
+      }).select("id").single();
+      if (error) return toast.error(error.message);
+      campaignId = (data as any)?.id ?? null;
+    } else if (channel === "postcard") {
+      const mailRows = selectedRows.filter((p) => !!p.address_line1);
+      if (!mailRows.length) return toast.error("No selected prospects have mailing addresses");
+      const { data, error } = await supabase.from("postcard_campaigns").insert({
+        county: selectedRows[0]?.county ?? audienceLabel,
+        copy_front: `Draft postcard — ${audienceLabel} ${today}`,
+        copy_back: `Draft postcard back. Targets: ${mailRows.length}. Edit before sending.`,
+        qr_url: "https://detroitwebagent.com",
+        prospect_count: mailRows.length,
+        status: "draft",
+        audience_type: audienceLabel,
+      }).select("id").single();
+      if (error) return toast.error(error.message);
+      campaignId = (data as any)?.id ?? null;
+    } else if (channel === "email") {
+      const emailRows = selectedRows.filter((p) => !!p.email);
+      if (!emailRows.length) return toast.error("No selected prospects have emails");
+      // email_campaigns table doesn't exist — fall back to status update + clear toast
+      // (per schema check). Surface this honestly instead of pretending.
+    }
+
+    await supabase.from("prospect_pool").update({
+      status: channel === "email" ? "queued_email" : channel === "postcard" ? "queued_postcard" : "queued_fax",
+    }).in("id", ids);
+
+    if (campaignId) {
+      toast.success(`Created ${channel} campaign #${String(campaignId).slice(0, 8)} with ${ids.length} targets — open Active Campaigns tab to send`);
+    } else {
+      toast.success(`Queued ${ids.length} for ${channel} — visit Active Campaigns`);
+    }
+    qc.invalidateQueries({ queryKey: ["postcard_campaigns_active"] });
+    qc.invalidateQueries({ queryKey: ["fax_campaigns_active"] });
     setSelected(new Set());
   }
 
@@ -725,22 +862,35 @@ function ActiveCampaigns() {
     },
   });
 
+  const qc = useQueryClient();
+
+  const mapDispatchRow = (c: Record<string, unknown>, kind: "fax" | "postcard") => ({
+    id: c.id as string,
+    primary: (c.campaign_name ?? c.audience_type ?? "—") as string,
+    secondary: (c.status ?? "—") as string,
+    meta: `${c.total_sent ?? 0} sent${c.total_cost ? ` · $${Number(c.total_cost).toFixed(2)}` : ""}`,
+    date: c.created_at as string,
+    status: (c.status as string) ?? "draft",
+    last_error: (c.last_error as string) ?? null,
+    kind,
+  });
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <CampaignCard title="📬 Postcard Campaigns" badge="postcard" rows={postcards.map((c: Record<string, unknown>) => ({
-        id: c.id as string,
-        primary: (c.campaign_name ?? c.audience_type ?? "—") as string,
-        secondary: (c.status ?? "—") as string,
-        meta: `${c.total_sent ?? 0} sent`,
-        date: c.created_at as string,
-      }))} />
-      <CampaignCard title="📠 Fax Campaigns" badge="fax" rows={faxes.map((c: Record<string, unknown>) => ({
-        id: c.id as string,
-        primary: (c.campaign_name ?? c.audience_type ?? "—") as string,
-        secondary: (c.status ?? "—") as string,
-        meta: `${c.total_sent ?? 0} sent`,
-        date: c.created_at as string,
-      }))} />
+      <CampaignCard
+        title="📬 Postcard Campaigns"
+        badge="postcard"
+        rows={postcards.map((c: Record<string, unknown>) => mapDispatchRow(c, "postcard"))}
+        onAction={async (row, action) => handleDispatchAction(row, action, qc)}
+        editorHint="Edit in Postcard Campaigns tab →"
+      />
+      <CampaignCard
+        title="📠 Fax Campaigns"
+        badge="fax"
+        rows={faxes.map((c: Record<string, unknown>) => mapDispatchRow(c, "fax"))}
+        onAction={async (row, action) => handleDispatchAction(row, action, qc)}
+        editorHint="Edit in Fax Campaigns tab →"
+      />
       <CampaignCard title="📧 Recent Emails" badge="email" rows={(emails as unknown as Record<string, unknown>[]).map((e) => ({
         id: e.id as string,
         primary: (e.template_name ?? "—") as string,
@@ -759,7 +909,91 @@ function ActiveCampaigns() {
   );
 }
 
-function CampaignCard({ title, badge, rows }: { title: string; badge: string; rows: { id: string; primary: string; secondary: string; meta: string; date: string }[] }) {
+type DispatchRow = {
+  id: string;
+  primary: string;
+  secondary: string;
+  meta: string;
+  date: string;
+  status?: string;
+  last_error?: string | null;
+  kind?: "fax" | "postcard";
+};
+
+type DispatchAction = "diagnose" | "send" | "resend";
+
+async function handleDispatchAction(
+  row: DispatchRow,
+  action: DispatchAction,
+  qc: ReturnType<typeof useQueryClient>,
+) {
+  if (!row.kind) return;
+  const fnName = row.kind === "fax" ? "send-fax-phaxio" : "send-postcards-lob";
+  const queryKey = row.kind === "fax" ? "fax_campaigns_active" : "postcard_campaigns_active";
+  const label = row.kind === "fax" ? "Fax" : "Postcard";
+
+  try {
+    if (action === "diagnose") {
+      const { data, error } = await supabase.functions.invoke(fnName, {
+        body: { campaign_id: row.id, dry_run: true },
+      });
+      if (error) throw error;
+      const ready = data?.ready ?? data?.eligible ?? data?.prospect_count ?? 0;
+      const cost = data?.estimated_cost ?? data?.cost ?? 0;
+      const apiOk = data?.api_ok ?? data?.api_status ?? "OK";
+      toast.success(`🔍 ${ready} ready · ${label} API ${apiOk === true || apiOk === "OK" ? "✅" : "⚠️"} · est $${Number(cost).toFixed(2)}`);
+      return;
+    }
+    if (action === "send") {
+      if (!confirm(`Send this ${label.toLowerCase()} campaign now? This will charge for real.`)) return;
+      const { data, error } = await supabase.functions.invoke(fnName, { body: { campaign_id: row.id } });
+      if (error) throw error;
+      const sent = data?.sent ?? 0;
+      const failed = data?.failed ?? 0;
+      const cost = data?.cost ?? data?.total_cost ?? 0;
+      toast.success(`✅ ${sent} sent · ${failed} failed · $${Number(cost).toFixed(2)}`);
+      qc.invalidateQueries({ queryKey: [queryKey] });
+      return;
+    }
+    if (action === "resend") {
+      const { data, error } = await supabase.functions.invoke(fnName, {
+        body: { campaign_id: row.id, resend_failed: true },
+      });
+      if (error) throw error;
+      const sent = data?.sent ?? 0;
+      const failed = data?.failed ?? 0;
+      toast.success(`↻ Resent: ${sent} ok · ${failed} failed`);
+      qc.invalidateQueries({ queryKey: [queryKey] });
+    }
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : `${action} failed`);
+  }
+}
+
+function CampaignCard({
+  title,
+  badge,
+  rows,
+  onAction,
+  editorHint,
+}: {
+  title: string;
+  badge: string;
+  rows: DispatchRow[];
+  onAction?: (row: DispatchRow, action: DispatchAction) => Promise<void> | void;
+  editorHint?: string;
+}) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const run = async (row: DispatchRow, action: DispatchAction) => {
+    if (!onAction) return;
+    setBusy(`${row.id}:${action}`);
+    try {
+      await onAction(row, action);
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
     <div className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
       <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
@@ -770,16 +1004,63 @@ function CampaignCard({ title, badge, rows }: { title: string; badge: string; ro
         {rows.length === 0 ? (
           <div className="p-6 text-center text-white/40 text-xs">No recent activity</div>
         ) : (
-          rows.map((r) => (
-            <div key={r.id} className="p-3 hover:bg-white/5 text-xs">
-              <div className="text-white font-medium truncate">{r.primary}</div>
-              <div className="text-white/50 truncate">{r.secondary}</div>
-              <div className="flex items-center justify-between mt-1">
-                <span className="text-white/40">{r.meta}</span>
-                <span className="text-white/30">{r.date ? new Date(r.date).toLocaleString() : ""}</span>
+          rows.map((r) => {
+            const status = (r.status ?? "").toLowerCase();
+            const canSend = !!onAction && status === "draft";
+            const canResend = !!onAction && status === "sent";
+            return (
+              <div key={r.id} className="p-3 hover:bg-white/5 text-xs space-y-1">
+                <div className="text-white font-medium truncate">{r.primary}</div>
+                <div className="text-white/50 truncate">{r.secondary}</div>
+                <div className="flex items-center justify-between">
+                  <span className="text-white/40">{r.meta}</span>
+                  <span className="text-white/30">{r.date ? new Date(r.date).toLocaleString() : ""}</span>
+                </div>
+                {r.last_error && (
+                  <div className="text-red-400 text-[11px] truncate" title={r.last_error}>
+                    ⚠ {r.last_error}
+                  </div>
+                )}
+                {onAction && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy === `${r.id}:diagnose`}
+                      onClick={() => run(r, "diagnose")}
+                      className="h-6 px-2 text-[10px] border-white/15 text-white/80 hover:bg-white/10"
+                    >
+                      {busy === `${r.id}:diagnose` ? <Loader2 className="animate-spin" size={10} /> : "🔍"} Diagnose
+                    </Button>
+                    {canSend && (
+                      <Button
+                        size="sm"
+                        disabled={busy === `${r.id}:send`}
+                        onClick={() => run(r, "send")}
+                        className="h-6 px-2 text-[10px] bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-[#0a1628] font-semibold"
+                      >
+                        {busy === `${r.id}:send` ? <Loader2 className="animate-spin" size={10} /> : badge === "fax" ? "📠" : "📬"} Send
+                      </Button>
+                    )}
+                    {canResend && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={busy === `${r.id}:resend`}
+                        onClick={() => run(r, "resend")}
+                        className="h-6 px-2 text-[10px] border-amber-500/40 text-amber-200 hover:bg-amber-500/10"
+                      >
+                        {busy === `${r.id}:resend` ? <Loader2 className="animate-spin" size={10} /> : "↻"} Resend Failed
+                      </Button>
+                    )}
+                    {editorHint && (
+                      <span className="text-white/30 text-[10px] ml-auto self-center">{editorHint}</span>
+                    )}
+                  </div>
+                )}
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

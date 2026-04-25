@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   DollarSign, Users, TrendingUp, Zap, CheckCircle, AlertTriangle,
   Phone, Clock, RefreshCw, ChevronDown, ChevronUp, Lock, Unlock,
-  Copy, Facebook, Globe, Wrench, Activity, Send,
+  Copy, Facebook, Globe, Wrench, Activity, Send, HelpCircle, Info,
 } from "lucide-react";
 import { toast } from "sonner";
 import TerritoryLinkGenerator from "@/components/dwa-admin/TerritoryLinkGenerator";
@@ -235,6 +235,29 @@ export default function AdminContractorLeads() {
     setRunningProspector(false);
   };
 
+  // ── À la carte: sell a single unclaimed lead ──────────────────────────────
+  const [sellingLeadId, setSellingLeadId] = useState<string | null>(null);
+  const sellLead = async (leadId: string) => {
+    const priceStr = window.prompt("Price to charge contractors (USD)? Suggested: 39, 59, or 99", "59");
+    if (!priceStr) return;
+    const price = parseInt(priceStr, 10);
+    if (!Number.isFinite(price) || price < 1 || price > 1000) { toast.error("Price must be 1-1000"); return; }
+    setSellingLeadId(leadId);
+    try {
+      const { data, error } = await supabase.functions.invoke("sell-lead-alacarte", {
+        body: { lead_id: leadId, price_cents: price * 100, max_candidates: 3 },
+      });
+      if (error) throw error;
+      const d = data as any;
+      if (!d?.ok) throw new Error(d?.error || "sell failed");
+      toast.success(`💰 Offer sent — ${d.sent?.sms ?? 0} SMS · ${d.sent?.email ?? 0} email · ${d.candidates?.length ?? 0} contractors notified`);
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to sell lead");
+    } finally {
+      setSellingLeadId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -247,6 +270,21 @@ export default function AdminContractorLeads() {
 
   return (
     <div className="space-y-8 pb-12">
+
+      {/* ── How leads come in (explainer) ────────────────────────────────── */}
+      <div className="bg-gradient-to-br from-blue-950/30 to-cyan-950/20 border border-blue-500/30 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <Info size={18} className="text-blue-400 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h3 className="text-sm font-bold text-blue-200">📍 How leads come in</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Leads arrive 3 ways: <span className="text-blue-300 font-semibold">(1)</span> homeowner fills <code className="text-[10px] bg-black/40 px-1 py-0.5 rounded">/contractor-leads/[trade-city]</code> SEO page,{" "}
+              <span className="text-blue-300 font-semibold">(2)</span> homeowner clicks a contractor's Facebook lead ad (requires FB Page ID wired below),{" "}
+              <span className="text-blue-300 font-semibold">(3)</span> you manually add via "Add Lead" button. Each new lead auto-SMSes the contractor who owns that territory. Unclaimed leads can be sold à la carte from the Live Lead Feed.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* ── Territory Signup Link Generator ──────────────────────────────── */}
       <TerritoryLinkGenerator />
@@ -421,7 +459,17 @@ export default function AdminContractorLeads() {
       {/* ── Section 3: Territory Grid ─────────────────────────────────────── */}
       <div>
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Territory Status ({territories.length} Territories)</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Territory Status ({territories.length} Territories)</h2>
+            <button
+              type="button"
+              onClick={() => setShowFbGuide((v) => !v)}
+              className="text-blue-400 hover:text-blue-300"
+              title="What is FB Page ID?"
+            >
+              <HelpCircle size={14} />
+            </button>
+          </div>
           <div className="flex items-center gap-2">
             <select value={newTrade} onChange={e => setNewTrade(e.target.value)} className="bg-background border border-border text-xs text-foreground px-2 py-1.5 rounded focus:outline-none focus:border-primary">
               <option value="">Trade…</option>
@@ -433,6 +481,11 @@ export default function AdminContractorLeads() {
             </button>
           </div>
         </div>
+        {showFbGuide && (
+          <div className="mb-3 bg-blue-950/30 border border-blue-500/30 rounded-lg p-3 text-xs text-blue-100 leading-relaxed">
+            <strong className="text-blue-300">What is "FB Page ID"?</strong> When a contractor wires their Facebook Lead Form to your territory, paste their Facebook Page ID here so incoming Facebook leads route to <em>them</em> automatically. Find it at <code className="bg-black/40 px-1 py-0.5 rounded text-[10px]">facebook.com/[their-page]/about</code> → Page Transparency. Without it, FB leads land in a generic bucket. Don't have a contractor for this slot yet? Use the Prospecting Pipeline below to find one.
+          </div>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {territories.map((t) => {
             const contractor = contractorFor(t);
@@ -511,6 +564,7 @@ export default function AdminContractorLeads() {
                 <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2 hidden md:table-cell">Territory</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2">Source</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2">Status</th>
+                <th className="text-right text-xs font-medium text-muted-foreground px-3 py-2">Sell</th>
               </tr>
             </thead>
             <tbody>
@@ -555,10 +609,24 @@ export default function AdminContractorLeads() {
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">New</span>
                       )}
                     </td>
+                    <td className="px-3 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                      {!l.client_id ? (
+                        <button
+                          onClick={() => sellLead(l.id)}
+                          disabled={sellingLeadId === l.id}
+                          className="text-[10px] font-bold px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50 whitespace-nowrap"
+                          title="Generate Stripe link + notify nearby contractors"
+                        >
+                          {sellingLeadId === l.id ? "…" : "💵 Sell"}
+                        </button>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground">claimed</span>
+                      )}
+                    </td>
                   </tr>,
                   isExpanded && (
                     <tr key={`${l.id}-expand`} className="border-t border-border bg-muted/10">
-                      <td colSpan={6} className="px-4 py-3">
+                      <td colSpan={7} className="px-4 py-3">
                         <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
                           {l.email && <span><strong className="text-foreground">Email:</strong> {l.email}</span>}
                           {l.project_type && <span><strong className="text-foreground">Project:</strong> {l.project_type}</span>}
@@ -573,7 +641,7 @@ export default function AdminContractorLeads() {
               })}
               {leads.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted-foreground">No leads yet — SEO pages are live, waiting for first homeowner.</td>
+                  <td colSpan={7} className="px-3 py-8 text-center text-sm text-muted-foreground">No leads yet — SEO pages are live, waiting for first homeowner.</td>
                 </tr>
               )}
             </tbody>

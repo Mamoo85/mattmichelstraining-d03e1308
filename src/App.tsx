@@ -210,25 +210,17 @@ const IndustrialNewsletter = lazyRetry(() => import("./pages/IndustrialNewslette
 const MissedCallSaaS = lazyRetry(() => import("./pages/MissedCallSaaS"));
 const MissedCallSetup = lazyRetry(() => import("./pages/MissedCallSetup"));
 const B2BPartnerPortal = lazyRetry(() => import("./pages/B2BPartnerPortal"));
-const AINewsletterService = lazyRetry(() => import("./pages/AINewsletterService"));
+// AINewsletterService — DELISTED (orphan, no live checkout). File preserved at src/pages/AINewsletterService.tsx
 const FreeTrendingProducts = lazyRetry(() => import("./pages/FreeTrendingProducts"));
 const FreeGrantDigest = lazyRetry(() => import("./pages/FreeGrantDigest"));
 const FreeRealEstateDigest = lazyRetry(() => import("./pages/FreeRealEstateDigest"));
-const AIMedSpaMarketing = lazyRetry(() => import("./pages/AIMedSpaMarketing"));
-const AIRealEstateDrip = lazyRetry(() => import("./pages/AIRealEstateDrip"));
-const AIPodcastShowNotes = lazyRetry(() => import("./pages/AIPodcastShowNotes"));
-const AIChurchNewsletter = lazyRetry(() => import("./pages/AIChurchNewsletter"));
-const AIPropertyManagement = lazyRetry(() => import("./pages/AIPropertyManagement"));
-const AIFranchiseOps = lazyRetry(() => import("./pages/AIFranchiseOps"));
-const AIEcommerceListings = lazyRetry(() => import("./pages/AIEcommerceListings"));
-const AIFinancialAdvisorContent = lazyRetry(() => import("./pages/AIFinancialAdvisorContent"));
-const AIVetMarketing = lazyRetry(() => import("./pages/AIVetMarketing"));
-const AITruckingDocs = lazyRetry(() => import("./pages/AITruckingDocs"));
+// AIMedSpaMarketing, AIRealEstateDrip, AIPodcastShowNotes, AIChurchNewsletter, AIPropertyManagement,
+// AIFranchiseOps, AIEcommerceListings, AIFinancialAdvisorContent, AIVetMarketing, AITruckingDocs,
+// AIJobPostingWriter — DELISTED (orphans, waitlist-only). Files preserved in src/pages/.
 const AIAdsCopyGenerator = lazyRetry(() => import("./pages/AIAdsCopyGenerator"));
-const AIJobPostingWriter = lazyRetry(() => import("./pages/AIJobPostingWriter"));
 const AIReputationDashboard = lazyRetry(() => import("./pages/AIReputationDashboard"));
 const ContractorInvoicing = lazyRetry(() => import("./pages/ContractorInvoicing"));
-const AIVoicemailTranscription = lazyRetry(() => import("./pages/AIVoicemailTranscription"));
+// AIVoicemailTranscription — DELISTED. File preserved.
 const AIPhoneAnswering = lazyRetry(() => import("./pages/AIPhoneAnswering"));
 const TextMessageMarketing = lazyRetry(() => import("./pages/TextMessageMarketing"));
 const ReviewRequestSMS = lazyRetry(() => import("./pages/ReviewRequestSMS"));
@@ -260,23 +252,12 @@ const AllServices = lazyRetry(() => import("./pages/AllServices"));
 const ReferralPage = lazyRetry(() => import("./pages/ReferralPage"));
 const PrivacyPolicy = lazyRetry(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazyRetry(() => import("./pages/TermsOfService"));
-const AIOnboardingAgent = lazyRetry(() => import("./pages/AIOnboardingAgent"));
-const AISocialProof = lazyRetry(() => import("./pages/AISocialProof"));
-const AIPriceMonitor = lazyRetry(() => import("./pages/AIPriceMonitor"));
-const AIMeetingPrep = lazyRetry(() => import("./pages/AIMeetingPrep"));
-const AIDirectorySubmitter = lazyRetry(() => import("./pages/AIDirectorySubmitter"));
+// AIOnboardingAgent, AISocialProof, AIPriceMonitor, AIMeetingPrep, AIDirectorySubmitter — DELISTED. Files preserved.
 const M2Development = lazyRetry(() => import("./pages/M2Development"));
-const AIHandbook = lazyRetry(() => import("./pages/AIHandbook"));
-const AIGrantFinder = lazyRetry(() => import("./pages/AIGrantFinder"));
-const AIBattlecard = lazyRetry(() => import("./pages/AIBattlecard"));
-const AIMarketIntel = lazyRetry(() => import("./pages/AIMarketIntel"));
-const AIPermitMonitor = lazyRetry(() => import("./pages/AIPermitMonitor"));
-const AIOshaCompliance = lazyRetry(() => import("./pages/AIOshaCompliance"));
+// AIHandbook, AIGrantFinder, AIBattlecard, AIMarketIntel, AIPermitMonitor, AIOshaCompliance — DELISTED. Files preserved.
 const DarkWebMonitor = lazyRetry(() => import("./pages/DarkWebMonitor"));
 const DarkWebDashboard = lazyRetry(() => import("./pages/DarkWebDashboard"));
-const AICollections = lazyRetry(() => import("./pages/AICollections"));
-const AIInventoryAlerts = lazyRetry(() => import("./pages/AIInventoryAlerts"));
-const AIBirthdayCampaign = lazyRetry(() => import("./pages/AIBirthdayCampaign"));
+// AICollections, AIInventoryAlerts, AIBirthdayCampaign — DELISTED. Files preserved.
 const LinkedInOutreach = lazyRetry(() => import("./pages/LinkedInOutreach"));
 const AbandonedCartRecovery = lazyRetry(() => import("./pages/AbandonedCartRecovery"));
 const ClientReportGenerator = lazyRetry(() => import("./pages/ClientReportGenerator"));
@@ -311,6 +292,10 @@ const TalentRadarVsStaffing = lazyRetry(() => import("./pages/TalentRadarVsStaff
 const FieldDeskVsEway = lazyRetry(() => import("./pages/FieldDeskVsEway"));
 const MortgageRadarVsTriggerLeads = lazyRetry(() => import("./pages/MortgageRadarVsTriggerLeads"));
 const MortgageRadar = lazyRetry(() => import("./pages/MortgageRadar"));
+const Marketplace = lazyRetry(() => import("./pages/Marketplace"));
+const MarketplaceReceipts = lazyRetry(() => import("./pages/MarketplaceReceipts"));
+const LeadDetail = lazyRetry(() => import("./pages/LeadDetail"));
+const SharedLead = lazyRetry(() => import("./pages/SharedLead"));
 const MyMortgageRadar = lazyRetry(() => import("./pages/MyMortgageRadar"));
 const MyMissedCall = lazyRetry(() => import("./pages/MyMissedCall"));
 const BuyerRadar = lazyRetry(() => import("./pages/BuyerRadar"));
@@ -672,25 +657,13 @@ const App = () => (
                     <Route path="/menu-engineering" element={<MenuEngineering />} />
                     <Route path="/fitness-reports" element={<FitnessReports />} />
                     <Route path="/gov-meeting-tracker" element={<GovMeetingTracker />} />
-                    <Route path="/ai-newsletter-service" element={<AINewsletterService />} />
+                    {/* Orphaned AI product routes delisted (waitlist-only, unlinked). Pages preserved on disk. */}
                     <Route path="/free-trending-products" element={<FreeTrendingProducts />} />
                     <Route path="/free-grant-digest" element={<FreeGrantDigest />} />
                     <Route path="/free-real-estate-digest" element={<FreeRealEstateDigest />} />
-                    <Route path="/ai-med-spa-marketing" element={<AIMedSpaMarketing />} />
-                    <Route path="/ai-real-estate-drip" element={<AIRealEstateDrip />} />
-                    <Route path="/ai-podcast-show-notes" element={<AIPodcastShowNotes />} />
-                    <Route path="/ai-church-newsletter" element={<AIChurchNewsletter />} />
-                    <Route path="/ai-property-management" element={<AIPropertyManagement />} />
-                    <Route path="/ai-franchise-ops" element={<AIFranchiseOps />} />
-                    <Route path="/ai-ecommerce-listings" element={<AIEcommerceListings />} />
-                    <Route path="/ai-financial-advisor-content" element={<AIFinancialAdvisorContent />} />
-                    <Route path="/ai-vet-marketing" element={<AIVetMarketing />} />
-                    <Route path="/ai-trucking-docs" element={<AITruckingDocs />} />
                     <Route path="/ai-ads-copy" element={<AIAdsCopyGenerator />} />
-                    <Route path="/ai-job-postings" element={<AIJobPostingWriter />} />
                     <Route path="/ai-reputation" element={<AIReputationDashboard />} />
                     <Route path="/contractor-invoicing" element={<ContractorInvoicing />} />
-                    <Route path="/ai-voicemail" element={<AIVoicemailTranscription />} />
                     <Route path="/ai-phone-answering" element={<AIPhoneAnswering />} />
                     <Route path="/text-message-marketing" element={<TextMessageMarketing />} />
                     <Route path="/review-request-sms" element={<ReviewRequestSMS />} />
@@ -723,24 +696,11 @@ const App = () => (
                     <Route path="/refer" element={<ReferralPage />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                     <Route path="/terms" element={<TermsOfService />} />
-                    <Route path="/ai-onboarding-agent" element={<AIOnboardingAgent />} />
-                    <Route path="/ai-social-proof" element={<AISocialProof />} />
-                    <Route path="/ai-price-monitor" element={<AIPriceMonitor />} />
-                    <Route path="/ai-meeting-prep" element={<AIMeetingPrep />} />
-                    <Route path="/ai-directory-submitter" element={<AIDirectorySubmitter />} />
+                    {/* Orphaned AI product routes delisted. Pages preserved on disk. */}
                     <Route path="/m2-development" element={<M2Development />} />
                     <Route path="/business-directory" element={<BusinessDirectory />} />
-                    <Route path="/ai-handbook" element={<AIHandbook />} />
-                    <Route path="/ai-grant-finder" element={<AIGrantFinder />} />
-                    <Route path="/ai-battlecard" element={<AIBattlecard />} />
-                    <Route path="/ai-market-intel" element={<AIMarketIntel />} />
-                    <Route path="/ai-permit-monitor" element={<AIPermitMonitor />} />
-                    <Route path="/ai-osha-compliance" element={<AIOshaCompliance />} />
                     <Route path="/dark-web-monitor" element={<DarkWebMonitor />} />
                     <Route path="/dark-web-monitor/dashboard" element={<ProtectedRoute><DarkWebDashboard /></ProtectedRoute>} />
-                    <Route path="/ai-collections" element={<AICollections />} />
-                    <Route path="/ai-inventory-alerts" element={<AIInventoryAlerts />} />
-                    <Route path="/ai-birthday-campaign" element={<AIBirthdayCampaign />} />
                     <Route path="/linkedin-outreach" element={<LinkedInOutreach />} />
                     <Route path="/abandoned-cart-recovery" element={<AbandonedCartRecovery />} />
                     <Route path="/client-report-generator" element={<ClientReportGenerator />} />
@@ -771,6 +731,15 @@ const App = () => (
                     <Route path="/go/techalert" element={<Navigate to="/talent-radar" replace />} />
                     <Route path="/radars" element={<Navigate to="/talent-radar" replace />} />
                     <Route path="/textback" element={<Navigate to="/missed-call-catch" replace />} />
+                    {/* Golden Ticket Marketplace v2 — single-buyer leads à la carte */}
+                    <Route path="/mortgage-leads" element={<Marketplace />} />
+                    <Route path="/talent-leads" element={<Marketplace />} />
+                    <Route path="/demand-leads" element={<Marketplace />} />
+                    <Route path="/growth-leads" element={<Marketplace />} />
+                    <Route path="/supply-leads" element={<Marketplace />} />
+                    <Route path="/marketplace/receipts" element={<MarketplaceReceipts />} />
+                    <Route path="/lead/share/:token" element={<SharedLead />} />
+                    <Route path="/lead/:slug" element={<LeadDetail />} />
                     {/* Growth Radar (company-side intelligence — separate product) */}
                     <Route path="/growth-radar" element={<IndustryPulse />} />
                     <Route path="/growth-radar-dashboard" element={<GrowthRadarDashboard />} />

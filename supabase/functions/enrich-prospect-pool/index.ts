@@ -9,6 +9,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { runEmailWaterfall, WaterfallCounters } from "../_shared/email-waterfall.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -69,6 +70,49 @@ function normPhone(p: string | null | undefined): string | null {
 }
 
 // ---------- enrichment stages ----------
+
+// Shared email waterfall (Snov → Apollo → pattern_verify → Hunter → PDL → site_scrape).
+// Replaces the legacy single-provider stageHunter/stageApolloPeople email paths.
+async function stageEmailWaterfall(
+  p: Prospect,
+  sb: any,
+  counters: WaterfallCounters,
+): Promise<{ patch: Prospect; trace: TraceStage }> {
+  const t0 = Date.now();
+  const trace: TraceStage = { source: "EmailWaterfall", filled: [], cost_usd: 0, duration_ms: 0, ok: false };
+  const patch: Prospect = {};
+  if (p.email) {
+    trace.error = "already_filled";
+    trace.duration_ms = Date.now() - t0;
+    trace.ok = true;
+    return { patch, trace };
+  }
+  try {
+    const r = await runEmailWaterfall(sb, {
+      website: p.website,
+      business_name: p.business_name,
+      city: p.city,
+      state: p.state,
+      contact_first_name: p.contact_first_name ?? null,
+      contact_last_name: p.contact_last_name ?? null,
+    }, counters);
+    if (r.email) {
+      patch.email = r.email;
+      trace.filled.push("email");
+      trace.source = r.source ? `EmailWaterfall:${r.source}` : "EmailWaterfall";
+    }
+    // Persist per-step trace inside the parent trace's error slot for audit
+    if (r.trace?.length) {
+      (trace as any).steps = r.trace;
+    }
+    trace.ok = true;
+  } catch (e) {
+    trace.error = e instanceof Error ? e.message : String(e);
+  }
+  trace.duration_ms = Date.now() - t0;
+  return { patch, trace };
+}
+
 
 async function stageHunter(p: Prospect): Promise<{ patch: Prospect; trace: TraceStage }> {
   const t0 = Date.now();
@@ -416,37 +460,60 @@ async function stageNPI(p: Prospect): Promise<{ patch: Prospect; trace: TraceSta
 }
 
 // ---------- waterfall router ----------
+//
+// Email finding is now centralized via stageEmailWaterfall (Snov → Apollo →
+// pattern_verify → Hunter → PDL → site_scrape). Audience-specific stages still
+// run for non-email enrichment (Sonar contact names, Google reviews, Twilio
+// carrier, HIBP breach flags, NPI, SAM.gov, DataForSEO, Firecrawl extras).
 
-function waterfallFor(audience: string): Array<(p: Prospect, sb: any) => Promise<{ patch: Prospect; trace: TraceStage }>> {
+type EnrichStage = (
+  p: Prospect,
+  sb: any,
+  counters: WaterfallCounters,
+) => Promise<{ patch: Prospect; trace: TraceStage }>;
+
+// Adapter so legacy stages (which ignore counters) match the EnrichStage signature
+const wrap = (
+  fn: (p: Prospect, sb: any) => Promise<{ patch: Prospect; trace: TraceStage }>,
+): EnrichStage => (p, sb, _c) => fn(p, sb);
+
+function waterfallFor(audience: string): EnrichStage[] {
   const seniorCare = ["nursing_home", "senior_care", "healthcare_staffing"];
   const industrial = ["industrial_mfg", "supply_house"];
   const trades = ["hvac", "plumbing", "roofing", "electrical", "general_contractor", "trades_staffing", "trade_contractor"];
 
   if (seniorCare.includes(audience)) {
-    return [stageNPI, stageSonar, stageHunter, stageGooglePlaces, stageTwilioCarrier, stageHIBP];
+    return [wrap(stageNPI), wrap(stageSonar), stageEmailWaterfall, wrap(stageGooglePlaces), wrap(stageTwilioCarrier), wrap(stageHIBP)];
   }
   if (industrial.includes(audience)) {
-    return [stageHunter, stageApolloPeople, stageFirecrawl, stageSAMGov, stageDataForSEO, stageSonar, stageGooglePlaces, stageTwilioCarrier, stageHIBP];
+    return [stageEmailWaterfall, wrap(stageFirecrawl), wrap(stageSAMGov), wrap(stageDataForSEO), wrap(stageSonar), wrap(stageGooglePlaces), wrap(stageTwilioCarrier), wrap(stageHIBP)];
   }
   if (trades.includes(audience)) {
-    return [stageSonar, stageHunter, stageFirecrawl, stageGooglePlaces, stageTwilioCarrier, stageHIBP];
+    return [wrap(stageSonar), stageEmailWaterfall, wrap(stageFirecrawl), wrap(stageGooglePlaces), wrap(stageTwilioCarrier), wrap(stageHIBP)];
   }
   // unknown → general
-  return [stageHunter, stageSonar, stageGooglePlaces, stageTwilioCarrier, stageHIBP];
+  return [stageEmailWaterfall, wrap(stageSonar), wrap(stageGooglePlaces), wrap(stageTwilioCarrier), wrap(stageHIBP)];
 }
 
-async function enrichOne(sb: any, p: Prospect): Promise<{ id: string; patches: Prospect; trace: TraceStage[] }> {
+async function enrichOne(
+  sb: any,
+  p: Prospect,
+  counters: WaterfallCounters,
+): Promise<{ id: string; patches: Prospect; trace: TraceStage[] }> {
   const trace: TraceStage[] = [];
-  let working: Prospect = { ...p };
+  const working: Prospect = { ...p };
   const stages = waterfallFor(p.audience_type);
 
   for (const stage of stages) {
     // stop early once we have email + contact_name (cost control), but always
     // run the "always-last" group (Google/Twilio/HIBP) since they fill different fields
-    const isQualityStage = stage === stageGooglePlaces || stage === stageTwilioCarrier || stage === stageHIBP;
+    const fnRef = (stage as any).__inner ?? stage;
+    const isQualityStage =
+      fnRef === stageGooglePlaces || fnRef === stageTwilioCarrier || fnRef === stageHIBP ||
+      stage === stageEmailWaterfall && working.email; // email waterfall self-skips when filled
     if (working.email && working.contact_name && !isQualityStage) continue;
 
-    const { patch, trace: t } = await stage(working, sb);
+    const { patch, trace: t } = await stage(working, sb, counters);
     trace.push(t);
     Object.assign(working, patch);
   }
@@ -457,12 +524,13 @@ async function enrichOne(sb: any, p: Prospect): Promise<{ id: string; patches: P
     if (working[k] != null && working[k] !== p[k]) patches[k] = working[k];
   }
 
-  // merge meta
+  // merge meta — append new trace entries to existing enrichment_trace history
   const existingMeta = (p.meta && typeof p.meta === "object") ? p.meta : {};
+  const existingTrace = Array.isArray((existingMeta as any).enrichment_trace) ? (existingMeta as any).enrichment_trace : [];
   const npiMeta = working.__meta_npi;
   patches.meta = {
     ...existingMeta,
-    enrichment_trace: trace,
+    enrichment_trace: [...existingTrace, ...trace.map((t) => ({ ...t, ts: new Date().toISOString(), flow: "enrich-prospect-pool" }))],
     ...(npiMeta ? { npi: npiMeta } : {}),
   };
 
@@ -508,10 +576,11 @@ serve(async (req) => {
   }
 
   const results: any[] = [];
+  const counters: WaterfallCounters = {};
   for (const row of rows ?? []) {
     if (Date.now() - startedAt > BUDGET_MS) break;
     try {
-      const { id, patches, trace } = await enrichOne(sb, row as Prospect);
+      const { id, patches, trace } = await enrichOne(sb, row as Prospect, counters);
       const { error: updErr } = await sb.from("prospect_pool").update(patches).eq("id", id);
       if (updErr) {
         results.push({ id, ok: false, error: updErr.message });
@@ -529,10 +598,11 @@ serve(async (req) => {
     ok: true,
     processed: results.length,
     enriched: results.filter((r) => r.ok).length,
+    counters,
     duration_ms: Date.now() - startedAt,
     results,
   };
-  console.log(`[enrich-prospect-pool] ${JSON.stringify({ processed: summary.processed, enriched: summary.enriched, ms: summary.duration_ms })}`);
+  console.log(`[enrich-prospect-pool] ${JSON.stringify({ processed: summary.processed, enriched: summary.enriched, counters, ms: summary.duration_ms })}`);
   return new Response(JSON.stringify(summary), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Helmet } from "react-helmet-async";
 import AppNavbar from "@/components/layout/AppNavbar";
+import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
+import CheckEmailCard from "@/components/checkout/CheckEmailCard";
+import ActionButton from "@/components/ui/action-button";
 import {
   MessageSquare, Bell, CalendarX, FileText, Receipt, UserPlus, Megaphone, Clock,
   CheckCircle, ArrowRight, Loader2, Shield, Zap,
@@ -26,6 +30,9 @@ const PRODUCTS = [
 const TOTAL_STANDALONE = "$221";
 
 export default function BundleRevenueSuite() {
+  const [searchParams] = useSearchParams();
+  const isSuccess = searchParams.get("status") === "success";
+  const sessionId = searchParams.get("session_id");
   const [email, setEmail] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [phone, setPhone] = useState("");
@@ -66,6 +73,24 @@ export default function BundleRevenueSuite() {
       <AppNavbar />
       <div className="min-h-screen bg-background pt-20 pb-24">
         <div className="container max-w-4xl mx-auto px-4">
+          {isSuccess && (
+            <div className="mb-8 space-y-4">
+              <ReceiptStatusBanner sessionId={sessionId} productLabel="Revenue Suite" />
+              <CheckEmailCard sessionId={sessionId} />
+              <Card className="border-primary/40 bg-primary/5">
+                <CardContent className="p-6 text-center">
+                  <CheckCircle className="text-primary mx-auto mb-3" size={36} />
+                  <h2 className="text-2xl font-bold mb-2">You're in. All 8 tools activating.</h2>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Welcome email is on its way. Matt will text you within 24 hours to finish setup.
+                  </p>
+                  <a href="sms:+13139921219" className="inline-flex items-center gap-2 text-primary font-semibold text-sm hover:underline">
+                    Text Matt now <ArrowRight size={14} />
+                  </a>
+                </CardContent>
+              </Card>
+            </div>
+          )}
           {/* Hero */}
           <div className="text-center mb-12">
             <Badge className="bg-primary/20 text-primary border-primary/30 mb-4">Save $100+/mo vs standalone</Badge>
@@ -147,10 +172,15 @@ export default function BundleRevenueSuite() {
                   <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Grosse Pointe" className="mt-1" />
                 </div>
               </div>
-              <Button onClick={handleCheckout} disabled={loading} className="w-full h-12 text-base font-bold" size="lg">
-                {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <ArrowRight className="h-5 w-5 mr-2" />}
+              <ActionButton
+                onClick={handleCheckout}
+                busyLabel="Opening secure checkout…"
+                ariaLabel="Start Revenue Suite for $299/mo"
+                style={{ minHeight: 48, fontSize: 16 }}
+              >
+                <ArrowRight className="h-5 w-5 mr-2" />
                 Start Revenue Suite — $299/mo
-              </Button>
+              </ActionButton>
               <p className="text-center text-xs text-muted-foreground mt-3">Secure checkout via Stripe. Cancel anytime.</p>
             </CardContent>
           </Card>

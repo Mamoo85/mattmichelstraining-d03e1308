@@ -6,9 +6,12 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import DWAStickyNav from "@/components/shared/DWAStickyNav";
+import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
+import CheckEmailCard from "@/components/checkout/CheckEmailCard";
 import WallOfLove, { Testimonial } from "@/components/shared/WallOfLove";
 import EnterpriseFooterBlock from "@/components/shared/EnterpriseFooterBlock";
 import TechAlertROICalculator from "@/components/agency/TechAlertROICalculator";
+import ActionButton from "@/components/ui/action-button";
 import { US_METROS, DEFAULT_METRO_ID, getMetroById, getMetroPricing } from "@/lib/usMetros";
 
 const ROLE_OPTIONS = [
@@ -17,7 +20,7 @@ const ROLE_OPTIONS = [
   { key: "pressure_vessel", label: "Pressure Vessel Inspector" },
   { key: "hvac_tech", label: "HVAC Technician" },
   { key: "plumber", label: "Plumber / Master Plumber" },
-  { key: "pipefitter", label: "Pipefitter / Steamfitter (UA 636)" },
+  { key: "pipefitter", label: "Pipefitter / Steamfitter" },
   { key: "electrician", label: "Electrician" },
   { key: "industrial_mechanic", label: "Industrial Mechanic" },
   { key: "cna", label: "CNA (Certified Nursing Assistant)" },
@@ -109,11 +112,15 @@ export default function HireAlert() {
     return (
       <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
         <div style={{ maxWidth: 520, textAlign: "center" }}>
+          <div style={{ marginBottom: 24, display: "flex", flexDirection: "column", gap: 12 }}>
+            <ReceiptStatusBanner sessionId={searchParams.get("session_id")} productLabel="HireAlert" />
+            <CheckEmailCard sessionId={searchParams.get("session_id")} />
+          </div>
           <div style={{ fontSize: 64, marginBottom: 24 }}>⚡</div>
           <h1 style={{ color: "#fff", fontSize: 32, fontWeight: 800, margin: "0 0 12px" }}>Talent Radar is Live</h1>
           <p style={{ color: ACCENT, fontSize: 18, fontWeight: 700, margin: "0 0 20px" }}>Your hiring advantage starts tomorrow at 7am.</p>
           <p style={{ color: "#94a3b8", fontSize: 15, lineHeight: 1.7, margin: "0 0 32px" }}>
-            Check your email — we sent your welcome guide with everything you need to know. Our monitoring runs every morning at 7am and alerts you the moment a match appears.
+            We just emailed you your dashboard link. Save it. First candidate batch hits at 7am tomorrow.
           </p>
           <a href="https://detroitwebagent.com" style={{ background: ACCENT, color: BG, padding: "14px 32px", borderRadius: 8, fontWeight: 800, fontSize: 16, textDecoration: "none", display: "inline-block" }}>
             Back to Home
@@ -639,15 +646,17 @@ export default function HireAlert() {
               </Link>
             </div>
 
-            <Button
+            <ActionButton
               onClick={handleCheckout}
-              disabled={loading || !tosAccepted}
-              style={{ background: tosAccepted ? ACCENT : "#334155", color: tosAccepted ? BG : "#94a3b8", fontWeight: 800, fontSize: 16, padding: "14px", borderRadius: 8, border: "none", opacity: tosAccepted ? 1 : 0.7 }}
+              disabled={!tosAccepted}
+              busyLabel="Redirecting…"
+              ariaLabel={`Start Talent Radar — $${plan === "bundle" ? bundlePrice : standalonePrice}/mo`}
+              style={{ background: tosAccepted ? ACCENT : "#334155", color: tosAccepted ? BG : "#94a3b8", padding: "14px", opacity: tosAccepted ? 1 : 0.7 }}
             >
-              {loading ? "Redirecting..." : betaFull
+              {betaFull
                 ? `Start for $${plan === "bundle" ? bundlePrice : standalonePrice}/mo →`
                 : `Claim Beta Slot — $${plan === "bundle" ? bundlePrice : standalonePrice}/mo →`}
-            </Button>
+            </ActionButton>
           </div>
 
           <p style={{ margin: "16px 0 0", fontSize: 12, color: "#64748b", textAlign: "center" }}>

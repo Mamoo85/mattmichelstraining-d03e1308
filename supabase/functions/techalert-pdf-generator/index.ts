@@ -78,7 +78,9 @@ function sanitizeForPDF(s: string | null | undefined): string {
     .replace(/✅/g, "[OK]")
     .replace(/❌/g, "[X]")
     .replace(/⚠️|⚠/g, "[WARN]")
+    // eslint-disable-next-line no-misleading-character-class
     .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}\u{1F000}-\u{1F2FF}\uFE0F]/gu, "")
+    // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ")
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201C\u201D]/g, '"')

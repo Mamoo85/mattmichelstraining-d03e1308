@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { toastSuccess, toastError, toastInfo } from "@/lib/toast";
 import {
   Users, Flame, Phone, Mail, ChevronDown, ChevronUp,
   ExternalLink, Award, MapPin, Briefcase, Shield,
@@ -257,13 +257,13 @@ export default function MyTechAlert() {
             },
           };
         });
-        toast.success(action === "hired"
+        toastSuccess(action === "hired"
           ? "Congratulations on the hire! This helps us find even better candidates."
           : "Marked as contacted"
         );
       }
     } catch {
-      toast.error("Failed to update — try again");
+      toastError("Failed to update — try again");
     } finally {
       setUpdatingIds((prev) => { const n = new Set(prev); n.delete(candidateId); return n; });
     }
@@ -289,12 +289,12 @@ export default function MyTechAlert() {
             ),
           };
         });
-        toast.success("⚡ Claimed! 48-hour exclusivity activated.");
+        toastSuccess("⚡ Claimed! 48-hour exclusivity activated.");
       } else {
-        toast.info(result.message || "Already claimed by another company.");
+        toastInfo(result.message || "Already claimed by another company.");
       }
     } catch {
-      toast.error("Claim failed — try again");
+      toastError("Claim failed — try again");
     } finally {
       setClaimingIds((prev) => { const n = new Set(prev); n.delete(candidateId); return n; });
       claimLockRef.current.delete(candidateId);
@@ -312,7 +312,7 @@ export default function MyTechAlert() {
       if (draft.error) throw new Error(draft.error);
       setOutreachModal({ candidateId, draft });
     } catch {
-      toast.error("Failed to generate draft — try again");
+      toastError("Failed to generate draft — try again");
     } finally {
       setGeneratingDraft(null);
     }
@@ -334,7 +334,7 @@ export default function MyTechAlert() {
 
   function copyToClipboard(text: string, label: string) {
     navigator.clipboard.writeText(text);
-    toast.success(`${label} copied to clipboard`);
+    toastSuccess(`${label} copied to clipboard`);
   }
 
   const fastTrackLock = useRef(false);
@@ -348,11 +348,11 @@ export default function MyTechAlert() {
       });
       if (invokeErr) throw invokeErr;
       if (result.error === "no_booking_link") {
-        toast.info("Add your scheduling link to enable Fast-Track. Email matt@detroitwebagent.com to set it up.");
+        toastInfo("Add your scheduling link to enable Fast-Track. Email matt@detroitwebagent.com to set it up.");
         return;
       }
       if (result.success) {
-        toast.success(`⚡ Interview invite sent to ${result.candidate_name}!`);
+        toastSuccess(`⚡ Interview invite sent to ${result.candidate_name}!`);
         setData((prev) => {
           if (!prev) return prev;
           return {
@@ -364,12 +364,12 @@ export default function MyTechAlert() {
           };
         });
       } else if (result.skipped) {
-        toast.info("Candidate opted out of SMS — try reaching out via email or LinkedIn.");
+        toastInfo("Candidate opted out of SMS — try reaching out via email or LinkedIn.");
       } else {
-        toast.error(result.error || "Failed to send invite");
+        toastError(result.error || "Failed to send invite");
       }
     } catch {
-      toast.error("Failed to send invite — try again");
+      toastError("Failed to send invite — try again");
     } finally {
       setFastTrackingId(null);
       fastTrackLock.current = false;
@@ -447,7 +447,7 @@ export default function MyTechAlert() {
     a.download = `techalert-candidates-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(`Exported ${filteredCandidates.length} candidates`);
+    toastSuccess(`Exported ${filteredCandidates.length} candidates`);
   }, [filteredCandidates]);
 
   const scoreBadgeColor = (score: number) => {
@@ -490,13 +490,26 @@ export default function MyTechAlert() {
   }
 
   if (error || !data) {
+    const isMissingToken = !token;
     return (
       <div className="min-h-screen bg-[#0a1628] flex items-center justify-center p-4">
         <Card className="max-w-md border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e]">
           <CardContent className="pt-6 text-center">
             <Shield className="h-12 w-12 text-red-400 mx-auto mb-4" />
-            <h2 className="text-white text-lg font-bold mb-2">Access Denied</h2>
-            <p className="text-slate-400 text-sm">{error || "Invalid or expired token."}</p>
+            <h2 className="text-white text-lg font-bold mb-2">
+              {isMissingToken ? "Dashboard Link Required" : "Access Denied"}
+            </h2>
+            <p className="text-slate-400 text-sm mb-6">
+              {error || "Invalid or expired token. Check your latest email for a fresh dashboard link."}
+            </p>
+            <a
+              href="sms:+13139921219"
+              className="inline-block bg-[#00d4ff] text-black font-bold text-sm px-6 py-3 rounded-md hover:bg-[#00d4ff]/90 transition"
+              style={{ minHeight: 44, lineHeight: "1.25rem", touchAction: "manipulation" }}
+            >
+              Text Matt for a fresh link →
+            </a>
+            <p className="text-slate-500 text-xs mt-4">(313) 992-1219</p>
           </CardContent>
         </Card>
       </div>
@@ -579,7 +592,7 @@ export default function MyTechAlert() {
               {[
                 { icon: "⚡", text: "Claim candidates before competitors — 48-hour exclusivity locks them to you" },
                 { icon: "📞", text: "Mark candidates as Contacted to track your hiring pipeline" },
-                { icon: "✍️", text: "Use Draft Outreach on any card for AI-written SMS + email templates" },
+                { icon: "✍️", text: "Use Draft Outreach on any card for ready-to-send SMS + email templates" },
                 { icon: "🎯", text: "Filter by trade (Boiler / HVAC / Healthcare) or use the search bar" },
                 { icon: "🔔", text: "Scanner runs every morning at 7am — new matches appear here automatically and trigger an alert" },
               ].map((item, i) => (

@@ -651,13 +651,13 @@ serve(async (req) => {
     let techAlertSent = techAlertSentToday;
     let missedCallSent = missedCallSentToday;
     let careAlertSent = careAlertSentToday;
-    const pitchRotation = getTodayPitchRotation();
-    log("Pitch rotation today", { pitchRotation, deadLeadSent, techAlertSent, missedCallSent, careAlertSent });
-
     // Optional manual override — allows dashboard to target a specific trade + city
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const manualTrade = body.target_trade as string | undefined;
     const manualCity = body.target_city as string | undefined;
+    const pitchOverride = body.pitch_override as ("dead_lead" | "tech_alert" | "missed_call" | "web_design" | "care_alert" | undefined);
+    const pitchRotation = pitchOverride || getTodayPitchRotation();
+    log("Pitch rotation today", { pitchRotation, override: !!pitchOverride, deadLeadSent, techAlertSent, missedCallSent, careAlertSent });
     const combos = (manualTrade && manualCity) ? [{ trade: manualTrade, city: manualCity }] : getTodaysCombos();
     let totalEmailed = 0;
     let totalDeadLeadEmailed = 0;

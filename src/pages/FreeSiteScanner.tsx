@@ -47,6 +47,22 @@ const FreeSiteScanner = () => {
           <p className="text-lg" style={{ color: "#94a3b8" }}>
             Enter your URL and get an instant analysis of what's costing you leads.
           </p>
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              to="/ai-website-audit"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-lg font-bold text-sm uppercase tracking-wider"
+              style={{ background: "linear-gradient(135deg, #06b6d4, #22d3ee)", color: "#020617" }}
+            >
+              Get the full professional audit
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              to="/schedule"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-lg font-bold text-sm uppercase tracking-wider border border-[rgba(148,163,184,0.2)] text-[#cbd5e1] hover:border-[#22d3ee] hover:text-white transition-colors"
+            >
+              Talk to Matt
+            </Link>
+          </div>
         </div>
 
         {!report ? (

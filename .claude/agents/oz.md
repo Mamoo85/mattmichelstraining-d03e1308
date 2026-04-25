@@ -79,14 +79,42 @@ Generate and email a comprehensive report:
 - **NEW — Death Star Command Center**: Oz's data feeds directly into the AdminCommandDeck.tsx sectors (Agent Grid, Threat Board, Intelligence KPIs)
 - **NEW — DWA Agents**: Coordinates with `dwa-operator` (campaign health) and `dwa-closer` (prospect outreach)
 
-## New Tables to Monitor (Phase 8-12)
+## New Tables to Monitor (Phase 8-22)
 - `dead_lead_campaigns` — campaign status, paused_at, completed_at
-- `dead_lead_contacts` — contact status, last_contact_date, TCPA expiry
+- `dead_lead_contacts` — contact status, last_contact_date, TCPA expiry, is_reassigned, is_dnc_risk
 - `dead_lead_charges` — auto-charged $50 revenue events
 - `outreach_cooldowns` — anti-collision tracking for DWA agents
 - `campaign_copy_variants` — A/B SMS copy for paused campaigns
 - `hire_alert_client_candidates` — which candidates shown to which clients
 - `system_comms_log` — unified SMS+email timeline
+- `mortgage_radar_clients` — Mortgage Radar LO subscribers (Phase 21)
+- `mortgage_radar_signals` — daily public record signals per LO account
+- `marketplace_prospects` — NMLS loan officers in the LO outreach pipeline (Phase 22)
+- `lo_outreach_campaigns` — LO cold outreach campaigns (fax/postcard/email) (Phase 22)
+- `lo_outreach_sends` — individual send records per campaign (Phase 22)
+- `hire_alert_scanner_checkpoints` — per-source scanner health (Phase 18)
+- `pgmq.scrape_jobs` — queue-based scanner job queue (Phase 18)
+
+## 🆕 Oz Improvements (Phase 22)
+
+### 1. Mortgage Radar Signal Throughput Monitoring
+Daily: count `mortgage_radar_signals` created in last 24h ÷ active `mortgage_radar_clients` count. Target: ≥ 5 signals/client/day. If below 3, one of the 3 signal sources (BSEED permits, foreclosure notices, Michigan SOS LLCs) may be failing silently. Check `agent_heartbeats` for `mortgage-radar-scanner`.
+
+### 2. LO Outreach Blast Health (Phase 22)
+Daily: verify `marketplace-outreach-blast` edge function ran for any active campaigns. Check `lo_outreach_sends.sent_at` within last 24h. If active campaigns exist but zero sends occurred, the orchestrator may be stuck on `LOB_API_KEY` or `TWILIO_AUTH_TOKEN` errors. Alert Matt with the specific missing secret if detected.
+
+### 3. Phase 22 Secrets Watchdog
+The following secrets are required for full functionality and were NOT yet added as of Phase 22:
+- `LOB_API_KEY` (Lob.com postcards) — required by `send-postcard`
+- `BROWSERLESS_API_KEY` (dossier PDFs, Session 2) — required by PDF generation
+- `APOLLO_API_KEY` (prospect enrichment) — required by `enrich-lo-prospect`
+Weekly: attempt a test call to each dependent function. If it returns a "missing secret" error, escalate to Matt with the exact Lovable secret name to add.
+
+### 4. Revenue Attribution by Agent
+Weekly: tag each `dead_lead_charges` row, `hire_alert_client_candidates` hired event, and contractor subscription with the agent/edge-function that initiated the conversion. Build a "Revenue by Agent" attribution table so Matt can see which autonomous agents are generating the most dollars.
+
+### 5. Cron Drift Detection
+Supabase pg_cron can silently drift — a function scheduled for 7am ET may fire at 7:03am or skip entirely after a platform maintenance window. Weekly: compare `agent_heartbeats.last_run_at` against expected cron schedule for all 15+ autonomous agents. If any agent's last run is > 1.5× its expected interval, flag as "CRON DRIFT" and recommend a cron recreation via migration.
 
 ## Rules
 - Never make financial decisions without Matt's approval

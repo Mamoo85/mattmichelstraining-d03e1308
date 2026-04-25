@@ -13,6 +13,8 @@ const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 const SITE_URL = Deno.env.get("SITE_URL") || "https://detroitwebagency.com";
 const FREE_TIER_LIMIT = 10; // max contacts allowed on the free trial
+const MAX_LEADS_PER_SUBMISSION = 500; // MALICIOUS-1: cap before any DB work
+const MAX_FIELD_LENGTH = 255;
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -20,28 +22,6 @@ const CORS = {
 };
 
 
-<<<<<<< HEAD
-// ── Items 34 & 36: Twilio Lookup v2 — phone carrier classification ─────────────
-async function twilioCarrierLookup(phone: string): Promise<{ type: string; isDncRisk: boolean }> {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) return { type: "unknown", isDncRisk: false };
-  try {
-    const res = await fetch(
-      `https://lookups.twilio.com/v2/PhoneNumbers/${encodeURIComponent(phone)}?Fields=line_type_intelligence`,
-      {
-        headers: { Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}` },
-        signal: AbortSignal.timeout(5000),
-      }
-    );
-    if (!res.ok) return { type: "unknown", isDncRisk: false };
-    const data = await res.json();
-    const type: string = data?.line_type_intelligence?.type || "unknown";
-    // Landlines are higher DNC-risk (can be on National DNC Registry)
-    return { type, isDncRisk: type === "landline" };
-  } catch { return { type: "unknown", isDncRisk: false }; }
-}
-
-=======
->>>>>>> b650fd72 (Fix dead-lead-intake: add RND check, remove duplicate functions, store is_reassigned)
 function normalizePhone(raw: string): string {
   const digits = raw.replace(/\D/g, "");
   if (digits.length === 10) return `+1${digits}`;
@@ -95,12 +75,27 @@ serve(async (req) => {
       google_review_link,
     } = body;
 
+    // MALICIOUS-1: validate before any DB or Twilio work
     if (!business_name || !phone || !email || !trade || !leads?.length) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         { status: 400, headers: { ...CORS, "Content-Type": "application/json" } }
       );
     }
+
+    // MALICIOUS-1: bounds check leads array before touching DB or Twilio
+    if (!Array.isArray(leads)) {
+      return new Response(JSON.stringify({ error: "leads must be an array" }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+    }
+    if (leads.length > MAX_LEADS_PER_SUBMISSION) {
+      return new Response(JSON.stringify({ error: `Maximum ${MAX_LEADS_PER_SUBMISSION} leads per submission` }), { status: 400, headers: { ...CORS, "Content-Type": "application/json" } });
+    }
+
+    // Truncate string fields to prevent oversized DB writes
+    const safeBizName = String(business_name).slice(0, MAX_FIELD_LENGTH);
+    const safeOwnerName = owner_name ? String(owner_name).slice(0, MAX_FIELD_LENGTH) : null;
+    const safeCampaignName = campaign_name ? String(campaign_name).slice(0, MAX_FIELD_LENGTH) : null;
+    const safeTrade = String(trade).slice(0, 50);
 
     const contractorPhone = normalizePhone(phone);
 
@@ -121,21 +116,21 @@ serve(async (req) => {
       billingActive = existing.dead_lead_billing_active ?? false;
       // Update name/phone/biz in case they changed
       await sb.from("contractor_clients" as any).update({
-        business_name,
-        name: owner_name || business_name,
+        business_name: safeBizName,
+        name: safeOwnerName || safeBizName,
         phone: contractorPhone,
-        trade,
+        trade: safeTrade,
         ...(google_review_link ? { google_review_link } : {}),
       }).eq("id", contractorId);
     } else {
       const { data: newContractor, error: insertErr } = await sb
         .from("contractor_clients" as any)
         .insert({
-          business_name,
-          name: owner_name || business_name,
+          business_name: safeBizName,
+          name: safeOwnerName || safeBizName,
           phone: contractorPhone,
           email: email.toLowerCase().trim(),
-          trade,
+          trade: safeTrade,
           city: "Metro Detroit",
           state: "MI",
           active: false,
@@ -207,13 +202,13 @@ serve(async (req) => {
     const effectiveLeads = isFreeTrial ? parsedLeads.slice(0, FREE_TIER_LIMIT) : parsedLeads;
 
     // Create campaign
-    const campName = campaign_name || `${business_name} — ${new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" })}`;
+    const campName = safeCampaignName || `${safeBizName} — ${new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" })}`;
     const { data: campaign, error: campErr } = await sb
       .from("dead_lead_campaigns" as any)
       .insert({
         contractor_id: contractorId,
         name: campName,
-        trade,
+        trade: safeTrade,
         status: "active",
         is_free_trial: isFreeTrial,
       })
@@ -239,6 +234,13 @@ serve(async (req) => {
       .from("dead_lead_contacts" as any)
       .insert(contactRows);
     if (contactErr) {
+      // MALICIOUS-2: rollback the campaign so it doesn't become an active orphan
+      // that loops forever in the drip cron with 0 contacts.
+      try {
+        await sb.from("dead_lead_campaigns" as any).delete().eq("id", campaign.id);
+      } catch (rollbackErr) {
+        console.error("[dead-lead-intake] rollback failed", rollbackErr);
+      }
       throw new Error(`contacts insert: ${contactErr.message}`);
     }
 
@@ -254,7 +256,7 @@ serve(async (req) => {
     await sendSMS(
       ADMIN_PHONE,
       TWILIO_PHONE,
-      `♻️ New dead lead campaign submitted!\n${business_name} (${trade})\n${effectiveLeads.length} contacts ready to drip.${trialNote}\nApprove: ${SITE_URL}/admin`,
+      `♻️ New dead lead campaign submitted!\n${safeBizName} (${safeTrade})\n${effectiveLeads.length} contacts ready to drip.${trialNote}\nApprove: ${SITE_URL}/admin`,
       "dead_lead_reactivation"
     );
 

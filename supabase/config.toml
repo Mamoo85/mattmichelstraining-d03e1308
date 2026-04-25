@@ -1752,5 +1752,56 @@ verify_jwt = false
 [functions.get-my-missed-call]
 verify_jwt = false
 
+[functions.create-marketplace-lead-checkout]
+verify_jwt = false
+
+[functions.marketplace-generate-dossier-pdf]
+verify_jwt = false
+
+[functions.marketplace-share-token]
+verify_jwt = false
+
+[functions.marketplace-saved-search-notifier]
+verify_jwt = false
+
+[functions.marketplace-lead-free-enrich]
+verify_jwt = false
+
+[functions.marketplace-lead-free-enrich-batch]
+verify_jwt = false
+
 [functions.marketplace-buyer-receipts]
+verify_jwt = false
+
+[functions.create-marketplace-first-look-checkout]
+verify_jwt = false
+
+[functions.marketplace-lead-gov-enrich]
+verify_jwt = false
+
+[functions.marketplace-hot-zone-notifier]
+verify_jwt = false
+
+[functions.marketplace-score-bump-alert]
+verify_jwt = false
+
+[functions.marketplace-weekly-scorecard]
+verify_jwt = false
+
+[functions.marketplace-buyer-welcome]
+verify_jwt = false
+
+[functions.marketplace-watch-price-drop]
+verify_jwt = false
+
+[functions.marketplace-reengagement]
+verify_jwt = false
+
+[functions.marketplace-watched-leads]
+verify_jwt = false
+
+[functions.marketplace-watch-add]
+verify_jwt = false
+
+[functions.marketplace-lead-summarize]
 verify_jwt = false

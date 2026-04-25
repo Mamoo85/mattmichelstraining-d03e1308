@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { getStripeSecretKey } from "../_shared/stripe-key.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,19 +29,21 @@ serve(async (req: Request) => {
     const resolvedEmail: string = customer_email || email;
     const siteUrl = Deno.env.get("PUBLIC_SITE_URL") || "https://www.detroitwebagent.com";
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
+    const stripe = new Stripe(getStripeSecretKey(), {
       apiVersion: "2025-08-27.basil",
     });
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       customer_email: resolvedEmail,
-      line_items: [
-        {
-          price: "price_1THQrCD52tPWee46S22fwipp",
-          quantity: 1,
+      line_items: [{
+        price_data: {
+          currency: "usd",
+          unit_amount: 29900,
+          product_data: { name: "10 Local SEO Pages", description: "10 dedicated SEO landing pages targeting your local keywords. One-time build." },
         },
-      ],
+        quantity: 1,
+      }],
       metadata: {
         type: "seo_package",
         business_name,

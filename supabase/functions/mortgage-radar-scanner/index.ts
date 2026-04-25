@@ -19,6 +19,42 @@ const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
 const ADMIN_EMAIL = "matt@detroitwebagent.com";
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
+const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
+const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
+const DWA_PHONE = "+13139921219";
+
+function streetViewUrl(address: string, city: string, zip: string): string {
+  if (!GOOGLE_MAPS_API_KEY || !address) return "";
+  const loc = encodeURIComponent(`${address}, ${city || ""} ${zip || ""}, MI`);
+  return `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${loc}&fov=80&key=${GOOGLE_MAPS_API_KEY}`;
+}
+
+async function sendHotLeadSMS(to: string, businessName: string, address: string, score: number, signalType: string, leadId?: string) {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !to) return;
+  try {
+    const sigLabel = signalType.replace(/_/g, " ");
+    const dashLink = leadId
+      ? `https://detroitwebagent.com/my-mortgage-radar?lead=${leadId}`
+      : `https://detroitwebagent.com/my-mortgage-radar`;
+    const streetView = address
+      ? `https://maps.google.com/?q=${encodeURIComponent(address)}`
+      : "";
+    const body = `🔥 HOT MORTGAGE LEAD (${score}/10)\n${address}\nSignal: ${sigLabel}\n\n📍 ${streetView}\n📊 Intel + draft outreach: ${dashLink}\n\nManual send only — TCPA. Reply STOP to opt out. — DWA`;
+    const params = new URLSearchParams({ To: to, From: DWA_PHONE, Body: body });
+    await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: params,
+    });
+  } catch (e) {
+    console.warn("[sendHotLeadSMS]", e instanceof Error ? e.message : String(e));
+  }
+}
+
 
 interface RawSignal {
   full_name?: string;
@@ -127,24 +163,25 @@ function openerFor(signal_type: string): { opener: string; window: string } {
 
 async function scanBSEEDPermits(): Promise<RawSignal[]> {
   try {
-    const url = "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/BSEED_Trades_Permits/FeatureServer/0/query?where=1%3D1&outFields=*&resultRecordCount=100&f=json&orderByFields=ISSUED_DATE+DESC";
+    // Real field names verified against ArcGIS schema (lowercase)
+    const url = "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_trades_permits/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,permit_type,work_description,issued_date,contact_business_name&resultRecordCount=100&f=json&orderByFields=issued_date+DESC";
     const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!r.ok) return [];
     const j = await r.json();
     const out: RawSignal[] = [];
     for (const f of (j.features || [])) {
       const a = f.attributes || {};
-      const desc = String(a.WORK_DESCRIPTION || a.SCOPE_OF_WORK || "").toLowerCase();
+      const desc = String(a.work_description || "").toLowerCase();
       const isReno = /kitchen|addition|remodel|bath|whole house|finish basement|roof/.test(desc);
       if (!isReno) continue;
       out.push({
-        address: a.SITE_ADDRESS || a.ADDRESS || "",
-        city: a.SITE_CITY || "Detroit",
-        zip: String(a.SITE_ZIP || a.ZIP || "").slice(0, 5) || undefined,
+        address: a.address || "",
+        city: "Detroit",
+        zip: String(a.zip_code || "").slice(0, 5) || undefined,
         signal_type: "renovation_permit",
         signal_source: "BSEED",
-        signal_detail: String(a.WORK_DESCRIPTION || "Renovation permit").slice(0, 200),
-        signal_date: a.ISSUED_DATE ? new Date(a.ISSUED_DATE).toISOString().slice(0, 10) : undefined,
+        signal_detail: String(a.work_description || "Renovation permit").slice(0, 200),
+        signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : undefined,
       });
     }
     return out.slice(0, 50);
@@ -285,25 +322,25 @@ async function scanDivorceFilings(): Promise<RawSignal[]> {
 // with significant equity who may want cash-out refi instead of draining savings.
 async function scanHighEquityLowRate(): Promise<RawSignal[]> {
   try {
-    const url = "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/BSEED_Trades_Permits/FeatureServer/0/query?where=CONSTRUCTION_COST+%3E%3D+100000&outFields=SITE_ADDRESS,SITE_CITY,SITE_ZIP,CONSTRUCTION_COST,WORK_DESCRIPTION,ISSUED_DATE,OWNER_NAME&resultRecordCount=30&f=json&orderByFields=ISSUED_DATE+DESC";
+    // bseed_building_permits has amt_estimated_contractor_cost — correct layer for cost filtering
+    const url = "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permits/FeatureServer/0/query?where=amt_estimated_contractor_cost+%3E%3D+100000&outFields=address,zip_code,work_description,issued_date,amt_estimated_contractor_cost&resultRecordCount=30&f=json&orderByFields=issued_date+DESC";
     const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!r.ok) return [];
     const j = await r.json();
     const out: RawSignal[] = [];
     for (const f of (j.features || [])) {
       const a = f.attributes || {};
-      const cost = Number(a.CONSTRUCTION_COST || 0);
+      const cost = Number(a.amt_estimated_contractor_cost || 0);
       if (cost < 100000) continue;
-      const desc = String(a.WORK_DESCRIPTION || "Major renovation").slice(0, 200);
+      const desc = String(a.work_description || "Major renovation").slice(0, 200);
       out.push({
-        full_name: a.OWNER_NAME || undefined,
-        address: a.SITE_ADDRESS || undefined,
-        city: a.SITE_CITY || "Detroit",
-        zip: String(a.SITE_ZIP || "").slice(0, 5) || undefined,
+        address: a.address || undefined,
+        city: "Detroit",
+        zip: String(a.zip_code || "").slice(0, 5) || undefined,
         signal_type: "high_equity_renovation",
         signal_source: "BSEED_HighValue",
         signal_detail: `$${cost.toLocaleString()} permit — ${desc}`,
-        signal_date: a.ISSUED_DATE ? new Date(a.ISSUED_DATE).toISOString().slice(0, 10) : undefined,
+        signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : undefined,
         estimated_equity: Math.round(cost * 2.5),
       });
     }
@@ -565,6 +602,7 @@ async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal
     }],
     suggested_opener: opener,
     best_call_window: window,
+    street_view_url: streetViewUrl(s.address, s.city || "", s.zip || ""),
     raw: s as unknown as Record<string, unknown>,
   };
   const { data: ins, error } = await (sb.from as any)("mortgage_radar_leads")
@@ -621,6 +659,11 @@ serve(async (req) => {
   let inserted = 0;
   let updated = 0;
   let alertsQueued = 0;
+  let inlineEnriched = 0;
+  let queuedForEnrich = 0;
+  let hotSmsFired = 0;
+  let inlineEnrichBudget = 5; // first 5 new leads per run get inline enrich; rest go to queue
+
   for (const s of signals) {
     const res = await upsertWithDedup(sb, s);
     if (!res) continue;
@@ -633,12 +676,44 @@ serve(async (req) => {
         .eq("id", s.source_id);
     }
 
-    const matchedClientIds = await notifyClients(sb, s.zip, scoreFor(s.signal_type));
+    // Enrichment: inline first 5 new leads, queue the rest
+    if (res.created) {
+      if (inlineEnrichBudget > 0) {
+        try {
+          const r = await fetch(`${SUPABASE_URL}/functions/v1/mortgage-radar-enrich`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${SERVICE_ROLE}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ lead_id: res.id }),
+          });
+          if (r.ok) { inlineEnriched += 1; inlineEnrichBudget -= 1; }
+        } catch (_) { /* fall through to queue */ }
+      } else {
+        await (sb.from as any)("mortgage_radar_enrich_queue")
+          .upsert({ lead_id: res.id, status: "pending" }, { onConflict: "lead_id" });
+        queuedForEnrich += 1;
+      }
+    }
+
+    const score = scoreFor(s.signal_type);
+    const matchedClientIds = await notifyClients(sb, s.zip, score);
     if (matchedClientIds.length > 0) {
       await (sb.from as any)("mortgage_radar_leads")
         .update({ notified_client_ids: matchedClientIds })
         .eq("id", res.id);
       alertsQueued += matchedClientIds.length;
+
+      // Hot lead SMS (score >= 9) to matched clients with phone on file
+      if (score >= 9 && res.created) {
+        const { data: hotClients } = await (sb.from as any)("mortgage_radar_clients")
+          .select("phone, business_name")
+          .in("id", matchedClientIds);
+        for (const c of (hotClients || [])) {
+          if (c.phone) {
+            await sendHotLeadSMS(c.phone, c.business_name || "", s.address || "", score, s.signal_type, res.id);
+            hotSmsFired += 1;
+          }
+        }
+      }
     }
   }
 
@@ -650,9 +725,9 @@ serve(async (req) => {
         body: JSON.stringify({
           from: "Detroit Web Agency <matt@detroitwebagent.com>",
           to: [ADMIN_EMAIL],
-          subject: `🏠 Mortgage Radar — ${inserted} new, ${updated} updated, ${alertsQueued} alerts`,
+          subject: `🏠 Mortgage Radar — ${inserted} new, ${updated} updated, ${alertsQueued} alerts, ${hotSmsFired} hot SMS`,
           html: `<p><strong>Mortgage Radar daily run</strong></p>
-            <p>Started: ${startedAt}<br>Signals fetched: ${signals.length}<br>New leads: ${inserted}<br>Updated (repeat signals): ${updated}<br>Client alerts queued: ${alertsQueued}</p>
+            <p>Started: ${startedAt}<br>Signals fetched: ${signals.length}<br>New leads: ${inserted}<br>Updated (repeat signals): ${updated}<br>Client alerts queued: ${alertsQueued}<br>Inline-enriched: ${inlineEnriched}<br>Queued for enrich: ${queuedForEnrich}<br>Hot lead SMS fired: ${hotSmsFired}</p>
             <pre>${JSON.stringify(sourceBreakdown, null, 2)}</pre>`,
         }),
       });
@@ -668,6 +743,9 @@ serve(async (req) => {
     inserted,
     updated,
     alerts_queued: alertsQueued,
+    inline_enriched: inlineEnriched,
+    queued_for_enrich: queuedForEnrich,
+    hot_sms_fired: hotSmsFired,
     source_breakdown: sourceBreakdown,
   }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });

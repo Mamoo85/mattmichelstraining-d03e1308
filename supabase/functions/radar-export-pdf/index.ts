@@ -24,6 +24,7 @@ function sanitize(s: string | null | undefined): string {
   // Strip emoji + control chars; keep printable ASCII + Latin-1
   return s
     .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}\u{1F000}-\u{1F2FF}]/gu, "")
+    // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ")
     .replace(/\s+/g, " ")
     .trim();

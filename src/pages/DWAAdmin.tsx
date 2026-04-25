@@ -20,6 +20,9 @@ const AdminDWARevenueDashboard = lazy(() => import("@/components/admin/AdminDWAR
 const AdminDeadLeads = lazy(() => import("@/components/admin/AdminDeadLeads"));
 const AdminContractorLeads = lazy(() => import("@/components/admin/AdminContractorLeads"));
 const AdminFieldCRMClients = lazy(() => import("@/components/admin/AdminFieldCRMClients"));
+const AdminFaxOutreach = lazy(() => import("@/components/admin/AdminFaxOutreach"));
+const AdminPostcardOutreach = lazy(() => import("@/components/admin/AdminPostcardOutreach"));
+const AdminSMSOutreach = lazy(() => import("@/components/admin/AdminSMSOutreach"));
 const VisitorIntelFeed = lazy(() => import("@/components/admin/VisitorIntelFeed"));
 const AdminSimulationSuite = lazy(() => import("@/components/admin/AdminSimulationSuite"));
 const AdminTheWire = lazy(() => import("@/components/admin/AdminTheWire"));
@@ -45,7 +48,7 @@ type Tab =
   | "ai-command"
   | "dwa-overview" | "revenue" | "leads-e2e" | "prospect-tracker" | "agent-toolkit" | "pipeline-velocity"
   | "command-center" | "sms-inbox" | "sms-drafts" | "call-list" | "linkedin-blitz" | "ad-launcher" | "agency-outreach"
-  | "contractor-leads" | "contractor-onboarding" | "dead-leads" | "fielddesk" | "techalert" | "clients-all"
+  | "contractor-leads" | "contractor-onboarding" | "dead-leads" | "fax-drip" | "postcard-drip" | "sms-sniper" | "fielddesk" | "techalert" | "clients-all"
   | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
   | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode";
@@ -82,6 +85,9 @@ const GROUPS: SidebarGroup[] = [
       { id: "contractor-leads",      label: "🏗️ Contractor Leads" },
       { id: "contractor-onboarding", label: "🤝 Contractor Onboarding" },
       { id: "dead-leads",            label: "♻️ Dead Leads" },
+      { id: "fax-drip",              label: "📠 Fax Drip" },
+      { id: "postcard-drip",         label: "✉️ Postcard Drip" },
+      { id: "sms-sniper",            label: "💬 SMS Sniper" },
       { id: "fielddesk",             label: "🛠️ FieldDesk Clients" },
       { id: "techalert",             label: "🎯 TechAlert Clients" },
       { id: "clients-all",           label: "👥 All Clients / CRM" },
@@ -163,6 +169,9 @@ export default function DWAAdmin() {
           {activeTab === "contractor-leads"      && <Suspense fallback={lazyFallback("contractor leads")}><AdminContractorLeads /></Suspense>}
           {activeTab === "contractor-onboarding" && <Suspense fallback={lazyFallback("onboarding")}><AdminContractorOnboarding /></Suspense>}
           {activeTab === "dead-leads"            && <Suspense fallback={lazyFallback("dead leads")}><AdminDeadLeads /></Suspense>}
+          {activeTab === "fax-drip"              && <Suspense fallback={lazyFallback("fax outreach")}><AdminFaxOutreach /></Suspense>}
+          {activeTab === "postcard-drip"         && <Suspense fallback={lazyFallback("postcard outreach")}><AdminPostcardOutreach /></Suspense>}
+          {activeTab === "sms-sniper"            && <Suspense fallback={lazyFallback("sms outreach")}><AdminSMSOutreach /></Suspense>}
           {activeTab === "fielddesk"             && <Suspense fallback={lazyFallback("FieldDesk")}><AdminFieldCRMClients /></Suspense>}
           {activeTab === "techalert"             && <Suspense fallback={lazyFallback("Talent Radar")}><TalentRadarHub /></Suspense>}
           {activeTab === "clients-all"           && (

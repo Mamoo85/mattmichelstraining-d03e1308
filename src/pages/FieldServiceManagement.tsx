@@ -4,7 +4,10 @@ import { Phone, CheckCircle, XCircle, Zap, MapPin, MessageSquare, FileText, Cale
 import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ActionButton from "@/components/ui/action-button";
 import TechTaxCalculator from "@/components/field-service/TechTaxCalculator";
+import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
+import CheckEmailCard from "@/components/checkout/CheckEmailCard";
 
 const COMPARE = [
   { name: "FieldServio", price: "$1,400/mo", users: "10 users", note: "Built for forklift rental companies", bad: true },
@@ -68,8 +71,12 @@ export default function FieldServiceManagement() {
 
   if (isSuccess) {
     return (
-      <div style={{ minHeight: "100vh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
-        <div style={{ maxWidth: 520, textAlign: "center" }}>
+      <div style={{ minHeight: "100dvh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
+        <div style={{ maxWidth: 520, width: "100%", textAlign: "center" }}>
+          <div style={{ marginBottom: 24, display: "flex", flexDirection: "column", gap: 12 }}>
+            <ReceiptStatusBanner sessionId={searchParams.get("session_id")} productLabel="FieldDesk" />
+            <CheckEmailCard sessionId={searchParams.get("session_id")} />
+          </div>
           <div style={{ fontSize: 64, marginBottom: 24 }}>🚀</div>
           <h1 style={{ color: "#fff", fontSize: 32, fontWeight: 800, margin: "0 0 12px" }}>FieldDesk is Live!</h1>
           <p style={{ color: "#00d4ff", fontSize: 18, fontWeight: 700, margin: "0 0 20px" }}>Your dispatch platform is being provisioned now.</p>
@@ -280,13 +287,14 @@ export default function FieldServiceManagement() {
                   <li key={f} className="flex items-center gap-2"><CheckCircle size={12} className="text-[#00d4ff] flex-shrink-0" />{f}</li>
                 ))}
               </ul>
-              <button
+              <ActionButton
                 onClick={() => handleCheckout("standalone")}
-                disabled={loading}
-                className="w-full border border-white/30 text-white py-2.5 text-sm font-bold hover:bg-white/5 transition-colors disabled:opacity-50"
+                busyLabel="Loading..."
+                ariaLabel="Get started — Standalone $299/mo"
+                style={{ background: "transparent", color: "#fff", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 0, minHeight: 40, fontSize: 13 }}
               >
-                {loading ? "Loading..." : "Get Started →"}
-              </button>
+                Get Started →
+              </ActionButton>
             </div>
 
             {/* Bundle */}
@@ -303,13 +311,14 @@ export default function FieldServiceManagement() {
                   <li key={f} className="flex items-center gap-2"><CheckCircle size={12} className="text-[#00d4ff] flex-shrink-0" />{f}</li>
                 ))}
               </ul>
-              <button
+              <ActionButton
                 onClick={() => handleCheckout("bundle")}
-                disabled={loading}
-                className="w-full bg-[#00d4ff] text-[#0a1628] py-2.5 text-sm font-black hover:bg-[#00d4ff]/90 transition-colors disabled:opacity-50"
+                busyLabel="Loading..."
+                ariaLabel="Get the Website Bundle — $199/mo"
+                style={{ background: "#00d4ff", color: "#0a1628", borderRadius: 0, minHeight: 40, fontSize: 13 }}
               >
-                {loading ? "Loading..." : "Get the Bundle →"}
-              </button>
+                Get the Bundle →
+              </ActionButton>
             </div>
           </div>
         </div>

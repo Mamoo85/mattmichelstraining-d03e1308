@@ -91,6 +91,7 @@ export default function LeadDetail() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, buyerEmail]);
 
+
   useEffect(() => {
     if (!slug) return;
     let cancelled = false;

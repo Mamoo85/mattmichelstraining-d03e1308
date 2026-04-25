@@ -165,10 +165,10 @@ const HeroSection = () => {
                 <ArrowRight size={14} />
               </Link>
               <Link
-                to="/about"
+                to="/free-site-scanner"
                 className="inline-flex items-center gap-2 border-2 border-border text-muted-foreground px-6 py-3.5 text-xs font-bold uppercase tracking-widest rounded-lg hover:border-primary hover:text-primary transition-all duration-300 w-full sm:w-auto justify-center"
               >
-                Meet Matt
+                Free Site Scanner
                 <ArrowRight size={14} />
               </Link>
             </div>

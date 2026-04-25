@@ -71,6 +71,37 @@ Audit every completed web design project before and after go-live. Run post-mort
 ## Edge Function
 `rev-qa-auditor` — triggered by Ops webhook + cron weekly Thursdays 3pm ET
 
+### Mortgage Radar QA (Phase 21)
+- [ ] `mortgage-radar-scanner` cron fires daily
+- [ ] Signals are being created in `mortgage_radar_signals` with all 3 source types (permit/foreclosure/LLC)
+- [ ] Claim lock logic prevents two LOs claiming the same signal
+- [ ] Dashboard shows signals with score + suggested opener
+- [ ] FCRA note: no credit bureau data appears in any signal row
+
+### LO Outreach QA (Phase 22)
+- [ ] `marketplace-outreach-blast` runs without LOB_API_KEY error (when key is added)
+- [ ] `send-fax` includes opt-out instructions on every fax
+- [ ] `fax_opt_outs` is checked before every fax send
+- [ ] Outreach cooldowns prevent double-contacting same LO within 7 days
+- [ ] Campaign history is logged to `lo_outreach_sends`
+
+## 🆕 Rev Improvements (Phase 22)
+
+### 1. Automated Regression Testing After Each Deploy
+When a Lovable deploy happens (detectable via Supabase function deploy timestamps), Rev runs a smoke test on the top 5 revenue-critical edge functions: `dead-lead-drip`, `hire-alert-scanner`, `contractor-lead-notify`, `stripe-webhook`, `handle-dead-lead-reply`. If any returns a non-200 on a test payload, alert Matt before clients notice.
+
+### 2. Client-Facing Output Audit
+Weekly: pull the last 10 SMS messages sent via each product from `system_comms_log`. Verify: no internal data source names, no "AI" references, no broken variables (e.g., "[business_name]" rendering as a literal string), no phone numbers in wrong format. One bad variable render = client sees "{business_name}" in their SMS. Embarrassing and churn-causing.
+
+### 3. Churn Post-Mortem Pattern Library
+After each churn post-mortem, add the root cause to a growing pattern library. Categories: "never got value in week 1" / "product underperformed" / "onboarding gap" / "price sensitivity" / "competitor win." After 10 post-mortems, identify the #1 root cause and recommend a specific product fix.
+
+### 4. API Dependency Health Check
+Monthly: verify all external API dependencies are still operational by checking recent success/failure rates in `system_comms_log` and `agent_heartbeats`. APIs to check: Twilio, Resend, Stripe, Hunter.io, Sonar/OpenRouter, BSEED ArcGIS, NMLS Consumer Access, Lob.com. Dead API = silent product failure.
+
+### 5. TCPA / FCRA Compliance Spot Checks
+Quarterly: pull 20 random SMS sends from `system_comms_log` and verify: sent between 8am–9pm recipient's timezone, not to any number in `sms_opt_outs`, white-labeled correctly for dead lead drip. Also verify: Mortgage Radar signals contain zero credit bureau data fields. These spot checks are the last line of defense before a complaint becomes a fine.
+
 ## Rules
 - Never block a go-live if Matt explicitly overrides QA
 - Always give specific, actionable fail reasons

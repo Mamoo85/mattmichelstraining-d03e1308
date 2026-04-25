@@ -62,7 +62,7 @@ serve(async (req) => {
         type: "gov_contract_monitor",
         company_name: company_name || "",
         naics_codes: naics_codes || "",
-        keywords: keywords || "",
+        keywords: Array.isArray(keywords) ? keywords.join(",") : (keywords || ""),
         set_aside_types: set_aside_types || "",
         customer_email,
         customer_name: customer_name || "",
