@@ -12,6 +12,8 @@ import { toastSuccess, toastError } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { priceLabelFor } from "@/lib/marketplacePricing";
+import LinkExpired from "@/components/shared/LinkExpired";
+import { isUuid, isEmail } from "@/lib/parseSearchParams";
 
 import { getOrCreateAnonId } from "@/lib/anonSession";
 
@@ -21,6 +23,15 @@ const POLL_TIMEOUT_MS = 12_000;
 export default function LeadDetail() {
   const { slug } = useParams<{ slug: string }>();
   const [params] = useSearchParams();
+  // Hard-validate route + query params before doing ANY supabase calls.
+  // The slug is interpolated into our queries, and a malformed buyer email
+  // would silently break the access lookup. Better to show a branded
+  // recovery screen than to flash a "not found" or hang on polling.
+  const slugValid = isUuid(slug);
+  const rawBuyerParam = params.get("buyer")?.trim() || "";
+  const storedBuyer = typeof window !== "undefined" ? (localStorage.getItem("mp_buyer_email") || "") : "";
+  const buyerEmailCandidate = rawBuyerParam || storedBuyer;
+  const buyerEmailValid = !buyerEmailCandidate || isEmail(buyerEmailCandidate);
   const [lead, setLead] = useState<MarketplaceLead | null>(null);
   const [loading, setLoading] = useState(true);
   const [pdfBusy, setPdfBusy] = useState(false);
