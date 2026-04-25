@@ -79,11 +79,11 @@ export default function MarketplaceReceipts() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.includes("@")) {
+    if (!isEmail(email)) {
       toast.error("Enter a valid email");
       return;
     }
-    fetchReceipts(email);
+    fetchReceipts(email.trim());
   };
 
   const handleShare = async (lead_id: string, product: string) => {
