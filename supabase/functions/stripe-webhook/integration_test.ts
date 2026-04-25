@@ -255,83 +255,102 @@ Deno.test({
   },
 });
 
-Deno.test("integration — TechAlert (hire_alert_subscription) fulfills", async () => {
-  installFetchStub();
-  const event = buildCheckoutSessionCompletedEvent(
-    {
-      type: "hire_alert_subscription",
-      business_name: "Joe's Plumbing",
-      vertical: "trades",
-      city: "Detroit",
-      state: "MI",
-      email: "joe@joesplumbing.test",
-    },
-    { email: "joe@joesplumbing.test" },
-  );
-  const res = await handler(await buildSignedRequest(event));
-  await res.text();
-  assertEquals(res.status, 200);
-  assertHitTable("hire_alert_clients");
+Deno.test({
+  name: "integration — TechAlert (hire_alert_subscription) fulfills",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: async () => {
+    installFetchStub();
+    const event = buildCheckoutSessionCompletedEvent(
+      {
+        type: "hire_alert_subscription",
+        business_name: "Joe's Plumbing",
+        vertical: "trades",
+        city: "Detroit",
+        state: "MI",
+        email: "joe@joesplumbing.test",
+      },
+      { email: "joe@joesplumbing.test" },
+    );
+    const res = await handler(await buildSignedRequest(event));
+    await res.text();
+    assertEquals(res.status, 200);
+    assertHitTable("hire_alert_clients");
+  },
 });
 
-Deno.test("integration — Contractor Leads (contractor_lead_subscription) fulfills", async () => {
-  installFetchStub();
-  const event = buildCheckoutSessionCompletedEvent(
-    {
-      type: "contractor_lead_subscription",
-      contractor_id: crypto.randomUUID(),
-      trade: "roofing",
-      city: "Detroit",
-      email: "pro@roofers.test",
-    },
-    { email: "pro@roofers.test" },
-  );
-  const res = await handler(await buildSignedRequest(event));
-  await res.text();
-  assertEquals(res.status, 200);
-  // Contractor branch sends a welcome email + writes to contractor tables.
-  // We accept either a Resend call OR a contractor-table write as evidence.
-  const emailHit = callsMatching((c) => c.url.includes("api.resend.com"));
-  const tableHit = callsMatching((c) => c.url.includes("/rest/v1/contractor_"));
-  assert(
-    emailHit.length + tableHit.length > 0,
-    `Expected contractor fulfillment side-effect (email or contractor_* write).`,
-  );
+Deno.test({
+  name: "integration — Contractor Leads (contractor_lead_subscription) fulfills",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: async () => {
+    installFetchStub();
+    const event = buildCheckoutSessionCompletedEvent(
+      {
+        type: "contractor_lead_subscription",
+        contractor_id: crypto.randomUUID(),
+        trade: "roofing",
+        city: "Detroit",
+        email: "pro@roofers.test",
+      },
+      { email: "pro@roofers.test" },
+    );
+    const res = await handler(await buildSignedRequest(event));
+    await res.text();
+    assertEquals(res.status, 200);
+    const emailHit = callsMatching((c) => c.url.includes("api.resend.com"));
+    const tableHit = callsMatching((c) => c.url.includes("/rest/v1/contractor_"));
+    assert(
+      emailHit.length + tableHit.length > 0,
+      `Expected contractor fulfillment side-effect (email or contractor_* write).`,
+    );
+  },
 });
 
-Deno.test("integration — Missed-Call Catch (missed_call_subscription) fulfills", async () => {
-  installFetchStub();
-  const event = buildCheckoutSessionCompletedEvent(
-    {
-      type: "missed_call_subscription",
-      businessName: "Sunny Spa",
-      email: "owner@sunnyspa.test",
-    },
-    { email: "owner@sunnyspa.test" },
-  );
-  const res = await handler(await buildSignedRequest(event));
-  await res.text();
-  assertEquals(res.status, 200);
-  assertInvokedFunction("auto-onboard-client");
-  const onboard = callsMatching((c) => c.url.includes("auto-onboard-client"))[0];
-  assertStringIncludes(onboard.body || "", "missed_call_subscription");
+Deno.test({
+  name: "integration — Missed-Call Catch (missed_call_subscription) fulfills",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: async () => {
+    installFetchStub();
+    const event = buildCheckoutSessionCompletedEvent(
+      {
+        type: "missed_call_subscription",
+        businessName: "Sunny Spa",
+        email: "owner@sunnyspa.test",
+      },
+      { email: "owner@sunnyspa.test" },
+    );
+    const res = await handler(await buildSignedRequest(event));
+    await res.text();
+    assertEquals(res.status, 200);
+    assertHitTable("missed_call_clients");
+    assertInvokedFunction("auto-onboard");
+    const onboard = callsMatching((c) => c.url.includes("/functions/v1/auto-onboard"))[0];
+    assertStringIncludes(onboard.body || "", "missed_call_subscription");
+  },
 });
 
-Deno.test("integration — Mortgage Radar (mortgage_radar_subscription) fulfills", async () => {
-  installFetchStub();
-  const event = buildCheckoutSessionCompletedEvent(
-    {
-      type: "mortgage_radar_subscription",
-      lo_name: "Jane Loanmaker",
-      nmls_id: "12345",
-      email: "jane@loans.test",
-    },
-    { email: "jane@loans.test" },
-  );
-  const res = await handler(await buildSignedRequest(event));
-  await res.text();
-  assertEquals(res.status, 200);
-  assertHitTable("mortgage_radar_clients");
+Deno.test({
+  name: "integration — Mortgage Radar (mortgage_radar_subscription) fulfills",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: async () => {
+    installFetchStub();
+    const event = buildCheckoutSessionCompletedEvent(
+      {
+        type: "mortgage_radar_subscription",
+        lo_name: "Jane Loanmaker",
+        nmls_id: "12345",
+        email: "jane@loans.test",
+      },
+      { email: "jane@loans.test" },
+    );
+    const res = await handler(await buildSignedRequest(event));
+    await res.text();
+    assertEquals(res.status, 200);
+    assertHitTable("mortgage_radar_clients");
+  },
 });
 
 // ─── 7. Cleanup ─────────────────────────────────────────────────────────
