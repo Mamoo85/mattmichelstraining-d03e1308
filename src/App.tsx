@@ -667,25 +667,13 @@ const App = () => (
                     <Route path="/menu-engineering" element={<MenuEngineering />} />
                     <Route path="/fitness-reports" element={<FitnessReports />} />
                     <Route path="/gov-meeting-tracker" element={<GovMeetingTracker />} />
-                    <Route path="/ai-newsletter-service" element={<AINewsletterService />} />
+                    {/* Orphaned AI product routes delisted (waitlist-only, unlinked). Pages preserved on disk. */}
                     <Route path="/free-trending-products" element={<FreeTrendingProducts />} />
                     <Route path="/free-grant-digest" element={<FreeGrantDigest />} />
                     <Route path="/free-real-estate-digest" element={<FreeRealEstateDigest />} />
-                    <Route path="/ai-med-spa-marketing" element={<AIMedSpaMarketing />} />
-                    <Route path="/ai-real-estate-drip" element={<AIRealEstateDrip />} />
-                    <Route path="/ai-podcast-show-notes" element={<AIPodcastShowNotes />} />
-                    <Route path="/ai-church-newsletter" element={<AIChurchNewsletter />} />
-                    <Route path="/ai-property-management" element={<AIPropertyManagement />} />
-                    <Route path="/ai-franchise-ops" element={<AIFranchiseOps />} />
-                    <Route path="/ai-ecommerce-listings" element={<AIEcommerceListings />} />
-                    <Route path="/ai-financial-advisor-content" element={<AIFinancialAdvisorContent />} />
-                    <Route path="/ai-vet-marketing" element={<AIVetMarketing />} />
-                    <Route path="/ai-trucking-docs" element={<AITruckingDocs />} />
                     <Route path="/ai-ads-copy" element={<AIAdsCopyGenerator />} />
-                    <Route path="/ai-job-postings" element={<AIJobPostingWriter />} />
                     <Route path="/ai-reputation" element={<AIReputationDashboard />} />
                     <Route path="/contractor-invoicing" element={<ContractorInvoicing />} />
-                    <Route path="/ai-voicemail" element={<AIVoicemailTranscription />} />
                     <Route path="/ai-phone-answering" element={<AIPhoneAnswering />} />
                     <Route path="/text-message-marketing" element={<TextMessageMarketing />} />
                     <Route path="/review-request-sms" element={<ReviewRequestSMS />} />
