@@ -1748,3 +1748,6 @@ verify_jwt = false
 
 [functions.verify-dashboard-token]
 verify_jwt = false
+
+[functions.marketplace-buyer-receipts]
+verify_jwt = false
