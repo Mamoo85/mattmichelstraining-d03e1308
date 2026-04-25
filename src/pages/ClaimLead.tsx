@@ -4,16 +4,23 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import LeadQualityBadges, { LeadQualityData } from "@/components/contractor/LeadQualityBadges";
+import LinkExpired from "@/components/shared/LinkExpired";
+import { parseParams } from "@/lib/parseSearchParams";
+import { toastError, toastInfo } from "@/lib/toast";
 
 export default function ClaimLead() {
   const [searchParams] = useSearchParams();
-  const lead_id = searchParams.get("lead_id") || "";
-  const contractor_id = searchParams.get("contractor_id") || "";
-  const contractor_email = searchParams.get("email") || "";
-  const hasMissingParams = !lead_id || !contractor_id || !contractor_email;
+  const parsed = parseParams(searchParams, {
+    lead_id: "uuid",
+    contractor_id: "uuid",
+    email: "email",
+  });
+  const lead_id = parsed.ok ? parsed.values.lead_id : "";
+  const contractor_id = parsed.ok ? parsed.values.contractor_id : "";
+  const contractor_email = parsed.ok ? parsed.values.email : "";
+  const hasMissingParams = !parsed.ok;
 
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"idle" | "locked" | "claimed" | "error">("idle");
@@ -73,78 +80,51 @@ export default function ClaimLead() {
 
       if (data?.error === "lead_claimed") {
         setStatus("claimed");
-        toast.info("This lead was just claimed by another contractor.");
+        toastInfo("This lead was just claimed by another contractor.");
       } else if (data?.error === "locked") {
         setMinutesLeft(data.minutesLeft || 10);
         setStatus("locked");
-        toast.info(`Another contractor is reviewing this lead. Try again in ~${data.minutesLeft || 10} min.`);
+        toastInfo(
+          `Another contractor is reviewing this lead. Try again in ~${data.minutesLeft || 10} min.`,
+        );
       } else if (data?.url) {
+        toastInfo("Locking lead — opening secure checkout…");
         window.location.href = data.url;
       } else {
         throw new Error("Unexpected response from server");
       }
     } catch (e) {
       setStatus("error");
-      toast.error("Couldn't open checkout. Text Matt at (313) 992-1219 and we'll fix it instantly.");
+      toastError(
+        "Couldn't open checkout.",
+        "Text Matt at (313) 992-1219 and we'll fix it instantly.",
+      );
     } finally {
       setLoading(false);
       claimLock.current = false;
     }
   };
 
-  // Missing params error
+  // Missing or malformed query string — branded fallback, not a blank page.
   if (hasMissingParams) {
-    return (
-      <div style={{ minHeight: "100vh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
-        <div style={{ maxWidth: 480, textAlign: "center" }}>
-          <div style={{ fontSize: 56, marginBottom: 16 }}>⚠️</div>
-          <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 800, margin: "0 0 12px" }}>Invalid Link</h1>
-          <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.7, margin: "0 0 32px" }}>
-            This link is missing required information. Please use the link from your text message.
-          </p>
-          <p style={{ color: "#64748b", fontSize: 14 }}>Questions? <a href="sms:+13139921219" style={{ color: "#00d4ff", textDecoration: "none" }}>Text Matt at (313) 992-1219</a></p>
-        </div>
-      </div>
-    );
+    return <LinkExpired variant="missing_params" />;
   }
 
   if (previewLoading) {
     return (
-      <div style={{ minHeight: "100vh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ color: "#00d4ff", fontSize: 18 }}>Loading lead...</div>
+      <div style={{ minHeight: "100dvh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ color: "#00d4ff", fontSize: 18 }}>Loading lead…</div>
       </div>
     );
   }
 
-  // Invalid UUID or lead not found
+  // Lead row not found in DB
   if (!leadPreview) {
-    return (
-      <div style={{ minHeight: "100vh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
-        <div style={{ maxWidth: 480, textAlign: "center" }}>
-          <div style={{ fontSize: 56, marginBottom: 16 }}>🔍</div>
-          <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 800, margin: "0 0 12px" }}>Lead Not Found</h1>
-          <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.7, margin: "0 0 32px" }}>
-            This lead may have expired or the link is incorrect. Check your latest text for a fresh link.
-          </p>
-          <p style={{ color: "#64748b", fontSize: 14 }}>Questions? <a href="sms:+13139921219" style={{ color: "#00d4ff", textDecoration: "none" }}>Text Matt at (313) 992-1219</a></p>
-        </div>
-      </div>
-    );
+    return <LinkExpired variant="not_found" />;
   }
 
   if (status === "claimed") {
-    return (
-      <div style={{ minHeight: "100vh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
-        <div style={{ maxWidth: 480, textAlign: "center" }}>
-          <div style={{ fontSize: 56, marginBottom: 16 }}>😔</div>
-          <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 800, margin: "0 0 12px" }}>Lead Already Claimed</h1>
-          <p style={{ color: "#94a3b8", fontSize: 16, lineHeight: 1.7, margin: "0 0 24px" }}>
-            Beat to it this time. The next job in your area goes to the contractor who taps fastest — keep your phone close. We typically send 1 lead every 2–4 days per territory.
-          </p>
-          <p style={{ color: "#64748b", fontSize: 14 }}>Questions? <a href="sms:+13139921219" style={{ color: "#00d4ff", textDecoration: "none" }}>Text Matt at (313) 992-1219</a></p>
-        </div>
-      </div>
-    );
+    return <LinkExpired variant="claimed" />;
   }
 
   if (status === "locked") {
