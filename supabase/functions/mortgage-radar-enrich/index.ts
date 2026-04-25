@@ -45,7 +45,13 @@ Rules:
           { role: "user", content: prompt },
         ],
       }),
+      signal: AbortSignal.timeout(30_000),
     });
+    // 429 = Ingestion Pipeline rate-limited — back off gracefully rather than crash
+    if (res.status === 429) {
+      console.warn("[mortgage-radar-enrich] AI gateway rate-limited — skipping lead");
+      return null;
+    }
     if (!res.ok) return null;
     const data = await res.json();
     const text = data?.choices?.[0]?.message?.content || "";
