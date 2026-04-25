@@ -6,6 +6,7 @@ import { CheckCircle, XCircle, Loader2, ArrowRight, Lock } from "lucide-react";
 import DWAStickyNav from "@/components/shared/DWAStickyNav";
 import WallOfLove, { Testimonial } from "@/components/shared/WallOfLove";
 import EnterpriseFooterBlock from "@/components/shared/EnterpriseFooterBlock";
+import ActionButton from "@/components/ui/action-button";
 
 // Trade catalog — must match create-contractor-checkout normalizeTrade map.
 const TRADES = [
@@ -434,17 +435,20 @@ export default function ContractorLeads() {
                 </div>
               )}
 
-              <button
-                type="submit"
-                disabled={loading || !trade || !city || !selectedTerritory || !!selectedTerritory?.active_contractor_id}
-                className="w-full bg-primary text-white font-bold py-3 text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              <ActionButton
+                onClick={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
+                disabled={!trade || !city || !selectedTerritory || !!selectedTerritory?.active_contractor_id}
+                busyLabel="Opening checkout…"
+                ariaLabel="Claim territory"
+                style={{ background: "hsl(var(--primary))", color: "#fff", borderRadius: 0, padding: "12px", minHeight: 44, fontSize: 13 }}
               >
-                {loading ? (
-                  <><Loader2 size={14} className="animate-spin" /> Opening checkout…</>
-                ) : (
-                  <>{trade && city && selectedTerritory && !selectedTerritory.active_contractor_id ? `Claim ${tradeLabel} — ${city} ($${monthly}/mo)` : trade && !city ? "← Select a territory above" : "Claim My Territory"} <ArrowRight size={14} /></>
-                )}
-              </button>
+                {trade && city && selectedTerritory && !selectedTerritory.active_contractor_id
+                  ? `Claim ${tradeLabel} — ${city} ($${monthly}/mo)`
+                  : trade && !city
+                  ? "← Select a territory above"
+                  : "Claim My Territory"}{" "}
+                <ArrowRight size={14} />
+              </ActionButton>
               <p className="text-[10px] text-muted-foreground text-center">
                 Secure checkout via Stripe. Cancel anytime. First month begins on activation.
               </p>
