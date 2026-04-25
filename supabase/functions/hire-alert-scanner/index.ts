@@ -7,6 +7,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 import { generateJSON } from "../_shared/ai.ts";
+import { withBreaker } from "../_shared/circuit-breaker.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -320,6 +321,9 @@ async function enrichWithPDL(candidate: ScoredCandidate): Promise<Record<string,
       signal: AbortSignal.timeout(10_000),
     });
 
+    if (res.status === 402) {
+      throw new Error(`PDL quota exceeded (402) for ${candidate.full_name}`);
+    }
     if (!res.ok) {
       const errText = await res.text();
       console.warn(`[hire-alert-scanner] PDL HTTP ${res.status} for ${candidate.full_name}: ${errText.slice(0, 200)}`);
@@ -1730,7 +1734,9 @@ serve(async (req: Request) => {
       // Phase 3: PDL Skip-Trace (only if we have LinkedIn or enough identity data)
       let pdlData: Record<string, unknown> = {};
       if (PDL_API_KEY && (candidate.linkedin_url || candidate.city)) {
-        pdlData = await enrichWithPDL(candidate);
+        const pdlRes = await withBreaker("pdl", () => enrichWithPDL(candidate));
+        if (pdlRes.skipped) console.warn("[hire-alert-scanner] PDL circuit open — skipping enrichment");
+        pdlData = pdlRes.ok ? (pdlRes.data ?? {}) : {};
         if (pdlData.pdl_mobile_phone || pdlData.pdl_personal_email) {
           pdlHits++;
           candidate.pdl_mobile_phone = pdlData.pdl_mobile_phone as string | undefined;

@@ -221,7 +221,10 @@ async function runDripJob(): Promise<Response> {
 
         const smsRes = await sendSMS(contact.phone, TWILIO_PHONE_NUMBER, body, "dead_lead_reactivation");
         if (!smsRes?.success) {
-          // sendSMS already logs to error_logs; just skip the state mutation
+          if (smsRes.twilio_code === 21614) {
+            // Carrier block — phone is on a carrier-level DNC list; suppress permanently
+            await sb.from("dead_lead_contacts" as any).update({ is_dnc_risk: true }).eq("id", contact.id);
+          }
           continue;
         }
 
@@ -357,7 +360,12 @@ async function runDripJob(): Promise<Response> {
         const body = fillSms(tpl, { name: firstName, bizName, trade });
 
         const smsRes = await sendSMS(contact.phone, TWILIO_PHONE_NUMBER, body, "dead_lead_reactivation");
-        if (!smsRes?.success) continue;
+        if (!smsRes?.success) {
+          if (smsRes.twilio_code === 21614) {
+            await sb.from("dead_lead_contacts" as any).update({ is_dnc_risk: true }).eq("id", contact.id);
+          }
+          continue;
+        }
 
         const { error: upErr } = await sb.from("dead_lead_contacts" as any)
           .update({ status: "drip3_sent", drip_step: 3, drip3_sent_at: now.toISOString() })

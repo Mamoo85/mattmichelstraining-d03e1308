@@ -3,6 +3,7 @@
 // FCRA-clean: only public-record / OSINT signals, no credit-bureau data.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { withBreaker } from "../_shared/circuit-breaker.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -92,6 +93,7 @@ async function pdlEnrich(address: string, city: string, zip: string): Promise<En
       headers: { "X-Api-Key": PDL_API_KEY, "Content-Type": "application/json" },
       body: JSON.stringify(query),
     });
+    if (res.status === 402) throw new Error("PDL quota exceeded (402)");
     if (!res.ok) return null;
     const data = await res.json();
     const p = data?.data?.[0];
@@ -150,8 +152,9 @@ serve(async (req) => {
 
     // Step 2 — PDL fallback if Sonar missed phone OR email
     if (!result || !result.phone || !result.email) {
-      const pdl = await pdlEnrich(lead.address, lead.city || "", lead.zip || "");
-      step.pdl = pdl ? "hit" : "miss";
+      const pdlRes = await withBreaker("pdl", () => pdlEnrich(lead.address, lead.city || "", lead.zip || ""));
+      const pdl = pdlRes.skipped ? null : (pdlRes.data ?? null);
+      step.pdl = pdlRes.skipped ? "circuit_open" : (pdl ? "hit" : "miss");
       if (pdl) {
         result = {
           full_name: result?.full_name || pdl.full_name,

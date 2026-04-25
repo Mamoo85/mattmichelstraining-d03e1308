@@ -213,6 +213,7 @@ export interface SMSResult {
   sid?: string;
   error?: string;
   skipped?: boolean;
+  twilio_code?: number;
 }
 
 export interface SMSOptions {
