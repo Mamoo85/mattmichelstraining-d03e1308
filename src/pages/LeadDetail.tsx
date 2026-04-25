@@ -198,6 +198,22 @@ export default function LeadDetail() {
     } finally { setShareBusy(false); }
   };
 
+  if (!slugValid) {
+    return (
+      <LinkExpired
+        variant={slug ? "invalid" : "missing_params"}
+        headline={slug ? "We couldn't read that lead link" : "Missing lead reference"}
+        message={
+          slug
+            ? "This dossier link is malformed — sometimes copy/paste drops part of the URL. Open the link from your purchase confirmation email or browse the live marketplace."
+            : "We didn't get a lead reference in this URL. Browse the live marketplace to see what's open right now."
+        }
+        primaryHref="/marketplace"
+        primaryLabel="View Current Marketplace"
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
