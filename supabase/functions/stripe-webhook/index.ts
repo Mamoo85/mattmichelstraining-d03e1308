@@ -913,8 +913,801 @@ serve(async (req) => {
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
-      // ── handbook_subscription branch removed 2026-04-25: AIHandbook page delisted, checkout function deleted.
-      //    `handbook_clients` table preserved in schema for any historical rows; safe to drop later.
+      // ── B2B SUBSCRIPTION FULFILLMENT (handbook, grant finder, etc.) ──────
+      if (meta.type === "handbook_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          if (email) {
+            await (sb.from as any)("handbook_clients").upsert({ email, business_name: meta.businessName || email, phone: meta.phone || null, industry: meta.industry || null, state: meta.state || "MI", employee_count: parseInt(meta.employeeCount) || null, active: true }, { onConflict: "email" });
+          }
+          if (RESEND_API_KEY && email) {
+            await sendM2Email(email, "Your AI Employee Handbook is Active — Here's What Happens Next", m2Email({
+              greeting: `Hey${meta.businessName ? " " + meta.businessName : ""} —`,
+              headline: "Your AI Employee Handbook is Active",
+              body: `<p style="margin:0 0 12px"><strong>You just made your HR life 10x easier.</strong> Here's exactly what you're getting:</p>
+<p style="margin:0 0 8px">📋 <strong>First handbook update</strong> — arrives within 48 hours, customized to your state (${meta.state || "MI"}) labor laws</p>
+<p style="margin:0 0 8px">📅 <strong>Monthly compliance updates</strong> — on the 1st of every month, your handbook gets refreshed with any new state regulations</p>
+<p style="margin:0 0 8px">🏢 <strong>Employee count-aware</strong> — policies calibrated for your team size (${meta.employeeCount || "your team"})</p>
+<p style="margin:0 0 16px">⚡ <strong>Industry-specific</strong> — language tailored to ${meta.industry || "your industry"}</p>
+<p style="margin:0 0 8px"><strong>What happens next:</strong></p>
+<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
+<li>Your first AI-generated handbook section arrives within 48 hours</li>
+<li>Review it — if anything needs adjusting, reply to this email</li>
+<li>Monthly updates auto-generate on the 1st</li>
+</ol>
+<p style="margin:0;color:#64748b;font-size:13px">Questions? Hit reply or text me. I read every message.</p>`,
+            }));
+            await notifyMatt(`💰 New Handbook Client — ${meta.businessName || email} ($99/mo)`, `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>State: ${meta.state || "MI"}<br>Employees: ${meta.employeeCount || "n/a"}</p>`);
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] handbook_subscription error:", e);
+          return new Response(JSON.stringify({ error: "handbook_subscription failed" }), { status: 500 });
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── THE WIRE — contractor leads $99/mo ────────────────────────────────
+      if (meta.type === "wire_subscription") {
+        const email = meta.email || customerEmail;
+        try {
+          if (email) {
+            let trades: string[] = [];
+            let cities: string[] = [];
+            try { trades = JSON.parse(meta.trades || "[]"); } catch {}
+            try { cities = JSON.parse(meta.cities || "[]"); } catch {}
+            const { error: wErr } = await (sb.from as any)("wire_subscribers").upsert({
+              email,
+              business_name: meta.business_name || null,
+              contact_name: meta.contact_name || null,
+              phone: meta.phone || null,
+              trades, cities,
+              active: true,
+              digest_enabled: true,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+              subscription_status: "active",
+            }, { onConflict: "email" });
+            if (wErr) throw new Error(`wire_subscribers upsert: ${wErr.message}`);
+          }
+          if (RESEND_API_KEY && email) {
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: "The Wire <matt@detroitwebagent.com>",
+                to: [email],
+                subject: "📡 You're on The Wire — first digest tomorrow 7am ET",
+                html: `<div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;background:#0a1628;color:#fff;padding:32px;border-radius:12px;">
+                  <div style="color:#00d4ff;font-size:11px;letter-spacing:3px;font-weight:700;">📡 THE WIRE</div>
+                  <h1 style="font-size:24px;margin:8px 0 12px;">You're in${meta.business_name ? `, ${meta.business_name}` : ""}.</h1>
+                  <p style="color:#94a3b8;font-size:14px;line-height:1.6;">Your first morning digest hits tomorrow at 7am ET. Fresh contractor leads filtered to your trades and cities, ready to claim.</p>
+                  <p style="color:#94a3b8;font-size:13px;margin-top:16px;">Trades: ${(trades||[]).join(", ") || "all"}<br/>Cities: ${(cities||[]).join(", ") || "all"}</p>
+                  <a href="https://detroitwebagent.com/the-wire" style="display:inline-block;margin-top:20px;background:#00d4ff;color:#0a1628;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">View The Wire →</a>
+                  <p style="color:#475569;font-size:11px;margin-top:24px;">Detroit Web Agency · (313) 992-1219</p>
+                </div>`,
+              }),
+            }).catch(e => console.error("[wire welcome email]", e));
+          }
+          await notifyMatt(`📡 New Wire subscriber: ${meta.business_name || email} ($99/mo)`);
+        } catch (err: any) {
+          console.error("[WEBHOOK wire_subscription]", err);
+          await notifyMatt(`⚠️ Wire signup failed: ${email} — ${err.message}`);
+          return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+        }
+      }
+
+      if (meta.type === "hire_alert_subscription") {
+        const email = meta.email || customerEmail;
+        // Hoisted so it's accessible in the welcome-email block below
+        let dashboardToken: string | null = null;
+        try {
+          if (email) {
+            // Parse target_roles from comma-separated string back to array
+            const targetRoles = meta.target_roles
+              ? meta.target_roles.split(",").map((r: string) => r.trim()).filter(Boolean)
+              : ["boiler_operator", "hvac_tech"];
+            // CRITICAL: upsert so repeat checkouts by same email update instead of duplicate-key failing
+            const targetZipPrefixes = meta.target_zip_prefixes
+              ? meta.target_zip_prefixes.split(",").map((z: string) => z.trim()).filter(Boolean)
+              : null;
+            const { data: insertedClient, error: insertErr } = await (sb.from as any)("hire_alert_clients").upsert({
+              company_name: meta.company_name || email,
+              owner_email: email,
+              owner_phone: meta.owner_phone || null,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+              active: true,
+              plan: meta.plan || "standalone",
+              target_roles: targetRoles,
+              target_state: (meta.target_state || "MI").toUpperCase(),
+              target_metro: (meta.target_metro || "detroit").toLowerCase(),
+              target_zip_prefixes: targetZipPrefixes,
+              tos_accepted_at: meta.tos_accepted === "true" ? new Date().toISOString() : null,
+            }, { onConflict: "owner_email" }).select("dashboard_token").single();
+            if (insertErr) throw new Error(`hire_alert_clients upsert: ${insertErr.message}`);
+            dashboardToken = insertedClient?.dashboard_token ?? null;
+
+            // Track postcard conversion if ref=postcard
+            if (meta.ref === "postcard") {
+              await (sb.from as any)("postcard_conversions").insert({
+                event: "paid",
+                stripe_session_id: session.id,
+                county: meta.county || null,
+                prospect_id: null,
+                campaign_id: null,
+              }).then(() => console.log("[WEBHOOK] Postcard conversion tracked"));
+            }
+          }
+          if (RESEND_API_KEY && email) {
+            const companyGreet = meta.company_name ? ` ${meta.company_name}` : "";
+            const welcomeHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;">
+<tr><td align="center" style="padding:32px 16px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
+
+  <!-- HEADER -->
+  <tr><td style="background:linear-gradient(135deg,#0a1628 0%,#1e293b 100%);padding:36px 28px 28px;border-radius:16px 16px 0 0;border-bottom:3px solid #00d4ff;text-align:center;">
+    <p style="margin:0;color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;">⚡ TechAlert</p>
+    <p style="margin:12px 0 0;color:#fff;font-size:26px;font-weight:800;line-height:1.2;letter-spacing:-0.5px;">You're In.</p>
+    <p style="margin:6px 0 0;color:#94a3b8;font-size:14px;">Your hiring advantage starts tomorrow morning.</p>
+  </td></tr>
+
+  <!-- BODY -->
+  <tr><td style="background:#fff;padding:28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+    <p style="color:#1e293b;font-size:15px;line-height:1.8;margin:0 0 20px;">Hey${companyGreet} —</p>
+    <p style="color:#475569;font-size:15px;line-height:1.8;margin:0 0 20px;">Welcome to TechAlert. Starting tomorrow at 7am, we scan <strong>three sources every single day</strong> looking for licensed tradespeople in your area — and alert you before anyone else knows they're available.</p>
+
+    <!-- SOURCE CARDS -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+      <tr><td style="padding:14px 16px;background:#0a162808;border-radius:12px;border-left:4px solid #00d4ff;margin-bottom:8px;">
+        <p style="margin:0;font-size:14px;color:#1e293b;font-weight:700;">🏛️ Licensing Signal Engine</p>
+        <p style="margin:4px 0 0;font-size:13px;color:#64748b;line-height:1.5;">Proprietary monitoring of state licensing records for boiler operators, steam engineers, and pressure vessel inspectors. <strong>New license issued = new talent entering the market.</strong> No other tool monitors this.</p>
+      </td></tr>
+      <tr><td style="height:8px;"></td></tr>
+      <tr><td style="padding:14px 16px;background:#0a162808;border-radius:12px;border-left:4px solid #8b5cf6;">
+        <p style="margin:0;font-size:14px;color:#1e293b;font-weight:700;">🔍 Professional Network Signals</p>
+        <p style="margin:4px 0 0;font-size:13px;color:#64748b;line-height:1.5;">HVAC techs, plumbers, pipefitters, and electricians surfaced by location and title across Metro Detroit through proprietary multi-source enrichment.</p>
+      </td></tr>
+      <tr><td style="height:8px;"></td></tr>
+      <tr><td style="padding:14px 16px;background:#0a162808;border-radius:12px;border-left:4px solid #f59e0b;">
+        <p style="margin:0;font-size:14px;color:#1e293b;font-weight:700;">📋 Live Intent Monitoring</p>
+        <p style="margin:4px 0 0;font-size:13px;color:#64748b;line-height:1.5;">Tradespeople actively signaling availability across professional networks and job boards.</p>
+      </td></tr>
+    </table>
+
+    <!-- HOW ALERTS WORK -->
+    <p style="margin:0 0 12px;font-size:14px;font-weight:800;color:#1e293b;text-transform:uppercase;letter-spacing:0.5px;">How Your Alerts Work</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+      <tr>
+        <td style="padding:10px 14px;background:#dc262610;border-radius:10px;">
+          <p style="margin:0;font-size:13px;color:#1e293b;"><span style="font-weight:800;color:#dc2626;">🔥 Score 8-10</span> — Instant SMS + email. Active job seeker, fresh license, local.</p>
+        </td>
+      </tr>
+      <tr><td style="height:6px;"></td></tr>
+      <tr>
+        <td style="padding:10px 14px;background:#e8621a10;border-radius:10px;">
+          <p style="margin:0;font-size:13px;color:#1e293b;"><span style="font-weight:800;color:#e8621a;">⚡ Score 7</span> — Instant SMS + email. Likely available, recent license or job board appearance.</p>
+        </td>
+      </tr>
+      <tr><td style="height:6px;"></td></tr>
+      <tr>
+        <td style="padding:10px 14px;background:#f59e0b10;border-radius:10px;">
+          <p style="margin:0;font-size:13px;color:#1e293b;"><span style="font-weight:800;color:#f59e0b;">📋 Score 5-6</span> — Daily email digest. Professional profile matches your criteria.</p>
+        </td>
+      </tr>
+    </table>
+
+    <p style="color:#475569;font-size:15px;line-height:1.8;margin:0 0 8px;">Each candidate alert includes their <strong>name, trade, city, license info, contact details</strong> (when available), and our proprietary availability score.</p>
+    <p style="color:#475569;font-size:15px;line-height:1.8;margin:0 0 8px;">Candidate profiles include verified phone and email data from industry databases. Staffing alerts use public CMS data to identify hiring opportunities.</p>
+    <p style="color:#475569;font-size:14px;line-height:1.8;margin:0 0 20px;">Want to adjust your target roles or zip codes? Just reply to this email.</p>
+    ${dashboardToken ? `<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:0 0 8px;"><a href="https://detroitwebagent.com/talent-radar/dashboard?token=${dashboardToken}" style="display:inline-block;padding:14px 32px;background:#00d4ff;color:#0a1628;font-weight:800;font-size:15px;border-radius:8px;text-decoration:none;letter-spacing:0.3px;">Open Your Dashboard →</a></td></tr><tr><td align="center" style="padding:14px 0 0;"><p style="margin:0;color:#475569;font-size:13px;line-height:1.6;">📲 <strong>Open this link on your phone</strong> and tap "Install" when it appears — your TechAlert dashboard lives on your home screen, one tap away from every new candidate alert.</p></td></tr></table>` : ""}
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td style="padding:20px 28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 16px 16px;background:#0a1628;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td>
+        <table cellpadding="0" cellspacing="0"><tr>
+          <td style="vertical-align:middle;"><img src="https://www.detroitwebagent.com/images/matt-boat.jpg" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #00d4ff30;" alt="Matt"></td>
+          <td style="padding-left:12px;vertical-align:middle;">
+            <p style="margin:0;font-size:14px;font-weight:700;color:#fff;">Matt Michels</p>
+            <p style="margin:2px 0 0;font-size:12px;color:#94a3b8;">Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;text-decoration:none;">(313) 992-1219</a></p>
+          </td>
+        </tr></table>
+      </td>
+      <td style="text-align:right;vertical-align:middle;">
+        <p style="margin:0;font-size:10px;color:#64748b;"><a href="mailto:matt@detroitwebagent.com?subject=Unsubscribe%20TechAlert" style="color:#64748b;text-decoration:none;">Unsubscribe</a></p>
+      </td>
+    </tr></table>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body></html>`;
+            await dwaEmail(email, `⚡ TechAlert is Live — Your Hiring Advantage Starts Tomorrow`, welcomeHtml);
+            if (meta.owner_phone) {
+              sendSMS(
+                meta.owner_phone,
+                Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219",
+                `TechAlert is live! You'll get a text the moment a licensed candidate shows up in Metro Detroit. Questions? (313) 992-1219 — Matt`,
+                "hire_alert_onboard"
+              ).catch(() => {});
+            }
+            await notifyMatt(
+              `💰 New TechAlert Client — ${meta.company_name || email} ($${meta.plan === "bundle" ? "49" : "99"}/mo)`,
+              `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Phone: ${meta.owner_phone || "n/a"}<br>Plan: ${meta.plan || "standalone"}</p>`
+            );
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] hire_alert_subscription error:", e);
+          await notifyMatt(
+            `🚨 TechAlert provision FAILED — ${email || "unknown"} paid but not activated`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p><p>Stripe session: ${session.id}</p><p>Manual fix: insert row in hire_alert_clients for ${email}</p>`
+          ).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      if (meta.type === "high_volume_buyer_subscription") {
+        const email = meta.email || customerEmail;
+        try {
+          if (email) {
+            const targetTrades = meta.target_trades
+              ? meta.target_trades.split(",").map((t: string) => t.trim()).filter(Boolean)
+              : ["hvac", "plumbing", "electrical"];
+            const targetCounties = meta.target_counties
+              ? meta.target_counties.split(",").map((c: string) => c.trim()).filter(Boolean)
+              : ["Wayne", "Oakland", "Macomb"];
+            const minPermits = parseInt(meta.min_permit_count || "5", 10);
+
+            const { error: insertErr } = await (sb.from as any)("high_volume_buyer_clients").upsert({
+              business_name: meta.business_name || email,
+              email,
+              phone: meta.phone || null,
+              contact_name: meta.contact_name || null,
+              target_trades: targetTrades,
+              target_counties: targetCounties,
+              min_permit_count: minPermits,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+              active: true,
+            }, { onConflict: "email" });
+            if (insertErr) throw new Error(`high_volume_buyer_clients upsert: ${insertErr.message}`);
+
+            if (RESEND_API_KEY) {
+              await dwaEmail(email, "📦 High-Volume Buyer Alerts is Live — First Digest Monday 7am", `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#030711;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;">
+    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0;">📦 HIGH-VOLUME BUYER ALERTS</p>
+    <h1 style="color:#fff;font-size:24px;margin:12px 0 8px;">You're In, ${meta.business_name || "team"}.</h1>
+    <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;line-height:1.6;">Your first weekly digest hits your inbox <strong style="color:#00d4ff;">this Monday at 7am ET</strong> — every Metro Detroit contractor pulling ${minPermits}+ permits in <strong style="color:#fff;">${targetTrades.join(", ")}</strong> across <strong style="color:#fff;">${targetCounties.join(", ")}</strong>.</p>
+    <div style="background:#0f172a;border:1px solid #1e3a5f;border-radius:12px;padding:16px;margin:0 0 20px;">
+      <p style="color:#cbd5e1;font-size:13px;line-height:1.7;margin:0;">Each entry includes:<br>• Contractor name + ${minPermits}+ active permits<br>• Estimated material spend<br>• Decision-maker contact emails<br>• Recent project addresses</p>
+    </div>
+    <p style="color:#64748b;font-size:12px;margin:0;">Want to adjust trades, counties, or permit threshold? Reply to this email.</p>
+  </div>
+  <div style="text-align:center;margin-top:24px;">
+    <p style="color:#475569;font-size:12px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p>
+  </div>
+</div></body></html>`);
+              await notifyMatt(
+                `💰 New High-Volume Buyer Client — ${meta.business_name || email} ($199/mo)`,
+                `<p><strong>${meta.business_name || email}</strong><br>Email: ${email}<br>Contact: ${meta.contact_name || "n/a"}<br>Phone: ${meta.phone || "n/a"}<br>Trades: ${targetTrades.join(", ")}<br>Counties: ${targetCounties.join(", ")}<br>Min permits: ${minPermits}</p>`
+              );
+            }
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] high_volume_buyer_subscription error:", e);
+          await notifyMatt(
+            `🚨 High-Volume Buyer provision FAILED — ${email || "unknown"} paid but not activated`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p><p>Stripe session: ${session.id}</p>`
+          ).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      if (meta.type === "industry_pulse_subscription") {
+        const email = meta.email || customerEmail;
+        try {
+          if (email) {
+            const targetIndustries = meta.target_industries
+              ? meta.target_industries.split(",").map((t: string) => t.trim()).filter(Boolean)
+              : ["boiler", "hvac", "manufacturing"];
+            const { data: inserted, error: insertErr } = await (sb.from as any)("industry_pulse_clients").upsert({
+              company_name: meta.company_name || email,
+              email,
+              phone: meta.phone || null,
+              contact_name: meta.contact_name || null,
+              target_industries: targetIndustries,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+              active: true,
+            }, { onConflict: "email" }).select("dashboard_token").single();
+            if (insertErr) throw new Error(`industry_pulse_clients upsert: ${insertErr.message}`);
+
+            // Send welcome email + SMS with dashboard link
+            const siteUrl = "https://detroitwebagent.com";
+            const dashLink = `${siteUrl}/my-industry-pulse?token=${inserted.dashboard_token}`;
+            if (RESEND_API_KEY) {
+              await dwaEmail(email, "📡 Demand Radar is Live — Your Dashboard is Ready", `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#030711;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;text-align:center;">
+    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0;">📡 DEMAND RADAR</p>
+    <h1 style="color:#fff;font-size:24px;margin:12px 0 8px;">You're In.</h1>
+    <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Predictive sales signals start flowing today.</p>
+    <a href="${dashLink}" style="display:inline-block;background:#00d4ff;color:#000;font-weight:700;padding:14px 40px;border-radius:8px;text-decoration:none;font-size:15px;">📊 Open Your Dashboard</a>
+    <p style="color:#64748b;font-size:12px;margin:20px 0 0;">Bookmark this link — it's your personal, always-on intelligence feed.</p>
+  </div>
+  <div style="text-align:center;margin-top:24px;">
+    <p style="color:#475569;font-size:12px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p>
+  </div>
+</div></body></html>`);
+              const tierLabel = meta.tier === "enterprise" ? "$499/mo Enterprise"
+                : meta.tier === "snapshot" ? "$99 One-Time Snapshot"
+                : "$199/mo Weekly";
+              await notifyMatt(
+                `💰 New Demand Radar Client — ${meta.company_name || email} (${tierLabel})`,
+                `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Tier: ${tierLabel}<br>Industries: ${targetIndustries.join(", ")}<br>Dashboard: <a href="${dashLink}">${dashLink}</a></p>`
+              );
+            }
+            // Welcome SMS if phone provided
+            if (meta.phone) {
+              await sendSMS(
+                meta.phone,
+                "+13139921219",
+                `Demand Radar is live. Your sales intelligence dashboard: ${dashLink} — Reply STOP to opt out.`,
+                "demand_radar_welcome"
+              );
+            }
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] industry_pulse_subscription error:", e);
+          await notifyMatt(`🚨 Industry Pulse provision FAILED — ${email || "unknown"}`, `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      if (meta.type === "mortgage_radar_subscription") {
+        const email = (meta.email || customerEmail || "").toLowerCase();
+        try {
+          if (!email) throw new Error("missing email");
+          const tier = meta.tier || "solo";
+          const zips = (meta.zip_codes || "").split(",").map((z: string) => z.trim()).filter(Boolean);
+          const { error: insertErr } = await (sb.from as any)("mortgage_radar_clients").insert({
+            email,
+            contact_name: meta.contact_name || null,
+            business_name: meta.business_name || null,
+            nmls_number: meta.nmls_number || null,
+            phone: meta.phone || null,
+            tier,
+            zip_codes: zips,
+            extra_zip_count: parseInt(meta.extra_zip_count || "0", 10) || 0,
+            stripe_customer_id: session.customer as string || null,
+            stripe_subscription_id: session.subscription as string || null,
+            active: true,
+          });
+          if (insertErr) throw new Error(`mortgage_radar_clients insert: ${insertErr.message}`);
+
+          const siteUrl = "https://detroitwebagent.com";
+          const dashLink = `${siteUrl}/my-mortgage-radar?email=${encodeURIComponent(email)}`;
+          const tierLabel = tier === "team" ? "$899/mo Team (15 ZIPs)" : "$399/mo Solo (5 ZIPs)";
+
+          if (RESEND_API_KEY) {
+            await dwaEmail(email, "🏠 Mortgage Radar is Live — Your In-Market Leads Start Today", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;text-align:center;">
+    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0;">🏠 MORTGAGE RADAR</p>
+    <h1 style="color:#fff;font-size:24px;margin:12px 0 8px;">You're In, ${meta.contact_name || "there"}.</h1>
+    <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Pre-trigger mortgage signals from public records — 100% FCRA-clean. Your first leads land within 24 hours.</p>
+    <a href="${dashLink}" style="display:inline-block;background:#00d4ff;color:#000;font-weight:700;padding:14px 40px;border-radius:8px;text-decoration:none;font-size:15px;">📊 Open Your Dashboard</a>
+    <p style="color:#64748b;font-size:12px;margin:20px 0 0;">ZIPs monitored: ${zips.join(", ") || "(set in dashboard)"}</p>
+  </div>
+  <p style="color:#64748b;font-size:11px;text-align:center;margin-top:16px;">Public + behavioral signals only. No bureau trigger leads. All outreach must be sent manually by you in compliance with TCPA + FCRA.</p>
+  <p style="color:#475569;font-size:12px;text-align:center;margin-top:16px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p>
+</div></body></html>`);
+            await notifyMatt(
+              `💰 New Mortgage Radar Client — ${meta.business_name || email} (${tierLabel})`,
+              `<p><strong>${meta.business_name || email}</strong><br>Contact: ${meta.contact_name || "n/a"}<br>NMLS: ${meta.nmls_number || "n/a"}<br>Email: ${email}<br>Phone: ${meta.phone || "n/a"}<br>Tier: ${tierLabel}<br>ZIPs: ${zips.join(", ")}</p>`
+            );
+          }
+          if (meta.phone) {
+            await sendSMS(meta.phone, "+13139921219",
+              `Mortgage Radar is live. Dashboard: ${dashLink} — Reply STOP to opt out.`,
+              "mortgage_radar_welcome");
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] mortgage_radar_subscription error:", e);
+          await notifyMatt(`🚨 Mortgage Radar provision FAILED — ${email || "unknown"}`, `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      if (meta.type === "buyer_radar_subscription") {
+        const email = (meta.email || customerEmail || "").toLowerCase();
+        try {
+          if (!email) throw new Error("missing email");
+          const tier = meta.tier || "core";
+          const planLabel = tier === "enterprise" ? "$799/mo Enterprise (RFQ Intercept)"
+            : tier === "pro" ? "$599/mo Pro (Watchlist)"
+            : "$399/mo Core";
+          const { data: inserted, error: insertErr } = await (sb.from as any)("industry_pulse_clients").insert({
+            company_name: meta.company_name || email,
+            email,
+            phone: meta.phone || null,
+            contact_name: meta.contact_name || null,
+            target_industries: ["manufacturing", "specialty_manufacturing", "fabricated_metal", "automotive", "defense"],
+            buyer_type: "supplier",
+            vertical: meta.vertical || "steel",
+            plan: tier,
+            stripe_customer_id: session.customer as string || null,
+            stripe_subscription_id: session.subscription as string || null,
+            active: true,
+          }).select("dashboard_token").single();
+          if (insertErr) throw new Error(`buyer_radar insert: ${insertErr.message}`);
+
+          const siteUrl = "https://detroitwebagent.com";
+          const dashLink = `${siteUrl}/my-buyer-radar?token=${inserted.dashboard_token}`;
+          if (RESEND_API_KEY) {
+            await dwaEmail(email, "🏭 Buyer Radar is Live — Your Dashboard is Ready", `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#030711;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;text-align:center;">
+    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0;">🏭 BUYER RADAR</p>
+    <h1 style="color:#fff;font-size:24px;margin:12px 0 8px;">You're In.</h1>
+    <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Daily buyer-intent signals start flowing today.</p>
+    <a href="${dashLink}" style="display:inline-block;background:#00d4ff;color:#000;font-weight:700;padding:14px 40px;border-radius:8px;text-decoration:none;font-size:15px;">📊 Open Your Dashboard</a>
+    <p style="color:#64748b;font-size:12px;margin:20px 0 0;">Bookmark this link — it's your always-on industrial intelligence feed.</p>
+  </div>
+  <div style="text-align:center;margin-top:24px;">
+    <p style="color:#475569;font-size:12px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p>
+  </div>
+</div></body></html>`);
+            await notifyMatt(
+              `💰 New Buyer Radar Client — ${meta.company_name || email} (${planLabel})`,
+              `<p><strong>${meta.company_name || email}</strong><br>Email: ${email}<br>Contact: ${meta.contact_name || "n/a"}<br>Phone: ${meta.phone || "n/a"}<br>Tier: ${planLabel}<br>Vertical: ${meta.vertical || "steel"}<br>Dashboard: <a href="${dashLink}">${dashLink}</a></p>`
+            );
+          }
+          if (meta.phone) {
+            await sendSMS(
+              meta.phone,
+              "+13139921219",
+              `Buyer Radar is live. Your industrial intelligence dashboard: ${dashLink} — Reply STOP to opt out.`,
+              "buyer_radar_welcome"
+            );
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] buyer_radar_subscription error:", e);
+          await notifyMatt(`🚨 Buyer Radar provision FAILED — ${email || "unknown"}`, `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
+          return new Response(JSON.stringify({ error: "provisioning failed" }), { status: 500 });
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // === Golden Ticket Marketplace — a la carte lead purchase ===
+      if (meta.type === "marketplace_lead_purchase") {
+        const email = (meta.buyer_email || customerEmail || "").toLowerCase();
+        const lead_id = meta.lead_id;
+        const product = meta.product;
+        try {
+          if (!email || !lead_id || !product) throw new Error("missing buyer_email/lead_id/product");
+
+          // Read configurable TTL (defaults to 30 days)
+          let ttlDays = 30;
+          try {
+            const { data: ttlRow } = await sb.from("marketplace_settings" as any)
+              .select("value_int").eq("key", "access_ttl_days").maybeSingle();
+            if (ttlRow && (ttlRow as any).value_int) ttlDays = (ttlRow as any).value_int;
+          } catch { /* default ok */ }
+          const accessExpiresAt = new Date(Date.now() + ttlDays * 24 * 60 * 60 * 1000).toISOString();
+
+          // Atomic claim: only mark sold if we still own the pending lock
+          const { data: claim, error: claimErr } = await (sb.from as any)("marketplace_lead_locks")
+            .update({
+              status: "sold",
+              stripe_session_id: session.id,
+              stripe_payment_intent_id: (session.payment_intent as string) || null,
+              stripe_charge_id: ((session as any).latest_charge as string) || null,
+              sold_at: new Date().toISOString(),
+              access_expires_at: accessExpiresAt,
+              revoked_at: null,
+              revoke_reason: null,
+            })
+            .eq("lead_id", lead_id)
+            .eq("product", product)
+            .in("status", ["pending", "soft_lock", "claimed"])
+            .eq("buyer_email", email)
+            .select("id");
+          if (claimErr) throw new Error(`lock claim: ${claimErr.message}`);
+
+          // Merge any anonymous browsing history into this confirmed buyer
+          const anonId = (meta.anon_session_id as string) || null;
+          if (anonId) {
+            try {
+              await (sb.rpc as any)("merge_anon_buyer_views", {
+                p_anon_session_id: anonId,
+                p_buyer_email: email,
+              });
+            } catch (mergeErr) {
+              console.warn("[mp anon merge]", mergeErr);
+            }
+          }
+
+          if (!claim || claim.length === 0) {
+            // Race lost or already sold — treat as duplicate but don't 500 (would re-trigger Stripe retries)
+            await notifyMatt(`⚠️ Marketplace duplicate claim — ${email} on ${lead_id}`,
+              `<p>Lead ${lead_id} (${product}) already sold or lock missing for ${email}. Refund check?</p>`).catch(()=>{});
+            return new Response(JSON.stringify({ received: true, duplicate: true }), { status: 200 });
+          }
+
+          // GHOST-3 fix: await PDF generation so failures alert Matt rather than silently dropping
+          try {
+            const pdfRes = await fetch(`${SUPABASE_URL}/functions/v1/marketplace-generate-dossier-pdf`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+              body: JSON.stringify({ lead_id, product, buyer_email: email }),
+              signal: AbortSignal.timeout(25_000),
+            });
+            if (!pdfRes.ok) throw new Error(`PDF function returned ${pdfRes.status}`);
+          } catch (pdfErr) {
+            console.error("[mp pdf trigger] failed:", pdfErr);
+            await notifyMatt(
+              `⚠️ Marketplace PDF FAILED — ${lead_id.slice(0, 8)} for ${email}`,
+              `<p>Error: ${String(pdfErr)}</p><p>Manually trigger: POST /marketplace-generate-dossier-pdf with lead_id=${lead_id} product=${product} buyer_email=${email}</p>`
+            ).catch(() => {});
+          }
+
+          // Fetch the unlocked lead for the email
+          const { data: lead } = await (sb.from as any)("unified_lead_marketplace_view")
+            .select("*").eq("id", lead_id).maybeSingle();
+
+          const dashLink = `https://detroitwebagent.com/lead/${lead_id}?paid=1&buyer=${encodeURIComponent(email)}`;
+          const productLabel = ({mortgage:"Mortgage",talent:"Talent",demand:"Demand",growth:"Growth",supply:"Supply"} as any)[product] || product;
+
+          if (RESEND_API_KEY) {
+            // GHOST-2 fix: stamp email_sent_at on success so reconcile cron knows delivery happened
+            await dwaEmail(email, `🎟 Your ${productLabel} Dossier is Unlocked`, `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+  <div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;">
+    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0;">🎟 Golden Ticket · Unlocked</p>
+    <h1 style="color:#fff;font-size:22px;margin:8px 0 16px;">Your ${productLabel} dossier is ready.</h1>
+    <p style="color:#94a3b8;font-size:14px;margin:0 0 16px;">${(lead as any)?.human_summary || "Full intelligence, contact details, and suggested openers — ready to action now."}</p>
+    <div style="text-align:center;margin:24px 0">
+      <a href="${dashLink}" style="display:inline-block;background:#00d4ff;color:#000;font-weight:700;padding:14px 40px;border-radius:8px;text-decoration:none;font-size:15px;">📂 Open Dossier</a>
+    </div>
+    <p style="color:#fbbf24;font-size:12px;border-top:1px solid #1e3a5f;padding-top:16px;margin:16px 0 0;"><strong>TCPA reminder:</strong> Verify Established Business Relationship or written consent before texting. Manual send only — DWA never auto-texts on your behalf.</p>
+  </div>
+  <p style="color:#475569;font-size:11px;text-align:center;margin-top:16px;">Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p>
+</div></body></html>`);
+          }
+          // GHOST-2 fix: stamp delivery timestamp so reconcile cron knows email was sent
+          await sb.from("marketplace_lead_locks" as any)
+            .update({ email_sent_at: new Date().toISOString() })
+            .eq("lead_id", lead_id)
+            .eq("product", product);
+
+          await notifyMatt(
+            `💰 Marketplace sale — ${productLabel} · ${email}`,
+            `<p><strong>${email}</strong> bought ${productLabel} lead <code>${lead_id.slice(0,8)}</code><br>${(lead as any)?.city || ""} ${(lead as any)?.zip || ""} · score ${(lead as any)?.score || "?"}/10</p>`
+          ).catch(()=>{});
+
+          await sendSMS(ADMIN_PHONE, "+13139921219",
+            `💰 Marketplace: ${email} bought ${productLabel} lead. Score ${(lead as any)?.score || "?"}/10.`,
+            "marketplace_sale_admin").catch(()=>{});
+
+          // Purchase confirmation SMS to the buyer (item 41)
+          try {
+            const { data: buyerProfile } = await (sb.from as any)("profiles")
+              .select("phone").eq("email", email).maybeSingle();
+            const buyerPhone = (buyerProfile as any)?.phone || (meta.buyer_phone as string) || null;
+            if (buyerPhone) {
+              await sendSMS(buyerPhone, "+13139921219",
+                `🎟 Detroit Web Agency: Your ${productLabel} dossier is unlocked. Open it: ${dashLink}  TCPA: verify EBR before texting. Reply STOP to opt out.`,
+                "marketplace_purchase_confirmation").catch(()=>{});
+            }
+          } catch (smsErr) {
+            console.warn("[mp purchase SMS]", smsErr);
+          }
+
+        } catch (e) {
+          console.error("[WEBHOOK] marketplace_lead_purchase error:", e);
+          await notifyMatt(`🚨 Marketplace fulfillment FAILED — ${email || "unknown"} / ${lead_id}`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(()=>{});
+          return new Response(JSON.stringify({ error: "marketplace_lead_purchase failed" }), { status: 500 });
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // === Contractor Leads À La Carte purchase ===
+      if (meta.type === "alacarte_lead_purchase") {
+        const buyerEmail = (meta.buyer_email || customerEmail || "").toLowerCase();
+        const offerId = meta.offer_id;
+        const leadId = meta.lead_id;
+        try {
+          if (!offerId || !leadId || !buyerEmail) {
+            throw new Error("missing offer_id / lead_id / buyer_email");
+          }
+          // Atomic claim via RPC (first-payer-wins, refunds others)
+          const { data: claimResult, error: claimErr } = await (sb.rpc as any)("claim_alacarte_lead", {
+            _offer_id: offerId,
+            _lead_id: leadId,
+            _claimer_email: buyerEmail,
+            _stripe_session_id: session.id,
+          });
+          if (claimErr) throw claimErr;
+          const claimed = (claimResult as any)?.claimed === true;
+
+          if (claimed) {
+            // Fetch lead details to send to buyer
+            const { data: lead } = await (sb.from as any)("contractor_leads")
+              .select("name, phone, email, project_type, message, contractor_lead_sites(trade, city)")
+              .eq("id", leadId).single();
+            const trade = lead?.contractor_lead_sites?.trade || "Lead";
+            const city = lead?.contractor_lead_sites?.city || "";
+            const html = `<h2>You won the lead — ${trade} in ${city}</h2>
+              <p><strong>Homeowner:</strong> ${lead?.name || "—"}</p>
+              <p><strong>Phone:</strong> <a href="tel:${lead?.phone}">${lead?.phone || "—"}</a></p>
+              <p><strong>Email:</strong> ${lead?.email || "—"}</p>
+              <p><strong>Project:</strong> ${lead?.project_type || "—"}</p>
+              <p><strong>Notes:</strong> ${lead?.message || "—"}</p>
+              <p style="margin-top:24px;color:#64748b;">Call them within 5 minutes — that's how you win.</p>`;
+            await sendM2Email(buyerEmail, `🎯 You won: ${trade} lead in ${city}`, html).catch(()=>{});
+            await notifyMatt(`💰 À la carte lead sold — ${buyerEmail} claimed ${trade}/${city}`, html).catch(()=>{});
+          } else {
+            // Refund — someone else got it first
+            const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2025-08-27.basil" });
+            const paymentIntent = (session as any).payment_intent;
+            if (paymentIntent) {
+              await stripe.refunds.create({ payment_intent: paymentIntent, reason: "duplicate" }).catch(()=>{});
+            }
+            const refundHtml = `<h2>Refunded — lead already claimed</h2>
+              <p>Another contractor paid for this lead seconds before you. Your card has been refunded in full.</p>
+              <p>More leads coming — keep an eye on your phone.</p>`;
+            await sendM2Email(buyerEmail, `Refunded — lead already claimed`, refundHtml).catch(()=>{});
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] alacarte_lead_purchase error:", e);
+          await notifyMatt(`🚨 À la carte fulfillment FAILED — ${buyerEmail} / ${leadId}`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(()=>{});
+          return new Response(JSON.stringify({ error: "alacarte_lead_purchase failed" }), { status: 500 });
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      if (meta.type === "marketplace_first_look_subscription") {
+        const email = (meta.email || customerEmail || "").toLowerCase();
+        const productKey = meta.product || "all";
+        try {
+          const subscriptionId = (session as any).subscription || null;
+          const customerId = (session as any).customer || null;
+          const { error: upErr } = await (sb.from as any)("marketplace_first_look_subscribers")
+            .upsert({
+              email,
+              product: productKey,
+              stripe_customer_id: customerId,
+              stripe_subscription_id: subscriptionId,
+              status: "active",
+              updated_at: new Date().toISOString(),
+            }, { onConflict: "stripe_subscription_id" });
+          if (upErr) {
+            console.error("[WEBHOOK] first_look upsert error:", upErr);
+            return new Response(JSON.stringify({ error: "first_look_upsert_failed" }), { status: 500 });
+          }
+
+          const productLabel = productKey === "all" ? "all marketplace products" : `${productKey} leads`;
+          await sendM2Email(email,
+            "✅ First Look access activated",
+            `<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#0a1628;color:#e6f1ff;">
+              <h1 style="color:#00d4ff;font-size:22px;margin:0 0 12px;">First Look is live</h1>
+              <p>You'll now see brand-new <strong>hot</strong> leads in <strong>${productLabel}</strong> a full hour before everyone else.</p>
+              <p>New hot leads → SMS within 15 minutes (subscribers).<br/>Public marketplace → 1 hour later.</p>
+              <p style="margin-top:24px;"><a href="https://detroitwebagent.com/marketplace/receipts?email=${encodeURIComponent(email)}" style="background:#00d4ff;color:#0a1628;padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:600;">View your receipts</a></p>
+              <p style="font-size:11px;color:#7a8aa0;margin-top:24px;">Cancel anytime. Detroit Web Agency · matt@detroitwebagent.com</p>
+            </div>`).catch(()=>{});
+
+          await notifyMatt(`💎 First Look subscriber: ${email} (${productKey})`,
+            `<p>${email} subscribed to First Look — ${productKey}.</p>`).catch(()=>{});
+        } catch (e) {
+          console.error("[WEBHOOK] first_look error:", e);
+          await notifyMatt(`🚨 First Look subscription failed — ${email}`,
+            `<p>Error: ${e instanceof Error ? e.message : String(e)}</p>`).catch(()=>{});
+          return new Response(JSON.stringify({ error: "first_look_failed" }), { status: 500 });
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // === Channel 3 — Industrial Pulse public unlock ($50 snapshot OR $199/mo firehose) ===
+      if (meta.type === "industrial_pulse_snapshot" || meta.type === "industrial_pulse_firehose") {
+        const email = (meta.email || customerEmail || "").toLowerCase();
+        const isSubscription = meta.type === "industrial_pulse_firehose";
+        const planLabel = isSubscription ? "$199/mo Firehose" : "$50 Snapshot";
+        try {
+          if (!email) throw new Error("missing email");
+
+          if (meta.unlock_id) {
+            const { error: upErr } = await (sb.from as any)("industrial_pulse_unlocks").update({
+              status: "active",
+              activated_at: new Date().toISOString(),
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+            }).eq("id", meta.unlock_id);
+            if (upErr) console.error("[ipu unlock update]", upErr.message);
+          } else {
+            await (sb.from as any)("industrial_pulse_unlocks").insert({
+              email,
+              plan: isSubscription ? "firehose_199" : "snapshot_50",
+              status: "active",
+              stripe_session_id: session.id,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+              amount_cents: isSubscription ? 19900 : 5000,
+              activated_at: new Date().toISOString(),
+              week_start: new Date().toISOString().slice(0, 10),
+              metadata: { business_name: meta.business_name || null, fallback_insert: true },
+            });
+          }
+
+          const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+          const { data: signals } = await (sb.from as any)("industry_pulse_signals")
+            .select("company_name, location, industry, hiring_roles, hiring_count, predicted_needs, confidence")
+            .gte("detected_at", sevenDaysAgo)
+            .gte("confidence", 7)
+            .order("confidence", { ascending: false })
+            .limit(isSubscription ? 50 : 25);
+
+          const rows = (signals || []).map((s: any) => `
+            <tr>
+              <td style="padding:10px;border-bottom:1px solid #1e3a5f;color:#fff;font-weight:600;">${s.company_name || "—"}</td>
+              <td style="padding:10px;border-bottom:1px solid #1e3a5f;color:#94a3b8;font-size:12px;">${s.location || "Metro Detroit"}</td>
+              <td style="padding:10px;border-bottom:1px solid #1e3a5f;color:#cbd5e1;font-size:12px;">${(s.hiring_count || "?")}× ${(s.hiring_roles || []).join(", ")}</td>
+              <td style="padding:10px;border-bottom:1px solid #1e3a5f;color:#64748b;font-size:11px;">${(s.predicted_needs || []).slice(0,3).join(" · ")}</td>
+              <td style="padding:10px;border-bottom:1px solid #1e3a5f;color:#00d4ff;font-weight:700;text-align:center;">${s.confidence || "-"}/10</td>
+            </tr>`).join("");
+
+          if (RESEND_API_KEY) {
+            await dwaEmail(email,
+              `🔓 Unlocked — ${(signals || []).length} Metro Detroit hiring signals`,
+              `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#020617;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#e2e8f0;">
+<div style="max-width:680px;margin:0 auto;padding:24px;">
+  <div style="border-bottom:2px solid #00d4ff;padding-bottom:16px;margin-bottom:20px;">
+    <div style="font-size:11px;letter-spacing:3px;color:#00d4ff;font-weight:700;text-transform:uppercase;">DETROIT INDUSTRIAL PULSE — ${planLabel}</div>
+    <h1 style="color:#fff;font-size:22px;margin:8px 0 4px;">Your unlock is ready.</h1>
+    <p style="color:#64748b;font-size:13px;margin:0;">${(signals || []).length} signals from the last 7 days · confidence ≥ 7/10</p>
+  </div>
+  <table style="width:100%;border-collapse:collapse;background:#0a1628;border:1px solid #1e3a5f;border-radius:6px;">
+    <thead><tr style="background:#0f1e3a;">
+      <th style="padding:10px;text-align:left;color:#00d4ff;font-size:11px;letter-spacing:1px;">COMPANY</th>
+      <th style="padding:10px;text-align:left;color:#00d4ff;font-size:11px;letter-spacing:1px;">LOCATION</th>
+      <th style="padding:10px;text-align:left;color:#00d4ff;font-size:11px;letter-spacing:1px;">HIRING</th>
+      <th style="padding:10px;text-align:left;color:#00d4ff;font-size:11px;letter-spacing:1px;">SPEND</th>
+      <th style="padding:10px;text-align:center;color:#00d4ff;font-size:11px;letter-spacing:1px;">CONF</th>
+    </tr></thead>
+    <tbody>${rows || `<tr><td colspan="5" style="padding:20px;color:#64748b;text-align:center;">No signals yet — radar refreshes hourly. Reply to this email and I'll send a fresh batch.</td></tr>`}</tbody>
+  </table>
+  ${isSubscription ? `<p style="color:#94a3b8;font-size:13px;margin-top:20px;">You're on the daily firehose — new signals arrive every morning.</p>` : `<p style="color:#94a3b8;font-size:13px;margin-top:20px;">This was a one-week unlock. Want every signal, every day? <a href="https://www.detroitwebagent.com/industrial-pulse?unlock=1" style="color:#00d4ff;">Upgrade to firehose →</a></p>`}
+  <p style="color:#475569;font-size:12px;margin-top:24px;border-top:1px solid #1e3a5f;padding-top:12px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p>
+</div></body></html>`);
+
+            await notifyMatt(
+              `💰 Industrial Pulse — ${planLabel} · ${email}`,
+              `<p><strong>${meta.business_name || email}</strong> just unlocked the ${planLabel}. Sent ${(signals || []).length} signals.</p>`
+            );
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] industrial_pulse error:", e);
+          await notifyMatt(`🚨 Industrial Pulse fulfillment FAILED — ${email}`, `<p>${e instanceof Error ? e.message : String(e)}</p>`).catch(() => {});
+          return new Response(JSON.stringify({ error: "fulfillment failed" }), { status: 500 });
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
 
 
       // ── DOMAIN BREACH REPORT — $19 one-time ──────────────────────────────────
