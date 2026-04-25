@@ -10,6 +10,7 @@ import { Helmet } from "react-helmet-async";
 import AppNavbar from "@/components/layout/AppNavbar";
 import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
 import CheckEmailCard from "@/components/checkout/CheckEmailCard";
+import ActionButton from "@/components/ui/action-button";
 import {
   MessageSquare, Bell, CalendarX, FileText, Receipt, UserPlus, Megaphone, Clock,
   CheckCircle, ArrowRight, Loader2, Shield, Zap,
@@ -171,10 +172,16 @@ export default function BundleRevenueSuite() {
                   <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Grosse Pointe" className="mt-1" />
                 </div>
               </div>
-              <Button onClick={handleCheckout} disabled={loading} className="w-full h-12 text-base font-bold" size="lg">
-                {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <ArrowRight className="h-5 w-5 mr-2" />}
+              <ActionButton
+                onClick={handleCheckout}
+                busyLabel="Opening secure checkout…"
+                ariaLabel="Start Revenue Suite for $299/mo"
+                className="w-full"
+                style={{ background: undefined, color: undefined, minHeight: 48, fontSize: 16 }}
+              >
+                <ArrowRight className="h-5 w-5 mr-2" />
                 Start Revenue Suite — $299/mo
-              </Button>
+              </ActionButton>
               <p className="text-center text-xs text-muted-foreground mt-3">Secure checkout via Stripe. Cancel anytime.</p>
             </CardContent>
           </Card>
