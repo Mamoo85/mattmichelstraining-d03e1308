@@ -231,23 +231,28 @@ function assertInvokedFunction(name: string) {
 
 // ─── 6. The five tests ───────────────────────────────────────────────────
 
-Deno.test("integration — FieldDesk (field_service_subscription) fulfills", async () => {
-  installFetchStub();
-  const event = buildCheckoutSessionCompletedEvent(
-    {
-      type: "field_service_subscription",
-      company: "Acme HVAC",
-      email: "owner@acmehvac.test",
-    },
-    { email: "owner@acmehvac.test" },
-  );
-  const res = await handler(await buildSignedRequest(event));
-  await res.text();
-  assertEquals(res.status, 200);
-  // Fulfillment branch invokes auto-onboard-client with type=field_service_subscription
-  assertInvokedFunction("auto-onboard-client");
-  const onboard = callsMatching((c) => c.url.includes("auto-onboard-client"))[0];
-  assertStringIncludes(onboard.body || "", "field_service_subscription");
+Deno.test({
+  name: "integration — FieldDesk (field_service_subscription) fulfills",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: async () => {
+    installFetchStub();
+    const event = buildCheckoutSessionCompletedEvent(
+      {
+        type: "field_service_subscription",
+        company: "Acme HVAC",
+        email: "owner@acmehvac.test",
+      },
+      { email: "owner@acmehvac.test" },
+    );
+    const res = await handler(await buildSignedRequest(event));
+    await res.text();
+    assertEquals(res.status, 200);
+    assertHitTable("field_crm_clients");
+    assertInvokedFunction("auto-onboard");
+    const onboard = callsMatching((c) => c.url.includes("/functions/v1/auto-onboard"))[0];
+    assertStringIncludes(onboard.body || "", "field_service_subscription");
+  },
 });
 
 Deno.test("integration — TechAlert (hire_alert_subscription) fulfills", async () => {
