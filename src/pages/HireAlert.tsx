@@ -11,6 +11,7 @@ import CheckEmailCard from "@/components/checkout/CheckEmailCard";
 import WallOfLove, { Testimonial } from "@/components/shared/WallOfLove";
 import EnterpriseFooterBlock from "@/components/shared/EnterpriseFooterBlock";
 import TechAlertROICalculator from "@/components/agency/TechAlertROICalculator";
+import ActionButton from "@/components/ui/action-button";
 import { US_METROS, DEFAULT_METRO_ID, getMetroById, getMetroPricing } from "@/lib/usMetros";
 
 const ROLE_OPTIONS = [
@@ -645,15 +646,17 @@ export default function HireAlert() {
               </Link>
             </div>
 
-            <Button
+            <ActionButton
               onClick={handleCheckout}
-              disabled={loading || !tosAccepted}
-              style={{ background: tosAccepted ? ACCENT : "#334155", color: tosAccepted ? BG : "#94a3b8", fontWeight: 800, fontSize: 16, padding: "14px", borderRadius: 8, border: "none", opacity: tosAccepted ? 1 : 0.7 }}
+              disabled={!tosAccepted}
+              busyLabel="Redirecting…"
+              ariaLabel={`Start Talent Radar — $${plan === "bundle" ? bundlePrice : standalonePrice}/mo`}
+              style={{ background: tosAccepted ? ACCENT : "#334155", color: tosAccepted ? BG : "#94a3b8", padding: "14px", opacity: tosAccepted ? 1 : 0.7 }}
             >
-              {loading ? "Redirecting..." : betaFull
+              {betaFull
                 ? `Start for $${plan === "bundle" ? bundlePrice : standalonePrice}/mo →`
                 : `Claim Beta Slot — $${plan === "bundle" ? bundlePrice : standalonePrice}/mo →`}
-            </Button>
+            </ActionButton>
           </div>
 
           <p style={{ margin: "16px 0 0", fontSize: 12, color: "#64748b", textAlign: "center" }}>
