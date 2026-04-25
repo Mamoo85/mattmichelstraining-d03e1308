@@ -269,10 +269,7 @@ async function syncTierToProfile(sb: any, email: string, tier: string, stripeCus
   }
 }
 
-// Exported for integration tests. The handler is a plain async function so
-// tests can call it without binding a port. `serve()` below wires it up
-// for the live Edge Function runtime.
-export const handler = async (req: Request): Promise<Response> => {
+serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
@@ -2833,9 +2830,7 @@ export const handler = async (req: Request): Promise<Response> => {
     const isSignatureError = /signature|webhook secret/i.test(msg);
     return new Response(JSON.stringify({ error: msg }), { status: isSignatureError ? 400 : 500 });
   }
-};
-
-serve(handler);
+});
 
 function parseGuideExercises(html: string): { name: string; sets: string; reps: string; notes: string }[] {
   const exercises: { name: string; sets: string; reps: string; notes: string }[] = [];

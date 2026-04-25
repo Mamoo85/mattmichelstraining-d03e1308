@@ -96,11 +96,10 @@ Focus on real business names that suggest trade services, construction, or profe
     const arr = JSON.parse(cleaned);
     if (!Array.isArray(arr)) return [];
 
-    return arr.map((item: any): NewBusiness => {
+    return arr.map((item: any) => {
       const nameLower = (item.entity_name || "").toLowerCase();
       const isTrade = TRADE_KEYWORDS.some((kw) => nameLower.includes(kw));
       const isHighTicket = HIGH_TICKET_KEYWORDS.some((kw) => nameLower.includes(kw));
-      const bucket: NewBusiness["industry_bucket"] = isTrade ? "trade" : isHighTicket ? "high_ticket" : "general";
       return {
         entity_name: item.entity_name || "",
         entity_type: item.entity_type || "LLC",
@@ -109,7 +108,7 @@ Focus on real business names that suggest trade services, construction, or profe
         zip: typeof item.zip === "string" ? item.zip.slice(0, 5) : undefined,
         formation_date: item.formation_date || undefined,
         source_url: item.source_url || undefined,
-        industry_bucket: bucket,
+        industry_bucket: isTrade ? "trade" : isHighTicket ? "high_ticket" : "general",
       };
     }).filter((b: NewBusiness) => b.entity_name.length > 2);
   } catch (e) {
