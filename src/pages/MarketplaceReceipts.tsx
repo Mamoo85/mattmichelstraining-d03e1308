@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Share2, ScrollText, Loader2, Mail, ChevronDown, ChevronUp, ExternalLink, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { ShareLinkDialog } from "@/components/marketplace/ShareLinkDialog";
+import { isEmail } from "@/lib/parseSearchParams";
 
 interface Receipt {
   lead_id: string;
@@ -34,8 +35,12 @@ const PRODUCT_LABEL: Record<string, string> = {
 
 export default function MarketplaceReceipts() {
   const [email, setEmail] = useState(() => {
-    const fromUrl = new URLSearchParams(window.location.search).get("email");
-    return fromUrl || localStorage.getItem("mp_buyer_email") || "";
+    // Only honor the URL email if it passes shape validation; bad input
+    // would otherwise auto-trigger a useless server fetch on mount.
+    const fromUrl = new URLSearchParams(window.location.search).get("email")?.trim() || "";
+    if (fromUrl && isEmail(fromUrl)) return fromUrl;
+    const stored = localStorage.getItem("mp_buyer_email") || "";
+    return isEmail(stored) ? stored : "";
   });
   const [submittedEmail, setSubmittedEmail] = useState("");
   const [receipts, setReceipts] = useState<Receipt[]>([]);
