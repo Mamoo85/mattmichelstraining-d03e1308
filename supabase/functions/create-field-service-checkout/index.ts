@@ -74,7 +74,7 @@ serve(async (req: Request) => {
         plan: plan ?? "standalone",
         industry: industry || "other",
       },
-      success_url: `${origin}/field-service?success=1`,
+      success_url: `${origin}/field-service?success=1&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/field-service`,
     });
 
