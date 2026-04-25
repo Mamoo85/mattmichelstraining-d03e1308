@@ -6,8 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ActionButton from "@/components/ui/action-button";
 import TechTaxCalculator from "@/components/field-service/TechTaxCalculator";
-import ReceiptStatusBanner from "@/components/shared/ReceiptStatusBanner";
-import CheckEmailCard from "@/components/shared/CheckEmailCard";
+import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
+import CheckEmailCard from "@/components/checkout/CheckEmailCard";
 
 const COMPARE = [
   { name: "FieldServio", price: "$1,400/mo", users: "10 users", note: "Built for forklift rental companies", bad: true },
@@ -71,8 +71,12 @@ export default function FieldServiceManagement() {
 
   if (isSuccess) {
     return (
-      <div style={{ minHeight: "100vh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
-        <div style={{ maxWidth: 520, textAlign: "center" }}>
+      <div style={{ minHeight: "100dvh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
+        <div style={{ maxWidth: 520, width: "100%", textAlign: "center" }}>
+          <div style={{ marginBottom: 24, display: "flex", flexDirection: "column", gap: 12 }}>
+            <ReceiptStatusBanner sessionId={searchParams.get("session_id")} productLabel="FieldDesk" />
+            <CheckEmailCard sessionId={searchParams.get("session_id")} />
+          </div>
           <div style={{ fontSize: 64, marginBottom: 24 }}>🚀</div>
           <h1 style={{ color: "#fff", fontSize: 32, fontWeight: 800, margin: "0 0 12px" }}>FieldDesk is Live!</h1>
           <p style={{ color: "#00d4ff", fontSize: 18, fontWeight: 700, margin: "0 0 20px" }}>Your dispatch platform is being provisioned now.</p>
