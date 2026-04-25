@@ -1018,7 +1018,7 @@ If you cannot find any information, return: { "job_posting_count": 0, "layoff_si
     const data = await res.json();
     const parsed = extractJSON(data?.choices?.[0]?.message?.content || "");
     if (!parsed) return { risk: "neutral", proof: "" };
-    const count = parsed.job_posting_count || 0;
+    const count = Number(parsed.job_posting_count || 0);
     if (parsed.layoff_signal) return { risk: "high_flight_risk", proof: `🎯 HIGH FLIGHT RISK — Layoff or downsizing signals detected at ${employer} in public data.` };
     if (count === 0) return { risk: "high_flight_risk", proof: `🎯 HIGH FLIGHT RISK — No recent growth signals detected at ${employer} in last 60 days. Candidate is statistically more receptive to outreach.` };
     if (count >= 10) return { risk: "hard_to_poach", proof: `🛡️ HARD TO POACH — ${employer} shows ~${count} open roles tracked. Candidate is likely comfortable and well-compensated.` };
