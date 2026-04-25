@@ -44,7 +44,9 @@ export default function LeadDetail() {
   const pollTimerRef = useRef<number | null>(null);
 
   const isPaid = params.get("paid") === "1" || params.get("print") === "1";
-  const buyerEmail = params.get("buyer") || localStorage.getItem("mp_buyer_email") || "";
+  // Only honor the buyer email after passing email-shape validation; if the
+  // URL value is bad we silently fall back to the stored one to preserve UX.
+  const buyerEmail = buyerEmailValid ? buyerEmailCandidate : "";
   const [claimDialogOpen, setClaimDialogOpen] = useState(false);
   const [pendingClaimLead, setPendingClaimLead] = useState<MarketplaceLead | null>(null);
 
