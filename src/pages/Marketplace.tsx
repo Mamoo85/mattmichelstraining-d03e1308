@@ -369,6 +369,18 @@ export default function Marketplace() {
     cool: leads.filter((l) => l.signal_strength_tier === "cool").length,
   }), [leads]);
 
+  if (!productParamValid) {
+    return (
+      <LinkExpired
+        variant="invalid"
+        headline="Unknown marketplace"
+        message={`We don't have a "${rawProductParam}" marketplace. Tap below to see every live lead category — Mortgage, Talent, Demand, Growth, and Supply.`}
+        primaryHref="/marketplace"
+        primaryLabel="View Current Marketplace"
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground pb-24 md:pb-0">
       <Helmet>
