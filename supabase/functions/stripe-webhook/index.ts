@@ -2762,7 +2762,9 @@ export const handler = async (req: Request): Promise<Response> => {
     const isSignatureError = /signature|webhook secret/i.test(msg);
     return new Response(JSON.stringify({ error: msg }), { status: isSignatureError ? 400 : 500 });
   }
-});
+};
+
+serve(handler);
 
 function parseGuideExercises(html: string): { name: string; sets: string; reps: string; notes: string }[] {
   const exercises: { name: string; sets: string; reps: string; notes: string }[] = [];
