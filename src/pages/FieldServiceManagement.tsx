@@ -4,6 +4,7 @@ import { Phone, CheckCircle, XCircle, Zap, MapPin, MessageSquare, FileText, Cale
 import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ActionButton from "@/components/ui/action-button";
 import TechTaxCalculator from "@/components/field-service/TechTaxCalculator";
 
 const COMPARE = [
@@ -280,13 +281,14 @@ export default function FieldServiceManagement() {
                   <li key={f} className="flex items-center gap-2"><CheckCircle size={12} className="text-[#00d4ff] flex-shrink-0" />{f}</li>
                 ))}
               </ul>
-              <button
+              <ActionButton
                 onClick={() => handleCheckout("standalone")}
-                disabled={loading}
-                className="w-full border border-white/30 text-white py-2.5 text-sm font-bold hover:bg-white/5 transition-colors disabled:opacity-50"
+                busyLabel="Loading..."
+                ariaLabel="Get started — Standalone $299/mo"
+                style={{ background: "transparent", color: "#fff", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 0, minHeight: 40, fontSize: 13 }}
               >
-                {loading ? "Loading..." : "Get Started →"}
-              </button>
+                Get Started →
+              </ActionButton>
             </div>
 
             {/* Bundle */}
@@ -303,13 +305,14 @@ export default function FieldServiceManagement() {
                   <li key={f} className="flex items-center gap-2"><CheckCircle size={12} className="text-[#00d4ff] flex-shrink-0" />{f}</li>
                 ))}
               </ul>
-              <button
+              <ActionButton
                 onClick={() => handleCheckout("bundle")}
-                disabled={loading}
-                className="w-full bg-[#00d4ff] text-[#0a1628] py-2.5 text-sm font-black hover:bg-[#00d4ff]/90 transition-colors disabled:opacity-50"
+                busyLabel="Loading..."
+                ariaLabel="Get the Website Bundle — $199/mo"
+                style={{ background: "#00d4ff", color: "#0a1628", borderRadius: 0, minHeight: 40, fontSize: 13 }}
               >
-                {loading ? "Loading..." : "Get the Bundle →"}
-              </button>
+                Get the Bundle →
+              </ActionButton>
             </div>
           </div>
         </div>
