@@ -83,7 +83,7 @@ const APIFY_INPUTS = {
   },
 };
 
-async function dispatchApifyRuns(sb: ReturnType<typeof createClient>): Promise<void> {
+async function dispatchApifyRuns(sb: any): Promise<void> {
   if (!APIFY_API_TOKEN || !APIFY_WEBHOOK_SECRET) {
     console.warn("[apify-dispatch] APIFY_API_TOKEN or APIFY_WEBHOOK_SECRET missing — skipping");
     return;
@@ -93,7 +93,7 @@ async function dispatchApifyRuns(sb: ReturnType<typeof createClient>): Promise<v
   const webhookUrl = `${SUPABASE_URL}/functions/v1/apify-results-handler?secret=${encodeURIComponent(APIFY_WEBHOOK_SECRET)}&batch_id=${encodeURIComponent(batchId)}`;
 
   // Insert batch row up front so the webhook handler can find it
-  await (sb.from("apify_run_batches") as any).insert({ batch_id: batchId, run_at: new Date().toISOString() });
+  await sb.from("apify_run_batches").insert({ batch_id: batchId, run_at: new Date().toISOString() });
 
   // Webhook spec — fires when run succeeds or fails. customData carries our batch_id.
   const webhooks = [{
@@ -132,7 +132,7 @@ async function dispatchApifyRuns(sb: ReturnType<typeof createClient>): Promise<v
         console.log(`[apify-dispatch] ${src} → ${runId} (HTTP ${res.status})`);
         const updates: Record<string, unknown> = {};
         updates[`${src}_run_id`] = runId;
-        await (sb.from("apify_run_batches") as any).update(updates).eq("batch_id", batchId);
+        await sb.from("apify_run_batches").update(updates).eq("batch_id", batchId);
       }
     } catch (e) {
       console.error(`[apify-dispatch] ${src} dispatch error:`, e instanceof Error ? e.message : String(e));
@@ -1018,7 +1018,7 @@ If you cannot find any information, return: { "job_posting_count": 0, "layoff_si
     const data = await res.json();
     const parsed = extractJSON(data?.choices?.[0]?.message?.content || "");
     if (!parsed) return { risk: "neutral", proof: "" };
-    const count: number = Number(parsed.job_posting_count) || 0;
+    const count = Number(parsed.job_posting_count || 0);
     if (parsed.layoff_signal) return { risk: "high_flight_risk", proof: `🎯 HIGH FLIGHT RISK — Layoff or downsizing signals detected at ${employer} in public data.` };
     if (count === 0) return { risk: "high_flight_risk", proof: `🎯 HIGH FLIGHT RISK — No recent growth signals detected at ${employer} in last 60 days. Candidate is statistically more receptive to outreach.` };
     if (count >= 10) return { risk: "hard_to_poach", proof: `🛡️ HARD TO POACH — ${employer} shows ~${count} open roles tracked. Candidate is likely comfortable and well-compensated.` };
@@ -1523,7 +1523,7 @@ serve(async (req: Request) => {
   // Phase 18: Dispatch Apify Actor runs in parallel (fire-and-forget — webhook handler picks up results).
   // This kicks off MIOSHA Excel scraper + Indeed scraper + LinkedIn enrichment via Apify residential proxies.
   // Results stream back to /apify-results-handler over the next 2-15 minutes.
-  dispatchApifyRuns(sb as any).catch((e) => console.error("[hire-alert-scanner] dispatchApifyRuns failed:", e));
+  dispatchApifyRuns(sb).catch((e) => console.error("[hire-alert-scanner] dispatchApifyRuns failed:", e));
 
   // Run direct sources in parallel (allSettled so one failure doesn't cancel the other)
   console.log("[hire-alert-scanner] Scanning all sources...");
@@ -2303,14 +2303,14 @@ ${candidateRows}
         }).catch(() => {});
 
         try {
-          await (sb.from("system_comms_log") as any).insert({
+          await (sb as any).from("system_comms_log").insert({
             channel: "email",
             product: "hire_alert",
             recipient: client.owner_email,
-            message_body: `Weekly re-engagement: ${totalThisWeek} candidates found`,
+            body_preview: `Weekly re-engagement: ${totalThisWeek} candidates found`,
             metadata: { client_id: client.id, type: "weekly_summary", candidates_found: totalThisWeek },
           });
-        } catch { /* swallow log insert errors */ }
+        } catch { /* swallow */ }
       }
     }
   } catch (e) {
