@@ -83,7 +83,7 @@ const APIFY_INPUTS = {
   },
 };
 
-async function dispatchApifyRuns(sb: ReturnType<typeof createClient>): Promise<void> {
+async function dispatchApifyRuns(sb: any): Promise<void> {
   if (!APIFY_API_TOKEN || !APIFY_WEBHOOK_SECRET) {
     console.warn("[apify-dispatch] APIFY_API_TOKEN or APIFY_WEBHOOK_SECRET missing — skipping");
     return;
