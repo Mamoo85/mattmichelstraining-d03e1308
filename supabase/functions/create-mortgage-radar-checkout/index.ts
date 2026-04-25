@@ -87,7 +87,7 @@ serve(async (req) => {
         zip_codes: Array.isArray(zip_codes) ? zip_codes.join(",") : (zip_codes || ""),
         extra_zip_count: String(extraZips),
       },
-      success_url: `${origin}/mortgage-radar?success=1&tier=${selectedTier}`,
+      success_url: `${origin}/mortgage-radar?success=1&tier=${selectedTier}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/mortgage-radar`,
     });
 

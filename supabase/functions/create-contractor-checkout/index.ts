@@ -140,7 +140,7 @@ serve(async (req) => {
         business_name: business_name || name,
         ...(ref ? { ref: String(ref).slice(0, 64) } : {}),
       },
-      success_url: `${origin}/contractor-leads?success=1&trade=${encodeURIComponent(normalizedTrade)}&city=${encodeURIComponent(city)}&cid=${encodeURIComponent(contractor?.id || "")}`,
+      success_url: `${origin}/contractor-leads?success=1&trade=${encodeURIComponent(normalizedTrade)}&city=${encodeURIComponent(city)}&cid=${encodeURIComponent(contractor?.id || "")}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/contractor-leads`,
     });
 
