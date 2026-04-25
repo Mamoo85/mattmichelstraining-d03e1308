@@ -2331,6 +2331,25 @@ serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── Marketplace lead purchase — promote soft_lock → sold ─────────────────
+      if (meta.type === "marketplace_lead_purchase") {
+        try {
+          const { error: lockErr } = await sb
+            .from("marketplace_lead_locks")
+            .update({ status: "sold", sold_at: new Date().toISOString() })
+            .eq("lead_id", meta.lead_id)
+            .eq("product", meta.product)
+            .eq("buyer_email", meta.buyer_email)
+            .eq("status", "soft_lock");
+          if (lockErr) throw lockErr;
+          console.log(`[WEBHOOK] marketplace sold: lead=${meta.lead_id} product=${meta.product} buyer=${meta.buyer_email}`);
+        } catch (e) {
+          console.error("[WEBHOOK] marketplace_lead_purchase error:", e);
+          return new Response(JSON.stringify({ error: "marketplace_lead_purchase processing failed" }), { status: 500 });
+        }
+        return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // Unmatched checkout.session.completed — log and acknowledge
       console.log(`[WEBHOOK] checkout.session.completed with unhandled meta.type: ${meta.type || "none"}`);
       return new Response(JSON.stringify({ received: true }), { status: 200 });
