@@ -12,6 +12,8 @@ import { toastSuccess, toastError } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { priceLabelFor } from "@/lib/marketplacePricing";
+import LinkExpired from "@/components/shared/LinkExpired";
+import { isUuid, isEmail } from "@/lib/parseSearchParams";
 
 import { getOrCreateAnonId } from "@/lib/anonSession";
 
@@ -21,6 +23,15 @@ const POLL_TIMEOUT_MS = 12_000;
 export default function LeadDetail() {
   const { slug } = useParams<{ slug: string }>();
   const [params] = useSearchParams();
+  // Hard-validate route + query params before doing ANY supabase calls.
+  // The slug is interpolated into our queries, and a malformed buyer email
+  // would silently break the access lookup. Better to show a branded
+  // recovery screen than to flash a "not found" or hang on polling.
+  const slugValid = isUuid(slug);
+  const rawBuyerParam = params.get("buyer")?.trim() || "";
+  const storedBuyer = typeof window !== "undefined" ? (localStorage.getItem("mp_buyer_email") || "") : "";
+  const buyerEmailCandidate = rawBuyerParam || storedBuyer;
+  const buyerEmailValid = !buyerEmailCandidate || isEmail(buyerEmailCandidate);
   const [lead, setLead] = useState<MarketplaceLead | null>(null);
   const [loading, setLoading] = useState(true);
   const [pdfBusy, setPdfBusy] = useState(false);
@@ -33,7 +44,9 @@ export default function LeadDetail() {
   const pollTimerRef = useRef<number | null>(null);
 
   const isPaid = params.get("paid") === "1" || params.get("print") === "1";
-  const buyerEmail = params.get("buyer") || localStorage.getItem("mp_buyer_email") || "";
+  // Only honor the buyer email after passing email-shape validation; if the
+  // URL value is bad we silently fall back to the stored one to preserve UX.
+  const buyerEmail = buyerEmailValid ? buyerEmailCandidate : "";
   const [claimDialogOpen, setClaimDialogOpen] = useState(false);
   const [pendingClaimLead, setPendingClaimLead] = useState<MarketplaceLead | null>(null);
 
@@ -184,6 +197,22 @@ export default function LeadDetail() {
       toastError("Could not generate share link");
     } finally { setShareBusy(false); }
   };
+
+  if (!slugValid) {
+    return (
+      <LinkExpired
+        variant={slug ? "invalid" : "missing_params"}
+        headline={slug ? "We couldn't read that lead link" : "Missing lead reference"}
+        message={
+          slug
+            ? "This dossier link is malformed — sometimes copy/paste drops part of the URL. Open the link from your purchase confirmation email or browse the live marketplace."
+            : "We didn't get a lead reference in this URL. Browse the live marketplace to see what's open right now."
+        }
+        primaryHref="/marketplace"
+        primaryLabel="View Current Marketplace"
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">

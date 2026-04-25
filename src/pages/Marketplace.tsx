@@ -18,6 +18,7 @@ import { Link } from "react-router-dom";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { useSwipeable } from "react-swipeable";
 import { cn } from "@/lib/utils";
+import LinkExpired from "@/components/shared/LinkExpired";
 
 const PRODUCTS = [
   { key: "mortgage", label: "Mortgage Leads", tagline: "Refi-ready homeowners with verified equity signals." },
@@ -88,7 +89,19 @@ function SwipeRow({
 export default function Marketplace() {
   const [params, setParams] = useSearchParams();
   const pathProduct = (typeof window !== "undefined" ? window.location.pathname.replace("/", "").replace("-leads", "") : "") as ProductKey;
-  const product = (params.get("product") as ProductKey) || (PRODUCTS.some((p) => p.key === pathProduct) ? pathProduct : "mortgage");
+  // Hardened resolution: explicit `?product=` query wins, else infer from
+  // the URL path. Track whether the supplied query value is in the allow-
+  // list so we can show a branded recovery screen for typos like
+  // `/marketplace?product=morgage` instead of silently swapping products.
+  const rawProductParam = params.get("product")?.trim() || "";
+  const productParamValid = !rawProductParam || PRODUCTS.some((p) => p.key === rawProductParam);
+  const product = (
+    rawProductParam && productParamValid
+      ? rawProductParam
+      : PRODUCTS.some((p) => p.key === pathProduct)
+        ? pathProduct
+        : "mortgage"
+  ) as ProductKey;
   const [leads, setLeads] = useState<MarketplaceLead[]>([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState<SortKey>("score");
@@ -355,6 +368,18 @@ export default function Marketplace() {
     warm: leads.filter((l) => l.signal_strength_tier === "warm").length,
     cool: leads.filter((l) => l.signal_strength_tier === "cool").length,
   }), [leads]);
+
+  if (!productParamValid) {
+    return (
+      <LinkExpired
+        variant="invalid"
+        headline="Unknown marketplace"
+        message={`We don't have a "${rawProductParam}" marketplace. Tap below to see every live lead category — Mortgage, Talent, Demand, Growth, and Supply.`}
+        primaryHref="/marketplace"
+        primaryLabel="View Current Marketplace"
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-24 md:pb-0">
