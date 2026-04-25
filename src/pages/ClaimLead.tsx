@@ -9,6 +9,7 @@ import LeadQualityBadges, { LeadQualityData } from "@/components/contractor/Lead
 import LinkExpired from "@/components/shared/LinkExpired";
 import { parseParams } from "@/lib/parseSearchParams";
 import { toastError, toastInfo } from "@/lib/toast";
+import ActionButton from "@/components/ui/action-button";
 
 export default function ClaimLead() {
   const [searchParams] = useSearchParams();
@@ -183,27 +184,14 @@ export default function ClaimLead() {
               </p>
             </div>
 
-            <button
+            <ActionButton
               onClick={handleClaim}
-              disabled={loading}
-              aria-busy={loading}
-              style={{
-                width: "100%",
-                background: loading ? "#334155" : "#00d4ff",
-                color: loading ? "#94a3b8" : "#0a1628",
-                border: "none",
-                borderRadius: 8,
-                padding: "18px",
-                minHeight: 56,
-                fontSize: 17,
-                fontWeight: 800,
-                cursor: loading ? "not-allowed" : "pointer",
-                transition: "background 0.2s",
-                touchAction: "manipulation",
-              }}
+              busyLabel="Locking lead..."
+              ariaLabel="Pay $50 to claim this lead"
+              style={{ padding: "18px", minHeight: 56, fontSize: 17 }}
             >
-              {loading ? "Locking lead..." : "Pay $50 — Get Their Phone Number"}
-            </button>
+              Pay $50 — Get Their Phone Number
+            </ActionButton>
 
             {status === "error" && (
               <p style={{ color: "#ef4444", fontSize: 13, textAlign: "center", marginTop: 12 }}>
