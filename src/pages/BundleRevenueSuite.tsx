@@ -176,8 +176,7 @@ export default function BundleRevenueSuite() {
                 onClick={handleCheckout}
                 busyLabel="Opening secure checkout…"
                 ariaLabel="Start Revenue Suite for $299/mo"
-                className="w-full"
-                style={{ background: undefined, color: undefined, minHeight: 48, fontSize: 16 }}
+                style={{ minHeight: 48, fontSize: 16 }}
               >
                 <ArrowRight className="h-5 w-5 mr-2" />
                 Start Revenue Suite — $299/mo
