@@ -2302,13 +2302,15 @@ ${candidateRows}
           }),
         }).catch(() => {});
 
-        await sb.from("system_comms_log").insert({
-          channel: "email",
-          product: "hire_alert",
-          recipient: client.owner_email,
-          message_body: `Weekly re-engagement: ${totalThisWeek} candidates found`,
-          metadata: { client_id: client.id, type: "weekly_summary", candidates_found: totalThisWeek },
-        }).catch(() => {});
+        try {
+          await (sb as any).from("system_comms_log").insert({
+            channel: "email",
+            product: "hire_alert",
+            recipient: client.owner_email,
+            body_preview: `Weekly re-engagement: ${totalThisWeek} candidates found`,
+            metadata: { client_id: client.id, type: "weekly_summary", candidates_found: totalThisWeek },
+          });
+        } catch { /* swallow */ }
       }
     }
   } catch (e) {
