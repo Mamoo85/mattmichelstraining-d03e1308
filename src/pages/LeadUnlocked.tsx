@@ -76,6 +76,22 @@ export default function LeadUnlocked() {
     }
   };
 
+  if (!sessionIdValid) {
+    return (
+      <LinkExpired
+        variant={session_id ? "invalid" : "missing_params"}
+        headline={session_id ? "We couldn't read your receipt link" : "Missing checkout reference"}
+        message={
+          session_id
+            ? "The checkout reference in this URL doesn't look right — Stripe links can get truncated when copy/pasted. Use the link from your confirmation email or text, or reopen your purchase from the receipts page."
+            : "We didn't get a checkout reference. If you just paid, open the link from your Stripe confirmation email — it includes the receipt code we need."
+        }
+        primaryHref="/marketplace-receipts"
+        primaryLabel="Open my receipts"
+      />
+    );
+  }
+
   if (status === "loading" || status === "pending") {
     return (
       <div style={{ minHeight: "100vh", background: "#0a1628", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
