@@ -913,38 +913,8 @@ serve(async (req) => {
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
-      // ── B2B SUBSCRIPTION FULFILLMENT (handbook, grant finder, etc.) ──────
-      if (meta.type === "handbook_subscription") {
-        try {
-          const email = meta.email || customerEmail;
-          if (email) {
-            await (sb.from as any)("handbook_clients").upsert({ email, business_name: meta.businessName || email, phone: meta.phone || null, industry: meta.industry || null, state: meta.state || "MI", employee_count: parseInt(meta.employeeCount) || null, active: true }, { onConflict: "email" });
-          }
-          if (RESEND_API_KEY && email) {
-            await sendM2Email(email, "Your AI Employee Handbook is Active — Here's What Happens Next", m2Email({
-              greeting: `Hey${meta.businessName ? " " + meta.businessName : ""} —`,
-              headline: "Your AI Employee Handbook is Active",
-              body: `<p style="margin:0 0 12px"><strong>You just made your HR life 10x easier.</strong> Here's exactly what you're getting:</p>
-<p style="margin:0 0 8px">📋 <strong>First handbook update</strong> — arrives within 48 hours, customized to your state (${meta.state || "MI"}) labor laws</p>
-<p style="margin:0 0 8px">📅 <strong>Monthly compliance updates</strong> — on the 1st of every month, your handbook gets refreshed with any new state regulations</p>
-<p style="margin:0 0 8px">🏢 <strong>Employee count-aware</strong> — policies calibrated for your team size (${meta.employeeCount || "your team"})</p>
-<p style="margin:0 0 16px">⚡ <strong>Industry-specific</strong> — language tailored to ${meta.industry || "your industry"}</p>
-<p style="margin:0 0 8px"><strong>What happens next:</strong></p>
-<ol style="margin:0 0 16px;padding-left:20px;color:#475569">
-<li>Your first AI-generated handbook section arrives within 48 hours</li>
-<li>Review it — if anything needs adjusting, reply to this email</li>
-<li>Monthly updates auto-generate on the 1st</li>
-</ol>
-<p style="margin:0;color:#64748b;font-size:13px">Questions? Hit reply or text me. I read every message.</p>`,
-            }));
-            await notifyMatt(`💰 New Handbook Client — ${meta.businessName || email} ($99/mo)`, `<p><strong>${meta.businessName || email}</strong><br>Email: ${email}<br>State: ${meta.state || "MI"}<br>Employees: ${meta.employeeCount || "n/a"}</p>`);
-          }
-        } catch (e) {
-          console.error("[WEBHOOK] handbook_subscription error:", e);
-          return new Response(JSON.stringify({ error: "handbook_subscription failed" }), { status: 500 });
-        }
-        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
-      }
+      // handbook_subscription branch removed 2026-04-25: AIHandbook page delisted, create-handbook-checkout deleted.
+      // `handbook_clients` table left in schema for any historical rows; safe to drop in a future cleanup migration.
 
       // ── THE WIRE — contractor leads $99/mo ────────────────────────────────
       if (meta.type === "wire_subscription") {
