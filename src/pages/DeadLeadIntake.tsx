@@ -2,6 +2,7 @@ import { useState } from "react";
 import SEOHead from "@/components/layout/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
+import CheckEmailCard from "@/components/checkout/CheckEmailCard";
 import ActionButton from "@/components/ui/action-button";
 
 const TRADES = ["HVAC", "Plumbing", "Roofing", "Electrical", "General Contractor", "Landscaping", "Painting", "Other"];
@@ -37,6 +38,9 @@ export default function DeadLeadIntake() {
         <Card>
           <div style={{ marginBottom: 16 }}>
             <ReceiptStatusBanner sessionId={urlParams.get("session_id")} productLabel="Dead Lead Billing" />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <CheckEmailCard sessionId={urlParams.get("session_id")} />
           </div>
           <div style={{ textAlign: "center", padding: "40px 0" }}>
             <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>

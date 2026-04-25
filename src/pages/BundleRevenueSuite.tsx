@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Helmet } from "react-helmet-async";
 import AppNavbar from "@/components/layout/AppNavbar";
 import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
+import CheckEmailCard from "@/components/checkout/CheckEmailCard";
 import {
   MessageSquare, Bell, CalendarX, FileText, Receipt, UserPlus, Megaphone, Clock,
   CheckCircle, ArrowRight, Loader2, Shield, Zap,
@@ -74,6 +75,7 @@ export default function BundleRevenueSuite() {
           {isSuccess && (
             <div className="mb-8 space-y-4">
               <ReceiptStatusBanner sessionId={sessionId} productLabel="Revenue Suite" />
+              <CheckEmailCard sessionId={sessionId} />
               <Card className="border-primary/40 bg-primary/5">
                 <CardContent className="p-6 text-center">
                   <CheckCircle className="text-primary mx-auto mb-3" size={36} />
