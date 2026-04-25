@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       const days = daysSince(client.created_at);
       const name = client.company_name || "there";
       const dashUrl = client.dashboard_token
-        ? `https://detroitwebagent.com/my-techalert?token=${client.dashboard_token}`
+        ? `https://detroitwebagent.com/talent-radar/dashboard?token=${client.dashboard_token}`
         : "https://detroitwebagent.com";
 
       // ── Day 3 check-in ──────────────────────────────────────────────────
