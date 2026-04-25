@@ -8,6 +8,7 @@ import SEOHead from "@/components/layout/SEOHead";
 import { Home, Target, Shield, FileText, TrendingUp, Bell, CheckCircle, ArrowRight, MapPin, Lock } from "lucide-react";
 import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
 import CheckEmailCard from "@/components/checkout/CheckEmailCard";
+import ActionButton from "@/components/ui/action-button";
 
 type Tier = "solo" | "team";
 
@@ -304,13 +305,19 @@ export default function MortgageRadar() {
                   </li>
                 ))}
               </ul>
-              <Button
+              <ActionButton
                 onClick={() => handleCheckout(t.id)}
-                disabled={loading}
-                className={`w-full font-bold ${t.highlight ? "bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90" : "bg-[#1e3a5f] text-white hover:bg-[#1e3a5f]/80"}`}
+                busyLabel="Loading…"
+                ariaLabel={`Start ${t.name} — $${t.price}/mo`}
+                className={`w-full ${t.highlight ? "" : "hover:bg-[#1e3a5f]/80"}`}
+                style={
+                  t.highlight
+                    ? { background: "#00d4ff", color: "#000", minHeight: 44, fontSize: 14 }
+                    : { background: "#1e3a5f", color: "#fff", minHeight: 44, fontSize: 14 }
+                }
               >
-                {loading ? "Loading…" : `Start ${t.name}`}
-              </Button>
+                Start {t.name}
+              </ActionButton>
             </div>
           ))}
         </div>
