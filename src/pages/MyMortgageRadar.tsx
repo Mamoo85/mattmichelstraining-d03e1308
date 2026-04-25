@@ -44,6 +44,8 @@ type Outreach = {
 
 export default function MyMortgageRadar() {
   const clientEmail = new URLSearchParams(window.location.search).get("email") || "";
+  const dashboardToken = new URLSearchParams(window.location.search).get("token") || "";
+  const [authError, setAuthError] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +60,29 @@ export default function MyMortgageRadar() {
 
   useEffect(() => {
     (async () => {
-      // Resolve real client ID from email param (sent in welcome email link)
+      if (!clientEmail) {
+        setAuthError("No dashboard link found. Check your weekly digest email.");
+        setLoading(false);
+        return;
+      }
+      if (!dashboardToken) {
+        setAuthError("Invalid dashboard link — request a new one from your weekly digest email.");
+        setLoading(false);
+        return;
+      }
+      const { data: authData } = await supabase.functions.invoke("verify-dashboard-token", {
+        body: { email: clientEmail, token: dashboardToken },
+      });
+      if (!(authData as any)?.valid) {
+        const reason = (authData as any)?.reason === "expired"
+          ? "Your dashboard link has expired — request a new one from your weekly digest email."
+          : "Invalid dashboard link — request a new one from your weekly digest email.";
+        setAuthError(reason);
+        setLoading(false);
+        return;
+      }
+
+      // Token valid — load lead data
       let resolvedClientId = clientId;
       if (clientEmail && !resolvedClientId) {
         const { data: clientRow } = await (supabase.from as any)("mortgage_radar_clients")
@@ -108,7 +132,7 @@ export default function MyMortgageRadar() {
         }
       }
     })();
-  }, [clientEmail]);
+  }, [clientEmail, dashboardToken]);
 
   const filtered = useMemo(() => {
     return leads.filter(l => {
@@ -224,6 +248,22 @@ export default function MyMortgageRadar() {
   };
 
   const pendingApproval = outreach.filter(o => o.status === "pending_approval" || o.status === "approved");
+
+  if (authError) {
+    return (
+      <div className="min-h-screen bg-[#030711] text-foreground">
+        <SEOHead title="My Mortgage Radar — Loan Officer Dashboard" description="Daily in-market mortgage leads from public records." />
+        <DWASuiteNav activeProduct="mortgage_radar" email={clientEmail || undefined} />
+        <div className="max-w-7xl mx-auto px-4 py-24 flex items-center justify-center">
+          <div className="bg-[#0a1628] border border-red-900 rounded-xl p-8 text-center max-w-md w-full">
+            <Lock className="w-8 h-8 text-red-400 mx-auto mb-3" />
+            <p className="text-white font-semibold mb-2">Access denied</p>
+            <p className="text-sm text-[#94a3b8]">{authError}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#030711] text-foreground">

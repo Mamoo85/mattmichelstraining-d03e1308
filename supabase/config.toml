@@ -1745,3 +1745,6 @@ verify_jwt = false
 
 [functions.enrich-prospect-pool]
 verify_jwt = false
+
+[functions.verify-dashboard-token]
+verify_jwt = false

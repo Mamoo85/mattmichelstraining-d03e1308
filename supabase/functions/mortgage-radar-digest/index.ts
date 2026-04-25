@@ -1,6 +1,7 @@
 // Mortgage Radar weekly digest — emails each active LO their top leads from the past 7 days.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { encode } from "https://deno.land/std@0.190.0/encoding/base64url.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,6 +11,20 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
+const HMAC_SECRET = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const DASHBOARD_ORIGIN = Deno.env.get("DASHBOARD_ORIGIN") || "https://detroitwebagent.com";
+
+async function signDashboardToken(email: string): Promise<string> {
+  const payload = JSON.stringify({ email, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 });
+  const tokenB64 = encode(new TextEncoder().encode(payload));
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(HMAC_SECRET),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(tokenB64));
+  return `${tokenB64}.${encode(new Uint8Array(sig))}`;
+}
+
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -43,6 +58,9 @@ serve(async (req) => {
         <td style="padding:10px;color:#94a3b8;font-size:12px;">${l.best_call_window || ""}</td>
       </tr>`).join("");
 
+    const dashboardToken = await signDashboardToken(c.email);
+    const dashboardUrl = `${DASHBOARD_ORIGIN}/my-mortgage-radar?email=${encodeURIComponent(c.email)}&token=${encodeURIComponent(dashboardToken)}`;
+
     if (RESEND_API_KEY) {
       try {
         await fetch("https://api.resend.com/emails", {
@@ -63,6 +81,9 @@ serve(async (req) => {
                   </tr></thead>
                   <tbody>${rows}</tbody>
                 </table>
+                <div style="text-align:center;margin:20px 0;">
+                  <a href="${dashboardUrl}" style="display:inline-block;background:#00d4ff;color:#000;font-weight:700;font-size:14px;padding:12px 28px;border-radius:8px;text-decoration:none;">View Full Dashboard →</a>
+                </div>
                 <p style="color:#64748b;font-size:11px;margin-top:16px;">Mortgage Radar uses public + behavioral signals only. We do not access, purchase, or resell credit-bureau trigger leads.</p>
               </div></body></html>`,
           }),
