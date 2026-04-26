@@ -9,6 +9,7 @@ import { Home, Target, Shield, FileText, TrendingUp, Bell, CheckCircle, ArrowRig
 import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
 import CheckEmailCard from "@/components/checkout/CheckEmailCard";
 import PostCheckoutClaim from "@/components/checkout/PostCheckoutClaim";
+import StickyMobileCTA from "@/components/shared/StickyMobileCTA";
 import ActionButton from "@/components/ui/action-button";
 
 type Tier = "solo" | "team";
