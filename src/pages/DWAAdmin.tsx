@@ -50,7 +50,7 @@ type Tab =
   | "ai-command"
   | "dwa-overview" | "revenue" | "leads-e2e" | "prospect-tracker" | "agent-toolkit" | "pipeline-velocity"
   | "command-center" | "sms-inbox" | "sms-drafts" | "call-list" | "linkedin-blitz" | "ad-launcher" | "agency-outreach"
-  | "contractor-leads" | "contractor-onboarding" | "dead-leads" | "fax-drip" | "postcard-drip" | "sms-sniper" | "fielddesk" | "techalert" | "missed-call" | "clients-all"
+  | "contractor-leads" | "contractor-onboarding" | "contractor-market" | "dead-leads" | "fax-drip" | "postcard-drip" | "sms-sniper" | "fielddesk" | "techalert" | "missed-call" | "clients-all"
   | "lead-marketplace" | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
   | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode";
@@ -86,6 +86,7 @@ const GROUPS: SidebarGroup[] = [
     items: [
       { id: "contractor-leads",      label: "🏗️ Contractor Leads" },
       { id: "contractor-onboarding", label: "🤝 Contractor Onboarding" },
+      { id: "contractor-market",     label: "🏪 PPL Marketplace" },
       { id: "dead-leads",            label: "♻️ Dead Leads" },
       { id: "fax-drip",              label: "📠 Fax Drip" },
       { id: "postcard-drip",         label: "✉️ Postcard Drip" },
@@ -172,6 +173,7 @@ export default function DWAAdmin() {
 
           {activeTab === "contractor-leads"      && <Suspense fallback={lazyFallback("contractor leads")}><AdminContractorLeads /></Suspense>}
           {activeTab === "contractor-onboarding" && <Suspense fallback={lazyFallback("onboarding")}><AdminContractorOnboarding /></Suspense>}
+          {activeTab === "contractor-market"     && <Suspense fallback={lazyFallback("PPL marketplace")}><AdminContractorLeadsStatus /></Suspense>}
           {activeTab === "dead-leads"            && <Suspense fallback={lazyFallback("dead leads")}><AdminDeadLeads /></Suspense>}
           {activeTab === "fax-drip"              && <Suspense fallback={lazyFallback("fax outreach")}><AdminFaxOutreach /></Suspense>}
           {activeTab === "postcard-drip"         && <Suspense fallback={lazyFallback("postcard outreach")}><AdminPostcardOutreach /></Suspense>}

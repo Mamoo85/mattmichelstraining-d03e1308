@@ -147,6 +147,7 @@ const TheWire = lazyRetry(() => import("./pages/TheWire"));
 const PostcardLanding = lazyRetry(() => import("./pages/PostcardLanding"));
 const GetQuote = lazyRetry(() => import("./pages/GetQuote"));
 const ContractorTerritory = lazyRetry(() => import("./pages/ContractorTerritory"));
+const ContractorMarketplace = lazyRetry(() => import("./pages/ContractorMarketplace"));
 const ClaimLead = lazyRetry(() => import("./pages/ClaimLead"));
 const LeadUnlocked = lazyRetry(() => import("./pages/LeadUnlocked"));
 const LeadClaimed = lazyRetry(() => import("./pages/LeadClaimed"));
@@ -598,6 +599,7 @@ const App = () => (
                     <Route path="/claim-lead" element={<ClaimLead />} />
                     <Route path="/lead-unlocked" element={<LeadUnlocked />} />
                     <Route path="/lead-claimed" element={<LeadClaimed />} />
+                    <Route path="/contractor-marketplace" element={<ContractorMarketplace />} />
                     <Route path="/field-service" element={<FieldServiceManagement />} />
                     <Route path="/field-service/dispatch" element={<FieldServiceDispatch />} />
                     <Route path="/field-service/tech" element={<FieldServiceTechApp />} />

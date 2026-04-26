@@ -17,16 +17,37 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { lead_id, contractor_id, contractor_email } = await req.json();
+    const body = await req.json();
+    const lead_id: string = body.lead_id;
+    const contractor_email: string = body.contractor_email || body.email;
+    let contractor_id: string = body.contractor_id;
 
-    if (!lead_id || !contractor_id || !contractor_email) {
+    if (!lead_id || !contractor_email) {
       return new Response(
-        JSON.stringify({ error: "lead_id, contractor_id, and contractor_email are required" }),
+        JSON.stringify({ error: "lead_id and email are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+    // Guest upsert: marketplace buyers supply email only — create/find contractor record
+    if (!contractor_id) {
+      const { data: guest } = await sb
+        .from("contractor_clients")
+        .upsert(
+          { name: contractor_email, email: contractor_email, trade: "general", city: "Detroit", active: false },
+          { onConflict: "email", ignoreDuplicates: false }
+        )
+        .select("id")
+        .single();
+      if (!guest?.id) {
+        return new Response(JSON.stringify({ error: "Could not create guest record" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      contractor_id = guest.id;
+    }
 
     // Fetch lead with site info for display
     const { data: lead, error: leadErr } = await sb
