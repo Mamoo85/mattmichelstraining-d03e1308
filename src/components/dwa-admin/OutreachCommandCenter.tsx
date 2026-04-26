@@ -612,10 +612,11 @@ function RankedPool() {
       if (!faxRows.length) return toast.error("No selected prospects have fax numbers");
       const { data, error } = await supabase.from("fax_campaigns").insert({
         name: campaignName,
-        target_segment: ids.join(","),
+        target_segment: audienceLabel,
         message_html: `<p>Draft fax — edit before sending. Targets: ${faxRows.length} ${audienceLabel} prospects.</p>`,
         status: "draft",
         audience_type: audienceLabel,
+        prospect_ids: faxRows.map((p) => p.id),
       }).select("id").single();
       if (error) return toast.error(error.message);
       campaignId = (data as any)?.id ?? null;
@@ -630,14 +631,24 @@ function RankedPool() {
         prospect_count: mailRows.length,
         status: "draft",
         audience_type: audienceLabel,
+        prospect_ids: mailRows.map((p) => p.id),
       }).select("id").single();
       if (error) return toast.error(error.message);
       campaignId = (data as any)?.id ?? null;
     } else if (channel === "email") {
       const emailRows = selectedRows.filter((p) => !!p.email);
       if (!emailRows.length) return toast.error("No selected prospects have emails");
-      // email_campaigns table doesn't exist — fall back to status update + clear toast
-      // (per schema check). Surface this honestly instead of pretending.
+      const { data, error } = await supabase.from("email_campaigns").insert({
+        name: campaignName,
+        audience_type: audienceLabel,
+        subject: `Quick idea for ${audienceLabel.replace(/_/g, " ")} businesses`,
+        message_html: `<p>Hi {{contact_name}},</p><p>Quick idea for {{business_name}} — reply here and I’ll send the details.</p><p>Matt<br/>Detroit Web Agency</p>`,
+        prospect_ids: emailRows.map((p) => p.id),
+        prospect_count: emailRows.length,
+        status: "draft",
+      }).select("id").single();
+      if (error) return toast.error(error.message);
+      campaignId = (data as any)?.id ?? null;
     }
 
     await supabase.from("prospect_pool").update({
@@ -848,9 +859,9 @@ function ActiveCampaigns() {
     },
   });
   const { data: emails = [] } = useQuery({
-    queryKey: ["email_send_log_recent"],
+    queryKey: ["email_campaigns_active"],
     queryFn: async () => {
-      const { data } = await supabase.from("email_send_log").select("id, recipient_email, template_name, status, created_at").order("created_at", { ascending: false }).limit(30);
+      const { data } = await supabase.from("email_campaigns").select("*").order("created_at", { ascending: false }).limit(50);
       return data ?? [];
     },
   });
@@ -864,11 +875,13 @@ function ActiveCampaigns() {
 
   const qc = useQueryClient();
 
-  const mapDispatchRow = (c: Record<string, unknown>, kind: "fax" | "postcard") => ({
+  const mapDispatchRow = (c: Record<string, unknown>, kind: "fax" | "postcard" | "email") => ({
     id: c.id as string,
-    primary: (c.campaign_name ?? c.audience_type ?? "—") as string,
-    secondary: (c.status ?? "—") as string,
-    meta: `${c.total_sent ?? 0} sent${c.total_cost ? ` · $${Number(c.total_cost).toFixed(2)}` : ""}`,
+    primary: (c.name ?? c.campaign_name ?? c.audience_type ?? "—") as string,
+    secondary: (c.subject ?? c.status ?? "—") as string,
+    meta: kind === "email"
+      ? `${c.sent_count ?? 0} sent · ${c.failed_count ?? 0} failed`
+      : `${c.total_sent ?? c.sent_count ?? 0} sent${c.total_cost ? ` · $${Number(c.total_cost).toFixed(2)}` : ""}`,
     date: c.created_at as string,
     status: (c.status as string) ?? "draft",
     last_error: (c.last_error as string) ?? null,
@@ -891,13 +904,13 @@ function ActiveCampaigns() {
         onAction={async (row, action) => handleDispatchAction(row, action, qc)}
         editorHint="Edit in Fax Campaigns tab →"
       />
-      <CampaignCard title="📧 Recent Emails" badge="email" rows={(emails as unknown as Record<string, unknown>[]).map((e) => ({
-        id: e.id as string,
-        primary: (e.template_name ?? "—") as string,
-        secondary: (e.recipient_email ?? "—") as string,
-        meta: (e.status ?? "—") as string,
-        date: e.created_at as string,
-      }))} />
+      <CampaignCard
+        title="📧 Email Campaigns"
+        badge="email"
+        rows={(emails as unknown as Record<string, unknown>[]).map((c) => mapDispatchRow(c, "email"))}
+        onAction={async (row, action) => handleDispatchAction(row, action, qc)}
+        editorHint="Draft copy can be edited in the row →"
+      />
       <CampaignCard title="💬 Recent SMS" badge="sms" rows={(sms as unknown as Record<string, unknown>[]).map((s) => ({
         id: s.id as string,
         primary: ((s.body_preview as string)?.slice(0, 60) ?? "—") as string,
@@ -917,7 +930,7 @@ type DispatchRow = {
   date: string;
   status?: string;
   last_error?: string | null;
-  kind?: "fax" | "postcard";
+  kind?: "fax" | "postcard" | "email";
 };
 
 type DispatchAction = "diagnose" | "send" | "resend";
@@ -928,9 +941,9 @@ async function handleDispatchAction(
   qc: ReturnType<typeof useQueryClient>,
 ) {
   if (!row.kind) return;
-  const fnName = row.kind === "fax" ? "send-fax-phaxio" : "send-postcard-lob";
-  const queryKey = row.kind === "fax" ? "fax_campaigns_active" : "postcard_campaigns_active";
-  const label = row.kind === "fax" ? "Fax" : "Postcard";
+  const fnName = row.kind === "fax" ? "send-fax-phaxio" : row.kind === "email" ? "send-email-campaign" : "send-postcards";
+  const queryKey = row.kind === "fax" ? "fax_campaigns_active" : row.kind === "email" ? "email_campaigns_active" : "postcard_campaigns_active";
+  const label = row.kind === "fax" ? "Fax" : row.kind === "email" ? "Email" : "Postcard";
 
   try {
     if (action === "diagnose") {
@@ -938,10 +951,12 @@ async function handleDispatchAction(
         body: { campaign_id: row.id, dry_run: true },
       });
       if (error) throw error;
-      const ready = data?.ready ?? data?.eligible ?? data?.prospect_count ?? 0;
-      const cost = data?.estimated_cost ?? data?.cost ?? 0;
-      const apiOk = data?.api_ok ?? data?.api_status ?? "OK";
-      toast.success(`🔍 ${ready} ready · ${label} API ${apiOk === true || apiOk === "OK" ? "✅" : "⚠️"} · est $${Number(cost).toFixed(2)}`);
+      const ready = data?.ready ?? data?.ready_to_send ?? data?.ready_to_mail ?? data?.prospect_count ?? 0;
+      const cost = data?.estimated_cost ?? data?.estimated_cost_if_sent ?? data?.cost ?? 0;
+      const apiOk = data?.api_ok ?? data?.lob_api_ok ?? data?.phaxio_api_ok ?? data?.api_status ?? "OK";
+      const apiError = data?.credential_error ?? data?.lob_error ?? data?.phaxio_error;
+      if (apiOk === false) toast.error(`${label} credential check failed: ${apiError || "unknown key error"}`);
+      else toast.success(`🔍 ${ready} ready · ${label} API ✅ · est $${Number(cost).toFixed(2)}`);
       return;
     }
     if (action === "send") {
@@ -1007,7 +1022,7 @@ function CampaignCard({
           rows.map((r) => {
             const status = (r.status ?? "").toLowerCase();
             const canSend = !!onAction && status === "draft";
-            const canResend = !!onAction && status === "sent";
+            const canResend = !!onAction && (status === "sent" || status === "mailed");
             return (
               <div key={r.id} className="p-3 hover:bg-white/5 text-xs space-y-1">
                 <div className="text-white font-medium truncate">{r.primary}</div>
@@ -1030,7 +1045,7 @@ function CampaignCard({
                       onClick={() => run(r, "diagnose")}
                       className="h-6 px-2 text-[10px] border-white/15 text-white/80 hover:bg-white/10"
                     >
-                      {busy === `${r.id}:diagnose` ? <Loader2 className="animate-spin" size={10} /> : "🔍"} Diagnose
+                      {busy === `${r.id}:diagnose` ? <Loader2 className="animate-spin" size={10} /> : "🔍"} Test
                     </Button>
                     {canSend && (
                       <Button
@@ -1039,7 +1054,7 @@ function CampaignCard({
                         onClick={() => run(r, "send")}
                         className="h-6 px-2 text-[10px] bg-[#00d4ff] hover:bg-[#00d4ff]/90 text-[#0a1628] font-semibold"
                       >
-                        {busy === `${r.id}:send` ? <Loader2 className="animate-spin" size={10} /> : badge === "fax" ? "📠" : "📬"} Send
+                        {busy === `${r.id}:send` ? <Loader2 className="animate-spin" size={10} /> : badge === "fax" ? "📠" : badge === "email" ? "📧" : "📬"} Send
                       </Button>
                     )}
                     {canResend && (
