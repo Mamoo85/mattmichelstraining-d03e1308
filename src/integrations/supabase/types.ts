@@ -5009,6 +5009,54 @@ export type Database = {
         }
         Relationships: []
       }
+      email_campaigns: {
+        Row: {
+          audience_type: string | null
+          created_at: string
+          failed_count: number
+          id: string
+          last_error: string | null
+          message_html: string
+          name: string
+          prospect_count: number
+          prospect_ids: string[]
+          sent_at: string | null
+          sent_count: number
+          status: string
+          subject: string
+        }
+        Insert: {
+          audience_type?: string | null
+          created_at?: string
+          failed_count?: number
+          id?: string
+          last_error?: string | null
+          message_html: string
+          name: string
+          prospect_count?: number
+          prospect_ids?: string[]
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject: string
+        }
+        Update: {
+          audience_type?: string | null
+          created_at?: string
+          failed_count?: number
+          id?: string
+          last_error?: string | null
+          message_html?: string
+          name?: string
+          prospect_count?: number
+          prospect_ids?: string[]
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject?: string
+        }
+        Relationships: []
+      }
       email_reply_drafts: {
         Row: {
           cancelled: boolean | null
@@ -5644,6 +5692,7 @@ export type Database = {
           message_html: string
           name: string
           phaxio_batch_id: string | null
+          prospect_ids: string[]
           sent_at: string | null
           status: string
           subject: string | null
@@ -5660,6 +5709,7 @@ export type Database = {
           message_html: string
           name: string
           phaxio_batch_id?: string | null
+          prospect_ids?: string[]
           sent_at?: string | null
           status?: string
           subject?: string | null
@@ -5676,6 +5726,7 @@ export type Database = {
           message_html?: string
           name?: string
           phaxio_batch_id?: string | null
+          prospect_ids?: string[]
           sent_at?: string | null
           status?: string
           subject?: string | null
@@ -11796,6 +11847,7 @@ export type Database = {
           last_error: string | null
           lob_batch_id: string | null
           prospect_count: number | null
+          prospect_ids: string[]
           qr_url: string
           returned_count: number
           sent_count: number | null
@@ -11815,6 +11867,7 @@ export type Database = {
           last_error?: string | null
           lob_batch_id?: string | null
           prospect_count?: number | null
+          prospect_ids?: string[]
           qr_url: string
           returned_count?: number
           sent_count?: number | null
@@ -11834,6 +11887,7 @@ export type Database = {
           last_error?: string | null
           lob_batch_id?: string | null
           prospect_count?: number | null
+          prospect_ids?: string[]
           qr_url?: string
           returned_count?: number
           sent_count?: number | null
