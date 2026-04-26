@@ -802,13 +802,27 @@ export default function MyTechAlert() {
 
         {/* Candidate List */}
         {filteredCandidates.length === 0 ? (
-          <Card className="border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e]">
-            <CardContent className="py-12 text-center">
-              <IndustryIcon className="h-12 w-12 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400">{isHealthcare ? "No candidates found yet" : "No techs found yet"}</p>
-              <p className="text-slate-500 text-sm mt-1">We scan daily — new matches will appear here automatically.</p>
-            </CardContent>
-          </Card>
+          (data?.kpi?.total ?? 0) === 0 ? (
+            <EmptyDashboardState
+              productName="TechAlert dashboard"
+              etaText="We're scanning state license boards and job signals daily. First matching candidates typically arrive within 24–72 hours."
+              checklist={[
+                "Target roles and zip codes saved",
+                "License board scanners running every 6 hours",
+                "Cross-referencing employer hiring signals",
+                "Email/SMS alerts will fire as candidates surface",
+              ]}
+              setupGuideHref="mailto:matt@detroitwebagent.com?subject=TechAlert%20setup%20question"
+            />
+          ) : (
+            <Card className="border-white/5 bg-gradient-to-br from-[#0a1628] to-[#0d1f2e]">
+              <CardContent className="py-12 text-center">
+                <IndustryIcon className="h-12 w-12 text-slate-600 mx-auto mb-3" />
+                <p className="text-slate-400">{isHealthcare ? "No candidates match these filters" : "No techs match these filters"}</p>
+                <p className="text-slate-500 text-sm mt-1">Adjust filters above to see more.</p>
+              </CardContent>
+            </Card>
+          )
         ) : (
           <div className="space-y-3">
             {filteredCandidates.map((c) => {
