@@ -2230,6 +2230,39 @@ export type Database = {
         }
         Relationships: []
       }
+      client_nps_scores: {
+        Row: {
+          client_email: string
+          created_at: string
+          id: string
+          milestone_day: number
+          product: string
+          raw_reply: string | null
+          score: number | null
+          surveyed_at: string
+        }
+        Insert: {
+          client_email: string
+          created_at?: string
+          id?: string
+          milestone_day: number
+          product: string
+          raw_reply?: string | null
+          score?: number | null
+          surveyed_at?: string
+        }
+        Update: {
+          client_email?: string
+          created_at?: string
+          id?: string
+          milestone_day?: number
+          product?: string
+          raw_reply?: string | null
+          score?: number | null
+          surveyed_at?: string
+        }
+        Relationships: []
+      }
       client_ranking_snapshots: {
         Row: {
           checked_at: string | null
@@ -10219,6 +10252,45 @@ export type Database = {
           stripe_checkout_url?: string | null
           stripe_price_id?: string | null
           target_audience?: string
+        }
+        Relationships: []
+      }
+      missed_call_captures: {
+        Row: {
+          caller_number: string
+          city: string | null
+          created_at: string
+          google_review_sent_at: string | null
+          id: string
+          reply_received: string | null
+          status: string
+          text_sent: string | null
+          updated_at: string
+          voicemail_transcript: string | null
+        }
+        Insert: {
+          caller_number: string
+          city?: string | null
+          created_at?: string
+          google_review_sent_at?: string | null
+          id?: string
+          reply_received?: string | null
+          status?: string
+          text_sent?: string | null
+          updated_at?: string
+          voicemail_transcript?: string | null
+        }
+        Update: {
+          caller_number?: string
+          city?: string | null
+          created_at?: string
+          google_review_sent_at?: string | null
+          id?: string
+          reply_received?: string | null
+          status?: string
+          text_sent?: string | null
+          updated_at?: string
+          voicemail_transcript?: string | null
         }
         Relationships: []
       }
