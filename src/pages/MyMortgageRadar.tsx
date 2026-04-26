@@ -528,6 +528,12 @@ export default function MyMortgageRadar() {
         </div>
       </section>
 
+      {clientEmail && (
+        <div className="py-6 text-center border-t border-[#1e3a5f]/40">
+          <ManageBillingButton email={clientEmail} />
+        </div>
+      )}
+
       {/* Draft modal — LO must explicitly submit, then approve in queue before send */}
       {draftFor && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50" onClick={() => setDraftFor(null)}>
