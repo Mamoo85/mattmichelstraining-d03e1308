@@ -161,6 +161,7 @@ serve(async (req) => {
         target_roles: client.target_roles || [],
         target_zip_codes: client.target_zip_codes || [],
         booking_link: client.booking_link || null,
+        email: client.owner_email || null,
       },
       candidates: merged,
       kpi,

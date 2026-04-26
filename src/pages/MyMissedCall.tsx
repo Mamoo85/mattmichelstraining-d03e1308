@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 
+import ManageBillingButton from "@/components/billing/ManageBillingButton";
+
 type MCClient = {
   business_name: string;
   contact_name: string | null;
@@ -10,6 +12,7 @@ type MCClient = {
   text_count: number;
   active: boolean;
   created_at: string;
+  email: string | null;
 };
 
 export default function MyMissedCall() {
@@ -93,6 +96,12 @@ export default function MyMissedCall() {
               <p style={{ color: "#334155", fontSize: 11, textAlign: "center", margin: "8px 0 0" }}>
                 Active since {new Date(client.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
               </p>
+
+              {client.email && (
+                <div style={{ marginTop: 16, display: "flex", justifyContent: "center" }}>
+                  <ManageBillingButton email={client.email} />
+                </div>
+              )}
             </div>
           )}
         </div>
