@@ -356,6 +356,7 @@ export default function MortgageRadar() {
       <footer className="border-t border-[#1e3a5f] py-8 text-center text-xs text-[#64748b]">
         Detroit Web Agency · Mortgage Radar · We Handle The Tech
       </footer>
+      <StickyMobileCTA label="Start Mortgage Radar →" onClick={() => handleCheckout("solo")} />
     </div>
   );
 }
