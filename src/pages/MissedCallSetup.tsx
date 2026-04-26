@@ -137,6 +137,35 @@ export default function MissedCallSetup() {
           <p style={{ color: "#94a3b8", margin: 0 }}>{data.business_name}</p>
         </div>
 
+        {/* Trial banner */}
+        <div style={{ background: "#10b98115", border: "1px solid #10b98140", borderRadius: 10, padding: "10px 14px", marginBottom: 16, textAlign: "center" }}>
+          <p style={{ color: "#10b981", fontSize: 12, fontWeight: 700, margin: 0 }}>
+            ✅ You're on day 1 of 14 — no card charged yet. Cancel before day 14 and you're never billed.
+          </p>
+        </div>
+
+        {/* Progress bar */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 20 }}>
+          {[
+            { n: 1, label: "Confirm number", done: !!data.twilio_number },
+            { n: 2, label: "Customize text", done: data.status === "live" },
+            { n: 3, label: "Done", done: data.status === "live" },
+          ].map((step, i, arr) => (
+            <div key={step.n} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{
+                width: 24, height: 24, borderRadius: "50%",
+                background: step.done ? ACCENT : SURFACE,
+                border: `1px solid ${step.done ? ACCENT : BORDER}`,
+                color: step.done ? BG : "#94a3b8",
+                fontSize: 11, fontWeight: 800,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>{step.done ? "✓" : step.n}</div>
+              <span style={{ color: step.done ? "#fff" : "#94a3b8", fontSize: 11, fontWeight: 600 }}>{step.label}</span>
+              {i < arr.length - 1 && <span style={{ color: "#475569" }}>→</span>}
+            </div>
+          ))}
+        </div>
+
         <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24, marginBottom: 16 }}>
           <div style={{ display: "inline-block", background: statusBadge.bg, color: statusBadge.color, padding: "6px 12px", borderRadius: 6, fontWeight: 700, fontSize: 13, marginBottom: 16 }}>
             {statusBadge.label}
