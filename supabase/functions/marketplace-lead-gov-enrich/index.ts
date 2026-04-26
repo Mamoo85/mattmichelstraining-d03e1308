@@ -3,6 +3,7 @@
 // Called per-lead from marketplace-lead-free-enrich-batch.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { logEnrichment } from "../_shared/enrichment-audit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -163,13 +164,30 @@ Deno.serve(async (req) => {
 
     const [first, last] = (lead.owner_name || "").trim().split(/\s+/, 2);
 
+    const wrap = <T,>(provider: string, fields: string[], fn: () => Promise<T | null>) =>
+      logEnrichment<T>(
+        {
+          lead_id,
+          vertical: "mortgage",
+          function_name: "marketplace-lead-gov-enrich",
+          stage: "gov",
+          provider,
+          triggered_by: "on_demand",
+        },
+        async () => {
+          const r = await fn();
+          if (r === null || r === undefined) throw new Error(`${provider}_miss`);
+          return { data: r, fields_added: fields };
+        },
+      ).then((res) => res.data ?? null);
+
     const [usps, hud, sam, epa, npi, sos] = await Promise.all([
-      uspsStandardize(lead.address || "", lead.city || "", lead.state || "MI", lead.zip || ""),
-      lead.zip ? hudFairMarketRent(lead.zip) : Promise.resolve(null),
-      lead.owner_name ? samGovLookup(lead.owner_name) : Promise.resolve(null),
-      lead.zip ? epaEchoCheck(lead.zip) : Promise.resolve(null),
-      first && last ? npiLookup(first, last, lead.state || "MI") : Promise.resolve(null),
-      lead.owner_name ? miSosSonar(lead.owner_name) : Promise.resolve(null),
+      wrap("usps_nominatim", ["usps"], () => uspsStandardize(lead.address || "", lead.city || "", lead.state || "MI", lead.zip || "")),
+      lead.zip ? wrap("hud_fmr", ["hud_fmr"], () => hudFairMarketRent(lead.zip!)) : Promise.resolve(null),
+      lead.owner_name ? wrap("sam_gov", ["sam_gov"], () => samGovLookup(lead.owner_name!)) : Promise.resolve(null),
+      lead.zip ? wrap("epa_echo", ["epa_echo"], () => epaEchoCheck(lead.zip!)) : Promise.resolve(null),
+      first && last ? wrap("npi_registry", ["npi_registry"], () => npiLookup(first, last, lead.state || "MI")) : Promise.resolve(null),
+      lead.owner_name ? wrap("perplexity_sonar", ["mi_sos"], () => miSosSonar(lead.owner_name!)) : Promise.resolve(null),
     ]);
 
     const govBlob = {
