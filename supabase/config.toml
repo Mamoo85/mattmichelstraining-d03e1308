@@ -1570,6 +1570,9 @@ verify_jwt = false
 [functions.inbound-sms-relay]
 verify_jwt = false
 
+[functions.code-fixer-watchdog]
+verify_jwt = false
+
 [functions.contractor-roi-sms]
 verify_jwt = false
 
