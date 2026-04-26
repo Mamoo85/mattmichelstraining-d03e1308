@@ -12,12 +12,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-04-24*
+*Last updated: 2026-04-26*
 
 ### Phase 22 — Golden Ticket Marketplace + LO Outreach + Paranoia Sweep COMPLETE ✅
-*Last updated: 2026-04-24*
+*Originally completed: 2026-04-24. Post-sweep additions through 2026-04-25 below.*
 
-**Shipped this session (Paranoia Sweep):**
+**Shipped in Phase 22 Paranoia Sweep (2026-04-24):**
 - GHOST-1/2: `agency-payment-reconcile` covers all 5 DWA products + marketplace `email_sent_at` reconcile
 - GHOST-3: Stripe webhook PDF call awaited with 25s timeout + `notifyMatt` on failure
 - MALICIOUS-1/2: `dead-lead-intake` — 500-lead cap, field truncation, campaign rollback on contacts failure
@@ -25,6 +25,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - TOKEN-1: `queryClient.ts` — global 401/PGRST301 handler signs out expired sessions
 - iOS fix: `window.prompt()` replaced with `BuyerEmailDialog` in `FirstLookUpsellGate` + `LeadDetail`
 - Migration: `email_sent_at` column + partial index on `marketplace_lead_locks`
+
+**Post-paranoia-sweep additions (2026-04-25):**
+- Migration `20260425020000`: `marketplace_receipt_access_log` table for audit trail
+- Migration `20260425030000`: Full `marketplace_lead_locks` + `marketplace_lead_pdfs` tables with DB-level double-sell prevention (partial unique index on `soft_lock|claimed|sold` status)
+- Migration `20260425040000`: `dashboard_token` column on `missed_call_clients` (magic-link portal access) + `access_expires_at` on `marketplace_lead_locks` (30-day expiry)
 
 **BSEED ArcGIS note**: `services2.arcgis.com/qvkbeam7Wirps6zC` is the only working server-side permit source. `data-wayne.opendata.arcgis.com` blocks all server requests (403). BSEED fields are **lowercase**: `address`, `issued_date`, `work_description`, `amt_estimated_contractor_cost`.
 
