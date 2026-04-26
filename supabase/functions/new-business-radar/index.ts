@@ -96,7 +96,7 @@ Focus on real business names that suggest trade services, construction, or profe
     const arr = JSON.parse(cleaned);
     if (!Array.isArray(arr)) return [];
 
-    return arr.map((item: any) => {
+    return arr.map((item: any): NewBusiness => {
       const nameLower = (item.entity_name || "").toLowerCase();
       const isTrade = TRADE_KEYWORDS.some((kw) => nameLower.includes(kw));
       const isHighTicket = HIGH_TICKET_KEYWORDS.some((kw) => nameLower.includes(kw));
@@ -108,7 +108,7 @@ Focus on real business names that suggest trade services, construction, or profe
         zip: typeof item.zip === "string" ? item.zip.slice(0, 5) : undefined,
         formation_date: item.formation_date || undefined,
         source_url: item.source_url || undefined,
-        industry_bucket: isTrade ? "trade" : isHighTicket ? "high_ticket" : "general",
+        industry_bucket: (isTrade ? "trade" : isHighTicket ? "high_ticket" : "general") as "trade" | "high_ticket" | "general",
       };
     }).filter((b: NewBusiness) => b.entity_name.length > 2);
   } catch (e) {

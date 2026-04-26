@@ -2244,7 +2244,7 @@ serve(async (req: Request) => {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const { data: activeClients } = await sb
       .from("hire_alert_clients")
-      .select("id, company_name, owner_email, target_roles")
+      .select("id, company_name, owner_email, target_roles, dashboard_token")
       .eq("active", true)
       .not("owner_email", "is", null)
       .lt("created_at", sevenDaysAgo); // only clients older than 7 days

@@ -126,8 +126,7 @@ async function attemptFix(
       }
 
       case "clear_stale_lock": {
-        const { error } = await sb
-          .from("marketplace_lead_locks")
+        const { error } = await (sb.from("marketplace_lead_locks") as any)
           .update({ status: "released" })
           .eq("status", "soft_lock")
           .lt("expires_at", new Date().toISOString());
@@ -226,7 +225,7 @@ serve(async (req) => {
       .single();
     const qId = qRow?.id;
 
-    const { success, detail } = await attemptFix(sb, err, category);
+    const { success, detail } = await attemptFix(sb as any, err, category);
 
     const finalStatus = success ? "fixed" : category === "unknown" ? "escalated" : "failed";
     if (qId) {
