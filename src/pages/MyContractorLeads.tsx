@@ -537,8 +537,9 @@ export default function MyContractorLeads() {
           )}
         </main>
 
-        <footer className="py-8 border-t border-white/5 text-center">
+        <footer className="py-8 border-t border-white/5 text-center space-y-3">
           <p className="text-white/20 text-[10px]">Detroit Web Agency — Contractor Lead Network</p>
+          {contractor?.email && <ManageBillingButton email={contractor.email} />}
           <a href="sms:+13139921219" className="text-[#00d4ff]/40 text-[10px] hover:text-[#00d4ff] mt-1 block">
             Questions? Text Matt at (313) 992-1219
           </a>
