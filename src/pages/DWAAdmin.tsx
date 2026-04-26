@@ -46,6 +46,7 @@ const MortgageRadarHub = lazy(() => import("@/components/dwa-admin/MortgageRadar
 const LeadSalesOutreachHub = lazy(() => import("@/components/dwa-admin/LeadSalesOutreachHub"));
 const PipelineVelocityDashboard = lazy(() => import("@/components/dwa-admin/PipelineVelocityDashboard"));
 const StrategyModeHub = lazy(() => import("@/components/dwa-admin/StrategyModeHub"));
+const AdminEnrichmentAudit = lazy(() => import("@/components/admin/AdminEnrichmentAudit"));
 
 type Tab =
   | "ai-command"
@@ -54,7 +55,7 @@ type Tab =
   | "contractor-leads" | "contractor-onboarding" | "contractor-market" | "dead-leads" | "fax-drip" | "postcard-drip" | "sms-sniper" | "fielddesk" | "techalert" | "missed-call" | "missed-call-leads" | "clients-all"
   | "lead-marketplace" | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
-  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode";
+  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit";
 
 const GROUPS: SidebarGroup[] = [
   {
@@ -117,6 +118,7 @@ const GROUPS: SidebarGroup[] = [
     label: "Ops & Tools",
     items: [
       { id: "health",          label: "🛡️ Health & Compliance" },
+      { id: "enrichment-audit", label: "🔬 Enrichment Audit" },
       { id: "buyer-radar-qa",  label: "🛡️ Buyer Radar QA" },
       { id: "simulation",      label: "🧪 Simulation Suite" },
       { id: "playbook-hub",  label: "📖 Playbook & Strategy" },
@@ -201,6 +203,7 @@ export default function DWAAdmin() {
           {activeTab === "coverage-map"    && <Suspense fallback={lazyFallback("coverage map")}><AdminCoverageMap /></Suspense>}
 
           {activeTab === "health"          && <Suspense fallback={lazyFallback("health")}><HealthComplianceHub /></Suspense>}
+          {activeTab === "enrichment-audit" && <Suspense fallback={lazyFallback("enrichment audit")}><AdminEnrichmentAudit /></Suspense>}
           {activeTab === "buyer-radar-qa"  && <Suspense fallback={lazyFallback("Buyer Radar QA")}><BuyerRadarQAChecklist /></Suspense>}
           {activeTab === "simulation"      && <Suspense fallback={lazyFallback("simulation")}><AdminSimulationSuite /></Suspense>}
           {activeTab === "playbook-hub"  && <Suspense fallback={lazyFallback("playbook")}><PlaybookHub /></Suspense>}

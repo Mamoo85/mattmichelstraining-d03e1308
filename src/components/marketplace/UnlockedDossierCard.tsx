@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { BuyerChip, FreshnessBadge, TierBadge, ScoreBars, EquityPanel, MetricsRow, TcpaBadge, IntelPanel, type MarketplaceLead } from "./GoldenTicketCard";
 import { SourceIconRow } from "./SourceIconRow";
+import { EnrichmentProvenancePanel } from "./EnrichmentProvenancePanel";
 import { cn } from "@/lib/utils";
 
 interface UnlockedLead extends MarketplaceLead {
@@ -93,6 +94,8 @@ export function UnlockedDossierCard({ lead, onExportPdf, onShare, className }: P
         <ScoreBars score={lead.score} percentile={lead.score_percentile} />
         <EquityPanel lead={lead} />
         <MetricsRow lead={lead} />
+
+        <EnrichmentProvenancePanel leadId={lead.id} />
 
         {/* TCPA banner — REQUIRED above opener */}
         <div className="flex items-start gap-2 p-2.5 border border-orange-500/40 bg-orange-500/10 rounded">
