@@ -5644,6 +5644,7 @@ export type Database = {
           message_html: string
           name: string
           phaxio_batch_id: string | null
+          prospect_ids: string[]
           sent_at: string | null
           status: string
           subject: string | null
@@ -5660,6 +5661,7 @@ export type Database = {
           message_html: string
           name: string
           phaxio_batch_id?: string | null
+          prospect_ids?: string[]
           sent_at?: string | null
           status?: string
           subject?: string | null
@@ -5676,6 +5678,7 @@ export type Database = {
           message_html?: string
           name?: string
           phaxio_batch_id?: string | null
+          prospect_ids?: string[]
           sent_at?: string | null
           status?: string
           subject?: string | null
@@ -11796,6 +11799,7 @@ export type Database = {
           last_error: string | null
           lob_batch_id: string | null
           prospect_count: number | null
+          prospect_ids: string[]
           qr_url: string
           returned_count: number
           sent_count: number | null
@@ -11815,6 +11819,7 @@ export type Database = {
           last_error?: string | null
           lob_batch_id?: string | null
           prospect_count?: number | null
+          prospect_ids?: string[]
           qr_url: string
           returned_count?: number
           sent_count?: number | null
@@ -11834,6 +11839,7 @@ export type Database = {
           last_error?: string | null
           lob_batch_id?: string | null
           prospect_count?: number | null
+          prospect_ids?: string[]
           qr_url?: string
           returned_count?: number
           sent_count?: number | null
