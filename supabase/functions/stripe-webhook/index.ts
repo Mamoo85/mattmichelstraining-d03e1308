@@ -2347,7 +2347,7 @@ serve(async (req) => {
       }
 
       // ── FIELDDESK — $199/mo field service CRM ────────────────────────────
-      if (meta.type === "field_service_subscription") {
+      if (meta.type === "field_crm_subscription") {
         try {
           const email = meta.email || customerEmail;
           if (email) {
