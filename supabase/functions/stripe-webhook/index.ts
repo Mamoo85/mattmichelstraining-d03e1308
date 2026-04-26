@@ -1275,6 +1275,13 @@ serve(async (req) => {
           });
           if (insertErr) throw new Error(`mortgage_radar_clients insert: ${insertErr.message}`);
 
+          // Fire-and-forget initial scan so new subscriber sees leads within minutes
+          fetch(`${SUPABASE_URL}/functions/v1/mortgage-radar-scanner`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+            body: JSON.stringify({ initial: true }),
+          }).catch(() => {});
+
           const siteUrl = "https://detroitwebagent.com";
           const dashToken = await signMortgageToken(email);
           const dashLink = `${siteUrl}/my-mortgage-radar?email=${encodeURIComponent(email)}&token=${encodeURIComponent(dashToken)}`;
