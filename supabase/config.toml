@@ -1838,3 +1838,33 @@ verify_jwt = false
 
 [functions.marketplace-lead-summarize]
 verify_jwt = false
+
+[functions.mortgage-radar-scanner]
+verify_jwt = false
+
+[functions.mortgage-radar-enrich-drain]
+verify_jwt = false
+
+[functions.mortgage-radar-am-digest]
+verify_jwt = false
+
+[functions.mortgage-radar-weekly-digest]
+verify_jwt = false
+
+[functions.mortgage-radar-health-check]
+verify_jwt = false
+
+[functions.mortgage-radar-digest]
+verify_jwt = false
+
+[functions.mortgage-radar-enrich]
+verify_jwt = false
+
+[functions.mortgage-radar-outreach]
+verify_jwt = false
+
+[functions.mortgage-radar-send-preview]
+verify_jwt = false
+
+[functions.visitor-identify]
+verify_jwt = false
