@@ -73,6 +73,7 @@ interface DashboardData {
     target_roles: string[];
     target_zip_codes: string[];
     booking_link?: string;
+    email?: string | null;
   };
   candidates: Candidate[];
   kpi: { total: number; hot: number; contacted: number; hired: number };
