@@ -41,7 +41,7 @@ const INCLUDED = [
   "Works on any phone (mobile or landline)",
   "No app to install — setup in under 10 min",
   "Missed call log dashboard",
-  "7-day free trial — cancel anytime",
+  "14-day free trial — cancel anytime",
 ];
 
 const TESTIMONIALS: Testimonial[] = [
@@ -134,7 +134,7 @@ export default function MissedCallSaaS() {
     <>
       <SEOHead
         title="Missed Call Text-Back for Local Businesses — $99/mo | 7-Day Free Trial"
-        description="70% of callers won't leave a voicemail. Automatically text them back within seconds of a missed call. $99/month. 7-day free trial."
+        description="70% of callers won't leave a voicemail. Automatically text them back within seconds of a missed call. $99/month. 14-day free trial."
         path="/missed-call-text"
       />
       <DWAStickyNav
@@ -226,7 +226,7 @@ export default function MissedCallSaaS() {
           <div className="max-w-md mx-auto">
             <div className="bg-[#1a1a2e] border border-white/10 rounded-xl p-6 sm:p-8">
               <h2 className="text-xl font-bold mb-1">Start Your Free Trial</h2>
-              <p className="text-sm text-[#888] mb-6">No credit card charged for 7 days. 5-minute setup included.</p>
+              <p className="text-sm text-[#888] mb-6">No credit card charged for 14 days. 5-minute setup included.</p>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
@@ -294,7 +294,7 @@ export default function MissedCallSaaS() {
                     : "Start Free 7-Day Trial →"}
                 </Button>
                 <p className="text-[10px] text-center text-[#555]">
-                  Secure payment via Stripe. $99/mo after 7 days. Cancel before trial ends and you're never charged.
+                  Secure payment via Stripe. $99/mo after 14 days. Cancel before trial ends and you're never charged.
                 </p>
               </form>
             </div>
