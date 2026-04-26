@@ -2869,83 +2869,8 @@ serve(async (req) => {
       await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
-    // Defensive guard: define session/meta with optional chaining so non-checkout
-    // events don't crash with "meta is not defined" when falling through to handlers below.
-    const session = event.data.object as any;
-    const meta = session?.metadata || {};
-
-    // ── AI Ads Copy subscription ──────────────────────────────────────────────
-    if (meta.type === "ads_copy_subscription") {
-      try {
-        const email = meta.email || session.customer_details?.email || "";
-        const businessName = meta.businessName || "";
-        const city = meta.city || "";
-        if (email) {
-          await sb.from("ads_copy_clients").upsert({
-            email,
-            business_name: businessName,
-            city,
-            stripe_customer_id: session.customer as string,
-            stripe_subscription_id: session.subscription as string,
-            active: true,
-          }, { onConflict: "email" });
-
-          await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              from: "Detroit Web Agency <matt@detroitwebagent.com>",
-              to: [email],
-              subject: "Your AI Ads Copy is being generated — here's what happens next",
-              html: `<div style="font-family:sans-serif;max-width:520px;background:#0a1628;color:#fff;padding:32px;border-radius:8px;"><h2 style="color:#00d4ff;">You're all set, ${businessName || "there"}! 🎉</h2><p>Your first batch of 10 AI-generated Google Ads variations will arrive by email within 24 hours.</p><p>Each month you'll get fresh copy — no work required on your end.</p><p style="color:#94a3b8;font-size:13px;">Questions? Just reply to this email. — Matt @ Detroit Web Agency</p></div>`,
-            }),
-          }).catch(() => {});
-
-          await notifyMatt(
-            `🎯 New AI Ads Copy subscriber — ${email}`,
-            `<p><strong>${businessName}</strong> (${city}) just subscribed to AI Ads Copy at $39/mo.</p>`
-          ).catch(() => {});
-        }
-      } catch (e) { console.error("[WEBHOOK] ads_copy_subscription error:", e); }
-      await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
-    }
-
-    // ── SiteRadar subscription ────────────────────────────────────────────────
-    if (meta.type === "site_radar_subscription") {
-      try {
-        const email = meta.email || session.customer_details?.email || "";
-        const businessName = meta.businessName || "";
-        const website = meta.website || "";
-        if (email) {
-          await sb.from("field_crm_clients").upsert({
-            email,
-            business_name: businessName,
-            website: website || null,
-            stripe_customer_id: session.customer as string,
-            stripe_subscription_id: session.subscription as string,
-            status: "active",
-          }, { onConflict: "email" });
-
-          await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              from: "SiteRadar <matt@detroitwebagent.com>",
-              to: [email],
-              subject: "Your SiteRadar tracking snippet is ready",
-              html: `<div style="font-family:sans-serif;max-width:520px;background:#0a1628;color:#fff;padding:32px;border-radius:8px;"><h2 style="color:#00d4ff;">Welcome to SiteRadar! 👁️</h2><p>Your visitor tracking snippet is ready. Log in to your dashboard to grab it and paste it into your website.</p><a href="https://detroitwebagent.com/my-site-radar" style="display:inline-block;background:#00d4ff;color:#0a1628;font-weight:700;padding:14px 28px;border-radius:6px;text-decoration:none;margin:16px 0;">Get your snippet →</a><p style="color:#94a3b8;font-size:13px;">Setup takes 2 minutes. Reply if you need help. — Matt</p></div>`,
-            }),
-          }).catch(() => {});
-
-          await notifyMatt(`👁️ New SiteRadar subscriber — ${email}`, `<p><strong>${businessName}</strong> just subscribed to SiteRadar at $49/mo. Website: ${website || "not provided"}</p>`).catch(() => {});
-        }
-      } catch (e) { console.error("[WEBHOOK] site_radar_subscription error:", e); }
-      await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
-    }
-
     // ── Unhandled event types (invoice.finalized, etc.) — acknowledge safely ──
     console.log(`[WEBHOOK] Unhandled event type: ${event.type} — acknowledging`);
-    await markFulfilled(true);
     await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
