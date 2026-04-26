@@ -376,12 +376,24 @@ export default function MyContractorLeads() {
 
           {/* Lead list */}
           {filtered.length === 0 ? (
-            <div className="bg-[#0f1f35] border border-white/10 rounded-xl py-16 text-center">
-              <TrendingUp className="h-10 w-10 text-white/20 mx-auto mb-3" />
-              <p className="text-white/40 text-sm">
-                {stats.total === 0 ? "Your first lead is on its way." : "No leads match this filter."}
-              </p>
-            </div>
+            stats.total === 0 ? (
+              <EmptyDashboardState
+                productName="Contractor Lead Network"
+                etaText="Your subscription is live. Most contractors get their first qualified homeowner lead within 5–10 days as our marketing engines pick up search demand in your trade + city."
+                checklist={[
+                  "Trade and service area locked in",
+                  "Lead-routing SMS active",
+                  "Marketing engines indexing your trade",
+                  "First-look priority enabled",
+                ]}
+                setupGuideHref="mailto:matt@detroitwebagent.com?subject=Contractor%20Leads%20setup"
+              />
+            ) : (
+              <div className="bg-[#0f1f35] border border-white/10 rounded-xl py-16 text-center">
+                <TrendingUp className="h-10 w-10 text-white/20 mx-auto mb-3" />
+                <p className="text-white/40 text-sm">No leads match this filter.</p>
+              </div>
+            )
           ) : (
             <div className="space-y-3">
               {filtered.map(lead => {
