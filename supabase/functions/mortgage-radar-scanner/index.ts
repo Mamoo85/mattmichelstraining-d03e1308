@@ -29,30 +29,6 @@ function streetViewUrl(address: string, city: string, zip: string): string {
   return `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${loc}&fov=80&key=${GOOGLE_MAPS_API_KEY}`;
 }
 
-async function sendHotLeadSMS(to: string, businessName: string, address: string, score: number, signalType: string, leadId?: string) {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !to) return;
-  try {
-    const sigLabel = signalType.replace(/_/g, " ");
-    const dashLink = leadId
-      ? `https://detroitwebagent.com/my-mortgage-radar?lead=${leadId}`
-      : `https://detroitwebagent.com/my-mortgage-radar`;
-    const streetView = address
-      ? `https://maps.google.com/?q=${encodeURIComponent(address)}`
-      : "";
-    const body = `🔥 HOT MORTGAGE LEAD (${score}/10)\n${address}\nSignal: ${sigLabel}\n\n📍 ${streetView}\n📊 Intel + draft outreach: ${dashLink}\n\nManual send only — TCPA. Reply STOP to opt out. — DWA`;
-    const params = new URLSearchParams({ To: to, From: DWA_PHONE, Body: body });
-    await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: params,
-    });
-  } catch (e) {
-    console.warn("[sendHotLeadSMS]", e instanceof Error ? e.message : String(e));
-  }
-}
 
 
 interface RawSignal {
