@@ -452,7 +452,7 @@ serve(async (req) => {
             },
             front: frontHTML,
             back: backHTML,
-            size: "6x4",
+            size: "4x6",
           }),
         });
 

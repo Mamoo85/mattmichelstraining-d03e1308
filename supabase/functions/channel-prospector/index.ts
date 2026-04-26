@@ -116,7 +116,7 @@ async function sendPostcard(toAddr: any, frontText: string, backText: string): P
     fd.append("from", "adr_3a3deb8f8de87557"); // default Lob from address; replace with real
     fd.append("front", front);
     fd.append("back", back);
-    fd.append("size", "6x4");
+    fd.append("size", "4x6");
     const r = await fetch("https://api.lob.com/v1/postcards", { method: "POST", headers: { Authorization: `Basic ${auth}` }, body: fd });
     const j = await r.json();
     if (!r.ok) return { ok: false, err: JSON.stringify(j) };

@@ -928,7 +928,7 @@ async function handleDispatchAction(
   qc: ReturnType<typeof useQueryClient>,
 ) {
   if (!row.kind) return;
-  const fnName = row.kind === "fax" ? "send-fax-phaxio" : "send-postcards-lob";
+  const fnName = row.kind === "fax" ? "send-fax-phaxio" : "send-postcard-lob";
   const queryKey = row.kind === "fax" ? "fax_campaigns_active" : "postcard_campaigns_active";
   const label = row.kind === "fax" ? "Fax" : "Postcard";
 
