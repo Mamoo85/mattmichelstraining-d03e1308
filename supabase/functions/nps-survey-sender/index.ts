@@ -22,12 +22,12 @@ serve(async (req) => {
   let sent = 0;
 
   for (const product of PRODUCTS) {
-    const { data: clients } = await sb
+    const { data: clients } = await (sb as any)
       .from(product.table)
       .select(`id, ${product.emailCol}, created_at`)
       .eq("active", true);
 
-    for (const client of (clients || []) as Array<{ id: string; [k: string]: string }>) {
+    for (const client of ((clients as any[]) || []) as Array<{ id: string; [k: string]: string }>) {
       const email = client[product.emailCol];
       if (!email) continue;
       const daysSince = Math.floor((Date.now() - new Date(client.created_at).getTime()) / 86400000);

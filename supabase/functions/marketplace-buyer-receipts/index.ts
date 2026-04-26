@@ -58,10 +58,10 @@ serve(async (req) => {
     }
 
     // Log this attempt BEFORE Stripe verification so probes count against the limit
-    sb.from("marketplace_receipt_access_log")
-      .insert({ ip: clientIp, buyer_email: email })
-      .then(() => {})
-      .catch(() => {});
+    Promise.resolve(
+      sb.from("marketplace_receipt_access_log")
+        .insert({ ip: clientIp, buyer_email: email })
+    ).then(() => {}).catch(() => {});
 
     // Verify ownership: retrieve Stripe session and confirm email + payment
     let session: Stripe.Checkout.Session;
