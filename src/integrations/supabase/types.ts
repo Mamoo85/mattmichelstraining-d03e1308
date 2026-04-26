@@ -8792,6 +8792,72 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_enrichment_audit: {
+        Row: {
+          actor: string | null
+          cost_cents: number | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          error_message: string | null
+          fields_added: string[] | null
+          finished_at: string | null
+          function_name: string
+          http_status: number | null
+          id: string
+          lead_id: string
+          provider: string
+          raw_response: Json | null
+          stage: string
+          started_at: string
+          success: boolean
+          triggered_by: string
+          vertical: string
+        }
+        Insert: {
+          actor?: string | null
+          cost_cents?: number | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          error_message?: string | null
+          fields_added?: string[] | null
+          finished_at?: string | null
+          function_name: string
+          http_status?: number | null
+          id?: string
+          lead_id: string
+          provider: string
+          raw_response?: Json | null
+          stage: string
+          started_at?: string
+          success?: boolean
+          triggered_by?: string
+          vertical: string
+        }
+        Update: {
+          actor?: string | null
+          cost_cents?: number | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          error_message?: string | null
+          fields_added?: string[] | null
+          finished_at?: string | null
+          function_name?: string
+          http_status?: number | null
+          id?: string
+          lead_id?: string
+          provider?: string
+          raw_response?: Json | null
+          stage?: string
+          started_at?: string
+          success?: boolean
+          triggered_by?: string
+          vertical?: string
+        }
+        Relationships: []
+      }
       lead_exchange_enrichment_checks: {
         Row: {
           ai_summary_ok: boolean
@@ -9700,6 +9766,36 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_inventory_status: {
+        Row: {
+          available_count: number
+          hot_count: number
+          is_visible: boolean
+          last_refreshed_at: string
+          min_visible_threshold: number
+          sold_24h: number
+          vertical: string
+        }
+        Insert: {
+          available_count?: number
+          hot_count?: number
+          is_visible?: boolean
+          last_refreshed_at?: string
+          min_visible_threshold?: number
+          sold_24h?: number
+          vertical: string
+        }
+        Update: {
+          available_count?: number
+          hot_count?: number
+          is_visible?: boolean
+          last_refreshed_at?: string
+          min_visible_threshold?: number
+          sold_24h?: number
+          vertical?: string
         }
         Relationships: []
       }
@@ -19127,6 +19223,39 @@ export type Database = {
           source?: never
           source_url?: never
           value_usd?: never
+          vertical?: string | null
+        }
+        Relationships: []
+      }
+      lead_enrichment_audit_buyer_view: {
+        Row: {
+          finished_at: string | null
+          function_name: string | null
+          id: string | null
+          lead_id: string | null
+          provider: string | null
+          stage: string | null
+          success: boolean | null
+          vertical: string | null
+        }
+        Insert: {
+          finished_at?: string | null
+          function_name?: string | null
+          id?: string | null
+          lead_id?: string | null
+          provider?: string | null
+          stage?: string | null
+          success?: boolean | null
+          vertical?: string | null
+        }
+        Update: {
+          finished_at?: string | null
+          function_name?: string | null
+          id?: string | null
+          lead_id?: string | null
+          provider?: string | null
+          stage?: string | null
+          success?: boolean | null
           vertical?: string | null
         }
         Relationships: []
