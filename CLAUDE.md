@@ -14,43 +14,71 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-04-26*
 
-### Phase 23 — Autonomous Fixer + SiteRadar + Missed-Call Enhancements IN PROGRESS 🔄
-*Branch: `claude/add-claude-documentation-8ZEPt` — awaiting Matt to merge to main*
+### Phase 24 — CI Recovery + Full Audit + PostCheckoutClaim COMPLETE ✅
+*All work on `main`. 231/231 tests passing (99 Vitest + 132 Deno).*
 
-**Autonomous Code-Fixer Agent (complete):**
+**CI fixed (was red for 3 days):**
+- `package-lock.json` regenerated — Lovable had added `react-swipeable` to package.json without updating the lockfile, breaking `npm ci`
+- `SUPABASE_ACCESS_TOKEN` GitHub secret was missing/expired — Matt re-added it manually
+- `workflow_dispatch` trigger added to `.github/workflows/deploy-supabase.yml` — can now trigger CI manually from GitHub Actions UI without a code push
+- `deno.lock` committed — pins deno.land/std@0.224.0 for reproducible Deno test runs
+
+**Stripe webhook SMS spam fixed:**
+- `stripe-webhook/index.ts`: duplicate `ads_copy_subscription` + `site_radar_subscription` handlers in the fallthrough zone were causing `meta is not defined` crash on every non-checkout Stripe event → spamming FATAL SMS alerts to Matt
+- Removed ~75 lines of dead code (duplicate handlers used raw `fetch()` to Resend, violating CLAUDE.md rules)
+- Removed doubled `markFulfilled` call on unhandled-event path
+- Correct handlers remain inside `checkout.session.completed` block
+
+**Phase 23 completeness audit (all 29/29 items verified on disk):**
+- All edge functions, migrations, agent files, config.toml entries confirmed present
+- All 3 checkout success URL fixes confirmed correct (FieldDesk → `/field-service`, Missed-Call → session_id, Bundle → `/bundle-revenue-suite`)
+- One missing item found and built: `src/components/PostCheckoutClaim.tsx`
+
+**PostCheckoutClaim component (new — `src/components/PostCheckoutClaim.tsx`):**
+- Reads `?session_id=` from URL on mount, calls `claim-session` edge function
+- Emails customer a one-click magic login link (no password needed)
+- Idempotent via localStorage guard (won't double-fire on page refresh)
+- Shows loading / success / error states with support SMS fallback
+- Covers all 8 DWA products: FieldDesk, TechAlert, SiteRadar, Missed-Call, Mortgage Radar, AI Phone Answering, Bundle Revenue Suite, AI Reputation Dashboard
+
+**AI model upgrades (from this session):**
+- `_shared/opus.ts`: `claude-opus-4-5` → `claude-opus-4-7`
+- `_shared/ai.ts` + `_shared/opus.ts`: Haiku pinned to `claude-haiku-4-5-20251001`
+
+**Contractor Lead Marketplace (complete — from this session):**
+- `src/pages/ContractorMarketplace.tsx`: Angie's List style storefront at `/contractor-marketplace`
+- Trade filter tabs, lead cards with tier badges, email-to-Stripe claim flow, empty state with phone capture
+- `supabase/migrations/20260427000000_contractor_marketplace_view.sql`: public view, no PII, anon SELECT
+- `create-contractor-ppl-checkout`: updated to accept `{ lead_id, email }` with guest upsert into `contractor_clients`
+- DWAAdmin → Customers → "🏪 PPL Marketplace" tab added
+
+### Phase 23 — Autonomous Fixer + SiteRadar + Missed-Call Enhancements COMPLETE ✅
+*Merged to main. All items shipped.*
+
+**Autonomous Code-Fixer Agent:**
 - `fixer_queue` + `fixer_runs` tables + Postgres trigger on `error_logs` → fires watchdog immediately
 - `code-fixer-watchdog` edge function: classifies + auto-fixes 6 error categories, SMS Matt on results
 - `inbound-sms-relay`: text "FIX" → trigger watchdog, "ERRORS" → last 5 errors, "FIXED?" → last run summary
 - `.claude/agents/fixer.md`: Claude Code agent spec for code-level fixes, pushes to auto-fix branches
 - `.claude/settings.json`: full git + vitest permissions, no prompts for fixer agent
 
-**SiteRadar full buildout (complete):**
+**SiteRadar full buildout:**
 - `create-site-radar-checkout`: $49/mo, `site_radar_subscription` webhook type
-- `stripe-webhook`: added `site_radar_subscription` + `ads_copy_subscription` handlers with welcome emails
-- `visitor-identify`: high-intent SMS to client when visitor hits /pricing or /contact
-- `site-radar-repeat-alert`: hourly cron, SMS when company visits 3x in 7 days
-- `site-radar-weekly-digest`: Monday 7am, sends visitor summary (skips "nothing happened" weeks)
-- `site-radar-health-check`: daily, pings client site, emails re-install instructions if snippet missing 48h+
-- Seeded `field_crm_clients` for detroitwebagency.com + mattmichelstraining.com (Matt's own sites)
+- `stripe-webhook`: `site_radar_subscription` + `ads_copy_subscription` handlers with welcome emails
+- `visitor-identify`, `site-radar-repeat-alert`, `site-radar-weekly-digest`, `site-radar-health-check`
+- Seeded `field_crm_clients` for detroitwebagency.com + mattmichelstraining.com
 
-**Matt's missed-call enhancements for +13139921219 (complete):**
-- `missed-call-status`: Twilio Lookup city personalization + logs every missed call to `missed_call_captures`
-- `missed-call-handler`: `<Record>` TwiML added — voicemail recorded + transcribed after missed call
-- `voicemail-transcription-handler`: receives Twilio transcription, SMS Matt the transcript
-- `inbound-sms-relay`: parses "call me at X" → inserts `callback_reminders` row, confirms to caller
-- `callback-reminder-sender`: every 5 min, SMS Matt with tap-to-dial link when callback is due
-- `missed-call-escalation`: every 30 min, emails Matt for leads with no reply in 4h
-- Migrations: `missed_call_captures`, `callback_reminders`, `google_review_url` + `owner_phone` on `missed_call_clients`
+**Missed-call enhancements for +13139921219:**
+- `missed-call-status`, `missed-call-handler` (voicemail Record TwiML), `voicemail-transcription-handler`
+- `callback-reminder-sender` (every 5 min), `missed-call-escalation` (every 30 min)
+- Migrations: `missed_call_captures`, `callback_reminders`, `google_review_url` + `owner_phone`
 
-**Cross-cutting (complete):**
-- `claim-session`: post-checkout magic link auth for all 8 DWA products
-- `create-customer-portal-session`: Stripe billing portal URL, searches all product tables by email
-- `nps-survey-sender`: daily cron, sends product-specific NPS at 30/60/90 day milestones
-- `client_nps_scores` table with unique milestone constraint
+**Cross-cutting:**
+- `claim-session`, `create-customer-portal-session`, `nps-survey-sender`, `client_nps_scores` table
 
-**Lovable's side (pending — give them the prompt from this session):**
-- `/my-site-radar` customer portal, SiteRadar landing page, `<PostCheckoutClaim />` component
-- Missed call admin tab, health dashboard upgrade, Stripe portal buttons, NPS templates, empty states
+**Lovable's side (still pending):**
+- `/my-site-radar` customer portal, SiteRadar landing page
+- Health dashboard upgrade, Stripe portal buttons, NPS email templates, empty states
 
 ### Phase 22 — Golden Ticket Marketplace + LO Outreach + Paranoia Sweep COMPLETE ✅
 *Originally completed: 2026-04-24. Post-sweep additions through 2026-04-25 below.*
