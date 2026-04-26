@@ -752,7 +752,7 @@ const App = () => (
                     <Route path="/free-leads" element={<FreeLeadsQR />} />
                     <Route path="/website-speed-audit" element={<WebsiteSpeedAudits />} />
                     <Route path="/crime-digest" element={<CrimeDigest />} />
-                    <Route path="/demand-radar" element={<DemandRadar />} />
+                    <Route path="/demand-radar" element={<Navigate to="/growth-radar" replace />} />
                     <Route path="/talent-radar-vs-staffing" element={<TalentRadarVsStaffing />} />
                     <Route path="/fielddesk-vs-eway" element={<FieldDeskVsEway />} />
                     <Route path="/mortgage-radar-vs-trigger-leads" element={<MortgageRadarVsTriggerLeads />} />

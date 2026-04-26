@@ -884,6 +884,36 @@ export type Database = {
         }
         Relationships: []
       }
+      alert_throttle: {
+        Row: {
+          alert_key: string
+          first_seen_at: string
+          hit_count: number
+          last_seen_at: string
+          last_sent_at: string | null
+          suppressed_count: number
+          window_minutes: number
+        }
+        Insert: {
+          alert_key: string
+          first_seen_at?: string
+          hit_count?: number
+          last_seen_at?: string
+          last_sent_at?: string | null
+          suppressed_count?: number
+          window_minutes?: number
+        }
+        Update: {
+          alert_key?: string
+          first_seen_at?: string
+          hit_count?: number
+          last_seen_at?: string
+          last_sent_at?: string | null
+          suppressed_count?: number
+          window_minutes?: number
+        }
+        Relationships: []
+      }
       annual_review_clients: {
         Row: {
           active: boolean | null
@@ -1494,6 +1524,48 @@ export type Database = {
           primary_targets?: string[] | null
           quarterly_goals?: Json | null
           secondary_targets?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      buyer_graduation_state: {
+        Row: {
+          buyer_email: string
+          created_at: string
+          id: string
+          last_pitch_first_look_at: string | null
+          last_pitch_territory_at: string | null
+          last_pitch_watcher_at: string | null
+          last_purchase_at: string | null
+          purchases_30d: number
+          tier: string
+          total_purchases: number
+          updated_at: string
+        }
+        Insert: {
+          buyer_email: string
+          created_at?: string
+          id?: string
+          last_pitch_first_look_at?: string | null
+          last_pitch_territory_at?: string | null
+          last_pitch_watcher_at?: string | null
+          last_purchase_at?: string | null
+          purchases_30d?: number
+          tier?: string
+          total_purchases?: number
+          updated_at?: string
+        }
+        Update: {
+          buyer_email?: string
+          created_at?: string
+          id?: string
+          last_pitch_first_look_at?: string | null
+          last_pitch_territory_at?: string | null
+          last_pitch_watcher_at?: string | null
+          last_purchase_at?: string | null
+          purchases_30d?: number
+          tier?: string
+          total_purchases?: number
           updated_at?: string
         }
         Relationships: []
@@ -3547,6 +3619,57 @@ export type Database = {
         }
         Relationships: []
       }
+      court_cases: {
+        Row: {
+          attorney_name: string | null
+          case_number: string
+          case_type: string | null
+          county: string | null
+          court: string
+          created_at: string
+          filed_at: string | null
+          id: string
+          ingested_at: string
+          party_defendant: string | null
+          party_plaintiff: string | null
+          raw: Json | null
+          source_url: string | null
+          zip: string | null
+        }
+        Insert: {
+          attorney_name?: string | null
+          case_number: string
+          case_type?: string | null
+          county?: string | null
+          court: string
+          created_at?: string
+          filed_at?: string | null
+          id?: string
+          ingested_at?: string
+          party_defendant?: string | null
+          party_plaintiff?: string | null
+          raw?: Json | null
+          source_url?: string | null
+          zip?: string | null
+        }
+        Update: {
+          attorney_name?: string | null
+          case_number?: string
+          case_type?: string | null
+          county?: string | null
+          court?: string
+          created_at?: string
+          filed_at?: string | null
+          id?: string
+          ingested_at?: string
+          party_defendant?: string | null
+          party_plaintiff?: string | null
+          raw?: Json | null
+          source_url?: string | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
       crm_visitor_events: {
         Row: {
           city: string | null
@@ -5087,6 +5210,8 @@ export type Database = {
           daily_calls: number
           daily_hits: number
           daily_reset_at: string
+          disabled_reason: string | null
+          disabled_until: string | null
           last_429_at: string | null
           provider: string
           updated_at: string
@@ -5096,6 +5221,8 @@ export type Database = {
           daily_calls?: number
           daily_hits?: number
           daily_reset_at?: string
+          disabled_reason?: string | null
+          disabled_until?: string | null
           last_429_at?: string | null
           provider: string
           updated_at?: string
@@ -5105,6 +5232,8 @@ export type Database = {
           daily_calls?: number
           daily_hits?: number
           daily_reset_at?: string
+          disabled_reason?: string | null
+          disabled_until?: string | null
           last_429_at?: string | null
           provider?: string
           updated_at?: string
@@ -8579,6 +8708,250 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_exchange_enrichment_checks: {
+        Row: {
+          ai_summary_ok: boolean
+          created_at: string
+          details: Json
+          email_deliverable_ok: boolean
+          geocoded_ok: boolean
+          id: string
+          last_checked_at: string
+          lead_id: string
+          phone_tcpa_ok: boolean
+          provenance_ok: boolean
+          signal_verified_ok: boolean
+        }
+        Insert: {
+          ai_summary_ok?: boolean
+          created_at?: string
+          details?: Json
+          email_deliverable_ok?: boolean
+          geocoded_ok?: boolean
+          id?: string
+          last_checked_at?: string
+          lead_id: string
+          phone_tcpa_ok?: boolean
+          provenance_ok?: boolean
+          signal_verified_ok?: boolean
+        }
+        Update: {
+          ai_summary_ok?: boolean
+          created_at?: string
+          details?: Json
+          email_deliverable_ok?: boolean
+          geocoded_ok?: boolean
+          id?: string
+          last_checked_at?: string
+          lead_id?: string
+          phone_tcpa_ok?: boolean
+          provenance_ok?: boolean
+          signal_verified_ok?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_exchange_enrichment_checks_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: true
+            referencedRelation: "contractor_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_exchange_listings: {
+        Row: {
+          buyer_email: string | null
+          created_at: string
+          id: string
+          internal_only: boolean
+          killed_at: string | null
+          killed_reason: string | null
+          lead_id: string
+          listed_at: string | null
+          price_cents: number | null
+          price_override: boolean
+          refund_reason: string | null
+          refunded_at: string | null
+          sale_mode: string
+          sold_at: string | null
+          status: string
+          updated_at: string
+          vertical: string
+        }
+        Insert: {
+          buyer_email?: string | null
+          created_at?: string
+          id?: string
+          internal_only?: boolean
+          killed_at?: string | null
+          killed_reason?: string | null
+          lead_id: string
+          listed_at?: string | null
+          price_cents?: number | null
+          price_override?: boolean
+          refund_reason?: string | null
+          refunded_at?: string | null
+          sale_mode?: string
+          sold_at?: string | null
+          status?: string
+          updated_at?: string
+          vertical: string
+        }
+        Update: {
+          buyer_email?: string | null
+          created_at?: string
+          id?: string
+          internal_only?: boolean
+          killed_at?: string | null
+          killed_reason?: string | null
+          lead_id?: string
+          listed_at?: string | null
+          price_cents?: number | null
+          price_override?: boolean
+          refund_reason?: string | null
+          refunded_at?: string | null
+          sale_mode?: string
+          sold_at?: string | null
+          status?: string
+          updated_at?: string
+          vertical?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_exchange_listings_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: true
+            referencedRelation: "contractor_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_exchange_pricing: {
+        Row: {
+          active: boolean
+          aged_multiplier: number
+          base_price_cents: number
+          created_at: string
+          fresh_multiplier: number
+          id: string
+          notes: string | null
+          signal_strong_bonus_cents: number
+          updated_at: string
+          vertical: string
+          warm_multiplier: number
+        }
+        Insert: {
+          active?: boolean
+          aged_multiplier?: number
+          base_price_cents?: number
+          created_at?: string
+          fresh_multiplier?: number
+          id?: string
+          notes?: string | null
+          signal_strong_bonus_cents?: number
+          updated_at?: string
+          vertical: string
+          warm_multiplier?: number
+        }
+        Update: {
+          active?: boolean
+          aged_multiplier?: number
+          base_price_cents?: number
+          created_at?: string
+          fresh_multiplier?: number
+          id?: string
+          notes?: string | null
+          signal_strong_bonus_cents?: number
+          updated_at?: string
+          vertical?: string
+          warm_multiplier?: number
+        }
+        Relationships: []
+      }
+      lead_inventory_thresholds: {
+        Row: {
+          created_at: string
+          daily_spend_cap_cents: number
+          id: string
+          last_evaluated_at: string | null
+          min_inventory: number
+          paid_apis_enabled: boolean
+          updated_at: string
+          vertical: string
+        }
+        Insert: {
+          created_at?: string
+          daily_spend_cap_cents?: number
+          id?: string
+          last_evaluated_at?: string | null
+          min_inventory?: number
+          paid_apis_enabled?: boolean
+          updated_at?: string
+          vertical: string
+        }
+        Update: {
+          created_at?: string
+          daily_spend_cap_cents?: number
+          id?: string
+          last_evaluated_at?: string | null
+          min_inventory?: number
+          paid_apis_enabled?: boolean
+          updated_at?: string
+          vertical?: string
+        }
+        Relationships: []
+      }
+      lead_purchase_reviews: {
+        Row: {
+          buyer_email: string
+          connected: boolean | null
+          created_at: string
+          id: string
+          is_published: boolean
+          lead_id: string | null
+          listing_id: string | null
+          outcome_text: string | null
+          rating: number | null
+        }
+        Insert: {
+          buyer_email: string
+          connected?: boolean | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          lead_id?: string | null
+          listing_id?: string | null
+          outcome_text?: string | null
+          rating?: number | null
+        }
+        Update: {
+          buyer_email?: string
+          connected?: boolean | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          lead_id?: string | null
+          listing_id?: string | null
+          outcome_text?: string | null
+          rating?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_purchase_reviews_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_purchase_reviews_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "lead_exchange_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       learn_articles: {
         Row: {
           author: string
@@ -9399,6 +9772,36 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_magic_tokens: {
+        Row: {
+          buyer_email: string
+          created_at: string
+          expires_at: string
+          id: string
+          ip_address: string | null
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          buyer_email: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          ip_address?: string | null
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          buyer_email?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       marketplace_redeem_rate_limits: {
         Row: {
           attempts: number
@@ -9540,6 +9943,42 @@ export type Database = {
           lead_id?: string
           product?: string
           watched_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_zip_alerts: {
+        Row: {
+          active: boolean
+          buyer_email: string
+          created_at: string
+          id: string
+          last_notified_at: string | null
+          product: string | null
+          trade: string | null
+          updated_at: string
+          zip: string | null
+        }
+        Insert: {
+          active?: boolean
+          buyer_email: string
+          created_at?: string
+          id?: string
+          last_notified_at?: string | null
+          product?: string | null
+          trade?: string | null
+          updated_at?: string
+          zip?: string | null
+        }
+        Update: {
+          active?: boolean
+          buyer_email?: string
+          created_at?: string
+          id?: string
+          last_notified_at?: string | null
+          product?: string | null
+          trade?: string | null
+          updated_at?: string
+          zip?: string | null
         }
         Relationships: []
       }
@@ -10532,6 +10971,33 @@ export type Database = {
           industry?: string | null
           onboard_count?: number | null
           stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      onboarding_progress: {
+        Row: {
+          completed_at: string
+          created_at: string
+          id: string
+          product: string
+          step: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          product: string
+          step: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          product?: string
+          step?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -18739,6 +19205,10 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      disable_enrichment_provider: {
+        Args: { p_days?: number; p_provider: string; p_reason: string }
+        Returns: undefined
+      }
       earth: { Args: never; Returns: number }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
@@ -18819,6 +19289,10 @@ export type Database = {
       }
       is_active_team_member: {
         Args: { _roster_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_enrichment_provider_disabled: {
+        Args: { p_provider: string }
         Returns: boolean
       }
       is_roster_owner: {
