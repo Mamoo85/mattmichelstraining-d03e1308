@@ -177,7 +177,75 @@ serve(async (req) => {
       return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
     }
 
-    // 3. Default: forward inbound to Matt's personal cell (existing behavior)
+    // 3. Fixer SMS commands — only from Matt's personal cell
+    if (sb && fromNormalized === MATT_PERSONAL) {
+      const cmd = trimmed.toUpperCase();
+
+      if (cmd === "FIX") {
+        // Trigger watchdog immediately
+        fetch(`${SUPABASE_URL}/functions/v1/code-fixer-watchdog`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ trigger: "sms_command" }),
+        }).catch(() => {/* fire-and-forget */});
+        await sendSMS(
+          MATT_PERSONAL,
+          TWILIO_PHONE_NUMBER,
+          "🔧 Fixer triggered — you'll get a summary SMS when it finishes.",
+          "fixer",
+          false,
+          { bypassQuietHours: true }
+        );
+        return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
+      }
+
+      if (cmd === "ERRORS" || cmd === "STATUS") {
+        const { data } = await sb
+          .from("error_logs")
+          .select("source,function_name,severity,error_message,created_at")
+          .order("created_at", { ascending: false })
+          .limit(5);
+        const lines = (data || []).map(
+          (e: { severity: string; source: string; function_name: string | null; error_message: string }, i: number) =>
+            `${i + 1}. [${e.severity}] ${e.source}/${e.function_name || "?"}: ${(e.error_message || "").slice(0, 55)}`
+        );
+        await sendSMS(
+          MATT_PERSONAL,
+          TWILIO_PHONE_NUMBER,
+          lines.length ? `Last ${lines.length} errors:\n${lines.join("\n")}` : "No recent errors.",
+          "fixer",
+          false,
+          { bypassQuietHours: true }
+        );
+        return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
+      }
+
+      if (cmd === "FIXED?") {
+        const { data } = await sb
+          .from("fixer_runs")
+          .select("triggered_by,errors_fixed,errors_escalated,errors_failed,summary,completed_at")
+          .order("started_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const msg = data
+          ? `Last fixer run (${(data as { triggered_by: string; errors_fixed: number; errors_escalated: number; errors_failed: number; summary: string }).triggered_by}): ${(data as { triggered_by: string; errors_fixed: number; errors_escalated: number; errors_failed: number; summary: string }).errors_fixed} fixed, ${(data as { triggered_by: string; errors_fixed: number; errors_escalated: number; errors_failed: number; summary: string }).errors_escalated} escalated, ${(data as { triggered_by: string; errors_fixed: number; errors_escalated: number; errors_failed: number; summary: string }).errors_failed} failed.`
+          : "No fixer runs recorded yet.";
+        await sendSMS(
+          MATT_PERSONAL,
+          TWILIO_PHONE_NUMBER,
+          msg,
+          "fixer",
+          false,
+          { bypassQuietHours: true }
+        );
+        return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
+      }
+    }
+
+    // 4. Default: forward inbound to Matt's personal cell (existing behavior)
     await sendSMS(
       MATT_PERSONAL,
       TWILIO_PHONE_NUMBER,
