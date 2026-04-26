@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import callDiagram from "@/assets/call-routing-diagram.png";
 import WaitlistGate from "@/components/WaitlistGate";
 import PostCheckoutClaim from "@/components/checkout/PostCheckoutClaim";
+import StickyMobileCTA from "@/components/shared/StickyMobileCTA";
 
 export default function AIPhoneAnswering() {
   const searchParams = new URLSearchParams(window.location.search);
