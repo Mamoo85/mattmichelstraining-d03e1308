@@ -14,6 +14,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-04-26*
 
+### Phase 25 — Mortgage Radar Pipeline + 8-Product Audit COMPLETE ✅
+*All work on `main`. Dev branch synced.*
+
+**Mortgage Radar — zero-touch pipeline finalized:**
+- `supabase/config.toml`: added `verify_jwt = false` for all 10 mortgage-radar functions + visitor-identify (cron calls were 401ing)
+- `supabase/migrations/20260426070000_mortgage_radar_crons.sql`: added `mortgage-radar-scanner-daily` (8am ET) + `mortgage-radar-weekly-digest` (Mon 8am ET) — scanner was never scheduled
+- `supabase/functions/mortgage-radar-scanner/index.ts`: replaced local `sendHotLeadSMS` (raw Twilio, no TCPA) with `sendSMS` from `_shared/twilio.ts`
+- `supabase/functions/stripe-webhook/index.ts`: fire-and-forget scanner invoke on new signup — first leads in minutes not 24h
+- `src/components/PostCheckoutClaim.tsx`: deleted (dead code duplicate; real one is `src/components/checkout/PostCheckoutClaim.tsx`)
+
+**Full 8-product pipeline audit — 12 issues found and fixed:**
+
+P0 (revenue-breaking):
+- **FieldDesk webhook type mismatch** FIXED: webhook checked `"field_service_subscription"` but checkout sets `"field_crm_subscription"` — every FieldDesk payment since launch hit the catch-all, customers were never provisioned. Corrected type string.
+- **config.toml missing entries** FIXED: added `create-field-crm-checkout` + `create-bundle-revenue-suite-checkout` (both defaulted to `verify_jwt = true`)
+
+P1 (post-payment UX broken):
+- **TechAlert success_url** FIXED: `/hire-alert` redirect dropped `session_id=` query param; changed success_url directly to `/talent-radar`
+- **Marketplace `session=` param** FIXED: standardized to `session_id=` to match claim-session and LeadDetail expectations
+
+P2/P3 (missing automation):
+- **Marketplace cron schedules** FIXED: `20260426080000_marketplace_crons.sql` — 4 background workers (weekly-scorecard, reengagement, hot-zone-notifier, saved-search-notifier) now have ET-aligned cron schedules
+- **marketplace-outreach-blast config.toml** FIXED: missing entry added
+
+P4 (code quality):
+- **SiteRadar dedicated webhook** FIXED: was falling to generic catch-all (no field_crm_clients upsert, no visitor_script_key). Added full handler that generates script key, sends installation email
+- **Bundle Revenue Suite email branding** FIXED: was using `sendM2Email()` (M2 Training brand) — switched to `dwaEmail()` with DWA HTML template
+- **Dead duplicate marketplace handler** FIXED: removed unreachable duplicate at fallthrough zone that lacked `markFulfilled`
+
+**Known remaining items (not code bugs):**
+- FieldDesk has no cron schedules for `field-service-sms` / `field-service-contract-scheduler` — functions exist but need business logic review to determine trigger frequency
+- TechAlert `hire-alert-dispatcher` has no active cron — was deliberately unscheduled in migration 20260420021718, needs Matt to decide if it should be re-added
+- Marketplace `marketplace-outreach-blast` has no cron — intentionally manual-trigger only (bulk blast, not automated)
+
 ### Phase 24 — CI Recovery + Full Audit + PostCheckoutClaim COMPLETE ✅
 *All work on `main`. 231/231 tests passing (99 Vitest + 132 Deno).*
 
