@@ -124,7 +124,7 @@ serve(async (req) => {
         tos_version: "2026-04-fcra",
         data_classification: "b2b_market_intelligence_not_consumer_report",
       },
-      success_url: `${origin}/${source_page === "healthcare" ? "talent-radar/healthcare" : "hire-alert"}?success=1&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}/${source_page === "healthcare" ? "talent-radar/healthcare" : "talent-radar"}?success=1&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/${source_page === "healthcare" ? "talent-radar/healthcare" : "hire-alert"}`,
     });
 
