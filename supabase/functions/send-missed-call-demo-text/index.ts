@@ -79,6 +79,23 @@ serve(async (req) => {
 
     const result = await sendSMS(e164, DWA_FROM, body, "missed_call_demo");
     if (!result.success) {
+      const reason = (result.error || "").toLowerCase();
+      // Friendly handling for TCPA quiet-hours + opt-out — return 200 so the UI shows a soft message
+      if (reason.includes("quiet_hour") || reason.includes("quiet hour")) {
+        phoneCooldown.set(e164, Date.now());
+        return new Response(JSON.stringify({
+          success: false,
+          softError: true,
+          message: "We pause demo texts between 9pm–9am (TCPA). Try again in the morning — your text will fly within 8 seconds.",
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
+      }
+      if (reason.includes("opt") && reason.includes("out")) {
+        return new Response(JSON.stringify({
+          success: false,
+          softError: true,
+          message: "This number has opted out of texts. Use a different phone to see the demo.",
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
+      }
       return new Response(JSON.stringify({ error: result.error || "Could not send text." }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
