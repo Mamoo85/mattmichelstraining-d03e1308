@@ -12,11 +12,26 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
 
 const MISSED_STATUSES = new Set(["no-answer", "busy", "failed"]);
+const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 
-// Default text for Matt's DWA number
-const DWA_TEXT_BODY =
-  "Hey, this is Matt with Detroit Web Agency — sorry I missed your call! " +
-  "Text back what you need and I'll get right back to you. — Matt (313) 992-1219";
+async function getCityFromNumber(phone: string): Promise<string> {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !phone) return "";
+  try {
+    const res = await fetch(
+      `https://lookups.twilio.com/v1/PhoneNumbers/${encodeURIComponent(phone)}`,
+      { headers: { Authorization: "Basic " + btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`) } }
+    );
+    if (!res.ok) return "";
+    const data = await res.json();
+    return data.carrier?.name ? "" : (data.national_format || "").split(" ")[0] || "";
+  } catch { return ""; }
+}
+
+function buildDwaText(city: string): string {
+  const location = city ? ` from ${city}` : "";
+  return `Hey! This is Matt — Detroit Web Agency. Sorry I missed your call${location}. Text me what you need and I'll get right back to you.`;
+}
 
 const TWIML_EMPTY = '<?xml version="1.0" encoding="UTF-8"?><Response/>';
 
@@ -66,8 +81,9 @@ serve(async (req) => {
     }
 
     // ── DWA MODE: Matt's number ────────────────────────────────────────────
-    // Guard: don't text the same caller twice within 10 minutes (prevents forwarding loops)
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+    // Guard: don't text the same caller twice within 10 minutes
     const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const { data: recentTexts } = await sb
       .from("system_comms_log")
@@ -83,7 +99,21 @@ serve(async (req) => {
       return new Response(TWIML_EMPTY, { headers: { "Content-Type": "text/xml" } });
     }
 
-    const result = await sendSMS(callerPhone, TWILIO_PHONE_NUMBER, DWA_TEXT_BODY, "missed_call");
+    // Personalize with caller's city via Twilio Lookup
+    const city = await getCityFromNumber(callerPhone);
+    const textBody = buildDwaText(city);
+
+    // Log to missed_call_captures (lead pipeline)
+    await sb.from("missed_call_captures").insert({
+      caller_number: callerPhone,
+      city: city || null,
+      text_sent: textBody,
+      status: "new",
+    }).then(({ error }) => {
+      if (error) console.error("[missed-call-status] captures insert:", error.message);
+    });
+
+    const result = await sendSMS(callerPhone, TWILIO_PHONE_NUMBER, textBody, "missed_call");
     if (result.success) {
       console.log(`[missed-call-status] DWA text-back sent to ${callerPhone} — SID: ${result.sid}`);
     } else {

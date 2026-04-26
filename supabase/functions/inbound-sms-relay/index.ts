@@ -177,7 +177,123 @@ serve(async (req) => {
       return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
     }
 
-    // 3. Default: forward inbound to Matt's personal cell (existing behavior)
+    // 3. Fixer SMS commands — only from Matt's personal cell
+    if (sb && fromNormalized === MATT_PERSONAL) {
+      const cmd = trimmed.toUpperCase();
+
+      if (cmd === "FIX") {
+        // Trigger watchdog immediately
+        fetch(`${SUPABASE_URL}/functions/v1/code-fixer-watchdog`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ trigger: "sms_command" }),
+        }).catch(() => {/* fire-and-forget */});
+        await sendSMS(
+          MATT_PERSONAL,
+          TWILIO_PHONE_NUMBER,
+          "🔧 Fixer triggered — you'll get a summary SMS when it finishes.",
+          "fixer",
+          false,
+          { bypassQuietHours: true }
+        );
+        return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
+      }
+
+      if (cmd === "ERRORS" || cmd === "STATUS") {
+        const { data } = await sb
+          .from("error_logs")
+          .select("source,function_name,severity,error_message,created_at")
+          .order("created_at", { ascending: false })
+          .limit(5);
+        const lines = (data || []).map(
+          (e: { severity: string; source: string; function_name: string | null; error_message: string }, i: number) =>
+            `${i + 1}. [${e.severity}] ${e.source}/${e.function_name || "?"}: ${(e.error_message || "").slice(0, 55)}`
+        );
+        await sendSMS(
+          MATT_PERSONAL,
+          TWILIO_PHONE_NUMBER,
+          lines.length ? `Last ${lines.length} errors:\n${lines.join("\n")}` : "No recent errors.",
+          "fixer",
+          false,
+          { bypassQuietHours: true }
+        );
+        return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
+      }
+
+      if (cmd === "FIXED?") {
+        const { data } = await sb
+          .from("fixer_runs")
+          .select("triggered_by,errors_fixed,errors_escalated,errors_failed,summary,completed_at")
+          .order("started_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const msg = data
+          ? `Last fixer run (${(data as { triggered_by: string; errors_fixed: number; errors_escalated: number; errors_failed: number; summary: string }).triggered_by}): ${(data as { triggered_by: string; errors_fixed: number; errors_escalated: number; errors_failed: number; summary: string }).errors_fixed} fixed, ${(data as { triggered_by: string; errors_fixed: number; errors_escalated: number; errors_failed: number; summary: string }).errors_escalated} escalated, ${(data as { triggered_by: string; errors_fixed: number; errors_escalated: number; errors_failed: number; summary: string }).errors_failed} failed.`
+          : "No fixer runs recorded yet.";
+        await sendSMS(
+          MATT_PERSONAL,
+          TWILIO_PHONE_NUMBER,
+          msg,
+          "fixer",
+          false,
+          { bypassQuietHours: true }
+        );
+        return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
+      }
+    }
+
+    // 4. Callback scheduler — parse "call me at X" from any caller reply
+    if (sb && fromNormalized !== MATT_PERSONAL) {
+      const callbackMatch = body.match(/call\s+(?:me\s+)?(?:back\s+)?at\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)/i);
+      if (callbackMatch) {
+        const timeStr = callbackMatch[1].trim();
+        const now = new Date();
+        // Parse simple time — default to today, Eastern time approximation (UTC-4)
+        const [hourRaw, minRaw] = timeStr.replace(/[apm]/gi, "").split(":").map(Number);
+        const isPm = /pm/i.test(timeStr);
+        const hour = isPm && hourRaw < 12 ? hourRaw + 12 : (!isPm && hourRaw === 12 ? 0 : hourRaw);
+        const scheduledFor = new Date(now);
+        scheduledFor.setUTCHours(hour + 4, minRaw || 0, 0, 0); // +4 for ET offset
+        if (scheduledFor < now) scheduledFor.setUTCDate(scheduledFor.getUTCDate() + 1);
+
+        await sb.from("callback_reminders").insert({
+          caller_number: fromNormalized,
+          context: body.slice(0, 200),
+          scheduled_for: scheduledFor.toISOString(),
+          status: "pending",
+        }).then(({ error }) => {
+          if (error) console.error("[inbound-sms-relay] callback_reminders insert:", error.message);
+        });
+
+        await sendSMS(
+          fromNormalized,
+          TWILIO_PHONE_NUMBER,
+          `Got it! Matt will call you back at ${timeStr}. `,
+          "missed_call_callback",
+          false,
+          { bypassQuietHours: true }
+        );
+
+        // Also log the reply in missed_call_captures
+        await sb.from("missed_call_captures")
+          .update({ reply_received: body.slice(0, 500), status: "in_progress" })
+          .eq("caller_number", fromNormalized)
+          .eq("status", "new");
+
+        return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
+      }
+
+      // Log any caller reply into missed_call_captures
+      await sb.from("missed_call_captures")
+        .update({ reply_received: body.slice(0, 500), status: "in_progress" })
+        .eq("caller_number", fromNormalized)
+        .eq("status", "new");
+    }
+
+    // 5. Default: forward inbound to Matt's personal cell (existing behavior)
     await sendSMS(
       MATT_PERSONAL,
       TWILIO_PHONE_NUMBER,

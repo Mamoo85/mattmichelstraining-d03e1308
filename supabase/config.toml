@@ -1570,6 +1570,39 @@ verify_jwt = false
 [functions.inbound-sms-relay]
 verify_jwt = false
 
+[functions.code-fixer-watchdog]
+verify_jwt = false
+
+[functions.claim-session]
+verify_jwt = false
+
+[functions.create-site-radar-checkout]
+verify_jwt = false
+
+[functions.voicemail-transcription-handler]
+verify_jwt = false
+
+[functions.callback-reminder-sender]
+verify_jwt = false
+
+[functions.site-radar-repeat-alert]
+verify_jwt = false
+
+[functions.site-radar-weekly-digest]
+verify_jwt = false
+
+[functions.site-radar-health-check]
+verify_jwt = false
+
+[functions.nps-survey-sender]
+verify_jwt = false
+
+[functions.create-customer-portal-session]
+verify_jwt = false
+
+[functions.missed-call-escalation]
+verify_jwt = false
+
 [functions.contractor-roi-sms]
 verify_jwt = false
 

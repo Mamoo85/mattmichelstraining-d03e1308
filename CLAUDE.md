@@ -14,6 +14,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-04-26*
 
+### Phase 23 — Autonomous Fixer + SiteRadar + Missed-Call Enhancements IN PROGRESS 🔄
+*Branch: `claude/add-claude-documentation-8ZEPt` — awaiting Matt to merge to main*
+
+**Autonomous Code-Fixer Agent (complete):**
+- `fixer_queue` + `fixer_runs` tables + Postgres trigger on `error_logs` → fires watchdog immediately
+- `code-fixer-watchdog` edge function: classifies + auto-fixes 6 error categories, SMS Matt on results
+- `inbound-sms-relay`: text "FIX" → trigger watchdog, "ERRORS" → last 5 errors, "FIXED?" → last run summary
+- `.claude/agents/fixer.md`: Claude Code agent spec for code-level fixes, pushes to auto-fix branches
+- `.claude/settings.json`: full git + vitest permissions, no prompts for fixer agent
+
+**SiteRadar full buildout (complete):**
+- `create-site-radar-checkout`: $49/mo, `site_radar_subscription` webhook type
+- `stripe-webhook`: added `site_radar_subscription` + `ads_copy_subscription` handlers with welcome emails
+- `visitor-identify`: high-intent SMS to client when visitor hits /pricing or /contact
+- `site-radar-repeat-alert`: hourly cron, SMS when company visits 3x in 7 days
+- `site-radar-weekly-digest`: Monday 7am, sends visitor summary (skips "nothing happened" weeks)
+- `site-radar-health-check`: daily, pings client site, emails re-install instructions if snippet missing 48h+
+- Seeded `field_crm_clients` for detroitwebagency.com + mattmichelstraining.com (Matt's own sites)
+
+**Matt's missed-call enhancements for +13139921219 (complete):**
+- `missed-call-status`: Twilio Lookup city personalization + logs every missed call to `missed_call_captures`
+- `missed-call-handler`: `<Record>` TwiML added — voicemail recorded + transcribed after missed call
+- `voicemail-transcription-handler`: receives Twilio transcription, SMS Matt the transcript
+- `inbound-sms-relay`: parses "call me at X" → inserts `callback_reminders` row, confirms to caller
+- `callback-reminder-sender`: every 5 min, SMS Matt with tap-to-dial link when callback is due
+- `missed-call-escalation`: every 30 min, emails Matt for leads with no reply in 4h
+- Migrations: `missed_call_captures`, `callback_reminders`, `google_review_url` + `owner_phone` on `missed_call_clients`
+
+**Cross-cutting (complete):**
+- `claim-session`: post-checkout magic link auth for all 8 DWA products
+- `create-customer-portal-session`: Stripe billing portal URL, searches all product tables by email
+- `nps-survey-sender`: daily cron, sends product-specific NPS at 30/60/90 day milestones
+- `client_nps_scores` table with unique milestone constraint
+
+**Lovable's side (pending — give them the prompt from this session):**
+- `/my-site-radar` customer portal, SiteRadar landing page, `<PostCheckoutClaim />` component
+- Missed call admin tab, health dashboard upgrade, Stripe portal buttons, NPS templates, empty states
+
 ### Phase 22 — Golden Ticket Marketplace + LO Outreach + Paranoia Sweep COMPLETE ✅
 *Originally completed: 2026-04-24. Post-sweep additions through 2026-04-25 below.*
 

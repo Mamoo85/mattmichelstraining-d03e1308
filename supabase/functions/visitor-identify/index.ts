@@ -181,6 +181,31 @@ serve(async (req) => {
       }
     }
 
+    // High-intent SMS: page contains /pricing or /contact → alert client immediately
+    const pageLower = (page || "").toLowerCase();
+    if (isBusiness && companyName && (pageLower.includes("pricing") || pageLower.includes("contact"))) {
+      const { data: clientRow } = await sb
+        .from("field_crm_clients")
+        .select("owner_phone, business_name")
+        .eq("id", client.id)
+        .maybeSingle();
+      const ownerPhone = (clientRow as { owner_phone?: string } | null)?.owner_phone;
+      if (ownerPhone) {
+        const opener = pageLower.includes("pricing")
+          ? `pricing page`
+          : `contact page`;
+        await fetch(`${SUPABASE_URL}/functions/v1/send-sms-internal`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: ownerPhone,
+            body: `🔥 ${companyName} (${city || "unknown city"}) just hit your ${opener}. Strike while it's hot: call or text them now.`,
+            product: "site_radar_alert",
+          }),
+        }).catch(() => {/* fire-and-forget */});
+      }
+    }
+
     return new Response(JSON.stringify({ ok: true, identified: isBusiness, company: companyName || null }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

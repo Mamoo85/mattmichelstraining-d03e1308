@@ -80,11 +80,13 @@ serve(async (req) => {
     }
 
     // ── DWA MODE: Matt's personal number (+13139921219) ────────────────────
+    const transcriptionUrl = `${SUPABASE_URL}/functions/v1/voicemail-transcription-handler`;
     return twiml(
       `<Dial timeout="20" action="${statusUrl}" method="POST">` +
       `<Number url="${whisperUrl}">${MATT_PERSONAL}</Number>` +
       `</Dial>` +
-      `<Say voice="Polly.Joanna">You've reached Detroit Web Agency. Check your texts — Matt just sent you one. Talk soon.</Say>` +
+      `<Say voice="Polly.Joanna">You've reached Detroit Web Agency. Leave a message and Matt will text you right back.</Say>` +
+      `<Record maxLength="60" transcribeCallback="${transcriptionUrl}" playBeep="true"/>` +
       `<Hangup/>`
     );
   } catch (e: unknown) {

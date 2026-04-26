@@ -28,7 +28,19 @@
       "Bash(printf:*)",
       "Bash(which:*)",
       "Bash(env:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npx vitest*)",
+      "Bash(npx vitest run*)",
+      "Bash(git push*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git branch*)",
+      "Bash(git checkout*)",
+      "Bash(git fetch*)",
+      "Bash(git pull*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git status*)"
     ],
     "deny": []
   },
