@@ -179,6 +179,8 @@ export default function AdminClientHealth() {
     refetchInterval: 60000,
   });
 
+  const [filter, setFilter] = useState<"all" | "at_risk" | "danger">("all");
+
   const realClients = clients?.filter(c => !c.isInternal) ?? [];
   const internalClients = clients?.filter(c => c.isInternal) ?? [];
 
@@ -188,6 +190,17 @@ export default function AdminClientHealth() {
     yellow: realClients.filter(c => c.status === "yellow").length,
     red: realClients.filter(c => c.status === "red").length,
   };
+
+  // MRR at risk = sum of monthly price for red rows (true paying clients only)
+  const mrrAtRisk = realClients
+    .filter(c => c.status === "red")
+    .reduce((sum, c) => sum + parsePriceMonthly(c.price), 0);
+
+  const filteredRealClients = realClients.filter(c => {
+    if (filter === "at_risk") return c.status === "yellow" || c.status === "red";
+    if (filter === "danger") return c.status === "red";
+    return true;
+  });
 
   if (isLoading) {
     return <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" size={24} /></div>;
