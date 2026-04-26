@@ -2558,21 +2558,10 @@ serve(async (req) => {
               )
             )
           );
-          await sendM2Email(
+          await dwaEmail(
             email,
-            "Welcome to the Revenue Suite — All 8 Tools Are Live",
-            m2Email({
-              greeting: `Hey ${meta.business_name ? meta.business_name : "there"},`,
-              headline: "Your Revenue Suite is active",
-              body: `<p>All 8 automated revenue tools are now live for your business:</p>
-<ul style="padding-left:20px;margin:12px 0">
-<li>Review Monitor</li><li>Weekly SMS Blast</li><li>No-Show Re-Booker</li>
-<li>Estimate Follow-Up Drip</li><li>Invoice Chaser</li><li>After-Job Drip</li>
-<li>Seasonal Promo Blaster</li><li>Slow Day SMS</li>
-</ul>
-<p>I'll reach out within 24 hours to get everything configured for your business. In the meantime, feel free to text me anytime.</p>`,
-              cta: { text: "Text Matt Now", url: "sms:+13139921219" },
-            })
+            "Revenue Suite is Live — All 8 Tools Are Active",
+            `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">⚙️ REVENUE SUITE</p><h1 style="color:#fff;font-size:24px;margin:0 0 8px;">You're live, ${meta.business_name || "there"}.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 16px;">All 8 automated revenue tools are now active:</p><ul style="color:#e2e8f0;font-size:13px;padding-left:20px;margin:0 0 24px;"><li>Review Monitor</li><li>Weekly SMS Blast</li><li>No-Show Re-Booker</li><li>Estimate Follow-Up Drip</li><li>Invoice Chaser</li><li>After-Job Drip</li><li>Seasonal Promo Blaster</li><li>Slow Day SMS</li></ul><p style="color:#94a3b8;font-size:13px;margin:0;">I'll reach out within 24 hours to configure everything for your business. Text anytime: <a href="sms:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p></div><p style="color:#475569;font-size:11px;text-align:center;margin-top:16px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p></div></body></html>`
           );
           await notifyMatt(
             `🔥 Revenue Suite sold — ${meta.business_name || email}`,
