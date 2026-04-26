@@ -11,6 +11,7 @@ import AppNavbar from "@/components/layout/AppNavbar";
 import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
 import CheckEmailCard from "@/components/checkout/CheckEmailCard";
 import PostCheckoutClaim from "@/components/checkout/PostCheckoutClaim";
+import StickyMobileCTA from "@/components/shared/StickyMobileCTA";
 import ActionButton from "@/components/ui/action-button";
 import {
   MessageSquare, Bell, CalendarX, FileText, Receipt, UserPlus, Megaphone, Clock,
