@@ -46,6 +46,7 @@ serve(async (req) => {
       mode: "subscription",
       payment_method_types: ["card"],
       customer_email: email,
+      payment_method_collection: "if_required",
       subscription_data: {
         trial_period_days: 14,
       },
@@ -68,7 +69,7 @@ serve(async (req) => {
         businessName,
         phone,
       },
-      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/missed-call-text?success=1&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/missed-call-text?status=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/missed-call-text`,
     });
 

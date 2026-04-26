@@ -628,6 +628,7 @@ const App = () => (
                     <Route path="/industrial-newsletter" element={<IndustrialNewsletter />} />
                     <Route path="/missed-call-text" element={<MissedCallSaaS />} />
                     <Route path="/missed-call-catch" element={<MissedCallSaaS />} />
+                    <Route path="/missed-call-text/:industry" element={<MissedCallSaaS />} />
                     <Route path="/missed-call-setup" element={<MissedCallSetup />} />
                     <Route path="/review-monitor" element={<ReviewMonitor />} />
                     <Route path="/weekly-sms-blast" element={<WeeklySMSBlast />} />
