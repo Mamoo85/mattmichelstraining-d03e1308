@@ -189,6 +189,7 @@ export default function BundleRevenueSuite() {
           </Card>
         </div>
       </div>
+      <StickyMobileCTA label="Start Revenue Suite — $299/mo" onClick={handleCheckout} />
     </>
   );
 }
