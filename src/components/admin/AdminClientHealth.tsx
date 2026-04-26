@@ -350,7 +350,7 @@ export default function AdminClientHealth() {
                   : "No clients match this filter."}
               </p>
             ) : (
-              realClients.map((c, i) => <ClientRow key={i} c={c} i={i} />)
+              filteredRealClients.map((c, i) => <ClientRow key={i} c={c} i={i} />)
             )}
           </div>
         </CardContent>
