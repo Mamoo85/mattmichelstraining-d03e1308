@@ -13,7 +13,6 @@ interface UnlockedLead extends MarketplaceLead {
   phone?: string | null;
   email?: string | null;
   address?: string | null;
-  id?: string;
 }
 
 interface Props {
@@ -96,7 +95,7 @@ export function UnlockedDossierCard({ lead, onExportPdf, onShare, className }: P
         <EquityPanel lead={lead} />
         <MetricsRow lead={lead} />
 
-        {lead.id && <EnrichmentProvenancePanel leadId={lead.id} />}
+        <EnrichmentProvenancePanel leadId={lead.id} />
 
         {/* TCPA banner — REQUIRED above opener */}
         <div className="flex items-start gap-2 p-2.5 border border-orange-500/40 bg-orange-500/10 rounded">
