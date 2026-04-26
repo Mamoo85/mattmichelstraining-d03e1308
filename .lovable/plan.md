@@ -1,73 +1,76 @@
-## Goal
-
-Replace the current `src/pages/MissedCallSaaS.tsx` with a high-conversion landing page implementing all 20 requested elements. Trial moves from 7 days → **14 days, no card charged**.
-
 ## Scope
 
-### Backend (small but required)
+Build 12 UI/UX upgrades across the DWA product suite. Most backend edge functions already exist (`enrich-visitor`, `claim-session`, `create-customer-portal-session`, `create-site-radar-checkout`, `nps-survey-sender`, `site-radar-health-check`). This plan focuses on UI, two new tables, and one URL fix.
 
-1. **`supabase/functions/create-missed-call-subscription/index.ts`** — change `trial_period_days: 7` → `14`. Add `payment_method_collection: "if_required"` so the trial truly says "no card charged."
-2. **New edge function `send-missed-call-demo-text`** — accepts `{ phone, city? }`, sends a single SMS via shared `_shared/twilio.ts` using the exact production template ("Hey! I just missed your call from {city} — I'll call you right back!"). Rate-limit: 1 send / phone / 10 min via in-memory map + a `demo_text_sends` row (best-effort log, no new migration — uses existing `system_comms_log`). Validates E.164, blocks obvious abuse (no SMS to short codes, no repeated identical numbers > 3/hour from same IP).
+## Database changes (one migration)
 
-### Frontend — full rewrite of `src/pages/MissedCallSaaS.tsx`
+1. `client_nps_scores` — `id`, `client_email`, `product` (text), `score` (int, nullable for YES/NO), `raw_reply` (text), `surveyed_at` (timestamptz), `milestone_day` (int: 30/60/90), unique(client_email, product, milestone_day). RLS: admin-only read, service-role insert.
+2. `missed_call_captures` — `id`, `caller_number`, `city`, `voicemail_transcript`, `text_sent`, `reply_received`, `status` (default 'new'), `google_review_sent_at`, `created_at`. RLS: admin-only.
 
-Sections in order:
+## Pages & components
 
-1. **Hero (#1, #2, #3, #20)** — Headline "Never Lose Another Job to a Missed Call." Primary CTA: **"Start Free — 14 Days, No Card Charged"** (red micro-line under button: *"Cancel before day 14 and you're never charged."*). Right side (desktop) / below (mobile): animated iPhone mockup — incoming missed call → 8-second ticking countdown ring → SMS bubble types out the personalized text using browser-detected city (fallback "Grosse Pointe"). Pure CSS/Framer Motion-style keyframes already available in tailwind config (`fade-in`, `scale-in`).
-2. **Trust badges row (#6)** — Single horizontal strip: Twilio · Stripe · TCPA Compliant · Month-to-Month · No Setup Fee.
-3. **3-step "How It Works" (#12)** — Existing 3-step layout, tightened: Miss call → Text in 8s → Lead saved.
-4. **Try-It-Live demo (#17)** — Card with phone input + "Text me the demo" button. On submit calls `send-missed-call-demo-text`. Shows toast "Check your phone — text sent in under 8 seconds." Disabled state while pending; error toast on rate-limit.
-5. **Lost-revenue calculator (#7)** — Two sliders: missed calls/week (0–50), avg job value ($100–$10,000). Live computed: `weekly × value × 0.25 × 4.3 = monthly lost`. Big red number "You're losing $X/month." Subtext: "Missed Call Catch costs $99/mo. Recover one job and it pays for itself for the year."
-6. **Stat block (#8)** — 3 big stats in a row: 97% / 70% / 1-in-4.
-7. **Competitor comparison table (#4, #5)** — 4-column (Feature / Podium $399 / Birdeye $299 / DWA $99). Rows: Voicemail transcription, City personalization, Callback reminders, No contract, 14-day free trial, Setup help included. Below table, the "why we're cheaper" paragraph.
-8. **Objection crushers (#9, #10)** — Two side-by-side cards. "We already have voicemail" + "I call everyone back."
-9. **Bundle callout (#15)** — Banner: "Already a Mortgage Radar or TechAlert client? Add Missed Call Catch for $49/mo." Button → `/pricing#bundle` (existing route) with `?bundle=missed-call` param.
-10. **Social-proof ticker (#14)** — Animated counter line: "47 Metro Detroit businesses signed up this month." Hardcoded number constant `MONTHLY_SIGNUPS = 47` at top of file (easy to update); pulse animation.
-11. **Testimonials (#13)** — Reuse existing `WallOfLove` with current 5 quotes (already includes roofer/HVAC/plumber/electrician/GC — covers requested industries).
-12. **FAQ (#11)** — shadcn `Accordion` with the 6 Q&As listed in the request.
-13. **Pricing card** — $99/mo callout with 14-day trial badge.
-14. **Signup form** — Existing form, button copy: **"Start Free — 14 Days, No Card Charged →"** with red sub-line "Cancel before day 14 and you're never charged."
-15. **Footer** — Existing `EnterpriseFooterBlock`.
+### 1. `/my-site-radar` (new page `MySiteRadar.tsx`)
+- Auth: read `?token=`, query `field_crm_clients` by `dispatch_token`. If invalid → "Invalid or expired link."
+- Cards: today's visitor count, businesses identified count.
+- Top 5 companies list (from `crm_visitor_events` joined/aggregated by company).
+- Real-time feed: subscribe to `crm_visitor_events` realtime channel filtered by `client_id`. Each row shows page, timestamp, company (green dot if business), "Enrich" button → invokes `enrich-visitor`.
+- Health indicator: green if any event in last 24h, red otherwise.
+- Tracking snippet panel with copy button (uses `visitor_script_key`).
+- Brand: DWA dark teal (#00d4ff / #0a1628).
+- Route added to `App.tsx`.
 
-### Industry variants (#16)
+### 2. `/site-radar` (new landing `SiteRadarLanding.tsx`)
+- Hero, 3 feature cards, $49/mo pricing, CTA → `create-site-radar-checkout`.
+- Success state on `?success=1` with `<PostCheckoutClaim />`.
 
-Add route in `src/App.tsx`:
-```
-<Route path="/missed-call-text/:industry" element={<MissedCallSaaS />} />
-```
-Inside the page, read `useParams().industry`. Map → headline override:
-- `plumber` → "Plumbers: Stop Losing Jobs to Voicemail."
-- `dentist` → "Dentists: Every Missed Call Is a Lost Patient."
-- `contractor` → "Contractors: Win Jobs While You're On Site."
-- `roofer`, `hvac`, `electrician` → similar swaps.
-Default → existing headline. Also swap one stat-block label and one testimonial filter where applicable. SEO `<title>` updates per variant.
+### 3. `<PostCheckoutClaim />` shared component (`src/components/checkout/PostCheckoutClaim.tsx`)
+- Reads `?session_id=` on mount → POST to `claim-session`.
+- Shows "Check your inbox — login link sent" with spinning mail icon (lucide `Mail` + animate-spin).
+- Drop into success blocks of: FieldDesk, TechAlert, Healthcare HireAlert, SiteRadar, Missed-Call, Mortgage Radar, AI Phone Answering, Bundle Revenue Suite (8 pages — locate each `?success=1` block and inject).
 
-### Mobile sticky CTA (#19)
+### 4. Missed Call Leads admin tab (DWAAdmin)
+- New tab "📞 Missed Call Leads" in `DWAAdmin.tsx`.
+- Table from `missed_call_captures`: caller, city, voicemail (truncate 60), text sent, reply, status badge (new=blue, in-progress=yellow, resolved=green), "Mark Resolved" action.
 
-New small component `src/components/missed-call/MissedCallStickyCTA.tsx` (mirrors existing `StickyMobileCTA` pattern). Bottom bar, mobile only, appears after scrolling past hero. Text: "Start Free Trial — No Card for 14 Days →" → scrolls to signup form.
+### 5. "Manage billing" buttons
+- Add ghost button in footer of `MyMissedCall.tsx`, `MyMortgageRadar.tsx`, `MyContractorLeads.tsx`, `MyTechAlert.tsx`, and field-service-dispatch page → invokes existing `create-customer-portal-session` with `{ email }`, `window.location.href = url`.
 
-### Post-checkout setup wizard (#18)
+### 6. AdminClientHealth upgrade
+- Add `Status` column with traffic-light chip per row: 🟢 ≤7d activity + paid, 🟡 7–14d, 🔴 14d+ or inactive/Stripe not active.
+- "MRR at Risk" total card at top (sum of monthly price for 🔴 rows; pull pricing from a small map keyed by product).
+- Filter toggle: All / At Risk / Danger.
+- Add "Last NPS" mini-cell per row pulling latest `client_nps_scores` row by `client_email + product`.
 
-`MissedCallSetup.tsx` already exists and is reasonable. Add a 3-dot progress bar at the top (Confirm number → Customize text → Done) and a clearer "You're on day 1 of 14 — no card charged yet" banner. Existing logic untouched.
+### 7. NPS email templates
+- Create 4 React Email templates in `supabase/functions/_shared/email-templates/`: `nps-techalert.tsx`, `nps-fielddesk.tsx`, `nps-mortgage-radar.tsx`, `nps-missed-call.tsx`.
+- TechAlert subject: "Quick question from Matt — did TechAlert help you hire this month?" Body: YES/NO ask.
+- Others: "How likely are you to recommend [Product]…" 1–10 ask.
+- Confirm `nps-survey-sender` already wires templates+milestones; if not, add a small TODO comment (function is owned by Claude side — UI side only ships templates + table).
 
-## Files touched
+### 8. `<EmptyDashboardState />` component
+- Props: `productName`, `checklist: string[]`, `etaText`, `setupGuideHref`.
+- Render in `MyTechAlert`, `MyMortgageRadar`, `MyContractorLeads`, field-service-dispatch when their primary list is empty. Friendly onboarding visual, not error.
 
-- **edit** `src/pages/MissedCallSaaS.tsx` (full rewrite, ~600 lines)
-- **edit** `src/pages/MissedCallSetup.tsx` (add progress bar + trial banner only)
-- **edit** `src/App.tsx` (add `/missed-call-text/:industry` route)
-- **edit** `supabase/functions/create-missed-call-subscription/index.ts` (trial 7→14 + `payment_method_collection`)
-- **new** `supabase/functions/send-missed-call-demo-text/index.ts`
-- **new** `src/components/missed-call/MissedCallStickyCTA.tsx`
+### 9. "Forgot password?" links
+- Add to `Auth.tsx` and to email-lookup forms in `MyMissedCall.tsx`, `MyMortgageRadar.tsx` → `Link to="/reset-password"`.
 
-## Out of scope (explicit)
+### 10. Competitor intercept toggle in MyMissedCall
+- New section "Google Maps Coverage" with on/off Switch (UI state only, persisted to localStorage), explanatory copy, and "Contact us to provision" mailto button to `matt@detroitwebagency.com`.
 
-- SiteRadar landing page — separate request, will tackle next.
-- Real signup-counter wiring to DB — hardcoded constant for now (per user: "hook it to real data later").
-- New testimonial copy — using existing 5 (already cover roofer/plumber/HVAC/electrician/GC).
-- Phone-number Twilio Lookup for city personalization in the demo — uses caller-provided city or default; production missed-call flow already does Lookup.
+### 11. `<StickyMobileCTA label onClick />`
+- Fixed bottom on mobile (`md:hidden`), DWA brand styling.
+- Add to `/hire-alert`, `/field-service`, `/missed-call-text`, `/mortgage-radar`, `/site-radar`, `/ai-phone-answering`, `/bundle-revenue-suite`. Wire to each page's existing primary CTA action.
 
-## Risk / verification
+### 12. Bundle Revenue Suite success URL fix
+- In `supabase/functions/create-bundle-revenue-suite-checkout/index.ts`, change `success_url` to `${origin}/bundle-revenue-suite?status=success&session_id={CHECKOUT_SESSION_ID}`. Redeploy function.
 
-- After deploy, will `curl` `create-missed-call-subscription` to confirm `trial_period_days: 14` in the returned Stripe session (read session via `stripe-api` if needed).
-- Will `curl` `send-missed-call-demo-text` with a test phone to confirm SMS fires and rate-limit triggers on 2nd call.
-- No DB migration required.
+## Tech notes
+
+- Use existing `useAuth`, `lazyRetry`, supabase client (`@/integrations/supabase/client`).
+- All routes registered with `lazyRetry` in `App.tsx`.
+- All new tables get RLS + service_role bypass policy per project rules.
+- Status column queries `created_at` / `last_activity_at` (or equivalent timestamp already present on each table in `SERVICE_TABLES`); for tables missing such a column, fall back to `created_at`.
+- After all changes: redeploy `create-bundle-revenue-suite-checkout`.
+
+## Out of scope (already shipped or owned by Claude side)
+- `claim-session`, `create-customer-portal-session`, `create-site-radar-checkout`, `enrich-visitor`, `nps-survey-sender`, `missed-call-status` voicemail capture, `site-radar-health-check`. These exist; UI just wires to them.
