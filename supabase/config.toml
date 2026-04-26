@@ -1845,6 +1845,9 @@ verify_jwt = false
 [functions.create-bundle-revenue-suite-checkout]
 verify_jwt = false
 
+[functions.marketplace-outreach-blast]
+verify_jwt = false
+
 [functions.mortgage-radar-scanner]
 verify_jwt = false
 
