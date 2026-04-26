@@ -684,7 +684,11 @@ serve(async (req) => {
           .in("id", matchedClientIds);
         for (const c of (hotClients || [])) {
           if (c.phone) {
-            await sendHotLeadSMS(c.phone, c.business_name || "", s.address || "", score, s.signal_type, res.id);
+            const sigLabel = s.signal_type.replace(/_/g, " ");
+            const dashLink = `https://detroitwebagent.com/my-mortgage-radar?lead=${res.id}`;
+            const streetView = s.address ? `https://maps.google.com/?q=${encodeURIComponent(s.address)}` : "";
+            const hotMsg = `🔥 HOT MORTGAGE LEAD (${score}/10)\n${s.address || ""}\nSignal: ${sigLabel}\n\n📍 ${streetView}\n📊 Intel + outreach: ${dashLink}\n\nManual send only — TCPA. Reply STOP to opt out. — DWA`;
+            await sendSMS(c.phone, DWA_PHONE, hotMsg, "mortgage_radar_hot_lead");
             hotSmsFired += 1;
           }
         }
