@@ -15,7 +15,7 @@ type Client = {
 type Event = {
   id: string;
   client_id: string;
-  page_url: string | null;
+  page_visited: string | null;
   company_name: string | null;
   city: string | null;
   created_at: string;
@@ -43,7 +43,7 @@ export default function MySiteRadar() {
       setClient(c as Client);
       const { data: ev } = await supabase
         .from("crm_visitor_events")
-        .select("id,client_id,page_url,company_name,city,created_at")
+        .select("id,client_id,page_visited,company_name,city,created_at")
         .eq("client_id", c.id)
         .order("created_at", { ascending: false })
         .limit(100);
@@ -156,7 +156,7 @@ export default function MySiteRadar() {
                         <span style={{ width: 8, height: 8, borderRadius: "50%", background: e.company_name ? "#34d399" : "#475569", flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ color: "#e2e8f0", fontSize: 13, margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {e.page_url || "—"}
+                            {e.page_visited || "—"}
                           </p>
                           <p style={{ color: "#64748b", fontSize: 11, margin: "2px 0 0" }}>
                             {e.company_name || "Unknown visitor"} · {new Date(e.created_at).toLocaleTimeString()}
