@@ -2698,7 +2698,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] dead_lead_billing_setup error:", e);
           return new Response(JSON.stringify({ error: "dead_lead_billing_setup failed" }), { status: 500 });
         }
-        return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── Marketplace lead purchase — promote soft_lock → sold ─────────────────
@@ -2718,6 +2718,71 @@ serve(async (req) => {
           return new Response(JSON.stringify({ error: "marketplace_lead_purchase processing failed" }), { status: 500 });
         }
         return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── AI PHONE ANSWERING — $149/mo ─────────────────────────────────────
+      if (meta.type === "phone_answering_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          const bizName = meta.businessName || meta.business_name || meta.name || "there";
+          if (email) {
+            await dwaEmail(email, "AI Phone Answering is Live", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">📞 AI PHONE ANSWERING</p><h1 style="color:#fff;font-size:24px;margin:0 0 8px;">You're live, ${bizName}.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Your AI receptionist is ready. Reply to this email with your business hours and the forwarding number you want calls routed to, and I'll have it answering within 24 hours.</p><p style="color:#94a3b8;font-size:13px;margin:0;">Questions? Just reply or text (313) 992-1219. — Matt</p></div></div></body></html>`);
+            await notifyMatt(`💰 New AI Phone Answering — ${bizName} ($149/mo)`, `<p><strong>${bizName}</strong><br>${email} | ${meta.phone || "no phone"}</p><p>ACTION: Set up Twilio routing.</p>`);
+          }
+        } catch (e) { console.error("[WEBHOOK] phone_answering_subscription error:", e); return new Response(JSON.stringify({ error: "phone_answering failed" }), { status: 500 }); }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── AI ESTIMATE GENERATOR — $99/mo ───────────────────────────────────
+      if (meta.type === "estimate_generator_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          const bizName = meta.businessName || meta.business_name || meta.name || "there";
+          if (email) {
+            await dwaEmail(email, "AI Estimate Generator is Active", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">📋 AI ESTIMATE GENERATOR</p><h1 style="color:#fff;font-size:24px;margin:0 0 8px;">You're in, ${bizName}.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Generate professional estimates in 60 seconds. Reply with your trade and your pricing model and I'll preload your templates so the first estimate is ready to send today.</p><p style="color:#94a3b8;font-size:13px;margin:0;">— Matt · (313) 992-1219</p></div></div></body></html>`);
+            await notifyMatt(`💰 New AI Estimate Generator — ${bizName} ($99/mo)`, `<p><strong>${bizName}</strong><br>${email} | ${meta.industry || ""} ${meta.city || ""}</p><p>ACTION: Preload pricing templates.</p>`);
+          }
+        } catch (e) { console.error("[WEBHOOK] estimate_generator_subscription error:", e); return new Response(JSON.stringify({ error: "estimate_generator failed" }), { status: 500 }); }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── AI REPUTATION DASHBOARD ──────────────────────────────────────────
+      if (meta.type === "reputation_dashboard_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          const bizName = meta.businessName || meta.business_name || meta.name || "there";
+          if (email) {
+            await dwaEmail(email, "Reputation Dashboard is Active", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">⭐ REPUTATION DASHBOARD</p><h1 style="color:#fff;font-size:24px;margin:0 0 8px;">Welcome, ${bizName}.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Reply with your Google Business Profile URL (or just your business address) and I'll have your dashboard wired in within 24 hours. You'll get instant alerts for every new review.</p><p style="color:#94a3b8;font-size:13px;margin:0;">— Matt · (313) 992-1219</p></div></div></body></html>`);
+            await notifyMatt(`💰 New Reputation Dashboard — ${bizName}`, `<p><strong>${bizName}</strong><br>${email}<br>Website: ${meta.website || "n/a"}</p>`);
+          }
+        } catch (e) { console.error("[WEBHOOK] reputation_dashboard_subscription error:", e); return new Response(JSON.stringify({ error: "reputation failed" }), { status: 500 }); }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── AI ADS COPY ──────────────────────────────────────────────────────
+      if (meta.type === "ads_copy_subscription") {
+        try {
+          const email = meta.email || customerEmail;
+          const bizName = meta.businessName || meta.business_name || meta.name || "there";
+          if (email) {
+            await dwaEmail(email, "AI Ads Copy is Live", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">🎯 AI ADS COPY</p><h1 style="color:#fff;font-size:24px;margin:0 0 8px;">You're in, ${bizName}.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">First ad pack drops in your inbox within 24 hours. Reply if you want a specific offer or angle prioritized.</p><p style="color:#94a3b8;font-size:13px;margin:0;">— Matt · (313) 992-1219</p></div></div></body></html>`);
+            await notifyMatt(`💰 New AI Ads Copy — ${bizName}`, `<p><strong>${bizName}</strong><br>${email}<br>City: ${meta.city || ""}<br>Services: ${meta.services || ""}</p><p>ACTION: Send first ad pack within 24h.</p>`);
+          }
+        } catch (e) { console.error("[WEBHOOK] ads_copy_subscription error:", e); return new Response(JSON.stringify({ error: "ads_copy failed" }), { status: 500 }); }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
+      // ── AUDIT REPORT (one-off) ───────────────────────────────────────────
+      if (meta.type === "audit_report") {
+        try {
+          const email = meta.email || customerEmail;
+          const bizName = meta.businessName || meta.business_name || meta.name || "there";
+          if (email) {
+            await dwaEmail(email, "Your Audit Report is Being Built", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">📊 AUDIT REPORT</p><h1 style="color:#fff;font-size:24px;margin:0 0 8px;">Got it, ${bizName}.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Your full audit (SEO, GBP, citations, speed, and competitor gap) lands in this inbox within 48 hours. No fluff — just the things that move revenue.</p><p style="color:#94a3b8;font-size:13px;margin:0;">— Matt · (313) 992-1219</p></div></div></body></html>`);
+            await notifyMatt(`💰 New Audit Report — ${bizName}`, `<p><strong>${bizName}</strong><br>${email}<br>Website: ${meta.website || ""}</p><p>ACTION: Build audit within 48h.</p>`);
+          }
+        } catch (e) { console.error("[WEBHOOK] audit_report error:", e); return new Response(JSON.stringify({ error: "audit_report failed" }), { status: 500 }); }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // Unmatched checkout.session.completed — log and acknowledge
@@ -2801,71 +2866,6 @@ serve(async (req) => {
         console.error("[WEBHOOK] invoice.payment_failed error:", e);
         return new Response(JSON.stringify({ error: "invoice.payment_failed failed" }), { status: 500 });
       }
-      await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
-    }
-
-    // ── AI PHONE ANSWERING — $149/mo ─────────────────────────────────────
-    if (meta.type === "phone_answering_subscription") {
-      try {
-        const email = meta.email || customerEmail;
-        const bizName = meta.businessName || meta.business_name || meta.name || "there";
-        if (email) {
-          await dwaEmail(email, "AI Phone Answering is Live", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">📞 AI PHONE ANSWERING</p><h1 style="color:#fff;font-size:24px;margin:0 0 8px;">You're live, ${bizName}.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Your AI receptionist is ready. Reply to this email with your business hours and the forwarding number you want calls routed to, and I'll have it answering within 24 hours.</p><p style="color:#94a3b8;font-size:13px;margin:0;">Questions? Just reply or text (313) 992-1219. — Matt</p></div></div></body></html>`);
-          await notifyMatt(`💰 New AI Phone Answering — ${bizName} ($149/mo)`, `<p><strong>${bizName}</strong><br>${email} | ${meta.phone || "no phone"}</p><p>ACTION: Set up Twilio routing.</p>`);
-        }
-      } catch (e) { console.error("[WEBHOOK] phone_answering_subscription error:", e); return new Response(JSON.stringify({ error: "phone_answering failed" }), { status: 500 }); }
-      await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
-    }
-
-    // ── AI ESTIMATE GENERATOR — $99/mo ───────────────────────────────────
-    if (meta.type === "estimate_generator_subscription") {
-      try {
-        const email = meta.email || customerEmail;
-        const bizName = meta.businessName || meta.business_name || meta.name || "there";
-        if (email) {
-          await dwaEmail(email, "AI Estimate Generator is Active", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">📋 AI ESTIMATE GENERATOR</p><h1 style="color:#fff;font-size:24px;margin:0 0 8px;">You're in, ${bizName}.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Generate professional estimates in 60 seconds. Reply with your trade and your pricing model and I'll preload your templates so the first estimate is ready to send today.</p><p style="color:#94a3b8;font-size:13px;margin:0;">— Matt · (313) 992-1219</p></div></div></body></html>`);
-          await notifyMatt(`💰 New AI Estimate Generator — ${bizName} ($99/mo)`, `<p><strong>${bizName}</strong><br>${email} | ${meta.industry || ""} ${meta.city || ""}</p><p>ACTION: Preload pricing templates.</p>`);
-        }
-      } catch (e) { console.error("[WEBHOOK] estimate_generator_subscription error:", e); return new Response(JSON.stringify({ error: "estimate_generator failed" }), { status: 500 }); }
-      await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
-    }
-
-    // ── AI REPUTATION DASHBOARD ──────────────────────────────────────────
-    if (meta.type === "reputation_dashboard_subscription") {
-      try {
-        const email = meta.email || customerEmail;
-        const bizName = meta.businessName || meta.business_name || meta.name || "there";
-        if (email) {
-          await dwaEmail(email, "Reputation Dashboard is Active", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">⭐ REPUTATION DASHBOARD</p><h1 style="color:#fff;font-size:24px;margin:0 0 8px;">Welcome, ${bizName}.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Reply with your Google Business Profile URL (or just your business address) and I'll have your dashboard wired in within 24 hours. You'll get instant alerts for every new review.</p><p style="color:#94a3b8;font-size:13px;margin:0;">— Matt · (313) 992-1219</p></div></div></body></html>`);
-          await notifyMatt(`💰 New Reputation Dashboard — ${bizName}`, `<p><strong>${bizName}</strong><br>${email}<br>Website: ${meta.website || "n/a"}</p>`);
-        }
-      } catch (e) { console.error("[WEBHOOK] reputation_dashboard_subscription error:", e); return new Response(JSON.stringify({ error: "reputation failed" }), { status: 500 }); }
-      await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
-    }
-
-    // ── AI ADS COPY ──────────────────────────────────────────────────────
-    if (meta.type === "ads_copy_subscription") {
-      try {
-        const email = meta.email || customerEmail;
-        const bizName = meta.businessName || meta.business_name || meta.name || "there";
-        if (email) {
-          await dwaEmail(email, "AI Ads Copy is Live", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">🎯 AI ADS COPY</p><h1 style="color:#fff;font-size:24px;margin:0 0 8px;">You're in, ${bizName}.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">First ad pack drops in your inbox within 24 hours. Reply if you want a specific offer or angle prioritized.</p><p style="color:#94a3b8;font-size:13px;margin:0;">— Matt · (313) 992-1219</p></div></div></body></html>`);
-          await notifyMatt(`💰 New AI Ads Copy — ${bizName}`, `<p><strong>${bizName}</strong><br>${email}<br>City: ${meta.city || ""}<br>Services: ${meta.services || ""}</p><p>ACTION: Send first ad pack within 24h.</p>`);
-        }
-      } catch (e) { console.error("[WEBHOOK] ads_copy_subscription error:", e); return new Response(JSON.stringify({ error: "ads_copy failed" }), { status: 500 }); }
-      await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
-    }
-
-    // ── AUDIT REPORT (one-off) ───────────────────────────────────────────
-    if (meta.type === "audit_report") {
-      try {
-        const email = meta.email || customerEmail;
-        const bizName = meta.businessName || meta.business_name || meta.name || "there";
-        if (email) {
-          await dwaEmail(email, "Your Audit Report is Being Built", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">📊 AUDIT REPORT</p><h1 style="color:#fff;font-size:24px;margin:0 0 8px;">Got it, ${bizName}.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Your full audit (SEO, GBP, citations, speed, and competitor gap) lands in this inbox within 48 hours. No fluff — just the things that move revenue.</p><p style="color:#94a3b8;font-size:13px;margin:0;">— Matt · (313) 992-1219</p></div></div></body></html>`);
-          await notifyMatt(`💰 New Audit Report — ${bizName}`, `<p><strong>${bizName}</strong><br>${email}<br>Website: ${meta.website || ""}</p><p>ACTION: Build audit within 48h.</p>`);
-        }
-      } catch (e) { console.error("[WEBHOOK] audit_report error:", e); return new Response(JSON.stringify({ error: "audit_report failed" }), { status: 500 }); }
       await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
