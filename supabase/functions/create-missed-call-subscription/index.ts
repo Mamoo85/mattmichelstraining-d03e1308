@@ -68,7 +68,7 @@ serve(async (req) => {
         businessName,
         phone,
       },
-      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/missed-call-text?status=success`,
+      success_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/missed-call-text?success=1&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin") || "https://www.detroitwebagent.com"}/missed-call-text`,
     });
 

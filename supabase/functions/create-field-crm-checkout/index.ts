@@ -95,8 +95,8 @@ serve(async (req) => {
         industry,
         coupon_code: coupon_code || "",
       },
-      success_url: `${origin}/field-crm?success=1&biz=${encodeURIComponent(business_name)}`,
-      cancel_url: `${origin}/field-crm`,
+      success_url: `${origin}/field-service?success=1&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/field-service`,
     };
 
     // Apply discount
