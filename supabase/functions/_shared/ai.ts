@@ -19,7 +19,7 @@ const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 
 const LOVABLE_MODEL = "google/gemini-2.5-flash-lite";
-const ANTHROPIC_MODEL = "claude-haiku-4-5";
+const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001";
 const OPENAI_MODEL = "gpt-5-nano";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";

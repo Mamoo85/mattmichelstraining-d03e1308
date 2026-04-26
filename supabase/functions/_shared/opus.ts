@@ -10,8 +10,8 @@ const ANTHROPIC_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 
-const OPUS_MODEL = "claude-opus-4-5";
-const HAIKU_MODEL = "claude-haiku-4-5";
+const OPUS_MODEL = "claude-opus-4-7";
+const HAIKU_MODEL = "claude-haiku-4-5-20251001";
 
 /**
  * High-stakes generation via Claude Opus. Use for outreach drafts only.
