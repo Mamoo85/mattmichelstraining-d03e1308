@@ -21,6 +21,7 @@ const AdminDeadLeads = lazy(() => import("@/components/admin/AdminDeadLeads"));
 const AdminContractorLeads = lazy(() => import("@/components/admin/AdminContractorLeads"));
 const AdminFieldCRMClients = lazy(() => import("@/components/admin/AdminFieldCRMClients"));
 const AdminMissedCall = lazy(() => import("@/components/admin/AdminMissedCall"));
+const AdminMissedCallLeads = lazy(() => import("@/components/admin/AdminMissedCallLeads"));
 const AdminFaxOutreach = lazy(() => import("@/components/admin/AdminFaxOutreach"));
 const AdminPostcardOutreach = lazy(() => import("@/components/admin/AdminPostcardOutreach"));
 const AdminSMSOutreach = lazy(() => import("@/components/admin/AdminSMSOutreach"));
@@ -50,7 +51,7 @@ type Tab =
   | "ai-command"
   | "dwa-overview" | "revenue" | "leads-e2e" | "prospect-tracker" | "agent-toolkit" | "pipeline-velocity"
   | "command-center" | "sms-inbox" | "sms-drafts" | "call-list" | "linkedin-blitz" | "ad-launcher" | "agency-outreach"
-  | "contractor-leads" | "contractor-onboarding" | "contractor-market" | "dead-leads" | "fax-drip" | "postcard-drip" | "sms-sniper" | "fielddesk" | "techalert" | "missed-call" | "clients-all"
+  | "contractor-leads" | "contractor-onboarding" | "contractor-market" | "dead-leads" | "fax-drip" | "postcard-drip" | "sms-sniper" | "fielddesk" | "techalert" | "missed-call" | "missed-call-leads" | "clients-all"
   | "lead-marketplace" | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
   | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode";
@@ -94,6 +95,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "fielddesk",             label: "🛠️ FieldDesk Clients" },
       { id: "techalert",             label: "🎯 TechAlert Clients" },
       { id: "missed-call",           label: "📞 Missed-Call Catch" },
+      { id: "missed-call-leads",     label: "📞 Missed Call Leads" },
       { id: "clients-all",           label: "👥 All Clients / CRM" },
     ],
   },
@@ -181,6 +183,7 @@ export default function DWAAdmin() {
           {activeTab === "fielddesk"             && <Suspense fallback={lazyFallback("FieldDesk")}><AdminFieldCRMClients /></Suspense>}
           {activeTab === "techalert"             && <Suspense fallback={lazyFallback("Talent Radar")}><TalentRadarHub /></Suspense>}
           {activeTab === "missed-call"           && <Suspense fallback={lazyFallback("Missed-Call")}><AdminMissedCall /></Suspense>}
+          {activeTab === "missed-call-leads"     && <Suspense fallback={lazyFallback("Missed Call Leads")}><AdminMissedCallLeads /></Suspense>}
           {activeTab === "clients-all"           && (
             <div className="space-y-6">
               <DWAClientRoster />
