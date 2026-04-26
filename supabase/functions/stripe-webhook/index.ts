@@ -2315,6 +2315,36 @@ serve(async (req) => {
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── SITE RADAR — $49/mo visitor tracking ─────────────────────────────
+      if (meta.type === "site_radar_subscription") {
+        try {
+          const email = (meta.email || customerEmail || "").toLowerCase();
+          if (email) {
+            const scriptKey = crypto.randomUUID().replace(/-/g, "");
+            await (sb.from as any)("field_crm_clients").upsert({
+              email,
+              business_name: meta.businessName || meta.business_name || null,
+              website: meta.website || null,
+              industry: "agency",
+              status: "active",
+              monthly_price: 49,
+              visitor_script_key: scriptKey,
+              stripe_subscription_id: session.subscription as string || null,
+            }, { onConflict: "email" });
+            const scriptTag = `&lt;script src="https://detroitwebagent.com/radar.js?key=${scriptKey}" async&gt;&lt;/script&gt;`;
+            await dwaEmail(email, "SiteRadar is Live — Install Your Tracking Script", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">📡 SITERADAR</p><h1 style="color:#fff;font-size:24px;margin:0 0 8px;">You're in. One step to go.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 20px;">Paste this script tag before &lt;/body&gt; on your site and you'll start seeing visitor intel within minutes:</p><div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:8px;padding:16px;font-family:monospace;font-size:12px;color:#00d4ff;word-break:break-all;margin:0 0 20px;">${scriptTag}</div><p style="color:#64748b;font-size:12px;margin:0;">Questions? Text Matt at <a href="sms:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p></div><p style="color:#475569;font-size:11px;text-align:center;margin-top:16px;">Matt Michels · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;">(313) 992-1219</a></p></div></body></html>`);
+            await notifyMatt(
+              `💰 New SiteRadar client — ${meta.businessName || meta.business_name || email} ($49/mo)`,
+              `<p><strong>${meta.businessName || meta.business_name || email}</strong><br>Email: ${email}<br>Website: ${meta.website || "n/a"}<br>Script key: ${scriptKey}</p>`
+            );
+          }
+        } catch (e) {
+          console.error("[WEBHOOK] site_radar_subscription error:", e);
+          return new Response(JSON.stringify({ error: "site_radar_subscription failed" }), { status: 500 });
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── MISSED CALL TEXT-BACK — $99/mo with 7-day trial ──────────────────
       if (meta.type === "missed_call_subscription") {
         try {
