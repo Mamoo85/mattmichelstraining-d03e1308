@@ -2869,6 +2869,12 @@ serve(async (req) => {
       await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
+    // Defensive guard for older checkout-only handlers below. Non-checkout
+    // Stripe events used to fall through here and crash with "meta is not defined",
+    // causing repeated fatal SMS alerts while Stripe retried the same event.
+    const session = event.data.object as any;
+    const meta = session?.metadata || {};
+
     // ── AI Ads Copy subscription ──────────────────────────────────────────────
     if (meta.type === "ads_copy_subscription") {
       try {
