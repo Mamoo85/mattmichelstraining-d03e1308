@@ -10,9 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
-// Killed products removed from OpsCenter
-const KILLED_NAMES = ["AI Obituary Service", "Sermon Prep", "AI Bedtime Stories", "Children's Story Subscription"];
-
 const ALL_SERVICES = [
   { table: "social_media_clients", name: "Social Media AI", price: "$99/mo", priceNum: 99 },
   { table: "gbp_saas_clients", name: "GBP SaaS", price: "$49/mo", priceNum: 49 },
