@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 
+import ManageBillingButton from "@/components/billing/ManageBillingButton";
+
 type MCClient = {
   business_name: string;
   contact_name: string | null;
@@ -10,6 +12,7 @@ type MCClient = {
   text_count: number;
   active: boolean;
   created_at: string;
+  email: string | null;
 };
 
 export default function MyMissedCall() {
