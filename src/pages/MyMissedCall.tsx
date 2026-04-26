@@ -96,6 +96,12 @@ export default function MyMissedCall() {
               <p style={{ color: "#334155", fontSize: 11, textAlign: "center", margin: "8px 0 0" }}>
                 Active since {new Date(client.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
               </p>
+
+              {client.email && (
+                <div style={{ marginTop: 16, display: "flex", justifyContent: "center" }}>
+                  <ManageBillingButton email={client.email} />
+                </div>
+              )}
             </div>
           )}
         </div>
