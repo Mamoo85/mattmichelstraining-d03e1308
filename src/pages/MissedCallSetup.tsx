@@ -140,7 +140,7 @@ export default function MissedCallSetup() {
         {/* Trial banner */}
         <div style={{ background: "#10b98115", border: "1px solid #10b98140", borderRadius: 10, padding: "10px 14px", marginBottom: 16, textAlign: "center" }}>
           <p style={{ color: "#10b981", fontSize: 12, fontWeight: 700, margin: 0 }}>
-            ✅ You're on day 1 of 14 — no card charged yet. Cancel before day 14 and you're never billed.
+            ✅ You're on day 1 of 7 — no card charged yet. Cancel before day 7 and you're never billed.
           </p>
         </div>
 

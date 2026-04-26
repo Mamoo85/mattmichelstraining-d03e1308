@@ -31,10 +31,10 @@ const MissedCallStickyCTA = ({ onClick }: Props) => {
         className="w-full py-4 font-bold text-sm rounded-lg flex items-center justify-center gap-2 text-white"
         style={{ background: "linear-gradient(135deg,#06b6d4,#22d3ee)" }}
       >
-        Start Free Trial — No Card for 14 Days <ArrowRight size={16} />
+        Start Free Trial — No Card for 7 Days <ArrowRight size={16} />
       </button>
       <p className="text-[10px] text-center text-[#ff6b6b] font-bold mt-1.5">
-        Cancel before day 14 and you're never charged.
+        Cancel before day 7 and you're never charged.
       </p>
     </div>
   );

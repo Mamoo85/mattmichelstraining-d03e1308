@@ -43,37 +43,37 @@ const INDUSTRY_CONFIG: Record<string, IndustryConfig> = {
     headlineLead: "Plumbers: Stop Losing Jobs",
     headlineAccent: "to Voicemail.",
     sub: "Every burst pipe call you miss goes to the next plumber on the list. We text them back in 8 seconds — automatically — so they wait for you.",
-    seoTitle: "Missed Call Text-Back for Plumbers — $99/mo | 14-Day Free Trial",
+    seoTitle: "Missed Call Text-Back for Plumbers — $99/mo | 7-Day Free Trial",
   },
   dentist: {
     headlineLead: "Dentists: Every Missed Call",
     headlineAccent: "Is a Lost Patient.",
     sub: "New patients call once. If you don't answer, they call the next dentist. We text them back in 8 seconds with your booking link.",
-    seoTitle: "Missed Call Text-Back for Dental Offices — $99/mo | 14-Day Free Trial",
+    seoTitle: "Missed Call Text-Back for Dental Offices — $99/mo | 7-Day Free Trial",
   },
   contractor: {
     headlineLead: "Contractors: Win Jobs",
     headlineAccent: "While You're On Site.",
     sub: "You can't drop a hammer to answer the phone. We text every missed call back in 8 seconds so the lead doesn't go cold.",
-    seoTitle: "Missed Call Text-Back for Contractors — $99/mo | 14-Day Free Trial",
+    seoTitle: "Missed Call Text-Back for Contractors — $99/mo | 7-Day Free Trial",
   },
   roofer: {
     headlineLead: "Roofers: Storm Calls",
     headlineAccent: "Don't Wait.",
     sub: "After a storm, every missed call is a $5k–$30k job going to your competitor. We catch them in 8 seconds.",
-    seoTitle: "Missed Call Text-Back for Roofers — $99/mo | 14-Day Free Trial",
+    seoTitle: "Missed Call Text-Back for Roofers — $99/mo | 7-Day Free Trial",
   },
   hvac: {
     headlineLead: "HVAC Pros: AC Down Calls",
     headlineAccent: "Go to Whoever Answers.",
     sub: "When their AC dies in July, they call 3 companies in 5 minutes. We text them back in 8 seconds — automatically.",
-    seoTitle: "Missed Call Text-Back for HVAC — $99/mo | 14-Day Free Trial",
+    seoTitle: "Missed Call Text-Back for HVAC — $99/mo | 7-Day Free Trial",
   },
   electrician: {
     headlineLead: "Electricians: Emergency Calls",
     headlineAccent: "Won't Wait For You.",
     sub: "Power out? They're calling everyone. We text them back in 8 seconds so you stay top of the list.",
-    seoTitle: "Missed Call Text-Back for Electricians — $99/mo | 14-Day Free Trial",
+    seoTitle: "Missed Call Text-Back for Electricians — $99/mo | 7-Day Free Trial",
   },
 };
 
@@ -81,7 +81,7 @@ const DEFAULT_CONFIG: IndustryConfig = {
   headlineLead: "Never Lose Another Job",
   headlineAccent: "to a Missed Call.",
   sub: "70% of callers won't leave a voicemail. We text them back within 8 seconds — automatically — so you never lose a lead to your competitor again.",
-  seoTitle: "Missed Call Text-Back — $99/mo | 14-Day Free Trial, No Card",
+  seoTitle: "Missed Call Text-Back — $99/mo | 7-Day Free Trial, No Card",
 };
 
 // ----------------------------------------------------------------------------
@@ -106,7 +106,7 @@ const COMPARISON_ROWS: Array<{ feature: string; podium: boolean; birdeye: boolea
   { feature: "Voicemail transcription", podium: false, birdeye: false, dwa: true },
   { feature: "City-personalized messages", podium: false, birdeye: false, dwa: true },
   { feature: "Callback reminders to you", podium: false, birdeye: false, dwa: true },
-  { feature: "14-day free trial, no card", podium: false, birdeye: false, dwa: true },
+  { feature: "7-day free trial, no card", podium: false, birdeye: false, dwa: true },
   { feature: "Month-to-month, no contract", podium: false, birdeye: false, dwa: true },
   { feature: "Setup help included", podium: false, birdeye: false, dwa: true },
 ];
@@ -122,7 +122,7 @@ const FAQS = [
   { q: "What if a caller doesn't want texts?", a: "Every text includes a STOP keyword — TCPA compliant. They reply STOP and they're never texted again. Fully automatic." },
   { q: "Can I customize the message?", a: "Yes. You write your own text-back during setup. Change it anytime from your dashboard. We give you a proven template if you don't want to write one." },
   { q: "Does it work nights and weekends?", a: "Yes — 24/7. The system fires every time you miss a call, no matter what time it is. Most of our clients catch their best leads after-hours." },
-  { q: "What happens after my 14-day trial?", a: "We email you 3 days before the trial ends. If you keep it, billing kicks in at $99/mo. Cancel before day 14 and you're never charged — period." },
+  { q: "What happens after my 7-day trial?", a: "We email you 3 days before the trial ends. If you keep it, billing kicks in at $99/mo. Cancel before day 7 and you're never charged — period." },
   { q: "Can I cancel anytime?", a: "Yes. Month-to-month, no contract, no cancellation fee. One click in your dashboard or text Matt at (313) 992-1219." },
 ];
 
@@ -423,11 +423,11 @@ export default function MissedCallSaaS() {
           <div className="w-20 h-20 rounded-full bg-[#22d3ee]/15 flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={36} className="text-[#22d3ee]" />
           </div>
-          <h1 className="text-2xl font-black mb-3">You're In — 14-Day Trial Started!</h1>
+          <h1 className="text-2xl font-black mb-3">You're In — 7-Day Trial Started!</h1>
           <p className="text-[#aaa] text-sm leading-relaxed mb-4">
             Check your inbox in the next 5 minutes for your setup link. Forward your business line to your new number, and every missed call gets a text-back automatically.
           </p>
-          <p className="text-[#ff5757] text-xs font-bold mb-4">No card charged. Cancel before day 14 and you're never billed.</p>
+          <p className="text-[#ff5757] text-xs font-bold mb-4">No card charged. Cancel before day 7 and you're never billed.</p>
           <p className="text-sm text-[#888]">Questions? <a href="sms:+13139921219" className="text-[#22d3ee] font-bold hover:underline">Text Matt at (313) 992-1219</a></p>
         </div>
       </div>
@@ -438,7 +438,7 @@ export default function MissedCallSaaS() {
     <>
       <SEOHead
         title={config.seoTitle}
-        description="70% of callers won't leave a voicemail. Automatically text them back in 8 seconds. $99/month. 14-day free trial — no card charged."
+        description="70% of callers won't leave a voicemail. Automatically text them back in 8 seconds. $99/month. 7-day free trial — no card charged."
         path={industry ? `/missed-call-text/${industry}` : "/missed-call-text"}
       />
       <DWAStickyNav
@@ -473,10 +473,10 @@ export default function MissedCallSaaS() {
                   className="bg-gradient-to-r from-[#06b6d4] to-[#22d3ee] hover:opacity-90 text-black text-base px-7 py-6 font-black rounded-xl shadow-lg shadow-[#22d3ee]/20"
                   onClick={scrollToForm}
                 >
-                  Start Free — 14 Days, No Card Charged <ArrowRight className="ml-2 h-4 w-4" />
+                  Start Free — 7 Days, No Card Charged <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <p className="text-xs font-bold" style={{ color: RED }}>
-                  Cancel before day 14 and you're never charged.
+                  Cancel before day 7 and you're never charged.
                 </p>
                 <div className="flex items-center gap-2 text-[#888] text-xs mt-1">
                   <Clock size={12} />
@@ -676,10 +676,10 @@ export default function MissedCallSaaS() {
           <div className="max-w-md mx-auto">
             <div className="bg-[#1a1a2e] border border-[#22d3ee]/30 rounded-2xl p-6 sm:p-8">
               <div className="inline-flex items-center gap-1 bg-[#22d3ee]/15 text-[#22d3ee] text-[10px] font-bold tracking-widest px-3 py-1 rounded-full mb-3 uppercase">
-                14-Day Free Trial
+                7-Day Free Trial
               </div>
               <h2 className="text-2xl font-black mb-1">Start Your Free Trial</h2>
-              <p className="text-sm text-[#888] mb-6">No card charged for 14 days. Setup takes under 10 minutes.</p>
+              <p className="text-sm text-[#888] mb-6">No card charged for 7 days. Setup takes under 10 minutes.</p>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-3">
                   <div>
@@ -744,10 +744,10 @@ export default function MissedCallSaaS() {
                 >
                   {loading
                     ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing…</>
-                    : <>Start Free — 14 Days, No Card Charged →</>}
+                    : <>Start Free — 7 Days, No Card Charged →</>}
                 </Button>
                 <p className="text-[11px] text-center font-bold" style={{ color: RED }}>
-                  Cancel before day 14 and you're never charged.
+                  Cancel before day 7 and you're never charged.
                 </p>
                 <p className="text-[10px] text-center text-[#555]">
                   Secure checkout via Stripe · $99/mo after trial · Cancel anytime
