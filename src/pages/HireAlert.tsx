@@ -9,6 +9,7 @@ import DWAStickyNav from "@/components/shared/DWAStickyNav";
 import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
 import CheckEmailCard from "@/components/checkout/CheckEmailCard";
 import PostCheckoutClaim from "@/components/checkout/PostCheckoutClaim";
+import StickyMobileCTA from "@/components/shared/StickyMobileCTA";
 import WallOfLove, { Testimonial } from "@/components/shared/WallOfLove";
 import EnterpriseFooterBlock from "@/components/shared/EnterpriseFooterBlock";
 import TechAlertROICalculator from "@/components/agency/TechAlertROICalculator";
