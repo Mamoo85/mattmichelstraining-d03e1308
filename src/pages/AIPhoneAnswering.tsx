@@ -166,6 +166,10 @@ export default function AIPhoneAnswering() {
           <WaitlistGate productName="24/7 Call Routing Engine" description="Automated phone answering for your business — takes messages, answers FAQs, and routes urgent calls." price="See pricing" />
         </div>
       </section>
+      <StickyMobileCTA
+        label="Get the Call Routing Engine →"
+        onClick={() => document.querySelector('section:last-of-type')?.scrollIntoView({ behavior: 'smooth' })}
+      />
     </div>
   );
 }
