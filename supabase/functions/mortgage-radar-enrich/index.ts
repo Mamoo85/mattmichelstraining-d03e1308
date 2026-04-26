@@ -149,14 +149,29 @@ serve(async (req) => {
     let result: EnrichResult | null = null;
 
     // Step 1 — Sonar (cheap, public records)
-    result = await sonarEnrich(lead.address, lead.city || "", lead.zip || "");
+    const sonarAudit = await logEnrichment<EnrichResult | null>(
+      { lead_id: lead.id, vertical: "mortgage", function_name: "mortgage-radar-enrich", stage: "free", provider: "sonar_lovable_ai", triggered_by: body.lead_id ? "manual" : "cron" },
+      async () => {
+        const r = await sonarEnrich(lead.address, lead.city || "", lead.zip || "");
+        return { data: r, fields_added: r ? Object.keys(r).filter(k => (r as any)[k] && k !== "source") : [] };
+      },
+    );
+    result = sonarAudit.data ?? null;
     step.sonar = result ? `hit:${result.source}` : "miss";
 
     // Step 2 — PDL fallback if Sonar missed phone OR email
     if (!result || !result.phone || !result.email) {
-      const pdlRes = await withBreaker("pdl", () => pdlEnrich(lead.address, lead.city || "", lead.zip || ""));
-      const pdl = pdlRes.skipped ? null : (pdlRes.data ?? null);
-      step.pdl = pdlRes.skipped ? "circuit_open" : (pdl ? "hit" : "miss");
+      const pdlAudit = await logEnrichment<EnrichResult | null>(
+        { lead_id: lead.id, vertical: "mortgage", function_name: "mortgage-radar-enrich", stage: "paid", provider: "pdl", triggered_by: body.lead_id ? "manual" : "cron", cost_cents: 5 },
+        async () => {
+          const pdlRes = await withBreaker("pdl", () => pdlEnrich(lead.address, lead.city || "", lead.zip || ""));
+          if (pdlRes.skipped) return { data: null, fields_added: [], raw: { circuit: "open" } };
+          const pdl = pdlRes.data ?? null;
+          return { data: pdl, fields_added: pdl ? Object.keys(pdl).filter(k => (pdl as any)[k] && k !== "source") : [] };
+        },
+      );
+      const pdl = pdlAudit.data ?? null;
+      step.pdl = pdl ? "hit" : (pdlAudit.ok ? "miss" : "circuit_open");
       if (pdl) {
         result = {
           full_name: result?.full_name || pdl.full_name,
@@ -166,6 +181,7 @@ serve(async (req) => {
         };
       }
     }
+
 
     if (result && (result.full_name || result.phone || result.email)) {
       const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
