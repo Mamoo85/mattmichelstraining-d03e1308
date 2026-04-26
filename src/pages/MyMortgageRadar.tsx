@@ -419,11 +419,25 @@ export default function MyMortgageRadar() {
 
             <TabsContent value="list" className="mt-0">
               {filtered.length === 0 ? (
-                <Card className="bg-[#0a1628] border-[#1e3a5f]"><CardContent className="p-8 text-center">
-                  <Bell className="w-8 h-8 text-[#00d4ff] mx-auto mb-3" />
-                  <p className="text-white font-semibold mb-1">No leads match your filters</p>
-                  <p className="text-sm text-[#94a3b8]">Try lowering the score threshold or clearing the ZIP filter.</p>
-                </CardContent></Card>
+                leads.length === 0 ? (
+                  <EmptyDashboardState
+                    productName="Mortgage Radar"
+                    etaText="We're scanning property records, life-event signals, and rate-trigger data daily. First leads usually appear within 48 hours."
+                    checklist={[
+                      "Service area zip codes saved",
+                      "Public-records scanners running daily",
+                      "Behavioral & life-event signals being monitored",
+                      "Weekly digest email queued",
+                    ]}
+                    setupGuideHref="mailto:matt@detroitwebagent.com?subject=Mortgage%20Radar%20setup"
+                  />
+                ) : (
+                  <Card className="bg-[#0a1628] border-[#1e3a5f]"><CardContent className="p-8 text-center">
+                    <Bell className="w-8 h-8 text-[#00d4ff] mx-auto mb-3" />
+                    <p className="text-white font-semibold mb-1">No leads match your filters</p>
+                    <p className="text-sm text-[#94a3b8]">Try lowering the score threshold or clearing the ZIP filter.</p>
+                  </CardContent></Card>
+                )
               ) : (
                 <div className="grid gap-4">
                   {filtered.map((l) => (
