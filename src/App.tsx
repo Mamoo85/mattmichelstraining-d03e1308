@@ -67,6 +67,7 @@ const ForParents = lazyRetry(() => import("./pages/ForParents"));
 const ForNurses = lazyRetry(() => import("./pages/ForNurses"));
 const Welcome = lazyRetry(() => import("./pages/Welcome"));
 const Auth = lazyRetry(() => import("./pages/Auth"));
+const ResetPassword = lazyRetry(() => import("./pages/ResetPassword"));
 const Admin = lazyRetry(() => import("./pages/Admin"));
 const DWAAdmin = lazyRetry(() => import("./pages/DWAAdmin"));
 const ProspectRedirect = lazyRetry(() => import("./pages/ProspectRedirect"));
@@ -494,6 +495,7 @@ const App = () => (
                     <Route path="/~oauth/*" element={<Auth />} />
                     <Route path="/auth/callback" element={<Auth />} />
                     <Route path="/auth/callback/*" element={<Auth />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/welcome" element={<Welcome />} />
                     <Route path="/shop" element={<Shop />} />
                     <Route path="/for-parents" element={<ForParents />} />
