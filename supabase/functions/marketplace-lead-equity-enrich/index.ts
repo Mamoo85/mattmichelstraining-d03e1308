@@ -3,6 +3,7 @@
 // NO Zillow (dead since 2021). NO Wayne County ArcGIS (blocks server-side).
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { logEnrichment } from "../_shared/enrichment-audit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -81,7 +82,22 @@ serve(async (req) => {
 
   for (const lead of leads || []) {
     if (!lead.address) { trace.push({ id: lead.id, skipped: "no address" }); continue; }
-    const result = await detroitParcelLookup(lead.address);
+    const audited = await logEnrichment<EquityResult>(
+      {
+        lead_id: lead.id,
+        vertical: "mortgage",
+        function_name: "marketplace-lead-equity-enrich",
+        stage: "equity",
+        provider: "detroit_arcgis",
+        triggered_by: body.lead_id ? "on_demand" : "cron",
+      },
+      async () => {
+        const r = await detroitParcelLookup(lead.address!);
+        if (!r) throw new Error("detroit_parcel_miss");
+        return { data: r, fields_added: ["equity_range_low_cents", "year_built", "last_sale_price_cents"] };
+      },
+    );
+    const result = audited.ok ? audited.data : null;
     if (result) {
       const sources = [{ field: "equity", url: result.source_url, fetched_at: new Date().toISOString() }];
       await (sb.from as any)("mortgage_radar_leads").update({
