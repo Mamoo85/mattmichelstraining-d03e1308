@@ -682,6 +682,7 @@ export default function HireAlert() {
           50% { opacity: 0.4; }
         }
       `}</style>
+      <StickyMobileCTA label="Start TechAlert →" onClick={handleCheckout} />
     </div>
   );
 }
