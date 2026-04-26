@@ -42,6 +42,7 @@ const AdminCommandBar = lazy(() => import("@/components/dwa-admin/AdminCommandBa
 const ProductSalesHub = lazy(() => import("@/components/dwa-admin/ProductSalesHub"));
 const BuyerRadarQAChecklist = lazy(() => import("@/components/dwa-admin/BuyerRadarQAChecklist"));
 const MortgageRadarHub = lazy(() => import("@/components/dwa-admin/MortgageRadarHub"));
+const LeadSalesOutreachHub = lazy(() => import("@/components/dwa-admin/LeadSalesOutreachHub"));
 const PipelineVelocityDashboard = lazy(() => import("@/components/dwa-admin/PipelineVelocityDashboard"));
 const StrategyModeHub = lazy(() => import("@/components/dwa-admin/StrategyModeHub"));
 
@@ -50,7 +51,7 @@ type Tab =
   | "dwa-overview" | "revenue" | "leads-e2e" | "prospect-tracker" | "agent-toolkit" | "pipeline-velocity"
   | "command-center" | "sms-inbox" | "sms-drafts" | "call-list" | "linkedin-blitz" | "ad-launcher" | "agency-outreach"
   | "contractor-leads" | "contractor-onboarding" | "dead-leads" | "fax-drip" | "postcard-drip" | "sms-sniper" | "fielddesk" | "techalert" | "missed-call" | "clients-all"
-  | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map"
+  | "lead-marketplace" | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
   | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode";
 
@@ -99,6 +100,7 @@ const GROUPS: SidebarGroup[] = [
     label: "Intel & Radars",
     items: [
       { id: "techalert",       label: "🎯 Talent Radar" },
+      { id: "lead-marketplace", label: "🏪 Lead Marketplace" },
       { id: "demand-radar",    label: "📈 Demand Radar" },
       { id: "mortgage-radar",  label: "🏠 Mortgage Radar" },
       { id: "hvb",             label: "📦 High-Volume Buyers" },
@@ -184,6 +186,7 @@ export default function DWAAdmin() {
             </div>
           )}
 
+          {activeTab === "lead-marketplace" && <Suspense fallback={lazyFallback("Lead Marketplace")}><LeadSalesOutreachHub /></Suspense>}
           {activeTab === "demand-radar"    && <Suspense fallback={lazyFallback("Demand Radar")}><DemandRadarHub /></Suspense>}
           {activeTab === "mortgage-radar"  && <Suspense fallback={lazyFallback("Mortgage Radar")}><MortgageRadarHub /></Suspense>}
           {activeTab === "hvb"             && <Suspense fallback={lazyFallback("HVB")}><AdminHighVolumeBuyer /></Suspense>}
