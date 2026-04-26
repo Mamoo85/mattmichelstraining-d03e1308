@@ -48,7 +48,7 @@ serve(async (req) => {
       customer_email: email,
       payment_method_collection: "if_required",
       subscription_data: {
-        trial_period_days: 14,
+        trial_period_days: 7,
       },
       line_items: [{
         price_data: {
