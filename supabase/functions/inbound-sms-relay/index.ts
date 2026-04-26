@@ -245,7 +245,55 @@ serve(async (req) => {
       }
     }
 
-    // 4. Default: forward inbound to Matt's personal cell (existing behavior)
+    // 4. Callback scheduler — parse "call me at X" from any caller reply
+    if (sb && fromNormalized !== MATT_PERSONAL) {
+      const callbackMatch = body.match(/call\s+(?:me\s+)?(?:back\s+)?at\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)/i);
+      if (callbackMatch) {
+        const timeStr = callbackMatch[1].trim();
+        const now = new Date();
+        // Parse simple time — default to today, Eastern time approximation (UTC-4)
+        const [hourRaw, minRaw] = timeStr.replace(/[apm]/gi, "").split(":").map(Number);
+        const isPm = /pm/i.test(timeStr);
+        const hour = isPm && hourRaw < 12 ? hourRaw + 12 : (!isPm && hourRaw === 12 ? 0 : hourRaw);
+        const scheduledFor = new Date(now);
+        scheduledFor.setUTCHours(hour + 4, minRaw || 0, 0, 0); // +4 for ET offset
+        if (scheduledFor < now) scheduledFor.setUTCDate(scheduledFor.getUTCDate() + 1);
+
+        await sb.from("callback_reminders").insert({
+          caller_number: fromNormalized,
+          context: body.slice(0, 200),
+          scheduled_for: scheduledFor.toISOString(),
+          status: "pending",
+        }).then(({ error }) => {
+          if (error) console.error("[inbound-sms-relay] callback_reminders insert:", error.message);
+        });
+
+        await sendSMS(
+          fromNormalized,
+          TWILIO_PHONE_NUMBER,
+          `Got it! Matt will call you back at ${timeStr}. `,
+          "missed_call_callback",
+          false,
+          { bypassQuietHours: true }
+        );
+
+        // Also log the reply in missed_call_captures
+        await sb.from("missed_call_captures")
+          .update({ reply_received: body.slice(0, 500), status: "in_progress" })
+          .eq("caller_number", fromNormalized)
+          .eq("status", "new");
+
+        return new Response(twimlEmpty, { headers: { "Content-Type": "text/xml" } });
+      }
+
+      // Log any caller reply into missed_call_captures
+      await sb.from("missed_call_captures")
+        .update({ reply_received: body.slice(0, 500), status: "in_progress" })
+        .eq("caller_number", fromNormalized)
+        .eq("status", "new");
+    }
+
+    // 5. Default: forward inbound to Matt's personal cell (existing behavior)
     await sendSMS(
       MATT_PERSONAL,
       TWILIO_PHONE_NUMBER,
