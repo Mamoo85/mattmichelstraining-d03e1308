@@ -4,6 +4,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { withBreaker } from "../_shared/circuit-breaker.ts";
+import { logEnrichment } from "../_shared/enrichment-audit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
