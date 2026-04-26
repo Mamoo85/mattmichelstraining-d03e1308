@@ -1168,10 +1168,11 @@ export default function MyTechAlert() {
         </Card>
 
         {/* Footer */}
-        <div className="text-center py-6 border-t border-white/5">
+        <div className="text-center py-6 border-t border-white/5 space-y-3">
           <p className="text-slate-600 text-[11px]">
             Powered by Detroit Web Agency · <a href="tel:+13139921219" className="text-[#00d4ff] hover:underline">(313) 992-1219</a>
           </p>
+          {data?.client?.email && <ManageBillingButton email={data.client.email} />}
           <p className="text-slate-700 text-[10px] mt-1">Reply to any alert email to adjust your target roles or zip codes</p>
         </div>
       </div>
