@@ -23,7 +23,7 @@ serve(async (req) => {
 
   const { data: client, error } = await sb
     .from("missed_call_clients")
-    .select("id, business_name, contact_name, response_message, call_count, text_count, active, created_at, stripe_subscription_id")
+    .select("id, business_name, contact_name, response_message, call_count, text_count, active, created_at, stripe_subscription_id, email")
     .eq("dashboard_token", token)
     .maybeSingle();
 
