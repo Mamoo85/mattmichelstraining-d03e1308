@@ -46,6 +46,24 @@ async function notifyMatt(subject: string, html: string): Promise<void> {
   }).catch(() => {});
 }
 
+
+async function checkLobHealth(): Promise<{ ok: boolean; error?: string }> {
+  if (!LOB_API_KEY) return { ok: false, error: "LOB_API_KEY is not configured" };
+  try {
+    const res = await fetch("https://api.lob.com/v1/postcards?limit=1", {
+      headers: { Authorization: `Basic ${btoa(LOB_API_KEY + ":")}` },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      return { ok: false, error: `LOB_API_KEY failed (${res.status}): ${text.slice(0, 180)}` };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: `LOB_API_KEY check failed: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
 async function getMonthSentCount(sb: any): Promise<number> {
   const monthStart = new Date();
   monthStart.setUTCDate(1); monthStart.setUTCHours(0, 0, 0, 0);
@@ -280,12 +298,16 @@ serve(async (req) => {
       const { data: campaign } = await sb.from("postcard_campaigns").select("*").eq("id", campaign_id).single();
       if (!campaign) return new Response(JSON.stringify({ error: "Campaign not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-      // Pull all prospects in this county AND audience_type to build a diagnostic breakdown
+      // Pull exact selected prospects when campaign was created from Outreach Command Center.
       let diagQuery = sb
         .from("postcard_prospects")
-        .select("id, business_name, city, address_line1, zip, postcard_sent_at, county, audience_type")
-        .ilike("county", campaign.county);
-      if (campaign.audience_type) diagQuery = diagQuery.eq("audience_type", campaign.audience_type);
+        .select("id, business_name, city, address_line1, zip, postcard_sent_at, county, audience_type");
+      if (Array.isArray(campaign.prospect_ids) && campaign.prospect_ids.length) {
+        diagQuery = diagQuery.in("id", campaign.prospect_ids);
+      } else {
+        diagQuery = diagQuery.ilike("county", campaign.county);
+        if (campaign.audience_type) diagQuery = diagQuery.eq("audience_type", campaign.audience_type);
+      }
       const { data: allInCounty } = await diagQuery;
 
       const total = allInCounty?.length || 0;
@@ -293,22 +315,9 @@ serve(async (req) => {
       const alreadySent = allInCounty?.filter((p: any) => p.postcard_sent_at).length || 0;
       const ready = allInCounty?.filter((p: any) => p.address_line1 && p.city && p.zip && !p.postcard_sent_at).length || 0;
 
-      // Test Lob API key
-      let lobOk = false;
-      let lobError: string | null = null;
-      if (LOB_API_KEY) {
-        try {
-          const r = await fetch("https://api.lob.com/v1/postcards?limit=1", {
-            headers: { Authorization: `Basic ${btoa(LOB_API_KEY + ":")}` },
-          });
-          lobOk = r.ok;
-          if (!r.ok) lobError = await r.text();
-        } catch (e) {
-          lobError = e instanceof Error ? e.message : String(e);
-        }
-      } else {
-        lobError = "LOB_API_KEY not set in environment";
-      }
+      const lobHealth = await checkLobHealth();
+      const lobOk = lobHealth.ok;
+      const lobError = lobHealth.error || null;
 
       const monthSent = await getMonthSentCount(sb);
 
@@ -330,7 +339,11 @@ serve(async (req) => {
       }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    if (!LOB_API_KEY) return new Response(JSON.stringify({ error: "LOB_API_KEY not configured" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const lobHealth = await checkLobHealth();
+    if (!lobHealth.ok) {
+      await sb.from("postcard_campaigns").update({ status: "failed", last_error: lobHealth.error }).eq("id", campaign_id);
+      return new Response(JSON.stringify({ success: false, error: lobHealth.error, credential_error: lobHealth.error }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const { data: campaign, error: campErr } = await sb.from("postcard_campaigns").select("*").eq("id", campaign_id).single();
     if (campErr || !campaign) return new Response(JSON.stringify({ error: "Campaign not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -345,8 +358,9 @@ serve(async (req) => {
     // Build query — either by prospect_ids (Resend Failed) or by county filter (default)
     let prospectQuery = sb.from("postcard_prospects").select("*").not("address_line1", "is", null).not("city", "is", null).not("zip", "is", null);
 
-    if (prospect_ids?.length) {
-      prospectQuery = prospectQuery.in("id", prospect_ids);
+    const selectedIds = prospect_ids?.length ? prospect_ids : (Array.isArray(campaign.prospect_ids) ? campaign.prospect_ids : []);
+    if (selectedIds.length) {
+      prospectQuery = prospectQuery.in("id", selectedIds);
     } else {
       // SAFETY FIX 2026-04-22: filter prospects by audience_type so a nursing-home
       // campaign can never accidentally mail HVAC contractors in the same county.
@@ -366,8 +380,8 @@ serve(async (req) => {
 
     if (!prospects?.length) {
       // Honest failure: mark campaign failed, log reason
-      const reason = prospect_ids?.length
-        ? "No matching prospects with valid addresses"
+      const reason = selectedIds.length
+        ? "No matching selected prospects with valid addresses"
         : `No unsent ${campaign.audience_type} prospects in ${campaign.county} County with valid addresses. Run "Find Prospects" for this audience first.`;
       await sb.from("postcard_campaigns").update({ status: "failed", last_error: reason }).eq("id", campaign_id);
       return new Response(JSON.stringify({ error: reason, sent: 0 }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
