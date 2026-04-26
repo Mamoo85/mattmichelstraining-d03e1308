@@ -1,13 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminHelpCard } from "./AdminHelpCard";
 import { getAdminGuide } from "@/lib/admin-guides";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, AlertTriangle, CheckCircle, Clock, Building2, Mail } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle, Clock, Building2, Mail, DollarSign } from "lucide-react";
 
 const INTERNAL_EMAILS = ["matt@mattmichelstraining.com", "matt@mattmichelstraining.com", "matthewmichels4@gmail.com"];
 const isInternalEmail = (email: string) => INTERNAL_EMAILS.includes(email?.toLowerCase());
+
+// Parse "$199/mo" / "$49-99/mo" / "$199-299/mo" / "$0/mo" → monthly USD (low end if range)
+function parsePriceMonthly(p: string): number {
+  const m = p.match(/\$(\d+)(?:-(\d+))?\/mo/);
+  if (!m) return 0;
+  return parseInt(m[1], 10);
+}
 
 interface ClientRow {
   service: string;
