@@ -561,9 +561,36 @@ const Auth = () => {
 
           {mode !== "magic" && (
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">
-                {mode === "signup" && signupRole === "parent" ? "Parent Password" : "Password"}
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                  {mode === "signup" && signupRole === "parent" ? "Parent Password" : "Password"}
+                </label>
+                {mode === "login" && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!email) {
+                        setError("Enter your email above first, then tap Forgot password.");
+                        return;
+                      }
+                      setError("");
+                      setSuccess("");
+                      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
+                        redirectTo: `${window.location.origin}/reset-password`,
+                      });
+                      if (resetErr) {
+                        setError(resetErr.message);
+                      } else {
+                        setSuccess(`Reset link sent to ${email}. Check your inbox (and spam).`);
+                        toast({ title: "Reset link sent", description: `Check ${email} for the reset link.` });
+                      }
+                    }}
+                    className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
               <input
                 type="password"
                 value={password}
