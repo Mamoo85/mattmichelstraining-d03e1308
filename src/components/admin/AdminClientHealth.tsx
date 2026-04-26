@@ -278,13 +278,30 @@ export default function AdminClientHealth() {
         );
       })()}
 
+
+      {/* MRR at Risk */}
+      <Card className={`border-border/40 ${mrrAtRisk > 0 ? "bg-red-500/5 border-red-500/30" : "bg-card/50"}`}>
+        <CardContent className="p-4 flex items-center gap-3">
+          <DollarSign size={20} className={mrrAtRisk > 0 ? "text-red-400" : "text-muted-foreground"} />
+          <div className="flex-1">
+            <div className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground">MRR at Risk</div>
+            <div className={`text-2xl font-black ${mrrAtRisk > 0 ? "text-red-400" : "text-muted-foreground"}`}>
+              ${mrrAtRisk.toLocaleString()}/mo
+            </div>
+            <div className="text-[10px] text-muted-foreground/80">
+              {realCounts.red} overdue {realCounts.red === 1 ? "service" : "services"} — these clients may churn if not contacted soon
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats - Real clients only */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Paying Active", value: realCounts.total, color: "text-foreground", desc: "Real paying clients" },
-          { label: "On Track", value: realCounts.green, color: "text-green-400", desc: "Delivered on schedule" },
-          { label: "Due Soon", value: realCounts.yellow, color: "text-yellow-400", desc: "Delivery approaching or never sent" },
-          { label: "Overdue", value: realCounts.red, color: "text-red-400", desc: "Past delivery deadline" },
+          { label: "Paying Active", value: realCounts.total, color: "text-foreground", desc: "Real paying clients", filterId: "all" as const },
+          { label: "On Track", value: realCounts.green, color: "text-green-400", desc: "Delivered on schedule", filterId: "all" as const },
+          { label: "Due Soon", value: realCounts.yellow, color: "text-yellow-400", desc: "Delivery approaching or never sent", filterId: "at_risk" as const },
+          { label: "Overdue", value: realCounts.red, color: "text-red-400", desc: "Past delivery deadline", filterId: "danger" as const },
         ].map(s => (
           <Card key={s.label} className="border-border/40 bg-card/50">
             <CardContent className="p-4 text-center">
@@ -296,18 +313,41 @@ export default function AdminClientHealth() {
         ))}
       </div>
 
+      {/* Filter chips */}
+      <div className="flex items-center gap-2">
+        {([
+          { id: "all", label: `All (${realClients.length})` },
+          { id: "at_risk", label: `At Risk (${realCounts.yellow + realCounts.red})` },
+          { id: "danger", label: `Danger (${realCounts.red})` },
+        ] as const).map(f => (
+          <button
+            key={f.id}
+            onClick={() => setFilter(f.id)}
+            className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border transition-colors ${
+              filter === f.id
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-transparent text-muted-foreground border-border hover:bg-muted/30"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
       {/* Real Clients */}
       <Card className="border-border/40">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-bold">
-            Paying Clients ({realClients.length})
+            Paying Clients ({filteredRealClients.length}{filter !== "all" ? ` of ${realClients.length}` : ""})
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-1.5 max-h-[500px] overflow-y-auto">
-            {realClients.length === 0 ? (
+            {filteredRealClients.length === 0 ? (
               <p className="text-xs text-muted-foreground text-center py-8">
-                No paying B2B clients yet. When customers subscribe through your service pages, they'll appear here.
+                {realClients.length === 0
+                  ? "No paying B2B clients yet. When customers subscribe through your service pages, they'll appear here."
+                  : "No clients match this filter."}
               </p>
             ) : (
               realClients.map((c, i) => <ClientRow key={i} c={c} i={i} />)
