@@ -22,6 +22,7 @@ import DWAStickyNav from "@/components/shared/DWAStickyNav";
 import WallOfLove, { Testimonial } from "@/components/shared/WallOfLove";
 import EnterpriseFooterBlock from "@/components/shared/EnterpriseFooterBlock";
 import MissedCallStickyCTA from "@/components/missed-call/MissedCallStickyCTA";
+import PostCheckoutClaim from "@/components/checkout/PostCheckoutClaim";
 
 const ACCENT = "#22d3ee";
 const BG = "#0f0f1a";
@@ -420,7 +421,8 @@ export default function MissedCallSaaS() {
     return (
       <div className="min-h-screen bg-[#0f0f1a] text-white flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="w-20 h-20 rounded-full bg-[#22d3ee]/15 flex items-center justify-center mx-auto mb-6">
+          <PostCheckoutClaim product="Missed Call Catch" />
+          <div className="w-20 h-20 rounded-full bg-[#22d3ee]/15 flex items-center justify-center mx-auto mb-6 mt-4">
             <CheckCircle size={36} className="text-[#22d3ee]" />
           </div>
           <h1 className="text-2xl font-black mb-3">You're In — 7-Day Trial Started!</h1>
