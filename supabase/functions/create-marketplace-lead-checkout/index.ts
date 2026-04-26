@@ -122,7 +122,7 @@ serve(async (req) => {
         lead_id, product, buyer_email,
         ...(anon_session_id ? { anon_session_id: String(anon_session_id).slice(0, 64) } : {}),
       },
-      success_url: `${origin}/lead/${lead_id}?paid=1&session={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}/lead/${lead_id}?paid=1&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/${product}-leads?cancelled=1`,
     });
 
