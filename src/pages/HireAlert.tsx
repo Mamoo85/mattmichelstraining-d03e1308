@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import DWAStickyNav from "@/components/shared/DWAStickyNav";
 import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
 import CheckEmailCard from "@/components/checkout/CheckEmailCard";
+import PostCheckoutClaim from "@/components/checkout/PostCheckoutClaim";
 import WallOfLove, { Testimonial } from "@/components/shared/WallOfLove";
 import EnterpriseFooterBlock from "@/components/shared/EnterpriseFooterBlock";
 import TechAlertROICalculator from "@/components/agency/TechAlertROICalculator";
@@ -115,6 +116,7 @@ export default function HireAlert() {
           <div style={{ marginBottom: 24, display: "flex", flexDirection: "column", gap: 12 }}>
             <ReceiptStatusBanner sessionId={searchParams.get("session_id")} productLabel="HireAlert" />
             <CheckEmailCard sessionId={searchParams.get("session_id")} />
+            <PostCheckoutClaim product="HireAlert" />
           </div>
           <div style={{ fontSize: 64, marginBottom: 24 }}>⚡</div>
           <h1 style={{ color: "#fff", fontSize: 32, fontWeight: 800, margin: "0 0 12px" }}>Talent Radar is Live</h1>

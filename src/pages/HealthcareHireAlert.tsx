@@ -9,6 +9,7 @@ import DWAStickyNav from "@/components/shared/DWAStickyNav";
 import WallOfLove, { Testimonial } from "@/components/shared/WallOfLove";
 import EnterpriseFooterBlock from "@/components/shared/EnterpriseFooterBlock";
 import { CheckCircle, Shield, Clock, Users, Zap, DollarSign } from "lucide-react";
+import PostCheckoutClaim from "@/components/checkout/PostCheckoutClaim";
 
 const HEALTHCARE_ROLES = [
   { key: "cna", label: "CNA (Certified Nursing Assistant)" },
@@ -64,6 +65,9 @@ export default function HealthcareHireAlert() {
     return (
       <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
         <div style={{ maxWidth: 520, textAlign: "center" }}>
+          <div style={{ marginBottom: 16 }}>
+            <PostCheckoutClaim product="Talent Radar Healthcare" />
+          </div>
           <div style={{ fontSize: 64, marginBottom: 24 }}>🏥</div>
           <h1 style={{ color: "#fff", fontSize: 32, fontWeight: 800, margin: "0 0 12px" }}>Talent Radar Healthcare is Live</h1>
           <p style={{ color: ACCENT, fontSize: 18, fontWeight: 700, margin: "0 0 20px" }}>Your staffing advantage starts tomorrow at 7am.</p>

@@ -3,6 +3,7 @@ import { ArrowRight, Phone, Mail, FileText, Clock, Headphones, MessageSquare } f
 import { Button } from "@/components/ui/button";
 import callDiagram from "@/assets/call-routing-diagram.png";
 import WaitlistGate from "@/components/WaitlistGate";
+import PostCheckoutClaim from "@/components/checkout/PostCheckoutClaim";
 
 export default function AIPhoneAnswering() {
   const searchParams = new URLSearchParams(window.location.search);
@@ -12,6 +13,7 @@ export default function AIPhoneAnswering() {
     return (
       <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "#0a0a0f" }}>
         <div className="max-w-md w-full rounded-xl text-center p-8" style={{ background: "rgba(15,23,42,0.6)", border: "1px solid rgba(148,163,184,0.1)" }}>
+          <PostCheckoutClaim product="AI Phone Answering" />
           <div className="text-5xl mb-4">📞</div>
           <h2 className="text-2xl font-bold mb-3" style={{ color: "#f8fafc" }}>You're in!</h2>
           <p style={{ color: "#94a3b8" }}>
