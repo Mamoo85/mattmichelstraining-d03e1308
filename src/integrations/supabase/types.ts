@@ -7135,6 +7135,36 @@ export type Database = {
         }
         Relationships: []
       }
+      health_check_pings: {
+        Row: {
+          auth_ok: boolean
+          created_at: string
+          db_read_ok: boolean
+          db_write_ok: boolean
+          error_message: string | null
+          id: string
+          latency_ms: number | null
+        }
+        Insert: {
+          auth_ok?: boolean
+          created_at?: string
+          db_read_ok?: boolean
+          db_write_ok?: boolean
+          error_message?: string | null
+          id?: string
+          latency_ms?: number | null
+        }
+        Update: {
+          auth_ok?: boolean
+          created_at?: string
+          db_read_ok?: boolean
+          db_write_ok?: boolean
+          error_message?: string | null
+          id?: string
+          latency_ms?: number | null
+        }
+        Relationships: []
+      }
       high_volume_buyer_clients: {
         Row: {
           active: boolean | null
