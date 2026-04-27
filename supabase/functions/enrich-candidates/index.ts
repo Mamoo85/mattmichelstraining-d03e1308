@@ -7,6 +7,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { logEnrichment } from "../_shared/enrichment-audit.ts";
 
 const SUPABASE_URL          = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY           = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -308,12 +309,20 @@ serve(async (req) => {
 
   for (const c of (candidates || [])) {
     if (Date.now() - started > WALL_BUDGET_MS - 45_000) break;
-    try {
-      const delta = await enrichCandidate(sb, c);
+    const wrapped = await logEnrichment(
+      { lead_id: c.id, vertical: "talent", function_name: "enrich-candidates", stage: "deep", provider: "waterfall(npi+sonar+pdl)", triggered_by: "cron" },
+      async () => {
+        const delta = await enrichCandidate(sb, c);
+        const fields_added: string[] = [];
+        if (delta > 0) fields_added.push(`score+${delta}`);
+        return { fields_added };
+      },
+    );
+    if (wrapped.ok) {
       stats.candidates++;
-      if (delta > 0) stats.score_bumps++;
-    } catch (e) {
-      console.error(`[enrich] candidate ${c.id} failed:`, e);
+      // delta tracked inside wrapper
+    } else {
+      console.error(`[enrich] candidate ${c.id} failed:`, wrapped.error);
       await sb.from("hire_alert_candidates")
         .update({ enrichment_status: "failed", enrichment_attempted_at: new Date().toISOString() })
         .eq("id", c.id);
