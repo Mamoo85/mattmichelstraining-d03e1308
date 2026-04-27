@@ -1883,3 +1883,6 @@ verify_jwt = false
 
 [functions.visitor-identify]
 verify_jwt = false
+
+[functions.health-check-supabase]
+verify_jwt = false
