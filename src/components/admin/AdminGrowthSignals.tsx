@@ -44,11 +44,33 @@ type FilterType = "all" | "cross_referenced" | "high" | "medium" | "low";
 const INDUSTRY_FILTERS = ["All", "HVAC", "CNC/Machining", "Welding", "Electrical", "Boiler/Pressure", "Plumbing"];
 
 export default function AdminGrowthSignals() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Restore filters: URL ?industry= & ?confidence= take precedence, then localStorage, then defaults
+  const initialFilters = (() => {
+    const urlIndustry = searchParams.get("industry");
+    const urlConfidence = searchParams.get("confidence") as FilterType | null;
+    if (urlIndustry || urlConfidence) {
+      return { industry: urlIndustry || "All", confidence: (urlConfidence || "all") as FilterType };
+    }
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (saved?.industry && saved?.confidence) return saved;
+    } catch { /* ignore */ }
+    return { industry: "All", confidence: "all" as FilterType };
+  })();
+
   const [signals, setSignals] = useState<PulseSignal[]>([]);
+  const [counts, setCounts] = useState<IndustryCount[]>([]);
+  const [queryMeta, setQueryMeta] = useState<QueryMeta>({
+    industry: initialFilters.industry, confidence: initialFilters.confidence,
+    fetchLimit: FETCH_LIMIT_ALL, returned: 0, totalForFilter: 0,
+  });
   const [loading, setLoading] = useState(true);
+  const [refetching, setRefetching] = useState(false);
   const [scanning, setScanning] = useState(false);
-  const [confidenceFilter, setConfidenceFilter] = useState<FilterType>("all");
-  const [industryFilter, setIndustryFilter] = useState("All");
+  const [confidenceFilter, setConfidenceFilter] = useState<FilterType>(initialFilters.confidence);
+  const [industryFilter, setIndustryFilter] = useState(initialFilters.industry);
   const [pitchSignal, setPitchSignal] = useState<PulseSignal | null>(null);
   const [outreachSignal, setOutreachSignal] = useState<PulseSignal | null>(null);
   const [copied, setCopied] = useState(false);
