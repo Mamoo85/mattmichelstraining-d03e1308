@@ -296,10 +296,18 @@ serve(async (req) => {
           business_name: p.business_name, audience_type: audience,
           phaxio_id: result.id, status: "sent", cost: COST_PER_FAX,
         });
-        await sb.from("fax_prospects").update({
-          fax_sent_at: new Date().toISOString(),
-          fax_send_id: result.id || null,
-        }).eq("id", p.id);
+        if (p._source === "prospect_pool") {
+          await sb.from("prospect_pool").update({
+            status: "sent_fax",
+            last_sent_at: new Date().toISOString(),
+            send_count: ((p as any).send_count || 0) + 1,
+          }).eq("id", p.id);
+        } else {
+          await sb.from("fax_prospects").update({
+            fax_sent_at: new Date().toISOString(),
+            fax_send_id: result.id || null,
+          }).eq("id", p.id);
+        }
       } else {
         failed++;
         lastError = result.error || "unknown phaxio error";
