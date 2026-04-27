@@ -202,6 +202,44 @@ export default function ContractorOutreachPanel() {
         </div>
       </div>
 
+      {/* Daily-cap meter */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="bg-card border border-border rounded-lg p-3">
+          <div className="flex items-center justify-between text-[11px] mb-1.5">
+            <span className="font-bold text-foreground">📧 Email cap (today)</span>
+            <span className={emailsToday >= DAILY_EMAIL_CAP ? "text-red-400 font-bold" : "text-muted-foreground"}>
+              {emailsToday} / {DAILY_EMAIL_CAP}
+            </span>
+          </div>
+          <div className="h-1.5 bg-background rounded overflow-hidden">
+            <div
+              className={`h-full ${emailsToday >= DAILY_EMAIL_CAP ? "bg-red-500" : emailsToday > DAILY_EMAIL_CAP * 0.8 ? "bg-amber-500" : "bg-cyan-500"}`}
+              style={{ width: `${Math.min(100, (emailsToday / DAILY_EMAIL_CAP) * 100)}%` }}
+            />
+          </div>
+        </div>
+        <div className="bg-card border border-border rounded-lg p-3">
+          <div className="flex items-center justify-between text-[11px] mb-1.5">
+            <span className="font-bold text-foreground">📱 SMS cap (today)</span>
+            <span className={smsToday >= DAILY_SMS_CAP ? "text-red-400 font-bold" : "text-muted-foreground"}>
+              {smsToday} / {DAILY_SMS_CAP}
+            </span>
+          </div>
+          <div className="h-1.5 bg-background rounded overflow-hidden">
+            <div
+              className={`h-full ${smsToday >= DAILY_SMS_CAP ? "bg-red-500" : smsToday > DAILY_SMS_CAP * 0.8 ? "bg-amber-500" : "bg-emerald-500"}`}
+              style={{ width: `${Math.min(100, (smsToday / DAILY_SMS_CAP) * 100)}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Provenance panel */}
+      <OutreachProvenancePanel />
+
+      {/* Suppression manager */}
+      <OutreachSuppressionManager />
+
       {/* Scrape panel */}
       <div className="bg-card border border-border rounded-lg p-4">
         <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
