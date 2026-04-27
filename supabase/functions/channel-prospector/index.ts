@@ -13,8 +13,10 @@ const corsHeaders = {
 
 const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
-const PHAXIO_KEY = Deno.env.get("PHAXIO_API_KEY") || "";
-const PHAXIO_SECRET = Deno.env.get("PHAXIO_API_SECRET") || "";
+const SINCH_PROJECT_ID = Deno.env.get("SINCH_PROJECT_ID") || "";
+const SINCH_KEY_ID = Deno.env.get("SINCH_KEY_ID") || "";
+const SINCH_KEY_SECRET = Deno.env.get("SINCH_KEY_SECRET") || "";
+const FAX_FROM = Deno.env.get("SINCH_FAX_FROM") || ""; // optional Sinch-provisioned fax number, E.164
 const LOB_API_KEY = Deno.env.get("LOB_API_KEY") || "";
 
 // ── Daily caps (massively scaled up) ──
