@@ -168,6 +168,18 @@ verify_jwt = false
 [functions.dossier-cold-outreach-bulk]
 verify_jwt = false
 
+[functions.enrich-supply-buyers]
+verify_jwt = false
+
+[functions.signal-channel-blast]
+verify_jwt = false
+
+[functions.signal-outreach-cancel-bulk]
+verify_jwt = false
+
+[functions.release-pending-sms]
+verify_jwt = false
+
 [functions.create-hire-alert-trial]
 verify_jwt = false
 
