@@ -599,7 +599,10 @@ export default function AdminContractorLeads() {
                     onClick={() => setExpandedLead(isExpanded ? null : l.id)}
                   >
                     <td className="px-3 py-2 text-xs text-muted-foreground whitespace-nowrap">{timeAgo(l.created_at)}</td>
-                    <td className="px-3 py-2 text-xs font-medium text-foreground">{l.name}</td>
+                    <td className="px-3 py-2 text-xs font-medium text-foreground">
+                      {l.name}
+                      {l.is_demo_record && <span className="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-300 border border-orange-500/30">DEMO</span>}
+                    </td>
                     <td className="px-3 py-2 text-xs text-muted-foreground hidden sm:table-cell">
                       <a href={`tel:${l.phone}`} onClick={(e) => e.stopPropagation()} className="hover:text-primary">{l.phone}</a>
                     </td>
@@ -845,8 +848,8 @@ export default function AdminContractorLeads() {
               </div>
             ))}
           </div>
-        )}
-      </div>
+      {/* ── Section 8: Contractor Outreach (cold-email leads) ─────────── */}
+      <ContractorOutreachPanel />
     </div>
   );
 }
