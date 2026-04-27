@@ -1839,6 +1839,12 @@ verify_jwt = false
 [functions.marketplace-lead-summarize]
 verify_jwt = false
 
+[functions.create-mortgage-radar-checkout]
+verify_jwt = false
+
+[functions.check-mortgage-radar-zips]
+verify_jwt = false
+
 [functions.create-field-crm-checkout]
 verify_jwt = false
 
