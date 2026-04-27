@@ -1,16 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import SEOHead from "@/components/layout/SEOHead";
-import { Home, Target, Shield, FileText, TrendingUp, Bell, CheckCircle, ArrowRight, MapPin, Lock } from "lucide-react";
+import { Home, Shield, TrendingUp, CheckCircle, ArrowRight, MapPin, Lock } from "lucide-react";
 import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
 import CheckEmailCard from "@/components/checkout/CheckEmailCard";
 import PostCheckoutClaim from "@/components/checkout/PostCheckoutClaim";
-import StickyMobileCTA from "@/components/shared/StickyMobileCTA";
 import ActionButton from "@/components/ui/action-button";
+import MortgageRadarROICalculator from "@/components/mortgage/MortgageRadarROICalculator";
+import MortgageRadarTerritoryPicker from "@/components/mortgage/MortgageRadarTerritoryPicker";
+import MortgageRadarComplianceGate, { ComplianceState, isComplianceComplete } from "@/components/mortgage/MortgageRadarComplianceGate";
+import MortgageRadarProvisioningProgress from "@/components/mortgage/MortgageRadarProvisioningProgress";
 
 type Tier = "solo" | "team";
 
