@@ -355,12 +355,34 @@ serve(async (req) => {
     if (campaign.copy_front) design.headline = campaign.copy_front;
     if (campaign.copy_back) design.body = campaign.copy_back;
 
-    // Build query — either by prospect_ids (Resend Failed) or by county filter (default)
-    let prospectQuery = sb.from("postcard_prospects").select("*").not("address_line1", "is", null).not("city", "is", null).not("zip", "is", null);
-
+    // Build query — either by prospect_ids (Resend Failed / Outreach Command Center)
+    // or by county filter (default county scan).
     const selectedIds = prospect_ids?.length ? prospect_ids : (Array.isArray(campaign.prospect_ids) ? campaign.prospect_ids : []);
+
+    let prospects: any[] | null = null;
+
     if (selectedIds.length) {
-      prospectQuery = prospectQuery.in("id", selectedIds);
+      // Try postcard_prospects first (legacy postcard scanner table)
+      const { data: pp } = await sb
+        .from("postcard_prospects")
+        .select("*")
+        .not("address_line1", "is", null).not("city", "is", null).not("zip", "is", null)
+        .in("id", selectedIds);
+
+      const found = (pp || []).map((p: any) => ({ ...p, _source: "postcard_prospects" }));
+      const foundIds = new Set(found.map((p: any) => p.id));
+      const missingIds = selectedIds.filter((id: string) => !foundIds.has(id));
+
+      // Fall back to prospect_pool (Outreach Command Center) for the rest
+      if (missingIds.length) {
+        const { data: pool } = await sb
+          .from("prospect_pool")
+          .select("id, business_name, contact_name, address_line1, address_line2, city, state, zip, audience_type, send_count")
+          .not("address_line1", "is", null).not("city", "is", null).not("zip", "is", null)
+          .in("id", missingIds);
+        for (const p of (pool || [])) found.push({ ...p, _source: "prospect_pool" });
+      }
+      prospects = found;
     } else {
       // SAFETY FIX 2026-04-22: filter prospects by audience_type so a nursing-home
       // campaign can never accidentally mail HVAC contractors in the same county.
@@ -369,19 +391,20 @@ serve(async (req) => {
         await sb.from("postcard_campaigns").update({ status: "failed", last_error: reason }).eq("id", campaign_id);
         return new Response(JSON.stringify({ error: reason, sent: 0 }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      prospectQuery = prospectQuery
+      const { data } = await sb.from("postcard_prospects")
+        .select("*")
+        .not("address_line1", "is", null).not("city", "is", null).not("zip", "is", null)
         .ilike("county", campaign.county)
         .eq("audience_type", campaign.audience_type)
         .is("postcard_sent_at", null)
         .limit(MAX_PER_RUN);
+      prospects = (data || []).map((p: any) => ({ ...p, _source: "postcard_prospects" }));
     }
-
-    const { data: prospects } = await prospectQuery;
 
     if (!prospects?.length) {
       // Honest failure: mark campaign failed, log reason
       const reason = selectedIds.length
-        ? "No matching selected prospects with valid addresses"
+        ? `No matching prospects with valid addresses for the ${selectedIds.length} selected IDs (checked postcard_prospects + prospect_pool)`
         : `No unsent ${campaign.audience_type} prospects in ${campaign.county} County with valid addresses. Run "Find Prospects" for this audience first.`;
       await sb.from("postcard_campaigns").update({ status: "failed", last_error: reason }).eq("id", campaign_id);
       return new Response(JSON.stringify({ error: reason, sent: 0 }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
