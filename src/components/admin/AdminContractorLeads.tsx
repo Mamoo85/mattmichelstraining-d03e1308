@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import TerritoryLinkGenerator from "@/components/dwa-admin/TerritoryLinkGenerator";
+import ContractorLeadsInfoBox from "@/components/admin/ContractorLeadsInfoBox";
+import ContractorOutreachPanel from "@/components/admin/ContractorOutreachPanel";
 
 // ── Priority territories for first Facebook/prospector push ──────────────────
 const PRIORITY_SLUGS = ["hvac-warren", "plumbing-detroit", "hvac-sterling-heights", "roofing-troy", "electrician-detroit"];
