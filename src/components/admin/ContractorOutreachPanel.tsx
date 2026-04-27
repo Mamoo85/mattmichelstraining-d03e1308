@@ -316,6 +316,9 @@ export default function ContractorOutreachPanel() {
           <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-300 mb-3 flex items-center gap-2">
             <Send size={13} /> Cold-Email Real Unclaimed Leads ({unclaimedLeads.length})
           </h3>
+          <p className="text-[11px] text-emerald-200/70 mb-3 -mt-2">
+            One press = scrape Google Maps → enrich emails (Snov/Apollo/Hunter waterfall) → cold-email matched contractors. Suppression + daily-cap enforced.
+          </p>
           <div className="space-y-2">
             {unclaimedLeads.map(l => (
               <div key={l.id} className="flex flex-wrap items-center gap-3 bg-card border border-border rounded p-3">
@@ -328,9 +331,10 @@ export default function ContractorOutreachPanel() {
                 <button
                   onClick={() => blastLead(l.id)}
                   disabled={blastingLeadId === l.id}
+                  title="Auto-blast: scrape Google Maps → enrich emails → cold-email matched contractors"
                   className="px-3 py-1.5 rounded text-xs font-bold bg-emerald-500 text-slate-900 hover:bg-emerald-400 disabled:opacity-50"
                 >
-                  {blastingLeadId === l.id ? "Sending…" : "📧 Email Contractors"}
+                  {blastingLeadId === l.id ? "Auto-blasting…" : "⚡ Auto-Blast (scrape+enrich+email)"}
                 </button>
               </div>
             ))}
