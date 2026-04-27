@@ -155,7 +155,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { signal_id, target_company, target_email, target_contact_name, vertical } = await req.json();
+    const { signal_id, target_company, target_email, target_contact_name, vertical, silent } = await req.json();
 
     if (!signal_id || !target_company || !target_email) {
       return new Response(JSON.stringify({ error: "signal_id, target_company, target_email required" }), {
