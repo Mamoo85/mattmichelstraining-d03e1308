@@ -46,8 +46,8 @@ export default function OutreachSuppressionManager() {
       reason: bulkReason || "Manual bulk add",
       source: "manual",
     }));
-    const { error } = await supabase
-      .from("contractor_outreach_suppression" as never)
+    const { error } = await (supabase as any)
+      .from("contractor_outreach_suppression")
       .upsert(payload, { onConflict: "contact,contact_type", ignoreDuplicates: true });
     setAdding(false);
     if (error) { toast.error(error.message); return; }
