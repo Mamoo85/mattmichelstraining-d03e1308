@@ -176,28 +176,61 @@ serve(async (req) => {
     const usePool = effectiveIds.length > 0;
 
     let prospects: any[] = [];
+    const resolutionTrace: string[] = [];
+    const mapPool = (p: any) => ({
+      id: p.id,
+      business_name: p.business_name,
+      fax_number: p.fax_number,
+      segment: p.audience_type,
+      fax_sent_at: p.status === "sent_fax" ? (p.last_sent_at || null) : null,
+      _source: "prospect_pool",
+    });
+
     if (usePool) {
-      // IDs come from prospect_pool (Outreach Command Center). Skip segment filter.
-      const { data } = await sb
+      // Primary: prospect_pool by ID. Skip segment filter when explicit IDs supplied.
+      const { data: poolData } = await sb
         .from("prospect_pool")
         .select("id, business_name, fax_number, audience_type, status, last_sent_at")
         .in("id", effectiveIds);
-      prospects = (data || []).map((p: any) => ({
-        id: p.id,
-        business_name: p.business_name,
-        fax_number: p.fax_number,
-        segment: p.audience_type,
-        fax_sent_at: p.status === "sent_fax" ? (p.last_sent_at || null) : null,
-        _source: "prospect_pool",
-      }));
+      prospects = (poolData || []).map(mapPool);
+      resolutionTrace.push(`prospect_pool:${prospects.length}/${effectiveIds.length}`);
+
+      // Fallback A: any unresolved IDs → try fax_prospects by ID
+      if (prospects.length < effectiveIds.length) {
+        const found = new Set(prospects.map((p) => p.id));
+        const missing = effectiveIds.filter((id) => !found.has(id));
+        const { data: faxData } = await sb.from("fax_prospects").select("*").in("id", missing);
+        const more = (faxData || []).map((p: any) => ({ ...p, _source: "fax_prospects" }));
+        prospects.push(...more);
+        resolutionTrace.push(`fax_prospects_by_id:${more.length}/${missing.length}`);
+      }
     } else {
       // Legacy path: fax_prospects table filtered by segment
       let q = sb.from("fax_prospects").select("*").eq("segment", campaign.target_segment);
       if (REQUIRE_PUBLIC_VERIFIED) q = q.eq("verified_public", true);
       const { data } = await q;
       prospects = (data || []).map((p: any) => ({ ...p, _source: "fax_prospects" }));
+      resolutionTrace.push(`segment(${campaign.target_segment}):${prospects.length}`);
+
+      // Fallback B: 0 from segment but campaign has prospect_ids → try fax_prospects by ID
+      if (prospects.length === 0 && campaignProspectIds.length > 0) {
+        const { data: byId } = await sb.from("fax_prospects").select("*").in("id", campaignProspectIds);
+        prospects = (byId || []).map((p: any) => ({ ...p, _source: "fax_prospects" }));
+        resolutionTrace.push(`fallback_fax_prospects_by_id:${prospects.length}/${campaignProspectIds.length}`);
+
+        // Fallback C: still 0 → prospect_pool by ID
+        if (prospects.length === 0) {
+          const { data: pool } = await sb
+            .from("prospect_pool")
+            .select("id, business_name, fax_number, audience_type, status, last_sent_at")
+            .in("id", campaignProspectIds);
+          prospects = (pool || []).map(mapPool);
+          resolutionTrace.push(`fallback_prospect_pool_by_id:${prospects.length}/${campaignProspectIds.length}`);
+        }
+      }
     }
     const allTargets = prospects;
+    console.log(`[send-fax-phaxio] campaign=${campaignId} resolution: ${resolutionTrace.join(" | ")}`);
 
     // For explicit-IDs runs (resend or Command Center): trust the selected list.
     // For legacy segment scans: skip anyone already faxed.
@@ -226,7 +259,26 @@ serve(async (req) => {
         month_remaining: Math.max(0, MAX_PER_MONTH - monthSent),
         per_run_cap: MAX_PER_RUN,
         estimated_cost_if_sent: +(targets.length * COST_PER_FAX).toFixed(2),
+        resolution_trace: resolutionTrace,
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── PRE-FLIGHT: invalid targets gate ─────────────────────────────────
+    if (allTargets.length === 0) {
+      const errMsg = `0 targets resolved (${resolutionTrace.join(" | ")})`;
+      await sb.from("fax_campaigns").update({
+        status: "invalid_targets",
+        last_error: errMsg,
+      }).eq("id", campaignId);
+      await notifyMatt(
+        `⚠️ Fax campaign blocked — invalid targets: ${campaign.name}`,
+        `<p>Campaign <strong>${campaign.name}</strong> resolved 0 prospects.</p>
+         <p>Trace: <code>${resolutionTrace.join(" | ")}</code></p>
+         <p>Likely cause: prospect_ids reference rows that no longer exist in either prospect_pool or fax_prospects, or segment label doesn't match any rows.</p>`,
+      );
+      return new Response(JSON.stringify({
+        success: false, error: "invalid_targets", resolution_trace: resolutionTrace,
+      }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     if (!PHAXIO_API_KEY || !PHAXIO_API_SECRET) {
