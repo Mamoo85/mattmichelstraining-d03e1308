@@ -496,7 +496,15 @@ serve(async (req) => {
         if (lobRes.ok) {
           const lobData = await lobRes.json();
           sentCount++;
-          await sb.from("postcard_prospects").update({ postcard_sent_at: new Date().toISOString(), postcard_batch_id: campaign_id }).eq("id", prospect.id);
+          if (prospect._source === "prospect_pool") {
+            await sb.from("prospect_pool").update({
+              status: "sent_postcard",
+              last_sent_at: new Date().toISOString(),
+              send_count: ((prospect as any).send_count || 0) + 1,
+            }).eq("id", prospect.id);
+          } else {
+            await sb.from("postcard_prospects").update({ postcard_sent_at: new Date().toISOString(), postcard_batch_id: campaign_id }).eq("id", prospect.id);
+          }
           await sb.from("postcard_send_log").insert({
             ...sendLogBase,
             lob_id: lobData.id,
