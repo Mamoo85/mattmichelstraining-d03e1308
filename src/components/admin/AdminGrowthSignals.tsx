@@ -126,23 +126,89 @@ export default function AdminGrowthSignals() {
     return 2 + Math.abs(hash % 5); // 2-6 competitors
   }
 
-  useEffect(() => { fetchSignals(); }, []);
-
-  async function fetchSignals() {
-    setLoading(true);
+  // ── Counts: total, high/medium/low, cross-ref per industry. Fed by SQL view.
+  // Refreshes on mount + after every scan so pill counts are always honest.
+  const fetchCounts = useCallback(async () => {
     const { data, error } = await (supabase as any)
-      .from("industry_pulse_signals")
-      .select("*")
-      .order("confidence", { ascending: false })
-      .order("detected_at", { ascending: false })
-      .limit(FETCH_LIMIT);
+      .from("industry_pulse_signals_counts")
+      .select("*");
+    if (!error && data) setCounts(data as IndustryCount[]);
+  }, []);
 
-    if (!error && data) {
-      const JUNK = ["indeed", "ziprecruiter", "linkedin", "multiple employers", "various", "confidential"];
-      setSignals(data.filter((s: PulseSignal) => !JUNK.some(j => s.company_name.toLowerCase().includes(j))));
+  // ── Server-side filtered fetch. Runs whenever industry or confidence changes.
+  // Confidence buckets are pushed to SQL — no more client-side hiding.
+  // Deterministic tie-break: confidence DESC, detected_at DESC, id ASC
+  // (the id leg guarantees identical sorts across reloads, paginations, and tabs).
+  const fetchSignals = useCallback(async () => {
+    const isInitial = signals.length === 0;
+    isInitial ? setLoading(true) : setRefetching(true);
+
+    const fetchLimit = industryFilter === "All" ? FETCH_LIMIT_ALL : FETCH_LIMIT_FILTERED;
+
+    let q = (supabase as any)
+      .from("industry_pulse_signals")
+      .select("*", { count: "exact" });
+
+    if (industryFilter !== "All") q = q.eq("industry", industryFilter);
+
+    switch (confidenceFilter) {
+      case "high":             q = q.gte("confidence", 7); break;
+      case "medium":           q = q.gte("confidence", 4).lt("confidence", 7); break;
+      case "low":              q = q.lt("confidence", 4); break;
+      case "cross_referenced": q = q.eq("cross_referenced", true); break;
+      // "all" and "watchlist" → no SQL constraint (watchlist filtered client-side)
     }
-    setLoading(false);
-  }
+
+    const { data, count, error } = await q
+      .order("confidence",  { ascending: false })
+      .order("detected_at", { ascending: false })
+      .order("id",          { ascending: true })
+      .limit(fetchLimit);
+
+    if (error) {
+      toast.error("Failed to load signals: " + error.message);
+      setLoading(false); setRefetching(false);
+      return;
+    }
+
+    // Client-side junk filter for company-name aggregator noise — applied AFTER
+    // the server query so it never causes a "filter ate everything" silent zero.
+    const JUNK = ["indeed", "ziprecruiter", "linkedin", "multiple employers", "various", "confidential"];
+    const cleaned = (data || []).filter((s: PulseSignal) => !JUNK.some(j => s.company_name.toLowerCase().includes(j)));
+
+    setSignals(cleaned);
+    setQueryMeta({
+      industry: industryFilter,
+      confidence: confidenceFilter,
+      fetchLimit,
+      returned: cleaned.length,
+      totalForFilter: count ?? cleaned.length,
+    });
+    setLoading(false); setRefetching(false);
+  }, [industryFilter, confidenceFilter, signals.length]);
+
+  // Initial mount: load counts + first signal page
+  useEffect(() => {
+    fetchCounts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Refetch whenever filters change (debounced via React batching)
+  useEffect(() => {
+    fetchSignals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [industryFilter, confidenceFilter]);
+
+  // Persist filter choices: URL + localStorage
+  useEffect(() => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (industryFilter === "All") next.delete("industry"); else next.set("industry", industryFilter);
+      if (confidenceFilter === "all") next.delete("confidence"); else next.set("confidence", confidenceFilter);
+      return next;
+    }, { replace: true });
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ industry: industryFilter, confidence: confidenceFilter })); } catch { /* ignore */ }
+  }, [industryFilter, confidenceFilter, setSearchParams]);
 
   async function runScanner() {
     setScanning(true);
@@ -150,7 +216,7 @@ export default function AdminGrowthSignals() {
       const { data, error } = await supabase.functions.invoke("industry-pulse-scanner");
       if (error) throw error;
       toast.success(`Scan complete: ${data?.signals_found || 0} signals found`);
-      await fetchSignals();
+      await Promise.all([fetchSignals(), fetchCounts()]);
     } catch (e: any) {
       toast.error("Scanner failed: " + (e.message || "unknown error"));
     } finally {
@@ -158,18 +224,13 @@ export default function AdminGrowthSignals() {
     }
   }
 
+  // Watchlist filter is the only client-side filter remaining (small list, instant)
   const filtered = useMemo(() => {
-    let list = signals;
-    if (industryFilter !== "All") list = list.filter(s => s.industry === industryFilter);
-    switch (confidenceFilter) {
-      case "cross_referenced": list = list.filter(s => s.cross_referenced); break;
-      case "high": list = list.filter(s => s.confidence >= 7); break;
-      case "medium": list = list.filter(s => s.confidence >= 4 && s.confidence < 7); break;
-      case "low": list = list.filter(s => s.confidence < 4); break;
-      case "watchlist" as any: list = list.filter(s => watchlist.includes(s.company_name)); break;
+    if (confidenceFilter === ("watchlist" as any)) {
+      return signals.filter(s => watchlist.includes(s.company_name));
     }
-    return list;
-  }, [signals, confidenceFilter, industryFilter, watchlist]);
+    return signals;
+  }, [signals, confidenceFilter, watchlist]);
 
   const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
