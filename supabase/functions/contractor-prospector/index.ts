@@ -41,20 +41,54 @@ const log = (step: string, data?: any) =>
   console.log(`[CONTRACTOR-PROSPECTOR] ${step}${data ? " — " + JSON.stringify(data) : ""}`);
 
 // ── Daily send cap to protect domain reputation ──
-const DAILY_SEND_CAP = 30;
-const DEAD_LEAD_CAP = 5;      // dead lead reactivation pitches/day
-const TECH_ALERT_CAP = 5;     // TechAlert trial pitches/day
-const MISSED_CALL_CAP = 5;    // Missed-Call Text-Back pitches/day
-const CARE_ALERT_CAP = 3;     // CareAlert (healthcare TechAlert) pitches/day
+const DAILY_SEND_CAP = 150;
+const DEAD_LEAD_CAP = 50;     // dead lead reactivation pitches/day
+const TECH_ALERT_CAP = 20;    // TechAlert trial pitches/day
+const MISSED_CALL_CAP = 20;   // Missed-Call Text-Back pitches/day
+const CARE_ALERT_CAP = 5;     // CareAlert (healthcare TechAlert) pitches/day
 
-// ── Metro Detroit targets only ──
+// ── Statewide Michigan targets ──
 const TRADES = ["roofer", "HVAC contractor", "plumber", "electrician", "dentist"];
 const DEAD_LEAD_TRADES = new Set(["roofer", "HVAC contractor", "plumber", "electrician"]);
 const CITIES = [
-  "Grosse Pointe MI", "Detroit MI", "Warren MI", "Sterling Heights MI",
+  // Metro Detroit
+  "Detroit MI", "Grosse Pointe MI", "Warren MI", "Sterling Heights MI",
   "Troy MI", "Livonia MI", "Dearborn MI", "Royal Oak MI",
-  "St. Clair Shores MI", "Macomb MI", "Ferndale MI",
+  "St. Clair Shores MI", "Macomb MI", "Ferndale MI", "Southfield MI",
+  "Farmington Hills MI", "Novi MI", "Rochester Hills MI", "Pontiac MI",
+  "Auburn Hills MI", "Birmingham MI", "Bloomfield Hills MI", "Canton MI",
+  "Westland MI", "Taylor MI", "Wyandotte MI", "Monroe MI",
+  // Ann Arbor / I-94 corridor
+  "Ann Arbor MI", "Ypsilanti MI", "Saline MI", "Brighton MI", "Howell MI",
+  // Lansing / Mid-MI
+  "Lansing MI", "East Lansing MI", "Okemos MI", "Jackson MI",
+  // Southwest MI
+  "Kalamazoo MI", "Battle Creek MI", "Portage MI",
+  // West MI
+  "Grand Rapids MI", "Wyoming MI", "Kentwood MI", "Holland MI",
+  "Muskegon MI", "Grand Haven MI",
+  // Mid-MI / Tri-Cities / Thumb
+  "Flint MI", "Burton MI", "Saginaw MI", "Bay City MI", "Midland MI", "Mt. Pleasant MI",
+  // Northern MI / UP
+  "Traverse City MI", "Petoskey MI", "Cadillac MI", "Alpena MI",
+  "Marquette MI", "Sault Ste. Marie MI", "Escanaba MI",
 ];
+
+// Trade-specific search query variants — used to multiply Google Places coverage
+// when targeting a single city (Places API caps at 20 results per query).
+const TRADE_QUERY_VARIANTS: Record<string, string[]> = {
+  "HVAC contractor": ["HVAC contractor", "heating and cooling", "AC repair", "furnace repair"],
+  "plumber": ["plumber", "plumbing contractor", "drain cleaning", "water heater repair"],
+  "electrician": ["electrician", "electrical contractor", "residential electrician"],
+  "roofer": ["roofer", "roofing contractor", "roof repair", "roof replacement"],
+  "dentist": ["dentist", "dental office", "family dentistry"],
+};
+
+// Pick N random cities from the statewide list (used when "All Michigan" selected)
+function pickRandomCities(n: number): string[] {
+  const shuffled = [...CITIES].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(n, CITIES.length));
+}
 
 // Pick 2 trade+city combos to run today (rotated by day of year)
 function getTodaysCombos(): { trade: string; city: string }[] {
