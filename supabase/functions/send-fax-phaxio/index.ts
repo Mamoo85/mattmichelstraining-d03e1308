@@ -323,6 +323,8 @@ serve(async (req) => {
     const totalCost = +(sent * COST_PER_FAX).toFixed(2);
 
     // Honest status update
+    // Treat body-supplied prospect_ids as a resend (incremental). Campaign-level
+    // prospect_ids from Outreach Command Center are the campaign's first run.
     const isResend = !!(prospectIds && prospectIds.length);
     if (!isResend) {
       await sb.from("fax_campaigns").update({
