@@ -44,6 +44,19 @@ export default function MortgageRadarHub() {
   const [enrichingId, setEnrichingId] = useState<string | null>(null);
   const [trace, setTrace] = useState<Array<Record<string, unknown>> | null>(null);
 
+  // Founder seat invite form
+  const [showFounderForm, setShowFounderForm] = useState(false);
+  const [creatingFounder, setCreatingFounder] = useState(false);
+  const [founderResult, setFounderResult] = useState<{ dashboard_url: string; email: string } | null>(null);
+  const [founderForm, setFounderForm] = useState({
+    email: "",
+    contact_name: "",
+    business_name: "",
+    nmls_number: "",
+    phone: "",
+    zip_codes: "",
+  });
+
   const load = async () => {
     setLoading(true);
     const [c, l] = await Promise.all([
