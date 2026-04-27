@@ -242,11 +242,32 @@ export default function AdminAgencyOutreach() {
                         ✓ {enrich.contact_full_name || "(no name)"} · {enrich.contact_email} · {enrich.source} · {enrich.email_status}
                       </span>
                     ) : (
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-slate-700/30 text-slate-400 flex items-center gap-1">
+                      <button
+                        onClick={() => setShowTrace(s => ({ ...s, [agency.name]: !s[agency.name] }))}
+                        className="text-[10px] px-2 py-0.5 rounded bg-slate-700/30 text-slate-300 hover:bg-slate-600/40 flex items-center gap-1"
+                      >
                         <AlertCircle className="w-3 h-3" /> Not enriched
-                      </span>
+                        {enrichTraces[agency.name]?.length ? (
+                          <>· Why? {showTrace[agency.name] ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}</>
+                        ) : null}
+                      </button>
                     )}
                   </div>
+
+                  {/* Diagnostic trace — explains exactly why enrichment missed */}
+                  {showTrace[agency.name] && enrichTraces[agency.name]?.length ? (
+                    <div className="mt-2 bg-[#0a1628] border border-white/10 rounded p-2">
+                      <div className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-1">Enrichment trace</div>
+                      <ol className="space-y-0.5 text-[10px] font-mono text-slate-300">
+                        {enrichTraces[agency.name].map((line, i) => (
+                          <li key={i} className={line.includes(":hit") ? "text-emerald-300" : line.includes(":miss") || line.includes(":skipped") ? "text-amber-300" : "text-slate-400"}>
+                            {i + 1}. {line}
+                          </li>
+                        ))}
+                      </ol>
+                      <p className="text-[10px] text-slate-500 mt-1.5">If every provider missed: the contact may not be in Apollo/Hunter/Snov databases for this domain. Try clicking <b>Re-enrich</b> with a manually-corrected domain in the seed list.</p>
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="flex flex-col items-end gap-2">
