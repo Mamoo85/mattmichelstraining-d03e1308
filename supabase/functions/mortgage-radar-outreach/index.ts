@@ -5,6 +5,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,9 +15,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
-const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
-const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+const DWA_PHONE = "+13139921219";
 
 interface CreateBody {
   action: "create";
@@ -44,21 +43,6 @@ interface ListBody {
 }
 type Body = CreateBody | ApproveBody | RejectBody | ListBody;
 
-async function sendSms(to: string, body: string): Promise<{ ok: boolean; error?: string }> {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) return { ok: false, error: "Twilio not configured" };
-  try {
-    const auth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
-    const r = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
-      method: "POST",
-      headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ To: to, From: TWILIO_PHONE_NUMBER, Body: body }).toString(),
-    });
-    if (!r.ok) return { ok: false, error: `Twilio ${r.status}: ${await r.text()}` };
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : String(e) };
-  }
-}
 
 async function sendEmail(to: string, subject: string, body: string, fromName: string): Promise<{ ok: boolean; error?: string }> {
   if (!RESEND_API_KEY) return { ok: false, error: "Resend not configured" };
@@ -152,7 +136,8 @@ serve(async (req) => {
 
       let result: { ok: boolean; error?: string } = { ok: false, error: "No send" };
       if (row.channel === "sms" && lead?.phone) {
-        result = await sendSms(lead.phone, finalBody);
+        const sms = await sendSMS(lead.phone, DWA_PHONE, finalBody, "mortgage_radar_outreach");
+        result = { ok: sms.success, error: sms.error };
       } else if (row.channel === "email" && lead?.email) {
         result = await sendEmail(lead.email, finalSubject, finalBody, fromName);
       } else if (row.channel === "call_note") {
