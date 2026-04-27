@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Home, Play, RefreshCw, Users, MapPin, Sparkles, Copy, Send, ExternalLink } from "lucide-react";
+import { Home, Play, RefreshCw, Users, MapPin, Sparkles, Copy, Send, ExternalLink, Star, Loader2, Check } from "lucide-react";
 import LeadSalesOutreachHub from "./LeadSalesOutreachHub";
 
 type Client = {
