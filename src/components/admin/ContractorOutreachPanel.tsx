@@ -145,6 +145,27 @@ export default function ContractorOutreachPanel() {
     load();
   }
 
+  async function sendQuickSms(p: Prospect) {
+    if (!p.phone) { toast.error("No phone on file"); return; }
+    if (!p.consent_for_sms) {
+      toast.error("Mark consent first (consent button on the row)");
+      return;
+    }
+    const msg = window.prompt(
+      `Send SMS to ${p.business_name} (${p.phone})?\n\nMessage (STOP suffix added automatically):`,
+      `Hi — Matt from Detroit Web Agency. New ${p.trade.toLowerCase()} lead in ${p.city || "your area"}, $59 to claim. Want it?`
+    );
+    if (!msg || !msg.trim()) return;
+    const { data, error } = await supabase.functions.invoke("contractor-outreach-sms-send", {
+      body: { prospect_id: p.id, message: msg.trim() },
+    });
+    if (error) { toast.error(error.message); return; }
+    const d = data as any;
+    if (!d?.ok) { toast.error(d?.error || "SMS failed"); return; }
+    toast.success("✅ SMS sent");
+    load();
+  }
+
   const filtered = prospects.filter(p =>
     (!filterTrade || p.trade === filterTrade) &&
     (!filterCity || (p.city || "").toLowerCase().includes(filterCity.toLowerCase()))
