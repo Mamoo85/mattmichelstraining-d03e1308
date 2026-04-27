@@ -155,7 +155,13 @@ export default function ChannelOutreachTab({ config }: { config: ChannelConfig }
               {last.errors?.length > 0 && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 4 }}>Errors: {last.errors.join(" · ")}</div>}
               <div style={{ fontSize: 10, color: "#64748b", marginTop: 4 }}>
                 Daily cap: {last.sentAfter || 0}/{last.cap || config.cap} · combo: {last.combo?.trade}/{last.combo?.city}
+                {last.queryCount ? ` · ${last.queryCount} Google queries` : ""}
               </div>
+              {last.citiesScanned?.length > 1 && (
+                <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 4 }}>
+                  Cities scanned: {last.citiesScanned.join(", ")}
+                </div>
+              )}
             </div>
           )}
         </div>
