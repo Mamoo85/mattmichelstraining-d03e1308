@@ -3383,6 +3383,7 @@ export type Database = {
           created_at: string | null
           facebook_page_id: string | null
           id: string
+          is_priority: boolean
           slug: string
           state: string
           trade: string
@@ -3394,6 +3395,7 @@ export type Database = {
           created_at?: string | null
           facebook_page_id?: string | null
           id?: string
+          is_priority?: boolean
           slug: string
           state?: string
           trade: string
@@ -3405,6 +3407,7 @@ export type Database = {
           created_at?: string | null
           facebook_page_id?: string | null
           id?: string
+          is_priority?: boolean
           slug?: string
           state?: string
           trade?: string
@@ -3565,6 +3568,56 @@ export type Database = {
           },
         ]
       }
+      contractor_outreach_audit_log: {
+        Row: {
+          actor: string | null
+          channel: string
+          created_at: string
+          event: string
+          id: string
+          ip_address: string | null
+          lead_id: string | null
+          metadata: Json | null
+          prospect_id: string | null
+          reason: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          actor?: string | null
+          channel: string
+          created_at?: string
+          event: string
+          id?: string
+          ip_address?: string | null
+          lead_id?: string | null
+          metadata?: Json | null
+          prospect_id?: string | null
+          reason?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          actor?: string | null
+          channel?: string
+          created_at?: string
+          event?: string
+          id?: string
+          ip_address?: string | null
+          lead_id?: string | null
+          metadata?: Json | null
+          prospect_id?: string | null
+          reason?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contractor_outreach_audit_log_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_outreach_prospects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contractor_outreach_prospects: {
         Row: {
           business_name: string
@@ -3646,6 +3699,36 @@ export type Database = {
           unsubscribed_at?: string | null
           updated_at?: string | null
           website?: string | null
+        }
+        Relationships: []
+      }
+      contractor_outreach_suppression: {
+        Row: {
+          added_by: string | null
+          contact: string
+          contact_type: string
+          created_at: string
+          id: string
+          reason: string | null
+          source: string
+        }
+        Insert: {
+          added_by?: string | null
+          contact: string
+          contact_type: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          source: string
+        }
+        Update: {
+          added_by?: string | null
+          contact?: string
+          contact_type?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          source?: string
         }
         Relationships: []
       }

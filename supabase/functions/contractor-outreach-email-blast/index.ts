@@ -1,5 +1,5 @@
 // Contractor Outreach: cold-email an unclaimed lead to N matched contractor prospects.
-// CAN-SPAM compliant: physical address + unsubscribe in footer.
+// CAN-SPAM compliant + suppression check + audit log + daily cap.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -10,6 +10,8 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
+
+const DAILY_EMAIL_CAP = 100;
 
 function dwaEmailWrap(bodyHtml: string, unsubUrl: string): string {
   return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a1628;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
@@ -45,6 +47,11 @@ function buildBody(opts: { businessName: string; trade: string; city: string; pr
   `;
 }
 
+async function logAudit(supabase: any, row: Record<string, unknown>) {
+  try { await supabase.from("contractor_outreach_audit_log").insert(row); }
+  catch (e) { console.error("audit log insert failed", e); }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -57,6 +64,27 @@ Deno.serve(async (req) => {
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+    // Daily cap check (fail-closed)
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count: sentToday, error: capErr } = await supabase
+      .from("contractor_outreach_audit_log")
+      .select("*", { count: "exact", head: true })
+      .eq("channel", "email")
+      .eq("event", "sent")
+      .gte("created_at", since);
+    if (capErr) {
+      return new Response(JSON.stringify({ error: `Cap check failed: ${capErr.message}` }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const remaining = DAILY_EMAIL_CAP - (sentToday || 0);
+    if (remaining <= 0) {
+      return new Response(JSON.stringify({ ok: false, error: `Daily cap reached (${DAILY_EMAIL_CAP}/day). Try again tomorrow.` }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const effectiveMax = Math.min(max_contractors, remaining);
 
     // Load lead + territory
     const { data: lead, error: lErr } = await supabase
@@ -82,7 +110,7 @@ Deno.serve(async (req) => {
       .not("email", "is", null)
       .is("unsubscribed_at", null)
       .order("last_emailed_at", { ascending: true, nullsFirst: true })
-      .limit(max_contractors);
+      .limit(effectiveMax);
 
     if (!prospects || prospects.length === 0) {
       return new Response(JSON.stringify({ ok: false, error: `No ${trade} prospects in ${city} with email. Scrape + enrich first.` }), {
@@ -90,13 +118,38 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Suppression check (batch)
+    const emails = prospects.map((p: any) => p.email).filter(Boolean);
+    const { data: suppressed, error: sErr } = await supabase
+      .from("contractor_outreach_suppression")
+      .select("contact")
+      .eq("contact_type", "email")
+      .in("contact", emails);
+    if (sErr) {
+      return new Response(JSON.stringify({ error: `Suppression check failed: ${sErr.message}` }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const suppressedSet = new Set((suppressed || []).map((s: any) => s.contact.toLowerCase()));
+
     const claimUrl = `https://detroitwebagent.com/contractor-marketplace?lead=${lead.id}`;
     const projectType = lead.project_type || lead.message || `${trade} project`;
 
     let sent = 0;
+    let skippedSuppressed = 0;
     const failures: string[] = [];
 
     for (const p of prospects) {
+      // Suppression gate
+      if (suppressedSet.has((p.email || "").toLowerCase())) {
+        skippedSuppressed++;
+        await logAudit(supabase, {
+          prospect_id: p.id, lead_id, channel: "email", event: "suppressed",
+          reason: "Email on global suppression list",
+        });
+        continue;
+      }
+
       try {
         const unsubUrl = `${SUPABASE_URL}/functions/v1/contractor-outreach-unsubscribe?id=${p.id}`;
         const html = dwaEmailWrap(
@@ -125,6 +178,10 @@ Deno.serve(async (req) => {
         if (!res.ok) {
           const t = await res.text();
           failures.push(`${p.email}: ${t.slice(0, 120)}`);
+          await logAudit(supabase, {
+            prospect_id: p.id, lead_id, channel: "email", event: "bounce",
+            reason: t.slice(0, 240),
+          });
           continue;
         }
         await supabase
@@ -134,9 +191,18 @@ Deno.serve(async (req) => {
             email_send_count: (p.email_send_count || 0) + 1,
           })
           .eq("id", p.id);
+        await logAudit(supabase, {
+          prospect_id: p.id, lead_id, channel: "email", event: "sent",
+          reason: subject,
+          metadata: { price, claim_url: claimUrl },
+        });
         sent++;
       } catch (e: any) {
         failures.push(`${p.email}: ${e?.message || "err"}`);
+        await logAudit(supabase, {
+          prospect_id: p.id, lead_id, channel: "email", event: "bounce",
+          reason: e?.message || "send error",
+        });
       }
     }
 
@@ -149,11 +215,18 @@ Deno.serve(async (req) => {
         subject: `Lead blast: ${trade} / ${city}`,
         body: `Lead ${lead.id} — ${projectType} — $${price}`,
         status: sent > 0 ? "sent" : "failed",
-        meta: { lead_id, sent, failures: failures.slice(0, 5) },
+        meta: { lead_id, sent, suppressed: skippedSuppressed, failures: failures.slice(0, 5) },
       });
     } catch (_e) { /* table may differ across envs */ }
 
-    return new Response(JSON.stringify({ ok: true, sent, attempted: prospects.length, failures }), {
+    return new Response(JSON.stringify({
+      ok: true,
+      sent,
+      attempted: prospects.length,
+      skipped_suppressed: skippedSuppressed,
+      daily_remaining: remaining - sent,
+      failures,
+    }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {

@@ -1,7 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, Sparkles, Mail, RefreshCw, ExternalLink, Trash2, Send } from "lucide-react";
+import { Search, Sparkles, RefreshCw, ExternalLink, Trash2, Send, Activity, MessageSquare, ShieldCheck } from "lucide-react";
+import OutreachProvenancePanel from "./OutreachProvenancePanel";
+import OutreachSuppressionManager from "./OutreachSuppressionManager";
+import OutreachAuditDrawer from "./OutreachAuditDrawer";
+import OutreachConsentDialog from "./OutreachConsentDialog";
+
+const DAILY_EMAIL_CAP = 100;
+const DAILY_SMS_CAP = 50;
 
 interface Prospect {
   id: string;
@@ -45,9 +52,14 @@ export default function ContractorOutreachPanel() {
   const [blastingLeadId, setBlastingLeadId] = useState<string | null>(null);
   const [filterTrade, setFilterTrade] = useState("");
   const [filterCity, setFilterCity] = useState("");
+  const [emailsToday, setEmailsToday] = useState(0);
+  const [smsToday, setSmsToday] = useState(0);
+  const [auditFor, setAuditFor] = useState<{ id: string; name: string } | null>(null);
+  const [consentFor, setConsentFor] = useState<{ id: string; name: string } | null>(null);
 
   const load = useCallback(async () => {
-    const [pRes, lRes] = await Promise.all([
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const [pRes, lRes, eRes, sRes] = await Promise.all([
       supabase.from("contractor_outreach_prospects" as never)
         .select("*")
         .is("unsubscribed_at", null)
@@ -59,9 +71,17 @@ export default function ContractorOutreachPanel() {
         .eq("is_demo_record", false)
         .order("created_at", { ascending: false })
         .limit(20),
+      (supabase as any).from("contractor_outreach_audit_log")
+        .select("id", { count: "exact", head: true })
+        .eq("channel", "email").eq("event", "sent").gte("created_at", since),
+      (supabase as any).from("contractor_outreach_audit_log")
+        .select("id", { count: "exact", head: true })
+        .eq("channel", "sms").eq("event", "sent").gte("created_at", since),
     ]);
     setProspects(((pRes.data as any[]) || []) as Prospect[]);
     setUnclaimedLeads(((lRes.data as any[]) || []) as Lead[]);
+    setEmailsToday((eRes as any).count || 0);
+    setSmsToday((sRes as any).count || 0);
     setLoading(false);
   }, []);
 
@@ -125,6 +145,27 @@ export default function ContractorOutreachPanel() {
     load();
   }
 
+  async function sendQuickSms(p: Prospect) {
+    if (!p.phone) { toast.error("No phone on file"); return; }
+    if (!p.consent_for_sms) {
+      toast.error("Mark consent first (consent button on the row)");
+      return;
+    }
+    const msg = window.prompt(
+      `Send SMS to ${p.business_name} (${p.phone})?\n\nMessage (STOP suffix added automatically):`,
+      `Hi — Matt from Detroit Web Agency. New ${p.trade.toLowerCase()} lead in ${p.city || "your area"}, $59 to claim. Want it?`
+    );
+    if (!msg || !msg.trim()) return;
+    const { data, error } = await supabase.functions.invoke("contractor-outreach-sms-send", {
+      body: { prospect_id: p.id, message: msg.trim() },
+    });
+    if (error) { toast.error(error.message); return; }
+    const d = data as any;
+    if (!d?.ok) { toast.error(d?.error || "SMS failed"); return; }
+    toast.success("✅ SMS sent");
+    load();
+  }
+
   const filtered = prospects.filter(p =>
     (!filterTrade || p.trade === filterTrade) &&
     (!filterCity || (p.city || "").toLowerCase().includes(filterCity.toLowerCase()))
@@ -160,6 +201,44 @@ export default function ContractorOutreachPanel() {
           <p className="text-2xl font-black text-emerald-400">{unclaimedLeads.length}</p>
         </div>
       </div>
+
+      {/* Daily-cap meter */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="bg-card border border-border rounded-lg p-3">
+          <div className="flex items-center justify-between text-[11px] mb-1.5">
+            <span className="font-bold text-foreground">📧 Email cap (today)</span>
+            <span className={emailsToday >= DAILY_EMAIL_CAP ? "text-red-400 font-bold" : "text-muted-foreground"}>
+              {emailsToday} / {DAILY_EMAIL_CAP}
+            </span>
+          </div>
+          <div className="h-1.5 bg-background rounded overflow-hidden">
+            <div
+              className={`h-full ${emailsToday >= DAILY_EMAIL_CAP ? "bg-red-500" : emailsToday > DAILY_EMAIL_CAP * 0.8 ? "bg-amber-500" : "bg-cyan-500"}`}
+              style={{ width: `${Math.min(100, (emailsToday / DAILY_EMAIL_CAP) * 100)}%` }}
+            />
+          </div>
+        </div>
+        <div className="bg-card border border-border rounded-lg p-3">
+          <div className="flex items-center justify-between text-[11px] mb-1.5">
+            <span className="font-bold text-foreground">📱 SMS cap (today)</span>
+            <span className={smsToday >= DAILY_SMS_CAP ? "text-red-400 font-bold" : "text-muted-foreground"}>
+              {smsToday} / {DAILY_SMS_CAP}
+            </span>
+          </div>
+          <div className="h-1.5 bg-background rounded overflow-hidden">
+            <div
+              className={`h-full ${smsToday >= DAILY_SMS_CAP ? "bg-red-500" : smsToday > DAILY_SMS_CAP * 0.8 ? "bg-amber-500" : "bg-emerald-500"}`}
+              style={{ width: `${Math.min(100, (smsToday / DAILY_SMS_CAP) * 100)}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Provenance panel */}
+      <OutreachProvenancePanel />
+
+      {/* Suppression manager */}
+      <OutreachSuppressionManager />
 
       {/* Scrape panel */}
       <div className="bg-card border border-border rounded-lg p-4">
@@ -246,17 +325,23 @@ export default function ContractorOutreachPanel() {
                   <th className="text-left p-2.5">Trade / City</th>
                   <th className="text-left p-2.5">Email</th>
                   <th className="text-left p-2.5">Phone</th>
+                  <th className="text-left p-2.5">SMS</th>
                   <th className="text-left p-2.5">Sent</th>
                   <th className="text-right p-2.5">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 && (
-                  <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">
+                  <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">
                     No prospects yet — use the Scrape panel above
                   </td></tr>
                 )}
-                {filtered.map(p => (
+                {filtered.map(p => {
+                  const smsStatus = p.unsubscribed_at ? { label: "⛔ Unsub", color: "text-red-400" }
+                    : !p.phone ? { label: "—", color: "text-muted-foreground" }
+                    : !p.consent_for_sms ? { label: "🔴 No consent", color: "text-red-300" }
+                    : { label: "🟢 Consented", color: "text-emerald-300" };
+                  return (
                   <tr key={p.id} className="border-t border-border hover:bg-background/30">
                     <td className="p-2.5">
                       <div className="font-semibold text-foreground">{p.business_name}</div>
@@ -278,8 +363,9 @@ export default function ContractorOutreachPanel() {
                       )}
                     </td>
                     <td className="p-2.5 text-muted-foreground">{p.phone || "—"}</td>
+                    <td className={`p-2.5 text-[10px] ${smsStatus.color}`}>{smsStatus.label}</td>
                     <td className="p-2.5 text-muted-foreground">{p.email_send_count}</td>
-                    <td className="p-2.5 text-right space-x-1">
+                    <td className="p-2.5 text-right space-x-1 whitespace-nowrap">
                       {!p.email && (
                         <button
                           onClick={() => enrich(p.id)}
@@ -289,6 +375,30 @@ export default function ContractorOutreachPanel() {
                           <Sparkles size={10} /> {enrichingId === p.id ? "…" : "Enrich"}
                         </button>
                       )}
+                      {p.phone && !p.consent_for_sms && !p.unsubscribed_at && (
+                        <button
+                          onClick={() => setConsentFor({ id: p.id, name: p.business_name })}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-600/40"
+                          title="Mark SMS consent received"
+                        >
+                          <ShieldCheck size={10} /> Consent
+                        </button>
+                      )}
+                      {p.consent_for_sms && p.phone && !p.unsubscribed_at && (
+                        <button
+                          onClick={() => sendQuickSms(p)}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-600/40"
+                        >
+                          <MessageSquare size={10} /> SMS
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setAuditFor({ id: p.id, name: p.business_name })}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] text-slate-300 hover:bg-slate-500/10"
+                        title="View audit log"
+                      >
+                        <Activity size={10} /> Audit
+                      </button>
                       <button
                         onClick={() => deleteProspect(p.id)}
                         className="inline-flex items-center px-2 py-1 rounded text-[10px] text-red-300 hover:bg-red-500/10"
@@ -297,12 +407,26 @@ export default function ContractorOutreachPanel() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
       </div>
+
+      {/* Drawers / dialogs */}
+      <OutreachAuditDrawer
+        prospectId={auditFor?.id ?? null}
+        prospectName={auditFor?.name}
+        onClose={() => setAuditFor(null)}
+      />
+      <OutreachConsentDialog
+        prospectId={consentFor?.id ?? null}
+        prospectName={consentFor?.name}
+        onClose={() => setConsentFor(null)}
+        onSaved={load}
+      />
     </div>
   );
 }
