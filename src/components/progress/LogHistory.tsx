@@ -45,6 +45,7 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
   const MAX_VIDEO_SIZE = 5 * 1024 * 1024;
 
   const [showHistory, setShowHistory] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(25);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editWeight, setEditWeight] = useState("");
   const [editReps, setEditReps] = useState("");
@@ -203,7 +204,7 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
 
       {showHistory && (
         <div className="bg-card border border-border divide-y divide-border rounded-lg">
-          {[...logs].reverse().map((log, idx) => {
+          {[...logs].reverse().slice(0, visibleCount).map((log, idx) => {
             const isEditing = editingId === log.id;
             const isDeleting = deletingId === log.id;
             const logNotes = notesForLog(log.id);
@@ -323,6 +324,15 @@ const LogHistory = ({ logs, isAdmin, effectiveUserId, onRefresh }: LogHistoryPro
             );
           })}
         </div>
+      )}
+
+      {showHistory && logs.length > visibleCount && (
+        <button
+          onClick={() => setVisibleCount((c) => c + 25)}
+          className="mt-3 w-full py-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-primary border border-border hover:border-primary/40 rounded transition-all"
+        >
+          Show {Math.min(25, logs.length - visibleCount)} more · {logs.length - visibleCount} remaining
+        </button>
       )}
 
       <input ref={lateVideoInputRef} type="file" accept="video/*" capture="environment" className="hidden" onChange={handleLateVideoUpload} />
