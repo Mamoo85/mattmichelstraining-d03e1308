@@ -24,7 +24,19 @@ export interface ChannelConfig {
 }
 
 const TRADES = ["", "roofer", "HVAC contractor", "plumber", "electrician"];
-const CITIES = ["", "Detroit MI", "Warren MI", "Sterling Heights MI", "Troy MI", "Royal Oak MI", "Livonia MI", "Grosse Pointe MI"];
+const CITIES = [
+  "", "🌎 All Michigan",
+  "Detroit MI", "Warren MI", "Sterling Heights MI", "Troy MI", "Livonia MI", "Dearborn MI",
+  "Royal Oak MI", "St. Clair Shores MI", "Macomb MI", "Ferndale MI", "Southfield MI",
+  "Farmington Hills MI", "Novi MI", "Rochester Hills MI", "Pontiac MI", "Auburn Hills MI",
+  "Birmingham MI", "Bloomfield Hills MI", "Canton MI", "Westland MI", "Taylor MI", "Wyandotte MI",
+  "Monroe MI", "Ann Arbor MI", "Ypsilanti MI", "Saline MI", "Brighton MI", "Howell MI",
+  "Lansing MI", "East Lansing MI", "Okemos MI", "Jackson MI", "Kalamazoo MI", "Battle Creek MI",
+  "Portage MI", "Grand Rapids MI", "Wyoming MI", "Kentwood MI", "Holland MI", "Muskegon MI",
+  "Grand Haven MI", "Saugatuck MI", "Flint MI", "Burton MI", "Saginaw MI", "Bay City MI",
+  "Midland MI", "Mt. Pleasant MI", "Traverse City MI", "Petoskey MI", "Cadillac MI",
+  "Alpena MI", "Marquette MI", "Sault Ste. Marie MI", "Escanaba MI", "Grosse Pointe MI",
+];
 
 export default function ChannelOutreachTab({ config }: { config: ChannelConfig }) {
   const [trade, setTrade] = useState("");
