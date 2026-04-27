@@ -201,7 +201,17 @@ serve(async (req) => {
     }
 
     // ── 3. Generate email body
-    const { subject, body } = await generateEmailBody(signal, target_company, target_contact_name || null, vertical || null);
+    const { subject, body: rawBody } = await generateEmailBody(signal, target_company, target_contact_name || null, vertical || null);
+
+    // ── 3b. Build dossier PDF + signed URL (best-effort; falls back gracefully)
+    const pdfUrl = await buildDossierPdfUrl(sb, signal.id);
+    const attachmentBlock = pdfUrl
+      ? `\n\n📎 Free dossier on ${signal.company_name} (PDF, no login required):\n${pdfUrl}\n\n(Link valid 30 days. One page. Public records only.)`
+      : `\n\n(Reply "DOSSIER" and I'll send the one-pager on ${signal.company_name} by return email.)`;
+
+    const signature = `\n\n— Matt Michels\nDetroit Web Agency\n(313) 992-1219\nmatt@detroitwebagent.com\ndetroitwebagent.com`;
+
+    const body = `${rawBody}${attachmentBlock}${signature}`;
 
     // ── 4. Queue in email_reply_drafts (10-min ghost delay)
     const sendAfter = new Date(Date.now() + GHOST_DELAY_MINUTES * 60 * 1000).toISOString();
