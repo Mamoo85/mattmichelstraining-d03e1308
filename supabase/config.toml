@@ -165,6 +165,9 @@ verify_jwt = false
 [functions.cancel-reply-draft]
 verify_jwt = false
 
+[functions.dossier-cold-outreach-bulk]
+verify_jwt = false
+
 [functions.create-hire-alert-trial]
 verify_jwt = false
 
