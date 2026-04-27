@@ -341,11 +341,23 @@ serve(async (req) => {
 
     for (const p of (prospects || [])) {
       if (Date.now() - started > WALL_BUDGET_MS - 20_000) break;
-      try {
-        await enrichProspect(sb, p);
+      const wrapped = await logEnrichment(
+        { lead_id: p.id, vertical: "b2b_prospect", function_name: "enrich-candidates", stage: "prospect", provider: "sonar", triggered_by: "cron" },
+        async () => {
+          const before = { website: !!p.website, phone: !!p.phone, email: !!p.email };
+          await enrichProspect(sb, p);
+          const { data: after } = await sb.from("techalert_business_prospects").select("website,phone,email").eq("id", p.id).maybeSingle();
+          const fields_added: string[] = [];
+          if (!before.website && after?.website) fields_added.push("website");
+          if (!before.phone && after?.phone) fields_added.push("phone");
+          if (!before.email && after?.email) fields_added.push("email");
+          return { fields_added };
+        },
+      );
+      if (wrapped.ok) {
         stats.prospects++;
-      } catch (e) {
-        console.error(`[enrich] prospect ${p.id} failed:`, e);
+      } else {
+        console.error(`[enrich] prospect ${p.id} failed:`, wrapped.error);
         await sb.from("techalert_business_prospects")
           .update({ enrichment_status: "failed", enrichment_attempted_at: new Date().toISOString() })
           .eq("id", p.id);
