@@ -255,6 +255,8 @@ export default function MortgageRadar() {
         </div>
       </section>
 
+      <MortgageRadarROICalculator />
+      <MortgageRadarTerritoryPicker onZipsResolved={(zips) => setZipsInput(zips.join(", "))} />
 
       <section className="max-w-6xl mx-auto px-4 py-12">
         <h2 className="text-2xl sm:text-3xl font-bold text-center text-white mb-2">The signals we hunt</h2>
@@ -287,6 +289,10 @@ export default function MortgageRadar() {
             <label className="text-sm text-[#94a3b8]">Extra ZIPs beyond plan ($50/mo each):</label>
             <Input type="number" min={0} value={extraZips} onChange={(e) => setExtraZips(Math.max(0, Number(e.target.value) || 0))} className="bg-[#0a1628] border-[#1e3a5f] text-white w-24" />
           </div>
+        </div>
+
+        <div id="compliance" className="mb-8">
+          <MortgageRadarComplianceGate value={compliance} onChange={setCompliance} />
         </div>
 
         <div className="grid md:grid-cols-2 gap-5 max-w-4xl mx-auto">
