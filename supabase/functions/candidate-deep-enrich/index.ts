@@ -34,6 +34,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { cheapExtract, Schemas } from "../_shared/cheap-extract.ts";
+import { logEnrichment } from "../_shared/enrichment-audit.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -586,84 +587,99 @@ serve(async (req: Request) => {
     try {
       await sb.from("hire_alert_candidates").update({ enrichment_status: "enriching" }).eq("id", c.id);
       const merged: Record<string, any> = {};
+      const audit = (provider: string, fields: string[], ok: boolean, err?: string) =>
+        logEnrichment(
+          { lead_id: c.id, vertical: "talent", function_name: "candidate-deep-enrich", stage: "deep", provider, triggered_by: "cron" },
+          () => Promise.resolve({ fields_added: fields, http_status: ok ? 200 : 500 }),
+        ).catch(() => {});
 
       // Stage 1 baseline
       await logStage(sb, c.id, "1_license", c.source || "unknown", ["name", "license_type"], 0, true);
+      await audit(c.source || "license", ["name", "license_type"], true);
 
-      // Stage 2 NPI (healthcare only)
-      const npi = await stageNPI(c);
+      // Stage 2 NPI
+      const npi = await stageNPI(c).catch((e) => { audit("npiregistry", [], false, String(e)); return {}; });
       if (Object.keys(npi).length) {
         Object.assign(merged, npi);
         await logStage(sb, c.id, "2_npi", "npiregistry", Object.keys(npi), 0, true, undefined, npi);
+        await audit("npiregistry", Object.keys(npi), true);
       }
 
       // Stage 3 PDL
-      const pdl = await stagePDL(c);
+      const pdl = await stagePDL(c).catch((e) => { audit("peopledatalabs", [], false, String(e)); return {}; });
       if (Object.keys(pdl).length) {
         Object.assign(merged, pdl);
         await logStage(sb, c.id, "3_pdl", "peopledatalabs", Object.keys(pdl), 0.28, true, undefined, pdl);
+        await audit("peopledatalabs", Object.keys(pdl), true);
       }
 
-      // Stage 4 Hunter (needs employer)
-      const hunter = await stageHunter(c, merged.current_employer as string);
+      // Stage 4 Hunter
+      const hunter = await stageHunter(c, merged.current_employer as string).catch((e) => { audit("hunter.io", [], false, String(e)); return {}; });
       if (Object.keys(hunter).length) {
         Object.assign(merged, hunter);
         await logStage(sb, c.id, "4_hunter", "hunter.io", Object.keys(hunter), 0.034, true, undefined, hunter);
+        await audit("hunter.io", Object.keys(hunter), true);
       }
 
-      // Stage 5 Snov (verify or finder)
-      const snov = await stageSnov(c, merged.company_domain as string, merged.hunter_email as string);
+      // Stage 5 Snov
+      const snov = await stageSnov(c, merged.company_domain as string, merged.hunter_email as string).catch((e) => { audit("snov.io", [], false, String(e)); return {}; });
       if (Object.keys(snov).length) {
         Object.assign(merged, snov);
         await logStage(sb, c.id, "5_snov", "snov.io", Object.keys(snov), 0.012, true, undefined, snov);
+        await audit("snov.io", Object.keys(snov), true);
       }
 
       // Stage 6 Lusha
       const { email: e1, phone: p1 } = pickContact(merged);
       if (!p1) {
-        const lusha = await stageLusha(c);
+        const lusha = await stageLusha(c).catch((e) => { audit("lusha", [], false, String(e)); return {}; });
         if (Object.keys(lusha).length) {
           Object.assign(merged, lusha);
           await logStage(sb, c.id, "6_lusha", "lusha", Object.keys(lusha), 0.40, true, undefined, lusha);
+          await audit("lusha", Object.keys(lusha), true);
         }
       }
 
-      // Stage 7 Sonar (only if still missing core fields)
+      // Stage 7 Sonar
       const { email: e2, phone: p2 } = pickContact(merged);
       if (!e2 || !p2 || !merged.linkedin_url) {
-        const sonar = await stageSonar(c);
+        const sonar = await stageSonar(c).catch((e) => { audit("sonar", [], false, String(e)); return {}; });
         if (Object.keys(sonar).length) {
           Object.assign(merged, sonar);
           await logStage(sb, c.id, "7_sonar", "openrouter/sonar-pro", Object.keys(sonar), 0.005, true, undefined, sonar);
+          await audit("sonar", Object.keys(sonar), true);
         }
       }
 
-      // Stage 7B NinjaPear (Proxycurl) — fires when LinkedIn URL exists AND still no contact/employer
+      // Stage 7B NinjaPear
       const { email: e2b, phone: p2b } = pickContact(merged);
       if (merged.linkedin_url && (!e2b || !p2b || !merged.current_employer)) {
-        const np = await stageNinjaPear(c, merged.linkedin_url as string);
+        const np = await stageNinjaPear(c, merged.linkedin_url as string).catch((e) => { audit("ninjapear", [], false, String(e)); return {}; });
         if (Object.keys(np).length) {
           Object.assign(merged, np);
           await logStage(sb, c.id, "7b_ninjapear", "nubela_proxycurl", Object.keys(np), 0.01, true, undefined, np);
+          await audit("ninjapear", Object.keys(np), true);
         }
       }
 
-      // Stage 7C Crustdata — trial fallback when still missing critical fields
+      // Stage 7C Crustdata
       const { email: e2c, phone: p2c } = pickContact(merged);
       if (!e2c && !p2c && !merged.linkedin_url) {
-        const cd = await stageCrustdata(c);
+        const cd = await stageCrustdata(c).catch((e) => { audit("crustdata", [], false, String(e)); return {}; });
         if (Object.keys(cd).length) {
           Object.assign(merged, cd);
           await logStage(sb, c.id, "7c_crustdata", "crustdata", Object.keys(cd), 0.05, true, undefined, cd);
+          await audit("crustdata", Object.keys(cd), true);
         }
       }
 
       const { email: e3, phone: p3 } = pickContact(merged);
       if (!e3 && !p3 && (c.score ?? 0) >= 7) {
-        const clay = await stageClay(c);
+        const clay = await stageClay(c).catch((e) => { audit("clay", [], false, String(e)); return {}; });
         if (Object.keys(clay).length) {
           Object.assign(merged, clay);
           await logStage(sb, c.id, "8_clay", "clay.com", Object.keys(clay), 0.50, true, undefined, clay);
+          await audit("clay", Object.keys(clay), true);
         }
       }
 
