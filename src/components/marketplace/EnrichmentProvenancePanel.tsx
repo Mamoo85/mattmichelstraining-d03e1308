@@ -26,7 +26,7 @@ interface Props {
  * providers to enrich this lead — without exposing internal provider names
  * when redactSources=true (per TechAlert source-protection rules).
  */
-export default function EnrichmentProvenancePanel({ leadId, vertical, redactSources = false }: Props) {
+export function EnrichmentProvenancePanel({ leadId, vertical, redactSources = false }: Props) {
   const [rows, setRows] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -150,3 +150,5 @@ function SummaryStat({ icon, label, value }: { icon: React.ReactNode; label: str
     </div>
   );
 }
+
+export default EnrichmentProvenancePanel;
