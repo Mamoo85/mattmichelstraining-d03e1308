@@ -47,8 +47,9 @@ serve(async (req) => {
     let emailCancelled = 0;
     if (emailDraftIds.length > 0) {
       const { data } = await sb.from("email_reply_drafts")
-        .update({ status: "cancelled" } as any) // table may use status or sent_at — try status
+        .update({ cancelled: true } as any)
         .in("id", emailDraftIds)
+        .eq("sent", false)
         .select("id");
       emailCancelled = data?.length || 0;
     }
