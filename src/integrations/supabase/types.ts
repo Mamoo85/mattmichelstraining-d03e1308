@@ -8268,6 +8268,48 @@ export type Database = {
         }
         Relationships: []
       }
+      industrial_supply_buyers: {
+        Row: {
+          active: boolean
+          city: string | null
+          company: string
+          contact_name: string | null
+          created_at: string
+          email: string
+          id: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+          vertical: string
+        }
+        Insert: {
+          active?: boolean
+          city?: string | null
+          company: string
+          contact_name?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          vertical: string
+        }
+        Update: {
+          active?: boolean
+          city?: string | null
+          company?: string
+          contact_name?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          vertical?: string
+        }
+        Relationships: []
+      }
       industry_pulse_client_actions: {
         Row: {
           action: string

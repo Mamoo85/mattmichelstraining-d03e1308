@@ -20,9 +20,52 @@ const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
 const ADMIN_PHONE = Deno.env.get("ADMIN_PHONE") ?? "+13138064952";
+const BROWSERLESS = Deno.env.get("BROWSERLESS_API_KEY") || "";
 
 const GHOST_DELAY_MINUTES = 10;
 const DEDUP_DAYS = 30;
+const PDF_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
+
+// Generate the dossier HTML (re-uses generate-signal-dossier), render to PDF via
+// Browserless, upload to private storage, return a 30-day signed URL.
+// Returns null on any failure — caller falls back to email without attachment.
+async function buildDossierPdfUrl(sb: any, signal_id: string): Promise<string | null> {
+  try {
+    const { data, error } = await sb.functions.invoke("generate-signal-dossier", {
+      body: { signal_id },
+    });
+    if (error) throw new Error(`dossier gen: ${error.message}`);
+    const html: string | undefined = (data as any)?.html;
+    if (!html) throw new Error("dossier gen: empty html");
+    if (!BROWSERLESS) {
+      console.warn("[dossier-cold-outreach] BROWSERLESS_API_KEY missing — sending without PDF");
+      return null;
+    }
+    const pdfRes = await fetch(`https://chrome.browserless.io/pdf?token=${BROWSERLESS}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        html,
+        options: { format: "Letter", printBackground: true, margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" } },
+        gotoOptions: { waitUntil: "networkidle2", timeout: 30000 },
+      }),
+    });
+    if (!pdfRes.ok) {
+      const txt = await pdfRes.text();
+      throw new Error(`browserless ${pdfRes.status}: ${txt.slice(0, 200)}`);
+    }
+    const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
+    const path = `signals/${signal_id}/${Date.now()}.pdf`;
+    const { error: upErr } = await sb.storage.from("dossier-pdfs")
+      .upload(path, pdfBytes, { contentType: "application/pdf", upsert: true });
+    if (upErr) throw new Error(`upload: ${upErr.message}`);
+    const { data: signed } = await sb.storage.from("dossier-pdfs").createSignedUrl(path, PDF_TTL_SECONDS);
+    return signed?.signedUrl || null;
+  } catch (e) {
+    console.error("[dossier-cold-outreach] PDF build failed:", e);
+    return null;
+  }
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,13 +92,13 @@ async function generateEmailBody(signal: any, targetCompany: string, contactName
     subject: `${signal.company_name} just posted ${signal.hiring_count || "multiple"} ${(signal.hiring_roles?.[0] || "trade")} openings — thought ${targetCompany} should know`,
     body: `${greeting}
 
-Quick heads-up — ${signal.company_name} (${signal.location || "Metro Detroit"}) just posted ${signal.hiring_count || "several"} openings for ${(signal.hiring_roles || []).join(", ") || "skilled trades"}. New crews = new ${(signal.predicted_needs?.[0] || "supply")} orders within 30 days.
+Quick heads-up — ${signal.company_name} (${signal.location || "Metro Detroit"}) just pulled ${signal.hiring_count || "several"} permits/postings for ${(signal.hiring_roles || []).join(", ") || "skilled trades"}, which usually means new ${(signal.predicted_needs?.[0] || "supply")} orders inside the next 30 days.
 
-I built a small intelligence tool that flags Metro Detroit manufacturers right when they start hiring — found 42 like this one in the last 7 days. I'm sending the full one-page dossier on ${signal.company_name} (name, address, hiring detail, predicted spend window) attached as a free sample.
+Their PO desk hasn't placed those orders yet — your branch could be the first call if a rep reaches out this week before competitors notice.
 
-If it's useful, $50 gets you the next 5 from your vertical. Reply YES and I'll send them over.
+I attached the full one-page dossier on ${signal.company_name} below — name, address, hiring detail, predicted 30-day spend window, all from public records, no charge.
 
-Worst case, you delete this. Best case, your ${vertical || "branch"} team gets a 30-day jump on a new account.`,
+If it's useful, $50 unlocks the next 5 dossiers like this in your ${vertical || "vertical"} — just reply YES and I'll send them over.`,
   };
 
   if (!LOVABLE_API_KEY) return fallback;
@@ -65,23 +108,23 @@ Worst case, you delete this. Best case, your ${vertical || "branch"} team gets a
 CONTEXT:
 - Recipient company: ${targetCompany}${contactName ? ` (contact: ${contactName})` : ""}
 - Their vertical: ${vertical || "industrial supply"}
-- Signal you're pitching: ${signal.company_name} (${signal.location || "Metro Detroit"}) just posted ${signal.hiring_count || "several"} openings for ${(signal.hiring_roles || []).join(", ") || "skilled trades"}
+- Signal you're pitching: ${signal.company_name} (${signal.location || "Metro Detroit"}) just posted ${signal.hiring_count || "several"} openings/permits for ${(signal.hiring_roles || []).join(", ") || "skilled trades"}
 - Predicted needs from the new hires: ${(signal.predicted_needs || []).join(", ") || "consumables and equipment"}
 - Confidence score: ${signal.confidence}/10
 
 STRICT RULES:
 1. Exactly 4 sentences in the body. No more, no less.
-2. First sentence: name-drop ${signal.company_name} and the hiring detail.
-3. Second sentence: explain in plain English why this means the recipient's branch is about to get an order opportunity.
-4. Third sentence: offer a FREE one-page dossier on this exact company as proof.
-5. Fourth sentence: $50 gets the next 5 dossiers in their vertical — reply YES.
+2. Sentence 1: name-drop ${signal.company_name}, the hiring/permit detail, and the 30-day spend window for ${signal.predicted_needs?.[0] || "their category"}.
+3. Sentence 2: tease that ${targetCompany}'s branch could be first call before competitors notice.
+4. Sentence 3: tell them the FREE one-page dossier on ${signal.company_name} is attached below (name, address, hiring detail, predicted 30-day spend window, public records). Use the literal phrase "attached below" so the link slot reads naturally.
+5. Sentence 4: $50 unlocks the next 5 dossiers in their vertical this month — reply YES.
 6. NO mention of "AI", "algorithms", "machine learning", "intelligence platforms". Sound human, local, like a guy who built something useful.
 7. NO emojis. NO em-dashes. Casual but professional.
 8. Greeting: "${greeting}"
-9. Sign-off: just leave it blank — the email template adds Matt's signature.
+9. Sign-off: leave it blank — the email template adds Matt's signature and the dossier download link.
 
 Return ONLY a JSON object: { "subject": "...", "body": "..." }
-The subject line MUST mention ${signal.company_name} by name and create curiosity for ${targetCompany}.
+The subject MUST mention ${signal.company_name} by name and signal a 30-day spending window.
 Body must start with the greeting on its own line, then a blank line, then the 4 sentences.`;
 
   try {
@@ -112,7 +155,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { signal_id, target_company, target_email, target_contact_name, vertical } = await req.json();
+    const { signal_id, target_company, target_email, target_contact_name, vertical, silent } = await req.json();
 
     if (!signal_id || !target_company || !target_email) {
       return new Response(JSON.stringify({ error: "signal_id, target_company, target_email required" }), {
@@ -158,7 +201,17 @@ serve(async (req) => {
     }
 
     // ── 3. Generate email body
-    const { subject, body } = await generateEmailBody(signal, target_company, target_contact_name || null, vertical || null);
+    const { subject, body: rawBody } = await generateEmailBody(signal, target_company, target_contact_name || null, vertical || null);
+
+    // ── 3b. Build dossier PDF + signed URL (best-effort; falls back gracefully)
+    const pdfUrl = await buildDossierPdfUrl(sb, signal.id);
+    const attachmentBlock = pdfUrl
+      ? `\n\n📎 Free dossier on ${signal.company_name} (PDF, no login required):\n${pdfUrl}\n\n(Link valid 30 days. One page. Public records only.)`
+      : `\n\n(Reply "DOSSIER" and I'll send the one-pager on ${signal.company_name} by return email.)`;
+
+    const signature = `\n\n— Matt Michels\nDetroit Web Agency\n(313) 992-1219\nmatt@detroitwebagent.com\ndetroitwebagent.com`;
+
+    const body = `${rawBody}${attachmentBlock}${signature}`;
 
     // ── 4. Queue in email_reply_drafts (10-min ghost delay)
     const sendAfter = new Date(Date.now() + GHOST_DELAY_MINUTES * 60 * 1000).toISOString();
@@ -197,9 +250,11 @@ serve(async (req) => {
     // ── 6. SMS Matt the preview + cancel link
     const cancelUrl = `${SUPABASE_URL}/functions/v1/cancel-reply-draft?id=${draft?.id}`;
     const preview = body.slice(0, 90).replace(/\n/g, " ");
-    await sendAdminSMS(
-      `Dossier email queued: ${target_company} (${target_email}). Re: ${signal.company_name}. Sends in ${GHOST_DELAY_MINUTES}min. Cancel: ${cancelUrl}`
-    );
+    if (!silent) {
+      await sendAdminSMS(
+        `Dossier email queued: ${target_company} (${target_email}). Re: ${signal.company_name}. Sends in ${GHOST_DELAY_MINUTES}min. Cancel: ${cancelUrl}`
+      );
+    }
 
     return new Response(JSON.stringify({
       ok: true,
@@ -207,6 +262,8 @@ serve(async (req) => {
       send_after: sendAfter,
       subject,
       preview,
+      cancel_url: cancelUrl,
+      pdf_url: pdfUrl,
     }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);

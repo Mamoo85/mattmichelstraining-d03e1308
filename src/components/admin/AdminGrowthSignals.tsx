@@ -10,6 +10,7 @@ import {
   CheckCircle2, MessageSquare, Bookmark, BookmarkCheck, Users,
   ChevronDown, ChevronUp, FileText,
 } from "lucide-react";
+import BuyerOutreachDialog from "./BuyerOutreachDialog";
 
 const PAGE_SIZE = 25;
 const FETCH_LIMIT = 80;

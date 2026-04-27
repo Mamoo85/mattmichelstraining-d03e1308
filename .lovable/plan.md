@@ -1,106 +1,83 @@
-## Why "Failed to send a request to the Edge Function"
+## What's broken right now
 
-The SMS Sniper / Fax / Postcard tabs all call the `channel-prospector` edge function. Two problems:
+Clicking **Cold Email** on a Growth Signal opens **3 raw `window.prompt()` boxes** and asks you to type in:
+1. The supply-house company name
+2. The buyer's email address
+3. The buyer's contact name
 
-1. **Function is not deployed.** `supabase--edge_function_logs` returns *zero* logs for `channel-prospector` — meaning Lovable never deployed it (likely because it was created without a `config.toml` entry, so the deploy pipeline skipped it).
-2. **No `[functions.channel-prospector]` block in `supabase/config.toml`.** Compare with `contractor-prospector` which has `verify_jwt = false`. Without this entry, even once deployed, calls would 401 because the auto-default flips JWT verification on for unregistered functions in this project.
+That's why it feels useless — it's making **you** do the prospecting work. There's no list, no suggestions, and the dossier is **not attached** to the email that goes out. The current pitch just *mentions* a free dossier exists.
 
-That combo = "Failed to send a request to the Edge Function" in the browser before the function ever runs. D
+## What the Dossier actually is (and why it matters)
 
-## Why the search parameters are so small
+The **Dossier** is a 1-page printable intelligence brief on the target manufacturer (e.g. Randazzo Mechanical) — it shows: company name + address, exact hiring detail (9x Electrical Permits), predicted spend window (30-day), predicted needs (HVAC equipment, electrical supplies, building materials), and confidence score. Today it opens in a new tab and triggers print.
 
-Looking at `supabase/functions/channel-prospector/index.ts`:
+**Strategic role**: it's the *bait*. The cold email tells a supply-house branch manager "Randazzo is about to spend money on your category — here's the proof, free" and the **dossier IS the proof**. Right now the email *promises* the dossier but never sends it. We'll fix that.
 
+## The Plan — "Cold Email" becomes a one-click Buyer Outreach Modal
 
-| Bottleneck                      | Current                                    | Effect                                            |
-| ------------------------------- | ------------------------------------------ | ------------------------------------------------- |
-| `CAPS.sms`                      | 30/day                                     | Hard ceiling — even a perfect run = max 30        |
-| Per-run loop                    | `places.slice(0, Math.min(15, remaining))` | Only 15 sends per click                           |
-| Single Google Places query      | 1 call → ~20 raw results                   | 80% drop after dedupe + missing-phone filter      |
-| `DEFAULT_CITIES`                | 6 Metro Detroit suburbs                    | Same exhausted pool every run                     |
-| `DEFAULT_TRADES`                | 4 trades                                   | Hits "already pitched" wall fast                  |
-| `todaysCombo()`                 | One trade × one city per day               | Zero fan-out                                      |
-| Per-place skip if no `+1` phone | Hard skip                                  | We never try a fallback Google Place phone format |
+### 1. Replace the 3 prompt boxes with a real Buyer Picker dialog
 
+When you click **Cold Email** on Randazzo Mechanical, open a modal that:
 
-So a typical SMS Sniper click = 1 query → 20 results → 10 already in DB → 8 with no clean phone → **0–2 sends**.
+- Auto-detects the relevant **vertical buyers** based on the signal's `predicted_needs` (HVAC equipment → HVAC supply houses; Electrical supplies → electrical distributors; Building materials → building product distributors).
+- Shows a pre-loaded list of **15–25 real Metro Detroit supply-house contacts** for that vertical, each with: company name, branch manager name, email, city. Sources we already have:
+  - `prospect_pool` table (already populated by Apollo + waterfall enrichment)
+  - `agency_clients` (existing prospects we've enriched)
+  - A new seed list of the top 30 Metro Detroit industrial supply houses per vertical (Granger, Kendall Electric, Madison Electric, Stoneco, R.E. Leggette, etc. — one-time SQL seed)
+- Each row has a **checkbox** + **"Send Dossier" button**.
+- **Bulk action**: "Send to all selected (N)" — fans out one email per buyer, each personalized to their company name, all queued via the existing 10-min ghost-delay (you still get one consolidated SMS preview + cancel link).
 
-## Fix Plan
+This kills the prompt boxes entirely. You go from "what's the email?" to "send to these 8 HVAC distributors → SMS preview in your pocket".
 
-### 1. Deploy + register the function
+### 2. Actually attach the Dossier PDF to the email
 
-- Add `[functions.channel-prospector]` with `verify_jwt = false` to `supabase/config.toml` (matches `contractor-prospector` pattern).
-- Add admin-role check inside the function (mirror the `outreach-gmail-send` pattern) so it stays secure even with JWT off.
-- Force redeploy of `channel-prospector`.
+Update `dossier-cold-outreach`:
+- Before queuing the email, call `generate-signal-dossier` for the signal and convert the HTML to a PDF (Browserless API — already in our secrets; the `marketplace-generate-dossier-pdf` function shows the working pattern).
+- Store the PDF in Supabase Storage (`dossier-pdfs` bucket, signed URL valid 30 days).
+- Inject the signed link into the email body: *"Free dossier on Randazzo Mechanical attached: [Download PDF]"*.
+- Now the lead magnet is real — recipient clicks, sees the proof, replies YES → you sell the $50/5-pack.
 
-### 2. Statewide Michigan coverage
+### 3. Tighten the 4-sentence email so it sells the upgrade
 
-Replace `DEFAULT_CITIES` (6 cities) and the UI dropdown `CITIES` (8 cities) with the **same 56-city Michigan list** already used by `contractor-prospector` / `AdminDeadLeads`:
-Detroit, Warren, Sterling Heights, Troy, Livonia, Dearborn, Royal Oak, St. Clair Shores, Macomb, Ferndale, Southfield, Farmington Hills, Novi, Rochester Hills, Pontiac, Auburn Hills, Birmingham, Bloomfield Hills, Canton, Westland, Taylor, Wyandotte, Monroe, Ann Arbor, Ypsilanti, Saline, Brighton, Howell, Lansing, East Lansing, Okemos, Jackson, Kalamazoo, Battle Creek, Portage, Grand Rapids, Wyoming, Kentwood, Holland, Muskegon, Grand Haven, Saugatuck, Flint, Burton, Saginaw, Bay City, Midland, Mt. Pleasant, Traverse City, Petoskey, Cadillac, Alpena, Marquette, Sault Ste. Marie, Escanaba, Grosse Pointe.
+The email body stays 4 sentences (current contract), but lines 3 and 4 get sharper:
 
-Add **"🌎 All Michigan (auto-rotate)"** as a UI option that triggers the multi-city fan-out.
+> Sentence 3: "I attached the full one-page dossier on Randazzo — name, address, hiring detail, predicted 30-day spend window, all from public records."
+> Sentence 4: "If it's useful, $50 unlocks 5 more like this in your vertical this month — just reply YES."
 
-### 3. Massively scale per-run output
+This makes the dossier do the heavy lifting. The email is the hook, the PDF is the tease, the $50 pack is the close.
 
-In `channel-prospector/index.ts`:
+### 4. Show buyer-suggestion badge on the signal card
 
+On each Growth Signal card, under the action buttons, add a small line:
+> *"📧 8 HVAC + Electrical buyers ready to pitch"*
 
-| Constant                | Old                  | New                                 |
-| ----------------------- | -------------------- | ----------------------------------- |
-| `CAPS.sms`              | 30                   | **150**                             |
-| `CAPS.fax`              | 20                   | **80**                              |
-| `CAPS.postcard`         | 25                   | **80**                              |
-| Per-run cap             | `min(15, remaining)` | `min(50, remaining)`                |
-| Google Places per query | 1 query × 20 results | **multi-query fan-out** (see below) |
+So at a glance you know how many warm targets exist before clicking.
 
+## Volume per click
 
-### 4. Multi-query fan-out (the real yield unlock)
+With this in place, one click on **Cold Email → Send to all** for a Randazzo-class signal will queue **8–25 personalized emails** (one per relevant supply-house buyer), each carrying the same dossier PDF, all cancellable with one tap from the SMS preview. That matches your "20–50 per scan" target across the day.
 
-Google Places caps at 20 results per text-search call. So instead of one call, we run **multiple in parallel**:
+## Technical changes
 
-- **Specific trade + specific city** → expand to 3–4 trade synonyms ("plumber Troy MI", "plumbing service Troy MI", "drain cleaning Troy MI", "emergency plumber Troy MI") = ~80 raw candidates.
-- **Specific trade + "All Michigan"** → run that trade across **8 randomly rotated cities** in one invocation = ~160 raw candidates.
-- **Auto-rotate trade + Auto-rotate city** → today's trade × 8 random MI cities = ~160 raw candidates.
+**New files**
+- `src/components/admin/BuyerOutreachDialog.tsx` — modal with vertical-filtered buyer list + checkboxes + bulk send
+- `supabase/migrations/<ts>_seed_industrial_supply_buyers.sql` — seed table `industrial_supply_buyers` (vertical, company, contact, email, city) with ~150 Metro Detroit supply-house contacts split across HVAC, electrical, plumbing, building materials, welding/CNC consumables
+- `supabase/functions/dossier-cold-outreach-bulk/index.ts` — accepts `{ signal_id, buyer_ids: [] }`, fans out to existing `dossier-cold-outreach` logic per buyer, returns aggregate result
 
-Run queries with `Promise.all()` in batches of 4 to stay under the 50 s soft timeout. Dedupe by `place_id`, then send up to 50 per run.
+**Modified files**
+- `src/components/admin/AdminGrowthSignals.tsx` — replace `window.prompt()` block (lines 419–438) with `<BuyerOutreachDialog />` trigger; add buyer-count badge under each signal card
+- `supabase/functions/dossier-cold-outreach/index.ts` — generate dossier PDF, upload to storage, signed URL injected into email body; keep ghost-delay + dedup unchanged
+- `supabase/config.toml` — register `dossier-cold-outreach-bulk` with `verify_jwt = false` (admin-gated by service role check inside)
 
-Add `TRADE_QUERY_VARIANTS` (mirror the one in `contractor-prospector`):
+**Storage**
+- Create `dossier-pdfs` bucket (private, signed URL access only)
 
-- HVAC → ["HVAC contractor", "heating and cooling", "AC repair", "furnace repair"]
-- plumber → ["plumber", "plumbing service", "drain cleaning", "emergency plumber"]
-- roofer → ["roofer", "roofing contractor", "roof repair", "roof replacement"]
-- electrician → ["electrician", "electrical contractor", "electrical repair"]
+## What this does NOT change
 
-### 5. Smarter dedupe (yield boost)
+- Ghost delay (10 min cancel window) — kept
+- 30-day dedup per recipient email — kept
+- SMS preview to your phone — kept (becomes "8 emails queued, all cancellable")
+- TCPA / manual-only outbound rules — kept
+- Dossier remains free as the lead magnet; $50/5-pack remains the upsell
 
-- Currently any business previously pitched on the same channel is permanently skipped. **Loosen to 90-day window** — allow re-pitch if `last_contact_date` is older than 90 days.
-- For SMS specifically: when Google Places phone is missing, fall back to scraping the website (we already have `scrapeFax` — generalize to `scrapePhone` too).
-
-### 6. UI feedback (`ChannelOutreachTab.tsx`)
-
-- Show which cities were rotated in the last-run panel: "8 cities scanned: Detroit, Ann Arbor, Lansing…"
-- Update cap displays from "30/day" → live channel cap.
-- Update subtitle text in `AdminSMSOutreach.tsx` (and Fax/Postcard equivalents) to reflect new caps.
-
-## Files Changed
-
-**Edited only — no new tables, no migrations, no new functions:**
-
-- `supabase/config.toml` — add `[functions.channel-prospector]` with `verify_jwt = false`
-- `supabase/functions/channel-prospector/index.ts` — caps, statewide cities, trade variants, multi-query fan-out, 90-day re-pitch, phone-scrape fallback, admin role check
-- `src/components/admin/ChannelOutreachTab.tsx` — 56-city dropdown + "All Michigan", richer last-run feedback
-- `src/components/admin/AdminSMSOutreach.tsx`, `AdminFaxOutreach.tsx`, `AdminPostcardOutreach.tsx` — updated subtitle/cap props
-
-## Expected Outcome
-
-
-| Metric                 | Before                 | After                   |
-| ---------------------- | ---------------------- | ----------------------- |
-| Per-click sends        | 0–2                    | **20–50**               |
-| Daily SMS ceiling      | 30                     | **150**                 |
-| City coverage          | 6 Detroit suburbs      | **All 56 MI cities**    |
-| Raw candidates per run | ~20                    | **~160**                |
-| Edge function status   | Not deployed (failing) | Deployed + auth-checked |
-
-
-Approve to ship.
+After approval, I'll build it in default mode.
