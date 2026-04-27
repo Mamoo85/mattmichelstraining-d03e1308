@@ -116,24 +116,65 @@ export default function ContractorOutreachPanel() {
   }
 
   async function blastLead(leadId: string) {
-    const priceStr = window.prompt("Price per claim (USD)?", "59");
+    const lastPrice = localStorage.getItem("dwa_last_blast_price") || "59";
+    const lastCount = localStorage.getItem("dwa_last_blast_count") || "10";
+    const priceStr = window.prompt("Price per claim (USD)?", lastPrice);
     if (!priceStr) return;
     const price = parseInt(priceStr, 10);
     if (!Number.isFinite(price) || price < 10 || price > 500) {
       toast.error("Price must be 10–500"); return;
     }
-    const maxStr = window.prompt("How many contractors to email?", "10");
+    const maxStr = window.prompt("How many contractors to email?", lastCount);
     if (!maxStr) return;
     const max = parseInt(maxStr, 10);
+    if (!Number.isFinite(max) || max < 1 || max > 50) {
+      toast.error("Count must be 1–50"); return;
+    }
+    localStorage.setItem("dwa_last_blast_price", String(price));
+    localStorage.setItem("dwa_last_blast_count", String(max));
+
     setBlastingLeadId(leadId);
-    const { data, error } = await supabase.functions.invoke("contractor-outreach-email-blast", {
-      body: { lead_id: leadId, price, max_contractors: max },
+    const toastId = toast.loading("🔍 Auto-blast: scrape → enrich → email…", {
+      description: "Step 1 of 3 · finding contractors on Google Maps",
     });
+
+    // Show simulated progress while the server orchestrates
+    const progressTimer = setTimeout(() => {
+      toast.loading("✨ Enriching contractor emails…", {
+        id: toastId,
+        description: "Step 2 of 3 · waterfall: Snov → Apollo → Hunter → pattern",
+      });
+    }, 4000);
+    const progressTimer2 = setTimeout(() => {
+      toast.loading("📧 Sending emails…", {
+        id: toastId,
+        description: "Step 3 of 3 · suppression-checked + CAN-SPAM compliant",
+      });
+    }, 12000);
+
+    const { data, error } = await supabase.functions.invoke("contractor-outreach-auto-blast", {
+      body: { lead_id: leadId, price, max_contractors: max, target_email_count: max },
+    });
+    clearTimeout(progressTimer);
+    clearTimeout(progressTimer2);
     setBlastingLeadId(null);
-    if (error) { toast.error(error.message); return; }
+
+    if (error) { toast.error(error.message, { id: toastId }); return; }
     const d = data as any;
-    if (!d?.ok) { toast.error(d?.error || "Blast failed"); return; }
-    toast.success(`📧 Emailed ${d.sent} of ${d.attempted} contractors`);
+    if (!d?.ok) {
+      toast.error(d?.error || "Auto-blast failed", {
+        id: toastId,
+        description: d?.steps?.slice(-2).join(" · ") || "See console for details",
+        duration: 10000,
+      });
+      console.warn("auto-blast trace", d);
+      return;
+    }
+    toast.success(`✅ Sent ${d.sent} of ${d.attempted} contractors`, {
+      id: toastId,
+      description: `Scraped ${d.scraped || 0} · enriched ${d.enriched || 0} · suppressed ${d.skipped_suppressed || 0}${d.failures?.length ? ` · ${d.failures.length} failures` : ""}`,
+      duration: 8000,
+    });
     load();
   }
 
