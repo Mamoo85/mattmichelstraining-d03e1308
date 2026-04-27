@@ -40,6 +40,7 @@ const ClientDashboard = lazyRetry(() => import("./pages/ClientDashboard"));
 const AgencyClientPortal = lazyRetry(() => import("./pages/AgencyClientPortal"));
 const EmbedCapture = lazyRetry(() => import("./pages/EmbedCapture"));
 const AgencyAdminRoute = lazyRetry(() => import("./components/layout/AgencyAdminRoute"));
+const AdminHealth = lazyRetry(() => import("./pages/AdminHealth"));
 const ClientRoute = lazyRetry(() => import("./components/layout/ClientRoute"));
 const FreeSiteScanner = lazyRetry(() => import("./pages/FreeSiteScanner"));
 const FreeToolsHub = lazyRetry(() => import("./pages/FreeToolsHub"));
