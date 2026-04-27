@@ -173,9 +173,27 @@ export default function AdminDeadLeads() {
 
   const PROSPECT_TRADES = ["roofer", "HVAC contractor", "plumber", "electrician"];
   const PROSPECT_CITIES = [
-    "Grosse Pointe MI", "Detroit MI", "Warren MI", "Sterling Heights MI",
-    "Troy MI", "Royal Oak MI", "Dearborn MI", "Livonia MI",
-    "Southfield MI", "Farmington Hills MI", "Novi MI", "Birmingham MI",
+    // Metro Detroit
+    "Detroit MI", "Grosse Pointe MI", "Warren MI", "Sterling Heights MI",
+    "Troy MI", "Livonia MI", "Dearborn MI", "Royal Oak MI",
+    "St. Clair Shores MI", "Macomb MI", "Ferndale MI", "Southfield MI",
+    "Farmington Hills MI", "Novi MI", "Rochester Hills MI", "Pontiac MI",
+    "Auburn Hills MI", "Birmingham MI", "Bloomfield Hills MI", "Canton MI",
+    "Westland MI", "Taylor MI", "Wyandotte MI", "Monroe MI",
+    // Ann Arbor / I-94
+    "Ann Arbor MI", "Ypsilanti MI", "Saline MI", "Brighton MI", "Howell MI",
+    // Lansing / Mid-MI
+    "Lansing MI", "East Lansing MI", "Okemos MI", "Jackson MI",
+    // SW MI
+    "Kalamazoo MI", "Battle Creek MI", "Portage MI",
+    // West MI
+    "Grand Rapids MI", "Wyoming MI", "Kentwood MI", "Holland MI",
+    "Muskegon MI", "Grand Haven MI",
+    // Tri-Cities / Thumb
+    "Flint MI", "Burton MI", "Saginaw MI", "Bay City MI", "Midland MI", "Mt. Pleasant MI",
+    // Northern MI / UP
+    "Traverse City MI", "Petoskey MI", "Cadillac MI", "Alpena MI",
+    "Marquette MI", "Sault Ste. Marie MI", "Escanaba MI",
   ];
 
   const handleRunProspector = async () => {
@@ -197,7 +215,7 @@ export default function AdminDeadLeads() {
       const rejected   = Number(data?.scoutRejected ?? 0);
       const sentBefore = Number(data?.dailySentBefore ?? 0);
       const sentAfter  = Number(data?.dailySentAfter ?? 0);
-      const cap        = Number(data?.cap ?? 30);
+      const cap        = Number(data?.cap ?? 150);
 
       // Build a precise reason when nothing was emailed.
       let note: string | undefined;
@@ -630,6 +648,7 @@ export default function AdminDeadLeads() {
                 style={{ background: "#0a1628", color: "#e2e8f0", border: "1px solid #1e3a5f", borderRadius: 6, padding: "8px 10px", fontSize: 13 }}
               >
                 <option value="">— Auto-rotate city —</option>
+                <option value="ALL_MI">🌎 All Michigan (8 random cities)</option>
                 {PROSPECT_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
               <Button size="sm" onClick={handleRunProspector} disabled={prospecting}
@@ -638,7 +657,7 @@ export default function AdminDeadLeads() {
               </Button>
             </div>
             <div style={{ color: "#475569", fontSize: 11 }}>
-              Leave both blank to use today's auto-rotated combos. Selecting both targets one specific trade × city.
+              Pick a trade + "All Michigan" to fan out across 8 cities (~160 candidates). Pick trade + single city to run 4 query variants (~80 candidates). Daily cap: 150 sends · up to 50 dead-lead pitches per run.
             </div>
 
             {lastProspectResult && (

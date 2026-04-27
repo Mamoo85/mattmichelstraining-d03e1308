@@ -41,20 +41,54 @@ const log = (step: string, data?: any) =>
   console.log(`[CONTRACTOR-PROSPECTOR] ${step}${data ? " — " + JSON.stringify(data) : ""}`);
 
 // ── Daily send cap to protect domain reputation ──
-const DAILY_SEND_CAP = 30;
-const DEAD_LEAD_CAP = 5;      // dead lead reactivation pitches/day
-const TECH_ALERT_CAP = 5;     // TechAlert trial pitches/day
-const MISSED_CALL_CAP = 5;    // Missed-Call Text-Back pitches/day
-const CARE_ALERT_CAP = 3;     // CareAlert (healthcare TechAlert) pitches/day
+const DAILY_SEND_CAP = 150;
+const DEAD_LEAD_CAP = 50;     // dead lead reactivation pitches/day
+const TECH_ALERT_CAP = 20;    // TechAlert trial pitches/day
+const MISSED_CALL_CAP = 20;   // Missed-Call Text-Back pitches/day
+const CARE_ALERT_CAP = 5;     // CareAlert (healthcare TechAlert) pitches/day
 
-// ── Metro Detroit targets only ──
+// ── Statewide Michigan targets ──
 const TRADES = ["roofer", "HVAC contractor", "plumber", "electrician", "dentist"];
 const DEAD_LEAD_TRADES = new Set(["roofer", "HVAC contractor", "plumber", "electrician"]);
 const CITIES = [
-  "Grosse Pointe MI", "Detroit MI", "Warren MI", "Sterling Heights MI",
+  // Metro Detroit
+  "Detroit MI", "Grosse Pointe MI", "Warren MI", "Sterling Heights MI",
   "Troy MI", "Livonia MI", "Dearborn MI", "Royal Oak MI",
-  "St. Clair Shores MI", "Macomb MI", "Ferndale MI",
+  "St. Clair Shores MI", "Macomb MI", "Ferndale MI", "Southfield MI",
+  "Farmington Hills MI", "Novi MI", "Rochester Hills MI", "Pontiac MI",
+  "Auburn Hills MI", "Birmingham MI", "Bloomfield Hills MI", "Canton MI",
+  "Westland MI", "Taylor MI", "Wyandotte MI", "Monroe MI",
+  // Ann Arbor / I-94 corridor
+  "Ann Arbor MI", "Ypsilanti MI", "Saline MI", "Brighton MI", "Howell MI",
+  // Lansing / Mid-MI
+  "Lansing MI", "East Lansing MI", "Okemos MI", "Jackson MI",
+  // Southwest MI
+  "Kalamazoo MI", "Battle Creek MI", "Portage MI",
+  // West MI
+  "Grand Rapids MI", "Wyoming MI", "Kentwood MI", "Holland MI",
+  "Muskegon MI", "Grand Haven MI",
+  // Mid-MI / Tri-Cities / Thumb
+  "Flint MI", "Burton MI", "Saginaw MI", "Bay City MI", "Midland MI", "Mt. Pleasant MI",
+  // Northern MI / UP
+  "Traverse City MI", "Petoskey MI", "Cadillac MI", "Alpena MI",
+  "Marquette MI", "Sault Ste. Marie MI", "Escanaba MI",
 ];
+
+// Trade-specific search query variants — used to multiply Google Places coverage
+// when targeting a single city (Places API caps at 20 results per query).
+const TRADE_QUERY_VARIANTS: Record<string, string[]> = {
+  "HVAC contractor": ["HVAC contractor", "heating and cooling", "AC repair", "furnace repair"],
+  "plumber": ["plumber", "plumbing contractor", "drain cleaning", "water heater repair"],
+  "electrician": ["electrician", "electrical contractor", "residential electrician"],
+  "roofer": ["roofer", "roofing contractor", "roof repair", "roof replacement"],
+  "dentist": ["dentist", "dental office", "family dentistry"],
+};
+
+// Pick N random cities from the statewide list (used when "All Michigan" selected)
+function pickRandomCities(n: number): string[] {
+  const shuffled = [...CITIES].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(n, CITIES.length));
+}
 
 // Pick 2 trade+city combos to run today (rotated by day of year)
 function getTodaysCombos(): { trade: string; city: string }[] {
@@ -658,13 +692,29 @@ serve(async (req) => {
     const pitchOverride = body.pitch_override as ("dead_lead" | "tech_alert" | "missed_call" | "web_design" | "care_alert" | undefined);
     const pitchRotation = pitchOverride || getTodayPitchRotation();
     log("Pitch rotation today", { pitchRotation, override: !!pitchOverride, deadLeadSent, techAlertSent, missedCallSent, careAlertSent });
-    const combos = (manualTrade && manualCity) ? [{ trade: manualTrade, city: manualCity }] : getTodaysCombos();
+
+    // ── Build combo list ──
+    // - "ALL_MI" or blank city + a trade  → fan out across 8 random Michigan cities for that trade
+    // - trade + specific city            → fan out across 4 query variants in that city
+    // - blank trade + blank city         → today's auto-rotated combo (legacy)
+    let combos: { trade: string; city: string }[];
+    const isAllMichigan = manualCity === "ALL_MI" || (manualTrade && !manualCity);
+    if (isAllMichigan && manualTrade) {
+      combos = pickRandomCities(8).map(city => ({ trade: manualTrade, city }));
+      log("All-Michigan fan-out", { trade: manualTrade, cityCount: combos.length });
+    } else if (manualTrade && manualCity) {
+      const variants = TRADE_QUERY_VARIANTS[manualTrade] || [manualTrade];
+      combos = variants.map(v => ({ trade: v, city: manualCity }));
+      log("Single-city query expansion", { city: manualCity, variants: variants.length });
+    } else {
+      combos = getTodaysCombos();
+    }
     let totalEmailed = 0;
     let totalDeadLeadEmailed = 0;
     let totalFound = 0;
     let totalSkipped = 0;
     let totalScoutRejected = 0;
-    const maxToSend = Math.min(15, remainingCap);
+    const maxToSend = Math.min(50, remainingCap);
 
     // ── CARE ALERT DAY: search nursing homes instead of trade combos ──
     if (pitchRotation === "care_alert" && !manualTrade) {
@@ -744,12 +794,23 @@ serve(async (req) => {
       }
     }
 
-    for (const { trade, city } of combos) {
-      log("Searching", { trade, city });
-      const places = await searchGoogleMaps(`${trade} in ${city}`, GOOGLE_MAPS_API_KEY);
+    // Map a (possibly-variant) trade query string back to its canonical trade key
+    const canonicalTrade = (q: string): string => {
+      for (const [canonical, variants] of Object.entries(TRADE_QUERY_VARIANTS)) {
+        if (variants.some(v => q.toLowerCase().includes(v.toLowerCase()))) return canonical;
+      }
+      return q;
+    };
+
+    for (const combo of combos) {
+      const tradeQuery = combo.trade;
+      const trade = canonicalTrade(tradeQuery);
+      const city = combo.city;
+      log("Searching", { tradeQuery, trade, city });
+      const places = await searchGoogleMaps(`${tradeQuery} in ${city}`, GOOGLE_MAPS_API_KEY);
       totalFound += places.length;
 
-      for (const place of places.slice(0, 10)) {
+      for (const place of places.slice(0, 20)) {
         const name = place.displayName?.text || "Unknown Business";
         const phone = place.nationalPhoneNumber || null;
         const website = place.websiteUri || null;
