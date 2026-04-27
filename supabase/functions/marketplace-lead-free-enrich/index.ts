@@ -254,31 +254,30 @@ serve(async (req) => {
 
     console.log(`[FREE-ENRICH] Starting for lead ${lead_id}`);
 
-    // Run all 11 in parallel
+    const wrap = (provider: string, fn: () => Promise<any>, fields: string[]) =>
+      logEnrichment(
+        { lead_id, vertical: "mortgage", function_name: "marketplace-lead-free-enrich", stage: "free", provider },
+        async () => {
+          const data = await fn();
+          return { data, fields_added: data != null ? fields : [] };
+        },
+      ).then(r => r.data);
+
     const [
-      mortgageRate,
-      treasury10y,
-      census,
-      noaaStorms,
-      noaaZipRecent,
-      usgsQuakes,
-      areaCode,
-      neighborPermits,
-      crime,
-      unemployment,
-      callWindow,
+      mortgageRate, treasury10y, census, noaaStorms, noaaZipRecent, usgsQuakes,
+      areaCode, neighborPermits, crime, unemployment, callWindow,
     ] = await Promise.all([
-      fetchFredMortgageRate(),
-      fetchTreasuryYield(),
-      fetchCensusTract(lead.zip || ""),
-      fetchNoaaStorms(lead.state || "", lead.county || ""),
-      fetchNoaaZipRecent(lead.zip || "", lead.lat || 0, lead.lon || 0),
-      fetchUsgsQuakes(lead.lat || 0, lead.lon || 0),
-      fetchFccAreaCode(lead.phone || ""),
-      fetchDetroitNeighborPermits(lead.zip || ""),
-      fetchFbiCrime(lead.state || ""),
-      fetchBlsUnemployment(lead.state || ""),
-      fetchCallWindow(lead.lat || 0, lead.lon || 0),
+      wrap("FRED", fetchFredMortgageRate, ["market_30y_rate"]),
+      wrap("Treasury", fetchTreasuryYield, ["treasury_10y"]),
+      wrap("Census ACS", () => fetchCensusTract(lead.zip || ""), ["census_tract"]),
+      wrap("NOAA Storm Events", () => fetchNoaaStorms(lead.state || "", lead.county || ""), ["storm_events_12mo"]),
+      wrap("NOAA NCEI Recent", () => fetchNoaaZipRecent(lead.zip || "", lead.lat || 0, lead.lon || 0), ["noaa", "storm_recent"]),
+      wrap("USGS Earthquakes", () => fetchUsgsQuakes(lead.lat || 0, lead.lon || 0), ["earthquakes_5yr_50km"]),
+      wrap("FCC AreaCode", () => fetchFccAreaCode(lead.phone || ""), ["area_code"]),
+      wrap("Detroit ArcGIS BSEED", () => fetchDetroitNeighborPermits(lead.zip || ""), ["neighbor_permits_zip"]),
+      wrap("FBI CDE", () => fetchFbiCrime(lead.state || ""), ["crime_state"]),
+      wrap("BLS LAUS", () => fetchBlsUnemployment(lead.state || ""), ["unemployment_rate"]),
+      wrap("Sunrise-Sunset", () => fetchCallWindow(lead.lat || 0, lead.lon || 0), ["call_window"]),
     ]);
 
     const enrichment = {
