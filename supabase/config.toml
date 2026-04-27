@@ -1892,3 +1892,15 @@ verify_jwt = true
 
 [functions.gmail-send-outreach]
 verify_jwt = true
+
+[functions.contractor-outreach-scrape]
+verify_jwt = true
+
+[functions.contractor-outreach-enrich]
+verify_jwt = true
+
+[functions.contractor-outreach-email-blast]
+verify_jwt = true
+
+[functions.contractor-outreach-unsubscribe]
+verify_jwt = false
