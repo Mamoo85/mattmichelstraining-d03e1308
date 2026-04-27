@@ -75,31 +75,31 @@ export default function MortgageRadar() {
   const [zipsInput, setZipsInput] = useState("");
   const [extraZips, setExtraZips] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [compliance, setCompliance] = useState<ComplianceState>({ dob: "", tcpaConsent: false, manualAck: false });
 
   const handleCheckout = async (selected: Tier) => {
     if (!email) { toast.error("Email is required"); return; }
+    if (!isComplianceComplete(compliance)) {
+      toast.error("Please complete the compliance section: DOB (18+), TCPA consent, and manual-outreach acknowledgment.");
+      document.getElementById("compliance")?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
     const zip_codes = zipsInput.split(/[, ]+/).map(z => z.trim()).filter(z => /^\d{5}$/.test(z));
+    if (zip_codes.length === 0) { toast.error("At least one valid 5-digit ZIP is required"); return; }
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-mortgage-radar-checkout", {
         body: {
-          email,
-          business_name: business,
-          contact_name: contactName || business,
-          nmls_number: nmls,
-          phone,
-          zip_codes,
-          extra_zip_count: extraZips,
-          tier: selected,
+          email, business_name: business, contact_name: contactName || business,
+          nmls_number: nmls, phone, zip_codes, extra_zip_count: extraZips, tier: selected,
+          dob: compliance.dob, tcpa_consent: compliance.tcpaConsent, manual_ack: compliance.manualAck,
         },
       });
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Checkout failed");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   if (success) {
