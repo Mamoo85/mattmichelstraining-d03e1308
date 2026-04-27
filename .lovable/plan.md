@@ -1,146 +1,134 @@
-# Harden Fax Campaign Sends — 4-Part Fix
+# Trojan Horse Outreach v2 — Enrich → Opus → One-Click Gmail Send
 
-## Background
+## What you'll get
 
-`send-fax-phaxio` already skips the segment filter when `prospect_ids` are supplied (last session's fix). The remaining failure modes:
+A 3-step flow on the existing Trojan Horse tab:
 
-1. **Phantom IDs**: campaign references prospect IDs that exist in `prospect_pool` but never got mirrored to `fax_prospects` — and vice versa.
-2. **No pre-flight check**: campaigns silently mark themselves "failed (sent=0)" instead of "invalid_targets" when the ID list resolves to zero rows.
-3. **No fallback**: if the segment-filter path returns 0, the function gives up even when the campaign has a valid `prospect_ids` array we could fall back to.
-4. **Builder gap**: `OutreachCommandCenter` writes prospect_pool IDs into `fax_campaigns.prospect_ids`, but never seeds matching rows in `fax_prospects`. Future legacy-segment scans (which only read `fax_prospects`) miss these targets.
+1. **Cherry-Pick** the proof candidate (already works)
+2. **Enrich** the agency → finds the real decision-maker's name + verified email via Apollo → Hunter → Snov waterfall
+3. **Draft with Opus** → uses the enriched contact name in greeting, builds a beautifully-formatted HTML email with teaser candidate cards (no PII leak), inline CTA buttons, and your DWA branding
+4. **Send via Gmail** → one click sends from `matt@detroitwebagent.com` through your Gmail account (no copy-paste)
 
-## Implementation
+## How it will look
 
-### 1. `supabase/functions/send-fax-phaxio/index.ts` — multi-source resolver + pre-flight
-
-Replace the `usePool ? prospect_pool : fax_prospects` block (lines ~178-200) with a chained resolver that records a `resolutionTrace` for logs:
-
-```ts
-let prospects: any[] = [];
-const resolutionTrace: string[] = [];
-
-if (usePool) {
-  // Primary: prospect_pool by ID
-  const { data: poolData } = await sb.from("prospect_pool")
-    .select("id, business_name, fax_number, audience_type, status, last_sent_at")
-    .in("id", effectiveIds);
-  prospects = (poolData || []).map(/* …same mapping… */);
-  resolutionTrace.push(`prospect_pool:${prospects.length}/${effectiveIds.length}`);
-
-  // Fallback A: any unresolved IDs → fax_prospects by ID
-  if (prospects.length < effectiveIds.length) {
-    const found = new Set(prospects.map(p => p.id));
-    const missing = effectiveIds.filter(id => !found.has(id));
-    const { data: faxData } = await sb.from("fax_prospects").select("*").in("id", missing);
-    prospects.push(...(faxData || []).map(p => ({ ...p, _source: "fax_prospects" })));
-    resolutionTrace.push(`fax_prospects_by_id:${(faxData || []).length}/${missing.length}`);
-  }
-} else {
-  // Legacy: fax_prospects by segment
-  let q = sb.from("fax_prospects").select("*").eq("segment", campaign.target_segment);
-  if (REQUIRE_PUBLIC_VERIFIED) q = q.eq("verified_public", true);
-  const { data } = await q;
-  prospects = (data || []).map(p => ({ ...p, _source: "fax_prospects" }));
-  resolutionTrace.push(`segment(${campaign.target_segment}):${prospects.length}`);
-
-  // Fallback B: 0 from segment but campaign has prospect_ids → try fax_prospects by ID
-  if (prospects.length === 0 && campaignProspectIds.length > 0) {
-    const { data: byId } = await sb.from("fax_prospects").select("*").in("id", campaignProspectIds);
-    prospects = (byId || []).map(p => ({ ...p, _source: "fax_prospects" }));
-    resolutionTrace.push(`fallback_by_id:${prospects.length}/${campaignProspectIds.length}`);
-
-    // Fallback C: still 0 → prospect_pool by ID
-    if (prospects.length === 0) {
-      const { data: pool } = await sb.from("prospect_pool")
-        .select("id, business_name, fax_number, audience_type, status, last_sent_at")
-        .in("id", campaignProspectIds);
-      prospects = (pool || []).map(/* …same mapping… */);
-      resolutionTrace.push(`fallback_pool:${prospects.length}/${campaignProspectIds.length}`);
-    }
-  }
-}
-console.log(`[send-fax-phaxio] campaign=${campaignId} resolution: ${resolutionTrace.join(" | ")}`);
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ Aerotek                          [INDUSTRIAL]               │
+│ Director of Recruiting · Largest skilled trades MI          │
+│                                                             │
+│ ✓ Cherry-picked: Bhagya Sree (Data Analyst · Southfield)   │
+│ ✓ Enriched: Sarah Chen <sarah.chen@aerotek.com> (Apollo)   │
+│                                                             │
+│ [🎯 Cherry-Pick] [⚡ Enrich Contact] [✨ Draft with Opus]   │
+│ ─────────────────────────────────────────────────────────── │
+│ ┌─ HTML PREVIEW ──────────────────────────────────────┐    │
+│ │ Subject: Pre-market Data Analyst — Oakland County   │    │
+│ │                                                      │    │
+│ │ Hi Sarah,                                            │    │
+│ │ Matt Michels here from Detroit Web Agency...        │    │
+│ │                                                      │    │
+│ │ ┌─ CANDIDATE TEASER ──────────────────────┐        │    │
+│ │ │ ✓ Data & Apps Analyst · Oakland County  │        │    │
+│ │ │ ✓ Exceptional signal · pre-market       │        │    │
+│ │ │ [👁 View Full Profile →]                 │        │    │
+│ │ └──────────────────────────────────────────┘        │    │
+│ └──────────────────────────────────────────────────────┘    │
+│                                                             │
+│ [📤 Send via Gmail]  [📋 Copy HTML]  [✉ Open in mail]      │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-**Pre-flight validation** — insert immediately after the resolver, before cost-cap checks:
+## Technical plan
 
-```ts
-if (!dryRun && allTargets.length === 0) {
-  await sb.from("fax_campaigns").update({
-    status: "invalid_targets",
-    last_error: `0 targets resolved (${resolutionTrace.join(" | ")})`,
-  }).eq("id", campaignId);
-  await notifyMatt(
-    `⚠️ Fax campaign blocked — invalid targets: ${campaign.name}`,
-    `<p>Campaign <strong>${campaign.name}</strong> resolved 0 prospects.</p>
-     <p>Trace: <code>${resolutionTrace.join(" | ")}</code></p>
-     <p>Likely cause: prospect_ids reference rows that no longer exist in either prospect_pool or fax_prospects.</p>`,
-  );
-  return new Response(JSON.stringify({
-    success: false, error: "invalid_targets", trace: resolutionTrace,
-  }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-}
+### 1. Gmail connector (new)
+
+Connect the **Google Mail** standard connector to your project, scoped to `gmail.send` and `gmail.compose`. This authorizes YOUR Gmail (`matt@detroitwebagent.com`) — exactly the use case the connector is designed for. Lovable handles OAuth.
+
+### 2. New table: `agency_contact_enrichments`
+
+Stores resolved decision-makers per agency so you don't pay Apollo twice.
+
+```sql
+create table public.agency_contact_enrichments (
+  id uuid primary key default gen_random_uuid(),
+  agency_name text not null unique,
+  contact_first_name text,
+  contact_last_name text,
+  contact_title text,
+  contact_email text,
+  email_status text,             -- verified | guessed | failed
+  source text,                    -- apollo | hunter | snov | pattern
+  enriched_at timestamptz default now(),
+  meta jsonb
+);
+alter table ... enable row level security;
+create policy "admin manage" on ... using (public.has_role(auth.uid(),'admin'));
 ```
 
-Also surface `resolution_trace` in the dry-run response payload.
+### 3. New edge function: `agency-contact-enrich`
 
-### 2. `src/components/dwa-admin/OutreachCommandCenter.tsx` — mirror selected fax targets into `fax_prospects`
+Reuses your unified enrichment waterfall pattern:
+- **Stage 1 — Apollo** `mixed_people/search` filtered by `organization_name=agency` + `person_titles=[Director of Recruiting, VP Recruiting, Branch Manager, ...]` based on the agency's role hint
+- **Stage 2 — Hunter.io** domain search if Apollo misses (`agency-domain.com` → highest-confidence person)
+- **Stage 3 — Snov** as final fallback
+- **Stage 4 — pattern guess** (`first.last@domain.com`) tagged `email_status='guessed'`
+- Caches result in `agency_contact_enrichments`, returns the contact object
 
-In the fax branch of the campaign-builder (line ~610-622), after inserting the campaign row, upsert each selected fax-eligible row into `fax_prospects` so legacy-path lookups find them:
+### 4. Upgrade edge function: `agency-outreach-draft`
 
-```ts
-const faxRows = selectedRows.filter((p) => !!p.fax_number);
-if (!faxRows.length) return toast.error("No selected prospects have fax numbers");
+- Accept new fields: `contact_first_name`, `contact_email`, `cherry_picked_candidate` (full object with role/county/signal)
+- Update Opus prompt to greet by **first name**, reference enriched title, and produce **two outputs**:
+  - `subject` (string)
+  - `html_body` (rich HTML — uses the DWA email template skeleton from `_shared/email-templates/`, with a styled "candidate teaser card" section and a `[View Full Profile]` button linking to a tokenized preview URL)
+  - `plain_body` (fallback)
+- Strip all PII from the teaser per `sanitize-candidate.ts` rules (role + county + signal tier only — no name, license, or source)
 
-const { data, error } = await supabase.from("fax_campaigns").insert({
-  name: campaignName,
-  target_segment: audienceLabel,
-  message_html: `<p>Draft fax — edit before sending. Targets: ${faxRows.length} ${audienceLabel} prospects.</p>`,
-  status: "draft",
-  audience_type: audienceLabel,
-  prospect_ids: faxRows.map((p) => p.id),
-}).select("id").single();
-if (error) return toast.error(error.message);
-campaignId = (data as any)?.id ?? null;
+### 5. New edge function: `gmail-send-outreach`
 
-// Mirror into fax_prospects so segment-scan path can find these
-// Use prospect_pool.id as fax_prospects.id for stable cross-table lookup
-const mirror = faxRows.map((p: any) => ({
-  id: p.id,                                  // share the UUID
-  business_name: p.business_name,
-  fax_number: p.fax_number,
-  contact_name: p.contact_name ?? null,
-  address: p.address_line1 ?? null,
-  city: p.city ?? null,
-  state: p.state ?? null,
-  zip: p.zip ?? null,
-  segment: audienceLabel,
-  source: "outreach_command_center",
-  source_url: null,
-  verified_public: true,                     // pre-vetted in Command Center
-  audience_type: audienceLabel,
-  county: p.county ?? null,
-}));
-const { error: mirrorErr } = await supabase
-  .from("fax_prospects" as any)
-  .upsert(mirror, { onConflict: "id", ignoreDuplicates: false });
-if (mirrorErr) {
-  // Non-fatal — campaign already created; sender's fallback chain still works
-  console.warn("fax_prospects mirror failed:", mirrorErr.message);
-}
-```
+- Verifies caller is admin
+- Reads Gmail token from the linked connector via the connector gateway (`https://connector-gateway.lovable.dev/google_mail/gmail/v1/users/me/messages/send`)
+- Builds RFC 2822 MIME message (HTML + plain text alternative, From: `matt@detroitwebagent.com`)
+- Base64url encodes, POSTs to Gmail API
+- Logs send to `system_comms_log` with `channel='email_gmail'`
+- Inserts row in `ai_action_queue` with `status='sent'` for audit
 
-Because `fax_prospects.id` is the PK and we explicitly set it to the `prospect_pool.id`, every campaign reference resolves cleanly in either table from this point forward. The schema confirms `business_name`, `fax_number`, `segment`, `source` are NOT NULL — all are populated above.
+### 6. Frontend: `AdminAgencyOutreach.tsx` rewrite
 
-## Verification after deploy
+- Add `enrichments` state keyed by agency name
+- New "Enrich Contact" button (between Cherry-Pick and Draft) with loading state
+- Show enrichment chip: `✓ Sarah Chen <sarah.chen@aerotek.com> (Apollo, verified)` or amber chip for guessed
+- Render draft as **HTML preview** in an iframe sandbox (not raw `<pre>`)
+- Replace "Open in mail" with **`📤 Send via Gmail`** primary button (calls `gmail-send-outreach`), keep Copy HTML as secondary
+- Send button disabled until: enriched contact has email + draft exists + admin confirms via toast
 
-1. Re-fire the failing `manual_mixed_…` campaign → edge function logs show resolution trace, fallback C resolves the 18 IDs from `prospect_pool`, sends proceed.
-2. Create a new fax campaign from Outreach Command Center → confirm matching rows appear in `fax_prospects` with same UUIDs.
-3. Manually create a campaign with a bogus prospect_id → status flips to `invalid_targets` with `last_error` populated, Matt gets the warning email, no Phaxio call made.
+### 7. Email design upgrade
+
+New shared template `_shared/email-templates/trojan-horse-outreach.ts` exports `buildTrojanHorseHtml({ greeting, intro_paragraph, candidate_teaser, cta_url, signature })`:
+- DWA branded header (teal `#00d4ff` accent bar, white background per email rules)
+- Personal-feeling typography (Inter/system, no marketing-email feel — looks like Matt typed it)
+- Candidate teaser card: subtle gray border, role/county/signal tier badges, single CTA button
+- Footer with Matt's actual signature block + DWA wordmark
 
 ## Files
 
-- **Edited**: `supabase/functions/send-fax-phaxio/index.ts` (multi-source resolver + pre-flight gate + dry-run trace)
-- **Edited**: `src/components/dwa-admin/OutreachCommandCenter.tsx` (mirror fax targets into `fax_prospects` on campaign create)
+**New:**
+- `supabase/migrations/<ts>_agency_contact_enrichments.sql`
+- `supabase/functions/agency-contact-enrich/index.ts`
+- `supabase/functions/gmail-send-outreach/index.ts`
+- `supabase/functions/_shared/email-templates/trojan-horse-outreach.ts`
 
-No migrations needed — `fax_campaigns.status` is `text` so `'invalid_targets'` is accepted.
+**Modified:**
+- `supabase/functions/agency-outreach-draft/index.ts` (HTML output + first-name greeting)
+- `src/components/dwa-admin/AdminAgencyOutreach.tsx` (enrich button, HTML preview, Gmail send)
+- `supabase/config.toml` (`verify_jwt = true` for both new functions — admin-only)
+
+## Required setup before I can ship this
+
+1. **Connect Gmail** — I'll trigger the connector flow; you'll click "Authorize" once and grant `gmail.send` + `gmail.compose` to your `matt@detroitwebagent.com` account
+2. Apollo/Hunter/Snov keys — already configured ✓
+
+## Out of scope (ask if you want them)
+
+- Auto-send on a timer (intentionally manual per TCPA-safe note in your current UI)
+- Reply tracking / inbox sync (would need `gmail.readonly` + a polling cron)
+- A/B subject line testing
