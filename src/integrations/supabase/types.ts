@@ -3565,6 +3565,90 @@ export type Database = {
           },
         ]
       }
+      contractor_outreach_prospects: {
+        Row: {
+          business_name: string
+          city: string | null
+          consent_for_sms: boolean
+          consent_source: string | null
+          consent_timestamp: string | null
+          created_at: string | null
+          email: string | null
+          email_send_count: number
+          email_verified: boolean | null
+          enriched_at: string | null
+          enrichment_trace: Json | null
+          id: string
+          last_emailed_at: string | null
+          last_smsed_at: string | null
+          notes: string | null
+          owner_name: string | null
+          phone: string | null
+          reply_status: string | null
+          scraped_at: string | null
+          source: string | null
+          state: string | null
+          trade: string
+          unsubscribed_at: string | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          business_name: string
+          city?: string | null
+          consent_for_sms?: boolean
+          consent_source?: string | null
+          consent_timestamp?: string | null
+          created_at?: string | null
+          email?: string | null
+          email_send_count?: number
+          email_verified?: boolean | null
+          enriched_at?: string | null
+          enrichment_trace?: Json | null
+          id?: string
+          last_emailed_at?: string | null
+          last_smsed_at?: string | null
+          notes?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          reply_status?: string | null
+          scraped_at?: string | null
+          source?: string | null
+          state?: string | null
+          trade: string
+          unsubscribed_at?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          business_name?: string
+          city?: string | null
+          consent_for_sms?: boolean
+          consent_source?: string | null
+          consent_timestamp?: string | null
+          created_at?: string | null
+          email?: string | null
+          email_send_count?: number
+          email_verified?: boolean | null
+          enriched_at?: string | null
+          enrichment_trace?: Json | null
+          id?: string
+          last_emailed_at?: string | null
+          last_smsed_at?: string | null
+          notes?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          reply_status?: string | null
+          scraped_at?: string | null
+          source?: string | null
+          state?: string | null
+          trade?: string
+          unsubscribed_at?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       contractor_provisioning_audit: {
         Row: {
           business_name: string | null
