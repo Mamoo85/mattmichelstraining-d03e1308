@@ -7513,6 +7513,7 @@ export type Database = {
           license_expiry: string | null
           license_issued_at: string | null
           license_number: string | null
+          license_state: string | null
           license_type: string | null
           linkedin_url: string | null
           lng: number | null
@@ -7520,6 +7521,10 @@ export type Database = {
           metro: string | null
           name: string
           nearby_signal_count: number | null
+          nursys_enrolled: boolean
+          nursys_enrolled_at: string | null
+          nursys_last_checked_at: string | null
+          nursys_last_status: string | null
           password_compromised: boolean | null
           personal_email_primary: boolean | null
           phone: string | null
@@ -7590,6 +7595,7 @@ export type Database = {
           license_expiry?: string | null
           license_issued_at?: string | null
           license_number?: string | null
+          license_state?: string | null
           license_type?: string | null
           linkedin_url?: string | null
           lng?: number | null
@@ -7597,6 +7603,10 @@ export type Database = {
           metro?: string | null
           name: string
           nearby_signal_count?: number | null
+          nursys_enrolled?: boolean
+          nursys_enrolled_at?: string | null
+          nursys_last_checked_at?: string | null
+          nursys_last_status?: string | null
           password_compromised?: boolean | null
           personal_email_primary?: boolean | null
           phone?: string | null
@@ -7667,6 +7677,7 @@ export type Database = {
           license_expiry?: string | null
           license_issued_at?: string | null
           license_number?: string | null
+          license_state?: string | null
           license_type?: string | null
           linkedin_url?: string | null
           lng?: number | null
@@ -7674,6 +7685,10 @@ export type Database = {
           metro?: string | null
           name?: string
           nearby_signal_count?: number | null
+          nursys_enrolled?: boolean
+          nursys_enrolled_at?: string | null
+          nursys_last_checked_at?: string | null
+          nursys_last_status?: string | null
           password_compromised?: boolean | null
           personal_email_primary?: boolean | null
           phone?: string | null
