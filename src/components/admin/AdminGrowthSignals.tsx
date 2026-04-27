@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,10 +12,17 @@ import {
   ChevronDown, ChevronUp, FileText,
 } from "lucide-react";
 import BuyerOutreachDialog from "./BuyerOutreachDialog";
+import IndustryPulseConfidenceLegend from "./IndustryPulseConfidenceLegend";
+import GrowthSignalsDebugPanel, { type IndustryCount, type QueryMeta } from "./GrowthSignalsDebugPanel";
 
 const PAGE_SIZE = 25;
-const FETCH_LIMIT = 80;
+// Filter-aware fetch caps. The OLD bug: a single LIMIT 80 ran BEFORE filters,
+// so confidence-6 ties pushed entire industries (Boiler/Pressure) past the cap.
+// New approach: industry filter is pushed to SQL, then we use a generous cap.
+const FETCH_LIMIT_ALL = 300;        // global view ("All" industries)
+const FETCH_LIMIT_FILTERED = 1000;  // single industry — never truncates a real-world tenant
 const VISIBLE_NEED_CHIPS = 3;
+const STORAGE_KEY = "dwa_growth_signals_filters_v2";
 
 interface PulseSignal {
   id: string;
