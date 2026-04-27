@@ -262,6 +262,8 @@ serve(async (req) => {
       send_after: sendAfter,
       subject,
       preview,
+      cancel_url: cancelUrl,
+      pdf_url: pdfUrl,
     }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
