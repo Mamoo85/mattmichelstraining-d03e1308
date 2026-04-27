@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Copy, Wand2, Mail, Target, X, CheckCircle2, Send, Sparkles, AlertCircle } from "lucide-react";
+import { Loader2, Copy, Wand2, Mail, Target, X, CheckCircle2, Send, Sparkles, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import HealthcareSourceHealthPanel from "./HealthcareSourceHealthPanel";
+import CandidateLicenseEditor from "./CandidateLicenseEditor";
 
 const METRO_DETROIT_AGENCIES = [
   { name: "Aerotek", contact: "Director of Recruiting", vertical: "industrial", note: "Largest skilled trades staffing in MI", domain: "aerotek.com", role_hint: "director" },
@@ -12,6 +14,10 @@ const METRO_DETROIT_AGENCIES = [
   { name: "Maxim Healthcare Staffing", contact: "Director of Recruiting", vertical: "healthcare", note: "RN/CNA/LPN focus, Metro Detroit", domain: "maximhealthcare.com", role_hint: "director" },
   { name: "Cross Country Healthcare", contact: "Regional Director", vertical: "healthcare", note: "Travel + perm placements MI", domain: "crosscountry.com", role_hint: "director" },
   { name: "Favorite Healthcare Staffing", contact: "Branch Director", vertical: "healthcare", note: "LTC + skilled nursing focus", domain: "favoritestaffing.com", role_hint: "branch" },
+  { name: "Interim HealthCare of Detroit", contact: "Director of Clinical Services", vertical: "healthcare", note: "Home health + hospice, NE Detroit", domain: "interimhealthcare.com", role_hint: "director" },
+  { name: "Comfort Keepers Metro Detroit", contact: "Branch Director", vertical: "healthcare", note: "In-home senior care, Oakland County", domain: "comfortkeepers.com", role_hint: "branch" },
+  { name: "ATC Healthcare Services", contact: "Branch Manager", vertical: "healthcare", note: "Per-diem + travel nursing, Metro Detroit", domain: "atchealthcare.com", role_hint: "branch" },
+  { name: "Soliant Health", contact: "Regional Director", vertical: "healthcare", note: "Allied health + nursing, Michigan", domain: "soliant.com", role_hint: "director" },
 ];
 
 interface DraftPayload {
