@@ -8271,42 +8271,66 @@ export type Database = {
       industrial_supply_buyers: {
         Row: {
           active: boolean
+          address: string | null
           city: string | null
           company: string
           contact_name: string | null
           created_at: string
           email: string
+          enriched_at: string | null
+          enrichment_status: string | null
+          fax: string | null
           id: string
+          last_outreach_at: string | null
           notes: string | null
           phone: string | null
+          state: string | null
           updated_at: string
           vertical: string
+          website: string | null
+          zip: string | null
         }
         Insert: {
           active?: boolean
+          address?: string | null
           city?: string | null
           company: string
           contact_name?: string | null
           created_at?: string
           email: string
+          enriched_at?: string | null
+          enrichment_status?: string | null
+          fax?: string | null
           id?: string
+          last_outreach_at?: string | null
           notes?: string | null
           phone?: string | null
+          state?: string | null
           updated_at?: string
           vertical: string
+          website?: string | null
+          zip?: string | null
         }
         Update: {
           active?: boolean
+          address?: string | null
           city?: string | null
           company?: string
           contact_name?: string | null
           created_at?: string
           email?: string
+          enriched_at?: string | null
+          enrichment_status?: string | null
+          fax?: string | null
           id?: string
+          last_outreach_at?: string | null
           notes?: string | null
           phone?: string | null
+          state?: string | null
           updated_at?: string
           vertical?: string
+          website?: string | null
+          zip?: string | null
         }
         Relationships: []
       }
@@ -16366,6 +16390,62 @@ export type Database = {
         }
         Relationships: []
       }
+      signal_outreach_log: {
+        Row: {
+          buyer_company: string | null
+          buyer_id: string | null
+          channel: string
+          cost_cents: number
+          created_at: string
+          draft_id: string | null
+          error: string | null
+          external_id: string | null
+          id: string
+          meta: Json | null
+          sent_at: string | null
+          signal_id: string
+          status: string
+        }
+        Insert: {
+          buyer_company?: string | null
+          buyer_id?: string | null
+          channel: string
+          cost_cents?: number
+          created_at?: string
+          draft_id?: string | null
+          error?: string | null
+          external_id?: string | null
+          id?: string
+          meta?: Json | null
+          sent_at?: string | null
+          signal_id: string
+          status?: string
+        }
+        Update: {
+          buyer_company?: string | null
+          buyer_id?: string | null
+          channel?: string
+          cost_cents?: number
+          created_at?: string
+          draft_id?: string | null
+          error?: string | null
+          external_id?: string | null
+          id?: string
+          meta?: Json | null
+          sent_at?: string | null
+          signal_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signal_outreach_log_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "industrial_supply_buyers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signal_strength_rules: {
         Row: {
           age_max_hours: number
@@ -16576,6 +16656,51 @@ export type Database = {
           opted_out_at?: string
           phone?: string
           source?: string | null
+        }
+        Relationships: []
+      }
+      sms_outreach_drafts: {
+        Row: {
+          body: string
+          buyer_id: string | null
+          category: string
+          created_at: string
+          error: string | null
+          external_id: string | null
+          id: string
+          send_after: string
+          sent_at: string | null
+          signal_id: string | null
+          status: string
+          to_phone: string
+        }
+        Insert: {
+          body: string
+          buyer_id?: string | null
+          category?: string
+          created_at?: string
+          error?: string | null
+          external_id?: string | null
+          id?: string
+          send_after: string
+          sent_at?: string | null
+          signal_id?: string | null
+          status?: string
+          to_phone: string
+        }
+        Update: {
+          body?: string
+          buyer_id?: string | null
+          category?: string
+          created_at?: string
+          error?: string | null
+          external_id?: string | null
+          id?: string
+          send_after?: string
+          sent_at?: string | null
+          signal_id?: string | null
+          status?: string
+          to_phone?: string
         }
         Relationships: []
       }
