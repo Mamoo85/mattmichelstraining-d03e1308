@@ -170,15 +170,38 @@ serve(async (req) => {
 
     const audience = campaign.audience_type || campaign.target_segment || "general";
 
-    // Pull prospects matching segment
-    let q = sb.from("fax_prospects").select("*").eq("segment", campaign.target_segment);
-    if (REQUIRE_PUBLIC_VERIFIED) q = q.eq("verified_public", true);
-    if (prospectIds && prospectIds.length) q = q.in("id", prospectIds);
-    const { data: prospects } = await q;
-    const allTargets = prospects || [];
+    // Resolve prospect_ids: explicit body param > campaign.prospect_ids (Outreach Command Center)
+    const campaignProspectIds: string[] = Array.isArray((campaign as any).prospect_ids) ? (campaign as any).prospect_ids : [];
+    const effectiveIds: string[] = (prospectIds && prospectIds.length) ? prospectIds : campaignProspectIds;
+    const usePool = effectiveIds.length > 0;
 
-    // For non-resend runs: filter out anyone already sent
-    const targets = prospectIds && prospectIds.length
+    let prospects: any[] = [];
+    if (usePool) {
+      // IDs come from prospect_pool (Outreach Command Center). Skip segment filter.
+      const { data } = await sb
+        .from("prospect_pool")
+        .select("id, business_name, fax_number, audience_type, status, last_sent_at")
+        .in("id", effectiveIds);
+      prospects = (data || []).map((p: any) => ({
+        id: p.id,
+        business_name: p.business_name,
+        fax_number: p.fax_number,
+        segment: p.audience_type,
+        fax_sent_at: p.status === "sent_fax" ? (p.last_sent_at || null) : null,
+        _source: "prospect_pool",
+      }));
+    } else {
+      // Legacy path: fax_prospects table filtered by segment
+      let q = sb.from("fax_prospects").select("*").eq("segment", campaign.target_segment);
+      if (REQUIRE_PUBLIC_VERIFIED) q = q.eq("verified_public", true);
+      const { data } = await q;
+      prospects = (data || []).map((p: any) => ({ ...p, _source: "fax_prospects" }));
+    }
+    const allTargets = prospects;
+
+    // For explicit-IDs runs (resend or Command Center): trust the selected list.
+    // For legacy segment scans: skip anyone already faxed.
+    const targets = (prospectIds && prospectIds.length) || usePool
       ? allTargets
       : allTargets.filter((p: any) => !p.fax_sent_at);
     const alreadySent = allTargets.length - targets.length;
@@ -273,10 +296,18 @@ serve(async (req) => {
           business_name: p.business_name, audience_type: audience,
           phaxio_id: result.id, status: "sent", cost: COST_PER_FAX,
         });
-        await sb.from("fax_prospects").update({
-          fax_sent_at: new Date().toISOString(),
-          fax_send_id: result.id || null,
-        }).eq("id", p.id);
+        if (p._source === "prospect_pool") {
+          await sb.from("prospect_pool").update({
+            status: "sent_fax",
+            last_sent_at: new Date().toISOString(),
+            send_count: ((p as any).send_count || 0) + 1,
+          }).eq("id", p.id);
+        } else {
+          await sb.from("fax_prospects").update({
+            fax_sent_at: new Date().toISOString(),
+            fax_send_id: result.id || null,
+          }).eq("id", p.id);
+        }
       } else {
         failed++;
         lastError = result.error || "unknown phaxio error";
@@ -292,6 +323,8 @@ serve(async (req) => {
     const totalCost = +(sent * COST_PER_FAX).toFixed(2);
 
     // Honest status update
+    // Treat body-supplied prospect_ids as a resend (incremental). Campaign-level
+    // prospect_ids from Outreach Command Center are the campaign's first run.
     const isResend = !!(prospectIds && prospectIds.length);
     if (!isResend) {
       await sb.from("fax_campaigns").update({
