@@ -794,12 +794,23 @@ serve(async (req) => {
       }
     }
 
-    for (const { trade, city } of combos) {
-      log("Searching", { trade, city });
-      const places = await searchGoogleMaps(`${trade} in ${city}`, GOOGLE_MAPS_API_KEY);
+    // Map a (possibly-variant) trade query string back to its canonical trade key
+    const canonicalTrade = (q: string): string => {
+      for (const [canonical, variants] of Object.entries(TRADE_QUERY_VARIANTS)) {
+        if (variants.some(v => q.toLowerCase().includes(v.toLowerCase()))) return canonical;
+      }
+      return q;
+    };
+
+    for (const combo of combos) {
+      const tradeQuery = combo.trade;
+      const trade = canonicalTrade(tradeQuery);
+      const city = combo.city;
+      log("Searching", { tradeQuery, trade, city });
+      const places = await searchGoogleMaps(`${tradeQuery} in ${city}`, GOOGLE_MAPS_API_KEY);
       totalFound += places.length;
 
-      for (const place of places.slice(0, 10)) {
+      for (const place of places.slice(0, 20)) {
         const name = place.displayName?.text || "Unknown Business";
         const phone = place.nationalPhoneNumber || null;
         const website = place.websiteUri || null;
