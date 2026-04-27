@@ -377,11 +377,22 @@ serve(async (req) => {
 
     for (const c of (contacts || [])) {
       if (Date.now() - started > WALL_BUDGET_MS - 8_000) break;
-      try {
-        await enrichB2B(sb, c);
+      const wrapped = await logEnrichment(
+        { lead_id: c.id, vertical: "b2b_contact", function_name: "enrich-candidates", stage: "contact", provider: "sonar", triggered_by: "cron" },
+        async () => {
+          const before = { phone: !!c.phone, email: !!c.email };
+          await enrichB2B(sb, c);
+          const { data: after } = await sb.from("b2b_contacts").select("phone,email").eq("id", c.id).maybeSingle();
+          const fields_added: string[] = [];
+          if (!before.phone && after?.phone) fields_added.push("phone");
+          if (!before.email && after?.email) fields_added.push("email");
+          return { fields_added };
+        },
+      );
+      if (wrapped.ok) {
         stats.b2b++;
-      } catch (e) {
-        console.error(`[enrich] b2b ${c.id} failed:`, e);
+      } else {
+        console.error(`[enrich] b2b ${c.id} failed:`, wrapped.error);
         await sb.from("b2b_contacts")
           .update({ enrichment_status: "failed", enrichment_attempted_at: new Date().toISOString() })
           .eq("id", c.id);
