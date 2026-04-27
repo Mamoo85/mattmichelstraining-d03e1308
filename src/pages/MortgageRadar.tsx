@@ -1,16 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import SEOHead from "@/components/layout/SEOHead";
-import { Home, Target, Shield, FileText, TrendingUp, Bell, CheckCircle, ArrowRight, MapPin, Lock } from "lucide-react";
+import { Home, Shield, TrendingUp, CheckCircle, ArrowRight, MapPin, Lock } from "lucide-react";
 import ReceiptStatusBanner from "@/components/checkout/ReceiptStatusBanner";
 import CheckEmailCard from "@/components/checkout/CheckEmailCard";
 import PostCheckoutClaim from "@/components/checkout/PostCheckoutClaim";
-import StickyMobileCTA from "@/components/shared/StickyMobileCTA";
 import ActionButton from "@/components/ui/action-button";
+import MortgageRadarROICalculator from "@/components/mortgage/MortgageRadarROICalculator";
+import MortgageRadarTerritoryPicker from "@/components/mortgage/MortgageRadarTerritoryPicker";
+import MortgageRadarComplianceGate, { ComplianceState, isComplianceComplete } from "@/components/mortgage/MortgageRadarComplianceGate";
+import MortgageRadarProvisioningProgress from "@/components/mortgage/MortgageRadarProvisioningProgress";
 
 type Tier = "solo" | "team";
 
@@ -72,31 +75,31 @@ export default function MortgageRadar() {
   const [zipsInput, setZipsInput] = useState("");
   const [extraZips, setExtraZips] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [compliance, setCompliance] = useState<ComplianceState>({ dob: "", tcpaConsent: false, manualAck: false });
 
   const handleCheckout = async (selected: Tier) => {
     if (!email) { toast.error("Email is required"); return; }
+    if (!isComplianceComplete(compliance)) {
+      toast.error("Please complete the compliance section: DOB (18+), TCPA consent, and manual-outreach acknowledgment.");
+      document.getElementById("compliance")?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
     const zip_codes = zipsInput.split(/[, ]+/).map(z => z.trim()).filter(z => /^\d{5}$/.test(z));
+    if (zip_codes.length === 0) { toast.error("At least one valid 5-digit ZIP is required"); return; }
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-mortgage-radar-checkout", {
         body: {
-          email,
-          business_name: business,
-          contact_name: contactName || business,
-          nmls_number: nmls,
-          phone,
-          zip_codes,
-          extra_zip_count: extraZips,
-          tier: selected,
+          email, business_name: business, contact_name: contactName || business,
+          nmls_number: nmls, phone, zip_codes, extra_zip_count: extraZips, tier: selected,
+          dob: compliance.dob, tcpa_consent: compliance.tcpaConsent, manual_ack: compliance.manualAck,
         },
       });
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Checkout failed");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   if (success) {
@@ -106,6 +109,7 @@ export default function MortgageRadar() {
       <div className="min-h-screen bg-[#030711] text-white flex items-center justify-center px-4">
         <div className="max-w-lg w-full text-center">
           <div className="mb-6 space-y-3">
+            <MortgageRadarProvisioningProgress email={searchParams.get("email") || undefined} />
             <ReceiptStatusBanner sessionId={searchParams.get("session_id")} productLabel="Mortgage Radar" />
             <CheckEmailCard sessionId={searchParams.get("session_id")} />
             <PostCheckoutClaim product="Mortgage Radar" />
@@ -251,6 +255,8 @@ export default function MortgageRadar() {
         </div>
       </section>
 
+      <MortgageRadarROICalculator />
+      <MortgageRadarTerritoryPicker onZipsResolved={(zips) => setZipsInput(zips.join(", "))} />
 
       <section className="max-w-6xl mx-auto px-4 py-12">
         <h2 className="text-2xl sm:text-3xl font-bold text-center text-white mb-2">The signals we hunt</h2>
@@ -283,6 +289,10 @@ export default function MortgageRadar() {
             <label className="text-sm text-[#94a3b8]">Extra ZIPs beyond plan ($50/mo each):</label>
             <Input type="number" min={0} value={extraZips} onChange={(e) => setExtraZips(Math.max(0, Number(e.target.value) || 0))} className="bg-[#0a1628] border-[#1e3a5f] text-white w-24" />
           </div>
+        </div>
+
+        <div id="compliance" className="mb-8">
+          <MortgageRadarComplianceGate value={compliance} onChange={setCompliance} />
         </div>
 
         <div className="grid md:grid-cols-2 gap-5 max-w-4xl mx-auto">
@@ -349,14 +359,13 @@ export default function MortgageRadar() {
         <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">Why this beats trigger leads</h2>
         <p className="text-[#94a3b8] mb-8">Trigger leads are dead AND were lousy: borrowers got 47 cold calls in 24 hours and conversion was 1–2%. Mortgage Radar surfaces the same person 1–6 weeks earlier, with zero competition, and a real reason to call ("saw the kitchen permit").</p>
         <a href="tel:+13139921219" className="inline-flex items-center gap-2 text-[#00d4ff] font-bold">
-          <Bell className="w-4 h-4" /> Talk to Matt: (313) 992-1219
+          <ArrowRight className="w-4 h-4" /> Talk to Matt: (313) 992-1219
         </a>
       </section>
 
       <footer className="border-t border-[#1e3a5f] py-8 text-center text-xs text-[#64748b]">
         Detroit Web Agency · Mortgage Radar · We Handle The Tech
       </footer>
-      <StickyMobileCTA label="Start Mortgage Radar →" onClick={() => handleCheckout("solo")} />
     </div>
   );
 }

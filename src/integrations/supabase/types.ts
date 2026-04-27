@@ -10535,15 +10535,18 @@ export type Database = {
           business_name: string | null
           contact_name: string | null
           created_at: string
+          dob: string | null
           email: string
           extra_zip_count: number | null
           id: string
           is_founder: boolean | null
           last_digest_sent_at: string | null
+          manual_ack_at: string | null
           nmls_number: string | null
           phone: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
+          tcpa_consent_at: string | null
           trial_ends_at: string | null
           updated_at: string
           zip_codes: string[] | null
@@ -10554,15 +10557,18 @@ export type Database = {
           business_name?: string | null
           contact_name?: string | null
           created_at?: string
+          dob?: string | null
           email: string
           extra_zip_count?: number | null
           id?: string
           is_founder?: boolean | null
           last_digest_sent_at?: string | null
+          manual_ack_at?: string | null
           nmls_number?: string | null
           phone?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          tcpa_consent_at?: string | null
           trial_ends_at?: string | null
           updated_at?: string
           zip_codes?: string[] | null
@@ -10573,15 +10579,18 @@ export type Database = {
           business_name?: string | null
           contact_name?: string | null
           created_at?: string
+          dob?: string | null
           email?: string
           extra_zip_count?: number | null
           id?: string
           is_founder?: boolean | null
           last_digest_sent_at?: string | null
+          manual_ack_at?: string | null
           nmls_number?: string | null
           phone?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          tcpa_consent_at?: string | null
           trial_ends_at?: string | null
           updated_at?: string
           zip_codes?: string[] | null
