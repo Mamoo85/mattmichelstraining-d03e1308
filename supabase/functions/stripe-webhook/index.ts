@@ -1272,6 +1272,9 @@ serve(async (req) => {
             stripe_customer_id: session.customer as string || null,
             stripe_subscription_id: session.subscription as string || null,
             active: true,
+            dob: meta.dob || null,
+            tcpa_consent_at: meta.tcpa_consent_at || new Date().toISOString(),
+            manual_ack_at: meta.manual_ack_at || new Date().toISOString(),
           });
           if (insertErr) throw new Error(`mortgage_radar_clients insert: ${insertErr.message}`);
 
