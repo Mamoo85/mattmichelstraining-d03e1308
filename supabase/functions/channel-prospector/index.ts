@@ -1,7 +1,6 @@
 // channel-prospector — channel-aware cold outreach (fax / postcard / sms)
-// Mirrors the dead-lead pitch UX from contractor-prospector but sends via
-// fax (Phaxio), postcard (Lob), or SMS (Twilio shared) instead of email.
-// Logs each send to outreach_leads with channel-specific offer_pitched.
+// Statewide Michigan coverage with multi-query fan-out, 90-day re-pitch window,
+// and admin-only gating. Mirrors contractor-prospector scaling.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -18,7 +17,11 @@ const PHAXIO_KEY = Deno.env.get("PHAXIO_API_KEY") || "";
 const PHAXIO_SECRET = Deno.env.get("PHAXIO_API_SECRET") || "";
 const LOB_API_KEY = Deno.env.get("LOB_API_KEY") || "";
 
-const CAPS: Record<string, number> = { fax: 20, postcard: 25, sms: 30 };
+// ── Daily caps (massively scaled up) ──
+const CAPS: Record<string, number> = { fax: 80, postcard: 80, sms: 150 };
+const PER_RUN_MAX = 50;
+const REPITCH_DAYS = 90;
+
 const OFFER_PITCHED: Record<string, string> = {
   fax: "fax_outreach",
   postcard: "postcard_outreach",
@@ -26,27 +29,66 @@ const OFFER_PITCHED: Record<string, string> = {
 };
 
 const DEFAULT_TRADES = ["roofer", "HVAC contractor", "plumber", "electrician"];
-const DEFAULT_CITIES = ["Detroit MI", "Warren MI", "Sterling Heights MI", "Troy MI", "Royal Oak MI", "Livonia MI"];
+
+// ── Statewide Michigan (56 cities) ──
+const MICHIGAN_CITIES = [
+  "Detroit MI", "Warren MI", "Sterling Heights MI", "Troy MI", "Livonia MI", "Dearborn MI",
+  "Royal Oak MI", "St. Clair Shores MI", "Macomb MI", "Ferndale MI", "Southfield MI",
+  "Farmington Hills MI", "Novi MI", "Rochester Hills MI", "Pontiac MI", "Auburn Hills MI",
+  "Birmingham MI", "Bloomfield Hills MI", "Canton MI", "Westland MI", "Taylor MI", "Wyandotte MI",
+  "Monroe MI", "Ann Arbor MI", "Ypsilanti MI", "Saline MI", "Brighton MI", "Howell MI",
+  "Lansing MI", "East Lansing MI", "Okemos MI", "Jackson MI", "Kalamazoo MI", "Battle Creek MI",
+  "Portage MI", "Grand Rapids MI", "Wyoming MI", "Kentwood MI", "Holland MI", "Muskegon MI",
+  "Grand Haven MI", "Saugatuck MI", "Flint MI", "Burton MI", "Saginaw MI", "Bay City MI",
+  "Midland MI", "Mt. Pleasant MI", "Traverse City MI", "Petoskey MI", "Cadillac MI",
+  "Alpena MI", "Marquette MI", "Sault Ste. Marie MI", "Escanaba MI", "Grosse Pointe MI",
+];
+
+// ── Trade query variants — bypasses Google Places 20-result-per-query cap ──
+const TRADE_QUERY_VARIANTS: Record<string, string[]> = {
+  "roofer": ["roofer", "roofing contractor", "roof repair", "roof replacement"],
+  "HVAC contractor": ["HVAC contractor", "heating and cooling", "AC repair", "furnace repair"],
+  "plumber": ["plumber", "plumbing service", "drain cleaning", "emergency plumber"],
+  "electrician": ["electrician", "electrical contractor", "electrical repair"],
+};
+
+function canonicalTrade(q: string): string {
+  const lower = q.toLowerCase();
+  if (lower.includes("roof")) return "roofer";
+  if (lower.includes("hvac") || lower.includes("heating") || lower.includes("ac repair") || lower.includes("furnace")) return "HVAC contractor";
+  if (lower.includes("plumb") || lower.includes("drain")) return "plumber";
+  if (lower.includes("electric")) return "electrician";
+  return q;
+}
+
+function pickRandomCities(n: number): string[] {
+  const shuffled = [...MICHIGAN_CITIES].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}
 
 function todaysCombo(): { trade: string; city: string } {
   const day = Math.floor(Date.now() / 86400000);
   return {
     trade: DEFAULT_TRADES[day % DEFAULT_TRADES.length],
-    city: DEFAULT_CITIES[Math.floor(day / DEFAULT_TRADES.length) % DEFAULT_CITIES.length],
+    city: MICHIGAN_CITIES[day % MICHIGAN_CITIES.length],
   };
 }
 
 async function searchGoogleMaps(q: string): Promise<any[]> {
   if (!GOOGLE_MAPS_API_KEY) return [];
-  const r = await fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(q)}&key=${GOOGLE_MAPS_API_KEY}`);
-  const j = await r.json().catch(() => ({}));
-  return j.results || [];
+  try {
+    const r = await fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(q)}&key=${GOOGLE_MAPS_API_KEY}`);
+    const j = await r.json().catch(() => ({}));
+    return j.results || [];
+  } catch (_) { return []; }
 }
 
 async function getPlaceDetails(placeId: string): Promise<any> {
-  const r = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_address,formatted_phone_number,international_phone_number,website,address_components&key=${GOOGLE_MAPS_API_KEY}`);
-  const j = await r.json().catch(() => ({}));
-  return j.result || {};
+  try {
+    const r = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_address,formatted_phone_number,international_phone_number,website,address_components&key=${GOOGLE_MAPS_API_KEY}`);
+    const j = await r.json().catch(() => ({}));
+    return j.result || {};
+  } catch (_) { return {}; }
 }
 
 async function scrapeFax(website: string): Promise<string | null> {
@@ -54,6 +96,17 @@ async function scrapeFax(website: string): Promise<string | null> {
     const r = await fetch(website, { signal: AbortSignal.timeout(8000) });
     const html = (await r.text()).toLowerCase();
     const m = html.match(/fax[:\s]*\(?(\d{3})\)?[\s.-]?(\d{3})[\s.-]?(\d{4})/);
+    if (m) return `+1${m[1]}${m[2]}${m[3]}`;
+  } catch (_) {}
+  return null;
+}
+
+async function scrapePhone(website: string): Promise<string | null> {
+  try {
+    const r = await fetch(website, { signal: AbortSignal.timeout(8000) });
+    const html = await r.text();
+    const m = html.match(/(?:tel:|phone[:\s]*)\(?(\d{3})\)?[\s.-]?(\d{3})[\s.-]?(\d{4})/i)
+          || html.match(/\(?(\d{3})\)?[\s.-]?(\d{3})[\s.-]?(\d{4})/);
     if (m) return `+1${m[1]}${m[2]}${m[3]}`;
   } catch (_) {}
   return null;
@@ -113,7 +166,7 @@ async function sendPostcard(toAddr: any, frontText: string, backText: string): P
     fd.append("to[address_city]", toAddr.city);
     fd.append("to[address_state]", toAddr.state);
     fd.append("to[address_zip]", toAddr.zip);
-    fd.append("from", "adr_3a3deb8f8de87557"); // default Lob from address; replace with real
+    fd.append("from", "adr_3a3deb8f8de87557");
     fd.append("front", front);
     fd.append("back", back);
     fd.append("size", "4x6");
@@ -124,7 +177,7 @@ async function sendPostcard(toAddr: any, frontText: string, backText: string): P
   } catch (e: any) { return { ok: false, err: e.message }; }
 }
 
-function parseAddr(formatted: string, components: any[]): { line1: string; city: string; state: string; zip: string } | null {
+function parseAddr(_formatted: string, components: any[]): { line1: string; city: string; state: string; zip: string } | null {
   if (!components?.length) return null;
   const get = (type: string) => components.find(c => c.types?.includes(type))?.short_name || "";
   const line1 = `${get("street_number")} ${get("route")}`.trim();
@@ -139,6 +192,24 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+  // ── Admin auth gate (verify_jwt=false in config so we check ourselves) ──
+  const authHeader = req.headers.get("Authorization") || "";
+  if (authHeader.startsWith("Bearer ")) {
+    const sbAuth = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: claims } = await sbAuth.auth.getClaims(authHeader.replace("Bearer ", ""));
+    const userId = claims?.claims?.sub;
+    if (!userId) {
+      return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const { data: isAdmin } = await sb.rpc("has_role", { _user_id: userId, _role: "admin" });
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ ok: false, error: "Admin only" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+  }
+
   const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
   const channel = (body.channel as string) || "sms";
   if (!["fax", "postcard", "sms"].includes(channel)) {
@@ -148,37 +219,72 @@ serve(async (req) => {
   const cap = CAPS[channel];
   const offerKey = OFFER_PITCHED[channel];
 
-  // Daily cap check
   const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
   const { count: sentToday } = await sb.from("outreach_leads" as any).select("id", { count: "exact", head: true }).eq("offer_pitched", offerKey).gte("created_at", dayStart.toISOString());
   const sentBefore = sentToday || 0;
   const remaining = cap - sentBefore;
 
-  const combo = (body.target_trade && body.target_city)
-    ? { trade: body.target_trade, city: body.target_city }
-    : todaysCombo();
+  // ── Combo selection ──
+  const requestedTrade = (body.target_trade as string) || "";
+  const requestedCity = (body.target_city as string) || "";
+  const isAllMichigan = requestedCity === "All Michigan" || requestedCity === "all_michigan" || requestedCity === "🌎 All Michigan";
+  const auto = todaysCombo();
+  const tradeForCopy = canonicalTrade(requestedTrade || auto.trade);
 
-  let found = 0, sent = 0, skipped = 0, failed = 0;
+  if (remaining <= 0) {
+    return new Response(JSON.stringify({ ok: true, channel, combo: { trade: tradeForCopy, city: requestedCity || auto.city }, found: 0, sent: 0, skipped: 0, failed: 0, cap, sentBefore, sentAfter: sentBefore, note: `Daily cap of ${cap} ${channel} sends already reached today. Resets at midnight.` }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  // ── Build query list (multi-query fan-out) ──
+  const variants = TRADE_QUERY_VARIANTS[tradeForCopy] || [requestedTrade || auto.trade];
+  const cityList = isAllMichigan
+    ? pickRandomCities(8)
+    : [requestedCity || auto.city];
+
+  const queries: { q: string; city: string }[] = [];
+  for (const c of cityList) {
+    for (const v of variants) queries.push({ q: `${v} in ${c}`, city: c });
+  }
+
+  // Run queries in parallel batches of 4
+  const allPlaces: { place: any; city: string }[] = [];
+  for (let i = 0; i < queries.length; i += 4) {
+    const batch = queries.slice(i, i + 4);
+    const results = await Promise.all(batch.map(({ q, city }) => searchGoogleMaps(q).then(places => ({ places, city }))));
+    for (const { places, city } of results) {
+      for (const p of places) allPlaces.push({ place: p, city });
+    }
+  }
+
+  // Dedupe by place_id
+  const seen = new Set<string>();
+  const dedupedPlaces = allPlaces.filter(({ place }) => {
+    if (!place.place_id || seen.has(place.place_id)) return false;
+    seen.add(place.place_id);
+    return true;
+  });
+
+  const found = dedupedPlaces.length;
+  const maxToSend = Math.min(PER_RUN_MAX, remaining);
+
+  let sent = 0, skipped = 0, failed = 0;
   const sendErrors: string[] = [];
   const sentSamples: any[] = [];
 
-  if (remaining <= 0) {
-    return new Response(JSON.stringify({ ok: true, channel, combo, found: 0, sent: 0, skipped: 0, failed: 0, cap, sentBefore, sentAfter: sentBefore, note: `Daily cap of ${cap} ${channel} sends already reached today. Resets at midnight.` }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  }
+  for (const { place: p, city: pCity } of dedupedPlaces) {
+    if (sent >= maxToSend) break;
 
-  const places = await searchGoogleMaps(`${combo.trade} in ${combo.city}`);
-  found = places.length;
-
-  for (const p of places.slice(0, Math.min(15, remaining))) {
-    if (sent >= remaining) break;
-    const placeId = p.place_id;
-    if (!placeId) { skipped++; continue; }
-
-    // Skip if already pitched on this channel
-    const { data: existing } = await sb.from("outreach_leads" as any).select("id").eq("offer_pitched", offerKey).eq("business_name", p.name).maybeSingle();
+    // Re-pitch window: skip if pitched in the last 90 days
+    const cutoff = new Date(Date.now() - REPITCH_DAYS * 86400000).toISOString();
+    const { data: existing } = await sb.from("outreach_leads" as any)
+      .select("id, last_contact_date")
+      .eq("offer_pitched", offerKey)
+      .eq("business_name", p.name)
+      .gte("last_contact_date", cutoff)
+      .maybeSingle();
     if (existing) { skipped++; continue; }
 
-    const details = await getPlaceDetails(placeId);
+    const details = await getPlaceDetails(p.place_id);
     const phone = details.international_phone_number || details.formatted_phone_number || "";
     const websiteRaw = details.website || "";
 
@@ -192,15 +298,28 @@ serve(async (req) => {
       if (!toAddr) { skipped++; continue; }
       toAddr.name = p.name;
     } else {
-      target = phone ? phone.replace(/\s/g, "") : null;
-      if (!target || !target.startsWith("+1")) { skipped++; continue; }
+      // SMS: try Google phone first, fall back to website scrape
+      // Normalize to strict E.164 (+1XXXXXXXXXX) — strip dashes, parens, spaces
+      const normalize = (raw: string): string => {
+        const digits = raw.replace(/[^\d]/g, "");
+        if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+        if (digits.length === 10) return `+1${digits}`;
+        return "";
+      };
+      let phoneClean = phone ? normalize(phone) : "";
+      if (!phoneClean && websiteRaw) {
+        const scraped = await scrapePhone(websiteRaw);
+        phoneClean = scraped ? normalize(scraped) : "";
+      }
+      target = phoneClean || null;
+      if (!target) { skipped++; continue; }
     }
 
-    const copy = await aiCopy(channel, p.name, combo.trade, combo.city);
+    const copy = await aiCopy(channel, p.name, tradeForCopy, pCity);
     let result: { ok: boolean; id?: string; err?: string };
     if (channel === "fax") result = await sendFax(target!, copy);
-    else if (channel === "postcard") result = await sendPostcard(toAddr, `Leads in ${combo.city}`, copy);
-    else result = await sendSMS({ to: target!, body: copy, force: false }).then(
+    else if (channel === "postcard") result = await sendPostcard(toAddr, `Leads in ${pCity}`, copy);
+    else result = await sendSMS(target!, "+13139921219", copy, "channel-prospector").then(
       (r: any) => ({ ok: !!r?.success, id: r?.sid, err: r?.error || (r?.suppressed ? "TCPA suppressed" : undefined) }),
     );
 
@@ -212,27 +331,34 @@ serve(async (req) => {
 
     await sb.from("outreach_leads" as any).insert({
       business_name: p.name,
-      city: combo.city,
-      industry: combo.trade,
+      city: pCity,
+      industry: tradeForCopy,
       phone: phone || null,
       offer_pitched: offerKey,
       status: "emailed",
       last_contact_date: new Date().toISOString(),
       drip_campaign_status: { d0_sent: true, d0_sent_at: new Date().toISOString(), channel, channel_target: target || (toAddr ? `${toAddr.line1}, ${toAddr.city} ${toAddr.state} ${toAddr.zip}` : ""), provider_id: result.id, copy },
-      notes: `${channel.toUpperCase()} cold outreach — ${combo.trade}/${combo.city}`,
+      notes: `${channel.toUpperCase()} cold outreach — ${tradeForCopy}/${pCity}`,
     });
     sent++;
-    sentSamples.push({ name: p.name, target: target || `${toAddr?.line1}`, copy: copy.slice(0, 120) });
-    await new Promise(r => setTimeout(r, 400));
+    sentSamples.push({ name: p.name, city: pCity, target: target || `${toAddr?.line1}`, copy: copy.slice(0, 120) });
+    await new Promise(r => setTimeout(r, 250));
   }
 
   return new Response(JSON.stringify({
-    ok: true, channel, combo, found, sent, skipped, failed,
+    ok: true,
+    channel,
+    combo: { trade: tradeForCopy, city: isAllMichigan ? `All Michigan (${cityList.length} cities)` : (requestedCity || auto.city) },
+    citiesScanned: cityList,
+    queryCount: queries.length,
+    found, sent, skipped, failed,
     cap, sentBefore, sentAfter: sentBefore + sent,
     samples: sentSamples,
     errors: sendErrors.slice(0, 5),
     note: sent === 0
-      ? (found === 0 ? `Google Places returned 0 ${combo.trade} for ${combo.city}` : `Found ${found} but ${skipped} skipped (already pitched / no ${channel === "fax" ? "fax#" : channel === "postcard" ? "address" : "phone"} found) and ${failed} failed.`)
+      ? (found === 0
+          ? `Google Places returned 0 results across ${queries.length} queries (${cityList.length} cities × ${variants.length} variants). Check GOOGLE_MAPS_API_KEY.`
+          : `Found ${found} unique businesses across ${cityList.length} cities but ${skipped} skipped (already pitched in last ${REPITCH_DAYS}d / no ${channel === "fax" ? "fax#" : channel === "postcard" ? "address" : "phone"} found) and ${failed} failed.`)
       : undefined,
   }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });

@@ -24,7 +24,19 @@ export interface ChannelConfig {
 }
 
 const TRADES = ["", "roofer", "HVAC contractor", "plumber", "electrician"];
-const CITIES = ["", "Detroit MI", "Warren MI", "Sterling Heights MI", "Troy MI", "Royal Oak MI", "Livonia MI", "Grosse Pointe MI"];
+const CITIES = [
+  "", "🌎 All Michigan",
+  "Detroit MI", "Warren MI", "Sterling Heights MI", "Troy MI", "Livonia MI", "Dearborn MI",
+  "Royal Oak MI", "St. Clair Shores MI", "Macomb MI", "Ferndale MI", "Southfield MI",
+  "Farmington Hills MI", "Novi MI", "Rochester Hills MI", "Pontiac MI", "Auburn Hills MI",
+  "Birmingham MI", "Bloomfield Hills MI", "Canton MI", "Westland MI", "Taylor MI", "Wyandotte MI",
+  "Monroe MI", "Ann Arbor MI", "Ypsilanti MI", "Saline MI", "Brighton MI", "Howell MI",
+  "Lansing MI", "East Lansing MI", "Okemos MI", "Jackson MI", "Kalamazoo MI", "Battle Creek MI",
+  "Portage MI", "Grand Rapids MI", "Wyoming MI", "Kentwood MI", "Holland MI", "Muskegon MI",
+  "Grand Haven MI", "Saugatuck MI", "Flint MI", "Burton MI", "Saginaw MI", "Bay City MI",
+  "Midland MI", "Mt. Pleasant MI", "Traverse City MI", "Petoskey MI", "Cadillac MI",
+  "Alpena MI", "Marquette MI", "Sault Ste. Marie MI", "Escanaba MI", "Grosse Pointe MI",
+];
 
 export default function ChannelOutreachTab({ config }: { config: ChannelConfig }) {
   const [trade, setTrade] = useState("");
@@ -143,7 +155,13 @@ export default function ChannelOutreachTab({ config }: { config: ChannelConfig }
               {last.errors?.length > 0 && <div style={{ fontSize: 11, color: "#ef4444", marginTop: 4 }}>Errors: {last.errors.join(" · ")}</div>}
               <div style={{ fontSize: 10, color: "#64748b", marginTop: 4 }}>
                 Daily cap: {last.sentAfter || 0}/{last.cap || config.cap} · combo: {last.combo?.trade}/{last.combo?.city}
+                {last.queryCount ? ` · ${last.queryCount} Google queries` : ""}
               </div>
+              {last.citiesScanned?.length > 1 && (
+                <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 4 }}>
+                  Cities scanned: {last.citiesScanned.join(", ")}
+                </div>
+              )}
             </div>
           )}
         </div>

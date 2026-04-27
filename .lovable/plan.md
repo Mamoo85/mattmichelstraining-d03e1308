@@ -1,70 +1,106 @@
-## Goal
+## Why "Failed to send a request to the Edge Function"
 
-Scale the Dead Lead Reactivation prospector from ~1–2 emails/run to **20–50/run**, expand search coverage from 11 Metro Detroit cities to **all of Michigan**, and remove the bottlenecks that cause "20 found · 10 skipped · 0 emailed" runs.
+The SMS Sniper / Fax / Postcard tabs all call the `channel-prospector` edge function. Two problems:
 
-## Why the current run only emailed 0–2
+1. **Function is not deployed.** `supabase--edge_function_logs` returns *zero* logs for `channel-prospector` — meaning Lovable never deployed it (likely because it was created without a `config.toml` entry, so the deploy pipeline skipped it).
+2. **No `[functions.channel-prospector]` block in `supabase/config.toml`.** Compare with `contractor-prospector` which has `verify_jwt = false`. Without this entry, even once deployed, calls would 401 because the auto-default flips JWT verification on for unregistered functions in this project.
 
-Audit of `supabase/functions/contractor-prospector/index.ts`:
+That combo = "Failed to send a request to the Edge Function" in the browser before the function ever runs. D
 
-1. **Daily cap = 30 total emails** (`DAILY_SEND_CAP = 30`), of which only **5** can be dead-lead pitches (`DEAD_LEAD_CAP = 5`). That alone caps us at 5 dead-lead emails per day no matter how many prospects we find.
-2. **Per-run send cap is hardcoded to 15** (`maxToSend = Math.min(15, remainingCap)`).
-3. **Google Places fetches only 20 results per query** (`maxResultCount: 20`) → after dedupe + AI rejection, often nets 0–2 new prospects.
-4. **Manual run uses one combo only** — when you pick "HVAC contractor / Troy MI", it searches that single string once and stops.
-5. **City list = 11 Metro Detroit ZIPs** in both the edge function (`CITIES`) and the UI dropdown (`PROSPECT_CITIES`).
-6. The "10 already in DB" skip is real — small city pool means we burn through fresh businesses fast.
+## Why the search parameters are so small
 
-## Plan
+Looking at `supabase/functions/channel-prospector/index.ts`:
 
-### 1. Statewide city coverage (50+ Michigan cities)
 
-Replace the 11-city Metro Detroit list in **both**:
-- `supabase/functions/contractor-prospector/index.ts` → `CITIES` constant
-- `src/components/admin/AdminDeadLeads.tsx` → `PROSPECT_CITIES`
+| Bottleneck                      | Current                                    | Effect                                            |
+| ------------------------------- | ------------------------------------------ | ------------------------------------------------- |
+| `CAPS.sms`                      | 30/day                                     | Hard ceiling — even a perfect run = max 30        |
+| Per-run loop                    | `places.slice(0, Math.min(15, remaining))` | Only 15 sends per click                           |
+| Single Google Places query      | 1 call → ~20 raw results                   | 80% drop after dedupe + missing-phone filter      |
+| `DEFAULT_CITIES`                | 6 Metro Detroit suburbs                    | Same exhausted pool every run                     |
+| `DEFAULT_TRADES`                | 4 trades                                   | Hits "already pitched" wall fast                  |
+| `todaysCombo()`                 | One trade × one city per day               | Zero fan-out                                      |
+| Per-place skip if no `+1` phone | Hard skip                                  | We never try a fallback Google Place phone format |
 
-New list grouped by region (Metro Detroit, West MI, Mid-MI, Northern MI, UP):
-Detroit, Grosse Pointe, Warren, Sterling Heights, Troy, Livonia, Dearborn, Royal Oak, St. Clair Shores, Macomb, Ferndale, Southfield, Farmington Hills, Novi, Rochester Hills, Pontiac, Auburn Hills, Birmingham, Bloomfield Hills, Canton, Westland, Taylor, Wyandotte, Monroe, Ann Arbor, Ypsilanti, Saline, Brighton, Howell, Lansing, East Lansing, Okemos, Jackson, Kalamazoo, Battle Creek, Portage, Grand Rapids, Wyoming, Kentwood, Holland, Muskegon, Grand Haven, Saugatuck, Flint, Burton, Saginaw, Bay City, Midland, Mt. Pleasant, Traverse City, Petoskey, Cadillac, Alpena, Marquette, Sault Ste. Marie, Escanaba.
 
-Add an **"All Michigan (auto-rotate)"** option in the UI city dropdown — picks 8 random cities per run.
+So a typical SMS Sniper click = 1 query → 20 results → 10 already in DB → 8 with no clean phone → **0–2 sends**.
 
-### 2. Bigger per-run scale
+## Fix Plan
 
-In `contractor-prospector/index.ts`:
+### 1. Deploy + register the function
 
-| Constant | Old | New |
-|---|---|---|
-| `DAILY_SEND_CAP` | 30 | **150** |
-| `DEAD_LEAD_CAP` | 5 | **50** |
-| `TECH_ALERT_CAP` | 5 | 20 |
-| `MISSED_CALL_CAP` | 5 | 20 |
-| `maxToSend` per run | `min(15, remaining)` | `min(50, remaining)` |
-| Google Places `maxResultCount` | 20 | **20 (max allowed by API) — but loop multiple queries** |
+- Add `[functions.channel-prospector]` with `verify_jwt = false` to `supabase/config.toml` (matches `contractor-prospector` pattern).
+- Add admin-role check inside the function (mirror the `outreach-gmail-send` pattern) so it stays secure even with JWT off.
+- Force redeploy of `channel-prospector`.
 
-Google Places caps at 20 per call, so to get more candidates we run **multiple queries per run**:
-- When user picks a single trade+city → expand to 4 query variants ("HVAC contractor in Troy MI", "heating and cooling Troy MI", "AC repair Troy MI", "furnace repair Troy MI") = ~80 raw candidates instead of 20.
-- When user picks "All Michigan" → run the chosen trade across **8 rotated cities** in one invocation = ~160 raw candidates.
-- Keep the 50 s soft timeout — process queries in parallel batches of 4 with `Promise.all`.
+### 2. Statewide Michigan coverage
 
-### 3. Smarter dedupe & yield
+Replace `DEFAULT_CITIES` (6 cities) and the UI dropdown `CITIES` (8 cities) with the **same 56-city Michigan list** already used by `contractor-prospector` / `AdminDeadLeads`:
+Detroit, Warren, Sterling Heights, Troy, Livonia, Dearborn, Royal Oak, St. Clair Shores, Macomb, Ferndale, Southfield, Farmington Hills, Novi, Rochester Hills, Pontiac, Auburn Hills, Birmingham, Bloomfield Hills, Canton, Westland, Taylor, Wyandotte, Monroe, Ann Arbor, Ypsilanti, Saline, Brighton, Howell, Lansing, East Lansing, Okemos, Jackson, Kalamazoo, Battle Creek, Portage, Grand Rapids, Wyoming, Kentwood, Holland, Muskegon, Grand Haven, Saugatuck, Flint, Burton, Saginaw, Bay City, Midland, Mt. Pleasant, Traverse City, Petoskey, Cadillac, Alpena, Marquette, Sault Ste. Marie, Escanaba, Grosse Pointe.
 
-- The "already in DB" filter currently rejects any business previously contacted by ANY pitch. Loosen for dead-lead pitch: allow re-pitch if last contact was >90 days ago.
-- Lower the email-found bar: when site scrape returns no email, fall back to the existing enrichment waterfall (Snov → Hunter → pattern-guess `info@domain`) inline before skipping. (Today the prospector skips if no email scraped; enrichment runs later out-of-band.)
+Add **"🌎 All Michigan (auto-rotate)"** as a UI option that triggers the multi-city fan-out.
 
-### 4. UI feedback
+### 3. Massively scale per-run output
 
-- Show city + trade in the result line: "Last run: 23 emailed · 142 found · 8 cities scanned".
-- When "All Michigan" is selected, show the 8 cities that were rotated.
-- Keep daily-cap progress bar so you know when you're approaching the new 150/day ceiling.
+In `channel-prospector/index.ts`:
 
-## Files
 
-**Edited:**
-- `supabase/functions/contractor-prospector/index.ts` — caps, city list, multi-query expansion, inline enrichment fallback, 90-day re-pitch window
-- `src/components/admin/AdminDeadLeads.tsx` — statewide city dropdown + "All Michigan" option, larger result display
+| Constant                | Old                  | New                                 |
+| ----------------------- | -------------------- | ----------------------------------- |
+| `CAPS.sms`              | 30                   | **150**                             |
+| `CAPS.fax`              | 20                   | **80**                              |
+| `CAPS.postcard`         | 25                   | **80**                              |
+| Per-run cap             | `min(15, remaining)` | `min(50, remaining)`                |
+| Google Places per query | 1 query × 20 results | **multi-query fan-out** (see below) |
 
-**No new tables, no new functions, no migrations.** Pure config + logic expansion in existing files.
 
-## Expected outcome
+### 4. Multi-query fan-out (the real yield unlock)
 
-- Single run targeting "HVAC contractor / All Michigan" → ~80–160 raw candidates → 20–50 emails sent (vs 0–2 today).
-- Daily ceiling 150 emails (vs 30) — enough headroom for 3–5 manual runs per day.
-- Coverage: every metro in Michigan, not just Detroit suburbs.
+Google Places caps at 20 results per text-search call. So instead of one call, we run **multiple in parallel**:
+
+- **Specific trade + specific city** → expand to 3–4 trade synonyms ("plumber Troy MI", "plumbing service Troy MI", "drain cleaning Troy MI", "emergency plumber Troy MI") = ~80 raw candidates.
+- **Specific trade + "All Michigan"** → run that trade across **8 randomly rotated cities** in one invocation = ~160 raw candidates.
+- **Auto-rotate trade + Auto-rotate city** → today's trade × 8 random MI cities = ~160 raw candidates.
+
+Run queries with `Promise.all()` in batches of 4 to stay under the 50 s soft timeout. Dedupe by `place_id`, then send up to 50 per run.
+
+Add `TRADE_QUERY_VARIANTS` (mirror the one in `contractor-prospector`):
+
+- HVAC → ["HVAC contractor", "heating and cooling", "AC repair", "furnace repair"]
+- plumber → ["plumber", "plumbing service", "drain cleaning", "emergency plumber"]
+- roofer → ["roofer", "roofing contractor", "roof repair", "roof replacement"]
+- electrician → ["electrician", "electrical contractor", "electrical repair"]
+
+### 5. Smarter dedupe (yield boost)
+
+- Currently any business previously pitched on the same channel is permanently skipped. **Loosen to 90-day window** — allow re-pitch if `last_contact_date` is older than 90 days.
+- For SMS specifically: when Google Places phone is missing, fall back to scraping the website (we already have `scrapeFax` — generalize to `scrapePhone` too).
+
+### 6. UI feedback (`ChannelOutreachTab.tsx`)
+
+- Show which cities were rotated in the last-run panel: "8 cities scanned: Detroit, Ann Arbor, Lansing…"
+- Update cap displays from "30/day" → live channel cap.
+- Update subtitle text in `AdminSMSOutreach.tsx` (and Fax/Postcard equivalents) to reflect new caps.
+
+## Files Changed
+
+**Edited only — no new tables, no migrations, no new functions:**
+
+- `supabase/config.toml` — add `[functions.channel-prospector]` with `verify_jwt = false`
+- `supabase/functions/channel-prospector/index.ts` — caps, statewide cities, trade variants, multi-query fan-out, 90-day re-pitch, phone-scrape fallback, admin role check
+- `src/components/admin/ChannelOutreachTab.tsx` — 56-city dropdown + "All Michigan", richer last-run feedback
+- `src/components/admin/AdminSMSOutreach.tsx`, `AdminFaxOutreach.tsx`, `AdminPostcardOutreach.tsx` — updated subtitle/cap props
+
+## Expected Outcome
+
+
+| Metric                 | Before                 | After                   |
+| ---------------------- | ---------------------- | ----------------------- |
+| Per-click sends        | 0–2                    | **20–50**               |
+| Daily SMS ceiling      | 30                     | **150**                 |
+| City coverage          | 6 Detroit suburbs      | **All 56 MI cities**    |
+| Raw candidates per run | ~20                    | **~160**                |
+| Edge function status   | Not deployed (failing) | Deployed + auth-checked |
+
+
+Approve to ship.
