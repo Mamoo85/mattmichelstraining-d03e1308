@@ -352,14 +352,13 @@ export default function MortgageRadar() {
         <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">Why this beats trigger leads</h2>
         <p className="text-[#94a3b8] mb-8">Trigger leads are dead AND were lousy: borrowers got 47 cold calls in 24 hours and conversion was 1–2%. Mortgage Radar surfaces the same person 1–6 weeks earlier, with zero competition, and a real reason to call ("saw the kitchen permit").</p>
         <a href="tel:+13139921219" className="inline-flex items-center gap-2 text-[#00d4ff] font-bold">
-          <Bell className="w-4 h-4" /> Talk to Matt: (313) 992-1219
+          <ArrowRight className="w-4 h-4" /> Talk to Matt: (313) 992-1219
         </a>
       </section>
 
       <footer className="border-t border-[#1e3a5f] py-8 text-center text-xs text-[#64748b]">
         Detroit Web Agency · Mortgage Radar · We Handle The Tech
       </footer>
-      <StickyMobileCTA label="Start Mortgage Radar →" onClick={() => handleCheckout("solo")} />
     </div>
   );
 }
