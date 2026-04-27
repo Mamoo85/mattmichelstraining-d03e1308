@@ -13,8 +13,10 @@ const corsHeaders = {
 
 const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
-const PHAXIO_KEY = Deno.env.get("PHAXIO_API_KEY") || "";
-const PHAXIO_SECRET = Deno.env.get("PHAXIO_API_SECRET") || "";
+const SINCH_PROJECT_ID = Deno.env.get("SINCH_PROJECT_ID") || "";
+const SINCH_KEY_ID = Deno.env.get("SINCH_KEY_ID") || "";
+const SINCH_KEY_SECRET = Deno.env.get("SINCH_KEY_SECRET") || "";
+const FAX_FROM = Deno.env.get("SINCH_FAX_FROM") || ""; // optional Sinch-provisioned fax number, E.164
 const LOB_API_KEY = Deno.env.get("LOB_API_KEY") || "";
 
 // ── Daily caps (massively scaled up) ──
@@ -139,17 +141,21 @@ function defaultCopy(channel: string, name: string, trade: string, city: string)
 }
 
 async function sendFax(toFax: string, body: string): Promise<{ ok: boolean; id?: string; err?: string }> {
-  if (!PHAXIO_KEY || !PHAXIO_SECRET) return { ok: false, err: "PHAXIO_API_KEY/SECRET not set" };
+  if (!SINCH_PROJECT_ID || !SINCH_KEY_ID || !SINCH_KEY_SECRET) {
+    return { ok: false, err: "SINCH_PROJECT_ID/SINCH_KEY_ID/SINCH_KEY_SECRET not set" };
+  }
   try {
-    const auth = btoa(`${PHAXIO_KEY}:${PHAXIO_SECRET}`);
+    const auth = btoa(`${SINCH_KEY_ID}:${SINCH_KEY_SECRET}`);
+    // Sinch Fax API v3 — multipart with a text/plain "body" file gets rendered to a fax page
     const fd = new FormData();
     fd.append("to", toFax);
-    fd.append("string_data", body);
-    fd.append("string_data_type", "text");
-    const r = await fetch("https://api.phaxio.com/v2.1/faxes", { method: "POST", headers: { Authorization: `Basic ${auth}` }, body: fd });
-    const j = await r.json();
-    if (!r.ok) return { ok: false, err: JSON.stringify(j) };
-    return { ok: true, id: String(j.data?.id || "") };
+    if (FAX_FROM) fd.append("from", FAX_FROM);
+    fd.append("body", new Blob([body], { type: "text/plain" }), "memo.txt");
+    const url = `https://fax.api.sinch.com/v3/projects/${SINCH_PROJECT_ID}/faxes`;
+    const r = await fetch(url, { method: "POST", headers: { Authorization: `Basic ${auth}` }, body: fd });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) return { ok: false, err: `Sinch ${r.status}: ${JSON.stringify(j)}` };
+    return { ok: true, id: String(j.id || j.faxId || "") };
   } catch (e: any) { return { ok: false, err: e.message }; }
 }
 
