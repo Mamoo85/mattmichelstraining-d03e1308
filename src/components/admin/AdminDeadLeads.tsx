@@ -173,9 +173,27 @@ export default function AdminDeadLeads() {
 
   const PROSPECT_TRADES = ["roofer", "HVAC contractor", "plumber", "electrician"];
   const PROSPECT_CITIES = [
-    "Grosse Pointe MI", "Detroit MI", "Warren MI", "Sterling Heights MI",
-    "Troy MI", "Royal Oak MI", "Dearborn MI", "Livonia MI",
-    "Southfield MI", "Farmington Hills MI", "Novi MI", "Birmingham MI",
+    // Metro Detroit
+    "Detroit MI", "Grosse Pointe MI", "Warren MI", "Sterling Heights MI",
+    "Troy MI", "Livonia MI", "Dearborn MI", "Royal Oak MI",
+    "St. Clair Shores MI", "Macomb MI", "Ferndale MI", "Southfield MI",
+    "Farmington Hills MI", "Novi MI", "Rochester Hills MI", "Pontiac MI",
+    "Auburn Hills MI", "Birmingham MI", "Bloomfield Hills MI", "Canton MI",
+    "Westland MI", "Taylor MI", "Wyandotte MI", "Monroe MI",
+    // Ann Arbor / I-94
+    "Ann Arbor MI", "Ypsilanti MI", "Saline MI", "Brighton MI", "Howell MI",
+    // Lansing / Mid-MI
+    "Lansing MI", "East Lansing MI", "Okemos MI", "Jackson MI",
+    // SW MI
+    "Kalamazoo MI", "Battle Creek MI", "Portage MI",
+    // West MI
+    "Grand Rapids MI", "Wyoming MI", "Kentwood MI", "Holland MI",
+    "Muskegon MI", "Grand Haven MI",
+    // Tri-Cities / Thumb
+    "Flint MI", "Burton MI", "Saginaw MI", "Bay City MI", "Midland MI", "Mt. Pleasant MI",
+    // Northern MI / UP
+    "Traverse City MI", "Petoskey MI", "Cadillac MI", "Alpena MI",
+    "Marquette MI", "Sault Ste. Marie MI", "Escanaba MI",
   ];
 
   const handleRunProspector = async () => {
