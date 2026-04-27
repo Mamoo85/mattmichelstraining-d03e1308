@@ -46,6 +46,8 @@ export default function AdminAgencyOutreach() {
   const [sending, setSending] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, DraftPayload>>({});
   const [enrichments, setEnrichments] = useState<Record<string, ContactEnrichment>>({});
+  const [enrichTraces, setEnrichTraces] = useState<Record<string, string[]>>({});
+  const [showTrace, setShowTrace] = useState<Record<string, boolean>>({});
   const [pickedFor, setPickedFor] = useState<Record<string, string | null>>({});
   const [showPicker, setShowPicker] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState<Record<string, "html" | "plain">>({});
@@ -102,8 +104,11 @@ export default function AdminAgencyOutreach() {
         body: { agency_name: agency.name, role_hint: agency.role_hint, domain: agency.domain, force },
       });
       if (error) throw error;
+      const trace = ((data as any)?.trace as string[]) || [];
+      setEnrichTraces(t => ({ ...t, [agency.name]: trace }));
       if (!data?.contact?.contact_email) {
-        toast.error(`No contact found for ${agency.name}. Try again or draft anyway.`);
+        setShowTrace(s => ({ ...s, [agency.name]: true }));
+        toast.error(`No contact found for ${agency.name}. Expand "Why?" to see which provider failed.`);
         return;
       }
       setEnrichments(e => ({ ...e, [agency.name]: data.contact }));
