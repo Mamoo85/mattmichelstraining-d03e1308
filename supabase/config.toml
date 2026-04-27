@@ -1886,3 +1886,9 @@ verify_jwt = false
 
 [functions.health-check-supabase]
 verify_jwt = false
+
+[functions.agency-contact-enrich]
+verify_jwt = true
+
+[functions.gmail-send-outreach]
+verify_jwt = true
