@@ -309,12 +309,20 @@ serve(async (req) => {
 
   for (const c of (candidates || [])) {
     if (Date.now() - started > WALL_BUDGET_MS - 45_000) break;
-    try {
-      const delta = await enrichCandidate(sb, c);
+    const wrapped = await logEnrichment(
+      { lead_id: c.id, vertical: "talent", function_name: "enrich-candidates", stage: "deep", provider: "waterfall(npi+sonar+pdl)", triggered_by: "cron" },
+      async () => {
+        const delta = await enrichCandidate(sb, c);
+        const fields_added: string[] = [];
+        if (delta > 0) fields_added.push(`score+${delta}`);
+        return { fields_added };
+      },
+    );
+    if (wrapped.ok) {
       stats.candidates++;
-      if (delta > 0) stats.score_bumps++;
-    } catch (e) {
-      console.error(`[enrich] candidate ${c.id} failed:`, e);
+      // delta tracked inside wrapper
+    } else {
+      console.error(`[enrich] candidate ${c.id} failed:`, wrapped.error);
       await sb.from("hire_alert_candidates")
         .update({ enrichment_status: "failed", enrichment_attempted_at: new Date().toISOString() })
         .eq("id", c.id);
