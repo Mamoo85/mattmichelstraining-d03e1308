@@ -1904,3 +1904,6 @@ verify_jwt = true
 
 [functions.contractor-outreach-unsubscribe]
 verify_jwt = false
+
+[functions.contractor-outreach-auto-blast]
+verify_jwt = true
