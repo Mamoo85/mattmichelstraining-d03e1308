@@ -211,6 +211,8 @@ export default function AdminAgencyOutreach() {
         </p>
       </div>
 
+      <HealthcareSourceHealthPanel onRefresh={loadCandidates} />
+
       <div className="grid gap-4">
         {METRO_DETROIT_AGENCIES.map(agency => {
           const enrich = enrichments[agency.name];
