@@ -648,6 +648,7 @@ export default function AdminDeadLeads() {
                 style={{ background: "#0a1628", color: "#e2e8f0", border: "1px solid #1e3a5f", borderRadius: 6, padding: "8px 10px", fontSize: 13 }}
               >
                 <option value="">— Auto-rotate city —</option>
+                <option value="ALL_MI">🌎 All Michigan (8 random cities)</option>
                 {PROSPECT_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
               <Button size="sm" onClick={handleRunProspector} disabled={prospecting}
@@ -656,7 +657,7 @@ export default function AdminDeadLeads() {
               </Button>
             </div>
             <div style={{ color: "#475569", fontSize: 11 }}>
-              Leave both blank to use today's auto-rotated combos. Selecting both targets one specific trade × city.
+              Pick a trade + "All Michigan" to fan out across 8 cities (~160 candidates). Pick trade + single city to run 4 query variants (~80 candidates). Daily cap: 150 sends · up to 50 dead-lead pitches per run.
             </div>
 
             {lastProspectResult && (
