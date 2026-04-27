@@ -42,6 +42,7 @@ export default function AdminGrowthSignals() {
   const [confidenceFilter, setConfidenceFilter] = useState<FilterType>("all");
   const [industryFilter, setIndustryFilter] = useState("All");
   const [pitchSignal, setPitchSignal] = useState<PulseSignal | null>(null);
+  const [outreachSignal, setOutreachSignal] = useState<PulseSignal | null>(null);
   const [copied, setCopied] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [expandedDetails, setExpandedDetails] = useState<Set<string>>(new Set());
@@ -418,21 +419,7 @@ detroitwebagent.com`;
                         Dossier
                       </button>
                       <button
-                        onClick={() => {
-                          const target_company = window.prompt(`Cold-email a buyer about ${signal.company_name}.\n\nSupply house / company name?`);
-                          if (!target_company) return;
-                          const target_email = window.prompt("Buyer email address?");
-                          if (!target_email) return;
-                          const target_contact_name = window.prompt("Buyer contact name (optional)?") || "";
-                          supabase.functions.invoke("dossier-cold-outreach", {
-                            body: { signal_id: signal.id, target_company, target_email, target_contact_name, vertical: signal.industry },
-                          }).then(({ data, error }) => {
-                            if (error) { toast.error("Queue failed: " + error.message); return; }
-                            if (data?.skipped) { toast.warning(data.reason || "Skipped (already contacted)"); return; }
-                            if (data?.error) { toast.error(data.error); return; }
-                            toast.success(`Email queued — sends in 10 min. Check your phone for cancel link.`);
-                          });
-                        }}
+                        onClick={() => setOutreachSignal(signal)}
                         className="px-3 py-1.5 rounded bg-amber-500/10 text-amber-400 text-xs font-medium hover:bg-amber-500/20 transition-colors border border-amber-500/20 flex items-center gap-1"
                       >
                         <Mail className="w-3 h-3" /> Cold Email
@@ -554,6 +541,17 @@ detroitwebagent.com`;
           </div>
         </div>
       )}
+
+      <BuyerOutreachDialog
+        open={!!outreachSignal}
+        onOpenChange={(v) => { if (!v) setOutreachSignal(null); }}
+        signal={outreachSignal ? {
+          id: outreachSignal.id,
+          company_name: outreachSignal.company_name,
+          industry: outreachSignal.industry || null,
+          predicted_needs: outreachSignal.predicted_needs || [],
+        } : null}
+      />
     </div>
   );
 }
