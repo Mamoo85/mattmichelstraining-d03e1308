@@ -311,7 +311,7 @@ serve(async (req) => {
     let result: { ok: boolean; id?: string; err?: string };
     if (channel === "fax") result = await sendFax(target!, copy);
     else if (channel === "postcard") result = await sendPostcard(toAddr, `Leads in ${pCity}`, copy);
-    else result = await sendSMS({ to: target!, body: copy, force: false }).then(
+    else result = await sendSMS(target!, "+13139921219", copy, "channel-prospector").then(
       (r: any) => ({ ok: !!r?.success, id: r?.sid, err: r?.error || (r?.suppressed ? "TCPA suppressed" : undefined) }),
     );
 
