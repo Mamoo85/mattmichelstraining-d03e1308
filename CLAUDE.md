@@ -12,7 +12,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-04-26*
+*Last updated: 2026-04-27*
+
+### Phase 26 — Mega-Audit: Lovable Push Verification + TCPA Fix + Cron Gaps COMPLETE ✅
+
+**3-agent parallel audit run — findings and fixes:**
+
+**Lovable 25-file push: ALL CLEAN ✅**
+- All imports resolve, types match, routes exist, migration uses IF NOT EXISTS
+- New components (MortgageRadarComplianceGate, TerritoryPicker, ROICalculator, SeedLead, ProvisioningProgress) wired correctly into MortgageRadar.tsx + MyMortgageRadar.tsx
+- AdminEnrichmentAudit.tsx queries `lead_enrichment_audit` table (exists in types.ts)
+- 2 config.toml gaps fixed: `create-mortgage-radar-checkout` + `check-mortgage-radar-zips` both needed `verify_jwt = false`
+
+**TCPA/FCRA compliance: ONE CRITICAL FIX + REST COMPLIANT ✅**
+- **FIXED**: `mortgage-radar-outreach/index.ts` had a local `sendSms()` bypassing `_shared/twilio.ts` — no opt-out scrub, no FCC quiet hours, no audit log. Replaced with shared `sendSMS()`.
+- H.R. 2808 (trigger lead ban): COMPLIANT — zero credit bureau sources in scanner (all BSEED, court records, SOS, FSBO)
+- RLS: all 10 key tables confirmed with ENABLE ROW LEVEL SECURITY + service_role bypass
+- Multi-tenancy: ZIP isolation confirmed (MyMortgageRadar filters by client's zip_codes, am-digest per-client)
+- FCRA manual-only gate: `status='approved'` required before any homeowner outreach
+- EBR 18-month: enforced in dead-lead-drip with `tcpa_expired` sweep
+
+**Cron + agent audit: ONE GAP FIXED ✅**
+- **FIXED**: Tom autonomous agent had zero pg_cron trigger — migration `20260427090000_tom_cron.sql` adds daily 8am ET schedule
+- 58 total cron jobs confirmed scheduled, all with verify_jwt = false
+- DWA Operator A/B testing confirmed: 4-hour cycle, auto-pauses dead campaigns, SMS copy variants to Matt
+- 34/36 agents updating heartbeats (2 legacy passive agents by design)
+- hire-alert-dispatcher: no cron by design (deliberately unscheduled in migration 20260420021718 — Matt decides)
 
 ### Phase 25 — Mortgage Radar Pipeline + 8-Product Audit COMPLETE ✅
 *All work on `main`. Dev branch synced.*
