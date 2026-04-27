@@ -848,6 +848,9 @@ export default function AdminContractorLeads() {
               </div>
             ))}
           </div>
+        )}
+      </div>
+
       {/* ── Section 8: Contractor Outreach (cold-email leads) ─────────── */}
       <ContractorOutreachPanel />
     </div>
