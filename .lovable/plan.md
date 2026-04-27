@@ -1,109 +1,79 @@
-## What's already shipped (from last loop)
+## The Problem
 
-These items in your request are **already live** — I'll only mention them so you know we don't duplicate:
+When you click **"📧 Email Contractors"** on a real unclaimed lead, the blast function looks up `contractor_outreach_prospects` matching that lead's **trade + city** with a non-null email. If you haven't scraped that exact trade+city *and* enriched the results, the database is empty for that combination → you get `"No {trade} prospects in {city} with email. Scrape + enrich first."`
 
-- **"How This Tab Works" guide** with Live Lead Feed / Territory Status / Locked / Priority / FB Page ID definitions → `ContractorLeadsInfoBox.tsx` (collapsible at top of the tab)
-- **Contractor database by trade** with stored emails + phones → `contractor_outreach_prospects` table (indexed by trade + city), Google Maps scraper, 6-stage enrichment waterfall (Snov → Apollo → pattern-verify → Hunter → PDL → site_scrape)
-- **Cold-email send + CAN-SPAM footer** → `contractor-outreach-email-blast` with `List-Unsubscribe` headers and one-click unsub endpoint
+That's why every click failed: the lead's trade/city didn't have any enriched contractor emails on file.
 
-## What this plan adds
+## The Fix — One-Press Auto-Blast Button
 
-### 1. Compliance & audit infrastructure (new)
+Make the green "Email Contractors" button do the entire pipeline automatically:
 
-**New table `contractor_outreach_audit_log`** — every send, opt-in, opt-out, suppression hit, and consent change writes one row. Powers the audit timeline UI and gives us a TCPA/CAN-SPAM defense file.
-
-```
-id, prospect_id, lead_id, channel (email|sms),
-event (sent|opened|clicked|replied|unsubscribed|suppressed|consent_granted),
-reason, ip_address, user_agent, created_at, actor (system|admin_user_id)
-```
-
-**New table `contractor_outreach_suppression`** — global do-not-contact list. Email or phone-keyed, with source (`unsubscribe_link`, `bounce`, `complaint`, `manual`, `competitor_block`). Every send checks this **before** the gateway call, fail-closed.
-
-```
-id, contact (email or E.164), contact_type, reason, source, added_by, created_at
+```text
+1. Read the lead's trade + city
+2. Check existing prospects → if <N with email, scrape Google Maps for that trade+city
+3. Enrich every unenriched prospect in parallel (waterfall: Snov → Apollo → Hunter → pattern → site-scrape)
+4. Re-query prospects with email
+5. Send the blast
+6. Show progress toast at each step
 ```
 
-**Pre-send compliance gate** — refactor `contractor-outreach-email-blast` and a new `contractor-outreach-sms-send` to:
-1. Check `contractor_outreach_suppression` → skip + log `suppressed`
-2. Check `unsubscribed_at` on prospect → skip + log
-3. **SMS only**: require `consent_for_sms = true` AND consent timestamp within 18 months → else hard-fail with reason
-4. **SMS only**: TCPA quiet-hours check (8am–9pm prospect's local time, derived from city)
-5. Daily cap enforcement (100 cold emails/day, 50 SMS/day) via count from audit log
-6. On send → write audit row before returning
+### New Edge Function: `contractor-outreach-auto-blast`
 
-### 2. Suppression list & opt-in UI (new)
+Single endpoint that orchestrates the whole flow server-side (faster, no client round-trips, no race conditions):
 
-New section inside `ContractorOutreachPanel.tsx`:
+- **Input**: `{ lead_id, price, max_contractors, target_email_count }`
+- **Steps**:
+  1. Load lead → derive `trade`, `city`, `state`
+  2. Query existing prospects matching trade+city with email → count
+  3. If count < target (default 10): invoke `contractor-outreach-scrape` internally with `{ trade, city, state, limit: 20 }`
+  4. Query all matching prospects WITHOUT email (cap at 15 to stay under provider rate limits)
+  5. Loop and call `contractor-outreach-enrich` per prospect with `Promise.all` in batches of 5
+  6. Re-query prospects with email
+  7. Run the existing email-blast logic inline (suppression check, daily cap, send via Resend)
+  8. Return rich response: `{ ok, scraped, enriched, attempted, sent, skipped_suppressed, failures }`
 
-- **Suppression list manager** — table of suppressed contacts with reason, paste-bulk add, CSV import, manual remove (with admin reason)
-- **Consent capture controls** — on each prospect row, "Mark consent received" button (dialog asking: source = reply | click | verbal | written, optional notes) → writes `consent_for_sms=true`, `consent_source`, `consent_timestamp` and an audit row
-- **Audit log drawer** — clicking any prospect opens a side drawer with the full event timeline pulled from `contractor_outreach_audit_log` (last 50 events), color-coded by event type
-- **Daily-cap meter** — top of panel shows "📧 47/100 emails today · 📱 12/50 SMS today" with progress bars; sends disabled when cap hit
+### Frontend Changes — `ContractorOutreachPanel.tsx`
 
-### 3. "Real vs Enriched" provenance info panel (new)
+Replace the existing `blastLead()` to call the new auto-blast function and show step-by-step progress:
 
-New collapsible card `OutreachProvenancePanel.tsx` mounted directly above the prospect table that explains, in plain English:
+```text
+Toast 1: "🔍 Scraping HVAC contractors in Detroit…"
+Toast 2: "✨ Enriching 12 contractors (finding emails)…"
+Toast 3: "📧 Emailing 8 contractors about James Rivera's water heater…"
+Toast 4: "✅ Sent 7/8 · 1 suppressed"
+```
 
-- **Where business names come from** — Google Maps Places API (verified business listings) + DataForSEO when available
-- **Where emails come from** — labeled by stage of the waterfall, with confidence:
-  - `snov` / `apollo` / `hunter` / `pdl` → ✅ verified (provider returned validity score)
-  - `pattern-verify` → 🟡 educated guess (pattern matched + SMTP-pinged but not provider-vouched)
-  - `site_scrape` → 🟡 found on contractor's website mailto/contact
-- **Where phones come from** — Google Maps listing OR provider returned with email
-- **What "verified" means in the table** — `email_verified=true` only if a provider returned a `valid` deliverability score; otherwise the email shows with a `guess` chip
-- Per-prospect "Show enrichment trace" button → expands the JSON `enrichment_trace` (which providers were tried, in order, with the result of each) so you can audit any single email
+Use `sonner`'s `toast.loading()` + `toast.success()` to update a single toast as the steps progress. Status comes from the edge function's response (single round trip — toast updates are timed by `setTimeout` to feel live).
 
-This makes it impossible for you to confuse a guess with a verified contact.
+Keep the price + count prompts but make defaults sticky (localStorage) so you don't re-type `59` and `10` every click.
 
-### 4. Expanded "What this tab means" guide (additions to existing InfoBox)
+### Bonus Quality-of-Life Fixes
 
-Add three new sections to `ContractorLeadsInfoBox.tsx`:
+1. **Smart price default**: pre-fill from last successful blast (localStorage `last_blast_price`).
+2. **Smart count default**: same idea (`last_blast_count`).
+3. **Empty-state copy**: if auto-blast scrapes 0 results (rare metro), show actionable error: *"Google Maps returned 0 {trade} contractors in {city}. Try a nearby metro or different trade."*
+4. **Failure trace**: if 0 emails get found after enrichment, surface the exact reason from `meta.enrichment_trace` (e.g., *"All 12 contractors failed enrichment — Apollo returned 0 matches, Hunter has no domain coverage. Add APOLLO_API_KEY credits or try a denser metro."*).
+5. **"Email Contractors" button label updates dynamically**: shows `Auto-blast (scrape+enrich+email)` on hover so you know it's the full pipeline now.
 
-- **"What does Locked under [Company] mean?"** — explains `active_contractor_id`, that locked = sold/assigned, how to **Unlock** (one click clears assignment, contractor keeps history), and how to **Request Access** if a contractor wants to take over a territory another contractor abandoned
-- **"How Priority works (in detail)"** — lists the exact 5 priority territories, what triggers the amber action card (priority + 0 contractor for 7+ days), and how to add/remove a territory from priority (currently hard-coded — we'll add an `is_priority` boolean to `contractor_lead_sites` and a toggle on each card)
-- **"Exact actions you should take"** decision-tree:
-  - Stuck lead → unlock or sell
-  - Empty priority territory → run scraper or sell
-  - Verified-email prospect → email blast
-  - Unverified prospect → enrich first
-  - SMS-consented prospect → eligible for SMS sniper
+## Technical Details
 
-### 5. SMS path — TCPA-hardened (new edge function)
+**Files created**:
+- `supabase/functions/contractor-outreach-auto-blast/index.ts` — orchestrator edge function
 
-New `contractor-outreach-sms-send` function (per-recipient, no bulk):
-- Hard-rejects if `consent_for_sms != true` OR `unsubscribed_at != null` OR suppression hit
-- Quiet-hours block (uses prospect city → tz lookup)
-- Daily cap 50/day
-- Routes through `_shared/twilio.ts` `sendSMS()` (not raw Twilio gateway)
-- Always appends "Reply STOP to opt out"
-- Writes audit row
+**Files edited**:
+- `src/components/admin/ContractorOutreachPanel.tsx` — `blastLead()` now calls auto-blast + shows progress toasts; localStorage for defaults
+- `supabase/config.toml` — add `verify_jwt = false` for the new function
 
-UI: SMS column on each prospect row showing one of: 🔴 No consent · 🟡 Consent OK · ✅ Sent today · ⛔ Suppressed
+**No DB migrations needed** — uses existing `contractor_outreach_prospects`, `contractor_outreach_audit_log`, `contractor_outreach_suppression`.
 
-## Files
+**Risk control**: auto-blast caps total work per click at: 1 scrape (20 rows) + 15 enrichments + 10 emails. Daily cap (100/day emails) still enforced. All sends still go through suppression + audit log.
 
-**New**
-- `supabase/migrations/<ts>_contractor_outreach_audit_and_suppression.sql` — 2 tables + indexes + RLS (admin + service_role only) + `is_priority` column on `contractor_lead_sites`
-- `supabase/functions/contractor-outreach-sms-send/index.ts`
-- `src/components/admin/OutreachProvenancePanel.tsx`
-- `src/components/admin/OutreachSuppressionManager.tsx`
-- `src/components/admin/OutreachAuditDrawer.tsx`
-- `src/components/admin/OutreachConsentDialog.tsx`
+**Why server-side orchestration**: doing this client-side would mean 3 round trips (scrape → wait → enrich loop → wait → blast) with the user staring at a blank screen. Server-side, it's one invoke that returns a complete summary.
 
-**Modified**
-- `supabase/functions/contractor-outreach-email-blast/index.ts` — add suppression check, audit writes, daily cap
-- `supabase/functions/contractor-outreach-unsubscribe/index.ts` — also write to `contractor_outreach_suppression`
-- `src/components/admin/ContractorLeadsInfoBox.tsx` — three new sections
-- `src/components/admin/ContractorOutreachPanel.tsx` — mount provenance panel, suppression manager, audit drawer, consent button, daily-cap meter, SMS column
-- `src/components/admin/AdminContractorLeads.tsx` — add `is_priority` toggle on each territory card
+## What stays the same
 
-## Compliance guardrails (final)
+- Trade/city filters, suppression manager, audit drawer, consent flow, daily cap meters — all unchanged.
+- The existing `contractor-outreach-email-blast` function stays available for anyone who wants to skip the auto-scrape step and blast existing prospects only.
+- Provenance disclosures (verified vs guess) unchanged.
 
-- Every outbound message has a matching audit row written **before** the API call returns success
-- Suppression check is fail-closed: any DB error → block the send, surface error
-- SMS sends require consent + quiet hours + suppression clean — three independent checks, all logged
-- Daily caps prevent reputation damage on Resend / 10DLC throttling
-- Unsubscribe writes to BOTH the prospect row AND the global suppression list (so re-scraping the same business can't re-add them to a campaign)
-
-Approve and I'll build it.
+**Approve and I'll build it.**
