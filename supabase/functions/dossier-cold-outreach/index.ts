@@ -20,9 +20,52 @@ const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
 const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
 const ADMIN_PHONE = Deno.env.get("ADMIN_PHONE") ?? "+13138064952";
+const BROWSERLESS = Deno.env.get("BROWSERLESS_API_KEY") || "";
 
 const GHOST_DELAY_MINUTES = 10;
 const DEDUP_DAYS = 30;
+const PDF_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
+
+// Generate the dossier HTML (re-uses generate-signal-dossier), render to PDF via
+// Browserless, upload to private storage, return a 30-day signed URL.
+// Returns null on any failure — caller falls back to email without attachment.
+async function buildDossierPdfUrl(sb: any, signal_id: string): Promise<string | null> {
+  try {
+    const { data, error } = await sb.functions.invoke("generate-signal-dossier", {
+      body: { signal_id },
+    });
+    if (error) throw new Error(`dossier gen: ${error.message}`);
+    const html: string | undefined = (data as any)?.html;
+    if (!html) throw new Error("dossier gen: empty html");
+    if (!BROWSERLESS) {
+      console.warn("[dossier-cold-outreach] BROWSERLESS_API_KEY missing — sending without PDF");
+      return null;
+    }
+    const pdfRes = await fetch(`https://chrome.browserless.io/pdf?token=${BROWSERLESS}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        html,
+        options: { format: "Letter", printBackground: true, margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" } },
+        gotoOptions: { waitUntil: "networkidle2", timeout: 30000 },
+      }),
+    });
+    if (!pdfRes.ok) {
+      const txt = await pdfRes.text();
+      throw new Error(`browserless ${pdfRes.status}: ${txt.slice(0, 200)}`);
+    }
+    const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
+    const path = `signals/${signal_id}/${Date.now()}.pdf`;
+    const { error: upErr } = await sb.storage.from("dossier-pdfs")
+      .upload(path, pdfBytes, { contentType: "application/pdf", upsert: true });
+    if (upErr) throw new Error(`upload: ${upErr.message}`);
+    const { data: signed } = await sb.storage.from("dossier-pdfs").createSignedUrl(path, PDF_TTL_SECONDS);
+    return signed?.signedUrl || null;
+  } catch (e) {
+    console.error("[dossier-cold-outreach] PDF build failed:", e);
+    return null;
+  }
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
