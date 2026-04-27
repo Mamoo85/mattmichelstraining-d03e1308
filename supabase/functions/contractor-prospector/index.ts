@@ -692,13 +692,29 @@ serve(async (req) => {
     const pitchOverride = body.pitch_override as ("dead_lead" | "tech_alert" | "missed_call" | "web_design" | "care_alert" | undefined);
     const pitchRotation = pitchOverride || getTodayPitchRotation();
     log("Pitch rotation today", { pitchRotation, override: !!pitchOverride, deadLeadSent, techAlertSent, missedCallSent, careAlertSent });
-    const combos = (manualTrade && manualCity) ? [{ trade: manualTrade, city: manualCity }] : getTodaysCombos();
+
+    // ── Build combo list ──
+    // - "ALL_MI" or blank city + a trade  → fan out across 8 random Michigan cities for that trade
+    // - trade + specific city            → fan out across 4 query variants in that city
+    // - blank trade + blank city         → today's auto-rotated combo (legacy)
+    let combos: { trade: string; city: string }[];
+    const isAllMichigan = manualCity === "ALL_MI" || (manualTrade && !manualCity);
+    if (isAllMichigan && manualTrade) {
+      combos = pickRandomCities(8).map(city => ({ trade: manualTrade, city }));
+      log("All-Michigan fan-out", { trade: manualTrade, cityCount: combos.length });
+    } else if (manualTrade && manualCity) {
+      const variants = TRADE_QUERY_VARIANTS[manualTrade] || [manualTrade];
+      combos = variants.map(v => ({ trade: v, city: manualCity }));
+      log("Single-city query expansion", { city: manualCity, variants: variants.length });
+    } else {
+      combos = getTodaysCombos();
+    }
     let totalEmailed = 0;
     let totalDeadLeadEmailed = 0;
     let totalFound = 0;
     let totalSkipped = 0;
     let totalScoutRejected = 0;
-    const maxToSend = Math.min(15, remainingCap);
+    const maxToSend = Math.min(50, remainingCap);
 
     // ── CARE ALERT DAY: search nursing homes instead of trade combos ──
     if (pitchRotation === "care_alert" && !manualTrade) {
