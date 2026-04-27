@@ -250,9 +250,11 @@ serve(async (req) => {
     // ── 6. SMS Matt the preview + cancel link
     const cancelUrl = `${SUPABASE_URL}/functions/v1/cancel-reply-draft?id=${draft?.id}`;
     const preview = body.slice(0, 90).replace(/\n/g, " ");
-    await sendAdminSMS(
-      `Dossier email queued: ${target_company} (${target_email}). Re: ${signal.company_name}. Sends in ${GHOST_DELAY_MINUTES}min. Cancel: ${cancelUrl}`
-    );
+    if (!silent) {
+      await sendAdminSMS(
+        `Dossier email queued: ${target_company} (${target_email}). Re: ${signal.company_name}. Sends in ${GHOST_DELAY_MINUTES}min. Cancel: ${cancelUrl}`
+      );
+    }
 
     return new Response(JSON.stringify({
       ok: true,
