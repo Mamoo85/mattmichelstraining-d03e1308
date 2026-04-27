@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { logEnrichment } from "../_shared/enrichment-audit.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -639,25 +640,32 @@ serve(async (req) => {
 
       let enriched = 0, failed = 0;
       for (const prospect of pending) {
-        try {
-          const dom = extractDomain(prospect.website || "");
-          if (!dom) { failed++; continue; }
-          // Enable email guessing in batch mode — maximize leads found
-          const result = await runWaterfall(dom, prospect.business_name, { website: prospect.website, allowEmailGuess: true });
-          await sb.from("prospect_businesses").update({
-            enrichment_source: result.enrichment_source,
-            enrichment_status: result.email ? "enriched" : "no_data",
-            verified_email: result.verified_email,
-            decision_maker_name: result.decision_maker_name,
-            decision_maker_title: result.decision_maker_title,
-            direct_phone: result.direct_phone,
-            enriched_at: new Date().toISOString(),
-            enrichment_data: result.enrichment_data,
-            ...(result.email && !prospect.email ? { email: result.email } : {}),
-          }).eq("id", prospect.id);
-          enriched++;
-          await new Promise(r => setTimeout(r, 500));
-        } catch (e) { log("Batch error", { id: prospect.id, error: String(e) }); failed++; }
+        const wrapped = await logEnrichment(
+          { lead_id: prospect.id, vertical: "prospect", function_name: "lead-enrichment-waterfall", stage: "free", provider: "internal", triggered_by: "cron" },
+          async () => {
+            const dom = extractDomain(prospect.website || "");
+            if (!dom) throw new Error("no_domain");
+            const result = await runWaterfall(dom, prospect.business_name, { website: prospect.website, allowEmailGuess: true });
+            await sb.from("prospect_businesses").update({
+              enrichment_source: result.enrichment_source,
+              enrichment_status: result.email ? "enriched" : "no_data",
+              verified_email: result.verified_email,
+              decision_maker_name: result.decision_maker_name,
+              decision_maker_title: result.decision_maker_title,
+              direct_phone: result.direct_phone,
+              enriched_at: new Date().toISOString(),
+              enrichment_data: result.enrichment_data,
+              ...(result.email && !prospect.email ? { email: result.email } : {}),
+            }).eq("id", prospect.id);
+            const fields_added: string[] = [];
+            if (result.email) fields_added.push("email");
+            if (result.direct_phone) fields_added.push("phone");
+            if (result.decision_maker_name) fields_added.push("decision_maker_name");
+            return { fields_added, provider: result.enrichment_source || "internal" };
+          },
+        );
+        if (wrapped.ok) enriched++; else { failed++; log("Batch error", { id: prospect.id, error: wrapped.error }); }
+        await new Promise(r => setTimeout(r, 500));
       }
 
       return new Response(JSON.stringify({ ok: true, enriched, failed, total: pending.length }), {
@@ -704,7 +712,24 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const result = await runWaterfall(targetDomain, resolvedBusinessName, { website, allowEmailGuess: allowEmailGuessResolved });
+    const result = await (async () => {
+      if (!prospect_id) {
+        return await runWaterfall(targetDomain, resolvedBusinessName, { website, allowEmailGuess: allowEmailGuessResolved });
+      }
+      let inner: any = null;
+      await logEnrichment(
+        { lead_id: prospect_id, vertical: "prospect", function_name: "lead-enrichment-waterfall", stage: "free", provider: "internal", triggered_by: "on_demand" },
+        async () => {
+          inner = await runWaterfall(targetDomain, resolvedBusinessName, { website, allowEmailGuess: allowEmailGuessResolved });
+          const fields_added: string[] = [];
+          if (inner.email) fields_added.push("email");
+          if (inner.direct_phone) fields_added.push("phone");
+          if (inner.decision_maker_name) fields_added.push("decision_maker_name");
+          return { fields_added, provider: inner.enrichment_source || "internal" };
+        },
+      );
+      return inner;
+    })();
 
     if (prospect_id) {
       await sb.from("prospect_businesses").update({
