@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Copy, Wand2, Mail, Target, X, CheckCircle2, Send, Sparkles, AlertCircle } from "lucide-react";
+import { Loader2, Copy, Wand2, Mail, Target, X, CheckCircle2, Send, Sparkles, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import HealthcareSourceHealthPanel from "./HealthcareSourceHealthPanel";
+import CandidateLicenseEditor from "./CandidateLicenseEditor";
 
 const METRO_DETROIT_AGENCIES = [
   { name: "Aerotek", contact: "Director of Recruiting", vertical: "industrial", note: "Largest skilled trades staffing in MI", domain: "aerotek.com", role_hint: "director" },
@@ -12,6 +14,10 @@ const METRO_DETROIT_AGENCIES = [
   { name: "Maxim Healthcare Staffing", contact: "Director of Recruiting", vertical: "healthcare", note: "RN/CNA/LPN focus, Metro Detroit", domain: "maximhealthcare.com", role_hint: "director" },
   { name: "Cross Country Healthcare", contact: "Regional Director", vertical: "healthcare", note: "Travel + perm placements MI", domain: "crosscountry.com", role_hint: "director" },
   { name: "Favorite Healthcare Staffing", contact: "Branch Director", vertical: "healthcare", note: "LTC + skilled nursing focus", domain: "favoritestaffing.com", role_hint: "branch" },
+  { name: "Interim HealthCare of Detroit", contact: "Director of Clinical Services", vertical: "healthcare", note: "Home health + hospice, NE Detroit", domain: "interimhealthcare.com", role_hint: "director" },
+  { name: "Comfort Keepers Metro Detroit", contact: "Branch Director", vertical: "healthcare", note: "In-home senior care, Oakland County", domain: "comfortkeepers.com", role_hint: "branch" },
+  { name: "ATC Healthcare Services", contact: "Branch Manager", vertical: "healthcare", note: "Per-diem + travel nursing, Metro Detroit", domain: "atchealthcare.com", role_hint: "branch" },
+  { name: "Soliant Health", contact: "Regional Director", vertical: "healthcare", note: "Allied health + nursing, Michigan", domain: "soliant.com", role_hint: "director" },
 ];
 
 interface DraftPayload {
@@ -40,6 +46,8 @@ export default function AdminAgencyOutreach() {
   const [sending, setSending] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, DraftPayload>>({});
   const [enrichments, setEnrichments] = useState<Record<string, ContactEnrichment>>({});
+  const [enrichTraces, setEnrichTraces] = useState<Record<string, string[]>>({});
+  const [showTrace, setShowTrace] = useState<Record<string, boolean>>({});
   const [pickedFor, setPickedFor] = useState<Record<string, string | null>>({});
   const [showPicker, setShowPicker] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState<Record<string, "html" | "plain">>({});
@@ -96,8 +104,11 @@ export default function AdminAgencyOutreach() {
         body: { agency_name: agency.name, role_hint: agency.role_hint, domain: agency.domain, force },
       });
       if (error) throw error;
+      const trace = ((data as any)?.trace as string[]) || [];
+      setEnrichTraces(t => ({ ...t, [agency.name]: trace }));
       if (!data?.contact?.contact_email) {
-        toast.error(`No contact found for ${agency.name}. Try again or draft anyway.`);
+        setShowTrace(s => ({ ...s, [agency.name]: true }));
+        toast.error(`No contact found for ${agency.name}. Expand "Why?" to see which provider failed.`);
         return;
       }
       setEnrichments(e => ({ ...e, [agency.name]: data.contact }));
@@ -200,6 +211,8 @@ export default function AdminAgencyOutreach() {
         </p>
       </div>
 
+      <HealthcareSourceHealthPanel onRefresh={loadCandidates} />
+
       <div className="grid gap-4">
         {METRO_DETROIT_AGENCIES.map(agency => {
           const enrich = enrichments[agency.name];
@@ -231,11 +244,32 @@ export default function AdminAgencyOutreach() {
                         ✓ {enrich.contact_full_name || "(no name)"} · {enrich.contact_email} · {enrich.source} · {enrich.email_status}
                       </span>
                     ) : (
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-slate-700/30 text-slate-400 flex items-center gap-1">
+                      <button
+                        onClick={() => setShowTrace(s => ({ ...s, [agency.name]: !s[agency.name] }))}
+                        className="text-[10px] px-2 py-0.5 rounded bg-slate-700/30 text-slate-300 hover:bg-slate-600/40 flex items-center gap-1"
+                      >
                         <AlertCircle className="w-3 h-3" /> Not enriched
-                      </span>
+                        {enrichTraces[agency.name]?.length ? (
+                          <>· Why? {showTrace[agency.name] ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}</>
+                        ) : null}
+                      </button>
                     )}
                   </div>
+
+                  {/* Diagnostic trace — explains exactly why enrichment missed */}
+                  {showTrace[agency.name] && enrichTraces[agency.name]?.length ? (
+                    <div className="mt-2 bg-[#0a1628] border border-white/10 rounded p-2">
+                      <div className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-1">Enrichment trace</div>
+                      <ol className="space-y-0.5 text-[10px] font-mono text-slate-300">
+                        {enrichTraces[agency.name].map((line, i) => (
+                          <li key={i} className={line.includes(":hit") ? "text-emerald-300" : line.includes(":miss") || line.includes(":skipped") ? "text-amber-300" : "text-slate-400"}>
+                            {i + 1}. {line}
+                          </li>
+                        ))}
+                      </ol>
+                      <p className="text-[10px] text-slate-500 mt-1.5">If every provider missed: the contact may not be in Apollo/Hunter/Snov databases for this domain. Try clicking <b>Re-enrich</b> with a manually-corrected domain in the seed list.</p>
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="flex flex-col items-end gap-2">

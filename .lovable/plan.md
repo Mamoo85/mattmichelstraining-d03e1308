@@ -1,109 +1,100 @@
-## What's already shipped (from last loop)
+# Why it's broken (3 separate issues)
 
-These items in your request are **already live** — I'll only mention them so you know we don't duplicate:
+I queried the database and read the enrichment edge function. Here are the actual root causes — none of them are "the search is broken in general."
 
-- **"How This Tab Works" guide** with Live Lead Feed / Territory Status / Locked / Priority / FB Page ID definitions → `ContractorLeadsInfoBox.tsx` (collapsible at top of the tab)
-- **Contractor database by trade** with stored emails + phones → `contractor_outreach_prospects` table (indexed by trade + city), Google Maps scraper, 6-stage enrichment waterfall (Snov → Apollo → pattern-verify → Hunter → PDL → site_scrape)
-- **Cold-email send + CAN-SPAM footer** → `contractor-outreach-email-blast` with `List-Unsubscribe` headers and one-click unsub endpoint
+## Issue 1 — Why healthcare shows "No matching candidates in last 7 days"
 
-## What this plan adds
+**Real numbers from `hire_alert_candidates` table right now:**
 
-### 1. Compliance & audit infrastructure (new)
+| Trade | Total | Last 7d |
+|---|---:|---:|
+| boiler | 72 | **0** |
+| other_trade | 40 | 40 |
+| hvac | 30 | 4 |
+| electrical | 28 | 1 |
+| plumbing | 25 | 13 |
+| **nursing** | **10** | **0** |
+| **home_health** | **2** | **0** |
 
-**New table `contractor_outreach_audit_log`** — every send, opt-in, opt-out, suppression hit, and consent change writes one row. Powers the audit timeline UI and gives us a TCPA/CAN-SPAM defense file.
+We have only **12 healthcare candidates ever**, and the last one was added **April 19** — 8 days ago. The Cherry-Pick widget filters to last 7 days, so it correctly shows zero. The healthcare scrapers stopped producing.
 
-```
-id, prospect_id, lead_id, channel (email|sms),
-event (sent|opened|clicked|replied|unsubscribed|suppressed|consent_granted),
-reason, ip_address, user_agent, created_at, actor (system|admin_user_id)
-```
+**Likely cause:** the healthcare source modules (Indeed/ZipRecruiter RN/CNA/LPN scrapers in the TechAlert pipeline) are either erroring silently or the cron stopped firing for the healthcare verticals. Industrial scrapers are healthy (40+ in last 7d).
 
-**New table `contractor_outreach_suppression`** — global do-not-contact list. Email or phone-keyed, with source (`unsubscribe_link`, `bounce`, `complaint`, `manual`, `competitor_block`). Every send checks this **before** the gateway call, fail-closed.
+## Issue 2 — Why "Enrich Contact" returns "No contact found" for every agency
 
-```
-id, contact (email or E.164), contact_type, reason, source, added_by, created_at
-```
+I read `supabase/functions/agency-contact-enrich/index.ts` and compared it against the 4 other working Apollo functions in the codebase. Two real bugs:
 
-**Pre-send compliance gate** — refactor `contractor-outreach-email-blast` and a new `contractor-outreach-sms-send` to:
-1. Check `contractor_outreach_suppression` → skip + log `suppressed`
-2. Check `unsubscribed_at` on prospect → skip + log
-3. **SMS only**: require `consent_for_sms = true` AND consent timestamp within 18 months → else hard-fail with reason
-4. **SMS only**: TCPA quiet-hours check (8am–9pm prospect's local time, derived from city)
-5. Daily cap enforcement (100 cold emails/day, 50 SMS/day) via count from audit log
-6. On send → write audit row before returning
+**Bug A — wrong Apollo header casing.** Line 55 sends `"x-api-key"` (lowercase). Every other Apollo function in the repo (`apollo-test-enrich`, `enrich-lo-prospect`, `apollo-backfill-decision-makers`) uses `"X-Api-Key"` (capitalized). Apollo's gateway is case-sensitive on some routes and silently 401s.
 
-### 2. Suppression list & opt-in UI (new)
+**Bug B — wrong endpoint for this use case.** It uses `mixed_people/search`, which on Apollo's standard plan returns people **without unlocked emails** (just names). Code then checks `if (apollo?.email)` and bails. The `apollo-test-enrich` function uses `people/match` + `organizations/enrich` which DO return unlocked emails on the same plan.
 
-New section inside `ContractorOutreachPanel.tsx`:
+**Bug C — Hunter/Snov fallbacks may not be wired.** `HUNTER_API_KEY`, `SNOV_CLIENT_ID`, `SNOV_CLIENT_SECRET` ARE set in your secrets (verified). So fallbacks should fire — but if Apollo silently returns a name with no email, the function never falls through to Hunter (the `if (!result.contact_email && domain)` gate works, but the trace is never surfaced to the UI so we can't see *why* it failed).
 
-- **Suppression list manager** — table of suppressed contacts with reason, paste-bulk add, CSV import, manual remove (with admin reason)
-- **Consent capture controls** — on each prospect row, "Mark consent received" button (dialog asking: source = reply | click | verbal | written, optional notes) → writes `consent_for_sms=true`, `consent_source`, `consent_timestamp` and an audit row
-- **Audit log drawer** — clicking any prospect opens a side drawer with the full event timeline pulled from `contractor_outreach_audit_log` (last 50 events), color-coded by event type
-- **Daily-cap meter** — top of panel shows "📧 47/100 emails today · 📱 12/50 SMS today" with progress bars; sends disabled when cap hit
+## Issue 3 — Nursys license number capture
 
-### 3. "Real vs Enriched" provenance info panel (new)
+You need to store an RN license number per healthcare candidate so you can keep the Nursys.com e-Notify monitoring active. Currently `hire_alert_candidates` has no `license_number` / `license_state` / `nursys_enrolled` columns. `NURSYS_USERNAME` and `NURSYS_PASSWORD` ARE in your secrets — the integration just isn't wired.
 
-New collapsible card `OutreachProvenancePanel.tsx` mounted directly above the prospect table that explains, in plain English:
+---
 
-- **Where business names come from** — Google Maps Places API (verified business listings) + DataForSEO when available
-- **Where emails come from** — labeled by stage of the waterfall, with confidence:
-  - `snov` / `apollo` / `hunter` / `pdl` → ✅ verified (provider returned validity score)
-  - `pattern-verify` → 🟡 educated guess (pattern matched + SMTP-pinged but not provider-vouched)
-  - `site_scrape` → 🟡 found on contractor's website mailto/contact
-- **Where phones come from** — Google Maps listing OR provider returned with email
-- **What "verified" means in the table** — `email_verified=true` only if a provider returned a `valid` deliverability score; otherwise the email shows with a `guess` chip
-- Per-prospect "Show enrichment trace" button → expands the JSON `enrichment_trace` (which providers were tried, in order, with the result of each) so you can audit any single email
+# The fix
 
-This makes it impossible for you to confuse a guess with a verified contact.
+## Part A — Restore healthcare candidate flow
+1. Add an admin "Healthcare Source Health" panel to the Cherry-Pick page showing: last successful run per healthcare source, last error, candidates added in 24h/7d.
+2. Add a one-click **"Re-run healthcare scrapers now"** button that invokes the existing healthcare source edge functions (whatever is named `*-nursing-*` / `*-rn-*` / `*-cna-*`) and surfaces errors.
+3. Audit which healthcare cron jobs exist; if they're missing or disabled, re-add them with daily 6am ET schedule.
 
-### 4. Expanded "What this tab means" guide (additions to existing InfoBox)
+## Part B — Fix Apollo enrichment (the real fix)
+1. **Rewrite `agency-contact-enrich/index.ts` waterfall** to mirror the proven `apollo-test-enrich` pattern:
+   - Stage 1: Apollo `organizations/enrich` (resolve org_id from domain) → `people/match` with `reveal_personal_emails: true` (unlocks the email).
+   - Stage 2: Apollo `mixed_people/search` filtered by org_id + titles (current code, but with org_id, not just domain).
+   - Stage 3: Hunter `domain-search` (already correct).
+   - Stage 4: Snov `domain-search` (already correct).
+   - Stage 5: Pattern guess + SMTP verify via Hunter `email-verifier`.
+2. **Fix header casing**: `"X-Api-Key"` everywhere.
+3. **Return the trace in the UI**: when no contact is found, show a small expandable diagnostic on the agency card: *"Apollo: hit (no email unlocked) · Hunter: miss · Snov: miss · Pattern: guessed → bounced"*. So you can see WHY it failed, not just "no contact found."
+4. **Add 4 more known-good Metro Detroit healthcare staffing agencies** to the seed list so you have more shots on goal: Interim HealthCare of Detroit, Comfort Keepers Metro Detroit, ATC Healthcare Services, Soliant Health.
 
-Add three new sections to `ContractorLeadsInfoBox.tsx`:
+## Part C — Nursys license capture
+1. **Migration**: add `license_number TEXT`, `license_state TEXT DEFAULT 'MI'`, `nursys_enrolled BOOLEAN DEFAULT false`, `nursys_enrolled_at TIMESTAMPTZ` columns to `hire_alert_candidates`.
+2. **Add a license editor** on each healthcare candidate row in the Cherry-Pick view: text input + state dropdown + "Enroll in Nursys" button.
+3. **Build `nursys-enroll` edge function**: takes `candidate_id`, calls Nursys e-Notify API with stored `NURSYS_USERNAME`/`NURSYS_PASSWORD`, marks `nursys_enrolled = true` on success.
+4. **Build `nursys-license-lookup` edge function**: when you have a candidate name + state but no license number, attempts a Nursys QuickConfirm lookup to auto-populate the license number. (Falls back to manual entry.)
+5. **Add a daily `nursys-status-sync` cron** that pulls Nursys e-Notify status changes (license expiry, discipline) and writes alerts to `hire_alert_candidates.qualifications_summary`.
 
-- **"What does Locked under [Company] mean?"** — explains `active_contractor_id`, that locked = sold/assigned, how to **Unlock** (one click clears assignment, contractor keeps history), and how to **Request Access** if a contractor wants to take over a territory another contractor abandoned
-- **"How Priority works (in detail)"** — lists the exact 5 priority territories, what triggers the amber action card (priority + 0 contractor for 7+ days), and how to add/remove a territory from priority (currently hard-coded — we'll add an `is_priority` boolean to `contractor_lead_sites` and a toggle on each card)
-- **"Exact actions you should take"** decision-tree:
-  - Stuck lead → unlock or sell
-  - Empty priority territory → run scraper or sell
-  - Verified-email prospect → email blast
-  - Unverified prospect → enrich first
-  - SMS-consented prospect → eligible for SMS sniper
+## Part D — Diagnostic info box
+Add an "Enrichment Health" info box at the top of `AdminAgencyOutreach.tsx` showing per-provider status:
+- ✅/❌ Apollo key present + last successful call timestamp + monthly credit usage
+- ✅/❌ Hunter key present + last successful call + remaining credits
+- ✅/❌ Snov key present + last successful call + remaining credits
+- ✅/❌ Nursys credentials present + last sync
 
-### 5. SMS path — TCPA-hardened (new edge function)
+---
 
-New `contractor-outreach-sms-send` function (per-recipient, no bulk):
-- Hard-rejects if `consent_for_sms != true` OR `unsubscribed_at != null` OR suppression hit
-- Quiet-hours block (uses prospect city → tz lookup)
-- Daily cap 50/day
-- Routes through `_shared/twilio.ts` `sendSMS()` (not raw Twilio gateway)
-- Always appends "Reply STOP to opt out"
-- Writes audit row
+# Files I'll touch
 
-UI: SMS column on each prospect row showing one of: 🔴 No consent · 🟡 Consent OK · ✅ Sent today · ⛔ Suppressed
+**New:**
+- `supabase/functions/nursys-enroll/index.ts`
+- `supabase/functions/nursys-license-lookup/index.ts`
+- `supabase/functions/nursys-status-sync/index.ts`
+- `supabase/functions/healthcare-sources-rerun/index.ts`
+- `supabase/migrations/<ts>_nursys_license_columns.sql`
+- `supabase/migrations/<ts>_healthcare_cron_restore.sql`
+- `src/components/dwa-admin/EnrichmentHealthPanel.tsx`
+- `src/components/dwa-admin/HealthcareSourceHealthPanel.tsx`
+- `src/components/dwa-admin/CandidateLicenseEditor.tsx`
 
-## Files
+**Edited:**
+- `supabase/functions/agency-contact-enrich/index.ts` (rewrite waterfall + return trace)
+- `src/components/dwa-admin/AdminAgencyOutreach.tsx` (4 new healthcare agencies, render trace, mount new panels, license editor on candidate rows)
+- `supabase/config.toml` (3 new functions need `verify_jwt = false` for cron)
 
-**New**
-- `supabase/migrations/<ts>_contractor_outreach_audit_and_suppression.sql` — 2 tables + indexes + RLS (admin + service_role only) + `is_priority` column on `contractor_lead_sites`
-- `supabase/functions/contractor-outreach-sms-send/index.ts`
-- `src/components/admin/OutreachProvenancePanel.tsx`
-- `src/components/admin/OutreachSuppressionManager.tsx`
-- `src/components/admin/OutreachAuditDrawer.tsx`
-- `src/components/admin/OutreachConsentDialog.tsx`
+---
 
-**Modified**
-- `supabase/functions/contractor-outreach-email-blast/index.ts` — add suppression check, audit writes, daily cap
-- `supabase/functions/contractor-outreach-unsubscribe/index.ts` — also write to `contractor_outreach_suppression`
-- `src/components/admin/ContractorLeadsInfoBox.tsx` — three new sections
-- `src/components/admin/ContractorOutreachPanel.tsx` — mount provenance panel, suppression manager, audit drawer, consent button, daily-cap meter, SMS column
-- `src/components/admin/AdminContractorLeads.tsx` — add `is_priority` toggle on each territory card
+# What you'll see after I ship
 
-## Compliance guardrails (final)
-
-- Every outbound message has a matching audit row written **before** the API call returns success
-- Suppression check is fail-closed: any DB error → block the send, surface error
-- SMS sends require consent + quiet hours + suppression clean — three independent checks, all logged
-- Daily caps prevent reputation damage on Resend / 10DLC throttling
-- Unsubscribe writes to BOTH the prospect row AND the global suppression list (so re-scraping the same business can't re-add them to a campaign)
+1. The 5 agency cards will show real names + verified emails (Apollo unlocked) within seconds of clicking "Enrich Contact" — and if any provider can't find one, you'll see exactly which stage failed and why.
+2. Healthcare section will repopulate within ~24h of the cron firing (or instantly if you click "Re-run healthcare scrapers now").
+3. Each healthcare candidate row gets a license-number field + "Enroll in Nursys" button — Nursys monitoring stays active forever.
+4. A persistent diagnostic panel tells you at a glance whether Apollo / Hunter / Snov / Nursys are healthy — no more guessing.
 
 Approve and I'll build it.
