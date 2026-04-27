@@ -624,6 +624,54 @@ export type Database = {
           },
         ]
       }
+      agency_contact_enrichments: {
+        Row: {
+          agency_name: string
+          contact_email: string | null
+          contact_first_name: string | null
+          contact_full_name: string | null
+          contact_last_name: string | null
+          contact_linkedin: string | null
+          contact_title: string | null
+          domain: string | null
+          email_status: string | null
+          enriched_at: string
+          id: string
+          meta: Json | null
+          source: string | null
+        }
+        Insert: {
+          agency_name: string
+          contact_email?: string | null
+          contact_first_name?: string | null
+          contact_full_name?: string | null
+          contact_last_name?: string | null
+          contact_linkedin?: string | null
+          contact_title?: string | null
+          domain?: string | null
+          email_status?: string | null
+          enriched_at?: string
+          id?: string
+          meta?: Json | null
+          source?: string | null
+        }
+        Update: {
+          agency_name?: string
+          contact_email?: string | null
+          contact_first_name?: string | null
+          contact_full_name?: string | null
+          contact_last_name?: string | null
+          contact_linkedin?: string | null
+          contact_title?: string | null
+          domain?: string | null
+          email_status?: string | null
+          enriched_at?: string
+          id?: string
+          meta?: Json | null
+          source?: string | null
+        }
+        Relationships: []
+      }
       agency_territory_locks: {
         Row: {
           active: boolean
