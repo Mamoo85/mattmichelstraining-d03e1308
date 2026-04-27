@@ -1,7 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, Sparkles, Mail, RefreshCw, ExternalLink, Trash2, Send } from "lucide-react";
+import { Search, Sparkles, RefreshCw, ExternalLink, Trash2, Send, Activity, MessageSquare, ShieldCheck } from "lucide-react";
+import OutreachProvenancePanel from "./OutreachProvenancePanel";
+import OutreachSuppressionManager from "./OutreachSuppressionManager";
+import OutreachAuditDrawer from "./OutreachAuditDrawer";
+import OutreachConsentDialog from "./OutreachConsentDialog";
+
+const DAILY_EMAIL_CAP = 100;
+const DAILY_SMS_CAP = 50;
 
 interface Prospect {
   id: string;
