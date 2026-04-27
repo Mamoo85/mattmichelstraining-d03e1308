@@ -52,9 +52,14 @@ export default function ContractorOutreachPanel() {
   const [blastingLeadId, setBlastingLeadId] = useState<string | null>(null);
   const [filterTrade, setFilterTrade] = useState("");
   const [filterCity, setFilterCity] = useState("");
+  const [emailsToday, setEmailsToday] = useState(0);
+  const [smsToday, setSmsToday] = useState(0);
+  const [auditFor, setAuditFor] = useState<{ id: string; name: string } | null>(null);
+  const [consentFor, setConsentFor] = useState<{ id: string; name: string } | null>(null);
 
   const load = useCallback(async () => {
-    const [pRes, lRes] = await Promise.all([
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const [pRes, lRes, eRes, sRes] = await Promise.all([
       supabase.from("contractor_outreach_prospects" as never)
         .select("*")
         .is("unsubscribed_at", null)
@@ -66,9 +71,17 @@ export default function ContractorOutreachPanel() {
         .eq("is_demo_record", false)
         .order("created_at", { ascending: false })
         .limit(20),
+      (supabase as any).from("contractor_outreach_audit_log")
+        .select("id", { count: "exact", head: true })
+        .eq("channel", "email").eq("event", "sent").gte("created_at", since),
+      (supabase as any).from("contractor_outreach_audit_log")
+        .select("id", { count: "exact", head: true })
+        .eq("channel", "sms").eq("event", "sent").gte("created_at", since),
     ]);
     setProspects(((pRes.data as any[]) || []) as Prospect[]);
     setUnclaimedLeads(((lRes.data as any[]) || []) as Lead[]);
+    setEmailsToday((eRes as any).count || 0);
+    setSmsToday((sRes as any).count || 0);
     setLoading(false);
   }, []);
 
