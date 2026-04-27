@@ -19734,6 +19734,18 @@ export type Database = {
         }
         Relationships: []
       }
+      industry_pulse_signals_counts: {
+        Row: {
+          cross_ref: number | null
+          high: number | null
+          industry: string | null
+          latest_detected_at: string | null
+          low: number | null
+          medium: number | null
+          total: number | null
+        }
+        Relationships: []
+      }
       lead_enrichment_audit_buyer_view: {
         Row: {
           finished_at: string | null
