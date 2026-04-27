@@ -11594,6 +11594,56 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_gmail_sends: {
+        Row: {
+          body: string
+          error: string | null
+          gmail_message_id: string | null
+          id: string
+          outreach_lead_id: string | null
+          sender_email: string | null
+          sender_user_id: string | null
+          sent_at: string
+          status: string
+          subject: string
+          to_email: string
+        }
+        Insert: {
+          body: string
+          error?: string | null
+          gmail_message_id?: string | null
+          id?: string
+          outreach_lead_id?: string | null
+          sender_email?: string | null
+          sender_user_id?: string | null
+          sent_at?: string
+          status: string
+          subject: string
+          to_email: string
+        }
+        Update: {
+          body?: string
+          error?: string | null
+          gmail_message_id?: string | null
+          id?: string
+          outreach_lead_id?: string | null
+          sender_email?: string | null
+          sender_user_id?: string | null
+          sent_at?: string
+          status?: string
+          subject?: string
+          to_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_gmail_sends_outreach_lead_id_fkey"
+            columns: ["outreach_lead_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       outreach_leads: {
         Row: {
           ai_drafted_at: string | null
@@ -11607,7 +11657,14 @@ export type Database = {
           custom_flaw: string | null
           drip_campaign_status: Json | null
           email: string | null
+          enriched_email: string | null
+          enriched_email_at: string | null
+          enriched_email_confidence: number | null
+          enriched_email_source: string | null
+          enrichment_trace: Json | null
           first_name: string | null
+          gmail_message_id: string | null
+          gmail_sent_at: string | null
           id: string
           industry: string | null
           job_title: string | null
@@ -11641,7 +11698,14 @@ export type Database = {
           custom_flaw?: string | null
           drip_campaign_status?: Json | null
           email?: string | null
+          enriched_email?: string | null
+          enriched_email_at?: string | null
+          enriched_email_confidence?: number | null
+          enriched_email_source?: string | null
+          enrichment_trace?: Json | null
           first_name?: string | null
+          gmail_message_id?: string | null
+          gmail_sent_at?: string | null
           id?: string
           industry?: string | null
           job_title?: string | null
@@ -11675,7 +11739,14 @@ export type Database = {
           custom_flaw?: string | null
           drip_campaign_status?: Json | null
           email?: string | null
+          enriched_email?: string | null
+          enriched_email_at?: string | null
+          enriched_email_confidence?: number | null
+          enriched_email_source?: string | null
+          enrichment_trace?: Json | null
           first_name?: string | null
+          gmail_message_id?: string | null
+          gmail_sent_at?: string | null
           id?: string
           industry?: string | null
           job_title?: string | null
