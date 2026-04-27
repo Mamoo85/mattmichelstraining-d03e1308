@@ -199,8 +199,9 @@ serve(async (req) => {
     }
     const allTargets = prospects;
 
-    // For non-resend runs: filter out anyone already sent
-    const targets = prospectIds && prospectIds.length
+    // For explicit-IDs runs (resend or Command Center): trust the selected list.
+    // For legacy segment scans: skip anyone already faxed.
+    const targets = (prospectIds && prospectIds.length) || usePool
       ? allTargets
       : allTargets.filter((p: any) => !p.fax_sent_at);
     const alreadySent = allTargets.length - targets.length;
