@@ -34,10 +34,27 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { email, business_name, contact_name, nmls_number, phone, zip_codes, extra_zip_count, tier } = await req.json();
+    const { email, business_name, contact_name, nmls_number, phone, zip_codes, extra_zip_count, tier, dob, tcpa_consent, manual_ack } = await req.json();
 
     if (!email) {
       return new Response(JSON.stringify({ error: "email is required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!tcpa_consent || !manual_ack) {
+      return new Response(JSON.stringify({ error: "TCPA consent and manual-outreach acknowledgment are required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!dob) {
+      return new Response(JSON.stringify({ error: "Date of birth is required (Michigan HB 4388)" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const dobDate = new Date(dob);
+    const ageYears = (Date.now() - dobDate.getTime()) / (365.25 * 86_400_000);
+    if (Number.isNaN(ageYears) || ageYears < 18) {
+      return new Response(JSON.stringify({ error: "Must be 18 or older" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
