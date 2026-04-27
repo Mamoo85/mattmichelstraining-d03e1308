@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Home, Play, RefreshCw, Users, MapPin, Sparkles, Copy, Send, ExternalLink } from "lucide-react";
+import { Home, Play, RefreshCw, Users, MapPin, Sparkles, Copy, Send, ExternalLink, Star, Loader2, Check } from "lucide-react";
 import LeadSalesOutreachHub from "./LeadSalesOutreachHub";
 
 type Client = {
@@ -43,6 +43,19 @@ export default function MortgageRadarHub() {
   const [enrichingAll, setEnrichingAll] = useState(false);
   const [enrichingId, setEnrichingId] = useState<string | null>(null);
   const [trace, setTrace] = useState<Array<Record<string, unknown>> | null>(null);
+
+  // Founder seat invite form
+  const [showFounderForm, setShowFounderForm] = useState(false);
+  const [creatingFounder, setCreatingFounder] = useState(false);
+  const [founderResult, setFounderResult] = useState<{ dashboard_url: string; email: string } | null>(null);
+  const [founderForm, setFounderForm] = useState({
+    email: "",
+    contact_name: "",
+    business_name: "",
+    nmls_number: "",
+    phone: "",
+    zip_codes: "",
+  });
 
   const load = async () => {
     setLoading(true);
@@ -127,6 +140,67 @@ export default function MortgageRadarHub() {
     }
   };
 
+  const createFounderSeat = async () => {
+    const zipList = founderForm.zip_codes
+      .split(/[,\s]+/)
+      .map((z) => z.trim())
+      .filter((z) => /^\d{5}$/.test(z));
+
+    if (!founderForm.email.trim()) {
+      toast.error("Email is required");
+      return;
+    }
+    if (zipList.length === 0) {
+      toast.error("Provide at least one valid 5-digit ZIP code");
+      return;
+    }
+
+    setCreatingFounder(true);
+    setFounderResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("mortgage-radar-founder-invite", {
+        body: {
+          email: founderForm.email.trim(),
+          contact_name: founderForm.contact_name.trim() || null,
+          business_name: founderForm.business_name.trim() || null,
+          nmls_number: founderForm.nmls_number.trim() || null,
+          phone: founderForm.phone.trim() || null,
+          zip_codes: zipList,
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+
+      setFounderResult({ dashboard_url: (data as any).dashboard_url, email: (data as any).email });
+      toast.success(
+        (data as any).email_sent
+          ? `Founder seat created — invite emailed to ${(data as any).email}`
+          : `Founder seat created — copy the dashboard link below (email failed: ${(data as any).email_error || "unknown"})`,
+      );
+      await load();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to create founder seat");
+    } finally {
+      setCreatingFounder(false);
+    }
+  };
+
+  const copyFounderLink = async () => {
+    if (!founderResult) return;
+    try {
+      await navigator.clipboard.writeText(founderResult.dashboard_url);
+      toast.success("Dashboard link copied");
+    } catch {
+      toast.error("Copy failed");
+    }
+  };
+
+  const resetFounderForm = () => {
+    setFounderForm({ email: "", contact_name: "", business_name: "", nmls_number: "", phone: "", zip_codes: "" });
+    setFounderResult(null);
+    setShowFounderForm(false);
+  };
+
   const missingInfo = (l: Lead) => !l.full_name || !l.phone || !l.email;
 
   return (
@@ -151,17 +225,137 @@ export default function MortgageRadarHub() {
       </div>
 
       <Card className="bg-gradient-to-r from-[#0a1628] to-[#0a2440] border-[#00d4ff]/40">
-        <CardContent className="p-5 flex items-center gap-4 flex-wrap">
-          <Send className="w-5 h-5 text-[#00d4ff] shrink-0" />
-          <div className="flex-1 min-w-[240px]">
-            <p className="text-white font-bold text-sm">Onboard your brother (founder seat)</p>
-            <p className="text-[#94a3b8] text-xs break-all">{ONBOARD_URL}</p>
+        <CardContent className="p-5 space-y-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            <Send className="w-5 h-5 text-[#00d4ff] shrink-0" />
+            <div className="flex-1 min-w-[240px]">
+              <p className="text-white font-bold text-sm">Onboard your brother (founder seat)</p>
+              <p className="text-[#94a3b8] text-xs">
+                Two ways to invite: (1) Copy SMS sends him to the public sales page (full price). (2) Create Founder Seat skips Stripe entirely and emails him a direct dashboard link — free, forever.
+              </p>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Button onClick={copyOnboardLink} variant="outline" className="border-[#00d4ff]/40 text-[#00d4ff] hover:bg-[#00d4ff]/10 font-bold">
+                <Copy className="w-3 h-3 mr-1" /> Copy SMS
+              </Button>
+              <Button
+                onClick={() => { setShowFounderForm((v) => !v); setFounderResult(null); }}
+                className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold"
+              >
+                <Star className="w-3 h-3 mr-1" /> {showFounderForm ? "Cancel" : "Create Founder Seat"}
+              </Button>
+            </div>
           </div>
-          <Button onClick={copyOnboardLink} className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold">
-            <Copy className="w-3 h-3 mr-1" /> Copy SMS
-          </Button>
+
+          {showFounderForm && (
+            <div className="border-t border-[#1e3a5f] pt-4 space-y-3 animate-in fade-in-50 slide-in-from-top-2 duration-200">
+              {!founderResult ? (
+                <>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-[#00d4ff] block mb-1">Email *</label>
+                      <input
+                        type="email"
+                        value={founderForm.email}
+                        onChange={(e) => setFounderForm({ ...founderForm, email: e.target.value })}
+                        placeholder="brother@example.com"
+                        className="w-full bg-[#030711] border border-[#1e3a5f] px-3 py-2 text-sm text-white rounded focus:ring-1 focus:ring-[#00d4ff] outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-[#00d4ff] block mb-1">Contact name</label>
+                      <input
+                        type="text"
+                        value={founderForm.contact_name}
+                        onChange={(e) => setFounderForm({ ...founderForm, contact_name: e.target.value })}
+                        placeholder="First Last"
+                        className="w-full bg-[#030711] border border-[#1e3a5f] px-3 py-2 text-sm text-white rounded focus:ring-1 focus:ring-[#00d4ff] outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-[#00d4ff] block mb-1">Brokerage</label>
+                      <input
+                        type="text"
+                        value={founderForm.business_name}
+                        onChange={(e) => setFounderForm({ ...founderForm, business_name: e.target.value })}
+                        placeholder="e.g. Rocket Mortgage"
+                        className="w-full bg-[#030711] border border-[#1e3a5f] px-3 py-2 text-sm text-white rounded focus:ring-1 focus:ring-[#00d4ff] outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-[#00d4ff] block mb-1">NMLS #</label>
+                      <input
+                        type="text"
+                        value={founderForm.nmls_number}
+                        onChange={(e) => setFounderForm({ ...founderForm, nmls_number: e.target.value })}
+                        placeholder="optional"
+                        className="w-full bg-[#030711] border border-[#1e3a5f] px-3 py-2 text-sm text-white rounded focus:ring-1 focus:ring-[#00d4ff] outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-[#00d4ff] block mb-1">Phone</label>
+                      <input
+                        type="tel"
+                        value={founderForm.phone}
+                        onChange={(e) => setFounderForm({ ...founderForm, phone: e.target.value })}
+                        placeholder="optional"
+                        className="w-full bg-[#030711] border border-[#1e3a5f] px-3 py-2 text-sm text-white rounded focus:ring-1 focus:ring-[#00d4ff] outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-[#00d4ff] block mb-1">ZIP codes * (comma-separated)</label>
+                      <input
+                        type="text"
+                        value={founderForm.zip_codes}
+                        onChange={(e) => setFounderForm({ ...founderForm, zip_codes: e.target.value })}
+                        placeholder="48226, 48201, 48202, 48207, 48208"
+                        className="w-full bg-[#030711] border border-[#1e3a5f] px-3 py-2 text-sm text-white rounded focus:ring-1 focus:ring-[#00d4ff] outline-none font-mono"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-[#64748b]">
+                    By creating this founder seat, you (admin) acknowledge the FCRA + TCPA terms on the recipient's behalf.
+                    They will be marked <span className="text-[#00d4ff]">★ founder</span>, given dashboard access immediately,
+                    and emailed a 30-day signed portal link.
+                  </p>
+                  <Button
+                    onClick={createFounderSeat}
+                    disabled={creatingFounder}
+                    className="w-full bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold"
+                  >
+                    {creatingFounder ? <><Loader2 className="w-3 h-3 mr-2 animate-spin" /> Provisioning…</> : <><Star className="w-3 h-3 mr-2" /> Provision Founder Seat + Send Invite</>}
+                  </Button>
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-green-400 text-sm font-bold">
+                    <Check className="w-4 h-4" /> Founder seat live for {founderResult.email}
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-[#00d4ff] block mb-1">Dashboard link (text or email it as backup)</label>
+                    <div className="flex items-stretch gap-1.5">
+                      <input
+                        type="text"
+                        readOnly
+                        value={founderResult.dashboard_url}
+                        className="flex-1 bg-[#030711] border border-[#1e3a5f] px-3 py-2 text-xs font-mono text-[#cbd5e1] rounded select-all focus:outline-none focus:ring-1 focus:ring-[#00d4ff]"
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                      />
+                      <Button onClick={copyFounderLink} variant="outline" className="border-[#1e3a5f] text-white hover:bg-[#1e3a5f]/40 px-3">
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  <Button onClick={resetFounderForm} variant="outline" className="w-full border-[#1e3a5f] text-white hover:bg-[#1e3a5f]/40">
+                    Create another founder seat
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
+
 
       <div className="grid sm:grid-cols-3 gap-4">
         <Card className="bg-[#0a1628] border-[#1e3a5f]"><CardContent className="p-5">
