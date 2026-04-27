@@ -42,6 +42,7 @@ export default function AdminGrowthSignals() {
   const [confidenceFilter, setConfidenceFilter] = useState<FilterType>("all");
   const [industryFilter, setIndustryFilter] = useState("All");
   const [pitchSignal, setPitchSignal] = useState<PulseSignal | null>(null);
+  const [outreachSignal, setOutreachSignal] = useState<PulseSignal | null>(null);
   const [copied, setCopied] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [expandedDetails, setExpandedDetails] = useState<Set<string>>(new Set());
