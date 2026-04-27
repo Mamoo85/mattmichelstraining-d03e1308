@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { RefreshCw, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import LeadEmailCell from "./outreach/LeadEmailCell";
 
 export interface ChannelConfig {
   channel: "fax" | "postcard" | "sms";
@@ -37,7 +38,7 @@ export default function ChannelOutreachTab({ config }: { config: ChannelConfig }
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from("outreach_leads")
-        .select("id, business_name, city, industry, phone, status, drip_campaign_status, created_at")
+        .select("id, business_name, city, industry, phone, status, drip_campaign_status, created_at, enriched_email, enriched_email_source, enriched_email_confidence, gmail_sent_at")
         .eq("offer_pitched", config.offerKey)
         .order("created_at", { ascending: false })
         .limit(100);
@@ -170,6 +171,17 @@ export default function ChannelOutreachTab({ config }: { config: ChannelConfig }
                         {config.targetLabel}: {row.drip_campaign_status.channel_target}
                       </div>
                     )}
+                    <LeadEmailCell
+                      leadId={row.id}
+                      businessName={row.business_name}
+                      city={row.city}
+                      industry={row.industry}
+                      enrichedEmail={row.enriched_email}
+                      enrichedSource={row.enriched_email_source}
+                      enrichedConfidence={row.enriched_email_confidence}
+                      gmailSentAt={row.gmail_sent_at}
+                      onChange={() => refetch()}
+                    />
                   </div>
                   <span style={{ background: row.status === "drip_complete" ? "#1e293b" : "#1e3a5f", color: "#94a3b8", padding: "3px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, textTransform: "uppercase" }}>
                     {row.status}
