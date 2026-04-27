@@ -11,6 +11,7 @@
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { logEnrichment } from "../_shared/enrichment-audit.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -131,10 +132,46 @@ serve(async (req) => {
     let enriched = 0;
 
     for (const row of rows) {
-      // Apollo first, Sonar fallback
-      let result = await enrichViaApollo(row.full_name, row.company_name);
+      // Apollo first, Sonar fallback — both wrapped in audit envelopes
+      const apolloAudit = await logEnrichment<EnrichResult>(
+        {
+          lead_id: row.id,
+          vertical: "prospect",
+          function_name: "enrich-lo-prospect",
+          stage: "paid",
+          provider: "apollo",
+          triggered_by: body.prospect_ids?.length ? "manual" : "cron",
+          cost_cents: APOLLO_API_KEY ? 1 : 0,
+        },
+        async () => {
+          const r = await enrichViaApollo(row.full_name, row.company_name);
+          const fields: string[] = [];
+          if (r.email) fields.push("email");
+          if (r.phone) fields.push("phone");
+          return { data: r, fields_added: fields };
+        },
+      );
+      let result: EnrichResult = apolloAudit.data || { source: "none" };
+
       if (result.source === "none" || (!result.email && !result.phone)) {
-        result = await enrichViaSonar(row.full_name, row.company_name);
+        const sonarAudit = await logEnrichment<EnrichResult>(
+          {
+            lead_id: row.id,
+            vertical: "prospect",
+            function_name: "enrich-lo-prospect",
+            stage: "free",
+            provider: "sonar",
+            triggered_by: body.prospect_ids?.length ? "manual" : "cron",
+          },
+          async () => {
+            const r = await enrichViaSonar(row.full_name, row.company_name);
+            const fields: string[] = [];
+            if (r.email) fields.push("email");
+            if (r.phone) fields.push("phone");
+            return { data: r, fields_added: fields };
+          },
+        );
+        result = sonarAudit.data || { source: "none" };
       }
 
       const updates: Record<string, unknown> = {
@@ -143,7 +180,6 @@ serve(async (req) => {
         warmth_score: computeWarmth(row, result),
         updated_at: new Date().toISOString(),
       };
-      // Only overwrite blank fields — don't clobber manually entered data
       if (result.email && !row.email) updates.email = result.email;
       if (result.phone && !row.phone) updates.phone = result.phone;
 
