@@ -541,6 +541,17 @@ detroitwebagent.com`;
           </div>
         </div>
       )}
+
+      <BuyerOutreachDialog
+        open={!!outreachSignal}
+        onOpenChange={(v) => { if (!v) setOutreachSignal(null); }}
+        signal={outreachSignal ? {
+          id: outreachSignal.id,
+          company_name: outreachSignal.company_name,
+          industry: outreachSignal.industry || null,
+          predicted_needs: outreachSignal.predicted_needs || [],
+        } : null}
+      />
     </div>
   );
 }
