@@ -20,8 +20,8 @@ export default function OutreachConsentDialog({ prospectId, prospectName, onClos
   async function save() {
     setSaving(true);
     const now = new Date().toISOString();
-    const { error: uErr } = await supabase
-      .from("contractor_outreach_prospects" as never)
+    const { error: uErr } = await (supabase as any)
+      .from("contractor_outreach_prospects")
       .update({
         consent_for_sms: true,
         consent_source: source,
@@ -31,7 +31,7 @@ export default function OutreachConsentDialog({ prospectId, prospectName, onClos
       .eq("id", prospectId);
     if (uErr) { setSaving(false); toast.error(uErr.message); return; }
 
-    await supabase.from("contractor_outreach_audit_log" as never).insert({
+    await (supabase as any).from("contractor_outreach_audit_log").insert({
       prospect_id: prospectId,
       channel: "sms",
       event: "consent_granted",
