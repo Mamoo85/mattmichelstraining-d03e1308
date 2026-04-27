@@ -40,6 +40,7 @@ const ClientDashboard = lazyRetry(() => import("./pages/ClientDashboard"));
 const AgencyClientPortal = lazyRetry(() => import("./pages/AgencyClientPortal"));
 const EmbedCapture = lazyRetry(() => import("./pages/EmbedCapture"));
 const AgencyAdminRoute = lazyRetry(() => import("./components/layout/AgencyAdminRoute"));
+const AdminHealth = lazyRetry(() => import("./pages/AdminHealth"));
 const ClientRoute = lazyRetry(() => import("./components/layout/ClientRoute"));
 const FreeSiteScanner = lazyRetry(() => import("./pages/FreeSiteScanner"));
 const FreeToolsHub = lazyRetry(() => import("./pages/FreeToolsHub"));
@@ -811,8 +812,9 @@ const App = () => (
                      <Route path="/coach" element={<BlurGate requireSubscription><Coach /></BlurGate>} />
                      <Route path="/trial-welcome" element={<ProtectedRoute><TrialWelcome /></ProtectedRoute>} />
                      <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
-                     <Route path="/admin" element={<AgencyAdminRoute><Admin /></AgencyAdminRoute>} />
-                     <Route path="/dwa-admin" element={<AgencyAdminRoute><DWAAdmin /></AgencyAdminRoute>} />
+                      <Route path="/admin" element={<AgencyAdminRoute><Admin /></AgencyAdminRoute>} />
+                      <Route path="/admin/health" element={<AgencyAdminRoute><AdminHealth /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin" element={<AgencyAdminRoute><DWAAdmin /></AgencyAdminRoute>} />
                      <Route path="/r/:token" element={<ProspectRedirect />} />
                      <Route path="/admin/view-user/:userId" element={<ProtectedRoute><AdminViewUser /></ProtectedRoute>} />
                      <Route path="/comms-center" element={<ProtectedRoute><CommunicationsCenter /></ProtectedRoute>} />
