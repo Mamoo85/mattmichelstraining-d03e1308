@@ -1,152 +1,70 @@
 ## Goal
 
-Two tightly-linked features for the Fax / Outreach panels:
+Scale the Dead Lead Reactivation prospector from ~1–2 emails/run to **20–50/run**, expand search coverage from 11 Metro Detroit cities to **all of Michigan**, and remove the bottlenecks that cause "20 found · 10 skipped · 0 emailed" runs.
 
-1. **Lead Email Enrichment** — for every fax/lead row in `outreach_leads`, look up and store the best email address using the existing 6-stage waterfall (Snov → Apollo → pattern-verify → Hunter → PDL → site_scrape). Persist the result, the source, and a confidence score so we never re-enrich the same lead twice.
-2. **"Send from My Gmail" one-click button** — once a lead has an enriched email, a single button on each row sends a personalized message **from the operator's connected Gmail account** (not Resend, not Twilio) to that enriched email. Uses the Gmail connector gateway so the message lands in the recipient's inbox as a real human-to-human email — perfect for warm follow-up after a fax.
+## Why the current run only emailed 0–2
 
-Both pieces are gated behind the existing manual-only compliance flow (no automation, no bulk send) — the operator clicks "Enrich" then "Send" per row.
+Audit of `supabase/functions/contractor-prospector/index.ts`:
 
----
+1. **Daily cap = 30 total emails** (`DAILY_SEND_CAP = 30`), of which only **5** can be dead-lead pitches (`DEAD_LEAD_CAP = 5`). That alone caps us at 5 dead-lead emails per day no matter how many prospects we find.
+2. **Per-run send cap is hardcoded to 15** (`maxToSend = Math.min(15, remainingCap)`).
+3. **Google Places fetches only 20 results per query** (`maxResultCount: 20`) → after dedupe + AI rejection, often nets 0–2 new prospects.
+4. **Manual run uses one combo only** — when you pick "HVAC contractor / Troy MI", it searches that single string once and stops.
+5. **City list = 11 Metro Detroit ZIPs** in both the edge function (`CITIES`) and the UI dropdown (`PROSPECT_CITIES`).
+6. The "10 already in DB" skip is real — small city pool means we burn through fresh businesses fast.
 
-## What the user sees
+## Plan
 
-In the "Recent FAX Sends" table on the Fax tab (and Postcard / SMS tabs), each row gets two new chips next to the existing "View Copy" eye icon:
+### 1. Statewide city coverage (50+ Michigan cities)
 
-```text
-[Acme Roofing]  Detroit · roofer · 2026-04-26  [SENT]
-   Fax #: +13135551234
-   Email: bob@acmeroof.com  ✓ verified (snov)        [📧 Send from Gmail]
-```
+Replace the 11-city Metro Detroit list in **both**:
+- `supabase/functions/contractor-prospector/index.ts` → `CITIES` constant
+- `src/components/admin/AdminDeadLeads.tsx` → `PROSPECT_CITIES`
 
-If no email yet:
-```text
-[Acme Roofing]  Detroit · roofer · 2026-04-26  [SENT]
-   Fax #: +13135551234
-   Email: —                                          [🔍 Find Email]
-```
+New list grouped by region (Metro Detroit, West MI, Mid-MI, Northern MI, UP):
+Detroit, Grosse Pointe, Warren, Sterling Heights, Troy, Livonia, Dearborn, Royal Oak, St. Clair Shores, Macomb, Ferndale, Southfield, Farmington Hills, Novi, Rochester Hills, Pontiac, Auburn Hills, Birmingham, Bloomfield Hills, Canton, Westland, Taylor, Wyandotte, Monroe, Ann Arbor, Ypsilanti, Saline, Brighton, Howell, Lansing, East Lansing, Okemos, Jackson, Kalamazoo, Battle Creek, Portage, Grand Rapids, Wyoming, Kentwood, Holland, Muskegon, Grand Haven, Saugatuck, Flint, Burton, Saginaw, Bay City, Midland, Mt. Pleasant, Traverse City, Petoskey, Cadillac, Alpena, Marquette, Sault Ste. Marie, Escanaba.
 
-Click **🔍 Find Email** → toast progress ("Trying Snov…", "Trying Apollo…", "Verified via pattern-match"). When it finds one, the chip updates inline.
+Add an **"All Michigan (auto-rotate)"** option in the UI city dropdown — picks 8 random cities per run.
 
-Click **📧 Send from Gmail** → opens a small dialog pre-filled with subject + body (editable), shows the Gmail account it'll send from (e.g. *matt@detroitwebagent.com*), confirm → message sends via Gmail API, audit log row written, button changes to `✓ Sent 2:41 PM`.
+### 2. Bigger per-run scale
 
-If Gmail isn't connected yet, the button opens the connector picker first (Lovable's standard `connect` flow).
+In `contractor-prospector/index.ts`:
 
----
+| Constant | Old | New |
+|---|---|---|
+| `DAILY_SEND_CAP` | 30 | **150** |
+| `DEAD_LEAD_CAP` | 5 | **50** |
+| `TECH_ALERT_CAP` | 5 | 20 |
+| `MISSED_CALL_CAP` | 5 | 20 |
+| `maxToSend` per run | `min(15, remaining)` | `min(50, remaining)` |
+| Google Places `maxResultCount` | 20 | **20 (max allowed by API) — but loop multiple queries** |
 
-## Technical plan
+Google Places caps at 20 per call, so to get more candidates we run **multiple queries per run**:
+- When user picks a single trade+city → expand to 4 query variants ("HVAC contractor in Troy MI", "heating and cooling Troy MI", "AC repair Troy MI", "furnace repair Troy MI") = ~80 raw candidates instead of 20.
+- When user picks "All Michigan" → run the chosen trade across **8 rotated cities** in one invocation = ~160 raw candidates.
+- Keep the 50 s soft timeout — process queries in parallel batches of 4 with `Promise.all`.
 
-### 1. Database — extend `outreach_leads`
+### 3. Smarter dedupe & yield
 
-Migration `add_lead_email_enrichment.sql`:
+- The "already in DB" filter currently rejects any business previously contacted by ANY pitch. Loosen for dead-lead pitch: allow re-pitch if last contact was >90 days ago.
+- Lower the email-found bar: when site scrape returns no email, fall back to the existing enrichment waterfall (Snov → Hunter → pattern-guess `info@domain`) inline before skipping. (Today the prospector skips if no email scraped; enrichment runs later out-of-band.)
 
-```sql
-ALTER TABLE outreach_leads
-  ADD COLUMN IF NOT EXISTS enriched_email text,
-  ADD COLUMN IF NOT EXISTS enriched_email_source text,    -- snov | apollo | pattern | hunter | pdl | site
-  ADD COLUMN IF NOT EXISTS enriched_email_confidence int, -- 0-100
-  ADD COLUMN IF NOT EXISTS enriched_email_at timestamptz,
-  ADD COLUMN IF NOT EXISTS enrichment_trace jsonb DEFAULT '[]'::jsonb,
-  ADD COLUMN IF NOT EXISTS gmail_sent_at timestamptz,
-  ADD COLUMN IF NOT EXISTS gmail_message_id text;
+### 4. UI feedback
 
-CREATE INDEX IF NOT EXISTS idx_outreach_leads_enriched_email
-  ON outreach_leads (enriched_email) WHERE enriched_email IS NOT NULL;
-```
+- Show city + trade in the result line: "Last run: 23 emailed · 142 found · 8 cities scanned".
+- When "All Michigan" is selected, show the 8 cities that were rotated.
+- Keep daily-cap progress bar so you know when you're approaching the new 150/day ceiling.
 
-New audit table for Gmail sends:
+## Files
 
-```sql
-CREATE TABLE outreach_gmail_sends (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  outreach_lead_id uuid REFERENCES outreach_leads(id) ON DELETE CASCADE,
-  sender_user_id uuid REFERENCES auth.users(id),
-  to_email text NOT NULL,
-  subject text NOT NULL,
-  body text NOT NULL,
-  gmail_message_id text,
-  status text NOT NULL,           -- sent | failed
-  error text,
-  sent_at timestamptz DEFAULT now()
-);
-ALTER TABLE outreach_gmail_sends ENABLE ROW LEVEL SECURITY;
--- service_role bypass + admin SELECT via has_role('admin')
-```
+**Edited:**
+- `supabase/functions/contractor-prospector/index.ts` — caps, city list, multi-query expansion, inline enrichment fallback, 90-day re-pitch window
+- `src/components/admin/AdminDeadLeads.tsx` — statewide city dropdown + "All Michigan" option, larger result display
 
-### 2. Edge function — `outreach-lead-enrich-email`
+**No new tables, no new functions, no migrations.** Pure config + logic expansion in existing files.
 
-New function. Input: `{ outreach_lead_id }`. Reuses the **existing** 6-stage waterfall logic from `lead-enrichment-waterfall` / `agency-contact-enrich` — does NOT duplicate provider code, just orchestrates against the lead's `business_name + city + industry + website` (derived from the Maps payload already on the row).
+## Expected outcome
 
-Returns:
-```json
-{ ok: true, email: "bob@acme.com", source: "snov", confidence: 92, trace: [...] }
-```
-
-Persists `enriched_email*` columns and pushes the trace into `enrichment_trace`. If all 6 stages fail, returns `{ ok: false, trace: [...] }` so the UI can surface "why".
-
-### 3. Edge function — `outreach-gmail-send`
-
-New function — uses the **Gmail connector gateway**, NOT Resend.
-
-```ts
-const GATEWAY_URL = 'https://connector-gateway.lovable.dev/google_mail/gmail/v1';
-// POST /users/me/messages/send  with base64url RFC2822 body
-// Headers: Authorization: Bearer ${LOVABLE_API_KEY}, X-Connection-Api-Key: ${GOOGLE_MAIL_API_KEY}
-```
-
-Flow:
-1. Auth-check JWT (verify_jwt = true on this one — only logged-in admins can send from their Gmail).
-2. Validate body with Zod: `{ outreach_lead_id, subject, body }`.
-3. Load lead, ensure `enriched_email` is present and not in `sms_opt_outs` / suppression list.
-4. Build RFC 2822 message (To/Subject/Content-Type) → base64url encode.
-5. POST to gateway `/users/me/messages/send`.
-6. On 200 → update `outreach_leads.gmail_sent_at` + `gmail_message_id`, insert `outreach_gmail_sends` row with `status='sent'`.
-7. On 403 `insufficient authentication scopes` → return `{ ok: false, needs_reconnect: true, missing_scope: 'gmail.send' }` so UI can trigger reconnect.
-8. On other errors → log to `outreach_gmail_sends` with `status='failed'` + error.
-
-Compliance: every send recorded; manual-only (one click per row, no batch endpoint); honors suppression list before sending.
-
-### 4. Connector setup (one-time, by user)
-
-When the operator first clicks "Send from Gmail", if Gmail isn't connected we call:
-```text
-standard_connectors--connect(connector_id="google_mail")
-```
-The Lovable picker handles OAuth. Required scope: `https://www.googleapis.com/auth/gmail.send` (and `gmail.readonly` for "from" address display).
-
-### 5. Frontend changes — `ChannelOutreachTab.tsx`
-
-Per row:
-- New `LeadEmailCell` subcomponent: shows enriched email + source badge, or a "🔍 Find Email" button when missing. Clicking calls `outreach-lead-enrich-email` with progress toasts using `sonner`'s `toast.loading()` updated as the function streams trace events back (single round trip — toast advances on `setTimeout` based on the trace timeline returned).
-- New `GmailSendDialog` component: opens on "📧 Send from Gmail" click. Pre-fills subject (`"Following up on the fax we sent to {{business}}"`) and body (operator-editable, with merge tokens for `{{business_name}}`, `{{city}}`, `{{trade}}`). Footer shows the connected Gmail account; "Send" calls `outreach-gmail-send`.
-- After successful send: row chip shows `✓ Sent {time}` and disables the button.
-
-### 6. Files
-
-**New**:
-- `supabase/migrations/{ts}_outreach_lead_email_enrichment.sql`
-- `supabase/functions/outreach-lead-enrich-email/index.ts`
-- `supabase/functions/outreach-gmail-send/index.ts`
-- `src/components/admin/outreach/LeadEmailCell.tsx`
-- `src/components/admin/outreach/GmailSendDialog.tsx`
-
-**Edited**:
-- `src/components/admin/ChannelOutreachTab.tsx` — render the two new components per row, expand the `select(...)` to include the new enrichment + gmail columns
-- `supabase/config.toml` — `verify_jwt = false` for `outreach-lead-enrich-email` (admin-only via service-role check inside), `verify_jwt = true` for `outreach-gmail-send`
-
-### 7. Out of scope (explicitly)
-
-- No bulk "Enrich All" button — manual one-row-at-a-time only (TCPA / CAN-SPAM safety).
-- No automatic Gmail send after enrichment — operator must click Send.
-- No Gmail thread tracking / reply ingestion in this pass (reply ingestion via Gmail watch can be a follow-up).
-- No changes to the existing fax/postcard/SMS sending paths — Gmail is an *additional* channel triggered by the operator after a fax goes out.
-
----
-
-## Risks + mitigations
-
-- **Gmail send-rate limits** (Google: ~500/day per Gmail account, ~2k/day for Workspace). We're manual-click — well below. UI shows a counter `"Gmail sends today: 12 / 500"` pulled from `outreach_gmail_sends` count.
-- **OAuth scope drift** — if the user only granted `gmail.readonly`, the send call returns 403; UI catches `needs_reconnect: true` and prompts a one-click reconnect with `gmail.send` pre-selected.
-- **Enrichment cost** — each click hits up to 6 paid providers. We persist the result so a second click on the same lead is free. Trace shows which provider succeeded so we can tune order over time.
-
-**Approve and I'll build it.**
+- Single run targeting "HVAC contractor / All Michigan" → ~80–160 raw candidates → 20–50 emails sent (vs 0–2 today).
+- Daily ceiling 150 emails (vs 30) — enough headroom for 3–5 manual runs per day.
+- Coverage: every metro in Michigan, not just Detroit suburbs.
