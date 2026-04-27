@@ -170,12 +170,34 @@ serve(async (req) => {
 
     const audience = campaign.audience_type || campaign.target_segment || "general";
 
-    // Pull prospects matching segment
-    let q = sb.from("fax_prospects").select("*").eq("segment", campaign.target_segment);
-    if (REQUIRE_PUBLIC_VERIFIED) q = q.eq("verified_public", true);
-    if (prospectIds && prospectIds.length) q = q.in("id", prospectIds);
-    const { data: prospects } = await q;
-    const allTargets = prospects || [];
+    // Resolve prospect_ids: explicit body param > campaign.prospect_ids (Outreach Command Center)
+    const campaignProspectIds: string[] = Array.isArray((campaign as any).prospect_ids) ? (campaign as any).prospect_ids : [];
+    const effectiveIds: string[] = (prospectIds && prospectIds.length) ? prospectIds : campaignProspectIds;
+    const usePool = effectiveIds.length > 0;
+
+    let prospects: any[] = [];
+    if (usePool) {
+      // IDs come from prospect_pool (Outreach Command Center). Skip segment filter.
+      const { data } = await sb
+        .from("prospect_pool")
+        .select("id, business_name, fax_number, audience_type, status, last_sent_at")
+        .in("id", effectiveIds);
+      prospects = (data || []).map((p: any) => ({
+        id: p.id,
+        business_name: p.business_name,
+        fax_number: p.fax_number,
+        segment: p.audience_type,
+        fax_sent_at: p.status === "sent_fax" ? (p.last_sent_at || null) : null,
+        _source: "prospect_pool",
+      }));
+    } else {
+      // Legacy path: fax_prospects table filtered by segment
+      let q = sb.from("fax_prospects").select("*").eq("segment", campaign.target_segment);
+      if (REQUIRE_PUBLIC_VERIFIED) q = q.eq("verified_public", true);
+      const { data } = await q;
+      prospects = (data || []).map((p: any) => ({ ...p, _source: "fax_prospects" }));
+    }
+    const allTargets = prospects;
 
     // For non-resend runs: filter out anyone already sent
     const targets = prospectIds && prospectIds.length
