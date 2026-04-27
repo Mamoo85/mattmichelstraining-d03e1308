@@ -109,6 +109,7 @@ export default function MortgageRadar() {
       <div className="min-h-screen bg-[#030711] text-white flex items-center justify-center px-4">
         <div className="max-w-lg w-full text-center">
           <div className="mb-6 space-y-3">
+            <MortgageRadarProvisioningProgress email={searchParams.get("email") || undefined} />
             <ReceiptStatusBanner sessionId={searchParams.get("session_id")} productLabel="Mortgage Radar" />
             <CheckEmailCard sessionId={searchParams.get("session_id")} />
             <PostCheckoutClaim product="Mortgage Radar" />
