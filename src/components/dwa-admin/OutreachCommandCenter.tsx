@@ -620,6 +620,32 @@ function RankedPool() {
       }).select("id").single();
       if (error) return toast.error(error.message);
       campaignId = (data as any)?.id ?? null;
+
+      // Mirror selected prospects into fax_prospects so legacy segment-scan path
+      // and any future re-send can resolve these IDs even if prospect_pool changes.
+      // We share the prospect_pool UUID as the fax_prospects PK for stable cross-table lookup.
+      const mirror = faxRows.map((p: any) => ({
+        id: p.id,
+        business_name: p.business_name,
+        fax_number: p.fax_number,
+        contact_name: p.contact_name ?? null,
+        address: p.address_line1 ?? null,
+        city: p.city ?? null,
+        state: p.state ?? null,
+        zip: p.zip ?? null,
+        segment: audienceLabel,
+        source: "outreach_command_center",
+        source_url: null,
+        verified_public: true,
+        audience_type: audienceLabel,
+        county: p.county ?? null,
+      }));
+      const { error: mirrorErr } = await supabase
+        .from("fax_prospects" as any)
+        .upsert(mirror, { onConflict: "id", ignoreDuplicates: false });
+      if (mirrorErr) {
+        console.warn("fax_prospects mirror failed:", mirrorErr.message);
+      }
     } else if (channel === "postcard") {
       const mailRows = selectedRows.filter((p) => !!p.address_line1);
       if (!mailRows.length) return toast.error("No selected prospects have mailing addresses");
