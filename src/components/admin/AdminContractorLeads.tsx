@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import TerritoryLinkGenerator from "@/components/dwa-admin/TerritoryLinkGenerator";
+import ContractorLeadsInfoBox from "@/components/admin/ContractorLeadsInfoBox";
+import ContractorOutreachPanel from "@/components/admin/ContractorOutreachPanel";
 
 // ── Priority territories for first Facebook/prospector push ──────────────────
 const PRIORITY_SLUGS = ["hvac-warren", "plumbing-detroit", "hvac-sterling-heights", "roofing-troy", "electrician-detroit"];
@@ -271,20 +273,8 @@ export default function AdminContractorLeads() {
   return (
     <div className="space-y-8 pb-12">
 
-      {/* ── How leads come in (explainer) ────────────────────────────────── */}
-      <div className="bg-gradient-to-br from-blue-950/30 to-cyan-950/20 border border-blue-500/30 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <Info size={18} className="text-blue-400 shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <h3 className="text-sm font-bold text-blue-200">📍 How leads come in</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Leads arrive 3 ways: <span className="text-blue-300 font-semibold">(1)</span> homeowner fills <code className="text-[10px] bg-black/40 px-1 py-0.5 rounded">/contractor-leads/[trade-city]</code> SEO page,{" "}
-              <span className="text-blue-300 font-semibold">(2)</span> homeowner clicks a contractor's Facebook lead ad (requires FB Page ID wired below),{" "}
-              <span className="text-blue-300 font-semibold">(3)</span> you manually add via "Add Lead" button. Each new lead auto-SMSes the contractor who owns that territory. Unclaimed leads can be sold à la carte from the Live Lead Feed.
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* ── Info Box (replaces old explainer) ─────────────────────────── */}
+      <ContractorLeadsInfoBox />
 
       {/* ── Territory Signup Link Generator ──────────────────────────────── */}
       <TerritoryLinkGenerator />
@@ -519,6 +509,20 @@ export default function AdminContractorLeads() {
                       ? <span className="inline-flex items-center gap-1 text-[10px] text-blue-300 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full"><Facebook size={9} /> FB wired</span>
                       : <span className="text-[10px] text-muted-foreground">FB not wired</span>
                     }
+                    <button
+                      onClick={async () => {
+                        if (!confirm(`Unlock ${t.trade} / ${t.city}? This frees the territory for a new contractor.`)) return;
+                        const { error } = await supabase
+                          .from("contractor_lead_sites" as never)
+                          .update({ active_contractor_id: null } as never)
+                          .eq("id", t.id);
+                        if (error) toast.error(error.message);
+                        else { toast.success("Territory unlocked"); load(); }
+                      }}
+                      className="block w-full mt-1 text-[10px] font-bold px-2 py-1 rounded bg-amber-600/20 text-amber-300 border border-amber-500/30 hover:bg-amber-600/40"
+                    >
+                      🔓 Unlock Territory
+                    </button>
                   </div>
                 ) : (
                   <div className="mt-2 space-y-2">
@@ -553,7 +557,22 @@ export default function AdminContractorLeads() {
 
       {/* ── Section 4: Live Lead Feed ─────────────────────────────────────── */}
       <div>
-        <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-3">Live Lead Feed</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Live Lead Feed</h2>
+          <button
+            onClick={async () => {
+              const demoCount = leads.filter(l => l.is_demo_record).length;
+              if (demoCount === 0) { toast.info("No demo leads to clear"); return; }
+              if (!confirm(`Delete ${demoCount} demo leads? This cannot be undone.`)) return;
+              const { error } = await supabase.from("contractor_leads" as never).delete().eq("is_demo_record", true);
+              if (error) toast.error(error.message);
+              else { toast.success(`Cleared ${demoCount} demo leads`); load(); }
+            }}
+            className="text-[10px] font-bold px-2 py-1 rounded bg-red-600/20 text-red-300 border border-red-500/30 hover:bg-red-600/40"
+          >
+            🗑️ Clear Demo Leads
+          </button>
+        </div>
         <div className="border border-border rounded-lg overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-muted/30">
@@ -580,7 +599,10 @@ export default function AdminContractorLeads() {
                     onClick={() => setExpandedLead(isExpanded ? null : l.id)}
                   >
                     <td className="px-3 py-2 text-xs text-muted-foreground whitespace-nowrap">{timeAgo(l.created_at)}</td>
-                    <td className="px-3 py-2 text-xs font-medium text-foreground">{l.name}</td>
+                    <td className="px-3 py-2 text-xs font-medium text-foreground">
+                      {l.name}
+                      {l.is_demo_record && <span className="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-300 border border-orange-500/30">DEMO</span>}
+                    </td>
                     <td className="px-3 py-2 text-xs text-muted-foreground hidden sm:table-cell">
                       <a href={`tel:${l.phone}`} onClick={(e) => e.stopPropagation()} className="hover:text-primary">{l.phone}</a>
                     </td>
@@ -826,8 +848,8 @@ export default function AdminContractorLeads() {
               </div>
             ))}
           </div>
-        )}
-      </div>
+      {/* ── Section 8: Contractor Outreach (cold-email leads) ─────────── */}
+      <ContractorOutreachPanel />
     </div>
   );
 }
