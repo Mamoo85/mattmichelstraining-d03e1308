@@ -712,7 +712,24 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const result = await runWaterfall(targetDomain, resolvedBusinessName, { website, allowEmailGuess: allowEmailGuessResolved });
+    const result = await (async () => {
+      if (!prospect_id) {
+        return await runWaterfall(targetDomain, resolvedBusinessName, { website, allowEmailGuess: allowEmailGuessResolved });
+      }
+      let inner: any = null;
+      await logEnrichment(
+        { lead_id: prospect_id, vertical: "prospect", function_name: "lead-enrichment-waterfall", stage: "free", provider: "internal", triggered_by: "on_demand" },
+        async () => {
+          inner = await runWaterfall(targetDomain, resolvedBusinessName, { website, allowEmailGuess: allowEmailGuessResolved });
+          const fields_added: string[] = [];
+          if (inner.email) fields_added.push("email");
+          if (inner.direct_phone) fields_added.push("phone");
+          if (inner.decision_maker_name) fields_added.push("decision_maker_name");
+          return { fields_added, provider: inner.enrichment_source || "internal" };
+        },
+      );
+      return inner;
+    })();
 
     if (prospect_id) {
       await sb.from("prospect_businesses").update({
