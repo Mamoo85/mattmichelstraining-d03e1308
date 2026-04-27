@@ -215,7 +215,7 @@ export default function AdminDeadLeads() {
       const rejected   = Number(data?.scoutRejected ?? 0);
       const sentBefore = Number(data?.dailySentBefore ?? 0);
       const sentAfter  = Number(data?.dailySentAfter ?? 0);
-      const cap        = Number(data?.cap ?? 30);
+      const cap        = Number(data?.cap ?? 150);
 
       // Build a precise reason when nothing was emailed.
       let note: string | undefined;
