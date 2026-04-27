@@ -259,7 +259,26 @@ serve(async (req) => {
         month_remaining: Math.max(0, MAX_PER_MONTH - monthSent),
         per_run_cap: MAX_PER_RUN,
         estimated_cost_if_sent: +(targets.length * COST_PER_FAX).toFixed(2),
+        resolution_trace: resolutionTrace,
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── PRE-FLIGHT: invalid targets gate ─────────────────────────────────
+    if (allTargets.length === 0) {
+      const errMsg = `0 targets resolved (${resolutionTrace.join(" | ")})`;
+      await sb.from("fax_campaigns").update({
+        status: "invalid_targets",
+        last_error: errMsg,
+      }).eq("id", campaignId);
+      await notifyMatt(
+        `⚠️ Fax campaign blocked — invalid targets: ${campaign.name}`,
+        `<p>Campaign <strong>${campaign.name}</strong> resolved 0 prospects.</p>
+         <p>Trace: <code>${resolutionTrace.join(" | ")}</code></p>
+         <p>Likely cause: prospect_ids reference rows that no longer exist in either prospect_pool or fax_prospects, or segment label doesn't match any rows.</p>`,
+      );
+      return new Response(JSON.stringify({
+        success: false, error: "invalid_targets", resolution_trace: resolutionTrace,
+      }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     if (!PHAXIO_API_KEY || !PHAXIO_API_SECRET) {
