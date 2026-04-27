@@ -342,7 +342,7 @@ serve(async (req) => {
     for (const p of (prospects || [])) {
       if (Date.now() - started > WALL_BUDGET_MS - 20_000) break;
       const wrapped = await logEnrichment(
-        { lead_id: p.id, vertical: "b2b_prospect", function_name: "enrich-candidates", stage: "prospect", provider: "sonar", triggered_by: "cron" },
+        { lead_id: p.id, vertical: "prospect", function_name: "enrich-candidates", stage: "other", provider: "sonar", triggered_by: "cron" },
         async () => {
           const before = { website: !!p.website, phone: !!p.phone, email: !!p.email };
           await enrichProspect(sb, p);
