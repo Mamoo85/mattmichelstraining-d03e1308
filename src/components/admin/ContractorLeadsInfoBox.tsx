@@ -54,12 +54,42 @@ export default function ContractorLeadsInfoBox() {
           </div>
 
           <div className="border-t border-blue-500/20 pt-4">
+            <h4 className="text-blue-300 font-bold mb-2 text-xs uppercase tracking-widest">Locked under [Company] — what it means</h4>
+            <ul className="space-y-1.5 text-xs">
+              <li>"Locked under Detroit Plumbing Pros" = that contractor's <code className="text-[10px] bg-black/40 px-1 rounded">active_contractor_id</code> is set on the territory. They own it; no one else gets those leads.</li>
+              <li><b>Unlock</b> button (on each locked card) clears the assignment instantly. Their lead history stays — they just stop receiving new leads.</li>
+              <li><b>Request access</b>: if a different contractor wants the territory, unlock first → contractor signs up via the Stripe link → they auto-claim it.</li>
+            </ul>
+          </div>
+
+          <div className="border-t border-blue-500/20 pt-4">
+            <h4 className="text-blue-300 font-bold mb-2 text-xs uppercase tracking-widest">How Priority works</h4>
+            <ul className="space-y-1.5 text-xs">
+              <li>Priority = Matt's top-5 sell list. Empty + priority = amber action card in the Action Queue.</li>
+              <li>Toggle priority on/off via the ⚡ icon on each territory card (writes <code className="text-[10px] bg-black/40 px-1 rounded">is_priority</code> to the DB — no code edits needed).</li>
+              <li>Defaults: HVAC Warren, Plumbing Detroit, HVAC Sterling Heights, Roofing Troy, Electrician Detroit.</li>
+            </ul>
+          </div>
+
+          <div className="border-t border-blue-500/20 pt-4">
+            <h4 className="text-blue-300 font-bold mb-2 text-xs uppercase tracking-widest">Exact actions to take (decision tree)</h4>
+            <ul className="space-y-1.5 text-xs">
+              <li>🔴 <b>Stuck lead</b> → Sell (à-la-carte) OR Unlock + reassign territory</li>
+              <li>⚡ <b>Empty priority territory</b> → Run Prospector OR Cold-Email Contractors</li>
+              <li>✅ <b>Verified-email prospect</b> → Email blast (safe)</li>
+              <li>🟡 <b>Unverified prospect</b> → Enrich first, then email</li>
+              <li>🟢 <b>SMS-consented prospect</b> → Eligible for SMS sniper</li>
+              <li>⛔ <b>Suppressed contact</b> → Never sends — system fail-closed</li>
+            </ul>
+          </div>
+
+          <div className="border-t border-blue-500/20 pt-4">
             <h4 className="text-blue-300 font-bold mb-2 text-xs uppercase tracking-widest">Cold outreach — what's legal?</h4>
             <ul className="space-y-1.5 text-xs">
               <li>✅ <b className="text-green-300">Cold EMAIL to contractors</b> — legal under CAN-SPAM (we include physical address + 1-click unsubscribe).</li>
               <li>⚠️ <b className="text-amber-300">Cold SMS to contractors</b> — risky under TCPA / 10DLC. Carriers will throttle and you can be fined.</li>
-              <li>✅ <b className="text-green-300">SMS after consent</b> — legal once they reply or click. We track <code className="text-[10px] bg-black/40 px-1 rounded">consent_for_sms</code> on every prospect.</li>
-              <li><b>Best play:</b> cold-email lead offers → reply/click = consent → then SMS the next ones.</li>
+              <li>✅ <b className="text-green-300">SMS after consent</b> — legal once they reply or click. We track <code className="text-[10px] bg-black/40 px-1 rounded">consent_for_sms</code> + timestamp + source on every prospect.</li>
+              <li><b>Best play:</b> cold-email lead offers → reply/click = consent → mark consent → then SMS the next ones.</li>
             </ul>
           </div>
         </div>
