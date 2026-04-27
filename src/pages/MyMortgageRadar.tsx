@@ -14,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import MortgageRadarMap from "@/components/mortgage/MortgageRadarMap";
 import MortgageRadarPipeline from "@/components/mortgage/MortgageRadarPipeline";
 import MortgageRadarWelcome from "@/components/mortgage/MortgageRadarWelcome";
+import MortgageRadarSeedLead from "@/components/mortgage/MortgageRadarSeedLead";
 
 type Lead = {
   id: string;
