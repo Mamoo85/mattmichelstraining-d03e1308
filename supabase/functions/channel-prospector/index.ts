@@ -299,11 +299,19 @@ serve(async (req) => {
       toAddr.name = p.name;
     } else {
       // SMS: try Google phone first, fall back to website scrape
-      let phoneClean = phone ? phone.replace(/\s/g, "") : "";
-      if (!phoneClean.startsWith("+1") && websiteRaw) {
-        phoneClean = (await scrapePhone(websiteRaw)) || "";
+      // Normalize to strict E.164 (+1XXXXXXXXXX) — strip dashes, parens, spaces
+      const normalize = (raw: string): string => {
+        const digits = raw.replace(/[^\d]/g, "");
+        if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+        if (digits.length === 10) return `+1${digits}`;
+        return "";
+      };
+      let phoneClean = phone ? normalize(phone) : "";
+      if (!phoneClean && websiteRaw) {
+        const scraped = await scrapePhone(websiteRaw);
+        phoneClean = scraped ? normalize(scraped) : "";
       }
-      target = phoneClean.startsWith("+1") ? phoneClean : null;
+      target = phoneClean || null;
       if (!target) { skipped++; continue; }
     }
 
