@@ -1,93 +1,147 @@
-## Context — what already exists
+# Wave 5 — Alert Hygiene, DLQ Aging, Confidence Scoring & Budget Guards
 
-Audit confirmed most backend is already shipped:
+Five tightly-scoped enhancements that close the remaining safety/prioritization gaps from Sprints G–L. All changes additive — no breaking schema or behavior shifts.
 
-- `contractor_outreach_prospects` — has `email_verified`, `consent_for_sms`, `consent_source`, `consent_timestamp`, `unsubscribed_at`, `enrichment_trace` (jsonb)
-- `contractor_outreach_audit_log` — already accepts events: sent/opened/clicked/replied/unsubscribed/suppressed/consent_granted/consent_revoked/quiet_hours_blocked/daily_cap_blocked/bounce
-- `contractor_outreach_suppression` — sources include unsubscribe_link/bounce/complaint/manual/sms_stop
-- Edge functions exist: `contractor-outreach-scrape`, `-enrich`, `-email-blast`, `-sms-send`, `-unsubscribe`
-- UI exists: `ContractorOutreachPanel`, `OutreachConsentDialog`, `OutreachAuditDrawer`, `OutreachSuppressionManager`
-- Email waterfall (`_shared/email-waterfall.ts`) has 6-stage waterfall with PDL last, but only fires when `business_name + city` present — does NOT do name-only `mixed_people/search`
+---
 
-So the work is: **(a) small additive schema for email consent + quality score, (b) one enrichment-pipeline upgrade, (c) UI clarity panels (InfoBoxes), (d) trade/territory filters, (e) global audit log page.** No duplicate tables.
+## 1. Quiet-hours filter for warn-level alerts (9pm–7am ET)
 
-## Plan
+Goal: Stop waking Matt up for non-critical noise. Warn alerts queue silently; crit always pages.
 
-### 1. Schema (one additive migration)
+**Edge change** — `supabase/functions/outreach-alert-evaluator/index.ts`
+- Add `isQuietHoursET()` helper: convert `now()` to America/Detroit; return true if hour ≥ 21 or < 7.
+- Before the `if (t.sms_enabled)` SMS block:
+  - If `severity === "warn"` and `isQuietHoursET()`: skip `sendSMS`, set `smsSent = false`, mark `meta.suppressed_by_quiet_hours = true`.
+  - `crit` alerts continue to call `sendSMS({ allowQuietHours: true })` unchanged.
+- Append the suppressed entry to `outreach_alerts_log` so it's still visible in the UI (with the meta flag).
 
-Add to `contractor_outreach_prospects`:
-- `consent_for_email boolean not null default false`
-- `consent_email_source text` / `consent_email_timestamp timestamptz`
-- `quality_score smallint` (0–100, computed)
-- `quality_breakdown jsonb` (email_validity / enrichment_confidence / territory_match sub-scores)
-- `is_demo boolean not null default false`
-- `territory_priority smallint default 3` (1=primary, 2=secondary, 3=opportunistic)
+**UI** — `src/components/admin/EnrichmentWalkerAlertsPanel.tsx`
+- In the "Recent alerts fired" list, render a 🌙 badge when `meta.suppressed_by_quiet_hours` is true.
 
-Add admin kill-switches table `outreach_global_settings` (single row):
-- `cold_email_enabled`, `cold_sms_enabled`, `min_quality_score_to_send`, `hide_demo_leads_below_score`, `updated_by`, `updated_at`
+---
 
-Backfill `quality_score` via SQL from existing fields. Index on `(quality_score desc, unsubscribed_at)`.
+## 2. DLQ aging → suppression after 7 days
 
-### 2. Enrichment upgrade (PDL name-only fallback)
+Goal: Stop infinitely retrying prospects that are truly unenrichable; keep the queue from bloating.
 
-In `_shared/email-waterfall.ts`, add a Stage 6.5: when `business_name + city` returns null AND we have `owner_name`, call PDL `mixed_people/search` with name filter, take top match, then resolve email via existing PDL person enrich. Wire into `contractor-outreach-enrich` so healthcare records (RN, CNA, etc. — name without business) get enriched instead of returning null. Trace appended to `enrichment_trace` as before.
+**Migration** — new `add_dlq_aging.sql`
+- Add `suppressed_at timestamptz` and `suppression_reason text` columns to `contractor_outreach_prospects` (if not already present).
+- Partial index `idx_dlq_aging` on `enrichment_dead_letter (created_at)` where unresolved.
 
-### 3. Quality score computation
+**Edge change** — `contractor-outreach-enrich-backfill/index.ts`
+- New phase at top of run (before replay loop):
+  - Select `enrichment_dead_letter` rows older than 7 days that are not resolved.
+  - For each: update parent prospect `suppressed_at = now()`, `suppression_reason = 'dlq_aged_unenrichable'`.
+  - Mark the DLQ row as resolved with note `aged_to_suppression`.
+- Backfill replay loop already filters out suppressed prospects via the existing "missing fields" query — add explicit `.is('suppressed_at', null)` guard.
+- Return `{ aged_count }` in the response payload.
 
-Add `compute_prospect_quality_score(prospect_id)` Postgres function:
-- email validity: 40 pts (verified=40, present-unverified=20, none=0)
-- enrichment confidence: 30 pts (read top trace entry confidence × 30)
-- territory match: 30 pts (primary=30, secondary=20, opportunistic=10)
+**UI** — `EnrichmentDLQPanel.tsx`
+- Add a "Suppressed (aged)" counter card pulling `count(*) where suppression_reason = 'dlq_aged_unenrichable'`.
 
-Triggered on insert/update of email/enrichment_trace/territory_priority. Admin toggle auto-hides prospects with score < threshold flagged `is_demo`.
+---
 
-### 4. UI — ContractorOutreachPanel upgrades
+## 3. `enrichment_confidence` score (0–100) on prospects
 
-- **InfoBox at top** (`<OutreachInfoBox />`): explains in plain English — "What is a verified lead?", "How we enrich emails (6-stage waterfall)", "What FB ID means", "Why some leads are locked", "How priority works", "How to unlock". Collapsible, default-open on first visit (localStorage).
-- **Trade + territory filter row**: multi-select trade dropdown (HVAC, Plumbing, Electrical, Roofing, Boiler, Gutters, Siding, Healthcare/RN, Healthcare/CNA), city autocomplete, territory priority dropdown, min-quality slider, "hide demo leads" toggle.
-- **Per-row badges**: quality score pill (green ≥75, amber 50-74, red <50), email-consent badge (green ✓ / amber Pending / red ✗), SMS-consent badge, verified-email checkmark.
-- **Per-row actions**: Grant/revoke email consent, Grant/revoke SMS consent (writes to audit log automatically via existing `OutreachConsentDialog` — extend it to handle both channels).
-- **Global toggles bar** (admin-only): Cold Email ON/OFF, Cold SMS ON/OFF, min-quality slider, hide-demo toggle. Writes to `outreach_global_settings`.
+Goal: Sort retries and outreach by likelihood of payoff. Low-confidence prospects get deprioritized; high-confidence go to the front.
 
-### 5. Send-path enforcement
+**Migration**
+- `ALTER TABLE contractor_outreach_prospects ADD COLUMN enrichment_confidence smallint DEFAULT 0 CHECK (enrichment_confidence BETWEEN 0 AND 100);`
+- Index: `CREATE INDEX idx_prospects_confidence ON contractor_outreach_prospects (enrichment_confidence DESC) WHERE suppressed_at IS NULL;`
 
-Update `contractor-outreach-email-blast` and `contractor-outreach-sms-send`:
-- Read `outreach_global_settings`; if channel disabled → log `quiet_hours_blocked` (reason: "global kill switch") and return.
-- Require `consent_for_email=true` for email (or `source='cold_b2b_legitimate_interest'` with valid CAN-SPAM footer — current behavior preserved for cold but logged distinctly as `cold_outreach`).
-- Require `consent_for_sms=true` for SMS — block all sends without it (no cold SMS).
-- Skip prospects below `min_quality_score_to_send`.
-- Every send/skip writes to `contractor_outreach_audit_log` with `actor = auth.uid email or 'system'`.
+**Scoring rule** (computed at end of `_shared/email-waterfall.ts` `runEmailWaterfall`):
+- Start at 0. Add:
+  - +40 if verified email present
+  - +20 if owner full name found
+  - +15 if phone number present
+  - +10 if domain confirmed reachable (no scrape error)
+  - +10 if pattern-verify or Hunter/PDL hit (high-trust source)
+  - +5 if Apollo confirmed company match
+- Persist via the existing prospect update step.
 
-### 6. Outreach Activity & Audit Log page
+**Consumers**
+- `contractor-outreach-enrich-backfill`: `.order('enrichment_confidence', { ascending: false })` so the most likely-to-succeed retries run first within the `HARD_MAX` budget.
+- Outreach selection (existing dispatcher that picks daily SMS/email targets — locate via `rg "contractor_outreach_prospects" supabase/functions | rg -i "order|select.*limit"`): also order by confidence desc so paid sends prioritize high-confidence leads.
 
-New route `/dwa-admin/outreach-audit` + sidebar entry. Lists `contractor_outreach_audit_log` with filters: channel, event type, prospect, actor, date range. Exports CSV. Click-through opens prospect drawer. Reuses existing `OutreachAuditDrawer` styling.
+**UI** — `EnrichmentTimelinePanel.tsx`
+- Show confidence as a colored chip per prospect (green ≥70, amber 40–69, red <40).
 
-### 7. Unsubscribe click logging
+---
 
-`contractor-outreach-unsubscribe` already exists — verify it writes `event='unsubscribed'` with `ip_address`/`user_agent` to audit log. Add the writes if missing.
+## 4. Cost-anomaly alert (daily spend > 2× 7-day rolling avg)
 
-## Files
+Goal: Catch a runaway cron / pricing change / loop bug before it burns the month's budget.
 
-**New (5):**
-- `supabase/migrations/<ts>_outreach_consent_quality.sql`
-- `src/components/admin/OutreachInfoBox.tsx`
-- `src/components/admin/OutreachGlobalSettings.tsx`
-- `src/pages/admin/OutreachAuditLog.tsx` + sidebar wiring
-- (maybe) `supabase/functions/_shared/quality-score.ts`
+**View** — new migration adds `enrichment_provider_spend_daily`:
+```sql
+CREATE OR REPLACE VIEW enrichment_provider_spend_daily AS
+SELECT date_trunc('day', ran_at)::date AS day,
+       SUM(cost_estimate_usd)::numeric(10,2) AS spend_usd
+FROM enrichment_walker_runs
+GROUP BY 1;
+```
+(Plus equivalent rollup if `email-waterfall` writes per-call spend rows — extend the union accordingly.)
 
-**Edited (~7):**
-- `src/components/admin/ContractorOutreachPanel.tsx` (filters, badges, info box)
-- `src/components/admin/OutreachConsentDialog.tsx` (add email channel)
-- `supabase/functions/_shared/email-waterfall.ts` (PDL name-only stage)
-- `supabase/functions/contractor-outreach-enrich/index.ts` (quality recompute)
-- `supabase/functions/contractor-outreach-email-blast/index.ts` (kill-switch + consent + audit)
-- `supabase/functions/contractor-outreach-sms-send/index.ts` (same)
-- `supabase/functions/contractor-outreach-unsubscribe/index.ts` (verify audit write)
+**Edge change** — `outreach-alert-evaluator/index.ts`
+- Add a hard-coded check kind `daily_spend_anomaly` (does not need a row in `enrichment_alert_thresholds`):
+  - `today_spend = sum where day = today_ET`
+  - `avg7 = sum where day in last 7 prior days / 7`
+  - If `avg7 >= 1.0` (avoid div-by-near-zero noise) AND `today_spend > 2 * avg7` AND `today_spend > 5`:
+    - Fire `crit` SMS: `[Cost spike] $X today vs $Y 7-day avg (Nx).`
+    - Use existing cooldown table with `kind='daily_spend_anomaly'`, 4-hour cooldown.
+    - Always `allowQuietHours: true` (financial = critical).
+  - Log to `outreach_alerts_log`.
 
-## Out of scope (explicitly skipped)
+**UI** — `EnrichmentWalkerAlertsPanel.tsx`
+- New "Spend (today vs 7-day avg)" tile at the top of the panel.
 
-- New tables for audit/suppression/consent (reused existing)
-- New enrichment vendor (just better use of PDL we already have)
-- Statewide MI city expansion (still pending from earlier plan — call out, don't bundle)
+---
 
-## Approve to ship?
+## 5. Walker daily budget cap (default $50/day, configurable)
+
+Goal: Hard ceiling on autonomous spend per UTC-or-ET day, separate from per-run cap.
+
+**Migration**
+- New table `enrichment_walker_config (key text primary key, value_numeric numeric, value_text text, updated_at timestamptz default now())`.
+- Seed row: `('daily_budget_usd', 50, null, now())`.
+- RLS: service_role + admin via `has_role()`; no public access.
+
+**Edge change** — `enrichment-matrix-walker/index.ts`
+- After the existing per-pair budget check, add a global daily-cap check:
+  - Read `daily_budget_usd` from `enrichment_walker_config` (fallback 50 if missing).
+  - Sum `cost_estimate_usd` from `enrichment_walker_runs` where `ran_at >= today 00:00 ET`.
+  - If `today_total >= daily_budget`: insert a walker run row with `skipped_reason='daily_budget_cap_hit ($X/$Y)'`, return `{ ok: true, skipped: "daily_budget" }`.
+  - If `today_total + projected_run_cost > daily_budget`: trim `HARD_MAX_RUN_COST_USD` for this run to remaining headroom (or skip if headroom < $1).
+
+**UI** — `EnrichmentWalkerAlertsPanel.tsx`
+- New "Today's walker spend" progress bar: `today_total / daily_budget_usd` with editable input (admin-only) that updates the config row via a small RPC `set_walker_daily_budget(usd numeric)`.
+
+---
+
+## Files Changed (summary)
+
+**Migrations (1 file)**
+- `add_wave5_dlq_confidence_budget.sql` — DLQ aging cols, confidence col + index, walker_config table, spend_daily view, RPC `set_walker_daily_budget`.
+
+**Edge functions**
+- `outreach-alert-evaluator/index.ts` — quiet-hours filter + cost-anomaly check
+- `contractor-outreach-enrich-backfill/index.ts` — DLQ aging phase + confidence-ordered replay
+- `enrichment-matrix-walker/index.ts` — daily budget cap
+- `_shared/email-waterfall.ts` — confidence scorer
+
+**UI**
+- `EnrichmentWalkerAlertsPanel.tsx` — quiet-hours badge, spend tile, walker budget bar
+- `EnrichmentDLQPanel.tsx` — aged-suppression counter
+- `EnrichmentTimelinePanel.tsx` — confidence chips
+
+**No changes to:** routes, auth, RLS on existing tables, cron schedules (existing 5-min evaluator + 30-min walker cadence handles all five features).
+
+---
+
+## Out of scope (intentionally)
+
+- Per-provider budget caps (separate Apollo/Hunter ceilings) — deferred until we have ≥30 days of latency/spend baseline data.
+- Auto-tuning confidence weights via ML — current rule-based scorer is sufficient for sort ordering.
+- Self-service quiet-hours window editor (hardcoded 21:00–07:00 ET) — add UI later if you need to adjust seasonally.
+
+Reply **Approve** to ship.
