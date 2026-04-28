@@ -405,12 +405,30 @@ export async function runEmailWaterfall(
     miss("hunter");
   }
 
-  // 6. pdl (only with business_name + city)
+  // 6. pdl company-match (business_name + city)
   if (input.business_name && input.city && !(await isProviderRateLimited(sb, "pdl"))) {
     const r = await pdlPersonEnrich(sb, input.business_name, input.city, input.state);
     if (r) { await bump(sb, "pdl", true); return hit("pdl", r.email, r.confidence); }
     await bump(sb, "pdl", false);
     miss("pdl");
+  }
+
+  // 6.5 pdl name-only (healthcare / no business): contact name + city/state
+  if (
+    input.contact_first_name &&
+    input.contact_last_name &&
+    !(await isProviderRateLimited(sb, "pdl"))
+  ) {
+    const r = await pdlNameOnlySearch(
+      sb,
+      input.contact_first_name,
+      input.contact_last_name,
+      input.city,
+      input.state,
+    );
+    if (r) { await bump(sb, "pdl", true); return hit("pdl_name", r.email, r.confidence); }
+    await bump(sb, "pdl", false);
+    miss("pdl_name");
   }
 
   return { email: null, source: null, confidence: 0, trace };
