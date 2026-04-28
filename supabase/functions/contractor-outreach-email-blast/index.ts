@@ -198,23 +198,31 @@ Deno.serve(async (req) => {
       });
     }
 
+    let skippedDuplicate = 0;
     if (queueRows.length > 0) {
+      // Insert with onConflict do-nothing equivalent: try insert, on duplicate-key skip silently.
+      // Postgres unique partial index will reject duplicates → upsert with ignoreDuplicates.
       const { error: qErr, data: inserted } = await supabase
-        .from("outreach_send_queue").insert(queueRows).select("id");
+        .from("outreach_send_queue")
+        .upsert(queueRows, { onConflict: "prospect_id,lead_id,channel", ignoreDuplicates: true })
+        .select("id, prospect_id");
       if (qErr) {
         return new Response(JSON.stringify({ error: `Queue enqueue failed: ${qErr.message}` }), {
           status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      queued = inserted?.length ?? queueRows.length;
+      queued = inserted?.length ?? 0;
+      skippedDuplicate = queueRows.length - queued;
 
-      // Audit one "queued" event per prospect for observability
-      const auditRows = queueRows.map((r, i) => ({
-        prospect_id: r.prospect_id, lead_id, channel: "email", event: "queued",
-        reason: "Enqueued for background send",
-        metadata: { job_id: inserted?.[i]?.id, price },
-      }));
-      await supabase.from("contractor_outreach_audit_log").insert(auditRows);
+      // Audit one "queued" event per successfully inserted row
+      if (inserted && inserted.length > 0) {
+        const auditRows = inserted.map((r: any) => ({
+          prospect_id: r.prospect_id, lead_id, channel: "email", event: "queued",
+          reason: "Enqueued for background send",
+          metadata: { job_id: r.id, price },
+        }));
+        await supabase.from("contractor_outreach_audit_log").insert(auditRows);
+      }
     }
 
     const sent = queued; // legacy field name for UI compatibility
@@ -238,6 +246,8 @@ Deno.serve(async (req) => {
       sent,
       attempted: prospects.length,
       skipped_suppressed: skippedSuppressed,
+      skipped_quality: skippedQuality,
+      skipped_duplicate: skippedDuplicate,
       daily_remaining: remaining - sent,
       failures,
     }), {
