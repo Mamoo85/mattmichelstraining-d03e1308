@@ -1929,6 +1929,9 @@ verify_jwt = true
 [functions.contractor-outreach-statewide-sweep]
 verify_jwt = true
 
+[functions.contractor-outreach-statewide-enrich]
+verify_jwt = true
+
 [functions.outreach-one-press]
 verify_jwt = true
 
