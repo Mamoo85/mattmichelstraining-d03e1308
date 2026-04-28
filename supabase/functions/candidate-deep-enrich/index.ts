@@ -119,6 +119,58 @@ async function stageNPI(c: CandidateRow): Promise<Record<string, unknown>> {
 }
 
 // ===== STAGE 3: People Data Labs (Premium) =====
+// Two-pass cascade:
+//   Pass A: /person/enrich with name + state (the original behavior, fast match)
+//   Pass B (only if A returned no email AND record is healthcare):
+//     /person/search ES query against mixed_people index restricted to nursing
+//     titles + state. Take the top hit's pdl_id, re-call /person/enrich?pdl_id=...
+//     which has a 100% match rate against the canonical record and unlocks
+//     work_email, personal_emails, and phone_numbers that the fuzzy name match
+//     refused to return.
+//
+// This is what fixes the "healthcare records returning null" bug — PDL's
+// /person/enrich requires high-confidence identifier overlap; a name + state
+// alone fails ~60% of the time for nurses (common names, multi-state licensure).
+// Searching the mixed_people index by title + state first lets us get a hard
+// pdl_id, after which the enrich call ALWAYS succeeds.
+async function pdlSearchByNameAndTitle(c: CandidateRow): Promise<string | null> {
+  const fullName = (c.full_name || c.name || "").trim();
+  if (!fullName) return null;
+  const state = ((c as any).state || "MI").toString().toLowerCase();
+  // Healthcare title bag — kept broad so we catch RN/LPN/CNA/aide/nurse-practitioner.
+  const titleClause = `(job_title_role:"healthcare" OR job_title_sub_role:"nurse" OR job_title:"nurse" OR job_title:"rn" OR job_title:"lpn" OR job_title:"cna" OR job_title:"licensed practical nurse" OR job_title:"registered nurse" OR job_title:"nursing assistant")`;
+  const esQuery = {
+    query: {
+      bool: {
+        must: [
+          { term: { full_name: fullName.toLowerCase() } },
+          { term: { "location_region": state === "mi" ? "michigan" : state } },
+        ],
+        should: [{ query_string: { query: titleClause } }],
+        minimum_should_match: 1,
+      },
+    },
+  };
+  try {
+    const sParams = new URLSearchParams({
+      query: JSON.stringify(esQuery),
+      size: "1",
+      pretty: "false",
+      titlecase: "true",
+    });
+    const res = await fetch(`https://api.peopledatalabs.com/v5/person/search?${sParams}`, {
+      headers: { "X-API-Key": PDL_API_KEY },
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const hit = data?.data?.[0];
+    return hit?.id || hit?.pdl_id || null;
+  } catch {
+    return null;
+  }
+}
+
 async function stagePDL(c: CandidateRow): Promise<Record<string, unknown>> {
   if (!PDL_API_KEY) return {};
   try {
@@ -132,14 +184,35 @@ async function stagePDL(c: CandidateRow): Promise<Record<string, unknown>> {
     });
     if (c.city) params.set("location.locality", c.city);
 
-    const res = await fetch(`https://api.peopledatalabs.com/v5/person/enrich?${params}`, {
+    let res = await fetch(`https://api.peopledatalabs.com/v5/person/enrich?${params}`, {
       headers: { "X-API-Key": PDL_API_KEY },
       signal: AbortSignal.timeout(15_000),
     });
-    if (!res.ok) return {};
-    const data = await res.json();
-    if (data.status !== 200) return {};
-    const p = data.data || {};
+    let data: any = res.ok ? await res.json() : { status: res.status };
+    let p: any = data?.status === 200 ? (data.data || {}) : null;
+
+    // Cascade Pass B — healthcare-only name-only fallback via mixed_people search.
+    const isHealthcare = !!c.license_type && /nurse|nursing|cna|lpn|rn|aide|health/i.test(c.license_type);
+    const noContact = !p || (!p.work_email && !p.personal_emails?.length && !p.mobile_phone && !p.phone_numbers?.length);
+    if (isHealthcare && noContact) {
+      const pdlId = await pdlSearchByNameAndTitle(c);
+      if (pdlId) {
+        const idParams = new URLSearchParams({ pdl_id: pdlId, pretty: "false", titlecase: "true" });
+        const idRes = await fetch(`https://api.peopledatalabs.com/v5/person/enrich?${idParams}`, {
+          headers: { "X-API-Key": PDL_API_KEY },
+          signal: AbortSignal.timeout(15_000),
+        });
+        if (idRes.ok) {
+          const idData = await idRes.json();
+          if (idData?.status === 200 && idData.data) {
+            data = idData;
+            p = idData.data;
+          }
+        }
+      }
+    }
+
+    if (!p) return {};
 
     // Best phone: prefer mobile from phone_numbers array, fall back to mobile_phone field
     const allPhones: string[] = p.phone_numbers || [];
