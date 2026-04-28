@@ -370,44 +370,36 @@ async function scanEstateSales(): Promise<RawSignal[]> {
   }));
 }
 
-// Tax delinquency — county treasurers publish these publicly in Michigan
+// Phase C: deterministic county-treasurer foreclosure/forfeiture list scrape.
 async function scanTaxDelinquency(): Promise<RawSignal[]> {
-  const items = await sonarSearch(
-    "Find recent property tax delinquency notices published by Wayne County, Oakland County, or Macomb County Michigan treasurer's office for the current tax year. Include property owner name, property address, city, ZIP, amount owed, source URL. These are published public records.",
-    `{ "full_name": string, "address": string, "city": string, "zip": string, "signal_url": string, "signal_detail": string }`,
-  );
-  return items.map((i: any) => ({
-    full_name: i.full_name || undefined,
-    address: i.address || "",
-    city: i.city || undefined,
-    zip: typeof i.zip === "string" ? i.zip.slice(0, 5) : undefined,
-    signal_type: "tax_delinquency",
-    signal_source: "CountyTreasurer",
-    signal_detail: i.signal_detail || "Property tax delinquency",
-    signal_url: i.signal_url || undefined,
-    signal_date: new Date().toISOString().slice(0, 10),
-    source_method: "llm_search",
-  })).filter(s => s.address);
+  const items = await scrapeTaxDelinquency({ perSourceCap: 10 });
+  return items.map((i) => ({
+    address: i.address,
+    city: i.city,
+    zip: i.zip,
+    signal_type: i.signal_type,
+    signal_source: i.signal_source,
+    signal_detail: i.signal_detail,
+    signal_url: i.signal_url,
+    signal_date: i.signal_date,
+    source_method: "scraper" as const,
+  }));
 }
 
-// Fixer-upper listings — buyer needs renovation loan, seller may need bridge financing
+// Phase C: deterministic Zillow keyword-search scrape (fixer-upper / handyman-special).
 async function scanFixerUpperListings(): Promise<RawSignal[]> {
-  const items = await sonarSearch(
-    "Find current real estate listings in Metro Detroit (Wayne, Oakland, Macomb counties) Michigan that use terms like 'as-is', 'handyman special', 'TLC', 'fixer upper', 'needs work', or 'investor special'. Sources: Zillow, Realtor.com, Redfin. Include address, city, ZIP, list price, listing URL.",
-    `{ "address": string, "city": string, "zip": string, "signal_url": string, "signal_detail": string, "estimated_loan_amount": number }`,
-  );
-  return items.map((i: any) => ({
-    address: i.address || "",
-    city: i.city || undefined,
-    zip: typeof i.zip === "string" ? i.zip.slice(0, 5) : undefined,
-    signal_type: "fixer_upper_listing",
-    signal_source: "MLS_Fixer",
-    signal_detail: i.signal_detail || "As-is / fixer-upper listing",
-    signal_url: i.signal_url || undefined,
-    signal_date: new Date().toISOString().slice(0, 10),
-    estimated_loan_amount: typeof i.estimated_loan_amount === "number" ? i.estimated_loan_amount : undefined,
-    source_method: "llm_search",
-  })).filter(s => s.address);
+  const items = await scrapeFixerUpperListings({ perSourceCap: 5 });
+  return items.map((i) => ({
+    address: i.address,
+    city: i.city,
+    zip: i.zip,
+    signal_type: i.signal_type,
+    signal_source: i.signal_source,
+    signal_detail: i.signal_detail,
+    signal_url: i.signal_url,
+    signal_date: i.signal_date,
+    source_method: "scraper" as const,
+  }));
 }
 
 // SBA loan approvals via USASpending.gov — new self-employed owner who just got capital
