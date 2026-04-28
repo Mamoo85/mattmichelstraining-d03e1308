@@ -656,16 +656,35 @@ serve(async (req) => {
 
   let inserted = 0;
   let updated = 0;
+  let quarantined = 0;
   let alertsQueued = 0;
   let inlineEnriched = 0;
   let queuedForEnrich = 0;
   let hotSmsFired = 0;
   let inlineEnrichBudget = 5; // first 5 new leads per run get inline enrich; rest go to queue
+  const acceptedBySource: Record<string, number> = {};
+  const quarantinedBySource: Record<string, number> = {};
 
   for (const s of signals) {
+    // ===== ANTI-HALLUCINATION GATE =====
+    // Validates address (Google Address Validation), checks placeholder fingerprints,
+    // checks cross-run quarantine history, and demands a real source URL for LLM-sourced leads.
+    const gate = await validateLead(sb, s, { sourceMethod: s.source_method || "scraper" });
+    if (!gate.pass) {
+      await quarantineRaw(sb, s, gate.reject_code || "unknown", gate.reject_reason || "validation failed", s.source_method || "unknown");
+      quarantined += 1;
+      quarantinedBySource[s.signal_source] = (quarantinedBySource[s.signal_source] || 0) + 1;
+      continue;
+    }
+    // Stamp validated lat/lon and formatted address onto the signal so upsertWithDedup persists them.
+    s.lat = gate.lat;
+    s.lon = gate.lon;
+    s.formatted_address = gate.formatted;
+
     const res = await upsertWithDedup(sb, s);
     if (!res) continue;
     if (res.created) inserted += 1; else updated += 1;
+    acceptedBySource[s.signal_source] = (acceptedBySource[s.signal_source] || 0) + 1;
 
     // Mark originating row as processed after successful upsert
     if (s.source_id) {
