@@ -226,7 +226,7 @@ export default function AdminGrowthSignals() {
 
   // Watchlist filter is the only client-side filter remaining (small list, instant)
   const filtered = useMemo(() => {
-    if (confidenceFilter === ("watchlist" as any)) {
+    if (confidenceFilter === "watchlist") {
       return signals.filter(s => watchlist.includes(s.company_name));
     }
     return signals;
