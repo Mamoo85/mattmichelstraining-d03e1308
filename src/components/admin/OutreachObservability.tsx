@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Activity, RefreshCw, TrendingUp, Mail, MessageSquare, Target, AlertTriangle, MapPin, Wand2 } from "lucide-react";
 import { toast } from "sonner";
+import SprintFObservabilityPanels from "./SprintFObservabilityPanels";
 import {
   ResponsiveContainer,
   LineChart,
@@ -333,6 +334,9 @@ export default function OutreachObservability() {
           </CardContent>
         </Card>
       )}
+
+      {/* Sprint F: provider health, backlog watchdog, territory drilldown, cost ledger */}
+      <SprintFObservabilityPanels />
     </div>
   );
 }
