@@ -1,6 +1,18 @@
-// Contractor Outreach: enrich a prospect's email via Hunter → Snov → pattern guess.
+// Contractor Outreach: enrich a prospect's email via Hunter → PDL → pattern guess.
 // Lightweight version of the unified waterfall, focused on domain-based discovery.
+//
+// Sprint E hardening: every external call wrapped with safeJson + typed parsers,
+// fetchWithRetry for 429 handling, response bodies always cancelled on early exit
+// (Deno resource leak prevention), enrichment_trace defensively parsed.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { fetchWithRetry } from "../_shared/fetch-with-retry.ts";
+import {
+  safeJson,
+  parseHunterDomainSearch,
+  parsePdlPersonSearch,
+  parseEnrichmentTrace,
+  asEmail,
+} from "../_shared/safe-parse.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,8 +22,6 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const HUNTER_API_KEY = Deno.env.get("HUNTER_API_KEY") || "";
-const SNOV_USER_ID = Deno.env.get("SNOV_USER_ID") || "";
-const SNOV_SECRET = Deno.env.get("SNOV_SECRET") || "";
 const PDL_API_KEY = Deno.env.get("PDL_API_KEY") || "";
 
 async function pdlNameOnlySearch(name: string, city?: string | null, state?: string | null):
