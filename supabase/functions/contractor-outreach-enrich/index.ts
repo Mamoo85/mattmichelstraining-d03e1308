@@ -12,6 +12,34 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const HUNTER_API_KEY = Deno.env.get("HUNTER_API_KEY") || "";
 const SNOV_USER_ID = Deno.env.get("SNOV_USER_ID") || "";
 const SNOV_SECRET = Deno.env.get("SNOV_SECRET") || "";
+const PDL_API_KEY = Deno.env.get("PDL_API_KEY") || "";
+
+async function pdlNameOnlySearch(name: string, city?: string | null, state?: string | null):
+  Promise<{ email?: string; phone?: string; confidence: number } | null> {
+  if (!PDL_API_KEY || !name) return null;
+  try {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length < 2) return null;
+    const sql: string[] = [`first_name='${parts[0].replace(/'/g, "")}'`, `last_name='${parts.slice(-1)[0].replace(/'/g, "")}'`];
+    if (city) sql.push(`location_locality='${city.replace(/'/g, "")}'`);
+    if (state) sql.push(`location_region='${state.replace(/'/g, "")}'`);
+    const body = { sql: `SELECT * FROM person WHERE ${sql.join(" AND ")}`, size: 1 };
+    const res = await fetch("https://api.peopledatalabs.com/v5/person/search", {
+      method: "POST",
+      headers: { "X-Api-Key": PDL_API_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const hit = data?.data?.[0];
+    if (!hit) return null;
+    const email = hit.work_email || hit.personal_emails?.[0] || null;
+    const phone = hit.mobile_phone || hit.phone_numbers?.[0] || null;
+    if (!email && !phone) return null;
+    return { email: email || undefined, phone: phone || undefined, confidence: 0.7 };
+  } catch { return null; }
+}
 
 function extractDomain(url?: string | null): string | null {
   if (!url) return null;
