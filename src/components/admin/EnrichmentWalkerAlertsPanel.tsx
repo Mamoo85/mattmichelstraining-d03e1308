@@ -283,7 +283,10 @@ export default function EnrichmentWalkerAlertsPanel() {
                 </span>
                 <span className="font-mono text-cyan-300">{a.kind}</span>
                 <span className="text-muted-foreground">{new Date(a.created_at).toLocaleString()}</span>
-                <span className="ml-auto">{a.sms_sent ? "📱" : ""}</span>
+                <span className="ml-auto flex items-center gap-1">
+                  {a.meta?.suppressed_by_quiet_hours ? <span title="Suppressed by quiet hours (9pm–7am ET)">🌙</span> : null}
+                  {a.sms_sent ? "📱" : ""}
+                </span>
               </li>
             ))}
           </ul>
