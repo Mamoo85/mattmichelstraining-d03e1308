@@ -157,7 +157,7 @@ async function stageApolloPeople(p: Prospect): Promise<{ patch: Prospect; trace:
   const domain = extractDomain(p.website);
   if (!domain) { trace.error = "no_domain"; trace.duration_ms = Date.now() - t0; return { patch, trace }; }
   try {
-    const res = await safeFetch("https://api.apollo.io/v1/mixed_people/search", {
+    const res = await safeFetch("https://api.apollo.io/api/v1/mixed_people/search", {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-Api-Key": APOLLO_API_KEY },
       body: JSON.stringify({
