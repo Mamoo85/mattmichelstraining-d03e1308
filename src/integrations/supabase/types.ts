@@ -3849,6 +3849,7 @@ export type Database = {
       }
       contractor_outreach_prospects: {
         Row: {
+          bounce_count: number
           business_name: string
           city: string | null
           consent_email_source: string | null
@@ -3863,8 +3864,10 @@ export type Database = {
           email_verified: boolean | null
           enriched_at: string | null
           enrichment_trace: Json | null
+          hard_bounced_at: string | null
           id: string
           is_demo: boolean
+          last_bounce_reason: string | null
           last_emailed_at: string | null
           last_smsed_at: string | null
           notes: string | null
@@ -3883,6 +3886,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          bounce_count?: number
           business_name: string
           city?: string | null
           consent_email_source?: string | null
@@ -3897,8 +3901,10 @@ export type Database = {
           email_verified?: boolean | null
           enriched_at?: string | null
           enrichment_trace?: Json | null
+          hard_bounced_at?: string | null
           id?: string
           is_demo?: boolean
+          last_bounce_reason?: string | null
           last_emailed_at?: string | null
           last_smsed_at?: string | null
           notes?: string | null
@@ -3917,6 +3923,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          bounce_count?: number
           business_name?: string
           city?: string | null
           consent_email_source?: string | null
@@ -3931,8 +3938,10 @@ export type Database = {
           email_verified?: boolean | null
           enriched_at?: string | null
           enrichment_trace?: Json | null
+          hard_bounced_at?: string | null
           id?: string
           is_demo?: boolean
+          last_bounce_reason?: string | null
           last_emailed_at?: string | null
           last_smsed_at?: string | null
           notes?: string | null
@@ -12580,6 +12589,124 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_replies: {
+        Row: {
+          body: string | null
+          channel: string
+          created_at: string
+          from_address: string
+          handled: boolean
+          handled_at: string | null
+          handled_by: string | null
+          id: string
+          prospect_id: string | null
+          raw: Json | null
+          sentiment: string | null
+          subject: string | null
+        }
+        Insert: {
+          body?: string | null
+          channel: string
+          created_at?: string
+          from_address: string
+          handled?: boolean
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          prospect_id?: string | null
+          raw?: Json | null
+          sentiment?: string | null
+          subject?: string | null
+        }
+        Update: {
+          body?: string | null
+          channel?: string
+          created_at?: string
+          from_address?: string
+          handled?: boolean
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          prospect_id?: string | null
+          raw?: Json | null
+          sentiment?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_replies_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_outreach_prospects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outreach_send_queue: {
+        Row: {
+          attempts: number
+          channel: string
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string
+          id: string
+          last_error: string | null
+          lead_id: string | null
+          max_attempts: number
+          payload: Json
+          priority: number
+          prospect_id: string | null
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          channel: string
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          lead_id?: string | null
+          max_attempts?: number
+          payload?: Json
+          priority?: number
+          prospect_id?: string | null
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          channel?: string
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          lead_id?: string | null
+          max_attempts?: number
+          payload?: Json
+          priority?: number
+          prospect_id?: string | null
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_send_queue_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "contractor_outreach_prospects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       outreach_signal_log: {
         Row: {
           admin_id: string | null
@@ -20867,6 +20994,33 @@ export type Database = {
         }
         Returns: string
       }
+      claim_outreach_send_jobs: {
+        Args: { p_batch_size?: number; p_worker_id: string }
+        Returns: {
+          attempts: number
+          channel: string
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string
+          id: string
+          last_error: string | null
+          lead_id: string | null
+          max_attempts: number
+          payload: Json
+          priority: number
+          prospect_id: string | null
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "outreach_send_queue"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       compute_freshness_score: {
         Args: { p_created_at: string; p_half_life_days?: number }
         Returns: number
@@ -20987,6 +21141,10 @@ export type Database = {
         }[]
       }
       get_tenant_id: { Args: { _user_id: string }; Returns: string }
+      handle_email_bounce: {
+        Args: { p_bounce_type: string; p_email: string; p_reason: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -21021,6 +21179,10 @@ export type Database = {
       log_challenge_progress: {
         Args: { _challenge_id: string; _user_id: string; _value: number }
         Returns: number
+      }
+      mark_outreach_send_result: {
+        Args: { p_error_msg?: string; p_job_id: string; p_success: boolean }
+        Returns: undefined
       }
       marketplace_cleanup_expired_locks: { Args: never; Returns: undefined }
       match_llm_cache: {
