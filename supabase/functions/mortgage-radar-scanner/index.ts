@@ -282,6 +282,7 @@ async function scanFSBOListings(): Promise<RawSignal[]> {
     signal_detail: i.signal_detail || "For sale by owner listing",
     signal_url: i.signal_url || undefined,
     signal_date: new Date().toISOString().slice(0, 10),
+    source_method: "llm_search",
   })).filter(s => s.address);
 }
 
@@ -300,6 +301,7 @@ async function scanDivorceFilings(): Promise<RawSignal[]> {
     signal_detail: i.signal_detail || "Divorce filing",
     signal_url: i.signal_url || undefined,
     signal_date: i.signal_date || undefined,
+    source_method: "llm_search",
   })).filter(s => s.address);
 }
 
@@ -387,6 +389,7 @@ async function scanProbateFilings(): Promise<RawSignal[]> {
     signal_detail: i.signal_detail || "Probate estate filing with real property",
     signal_url: i.signal_url || undefined,
     signal_date: i.signal_date || undefined,
+    source_method: "llm_search",
   })).filter(s => s.address);
 }
 
@@ -405,6 +408,7 @@ async function scanEstateSales(): Promise<RawSignal[]> {
     signal_detail: i.signal_detail || "Estate sale listing",
     signal_url: i.signal_url || undefined,
     signal_date: i.signal_date || undefined,
+    source_method: "llm_search",
   })).filter(s => s.address);
 }
 
@@ -424,6 +428,7 @@ async function scanTaxDelinquency(): Promise<RawSignal[]> {
     signal_detail: i.signal_detail || "Property tax delinquency",
     signal_url: i.signal_url || undefined,
     signal_date: new Date().toISOString().slice(0, 10),
+    source_method: "llm_search",
   })).filter(s => s.address);
 }
 
@@ -443,6 +448,7 @@ async function scanFixerUpperListings(): Promise<RawSignal[]> {
     signal_url: i.signal_url || undefined,
     signal_date: new Date().toISOString().slice(0, 10),
     estimated_loan_amount: typeof i.estimated_loan_amount === "number" ? i.estimated_loan_amount : undefined,
+    source_method: "llm_search",
   })).filter(s => s.address);
 }
 
