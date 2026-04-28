@@ -58,9 +58,9 @@ export default function EnrichmentDLQPanel() {
         .order("created_at", { ascending: false })
         .limit(15),
     ]);
-    setDlq((dlqRes.data as DLRow[]) ?? []);
-    setCanary((canRes.data as CanaryRow[]) ?? []);
-    setReplays((repRes.data as ReplayRow[]) ?? []);
+    setDlq(((dlqRes.data as unknown) as DLRow[]) ?? []);
+    setCanary(((canRes.data as unknown) as CanaryRow[]) ?? []);
+    setReplays(((repRes.data as unknown) as ReplayRow[]) ?? []);
   };
 
   useEffect(() => { load(); }, []);
