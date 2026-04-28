@@ -145,7 +145,8 @@ export default function AdminCronStatus() {
   if (error) return <div className="text-red-400 text-sm p-4 bg-red-500/10 rounded">Error: {error}</div>;
   if (!data) return null;
 
-  const { kpis, jobs } = data;
+  const kpis = data.kpis ?? { total: 0, healthy: 0, failing: 0, stale: 0 };
+  const jobs = Array.isArray(data.jobs) ? data.jobs : [];
   const failingJobs = jobs.filter(j => j.health && j.health.consecutive_failures > 0);
   const allJobs = [...jobs].sort((a, b) => a.jobname.localeCompare(b.jobname));
 

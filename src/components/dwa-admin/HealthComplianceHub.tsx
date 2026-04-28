@@ -1,5 +1,6 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import ErrorBoundary from "@/components/layout/ErrorBoundary";
 
 const AdminServiceResilience = lazy(() => import("@/components/dwa-admin/AdminServiceResilience"));
 const AdminCronSentinel = lazy(() => import("@/components/dwa-admin/AdminCronSentinel"));
@@ -7,6 +8,12 @@ const AdminCronStatus = lazy(() => import("@/components/dwa-admin/AdminCronStatu
 const AdminComplianceMonitor = lazy(() => import("@/components/dwa-admin/AdminComplianceMonitor"));
 const AdminLaraHealth = lazy(() => import("@/components/admin/AdminLaraHealth"));
 const AdminErrorLogs = lazy(() => import("@/components/dwa-admin/AdminErrorLogs"));
+
+const safe = (label: string, node: ReactNode) => (
+  <ErrorBoundary>
+    <Suspense fallback={<div className="text-white/40 text-sm p-6">Loading {label}…</div>}>{node}</Suspense>
+  </ErrorBoundary>
+);
 
 type Sub = "resilience" | "cron" | "tcpa" | "lara" | "errors";
 
@@ -17,8 +24,6 @@ const TABS: { id: Sub; label: string }[] = [
   { id: "lara",       label: "🏛️ LARA Health" },
   { id: "errors",     label: "🚨 Error Logs" },
 ];
-
-const fb = (l: string) => <div className="text-white/40 text-sm p-6">Loading {l}…</div>;
 
 export default function HealthComplianceHub() {
   const [sub, setSub] = useState<Sub>("resilience");
@@ -40,16 +45,16 @@ export default function HealthComplianceHub() {
           </button>
         ))}
       </div>
-      {sub === "resilience" && <Suspense fallback={fb("resilience")}><AdminServiceResilience /></Suspense>}
+      {sub === "resilience" && safe("resilience", <AdminServiceResilience />)}
       {sub === "cron" && (
         <div className="space-y-6">
-          <Suspense fallback={fb("cron sentinel")}><AdminCronSentinel /></Suspense>
-          <Suspense fallback={fb("cron status")}><AdminCronStatus /></Suspense>
+          {safe("cron sentinel", <AdminCronSentinel />)}
+          {safe("cron status", <AdminCronStatus />)}
         </div>
       )}
-      {sub === "tcpa"   && <Suspense fallback={fb("TCPA")}><AdminComplianceMonitor /></Suspense>}
-      {sub === "lara"   && <Suspense fallback={fb("LARA")}><AdminLaraHealth /></Suspense>}
-      {sub === "errors" && <Suspense fallback={fb("error logs")}><AdminErrorLogs /></Suspense>}
+      {sub === "tcpa"   && safe("TCPA", <AdminComplianceMonitor />)}
+      {sub === "lara"   && safe("LARA", <AdminLaraHealth />)}
+      {sub === "errors" && safe("error logs", <AdminErrorLogs />)}
     </div>
   );
 }
