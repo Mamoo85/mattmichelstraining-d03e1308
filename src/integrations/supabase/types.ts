@@ -3863,6 +3863,7 @@ export type Database = {
           email_send_count: number
           email_verified: boolean | null
           enriched_at: string | null
+          enrichment_confidence: number | null
           enrichment_trace: Json | null
           hard_bounced_at: string | null
           id: string
@@ -3900,6 +3901,7 @@ export type Database = {
           email_send_count?: number
           email_verified?: boolean | null
           enriched_at?: string | null
+          enrichment_confidence?: number | null
           enrichment_trace?: Json | null
           hard_bounced_at?: string | null
           id?: string
@@ -3937,6 +3939,7 @@ export type Database = {
           email_send_count?: number
           email_verified?: boolean | null
           enriched_at?: string | null
+          enrichment_confidence?: number | null
           enrichment_trace?: Json | null
           hard_bounced_at?: string | null
           id?: string
@@ -5908,6 +5911,114 @@ export type Database = {
         }
         Relationships: []
       }
+      enrichment_alert_thresholds: {
+        Row: {
+          cooldown_minutes: number
+          crit_value: number
+          description: string | null
+          kind: string
+          sms_enabled: boolean
+          updated_at: string
+          warn_value: number
+        }
+        Insert: {
+          cooldown_minutes?: number
+          crit_value: number
+          description?: string | null
+          kind: string
+          sms_enabled?: boolean
+          updated_at?: string
+          warn_value: number
+        }
+        Update: {
+          cooldown_minutes?: number
+          crit_value?: number
+          description?: string | null
+          kind?: string
+          sms_enabled?: boolean
+          updated_at?: string
+          warn_value?: number
+        }
+        Relationships: []
+      }
+      enrichment_dead_letter: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          id: string
+          last_error: string | null
+          last_payload: Json | null
+          next_retry_at: string
+          permanent_failure: boolean
+          prospect_id: string
+          stage: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_payload?: Json | null
+          next_retry_at?: string
+          permanent_failure?: boolean
+          prospect_id: string
+          stage: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_payload?: Json | null
+          next_retry_at?: string
+          permanent_failure?: boolean
+          prospect_id?: string
+          stage?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      enrichment_e2e_runs: {
+        Row: {
+          baseline_p50_ms: number | null
+          duration_ms: number
+          error: string | null
+          id: string
+          ran_at: string
+          regression_detected: boolean
+          stages_ok: number
+          stages_total: number
+          status: string
+          trace: Json
+        }
+        Insert: {
+          baseline_p50_ms?: number | null
+          duration_ms?: number
+          error?: string | null
+          id?: string
+          ran_at?: string
+          regression_detected?: boolean
+          stages_ok?: number
+          stages_total?: number
+          status: string
+          trace?: Json
+        }
+        Update: {
+          baseline_p50_ms?: number | null
+          duration_ms?: number
+          error?: string | null
+          id?: string
+          ran_at?: string
+          regression_detected?: boolean
+          stages_ok?: number
+          stages_total?: number
+          status?: string
+          trace?: Json
+        }
+        Relationships: []
+      }
       enrichment_jitter_log: {
         Row: {
           created_at: string
@@ -6010,6 +6121,90 @@ export type Database = {
         }
         Relationships: []
       }
+      enrichment_replay_log: {
+        Row: {
+          dry_run: boolean
+          emails_recovered: number
+          failed: number
+          finished_at: string | null
+          id: string
+          kind: string
+          meta: Json
+          processed: number
+          requested: number
+          started_at: string
+          succeeded: number
+          triggered_by: string | null
+        }
+        Insert: {
+          dry_run?: boolean
+          emails_recovered?: number
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          kind: string
+          meta?: Json
+          processed?: number
+          requested?: number
+          started_at?: string
+          succeeded?: number
+          triggered_by?: string | null
+        }
+        Update: {
+          dry_run?: boolean
+          emails_recovered?: number
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          kind?: string
+          meta?: Json
+          processed?: number
+          requested?: number
+          started_at?: string
+          succeeded?: number
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
+      enrichment_run_progress: {
+        Row: {
+          done: boolean
+          kind: string
+          message: string | null
+          meta: Json
+          processed: number
+          progress_id: string
+          started_at: string
+          step: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          done?: boolean
+          kind: string
+          message?: string | null
+          meta?: Json
+          processed?: number
+          progress_id: string
+          started_at?: string
+          step?: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          done?: boolean
+          kind?: string
+          message?: string | null
+          meta?: Json
+          processed?: number
+          progress_id?: string
+          started_at?: string
+          step?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       enrichment_source_budgets: {
         Row: {
           calls_today: number
@@ -6092,6 +6287,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      enrichment_walker_runs: {
+        Row: {
+          attempted: number
+          city: string
+          cost_estimate_usd: number
+          failed: number
+          id: string
+          meta: Json
+          ran_at: string
+          skipped_reason: string | null
+          succeeded: number
+          trade: string
+          unenriched_count: number
+        }
+        Insert: {
+          attempted?: number
+          city: string
+          cost_estimate_usd?: number
+          failed?: number
+          id?: string
+          meta?: Json
+          ran_at?: string
+          skipped_reason?: string | null
+          succeeded?: number
+          trade: string
+          unenriched_count?: number
+        }
+        Update: {
+          attempted?: number
+          city?: string
+          cost_estimate_usd?: number
+          failed?: number
+          id?: string
+          meta?: Json
+          ran_at?: string
+          skipped_reason?: string | null
+          succeeded?: number
+          trade?: string
+          unenriched_count?: number
+        }
+        Relationships: []
       }
       enterprise_consultation_requests: {
         Row: {
@@ -12164,6 +12401,39 @@ export type Database = {
           last_sent_at?: string | null
           send_count?: number | null
           stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      outreach_alerts_log: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          message: string
+          meta: Json
+          severity: string
+          sms_sent: boolean
+          value: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          message: string
+          meta?: Json
+          severity: string
+          sms_sent?: boolean
+          value?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          message?: string
+          meta?: Json
+          severity?: string
+          sms_sent?: boolean
+          value?: number | null
         }
         Relationships: []
       }
@@ -20612,6 +20882,36 @@ export type Database = {
         }
         Relationships: []
       }
+      cron_run_status: {
+        Row: {
+          active: boolean | null
+          jobid: number | null
+          jobname: string | null
+          last_duration_s: number | null
+          last_run_at: string | null
+          last_status: string | null
+          schedule: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          jobid?: number | null
+          jobname?: string | null
+          last_duration_s?: never
+          last_run_at?: never
+          last_status?: never
+          schedule?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          jobid?: number | null
+          jobname?: string | null
+          last_duration_s?: never
+          last_run_at?: never
+          last_status?: never
+          schedule?: string | null
+        }
+        Relationships: []
+      }
       dlq_enrich_inspector: {
         Row: {
           candidate_id: string | null
@@ -20647,6 +20947,16 @@ export type Database = {
           source: string | null
           spend_24h_usd: number | null
           unique_candidates: number | null
+        }
+        Relationships: []
+      }
+      enrichment_error_rates_live: {
+        Row: {
+          failure_rate_pct: number | null
+          failures: number | null
+          parse_failures: number | null
+          stage: string | null
+          total_events: number | null
         }
         Relationships: []
       }
@@ -20843,6 +21153,21 @@ export type Database = {
           statewide_unenriched_48h: number | null
           statewide_unenriched_total: number | null
           unhandled_replies_6h: number | null
+        }
+        Relationships: []
+      }
+      outreach_city_coverage: {
+        Row: {
+          city: string | null
+          enriched_count: number | null
+          last_enriched_at: string | null
+          last_swept_at: string | null
+          pct_enriched: number | null
+          source: string | null
+          state: string | null
+          swept_count: number | null
+          tier: number | null
+          unenriched_remaining: number | null
         }
         Relationships: []
       }
@@ -21400,6 +21725,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      reclaim_dead_letter_aged: { Args: never; Returns: number }
       revoke_marketplace_access: {
         Args: { p_lead_id: string; p_product: string; p_reason: string }
         Returns: number
@@ -21460,6 +21786,33 @@ export type Database = {
       toggle_points_visibility: {
         Args: { _is_public: boolean }
         Returns: undefined
+      }
+      upsert_enrichment_dead_letter: {
+        Args: {
+          _error: string
+          _next_retry_at: string
+          _payload: Json
+          _prospect_id: string
+          _stage: string
+        }
+        Returns: {
+          attempt_count: number
+          created_at: string
+          id: string
+          last_error: string | null
+          last_payload: Json | null
+          next_retry_at: string
+          permanent_failure: boolean
+          prospect_id: string
+          stage: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "enrichment_dead_letter"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       validate_promo_code: {
         Args: { _code: string }
