@@ -13,6 +13,7 @@ import {
   highQuarantineRateAlerts,
   type ScanRunStats,
 } from "../_shared/anti-hallucination.ts";
+import { scrapeZillowFSBO, scrapeEstateSales } from "../_shared/scrapers-public-listings.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -268,23 +269,21 @@ async function scanForeclosureNotices(): Promise<RawSignal[]> {
   }
 }
 
+// Phase B: deterministic Firecrawl scrape of Zillow FSBO city pages.
+// Replaces LLM "discovery" — every address comes from a real Zillow page.
 async function scanFSBOListings(): Promise<RawSignal[]> {
-  const items = await sonarSearch(
-    "Find current For Sale By Owner (FSBO) home listings in Metro Detroit (Wayne, Oakland, Macomb counties) Michigan. Sources: Zillow FSBO, Craigslist real estate by-owner, ForSaleByOwner.com. Include owner name if shown, full property address, city, ZIP, listing URL.",
-    `{ "full_name": string, "address": string, "city": string, "zip": string, "signal_url": string, "signal_detail": string }`,
-  );
-  return items.map((i: any) => ({
-    full_name: i.full_name || undefined,
-    address: i.address || "",
-    city: i.city || undefined,
-    zip: typeof i.zip === "string" ? i.zip.slice(0, 5) : undefined,
-    signal_type: "fsbo_listing",
-    signal_source: "FSBO",
-    signal_detail: i.signal_detail || "For sale by owner listing",
-    signal_url: i.signal_url || undefined,
-    signal_date: new Date().toISOString().slice(0, 10),
-    source_method: "llm_search",
-  })).filter(s => s.address);
+  const items = await scrapeZillowFSBO({ perCityCap: 5 });
+  return items.map((i) => ({
+    address: i.address,
+    city: i.city,
+    zip: i.zip,
+    signal_type: i.signal_type,
+    signal_source: i.signal_source,
+    signal_detail: i.signal_detail,
+    signal_url: i.signal_url,
+    signal_date: i.signal_date,
+    source_method: "scraper" as const,
+  }));
 }
 
 async function scanDivorceFilings(): Promise<RawSignal[]> {
@@ -394,23 +393,20 @@ async function scanProbateFilings(): Promise<RawSignal[]> {
   })).filter(s => s.address);
 }
 
-// Estate sales — property going to market, buyer needs financing
+// Phase B: deterministic Firecrawl scrape of EstateSales.net MI city pages.
 async function scanEstateSales(): Promise<RawSignal[]> {
-  const items = await sonarSearch(
-    "Find current estate sales listed in Metro Detroit (Wayne, Oakland, Macomb counties) Michigan on estatesales.net or estatesale.com. Include address, city, ZIP, date of sale, and URL. Focus on ones that mention real property or large estates.",
-    `{ "address": string, "city": string, "zip": string, "signal_date": "YYYY-MM-DD", "signal_url": string, "signal_detail": string }`,
-  );
-  return items.map((i: any) => ({
-    address: i.address || "",
-    city: i.city || undefined,
-    zip: typeof i.zip === "string" ? i.zip.slice(0, 5) : undefined,
-    signal_type: "estate_sale",
-    signal_source: "EstateSales",
-    signal_detail: i.signal_detail || "Estate sale listing",
-    signal_url: i.signal_url || undefined,
-    signal_date: i.signal_date || undefined,
-    source_method: "llm_search",
-  })).filter(s => s.address);
+  const items = await scrapeEstateSales({ perCityCap: 4 });
+  return items.map((i) => ({
+    address: i.address,
+    city: i.city,
+    zip: i.zip,
+    signal_type: i.signal_type,
+    signal_source: i.signal_source,
+    signal_detail: i.signal_detail,
+    signal_url: i.signal_url,
+    signal_date: i.signal_date,
+    source_method: "scraper" as const,
+  }));
 }
 
 // Tax delinquency — county treasurers publish these publicly in Michigan
@@ -520,7 +516,10 @@ async function notifyClients(sb: ReturnType<typeof createClient>, zip: string | 
 // and the new signal is appended to signal_history.
 async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal): Promise<{ id: string; created: boolean } | null> {
   if (!s.address) return null;
-  const baseScore = scoreFor(s.signal_type);
+  // Phase B trust gate: LLM-only-sourced leads are capped at 3 until a 2nd source confirms.
+  // Deterministic scrapers + APIs use full base score immediately.
+  const rawBase = scoreFor(s.signal_type);
+  const baseScore = s.source_method === "llm_search" ? Math.min(3, rawBase) : rawBase;
   const { opener, window } = openerFor(s.signal_type);
 
   const lookupAddress = s.address.toLowerCase();
@@ -711,7 +710,9 @@ serve(async (req) => {
       }
     }
 
-    const score = scoreFor(s.signal_type);
+    // Phase B: respect the trust cap. Unverified LLM-only leads cannot trigger hot SMS.
+    const rawScore = scoreFor(s.signal_type);
+    const score = s.source_method === "llm_search" ? Math.min(3, rawScore) : rawScore;
     const matchedClientIds = await notifyClients(sb, s.zip, score);
     if (matchedClientIds.length > 0) {
       await (sb.from as any)("mortgage_radar_leads")
