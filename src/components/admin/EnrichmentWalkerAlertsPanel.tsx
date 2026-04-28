@@ -40,7 +40,9 @@ interface AlertRow {
   message: string;
   sms_sent: boolean;
   created_at: string;
+  meta: any;
 }
+interface SpendRow { day: string; spend_usd: number; run_count: number; }
 
 export default function EnrichmentWalkerAlertsPanel() {
   const [walkerRuns, setWalkerRuns] = useState<WalkerRun[]>([]);
