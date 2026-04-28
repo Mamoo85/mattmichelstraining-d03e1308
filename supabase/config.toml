@@ -2000,3 +2000,12 @@ verify_jwt = false
 
 [functions.cohort-campaign-builder]
 verify_jwt = false
+
+[functions.outreach-queue-worker]
+verify_jwt = false
+
+[functions.resend-bounce-webhook]
+verify_jwt = false
+
+[functions.outreach-reply-handler]
+verify_jwt = false
