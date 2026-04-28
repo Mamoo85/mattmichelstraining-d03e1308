@@ -29,9 +29,12 @@ serve(async (req) => {
       }
       const ip = req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for") || "0.0.0.0";
       const ip_hash = await sha256Hex(ip);
+      // Schema records dwell in seconds; map ms→s. Event type lives in user_agent suffix
+      // because the table has no `event` column — keeps schema stable.
+      const ua = (req.headers.get("user-agent") || "").slice(0, 180) + ` [${event}]`;
       await sb.from("dossier_share_views").insert({
-        token, event, dwell_ms: dwell_ms ?? null,
-        ip_hash, user_agent: req.headers.get("user-agent")?.slice(0, 200) || null,
+        token, ip_hash, user_agent: ua,
+        dwell_seconds: dwell_ms ? Math.round(dwell_ms / 1000) : null,
       });
       return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     } catch (e) {
@@ -52,12 +55,12 @@ serve(async (req) => {
     return new Response("This share link has expired.", { status: 410 });
   }
 
-  // Record view (fire and forget)
+  // Record view (fire and forget) — schema has no `event` column; tag via user_agent suffix
   const ip = req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for") || "0.0.0.0";
   const ipHash = await sha256Hex(ip);
   sb.from("dossier_share_views").insert({
-    token, event: "view", ip_hash: ipHash,
-    user_agent: req.headers.get("user-agent")?.slice(0, 200) || null,
+    token, ip_hash: ipHash,
+    user_agent: ((req.headers.get("user-agent") || "").slice(0, 180)) + " [view]",
   }).then(() => {}).catch(() => {});
 
   // Pull signal + dossier HTML

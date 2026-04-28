@@ -98,10 +98,10 @@ serve(async (req) => {
         const token = crypto.randomUUID().replace(/-/g, "");
         const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
         await sb.from("dossier_share_tokens").insert({
-          signal_id, token, recipient_email: s.recipient_email, expires_at: expires,
+          signal_id, token, created_for_email: s.recipient_email, expires_at: expires,
         });
 
-        const shareUrl = `https://detroitwebagent.com/dossier/share/${token}`;
+        const shareUrl = `${SUPABASE_URL}/functions/v1/dossier-share-page?token=${token}`;
         const finalBody = `${genData.body}\n\nFull dossier (no signup): ${shareUrl}`;
 
         // 4) Queue ghost-delay draft
@@ -121,19 +121,29 @@ serve(async (req) => {
           continue;
         }
 
-        // 5) Record arm stat (sent will increment when actually sent; we mark queued)
-        await sb.from("email_arm_stats").upsert({
-          vertical: "default",
-          subject_arm: arms.subject, opener_arm: arms.opener, cta_arm: arms.cta,
-          queued_count: 1,
-        }, { onConflict: "vertical,subject_arm,opener_arm,cta_arm", ignoreDuplicates: false });
+        // 5) Bandit arm stat — increment sent for this arm/vertical combo (key matches betaSample alpha/beta)
+        const ak = `subj:${arms.subject}|open:${arms.opener}|cta:${arms.cta}`;
+        await sb.rpc("increment_arm_sent", { p_arm_key: ak, p_vertical: "default" })
+          .then(() => {})
+          .catch(async () => {
+            // Fallback if RPC missing: direct upsert
+            await sb.from("email_arm_stats").upsert(
+              { arm_key: ak, vertical: "default", sent: 1, last_updated: new Date().toISOString() },
+              { onConflict: "arm_key,vertical" },
+            );
+          });
 
-        // 6) Cache intent score row (sentinel — recompute can refresh)
+        // 6) Touch the BIS cache row's recency component (don't overwrite if already populated)
         if (s.buyer_id) {
-          await sb.from("signal_buyer_intent").upsert({
-            signal_id, buyer_id: s.buyer_id, contact_id: s.contact_id,
-            last_outreach_queued_at: new Date().toISOString(),
-          }, { onConflict: "signal_id,buyer_id,contact_id" });
+          const { data: existing } = await sb.from("signal_buyer_intent")
+            .select("bis").eq("signal_id", signal_id).eq("buyer_id", s.buyer_id)
+            .eq("contact_id", s.contact_id || null).maybeSingle();
+          if (!existing) {
+            await sb.from("signal_buyer_intent").insert({
+              signal_id, buyer_id: s.buyer_id, contact_id: s.contact_id || null,
+              bis: 50, breakdown: { source: "bulk-queue-stub", queued_at: new Date().toISOString() },
+            });
+          }
         }
 
         queued++;
