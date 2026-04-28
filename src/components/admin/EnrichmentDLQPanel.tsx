@@ -113,7 +113,7 @@ export default function EnrichmentDLQPanel() {
   return (
     <div className="space-y-4">
       {/* Health summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
