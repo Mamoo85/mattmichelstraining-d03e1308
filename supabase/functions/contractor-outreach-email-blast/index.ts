@@ -146,13 +146,17 @@ Deno.serve(async (req) => {
     const claimUrl = `https://detroitwebagent.com/contractor-marketplace?lead=${lead.id}`;
     const projectType = lead.project_type || lead.message || `${trade} project`;
 
-    let sent = 0;
+    // ENQUEUE INSTEAD OF SEND — outreach-queue-worker will pick these up every minute
+    // with retry + backoff + concurrency safety (SELECT FOR UPDATE SKIP LOCKED).
+    let queued = 0;
     let skippedSuppressed = 0;
-    const failures: string[] = [];
+    let skippedQuality = 0;
+    const queueRows: Record<string, unknown>[] = [];
 
     for (const p of prospects) {
-      // Quality-score gate
+      // Quality gate
       if (minQuality > 0 && (p.quality_score ?? 0) < minQuality) {
+        skippedQuality++;
         await logAudit(supabase, {
           prospect_id: p.id, lead_id, channel: "email", event: "suppressed",
           reason: `Below min quality score (${p.quality_score ?? 0} < ${minQuality})`,
@@ -169,61 +173,52 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      try {
-        const unsubUrl = `${SUPABASE_URL}/functions/v1/contractor-outreach-unsubscribe?id=${p.id}`;
-        const html = dwaEmailWrap(
-          buildBody({ businessName: p.business_name, trade, city, projectType, price, claimUrl }),
-          unsubUrl
-        );
-        const subject = `${city} homeowner needs ${trade.toLowerCase()} — claim for $${price}?`;
+      const unsubUrl = `${SUPABASE_URL}/functions/v1/contractor-outreach-unsubscribe?id=${p.id}`;
+      const subject = `${city} homeowner needs ${trade.toLowerCase()} — claim for $${price}?`;
+      const html = dwaEmailWrap(
+        buildBody({ businessName: p.business_name, trade, city, projectType, price, claimUrl }),
+        unsubUrl
+      );
 
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
+      queueRows.push({
+        channel: "email",
+        prospect_id: p.id,
+        lead_id,
+        priority: 7,
+        payload: {
+          to: p.email,
+          subject,
+          html,
+          from: "Matt Michels <matt@detroitwebagent.com>",
           headers: {
-            Authorization: `Bearer ${RESEND_API_KEY}`,
-            "Content-Type": "application/json",
+            "List-Unsubscribe": `<${unsubUrl}>, <mailto:matt@detroitwebagent.com?subject=Unsubscribe>`,
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
           },
-          body: JSON.stringify({
-            from: "Matt Michels <matt@detroitwebagent.com>",
-            to: [p.email],
-            subject,
-            html,
-            headers: {
-              "List-Unsubscribe": `<${unsubUrl}>, <mailto:matt@detroitwebagent.com?subject=Unsubscribe>`,
-              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-            },
-          }),
-        });
-        if (!res.ok) {
-          const t = await res.text();
-          failures.push(`${p.email}: ${t.slice(0, 120)}`);
-          await logAudit(supabase, {
-            prospect_id: p.id, lead_id, channel: "email", event: "bounce",
-            reason: t.slice(0, 240),
-          });
-          continue;
-        }
-        await supabase
-          .from("contractor_outreach_prospects")
-          .update({
-            last_emailed_at: new Date().toISOString(),
-            email_send_count: (p.email_send_count || 0) + 1,
-          })
-          .eq("id", p.id);
-        await logAudit(supabase, {
-          prospect_id: p.id, lead_id, channel: "email", event: "sent",
-          reason: subject,
-          metadata: { price, claim_url: claimUrl },
-        });
-        sent++;
-      } catch (e: any) {
-        failures.push(`${p.email}: ${e?.message || "err"}`);
-        await logAudit(supabase, {
-          prospect_id: p.id, lead_id, channel: "email", event: "bounce",
-          reason: e?.message || "send error",
+        },
+      });
+    }
+
+    if (queueRows.length > 0) {
+      const { error: qErr, data: inserted } = await supabase
+        .from("outreach_send_queue").insert(queueRows).select("id");
+      if (qErr) {
+        return new Response(JSON.stringify({ error: `Queue enqueue failed: ${qErr.message}` }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      queued = inserted?.length ?? queueRows.length;
+
+      // Audit one "queued" event per prospect for observability
+      const auditRows = queueRows.map((r, i) => ({
+        prospect_id: r.prospect_id, lead_id, channel: "email", event: "queued",
+        reason: "Enqueued for background send",
+        metadata: { job_id: inserted?.[i]?.id, price },
+      }));
+      await supabase.from("contractor_outreach_audit_log").insert(auditRows);
     }
+
+    const sent = queued; // legacy field name for UI compatibility
+    const failures: string[] = [];
 
     // Best-effort comms log
     try {
