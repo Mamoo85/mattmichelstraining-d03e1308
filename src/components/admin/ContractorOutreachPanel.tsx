@@ -76,6 +76,7 @@ export default function ContractorOutreachPanel() {
   const [smsToday, setSmsToday] = useState(0);
   const [auditFor, setAuditFor] = useState<{ id: string; name: string } | null>(null);
   const [consentFor, setConsentFor] = useState<{ id: string; name: string; channel: "sms" | "email" | "both" } | null>(null);
+  const [diagnosticsFor, setDiagnosticsFor] = useState<string | null>(null);
   const [globalSettings, setGlobalSettings] = useState<GlobalSettings | null>(null);
 
   const load = useCallback(async () => {
