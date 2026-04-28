@@ -32,7 +32,7 @@ serve(async (req) => {
     const since = new Date(Date.now() - 24 * 3600_000).toISOString();
     const { data: snaps, error } = await sb
       .from("intent_score_snapshots")
-      .select("account_key, score, computed_at, signal_summary, top_signals, account_name, account_phone, account_vertical, account_location")
+      .select("account_key, score, computed_at, contributing_signals, company_name, vertical, location")
       .gte("score", SCORE_THRESHOLD)
       .gte("computed_at", since)
       .order("computed_at", { ascending: false })
@@ -49,7 +49,14 @@ serve(async (req) => {
     let drafted = 0, skipped = 0, noPhone = 0;
 
     for (const [accountKey, snap] of latest) {
-      const phone = snap.account_phone;
+      // Try to resolve phone from contractor/field/hire_alert prospect tables
+      let phone: string | null = null;
+      const { data: prospect } = await sb
+        .from("prospect_companies" as any)
+        .select("phone")
+        .ilike("company_name", snap.company_name || "")
+        .limit(1).maybeSingle();
+      phone = (prospect as any)?.phone || null;
       if (!phone) { noPhone++; continue; }
 
       const idem = `signal-sms-${accountKey}-${today}`;
@@ -58,10 +65,10 @@ serve(async (req) => {
         .select("id").eq("idempotency_key", idem).maybeSingle();
       if (existing) { skipped++; continue; }
 
-      const topSig = Array.isArray(snap.top_signals) && snap.top_signals.length
-        ? snap.top_signals[0] : (snap.signal_summary || "");
+      const sigs: any[] = Array.isArray(snap.contributing_signals) ? snap.contributing_signals : [];
+      const topSig = sigs[0]?.signal_type ? `${sigs[0].signal_type} (${sigs[0].source || ""})` : "high intent activity";
 
-      const prompt = `Write a 2-sentence SMS (max 320 chars) to ${snap.account_name || "the prospect"}. They just hit a high intent score (${Math.round(snap.score)}/100) because: ${topSig}. Sentence 1: lead with one specific thing you noticed (NOT "Hi I'm Matt"). Sentence 2: ask for 5 min by phone this afternoon. Sign off "— Matt, Detroit Web Agency · Reply STOP to opt out". Direct, no emojis, no exclamation marks.`;
+      const prompt = `Write a 2-sentence SMS (max 320 chars) to ${snap.company_name || "the prospect"}. They just hit a high intent score (${Math.round(snap.score)}/100) because: ${topSig}. Sentence 1: lead with one specific thing you noticed (NOT "Hi I'm Matt"). Sentence 2: ask for 5 min by phone this afternoon. Sign off "— Matt, Detroit Web Agency · Reply STOP to opt out". Direct, no emojis, no exclamation marks.`;
 
       let body = "";
       try { body = await generateWithHaiku(prompt, "Cold SMS, founder voice, under 320 chars total including sign-off.", 200); }
@@ -73,13 +80,13 @@ serve(async (req) => {
         source_function: "signal-triggered-sms-draft",
         channel: "sms",
         account_key: accountKey,
-        account_name: snap.account_name,
-        account_location: snap.account_location,
-        account_vertical: snap.account_vertical,
+        account_name: snap.company_name,
+        account_location: snap.location,
+        account_vertical: snap.vertical,
         recipient_phone: phone,
         draft_body: body,
         signal_reason: `Intent score ${Math.round(snap.score)} — ${topSig}`,
-        signal_payload: { score: snap.score, top_signals: snap.top_signals },
+        signal_payload: { score: snap.score, contributing_signals: sigs.slice(0, 3) },
         confidence_score: Math.min(0.99, snap.score / 100),
         idempotency_key: idem,
       });
