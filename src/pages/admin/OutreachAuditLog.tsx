@@ -19,9 +19,9 @@ interface Row {
 }
 
 const EVENTS = [
-  "sent", "opened", "clicked", "replied", "unsubscribed",
+  "sent", "queued", "opened", "clicked", "replied", "unsubscribed",
   "suppressed", "consent_granted", "consent_revoked",
-  "quiet_hours_blocked", "daily_cap_blocked", "bounce",
+  "quiet_hours_blocked", "daily_cap_blocked", "bounce", "complaint", "retry", "dead",
 ];
 
 const CHANNELS = ["email", "sms"];
