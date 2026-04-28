@@ -28,7 +28,7 @@ type EnrichResult = { email?: string; phone?: string; source: string };
 async function enrichViaApollo(name: string, company: string | null): Promise<EnrichResult> {
   if (!APOLLO_API_KEY) return { source: "none" };
   try {
-    const res = await fetch("https://api.apollo.io/v1/people/search", {
+    const res = await fetch("https://api.apollo.io/api/v1/people/search", {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-Api-Key": APOLLO_API_KEY },
       body: JSON.stringify({
