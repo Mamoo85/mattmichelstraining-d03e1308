@@ -41,11 +41,16 @@ const GrowthRadarDashboard = () => {
 
   useEffect(() => {
     (async () => {
+      // Deterministic tie-break + raised cap so high-volume signal types
+      // (e.g. building permits, school RFPs) don't squeeze rarer types
+      // (warn_act_notice, healthcare_expansion) out of the result set.
       const { data } = await supabase
         .from("growth_radar_signals" as any)
         .select("*")
+        .order("confidence",  { ascending: false })
         .order("detected_at", { ascending: false })
-        .limit(200);
+        .order("id",          { ascending: true })
+        .limit(500);
       setSignals((data as any) || []);
       setLoading(false);
     })();
