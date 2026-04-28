@@ -14922,6 +14922,39 @@ export type Database = {
           },
         ]
       }
+      provider_cost_ledger: {
+        Row: {
+          caller: string | null
+          cost_usd: number | null
+          created_at: string
+          id: string
+          meta: Json | null
+          provider: string
+          unit: string
+          units: number
+        }
+        Insert: {
+          caller?: string | null
+          cost_usd?: number | null
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          provider: string
+          unit: string
+          units?: number
+        }
+        Update: {
+          caller?: string | null
+          cost_usd?: number | null
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          provider?: string
+          unit?: string
+          units?: number
+        }
+        Relationships: []
+      }
       pulse_alert_clients: {
         Row: {
           active: boolean
@@ -20800,6 +20833,19 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_backlog_health: {
+        Row: {
+          bounces_24h: number | null
+          send_queue_dead_total: number | null
+          send_queue_overdue_1h: number | null
+          send_queue_overdue_24h: number | null
+          send_queue_stuck_claimed: number | null
+          statewide_unenriched_48h: number | null
+          statewide_unenriched_total: number | null
+          unhandled_replies_6h: number | null
+        }
+        Relationships: []
+      }
       outreach_funnel_summary: {
         Row: {
           blocked_30d: number | null
@@ -20813,6 +20859,28 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_provider_errors_24h: {
+        Row: {
+          error_snippet: string | null
+          last_seen: string | null
+          occurrences: number | null
+          provider: string | null
+        }
+        Relationships: []
+      }
+      outreach_provider_health_24h: {
+        Row: {
+          calls_24h: number | null
+          errors_24h: number | null
+          hits_24h: number | null
+          max_ms: number | null
+          p50_ms: number | null
+          p95_ms: number | null
+          provider: string | null
+          success_rate_pct: number | null
+        }
+        Relationships: []
+      }
       outreach_send_metrics_hourly: {
         Row: {
           avg_attempts: number | null
@@ -20820,6 +20888,27 @@ export type Database = {
           failed_count: number | null
           hour: string | null
           sent_count: number | null
+        }
+        Relationships: []
+      }
+      outreach_territory_funnel_30d: {
+        Row: {
+          bounce_rate_pct: number | null
+          bounced: number | null
+          city: string | null
+          clicked: number | null
+          flag_high_bounce: boolean | null
+          flag_no_replies: boolean | null
+          flag_no_sends: boolean | null
+          last_replied_at: string | null
+          last_sent_at: string | null
+          opened: number | null
+          prospects: number | null
+          replied: number | null
+          reply_rate_pct: number | null
+          send_rate_pct: number | null
+          sent: number | null
+          trade: string | null
         }
         Relationships: []
       }
@@ -20831,6 +20920,17 @@ export type Database = {
           hits: number | null
           misses: number | null
           stage: string | null
+        }
+        Relationships: []
+      }
+      provider_cost_daily_14d: {
+        Row: {
+          cost_usd_total: number | null
+          day: string | null
+          event_count: number | null
+          provider: string | null
+          unit: string | null
+          units_total: number | null
         }
         Relationships: []
       }
@@ -21213,6 +21313,17 @@ export type Database = {
       log_challenge_progress: {
         Args: { _challenge_id: string; _user_id: string; _value: number }
         Returns: number
+      }
+      log_provider_cost: {
+        Args: {
+          _caller?: string
+          _cost_usd?: number
+          _meta?: Json
+          _provider: string
+          _unit: string
+          _units: number
+        }
+        Returns: undefined
       }
       mark_outreach_send_result: {
         Args: { p_error_msg?: string; p_job_id: string; p_success: boolean }
