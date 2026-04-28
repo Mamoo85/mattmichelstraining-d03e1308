@@ -237,11 +237,39 @@ export default function AdminGrowthSignals() {
   // Reset pagination when filters change
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [confidenceFilter, industryFilter]);
 
-  const stats = useMemo(() => ({
-    total: signals.length,
-    highConf: signals.filter(s => s.confidence >= 7).length,
-    crossRef: signals.filter(s => s.cross_referenced).length,
-  }), [signals]);
+  // Stats are sourced from the counts view (DB-truth) — never from the
+  // truncated visible page. This is the foundation that prevents the old
+  // "filter shows 0 because we never fetched the data" bug.
+  const stats = useMemo(() => {
+    const sum = (k: keyof IndustryCount) =>
+      counts.reduce((s, c) => s + (typeof c[k] === "number" ? (c[k] as number) : 0), 0);
+    return {
+      total:    sum("total"),
+      highConf: sum("high"),
+      medConf:  sum("medium"),
+      lowConf:  sum("low"),
+      crossRef: sum("cross_ref"),
+    };
+  }, [counts]);
+
+  // Per-industry total used by industry filter pills
+  const industryCount = useCallback((ind: string) => {
+    if (ind === "All") return stats.total;
+    return counts.find(c => c.industry === ind)?.total ?? 0;
+  }, [counts, stats.total]);
+
+  // Confidence-bucket totals respecting the active industry filter
+  const bucketCount = useCallback((bucket: FilterType): number => {
+    const rows = industryFilter === "All" ? counts : counts.filter(c => c.industry === industryFilter);
+    switch (bucket) {
+      case "all":              return rows.reduce((s, c) => s + c.total, 0);
+      case "high":             return rows.reduce((s, c) => s + c.high, 0);
+      case "medium":           return rows.reduce((s, c) => s + c.medium, 0);
+      case "low":              return rows.reduce((s, c) => s + c.low, 0);
+      case "cross_referenced": return rows.reduce((s, c) => s + c.cross_ref, 0);
+      default:                 return 0;
+    }
+  }, [counts, industryFilter]);
 
   const confidenceBadge = (c: number, crossRef: boolean) => {
     if (crossRef) return <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px]">Cross-Referenced</Badge>;
