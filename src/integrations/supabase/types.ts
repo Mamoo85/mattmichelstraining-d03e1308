@@ -68,6 +68,96 @@ export type Database = {
         }
         Relationships: []
       }
+      account_narratives: {
+        Row: {
+          account_key: string
+          cost_cents: number | null
+          generated_at: string
+          model: string
+          narrative_md: string
+          pitch_angle: string | null
+          recommended_products: string[] | null
+          signals_snapshot_at: string | null
+        }
+        Insert: {
+          account_key: string
+          cost_cents?: number | null
+          generated_at?: string
+          model?: string
+          narrative_md: string
+          pitch_angle?: string | null
+          recommended_products?: string[] | null
+          signals_snapshot_at?: string | null
+        }
+        Update: {
+          account_key?: string
+          cost_cents?: number | null
+          generated_at?: string
+          model?: string
+          narrative_md?: string
+          pitch_angle?: string | null
+          recommended_products?: string[] | null
+          signals_snapshot_at?: string | null
+        }
+        Relationships: []
+      }
+      account_notes: {
+        Row: {
+          account_key: string
+          body: string
+          created_at: string
+          id: string
+          team_owner_id: string | null
+          user_id: string
+        }
+        Insert: {
+          account_key: string
+          body: string
+          created_at?: string
+          id?: string
+          team_owner_id?: string | null
+          user_id: string
+        }
+        Update: {
+          account_key?: string
+          body?: string
+          created_at?: string
+          id?: string
+          team_owner_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      account_share_links: {
+        Row: {
+          account_key: string
+          created_at: string
+          created_by: string
+          expires_at: string
+          last_viewed_at: string | null
+          token: string
+          view_count: number
+        }
+        Insert: {
+          account_key: string
+          created_at?: string
+          created_by: string
+          expires_at: string
+          last_viewed_at?: string | null
+          token: string
+          view_count?: number
+        }
+        Update: {
+          account_key?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          last_viewed_at?: string | null
+          token?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
       activity_feed_notes: {
         Row: {
           activity_id: string
@@ -4898,6 +4988,30 @@ export type Database = {
         }
         Relationships: []
       }
+      demand_radar_seats: {
+        Row: {
+          accepted_at: string | null
+          invited_at: string
+          member_id: string
+          owner_id: string
+          role: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          invited_at?: string
+          member_id: string
+          owner_id: string
+          role?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          invited_at?: string
+          member_id?: string
+          owner_id?: string
+          role?: string
+        }
+        Relationships: []
+      }
       demand_radar_signal_actions: {
         Row: {
           action: string
@@ -8729,6 +8843,7 @@ export type Database = {
           est_loan_high_cents: number | null
           est_loan_low_cents: number | null
           expansion_type: string | null
+          geocoded_at: string | null
           hiring_count: number | null
           hiring_roles: string[] | null
           human_summary: string | null
@@ -8736,6 +8851,8 @@ export type Database = {
           industry: string | null
           last_sale_date: string | null
           last_sale_price_cents: number | null
+          lat: number | null
+          lng: number | null
           location: string | null
           marketplace_enriched_at: string | null
           nearby_signal_count: number | null
@@ -8777,6 +8894,7 @@ export type Database = {
           est_loan_high_cents?: number | null
           est_loan_low_cents?: number | null
           expansion_type?: string | null
+          geocoded_at?: string | null
           hiring_count?: number | null
           hiring_roles?: string[] | null
           human_summary?: string | null
@@ -8784,6 +8902,8 @@ export type Database = {
           industry?: string | null
           last_sale_date?: string | null
           last_sale_price_cents?: number | null
+          lat?: number | null
+          lng?: number | null
           location?: string | null
           marketplace_enriched_at?: string | null
           nearby_signal_count?: number | null
@@ -8825,6 +8945,7 @@ export type Database = {
           est_loan_high_cents?: number | null
           est_loan_low_cents?: number | null
           expansion_type?: string | null
+          geocoded_at?: string | null
           hiring_count?: number | null
           hiring_roles?: string[] | null
           human_summary?: string | null
@@ -8832,6 +8953,8 @@ export type Database = {
           industry?: string | null
           last_sale_date?: string | null
           last_sale_price_cents?: number | null
+          lat?: number | null
+          lng?: number | null
           location?: string | null
           marketplace_enriched_at?: string | null
           nearby_signal_count?: number | null
@@ -8974,6 +9097,72 @@ export type Database = {
           updated_at?: string
           user_id?: string
           weight?: string | null
+        }
+        Relationships: []
+      }
+      intent_score_snapshots: {
+        Row: {
+          account_key: string
+          category_count: number
+          company_name: string | null
+          computed_at: string
+          contributing_signals: Json
+          id: string
+          is_at_risk: boolean
+          is_budget_released: boolean
+          is_surging: boolean
+          lat: number | null
+          lng: number | null
+          location: string | null
+          score: number
+          signal_count: number
+          stacking_multiplier: number
+          tier: string
+          trajectory_delta_14d: number | null
+          trajectory_delta_7d: number | null
+          vertical: string | null
+        }
+        Insert: {
+          account_key: string
+          category_count?: number
+          company_name?: string | null
+          computed_at?: string
+          contributing_signals?: Json
+          id?: string
+          is_at_risk?: boolean
+          is_budget_released?: boolean
+          is_surging?: boolean
+          lat?: number | null
+          lng?: number | null
+          location?: string | null
+          score: number
+          signal_count?: number
+          stacking_multiplier?: number
+          tier: string
+          trajectory_delta_14d?: number | null
+          trajectory_delta_7d?: number | null
+          vertical?: string | null
+        }
+        Update: {
+          account_key?: string
+          category_count?: number
+          company_name?: string | null
+          computed_at?: string
+          contributing_signals?: Json
+          id?: string
+          is_at_risk?: boolean
+          is_budget_released?: boolean
+          is_surging?: boolean
+          lat?: number | null
+          lng?: number | null
+          location?: string | null
+          score?: number
+          signal_count?: number
+          stacking_multiplier?: number
+          tier?: string
+          trajectory_delta_14d?: number | null
+          trajectory_delta_7d?: number | null
+          vertical?: string | null
         }
         Relationships: []
       }
@@ -12482,6 +12671,27 @@ export type Database = {
           last_call_at?: string | null
           stripe_customer_id?: string | null
           twilio_number?: string | null
+        }
+        Relationships: []
+      }
+      pinned_accounts: {
+        Row: {
+          account_key: string
+          notes: string | null
+          pinned_at: string
+          user_id: string
+        }
+        Insert: {
+          account_key: string
+          notes?: string | null
+          pinned_at?: string
+          user_id: string
+        }
+        Update: {
+          account_key?: string
+          notes?: string | null
+          pinned_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -16756,6 +16966,42 @@ export type Database = {
         }
         Relationships: []
       }
+      signal_weights_config: {
+        Row: {
+          category: string
+          created_at: string
+          display_label: string | null
+          half_life_days: number
+          id: string
+          signal_type: string
+          updated_at: string
+          user_id: string | null
+          weight: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          display_label?: string | null
+          half_life_days: number
+          id?: string
+          signal_type: string
+          updated_at?: string
+          user_id?: string | null
+          weight: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          display_label?: string | null
+          half_life_days?: number
+          id?: string
+          signal_type?: string
+          updated_at?: string
+          user_id?: string | null
+          weight?: number
+        }
+        Relationships: []
+      }
       site_content: {
         Row: {
           content_key: string
@@ -17494,6 +17740,48 @@ export type Database = {
           checked_in_at?: string
           id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      subscription_migrations: {
+        Row: {
+          email: string | null
+          free_through: string | null
+          id: string
+          migrated_at: string
+          new_price_cents: number | null
+          new_product: string
+          old_price_cents: number | null
+          old_product: string
+          reason: string | null
+          stripe_customer_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          email?: string | null
+          free_through?: string | null
+          id?: string
+          migrated_at?: string
+          new_price_cents?: number | null
+          new_product: string
+          old_price_cents?: number | null
+          old_product: string
+          reason?: string | null
+          stripe_customer_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          email?: string | null
+          free_through?: string | null
+          id?: string
+          migrated_at?: string
+          new_price_cents?: number | null
+          new_product?: string
+          old_price_cents?: number | null
+          old_product?: string
+          reason?: string | null
+          stripe_customer_id?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -19057,6 +19345,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_onboarding_state: {
+        Row: {
+          demand_radar_tour_completed_at: string | null
+          demand_radar_welcomed_at: string | null
+          state: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          demand_radar_tour_completed_at?: string | null
+          demand_radar_welcomed_at?: string | null
+          state?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          demand_radar_tour_completed_at?: string | null
+          demand_radar_welcomed_at?: string | null
+          state?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_points: {
         Row: {
           created_at: string
@@ -20138,6 +20450,29 @@ export type Database = {
         }
         Relationships: []
       }
+      v_latest_intent_scores: {
+        Row: {
+          account_key: string | null
+          category_count: number | null
+          company_name: string | null
+          computed_at: string | null
+          contributing_signals: Json | null
+          is_at_risk: boolean | null
+          is_budget_released: boolean | null
+          is_surging: boolean | null
+          lat: number | null
+          lng: number | null
+          location: string | null
+          score: number | null
+          signal_count: number | null
+          stacking_multiplier: number | null
+          tier: string | null
+          trajectory_delta_14d: number | null
+          trajectory_delta_7d: number | null
+          vertical: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       _extract_vault_keys: { Args: { p_command: string }; Returns: string[] }
@@ -20260,6 +20595,10 @@ export type Database = {
       delete_job: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
+      }
+      demand_radar_account_key: {
+        Args: { p_company: string; p_location: string }
+        Returns: string
       }
       disable_enrichment_provider: {
         Args: { p_days?: number; p_provider: string; p_reason: string }
