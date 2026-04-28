@@ -41,10 +41,11 @@ export default function EnrichmentDLQPanel() {
   const [dlq, setDlq] = useState<DLRow[] | null>(null);
   const [canary, setCanary] = useState<CanaryRow[] | null>(null);
   const [replays, setReplays] = useState<ReplayRow[] | null>(null);
+  const [agedCount, setAgedCount] = useState<number | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = async () => {
-    const [dlqRes, canRes, repRes] = await Promise.all([
+    const [dlqRes, canRes, repRes, agedRes] = await Promise.all([
       supabase.from("enrichment_dead_letter" as any)
         .select("id,prospect_id,provider,reason,attempt_count,last_attempt_at,last_error,meta")
         .order("last_attempt_at", { ascending: false })
@@ -57,10 +58,14 @@ export default function EnrichmentDLQPanel() {
         .select("id,prospect_id,reason,triggered_by,success,created_at")
         .order("created_at", { ascending: false })
         .limit(15),
+      supabase.from("contractor_outreach_prospects" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("suppression_reason", "dlq_aged_unenrichable"),
     ]);
     setDlq(((dlqRes.data as unknown) as DLRow[]) ?? []);
     setCanary(((canRes.data as unknown) as CanaryRow[]) ?? []);
     setReplays(((repRes.data as unknown) as ReplayRow[]) ?? []);
+    setAgedCount(agedRes.count ?? 0);
   };
 
   useEffect(() => { load(); }, []);
