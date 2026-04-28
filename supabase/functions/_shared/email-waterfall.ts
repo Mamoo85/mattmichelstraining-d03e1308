@@ -118,9 +118,11 @@ async function bump(sb: SupabaseClient, provider: string, hit: boolean, opts?: {
       // fire-and-forget latency sample
       sb.rpc("record_provider_latency", {
         _provider: provider,
-        _latency_ms: Math.round(opts.latency_ms),
-        _success: hit,
-        _was_429: opts?.was429 ?? false,
+        _stage: provider,
+        _duration_ms: Math.round(opts.latency_ms),
+        _ok: hit,
+        _status_code: opts?.was429 ? 429 : null,
+        _meta: {},
       }).then(() => {}, (e) => console.warn(`[waterfall] latency ${provider} failed:`, e));
     }
   } catch (e) {
