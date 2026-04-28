@@ -2025,3 +2025,9 @@ verify_jwt = false
 [functions.enrichment-e2e-verify]
 verify_jwt = false
 
+[functions.enrichment-matrix-walker]
+verify_jwt = false
+
+[functions.outreach-alert-evaluator]
+verify_jwt = false
+
