@@ -266,6 +266,37 @@ export default function OutreachObservability() {
         </CardContent>
       </Card>
 
+      {/* Sprint D — Statewide MI sweep + enrichment */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <MapPin className="h-4 w-4" /> Statewide Michigan sweep
+          </CardTitle>
+          <CardDescription>
+            Serial Google Places sweep across the curated MI city catalog (46 cities, 3 tiers) →
+            unified enrichment waterfall, tier-priority order. Cron auto-runs weekly + every 4 h.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col">
+            <span className="text-xs text-muted-foreground">Unenriched statewide backlog</span>
+            <span className="text-2xl font-bold tabular-nums">
+              {statewideBacklog === null ? "—" : statewideBacklog.toLocaleString()}
+            </span>
+          </div>
+          <div className="ml-auto flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={runSweep} disabled={sweepRunning}>
+              <MapPin className={`h-4 w-4 mr-1 ${sweepRunning ? "animate-pulse" : ""}`} />
+              {sweepRunning ? "Sweeping…" : "Run sweep now"}
+            </Button>
+            <Button size="sm" onClick={runEnrich} disabled={enrichRunning}>
+              <Wand2 className={`h-4 w-4 mr-1 ${enrichRunning ? "animate-pulse" : ""}`} />
+              {enrichRunning ? "Enriching…" : "Drain backlog"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Health hints */}
       {funnel && (
         <Card>
