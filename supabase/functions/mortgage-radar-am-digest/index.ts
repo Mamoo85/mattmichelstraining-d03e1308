@@ -14,10 +14,14 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
 
-function streetViewUrl(address: string, city: string, zip: string): string {
+function streetViewUrl(lead: { address?: string; city?: string; zip?: string; lat?: number | null; lon?: number | null }): string {
   if (!GOOGLE_MAPS_API_KEY) return "";
-  const location = encodeURIComponent(`${address}, ${city} ${zip}, MI`);
-  return `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${location}&fov=80&key=${GOOGLE_MAPS_API_KEY}`;
+  // Prefer validated lat/lon (kills Street View's silent fuzzy-match on bad addresses).
+  if (lead.lat != null && lead.lon != null) {
+    return `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${lead.lat},${lead.lon}&fov=80&source=outdoor&key=${GOOGLE_MAPS_API_KEY}`;
+  }
+  // No coords = no image. Better to show no photo than someone else's house.
+  return "";
 }
 
 serve(async (req) => {
@@ -37,7 +41,7 @@ serve(async (req) => {
     if (zips.length === 0) continue;
 
     const { data: leads } = await (sb.from as any)("mortgage_radar_leads")
-      .select("id, full_name, address, city, zip, signal_type, signal_detail, score, suggested_opener, best_call_window, estimated_equity, intel_highlights")
+      .select("id, full_name, address, city, zip, lat, lon, signal_type, signal_detail, score, suggested_opener, best_call_window, estimated_equity, intel_highlights")
       .in("zip", zips)
       .gte("created_at", since)
       .order("score", { ascending: false })
@@ -48,7 +52,7 @@ serve(async (req) => {
     const dashboardLink = `https://detroitwebagent.com/my-mortgage-radar?email=${encodeURIComponent(c.email)}`;
 
     const cards = leads.map((l: any) => {
-      const sv = streetViewUrl(l.address || "", l.city || "", l.zip || "");
+      const sv = streetViewUrl(l);
       const scoreColor = l.score >= 9 ? "#00d4ff" : l.score >= 7 ? "#fbbf24" : "#94a3b8";
       const draftLink = `${dashboardLink}&draft=${l.id}`;
       const highlights = Array.isArray(l.intel_highlights)
