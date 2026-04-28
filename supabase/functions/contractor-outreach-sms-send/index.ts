@@ -54,6 +54,16 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+    // Global kill-switch
+    const { data: gs } = await supabase
+      .from("outreach_global_settings").select("cold_sms_enabled, min_quality_score_to_send").eq("id", 1).single();
+    if (gs && gs.cold_sms_enabled === false) {
+      await logAudit(supabase, { prospect_id, channel: "sms", event: "quiet_hours_blocked", reason: "Global kill switch: cold SMS disabled" });
+      return new Response(JSON.stringify({ ok: false, error: "Cold SMS is globally disabled (admin kill switch)." }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Load prospect
     const { data: p, error: pErr } = await supabase
       .from("contractor_outreach_prospects")
