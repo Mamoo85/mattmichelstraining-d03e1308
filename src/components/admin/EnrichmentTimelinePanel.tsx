@@ -107,7 +107,7 @@ export default function EnrichmentTimelinePanel() {
                 const trace = asTrace(r.enrichment_trace);
                 const name =
                   r.business_name ||
-                  [r.contact_first_name, r.contact_last_name].filter(Boolean).join(" ") ||
+                  r.owner_name ||
                   "(unnamed)";
                 return (
                   <div key={r.id} className="border rounded-md p-3 bg-card">
