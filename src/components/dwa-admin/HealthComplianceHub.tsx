@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from "react";
 import { cn } from "@/lib/utils";
+import ErrorBoundary from "@/components/layout/ErrorBoundary";
 
 const AdminServiceResilience = lazy(() => import("@/components/dwa-admin/AdminServiceResilience"));
 const AdminCronSentinel = lazy(() => import("@/components/dwa-admin/AdminCronSentinel"));
@@ -7,6 +8,12 @@ const AdminCronStatus = lazy(() => import("@/components/dwa-admin/AdminCronStatu
 const AdminComplianceMonitor = lazy(() => import("@/components/dwa-admin/AdminComplianceMonitor"));
 const AdminLaraHealth = lazy(() => import("@/components/admin/AdminLaraHealth"));
 const AdminErrorLogs = lazy(() => import("@/components/dwa-admin/AdminErrorLogs"));
+
+const safe = (label: string, node: ReactNode) => (
+  <ErrorBoundary>
+    <Suspense fallback={<div className="text-white/40 text-sm p-6">Loading {label}…</div>}>{node}</Suspense>
+  </ErrorBoundary>
+);
 
 type Sub = "resilience" | "cron" | "tcpa" | "lara" | "errors";
 
