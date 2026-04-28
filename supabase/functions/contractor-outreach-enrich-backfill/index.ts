@@ -142,7 +142,7 @@ Deno.serve(async (req) => {
   }
 
   if (candidates.length === 0) {
-    return json({ ok: true, mode, total_candidates: 0, processed: 0, duration_ms: Date.now() - startedAt }, 200);
+    return json({ ok: true, mode, total_candidates: 0, processed: 0, aged_count, duration_ms: Date.now() - startedAt }, 200);
   }
 
   // Filter out prospects already replayed too many times
