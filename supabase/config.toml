@@ -1985,3 +1985,15 @@ verify_jwt = false
 
 [functions.outreach-queue-action]
 verify_jwt = false
+
+[functions.hiring-velocity-tracker]
+verify_jwt = false
+
+[functions.rfp-keyword-bounty]
+verify_jwt = false
+
+[functions.signal-triggered-sms-draft]
+verify_jwt = false
+
+[functions.cohort-campaign-builder]
+verify_jwt = false
