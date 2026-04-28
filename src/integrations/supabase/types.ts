@@ -12511,6 +12511,75 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_one_press_runs: {
+        Row: {
+          channels: string[]
+          cities: string[]
+          completed_at: string | null
+          created_at: string
+          enriched_count: number
+          error_message: string | null
+          failed_count: number
+          id: string
+          initiated_by: string | null
+          max_prospects: number
+          min_quality_score: number
+          scored_count: number
+          scraped_count: number
+          sent_count: number
+          stage: string
+          stage_progress: Json
+          started_at: string | null
+          status: string
+          trades: string[]
+          updated_at: string
+        }
+        Insert: {
+          channels?: string[]
+          cities?: string[]
+          completed_at?: string | null
+          created_at?: string
+          enriched_count?: number
+          error_message?: string | null
+          failed_count?: number
+          id?: string
+          initiated_by?: string | null
+          max_prospects?: number
+          min_quality_score?: number
+          scored_count?: number
+          scraped_count?: number
+          sent_count?: number
+          stage?: string
+          stage_progress?: Json
+          started_at?: string | null
+          status?: string
+          trades?: string[]
+          updated_at?: string
+        }
+        Update: {
+          channels?: string[]
+          cities?: string[]
+          completed_at?: string | null
+          created_at?: string
+          enriched_count?: number
+          error_message?: string | null
+          failed_count?: number
+          id?: string
+          initiated_by?: string | null
+          max_prospects?: number
+          min_quality_score?: number
+          scored_count?: number
+          scraped_count?: number
+          sent_count?: number
+          stage?: string
+          stage_progress?: Json
+          started_at?: string | null
+          status?: string
+          trades?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       outreach_signal_log: {
         Row: {
           admin_id: string | null
