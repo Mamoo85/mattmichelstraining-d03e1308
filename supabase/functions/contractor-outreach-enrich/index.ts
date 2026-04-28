@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const trace: any[] = Array.isArray(prospect.enrichment_trace) ? prospect.enrichment_trace : [];
+    const trace: Array<Record<string, unknown>> = parseEnrichmentTrace(prospect.enrichment_trace);
     const domain = extractDomain(prospect.website);
 
     let email: string | null = prospect.email;
