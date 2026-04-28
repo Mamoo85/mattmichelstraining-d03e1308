@@ -42,6 +42,7 @@ export default function SupplierOutreachGenerator() {
         .eq("vertical", vertical)
         .gte("confidence", 6)
         .order("confidence", { ascending: false })
+        .order("id",         { ascending: true })
         .limit(15);
       setSignals((data as any) || []);
       setPicked([]);

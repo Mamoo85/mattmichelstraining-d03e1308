@@ -36,13 +36,18 @@ export default function AdminLinkedInBlitz() {
 
   async function fetchSignals() {
     setLoading(true);
+    // Deterministic tie-break (confidence DESC, detected_at DESC, id ASC) so
+    // industries tied at confidence=6 (Boiler/Pressure, Welding, Plumbing)
+    // never get silently dropped past the row limit. Limit raised 40 → 250 so
+    // every industry vertical reliably appears in the verticals filter bar.
     const { data } = await (supabase as any)
       .from("industry_pulse_signals")
-      .select("id,company_name,location,industry,hiring_roles,hiring_count,predicted_needs,confidence")
+      .select("id,company_name,location,industry,hiring_roles,hiring_count,predicted_needs,confidence,detected_at")
       .gte("confidence", 6)
-      .order("confidence", { ascending: false })
+      .order("confidence",  { ascending: false })
       .order("detected_at", { ascending: false })
-      .limit(40);
+      .order("id",          { ascending: true })
+      .limit(250);
     setSignals(data || []);
     setLoading(false);
   }

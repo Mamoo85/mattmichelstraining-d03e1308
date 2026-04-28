@@ -51,6 +51,7 @@ export default function MyBuyerRadar() {
         .select("*")
         .gte("detected_at", weekAgo)
         .order("confidence", { ascending: false })
+        .order("id",         { ascending: true })
         .limit(50);
       setSignals((sigs as any[]) || []);
 

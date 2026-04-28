@@ -52,8 +52,9 @@ export default function AdminGrowthSignalOutreach() {
       .from("industry_pulse_signals")
       .select("id,company_name,location,industry,hiring_roles,hiring_count,predicted_needs,confidence")
       .gte("confidence", 6)
-      .order("confidence", { ascending: false })
+      .order("confidence",  { ascending: false })
       .order("detected_at", { ascending: false })
+      .order("id",          { ascending: true })
       .limit(40);
     setSignals(data || []);
     setLoading(false);

@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,10 +12,17 @@ import {
   ChevronDown, ChevronUp, FileText,
 } from "lucide-react";
 import BuyerOutreachDialog from "./BuyerOutreachDialog";
+import IndustryPulseConfidenceLegend from "./IndustryPulseConfidenceLegend";
+import GrowthSignalsDebugPanel, { type IndustryCount, type QueryMeta } from "./GrowthSignalsDebugPanel";
 
 const PAGE_SIZE = 25;
-const FETCH_LIMIT = 80;
+// Filter-aware fetch caps. The OLD bug: a single LIMIT 80 ran BEFORE filters,
+// so confidence-6 ties pushed entire industries (Boiler/Pressure) past the cap.
+// New approach: industry filter is pushed to SQL, then we use a generous cap.
+const FETCH_LIMIT_ALL = 300;        // global view ("All" industries)
+const FETCH_LIMIT_FILTERED = 1000;  // single industry — never truncates a real-world tenant
 const VISIBLE_NEED_CHIPS = 3;
+const STORAGE_KEY = "dwa_growth_signals_filters_v2";
 
 interface PulseSignal {
   id: string;
@@ -31,16 +39,38 @@ interface PulseSignal {
   detected_at: string;
 }
 
-type FilterType = "all" | "cross_referenced" | "high" | "medium" | "low";
+type FilterType = "all" | "cross_referenced" | "high" | "medium" | "low" | "watchlist";
 
 const INDUSTRY_FILTERS = ["All", "HVAC", "CNC/Machining", "Welding", "Electrical", "Boiler/Pressure", "Plumbing"];
 
 export default function AdminGrowthSignals() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Restore filters: URL ?industry= & ?confidence= take precedence, then localStorage, then defaults
+  const initialFilters = (() => {
+    const urlIndustry = searchParams.get("industry");
+    const urlConfidence = searchParams.get("confidence") as FilterType | null;
+    if (urlIndustry || urlConfidence) {
+      return { industry: urlIndustry || "All", confidence: (urlConfidence || "all") as FilterType };
+    }
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (saved?.industry && saved?.confidence) return saved;
+    } catch { /* ignore */ }
+    return { industry: "All", confidence: "all" as FilterType };
+  })();
+
   const [signals, setSignals] = useState<PulseSignal[]>([]);
+  const [counts, setCounts] = useState<IndustryCount[]>([]);
+  const [queryMeta, setQueryMeta] = useState<QueryMeta>({
+    industry: initialFilters.industry, confidence: initialFilters.confidence,
+    fetchLimit: FETCH_LIMIT_ALL, returned: 0, totalForFilter: 0,
+  });
   const [loading, setLoading] = useState(true);
+  const [refetching, setRefetching] = useState(false);
   const [scanning, setScanning] = useState(false);
-  const [confidenceFilter, setConfidenceFilter] = useState<FilterType>("all");
-  const [industryFilter, setIndustryFilter] = useState("All");
+  const [confidenceFilter, setConfidenceFilter] = useState<FilterType>(initialFilters.confidence);
+  const [industryFilter, setIndustryFilter] = useState(initialFilters.industry);
   const [pitchSignal, setPitchSignal] = useState<PulseSignal | null>(null);
   const [outreachSignal, setOutreachSignal] = useState<PulseSignal | null>(null);
   const [copied, setCopied] = useState(false);
@@ -96,23 +126,89 @@ export default function AdminGrowthSignals() {
     return 2 + Math.abs(hash % 5); // 2-6 competitors
   }
 
-  useEffect(() => { fetchSignals(); }, []);
-
-  async function fetchSignals() {
-    setLoading(true);
+  // ── Counts: total, high/medium/low, cross-ref per industry. Fed by SQL view.
+  // Refreshes on mount + after every scan so pill counts are always honest.
+  const fetchCounts = useCallback(async () => {
     const { data, error } = await (supabase as any)
-      .from("industry_pulse_signals")
-      .select("*")
-      .order("confidence", { ascending: false })
-      .order("detected_at", { ascending: false })
-      .limit(FETCH_LIMIT);
+      .from("industry_pulse_signals_counts")
+      .select("*");
+    if (!error && data) setCounts(data as IndustryCount[]);
+  }, []);
 
-    if (!error && data) {
-      const JUNK = ["indeed", "ziprecruiter", "linkedin", "multiple employers", "various", "confidential"];
-      setSignals(data.filter((s: PulseSignal) => !JUNK.some(j => s.company_name.toLowerCase().includes(j))));
+  // ── Server-side filtered fetch. Runs whenever industry or confidence changes.
+  // Confidence buckets are pushed to SQL — no more client-side hiding.
+  // Deterministic tie-break: confidence DESC, detected_at DESC, id ASC
+  // (the id leg guarantees identical sorts across reloads, paginations, and tabs).
+  const fetchSignals = useCallback(async () => {
+    const isInitial = signals.length === 0;
+    isInitial ? setLoading(true) : setRefetching(true);
+
+    const fetchLimit = industryFilter === "All" ? FETCH_LIMIT_ALL : FETCH_LIMIT_FILTERED;
+
+    let q = (supabase as any)
+      .from("industry_pulse_signals")
+      .select("*", { count: "exact" });
+
+    if (industryFilter !== "All") q = q.eq("industry", industryFilter);
+
+    switch (confidenceFilter) {
+      case "high":             q = q.gte("confidence", 7); break;
+      case "medium":           q = q.gte("confidence", 4).lt("confidence", 7); break;
+      case "low":              q = q.lt("confidence", 4); break;
+      case "cross_referenced": q = q.eq("cross_referenced", true); break;
+      // "all" and "watchlist" → no SQL constraint (watchlist filtered client-side)
     }
-    setLoading(false);
-  }
+
+    const { data, count, error } = await q
+      .order("confidence",  { ascending: false })
+      .order("detected_at", { ascending: false })
+      .order("id",          { ascending: true })
+      .limit(fetchLimit);
+
+    if (error) {
+      toast.error("Failed to load signals: " + error.message);
+      setLoading(false); setRefetching(false);
+      return;
+    }
+
+    // Client-side junk filter for company-name aggregator noise — applied AFTER
+    // the server query so it never causes a "filter ate everything" silent zero.
+    const JUNK = ["indeed", "ziprecruiter", "linkedin", "multiple employers", "various", "confidential"];
+    const cleaned = (data || []).filter((s: PulseSignal) => !JUNK.some(j => s.company_name.toLowerCase().includes(j)));
+
+    setSignals(cleaned);
+    setQueryMeta({
+      industry: industryFilter,
+      confidence: confidenceFilter,
+      fetchLimit,
+      returned: cleaned.length,
+      totalForFilter: count ?? cleaned.length,
+    });
+    setLoading(false); setRefetching(false);
+  }, [industryFilter, confidenceFilter, signals.length]);
+
+  // Initial mount: load counts + first signal page
+  useEffect(() => {
+    fetchCounts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Refetch whenever filters change (debounced via React batching)
+  useEffect(() => {
+    fetchSignals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [industryFilter, confidenceFilter]);
+
+  // Persist filter choices: URL + localStorage
+  useEffect(() => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (industryFilter === "All") next.delete("industry"); else next.set("industry", industryFilter);
+      if (confidenceFilter === "all") next.delete("confidence"); else next.set("confidence", confidenceFilter);
+      return next;
+    }, { replace: true });
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ industry: industryFilter, confidence: confidenceFilter })); } catch { /* ignore */ }
+  }, [industryFilter, confidenceFilter, setSearchParams]);
 
   async function runScanner() {
     setScanning(true);
@@ -120,7 +216,7 @@ export default function AdminGrowthSignals() {
       const { data, error } = await supabase.functions.invoke("industry-pulse-scanner");
       if (error) throw error;
       toast.success(`Scan complete: ${data?.signals_found || 0} signals found`);
-      await fetchSignals();
+      await Promise.all([fetchSignals(), fetchCounts()]);
     } catch (e: any) {
       toast.error("Scanner failed: " + (e.message || "unknown error"));
     } finally {
@@ -128,29 +224,52 @@ export default function AdminGrowthSignals() {
     }
   }
 
+  // Watchlist filter is the only client-side filter remaining (small list, instant)
   const filtered = useMemo(() => {
-    let list = signals;
-    if (industryFilter !== "All") list = list.filter(s => s.industry === industryFilter);
-    switch (confidenceFilter) {
-      case "cross_referenced": list = list.filter(s => s.cross_referenced); break;
-      case "high": list = list.filter(s => s.confidence >= 7); break;
-      case "medium": list = list.filter(s => s.confidence >= 4 && s.confidence < 7); break;
-      case "low": list = list.filter(s => s.confidence < 4); break;
-      case "watchlist" as any: list = list.filter(s => watchlist.includes(s.company_name)); break;
+    if (confidenceFilter === "watchlist") {
+      return signals.filter(s => watchlist.includes(s.company_name));
     }
-    return list;
-  }, [signals, confidenceFilter, industryFilter, watchlist]);
+    return signals;
+  }, [signals, confidenceFilter, watchlist]);
 
   const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
 
   // Reset pagination when filters change
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [confidenceFilter, industryFilter]);
 
-  const stats = useMemo(() => ({
-    total: signals.length,
-    highConf: signals.filter(s => s.confidence >= 7).length,
-    crossRef: signals.filter(s => s.cross_referenced).length,
-  }), [signals]);
+  // Stats are sourced from the counts view (DB-truth) — never from the
+  // truncated visible page. This is the foundation that prevents the old
+  // "filter shows 0 because we never fetched the data" bug.
+  const stats = useMemo(() => {
+    const sum = (k: keyof IndustryCount) =>
+      counts.reduce((s, c) => s + (typeof c[k] === "number" ? (c[k] as number) : 0), 0);
+    return {
+      total:    sum("total"),
+      highConf: sum("high"),
+      medConf:  sum("medium"),
+      lowConf:  sum("low"),
+      crossRef: sum("cross_ref"),
+    };
+  }, [counts]);
+
+  // Per-industry total used by industry filter pills
+  const industryCount = useCallback((ind: string) => {
+    if (ind === "All") return stats.total;
+    return counts.find(c => c.industry === ind)?.total ?? 0;
+  }, [counts, stats.total]);
+
+  // Confidence-bucket totals respecting the active industry filter
+  const bucketCount = useCallback((bucket: FilterType): number => {
+    const rows = industryFilter === "All" ? counts : counts.filter(c => c.industry === industryFilter);
+    switch (bucket) {
+      case "all":              return rows.reduce((s, c) => s + c.total, 0);
+      case "high":             return rows.reduce((s, c) => s + c.high, 0);
+      case "medium":           return rows.reduce((s, c) => s + c.medium, 0);
+      case "low":              return rows.reduce((s, c) => s + c.low, 0);
+      case "cross_referenced": return rows.reduce((s, c) => s + c.cross_ref, 0);
+      default:                 return 0;
+    }
+  }, [counts, industryFilter]);
 
   const confidenceBadge = (c: number, crossRef: boolean) => {
     if (crossRef) return <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px]">Cross-Referenced</Badge>;
@@ -293,45 +412,64 @@ detroitwebagent.com`;
         </div>
       )}
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        <div className="flex gap-1">
-          {(["all", "cross_referenced", "high", "medium", "low", "watchlist"] as FilterType[]).map(f => (
-            <Button
-              key={f}
-              size="sm"
-              variant={confidenceFilter === f ? "default" : "outline"}
-              onClick={() => setConfidenceFilter(f)}
-              className={`text-xs ${confidenceFilter === f ? "bg-[#00d4ff] text-black" : "border-white/10 text-white/50 hover:bg-white/5"}`}
-            >
-              {f === "all" ? "All" : f === "cross_referenced" ? "Cross-Ref" : f === "high" ? "High" : f === "medium" ? "Medium" : f === "low" ? "Low" : `Watchlist (${watchlist.length})`}
-            </Button>
-          ))}
+      {/* Confidence-bucket explainer (collapsible). Tells users why
+          institutional buyers like Stellantis cap at confidence 6. */}
+      <IndustryPulseConfidenceLegend />
+
+      {/* Filter pills with LIVE counts from the SQL counts view. If a pill
+          shows (0), the data genuinely doesn't exist — not a frontend bug. */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex flex-wrap gap-1">
+          {(["all", "cross_referenced", "high", "medium", "low", "watchlist"] as FilterType[]).map(f => {
+            const count = f === "watchlist" ? watchlist.length : bucketCount(f);
+            const label = ({ all: "All", cross_referenced: "Cross-Ref", high: "High", medium: "Medium", low: "Low", watchlist: "Watchlist" } as Record<string, string>)[f];
+            return (
+              <Button
+                key={f}
+                size="sm"
+                variant={confidenceFilter === f ? "default" : "outline"}
+                onClick={() => setConfidenceFilter(f)}
+                className={`text-xs ${confidenceFilter === f ? "bg-[#00d4ff] text-black" : "border-white/10 text-white/50 hover:bg-white/5"} ${count === 0 && f !== "all" ? "opacity-40" : ""}`}
+              >
+                {label} <span className={`ml-1 text-[10px] ${confidenceFilter === f ? "text-black/60" : "text-white/30"}`}>({count})</span>
+              </Button>
+            );
+          })}
         </div>
-        <div className="flex gap-1 ml-auto">
-          {INDUSTRY_FILTERS.map(ind => (
-            <Button
-              key={ind}
-              size="sm"
-              variant={industryFilter === ind ? "default" : "outline"}
-              onClick={() => setIndustryFilter(ind)}
-              className={`text-xs ${industryFilter === ind ? "bg-white/10 text-white" : "border-white/10 text-white/40 hover:bg-white/5"}`}
-            >
-              {ind}
-            </Button>
-          ))}
+        <div className="flex flex-wrap gap-1 ml-auto">
+          {INDUSTRY_FILTERS.map(ind => {
+            const count = industryCount(ind);
+            return (
+              <Button
+                key={ind}
+                size="sm"
+                variant={industryFilter === ind ? "default" : "outline"}
+                onClick={() => setIndustryFilter(ind)}
+                className={`text-xs ${industryFilter === ind ? "bg-white/10 text-white" : "border-white/10 text-white/40 hover:bg-white/5"} ${count === 0 && ind !== "All" ? "opacity-40" : ""}`}
+              >
+                {ind} <span className={`ml-1 text-[10px] ${industryFilter === ind ? "text-white/60" : "text-white/25"}`}>({count})</span>
+              </Button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Signal Cards */}
+      {/* Refetch indicator (subtle, in-place) */}
+      {refetching && (
+        <div className="flex items-center gap-2 text-[11px] text-white/40">
+          <Loader2 className="h-3 w-3 animate-spin" /> Updating signals…
+        </div>
+      )}
+
+      {/* Signal Cards (or diagnostic empty state) */}
       {filtered.length === 0 ? (
-        <Card className="bg-[#0f1f35] border-white/10">
-          <CardContent className="py-12 text-center">
-            <Factory className="h-10 w-10 text-white/20 mx-auto mb-3" />
-            <p className="text-white/40 text-sm">No signals match your filters.</p>
-            <p className="text-white/30 text-xs mt-1">Try running the scanner or adjusting filters.</p>
-          </CardContent>
-        </Card>
+        <GrowthSignalsDebugPanel
+          meta={queryMeta}
+          counts={counts}
+          onSwitchConfidence={(c) => setConfidenceFilter(c as FilterType)}
+          onClearIndustry={() => setIndustryFilter("All")}
+          onRunScanner={runScanner}
+        />
       ) : (
         <div className="space-y-3">
           {visible.map(signal => {
