@@ -3851,6 +3851,9 @@ export type Database = {
         Row: {
           business_name: string
           city: string | null
+          consent_email_source: string | null
+          consent_email_timestamp: string | null
+          consent_for_email: boolean
           consent_for_sms: boolean
           consent_source: string | null
           consent_timestamp: string | null
@@ -3861,15 +3864,19 @@ export type Database = {
           enriched_at: string | null
           enrichment_trace: Json | null
           id: string
+          is_demo: boolean
           last_emailed_at: string | null
           last_smsed_at: string | null
           notes: string | null
           owner_name: string | null
           phone: string | null
+          quality_breakdown: Json | null
+          quality_score: number | null
           reply_status: string | null
           scraped_at: string | null
           source: string | null
           state: string | null
+          territory_priority: number
           trade: string
           unsubscribed_at: string | null
           updated_at: string | null
@@ -3878,6 +3885,9 @@ export type Database = {
         Insert: {
           business_name: string
           city?: string | null
+          consent_email_source?: string | null
+          consent_email_timestamp?: string | null
+          consent_for_email?: boolean
           consent_for_sms?: boolean
           consent_source?: string | null
           consent_timestamp?: string | null
@@ -3888,15 +3898,19 @@ export type Database = {
           enriched_at?: string | null
           enrichment_trace?: Json | null
           id?: string
+          is_demo?: boolean
           last_emailed_at?: string | null
           last_smsed_at?: string | null
           notes?: string | null
           owner_name?: string | null
           phone?: string | null
+          quality_breakdown?: Json | null
+          quality_score?: number | null
           reply_status?: string | null
           scraped_at?: string | null
           source?: string | null
           state?: string | null
+          territory_priority?: number
           trade: string
           unsubscribed_at?: string | null
           updated_at?: string | null
@@ -3905,6 +3919,9 @@ export type Database = {
         Update: {
           business_name?: string
           city?: string | null
+          consent_email_source?: string | null
+          consent_email_timestamp?: string | null
+          consent_for_email?: boolean
           consent_for_sms?: boolean
           consent_source?: string | null
           consent_timestamp?: string | null
@@ -3915,15 +3932,19 @@ export type Database = {
           enriched_at?: string | null
           enrichment_trace?: Json | null
           id?: string
+          is_demo?: boolean
           last_emailed_at?: string | null
           last_smsed_at?: string | null
           notes?: string | null
           owner_name?: string | null
           phone?: string | null
+          quality_breakdown?: Json | null
+          quality_score?: number | null
           reply_status?: string | null
           scraped_at?: string | null
           source?: string | null
           state?: string | null
+          territory_priority?: number
           trade?: string
           unsubscribed_at?: string | null
           updated_at?: string | null
@@ -12281,6 +12302,36 @@ export type Database = {
           last_agent?: string
           last_contacted_at?: string | null
           prospect_email?: string
+        }
+        Relationships: []
+      }
+      outreach_global_settings: {
+        Row: {
+          cold_email_enabled: boolean
+          cold_sms_enabled: boolean
+          hide_demo_leads_below_score: number
+          id: number
+          min_quality_score_to_send: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          cold_email_enabled?: boolean
+          cold_sms_enabled?: boolean
+          hide_demo_leads_below_score?: number
+          id?: number
+          min_quality_score_to_send?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          cold_email_enabled?: boolean
+          cold_sms_enabled?: boolean
+          hide_demo_leads_below_score?: number
+          id?: number
+          min_quality_score_to_send?: number
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -20750,6 +20801,10 @@ export type Database = {
       compute_freshness_score: {
         Args: { p_created_at: string; p_half_life_days?: number }
         Returns: number
+      }
+      compute_prospect_quality_score: {
+        Args: { _prospect_id: string }
+        Returns: undefined
       }
       consume_source_budget: {
         Args: { p_estimated_cost?: number; p_provider: string }

@@ -65,6 +65,17 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+    // Global kill-switch + min quality
+    const { data: gs } = await supabase
+      .from("outreach_global_settings").select("*").eq("id", 1).single();
+    if (gs && gs.cold_email_enabled === false) {
+      await logAudit(supabase, { lead_id, channel: "email", event: "quiet_hours_blocked", reason: "Global kill switch: cold email disabled" });
+      return new Response(JSON.stringify({ ok: false, error: "Cold email is globally disabled (admin kill switch)." }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const minQuality: number = gs?.min_quality_score_to_send ?? 0;
+
     // Daily cap check (fail-closed)
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { count: sentToday, error: capErr } = await supabase
@@ -140,6 +151,14 @@ Deno.serve(async (req) => {
     const failures: string[] = [];
 
     for (const p of prospects) {
+      // Quality-score gate
+      if (minQuality > 0 && (p.quality_score ?? 0) < minQuality) {
+        await logAudit(supabase, {
+          prospect_id: p.id, lead_id, channel: "email", event: "suppressed",
+          reason: `Below min quality score (${p.quality_score ?? 0} < ${minQuality})`,
+        });
+        continue;
+      }
       // Suppression gate
       if (suppressedSet.has((p.email || "").toLowerCase())) {
         skippedSuppressed++;

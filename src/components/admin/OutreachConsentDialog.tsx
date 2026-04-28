@@ -1,49 +1,76 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle2, X } from "lucide-react";
+import { CheckCircle2, X, Mail, MessageSquare } from "lucide-react";
 
 interface Props {
   prospectId: string | null;
   prospectName?: string;
+  /** Which channel(s) to capture consent for. Defaults to "sms" for back-compat. */
+  channel?: "sms" | "email" | "both";
   onClose: () => void;
   onSaved: () => void;
 }
 
-export default function OutreachConsentDialog({ prospectId, prospectName, onClose, onSaved }: Props) {
+export default function OutreachConsentDialog({ prospectId, prospectName, channel = "sms", onClose, onSaved }: Props) {
   const [source, setSource] = useState<"reply" | "click" | "verbal" | "written">("reply");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
   if (!prospectId) return null;
 
+  const grantsSms = channel === "sms" || channel === "both";
+  const grantsEmail = channel === "email" || channel === "both";
+
   async function save() {
     setSaving(true);
     const now = new Date().toISOString();
+
+    const update: Record<string, unknown> = {};
+    if (grantsSms) {
+      update.consent_for_sms = true;
+      update.consent_source = source;
+      update.consent_timestamp = now;
+    }
+    if (grantsEmail) {
+      update.consent_for_email = true;
+      update.consent_email_source = source;
+      update.consent_email_timestamp = now;
+    }
+    if (notes) update.notes = notes;
+
     const { error: uErr } = await (supabase as any)
       .from("contractor_outreach_prospects")
-      .update({
-        consent_for_sms: true,
-        consent_source: source,
-        consent_timestamp: now,
-        notes: notes || null,
-      })
+      .update(update)
       .eq("id", prospectId);
     if (uErr) { setSaving(false); toast.error(uErr.message); return; }
 
-    await (supabase as any).from("contractor_outreach_audit_log").insert({
-      prospect_id: prospectId,
-      channel: "sms",
-      event: "consent_granted",
-      reason: `Source: ${source}${notes ? " — " + notes : ""}`,
-      actor: "admin",
+    const auditRows: Array<Record<string, unknown>> = [];
+    if (grantsSms) auditRows.push({
+      prospect_id: prospectId, channel: "sms", event: "consent_granted",
+      reason: `Source: ${source}${notes ? " — " + notes : ""}`, actor: "admin",
     });
+    if (grantsEmail) auditRows.push({
+      prospect_id: prospectId, channel: "email", event: "consent_granted",
+      reason: `Source: ${source}${notes ? " — " + notes : ""}`, actor: "admin",
+    });
+    if (auditRows.length) {
+      await (supabase as any).from("contractor_outreach_audit_log").insert(auditRows);
+    }
 
     setSaving(false);
-    toast.success("SMS consent recorded — prospect is now eligible for SMS");
+    toast.success(
+      grantsSms && grantsEmail ? "Email + SMS consent recorded"
+      : grantsEmail ? "Email consent recorded"
+      : "SMS consent recorded — prospect is now eligible for SMS"
+    );
     onSaved();
     onClose();
   }
+
+  const title = grantsSms && grantsEmail ? "Mark Email + SMS Consent"
+    : grantsEmail ? "Mark Email Consent"
+    : "Mark SMS Consent";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
@@ -51,7 +78,7 @@ export default function OutreachConsentDialog({ prospectId, prospectName, onClos
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <CheckCircle2 size={18} className="text-emerald-400" />
-            <h3 className="text-sm font-bold text-foreground">Mark SMS Consent</h3>
+            <h3 className="text-sm font-bold text-foreground">{title}</h3>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X size={16} />
@@ -60,8 +87,13 @@ export default function OutreachConsentDialog({ prospectId, prospectName, onClos
 
         <p className="text-xs text-muted-foreground mb-3">
           Recording consent for <b className="text-foreground">{prospectName || "this prospect"}</b>.
-          This is your TCPA defense file — only mark consent if they actually replied, clicked, or said yes.
+          This is your TCPA / CAN-SPAM defense file — only mark consent if they actually replied, clicked, or said yes.
         </p>
+
+        <div className="flex flex-wrap gap-1.5 mb-3 text-[10px]">
+          {grantsEmail && <span className="px-2 py-1 rounded bg-cyan-500/15 text-cyan-300 inline-flex items-center gap-1"><Mail size={10}/>Email</span>}
+          {grantsSms && <span className="px-2 py-1 rounded bg-emerald-500/15 text-emerald-300 inline-flex items-center gap-1"><MessageSquare size={10}/>SMS</span>}
+        </div>
 
         <div className="space-y-3">
           <div>
@@ -89,9 +121,11 @@ export default function OutreachConsentDialog({ prospectId, prospectName, onClos
             />
           </div>
 
-          <div className="bg-amber-950/30 border border-amber-700/30 rounded p-2.5 text-[11px] text-amber-200">
-            ⚠️ Consent expires after 18 months (TCPA EBR rule). System will block SMS automatically after that.
-          </div>
+          {grantsSms && (
+            <div className="bg-amber-950/30 border border-amber-700/30 rounded p-2.5 text-[11px] text-amber-200">
+              ⚠️ SMS consent expires after 18 months (TCPA EBR rule). System will block SMS automatically after that.
+            </div>
+          )}
 
           <div className="flex gap-2 pt-1">
             <button

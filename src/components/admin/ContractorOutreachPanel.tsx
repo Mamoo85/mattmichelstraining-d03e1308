@@ -6,6 +6,9 @@ import OutreachProvenancePanel from "./OutreachProvenancePanel";
 import OutreachSuppressionManager from "./OutreachSuppressionManager";
 import OutreachAuditDrawer from "./OutreachAuditDrawer";
 import OutreachConsentDialog from "./OutreachConsentDialog";
+import OutreachInfoBox from "./OutreachInfoBox";
+import OutreachGlobalSettings from "./OutreachGlobalSettings";
+import { Link } from "react-router-dom";
 
 const DAILY_EMAIL_CAP = 100;
 const DAILY_SMS_CAP = 50;
@@ -27,7 +30,11 @@ interface Prospect {
   email_send_count: number;
   reply_status: string | null;
   consent_for_sms: boolean;
+  consent_for_email: boolean;
   unsubscribed_at: string | null;
+  quality_score: number | null;
+  is_demo: boolean;
+  territory_priority: number;
 }
 
 interface Lead {
@@ -39,7 +46,14 @@ interface Lead {
   contractor_lead_sites?: { trade: string; city: string };
 }
 
-const TRADES = ["HVAC", "Plumbing", "Electrical", "Roofing", "Boiler", "Gutters", "Siding"];
+const TRADES = ["HVAC", "Plumbing", "Electrical", "Roofing", "Boiler", "Gutters", "Siding", "Healthcare/RN", "Healthcare/CNA", "Healthcare/LPN"];
+
+interface GlobalSettings {
+  cold_email_enabled: boolean;
+  cold_sms_enabled: boolean;
+  min_quality_score_to_send: number;
+  hide_demo_leads_below_score: number;
+}
 
 export default function ContractorOutreachPanel() {
   const [prospects, setProspects] = useState<Prospect[]>([]);
@@ -52,10 +66,14 @@ export default function ContractorOutreachPanel() {
   const [blastingLeadId, setBlastingLeadId] = useState<string | null>(null);
   const [filterTrade, setFilterTrade] = useState("");
   const [filterCity, setFilterCity] = useState("");
+  const [filterTerritory, setFilterTerritory] = useState<string>("");
+  const [filterMinQuality, setFilterMinQuality] = useState<number>(0);
+  const [hideDemo, setHideDemo] = useState<boolean>(true);
   const [emailsToday, setEmailsToday] = useState(0);
   const [smsToday, setSmsToday] = useState(0);
   const [auditFor, setAuditFor] = useState<{ id: string; name: string } | null>(null);
-  const [consentFor, setConsentFor] = useState<{ id: string; name: string } | null>(null);
+  const [consentFor, setConsentFor] = useState<{ id: string; name: string; channel: "sms" | "email" | "both" } | null>(null);
+  const [globalSettings, setGlobalSettings] = useState<GlobalSettings | null>(null);
 
   const load = useCallback(async () => {
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -207,11 +225,17 @@ export default function ContractorOutreachPanel() {
     load();
   }
 
-  const filtered = prospects.filter(p =>
-    (!filterTrade || p.trade === filterTrade) &&
-    (!filterCity || (p.city || "").toLowerCase().includes(filterCity.toLowerCase()))
-  );
+  const hideThreshold = globalSettings?.hide_demo_leads_below_score ?? 60;
+  const filtered = prospects.filter(p => {
+    if (filterTrade && p.trade !== filterTrade) return false;
+    if (filterCity && !(p.city || "").toLowerCase().includes(filterCity.toLowerCase())) return false;
+    if (filterTerritory && String(p.territory_priority) !== filterTerritory) return false;
+    if ((p.quality_score ?? 0) < filterMinQuality) return false;
+    if (hideDemo && p.is_demo && (p.quality_score ?? 0) < hideThreshold) return false;
+    return true;
+  });
   const withEmail = prospects.filter(p => p.email).length;
+  const verifiedEmail = prospects.filter(p => p.email && p.email_verified).length;
 
   return (
     <div className="space-y-6">
@@ -275,11 +299,25 @@ export default function ContractorOutreachPanel() {
         </div>
       </div>
 
+      {/* Info box explaining how the system works */}
+      <OutreachInfoBox />
+
+      {/* Global kill-switches */}
+      <OutreachGlobalSettings onChange={setGlobalSettings} />
+
       {/* Provenance panel */}
       <OutreachProvenancePanel />
 
       {/* Suppression manager */}
       <OutreachSuppressionManager />
+
+      {/* Audit log link */}
+      <Link
+        to="/dwa-admin/outreach-audit"
+        className="inline-flex items-center gap-2 text-xs px-3 py-2 rounded border border-cyan-700/40 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20"
+      >
+        <Activity size={12} /> Open full Outreach Audit Log →
+      </Link>
 
       {/* Scrape panel */}
       <div className="bg-card border border-border rounded-lg p-4">
@@ -346,9 +384,9 @@ export default function ContractorOutreachPanel() {
       <div>
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Contractor Database ({filtered.length} of {prospects.length})
+            Contractor Database ({filtered.length} of {prospects.length}) · {verifiedEmail} verified
           </h3>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <select value={filterTrade} onChange={e => setFilterTrade(e.target.value)} className="bg-background border border-border text-xs px-2 py-1 rounded">
               <option value="">All trades</option>
               {TRADES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -359,6 +397,21 @@ export default function ContractorOutreachPanel() {
               placeholder="Filter city…"
               className="bg-background border border-border text-xs px-2 py-1 rounded w-32"
             />
+            <select value={filterTerritory} onChange={e => setFilterTerritory(e.target.value)} className="bg-background border border-border text-xs px-2 py-1 rounded">
+              <option value="">All territories</option>
+              <option value="1">1 — Primary</option>
+              <option value="2">2 — Secondary</option>
+              <option value="3">3 — Opportunistic</option>
+            </select>
+            <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              Min Q
+              <input type="range" min={0} max={100} step={5} value={filterMinQuality} onChange={e => setFilterMinQuality(parseInt(e.target.value))} className="w-20 accent-cyan-500" />
+              <span className="text-cyan-300 font-bold w-6 text-right">{filterMinQuality}</span>
+            </label>
+            <label className="flex items-center gap-1 text-[11px] text-muted-foreground cursor-pointer">
+              <input type="checkbox" checked={hideDemo} onChange={e => setHideDemo(e.target.checked)} className="accent-cyan-500" />
+              Hide demo
+            </label>
           </div>
         </div>
         {loading ? <p className="text-xs text-muted-foreground">Loading…</p> : (
@@ -367,18 +420,20 @@ export default function ContractorOutreachPanel() {
               <thead className="bg-background/40 text-muted-foreground">
                 <tr>
                   <th className="text-left p-2.5">Business</th>
-                  <th className="text-left p-2.5">Trade / City</th>
+                  <th className="text-left p-2.5">Trade / Terr</th>
+                  <th className="text-left p-2.5">Quality</th>
                   <th className="text-left p-2.5">Email</th>
+                  <th className="text-left p-2.5">Email OK?</th>
                   <th className="text-left p-2.5">Phone</th>
-                  <th className="text-left p-2.5">SMS</th>
+                  <th className="text-left p-2.5">SMS OK?</th>
                   <th className="text-left p-2.5">Sent</th>
                   <th className="text-right p-2.5">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 && (
-                  <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">
-                    No prospects yet — use the Scrape panel above
+                  <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">
+                    No prospects match these filters — adjust filters or use the Scrape panel above
                   </td></tr>
                 )}
                 {filtered.map(p => {
@@ -386,17 +441,34 @@ export default function ContractorOutreachPanel() {
                     : !p.phone ? { label: "—", color: "text-muted-foreground" }
                     : !p.consent_for_sms ? { label: "🔴 No consent", color: "text-red-300" }
                     : { label: "🟢 Consented", color: "text-emerald-300" };
+                  const emailStatus = p.unsubscribed_at ? { label: "⛔ Unsub", color: "text-red-400" }
+                    : !p.email ? { label: "—", color: "text-muted-foreground" }
+                    : p.consent_for_email ? { label: "🟢 Consented", color: "text-emerald-300" }
+                    : { label: "🟡 Cold (CAN-SPAM)", color: "text-amber-300" };
+                  const q = p.quality_score ?? 0;
+                  const qColor = q >= 75 ? "bg-emerald-500/20 text-emerald-300"
+                    : q >= 50 ? "bg-amber-500/20 text-amber-300"
+                    : "bg-red-500/20 text-red-300";
                   return (
                   <tr key={p.id} className="border-t border-border hover:bg-background/30">
                     <td className="p-2.5">
-                      <div className="font-semibold text-foreground">{p.business_name}</div>
+                      <div className="font-semibold text-foreground flex items-center gap-1.5">
+                        {p.business_name}
+                        {p.is_demo && <span className="text-[9px] px-1 py-0.5 rounded bg-slate-700 text-slate-300">demo</span>}
+                      </div>
                       {p.website && (
                         <a href={p.website} target="_blank" rel="noreferrer" className="text-[10px] text-cyan-400 hover:underline inline-flex items-center gap-1">
                           site <ExternalLink size={9} />
                         </a>
                       )}
                     </td>
-                    <td className="p-2.5 text-muted-foreground">{p.trade} · {p.city}</td>
+                    <td className="p-2.5 text-muted-foreground">
+                      <div>{p.trade}</div>
+                      <div className="text-[10px]">{p.city || "—"} · T{p.territory_priority}</div>
+                    </td>
+                    <td className="p-2.5">
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${qColor}`}>{q}</span>
+                    </td>
                     <td className="p-2.5">
                       {p.email ? (
                         <span className={p.email_verified ? "text-emerald-300" : "text-amber-300"}>
@@ -407,6 +479,7 @@ export default function ContractorOutreachPanel() {
                         <span className="text-muted-foreground italic">—</span>
                       )}
                     </td>
+                    <td className={`p-2.5 text-[10px] ${emailStatus.color}`}>{emailStatus.label}</td>
                     <td className="p-2.5 text-muted-foreground">{p.phone || "—"}</td>
                     <td className={`p-2.5 text-[10px] ${smsStatus.color}`}>{smsStatus.label}</td>
                     <td className="p-2.5 text-muted-foreground">{p.email_send_count}</td>
@@ -420,13 +493,22 @@ export default function ContractorOutreachPanel() {
                           <Sparkles size={10} /> {enrichingId === p.id ? "…" : "Enrich"}
                         </button>
                       )}
+                      {p.email && !p.consent_for_email && !p.unsubscribed_at && (
+                        <button
+                          onClick={() => setConsentFor({ id: p.id, name: p.business_name, channel: "email" })}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold bg-cyan-600/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-600/40"
+                          title="Mark explicit email consent received (e.g. opted in via form)"
+                        >
+                          <ShieldCheck size={10} /> Email-OK
+                        </button>
+                      )}
                       {p.phone && !p.consent_for_sms && !p.unsubscribed_at && (
                         <button
-                          onClick={() => setConsentFor({ id: p.id, name: p.business_name })}
+                          onClick={() => setConsentFor({ id: p.id, name: p.business_name, channel: "sms" })}
                           className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-600/40"
                           title="Mark SMS consent received"
                         >
-                          <ShieldCheck size={10} /> Consent
+                          <ShieldCheck size={10} /> SMS-OK
                         </button>
                       )}
                       {p.consent_for_sms && p.phone && !p.unsubscribed_at && (
@@ -469,6 +551,7 @@ export default function ContractorOutreachPanel() {
       <OutreachConsentDialog
         prospectId={consentFor?.id ?? null}
         prospectName={consentFor?.name}
+        channel={consentFor?.channel ?? "sms"}
         onClose={() => setConsentFor(null)}
         onSaved={load}
       />
