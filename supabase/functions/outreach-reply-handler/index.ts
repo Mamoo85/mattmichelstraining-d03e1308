@@ -4,14 +4,16 @@
 // Inbound email: configure Resend inbound or forward to this endpoint with { from, subject, body }.
 // Inbound SMS: configure Twilio Messaging webhook to POST here with form-encoded { From, Body }.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { verifyTwilioSignature } from "../_shared/webhook-verify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-twilio-signature",
 };
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
 
 const UNSUB_KEYWORDS = ["unsubscribe", "stop", "remove me", "opt out", "opt-out", "no thanks", "do not email"];
 const POSITIVE_KEYWORDS = ["interested", "yes", "send me", "tell me more", "sounds good", "let's talk", "lets talk", "more info", "pricing", "demo", "call me", "claim"];
@@ -47,12 +49,28 @@ Deno.serve(async (req) => {
 
   try {
     if (contentType.includes("application/x-www-form-urlencoded")) {
-      // Twilio inbound SMS
+      // Twilio inbound SMS — verify signature
       const form = await req.formData();
+      const params: Record<string, string> = {};
+      for (const [k, v] of form.entries()) params[k] = String(v);
+
+      if (TWILIO_AUTH_TOKEN) {
+        const fullUrl = req.url;
+        const sig = req.headers.get("x-twilio-signature");
+        const ok = await verifyTwilioSignature(fullUrl, params, sig, TWILIO_AUTH_TOKEN);
+        if (!ok) {
+          return new Response("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response/>", {
+            status: 401, headers: { ...corsHeaders, "Content-Type": "text/xml" },
+          });
+        }
+      } else {
+        console.warn("[outreach-reply-handler] TWILIO_AUTH_TOKEN not set — accepting unsigned (DEV ONLY)");
+      }
+
       channel = "sms";
-      from = String(form.get("From") || "");
-      body = String(form.get("Body") || "");
-      raw = Object.fromEntries(form.entries());
+      from = params.From || "";
+      body = params.Body || "";
+      raw = params;
     } else {
       const json = await req.json();
       raw = json;

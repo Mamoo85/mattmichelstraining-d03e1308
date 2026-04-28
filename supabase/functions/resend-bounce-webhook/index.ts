@@ -3,6 +3,7 @@
 // from Resend and updates prospects + audit log accordingly.
 // Configure in Resend dashboard: https://resend.com/webhooks → POST to this endpoint.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { verifySvixSignature } from "../_shared/webhook-verify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,7 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const RESEND_WEBHOOK_SECRET = Deno.env.get("RESEND_WEBHOOK_SECRET");
 
 interface ResendEvent {
   type: string;
@@ -33,9 +35,23 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+  // Read raw body once for signature verification
+  const rawBody = await req.text();
+
+  if (!RESEND_WEBHOOK_SECRET) {
+    console.warn("[resend-bounce-webhook] RESEND_WEBHOOK_SECRET not set — accepting unsigned webhooks (DEV ONLY)");
+  } else {
+    const ok = await verifySvixSignature(rawBody, req.headers, RESEND_WEBHOOK_SECRET);
+    if (!ok) {
+      return new Response(JSON.stringify({ error: "invalid signature" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }
+
   let event: ResendEvent;
   try {
-    event = await req.json();
+    event = JSON.parse(rawBody);
   } catch {
     return new Response(JSON.stringify({ error: "invalid json" }), { status: 400, headers: corsHeaders });
   }
