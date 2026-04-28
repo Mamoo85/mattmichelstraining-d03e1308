@@ -108,11 +108,21 @@ Deno.serve(async (req) => {
       }
     }
 
+    let phone: string | null = prospect.phone;
+
+    // PDL name-only fallback (healthcare records: RN/CNA/LPN with no business+city domain)
+    if (!email && prospect.owner_name) {
+      const pdl = await pdlNameOnlySearch(prospect.owner_name, prospect.city, prospect.state);
+      trace.push({ stage: "pdl_name_only", name: prospect.owner_name, found: !!(pdl?.email || pdl?.phone), confidence: pdl?.confidence ?? 0, ts: new Date().toISOString() });
+      if (pdl?.email) { email = pdl.email; verified = true; }
+      if (pdl?.phone && !phone) phone = pdl.phone;
+    }
+
     // Fallback: pattern guess info@domain
     if (!email && domain) {
       email = `info@${domain}`;
       verified = false;
-      trace.push({ stage: "pattern_guess", email, ts: new Date().toISOString() });
+      trace.push({ stage: "pattern_guess", email, confidence: 0.3, ts: new Date().toISOString() });
     }
 
     const { data: updated, error: uErr } = await supabase
@@ -121,6 +131,7 @@ Deno.serve(async (req) => {
         email,
         email_verified: verified,
         owner_name: owner,
+        phone,
         enriched_at: new Date().toISOString(),
         enrichment_trace: trace,
       })
