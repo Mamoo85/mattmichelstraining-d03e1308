@@ -216,63 +216,21 @@ async function sonarSearch(prompt: string, schemaHint: string): Promise<any[]> {
   }
 }
 
+// Phase C: deterministic scrape of Detroit/Oakland/Macomb Legal News public foreclosure notices.
+// Replaces Sonar/Perplexity LLM discovery — every address is on a real, fetched legal-notice page.
 async function scanForeclosureNotices(): Promise<RawSignal[]> {
-  if (!OPENROUTER_API_KEY) return [];
-  try {
-    const today = new Date().toISOString().slice(0, 10);
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "perplexity/sonar-pro",
-        messages: [{
-          role: "system",
-          content: "You are a public records researcher. Return ONLY valid JSON, no markdown.",
-        }, {
-          role: "user",
-          content: `Search for lis pendens filings, foreclosure notices, and sheriff sale listings in Wayne County, Oakland County, and Macomb County Michigan published in the last 7 days (before ${today}). Include Michigan legal newspapers, county recorder public notices, and court filings. Return a JSON array of up to 15 records. Each record: { "address": "full street address", "city": "city name", "zip": "5-digit zip or null", "owner_name": "owner name or null", "signal_detail": "brief description of the filing", "signal_date": "YYYY-MM-DD or null" }. If no results found return [].`,
-        }],
-        max_tokens: 1200,
-        temperature: 0.1,
-      }),
-      signal: AbortSignal.timeout(20000),
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    const raw = data?.choices?.[0]?.message?.content?.trim() || "[]";
-    const jsonMatch = raw.match(/\[[\s\S]*\]/);
-    const cleaned = jsonMatch ? jsonMatch[0] : "[]";
-    let records: any[];
-    try {
-      records = JSON.parse(cleaned);
-      if (!Array.isArray(records)) {
-        console.warn("[scanForeclosureNotices] Ingestion Pipeline returned non-array — raw:", cleaned.slice(0, 200));
-        records = [];
-      }
-    } catch (parseErr) {
-      console.warn("[scanForeclosureNotices] Ingestion Pipeline JSON parse failed:", String(parseErr), "raw:", cleaned.slice(0, 200));
-      records = [];
-    }
-    return records.slice(0, 15).map((r: any) => {
-      if (!r.address && !r.owner_name) {
-        console.warn("[scanForeclosureNotices] Schema drift — record missing expected fields:", JSON.stringify(r).slice(0, 100));
-      }
-      return {
-        full_name: r.owner_name || r.owner || r.full_name || undefined,
-        address: r.address || r.property_address || undefined,
-        city: r.city || undefined,
-        zip: r.zip || r.zip_code || undefined,
-        signal_type: "lis_pendens" as const,
-        signal_source: "Sonar_PublicRecords",
-        signal_detail: r.signal_detail || r.description || "Lis pendens / foreclosure notice filed",
-        signal_date: r.signal_date || r.date || today,
-        source_method: "llm_search" as const,
-      };
-    });
-  } catch (e) {
-    console.warn("[scanForeclosureNotices]", e instanceof Error ? e.message : String(e));
-    return [];
-  }
+  const items = await scrapeForeclosureNotices({ perSourceCap: 8 });
+  return items.map((i) => ({
+    address: i.address,
+    city: i.city,
+    zip: i.zip,
+    signal_type: i.signal_type,
+    signal_source: i.signal_source,
+    signal_detail: i.signal_detail,
+    signal_url: i.signal_url,
+    signal_date: i.signal_date,
+    source_method: "scraper" as const,
+  }));
 }
 
 // Phase B: deterministic Firecrawl scrape of Zillow FSBO city pages.
@@ -379,24 +337,21 @@ async function scanNewMichiganLLCs(sb: ReturnType<typeof createClient>): Promise
 
 async function scanJobChanges(): Promise<RawSignal[]> { return []; }
 
-// Probate filings — inherited property almost always sells within 12 months
+// Phase C: deterministic scrape of probate court public notices via Legal News.
 async function scanProbateFilings(): Promise<RawSignal[]> {
-  const items = await sonarSearch(
-    "Find recent (last 30 days) probate estate filings in Wayne, Oakland, or Macomb County Michigan probate court public records. Include decedent name or estate name, property address if available, city, ZIP, filing date, source URL. Look for estates that include real property.",
-    `{ "full_name": string, "address": string, "city": string, "zip": string, "signal_date": "YYYY-MM-DD", "signal_url": string, "signal_detail": string }`,
-  );
-  return items.map((i: any) => ({
-    full_name: i.full_name || undefined,
-    address: i.address || "",
-    city: i.city || undefined,
-    zip: typeof i.zip === "string" ? i.zip.slice(0, 5) : undefined,
-    signal_type: "probate_filing",
-    signal_source: "ProbateCourt",
-    signal_detail: i.signal_detail || "Probate estate filing with real property",
-    signal_url: i.signal_url || undefined,
-    signal_date: i.signal_date || undefined,
-    source_method: "llm_search",
-  })).filter(s => s.address);
+  const items = await scrapeProbateFilings({ perSourceCap: 6 });
+  return items.map((i) => ({
+    full_name: i.full_name,
+    address: i.address,
+    city: i.city,
+    zip: i.zip,
+    signal_type: i.signal_type,
+    signal_source: i.signal_source,
+    signal_detail: i.signal_detail,
+    signal_url: i.signal_url,
+    signal_date: i.signal_date,
+    source_method: "scraper" as const,
+  }));
 }
 
 // Phase B: deterministic Firecrawl scrape of EstateSales.net MI city pages.
