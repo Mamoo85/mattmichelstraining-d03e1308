@@ -124,7 +124,28 @@ export default function ContractorOutreachPanel() {
     load();
   }
 
-  async function enrich(id: string) {
+  async function runStatewideSweep(tier: "primary" | "secondary" | "tertiary") {
+    if (sweeping) return;
+    setSweeping(true);
+    const toastId = toast.loading(`🗺️ Statewide ${tier} sweep running…`);
+    try {
+      const { data, error } = await supabase.functions.invoke("contractor-outreach-statewide-sweep", {
+        body: { tiers: [tier], limit_per_query: 20, max_seconds: 90 },
+      });
+      if (error) throw new Error(error.message);
+      const d = data as any;
+      if (!d?.ok) throw new Error(d?.error || "Sweep failed");
+      toast.success(
+        `Sweep ${d.completed_all ? "complete" : `partial (resume @ ${d.next_start_index})`} — scanned ${d.scanned}, added ${d.inserted}, skipped ${d.skipped_duplicates}`,
+        { id: toastId, duration: 7000 },
+      );
+      load();
+    } catch (e: any) {
+      toast.error(e?.message || "Sweep failed", { id: toastId });
+    } finally {
+      setSweeping(false);
+    }
+  }
     setEnrichingId(id);
     const { data, error } = await supabase.functions.invoke("contractor-outreach-enrich", {
       body: { prospect_id: id },
