@@ -1,147 +1,119 @@
-# Wave 5 — Alert Hygiene, DLQ Aging, Confidence Scoring & Budget Guards
+## Wave 7 — Observability, Audit & Operator Tooling (8 items)
 
-Five tightly-scoped enhancements that close the remaining safety/prioritization gaps from Sprints G–L. All changes additive — no breaking schema or behavior shifts.
-
----
-
-## 1. Quiet-hours filter for warn-level alerts (9pm–7am ET)
-
-Goal: Stop waking Matt up for non-critical noise. Warn alerts queue silently; crit always pages.
-
-**Edge change** — `supabase/functions/outreach-alert-evaluator/index.ts`
-- Add `isQuietHoursET()` helper: convert `now()` to America/Detroit; return true if hour ≥ 21 or < 7.
-- Before the `if (t.sms_enabled)` SMS block:
-  - If `severity === "warn"` and `isQuietHoursET()`: skip `sendSMS`, set `smsSent = false`, mark `meta.suppressed_by_quiet_hours = true`.
-  - `crit` alerts continue to call `sendSMS({ allowQuietHours: true })` unchanged.
-- Append the suppressed entry to `outreach_alerts_log` so it's still visible in the UI (with the meta flag).
-
-**UI** — `src/components/admin/EnrichmentWalkerAlertsPanel.tsx`
-- In the "Recent alerts fired" list, render a 🌙 badge when `meta.suppressed_by_quiet_hours` is true.
+Building on Waves 5–6 (walker budget, DLQ aging, enrichment_confidence, quiet-hours, cost anomaly). Existing surfaces to reuse: `enrichment-e2e-verify`, `cron-sentinel`, `cron-status`, `cron_job_health`, `cron_schedule_audit`, `outreach_alerts_log`, `outreach_alert_cooldowns`, `enrichment_walker_runs`, `enrichment_dead_letter`, `enrichment_provider_spend_daily`.
 
 ---
 
-## 2. DLQ aging → suppression after 7 days
+### 1. Nightly E2E smoke suite (extend `enrichment-e2e-verify`)
 
-Goal: Stop infinitely retrying prospects that are truly unenrichable; keep the queue from bloating.
+Today the canary only hits the waterfall. Expand into a multi-check suite that runs before alerts can fire and writes pass/fail per check.
 
-**Migration** — new `add_dlq_aging.sql`
-- Add `suppressed_at timestamptz` and `suppression_reason text` columns to `contractor_outreach_prospects` (if not already present).
-- Partial index `idx_dlq_aging` on `enrichment_dead_letter (created_at)` where unresolved.
+- New table `enrichment_e2e_checks` (run_id, check_name, status, detail, duration_ms).
+- Edge function additions — for each run, execute and record:
+  - **tables**: SELECT 1 row from `enrichment_walker_config`, `enrichment_walker_targets`, `enrichment_dead_letter`, `enrichment_provider_spend_daily`, `outreach_alerts_log`.
+  - **rpcs**: dry-call `claim_lead_soft_lock` (rolled back), `reset_alert_cooldown('canary')`, `upsert_walker_target` with a fixture then `delete_walker_target`.
+  - **ui endpoints**: HEAD/GET against deployed `cron-status`, `outreach-alert-evaluator?dry=1`, `enrichment-matrix-walker?dry=1`.
+  - **waterfall canary**: existing check.
+- Overall run is `pass` only if every check passes; `degraded` if any non-critical fails; `fail` blocks downstream alert evaluator from firing for that cycle (evaluator reads latest run before sending).
+- Cron `enrichment-e2e-verify-nightly` already exists at 4 AM ET — reused.
 
-**Edge change** — `contractor-outreach-enrich-backfill/index.ts`
-- New phase at top of run (before replay loop):
-  - Select `enrichment_dead_letter` rows older than 7 days that are not resolved.
-  - For each: update parent prospect `suppressed_at = now()`, `suppression_reason = 'dlq_aged_unenrichable'`.
-  - Mark the DLQ row as resolved with note `aged_to_suppression`.
-- Backfill replay loop already filters out suppressed prospects via the existing "missing fields" query — add explicit `.is('suppressed_at', null)` guard.
-- Return `{ aged_count }` in the response payload.
+### 2. Cron status widget (per-cron)
 
-**UI** — `EnrichmentDLQPanel.tsx`
-- Add a "Suppressed (aged)" counter card pulling `count(*) where suppression_reason = 'dlq_aged_unenrichable'`.
+New `src/components/admin/CronStatusWidget.tsx` — compact card grid usable on multiple admin pages. Reads `cron-status` edge function output (already returns `cron_job_health` + history) plus `cron.job_run_details` aggregates.
 
----
+Per cron card shows:
+- Last run time + duration
+- 24h success/failure counts (from `cron_run_status`)
+- Next scheduled execution (computed from cron expression via `cronstrue` + simple next-fire calc)
+- Status pill: green / amber (stale) / red (consecutive failures)
 
-## 3. `enrichment_confidence` score (0–100) on prospects
+Mounted on Wave 5 dashboard (item 4) and on existing `/admin/cron-status` page.
 
-Goal: Sort retries and outreach by likelihood of payoff. Low-confidence prospects get deprioritized; high-confidence go to the front.
+### 3. Alert log search & filter (in `/admin/outreach-observability`)
 
-**Migration**
-- `ALTER TABLE contractor_outreach_prospects ADD COLUMN enrichment_confidence smallint DEFAULT 0 CHECK (enrichment_confidence BETWEEN 0 AND 100);`
-- Index: `CREATE INDEX idx_prospects_confidence ON contractor_outreach_prospects (enrichment_confidence DESC) WHERE suppressed_at IS NULL;`
+Extend the existing **Walker & Alerts** tab in `OutreachObservability.tsx` (or add a new "Alert Log" sub-section in `EnrichmentWalkerAlertsPanel.tsx`):
 
-**Scoring rule** (computed at end of `_shared/email-waterfall.ts` `runEmailWaterfall`):
-- Start at 0. Add:
-  - +40 if verified email present
-  - +20 if owner full name found
-  - +15 if phone number present
-  - +10 if domain confirmed reachable (no scrape error)
-  - +10 if pattern-verify or Hunter/PDL hit (high-trust source)
-  - +5 if Apollo confirmed company match
-- Persist via the existing prospect update step.
+- Filters: severity (info/warn/critical), reason (dropdown populated from distinct `outreach_alerts_log.reason`), date range (last 24h / 7d / 30d / custom), free-text search across `message`/`payload`.
+- Server-side query against `outreach_alerts_log` with indexed filters; client-side debounce.
+- Row expands to show full payload JSON + cooldown state from `outreach_alert_cooldowns` + link to "Reset cooldown" RPC.
+- CSV export of filtered set.
 
-**Consumers**
-- `contractor-outreach-enrich-backfill`: `.order('enrichment_confidence', { ascending: false })` so the most likely-to-succeed retries run first within the `HARD_MAX` budget.
-- Outreach selection (existing dispatcher that picks daily SMS/email targets — locate via `rg "contractor_outreach_prospects" supabase/functions | rg -i "order|select.*limit"`): also order by confidence desc so paid sends prioritize high-confidence leads.
+### 4. Wave 5 admin dashboard
 
-**UI** — `EnrichmentTimelinePanel.tsx`
-- Show confidence as a colored chip per prospect (green ≥70, amber 40–69, red <40).
+New page `src/pages/admin/Wave5Dashboard.tsx` (route `/admin/wave5`), composed of:
+- **Walker spend (today + 7d)** — line chart from `enrichment_provider_spend_daily` (Apollo/Hunter/Snov/PDL) with the daily budget line overlaid from `enrichment_walker_config.daily_budget_usd`.
+- **Daily budget status** — gauge + "walker paused / active" pill driven by spend vs cap.
+- **DLQ aging buckets** — counts grouped by age (<1d, 1–3d, 3–7d, >7d) from `enrichment_dead_letter`.
+- **Alert history (last 50)** — embeds the filterable log from item 3 in compact mode.
+- **enrichment_confidence distribution** — histogram (10 buckets) from `prospects.enrichment_confidence` plus median/p25/p75 stats.
+- **Embedded `CronStatusWidget`** (item 2) for the 5 enrichment crons.
+- Add link tile in `AdminOpsCenter` and a tab inside `OutreachObservability`.
 
----
+### 5. Cron/worker health monitor (missing-row detection)
 
-## 4. Cost-anomaly alert (daily spend > 2× 7-day rolling avg)
+Today `cron-sentinel` only checks watchlisted crons exist. Add an **expectation registry** that flags missing rows.
 
-Goal: Catch a runaway cron / pricing change / loop bug before it burns the month's budget.
+- New table `cron_expected_jobs` (jobname, surface, owner, critical bool) — seeded with all enrichment + alerting + walker crons.
+- New edge function `cron-health-monitor` (every 15 min cron):
+  1. Left-join `cron_expected_jobs` against `cron.job` — any missing → critical alert with `surface` name in payload.
+  2. For each present job: detect `consecutive_failures >= 3` or `last_success_at` older than `stale_after_minutes` → critical alert.
+  3. Writes to `outreach_alerts_log` with `kind='cron_missing'` or `kind='cron_failing'`, respects quiet-hours rule (warn suppressed 9pm–7am ET, critical always sends).
+- UI: `CronStatusWidget` shows a red "MISSING" badge for expected-but-absent jobs with one-click link to the migration.
 
-**View** — new migration adds `enrichment_provider_spend_daily`:
-```sql
-CREATE OR REPLACE VIEW enrichment_provider_spend_daily AS
-SELECT date_trunc('day', ran_at)::date AS day,
-       SUM(cost_estimate_usd)::numeric(10,2) AS spend_usd
-FROM enrichment_walker_runs
-GROUP BY 1;
+### 6. Decision audit logging (budget caps, quiet-hours, DLQ aging)
+
+Single append-only table `enrichment_decision_audit`:
 ```
-(Plus equivalent rollup if `email-waterfall` writes per-call spend rows — extend the union accordingly.)
+id uuid pk, decided_at timestamptz default now(),
+decision_kind text,        -- 'walker_budget_block' | 'quiet_hours_suppress' | 'dlq_aged_to_suppression'
+prospect_id uuid null,
+surface text,              -- 'enrichment-matrix-walker' | 'outreach-alert-evaluator' | 'enrichment-backfill-nightly'
+reason text,
+context jsonb              -- spend snapshot, alert kind+severity, dlq age days, etc.
+```
 
-**Edge change** — `outreach-alert-evaluator/index.ts`
-- Add a hard-coded check kind `daily_spend_anomaly` (does not need a row in `enrichment_alert_thresholds`):
-  - `today_spend = sum where day = today_ET`
-  - `avg7 = sum where day in last 7 prior days / 7`
-  - If `avg7 >= 1.0` (avoid div-by-near-zero noise) AND `today_spend > 2 * avg7` AND `today_spend > 5`:
-    - Fire `crit` SMS: `[Cost spike] $X today vs $Y 7-day avg (Nx).`
-    - Use existing cooldown table with `kind='daily_spend_anomaly'`, 4-hour cooldown.
-    - Always `allowQuietHours: true` (financial = critical).
-  - Log to `outreach_alerts_log`.
+Wired into:
+- `enrichment-matrix-walker` — log every prospect skipped because `daily_spend >= daily_budget_usd` with the spend snapshot.
+- `outreach-alert-evaluator` — log every alert suppressed by quiet-hours, including severity, kind, ET time.
+- `enrichment-backfill-nightly` — log each DLQ row aged into suppression with age_days + dlq reason.
 
-**UI** — `EnrichmentWalkerAlertsPanel.tsx`
-- New "Spend (today vs 7-day avg)" tile at the top of the panel.
+UI: new "Decisions" tab on Wave 5 dashboard with filters by kind/prospect/surface and CSV export. Per-prospect view added to existing `EnrichmentDLQPanel` row drawer so you can trace a prospect's full decision history.
 
----
+### 7. Alert rule tester (dry-run simulator)
 
-## 5. Walker daily budget cap (default $50/day, configurable)
+New edge function `alert-rule-tester` + new component `src/components/admin/AlertRuleTesterPanel.tsx` mounted as a tab on the Wave 5 dashboard.
 
-Goal: Hard ceiling on autonomous spend per UTC-or-ET day, separate from per-run cap.
+Inputs:
+- **Spend anomaly**: enter today's spend + (optional) override 7-day average → returns whether cost-anomaly alert would fire and the computed ratio.
+- **Quiet hours**: enter severity + ET time → returns suppress/send and reason.
+- **DLQ aging**: enter prospect's DLQ entry date + reason → returns whether suppression would trigger and what reason code.
 
-**Migration**
-- New table `enrichment_walker_config (key text primary key, value_numeric numeric, value_text text, updated_at timestamptz default now())`.
-- Seed row: `('daily_budget_usd', 50, null, now())`.
-- RLS: service_role + admin via `has_role()`; no public access.
+The function reuses the exact predicates from `outreach-alert-evaluator` and `enrichment-backfill-nightly` (extracted into `_shared/alert-rules.ts`) so tester == production. Results render inline; nothing is written to live tables (audit/log writes are skipped via a `dry: true` flag).
 
-**Edge change** — `enrichment-matrix-walker/index.ts`
-- After the existing per-pair budget check, add a global daily-cap check:
-  - Read `daily_budget_usd` from `enrichment_walker_config` (fallback 50 if missing).
-  - Sum `cost_estimate_usd` from `enrichment_walker_runs` where `ran_at >= today 00:00 ET`.
-  - If `today_total >= daily_budget`: insert a walker run row with `skipped_reason='daily_budget_cap_hit ($X/$Y)'`, return `{ ok: true, skipped: "daily_budget" }`.
-  - If `today_total + projected_run_cost > daily_budget`: trim `HARD_MAX_RUN_COST_USD` for this run to remaining headroom (or skip if headroom < $1).
+### 8. "Re-run enrichment" button (confidence-ordered)
 
-**UI** — `EnrichmentWalkerAlertsPanel.tsx`
-- New "Today's walker spend" progress bar: `today_total / daily_budget_usd` with editable input (admin-only) that updates the config row via a small RPC `set_walker_daily_budget(usd numeric)`.
-
----
-
-## Files Changed (summary)
-
-**Migrations (1 file)**
-- `add_wave5_dlq_confidence_budget.sql` — DLQ aging cols, confidence col + index, walker_config table, spend_daily view, RPC `set_walker_daily_budget`.
-
-**Edge functions**
-- `outreach-alert-evaluator/index.ts` — quiet-hours filter + cost-anomaly check
-- `contractor-outreach-enrich-backfill/index.ts` — DLQ aging phase + confidence-ordered replay
-- `enrichment-matrix-walker/index.ts` — daily budget cap
-- `_shared/email-waterfall.ts` — confidence scorer
-
-**UI**
-- `EnrichmentWalkerAlertsPanel.tsx` — quiet-hours badge, spend tile, walker budget bar
-- `EnrichmentDLQPanel.tsx` — aged-suppression counter
-- `EnrichmentTimelinePanel.tsx` — confidence chips
-
-**No changes to:** routes, auth, RLS on existing tables, cron schedules (existing 5-min evaluator + 30-min walker cadence handles all five features).
+- Add a button to `EnrichmentDLQPanel` and to a new section on the Wave 5 dashboard: "Re-run lowest-confidence prospects".
+- Inputs: limit (default 100), min/max confidence range, optional trade/city filter.
+- Calls a new edge function `enrichment-rerun-batch` that:
+  1. Selects prospects ordered by `enrichment_confidence ASC NULLS FIRST` (lowest first), filtered by inputs.
+  2. For each: pushes through `lead-enrichment-waterfall` with `force=true`.
+  3. Tallies `updated` (confidence improved or new contact found), `skipped` (provider budget block / suppressed), `suppressed` (newly moved to suppression).
+  4. Writes a summary row to `enrichment_run_progress` and returns the tally.
+- UI shows live progress (poll `enrichment_run_progress` every 2s) and final toast: "Updated 47 / Skipped 12 / Suppressed 3".
 
 ---
 
-## Out of scope (intentionally)
+## Technical notes
 
-- Per-provider budget caps (separate Apollo/Hunter ceilings) — deferred until we have ≥30 days of latency/spend baseline data.
-- Auto-tuning confidence weights via ML — current rule-based scorer is sufficient for sort ordering.
-- Self-service quiet-hours window editor (hardcoded 21:00–07:00 ET) — add UI later if you need to adjust seasonally.
+- **Migrations**: 1 SQL file adding `enrichment_e2e_checks`, `cron_expected_jobs`, `enrichment_decision_audit`, indexes (`outreach_alerts_log(severity, created_at)`, `enrichment_decision_audit(decision_kind, decided_at)`, `enrichment_dead_letter(created_at)`), RLS (admin-only via `has_role`), seed `cron_expected_jobs` with current enrichment/alerting/walker crons.
+- **New edge functions**: `cron-health-monitor`, `alert-rule-tester`, `enrichment-rerun-batch`. Plus extensions to `enrichment-e2e-verify`, `enrichment-matrix-walker`, `outreach-alert-evaluator`, `contractor-outreach-enrich-backfill`.
+- **Shared module**: `supabase/functions/_shared/alert-rules.ts` — extracted predicates so tester and live evaluator share one source of truth.
+- **New cron**: `cron-health-monitor-15m` via `safe_cron_schedule` per the cron migration mandate.
+- **Frontend**: `Wave5Dashboard.tsx`, `CronStatusWidget.tsx`, `AlertRuleTesterPanel.tsx`, `RerunEnrichmentDialog.tsx`; new tabs in `OutreachObservability.tsx`; tile in `AdminOpsCenter`.
+- **Runbook**: append "Wave 7" section to `docs/enrichment-runbook.md` documenting tester, rerun button, and decision-audit query examples.
 
-Reply **Approve** to ship.
+## Out of scope
+
+- Renaming or restructuring existing Wave 5/6 panels.
+- Changing alert delivery channels (still SMS via `_shared/twilio.ts` + email).
+- Backfilling historical decision audit (starts logging from deploy).
