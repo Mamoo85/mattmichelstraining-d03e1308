@@ -58,9 +58,9 @@ export default function OutreachObservability() {
       supabase.from("outreach_send_metrics_hourly" as any).select("*").order("hour", { ascending: true }),
       supabase.from("outreach_waterfall_stage_stats" as any).select("*"),
     ]);
-    setFunnel((fRes.data as FunnelRow) ?? null);
-    setHourly((hRes.data as HourlyRow[]) ?? []);
-    setStages((sRes.data as StageRow[]) ?? []);
+    setFunnel((fRes.data as unknown as FunnelRow) ?? null);
+    setHourly((hRes.data as unknown as HourlyRow[]) ?? []);
+    setStages((sRes.data as unknown as StageRow[]) ?? []);
     setLoading(false);
   }, []);
 
