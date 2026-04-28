@@ -7,6 +7,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { sendSMS } from "../_shared/twilio.ts";
+import {
+  validateLead,
+  quarantineRaw,
+  highQuarantineRateAlerts,
+  type ScanRunStats,
+} from "../_shared/anti-hallucination.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,7 +49,12 @@ interface RawSignal {
   signal_date?: string;
   estimated_equity?: number;
   estimated_loan_amount?: number;
-  source_id?: string;  // ID in originating table; marked after successful upsert
+  source_id?: string;            // ID in originating table; marked after successful upsert
+  source_method?: "llm_search" | "scraper" | "api"; // provenance — drives validation strictness
+  // Populated by validateLead() gate before insert. Never trust LLM-supplied lat/lon.
+  lat?: number;
+  lon?: number;
+  formatted_address?: string;
 }
 
 const BASE_SCORES: Record<string, number> = {
@@ -248,6 +259,7 @@ async function scanForeclosureNotices(): Promise<RawSignal[]> {
         signal_source: "Sonar_PublicRecords",
         signal_detail: r.signal_detail || r.description || "Lis pendens / foreclosure notice filed",
         signal_date: r.signal_date || r.date || today,
+        source_method: "llm_search" as const,
       };
     });
   } catch (e) {
@@ -271,6 +283,7 @@ async function scanFSBOListings(): Promise<RawSignal[]> {
     signal_detail: i.signal_detail || "For sale by owner listing",
     signal_url: i.signal_url || undefined,
     signal_date: new Date().toISOString().slice(0, 10),
+    source_method: "llm_search",
   })).filter(s => s.address);
 }
 
@@ -289,6 +302,7 @@ async function scanDivorceFilings(): Promise<RawSignal[]> {
     signal_detail: i.signal_detail || "Divorce filing",
     signal_url: i.signal_url || undefined,
     signal_date: i.signal_date || undefined,
+    source_method: "llm_search",
   })).filter(s => s.address);
 }
 
@@ -376,6 +390,7 @@ async function scanProbateFilings(): Promise<RawSignal[]> {
     signal_detail: i.signal_detail || "Probate estate filing with real property",
     signal_url: i.signal_url || undefined,
     signal_date: i.signal_date || undefined,
+    source_method: "llm_search",
   })).filter(s => s.address);
 }
 
@@ -394,6 +409,7 @@ async function scanEstateSales(): Promise<RawSignal[]> {
     signal_detail: i.signal_detail || "Estate sale listing",
     signal_url: i.signal_url || undefined,
     signal_date: i.signal_date || undefined,
+    source_method: "llm_search",
   })).filter(s => s.address);
 }
 
@@ -413,6 +429,7 @@ async function scanTaxDelinquency(): Promise<RawSignal[]> {
     signal_detail: i.signal_detail || "Property tax delinquency",
     signal_url: i.signal_url || undefined,
     signal_date: new Date().toISOString().slice(0, 10),
+    source_method: "llm_search",
   })).filter(s => s.address);
 }
 
@@ -432,6 +449,7 @@ async function scanFixerUpperListings(): Promise<RawSignal[]> {
     signal_url: i.signal_url || undefined,
     signal_date: new Date().toISOString().slice(0, 10),
     estimated_loan_amount: typeof i.estimated_loan_amount === "number" ? i.estimated_loan_amount : undefined,
+    source_method: "llm_search",
   })).filter(s => s.address);
 }
 
@@ -554,7 +572,7 @@ async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal
   // New property — insert
   const row = {
     full_name: s.full_name || null,
-    address: s.address,
+    address: s.formatted_address || s.address,
     city: s.city || null,
     state: "MI",
     zip: s.zip || null,
@@ -577,7 +595,12 @@ async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal
     }],
     suggested_opener: opener,
     best_call_window: window,
-    street_view_url: streetViewUrl(s.address, s.city || "", s.zip || ""),
+    // Use validated coordinates for Street View when available — kills the fuzzy-match bug.
+    street_view_url: s.lat != null && s.lon != null && GOOGLE_MAPS_API_KEY
+      ? `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${s.lat},${s.lon}&fov=80&key=${GOOGLE_MAPS_API_KEY}`
+      : streetViewUrl(s.address || "", s.city || "", s.zip || ""),
+    lat: s.lat ?? null,
+    lon: s.lon ?? null,
     raw: s as unknown as Record<string, unknown>,
   };
   const { data: ins, error } = await (sb.from as any)("mortgage_radar_leads")
@@ -633,16 +656,35 @@ serve(async (req) => {
 
   let inserted = 0;
   let updated = 0;
+  let quarantined = 0;
   let alertsQueued = 0;
   let inlineEnriched = 0;
   let queuedForEnrich = 0;
   let hotSmsFired = 0;
   let inlineEnrichBudget = 5; // first 5 new leads per run get inline enrich; rest go to queue
+  const acceptedBySource: Record<string, number> = {};
+  const quarantinedBySource: Record<string, number> = {};
 
   for (const s of signals) {
+    // ===== ANTI-HALLUCINATION GATE =====
+    // Validates address (Google Address Validation), checks placeholder fingerprints,
+    // checks cross-run quarantine history, and demands a real source URL for LLM-sourced leads.
+    const gate = await validateLead(sb, s, { sourceMethod: s.source_method || "scraper" });
+    if (!gate.pass) {
+      await quarantineRaw(sb, s, gate.reject_code || "unknown", gate.reject_reason || "validation failed", s.source_method || "unknown");
+      quarantined += 1;
+      quarantinedBySource[s.signal_source] = (quarantinedBySource[s.signal_source] || 0) + 1;
+      continue;
+    }
+    // Stamp validated lat/lon and formatted address onto the signal so upsertWithDedup persists them.
+    s.lat = gate.lat;
+    s.lon = gate.lon;
+    s.formatted_address = gate.formatted;
+
     const res = await upsertWithDedup(sb, s);
     if (!res) continue;
     if (res.created) inserted += 1; else updated += 1;
+    acceptedBySource[s.signal_source] = (acceptedBySource[s.signal_source] || 0) + 1;
 
     // Mark originating row as processed after successful upsert
     if (s.source_id) {
