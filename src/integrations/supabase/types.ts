@@ -4260,6 +4260,39 @@ export type Database = {
           },
         ]
       }
+      cron_expected_jobs: {
+        Row: {
+          created_at: string
+          critical: boolean
+          id: string
+          jobname: string
+          notes: string | null
+          owner: string | null
+          stale_after_minutes: number
+          surface: string
+        }
+        Insert: {
+          created_at?: string
+          critical?: boolean
+          id?: string
+          jobname: string
+          notes?: string | null
+          owner?: string | null
+          stale_after_minutes?: number
+          surface: string
+        }
+        Update: {
+          created_at?: string
+          critical?: boolean
+          id?: string
+          jobname?: string
+          notes?: string | null
+          owner?: string | null
+          stale_after_minutes?: number
+          surface?: string
+        }
+        Relationships: []
+      }
       cron_job_health: {
         Row: {
           consecutive_failures: number
@@ -5983,6 +6016,66 @@ export type Database = {
           prospect_id?: string
           stage?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      enrichment_decision_audit: {
+        Row: {
+          context: Json
+          decided_at: string
+          decision_kind: string
+          id: string
+          prospect_id: string | null
+          reason: string | null
+          surface: string | null
+        }
+        Insert: {
+          context?: Json
+          decided_at?: string
+          decision_kind: string
+          id?: string
+          prospect_id?: string | null
+          reason?: string | null
+          surface?: string | null
+        }
+        Update: {
+          context?: Json
+          decided_at?: string
+          decision_kind?: string
+          id?: string
+          prospect_id?: string | null
+          reason?: string | null
+          surface?: string | null
+        }
+        Relationships: []
+      }
+      enrichment_e2e_checks: {
+        Row: {
+          check_name: string
+          created_at: string
+          detail: string | null
+          duration_ms: number | null
+          id: string
+          run_id: string
+          status: string
+        }
+        Insert: {
+          check_name: string
+          created_at?: string
+          detail?: string | null
+          duration_ms?: number | null
+          id?: string
+          run_id: string
+          status: string
+        }
+        Update: {
+          check_name?: string
+          created_at?: string
+          detail?: string | null
+          duration_ms?: number | null
+          id?: string
+          run_id?: string
+          status?: string
         }
         Relationships: []
       }
