@@ -151,6 +151,14 @@ Deno.serve(async (req) => {
     const failures: string[] = [];
 
     for (const p of prospects) {
+      // Quality-score gate
+      if (minQuality > 0 && (p.quality_score ?? 0) < minQuality) {
+        await logAudit(supabase, {
+          prospect_id: p.id, lead_id, channel: "email", event: "suppressed",
+          reason: `Below min quality score (${p.quality_score ?? 0} < ${minQuality})`,
+        });
+        continue;
+      }
       // Suppression gate
       if (suppressedSet.has((p.email || "").toLowerCase())) {
         skippedSuppressed++;
