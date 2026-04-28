@@ -427,6 +427,45 @@ export type Database = {
         }
         Relationships: []
       }
+      address_validation_cache: {
+        Row: {
+          cache_key: string
+          cached_at: string
+          formatted_address: string | null
+          granularity: string | null
+          lat: number | null
+          lon: number | null
+          missing_components: string[] | null
+          pass: boolean
+          raw_response: Json | null
+          unconfirmed_components: string[] | null
+        }
+        Insert: {
+          cache_key: string
+          cached_at?: string
+          formatted_address?: string | null
+          granularity?: string | null
+          lat?: number | null
+          lon?: number | null
+          missing_components?: string[] | null
+          pass: boolean
+          raw_response?: Json | null
+          unconfirmed_components?: string[] | null
+        }
+        Update: {
+          cache_key?: string
+          cached_at?: string
+          formatted_address?: string | null
+          granularity?: string | null
+          lat?: number | null
+          lon?: number | null
+          missing_components?: string[] | null
+          pass?: boolean
+          raw_response?: Json | null
+          unconfirmed_components?: string[] | null
+        }
+        Relationships: []
+      }
       admin_command_log: {
         Row: {
           admin_email: string
@@ -12239,6 +12278,75 @@ export type Database = {
           },
         ]
       }
+      mortgage_radar_quarantine: {
+        Row: {
+          address: string | null
+          city: string | null
+          full_name: string | null
+          id: string
+          original_lead_id: string | null
+          quarantined_at: string
+          raw: Json | null
+          reject_code: string
+          reject_reason: string
+          review_action: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          signal_date: string | null
+          signal_detail: string | null
+          signal_source: string | null
+          signal_type: string | null
+          signal_url: string | null
+          source_method: string | null
+          state: string | null
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          full_name?: string | null
+          id?: string
+          original_lead_id?: string | null
+          quarantined_at?: string
+          raw?: Json | null
+          reject_code: string
+          reject_reason: string
+          review_action?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          signal_date?: string | null
+          signal_detail?: string | null
+          signal_source?: string | null
+          signal_type?: string | null
+          signal_url?: string | null
+          source_method?: string | null
+          state?: string | null
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          full_name?: string | null
+          id?: string
+          original_lead_id?: string | null
+          quarantined_at?: string
+          raw?: Json | null
+          reject_code?: string
+          reject_reason?: string
+          review_action?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          signal_date?: string | null
+          signal_detail?: string | null
+          signal_source?: string | null
+          signal_type?: string | null
+          signal_url?: string | null
+          source_method?: string | null
+          state?: string | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
       new_mover_clients: {
         Row: {
           active: boolean | null
@@ -15548,6 +15656,33 @@ export type Database = {
           sport?: string | null
           stripe_session_id?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      quarantine_history: {
+        Row: {
+          address_zip_key: string
+          first_seen: string
+          hit_count: number
+          last_reject_code: string | null
+          last_seen: string
+          permanent_blocklist: boolean
+        }
+        Insert: {
+          address_zip_key: string
+          first_seen?: string
+          hit_count?: number
+          last_reject_code?: string | null
+          last_seen?: string
+          permanent_blocklist?: boolean
+        }
+        Update: {
+          address_zip_key?: string
+          first_seen?: string
+          hit_count?: number
+          last_reject_code?: string | null
+          last_seen?: string
+          permanent_blocklist?: boolean
         }
         Relationships: []
       }
@@ -21934,7 +22069,17 @@ export type Database = {
       next_enrich_stage: { Args: { _candidate_id: string }; Returns: string }
       prune_enrichment_provider_latency: { Args: never; Returns: number }
       prune_provider_latency: { Args: never; Returns: number }
+      purge_address_validation_cache: { Args: never; Returns: number }
       purge_expired_idempotency_keys: { Args: never; Returns: number }
+      quarantine_mortgage_lead: {
+        Args: {
+          p_lead_id: string
+          p_reject_code: string
+          p_reject_reason: string
+          p_source_method?: string
+        }
+        Returns: string
+      }
       queue_depth_snapshot: {
         Args: never
         Returns: {
@@ -22030,6 +22175,7 @@ export type Database = {
       set_walker_daily_budget: { Args: { usd: number }; Returns: number }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      sweep_suspicious_mortgage_leads: { Args: never; Returns: number }
       toggle_points_visibility: {
         Args: { _is_public: boolean }
         Returns: undefined
