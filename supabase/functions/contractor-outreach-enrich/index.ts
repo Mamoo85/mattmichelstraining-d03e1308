@@ -1,6 +1,18 @@
-// Contractor Outreach: enrich a prospect's email via Hunter → Snov → pattern guess.
+// Contractor Outreach: enrich a prospect's email via Hunter → PDL → pattern guess.
 // Lightweight version of the unified waterfall, focused on domain-based discovery.
+//
+// Sprint E hardening: every external call wrapped with safeJson + typed parsers,
+// fetchWithRetry for 429 handling, response bodies always cancelled on early exit
+// (Deno resource leak prevention), enrichment_trace defensively parsed.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { fetchWithRetry } from "../_shared/fetch-with-retry.ts";
+import {
+  safeJson,
+  parseHunterDomainSearch,
+  parsePdlPersonSearch,
+  parseEnrichmentTrace,
+  asEmail,
+} from "../_shared/safe-parse.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,8 +22,6 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const HUNTER_API_KEY = Deno.env.get("HUNTER_API_KEY") || "";
-const SNOV_USER_ID = Deno.env.get("SNOV_USER_ID") || "";
-const SNOV_SECRET = Deno.env.get("SNOV_SECRET") || "";
 const PDL_API_KEY = Deno.env.get("PDL_API_KEY") || "";
 
 async function pdlNameOnlySearch(name: string, city?: string | null, state?: string | null):
@@ -24,20 +34,22 @@ async function pdlNameOnlySearch(name: string, city?: string | null, state?: str
     if (city) sql.push(`location_locality='${city.replace(/'/g, "")}'`);
     if (state) sql.push(`location_region='${state.replace(/'/g, "")}'`);
     const body = { sql: `SELECT * FROM person WHERE ${sql.join(" AND ")}`, size: 1 };
-    const res = await fetch("https://api.peopledatalabs.com/v5/person/search", {
-      method: "POST",
-      headers: { "X-Api-Key": PDL_API_KEY, "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const hit = data?.data?.[0];
-    if (!hit) return null;
-    const email = hit.work_email || hit.personal_emails?.[0] || null;
-    const phone = hit.mobile_phone || hit.phone_numbers?.[0] || null;
-    if (!email && !phone) return null;
-    return { email: email || undefined, phone: phone || undefined, confidence: 0.7 };
+    const res = await fetchWithRetry(
+      "https://api.peopledatalabs.com/v5/person/search",
+      {
+        method: "POST",
+        headers: { "X-Api-Key": PDL_API_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(8000),
+      },
+      { label: "PDL-Search-Lite", maxRetries: 2 },
+    );
+    if (!res.ok) { await res.body?.cancel(); return null; }
+    const parsed = await safeJson(res);
+    if (!parsed.ok) return null;
+    const r = parsePdlPersonSearch(parsed.value);
+    if (!r.ok) return null;
+    return { email: r.value.email, phone: r.value.phone, confidence: r.value.confidence / 100 };
   } catch { return null; }
 }
 
@@ -52,16 +64,24 @@ function extractDomain(url?: string | null): string | null {
 async function hunterDomainSearch(domain: string): Promise<{ email?: string; first?: string; last?: string } | null> {
   if (!HUNTER_API_KEY) return null;
   try {
-    const res = await fetch(`https://api.hunter.io/v2/domain-search?domain=${domain}&api_key=${HUNTER_API_KEY}&limit=5`);
-    const data = await res.json();
-    const emails = data?.data?.emails || [];
+    const res = await fetchWithRetry(
+      `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&api_key=${HUNTER_API_KEY}&limit=5`,
+      { signal: AbortSignal.timeout(6000) },
+      { label: "Hunter-Lite", maxRetries: 2 },
+    );
+    if (!res.ok) { await res.body?.cancel(); return null; }
+    const parsed = await safeJson(res);
+    if (!parsed.ok) return null;
+    const r = parseHunterDomainSearch(parsed.value);
+    if (!r.ok) return null;
     // Prefer owner/CEO/manager/founder
     const priority = ["owner", "ceo", "founder", "president", "manager", "general"];
     for (const role of priority) {
-      const hit = emails.find((e: any) => (e.position || "").toLowerCase().includes(role));
-      if (hit) return { email: hit.value, first: hit.first_name, last: hit.last_name };
+      const hit = r.value.find((e) => (e.position ?? "").toLowerCase().includes(role));
+      if (hit && asEmail(hit.email)) return { email: hit.email, first: hit.first, last: hit.last };
     }
-    if (emails[0]) return { email: emails[0].value, first: emails[0].first_name, last: emails[0].last_name };
+    const first = r.value[0];
+    if (first && asEmail(first.email)) return { email: first.email, first: first.first, last: first.last };
     return null;
   } catch { return null; }
 }
@@ -89,7 +109,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const trace: any[] = Array.isArray(prospect.enrichment_trace) ? prospect.enrichment_trace : [];
+    const trace: Array<Record<string, unknown>> = parseEnrichmentTrace(prospect.enrichment_trace);
     const domain = extractDomain(prospect.website);
 
     let email: string | null = prospect.email;
