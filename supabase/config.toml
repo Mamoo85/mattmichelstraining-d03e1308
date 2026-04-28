@@ -1931,3 +1931,24 @@ verify_jwt = true
 
 [functions.outreach-gmail-send]
 verify_jwt = true
+
+[functions.cold-email-rank-buyers]
+verify_jwt = true
+
+[functions.buyer-contact-enrich]
+verify_jwt = true
+
+[functions.cold-email-bandit-pick]
+verify_jwt = true
+
+[functions.cold-email-quality-gate]
+verify_jwt = true
+
+[functions.cold-email-generate-row]
+verify_jwt = true
+
+[functions.cold-email-bulk-queue]
+verify_jwt = true
+
+[functions.dossier-share-page]
+verify_jwt = false

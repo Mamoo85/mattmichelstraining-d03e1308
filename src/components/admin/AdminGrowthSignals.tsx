@@ -12,6 +12,7 @@ import {
   ChevronDown, ChevronUp, FileText,
 } from "lucide-react";
 import BuyerOutreachDialog from "./BuyerOutreachDialog";
+import ColdEmailEngineDialog from "./ColdEmailEngineDialog";
 import IndustryPulseConfidenceLegend from "./IndustryPulseConfidenceLegend";
 import GrowthSignalsDebugPanel, { type IndustryCount, type QueryMeta } from "./GrowthSignalsDebugPanel";
 
@@ -73,6 +74,7 @@ export default function AdminGrowthSignals() {
   const [industryFilter, setIndustryFilter] = useState(initialFilters.industry);
   const [pitchSignal, setPitchSignal] = useState<PulseSignal | null>(null);
   const [outreachSignal, setOutreachSignal] = useState<PulseSignal | null>(null);
+  const [sniperSignal, setSniperSignal] = useState<PulseSignal | null>(null);
   const [copied, setCopied] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [expandedDetails, setExpandedDetails] = useState<Set<string>>(new Set());
@@ -562,6 +564,13 @@ detroitwebagent.com`;
                       >
                         <Mail className="w-3 h-3" /> Cold Email
                       </button>
+                      <button
+                        onClick={() => setSniperSignal(signal)}
+                        className="px-3 py-1.5 rounded bg-orange-500/10 text-orange-400 text-xs font-bold hover:bg-orange-500/20 transition-colors border border-orange-500/30 flex items-center gap-1"
+                        title="Cold-Email Engine v3 — Demand Heat Sniper"
+                      >
+                        🔥 Sniper
+                      </button>
                       {signal.confidence >= 6 && (
                         <span className="text-[10px] text-white/20 flex items-center gap-1 ml-auto">
                           <Users className="w-3 h-3" /> {competitorCount(signal.id)} watching
@@ -689,6 +698,12 @@ detroitwebagent.com`;
           industry: outreachSignal.industry || null,
           predicted_needs: outreachSignal.predicted_needs || [],
         } : null}
+      />
+      <ColdEmailEngineDialog
+        open={!!sniperSignal}
+        onOpenChange={(v) => { if (!v) setSniperSignal(null); }}
+        signalId={sniperSignal?.id || null}
+        signalCompanyName={sniperSignal?.company_name}
       />
     </div>
   );

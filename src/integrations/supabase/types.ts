@@ -20335,6 +20335,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_arm_sent: {
+        Args: { p_arm_key: string; p_vertical: string }
+        Returns: undefined
+      }
       is_active_team_member: {
         Args: { _roster_id: string; _user_id: string }
         Returns: boolean
