@@ -1,6 +1,6 @@
 // Sprint F: Backlog & freshness watchdog.
 // Reads outreach_backlog_health, SMS Matt when thresholds breached.
-// Fires a digest at most once every 4h (de-duped via outreach_global_settings.meta).
+// De-duped via outreach_global_settings.meta.backlog_last_alert_at (4h cooldown).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { sendSMS } from "../_shared/twilio.ts";
 
@@ -13,7 +13,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ADMIN_PHONE = Deno.env.get("ADMIN_PHONE") ?? "+13138064952";
 
-const THRESHOLDS = {
+const THRESHOLDS: Record<string, number> = {
   send_queue_overdue_1h: 50,
   send_queue_overdue_24h: 1,
   send_queue_stuck_claimed: 5,
@@ -22,7 +22,7 @@ const THRESHOLDS = {
   bounces_24h: 20,
 };
 
-const COOLDOWN_MS = 4 * 60 * 60 * 1000; // 4h
+const COOLDOWN_MS = 4 * 60 * 60 * 1000;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -36,22 +36,18 @@ Deno.serve(async (req) => {
 
   if (error || !health) {
     console.error("backlog-watchdog: health query failed", error);
-    return new Response(JSON.stringify({ ok: false, error: error?.message ?? "no row" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ ok: false, error: error?.message ?? "no row" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   }
 
-  // Build alert lines for breached thresholds
   const breaches: string[] = [];
   for (const [key, limit] of Object.entries(THRESHOLDS)) {
     const val = Number((health as Record<string, unknown>)[key] ?? 0);
-    if (val >= limit) {
-      breaches.push(`${key.replace(/_/g, " ")}: ${val} (≥${limit})`);
-    }
+    if (val >= limit) breaches.push(`${key.replace(/_/g, " ")}: ${val} (≥${limit})`);
   }
 
-  // Cooldown check via outreach_global_settings
   const { data: settings } = await sb
     .from("outreach_global_settings")
     .select("meta")
@@ -62,10 +58,9 @@ Deno.serve(async (req) => {
   const lastAlertAt = typeof meta.backlog_last_alert_at === "string"
     ? new Date(meta.backlog_last_alert_at).getTime()
     : 0;
-  const now = Date.now();
 
   let alerted = false;
-  if (breaches.length > 0 && now - lastAlertAt > COOLDOWN_MS) {
+  if (breaches.length > 0 && Date.now() - lastAlertAt > COOLDOWN_MS) {
     const body =
       `[DWA backlog]\n` +
       breaches.map((b) => `• ${b}`).join("\n") +
@@ -79,7 +74,6 @@ Deno.serve(async (req) => {
         .eq("id", 1);
     } catch (e) {
       console.error("backlog-watchdog: SMS failed", e);
-      // Fail-fast (Defensive Programming Protocol)
       return new Response(
         JSON.stringify({ ok: false, error: "sms_failed", breaches }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
