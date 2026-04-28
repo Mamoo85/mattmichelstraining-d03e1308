@@ -196,9 +196,9 @@ Deno.serve(async (req) => {
       failed = batchSize;
     }
 
-    if (costEstimate > HARD_MAX_RUN_COST_USD) {
-      // safety: clamp displayed cost so a buggy enricher can't crash the cap math
-      costEstimate = HARD_MAX_RUN_COST_USD;
+    if (costEstimate > runCostCeiling) {
+      // safety: clamp to per-run hard cap AND remaining daily-budget headroom
+      costEstimate = runCostCeiling;
     }
 
     // 6. Log run + bump last_walked_at.
