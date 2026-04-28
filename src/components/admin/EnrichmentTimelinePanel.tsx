@@ -46,7 +46,7 @@ export default function EnrichmentTimelinePanel() {
     setLoading(true);
     let q = supabase
       .from("contractor_outreach_prospects")
-      .select("id,business_name,contact_first_name,contact_last_name,city,email,email_verified,enrichment_confidence,enrichment_trace,updated_at")
+      .select("id,business_name,owner_name,city,email,email_verified,enrichment_confidence,enrichment_trace,updated_at")
       .order("updated_at", { ascending: false })
       .limit(50);
 
@@ -54,7 +54,7 @@ export default function EnrichmentTimelinePanel() {
     if (filter === "partial") q = q.lt("enrichment_confidence", 60);
 
     if (search.trim()) {
-      q = q.or(`business_name.ilike.%${search}%,city.ilike.%${search}%,contact_last_name.ilike.%${search}%`);
+      q = q.or(`business_name.ilike.%${search}%,city.ilike.%${search}%,owner_name.ilike.%${search}%`);
     }
 
     const { data, error } = await q;
