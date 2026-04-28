@@ -71,6 +71,7 @@ const Auth = lazyRetry(() => import("./pages/Auth"));
 const ResetPassword = lazyRetry(() => import("./pages/ResetPassword"));
 const Admin = lazyRetry(() => import("./pages/Admin"));
 const DWAAdmin = lazyRetry(() => import("./pages/DWAAdmin"));
+const OutreachAuditLog = lazyRetry(() => import("./pages/admin/OutreachAuditLog"));
 const ProspectRedirect = lazyRetry(() => import("./pages/ProspectRedirect"));
 const Pricing = lazyRetry(() => import("./pages/Pricing"));
 const About = lazyRetry(() => import("./pages/About"));
