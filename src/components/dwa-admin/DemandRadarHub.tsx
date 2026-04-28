@@ -143,6 +143,12 @@ export default function DemandRadarHub() {
           <TabsTrigger value="cohort" className="data-[state=active]:bg-[#00d4ff]/20 data-[state=active]:text-[#00d4ff]">
             ✨ Cohort Builder
           </TabsTrigger>
+          <TabsTrigger value="heatmap" className="data-[state=active]:bg-rose-500/20 data-[state=active]:text-rose-300">
+            🗺️ Heatmap
+          </TabsTrigger>
+          <TabsTrigger value="predictive" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-300">
+            🔮 Predictive
+          </TabsTrigger>
           <TabsTrigger value="waterfall" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-300">
             💧 Waterfall
           </TabsTrigger>
@@ -177,6 +183,14 @@ export default function DemandRadarHub() {
           <CohortCampaignBuilder />
         </TabsContent>
 
+        <TabsContent value="heatmap" className="mt-4">
+          <IntentHeatmap onSelectAccount={openNarrative} />
+        </TabsContent>
+
+        <TabsContent value="predictive" className="mt-4">
+          <PredictiveAccountTable onSelectAccount={openNarrative} />
+        </TabsContent>
+
         <TabsContent value="waterfall" className="mt-4">
           <WaterfallDiagnostics scannerFilter={["industry-pulse-scanner", "accela-permit-scanner"]} />
         </TabsContent>
@@ -185,6 +199,13 @@ export default function DemandRadarHub() {
           <DemandRadarLiveLog />
         </TabsContent>
       </Tabs>
+
+      <AccountNarrativeDrawer
+        open={narrativeOpen}
+        onOpenChange={setNarrativeOpen}
+        accountKey={selectedAccount?.key ?? null}
+        companyName={selectedAccount?.name ?? null}
+      />
     </div>
   );
 }
