@@ -14,6 +14,12 @@ import {
   type ScanRunStats,
 } from "../_shared/anti-hallucination.ts";
 import { scrapeZillowFSBO, scrapeEstateSales } from "../_shared/scrapers-public-listings.ts";
+import {
+  scrapeForeclosureNotices,
+  scrapeProbateFilings,
+  scrapeTaxDelinquency,
+  scrapeFixerUpperListings,
+} from "../_shared/scrapers-county-records.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
