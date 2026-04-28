@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
 
   const durationMs = Date.now() - startedAt;
 
-  // Persist run regardless of outcome
+  // Persist waterfall canary run
   await sb.from("enrichment_e2e_runs").insert({
     id: runId,
     status,
@@ -79,6 +79,69 @@ Deno.serve(async (req) => {
     fixture: CANARY_FIXTURE,
     result: waterfallResult,
   });
+
+  // Wave 7: extended multi-check suite — table presence, RPC dry-calls, UI endpoints
+  const checks: Array<{ check_name: string; status: "pass" | "fail" | "skipped"; detail?: string; duration_ms: number }> = [];
+
+  async function runCheck(name: string, fn: () => Promise<void>) {
+    const t0 = Date.now();
+    try {
+      await fn();
+      checks.push({ check_name: name, status: "pass", duration_ms: Date.now() - t0 });
+    } catch (e) {
+      checks.push({ check_name: name, status: "fail", detail: String(e).slice(0, 300), duration_ms: Date.now() - t0 });
+    }
+  }
+
+  // Table presence checks
+  const tables = [
+    "enrichment_walker_config",
+    "enrichment_dead_letter",
+    "enrichment_provider_spend_daily",
+    "outreach_alerts_log",
+    "cron_expected_jobs",
+  ];
+  for (const t of tables) {
+    await runCheck(`table:${t}`, async () => {
+      const { error } = await sb.from(t).select("*", { count: "exact", head: true });
+      if (error) throw error;
+    });
+  }
+
+  // RPC dry-calls
+  await runCheck("rpc:reset_alert_cooldown", async () => {
+    const { error } = await sb.rpc("reset_alert_cooldown", { _kind: "canary_test" });
+    if (error && !String(error.message).includes("not found")) throw error;
+  });
+
+  // UI endpoint check (cron-status HEAD)
+  await runCheck("endpoint:cron-status", async () => {
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/cron-status`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!r.ok) throw new Error(`status ${r.status}`);
+    await r.body?.cancel();
+  });
+
+  // Waterfall canary roll-up
+  checks.push({
+    check_name: "waterfall:canary",
+    status: status === "pass" ? "pass" : status === "degraded" ? "pass" : "fail",
+    detail: errorMsg ?? undefined,
+    duration_ms: durationMs,
+  });
+
+  // Insert per-check rows
+  if (checks.length) {
+    await sb.from("enrichment_e2e_checks").insert(
+      checks.map((c) => ({ run_id: runId, ...c })),
+    );
+  }
+
+  const failedCount = checks.filter((c) => c.status === "fail").length;
+  const overall = failedCount === 0 ? "pass" : failedCount >= 3 ? "fail" : "degraded";
 
   // Check for alert: 3 consecutive non-pass runs
   if (status !== "pass") {
@@ -90,16 +153,17 @@ Deno.serve(async (req) => {
     const allBad = (recent?.length ?? 0) >= 3 && recent!.every((r) => r.status !== "pass");
     if (allBad) {
       await sb.from("outreach_alerts_log").insert({
-        alert_type: "e2e_canary_failing",
-        severity: "high",
-        message: `Enrichment canary has failed 3 runs in a row. Last error: ${errorMsg ?? "n/a"}`,
-        meta: { last_run_id: runId, fixture: CANARY_FIXTURE },
+        kind: "e2e_canary_failing",
+        severity: "crit",
+        message: `Enrichment canary failed 3 runs. Last: ${errorMsg ?? "n/a"}`,
+        meta: { last_run_id: runId, fixture: CANARY_FIXTURE, failed_checks: failedCount },
       });
     }
   }
 
-  return new Response(JSON.stringify({ ok: true, run_id: runId, status, duration_ms: durationMs, error: errorMsg }), {
-    status: 200,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+  return new Response(
+    JSON.stringify({ ok: true, run_id: runId, status, overall, checks: checks.length, failed: failedCount, duration_ms: durationMs, error: errorMsg }),
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+  );
 });
+
