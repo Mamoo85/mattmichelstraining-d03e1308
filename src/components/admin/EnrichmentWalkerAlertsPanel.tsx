@@ -95,6 +95,36 @@ export default function EnrichmentWalkerAlertsPanel() {
     }
   }
 
+  async function saveBudget() {
+    const usd = Number(budgetInput);
+    if (!Number.isFinite(usd) || usd < 0 || usd > 5000) {
+      toast.error("Budget must be 0–5000");
+      return;
+    }
+    setSavingBudget(true);
+    try {
+      const { error } = await (supabase as any).rpc("set_walker_daily_budget", { usd });
+      if (error) throw error;
+      toast.success(`Walker daily budget set to $${usd}`);
+      setDailyBudget(usd);
+    } catch (e: any) {
+      toast.error(`Save failed: ${e.message ?? e}`);
+    } finally {
+      setSavingBudget(false);
+    }
+  }
+
+  // Today's spend (Detroit-local) from the rollup view
+  const todayET = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Detroit", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date());
+  const todayRow = spend.find((r) => String(r.day) === todayET);
+  const todaysSpend = Number(todayRow?.spend_usd ?? 0);
+  const priorRows = spend.filter((r) => String(r.day) !== todayET).slice(0, 7);
+  const avg7 = priorRows.length ? priorRows.reduce((s, r) => s + Number(r.spend_usd ?? 0), 0) / priorRows.length : 0;
+  const budgetPct = Math.min(100, Math.round((todaysSpend / Math.max(dailyBudget, 0.01)) * 100));
+  const anomalyRatio = avg7 >= 1 ? todaysSpend / avg7 : 0;
+
   if (loading) {
     return (
       <div className="bg-card border border-border rounded-lg p-6 flex items-center gap-2 text-sm text-muted-foreground">
