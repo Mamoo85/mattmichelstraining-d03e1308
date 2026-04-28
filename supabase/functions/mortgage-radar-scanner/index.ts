@@ -259,6 +259,7 @@ async function scanForeclosureNotices(): Promise<RawSignal[]> {
         signal_source: "Sonar_PublicRecords",
         signal_detail: r.signal_detail || r.description || "Lis pendens / foreclosure notice filed",
         signal_date: r.signal_date || r.date || today,
+        source_method: "llm_search" as const,
       };
     });
   } catch (e) {
