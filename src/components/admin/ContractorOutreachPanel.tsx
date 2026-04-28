@@ -384,6 +384,15 @@ export default function ContractorOutreachPanel() {
         </div>
       )}
 
+      {/* One-Press orchestrator */}
+      <OnePressLauncher
+        trades={filterTrade ? [filterTrade] : ["HVAC", "Plumbing", "Electrical"]}
+        cities={filterCity ? [filterCity] : [scrapeCity]}
+        channels={["email"]}
+        maxProspects={50}
+        minQualityScore={Math.max(50, filterMinQuality)}
+      />
+
       {/* Prospect list */}
       <div>
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
