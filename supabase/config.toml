@@ -2018,3 +2018,10 @@ verify_jwt = false
 
 [functions.outreach-backlog-watchdog]
 verify_jwt = false
+
+[functions.contractor-outreach-enrich-backfill]
+verify_jwt = false
+
+[functions.enrichment-e2e-verify]
+verify_jwt = false
+
