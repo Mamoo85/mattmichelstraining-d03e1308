@@ -13,6 +13,7 @@ import {
   highQuarantineRateAlerts,
   type ScanRunStats,
 } from "../_shared/anti-hallucination.ts";
+import { scrapeZillowFSBO, scrapeEstateSales } from "../_shared/scrapers-public-listings.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
