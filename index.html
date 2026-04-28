@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="M² Training" />
+    <meta name="apple-mobile-web-app-title" content="Detroit Web Agency" />
     <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -151,6 +151,8 @@
         s('name','twitter:title',m2.title);s('name','twitter:description',m2.desc);
         s('name','twitter:image',m2.img);
         s('name','description',m2.desc);
+        // Swap apple title for M²
+        var apple=d.querySelector('meta[name="apple-mobile-web-app-title"]');if(apple)apple.setAttribute('content','M² Training');
         // Disable DWA JSON-LD and activate M² schemas
         var dwaLd=d.getElementById('ld-default');if(dwaLd)dwaLd.type='application/ld+json-dwa-disabled';
         var m2a=d.getElementById('ld-m2-training');if(m2a){var n1=d.createElement('script');n1.type='application/ld+json';n1.text=m2a.text;d.head.appendChild(n1);}
@@ -250,42 +252,30 @@
       </script>
     </div>
     <noscript>
-      <h1>M² Training — Youth Strength Coach</h1>
-      <p>In-person youth strength training in Grosse Pointe Park, MI. Online programs anywhere. 20+ years coaching experience, 50+ college athletes developed, zero injuries. Custom programs from $20, monthly coaching from $14.99/mo.</p>
-      <h2>Training Services</h2>
-      <ul>
-        <li><a href="/about">About Coach Matt Michels</a></li>
-        <li><a href="/for-parents">For Parents</a></li>
-        <li><a href="/pricing">Pricing & Plans</a></li>
-        <li><a href="/shop">Programs & Exercise Library</a></li>
-        <li><a href="/schedule">Book a Session</a></li>
-        <li><a href="/learn">Articles & Guides</a></li>
-        <li><a href="/merch">Merch</a></li>
-        <li><a href="/free-ai-generator">Free AI Workout Generator</a></li>
-        <li><a href="/the-edge">The Edge</a></li>
-      </ul>
-      <h2>Web Design Services</h2>
+      <h1>Detroit Web Agency — Websites &amp; Automation for Local Business</h1>
+      <p>Professional websites, CRM systems, and automated lead generation for contractors, HVAC technicians, plumbers, electricians, and local service businesses across metro Detroit.</p>
+      <h2>Services</h2>
       <ul>
         <li><a href="/detroit-web-design">Detroit Web Design Agency</a></li>
+        <li><a href="/whats-included">What's Included in Web Design</a></li>
+        <li><a href="/field-service">FieldDesk — Field Service CRM</a></li>
+        <li><a href="/talent-radar">TechAlert — Talent Discovery</a></li>
+        <li><a href="/site-radar">SiteRadar — Visitor Intelligence</a></li>
+        <li><a href="/mortgage-radar">Mortgage Radar — Lead Discovery</a></li>
+        <li><a href="/contractor-marketplace">Contractor Lead Marketplace</a></li>
+      </ul>
+      <h2>Website Demos</h2>
+      <ul>
         <li><a href="/demo-plumber">Plumber Website Demo</a></li>
         <li><a href="/demo-electrician">Electrician Website Demo</a></li>
         <li><a href="/demo-landscaping">Landscaping Website Demo</a></li>
         <li><a href="/demo-lawyer">Attorney Website Demo</a></li>
-        <li><a href="/demo-clinic">MedSpa & Clinic Website Demo</a></li>
+        <li><a href="/demo-clinic">MedSpa &amp; Clinic Website Demo</a></li>
         <li><a href="/demo-roofing">Roofing Website Demo</a></li>
         <li><a href="/demo-youngblood">Industrial Automation Website Demo</a></li>
         <li><a href="/demo-dental">Dental Website Demo</a></li>
-        <li><a href="/whats-included">What's Included in Web Design</a></li>
       </ul>
-      <ul>
-        <li><a href="/free-program">Free Beginner Strength Program</a></li>
-      </ul>
-      <ul>
-        <li><a href="/results">Results & Testimonials</a></li>
-        <li><a href="/studio-rental">Studio Rental</a></li>
-        <li><a href="/install">Install the App</a></li>
-      </ul>
-      <p>Located at 15121 Kercheval Ave, Grosse Pointe Park, MI 48230. Call (313) 806-4952.</p>
+      <p>Based in Grosse Pointe, MI — serving metro Detroit. Call (313) 992-1219.</p>
     </noscript>
     <script>
       (function() {
