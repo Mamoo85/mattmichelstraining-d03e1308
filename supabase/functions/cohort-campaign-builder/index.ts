@@ -53,11 +53,11 @@ serve(async (req) => {
 
     // Pull latest snapshot per account
     let q = sb.from("intent_score_snapshots")
-      .select("account_key, account_name, account_email, account_phone, account_vertical, account_location, score, top_signals, signal_summary, computed_at")
+      .select("account_key, company_name, vertical, location, score, contributing_signals, computed_at")
       .gte("score", minScore)
       .order("computed_at", { ascending: false })
       .limit(800);
-    if (body.vertical) q = q.eq("account_vertical", body.vertical);
+    if (body.vertical) q = q.eq("vertical", body.vertical);
     const { data: snaps, error } = await q;
     if (error) throw error;
 
@@ -67,11 +67,12 @@ serve(async (req) => {
     }
 
     let candidates = Array.from(latest.values());
-    if (body.state) candidates = candidates.filter((c) => (c.account_location || "").toUpperCase().includes(body.state!.toUpperCase()));
+    if (body.state) candidates = candidates.filter((c) => (c.location || "").toUpperCase().includes(body.state!.toUpperCase()));
     if (body.signal_types?.length) {
       candidates = candidates.filter((c) => {
-        const sigs = Array.isArray(c.top_signals) ? c.top_signals.join(" ") : "";
-        return body.signal_types!.some((t) => sigs.toLowerCase().includes(t.toLowerCase()));
+        const sigs = Array.isArray(c.contributing_signals) ? c.contributing_signals : [];
+        const sigStr = sigs.map((s: any) => `${s.signal_type || ""} ${s.source || ""}`).join(" ").toLowerCase();
+        return body.signal_types!.some((t) => sigStr.includes(t.toLowerCase()));
       });
     }
     candidates = candidates.slice(0, limit);
@@ -90,15 +91,26 @@ serve(async (req) => {
           .select("id").eq("idempotency_key", idem).maybeSingle();
         if (existing) { skipped++; return; }
 
-        const recipient = channel === "sms" ? snap.account_phone : snap.account_email;
-        if (!recipient) { noContact++; return; }
+        // Resolve contact info from prospect tables (best-effort; queue still creates draft if missing)
+        let recipientEmail: string | null = null;
+        let recipientPhone: string | null = null;
+        const { data: prospect } = await sb
+          .from("prospect_companies" as any)
+          .select("email, phone")
+          .ilike("company_name", snap.company_name || "")
+          .limit(1).maybeSingle();
+        recipientEmail = (prospect as any)?.email || null;
+        recipientPhone = (prospect as any)?.phone || null;
 
-        const topSig = Array.isArray(snap.top_signals) && snap.top_signals.length
-          ? snap.top_signals.slice(0, 2).join("; ") : (snap.signal_summary || "no specific signal");
+        if (channel === "sms" && !recipientPhone) { noContact++; return; }
+        if (channel === "email" && !recipientEmail) { noContact++; /* still draft so admin can fill */ }
+
+        const sigs: any[] = Array.isArray(snap.contributing_signals) ? snap.contributing_signals : [];
+        const topSig = sigs.slice(0, 2).map((s: any) => `${s.signal_type || ""} (${s.source || ""})`).join("; ") || "no specific signal";
 
         const prompt = channel === "sms"
-          ? `Cold SMS (max 320 chars) to ${snap.account_name}. Campaign brief: "${body.campaign_brief}". Their recent signals: ${topSig}. 2 sentences, founder voice, end with "— Matt, DWA · Reply STOP".`
-          : `Cold email to ${snap.account_name} (${snap.account_location || ""}, ${snap.account_vertical || ""}). Campaign brief: "${body.campaign_brief}". Their recent intent signals: ${topSig}. 4 sentences max. Open with one specific signal observation. Tie campaign to their situation. End with a single ask. Founder voice, no fluff.`;
+          ? `Cold SMS (max 320 chars) to ${snap.company_name}. Campaign brief: "${body.campaign_brief}". Their recent signals: ${topSig}. 2 sentences, founder voice, end with "— Matt, DWA · Reply STOP".`
+          : `Cold email to ${snap.company_name} (${snap.location || ""}, ${snap.vertical || ""}). Campaign brief: "${body.campaign_brief}". Their recent intent signals: ${topSig}. 4 sentences max. Open with one specific signal observation. Tie campaign to their situation. End with a single ask. Founder voice, no fluff.`;
 
         let draftBody = "";
         try { draftBody = await generateWithHaiku(prompt, "Personalized cold outreach. Reference the prospect's exact signals.", channel === "sms" ? 200 : 600); }
@@ -106,18 +118,18 @@ serve(async (req) => {
         if (!draftBody || draftBody.length < 30) { skipped++; return; }
 
         const subject = channel === "email"
-          ? (body.subject_template || `${snap.account_name} — quick question`).replace(/\{\{name\}\}/g, snap.account_name || "")
+          ? (body.subject_template || `${snap.company_name} — quick question`).replace(/\{\{name\}\}/g, snap.company_name || "")
           : null;
 
         const { error: insErr } = await sb.from("outreach_approval_queue").insert({
           source_function: "cohort-campaign-builder",
           channel,
           account_key: snap.account_key,
-          account_name: snap.account_name,
-          account_location: snap.account_location,
-          account_vertical: snap.account_vertical,
-          recipient_email: channel === "email" ? snap.account_email : null,
-          recipient_phone: channel === "sms" ? snap.account_phone : null,
+          account_name: snap.company_name,
+          account_location: snap.location,
+          account_vertical: snap.vertical,
+          recipient_email: channel === "email" ? recipientEmail : null,
+          recipient_phone: channel === "sms" ? recipientPhone : null,
           draft_subject: subject,
           draft_body: draftBody,
           signal_reason: `Cohort '${body.campaign_name}' — score ${Math.round(snap.score)}, signals: ${topSig}`,
