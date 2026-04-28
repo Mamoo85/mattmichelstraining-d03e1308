@@ -21,20 +21,16 @@ serve(async (req) => {
 
     const { data: stats, error } = await sb
       .from("email_arm_stats")
-      .select("subject_arm, opener_arm, cta_arm, sent_count, reply_count, conversion_count")
+      .select("arm_key, sent, replied, bought")
       .eq("vertical", vertical);
     if (error) throw new Error(`load stats: ${error.message}`);
 
     const lookup = new Map<string, { sent: number; replies: number; conv: number }>();
     for (const r of stats || []) {
-      lookup.set(armKey({
-        subject: r.subject_arm as SubjectArm,
-        opener: r.opener_arm as OpenerArm,
-        cta: r.cta_arm as CtaArm,
-      }), {
-        sent: r.sent_count ?? 0,
-        replies: r.reply_count ?? 0,
-        conv: r.conversion_count ?? 0,
+      lookup.set(r.arm_key, {
+        sent: r.sent ?? 0,
+        replies: r.replied ?? 0,
+        conv: r.bought ?? 0,
       });
     }
 

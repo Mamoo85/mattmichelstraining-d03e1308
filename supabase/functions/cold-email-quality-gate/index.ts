@@ -60,15 +60,14 @@ serve(async (req) => {
       .maybeSingle();
     if (supp) reasons.push("recipient_unsubscribed");
 
-    // 4) Per-domain throttle (24h)
+    // 4) Per-domain throttle (24h) — count queued/sent drafts to this domain
     if (domain) {
       const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
       const { count } = await sb
-        .from("email_quality_checks")
+        .from("email_reply_drafts")
         .select("id", { count: "exact", head: true })
         .gte("created_at", since)
-        .eq("recipient_domain", domain)
-        .eq("allowed", true);
+        .ilike("recipient_email", `%@${domain}`);
       if ((count ?? 0) >= DOMAIN_LIMIT_24H) {
         reasons.push(`domain_throttled_${count}_in_24h`);
       } else if ((count ?? 0) >= 1) {
@@ -88,14 +87,10 @@ serve(async (req) => {
     if (etHour >= 21 || etHour < 8) warnings.push(`outside_business_hours_et_${etHour}`);
 
     const allow = reasons.length === 0;
-    await sb.from("email_quality_checks").insert({
-      signal_id, contact_id,
-      recipient_email, recipient_domain: domain,
-      subject, allowed: allow,
-      spam_score: spam.score,
-      mx_valid,
-      reasons, warnings,
-    });
+    // Note: email_quality_checks is keyed on draft_id which doesn't exist yet at gate time
+    // (we run the gate BEFORE inserting the draft). We log to console + return; the bulk-queue
+    // function persists the final decision after the draft row is created.
+    console.log("[quality-gate]", { recipient_email, allow, reasons, warnings, spam_score: spam.score });
 
     return new Response(JSON.stringify({
       allow, reasons, warnings, spam_score: spam.score, spam_reasons: spam.reasons, mx_valid, domain,
