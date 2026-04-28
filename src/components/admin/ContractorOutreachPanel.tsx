@@ -6,6 +6,9 @@ import OutreachProvenancePanel from "./OutreachProvenancePanel";
 import OutreachSuppressionManager from "./OutreachSuppressionManager";
 import OutreachAuditDrawer from "./OutreachAuditDrawer";
 import OutreachConsentDialog from "./OutreachConsentDialog";
+import OutreachInfoBox from "./OutreachInfoBox";
+import OutreachGlobalSettings from "./OutreachGlobalSettings";
+import { Link } from "react-router-dom";
 
 const DAILY_EMAIL_CAP = 100;
 const DAILY_SMS_CAP = 50;
@@ -27,7 +30,11 @@ interface Prospect {
   email_send_count: number;
   reply_status: string | null;
   consent_for_sms: boolean;
+  consent_for_email: boolean;
   unsubscribed_at: string | null;
+  quality_score: number | null;
+  is_demo: boolean;
+  territory_priority: number;
 }
 
 interface Lead {
