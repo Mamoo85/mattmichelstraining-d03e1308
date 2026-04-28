@@ -1958,3 +1958,15 @@ verify_jwt = false
 
 [functions.nursys-enroll-batch]
 verify_jwt = false
+
+[functions.intent-score-recompute]
+verify_jwt = false
+
+[functions.compute-intent-score]
+verify_jwt = true
+
+[functions.geocode-signals-batch]
+verify_jwt = false
+
+[functions.generate-account-narrative]
+verify_jwt = true
