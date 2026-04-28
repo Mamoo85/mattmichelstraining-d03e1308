@@ -8,6 +8,7 @@ import WaterfallDiagnostics from "./WaterfallDiagnostics";
 import { validateSchema, INDUSTRY_PULSE_SIGNALS_CHECK, type SchemaValidation } from "@/lib/validateSchema";
 import { SchemaErrorPanel } from "@/components/shared/SchemaErrorPanel";
 import OutreachApprovalQueue from "./OutreachApprovalQueue";
+import CohortCampaignBuilder from "./CohortCampaignBuilder";
 
 const FILTERED_SELECT = "id, company_name, location, vertical, signal_type, expansion_type, predicted_needs, confidence, detected_at, source_urls";
 
@@ -129,6 +130,9 @@ export default function DemandRadarHub() {
           <TabsTrigger value="approval" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-300">
             ✅ Approval Queue
           </TabsTrigger>
+          <TabsTrigger value="cohort" className="data-[state=active]:bg-[#00d4ff]/20 data-[state=active]:text-[#00d4ff]">
+            ✨ Cohort Builder
+          </TabsTrigger>
           <TabsTrigger value="waterfall" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-300">
             💧 Waterfall
           </TabsTrigger>
@@ -157,6 +161,10 @@ export default function DemandRadarHub() {
 
         <TabsContent value="approval" className="mt-4">
           <OutreachApprovalQueue />
+        </TabsContent>
+
+        <TabsContent value="cohort" className="mt-4">
+          <CohortCampaignBuilder />
         </TabsContent>
 
         <TabsContent value="waterfall" className="mt-4">
