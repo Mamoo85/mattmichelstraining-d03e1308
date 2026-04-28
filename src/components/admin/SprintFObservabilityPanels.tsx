@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertTriangle,
   Server,
-  Map,
+  Map as MapIcon,
   DollarSign,
   Download,
   Search,
@@ -124,7 +124,7 @@ export default function SprintFObservabilityPanels() {
     const csv = [
       header.join(","),
       ...rows.map((r) => header.map((h) => {
-        const v = (r as Record<string, unknown>)[h];
+        const v = (r as unknown as Record<string, unknown>)[h];
         if (v === null || v === undefined) return "";
         const s = String(v).replace(/"/g, '""');
         return /[,"\n]/.test(s) ? `"${s}"` : s;
@@ -158,7 +158,7 @@ export default function SprintFObservabilityPanels() {
 
   // ── COSTS rollup by provider (14d) ──
   const costsByProvider = useMemo(() => {
-    const map = new Map<string, { units: number; cost: number; events: number }>();
+    const map = new globalThis.Map<string, { units: number; cost: number; events: number }>();
     costs.forEach((c) => {
       const cur = map.get(c.provider) ?? { units: 0, cost: 0, events: 0 };
       cur.units += Number(c.units_total ?? 0);
@@ -305,7 +305,7 @@ export default function SprintFObservabilityPanels() {
         <CardHeader className="flex flex-row items-end justify-between gap-2 flex-wrap">
           <div>
             <CardTitle className="text-base flex items-center gap-2">
-              <Map className="h-4 w-4" /> Territory funnel (30d)
+              <MapIcon className="h-4 w-4" /> Territory funnel (30d)
             </CardTitle>
             <CardDescription className="text-xs">
               Per trade × city — find which territories convert and which silently leak.
