@@ -412,45 +412,64 @@ detroitwebagent.com`;
         </div>
       )}
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        <div className="flex gap-1">
-          {(["all", "cross_referenced", "high", "medium", "low", "watchlist"] as FilterType[]).map(f => (
-            <Button
-              key={f}
-              size="sm"
-              variant={confidenceFilter === f ? "default" : "outline"}
-              onClick={() => setConfidenceFilter(f)}
-              className={`text-xs ${confidenceFilter === f ? "bg-[#00d4ff] text-black" : "border-white/10 text-white/50 hover:bg-white/5"}`}
-            >
-              {f === "all" ? "All" : f === "cross_referenced" ? "Cross-Ref" : f === "high" ? "High" : f === "medium" ? "Medium" : f === "low" ? "Low" : `Watchlist (${watchlist.length})`}
-            </Button>
-          ))}
+      {/* Confidence-bucket explainer (collapsible). Tells users why
+          institutional buyers like Stellantis cap at confidence 6. */}
+      <IndustryPulseConfidenceLegend />
+
+      {/* Filter pills with LIVE counts from the SQL counts view. If a pill
+          shows (0), the data genuinely doesn't exist — not a frontend bug. */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex flex-wrap gap-1">
+          {(["all", "cross_referenced", "high", "medium", "low", "watchlist"] as FilterType[]).map(f => {
+            const count = f === "watchlist" ? watchlist.length : bucketCount(f);
+            const label = ({ all: "All", cross_referenced: "Cross-Ref", high: "High", medium: "Medium", low: "Low", watchlist: "Watchlist" } as Record<string, string>)[f];
+            return (
+              <Button
+                key={f}
+                size="sm"
+                variant={confidenceFilter === f ? "default" : "outline"}
+                onClick={() => setConfidenceFilter(f)}
+                className={`text-xs ${confidenceFilter === f ? "bg-[#00d4ff] text-black" : "border-white/10 text-white/50 hover:bg-white/5"} ${count === 0 && f !== "all" ? "opacity-40" : ""}`}
+              >
+                {label} <span className={`ml-1 text-[10px] ${confidenceFilter === f ? "text-black/60" : "text-white/30"}`}>({count})</span>
+              </Button>
+            );
+          })}
         </div>
-        <div className="flex gap-1 ml-auto">
-          {INDUSTRY_FILTERS.map(ind => (
-            <Button
-              key={ind}
-              size="sm"
-              variant={industryFilter === ind ? "default" : "outline"}
-              onClick={() => setIndustryFilter(ind)}
-              className={`text-xs ${industryFilter === ind ? "bg-white/10 text-white" : "border-white/10 text-white/40 hover:bg-white/5"}`}
-            >
-              {ind}
-            </Button>
-          ))}
+        <div className="flex flex-wrap gap-1 ml-auto">
+          {INDUSTRY_FILTERS.map(ind => {
+            const count = industryCount(ind);
+            return (
+              <Button
+                key={ind}
+                size="sm"
+                variant={industryFilter === ind ? "default" : "outline"}
+                onClick={() => setIndustryFilter(ind)}
+                className={`text-xs ${industryFilter === ind ? "bg-white/10 text-white" : "border-white/10 text-white/40 hover:bg-white/5"} ${count === 0 && ind !== "All" ? "opacity-40" : ""}`}
+              >
+                {ind} <span className={`ml-1 text-[10px] ${industryFilter === ind ? "text-white/60" : "text-white/25"}`}>({count})</span>
+              </Button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Signal Cards */}
+      {/* Refetch indicator (subtle, in-place) */}
+      {refetching && (
+        <div className="flex items-center gap-2 text-[11px] text-white/40">
+          <Loader2 className="h-3 w-3 animate-spin" /> Updating signals…
+        </div>
+      )}
+
+      {/* Signal Cards (or diagnostic empty state) */}
       {filtered.length === 0 ? (
-        <Card className="bg-[#0f1f35] border-white/10">
-          <CardContent className="py-12 text-center">
-            <Factory className="h-10 w-10 text-white/20 mx-auto mb-3" />
-            <p className="text-white/40 text-sm">No signals match your filters.</p>
-            <p className="text-white/30 text-xs mt-1">Try running the scanner or adjusting filters.</p>
-          </CardContent>
-        </Card>
+        <GrowthSignalsDebugPanel
+          meta={queryMeta}
+          counts={counts}
+          onSwitchConfidence={(c) => setConfidenceFilter(c as FilterType)}
+          onClearIndustry={() => setIndustryFilter("All")}
+          onRunScanner={runScanner}
+        />
       ) : (
         <div className="space-y-3">
           {visible.map(signal => {
