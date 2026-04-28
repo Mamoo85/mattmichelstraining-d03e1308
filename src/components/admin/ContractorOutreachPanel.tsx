@@ -65,6 +65,7 @@ export default function ContractorOutreachPanel() {
   const [scrapeTrade, setScrapeTrade] = useState("HVAC");
   const [scrapeCity, setScrapeCity] = useState("Warren");
   const [scraping, setScraping] = useState(false);
+  const [sweeping, setSweeping] = useState(false);
   const [enrichingId, setEnrichingId] = useState<string | null>(null);
   const [blastingLeadId, setBlastingLeadId] = useState<string | null>(null);
   const [filterTrade, setFilterTrade] = useState("");
