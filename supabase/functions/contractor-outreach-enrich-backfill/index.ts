@@ -101,7 +101,9 @@ Deno.serve(async (req) => {
       .from("contractor_outreach_prospects")
       .select("id")
       .eq("enrichment_status", "no_data")
+      .is("suppressed_at", null) // Wave 5: skip aged-out prospects
       .lt("enriched_at", new Date(Date.now() - 14 * 86400_000).toISOString())
+      .order("enrichment_confidence", { ascending: false }) // Wave 5: high-confidence first
       .limit(limit);
     for (const r of data ?? []) {
       candidates.push({ id: r.id, reason: "stale_no_data", source_table: "contractor_outreach_prospects" });
@@ -114,8 +116,10 @@ Deno.serve(async (req) => {
       .from("contractor_outreach_prospects")
       .select("id")
       .eq("enrichment_status", "enriched")
+      .is("suppressed_at", null) // Wave 5
       .is("email", null)
       .is("phone", null)
+      .order("enrichment_confidence", { ascending: false }) // Wave 5
       .limit(remaining);
     for (const r of data ?? []) {
       candidates.push({ id: r.id, reason: "partial_enrichment", source_table: "contractor_outreach_prospects" });
