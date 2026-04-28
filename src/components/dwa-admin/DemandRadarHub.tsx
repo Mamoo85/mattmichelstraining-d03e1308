@@ -9,6 +9,9 @@ import { validateSchema, INDUSTRY_PULSE_SIGNALS_CHECK, type SchemaValidation } f
 import { SchemaErrorPanel } from "@/components/shared/SchemaErrorPanel";
 import OutreachApprovalQueue from "./OutreachApprovalQueue";
 import CohortCampaignBuilder from "./CohortCampaignBuilder";
+import IntentHeatmap from "./IntentHeatmap";
+import PredictiveAccountTable from "./PredictiveAccountTable";
+import AccountNarrativeDrawer from "./AccountNarrativeDrawer";
 
 const FILTERED_SELECT = "id, company_name, location, vertical, signal_type, expansion_type, predicted_needs, confidence, detected_at, source_urls";
 
@@ -101,6 +104,13 @@ function FilteredSignalList({ types, label }: { types: string[]; label: string }
 
 export default function DemandRadarHub() {
   const [tab, setTab] = useState("throughput");
+  const [narrativeOpen, setNarrativeOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<{ key: string; name: string } | null>(null);
+
+  const openNarrative = (key: string, name: string) => {
+    setSelectedAccount({ key, name });
+    setNarrativeOpen(true);
+  };
 
   return (
     <div className="space-y-4">
@@ -132,6 +142,12 @@ export default function DemandRadarHub() {
           </TabsTrigger>
           <TabsTrigger value="cohort" className="data-[state=active]:bg-[#00d4ff]/20 data-[state=active]:text-[#00d4ff]">
             ✨ Cohort Builder
+          </TabsTrigger>
+          <TabsTrigger value="heatmap" className="data-[state=active]:bg-rose-500/20 data-[state=active]:text-rose-300">
+            🗺️ Heatmap
+          </TabsTrigger>
+          <TabsTrigger value="predictive" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-300">
+            🔮 Predictive
           </TabsTrigger>
           <TabsTrigger value="waterfall" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-300">
             💧 Waterfall
@@ -167,6 +183,14 @@ export default function DemandRadarHub() {
           <CohortCampaignBuilder />
         </TabsContent>
 
+        <TabsContent value="heatmap" className="mt-4">
+          <IntentHeatmap onSelectAccount={openNarrative} />
+        </TabsContent>
+
+        <TabsContent value="predictive" className="mt-4">
+          <PredictiveAccountTable onSelectAccount={openNarrative} />
+        </TabsContent>
+
         <TabsContent value="waterfall" className="mt-4">
           <WaterfallDiagnostics scannerFilter={["industry-pulse-scanner", "accela-permit-scanner"]} />
         </TabsContent>
@@ -175,6 +199,13 @@ export default function DemandRadarHub() {
           <DemandRadarLiveLog />
         </TabsContent>
       </Tabs>
+
+      <AccountNarrativeDrawer
+        open={narrativeOpen}
+        onOpenChange={setNarrativeOpen}
+        accountKey={selectedAccount?.key ?? null}
+        companyName={selectedAccount?.name ?? null}
+      />
     </div>
   );
 }
