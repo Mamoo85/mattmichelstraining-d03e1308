@@ -37,7 +37,7 @@ export async function verifySvixSignature(
 
   const key = await crypto.subtle.importKey(
     "raw",
-    keyBytes,
+    keyBytes.buffer.slice(keyBytes.byteOffset, keyBytes.byteOffset + keyBytes.byteLength) as ArrayBuffer,
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"],
@@ -73,9 +73,10 @@ export async function verifyTwilioSignature(
   const sortedKeys = Object.keys(formParams).sort();
   const data = sortedKeys.reduce((acc, k) => acc + k + formParams[k], fullUrl);
 
+  const tokenBytes = new TextEncoder().encode(authToken);
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(authToken),
+    tokenBytes.buffer.slice(tokenBytes.byteOffset, tokenBytes.byteOffset + tokenBytes.byteLength) as ArrayBuffer,
     { name: "HMAC", hash: "SHA-1" },
     false,
     ["sign"],

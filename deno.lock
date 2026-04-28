@@ -1,5 +1,8 @@
 {
   "version": "5",
+  "redirects": {
+    "https://esm.sh/@supabase/supabase-js@2": "https://esm.sh/@supabase/supabase-js@2.105.0"
+  },
   "remote": {
     "https://deno.land/std@0.224.0/assert/_constants.ts": "a271e8ef5a573f1df8e822a6eb9d09df064ad66a4390f21b3e31f820a38e0975",
     "https://deno.land/std@0.224.0/assert/assert.ts": "09d30564c09de846855b7b071e62b5974b001bb72a4b797958fe0660e7849834",
@@ -33,7 +36,8 @@
     "https://deno.land/std@0.224.0/fmt/colors.ts": "508563c0659dd7198ba4bbf87e97f654af3c34eb56ba790260f252ad8012e1c5",
     "https://deno.land/std@0.224.0/internal/diff.ts": "6234a4b493ebe65dc67a18a0eb97ef683626a1166a1906232ce186ae9f65f4e6",
     "https://deno.land/std@0.224.0/internal/format.ts": "0a98ee226fd3d43450245b1844b47003419d34d210fa989900861c79820d21c2",
-    "https://deno.land/std@0.224.0/internal/mod.ts": "534125398c8e7426183e12dc255bb635d94e06d0f93c60a297723abe69d3b22e"
+    "https://deno.land/std@0.224.0/internal/mod.ts": "534125398c8e7426183e12dc255bb635d94e06d0f93c60a297723abe69d3b22e",
+    "https://esm.sh/@supabase/supabase-js@2.105.0": "80c6d1a78550118b8efa14ad8549036196e4f5272dbc02a18f85b14d5a759d1d"
   },
   "workspace": {
     "packageJson": {
@@ -108,6 +112,7 @@
         "npm:jsdom@^20.0.3",
         "npm:lovable-tagger@^1.1.13",
         "npm:lucide-react@0.462",
+        "npm:maplibre-gl@^5.24.0",
         "npm:next-themes@0.3",
         "npm:postcss@^8.5.6",
         "npm:react-day-picker@^8.10.1",
@@ -134,24 +139,7 @@
         "npm:vitest@^3.2.4",
         "npm:workbox-build@7.0.0",
         "npm:zod@^3.25.76"
-      ],
-      "overrides": {
-        "serialize-javascript@<=7.0.3": "7.0.3",
-        "glob": "10.5.0",
-        "react-router": "6.30.2",
-        "rollup": "4.22.4",
-        "@remix-run/router": "1.23.2",
-        "lodash": "4.17.23",
-        "picomatch": "4.0.4",
-        "js-yaml": "4.1.1",
-        "yaml": "2.8.3",
-        "minimatch": "3.1.4",
-        "@tootallnate/once": "3.0.1",
-        "brace-expansion": "1.1.12",
-        "ajv": "6.14.0",
-        "browserslist": "4.25.3",
-        "flatted": "3.4.2"
-      }
+      ]
     }
   }
 }
