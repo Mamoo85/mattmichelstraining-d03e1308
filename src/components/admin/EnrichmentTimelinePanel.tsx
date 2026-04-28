@@ -18,8 +18,7 @@ type TraceStep = {
 type ProspectRow = {
   id: string;
   business_name: string | null;
-  contact_first_name: string | null;
-  contact_last_name: string | null;
+  owner_name: string | null;
   city: string | null;
   email: string | null;
   email_verified: boolean | null;
