@@ -49,7 +49,12 @@ interface RawSignal {
   signal_date?: string;
   estimated_equity?: number;
   estimated_loan_amount?: number;
-  source_id?: string;  // ID in originating table; marked after successful upsert
+  source_id?: string;            // ID in originating table; marked after successful upsert
+  source_method?: "llm_search" | "scraper" | "api"; // provenance — drives validation strictness
+  // Populated by validateLead() gate before insert. Never trust LLM-supplied lat/lon.
+  lat?: number;
+  lon?: number;
+  formatted_address?: string;
 }
 
 const BASE_SCORES: Record<string, number> = {
