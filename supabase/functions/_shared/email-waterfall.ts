@@ -12,6 +12,17 @@
 // Logs every call into enrichment_provider_health via bump_provider_health RPC.
 
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { fetchWithRetry } from "./fetch-with-retry.ts";
+import {
+  safeJson,
+  parseHunterDomainSearch,
+  parseSnovDomainSearch,
+  parseSnovVerifier,
+  parseSnovToken,
+  parseApolloMatch,
+  parsePdlPersonEnrich,
+  parsePdlPersonSearch,
+} from "./safe-parse.ts";
 
 const HUNTER_API_KEY = Deno.env.get("HUNTER_API_KEY") || "";
 const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
