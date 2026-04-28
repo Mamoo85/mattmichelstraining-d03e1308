@@ -3,12 +3,13 @@
 // fires SMS alerts (with cooldowns) and writes to outreach_alerts_log.
 // Designed to be cron-triggered every 10 minutes.
 //
-// Metrics evaluated:
-//   - error_rate_60min_pct   → from enrichment_error_rates_live
-//   - backlog_unenriched     → count of contractor_outreach_prospects.enriched_at IS NULL
-//   - dlq_depth              → count of enrichment_dead_letter where status != 'permanent'
-//   - daily_spend_usd        → sum cost_estimate_usd from walker_runs today
-//   - cron_overdue_hours     → from cron_run_status view
+// Wave 5 additions:
+//   - Quiet-hours filter: warn-level alerts are suppressed 9pm–7am ET
+//     (logged with meta.suppressed_by_quiet_hours so UI can render a 🌙 badge).
+//     Crit alerts always page through.
+//   - Cost-anomaly check: hard-coded extra metric `daily_spend_anomaly` that
+//     SMSes Matt when today's walker spend > 2× the 7-day rolling average
+//     (and absolute spend > $5 to filter noise). Always treated as crit.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 
@@ -29,6 +30,21 @@ interface Threshold {
   description: string | null;
 }
 
+// ── Quiet-hours helper ──────────────────────────────────────────────────────
+// Returns true if Detroit-local hour is ≥ 21 or < 7.
+function isQuietHoursET(now: Date = new Date()): boolean {
+  // en-US 24h hour part in America/Detroit
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    hour12: false,
+    timeZone: "America/Detroit",
+  });
+  const hourStr = fmt.format(now);
+  const hour = Number(hourStr);
+  if (!Number.isFinite(hour)) return false;
+  return hour >= 21 || hour < 7;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -42,6 +58,8 @@ Deno.serve(async (req) => {
   }
 
   const fired: any[] = [];
+  const quiet = isQuietHoursET();
+
   for (const t of (thresholds ?? []) as Threshold[]) {
     try {
       const value = await measure(sb, t.kind);
@@ -73,8 +91,11 @@ Deno.serve(async (req) => {
 
       const message = `[Outreach ${severity.toUpperCase()}] ${t.kind} = ${value} (threshold ${severity === "crit" ? t.crit_value : t.warn_value}). ${t.description ?? ""}`.trim();
 
+      // Wave 5: quiet-hours filter — warn alerts wait until morning, crit always pages.
+      const suppressedByQuietHours = quiet && severity === "warn";
+
       let smsSent = false;
-      if (t.sms_enabled) {
+      if (t.sms_enabled && !suppressedByQuietHours) {
         try {
           await sendSMS({
             to: ADMIN_PHONE,
@@ -95,7 +116,10 @@ Deno.serve(async (req) => {
           value,
           message,
           sms_sent: smsSent,
-          meta: { threshold: severity === "crit" ? t.crit_value : t.warn_value },
+          meta: {
+            threshold: severity === "crit" ? t.crit_value : t.warn_value,
+            suppressed_by_quiet_hours: suppressedByQuietHours,
+          },
         }),
         sb.from("outreach_alert_cooldowns").upsert({
           kind: t.kind,
@@ -105,14 +129,77 @@ Deno.serve(async (req) => {
         }),
       ]);
 
-      fired.push({ kind: t.kind, value, severity, sms_sent: smsSent });
+      fired.push({
+        kind: t.kind,
+        value,
+        severity,
+        sms_sent: smsSent,
+        suppressed_by_quiet_hours: suppressedByQuietHours,
+      });
     } catch (e) {
       console.error(`[alert-evaluator] ${t.kind}:`, e);
       fired.push({ kind: t.kind, error: e instanceof Error ? e.message : String(e) });
     }
   }
 
-  return json({ ok: true, evaluated: thresholds?.length ?? 0, fired });
+  // ── Wave 5: cost-anomaly check (always crit, ignores quiet hours) ────────
+  try {
+    const anomaly = await checkSpendAnomaly(sb);
+    if (anomaly) {
+      const { today, avg7, ratio } = anomaly;
+      // Cooldown: 4 hours
+      const { data: cooldown } = await sb
+        .from("outreach_alert_cooldowns")
+        .select("last_fired_at")
+        .eq("kind", "daily_spend_anomaly")
+        .maybeSingle();
+      const lastFired = cooldown?.last_fired_at ? new Date(cooldown.last_fired_at).getTime() : 0;
+      const sinceMs = Date.now() - lastFired;
+      if (sinceMs >= 4 * 3600_000) {
+        const message = `[Cost spike CRIT] $${today.toFixed(2)} spent today vs $${avg7.toFixed(2)} 7-day avg (${ratio.toFixed(1)}x). Check the walker.`;
+        let smsSent = false;
+        try {
+          await sendSMS({
+            to: ADMIN_PHONE,
+            body: message.slice(0, 320),
+            product: "outreach_alert",
+            allowQuietHours: true, // cost issue = always wake up
+          } as any);
+          smsSent = true;
+        } catch (smsErr) {
+          console.error("[alert-evaluator] anomaly sms fail:", smsErr);
+        }
+        await Promise.all([
+          sb.from("outreach_alerts_log").insert({
+            kind: "daily_spend_anomaly",
+            severity: "crit",
+            value: today,
+            message,
+            sms_sent: smsSent,
+            meta: { avg7, ratio, suppressed_by_quiet_hours: false },
+          }),
+          sb.from("outreach_alert_cooldowns").upsert({
+            kind: "daily_spend_anomaly",
+            last_fired_at: new Date().toISOString(),
+            last_severity: "crit",
+            last_value: today,
+          }),
+        ]);
+        fired.push({ kind: "daily_spend_anomaly", value: today, severity: "crit", sms_sent: smsSent, ratio });
+      } else {
+        fired.push({ kind: "daily_spend_anomaly", value: today, severity: "crit", suppressed_by_cooldown: true });
+      }
+    }
+  } catch (e) {
+    console.error("[alert-evaluator] anomaly check failed:", e);
+  }
+
+  return json({
+    ok: true,
+    evaluated: thresholds?.length ?? 0,
+    fired,
+    quiet_hours_active: quiet,
+  });
 });
 
 async function measure(sb: any, kind: string): Promise<number | null> {
@@ -125,7 +212,8 @@ async function measure(sb: any, kind: string): Promise<number | null> {
       const { count } = await sb
         .from("contractor_outreach_prospects")
         .select("id", { count: "exact", head: true })
-        .is("enriched_at", null);
+        .is("enriched_at", null)
+        .is("suppressed_at", null);
       return count ?? 0;
     }
     case "dlq_depth": {
@@ -154,6 +242,35 @@ async function measure(sb: any, kind: string): Promise<number | null> {
     default:
       return null;
   }
+}
+
+// Wave 5: 2x 7-day-avg cost anomaly detector.
+async function checkSpendAnomaly(sb: any): Promise<{ today: number; avg7: number; ratio: number } | null> {
+  const { data, error } = await sb
+    .from("enrichment_provider_spend_daily")
+    .select("day, spend_usd")
+    .order("day", { ascending: false })
+    .limit(8);
+  if (error || !data || data.length === 0) return null;
+
+  // Detroit-local "today" date string to match the view's bucketing
+  const todayET = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Detroit",
+    year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date()); // YYYY-MM-DD
+
+  const todayRow = data.find((r: any) => String(r.day) === todayET);
+  const today = todayRow ? Number(todayRow.spend_usd) : 0;
+
+  const priorRows = data.filter((r: any) => String(r.day) !== todayET).slice(0, 7);
+  if (priorRows.length === 0) return null;
+  const avg7 = priorRows.reduce((s: number, r: any) => s + Number(r.spend_usd ?? 0), 0) / priorRows.length;
+
+  if (avg7 < 1.0) return null;          // baseline too small to trust
+  if (today < 5) return null;            // ignore trivial spend
+  const ratio = today / avg7;
+  if (ratio < 2.0) return null;
+  return { today, avg7, ratio };
 }
 
 function json(body: unknown, status = 200) {
