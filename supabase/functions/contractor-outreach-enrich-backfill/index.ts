@@ -165,6 +165,7 @@ Deno.serve(async (req) => {
       total_candidates: candidates.length,
       eligible: eligible.length,
       skipped_max_replays,
+      aged_count,
       preview: eligible.slice(0, 10),
       duration_ms: Date.now() - startedAt,
     }, 200);
