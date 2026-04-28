@@ -225,11 +225,17 @@ export default function ContractorOutreachPanel() {
     load();
   }
 
-  const filtered = prospects.filter(p =>
-    (!filterTrade || p.trade === filterTrade) &&
-    (!filterCity || (p.city || "").toLowerCase().includes(filterCity.toLowerCase()))
-  );
+  const hideThreshold = globalSettings?.hide_demo_leads_below_score ?? 60;
+  const filtered = prospects.filter(p => {
+    if (filterTrade && p.trade !== filterTrade) return false;
+    if (filterCity && !(p.city || "").toLowerCase().includes(filterCity.toLowerCase())) return false;
+    if (filterTerritory && String(p.territory_priority) !== filterTerritory) return false;
+    if ((p.quality_score ?? 0) < filterMinQuality) return false;
+    if (hideDemo && p.is_demo && (p.quality_score ?? 0) < hideThreshold) return false;
+    return true;
+  });
   const withEmail = prospects.filter(p => p.email).length;
+  const verifiedEmail = prospects.filter(p => p.email && p.email_verified).length;
 
   return (
     <div className="space-y-6">
