@@ -575,6 +575,11 @@ export default function ContractorOutreachPanel() {
         onClose={() => setConsentFor(null)}
         onSaved={load}
       />
+      <LeadDiagnosticsDrawer
+        prospectId={diagnosticsFor}
+        open={diagnosticsFor !== null}
+        onClose={() => setDiagnosticsFor(null)}
+      />
     </div>
   );
 }
