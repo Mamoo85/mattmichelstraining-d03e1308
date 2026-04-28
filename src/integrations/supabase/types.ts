@@ -12078,6 +12078,7 @@ export type Database = {
           pipeline_stage: string
           provenance_screenshot_paths: Json | null
           provenance_source_urls: Json | null
+          quarantine_reason: string | null
           raw: Json | null
           score: number
           score_history: Json | null
@@ -12136,6 +12137,7 @@ export type Database = {
           pipeline_stage?: string
           provenance_screenshot_paths?: Json | null
           provenance_source_urls?: Json | null
+          quarantine_reason?: string | null
           raw?: Json | null
           score?: number
           score_history?: Json | null
@@ -12194,6 +12196,7 @@ export type Database = {
           pipeline_stage?: string
           provenance_screenshot_paths?: Json | null
           provenance_source_urls?: Json | null
+          quarantine_reason?: string | null
           raw?: Json | null
           score?: number
           score_history?: Json | null
