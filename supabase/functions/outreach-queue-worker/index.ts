@@ -105,9 +105,76 @@ Deno.serve(async (req) => {
       if (!jobs || jobs.length === 0) break; // queue empty
       stats.claimed += jobs.length;
 
+      // Cache global settings once per batch (changes are rare; reduces DB hits)
+      const { data: gs } = await supabase
+        .from("outreach_global_settings").select("*").eq("id", 1).single();
+
       // Send sequentially to respect rate limits — each provider call awaited
       for (const job of jobs as Job[]) {
         try {
+          // Pre-send re-check: kill switch
+          const killSwitchOff = job.channel === "email"
+            ? gs?.cold_email_enabled === false
+            : gs?.cold_sms_enabled === false;
+          if (killSwitchOff) {
+            await supabase.rpc("mark_outreach_send_result", {
+              p_job_id: job.id, p_success: false, p_error_msg: "kill_switch",
+            });
+            await supabase.from("contractor_outreach_audit_log").insert({
+              prospect_id: job.prospect_id, lead_id: job.lead_id,
+              channel: job.channel, event: "quiet_hours_blocked",
+              reason: "Kill switch flipped after enqueue",
+              metadata: { job_id: job.id, worker: workerId },
+            });
+            stats.failed++;
+            continue;
+          }
+
+          // Pre-send re-check: prospect unsubscribed since enqueue
+          if (job.prospect_id) {
+            const { data: pCheck } = await supabase
+              .from("contractor_outreach_prospects")
+              .select("unsubscribed_at, email, phone")
+              .eq("id", job.prospect_id)
+              .maybeSingle();
+            if (pCheck?.unsubscribed_at) {
+              await supabase.rpc("mark_outreach_send_result", {
+                p_job_id: job.id, p_success: false, p_error_msg: "unsubscribed",
+              });
+              await supabase.from("contractor_outreach_audit_log").insert({
+                prospect_id: job.prospect_id, lead_id: job.lead_id,
+                channel: job.channel, event: "suppressed",
+                reason: "Prospect unsubscribed after enqueue",
+                metadata: { job_id: job.id, worker: workerId },
+              });
+              stats.failed++;
+              continue;
+            }
+            // Pre-send re-check: contact added to suppression since enqueue
+            const contact = job.channel === "email" ? pCheck?.email : pCheck?.phone;
+            if (contact) {
+              const { data: supRow } = await supabase
+                .from("contractor_outreach_suppression")
+                .select("id")
+                .eq("contact_type", job.channel)
+                .ilike("contact", contact)
+                .maybeSingle();
+              if (supRow) {
+                await supabase.rpc("mark_outreach_send_result", {
+                  p_job_id: job.id, p_success: false, p_error_msg: "suppressed",
+                });
+                await supabase.from("contractor_outreach_audit_log").insert({
+                  prospect_id: job.prospect_id, lead_id: job.lead_id,
+                  channel: job.channel, event: "suppressed",
+                  reason: "Contact suppressed after enqueue",
+                  metadata: { job_id: job.id, worker: workerId },
+                });
+                stats.failed++;
+                continue;
+              }
+            }
+          }
+
           const result = job.channel === "email" ? await sendEmail(job) : await sendSms(job);
 
           await supabase.rpc("mark_outreach_send_result", {
