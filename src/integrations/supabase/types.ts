@@ -1576,6 +1576,74 @@ export type Database = {
         }
         Relationships: []
       }
+      buyer_contacts: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          email: string | null
+          email_confidence: number | null
+          email_source: string | null
+          email_verified: boolean | null
+          enriched_at: string | null
+          first_name: string | null
+          full_name: string
+          id: string
+          is_primary: boolean | null
+          linkedin_url: string | null
+          meta: Json
+          phone: string | null
+          refreshed_at: string | null
+          seniority: string | null
+          title: string | null
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          email?: string | null
+          email_confidence?: number | null
+          email_source?: string | null
+          email_verified?: boolean | null
+          enriched_at?: string | null
+          first_name?: string | null
+          full_name: string
+          id?: string
+          is_primary?: boolean | null
+          linkedin_url?: string | null
+          meta?: Json
+          phone?: string | null
+          refreshed_at?: string | null
+          seniority?: string | null
+          title?: string | null
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          email?: string | null
+          email_confidence?: number | null
+          email_source?: string | null
+          email_verified?: boolean | null
+          enriched_at?: string | null
+          first_name?: string | null
+          full_name?: string
+          id?: string
+          is_primary?: boolean | null
+          linkedin_url?: string | null
+          meta?: Json
+          phone?: string | null
+          refreshed_at?: string | null
+          seniority?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyer_contacts_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "industrial_supply_buyers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       buyer_graduation_state: {
         Row: {
           buyer_email: string
@@ -2192,6 +2260,30 @@ export type Database = {
           phone?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+        }
+        Relationships: []
+      }
+      city_coords: {
+        Row: {
+          city_state: string
+          lat: number
+          lng: number
+          populated: boolean
+          populated_at: string | null
+        }
+        Insert: {
+          city_state: string
+          lat: number
+          lng: number
+          populated?: boolean
+          populated_at?: string | null
+        }
+        Update: {
+          city_state?: string
+          lat?: number
+          lng?: number
+          populated?: boolean
+          populated_at?: string | null
         }
         Relationships: []
       }
@@ -5215,6 +5307,89 @@ export type Database = {
         }
         Relationships: []
       }
+      dossier_pdf_cache: {
+        Row: {
+          generated_at: string
+          signal_id: string
+          signed_url: string
+          signed_url_expires_at: string
+          storage_path: string
+        }
+        Insert: {
+          generated_at?: string
+          signal_id: string
+          signed_url: string
+          signed_url_expires_at: string
+          storage_path: string
+        }
+        Update: {
+          generated_at?: string
+          signal_id?: string
+          signed_url?: string
+          signed_url_expires_at?: string
+          storage_path?: string
+        }
+        Relationships: []
+      }
+      dossier_share_tokens: {
+        Row: {
+          created_at: string
+          created_for_email: string | null
+          expires_at: string
+          signal_id: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          created_for_email?: string | null
+          expires_at: string
+          signal_id: string
+          token: string
+        }
+        Update: {
+          created_at?: string
+          created_for_email?: string | null
+          expires_at?: string
+          signal_id?: string
+          token?: string
+        }
+        Relationships: []
+      }
+      dossier_share_views: {
+        Row: {
+          dwell_seconds: number | null
+          id: string
+          ip_hash: string | null
+          token: string
+          user_agent: string | null
+          viewed_at: string
+        }
+        Insert: {
+          dwell_seconds?: number | null
+          id?: string
+          ip_hash?: string | null
+          token: string
+          user_agent?: string | null
+          viewed_at?: string
+        }
+        Update: {
+          dwell_seconds?: number | null
+          id?: string
+          ip_hash?: string | null
+          token?: string
+          user_agent?: string | null
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dossier_share_views_token_fkey"
+            columns: ["token"]
+            isOneToOne: false
+            referencedRelation: "dossier_share_tokens"
+            referencedColumns: ["token"]
+          },
+        ]
+      }
       drip_conversions: {
         Row: {
           business_name: string | null
@@ -5254,6 +5429,42 @@ export type Database = {
           service_interested?: string | null
           source?: string | null
           stripe_checkout_completed?: boolean | null
+        }
+        Relationships: []
+      }
+      email_arm_stats: {
+        Row: {
+          arm_key: string
+          bought: number
+          bounced: number
+          last_updated: string
+          opened: number
+          replied: number
+          sent: number
+          unsubscribed: number
+          vertical: string
+        }
+        Insert: {
+          arm_key: string
+          bought?: number
+          bounced?: number
+          last_updated?: string
+          opened?: number
+          replied?: number
+          sent?: number
+          unsubscribed?: number
+          vertical: string
+        }
+        Update: {
+          arm_key?: string
+          bought?: number
+          bounced?: number
+          last_updated?: string
+          opened?: number
+          replied?: number
+          sent?: number
+          unsubscribed?: number
+          vertical?: string
         }
         Relationships: []
       }
@@ -5302,6 +5513,42 @@ export type Database = {
           sent_count?: number
           status?: string
           subject?: string
+        }
+        Relationships: []
+      }
+      email_quality_checks: {
+        Row: {
+          checked_at: string
+          compliant: boolean | null
+          decision: string
+          draft_id: string
+          mx_ok: boolean | null
+          reason: string | null
+          spam_score: number | null
+          throttle_ok: boolean | null
+          warmup_ok: boolean | null
+        }
+        Insert: {
+          checked_at?: string
+          compliant?: boolean | null
+          decision: string
+          draft_id: string
+          mx_ok?: boolean | null
+          reason?: string | null
+          spam_score?: number | null
+          throttle_ok?: boolean | null
+          warmup_ok?: boolean | null
+        }
+        Update: {
+          checked_at?: string
+          compliant?: boolean | null
+          decision?: string
+          draft_id?: string
+          mx_ok?: boolean | null
+          reason?: string | null
+          spam_score?: number | null
+          throttle_ok?: boolean | null
+          warmup_ok?: boolean | null
         }
         Relationships: []
       }
@@ -16329,6 +16576,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      signal_buyer_intent: {
+        Row: {
+          bis: number
+          breakdown: Json
+          buyer_id: string
+          computed_at: string
+          contact_id: string
+          signal_id: string
+        }
+        Insert: {
+          bis: number
+          breakdown: Json
+          buyer_id: string
+          computed_at?: string
+          contact_id: string
+          signal_id: string
+        }
+        Update: {
+          bis?: number
+          breakdown?: Json
+          buyer_id?: string
+          computed_at?: string
+          contact_id?: string
+          signal_id?: string
+        }
+        Relationships: []
       }
       signal_correlations: {
         Row: {
