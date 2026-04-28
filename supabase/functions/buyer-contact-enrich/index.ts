@@ -169,7 +169,7 @@ function tellSeniority(title?: string): string {
 
 async function apolloPeople(company: string, city: string | null, domain: string | null): Promise<Contact[]> {
   if (!APOLLO_API_KEY) throw new Error("APOLLO_API_KEY missing");
-  const r = await fetch("https://api.apollo.io/v1/mixed_people/search", {
+  const r = await fetch("https://api.apollo.io/api/v1/mixed_people/search", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Cache-Control": "no-cache", "X-Api-Key": APOLLO_API_KEY },
     body: JSON.stringify({
