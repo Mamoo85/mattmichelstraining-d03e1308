@@ -39,7 +39,7 @@ interface PulseSignal {
   detected_at: string;
 }
 
-type FilterType = "all" | "cross_referenced" | "high" | "medium" | "low";
+type FilterType = "all" | "cross_referenced" | "high" | "medium" | "low" | "watchlist";
 
 const INDUSTRY_FILTERS = ["All", "HVAC", "CNC/Machining", "Welding", "Electrical", "Boiler/Pressure", "Plumbing"];
 
