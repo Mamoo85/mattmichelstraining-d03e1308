@@ -434,7 +434,7 @@ export async function runEmailWaterfall(
   return { email: null, source: null, confidence: 0, trace };
 }
 
-export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "hunter", "pdl"] as const;
+export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "hunter", "pdl", "pdl_name"] as const;
 
 /**
  * runFieldWaterfall — wrapper around runEmailWaterfall that reports which
