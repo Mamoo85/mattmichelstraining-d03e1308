@@ -44,6 +44,7 @@ export default function AdminCommunityDrop() {
       .select("id,company_name,location,industry,hiring_count,hiring_roles,confidence")
       .gte("confidence", 7)
       .order("confidence", { ascending: false })
+      .order("id",         { ascending: true })
       .limit(5);
     setSignals(data || []);
     setLoading(false);

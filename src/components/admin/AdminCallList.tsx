@@ -50,8 +50,9 @@ export default function AdminCallList() {
         .from("industry_pulse_signals")
         .select("id,company_name,location,industry,hiring_roles,hiring_count,predicted_needs,confidence")
         .gte("confidence", 7)
-        .order("confidence", { ascending: false })
+        .order("confidence",  { ascending: false })
         .order("detected_at", { ascending: false })
+        .order("id",          { ascending: true })
         .limit(20),
       (supabase as any)
         .from("call_outreach_log")
