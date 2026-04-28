@@ -20800,6 +20800,40 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_funnel_summary: {
+        Row: {
+          blocked_30d: number | null
+          bounced_30d: number | null
+          clicked_30d: number | null
+          opened_30d: number | null
+          prospects_30d: number | null
+          replied_30d: number | null
+          sent_30d: number | null
+          unsubscribed_30d: number | null
+        }
+        Relationships: []
+      }
+      outreach_send_metrics_hourly: {
+        Row: {
+          avg_attempts: number | null
+          channel: string | null
+          failed_count: number | null
+          hour: string | null
+          sent_count: number | null
+        }
+        Relationships: []
+      }
+      outreach_waterfall_stage_stats: {
+        Row: {
+          attempts: number | null
+          avg_confidence: number | null
+          hit_rate_pct: number | null
+          hits: number | null
+          misses: number | null
+          stage: string | null
+        }
+        Relationships: []
+      }
       training_programs_public: {
         Row: {
           category: string | null
