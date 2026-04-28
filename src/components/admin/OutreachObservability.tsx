@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Activity, RefreshCw, TrendingUp, Mail, MessageSquare, Target, AlertTriangle } from "lucide-react";
+import { Activity, RefreshCw, TrendingUp, Mail, MessageSquare, Target, AlertTriangle, MapPin, Wand2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   ResponsiveContainer,
   LineChart,
@@ -50,6 +51,51 @@ export default function OutreachObservability() {
   const [hourly, setHourly] = useState<HourlyRow[]>([]);
   const [stages, setStages] = useState<StageRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statewideBacklog, setStatewideBacklog] = useState<number | null>(null);
+  const [sweepRunning, setSweepRunning] = useState(false);
+  const [enrichRunning, setEnrichRunning] = useState(false);
+
+  const loadBacklog = useCallback(async () => {
+    const { count } = await supabase
+      .from("contractor_outreach_prospects")
+      .select("id", { count: "exact", head: true })
+      .eq("source", "google_maps_statewide")
+      .is("email", null)
+      .is("unsubscribed_at", null);
+    setStatewideBacklog(count ?? 0);
+  }, []);
+
+  const runSweep = async () => {
+    setSweepRunning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("contractor-outreach-statewide-sweep", {
+        body: { tiers: ["primary", "secondary"], max_seconds: 90, limit_per_query: 20 },
+      });
+      if (error) throw error;
+      toast.success(`Sweep done: scanned ${data?.scanned ?? 0}, added ${data?.inserted ?? 0}, skipped ${data?.skipped_duplicates ?? 0}`);
+      await loadBacklog();
+    } catch (e: any) {
+      toast.error(`Sweep failed: ${e.message}`);
+    } finally {
+      setSweepRunning(false);
+    }
+  };
+
+  const runEnrich = async () => {
+    setEnrichRunning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("contractor-outreach-statewide-enrich", {
+        body: { max_seconds: 90, batch_size: 5, limit: 60 },
+      });
+      if (error) throw error;
+      toast.success(`Enriched ${data?.enriched ?? 0}/${data?.attempted ?? 0} (backlog pulled: ${data?.backlog_pulled ?? 0})`);
+      await loadBacklog();
+    } catch (e: any) {
+      toast.error(`Enrich failed: ${e.message}`);
+    } finally {
+      setEnrichRunning(false);
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -64,7 +110,7 @@ export default function OutreachObservability() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); loadBacklog(); }, [load, loadBacklog]);
 
   // Combine email + sms hourly into one series
   const chartData = (() => {
