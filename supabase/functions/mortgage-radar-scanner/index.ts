@@ -7,6 +7,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { sendSMS } from "../_shared/twilio.ts";
+import {
+  validateLead,
+  quarantineRaw,
+  highQuarantineRateAlerts,
+  type ScanRunStats,
+} from "../_shared/anti-hallucination.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
