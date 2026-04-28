@@ -374,6 +374,35 @@ export default function ContractorOutreachPanel() {
             {scraping ? "Scraping…" : "Scrape 20"}
           </button>
         </div>
+
+        <div className="mt-4 pt-4 border-t border-border/40">
+          <p className="text-xs text-muted-foreground mb-2">
+            <strong className="text-foreground">Statewide Michigan Sweep</strong> — serial Google Places across the curated MI city catalog (rate-limited, resumable, dedupes existing prospects).
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => runStatewideSweep("primary")}
+              disabled={sweeping}
+              className="px-3 py-1.5 rounded text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50"
+            >
+              {sweeping ? "Sweeping…" : "🗺️ Sweep Primary (Metro Detroit)"}
+            </button>
+            <button
+              onClick={() => runStatewideSweep("secondary")}
+              disabled={sweeping}
+              className="px-3 py-1.5 rounded text-xs font-bold bg-amber-600 text-white hover:bg-amber-500 disabled:opacity-50"
+            >
+              Sweep Secondary (GR/Lansing/Flint)
+            </button>
+            <button
+              onClick={() => runStatewideSweep("tertiary")}
+              disabled={sweeping}
+              className="px-3 py-1.5 rounded text-xs font-bold bg-slate-600 text-white hover:bg-slate-500 disabled:opacity-50"
+            >
+              Sweep Tertiary (Up North/UP)
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Email blast unclaimed leads */}
