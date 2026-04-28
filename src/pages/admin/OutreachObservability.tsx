@@ -1,5 +1,6 @@
 import OutreachObservability from "@/components/admin/OutreachObservability";
 import OutreachQueueMonitor from "@/components/admin/OutreachQueueMonitor";
+import EnrichmentDLQPanel from "@/components/admin/EnrichmentDLQPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function OutreachObservabilityPage() {
@@ -9,12 +10,16 @@ export default function OutreachObservabilityPage() {
         <TabsList>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="queue">Live queue</TabsTrigger>
+          <TabsTrigger value="dlq">DLQ &amp; Backfill</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="mt-4">
           <OutreachObservability />
         </TabsContent>
         <TabsContent value="queue" className="mt-4">
           <OutreachQueueMonitor />
+        </TabsContent>
+        <TabsContent value="dlq" className="mt-4">
+          <EnrichmentDLQPanel />
         </TabsContent>
       </Tabs>
     </div>
