@@ -146,6 +146,8 @@ export default function ContractorOutreachPanel() {
       setSweeping(false);
     }
   }
+
+  async function enrich(id: string) {
     setEnrichingId(id);
     const { data, error } = await supabase.functions.invoke("contractor-outreach-enrich", {
       body: { prospect_id: id },
