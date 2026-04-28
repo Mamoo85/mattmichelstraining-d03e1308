@@ -21656,6 +21656,10 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      delete_walker_target: {
+        Args: { _city: string; _trade: string }
+        Returns: undefined
+      }
       demand_radar_account_key: {
         Args: { p_company: string; p_location: string }
         Returns: string
@@ -21835,6 +21839,7 @@ export type Database = {
       mp_signal_velocity: { Args: { p_lead_id: string }; Returns: number }
       mp_zip_heat_index: { Args: { p_zip: string }; Returns: number }
       next_enrich_stage: { Args: { _candidate_id: string }; Returns: string }
+      prune_enrichment_provider_latency: { Args: never; Returns: number }
       prune_provider_latency: { Args: never; Returns: number }
       purge_expired_idempotency_keys: { Args: never; Returns: number }
       queue_depth_snapshot: {
@@ -21873,6 +21878,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      reset_alert_cooldown: { Args: { _kind: string }; Returns: undefined }
       revoke_marketplace_access: {
         Args: { p_lead_id: string; p_product: string; p_reason: string }
         Returns: number
@@ -21961,6 +21967,18 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      upsert_walker_target: {
+        Args: {
+          _city: string
+          _daily_cost_cap_usd?: number
+          _enabled?: boolean
+          _max_per_run?: number
+          _notes?: string
+          _priority?: number
+          _trade: string
+        }
+        Returns: undefined
       }
       validate_promo_code: {
         Args: { _code: string }

@@ -3,6 +3,7 @@ import OutreachQueueMonitor from "@/components/admin/OutreachQueueMonitor";
 import EnrichmentDLQPanel from "@/components/admin/EnrichmentDLQPanel";
 import EnrichmentWalkerAlertsPanel from "@/components/admin/EnrichmentWalkerAlertsPanel";
 import EnrichmentTimelinePanel from "@/components/admin/EnrichmentTimelinePanel";
+import WalkerTargetsPanel from "@/components/admin/WalkerTargetsPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function OutreachObservabilityPage() {
@@ -15,6 +16,7 @@ export default function OutreachObservabilityPage() {
           <TabsTrigger value="dlq">DLQ &amp; Backfill</TabsTrigger>
           <TabsTrigger value="walker">Walker &amp; Alerts</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
+          <TabsTrigger value="targets">Targets &amp; Cooldowns</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="mt-4">
           <OutreachObservability />
@@ -30,6 +32,9 @@ export default function OutreachObservabilityPage() {
         </TabsContent>
         <TabsContent value="timeline" className="mt-4">
           <EnrichmentTimelinePanel />
+        </TabsContent>
+        <TabsContent value="targets" className="mt-4">
+          <WalkerTargetsPanel />
         </TabsContent>
       </Tabs>
     </div>
