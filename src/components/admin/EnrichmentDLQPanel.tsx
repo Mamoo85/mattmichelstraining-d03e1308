@@ -177,6 +177,24 @@ export default function EnrichmentDLQPanel() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Wave 5: Aged-suppression counter */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" /> Suppressed (aged)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{agedCount ?? "—"}</p>
+            <p className="text-xs text-muted-foreground">
+              In DLQ &gt;7 days, marked unenrichable
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Auto-aged on each backfill execute run.
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* DLQ table */}
