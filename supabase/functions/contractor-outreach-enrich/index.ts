@@ -145,6 +145,20 @@ Deno.serve(async (req) => {
       trace.push({ stage: "pattern_guess", email, confidence: 0.3, ts: new Date().toISOString() });
     }
 
+    // Wave 5: compute enrichment_confidence (0–100) from current outcome.
+    // Used downstream to sort retries (backfill) and outreach priority.
+    let confidence = 0;
+    if (email && verified) confidence += 40;
+    else if (email) confidence += 20; // unverified guess
+    if (owner) confidence += 20;
+    if (phone) confidence += 15;
+    if (domain) confidence += 10;
+    // Trust bonus from trace: high-trust sources
+    const sources = trace.map((t) => String((t as any).stage ?? ""));
+    if (sources.some((s) => s === "hunter" || s === "pdl_name_only")) confidence += 10;
+    if (sources.some((s) => s === "pattern_verify")) confidence += 5;
+    if (confidence > 100) confidence = 100;
+
     const { data: updated, error: uErr } = await supabase
       .from("contractor_outreach_prospects")
       .update({
@@ -154,6 +168,7 @@ Deno.serve(async (req) => {
         phone,
         enriched_at: new Date().toISOString(),
         enrichment_trace: trace,
+        enrichment_confidence: confidence,
       })
       .eq("id", prospect_id)
       .select()

@@ -41,10 +41,11 @@ export default function EnrichmentDLQPanel() {
   const [dlq, setDlq] = useState<DLRow[] | null>(null);
   const [canary, setCanary] = useState<CanaryRow[] | null>(null);
   const [replays, setReplays] = useState<ReplayRow[] | null>(null);
+  const [agedCount, setAgedCount] = useState<number | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = async () => {
-    const [dlqRes, canRes, repRes] = await Promise.all([
+    const [dlqRes, canRes, repRes, agedRes] = await Promise.all([
       supabase.from("enrichment_dead_letter" as any)
         .select("id,prospect_id,provider,reason,attempt_count,last_attempt_at,last_error,meta")
         .order("last_attempt_at", { ascending: false })
@@ -57,10 +58,14 @@ export default function EnrichmentDLQPanel() {
         .select("id,prospect_id,reason,triggered_by,success,created_at")
         .order("created_at", { ascending: false })
         .limit(15),
+      supabase.from("contractor_outreach_prospects" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("suppression_reason", "dlq_aged_unenrichable"),
     ]);
     setDlq(((dlqRes.data as unknown) as DLRow[]) ?? []);
     setCanary(((canRes.data as unknown) as CanaryRow[]) ?? []);
     setReplays(((repRes.data as unknown) as ReplayRow[]) ?? []);
+    setAgedCount(agedRes.count ?? 0);
   };
 
   useEffect(() => { load(); }, []);
@@ -108,7 +113,7 @@ export default function EnrichmentDLQPanel() {
   return (
     <div className="space-y-4">
       {/* Health summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
@@ -170,6 +175,24 @@ export default function EnrichmentDLQPanel() {
             <Button size="sm" variant="destructive" className="w-full" onClick={() => runBackfill("execute", "all")} disabled={busy?.startsWith("backfill")}>
               {busy === "backfill_execute" ? "Replaying…" : "Execute (25)"}
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Wave 5: Aged-suppression counter */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" /> Suppressed (aged)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{agedCount ?? "—"}</p>
+            <p className="text-xs text-muted-foreground">
+              In DLQ &gt;7 days, marked unenrichable
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Auto-aged on each backfill execute run.
+            </p>
           </CardContent>
         </Card>
       </div>

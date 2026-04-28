@@ -38,6 +38,55 @@ Deno.serve(async (req) => {
   const startedAt = Date.now();
 
   try {
+    // ── Wave 5: global daily budget cap ────────────────────────────────────
+    // Read the configurable cap (default $50/day) and today's spend in ET.
+    let dailyBudget = 50;
+    try {
+      const { data: cfg } = await sb
+        .from("enrichment_walker_config")
+        .select("value_numeric")
+        .eq("key", "daily_budget_usd")
+        .maybeSingle();
+      if (cfg?.value_numeric != null) dailyBudget = Number(cfg.value_numeric);
+    } catch (_) { /* fallback to default */ }
+
+    const todayET = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Detroit",
+      year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date()); // YYYY-MM-DD
+    const { data: todaysRuns } = await sb
+      .from("enrichment_walker_runs")
+      .select("cost_estimate_usd, ran_at");
+    const todaysSpend = (todaysRuns ?? [])
+      .filter((r: any) => {
+        const d = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "America/Detroit",
+          year: "numeric", month: "2-digit", day: "2-digit",
+        }).format(new Date(r.ran_at));
+        return d === todayET;
+      })
+      .reduce((s: number, r: any) => s + Number(r.cost_estimate_usd ?? 0), 0);
+
+    if (todaysSpend >= dailyBudget) {
+      await sb.from("enrichment_walker_runs").insert({
+        trade: "—",
+        city: "—",
+        unenriched_count: 0,
+        skipped_reason: `daily_budget_cap_hit ($${todaysSpend.toFixed(2)}/$${dailyBudget.toFixed(2)})`,
+        meta: { daily_budget_usd: dailyBudget, todays_spend_usd: todaysSpend },
+      });
+      return json({
+        ok: true,
+        skipped: "daily_budget_cap_hit",
+        todays_spend_usd: todaysSpend,
+        daily_budget_usd: dailyBudget,
+      });
+    }
+
+    // Headroom for this run = min(per-run hard cap, remaining daily budget)
+    const remainingBudget = Math.max(0, dailyBudget - todaysSpend);
+    const runCostCeiling = Math.min(HARD_MAX_RUN_COST_USD, remainingBudget);
+
     // 1. Pick the next pair: enabled, lowest priority number, oldest last_walked_at.
     const { data: targets, error: tErr } = await sb
       .from("enrichment_walker_targets")
@@ -147,9 +196,9 @@ Deno.serve(async (req) => {
       failed = batchSize;
     }
 
-    if (costEstimate > HARD_MAX_RUN_COST_USD) {
-      // safety: clamp displayed cost so a buggy enricher can't crash the cap math
-      costEstimate = HARD_MAX_RUN_COST_USD;
+    if (costEstimate > runCostCeiling) {
+      // safety: clamp to per-run hard cap AND remaining daily-budget headroom
+      costEstimate = runCostCeiling;
     }
 
     // 6. Log run + bump last_walked_at.

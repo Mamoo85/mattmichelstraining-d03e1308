@@ -46,6 +46,37 @@ Deno.serve(async (req) => {
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+  // ── Wave 5: DLQ aging — prospects in DLQ > 7 days get marked unenrichable ──
+  let aged_count = 0;
+  if (mode === "execute") {
+    try {
+      const cutoff = new Date(Date.now() - 7 * 86400_000).toISOString();
+      const { data: aged } = await sb
+        .from("enrichment_dead_letter")
+        .select("id, prospect_id")
+        .lt("created_at", cutoff)
+        .eq("permanent_failure", false)
+        .limit(500);
+      for (const row of aged ?? []) {
+        if (row.prospect_id) {
+          await sb.from("contractor_outreach_prospects")
+            .update({
+              suppressed_at: new Date().toISOString(),
+              suppression_reason: "dlq_aged_unenrichable",
+            })
+            .eq("id", row.prospect_id)
+            .is("suppressed_at", null);
+        }
+        await sb.from("enrichment_dead_letter")
+          .update({ permanent_failure: true, last_error: "aged_to_suppression after 7d" })
+          .eq("id", row.id);
+        aged_count++;
+      }
+    } catch (e) {
+      console.warn("[backfill] dlq aging step failed:", e);
+    }
+  }
+
   // Safety check: refuse if too many providers are unhealthy
   try {
     const { data: unhealthy } = await sb
@@ -70,7 +101,9 @@ Deno.serve(async (req) => {
       .from("contractor_outreach_prospects")
       .select("id")
       .eq("enrichment_status", "no_data")
+      .is("suppressed_at", null) // Wave 5: skip aged-out prospects
       .lt("enriched_at", new Date(Date.now() - 14 * 86400_000).toISOString())
+      .order("enrichment_confidence", { ascending: false }) // Wave 5: high-confidence first
       .limit(limit);
     for (const r of data ?? []) {
       candidates.push({ id: r.id, reason: "stale_no_data", source_table: "contractor_outreach_prospects" });
@@ -83,8 +116,10 @@ Deno.serve(async (req) => {
       .from("contractor_outreach_prospects")
       .select("id")
       .eq("enrichment_status", "enriched")
+      .is("suppressed_at", null) // Wave 5
       .is("email", null)
       .is("phone", null)
+      .order("enrichment_confidence", { ascending: false }) // Wave 5
       .limit(remaining);
     for (const r of data ?? []) {
       candidates.push({ id: r.id, reason: "partial_enrichment", source_table: "contractor_outreach_prospects" });
@@ -107,7 +142,7 @@ Deno.serve(async (req) => {
   }
 
   if (candidates.length === 0) {
-    return json({ ok: true, mode, total_candidates: 0, processed: 0, duration_ms: Date.now() - startedAt }, 200);
+    return json({ ok: true, mode, total_candidates: 0, processed: 0, aged_count, duration_ms: Date.now() - startedAt }, 200);
   }
 
   // Filter out prospects already replayed too many times
@@ -130,6 +165,7 @@ Deno.serve(async (req) => {
       total_candidates: candidates.length,
       eligible: eligible.length,
       skipped_max_replays,
+      aged_count,
       preview: eligible.slice(0, 10),
       duration_ms: Date.now() - startedAt,
     }, 200);
@@ -180,6 +216,7 @@ Deno.serve(async (req) => {
     succeeded,
     failed,
     skipped_max_replays,
+    aged_count,
     errors: errors.slice(0, 20),
     duration_ms: Date.now() - startedAt,
   }, 200);

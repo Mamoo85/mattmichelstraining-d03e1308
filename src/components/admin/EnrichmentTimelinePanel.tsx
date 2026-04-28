@@ -118,7 +118,19 @@ export default function EnrichmentTimelinePanel() {
                           {r.city ?? "—"} · {r.email ?? <span className="italic">no email</span>}
                           {r.email_verified && <Badge className="ml-2" variant="secondary">verified</Badge>}
                           {typeof r.enrichment_confidence === "number" && (
-                            <Badge className="ml-2" variant="outline">conf {r.enrichment_confidence}</Badge>
+                            <span
+                              className={
+                                "ml-2 inline-block px-1.5 py-0.5 rounded text-[10px] font-bold " +
+                                (r.enrichment_confidence >= 70
+                                  ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/40"
+                                  : r.enrichment_confidence >= 40
+                                  ? "bg-amber-500/15 text-amber-400 border border-amber-500/40"
+                                  : "bg-rose-500/15 text-rose-400 border border-rose-500/40")
+                              }
+                              title="Enrichment confidence (0–100)"
+                            >
+                              conf {r.enrichment_confidence}
+                            </span>
                           )}
                         </div>
                       </div>

@@ -3880,6 +3880,8 @@ export type Database = {
           scraped_at: string | null
           source: string | null
           state: string | null
+          suppressed_at: string | null
+          suppression_reason: string | null
           territory_priority: number
           trade: string
           unsubscribed_at: string | null
@@ -3918,6 +3920,8 @@ export type Database = {
           scraped_at?: string | null
           source?: string | null
           state?: string | null
+          suppressed_at?: string | null
+          suppression_reason?: string | null
           territory_priority?: number
           trade: string
           unsubscribed_at?: string | null
@@ -3956,6 +3960,8 @@ export type Database = {
           scraped_at?: string | null
           source?: string | null
           state?: string | null
+          suppressed_at?: string | null
+          suppression_reason?: string | null
           territory_priority?: number
           trade?: string
           unsubscribed_at?: string | null
@@ -6320,6 +6326,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      enrichment_walker_config: {
+        Row: {
+          key: string
+          updated_at: string
+          value_numeric: number | null
+          value_text: string | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value_numeric?: number | null
+          value_text?: string | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value_numeric?: number | null
+          value_text?: string | null
+        }
+        Relationships: []
       }
       enrichment_walker_runs: {
         Row: {
@@ -21060,6 +21087,14 @@ export type Database = {
         }
         Relationships: []
       }
+      enrichment_provider_spend_daily: {
+        Row: {
+          day: string | null
+          run_count: number | null
+          spend_usd: number | null
+        }
+        Relationships: []
+      }
       generated_sites_public: {
         Row: {
           business_name: string | null
@@ -21893,6 +21928,7 @@ export type Database = {
           title: string
         }[]
       }
+      set_walker_daily_budget: { Args: { usd: number }; Returns: number }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       toggle_points_visibility: {
