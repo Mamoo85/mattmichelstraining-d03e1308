@@ -105,7 +105,7 @@ async function isProviderRateLimited(sb: SupabaseClient, provider: string): Prom
   }
 }
 
-async function bump(sb: SupabaseClient, provider: string, hit: boolean, opts?: { credits?: number; was429?: boolean }) {
+async function bump(sb: SupabaseClient, provider: string, hit: boolean, opts?: { credits?: number; was429?: boolean; latency_ms?: number }) {
   try {
     await sb.rpc("bump_provider_health", {
       _provider: provider,
@@ -114,9 +114,25 @@ async function bump(sb: SupabaseClient, provider: string, hit: boolean, opts?: {
       _was_429: opts?.was429 ?? false,
     });
     if (opts?.was429) HEALTH_CACHE[provider] = { skip: true, ts: Date.now() };
+    if (typeof opts?.latency_ms === "number") {
+      // fire-and-forget latency sample
+      sb.rpc("record_provider_latency", {
+        _provider: provider,
+        _latency_ms: Math.round(opts.latency_ms),
+        _success: hit,
+        _was_429: opts?.was429 ?? false,
+      }).then(() => {}, (e) => console.warn(`[waterfall] latency ${provider} failed:`, e));
+    }
   } catch (e) {
     console.warn(`[waterfall] bump ${provider} failed:`, e);
   }
+}
+
+// Wrap a stage to capture wall-clock latency and forward to bump().
+async function timeStage<T>(fn: () => Promise<T>): Promise<{ result: T; ms: number }> {
+  const t0 = performance.now();
+  const result = await fn();
+  return { result, ms: performance.now() - t0 };
 }
 
 // ── Validators ──────────────────────────────────────────────────────────────
