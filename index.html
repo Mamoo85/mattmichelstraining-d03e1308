@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="M² Training" />
+    <meta name="apple-mobile-web-app-title" content="Detroit Web Agency" />
     <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -151,6 +151,8 @@
         s('name','twitter:title',m2.title);s('name','twitter:description',m2.desc);
         s('name','twitter:image',m2.img);
         s('name','description',m2.desc);
+        // Swap apple title for M²
+        var apple=d.querySelector('meta[name="apple-mobile-web-app-title"]');if(apple)apple.setAttribute('content','M² Training');
         // Disable DWA JSON-LD and activate M² schemas
         var dwaLd=d.getElementById('ld-default');if(dwaLd)dwaLd.type='application/ld+json-dwa-disabled';
         var m2a=d.getElementById('ld-m2-training');if(m2a){var n1=d.createElement('script');n1.type='application/ld+json';n1.text=m2a.text;d.head.appendChild(n1);}
