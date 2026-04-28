@@ -710,7 +710,9 @@ serve(async (req) => {
       }
     }
 
-    const score = scoreFor(s.signal_type);
+    // Phase B: respect the trust cap. Unverified LLM-only leads cannot trigger hot SMS.
+    const rawScore = scoreFor(s.signal_type);
+    const score = s.source_method === "llm_search" ? Math.min(3, rawScore) : rawScore;
     const matchedClientIds = await notifyClients(sb, s.zip, score);
     if (matchedClientIds.length > 0) {
       await (sb.from as any)("mortgage_radar_leads")
