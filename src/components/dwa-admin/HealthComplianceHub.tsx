@@ -25,8 +25,6 @@ const TABS: { id: Sub; label: string }[] = [
   { id: "errors",     label: "🚨 Error Logs" },
 ];
 
-const fb = (l: string) => <div className="text-white/40 text-sm p-6">Loading {l}…</div>;
-
 export default function HealthComplianceHub() {
   const [sub, setSub] = useState<Sub>("resilience");
   return (
@@ -47,16 +45,16 @@ export default function HealthComplianceHub() {
           </button>
         ))}
       </div>
-      {sub === "resilience" && <Suspense fallback={fb("resilience")}><AdminServiceResilience /></Suspense>}
+      {sub === "resilience" && safe("resilience", <AdminServiceResilience />)}
       {sub === "cron" && (
         <div className="space-y-6">
-          <Suspense fallback={fb("cron sentinel")}><AdminCronSentinel /></Suspense>
-          <Suspense fallback={fb("cron status")}><AdminCronStatus /></Suspense>
+          {safe("cron sentinel", <AdminCronSentinel />)}
+          {safe("cron status", <AdminCronStatus />)}
         </div>
       )}
-      {sub === "tcpa"   && <Suspense fallback={fb("TCPA")}><AdminComplianceMonitor /></Suspense>}
-      {sub === "lara"   && <Suspense fallback={fb("LARA")}><AdminLaraHealth /></Suspense>}
-      {sub === "errors" && <Suspense fallback={fb("error logs")}><AdminErrorLogs /></Suspense>}
+      {sub === "tcpa"   && safe("TCPA", <AdminComplianceMonitor />)}
+      {sub === "lara"   && safe("LARA", <AdminLaraHealth />)}
+      {sub === "errors" && safe("error logs", <AdminErrorLogs />)}
     </div>
   );
 }
