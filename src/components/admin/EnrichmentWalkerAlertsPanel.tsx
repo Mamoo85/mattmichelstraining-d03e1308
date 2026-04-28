@@ -143,6 +143,52 @@ export default function EnrichmentWalkerAlertsPanel() {
         <button onClick={load} className="ml-auto text-[11px] text-cyan-300 hover:underline">Refresh</button>
       </div>
 
+      {/* Wave 5: Today's walker spend + daily budget */}
+      <div className="bg-card border border-border rounded-lg p-4">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-foreground flex items-center gap-2 mb-3">
+          <Gauge size={14} className="text-cyan-300" /> Walker spend (today, ET)
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div>
+            <div className="text-muted-foreground">Today</div>
+            <div className="text-lg font-bold text-cyan-300">${todaysSpend.toFixed(2)}</div>
+            <div className="text-[10px] text-muted-foreground">7-day avg ${avg7.toFixed(2)}{anomalyRatio >= 2 ? <span className="ml-1 text-rose-400 font-bold">⚠ {anomalyRatio.toFixed(1)}x</span> : null}</div>
+          </div>
+          <div>
+            <div className="text-muted-foreground">Budget cap</div>
+            <div className="text-lg font-bold">${dailyBudget.toFixed(2)}</div>
+            <div className="mt-1 h-1.5 w-full bg-border rounded overflow-hidden">
+              <div
+                className={budgetPct >= 100 ? "h-full bg-rose-500" : budgetPct >= 75 ? "h-full bg-amber-400" : "h-full bg-emerald-400"}
+                style={{ width: `${budgetPct}%` }}
+              />
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-0.5">{budgetPct}% used</div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-muted-foreground">Set new daily cap (USD)</label>
+            <div className="flex gap-1.5">
+              <input
+                type="number"
+                min={0}
+                max={5000}
+                step={5}
+                value={budgetInput}
+                onChange={(e) => setBudgetInput(e.target.value)}
+                className="bg-background border border-border rounded px-2 py-1 text-xs w-24"
+              />
+              <button
+                onClick={saveBudget}
+                disabled={savingBudget}
+                className="px-2 py-1 rounded text-[11px] font-bold bg-cyan-500/15 border border-cyan-500/40 text-cyan-200 hover:bg-cyan-500/25 disabled:opacity-50"
+              >
+                {savingBudget ? <Loader2 size={11} className="animate-spin" /> : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Provider latency */}
       <Section icon={<Gauge size={14} className="text-cyan-300" />} title="Provider latency (last 60 min)">
         {latency.length === 0 ? (
