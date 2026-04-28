@@ -46,6 +46,37 @@ Deno.serve(async (req) => {
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+  // ── Wave 5: DLQ aging — prospects in DLQ > 7 days get marked unenrichable ──
+  let aged_count = 0;
+  if (mode === "execute") {
+    try {
+      const cutoff = new Date(Date.now() - 7 * 86400_000).toISOString();
+      const { data: aged } = await sb
+        .from("enrichment_dead_letter")
+        .select("id, prospect_id")
+        .lt("created_at", cutoff)
+        .eq("permanent_failure", false)
+        .limit(500);
+      for (const row of aged ?? []) {
+        if (row.prospect_id) {
+          await sb.from("contractor_outreach_prospects")
+            .update({
+              suppressed_at: new Date().toISOString(),
+              suppression_reason: "dlq_aged_unenrichable",
+            })
+            .eq("id", row.prospect_id)
+            .is("suppressed_at", null);
+        }
+        await sb.from("enrichment_dead_letter")
+          .update({ permanent_failure: true, last_error: "aged_to_suppression after 7d" })
+          .eq("id", row.id);
+        aged_count++;
+      }
+    } catch (e) {
+      console.warn("[backfill] dlq aging step failed:", e);
+    }
+  }
+
   // Safety check: refuse if too many providers are unhealthy
   try {
     const { data: unhealthy } = await sb
