@@ -432,8 +432,8 @@ export default function ContractorOutreachPanel() {
               </thead>
               <tbody>
                 {filtered.length === 0 && (
-                  <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">
-                    No prospects yet — use the Scrape panel above
+                  <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">
+                    No prospects match these filters — adjust filters or use the Scrape panel above
                   </td></tr>
                 )}
                 {filtered.map(p => {
@@ -441,17 +441,34 @@ export default function ContractorOutreachPanel() {
                     : !p.phone ? { label: "—", color: "text-muted-foreground" }
                     : !p.consent_for_sms ? { label: "🔴 No consent", color: "text-red-300" }
                     : { label: "🟢 Consented", color: "text-emerald-300" };
+                  const emailStatus = p.unsubscribed_at ? { label: "⛔ Unsub", color: "text-red-400" }
+                    : !p.email ? { label: "—", color: "text-muted-foreground" }
+                    : p.consent_for_email ? { label: "🟢 Consented", color: "text-emerald-300" }
+                    : { label: "🟡 Cold (CAN-SPAM)", color: "text-amber-300" };
+                  const q = p.quality_score ?? 0;
+                  const qColor = q >= 75 ? "bg-emerald-500/20 text-emerald-300"
+                    : q >= 50 ? "bg-amber-500/20 text-amber-300"
+                    : "bg-red-500/20 text-red-300";
                   return (
                   <tr key={p.id} className="border-t border-border hover:bg-background/30">
                     <td className="p-2.5">
-                      <div className="font-semibold text-foreground">{p.business_name}</div>
+                      <div className="font-semibold text-foreground flex items-center gap-1.5">
+                        {p.business_name}
+                        {p.is_demo && <span className="text-[9px] px-1 py-0.5 rounded bg-slate-700 text-slate-300">demo</span>}
+                      </div>
                       {p.website && (
                         <a href={p.website} target="_blank" rel="noreferrer" className="text-[10px] text-cyan-400 hover:underline inline-flex items-center gap-1">
                           site <ExternalLink size={9} />
                         </a>
                       )}
                     </td>
-                    <td className="p-2.5 text-muted-foreground">{p.trade} · {p.city}</td>
+                    <td className="p-2.5 text-muted-foreground">
+                      <div>{p.trade}</div>
+                      <div className="text-[10px]">{p.city || "—"} · T{p.territory_priority}</div>
+                    </td>
+                    <td className="p-2.5">
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${qColor}`}>{q}</span>
+                    </td>
                     <td className="p-2.5">
                       {p.email ? (
                         <span className={p.email_verified ? "text-emerald-300" : "text-amber-300"}>
@@ -462,6 +479,7 @@ export default function ContractorOutreachPanel() {
                         <span className="text-muted-foreground italic">—</span>
                       )}
                     </td>
+                    <td className={`p-2.5 text-[10px] ${emailStatus.color}`}>{emailStatus.label}</td>
                     <td className="p-2.5 text-muted-foreground">{p.phone || "—"}</td>
                     <td className={`p-2.5 text-[10px] ${smsStatus.color}`}>{smsStatus.label}</td>
                     <td className="p-2.5 text-muted-foreground">{p.email_send_count}</td>
@@ -475,13 +493,22 @@ export default function ContractorOutreachPanel() {
                           <Sparkles size={10} /> {enrichingId === p.id ? "…" : "Enrich"}
                         </button>
                       )}
+                      {p.email && !p.consent_for_email && !p.unsubscribed_at && (
+                        <button
+                          onClick={() => setConsentFor({ id: p.id, name: p.business_name, channel: "email" })}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold bg-cyan-600/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-600/40"
+                          title="Mark explicit email consent received (e.g. opted in via form)"
+                        >
+                          <ShieldCheck size={10} /> Email-OK
+                        </button>
+                      )}
                       {p.phone && !p.consent_for_sms && !p.unsubscribed_at && (
                         <button
-                          onClick={() => setConsentFor({ id: p.id, name: p.business_name })}
+                          onClick={() => setConsentFor({ id: p.id, name: p.business_name, channel: "sms" })}
                           className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-600/40"
                           title="Mark SMS consent received"
                         >
-                          <ShieldCheck size={10} /> Consent
+                          <ShieldCheck size={10} /> SMS-OK
                         </button>
                       )}
                       {p.consent_for_sms && p.phone && !p.unsubscribed_at && (
@@ -524,6 +551,7 @@ export default function ContractorOutreachPanel() {
       <OutreachConsentDialog
         prospectId={consentFor?.id ?? null}
         prospectName={consentFor?.name}
+        channel={consentFor?.channel ?? "sms"}
         onClose={() => setConsentFor(null)}
         onSaved={load}
       />
