@@ -299,11 +299,25 @@ export default function ContractorOutreachPanel() {
         </div>
       </div>
 
+      {/* Info box explaining how the system works */}
+      <OutreachInfoBox />
+
+      {/* Global kill-switches */}
+      <OutreachGlobalSettings onChange={setGlobalSettings} />
+
       {/* Provenance panel */}
       <OutreachProvenancePanel />
 
       {/* Suppression manager */}
       <OutreachSuppressionManager />
+
+      {/* Audit log link */}
+      <Link
+        to="/dwa-admin/outreach-audit"
+        className="inline-flex items-center gap-2 text-xs px-3 py-2 rounded border border-cyan-700/40 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20"
+      >
+        <Activity size={12} /> Open full Outreach Audit Log →
+      </Link>
 
       {/* Scrape panel */}
       <div className="bg-card border border-border rounded-lg p-4">
@@ -370,9 +384,9 @@ export default function ContractorOutreachPanel() {
       <div>
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Contractor Database ({filtered.length} of {prospects.length})
+            Contractor Database ({filtered.length} of {prospects.length}) · {verifiedEmail} verified
           </h3>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <select value={filterTrade} onChange={e => setFilterTrade(e.target.value)} className="bg-background border border-border text-xs px-2 py-1 rounded">
               <option value="">All trades</option>
               {TRADES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -383,6 +397,21 @@ export default function ContractorOutreachPanel() {
               placeholder="Filter city…"
               className="bg-background border border-border text-xs px-2 py-1 rounded w-32"
             />
+            <select value={filterTerritory} onChange={e => setFilterTerritory(e.target.value)} className="bg-background border border-border text-xs px-2 py-1 rounded">
+              <option value="">All territories</option>
+              <option value="1">1 — Primary</option>
+              <option value="2">2 — Secondary</option>
+              <option value="3">3 — Opportunistic</option>
+            </select>
+            <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              Min Q
+              <input type="range" min={0} max={100} step={5} value={filterMinQuality} onChange={e => setFilterMinQuality(parseInt(e.target.value))} className="w-20 accent-cyan-500" />
+              <span className="text-cyan-300 font-bold w-6 text-right">{filterMinQuality}</span>
+            </label>
+            <label className="flex items-center gap-1 text-[11px] text-muted-foreground cursor-pointer">
+              <input type="checkbox" checked={hideDemo} onChange={e => setHideDemo(e.target.checked)} className="accent-cyan-500" />
+              Hide demo
+            </label>
           </div>
         </div>
         {loading ? <p className="text-xs text-muted-foreground">Loading…</p> : (
@@ -391,10 +420,12 @@ export default function ContractorOutreachPanel() {
               <thead className="bg-background/40 text-muted-foreground">
                 <tr>
                   <th className="text-left p-2.5">Business</th>
-                  <th className="text-left p-2.5">Trade / City</th>
+                  <th className="text-left p-2.5">Trade / Terr</th>
+                  <th className="text-left p-2.5">Quality</th>
                   <th className="text-left p-2.5">Email</th>
+                  <th className="text-left p-2.5">Email OK?</th>
                   <th className="text-left p-2.5">Phone</th>
-                  <th className="text-left p-2.5">SMS</th>
+                  <th className="text-left p-2.5">SMS OK?</th>
                   <th className="text-left p-2.5">Sent</th>
                   <th className="text-right p-2.5">Actions</th>
                 </tr>
