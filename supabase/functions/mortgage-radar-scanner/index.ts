@@ -516,7 +516,10 @@ async function notifyClients(sb: ReturnType<typeof createClient>, zip: string | 
 // and the new signal is appended to signal_history.
 async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal): Promise<{ id: string; created: boolean } | null> {
   if (!s.address) return null;
-  const baseScore = scoreFor(s.signal_type);
+  // Phase B trust gate: LLM-only-sourced leads are capped at 3 until a 2nd source confirms.
+  // Deterministic scrapers + APIs use full base score immediately.
+  const rawBase = scoreFor(s.signal_type);
+  const baseScore = s.source_method === "llm_search" ? Math.min(3, rawBase) : rawBase;
   const { opener, window } = openerFor(s.signal_type);
 
   const lookupAddress = s.address.toLowerCase();
