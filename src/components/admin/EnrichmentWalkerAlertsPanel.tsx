@@ -49,21 +49,33 @@ export default function EnrichmentWalkerAlertsPanel() {
   const [latency, setLatency] = useState<Latency[]>([]);
   const [thresholds, setThresholds] = useState<Threshold[]>([]);
   const [alerts, setAlerts] = useState<AlertRow[]>([]);
+  const [spend, setSpend] = useState<SpendRow[]>([]);
+  const [dailyBudget, setDailyBudget] = useState<number>(50);
+  const [budgetInput, setBudgetInput] = useState<string>("50");
+  const [savingBudget, setSavingBudget] = useState(false);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
-    const [w, l, t, a] = await Promise.all([
+    const [w, l, t, a, s, c] = await Promise.all([
       (supabase as any).from("enrichment_walker_runs").select("*").order("ran_at", { ascending: false }).limit(20),
       (supabase as any).from("enrichment_provider_latency_live").select("*"),
       (supabase as any).from("enrichment_alert_thresholds").select("*").order("kind"),
       (supabase as any).from("outreach_alerts_log").select("*").order("created_at", { ascending: false }).limit(15),
+      (supabase as any).from("enrichment_provider_spend_daily").select("*").limit(8),
+      (supabase as any).from("enrichment_walker_config").select("value_numeric").eq("key", "daily_budget_usd").maybeSingle(),
     ]);
     setWalkerRuns(w.data ?? []);
     setLatency(l.data ?? []);
     setThresholds(t.data ?? []);
     setAlerts(a.data ?? []);
+    setSpend(s.data ?? []);
+    if (c.data?.value_numeric != null) {
+      const v = Number(c.data.value_numeric);
+      setDailyBudget(v);
+      setBudgetInput(String(v));
+    }
     setLoading(false);
   }
 
