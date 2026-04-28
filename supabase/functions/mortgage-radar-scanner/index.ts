@@ -572,7 +572,7 @@ async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal
   // New property — insert
   const row = {
     full_name: s.full_name || null,
-    address: s.address,
+    address: s.formatted_address || s.address,
     city: s.city || null,
     state: "MI",
     zip: s.zip || null,
@@ -595,7 +595,12 @@ async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal
     }],
     suggested_opener: opener,
     best_call_window: window,
-    street_view_url: streetViewUrl(s.address, s.city || "", s.zip || ""),
+    // Use validated coordinates for Street View when available — kills the fuzzy-match bug.
+    street_view_url: s.lat != null && s.lon != null && GOOGLE_MAPS_API_KEY
+      ? `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${s.lat},${s.lon}&fov=80&key=${GOOGLE_MAPS_API_KEY}`
+      : streetViewUrl(s.address || "", s.city || "", s.zip || ""),
+    lat: s.lat ?? null,
+    lon: s.lon ?? null,
     raw: s as unknown as Record<string, unknown>,
   };
   const { data: ins, error } = await (sb.from as any)("mortgage_radar_leads")
