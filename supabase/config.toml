@@ -2031,3 +2031,12 @@ verify_jwt = false
 [functions.outreach-alert-evaluator]
 verify_jwt = false
 
+[functions.cron-health-monitor]
+verify_jwt = false
+
+[functions.alert-rule-tester]
+verify_jwt = false
+
+[functions.enrichment-rerun-batch]
+verify_jwt = false
+
