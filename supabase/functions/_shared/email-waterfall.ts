@@ -105,7 +105,7 @@ async function isProviderRateLimited(sb: SupabaseClient, provider: string): Prom
   }
 }
 
-async function bump(sb: SupabaseClient, provider: string, hit: boolean, opts?: { credits?: number; was429?: boolean }) {
+async function bump(sb: SupabaseClient, provider: string, hit: boolean, opts?: { credits?: number; was429?: boolean; latency_ms?: number }) {
   try {
     await sb.rpc("bump_provider_health", {
       _provider: provider,
@@ -114,9 +114,27 @@ async function bump(sb: SupabaseClient, provider: string, hit: boolean, opts?: {
       _was_429: opts?.was429 ?? false,
     });
     if (opts?.was429) HEALTH_CACHE[provider] = { skip: true, ts: Date.now() };
+    if (typeof opts?.latency_ms === "number") {
+      // fire-and-forget latency sample
+      sb.rpc("record_provider_latency", {
+        _provider: provider,
+        _stage: provider,
+        _duration_ms: Math.round(opts.latency_ms),
+        _ok: hit,
+        _status_code: opts?.was429 ? 429 : null,
+        _meta: {},
+      }).then(() => {}, (e) => console.warn(`[waterfall] latency ${provider} failed:`, e));
+    }
   } catch (e) {
     console.warn(`[waterfall] bump ${provider} failed:`, e);
   }
+}
+
+// Wrap a stage to capture wall-clock latency and forward to bump().
+async function timeStage<T>(fn: () => Promise<T>): Promise<{ result: T; ms: number }> {
+  const t0 = performance.now();
+  const result = await fn();
+  return { result, ms: performance.now() - t0 };
 }
 
 // ── Validators ──────────────────────────────────────────────────────────────
@@ -396,49 +414,49 @@ export async function runEmailWaterfall(
 
   // 1. site_scrape
   if (url) {
-    const e = await siteScrape(url);
-    if (e) { await bump(sb, "site_scrape", true); return hit("site_scrape", e, 60); }
-    await bump(sb, "site_scrape", false);
+    const { result: e, ms } = await timeStage(() => siteScrape(url));
+    if (e) { await bump(sb, "site_scrape", true, { latency_ms: ms }); return hit("site_scrape", e, 60); }
+    await bump(sb, "site_scrape", false, { latency_ms: ms });
     miss("site_scrape");
   }
 
   // 2. snov
   if (domain && !(await isProviderRateLimited(sb, "snov"))) {
-    const r = await snovDomainSearch(sb, domain);
-    if (r) { await bump(sb, "snov", true); return hit("snov", r.email, r.confidence); }
-    await bump(sb, "snov", false);
+    const { result: r, ms } = await timeStage(() => snovDomainSearch(sb, domain));
+    if (r) { await bump(sb, "snov", true, { latency_ms: ms }); return hit("snov", r.email, r.confidence); }
+    await bump(sb, "snov", false, { latency_ms: ms });
     miss("snov");
   }
 
   // 3. apollo
   if (domain && input.business_name && !(await isProviderRateLimited(sb, "apollo"))) {
-    const r = await apolloMatch(sb, domain, input.business_name);
-    if (r) { await bump(sb, "apollo", true); return hit("apollo", r.email, r.confidence); }
-    await bump(sb, "apollo", false);
+    const { result: r, ms } = await timeStage(() => apolloMatch(sb, domain, input.business_name!));
+    if (r) { await bump(sb, "apollo", true, { latency_ms: ms }); return hit("apollo", r.email, r.confidence); }
+    await bump(sb, "apollo", false, { latency_ms: ms });
     miss("apollo");
   }
 
   // 4. pattern_verify
   if (domain && !(await isProviderRateLimited(sb, "snov"))) {
-    const r = await patternGuessAndVerify(sb, domain, input.contact_first_name, input.contact_last_name);
-    if (r) { await bump(sb, "pattern_verify", true); return hit("pattern_verify", r.email, r.confidence); }
-    await bump(sb, "pattern_verify", false);
+    const { result: r, ms } = await timeStage(() => patternGuessAndVerify(sb, domain, input.contact_first_name, input.contact_last_name));
+    if (r) { await bump(sb, "pattern_verify", true, { latency_ms: ms }); return hit("pattern_verify", r.email, r.confidence); }
+    await bump(sb, "pattern_verify", false, { latency_ms: ms });
     miss("pattern_verify");
   }
 
   // 5. hunter
   if (domain && !(await isProviderRateLimited(sb, "hunter"))) {
-    const r = await hunterDomainSearch(sb, domain);
-    if (r) { await bump(sb, "hunter", true); return hit("hunter", r.email, r.confidence); }
-    await bump(sb, "hunter", false);
+    const { result: r, ms } = await timeStage(() => hunterDomainSearch(sb, domain));
+    if (r) { await bump(sb, "hunter", true, { latency_ms: ms }); return hit("hunter", r.email, r.confidence); }
+    await bump(sb, "hunter", false, { latency_ms: ms });
     miss("hunter");
   }
 
   // 6. pdl company-match (business_name + city)
   if (input.business_name && input.city && !(await isProviderRateLimited(sb, "pdl"))) {
-    const r = await pdlPersonEnrich(sb, input.business_name, input.city, input.state);
-    if (r) { await bump(sb, "pdl", true); return hit("pdl", r.email, r.confidence); }
-    await bump(sb, "pdl", false);
+    const { result: r, ms } = await timeStage(() => pdlPersonEnrich(sb, input.business_name!, input.city!, input.state));
+    if (r) { await bump(sb, "pdl", true, { latency_ms: ms }); return hit("pdl", r.email, r.confidence); }
+    await bump(sb, "pdl", false, { latency_ms: ms });
     miss("pdl");
   }
 
@@ -448,15 +466,15 @@ export async function runEmailWaterfall(
     input.contact_last_name &&
     !(await isProviderRateLimited(sb, "pdl"))
   ) {
-    const r = await pdlNameOnlySearch(
+    const { result: r, ms } = await timeStage(() => pdlNameOnlySearch(
       sb,
-      input.contact_first_name,
-      input.contact_last_name,
+      input.contact_first_name!,
+      input.contact_last_name!,
       input.city,
       input.state,
-    );
-    if (r) { await bump(sb, "pdl", true); return hit("pdl_name", r.email, r.confidence); }
-    await bump(sb, "pdl", false);
+    ));
+    if (r) { await bump(sb, "pdl", true, { latency_ms: ms }); return hit("pdl_name", r.email, r.confidence); }
+    await bump(sb, "pdl", false, { latency_ms: ms });
     miss("pdl_name");
   }
 
