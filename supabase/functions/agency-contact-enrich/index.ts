@@ -52,7 +52,7 @@ async function apolloPeopleSearch(domain: string, agencyName: string, titles: st
   try {
     const res = await fetch("https://api.apollo.io/api/v1/mixed_people/search", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-api-key": APOLLO_API_KEY },
+      headers: { "Content-Type": "application/json", "X-Api-Key": APOLLO_API_KEY },
       body: JSON.stringify({
         per_page: 5,
         page: 1,
@@ -190,7 +190,7 @@ async function resolveDomain(agencyName: string, providedDomain?: string): Promi
     try {
       const res = await fetch("https://api.apollo.io/api/v1/organizations/search", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": APOLLO_API_KEY },
+        headers: { "Content-Type": "application/json", "X-Api-Key": APOLLO_API_KEY },
         body: JSON.stringify({ q_organization_name: agencyName, per_page: 1 }),
         signal: AbortSignal.timeout(10_000),
       });

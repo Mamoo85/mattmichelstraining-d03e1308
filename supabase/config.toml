@@ -1926,6 +1926,9 @@ verify_jwt = false
 [functions.contractor-outreach-auto-blast]
 verify_jwt = true
 
+[functions.outreach-one-press]
+verify_jwt = true
+
 [functions.outreach-lead-enrich-email]
 verify_jwt = true
 

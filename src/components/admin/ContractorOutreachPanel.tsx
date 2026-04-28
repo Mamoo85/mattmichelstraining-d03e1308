@@ -1,14 +1,17 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, Sparkles, RefreshCw, ExternalLink, Trash2, Send, Activity, MessageSquare, ShieldCheck } from "lucide-react";
+import { Search, Sparkles, RefreshCw, ExternalLink, Trash2, Send, Activity, MessageSquare, ShieldCheck, Stethoscope } from "lucide-react";
 import OutreachProvenancePanel from "./OutreachProvenancePanel";
 import OutreachSuppressionManager from "./OutreachSuppressionManager";
 import OutreachAuditDrawer from "./OutreachAuditDrawer";
 import OutreachConsentDialog from "./OutreachConsentDialog";
 import OutreachInfoBox from "./OutreachInfoBox";
 import OutreachGlobalSettings from "./OutreachGlobalSettings";
+import OnePressLauncher from "./OnePressLauncher";
+import LeadDiagnosticsDrawer from "./LeadDiagnosticsDrawer";
 import { Link } from "react-router-dom";
+
 
 const DAILY_EMAIL_CAP = 100;
 const DAILY_SMS_CAP = 50;
@@ -73,6 +76,7 @@ export default function ContractorOutreachPanel() {
   const [smsToday, setSmsToday] = useState(0);
   const [auditFor, setAuditFor] = useState<{ id: string; name: string } | null>(null);
   const [consentFor, setConsentFor] = useState<{ id: string; name: string; channel: "sms" | "email" | "both" } | null>(null);
+  const [diagnosticsFor, setDiagnosticsFor] = useState<string | null>(null);
   const [globalSettings, setGlobalSettings] = useState<GlobalSettings | null>(null);
 
   const load = useCallback(async () => {
@@ -380,6 +384,15 @@ export default function ContractorOutreachPanel() {
         </div>
       )}
 
+      {/* One-Press orchestrator */}
+      <OnePressLauncher
+        trades={filterTrade ? [filterTrade] : ["HVAC", "Plumbing", "Electrical"]}
+        cities={filterCity ? [filterCity] : [scrapeCity]}
+        channels={["email"]}
+        maxProspects={50}
+        minQualityScore={Math.max(50, filterMinQuality)}
+      />
+
       {/* Prospect list */}
       <div>
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
@@ -520,6 +533,13 @@ export default function ContractorOutreachPanel() {
                         </button>
                       )}
                       <button
+                        onClick={() => setDiagnosticsFor(p.id)}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] text-cyan-300 hover:bg-cyan-500/10"
+                        title="Why isn't this lead being contacted?"
+                      >
+                        <Stethoscope size={10} /> Diagnose
+                      </button>
+                      <button
                         onClick={() => setAuditFor({ id: p.id, name: p.business_name })}
                         className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] text-slate-300 hover:bg-slate-500/10"
                         title="View audit log"
@@ -554,6 +574,11 @@ export default function ContractorOutreachPanel() {
         channel={consentFor?.channel ?? "sms"}
         onClose={() => setConsentFor(null)}
         onSaved={load}
+      />
+      <LeadDiagnosticsDrawer
+        prospectId={diagnosticsFor}
+        open={diagnosticsFor !== null}
+        onClose={() => setDiagnosticsFor(null)}
       />
     </div>
   );

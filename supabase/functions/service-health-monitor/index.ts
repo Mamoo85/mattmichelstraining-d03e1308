@@ -119,7 +119,7 @@ async function probeFirecrawl(): Promise<ProbeResult> {
 
 async function probeApollo(): Promise<ProbeResult> {
   if (!APOLLO_API_KEY) return { service: "apollo_api", ok: false, reason: "no key" };
-  const res = await fetch("https://api.apollo.io/v1/auth/health", {
+  const res = await fetch("https://api.apollo.io/api/v1/auth/health", {
     headers: { "X-Api-Key": APOLLO_API_KEY },
     signal: AbortSignal.timeout(8_000),
   });
