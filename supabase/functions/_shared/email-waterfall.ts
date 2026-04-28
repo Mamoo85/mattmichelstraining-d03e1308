@@ -231,22 +231,28 @@ async function snovVerify(sb: SupabaseClient, email: string): Promise<boolean> {
 async function apolloMatch(sb: SupabaseClient, domain: string, businessName: string): Promise<{ email: string; confidence: number } | null> {
   if (!APOLLO_API_KEY) return null;
   try {
-    const res = await fetch("https://api.apollo.io/api/v1/people/match", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-cache",
-        "X-Api-Key": APOLLO_API_KEY,
+    const res = await fetchWithRetry(
+      "https://api.apollo.io/api/v1/people/match",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+          "X-Api-Key": APOLLO_API_KEY,
+        },
+        body: JSON.stringify({ organization_name: businessName, domain, reveal_personal_emails: false }),
+        signal: AbortSignal.timeout(8000),
       },
-      body: JSON.stringify({ organization_name: businessName, domain, reveal_personal_emails: false }),
-      signal: AbortSignal.timeout(8000),
-    });
-    if (res.status === 429) { await bump(sb, "apollo", false, { was429: true }); return null; }
-    if (!res.ok) return null;
-    const data = await res.json();
-    const person = data?.person;
-    if (!person?.email || !looksValidEmail(person.email)) return null;
-    return { email: person.email, confidence: 70 };
+      { label: "Apollo-Match", maxRetries: 2 },
+    );
+    if (res.status === 429) { await res.body?.cancel(); await bump(sb, "apollo", false, { was429: true }); return null; }
+    if (!res.ok) { await res.body?.cancel(); return null; }
+    const parsed = await safeJson(res);
+    if (!parsed.ok) return null;
+    const m = parseApolloMatch(parsed.value);
+    if (!m.ok) return null;
+    if (!looksValidEmail(m.value.email)) return null;
+    return { email: m.value.email, confidence: m.value.confidence ?? 70 };
   } catch { return null; }
 }
 
@@ -278,23 +284,22 @@ async function patternGuessAndVerify(
 async function hunterDomainSearch(sb: SupabaseClient, domain: string): Promise<{ email: string; confidence: number } | null> {
   if (!HUNTER_API_KEY) return null;
   try {
-    const res = await fetch(
+    const res = await fetchWithRetry(
       `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&limit=5&api_key=${HUNTER_API_KEY}`,
-      { signal: AbortSignal.timeout(6000) }
+      { signal: AbortSignal.timeout(6000) },
+      { label: "Hunter-Domain", maxRetries: 2 },
     );
-    if (res.status === 429) { await bump(sb, "hunter", false, { was429: true }); return null; }
-    if (!res.ok) return null;
-    const data = await res.json();
-    const credits = data?.meta?.results;
-    if (typeof credits === "number") {
-      // Hunter doesn't return remaining credits in domain-search; ignore.
-    }
-    const emails = data?.data?.emails || [];
-    const sorted = emails
-      .filter((e: any) => e.value && looksValidEmail(e.value) && (e.confidence ?? 0) >= 50)
-      .sort((a: any, b: any) => (b.confidence ?? 0) - (a.confidence ?? 0));
+    if (res.status === 429) { await res.body?.cancel(); await bump(sb, "hunter", false, { was429: true }); return null; }
+    if (!res.ok) { await res.body?.cancel(); return null; }
+    const parsed = await safeJson(res);
+    if (!parsed.ok) return null;
+    const r = parseHunterDomainSearch(parsed.value);
+    if (!r.ok) return null;
+    const sorted = r.value
+      .filter((e) => looksValidEmail(e.email) && (e.confidence ?? 0) >= 50)
+      .sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0));
     if (!sorted.length) return null;
-    return { email: sorted[0].value, confidence: sorted[0].confidence ?? 50 };
+    return { email: sorted[0].email, confidence: sorted[0].confidence ?? 50 };
   } catch { return null; }
 }
 
@@ -310,33 +315,32 @@ async function pdlNameOnlySearch(
 ): Promise<{ email: string; confidence: number } | null> {
   if (!PDL_API_KEY) return null;
   try {
-    // mixed_people/search uses Elasticsearch query DSL
-    const must: any[] = [
+    const must: Array<Record<string, unknown>> = [
       { term: { first_name: firstName.toLowerCase() } },
       { term: { last_name: lastName.toLowerCase() } },
     ];
     if (city) must.push({ term: { location_locality: city.toLowerCase() } });
     if (state) must.push({ term: { location_region: state.toLowerCase() } });
 
-    const body = {
-      query: { bool: { must } },
-      size: 1,
-    };
-    const res = await fetch("https://api.peopledatalabs.com/v5/person/search", {
-      method: "POST",
-      headers: { "X-Api-Key": PDL_API_KEY, "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(10000),
-    });
-    if (res.status === 429) { await bump(sb, "pdl", false, { was429: true }); return null; }
-    if (!res.ok) return null;
-    const data = await res.json();
-    const person = data?.data?.[0];
-    if (!person) return null;
-    const email = person.work_email || person.personal_emails?.[0] || person.recommended_personal_email;
-    if (!email || !looksValidEmail(email)) return null;
-    // Lower confidence than direct company match — name-only is fuzzier
-    return { email, confidence: 60 };
+    const body = { query: { bool: { must } }, size: 1 };
+    const res = await fetchWithRetry(
+      "https://api.peopledatalabs.com/v5/person/search",
+      {
+        method: "POST",
+        headers: { "X-Api-Key": PDL_API_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(10000),
+      },
+      { label: "PDL-Search", maxRetries: 2 },
+    );
+    if (res.status === 429) { await res.body?.cancel(); await bump(sb, "pdl", false, { was429: true }); return null; }
+    if (!res.ok) { await res.body?.cancel(); return null; }
+    const parsed = await safeJson(res);
+    if (!parsed.ok) return null;
+    const r = parsePdlPersonSearch(parsed.value);
+    if (!r.ok || !r.value.email) return null;
+    if (!looksValidEmail(r.value.email)) return null;
+    return { email: r.value.email, confidence: r.value.confidence };
   } catch { return null; }
 }
 
@@ -355,16 +359,19 @@ async function pdlPersonEnrich(
       ...(state ? { region: state } : {}),
       pretty: "false",
     });
-    const res = await fetch(`https://api.peopledatalabs.com/v5/person/enrich?${params}`, {
-      headers: { "X-Api-Key": PDL_API_KEY },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (res.status === 429) { await bump(sb, "pdl", false, { was429: true }); return null; }
-    if (!res.ok) return null;
-    const data = await res.json();
-    const email = data?.data?.work_email || data?.data?.personal_emails?.[0];
-    if (!email || !looksValidEmail(email)) return null;
-    return { email, confidence: 75 };
+    const res = await fetchWithRetry(
+      `https://api.peopledatalabs.com/v5/person/enrich?${params}`,
+      { headers: { "X-Api-Key": PDL_API_KEY }, signal: AbortSignal.timeout(8000) },
+      { label: "PDL-Enrich", maxRetries: 2 },
+    );
+    if (res.status === 429) { await res.body?.cancel(); await bump(sb, "pdl", false, { was429: true }); return null; }
+    if (!res.ok) { await res.body?.cancel(); return null; }
+    const parsed = await safeJson(res);
+    if (!parsed.ok) return null;
+    const r = parsePdlPersonEnrich(parsed.value);
+    if (!r.ok) return null;
+    if (!looksValidEmail(r.value.email)) return null;
+    return { email: r.value.email, confidence: r.value.confidence ?? 75 };
   } catch { return null; }
 }
 
