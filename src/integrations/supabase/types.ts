@@ -6085,6 +6085,39 @@ export type Database = {
         }
         Relationships: []
       }
+      enrichment_provider_latency: {
+        Row: {
+          duration_ms: number
+          id: number
+          meta: Json
+          ok: boolean
+          provider: string
+          sampled_at: string
+          stage: string
+          status_code: number | null
+        }
+        Insert: {
+          duration_ms: number
+          id?: number
+          meta?: Json
+          ok: boolean
+          provider: string
+          sampled_at?: string
+          stage: string
+          status_code?: number | null
+        }
+        Update: {
+          duration_ms?: number
+          id?: number
+          meta?: Json
+          ok?: boolean
+          provider?: string
+          sampled_at?: string
+          stage?: string
+          status_code?: number | null
+        }
+        Relationships: []
+      }
       enrichment_provider_routes: {
         Row: {
           call_order: number
@@ -6327,6 +6360,39 @@ export type Database = {
           succeeded?: number
           trade?: string
           unenriched_count?: number
+        }
+        Relationships: []
+      }
+      enrichment_walker_targets: {
+        Row: {
+          city: string
+          daily_cost_cap_usd: number
+          enabled: boolean
+          last_walked_at: string | null
+          max_per_run: number
+          notes: string | null
+          priority: number
+          trade: string
+        }
+        Insert: {
+          city: string
+          daily_cost_cap_usd?: number
+          enabled?: boolean
+          last_walked_at?: string | null
+          max_per_run?: number
+          notes?: string | null
+          priority?: number
+          trade: string
+        }
+        Update: {
+          city?: string
+          daily_cost_cap_usd?: number
+          enabled?: boolean
+          last_walked_at?: string | null
+          max_per_run?: number
+          notes?: string | null
+          priority?: number
+          trade?: string
         }
         Relationships: []
       }
@@ -12401,6 +12467,27 @@ export type Database = {
           last_sent_at?: string | null
           send_count?: number | null
           stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      outreach_alert_cooldowns: {
+        Row: {
+          kind: string
+          last_fired_at: string
+          last_severity: string
+          last_value: number | null
+        }
+        Insert: {
+          kind: string
+          last_fired_at?: string
+          last_severity: string
+          last_value?: number | null
+        }
+        Update: {
+          kind?: string
+          last_fired_at?: string
+          last_severity?: string
+          last_value?: number | null
         }
         Relationships: []
       }
@@ -20960,6 +21047,19 @@ export type Database = {
         }
         Relationships: []
       }
+      enrichment_provider_latency_live: {
+        Row: {
+          avg_ms: number | null
+          last_sample_at: string | null
+          p50_ms: number | null
+          p95_ms: number | null
+          p99_ms: number | null
+          provider: string | null
+          sample_count: number | null
+          success_pct: number | null
+        }
+        Relationships: []
+      }
       generated_sites_public: {
         Row: {
           business_name: string | null
@@ -21700,6 +21800,7 @@ export type Database = {
       mp_signal_velocity: { Args: { p_lead_id: string }; Returns: number }
       mp_zip_heat_index: { Args: { p_zip: string }; Returns: number }
       next_enrich_stage: { Args: { _candidate_id: string }; Returns: string }
+      prune_provider_latency: { Args: never; Returns: number }
       purge_expired_idempotency_keys: { Args: never; Returns: number }
       queue_depth_snapshot: {
         Args: never
@@ -21726,6 +21827,17 @@ export type Database = {
         }[]
       }
       reclaim_dead_letter_aged: { Args: never; Returns: number }
+      record_provider_latency: {
+        Args: {
+          _duration_ms: number
+          _meta?: Json
+          _ok: boolean
+          _provider: string
+          _stage: string
+          _status_code?: number
+        }
+        Returns: undefined
+      }
       revoke_marketplace_access: {
         Args: { p_lead_id: string; p_product: string; p_reason: string }
         Returns: number
