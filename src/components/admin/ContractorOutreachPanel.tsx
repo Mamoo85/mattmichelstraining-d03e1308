@@ -533,6 +533,13 @@ export default function ContractorOutreachPanel() {
                         </button>
                       )}
                       <button
+                        onClick={() => setDiagnosticsFor(p.id)}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] text-cyan-300 hover:bg-cyan-500/10"
+                        title="Why isn't this lead being contacted?"
+                      >
+                        <Stethoscope size={10} /> Diagnose
+                      </button>
+                      <button
                         onClick={() => setAuditFor({ id: p.id, name: p.business_name })}
                         className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] text-slate-300 hover:bg-slate-500/10"
                         title="View audit log"
