@@ -1970,3 +1970,18 @@ verify_jwt = false
 
 [functions.generate-account-narrative]
 verify_jwt = true
+
+[functions.intent-spike-notifier]
+verify_jwt = false
+
+[functions.intent-weekly-digest]
+verify_jwt = false
+
+[functions.techalert-auto-pitch]
+verify_jwt = false
+
+[functions.competitor-displacement-detector]
+verify_jwt = false
+
+[functions.outreach-queue-action]
+verify_jwt = false

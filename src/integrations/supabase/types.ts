@@ -2948,6 +2948,53 @@ export type Database = {
           },
         ]
       }
+      competitor_mentions: {
+        Row: {
+          account_key: string | null
+          acted_at: string | null
+          acted_on: boolean | null
+          approval_queue_id: string | null
+          candidate_id: string | null
+          competitor_name: string
+          context_snippet: string | null
+          detected_at: string
+          id: string
+          source: string
+        }
+        Insert: {
+          account_key?: string | null
+          acted_at?: string | null
+          acted_on?: boolean | null
+          approval_queue_id?: string | null
+          candidate_id?: string | null
+          competitor_name: string
+          context_snippet?: string | null
+          detected_at?: string
+          id?: string
+          source: string
+        }
+        Update: {
+          account_key?: string | null
+          acted_at?: string | null
+          acted_on?: boolean | null
+          approval_queue_id?: string | null
+          candidate_id?: string | null
+          competitor_name?: string
+          context_snippet?: string | null
+          detected_at?: string
+          id?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_mentions_approval_queue_id_fkey"
+            columns: ["approval_queue_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_approval_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competitor_monitors: {
         Row: {
           client_id: string
@@ -9166,6 +9213,42 @@ export type Database = {
         }
         Relationships: []
       }
+      intent_spike_alerts: {
+        Row: {
+          account_key: string
+          created_at: string
+          id: string
+          notes: string | null
+          prior_score: number | null
+          sms_message_id: string | null
+          sms_sent_at: string | null
+          triggered_score: number
+          week_start: string
+        }
+        Insert: {
+          account_key: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          prior_score?: number | null
+          sms_message_id?: string | null
+          sms_sent_at?: string | null
+          triggered_score: number
+          week_start: string
+        }
+        Update: {
+          account_key?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          prior_score?: number | null
+          sms_message_id?: string | null
+          sms_sent_at?: string | null
+          triggered_score?: number
+          week_start?: string
+        }
+        Relationships: []
+      }
       inventory_alert_clients: {
         Row: {
           active: boolean | null
@@ -10248,6 +10331,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      m2_brief_apology_resend_log: {
+        Row: {
+          email: string
+          id: string
+          resend_message_id: string | null
+          sent_at: string
+          status: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          resend_message_id?: string | null
+          sent_at?: string
+          status?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          resend_message_id?: string | null
+          sent_at?: string
+          status?: string | null
+        }
+        Relationships: []
       }
       market_intel_clients: {
         Row: {
@@ -12027,6 +12134,87 @@ export type Database = {
           last_sent_at?: string | null
           send_count?: number | null
           stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      outreach_approval_queue: {
+        Row: {
+          account_key: string | null
+          account_location: string | null
+          account_name: string | null
+          account_vertical: string | null
+          approved_at: string | null
+          approved_by: string | null
+          channel: string
+          confidence_score: number | null
+          created_at: string
+          draft_body: string
+          draft_subject: string | null
+          expires_at: string | null
+          id: string
+          idempotency_key: string | null
+          recipient_email: string | null
+          recipient_name: string | null
+          recipient_phone: string | null
+          rejected_reason: string | null
+          send_result: Json | null
+          sent_at: string | null
+          signal_payload: Json | null
+          signal_reason: string | null
+          source_function: string
+          status: string
+        }
+        Insert: {
+          account_key?: string | null
+          account_location?: string | null
+          account_name?: string | null
+          account_vertical?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          channel: string
+          confidence_score?: number | null
+          created_at?: string
+          draft_body: string
+          draft_subject?: string | null
+          expires_at?: string | null
+          id?: string
+          idempotency_key?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          rejected_reason?: string | null
+          send_result?: Json | null
+          sent_at?: string | null
+          signal_payload?: Json | null
+          signal_reason?: string | null
+          source_function: string
+          status?: string
+        }
+        Update: {
+          account_key?: string | null
+          account_location?: string | null
+          account_name?: string | null
+          account_vertical?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          channel?: string
+          confidence_score?: number | null
+          created_at?: string
+          draft_body?: string
+          draft_subject?: string | null
+          expires_at?: string | null
+          id?: string
+          idempotency_key?: string | null
+          recipient_email?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          rejected_reason?: string | null
+          send_result?: Json | null
+          sent_at?: string | null
+          signal_payload?: Json | null
+          signal_reason?: string | null
+          source_function?: string
+          status?: string
         }
         Relationships: []
       }

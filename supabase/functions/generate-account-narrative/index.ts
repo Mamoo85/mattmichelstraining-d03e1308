@@ -13,14 +13,18 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const ANTHROPIC_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 const CACHE_HOURS = 24;
+// Default to Claude Haiku via Anthropic (we already pay for it). Falls back to
+// Lovable Gateway if ANTHROPIC_API_KEY is missing.
+const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { account_key, force = false, model = "google/gemini-3-flash-preview" } = await req.json();
+    const { account_key, force = false, model = DEFAULT_MODEL } = await req.json();
     if (!account_key) {
       return new Response(JSON.stringify({ error: "account_key required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -75,15 +79,34 @@ Write 4 paragraphs:
 
 End with: PITCH_ANGLE: <one short phrase> | PRODUCTS: <comma-separated product names>`;
 
-    const ai = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: "system", content: sys }, { role: "user", content: user }],
-        stream: true,
-      }),
-    });
+    // Prefer Anthropic Claude (we already pay for it). Fallback to Lovable
+    // Gateway with a Gemini equivalent only if ANTHROPIC_API_KEY missing.
+    const useAnthropic = ANTHROPIC_KEY && model.startsWith("claude-");
+    const ai = useAnthropic
+      ? await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "x-api-key": ANTHROPIC_KEY,
+            "anthropic-version": "2023-06-01",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model,
+            max_tokens: 1500,
+            stream: true,
+            system: sys,
+            messages: [{ role: "user", content: user }],
+          }),
+        })
+      : await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            messages: [{ role: "system", content: sys }, { role: "user", content: user }],
+            stream: true,
+          }),
+        });
 
     if (!ai.ok) {
       if (ai.status === 429) {
@@ -100,7 +123,8 @@ End with: PITCH_ANGLE: <one short phrase> | PRODUCTS: <comma-separated product n
       throw new Error(`AI gateway ${ai.status}: ${t}`);
     }
 
-    // Tee the stream: pass through to client AND accumulate for cache write
+    // Tee the stream: pass through to client AND accumulate for cache write.
+    // Anthropic and OpenAI-compatible streams have different shapes; handle both.
     let full = "";
     const passThrough = new TransformStream({
       transform(chunk, ctrl) {
@@ -111,8 +135,12 @@ End with: PITCH_ANGLE: <one short phrase> | PRODUCTS: <comma-separated product n
           if (data === "[DONE]") continue;
           try {
             const parsed = JSON.parse(data);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) full += content;
+            // OpenAI/Gemini gateway: choices[0].delta.content
+            const oai = parsed.choices?.[0]?.delta?.content;
+            if (oai) full += oai;
+            // Anthropic: type='content_block_delta' with delta.text
+            const anth = parsed.delta?.text;
+            if (anth) full += anth;
           } catch { /* partial */ }
         }
         ctrl.enqueue(chunk);
