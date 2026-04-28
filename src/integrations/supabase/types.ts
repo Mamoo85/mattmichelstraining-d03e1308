@@ -20160,6 +20160,10 @@ export type Database = {
         }
         Returns: number
       }
+      bulk_candidate_export_check: {
+        Args: { p_candidate_ids: string[] }
+        Returns: Json
+      }
       bump_provider_health: {
         Args: {
           _credits_remaining?: number
@@ -20172,6 +20176,10 @@ export type Database = {
       burn_fast_track_credit: {
         Args: { p_agency_id: string }
         Returns: boolean
+      }
+      candidate_export_eligible: {
+        Args: { p_candidate_id: string }
+        Returns: Json
       }
       candidates_within_radius: {
         Args: {

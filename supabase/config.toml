@@ -1952,3 +1952,9 @@ verify_jwt = true
 
 [functions.dossier-share-page]
 verify_jwt = false
+
+[functions.m2-brief-apology-send]
+verify_jwt = false
+
+[functions.nursys-enroll-batch]
+verify_jwt = false
