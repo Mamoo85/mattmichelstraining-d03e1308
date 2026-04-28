@@ -9,6 +9,9 @@ import { validateSchema, INDUSTRY_PULSE_SIGNALS_CHECK, type SchemaValidation } f
 import { SchemaErrorPanel } from "@/components/shared/SchemaErrorPanel";
 import OutreachApprovalQueue from "./OutreachApprovalQueue";
 import CohortCampaignBuilder from "./CohortCampaignBuilder";
+import IntentHeatmap from "./IntentHeatmap";
+import PredictiveAccountTable from "./PredictiveAccountTable";
+import AccountNarrativeDrawer from "./AccountNarrativeDrawer";
 
 const FILTERED_SELECT = "id, company_name, location, vertical, signal_type, expansion_type, predicted_needs, confidence, detected_at, source_urls";
 
@@ -101,6 +104,13 @@ function FilteredSignalList({ types, label }: { types: string[]; label: string }
 
 export default function DemandRadarHub() {
   const [tab, setTab] = useState("throughput");
+  const [narrativeOpen, setNarrativeOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<{ key: string; name: string } | null>(null);
+
+  const openNarrative = (key: string, name: string) => {
+    setSelectedAccount({ key, name });
+    setNarrativeOpen(true);
+  };
 
   return (
     <div className="space-y-4">
