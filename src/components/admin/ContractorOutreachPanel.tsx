@@ -46,7 +46,14 @@ interface Lead {
   contractor_lead_sites?: { trade: string; city: string };
 }
 
-const TRADES = ["HVAC", "Plumbing", "Electrical", "Roofing", "Boiler", "Gutters", "Siding"];
+const TRADES = ["HVAC", "Plumbing", "Electrical", "Roofing", "Boiler", "Gutters", "Siding", "Healthcare/RN", "Healthcare/CNA", "Healthcare/LPN"];
+
+interface GlobalSettings {
+  cold_email_enabled: boolean;
+  cold_sms_enabled: boolean;
+  min_quality_score_to_send: number;
+  hide_demo_leads_below_score: number;
+}
 
 export default function ContractorOutreachPanel() {
   const [prospects, setProspects] = useState<Prospect[]>([]);
@@ -59,10 +66,14 @@ export default function ContractorOutreachPanel() {
   const [blastingLeadId, setBlastingLeadId] = useState<string | null>(null);
   const [filterTrade, setFilterTrade] = useState("");
   const [filterCity, setFilterCity] = useState("");
+  const [filterTerritory, setFilterTerritory] = useState<string>("");
+  const [filterMinQuality, setFilterMinQuality] = useState<number>(0);
+  const [hideDemo, setHideDemo] = useState<boolean>(true);
   const [emailsToday, setEmailsToday] = useState(0);
   const [smsToday, setSmsToday] = useState(0);
   const [auditFor, setAuditFor] = useState<{ id: string; name: string } | null>(null);
-  const [consentFor, setConsentFor] = useState<{ id: string; name: string } | null>(null);
+  const [consentFor, setConsentFor] = useState<{ id: string; name: string; channel: "sms" | "email" | "both" } | null>(null);
+  const [globalSettings, setGlobalSettings] = useState<GlobalSettings | null>(null);
 
   const load = useCallback(async () => {
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
