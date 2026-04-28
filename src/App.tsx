@@ -815,6 +815,7 @@ const App = () => (
                       <Route path="/admin" element={<AgencyAdminRoute><Admin /></AgencyAdminRoute>} />
                       <Route path="/admin/health" element={<AgencyAdminRoute><AdminHealth /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin" element={<AgencyAdminRoute><DWAAdmin /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/outreach-audit" element={<AgencyAdminRoute><OutreachAuditLog /></AgencyAdminRoute>} />
                      <Route path="/r/:token" element={<ProspectRedirect />} />
                      <Route path="/admin/view-user/:userId" element={<ProtectedRoute><AdminViewUser /></ProtectedRoute>} />
                      <Route path="/comms-center" element={<ProtectedRoute><CommunicationsCenter /></ProtectedRoute>} />
