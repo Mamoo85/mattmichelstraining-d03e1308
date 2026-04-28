@@ -276,6 +276,48 @@ async function hunterDomainSearch(sb: SupabaseClient, domain: string): Promise<{
   } catch { return null; }
 }
 
+// ── 6.5 PDL name-only search (healthcare / contractors w/o business) ──────
+// Used when business_name+city is missing but we have a person's name + city.
+// Calls mixed_people/search → top match → resolve email via person/enrich by id.
+async function pdlNameOnlySearch(
+  sb: SupabaseClient,
+  firstName: string,
+  lastName: string,
+  city?: string | null,
+  state?: string | null,
+): Promise<{ email: string; confidence: number } | null> {
+  if (!PDL_API_KEY) return null;
+  try {
+    // mixed_people/search uses Elasticsearch query DSL
+    const must: any[] = [
+      { term: { first_name: firstName.toLowerCase() } },
+      { term: { last_name: lastName.toLowerCase() } },
+    ];
+    if (city) must.push({ term: { location_locality: city.toLowerCase() } });
+    if (state) must.push({ term: { location_region: state.toLowerCase() } });
+
+    const body = {
+      query: { bool: { must } },
+      size: 1,
+    };
+    const res = await fetch("https://api.peopledatalabs.com/v5/person/search", {
+      method: "POST",
+      headers: { "X-Api-Key": PDL_API_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (res.status === 429) { await bump(sb, "pdl", false, { was429: true }); return null; }
+    if (!res.ok) return null;
+    const data = await res.json();
+    const person = data?.data?.[0];
+    if (!person) return null;
+    const email = person.work_email || person.personal_emails?.[0] || person.recommended_personal_email;
+    if (!email || !looksValidEmail(email)) return null;
+    // Lower confidence than direct company match — name-only is fuzzier
+    return { email, confidence: 60 };
+  } catch { return null; }
+}
+
 // ── 6. PDL person enrich ────────────────────────────────────────────────────
 async function pdlPersonEnrich(
   sb: SupabaseClient,
@@ -363,7 +405,7 @@ export async function runEmailWaterfall(
     miss("hunter");
   }
 
-  // 6. pdl (only with business_name + city)
+  // 6. pdl company-match (business_name + city)
   if (input.business_name && input.city && !(await isProviderRateLimited(sb, "pdl"))) {
     const r = await pdlPersonEnrich(sb, input.business_name, input.city, input.state);
     if (r) { await bump(sb, "pdl", true); return hit("pdl", r.email, r.confidence); }
@@ -371,10 +413,28 @@ export async function runEmailWaterfall(
     miss("pdl");
   }
 
+  // 6.5 pdl name-only (healthcare / no business): contact name + city/state
+  if (
+    input.contact_first_name &&
+    input.contact_last_name &&
+    !(await isProviderRateLimited(sb, "pdl"))
+  ) {
+    const r = await pdlNameOnlySearch(
+      sb,
+      input.contact_first_name,
+      input.contact_last_name,
+      input.city,
+      input.state,
+    );
+    if (r) { await bump(sb, "pdl", true); return hit("pdl_name", r.email, r.confidence); }
+    await bump(sb, "pdl", false);
+    miss("pdl_name");
+  }
+
   return { email: null, source: null, confidence: 0, trace };
 }
 
-export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "hunter", "pdl"] as const;
+export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "hunter", "pdl", "pdl_name"] as const;
 
 /**
  * runFieldWaterfall — wrapper around runEmailWaterfall that reports which
