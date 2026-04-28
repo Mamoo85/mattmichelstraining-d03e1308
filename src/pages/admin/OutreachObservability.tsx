@@ -2,6 +2,7 @@ import OutreachObservability from "@/components/admin/OutreachObservability";
 import OutreachQueueMonitor from "@/components/admin/OutreachQueueMonitor";
 import EnrichmentDLQPanel from "@/components/admin/EnrichmentDLQPanel";
 import EnrichmentWalkerAlertsPanel from "@/components/admin/EnrichmentWalkerAlertsPanel";
+import EnrichmentTimelinePanel from "@/components/admin/EnrichmentTimelinePanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function OutreachObservabilityPage() {
@@ -13,6 +14,7 @@ export default function OutreachObservabilityPage() {
           <TabsTrigger value="queue">Live queue</TabsTrigger>
           <TabsTrigger value="dlq">DLQ &amp; Backfill</TabsTrigger>
           <TabsTrigger value="walker">Walker &amp; Alerts</TabsTrigger>
+          <TabsTrigger value="timeline">Timeline</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="mt-4">
           <OutreachObservability />
@@ -25,6 +27,9 @@ export default function OutreachObservabilityPage() {
         </TabsContent>
         <TabsContent value="walker" className="mt-4">
           <EnrichmentWalkerAlertsPanel />
+        </TabsContent>
+        <TabsContent value="timeline" className="mt-4">
+          <EnrichmentTimelinePanel />
         </TabsContent>
       </Tabs>
     </div>
