@@ -14,6 +14,11 @@ const ENDPOINTS = [
   "missed-call-status",
   "create-mortgage-radar-checkout",
   "check-mortgage-radar-zips",
+  "mortgage-radar-outreach",
+  "mortgage-radar-scanner",
+  "send-fax",
+  "channel-prospector",
+  "stripe-webhook",
 ];
 
 Deno.serve(async (req) => {
