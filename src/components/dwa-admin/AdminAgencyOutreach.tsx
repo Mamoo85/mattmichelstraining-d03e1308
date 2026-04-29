@@ -296,6 +296,17 @@ export default function AdminAgencyOutreach() {
                       {drafting === agency.name ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wand2 className="w-3 h-3" />}
                       Draft with Opus
                     </button>
+                    <button
+                      onClick={() => blastProspects(agency)}
+                      disabled={blasting === agency.name || !enrich?.contact_email}
+                      title={!enrich?.contact_email ? "Enrich contact first" : `Send 50-candidate teaser to ${enrich.contact_email}`}
+                      className="px-3 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-300 hover:bg-orange-500/20 transition-colors text-[11px] font-semibold flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {blasting === agency.name ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                      {blastResults[agency.name]
+                        ? `✓ Sent ${blastResults[agency.name].count} @ ${blastResults[agency.name].sentAt}`
+                        : "🚀 Blast 50 Prospects"}
+                    </button>
                   </div>
                 </div>
               </div>
