@@ -1,12 +1,12 @@
 /**
  * agency-contact-enrich
  *
- * Resolves the decision-maker (name + verified email) for a Metro Detroit
- * staffing agency using a 4-stage waterfall, then caches the result in
+ * Resolves the decision-maker (name + verified email) for a staffing agency
+ * using a 6-stage waterfall, then caches the result in
  * `agency_contact_enrichments` so repeat lookups are free.
  *
- * Stages: Apollo (org + title search) → Hunter.io (domain search) →
- * Snov.io (domain search) → pattern guess (first.last@domain).
+ * Stages: Apollo → Hunter.io → Snov.io → Firecrawl site scrape →
+ * pattern verify (recruiting@/hr@/info@ + Hunter verifier) → name-pattern guess.
  *
  * Admin-only. Returns { ok, contact, cached, trace }.
  */
@@ -22,6 +22,7 @@ const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
 const HUNTER_API_KEY = Deno.env.get("HUNTER_IO_API_KEY") || "";
 const SNOV_CLIENT_ID = Deno.env.get("SNOV_CLIENT_ID") || "";
 const SNOV_CLIENT_SECRET = Deno.env.get("SNOV_CLIENT_SECRET") || "";
+const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY") || "";
 
 const sb = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -36,7 +37,7 @@ interface ContactResult {
   contact_email: string | null;
   contact_linkedin: string | null;
   email_status: "verified" | "guessed" | "failed";
-  source: "apollo" | "hunter" | "snov" | "pattern" | "none";
+  source: "apollo" | "hunter" | "snov" | "site_scrape" | "pattern_verify" | "pattern" | "none";
   domain: string | null;
 }
 
@@ -166,8 +167,6 @@ async function snovDomainSearch(domain: string): Promise<any | null> {
 
 function patternGuess(domain: string, contactHint: string | null): any | null {
   if (!domain || !contactHint) return null;
-  // We don't have a real name yet — pattern guess only works when we have a name.
-  // Skip when no name is known.
   const parts = (contactHint || "").trim().split(/\s+/);
   if (parts.length < 2) return null;
   const first = parts[0].toLowerCase().replace(/[^a-z]/g, "");
@@ -181,6 +180,70 @@ function patternGuess(domain: string, contactHint: string | null): any | null {
     linkedin: null,
     verified: false,
   };
+}
+
+// Stage 5: Firecrawl — scrape /contact /team /about pages and extract domain-matching emails
+async function siteScrapeEmails(domain: string): Promise<any | null> {
+  if (!FIRECRAWL_API_KEY || !domain) return null;
+  const pages = [
+    `https://${domain}/contact`,
+    `https://${domain}/contact-us`,
+    `https://${domain}/about`,
+    `https://${domain}/team`,
+  ];
+  const emailRx = /\b[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}\b/g;
+  const scoreEmail = (e: string) => {
+    const lc = e.toLowerCase();
+    if (/recruit|talent/.test(lc)) return 100;
+    if (/\bhr\b|human\.res/.test(lc)) return 80;
+    if (/staffing|staff/.test(lc)) return 70;
+    if (/director|manager|vp|president/.test(lc)) return 60;
+    if (/info|contact|hello/.test(lc)) return 30;
+    return 10;
+  };
+  for (const url of pages) {
+    try {
+      const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${FIRECRAWL_API_KEY}` },
+        body: JSON.stringify({ url, formats: ["markdown"] }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const text: string = data?.data?.markdown || data?.markdown || "";
+      if (!text) continue;
+      const found = [...new Set((text.match(emailRx) || []) as string[])]
+        .filter((e) => e.toLowerCase().endsWith(`@${domain}`));
+      if (found.length === 0) continue;
+      const best = found.sort((a, b) => scoreEmail(b) - scoreEmail(a))[0];
+      return { email: best, first: null, last: null, title: null, linkedin: null, verified: false };
+    } catch (_) { continue; }
+  }
+  return null;
+}
+
+// Stage 6: try staffing-specific email prefixes and verify each via Hunter
+async function patternVerifyDomain(domain: string, apolloFirst: string | null): Promise<any | null> {
+  if (!HUNTER_API_KEY || !domain) return null;
+  const prefixes = ["recruiting", "staffing", "hr", "info", "operations", "talent", "ops"];
+  if (apolloFirst) prefixes.unshift(apolloFirst.toLowerCase().replace(/[^a-z]/g, ""));
+  for (const prefix of prefixes) {
+    const email = `${prefix}@${domain}`;
+    try {
+      const res = await fetch(
+        `https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${HUNTER_API_KEY}`,
+        { signal: AbortSignal.timeout(10_000) },
+      );
+      if (!res.ok) continue;
+      const data = await res.json();
+      const status = data?.data?.status;
+      if (status === "valid" || status === "accept_all") {
+        return { email, first: null, last: null, title: null, linkedin: null, verified: status === "valid" };
+      }
+    } catch (_) { continue; }
+  }
+  return null;
 }
 
 async function resolveDomain(agencyName: string, providedDomain?: string): Promise<string | null> {
@@ -314,8 +377,29 @@ serve(async (req) => {
       }
     }
 
-    // Stage 4: pattern guess (only if we have a name from Apollo but no email)
-    // Apollo sometimes returns names without emails — pattern-guess against the resolved domain.
+    // Stage 4: Firecrawl site scrape — finds real emails on /contact /team /about pages
+    if (!result.contact_email && domain) {
+      const scraped = await siteScrapeEmails(domain);
+      trace.push(`site_scrape:${scraped?.email ? "hit" : "miss"}`);
+      if (scraped?.email) {
+        result.contact_email = scraped.email;
+        result.email_status = "guessed";
+        result.source = "site_scrape";
+      }
+    }
+
+    // Stage 5: pattern verify — try recruiting@/hr@/info@ and confirm with Hunter verifier
+    if (!result.contact_email && domain) {
+      const verified = await patternVerifyDomain(domain, apollo?.first || null);
+      trace.push(`pattern_verify:${verified?.email ? "hit" : "miss"}`);
+      if (verified?.email) {
+        result.contact_email = verified.email;
+        result.email_status = verified.verified ? "verified" : "guessed";
+        result.source = "pattern_verify";
+      }
+    }
+
+    // Stage 6: name-pattern guess (only if Apollo returned a name but no email)
     if (!result.contact_email && domain && apollo?.first && apollo?.last) {
       const guess = patternGuess(domain, `${apollo.first} ${apollo.last}`);
       trace.push(`pattern:${guess?.email ? "hit" : "miss"}`);
