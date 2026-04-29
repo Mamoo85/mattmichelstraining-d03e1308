@@ -243,6 +243,24 @@ export default function DemoTemplate() {
       {!kiosk && <StartDemoButton />}
       {kiosk && <ExitKioskButton />}
       {kiosk && !isFullscreen && <FullscreenPrompt onEnter={requestFullscreen} />}
+
+      {/* Auto-advance + analytics in kiosk mode */}
+      {kiosk && isFullscreen && (
+        <AutoAdvance
+          intervalSec={9}
+          sectionIds={[
+            "demo-sizzle",
+            "demo-stats",
+            "demo-siteradar",
+            "demo-missedcall",
+            "demo-buyer",
+            ...(c.competitorPricing && c.ourPrice ? ["demo-pricing"] : []),
+            ...(c.yearOneSavings ? ["demo-savings"] : []),
+            ...(c.candidates && c.candidates.length > 0 ? ["demo-talent"] : []),
+          ]}
+        />
+      )}
+      {kiosk && <DemoAnalyticsPanel />}
     </div>
   );
 }
