@@ -178,53 +178,61 @@ export default function DemoTemplate() {
         </section>
 
         {/* Buyer Radar */}
-        <BuyerRadarPanel city={c.city} buyerRadarValue={c.buyerRadarValue} />
+        <section id="demo-buyer" style={{ scrollMarginTop: 16 }}>
+          <BuyerRadarPanel city={c.city} buyerRadarValue={c.buyerRadarValue} />
+        </section>
 
         {/* Pricing */}
         {c.competitorPricing && c.ourPrice && (
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${c.competitorPricing.length + 1}, 1fr)`, gap: 12, marginBottom: 20 }}>
-            {[...c.competitorPricing.map((p) => ({ ...p, bad: true })), { ...c.ourPrice, bad: false }].map((p) => (
-              <div key={p.name} style={{ background: p.bad ? "#0a1628" : "#10b98110", border: `2px solid ${p.bad ? "#1e3a5f" : "#10b981"}`, borderRadius: 14, padding: "18px", textAlign: "center" }}>
-                {!p.bad && <p style={{ margin: "0 0 6px", fontSize: 10, color: "#10b981", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase" }}>✓ Best Value</p>}
-                <p style={{ margin: "0 0 6px", fontWeight: 800, fontSize: 15, color: p.bad ? "#94a3b8" : "#fff" }}>{p.name}</p>
-                <p style={{ margin: "0 0 8px", fontWeight: 900, fontSize: 28, color: p.bad ? "#ef4444" : "#10b981" }}>{p.price}</p>
-                <p style={{ margin: 0, fontSize: 11, color: "#64748b", lineHeight: 1.5 }}>{p.note}</p>
-              </div>
-            ))}
-          </div>
+          <section id="demo-pricing" style={{ scrollMarginTop: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: `repeat(${c.competitorPricing.length + 1}, 1fr)`, gap: 12, marginBottom: 20 }}>
+              {[...c.competitorPricing.map((p) => ({ ...p, bad: true })), { ...c.ourPrice, bad: false }].map((p) => (
+                <div key={p.name} style={{ background: p.bad ? "#0a1628" : "#10b98110", border: `2px solid ${p.bad ? "#1e3a5f" : "#10b981"}`, borderRadius: 14, padding: "18px", textAlign: "center" }}>
+                  {!p.bad && <p style={{ margin: "0 0 6px", fontSize: 10, color: "#10b981", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase" }}>✓ Best Value</p>}
+                  <p style={{ margin: "0 0 6px", fontWeight: 800, fontSize: 15, color: p.bad ? "#94a3b8" : "#fff" }}>{p.name}</p>
+                  <p style={{ margin: "0 0 8px", fontWeight: 900, fontSize: 28, color: p.bad ? "#ef4444" : "#10b981" }}>{p.price}</p>
+                  <p style={{ margin: 0, fontSize: 11, color: "#64748b", lineHeight: 1.5 }}>{p.note}</p>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
 
         {/* Year-one savings */}
         {c.yearOneSavings && (
-          <div style={{ background: "linear-gradient(135deg, #10b98115, #00d4ff10)", border: "1px solid #10b98130", borderRadius: 16, padding: "20px 24px", marginBottom: 20, textAlign: "center" }}>
-            <p style={{ margin: "0 0 4px", fontSize: 36, fontWeight: 900, color: "#10b981" }}>Save {c.yearOneSavings} in Year One</p>
-            <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>Switching to the Detroit Web Agency stack</p>
-          </div>
+          <section id="demo-savings" style={{ scrollMarginTop: 16 }}>
+            <div style={{ background: "linear-gradient(135deg, #10b98115, #00d4ff10)", border: "1px solid #10b98130", borderRadius: 16, padding: "20px 24px", marginBottom: 20, textAlign: "center" }}>
+              <p style={{ margin: "0 0 4px", fontSize: 36, fontWeight: 900, color: "#10b981" }}>Save {c.yearOneSavings} in Year One</p>
+              <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>Switching to the Detroit Web Agency stack</p>
+            </div>
+          </section>
         )}
 
         {/* Talent Radar candidates */}
         {c.candidates && c.candidates.length > 0 && (
-          <div style={{ background: "#0a1628", border: `1px solid ${c.accentColor}30`, borderRadius: 16, padding: "20px 24px" }}>
-            <p style={{ margin: "0 0 10px", fontSize: 11, color: c.accentColor, fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase" }}>
-              ⚡ Talent Radar — $99/mo Add-On
-            </p>
-            <p style={{ margin: "0 0 14px", fontSize: 13, color: "#94a3b8", lineHeight: 1.7 }}>
-              Available right now near {c.city}, {c.state}:
-            </p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 8 }}>
-              {c.candidates.map((cand) => (
-                <div key={cand.name} style={{ background: "#060e1a", border: `1px solid ${scoreColor(cand.score)}40`, borderRadius: 10, padding: "10px 14px" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <p style={{ margin: 0, fontWeight: 700, fontSize: 13 }}>{cand.name} · {cand.city}</p>
-                    <span style={{ background: `${scoreColor(cand.score)}20`, color: scoreColor(cand.score), borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 800 }}>
-                      {cand.score}/10
-                    </span>
+          <section id="demo-talent" style={{ scrollMarginTop: 16 }}>
+            <div style={{ background: "#0a1628", border: `1px solid ${c.accentColor}30`, borderRadius: 16, padding: "20px 24px" }}>
+              <p style={{ margin: "0 0 10px", fontSize: 11, color: c.accentColor, fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase" }}>
+                ⚡ Talent Radar — $99/mo Add-On
+              </p>
+              <p style={{ margin: "0 0 14px", fontSize: 13, color: "#94a3b8", lineHeight: 1.7 }}>
+                Available right now near {c.city}, {c.state}:
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 8 }}>
+                {c.candidates.map((cand) => (
+                  <div key={cand.name} style={{ background: "#060e1a", border: `1px solid ${scoreColor(cand.score)}40`, borderRadius: 10, padding: "10px 14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <p style={{ margin: 0, fontWeight: 700, fontSize: 13 }}>{cand.name} · {cand.city}</p>
+                      <span style={{ background: `${scoreColor(cand.score)}20`, color: scoreColor(cand.score), borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 800 }}>
+                        {cand.score}/10
+                      </span>
+                    </div>
+                    <p style={{ margin: "3px 0 0", fontSize: 11, color: "#64748b" }}>{cand.license} · via {cand.source}</p>
                   </div>
-                  <p style={{ margin: "3px 0 0", fontSize: 11, color: "#64748b" }}>{cand.license} · via {cand.source}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          </section>
         )}
 
         <p style={{ textAlign: "center", marginTop: 32, fontSize: 12, color: "#334155" }}>
