@@ -18,6 +18,35 @@ export interface ApolloResult<T = any> {
   endpoint: string;
 }
 
+export interface ApolloContact {
+  id?: string;
+  first_name?: string;
+  last_name?: string;
+  name?: string;
+  title?: string;
+  email?: string;
+  phone_numbers?: Array<{ raw_number: string; type: string }>;
+  linkedin_url?: string;
+  organization_name?: string;
+  organization?: { name?: string; website_url?: string; industry?: string; employee_count?: number };
+  city?: string;
+  state?: string;
+}
+
+export interface ApolloOrganization {
+  id?: string;
+  name?: string;
+  website_url?: string;
+  industry?: string;
+  employee_count?: number;
+  linkedin_url?: string;
+  city?: string;
+  state?: string;
+  founded_year?: number;
+  estimated_num_employees?: number;
+  keywords?: string[];
+}
+
 export function hasApolloKey(): boolean {
   return APOLLO_API_KEY.length > 0;
 }
@@ -27,7 +56,7 @@ function buildHeaders(extra?: Record<string, string>): HeadersInit {
     "Content-Type": "application/json",
     "Cache-Control": "no-cache",
     "Accept": "application/json",
-    "X-Api-Key": APOLLO_API_KEY, // capitalized — required
+    "X-Api-Key": APOLLO_API_KEY,
     ...(extra || {}),
   };
 }
@@ -82,7 +111,7 @@ async function callApollo<T = any>(
   }
 }
 
-// ---- Public helpers ----
+// ---- Core helpers ----
 
 export function apolloPeopleMatch(body: Record<string, unknown>) {
   return callApollo("/people/match", { method: "POST", body: JSON.stringify(body) });
@@ -103,6 +132,38 @@ export function apolloOrgEnrich(params: Record<string, string>) {
 
 export function apolloHealth() {
   return callApollo("/auth/health", { method: "GET", timeoutMs: 6_000 });
+}
+
+// ---- Backward-compatible wrappers for enrichment functions ----
+
+export async function apolloPeopleSearch(params: {
+  name?: string;
+  email?: string;
+  organization_name?: string;
+  person_titles?: string[];
+  person_locations?: string[];
+  page?: number;
+  per_page?: number;
+}): Promise<ApolloContact[]> {
+  const res = await apolloMixedPeopleSearch(params as Record<string, unknown>);
+  return (res.data?.people || []) as ApolloContact[];
+}
+
+export async function apolloOrganizationSearch(params: {
+  q_organization_name?: string;
+  organization_domains?: string[];
+  organization_locations?: string[];
+  per_page?: number;
+  page?: number;
+}): Promise<ApolloOrganization[]> {
+  const res = await apolloOrgSearch(params as Record<string, unknown>);
+  return (res.data?.organizations || []) as ApolloOrganization[];
+}
+
+export async function apolloOrganizationEnrich(domain: string): Promise<ApolloOrganization | null> {
+  if (!domain) return null;
+  const res = await apolloOrgEnrich({ domain });
+  return (res.data?.organization || null) as ApolloOrganization | null;
 }
 
 export { APOLLO_BASE, callApollo };

@@ -5,6 +5,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
+import { extractFaxNumber } from "../_shared/firecrawl.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +19,8 @@ const SINCH_KEY_ID = Deno.env.get("SINCH_KEY_ID") || "";
 const SINCH_KEY_SECRET = Deno.env.get("SINCH_KEY_SECRET") || "";
 const FAX_FROM = Deno.env.get("SINCH_FAX_FROM") || ""; // optional Sinch-provisioned fax number, E.164
 const LOB_API_KEY = Deno.env.get("LOB_API_KEY") || "";
+const DATAFORSEO_LOGIN = Deno.env.get("DATAFORSEO_LOGIN") || "";
+const DATAFORSEO_PASSWORD = Deno.env.get("DATAFORSEO_PASSWORD") || "";
 
 // ── Daily caps (massively scaled up) ──
 const CAPS: Record<string, number> = { fax: 80, postcard: 80, sms: 150 };
@@ -30,9 +33,11 @@ const OFFER_PITCHED: Record<string, string> = {
   sms: "sms_outreach",
 };
 
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
 const DEFAULT_TRADES = ["roofer", "HVAC contractor", "plumber", "electrician"];
 
-// ── Statewide Michigan (56 cities) ──
 const MICHIGAN_CITIES = [
   "Detroit MI", "Warren MI", "Sterling Heights MI", "Troy MI", "Livonia MI", "Dearborn MI",
   "Royal Oak MI", "St. Clair Shores MI", "Macomb MI", "Ferndale MI", "Southfield MI",
@@ -46,7 +51,6 @@ const MICHIGAN_CITIES = [
   "Alpena MI", "Marquette MI", "Sault Ste. Marie MI", "Escanaba MI", "Grosse Pointe MI",
 ];
 
-// ── Trade query variants — bypasses Google Places 20-result-per-query cap ──
 const TRADE_QUERY_VARIANTS: Record<string, string[]> = {
   "roofer": ["roofer", "roofing contractor", "roof repair", "roof replacement"],
   "HVAC contractor": ["HVAC contractor", "heating and cooling", "AC repair", "furnace repair"],
@@ -68,12 +72,31 @@ function pickRandomCities(n: number): string[] {
   return shuffled.slice(0, n);
 }
 
-function todaysCombo(): { trade: string; city: string } {
+// Fallback used only if prospector_targets table is empty or unreachable
+const FALLBACK_TARGETS = [
+  { city: "Detroit", state: "MI", trade: "roofer" },
+  { city: "Detroit", state: "MI", trade: "HVAC contractor" },
+  { city: "Warren", state: "MI", trade: "plumber" },
+  { city: "Troy", state: "MI", trade: "electrician" },
+];
+
+async function getActiveTargets(sb: ReturnType<typeof createClient>): Promise<Array<{ city: string; state: string; trade: string }>> {
+  try {
+    const { data, error } = await (sb.from as any)("prospector_targets")
+      .select("city, state, trade")
+      .eq("active", true)
+      .order("state").order("city").order("trade");
+    if (error || !data?.length) return FALLBACK_TARGETS;
+    return data as Array<{ city: string; state: string; trade: string }>;
+  } catch {
+    return FALLBACK_TARGETS;
+  }
+}
+
+function pickTarget(targets: Array<{ city: string; state: string; trade: string }>): { trade: string; city: string } {
   const day = Math.floor(Date.now() / 86400000);
-  return {
-    trade: DEFAULT_TRADES[day % DEFAULT_TRADES.length],
-    city: MICHIGAN_CITIES[day % MICHIGAN_CITIES.length],
-  };
+  const t = targets[day % targets.length];
+  return { trade: t.trade, city: `${t.city} ${t.state}` };
 }
 
 async function searchGoogleMaps(q: string): Promise<any[]> {
@@ -85,6 +108,45 @@ async function searchGoogleMaps(q: string): Promise<any[]> {
   } catch (_) { return []; }
 }
 
+// DataForSEO Local Pack: returns businesses from SERP local results.
+// Surfaces contractors that don't rank in Google Places but appear in map pack.
+// Deduplicated against Google Maps results by name before use.
+async function searchDataForSEO(trade: string, city: string): Promise<any[]> {
+  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return [];
+  try {
+    const auth = btoa(`${DATAFORSEO_LOGIN}:${DATAFORSEO_PASSWORD}`);
+    const payload = [{
+      keyword: `${trade} ${city}`,
+      location_name: city.includes(",") ? city : `${city}, United States`,
+      language_name: "English",
+      depth: 10,
+    }];
+    const res = await fetch("https://api.dataforseo.com/v3/serp/google/local_pack/live/advanced", {
+      method: "POST",
+      headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const items: any[] = data?.tasks?.[0]?.result?.[0]?.items || [];
+    // Normalize to same shape as Google Places results
+    return items
+      .filter((item: any) => item?.type === "local_pack" && item?.title)
+      .map((item: any) => ({
+        name: item.title,
+        formatted_address: item.address || "",
+        international_phone_number: item.phone || "",
+        website: item.domain ? `https://${item.domain}` : "",
+        place_id: null, // DataForSEO doesn't give Google place_id
+        _source: "dataforseo",
+      }));
+  } catch (e) {
+    console.error("[prospector] dataforseo error:", e instanceof Error ? e.message : e);
+    return [];
+  }
+}
+
 async function getPlaceDetails(placeId: string): Promise<any> {
   try {
     const r = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_address,formatted_phone_number,international_phone_number,website,address_components&key=${GOOGLE_MAPS_API_KEY}`);
@@ -93,12 +155,25 @@ async function getPlaceDetails(placeId: string): Promise<any> {
   } catch (_) { return {}; }
 }
 
+// Fax extraction waterfall: Firecrawl structured scrape → raw HTML regex → null
 async function scrapeFax(website: string): Promise<string | null> {
+  // Tier 1: Firecrawl (tries contact, contact-us, then homepage — labeled fax patterns)
+  const firecrawlResult = await extractFaxNumber(website);
+  if (firecrawlResult) return firecrawlResult;
+
+  // Tier 2: raw fetch + regex fallback (faster, less accurate)
   try {
-    const r = await fetch(website, { signal: AbortSignal.timeout(8000) });
+    const r = await fetch(website, { signal: AbortSignal.timeout(8_000) });
     const html = (await r.text()).toLowerCase();
-    const m = html.match(/fax[:\s]*\(?(\d{3})\)?[\s.-]?(\d{3})[\s.-]?(\d{4})/);
-    if (m) return `+1${m[1]}${m[2]}${m[3]}`;
+    const patterns = [
+      /fax[:\s]*\(?(\d{3})\)?[\s.\-]?(\d{3})[\s.\-]?(\d{4})/,
+      /facsimile[:\s]*\(?(\d{3})\)?[\s.\-]?(\d{3})[\s.\-]?(\d{4})/,
+      /f\.[:\s]*\(?(\d{3})\)?[\s.\-]?(\d{3})[\s.\-]?(\d{4})/,
+    ];
+    for (const p of patterns) {
+      const m = html.match(p);
+      if (m) return `+1${m[1]}${m[2]}${m[3]}`;
+    }
   } catch (_) {}
   return null;
 }
@@ -197,12 +272,12 @@ function parseAddr(_formatted: string, components: any[]): { line1: string; city
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   // ── Admin auth gate (verify_jwt=false in config so we check ourselves) ──
   const authHeader = req.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
-    const sbAuth = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    const sbAuth = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY") || "", {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: claims } = await sbAuth.auth.getClaims(authHeader.replace("Bearer ", ""));
@@ -230,43 +305,65 @@ serve(async (req) => {
   const sentBefore = sentToday || 0;
   const remaining = cap - sentBefore;
 
-  // ── Combo selection ──
+  // ── Combo selection: DB-driven targets with manual override + All Michigan support ──
   const requestedTrade = (body.target_trade as string) || "";
   const requestedCity = (body.target_city as string) || "";
   const isAllMichigan = requestedCity === "All Michigan" || requestedCity === "all_michigan" || requestedCity === "🌎 All Michigan";
-  const auto = todaysCombo();
-  const tradeForCopy = canonicalTrade(requestedTrade || auto.trade);
+
+  let tradeForCopy: string;
+  let cityList: string[];
+
+  if (requestedTrade && requestedCity && !isAllMichigan) {
+    tradeForCopy = canonicalTrade(requestedTrade);
+    cityList = [requestedCity];
+  } else if (isAllMichigan) {
+    tradeForCopy = canonicalTrade(requestedTrade) || DEFAULT_TRADES[0];
+    cityList = pickRandomCities(8);
+  } else {
+    const targets = await getActiveTargets(sb);
+    const combo = pickTarget(targets);
+    tradeForCopy = canonicalTrade(combo.trade);
+    cityList = [combo.city];
+  }
 
   if (remaining <= 0) {
-    return new Response(JSON.stringify({ ok: true, channel, combo: { trade: tradeForCopy, city: requestedCity || auto.city }, found: 0, sent: 0, skipped: 0, failed: 0, cap, sentBefore, sentAfter: sentBefore, note: `Daily cap of ${cap} ${channel} sends already reached today. Resets at midnight.` }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ ok: true, channel, trade: tradeForCopy, city: cityList[0], found: 0, sent: 0, skipped: 0, failed: 0, cap, sentBefore, sentAfter: sentBefore, note: `Daily cap of ${cap} ${channel} sends already reached today. Resets at midnight.` }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   // ── Build query list (multi-query fan-out) ──
-  const variants = TRADE_QUERY_VARIANTS[tradeForCopy] || [requestedTrade || auto.trade];
-  const cityList = isAllMichigan
-    ? pickRandomCities(8)
-    : [requestedCity || auto.city];
+  const variants = TRADE_QUERY_VARIANTS[tradeForCopy] || [tradeForCopy];
 
   const queries: { q: string; city: string }[] = [];
   for (const c of cityList) {
     for (const v of variants) queries.push({ q: `${v} in ${c}`, city: c });
   }
 
-  // Run queries in parallel batches of 4
+  // Run Google Maps + DataForSEO in parallel batches of 4
   const allPlaces: { place: any; city: string }[] = [];
   for (let i = 0; i < queries.length; i += 4) {
     const batch = queries.slice(i, i + 4);
-    const results = await Promise.all(batch.map(({ q, city }) => searchGoogleMaps(q).then(places => ({ places, city }))));
-    for (const { places, city } of results) {
-      for (const p of places) allPlaces.push({ place: p, city });
-    }
+    const results = await Promise.all(batch.map(({ q, city }) =>
+      Promise.all([
+        searchGoogleMaps(q).then(places => places.map((p: any) => ({ place: p, city }))),
+        searchDataForSEO(tradeForCopy, city).then(places => places.map((p: any) => ({ place: p, city }))),
+      ]).then(([gp, dp]) => [...gp, ...dp])
+    ));
+    for (const r of results) allPlaces.push(...r);
   }
 
-  // Dedupe by place_id
-  const seen = new Set<string>();
+  // Dedupe: Google by place_id, DataForSEO by name (no place_id)
+  const seenPlaceIds = new Set<string>();
+  const seenNames = new Set<string>();
   const dedupedPlaces = allPlaces.filter(({ place }) => {
-    if (!place.place_id || seen.has(place.place_id)) return false;
-    seen.add(place.place_id);
+    const name = (place.name || "").toLowerCase().trim();
+    if (place._source === "dataforseo") {
+      if (seenNames.has(name)) return false;
+      seenNames.add(name);
+      return true;
+    }
+    if (!place.place_id || seenPlaceIds.has(place.place_id)) return false;
+    seenPlaceIds.add(place.place_id);
+    seenNames.add(name);
     return true;
   });
 
@@ -290,7 +387,9 @@ serve(async (req) => {
       .maybeSingle();
     if (existing) { skipped++; continue; }
 
-    const details = await getPlaceDetails(p.place_id);
+    // DataForSEO results have no place_id — use pre-normalized fields directly
+    const isDFS = p._source === "dataforseo";
+    const details = isDFS ? p : await getPlaceDetails(p.place_id);
     const phone = details.international_phone_number || details.formatted_phone_number || "";
     const websiteRaw = details.website || "";
 

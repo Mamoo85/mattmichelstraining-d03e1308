@@ -1902,6 +1902,24 @@ verify_jwt = false
 [functions.visitor-identify]
 verify_jwt = false
 
+[functions.techalert-enrich]
+verify_jwt = false
+
+[functions.techalert-outreach]
+verify_jwt = false
+
+[functions.techalert-followup-drip]
+verify_jwt = false
+
+[functions.channel-prospector-followup]
+verify_jwt = false
+
+[functions.outreach-leads-enrich]
+verify_jwt = false
+
+[functions.weekly-admin-digest]
+verify_jwt = false
+
 [functions.health-check-supabase]
 verify_jwt = false
 

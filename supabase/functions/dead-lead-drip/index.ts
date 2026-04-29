@@ -13,6 +13,8 @@ import { getDeadLeadEmail } from "../_shared/dead-lead-emails.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
+const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 
@@ -20,6 +22,27 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Twilio Lookup: validates phone is a real mobile number before sending.
+// Returns true (safe to send) or false (landline/invalid/VOIP — skip).
+// Costs $0.005/lookup. Only called on D1 (first touch) to avoid repeat charges.
+async function isMobileNumber(phone: string): Promise<boolean> {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !phone) return true; // skip if no creds
+  try {
+    const url = `https://lookups.twilio.com/v1/PhoneNumbers/${encodeURIComponent(phone)}?Type=carrier`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}` },
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!res.ok) return true; // assume mobile on API error to avoid dropping valid contacts
+    const data = await res.json();
+    const lineType: string = data?.carrier?.type || "";
+    // Accept mobile and voip (many cell phones show as voip); reject landline
+    return lineType !== "landline";
+  } catch (_) {
+    return true; // assume mobile on timeout
+  }
+}
 
 // drip_step semantics:
 //   0 = pending (never contacted)
@@ -66,15 +89,22 @@ function fillSms(template: string, vars: { name: string; bizName: string; trade:
 }
 
 // ── Item 42: Sonar homeowner re-enrichment — skip completed projects ───────────
-async function checkProjectComplete(name: string, trade: string): Promise<boolean> {
+async function checkProjectComplete(name: string, trade: string, state = "MI"): Promise<boolean> {
   if (!OPENROUTER_API_KEY || !name) return false;
+  // Map state abbreviation to full name for natural-language query
+  const STATE_NAMES: Record<string, string> = {
+    MI: "Michigan", OH: "Ohio", IN: "Indiana", IL: "Illinois",
+    TX: "Texas", FL: "Florida", TN: "Tennessee", GA: "Georgia",
+    AZ: "Arizona", NC: "North Carolina", PA: "Pennsylvania",
+  };
+  const stateName = STATE_NAMES[state.toUpperCase()] || state;
   try {
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "perplexity/sonar-pro",
-        messages: [{ role: "user", content: `Is there any online evidence that "${name}" in Michigan recently completed a ${trade} home project in 2025-2026 (review posted, photo shared, job listed as done)? Answer YES or NO only.` }],
+        messages: [{ role: "user", content: `Is there any online evidence that "${name}" in ${stateName} recently completed a ${trade} home project in 2025-2026 (review posted, photo shared, job listed as done)? Answer YES or NO only.` }],
         max_tokens: 50, temperature: 0.1,
       }),
       signal: AbortSignal.timeout(10000),
@@ -176,7 +206,7 @@ async function runDripJob(): Promise<Response> {
     // ── LOOP A — D1 SMS: drip_step=0 (pending) ───────────────────────────
     const { data: d1Contacts } = await sb
       .from("dead_lead_contacts" as any)
-      .select("*, dead_lead_campaigns(id, trade, status, contractor_id, contractor_clients(business_name, phone))")
+      .select("*, dead_lead_campaigns(id, trade, status, contractor_id, contractor_clients(business_name, phone, state))")
       .eq("drip_step", 0)
       .neq("status", "opted_out")
       .eq("is_reassigned", false)
@@ -197,7 +227,7 @@ async function runDripJob(): Promise<Response> {
 
         // Skip if Sonar finds project already completed (cost-capped)
         if (sonarEnrichedCount < SONAR_ENRICH_LIMIT) {
-          const projectDone = await checkProjectComplete(contact.name || "", trade);
+          const projectDone = await checkProjectComplete(contact.name || "", trade, contractor?.state || "MI");
           sonarEnrichedCount++;
           if (projectDone) {
             await sb.from("dead_lead_contacts" as any)
@@ -218,6 +248,14 @@ async function runDripJob(): Promise<Response> {
 
         const tpl = customCopy?.drip1_copy || TRADE_TEMPLATES[tradeKey(trade)].d1;
         const body = fillSms(tpl, { name: firstName, bizName, trade });
+
+        // Validate line type before spending credits — skip landlines
+        const mobile = await isMobileNumber(contact.phone);
+        if (!mobile) {
+          await sb.from("dead_lead_contacts" as any).update({ is_dnc_risk: true, status: "landline" }).eq("id", contact.id);
+          console.log(`[drip] Lookup: ${contact.phone} is landline — skipping`);
+          continue;
+        }
 
         const smsRes = await sendSMS(contact.phone, TWILIO_PHONE_NUMBER, body, "dead_lead_reactivation");
         if (!smsRes?.success) {

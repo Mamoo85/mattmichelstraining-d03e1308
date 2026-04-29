@@ -12,7 +12,150 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-04-27*
+*Last updated: 2026-04-29*
+
+### Phase 29 — Enrichment Waterfalls + Admin Digest + Full Pipeline Wiring COMPLETE ✅
+
+**New shared utilities:**
+- `_shared/firecrawl.ts`: `firecrawlScrape()`, `extractFaxNumber()` (contact→contact-us→homepage waterfall), `extractPhoneNumbers()`, `extractContactInfo()` — all fail gracefully
+- `_shared/hunter.ts`: `hunterFindEmail(domain)` (prefers owner/president/GM titles), `hunterVerifyEmail(email)` — uses `HUNTER_IO_API_KEY`
+
+**Waterfall extraction everywhere (user's explicit requirement):**
+- Email: Apollo org + people search → Hunter.io domain search → Firecrawl contact/about page scrape
+- Fax: Firecrawl structured scrape → raw HTML fetch + multi-pattern regex (labeled fax/ facsimile/ f.: patterns)
+- Company from IP: ipinfo.io → Clearbit Reveal (SiteRadar visitor-identify)
+
+**outreach-leads-enrich (new function):**
+- Drains `outreach_leads` rows with no owner_email — 20 records/run, Apollo → Hunter → Firecrawl
+- Marks `enriched_at` on both success and failure (prevents infinite retry loop)
+- Migration `20260429070000_outreach_leads_enrich_columns.sql`: owner_name/email/phone, website, enriched_at
+- Migration `20260429080000_outreach_enrich_cron.sql`: daily 11am ET (15:00 UTC)
+
+**weekly-admin-digest (new function):**
+- Every Monday 8am ET, sends Matt one SMS with full week pipeline breakdown
+- Queries in `Promise.all`: TechAlert prospects/enriched/emailed/replied, outreach sent/followups, dead lead D1/replies, mortgage leads, new clients per product (TechAlert, Contractors, Mortgage Radar)
+- Migration `20260429090000_weekly_admin_digest_cron.sql`: Monday 13:00 UTC cron
+- config.toml: `verify_jwt = false` added
+
+**channel-prospector: DataForSEO integration:**
+- Runs Google Places + DataForSEO Local Pack in parallel, deduplicates by name
+- DataForSEO surfaces contractors not in Google Places results
+- `isDFS` flag skips `getPlaceDetails` call for DataForSEO results (they have no place_id)
+
+**Secrets needed (add to Supabase Edge Function secrets):**
+- `HUNTER_IO_API_KEY` — Hunter.io domain email search (new)
+- `CLEARBIT_API_KEY` — SiteRadar company visitor ID (Matt waiting on email confirmation)
+- `DATAFORSEO_LOGIN` + `DATAFORSEO_PASSWORD` — channel-prospector DataForSEO integration
+- `EVENTBRITE_API_KEY` — Eventbrite trade show signals
+- `APOLLO_API_KEY` — all enrichment waterfalls (already added per Matt)
+
+**Full automated pipeline now running daily (all times ET):**
+| Time | Function | Purpose |
+|---|---|---|
+| 6am | techalert-prospect-hunter | 8-source signal scan |
+| 7am | techalert-enrich | Apollo→Hunter→Firecrawl owner enrichment |
+| 8am | techalert-outreach | D0 cold email (30/day) |
+| 9am + 2pm | techalert-followup-drip | D3/D7/D14 follow-ups (50/day) |
+| 10am | channel-prospector-followup | Channel D7/D14 follow-ups (40/day) |
+| 11am | outreach-leads-enrich | Apollo→Hunter→Firecrawl owner drain (20/run) |
+| Mon 8am | weekly-admin-digest | Full pipeline SMS summary to Matt |
+
+### Phase 28 — Full Signal API Buildout + Automated Revenue Pipelines COMPLETE ✅
+
+**TechAlert — fully automated pipeline (6am → 7am → 8am + drip):**
+- `techalert-prospect-hunter`: now pulls from **8 parallel signal sources**:
+  - Sonar (job boards), GitHub (repo activity), SEC EDGAR (Form D), USPTO PatentsView
+  - SAM.gov (federal contract awards by NAICS, uses `SAM_GOV_API_KEY`)
+  - BLS employment data (Detroit metro HVAC/electrician trends, free)
+  - Eventbrite (trade show organizers, uses `EVENTBRITE_API_KEY`)
+  - USASpending.gov (federal contract awards to MI trades firms, free)
+  - LinkedIn job postings (uses `LINKEDIN_ACCESS_TOKEN`)
+  - Response now shows full `signals: { github, edgar, uspto, sam, eventbrite, usaspending, linkedin }` breakdown
+- `techalert-enrich`: Apollo owner lookup drain, 7am ET, 25 prospects/run
+- `techalert-outreach`: D0 cold email, 8am ET, 30/day cap
+- `techalert-followup-drip`: **NEW** — D3/D7/D14 follow-up sequence, 9am + 2pm ET, 50/day cap
+  - D3: urgency/scarcity angle
+  - D7: 30-day free trial offer
+  - D14: final touch + phone escalation to (313) 992-1219
+  - Migration `20260429030000_techalert_followup_columns.sql`: adds followup_d3/d7/d14_sent_at, replied_at, reply_positive
+  - Migration `20260429040000_techalert_drip_cron.sql`: cron schedules
+
+**SiteRadar — Clearbit Reveal for company identification:**
+- `visitor-identify/index.ts`: added Clearbit Reveal as secondary enrichment
+- When ipinfo.io doesn't identify a business visitor, falls back to Clearbit Reveal API
+- Returns company name, domain, industry, employee count → stored in enrichment_data JSON
+- Requires `CLEARBIT_API_KEY` in Supabase secrets
+
+**Channel Prospector — 7/14-day follow-up sequences:**
+- `channel-prospector-followup/index.ts`: **NEW** — D7/D14 follow-ups via original channel (fax/postcard/SMS)
+- Reads `drip_campaign_status.channel_target` to know where to send
+- AI-generated copy per touch via Claude Haiku, 40/day cap
+- Migration `20260429050000_channel_prospector_followup.sql`: adds followup_d7/d14_sent_at, replied_at to outreach_leads
+- Migration `20260429060000_channel_followup_cron.sql`: daily 10am ET cron
+- config.toml: `verify_jwt = false` added
+
+**Dead Lead Drip — Twilio Lookup phone validation:**
+- `dead-lead-drip/index.ts`: gates every D1 SMS on Twilio Lookup line-type check
+- Landlines → marked `is_dnc_risk=true, status='landline'`, skipped permanently
+- Fails open on API error (never drops valid contacts due to Lookup downtime)
+- Cost: $0.005/lookup — pays for itself by not burning SMS credits on landlines
+
+**Secrets needed (add to Supabase Edge Function secrets):**
+- `EVENTBRITE_API_KEY` — Eventbrite trade show signals
+- `CLEARBIT_API_KEY` — SiteRadar company-level visitor identification
+- `SAM_GOV_API_KEY` — already in secrets per CLAUDE.md; confirm Supabase copy
+- `LINKEDIN_ACCESS_TOKEN` — already in secrets; confirm Supabase copy
+- `APOLLO_API_KEY` — needed for techalert-enrich drain
+- `GITHUB_TOKEN` — already confirmed per Matt
+
+**New cron schedule summary (all times ET):**
+| Time | Function | Purpose |
+|---|---|---|
+| 6am | techalert-prospect-hunter | 8-source signal scan |
+| 7am | techalert-enrich | Apollo owner enrichment |
+| 8am | techalert-outreach | D0 cold email (30/day) |
+| 9am + 2pm | techalert-followup-drip | D3/D7/D14 follow-ups (50/day) |
+| 10am | channel-prospector-followup | Channel D7/D14 follow-ups (40/day) |
+
+### Phase 27 — HBS-Level Product Upgrades: Geographic Expansion + Free Signal APIs COMPLETE ✅
+
+**Phase 1 foundations shipped (4 items):**
+
+**F1 — prospector_targets migration + channel-prospector DB config:**
+- `supabase/migrations/20260429000000_prospector_targets.sql`: new table replacing hardcoded city/trade arrays
+- 14 active Michigan targets seeded; Ohio (Cleveland, Columbus, Cincinnati), Indiana (Indianapolis), Illinois (Chicago), Texas (Dallas, Houston, San Antonio), Tennessee (Nashville) rows seeded as `active=false`
+- Admin toggles `active=true` in DB → zero code deploy required to expand to any new market
+- `supabase/functions/channel-prospector/index.ts`: removed `DEFAULT_TRADES`/`DEFAULT_CITIES`/`todaysCombo()`, replaced with `getActiveTargets(sb)` + `pickTarget(targets)` — falls back to hardcoded Michigan list if DB is unreachable
+
+**F2 — _shared/apollo.ts centralized Apollo.io helper:**
+- `supabase/functions/_shared/apollo.ts`: canonical Apollo API helper — exports `ApolloContact`, `ApolloOrganization` interfaces + `apolloPeopleSearch()`, `apolloPeopleMatch()`, `apolloOrganizationSearch()`, `apolloOrganizationEnrich()`
+- Both `X-Api-Key` header AND `api_key` body sent (Apollo belt-and-suspenders requirement)
+- All callsites should import from here; prevents future header drift across 11+ Apollo usages
+
+**F3 — Dead Lead state parameterization:**
+- `supabase/functions/dead-lead-drip/index.ts`: `checkProjectComplete(name, trade)` → `checkProjectComplete(name, trade, state="MI")`
+- Added `STATE_NAMES` map for 11 states (MI, OH, IN, IL, TX, FL, TN, GA, AZ, NC, PA)
+- OpenRouter Sonar query now uses contractor's actual state instead of hardcoded "Michigan" — prevents false "project complete" hits for OH/TX/etc contractors
+- D1 select now pulls `state` from `contractor_clients`; call site passes `contractor?.state || "MI"`
+
+**F4 — GitHub + SEC EDGAR + USPTO signal scanning in techalert-prospect-hunter:**
+- `supabase/functions/techalert-prospect-hunter/index.ts`: added 3 free signal scanning functions
+- `scanGitHubSignals()`: searches GitHub for HVAC/building-automation orgs with pushes in last 30 days (uses GITHUB_TOKEN, 5000 req/hr free)
+- `scanEDGARFundings()`: queries SEC EDGAR Form D filings for funded trades companies (fully open, just User-Agent header)
+- `scanUSPTOPatents()`: queries USPTO PatentsView for HVAC/boiler/plumbing/electrical patents filed in last 90 days (fully open, no key)
+- All three run in parallel via `Promise.all()` after the Sonar loop; results feed same upsert pipeline
+- Response includes `signals: { github, edgar, uspto }` counts for log visibility
+
+**Secrets Matt needs to add to Supabase (not just Lovable cloud):**
+- `APOLLO_API_KEY` — Supabase Edge Functions secret store (Lovable cloud secrets don't reach Deno runtime)
+- `GITHUB_TOKEN` — already added per Matt; confirm it's in Supabase secrets, not just Lovable cloud
+- SEC EDGAR + USPTO PatentsView: no keys needed — open APIs, just User-Agent header
+
+**Next Phase 27 items (Lovable's side — UI for market targeting):**
+- Admin panel market toggle for prospector_targets (city/state/trade on/off grid)
+- TechAlert beta flag flip for Phoenix/DFW/Houston/Atlanta (already in usMetros.ts, just needs flag change)
+- Clearbit Reveal integration for SiteRadar (company-level visitor ID from IP)
+- Eventbrite API for conference/trade-show signals
 
 ### Phase 26 — Mega-Audit: Lovable Push Verification + TCPA Fix + Cron Gaps COMPLETE ✅
 

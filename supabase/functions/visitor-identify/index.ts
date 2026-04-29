@@ -8,6 +8,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const CLEARBIT_API_KEY = Deno.env.get("CLEARBIT_API_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -95,6 +96,30 @@ serve(async (req) => {
       }
     } catch (_) {
       // Enrichment failed — still log the raw visit
+    }
+
+    // Clearbit Reveal: secondary enrichment when ipinfo doesn't identify a business
+    // Returns company name, domain, industry, employee range from Clearbit's B2B database
+    if (!isBusiness && CLEARBIT_API_KEY) {
+      try {
+        const cbRes = await fetch(`https://reveal.clearbit.com/v1/companies/find?ip=${ip}`, {
+          headers: { Authorization: `Bearer ${CLEARBIT_API_KEY}` },
+          signal: AbortSignal.timeout(5_000),
+        });
+        if (cbRes.ok) {
+          const cb = await cbRes.json();
+          const cbName: string = cb?.name || "";
+          if (cbName && !isNoise(cbName)) {
+            companyName = cbName;
+            isBusiness = true;
+            city = city || cb?.geo?.city || "";
+            region = region || cb?.geo?.stateCode || "";
+            enrichment = { ...enrichment, clearbit_domain: cb?.domain, clearbit_industry: cb?.category?.industry, clearbit_employees: String(cb?.metrics?.employees || ""), clearbit_type: cb?.type };
+          }
+        }
+      } catch (_) {
+        // Clearbit failed — ipinfo result stands
+      }
     }
 
     // Upsert: if same IP + client visited today, increment count instead of duplicate
