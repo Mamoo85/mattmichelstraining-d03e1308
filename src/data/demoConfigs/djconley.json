@@ -1,0 +1,44 @@
+{
+  "companyName": "D.J. Conley Associates",
+  "industry": "Boiler Service",
+  "tagline": "Field Operations Command Center",
+  "accentColor": "#00d4ff",
+  "alertColor": "#dc2626",
+  "logoEmoji": "🔥",
+  "city": "Troy",
+  "state": "MI",
+  "zip": "48083",
+  "currentSiteUrl": "djconley.com",
+  "fakeVisitors": [
+    { "company": "Stellantis Facilities Mgmt", "page": "Boiler Tune-Up Services", "time": "Today, 2:14 PM", "badge": "🏭", "value": "$40k–$120k contract" },
+    { "company": "Detroit Medical Center", "page": "Service Contracts", "time": "Today, 11:47 AM", "badge": "🏥", "value": "$25k–$60k contract" },
+    { "company": "Wayne County Schools", "page": "Homepage", "time": "Today, 9:03 AM", "badge": "🏫", "value": "$15k–$35k contract" }
+  ],
+  "stats": {
+    "jobsToday": "7",
+    "jobsSub": "2 emergency",
+    "techsInField": "4",
+    "techsSub": "All active now",
+    "openRevenue": "$34,200",
+    "revenueSub": "Pending invoices",
+    "reviewScore": "4.8 ⭐",
+    "reviewSub": "Last 30 days"
+  },
+  "yearOneSavings": "$14,412",
+  "candidates": [
+    { "name": "James P.", "license": "1st Class Boiler Op", "city": "Troy", "score": 9, "source": "State licensing records" },
+    { "name": "Kevin M.", "license": "2nd Class Boiler Op", "city": "Sterling Heights", "score": 7, "source": "Proprietary OSINT" }
+  ],
+  "competitorPricing": [
+    { "name": "FieldServio", "price": "$1,400/mo", "note": "Built for forklift rental companies" },
+    { "name": "eWay-CRM", "price": "$300–400/mo", "note": "An Outlook plugin. For desk workers." }
+  ],
+  "ourPrice": { "name": "FieldDesk", "price": "$199/mo", "note": "Unlimited users. Built for boiler rooms." },
+  "sizzleVideoSrc": "/videos/djconley-sizzle.mp4",
+  "buyerRadarValue": "Stellantis truck plant just posted a $2.4M boiler retrofit RFP on MITN.info. Buyer Radar would have texted Pat the moment it went live.",
+  "missedCallStats": {
+    "responseTime": "< 60 sec",
+    "coverage": "24/7/365",
+    "recoveryRate": "~38% convert"
+  }
+}

@@ -380,6 +380,7 @@ const StewartDentalProduction = lazyRetry(() => import("./pages/StewartDentalPro
 const StewartDentalPrivacy = lazyRetry(() => import("./pages/StewartDentalPrivacy"));
 const DJConleyDemo1 = lazyRetry(() => import("./pages/DJConleyDemo1"));
 const DJConleyDemo2 = lazyRetry(() => import("./pages/DJConleyDemo2"));
+const DemoTemplate = lazyRetry(() => import("./pages/DemoTemplate"));
 const CommunicationsCenter = lazyRetry(() => import("./pages/CommunicationsCenter"));
 
 const persister = createSyncStoragePersister({
@@ -568,6 +569,7 @@ const App = () => (
                     <Route path="/demo-djconley-1" element={<DJConleyDemo1 />} />
                     <Route path="/demo-djconley-1/*" element={<DJConleyDemo1 />} />
                     <Route path="/demo-djconley-2" element={<DJConleyDemo2 />} />
+                    <Route path="/demo/:slug" element={<DemoTemplate />} />
                     <Route path="/demo-youngblood-alt2" element={<YoungbloodMockupAlt2 />} />
                     <Route path="/demo-youngblood-alt2/*" element={<YoungbloodMockupAlt2 />} />
                     <Route path="/demo-hvac" element={<HvacMockup />} />
