@@ -184,36 +184,15 @@ async function scanBSEEDPermits(): Promise<RawSignal[]> {
   }
 }
 
-// Sonar OSINT helper — used for FSBO, foreclosure, divorce, SOS, job changes.
-// Cheap, returns JSON. Falls back to [] gracefully if not configured.
-async function sonarSearch(prompt: string, schemaHint: string): Promise<any[]> {
-  if (!LOVABLE_API_KEY) return [];
-  try {
-    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: `You are a public-records OSINT researcher. Return ONLY a valid JSON array (no prose, no markdown fence). Each item: ${schemaHint}. Empty array if nothing found. Public sources only — no credit bureau data.` },
-          { role: "user", content: prompt },
-        ],
-      }),
-      signal: AbortSignal.timeout(20_000),
-    });
-    if (!r.ok) return [];
-    const j = await r.json();
-    const text = j?.choices?.[0]?.message?.content || "[]";
-    const cleaned = text.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
-    const arr = JSON.parse(cleaned);
-    return Array.isArray(arr) ? arr : [];
-  } catch (e) {
-    console.warn("[sonarSearch]", e instanceof Error ? e.message : String(e));
-    return [];
-  }
+// DEPRECATED: sonarSearch (Gemini free-form JSON) was retired Phase 25.
+// All LLM extraction now goes through extractLeadsFromSource() + verifyClaims()
+// in _shared/lead-extractor.ts and _shared/lead-verifier.ts. This shim exists
+// only so legacy call sites compile; it ALWAYS returns [].
+// New pipeline: caller must fetch source text deterministically (Firecrawl/HTTP),
+// then run extractor → verifier → corroboration before persisting.
+async function sonarSearch(_prompt: string, _schemaHint: string): Promise<any[]> {
+  console.warn("[sonarSearch] deprecated — use extractor/verifier pipeline. Returning [].");
+  return [];
 }
 
 // Phase C: deterministic scrape of Detroit/Oakland/Macomb Legal News public foreclosure notices.
