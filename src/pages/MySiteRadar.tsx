@@ -111,6 +111,59 @@ export default function MySiteRadar() {
     setCopied(true); setTimeout(() => setCopied(false), 1800);
   };
 
+  const dismissBanner = () => {
+    localStorage.setItem("siteradar_upsell_dismissed_v1", String(Date.now()));
+    setBannerDismissed(true);
+  };
+
+  const csvEscape = (v: unknown): string => {
+    if (v === null || v === undefined) return "";
+    const s = String(v);
+    if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+    return s;
+  };
+
+  const handleExport = async () => {
+    if (!client) return;
+    setExporting(true);
+    try {
+      const fromIso = new Date(exportFrom); fromIso.setHours(0, 0, 0, 0);
+      const toIso = new Date(exportTo); toIso.setHours(23, 59, 59, 999);
+      const { data, error: qErr } = await supabase
+        .from("crm_visitor_events")
+        .select("created_at, company_name, city, region, country, page_visited, referrer, ip_address, is_business, visit_count")
+        .eq("client_id", client.id)
+        .gte("created_at", fromIso.toISOString())
+        .lte("created_at", toIso.toISOString())
+        .order("created_at", { ascending: false })
+        .limit(10000);
+      if (qErr) throw qErr;
+      const rows = data || [];
+      if (rows.length === 0) {
+        alert("No events in the selected date range.");
+        return;
+      }
+      const header = ["created_at", "company_name", "city", "region", "country", "page_visited", "referrer", "ip_address", "is_business", "visit_count"];
+      const lines = [header.join(",")];
+      rows.forEach((r: any) => {
+        lines.push(header.map((k) => csvEscape(r[k])).join(","));
+      });
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `siteradar-events-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      alert(`Export failed: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <>
       <Helmet><title>SiteRadar — Your Dashboard | Detroit Web Agency</title></Helmet>
