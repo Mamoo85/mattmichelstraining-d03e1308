@@ -25,6 +25,7 @@ export const US_METROS: MetroOption[] = [
     zipPrefixes: ["480", "481", "482", "483"],
     coverage: "full",
     coverageLabel: "Trades + Healthcare — full coverage (MIOSHA, BPL, LARA, BSEED, NPI, Nursys, CMS)",
+    betaActive: true,
   },
   {
     id: "dfw",
