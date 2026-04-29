@@ -2066,3 +2066,6 @@ verify_jwt = false
 
 [functions.orphan-scan]
 verify_jwt = false
+
+[functions.validate-osint-secrets]
+verify_jwt = false
