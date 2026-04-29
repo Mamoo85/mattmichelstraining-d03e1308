@@ -9,8 +9,10 @@ import { sendSMS } from "../_shared/twilio.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
-const PHAXIO_KEY = Deno.env.get("PHAXIO_API_KEY") || "";
-const PHAXIO_SECRET = Deno.env.get("PHAXIO_API_SECRET") || "";
+const SINCH_PROJECT_ID = Deno.env.get("SINCH_PROJECT_ID") || "";
+const SINCH_KEY_ID     = Deno.env.get("SINCH_KEY_ID") || "";
+const SINCH_KEY_SECRET = Deno.env.get("SINCH_KEY_SECRET") || "";
+const FAX_FROM         = Deno.env.get("SINCH_FAX_FROM") || "";
 const LOB_API_KEY = Deno.env.get("LOB_API_KEY") || "";
 
 const DAILY_CAP = 40;
@@ -58,13 +60,18 @@ function defaultCopy(channel: Channel, touch: Touch, name: string, trade: string
 }
 
 async function sendFax(toFax: string, body: string): Promise<{ ok: boolean; err?: string }> {
-  if (!PHAXIO_KEY || !PHAXIO_SECRET) return { ok: false, err: "PHAXIO not configured" };
+  if (!SINCH_PROJECT_ID || !SINCH_KEY_ID || !SINCH_KEY_SECRET) return { ok: false, err: "Sinch creds not configured" };
   try {
-    const auth = btoa(`${PHAXIO_KEY}:${PHAXIO_SECRET}`);
+    const auth = btoa(`${SINCH_KEY_ID}:${SINCH_KEY_SECRET}`);
     const fd = new FormData();
-    fd.append("to", toFax); fd.append("string_data", body); fd.append("string_data_type", "text");
-    const r = await fetch("https://api.phaxio.com/v2.1/faxes", { method: "POST", headers: { Authorization: `Basic ${auth}` }, body: fd });
-    return r.ok ? { ok: true } : { ok: false, err: await r.text() };
+    fd.append("to", toFax);
+    if (FAX_FROM) fd.append("from", FAX_FROM);
+    fd.append("body", new Blob([body], { type: "text/plain" }), "memo.txt");
+    const url = `https://fax.api.sinch.com/v3/projects/${SINCH_PROJECT_ID}/faxes`;
+    const r = await fetch(url, { method: "POST", headers: { Authorization: `Basic ${auth}` }, body: fd });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) return { ok: false, err: `Sinch ${r.status}: ${JSON.stringify(j)}` };
+    return { ok: true };
   } catch (e: any) { return { ok: false, err: e.message }; }
 }
 

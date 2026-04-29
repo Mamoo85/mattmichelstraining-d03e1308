@@ -1,8 +1,8 @@
 /**
- * send-fax-phaxio — Sends B2B faxes via Phaxio (Sinch Fax API)
+ * send-fax-phaxio — Sends B2B faxes via Sinch Fax API v3
  *
  * HONESTY UPDATE 2026-04-20 — mirrors send-postcards:
- *  - dry_run mode (Diagnose) → returns prospect counts + Phaxio API health, no sends
+ *  - dry_run mode (Diagnose) → returns prospect counts + Sinch API health, no sends
  *  - prospect_ids[] filter (Resend Failed) → only sends to specified prospects
  *  - Logs EVERY attempt to fax_send_log (sent / failed / skipped_opt_out)
  *  - Marks campaign 'sent' only if sentCount > 0; 'failed' otherwise w/ last_error
@@ -21,8 +21,10 @@ const REQUIRE_PUBLIC_VERIFIED = true;
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const PHAXIO_API_KEY = Deno.env.get("PHAXIO_API_KEY") || "";
-const PHAXIO_API_SECRET = Deno.env.get("PHAXIO_API_SECRET") || "";
+const SINCH_PROJECT_ID = Deno.env.get("SINCH_PROJECT_ID") || "";
+const SINCH_KEY_ID     = Deno.env.get("SINCH_KEY_ID") || "";
+const SINCH_KEY_SECRET = Deno.env.get("SINCH_KEY_SECRET") || "";
+const FAX_FROM         = Deno.env.get("SINCH_FAX_FROM") || "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const ADMIN_EMAIL = "matt@detroitwebagent.com";
 
@@ -98,46 +100,57 @@ function normalizeFax(num: string): string {
   return num;
 }
 
-async function checkPhaxioHealth(): Promise<{ ok: boolean; error?: string }> {
-  if (!PHAXIO_API_KEY || !PHAXIO_API_SECRET) {
-    return { ok: false, error: "PHAXIO_API_KEY / PHAXIO_API_SECRET not configured" };
+async function checkSinchHealth(): Promise<{ ok: boolean; error?: string }> {
+  if (!SINCH_PROJECT_ID || !SINCH_KEY_ID || !SINCH_KEY_SECRET) {
+    return { ok: false, error: "SINCH_PROJECT_ID / SINCH_KEY_ID / SINCH_KEY_SECRET not configured" };
   }
-  const credentials = btoa(`${PHAXIO_API_KEY}:${PHAXIO_API_SECRET}`);
   try {
-    const res = await fetch("https://api.phaxio.com/v2.1/account/status", {
-      headers: { Authorization: `Basic ${credentials}` },
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      return { ok: false, error: `HTTP ${res.status}: ${txt.slice(0, 160)}` };
-    }
-    return { ok: true };
+    const auth = btoa(`${SINCH_KEY_ID}:${SINCH_KEY_SECRET}`);
+    const res = await fetch(
+      `https://fax.api.sinch.com/v3/projects/${SINCH_PROJECT_ID}/faxes?page_size=1`,
+      { headers: { Authorization: `Basic ${auth}` }, signal: AbortSignal.timeout(10_000) },
+    );
+    // 200 (list) or 404 (no faxes yet) both mean the API is reachable and credentials work
+    if (res.status === 200 || res.status === 404) return { ok: true };
+    const txt = await res.text().catch(() => "");
+    return { ok: false, error: `HTTP ${res.status}: ${txt.slice(0, 160)}` };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
 
-async function sendFaxViaPhaxio(toNumber: string, html: string): Promise<{ ok: boolean; id?: string; error?: string }> {
-  const credentials = btoa(`${PHAXIO_API_KEY}:${PHAXIO_API_SECRET}`);
-  const form = new FormData();
-  form.append("to", toNumber);
-  form.append("string_data", html);
-  form.append("string_data_type", "html");
-  form.append("header_text", "Detroit Web Agency");
+async function sendFaxViaSinch(
+  sb: any,
+  toNumber: string,
+  html: string,
+): Promise<{ ok: boolean; id?: string; error?: string }> {
+  if (!SINCH_PROJECT_ID || !SINCH_KEY_ID || !SINCH_KEY_SECRET) {
+    return { ok: false, error: "Sinch creds not configured" };
+  }
+  // Upload HTML to Supabase Storage so Sinch can fetch it via contentUrl
+  const storageKey = `fax-temp/sinch-${Date.now()}-${Math.random().toString(36).slice(2)}.html`;
+  const { error: uploadErr } = await sb.storage
+    .from("lead-dossier-pdfs")
+    .upload(storageKey, new TextEncoder().encode(html), { contentType: "text/html", upsert: true });
+  if (uploadErr) return { ok: false, error: `Storage upload failed: ${uploadErr.message}` };
+
+  const { data: urlData } = sb.storage.from("lead-dossier-pdfs").getPublicUrl(storageKey);
+  const contentUrl = urlData?.publicUrl;
+  if (!contentUrl) return { ok: false, error: "Failed to get public URL for fax content" };
 
   try {
-    const res = await fetch("https://api.phaxio.com/v2.1/faxes", {
-      method: "POST",
-      headers: { Authorization: `Basic ${credentials}` },
-      body: form,
-      signal: AbortSignal.timeout(30_000),
-    });
-    const data = await res.json();
-    if (!res.ok || !data?.success) {
-      return { ok: false, error: data?.message || `HTTP ${res.status}` };
-    }
-    return { ok: true, id: String(data?.data?.id || "") };
+    const auth = btoa(`${SINCH_KEY_ID}:${SINCH_KEY_SECRET}`);
+    const fd = new FormData();
+    fd.append("to", toNumber);
+    if (FAX_FROM) fd.append("from", FAX_FROM);
+    fd.append("contentUrl", contentUrl);
+    const res = await fetch(
+      `https://fax.api.sinch.com/v3/projects/${SINCH_PROJECT_ID}/faxes`,
+      { method: "POST", headers: { Authorization: `Basic ${auth}` }, body: fd, signal: AbortSignal.timeout(30_000) },
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, error: `Sinch ${res.status}: ${JSON.stringify(data)}` };
+    return { ok: true, id: String(data?.id || data?.faxId || "") };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
@@ -241,8 +254,8 @@ serve(async (req) => {
 
     // ── DIAGNOSE / DRY RUN ───────────────────────────────────────────────
     if (dryRun) {
-      const [phaxioHealth, monthSent] = await Promise.all([
-        checkPhaxioHealth(),
+      const [sinchHealth, monthSent] = await Promise.all([
+        checkSinchHealth(),
         getMonthSentCount(sb),
       ]);
       const noFax = allTargets.filter((p: any) => !p.fax_number).length;
@@ -253,8 +266,8 @@ serve(async (req) => {
         ready_to_send: targets.length,
         already_sent: alreadySent,
         no_fax_number: noFax,
-        phaxio_api_ok: phaxioHealth.ok,
-        phaxio_error: phaxioHealth.error || null,
+        sinch_api_ok: sinchHealth.ok,
+        sinch_error: sinchHealth.error || null,
         month_sent_so_far: monthSent,
         month_remaining: Math.max(0, MAX_PER_MONTH - monthSent),
         per_run_cap: MAX_PER_RUN,
@@ -281,8 +294,8 @@ serve(async (req) => {
       }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    if (!PHAXIO_API_KEY || !PHAXIO_API_SECRET) {
-      return new Response(JSON.stringify({ error: "PHAXIO_API_KEY / PHAXIO_API_SECRET not configured" }), {
+    if (!SINCH_PROJECT_ID || !SINCH_KEY_ID || !SINCH_KEY_SECRET) {
+      return new Response(JSON.stringify({ error: "SINCH_PROJECT_ID / SINCH_KEY_ID / SINCH_KEY_SECRET not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -340,13 +353,13 @@ serve(async (req) => {
         continue;
       }
 
-      const result = await sendFaxViaPhaxio(faxNum, html_body);
+      const result = await sendFaxViaSinch(sb, faxNum, html_body);
       if (result.ok) {
         sent++;
         await sb.from("fax_send_log").insert({
           prospect_id: p.id, campaign_id: campaignId, fax_number: faxNum,
           business_name: p.business_name, audience_type: audience,
-          phaxio_id: result.id, status: "sent", cost: COST_PER_FAX,
+          sinch_id: result.id, status: "sent", cost: COST_PER_FAX,
         });
         if (p._source === "prospect_pool") {
           await sb.from("prospect_pool").update({
@@ -362,7 +375,7 @@ serve(async (req) => {
         }
       } else {
         failed++;
-        lastError = result.error || "unknown phaxio error";
+        lastError = result.error || "unknown sinch error";
         await sb.from("fax_send_log").insert({
           prospect_id: p.id, campaign_id: campaignId, fax_number: faxNum,
           business_name: p.business_name, audience_type: audience,
