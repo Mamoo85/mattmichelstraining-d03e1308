@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { demoAnalytics } from "./DemoAnalytics";
 
 /**
  * Presentation-grade kiosk mode for /demo/:slug.
