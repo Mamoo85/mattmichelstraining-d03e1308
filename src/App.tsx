@@ -569,6 +569,7 @@ const App = () => (
                     <Route path="/demo-djconley-1" element={<DJConleyDemo1 />} />
                     <Route path="/demo-djconley-1/*" element={<DJConleyDemo1 />} />
                     <Route path="/demo-djconley-2" element={<DJConleyDemo2 />} />
+                    <Route path="/demo/:slug" element={<DemoTemplate />} />
                     <Route path="/demo-youngblood-alt2" element={<YoungbloodMockupAlt2 />} />
                     <Route path="/demo-youngblood-alt2/*" element={<YoungbloodMockupAlt2 />} />
                     <Route path="/demo-hvac" element={<HvacMockup />} />
