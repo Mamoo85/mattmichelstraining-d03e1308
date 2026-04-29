@@ -594,9 +594,12 @@ export default function HireAlert() {
                 onChange={(e) => setMetroId(e.target.value)}
                 style={{ width: "100%", background: "#001a33", border: "1px solid #1e3a5f", color: "#fff", padding: "12px 14px", borderRadius: 6, fontSize: 14 }}
               >
-                {US_METROS.map((m) => (
+                {(typeof window !== "undefined" && new URLSearchParams(window.location.search).get("all") === "1"
+                  ? getVisibleMetros(true)
+                  : getVisibleMetros(false)
+                ).map((m) => (
                   <option key={m.id} value={m.id}>
-                    {m.label}{m.priorityMarket ? " ⚡" : ""}
+                    {m.label}{m.priorityMarket ? " ⚡" : ""}{!m.betaActive ? " (coming soon)" : ""}
                   </option>
                 ))}
               </select>
