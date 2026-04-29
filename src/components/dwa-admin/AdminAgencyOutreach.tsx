@@ -338,7 +338,7 @@ export default function AdminAgencyOutreach() {
                     <iframe
                       title={`preview-${agency.name}`}
                       srcDoc={draft.html_body}
-                      sandbox=""
+                      sandbox="allow-same-origin"
                       className="w-full bg-white border-0"
                       style={{ height: 540 }}
                     />
