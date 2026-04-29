@@ -4,14 +4,14 @@ import { toast } from "sonner";
 import { Loader2, Copy, Wand2, Mail, Target, X, CheckCircle2, Send, Sparkles, AlertCircle } from "lucide-react";
 
 const METRO_DETROIT_AGENCIES = [
-  { name: "Aerotek", contact: "Director of Recruiting", vertical: "industrial", note: "Largest skilled trades staffing in MI", domain: "aerotek.com", role_hint: "director" },
-  { name: "Kelly Industrial", contact: "VP of Recruiting", vertical: "industrial", note: "Manufacturing + skilled trades focus", domain: "kellyservices.com", role_hint: "vp" },
-  { name: "Express Employment Pros — Troy", contact: "Branch Manager", vertical: "industrial", note: "High-volume CNC/machinist placements", domain: "expresspros.com", role_hint: "branch" },
-  { name: "Manpower Detroit", contact: "Director of Operations", vertical: "industrial", note: "Industrial + healthcare verticals", domain: "manpower.com", role_hint: "director" },
-  { name: "PrideStaff Detroit", contact: "Strategic Partner", vertical: "industrial", note: "Mid-market skilled trades", domain: "pridestaff.com", role_hint: "branch" },
-  { name: "Maxim Healthcare Staffing", contact: "Director of Recruiting", vertical: "healthcare", note: "RN/CNA/LPN focus, Metro Detroit", domain: "maximhealthcare.com", role_hint: "director" },
-  { name: "Cross Country Healthcare", contact: "Regional Director", vertical: "healthcare", note: "Travel + perm placements MI", domain: "crosscountry.com", role_hint: "director" },
-  { name: "Favorite Healthcare Staffing", contact: "Branch Director", vertical: "healthcare", note: "LTC + skilled nursing focus", domain: "favoritestaffing.com", role_hint: "branch" },
+  { name: "Qualified Staffing", contact: "Director of Recruiting", vertical: "industrial", note: "Troy, MI · CNC, machinist, light industrial placements since 1993", domain: "qualified-staffing.com", role_hint: "director" },
+  { name: "Acro Service Corp", contact: "VP of Technical Staffing", vertical: "industrial", note: "Livonia, MI · Engineering + skilled trades, heavy automotive focus", domain: "acrocorp.com", role_hint: "vp" },
+  { name: "Express Employment Pros — Troy", contact: "Branch Manager", vertical: "industrial", note: "Troy, MI franchise · High-volume light industrial + machinist", domain: "expresspros.com", role_hint: "branch" },
+  { name: "ASG Renaissance", contact: "Director of Recruiting", vertical: "industrial", note: "Southfield, MI · Engineering + technical, Detroit automotive ecosystem", domain: "asgrenaissance.com", role_hint: "director" },
+  { name: "Staffing Solutions Enterprises", contact: "Branch Manager", vertical: "industrial", note: "Auburn Hills, MI · General + light industrial, multi-county MI coverage", domain: "sse.net", role_hint: "branch" },
+  { name: "PrideStaff Detroit", contact: "Strategic Partner", vertical: "industrial", note: "Detroit franchise · Mid-market skilled trades + office placements", domain: "pridestaff.com", role_hint: "branch" },
+  { name: "Favorite Healthcare Staffing", contact: "Branch Director", vertical: "healthcare", note: "Metro Detroit · LTC + skilled nursing, active Michigan branch", domain: "favoritestaffing.com", role_hint: "branch" },
+  { name: "Delta T Group", contact: "Regional Director", vertical: "healthcare", note: "Metro Detroit · Behavioral health + human services staffing, MI region", domain: "deltatgroup.com", role_hint: "director" },
 ];
 
 interface DraftPayload {
