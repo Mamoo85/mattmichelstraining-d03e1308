@@ -355,7 +355,7 @@ Single test: `npx vitest run src/path/to/file.test.ts`
 - **Database**: Supabase Postgres (RLS on all tables)
 - **Payments**: Stripe (inline `price_data` only, no pre-created prices)
 - **Email**: Resend API
-- **AI**: Claude Haiku (`claude-haiku-4-5` / `claude-haiku-4-5-20251001`) via Anthropic API
+- **AI**: Claude Opus 4.7 (`claude-opus-4-7`) for high-stakes outreach via `_shared/opus.ts`; cheap calls use Lovable Gateway → `google/gemini-2.5-flash` (branded "Haiku" internally). Haiku fallback ID: `claude-haiku-4-5-20251001`
 - **Repo**: `mamoo85/m2training` (GitHub)
 - **Primary Supabase**: Lovable-managed (URL starts with `eauvubfpanpeuxsrqesu`)
 - **Secondary Supabase**: `zmyczlfuufhngzovkjdh` — GitHub Actions only. Do NOT apply migrations here via MCP.
@@ -364,10 +364,10 @@ Single test: `npx vitest run src/path/to/file.test.ts`
 
 ## Codebase Scale
 
-- **311** frontend pages in `src/pages/`
-- **598** Supabase Edge Functions in `supabase/functions/`
-- **461** migration files
-- **31** AI agents in `.claude/agents/`
+- **328** frontend pages in `src/pages/`
+- **859** Supabase Edge Functions in `supabase/functions/`
+- **707** migration files
+- **33** AI agents in `.claude/agents/`
 - **67+** product lines across 5 waves + DWA suite
 
 New product checklist: 1 migration, 1–2 edge functions, 1 page, add to `AdminOpsCenter` + `AdminClientHealth`.
@@ -406,11 +406,41 @@ Two purposes in one codebase:
 ## Edge Function Conventions
 
 - Every function: `supabase/functions/<name>/index.ts`, Deno runtime
-- Shared utilities: `_shared/ai.ts` (generateText, generateJSON), `_shared/twilio.ts` (sendSMS + TCPA), `_shared/email-templates/`
+- Shared utilities in `supabase/functions/_shared/`:
+  - `ai.ts` — `generateText`, `generateJSON` via Lovable Gateway
+  - `opus.ts` — `generateWithOpus` (Opus 4.7 for outreach), `generateWithHaiku` (Gemini Flash via gateway)
+  - `twilio.ts` — `sendSMS` + TCPA opt-out scrub + FCC quiet hours
+  - `apollo.ts` — `apolloPeopleSearch`, `apolloOrganizationSearch`, `apolloOrganizationEnrich` (canonical; use this, not raw fetch)
+  - `firecrawl.ts` — `firecrawlScrape`, `extractFaxNumber`, `extractPhoneNumbers`, `extractContactInfo`
+  - `hunter.ts` — `hunterFindEmail(domain)`, `hunterVerifyEmail(email)`
+  - `email-waterfall.ts` — multi-source email enrichment waterfall (Apollo → Hunter → Firecrawl)
+  - `circuit-breaker.ts`, `fetch-with-retry.ts`, `retry-policy.ts` — resilience utilities
+  - `enrichment-audit.ts` — enrichment cost + result logging
+  - `anti-hallucination.ts`, `llm-contradiction-check.ts`, `event-corroboration.ts` — LLM output validation
+  - `cron-window.ts` — time-window helpers for ET-aligned cron guards
+  - `outreach-blocklist.ts` — suppression list checks before any outreach
+  - `safe-parse.ts`, `strict-json.ts` — JSON parsing with graceful fallbacks
+  - `stealth-scrape.ts`, `scraper.ts`, `scrape-fallback.ts` — browser/HTTP scraping stack
+  - `flight-risk.ts`, `intent-score.ts`, `recency-decay.ts` — lead scoring signals
+  - `lead-extractor.ts`, `lead-verifier.ts` — lead validation pipeline
+  - `sms-templates.ts` — reusable SMS copy library
+  - `email-templates/` — transactional React email components
+  - `transactional-email-templates/` — order-confirmation, welcome, subscription-activated
+  - `scrapers-county-records.ts`, `scrapers-public-listings.ts` — public data scrapers
+  - `michigan-cities.ts` — Michigan geo reference data
+  - `postcard-assets.ts` — LOB postcard templates
+  - `webhook-verify.ts` — Stripe + Twilio signature verification
+  - `stripe-key.ts` — Stripe key helper
+  - `coldEmailShared.ts` — shared cold email copy utilities
+  - `permit-velocity.ts` — permit signal scoring
+  - `sanitize-candidate.ts` — candidate data normalizer
+  - `signup-classifier.ts` — signup intent classification
+  - `dead-lead-emails.ts` — dead lead re-engagement email copy
 - Checkout functions named `create-<product>-checkout/index.ts`
 - Stripe: always inline `price_data`, always set `metadata.type` for webhook routing
 - **SMS**: ALWAYS `import { sendSMS } from "../_shared/twilio.ts"` — never define a local sendSMS. The shared version checks `sms_opt_outs` (TCPA).
-- AI calls: Claude Haiku only, `max_tokens` 800–1200
+- **Apollo**: ALWAYS import from `_shared/apollo.ts` — sends both `X-Api-Key` header AND `api_key` body (Apollo requires both)
+- AI calls: `generateWithHaiku()` (cheap) or `generateWithOpus()` (outreach-critical only), `max_tokens` 800–1200
 - Read env vars at module scope (top-level), not inside handlers
 - Parallelize independent async ops with `Promise.all()`
 
@@ -442,8 +472,9 @@ Two purposes in one codebase:
 | Twilio | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`, `TWILIO_API_KEY` |
 | Social | `META_ACCESS_TOKEN`, `META_APP_ID`, `META_APP_SECRET`, `META_PAGE_ID`, `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET` |
 | Data | `FIRECRAWL_API_KEY`, `DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD`, `HIBP_API_KEY`, `SAM_GOV_API_KEY`, `NOAA_API_KEY` |
+| Enrichment | `APOLLO_API_KEY`, `HUNTER_IO_API_KEY`, `CLEARBIT_API_KEY` |
 | Automation | `N8N_MCP_URL`, `N8N_ACCESS_TOKEN` |
-| Pending | `LOB_API_KEY`, `BROWSERLESS_API_KEY`, `APOLLO_API_KEY` |
+| Pending | `LOB_API_KEY`, `BROWSERLESS_API_KEY` |
 
 Twilio webhook (voice/missed call): `https://zmyczlfuufhngzovkjdh.supabase.co/functions/v1/missed-call-handler`
 
@@ -474,13 +505,15 @@ Twilio webhook (voice/missed call): `https://zmyczlfuufhngzovkjdh.supabase.co/fu
 
 ---
 
-## Agents (31 total — `.claude/agents/`)
+## Agents (33 total — `.claude/agents/`)
 
 **Autonomous loop agents** (paired edge functions running 24/7): `tom-autonomous`, `oz-autonomous`, `scarlett-autonomous`, `selma-autonomous`, `ops-autonomous`
 
 **Core**: Tom (lead hunter), Oracle (account watchdog), Ops (fulfillment)
 
 **Specialized**: Aff, Cashier, Comply, Critic, Drill, Guard, Hype, Invest, Launch, Luna, Mirror, Mute, Nova, Pulse, Red, Ref, Rev, Scout, Shield, Solo, Trim, Upsell, Vera, Zero
+
+**Also in `.claude/agents/`**: `PHASE_18_BRIEFING.md` (cross-agent phase briefing), `fixer.md` (autonomous code-fix agent)
 
 > "Create an agent" = create `.md` file at `.claude/agents/[name].md`
 
@@ -492,11 +525,16 @@ Twilio webhook (voice/missed call): `https://zmyczlfuufhngzovkjdh.supabase.co/fu
 git fetch origin main && git checkout origin/main -- knowledge/
 ```
 
-- `knowledge/M2_Agent_Roster.md` — all 31 agents, status, schedules
+- `knowledge/M2_Agent_Roster.md` — all 33 agents, status, schedules
 - `knowledge/M2_Admin_Controls_Guide.md` — every admin tool
 - `knowledge/M2_Product_Catalog.md` — all products, pricing, margins, flows
 - `knowledge/M2_Ad_Strategy_Action_Plan.md` — paid ads roadmap
 - `knowledge/TechAlert_Value_Proposition.md` — TechAlert pitch, objections, ROI math
+- `knowledge/DWA_Business_Plan_2026.md` — full DWA growth plan
+- `knowledge/DWA_Full_Business_Audit_2026.md` — full audit findings
+- `knowledge/Michigan_Market_Intelligence_2026.md` — Michigan market data
+- `knowledge/field-service-brief.md` — FieldDesk product brief
+- `knowledge/talent-radar-v5/` — TechAlert v5 product spec
 
 ---
 
@@ -505,7 +543,7 @@ git fetch origin main && git checkout origin/main -- knowledge/
 - All new tables: RLS enabled + service_role bypass policy
 - Stripe: inline `price_data` always; always set `metadata.type`; always `constructEventAsync` (not sync) in webhooks
 - SMS: always use `_shared/twilio.ts` sendSMS — checks `sms_opt_outs` (TCPA)
-- AI: Claude Haiku only (`claude-haiku-4-5`), max_tokens 800–1200
+- AI: `generateWithHaiku()` for cheap calls (routes to Gemini Flash via Lovable Gateway), `generateWithOpus()` for outreach drafts only (Opus 4.7 direct). max_tokens 800–1200
 - stripe-webhook: use `sendM2Email()` and `notifyMatt()` helpers — never raw `fetch()` to Resend
 - stripe-webhook: use `${SUPABASE_URL}/functions/v1/...` for function URLs — never hardcode project ref
 - Auto-onboard: add welcome email template when adding new products
