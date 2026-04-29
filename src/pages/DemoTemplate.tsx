@@ -53,6 +53,12 @@ export default function DemoTemplate() {
       .catch(() => setError(`Demo config "${slug}" not found.`));
   }, [slug]);
 
+  // Record a "view" once we have a slug + config (kiosk or not — every demo open counts)
+  useEffect(() => {
+    if (config) demoAnalytics.recordView();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config?.companyName]);
+
   if (error) {
     return (
       <div style={{ minHeight: "100vh", background: "#060e1a", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", fontFamily: "-apple-system, sans-serif" }}>
