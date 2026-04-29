@@ -110,6 +110,14 @@ export default function MortgageRadarPipeline({
                           {l.score}
                         </span>
                       </div>
+                      <div className="mt-1.5">
+                        <LeadVerificationBadges
+                          verifier_grounded={l.verifier_grounded}
+                          verifier_citation_match={l.verifier_citation_match}
+                          verification_method={l.verification_method}
+                          has_coordinates={l.lat != null && l.lng != null}
+                        />
+                      </div>
                     </div>
                   </div>
                   {/* Mobile fallback — quick stage select */}
