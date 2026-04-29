@@ -49,6 +49,18 @@ serve(async (req) => {
 
     for (const client of clients) {
       try {
+        // Top 5 new candidates this week (for the candidate spotlight section)
+        const { data: topCandidateRows } = await sb
+          .from("hire_alert_client_candidates")
+          .select("candidate_id, alerted_at, pipeline_stage, hire_alert_candidates(name, trade, city, state, score, license_type, years_experience)")
+          .eq("client_id", client.id)
+          .gte("alerted_at", sevenDaysAgo)
+          .order("alerted_at", { ascending: false })
+          .limit(5);
+        const topCandidates = (topCandidateRows || [])
+          .map((r: any) => ({ ...r.hire_alert_candidates, stage: r.pipeline_stage, alerted_at: r.alerted_at }))
+          .filter((c: any) => c?.name);
+
         // 7-day pipeline stats
         const { data: weekCandidates } = await sb
           .from("hire_alert_client_candidates")
