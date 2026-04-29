@@ -75,6 +75,9 @@ const OutreachAuditLog = lazyRetry(() => import("./pages/admin/OutreachAuditLog"
 const OutreachQueuePage = lazyRetry(() => import("./pages/admin/OutreachQueue"));
 const OutreachObservabilityPage = lazyRetry(() => import("./pages/admin/OutreachObservability"));
 const Wave5Dashboard = lazyRetry(() => import("./pages/admin/Wave5Dashboard"));
+const AuditTimeline = lazyRetry(() => import("./pages/admin/AuditTimeline"));
+const Quarantine = lazyRetry(() => import("./pages/admin/Quarantine"));
+const AdminEdgeHealth = lazyRetry(() => import("./pages/admin/AdminEdgeHealth"));
 const ProspectRedirect = lazyRetry(() => import("./pages/ProspectRedirect"));
 const Pricing = lazyRetry(() => import("./pages/Pricing"));
 const About = lazyRetry(() => import("./pages/About"));
@@ -823,6 +826,9 @@ const App = () => (
                       <Route path="/dwa-admin/outreach-queue" element={<AgencyAdminRoute><OutreachQueuePage /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/outreach-observability" element={<AgencyAdminRoute><OutreachObservabilityPage /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/wave5" element={<AgencyAdminRoute><Wave5Dashboard /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/audit-timeline" element={<AgencyAdminRoute><AuditTimeline /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/quarantine" element={<AgencyAdminRoute><Quarantine /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/edge-health" element={<AgencyAdminRoute><AdminEdgeHealth /></AgencyAdminRoute>} />
                      <Route path="/r/:token" element={<ProspectRedirect />} />
                      <Route path="/admin/view-user/:userId" element={<ProtectedRoute><AdminViewUser /></ProtectedRoute>} />
                      <Route path="/comms-center" element={<ProtectedRoute><CommunicationsCenter /></ProtectedRoute>} />
