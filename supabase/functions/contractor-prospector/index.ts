@@ -236,7 +236,7 @@ async function scoutScoreLead(
 
 Business: "${businessName}"
 Trade: ${trade}
-City: ${city}, MI
+City: ${city}
 Google Rating: ${rating || "N/A"} stars
 Review Count: ${reviewCount}
 Has Website: ${hasWebsite ? "Yes" : "No"}
