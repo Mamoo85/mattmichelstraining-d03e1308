@@ -130,9 +130,15 @@ export default function AlertRuleTesterPanel() {
       </Button>
 
       {result && (
-        <pre className="text-xs bg-muted/40 rounded p-3 overflow-auto max-h-72">
-          {JSON.stringify(result, null, 2)}
-        </pre>
+        <>
+          <pre className="text-xs bg-muted/40 rounded p-3 overflow-auto max-h-72">
+            {JSON.stringify(result, null, 2)}
+          </pre>
+          <AlertRuleDiffView
+            liveConfig={LIVE_CONFIG[rule]}
+            testConfig={(result && (result as any).input) || null}
+          />
+        </>
       )}
     </Card>
   );
