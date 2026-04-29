@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { demoAnalytics } from "./DemoAnalytics";
 
 /**
  * Presentation-grade kiosk mode for /demo/:slug.
@@ -145,6 +146,7 @@ export function FullscreenPrompt({ onEnter }: { onEnter: () => void }) {
  */
 export function StartDemoButton() {
   const enter = () => {
+    demoAnalytics.recordStartClick();
     const url = new URL(window.location.href);
     url.searchParams.set("kiosk", "1");
     window.location.href = url.toString();
@@ -186,6 +188,7 @@ export function StartDemoButton() {
  */
 export function ExitKioskButton() {
   const exit = () => {
+    demoAnalytics.recordExitClick();
     if (document.fullscreenElement && document.exitFullscreen) {
       document.exitFullscreen().catch(() => {});
     }
