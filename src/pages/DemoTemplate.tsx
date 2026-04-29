@@ -116,24 +116,27 @@ export default function DemoTemplate() {
 
       <div style={{ maxWidth: kiosk ? 1400 : 1100, margin: "0 auto", padding: kiosk ? "20px 24px" : "24px 20px" }}>
         {/* Sizzle reel */}
-        <SizzleHero src={c.sizzleVideoSrc} kiosk={kiosk} companyName={c.companyName} />
+        <section id="demo-sizzle" style={{ scrollMarginTop: 16 }}>
+          <SizzleHero src={c.sizzleVideoSrc} kiosk={kiosk} companyName={c.companyName} />
+        </section>
 
-        {/* Stat strip */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
-          {[
-            { label: "Jobs Today", value: c.stats.jobsToday, sub: c.stats.jobsSub, color: "#e8621a" },
-            { label: "Techs in Field", value: c.stats.techsInField, sub: c.stats.techsSub, color: c.accentColor },
-            { label: "Open Revenue", value: c.stats.openRevenue, sub: c.stats.revenueSub, color: "#10b981" },
-            { label: "Avg Review Score", value: c.stats.reviewScore, sub: c.stats.reviewSub, color: "#f59e0b" },
-          ].map((s) => (
-            <div key={s.label} style={{ background: "#0a1628", border: `1px solid ${s.color}30`, borderRadius: 14, padding: "16px 18px", position: "relative", overflow: "hidden" }}>
-              <div style={{ position: "absolute", top: -8, right: -8, width: 60, height: 60, borderRadius: "50%", background: s.color, opacity: 0.08, filter: "blur(16px)" }} />
-              <p style={{ margin: "0 0 4px", fontSize: 11, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>{s.label}</p>
-              <p style={{ margin: "0 0 2px", fontSize: 24, fontWeight: 900, color: s.color }}>{s.value}</p>
-              <p style={{ margin: 0, fontSize: 11, color: "#475569" }}>{s.sub}</p>
-            </div>
-          ))}
-        </div>
+        <section id="demo-stats" style={{ scrollMarginTop: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+            {[
+              { label: "Jobs Today", value: c.stats.jobsToday, sub: c.stats.jobsSub, color: "#e8621a" },
+              { label: "Techs in Field", value: c.stats.techsInField, sub: c.stats.techsSub, color: c.accentColor },
+              { label: "Open Revenue", value: c.stats.openRevenue, sub: c.stats.revenueSub, color: "#10b981" },
+              { label: "Avg Review Score", value: c.stats.reviewScore, sub: c.stats.reviewSub, color: "#f59e0b" },
+            ].map((s) => (
+              <div key={s.label} style={{ background: "#0a1628", border: `1px solid ${s.color}30`, borderRadius: 14, padding: "16px 18px", position: "relative", overflow: "hidden" }}>
+                <div style={{ position: "absolute", top: -8, right: -8, width: 60, height: 60, borderRadius: "50%", background: s.color, opacity: 0.08, filter: "blur(16px)" }} />
+                <p style={{ margin: "0 0 4px", fontSize: 11, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>{s.label}</p>
+                <p style={{ margin: "0 0 2px", fontSize: 24, fontWeight: 900, color: s.color }}>{s.value}</p>
+                <p style={{ margin: 0, fontSize: 11, color: "#475569" }}>{s.sub}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* SiteRadar */}
         <div style={{ background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 16, padding: "18px 20px", marginBottom: 20 }}>
