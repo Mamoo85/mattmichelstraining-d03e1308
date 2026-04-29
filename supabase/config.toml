@@ -2090,3 +2090,6 @@ verify_jwt = false
 
 [functions.techalert-hot-candidate-notify]
 verify_jwt = false
+
+[functions.agency-prospect-list-blast]
+verify_jwt = false
