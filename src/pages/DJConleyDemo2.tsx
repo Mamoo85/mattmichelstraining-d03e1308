@@ -37,7 +37,7 @@ const scoreColor = (s: number) => (s >= 8 ? "#dc2626" : s >= 7 ? "#e8621a" : "#f
 
 export default function DJConleyDemo2() {
   const [activeSection, setActiveSection] = useState<"dispatch" | "map">("dispatch");
-  const kiosk = useKioskMode();
+  const { kiosk } = useKioskMode();
 
   return (
     <div
