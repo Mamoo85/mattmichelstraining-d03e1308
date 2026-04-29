@@ -2051,3 +2051,18 @@ verify_jwt = false
 
 [functions.nursys-enroll]
 verify_jwt = false
+
+[functions.quarantine-daily-report]
+verify_jwt = false
+
+[functions.edge-function-health-check]
+verify_jwt = false
+
+[functions.env-validator]
+verify_jwt = false
+
+[functions.intent-score-decay]
+verify_jwt = false
+
+[functions.orphan-scan]
+verify_jwt = false

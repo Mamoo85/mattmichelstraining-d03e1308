@@ -19,37 +19,56 @@ export default function Wave5Dashboard() {
   const [confidences, setConfidences] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const loadAll = async () => {
+    const since = new Date(Date.now() - 7 * 86400_000).toISOString();
+    const [s, b, d, c] = await Promise.all([
+      supabase
+        .from("enrichment_provider_spend_daily" as any)
+        .select("day, provider, spend_usd")
+        .gte("day", since.slice(0, 10))
+        .order("day", { ascending: true }),
+      supabase
+        .from("enrichment_walker_config")
+        .select("value_numeric")
+        .eq("key", "daily_budget_usd")
+        .maybeSingle(),
+      supabase
+        .from("enrichment_dead_letter")
+        .select("created_at")
+        .eq("permanent_failure", false),
+      supabase
+        .from("prospects" as any)
+        .select("enrichment_confidence")
+        .not("enrichment_confidence", "is", null)
+        .limit(1000),
+    ]);
+    setSpend((s.data as any[]) || []);
+    setDailyBudget(Number((b.data as any)?.value_numeric ?? 50));
+    setDlq((d.data as any[]) || []);
+    setConfidences(((c.data as any[]) || []).map((x) => Number(x.enrichment_confidence)).filter((v) => !isNaN(v)));
+  };
+
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const since = new Date(Date.now() - 7 * 86400_000).toISOString();
-      const [s, b, d, c] = await Promise.all([
-        supabase
-          .from("enrichment_provider_spend_daily" as any)
-          .select("day, provider, spend_usd")
-          .gte("day", since.slice(0, 10))
-          .order("day", { ascending: true }),
-        supabase
-          .from("enrichment_walker_config")
-          .select("value_numeric")
-          .eq("key", "daily_budget_usd")
-          .maybeSingle(),
-        supabase
-          .from("enrichment_dead_letter")
-          .select("created_at")
-          .eq("permanent_failure", false),
-        supabase
-          .from("prospects" as any)
-          .select("enrichment_confidence")
-          .not("enrichment_confidence", "is", null)
-          .limit(1000),
-      ]);
-      setSpend((s.data as any[]) || []);
-      setDailyBudget(Number((b.data as any)?.value_numeric ?? 50));
-      setDlq((d.data as any[]) || []);
-      setConfidences(((c.data as any[]) || []).map((x) => Number(x.enrichment_confidence)).filter((v) => !isNaN(v)));
+      await loadAll();
       setLoading(false);
     })();
+
+    // Live refresh on DLQ + walker_config changes
+    const ch = supabase
+      .channel("wave5_live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "enrichment_dead_letter" }, () => loadAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "enrichment_walker_config" }, () => loadAll())
+      .subscribe();
+
+    // Periodic refresh for spend rollups (view, no realtime)
+    const t = setInterval(loadAll, 60_000);
+
+    return () => {
+      supabase.removeChannel(ch);
+      clearInterval(t);
+    };
   }, []);
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
