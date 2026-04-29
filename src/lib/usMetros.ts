@@ -36,6 +36,7 @@ export const US_METROS: MetroOption[] = [
     coverage: "healthcare_full_trades_partial",
     coverageLabel: "Healthcare full coverage (TX BON + Nursys + NPI + CMS) — Trades expanding Q2 2026",
     priorityMarket: true,
+    betaActive: true,
   },
   {
     id: "houston",
@@ -45,6 +46,7 @@ export const US_METROS: MetroOption[] = [
     zipPrefixes: ["770", "771", "772", "773", "774", "775"],
     coverage: "healthcare_only",
     coverageLabel: "Healthcare coverage (TX BON + Nursys + NPI + CMS) — Trades coming Q2 2026",
+    betaActive: true,
   },
   {
     id: "phoenix",
@@ -55,6 +57,7 @@ export const US_METROS: MetroOption[] = [
     coverage: "full",
     coverageLabel: "Trades + Healthcare full coverage (AZ ROC + Nursys + NPI + CMS)",
     priorityMarket: true,
+    betaActive: true,
   },
   {
     id: "atlanta",
@@ -64,6 +67,7 @@ export const US_METROS: MetroOption[] = [
     zipPrefixes: ["300", "301", "302", "303", "305", "311"],
     coverage: "healthcare_only",
     coverageLabel: "Healthcare only (Nursys + NPI + CMS) — Trades licensed at county level",
+    betaActive: true,
   },
   {
     id: "miami",
