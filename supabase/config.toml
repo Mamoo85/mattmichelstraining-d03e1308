@@ -2087,3 +2087,6 @@ verify_jwt = false
 
 [functions.validate-osint-secrets]
 verify_jwt = false
+
+[functions.techalert-hot-candidate-notify]
+verify_jwt = false
