@@ -2040,3 +2040,14 @@ verify_jwt = false
 [functions.enrichment-rerun-batch]
 verify_jwt = false
 
+[functions.contractor-outreach-sms-send]
+verify_jwt = false
+
+[functions.mortgage-radar-founder-invite]
+verify_jwt = false
+
+[functions.healthcare-sources-rerun]
+verify_jwt = false
+
+[functions.nursys-enroll]
+verify_jwt = false
