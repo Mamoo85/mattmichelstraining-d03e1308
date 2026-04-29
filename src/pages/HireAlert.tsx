@@ -588,32 +588,15 @@ export default function HireAlert() {
               onChange={(e) => setPhone(e.target.value)}
               style={{ background: "#001a33", border: "1px solid #1e3a5f", color: "#fff", padding: "12px 14px" }}
             />
-            <div>
-              <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 600, color: "#94a3b8" }}>Which market? *</p>
-              <select
-                value={metroId}
-                onChange={(e) => setMetroId(e.target.value)}
-                style={{ width: "100%", background: "#001a33", border: "1px solid #1e3a5f", color: "#fff", padding: "12px 14px", borderRadius: 6, fontSize: 14 }}
-              >
-                {(typeof window !== "undefined" && new URLSearchParams(window.location.search).get("all") === "1"
-                  ? getVisibleMetros(true)
-                  : getVisibleMetros(false)
-                ).map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.label}{m.priorityMarket ? " ⚡" : ""}{!m.betaActive ? " (coming soon)" : ""}
-                  </option>
-                ))}
-              </select>
-              <p style={{ margin: "8px 0 0", fontSize: 12, color: selectedMetro.coverage === "full" ? "#22c55e" : selectedMetro.coverage === "healthcare_full_trades_partial" ? "#fbbf24" : "#94a3b8", lineHeight: 1.5 }}>
-                {selectedMetro.coverage === "full" ? "✓ " : selectedMetro.coverage === "healthcare_full_trades_partial" ? "⚡ " : "ℹ️ "}
-                {selectedMetro.coverageLabel}
-              </p>
-              {metroId !== "detroit" && (
-                <p style={{ margin: "6px 0 0", fontSize: 12, color: ACCENT, fontWeight: 600 }}>
-                  ${metroStandalone}/mo standalone · ${metroBundle}/mo bundle
-                </p>
-              )}
-            </div>
+            <MetroPickerWithToggle
+              metroId={metroId}
+              setMetroId={setMetroId}
+              selectedMetro={selectedMetro}
+              metroStandalone={metroStandalone}
+              metroBundle={metroBundle}
+              accent={ACCENT}
+            />
+
             <div>
               <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 600, color: "#94a3b8" }}>Which roles do you want to monitor? *</p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
