@@ -1,93 +1,39 @@
-# 48-Hour Audit + Click Test
+# Wave 5 Finalization — Execution Checkpoint
+*Last checkpoint: 2026-04-29*
 
-## What I found (data, not opinion)
+## ✅ Completed this turn
 
-The last 48h shipped **210 changed files**: 56 new edge functions, 34 migrations, 39 new components, 5 new pages, 3 new e2e suites. Brand-new pages (`AdminHealth`, `OutreachAuditLog`, `OutreachObservability`, `OutreachQueue`, `Wave5Dashboard`) are all routed in `App.tsx`. Almost everything is wired correctly. But a sweep turned up real gaps:
+### Migration applied (1 file)
+- `admin_decision_audit`, `cron_health_events`, `edge_health_events`, `orphan_scan_results`, `lead_event_corroborations` tables — all with RLS + admin/coach SELECT policies + service_role bypass.
+- `mortgage_radar_leads` columns added: `intent_score`, `intent_score_updated_at`, `extractor_run_id`, `verifier_grounded`, `verifier_citation_match`, `verification_method`. Plus indexes on `intent_score DESC` and `pipeline_stage`.
+- Coach SELECT policies added to: `mortgage_radar_leads`, `enrichment_decision_audit`, `enrichment_dead_letter`, `enrichment_walker_config`, `health_check_pings`. (Skipped `enrichment_provider_spend_daily` — it's a view; coach inherits via underlying table grants.)
+- SQL functions: `quarantine_suspect_leads()` (idempotent), `compute_lead_intent_score(lead_id)` (with decay).
+- Audit triggers: `trg_audit_walker_config` (budget cap changes), `trg_audit_dlq_transition` (DLQ state changes).
+- Seeded `intent_weights` config row.
+- Cron schedules added: `quarantine-daily-report` (11:00 UTC daily), `edge-function-health-check` (every 15m), `intent-score-decay` (10:00 UTC daily).
 
-### Orphaned components (built, never imported anywhere)
-1. `src/components/dwa-admin/CandidateLicenseEditor.tsx`
-2. `src/components/dwa-admin/HealthcareSourceHealthPanel.tsx`
+### Shared module (1 of 4)
+- `supabase/functions/_shared/strict-json.ts` — Claude Haiku tool-calling helper, model pinned to `claude-haiku-4-5-20251001`, temperature 0.1, `additionalProperties:false` enforced. Includes `assertAnthropicOnly()` guard.
 
-### Orphaned edge functions (never called from frontend, no cron, no other function)
-Most have `[functions.X]` in `config.toml` but no caller — they're deployed dead weight or were meant to be cron'd:
-- `compute-intent-score`, `intent-score-recompute`
-- `geocode-signals-batch`
-- `hiring-velocity-tracker`
-- `cron-health-monitor` (should run on schedule by name)
-- `rfp-keyword-bounty`
-- `dossier-cold-outreach-bulk`, `dossier-share-page`
-- `generate-account-narrative` (note: `AccountNarrativeDrawer` IS imported, may call this — needs verify)
-- `signal-triggered-sms-draft`, `signal-outreach-cancel-bulk`
-- `outreach-reply-handler`, `resend-bounce-webhook` (these are inbound webhooks — Twilio/Resend point at them externally; "no caller" is expected, but they need webhook URLs documented)
-- `contractor-outreach-unsubscribe` (List-Unsubscribe header target — also expected)
-- `healthcare-sources-rerun`, `nursys-enroll`
+## ⏭️ Remaining work (next turn)
 
-### Missing `supabase/config.toml` entries (will deploy with `verify_jwt = true` and break)
-1. `contractor-outreach-sms-send` — Twilio inbound? must be public
-2. `healthcare-sources-rerun`
-3. `mortgage-radar-founder-invite` — public invite link, must be public
-4. `nursys-enroll`
+**Shared modules (3 left):**
+- `_shared/lead-extractor.ts`
+- `_shared/lead-verifier.ts`
+- `_shared/event-corroboration.ts`
 
-### Code-quality flag
-- `supabase/functions/outreach-one-press/index.ts` uses `// @ts-nocheck` or `@ts-ignore` — needs review.
+**Edge functions (5 new + 4 modified):**
+- New: `quarantine-daily-report`, `edge-function-health-check`, `env-validator`, `enrichment-e2e-export`, `orphan-scan`, `intent-score-decay`
+- Modify: `mortgage-radar-scanner` (replace `sonarSearch` Gemini call with extractor→verifier pipeline), `mortgage-radar-am-digest` (sort by intent_score, Street View from lat/lon), `_shared/llm-contradiction-check.ts` (inline citations + Haiku), `_shared/ai.ts` (assertAnthropicOnly belt)
 
----
+**Frontend (5 new + 5 modified):**
+- New pages: `AuditTimeline.tsx`, `Quarantine.tsx`, `AdminEdgeHealth.tsx`
+- New components: `LeadVerificationBadges.tsx`, `AlertRuleDiffView.tsx` (hand-rolled diff)
+- Modify: `Wave5Dashboard.tsx` (realtime channel), `CronStatusWidget` (red-badge subscription), `AlertRuleTesterPanel.tsx` (mount diff view), `App.tsx` (3 routes + `<CoachReadOnlyRoute>`), `useIsAdmin.tsx` (add `useIsAdminOrCoach`)
 
-## Plan (in execution order)
+**Tests (5):** quarantine seed test, lead-verifier substring test, env-config validator test, route-orphan test, coach-rbac e2e
 
-**Step 1 — Verify each "orphan" against actual callers before deleting**
-Re-grep across full codebase for each orphan (some are webhook targets or called by name dynamically). Categorize as:
-- **WIRE**: real orphan that should be wired (e.g. `CandidateLicenseEditor` likely belongs on a candidate detail page).
-- **WEBHOOK**: external-callable, leave but document in `CLAUDE.md`.
-- **CRON-MISS**: function whose name implies a schedule (e.g. `cron-health-monitor`, `intent-score-recompute`, `intent-spike-notifier`) but has no `pg_cron` job. Add cron migration.
-- **DELETE**: truly dead.
-
-**Step 2 — Fix the 4 missing `config.toml` entries**
-Add `[functions.X]` blocks with `verify_jwt = false` for the public/webhook ones (`contractor-outreach-sms-send`, `mortgage-radar-founder-invite`); leave `verify_jwt = true` for admin-only (`healthcare-sources-rerun`, `nursys-enroll`).
-
-**Step 3 — Wire the 2 truly orphaned components**
-- `CandidateLicenseEditor` → mount inside the existing TechAlert candidate detail/edit panel.
-- `HealthcareSourceHealthPanel` → mount on `Wave5Dashboard` or `AdminClientHealth` (whichever already shows source health).
-
-**Step 4 — Backfill cron jobs for orphan workers** (only those whose name implies a schedule)
-Single migration adding `pg_cron` schedules for: `cron-health-monitor` (every 5 min), `intent-score-recompute` (hourly), `geocode-signals-batch` (every 15 min), `hiring-velocity-tracker` (daily 7am ET), `outreach-backlog-watchdog` if missing.
-
-**Step 5 — Clean up `outreach-one-press` `@ts-nocheck`**
-Read the file, type the offending lines, remove the suppression.
-
-**Step 6 — Run the existing automated suites**
-- `bunx vitest run` — full unit suite (231 tests as of last session).
-- `npx playwright test tests/e2e/auth-smoke.spec.ts tests/e2e/dashboard-smoke.spec.ts tests/e2e/checkout-smoke.spec.ts tests/e2e/receipt-banner.spec.ts` — the new smoke suites.
-- `bunx supabase test edge-functions` for the new function tests (`safe-parse.test.ts`, `signup-classifier.test.ts`, `contractor-outreach-enrich-backfill/index.test.ts`, etc.).
-
-**Step 7 — Live click-test the 5 brand-new pages with the browser tool**
-Navigate to each, observe, screenshot, capture console errors:
-1. `/admin-health` — run health check, confirm it returns auth_ok / db_read_ok / db_write_ok.
-2. `/admin/outreach-observability`
-3. `/admin/outreach-queue`
-4. `/admin/outreach-audit-log`
-5. `/admin/wave5-dashboard`
-Plus a smoke pass on `/mortgage-radar` (fresh anti-hallucination work) and `/contractor-marketplace` (new guest flow).
-
-**Step 8 — DB sanity sweep**
-Quick `read_query`:
-- Count rows in `mortgage_radar_leads` where `pipeline_stage = 'quarantined_pre_validation'` vs active (confirm last sweep stuck).
-- Confirm no new leads since the manual scanner run lack `lat`/`lon`.
-- Spot-check `outreach_queue`, `outreach_audit_log`, `enrichment_walker_alerts` tables exist and have RLS.
-
-**Step 9 — Report**
-Single message back with: (a) what was orphaned + how it was fixed, (b) test pass/fail counts, (c) screenshots of the 5 new admin pages, (d) any runtime errors found, (e) anything I think still needs Matt's eye.
-
----
-
-## Out of scope (call out, don't fix)
-- I won't refactor the 56 new edge functions for style.
-- I won't add new features.
-- I won't touch the anti-hallucination code we just shipped — only verify it via the DB sweep in Step 8.
-
----
-
-## Risk
-Low. Steps 1–5 are additive (new config, new mounts, one cron migration). Steps 6–8 are read-only verification. The only DB change is a small cron migration (Step 4), which uses `IF NOT EXISTS` patterns and is reversible.
-
-Approve and I'll execute end-to-end and report back in one message.
+## Notes
+- Confirmed: zero direct `generativelanguage.googleapis.com` / `GOOGLE_GEMINI` / `GOOGLE_AI_API_KEY` call sites. All Gemini usage routes through `https://ai.gateway.lovable.dev`. Scope of LLM swap is **mortgage-radar-scanner only** for this wave (other scanners aren't exhibiting hallucination — out of scope).
+- Linter warnings post-migration (235) are pre-existing project noise (search_path on legacy functions, public extensions, `USING (true)` on service_role bypass policies). None introduced by this migration — my new functions all have `SET search_path = public`, my new RLS policies all use `has_role()`.
+- `coach` enum value already existed before this migration — no enum change needed.
