@@ -182,7 +182,40 @@ export default function MySiteRadar() {
 
           {client && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {/* Health + stats */}
+              {/* Upsell banner */}
+              {!bannerDismissed && (
+                <div style={{ background: "linear-gradient(135deg,#0a1628,#0d2547)", border: "1px solid #00d4ff66", borderRadius: 14, padding: "16px 18px", display: "flex", alignItems: "center", gap: 14, position: "relative" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ color: "#00d4ff", fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", margin: "0 0 4px" }}>
+                      {client.visitor_script_key ? "🚀 Upgrade" : "📡 Activate"}
+                    </p>
+                    <p style={{ color: "#fff", fontSize: 15, fontWeight: 700, margin: 0 }}>
+                      {client.visitor_script_key
+                        ? "Bundle SiteRadar with Lead Capture for $99/mo (save $49/mo)"
+                        : "Start tracking visitors today — $49/mo"}
+                    </p>
+                    <p style={{ color: "#94a3b8", fontSize: 12, margin: "4px 0 0" }}>
+                      {client.visitor_script_key
+                        ? "Identify visitors + capture missed-call leads in one bundle."
+                        : "See which companies visit your site — install in 60 seconds."}
+                    </p>
+                  </div>
+                  <a
+                    href={client.visitor_script_key ? "/site-radar?bundle=1" : "/site-radar"}
+                    style={{ background: "#00d4ff", color: "#0a1628", padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 800, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0 }}
+                  >
+                    {client.visitor_script_key ? "Upgrade" : "Start SiteRadar"} <ArrowUpRight className="h-4 w-4" />
+                  </a>
+                  <button
+                    onClick={dismissBanner}
+                    aria-label="Dismiss"
+                    style={{ position: "absolute", top: 8, right: 8, background: "transparent", border: "none", color: "#64748b", cursor: "pointer", padding: 4 }}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
                 <Stat label="Today's visitors" value={todayCount} />
                 <Stat label="Businesses identified" value={businessesIdentified} />
