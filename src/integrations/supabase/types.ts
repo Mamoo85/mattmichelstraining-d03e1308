@@ -15521,6 +15521,36 @@ export type Database = {
         }
         Relationships: []
       }
+      prospector_targets: {
+        Row: {
+          active: boolean
+          city: string
+          created_at: string | null
+          id: string
+          state: string
+          trade: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean
+          city: string
+          created_at?: string | null
+          id?: string
+          state: string
+          trade: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean
+          city?: string
+          created_at?: string | null
+          id?: string
+          state?: string
+          trade?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       protocol_exercise_flags: {
         Row: {
           admin_response: string | null
