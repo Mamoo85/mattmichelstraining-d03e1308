@@ -139,3 +139,19 @@ export function getMetroPricing(metroId: string, plan: "standalone" | "bundle"):
   }
   return plan === "bundle" ? 7900 : 14900; // $79 bundle, $149 standalone (MI baseline)
 }
+
+/**
+ * Returns metros visible in the public TechAlert market picker.
+ *
+ * - Public users → only metros with `betaActive: true` (currently Detroit,
+ *   DFW, Houston, Phoenix, Atlanta).
+ * - `includeAll: true` (admin / internal tooling) → every metro, including
+ *   "coming soon" ones, so admins can preview future markets.
+ *
+ * Until a metro is flagged `betaActive: true`, it stays out of the public
+ * checkout flow so we never sell coverage we can't yet deliver.
+ */
+export function getVisibleMetros(includeAll = false): MetroOption[] {
+  if (includeAll) return US_METROS;
+  return US_METROS.filter((m) => m.betaActive === true);
+}
