@@ -146,6 +146,7 @@ export function FullscreenPrompt({ onEnter }: { onEnter: () => void }) {
  */
 export function StartDemoButton() {
   const enter = () => {
+    demoAnalytics.recordStartClick();
     const url = new URL(window.location.href);
     url.searchParams.set("kiosk", "1");
     window.location.href = url.toString();
