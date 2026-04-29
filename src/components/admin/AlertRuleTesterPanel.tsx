@@ -5,8 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { TestTube, Loader2 } from "lucide-react";
+import AlertRuleDiffView from "./AlertRuleDiffView";
 
 type Rule = "spend_anomaly" | "quiet_hours" | "dlq_aging" | "walker_budget";
+
+// Production defaults — keep in sync with _shared/alert-rules.ts
+const LIVE_CONFIG: Record<Rule, Record<string, unknown>> = {
+  spend_anomaly: { threshold: 2.0, todaySpend: null, rollingAvg7d: null },
+  quiet_hours: { quietStartEtHour: 21, quietEndEtHour: 7, suppressSeverity: "warn" },
+  dlq_aging: { ageThresholdDays: 7, reason: null },
+  walker_budget: { dailyBudgetUsd: 50, dailySpend: null },
+};
 
 export default function AlertRuleTesterPanel() {
   const [rule, setRule] = useState<Rule>("spend_anomaly");
