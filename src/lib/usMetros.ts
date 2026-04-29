@@ -13,6 +13,7 @@ export interface MetroOption {
   coverage: CoverageTier;
   coverageLabel: string;
   priorityMarket?: boolean; // top-tier launch markets (DFW, Phoenix)
+  betaActive?: boolean;     // visible to public + beta users; false/undefined = admin/coming-soon only
 }
 
 export const US_METROS: MetroOption[] = [
@@ -24,6 +25,7 @@ export const US_METROS: MetroOption[] = [
     zipPrefixes: ["480", "481", "482", "483"],
     coverage: "full",
     coverageLabel: "Trades + Healthcare — full coverage (MIOSHA, BPL, LARA, BSEED, NPI, Nursys, CMS)",
+    betaActive: true,
   },
   {
     id: "dfw",
@@ -34,6 +36,7 @@ export const US_METROS: MetroOption[] = [
     coverage: "healthcare_full_trades_partial",
     coverageLabel: "Healthcare full coverage (TX BON + Nursys + NPI + CMS) — Trades expanding Q2 2026",
     priorityMarket: true,
+    betaActive: true,
   },
   {
     id: "houston",
@@ -43,6 +46,7 @@ export const US_METROS: MetroOption[] = [
     zipPrefixes: ["770", "771", "772", "773", "774", "775"],
     coverage: "healthcare_only",
     coverageLabel: "Healthcare coverage (TX BON + Nursys + NPI + CMS) — Trades coming Q2 2026",
+    betaActive: true,
   },
   {
     id: "phoenix",
@@ -53,6 +57,7 @@ export const US_METROS: MetroOption[] = [
     coverage: "full",
     coverageLabel: "Trades + Healthcare full coverage (AZ ROC + Nursys + NPI + CMS)",
     priorityMarket: true,
+    betaActive: true,
   },
   {
     id: "atlanta",
@@ -62,6 +67,7 @@ export const US_METROS: MetroOption[] = [
     zipPrefixes: ["300", "301", "302", "303", "305", "311"],
     coverage: "healthcare_only",
     coverageLabel: "Healthcare only (Nursys + NPI + CMS) — Trades licensed at county level",
+    betaActive: true,
   },
   {
     id: "miami",
@@ -132,4 +138,20 @@ export function getMetroPricing(metroId: string, plan: "standalone" | "bundle"):
     return plan === "bundle" ? 9900 : 24900; // $99 bundle, $249 standalone
   }
   return plan === "bundle" ? 7900 : 14900; // $79 bundle, $149 standalone (MI baseline)
+}
+
+/**
+ * Returns metros visible in the public TechAlert market picker.
+ *
+ * - Public users → only metros with `betaActive: true` (currently Detroit,
+ *   DFW, Houston, Phoenix, Atlanta).
+ * - `includeAll: true` (admin / internal tooling) → every metro, including
+ *   "coming soon" ones, so admins can preview future markets.
+ *
+ * Until a metro is flagged `betaActive: true`, it stays out of the public
+ * checkout flow so we never sell coverage we can't yet deliver.
+ */
+export function getVisibleMetros(includeAll = false): MetroOption[] {
+  if (includeAll) return US_METROS;
+  return US_METROS.filter((m) => m.betaActive === true);
 }
