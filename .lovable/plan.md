@@ -1,119 +1,93 @@
-## Wave 7 — Observability, Audit & Operator Tooling (8 items)
+# 48-Hour Audit + Click Test
 
-Building on Waves 5–6 (walker budget, DLQ aging, enrichment_confidence, quiet-hours, cost anomaly). Existing surfaces to reuse: `enrichment-e2e-verify`, `cron-sentinel`, `cron-status`, `cron_job_health`, `cron_schedule_audit`, `outreach_alerts_log`, `outreach_alert_cooldowns`, `enrichment_walker_runs`, `enrichment_dead_letter`, `enrichment_provider_spend_daily`.
+## What I found (data, not opinion)
 
----
+The last 48h shipped **210 changed files**: 56 new edge functions, 34 migrations, 39 new components, 5 new pages, 3 new e2e suites. Brand-new pages (`AdminHealth`, `OutreachAuditLog`, `OutreachObservability`, `OutreachQueue`, `Wave5Dashboard`) are all routed in `App.tsx`. Almost everything is wired correctly. But a sweep turned up real gaps:
 
-### 1. Nightly E2E smoke suite (extend `enrichment-e2e-verify`)
+### Orphaned components (built, never imported anywhere)
+1. `src/components/dwa-admin/CandidateLicenseEditor.tsx`
+2. `src/components/dwa-admin/HealthcareSourceHealthPanel.tsx`
 
-Today the canary only hits the waterfall. Expand into a multi-check suite that runs before alerts can fire and writes pass/fail per check.
+### Orphaned edge functions (never called from frontend, no cron, no other function)
+Most have `[functions.X]` in `config.toml` but no caller — they're deployed dead weight or were meant to be cron'd:
+- `compute-intent-score`, `intent-score-recompute`
+- `geocode-signals-batch`
+- `hiring-velocity-tracker`
+- `cron-health-monitor` (should run on schedule by name)
+- `rfp-keyword-bounty`
+- `dossier-cold-outreach-bulk`, `dossier-share-page`
+- `generate-account-narrative` (note: `AccountNarrativeDrawer` IS imported, may call this — needs verify)
+- `signal-triggered-sms-draft`, `signal-outreach-cancel-bulk`
+- `outreach-reply-handler`, `resend-bounce-webhook` (these are inbound webhooks — Twilio/Resend point at them externally; "no caller" is expected, but they need webhook URLs documented)
+- `contractor-outreach-unsubscribe` (List-Unsubscribe header target — also expected)
+- `healthcare-sources-rerun`, `nursys-enroll`
 
-- New table `enrichment_e2e_checks` (run_id, check_name, status, detail, duration_ms).
-- Edge function additions — for each run, execute and record:
-  - **tables**: SELECT 1 row from `enrichment_walker_config`, `enrichment_walker_targets`, `enrichment_dead_letter`, `enrichment_provider_spend_daily`, `outreach_alerts_log`.
-  - **rpcs**: dry-call `claim_lead_soft_lock` (rolled back), `reset_alert_cooldown('canary')`, `upsert_walker_target` with a fixture then `delete_walker_target`.
-  - **ui endpoints**: HEAD/GET against deployed `cron-status`, `outreach-alert-evaluator?dry=1`, `enrichment-matrix-walker?dry=1`.
-  - **waterfall canary**: existing check.
-- Overall run is `pass` only if every check passes; `degraded` if any non-critical fails; `fail` blocks downstream alert evaluator from firing for that cycle (evaluator reads latest run before sending).
-- Cron `enrichment-e2e-verify-nightly` already exists at 4 AM ET — reused.
+### Missing `supabase/config.toml` entries (will deploy with `verify_jwt = true` and break)
+1. `contractor-outreach-sms-send` — Twilio inbound? must be public
+2. `healthcare-sources-rerun`
+3. `mortgage-radar-founder-invite` — public invite link, must be public
+4. `nursys-enroll`
 
-### 2. Cron status widget (per-cron)
-
-New `src/components/admin/CronStatusWidget.tsx` — compact card grid usable on multiple admin pages. Reads `cron-status` edge function output (already returns `cron_job_health` + history) plus `cron.job_run_details` aggregates.
-
-Per cron card shows:
-- Last run time + duration
-- 24h success/failure counts (from `cron_run_status`)
-- Next scheduled execution (computed from cron expression via `cronstrue` + simple next-fire calc)
-- Status pill: green / amber (stale) / red (consecutive failures)
-
-Mounted on Wave 5 dashboard (item 4) and on existing `/admin/cron-status` page.
-
-### 3. Alert log search & filter (in `/admin/outreach-observability`)
-
-Extend the existing **Walker & Alerts** tab in `OutreachObservability.tsx` (or add a new "Alert Log" sub-section in `EnrichmentWalkerAlertsPanel.tsx`):
-
-- Filters: severity (info/warn/critical), reason (dropdown populated from distinct `outreach_alerts_log.reason`), date range (last 24h / 7d / 30d / custom), free-text search across `message`/`payload`.
-- Server-side query against `outreach_alerts_log` with indexed filters; client-side debounce.
-- Row expands to show full payload JSON + cooldown state from `outreach_alert_cooldowns` + link to "Reset cooldown" RPC.
-- CSV export of filtered set.
-
-### 4. Wave 5 admin dashboard
-
-New page `src/pages/admin/Wave5Dashboard.tsx` (route `/admin/wave5`), composed of:
-- **Walker spend (today + 7d)** — line chart from `enrichment_provider_spend_daily` (Apollo/Hunter/Snov/PDL) with the daily budget line overlaid from `enrichment_walker_config.daily_budget_usd`.
-- **Daily budget status** — gauge + "walker paused / active" pill driven by spend vs cap.
-- **DLQ aging buckets** — counts grouped by age (<1d, 1–3d, 3–7d, >7d) from `enrichment_dead_letter`.
-- **Alert history (last 50)** — embeds the filterable log from item 3 in compact mode.
-- **enrichment_confidence distribution** — histogram (10 buckets) from `prospects.enrichment_confidence` plus median/p25/p75 stats.
-- **Embedded `CronStatusWidget`** (item 2) for the 5 enrichment crons.
-- Add link tile in `AdminOpsCenter` and a tab inside `OutreachObservability`.
-
-### 5. Cron/worker health monitor (missing-row detection)
-
-Today `cron-sentinel` only checks watchlisted crons exist. Add an **expectation registry** that flags missing rows.
-
-- New table `cron_expected_jobs` (jobname, surface, owner, critical bool) — seeded with all enrichment + alerting + walker crons.
-- New edge function `cron-health-monitor` (every 15 min cron):
-  1. Left-join `cron_expected_jobs` against `cron.job` — any missing → critical alert with `surface` name in payload.
-  2. For each present job: detect `consecutive_failures >= 3` or `last_success_at` older than `stale_after_minutes` → critical alert.
-  3. Writes to `outreach_alerts_log` with `kind='cron_missing'` or `kind='cron_failing'`, respects quiet-hours rule (warn suppressed 9pm–7am ET, critical always sends).
-- UI: `CronStatusWidget` shows a red "MISSING" badge for expected-but-absent jobs with one-click link to the migration.
-
-### 6. Decision audit logging (budget caps, quiet-hours, DLQ aging)
-
-Single append-only table `enrichment_decision_audit`:
-```
-id uuid pk, decided_at timestamptz default now(),
-decision_kind text,        -- 'walker_budget_block' | 'quiet_hours_suppress' | 'dlq_aged_to_suppression'
-prospect_id uuid null,
-surface text,              -- 'enrichment-matrix-walker' | 'outreach-alert-evaluator' | 'enrichment-backfill-nightly'
-reason text,
-context jsonb              -- spend snapshot, alert kind+severity, dlq age days, etc.
-```
-
-Wired into:
-- `enrichment-matrix-walker` — log every prospect skipped because `daily_spend >= daily_budget_usd` with the spend snapshot.
-- `outreach-alert-evaluator` — log every alert suppressed by quiet-hours, including severity, kind, ET time.
-- `enrichment-backfill-nightly` — log each DLQ row aged into suppression with age_days + dlq reason.
-
-UI: new "Decisions" tab on Wave 5 dashboard with filters by kind/prospect/surface and CSV export. Per-prospect view added to existing `EnrichmentDLQPanel` row drawer so you can trace a prospect's full decision history.
-
-### 7. Alert rule tester (dry-run simulator)
-
-New edge function `alert-rule-tester` + new component `src/components/admin/AlertRuleTesterPanel.tsx` mounted as a tab on the Wave 5 dashboard.
-
-Inputs:
-- **Spend anomaly**: enter today's spend + (optional) override 7-day average → returns whether cost-anomaly alert would fire and the computed ratio.
-- **Quiet hours**: enter severity + ET time → returns suppress/send and reason.
-- **DLQ aging**: enter prospect's DLQ entry date + reason → returns whether suppression would trigger and what reason code.
-
-The function reuses the exact predicates from `outreach-alert-evaluator` and `enrichment-backfill-nightly` (extracted into `_shared/alert-rules.ts`) so tester == production. Results render inline; nothing is written to live tables (audit/log writes are skipped via a `dry: true` flag).
-
-### 8. "Re-run enrichment" button (confidence-ordered)
-
-- Add a button to `EnrichmentDLQPanel` and to a new section on the Wave 5 dashboard: "Re-run lowest-confidence prospects".
-- Inputs: limit (default 100), min/max confidence range, optional trade/city filter.
-- Calls a new edge function `enrichment-rerun-batch` that:
-  1. Selects prospects ordered by `enrichment_confidence ASC NULLS FIRST` (lowest first), filtered by inputs.
-  2. For each: pushes through `lead-enrichment-waterfall` with `force=true`.
-  3. Tallies `updated` (confidence improved or new contact found), `skipped` (provider budget block / suppressed), `suppressed` (newly moved to suppression).
-  4. Writes a summary row to `enrichment_run_progress` and returns the tally.
-- UI shows live progress (poll `enrichment_run_progress` every 2s) and final toast: "Updated 47 / Skipped 12 / Suppressed 3".
+### Code-quality flag
+- `supabase/functions/outreach-one-press/index.ts` uses `// @ts-nocheck` or `@ts-ignore` — needs review.
 
 ---
 
-## Technical notes
+## Plan (in execution order)
 
-- **Migrations**: 1 SQL file adding `enrichment_e2e_checks`, `cron_expected_jobs`, `enrichment_decision_audit`, indexes (`outreach_alerts_log(severity, created_at)`, `enrichment_decision_audit(decision_kind, decided_at)`, `enrichment_dead_letter(created_at)`), RLS (admin-only via `has_role`), seed `cron_expected_jobs` with current enrichment/alerting/walker crons.
-- **New edge functions**: `cron-health-monitor`, `alert-rule-tester`, `enrichment-rerun-batch`. Plus extensions to `enrichment-e2e-verify`, `enrichment-matrix-walker`, `outreach-alert-evaluator`, `contractor-outreach-enrich-backfill`.
-- **Shared module**: `supabase/functions/_shared/alert-rules.ts` — extracted predicates so tester and live evaluator share one source of truth.
-- **New cron**: `cron-health-monitor-15m` via `safe_cron_schedule` per the cron migration mandate.
-- **Frontend**: `Wave5Dashboard.tsx`, `CronStatusWidget.tsx`, `AlertRuleTesterPanel.tsx`, `RerunEnrichmentDialog.tsx`; new tabs in `OutreachObservability.tsx`; tile in `AdminOpsCenter`.
-- **Runbook**: append "Wave 7" section to `docs/enrichment-runbook.md` documenting tester, rerun button, and decision-audit query examples.
+**Step 1 — Verify each "orphan" against actual callers before deleting**
+Re-grep across full codebase for each orphan (some are webhook targets or called by name dynamically). Categorize as:
+- **WIRE**: real orphan that should be wired (e.g. `CandidateLicenseEditor` likely belongs on a candidate detail page).
+- **WEBHOOK**: external-callable, leave but document in `CLAUDE.md`.
+- **CRON-MISS**: function whose name implies a schedule (e.g. `cron-health-monitor`, `intent-score-recompute`, `intent-spike-notifier`) but has no `pg_cron` job. Add cron migration.
+- **DELETE**: truly dead.
 
-## Out of scope
+**Step 2 — Fix the 4 missing `config.toml` entries**
+Add `[functions.X]` blocks with `verify_jwt = false` for the public/webhook ones (`contractor-outreach-sms-send`, `mortgage-radar-founder-invite`); leave `verify_jwt = true` for admin-only (`healthcare-sources-rerun`, `nursys-enroll`).
 
-- Renaming or restructuring existing Wave 5/6 panels.
-- Changing alert delivery channels (still SMS via `_shared/twilio.ts` + email).
-- Backfilling historical decision audit (starts logging from deploy).
+**Step 3 — Wire the 2 truly orphaned components**
+- `CandidateLicenseEditor` → mount inside the existing TechAlert candidate detail/edit panel.
+- `HealthcareSourceHealthPanel` → mount on `Wave5Dashboard` or `AdminClientHealth` (whichever already shows source health).
+
+**Step 4 — Backfill cron jobs for orphan workers** (only those whose name implies a schedule)
+Single migration adding `pg_cron` schedules for: `cron-health-monitor` (every 5 min), `intent-score-recompute` (hourly), `geocode-signals-batch` (every 15 min), `hiring-velocity-tracker` (daily 7am ET), `outreach-backlog-watchdog` if missing.
+
+**Step 5 — Clean up `outreach-one-press` `@ts-nocheck`**
+Read the file, type the offending lines, remove the suppression.
+
+**Step 6 — Run the existing automated suites**
+- `bunx vitest run` — full unit suite (231 tests as of last session).
+- `npx playwright test tests/e2e/auth-smoke.spec.ts tests/e2e/dashboard-smoke.spec.ts tests/e2e/checkout-smoke.spec.ts tests/e2e/receipt-banner.spec.ts` — the new smoke suites.
+- `bunx supabase test edge-functions` for the new function tests (`safe-parse.test.ts`, `signup-classifier.test.ts`, `contractor-outreach-enrich-backfill/index.test.ts`, etc.).
+
+**Step 7 — Live click-test the 5 brand-new pages with the browser tool**
+Navigate to each, observe, screenshot, capture console errors:
+1. `/admin-health` — run health check, confirm it returns auth_ok / db_read_ok / db_write_ok.
+2. `/admin/outreach-observability`
+3. `/admin/outreach-queue`
+4. `/admin/outreach-audit-log`
+5. `/admin/wave5-dashboard`
+Plus a smoke pass on `/mortgage-radar` (fresh anti-hallucination work) and `/contractor-marketplace` (new guest flow).
+
+**Step 8 — DB sanity sweep**
+Quick `read_query`:
+- Count rows in `mortgage_radar_leads` where `pipeline_stage = 'quarantined_pre_validation'` vs active (confirm last sweep stuck).
+- Confirm no new leads since the manual scanner run lack `lat`/`lon`.
+- Spot-check `outreach_queue`, `outreach_audit_log`, `enrichment_walker_alerts` tables exist and have RLS.
+
+**Step 9 — Report**
+Single message back with: (a) what was orphaned + how it was fixed, (b) test pass/fail counts, (c) screenshots of the 5 new admin pages, (d) any runtime errors found, (e) anything I think still needs Matt's eye.
+
+---
+
+## Out of scope (call out, don't fix)
+- I won't refactor the 56 new edge functions for style.
+- I won't add new features.
+- I won't touch the anti-hallucination code we just shipped — only verify it via the DB sweep in Step 8.
+
+---
+
+## Risk
+Low. Steps 1–5 are additive (new config, new mounts, one cron migration). Steps 6–8 are read-only verification. The only DB change is a small cron migration (Step 4), which uses `IF NOT EXISTS` patterns and is reversible.
+
+Approve and I'll execute end-to-end and report back in one message.
