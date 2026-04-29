@@ -194,6 +194,16 @@ export default function AdminDeadLeads() {
     // Northern MI / UP
     "Traverse City MI", "Petoskey MI", "Cadillac MI", "Alpena MI",
     "Marquette MI", "Sault Ste. Marie MI", "Escanaba MI",
+    // Ohio
+    "Cleveland OH", "Columbus OH", "Cincinnati OH", "Akron OH", "Toledo OH",
+    // Indiana
+    "Indianapolis IN", "Fort Wayne IN", "South Bend IN",
+    // Illinois
+    "Chicago IL", "Rockford IL", "Aurora IL",
+    // Tennessee
+    "Nashville TN", "Memphis TN", "Knoxville TN",
+    // Georgia
+    "Atlanta GA", "Augusta GA",
   ];
 
   const handleRunProspector = async () => {
