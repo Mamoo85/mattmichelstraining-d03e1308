@@ -13,6 +13,7 @@ export interface MetroOption {
   coverage: CoverageTier;
   coverageLabel: string;
   priorityMarket?: boolean; // top-tier launch markets (DFW, Phoenix)
+  betaActive?: boolean;     // visible to public + beta users; false/undefined = admin/coming-soon only
 }
 
 export const US_METROS: MetroOption[] = [
