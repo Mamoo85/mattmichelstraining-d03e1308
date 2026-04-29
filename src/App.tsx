@@ -78,6 +78,7 @@ const Wave5Dashboard = lazyRetry(() => import("./pages/admin/Wave5Dashboard"));
 const AuditTimeline = lazyRetry(() => import("./pages/admin/AuditTimeline"));
 const Quarantine = lazyRetry(() => import("./pages/admin/Quarantine"));
 const AdminEdgeHealth = lazyRetry(() => import("./pages/admin/AdminEdgeHealth"));
+const AdminSecretsHealth = lazyRetry(() => import("./pages/admin/AdminSecretsHealth"));
 const ProspectRedirect = lazyRetry(() => import("./pages/ProspectRedirect"));
 const Pricing = lazyRetry(() => import("./pages/Pricing"));
 const About = lazyRetry(() => import("./pages/About"));
@@ -829,6 +830,7 @@ const App = () => (
                       <Route path="/dwa-admin/audit-timeline" element={<AgencyAdminRoute><AuditTimeline /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/quarantine" element={<AgencyAdminRoute><Quarantine /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/edge-health" element={<AgencyAdminRoute><AdminEdgeHealth /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/secrets-health" element={<AgencyAdminRoute><AdminSecretsHealth /></AgencyAdminRoute>} />
                      <Route path="/r/:token" element={<ProspectRedirect />} />
                      <Route path="/admin/view-user/:userId" element={<ProtectedRoute><AdminViewUser /></ProtectedRoute>} />
                      <Route path="/comms-center" element={<ProtectedRoute><CommunicationsCenter /></ProtectedRoute>} />
