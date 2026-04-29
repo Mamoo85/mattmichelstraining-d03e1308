@@ -38,6 +38,11 @@ jobs:
           deno test --allow-env supabase/functions/handle-dead-lead-reply/index_test.ts
           deno test --allow-env supabase/functions/create-hire-alert-checkout/index_test.ts
           deno test --allow-env supabase/functions/hire-alert-scanner/index_test.ts
+          deno test --allow-env supabase/functions/_shared/lead-verifier_test.ts
+          deno test --allow-env --allow-net supabase/functions/env-validator/index_test.ts
+
+      - name: Orphan page scan (advisory)
+        run: npx tsx scripts/orphan-scan.ts || true
 
   deploy:
     needs: test
