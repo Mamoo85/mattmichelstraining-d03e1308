@@ -287,14 +287,14 @@ async function sniperGenerateEmail(
   offer: { offer: string; pitch: string; price: string },
   scoutReasoning: string,
 ): Promise<{ subject: string; body: string }> {
-  const cityShort = city.replace(" MI", "");
+  const [cityShort, stateCode] = extractCityState(city);
   const issueText = issues.length > 0 ? issues.join(", ") : "limited online presence";
 
   const prompt = `You are the SNIPER — a cold outreach copywriter for Matt Michels, a local business automation consultant in Grosse Pointe, MI.
 
 Your job: write a hyper-personalized 4-sentence cold email that gets replies.
 
-Target: "${businessName}" — a ${trade} in ${cityShort}, MI
+Target: "${businessName}" — a ${trade} in ${cityShort}, ${stateCode}
 Specific flaws found: ${issueText}
 Scout's assessment: ${scoutReasoning}
 Offer to pitch: ${offer.pitch} at ${offer.price}
