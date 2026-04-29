@@ -353,9 +353,9 @@ async function sniperDeadLeadEmail(
   reviewCount: number,
   rating: number,
 ): Promise<{ subject: string; body: string }> {
-  const cityShort = city.replace(" MI", "");
+  const [cityShort, stateCode] = extractCityState(city);
   const tradeClean = trade.replace(" contractor", "");
-  const prompt = `You are writing a 4-sentence cold email from Matt Michels at Detroit Web Agency to the owner of "${businessName}", a ${tradeClean} in ${cityShort}, MI.
+  const prompt = `You are writing a 4-sentence cold email from Matt Michels at Detroit Web Agency to the owner of "${businessName}", a ${tradeClean} in ${cityShort}, ${stateCode}.
 
 The offer: We SMS-drip their OLD dead estimates (homeowners who got a quote but never hired). They only pay $50 when a lead replies YES they still need the work. Zero monthly fee, zero risk.
 
