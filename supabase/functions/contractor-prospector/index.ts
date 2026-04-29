@@ -32,6 +32,15 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { generateText } from "../_shared/ai.ts";
 import { isBlocked, recordOutreach } from "../_shared/outreach-blocklist.ts";
 
+function extractCityState(city: string): [string, string] {
+  const parts = city.trim().split(/\s+/);
+  const last = parts[parts.length - 1];
+  if (parts.length >= 2 && /^[A-Z]{2}$/.test(last)) {
+    return [parts.slice(0, -1).join(" "), last];
+  }
+  return [city, "MI"];
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
