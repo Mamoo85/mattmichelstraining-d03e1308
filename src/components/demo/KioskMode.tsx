@@ -188,6 +188,7 @@ export function StartDemoButton() {
  */
 export function ExitKioskButton() {
   const exit = () => {
+    demoAnalytics.recordExitClick();
     if (document.fullscreenElement && document.exitFullscreen) {
       document.exitFullscreen().catch(() => {});
     }
