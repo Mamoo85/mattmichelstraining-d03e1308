@@ -77,9 +77,9 @@ export default function AdminAgencyOutreach() {
   };
 
   const HC_TRADES = new Set(["nursing", "home_health"]);
-  const IND_TRADES = new Set(["boiler", "hvac", "electrical", "plumbing", "other_trade"]);
+  const IND_TRADES = new Set(["boiler", "hvac", "electrical", "plumbing"]);
   const HC_RX = /\b(rn|lpn|cna|nurse|nursing|aide|home\s*health|caregiver|medical|clinical|therapist|hha)\b/;
-  const IND_RX = /\b(boiler|hvac|electric|plumb|stationary|engineer|machinist|operator|tech|welder|mechanic|fitter|pipefitter|fabricat|cnc|industrial)\b/;
+  const IND_RX = /\b(boiler|hvac|electric|plumb|stationary\s+engineer|machinist|welder|fitter|pipefitter|fabricat|cnc|millwright)\b/;
 
   const matchingCandidatesFor = (vertical: "industrial" | "healthcare") =>
     candidates.filter(c => {
