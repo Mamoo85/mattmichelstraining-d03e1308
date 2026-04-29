@@ -78,7 +78,10 @@ CTA: <single-line call to action button label, max 6 words, e.g. "Send me the fu
     const bridgeMatch = scrubbed.match(/BRIDGE:\s*([\s\S]*?)(?=\n\s*CTA:|$)/i);
     const ctaMatch = scrubbed.match(/CTA:\s*([^\n]+)/i);
 
-    const subject = (subjectMatch?.[1] || `Pre-market candidate — ${agency_name}`).trim();
+    // Strip any trailing section label the model may have packed onto the subject line
+    const subject = (subjectMatch?.[1] || `Pre-market candidate — ${agency_name}`)
+      .replace(/\s*(INTRO|BRIDGE|CTA):.*$/i, "")
+      .trim();
     const intro = (introMatch?.[1] || "").trim();
     const bridge = (bridgeMatch?.[1] || "").trim();
     const ctaLabel = (ctaMatch?.[1] || "Send me the full profile").trim().replace(/^["']|["']$/g, "");
