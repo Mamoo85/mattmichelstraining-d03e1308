@@ -830,6 +830,7 @@ const App = () => (
                       <Route path="/dwa-admin/audit-timeline" element={<AgencyAdminRoute><AuditTimeline /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/quarantine" element={<AgencyAdminRoute><Quarantine /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/edge-health" element={<AgencyAdminRoute><AdminEdgeHealth /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/secrets-health" element={<AgencyAdminRoute><AdminSecretsHealth /></AgencyAdminRoute>} />
                      <Route path="/r/:token" element={<ProspectRedirect />} />
                      <Route path="/admin/view-user/:userId" element={<ProtectedRoute><AdminViewUser /></ProtectedRoute>} />
                      <Route path="/comms-center" element={<ProtectedRoute><CommunicationsCenter /></ProtectedRoute>} />
