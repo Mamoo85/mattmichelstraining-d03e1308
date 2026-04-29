@@ -33,12 +33,15 @@
 - `App.tsx` — 3 new routes wired.
 - `supabase/config.toml` — `verify_jwt=false` for 5 new functions.
 
-## 🔜 Optional follow-ups (not blocking)
-- Wire `<AlertRuleDiffView>` into `AlertRuleTesterPanel.tsx` (component shipped; mount left for next iteration).
-- Wire `<LeadVerificationBadges>` into mortgage radar lead detail view.
-- Convert remaining mortgage-radar-scanner divorce/SOS/job-change scanners from `sonarSearch` shim to deterministic Firecrawl + extractor/verifier.
-- Tests: extractor offset roundtrip, verifier substring, env-validator green/red, coach RBAC e2e.
-- CI script `scripts/orphan-scan.ts` to populate `orphan_scan_results`.
+## ✅ Follow-ups completed (2026-04-29)
+- `<AlertRuleDiffView>` mounted in `AlertRuleTesterPanel.tsx` — diffs `LIVE_CONFIG[rule]` vs simulated `input` after each dry-run.
+- `<LeadVerificationBadges>` mounted in `MortgageRadarPipeline.tsx` lead cards (Lead type extended with `verifier_grounded`, `verifier_citation_match`, `verification_method`, `lat/lng`).
+- Vitest: `AlertRuleDiffView.test.tsx` (5 tests), `LeadVerificationBadges.test.tsx` (5 tests) — all passing.
+- Deno: `_shared/lead-verifier_test.ts` (6 tests: grounding, short excerpt, hallucinated excerpt, missing address, whitespace tolerance, stats) + `env-validator/index_test.ts` (2 tests).
+- `scripts/orphan-scan.ts` — parses `App.tsx` lazy imports, walks `src/pages/`, prints JSON summary, optional `--write` to `orphan_scan_results`. Wired into `.github/workflows/deploy-supabase.yml` post-test (advisory, non-blocking). First run: 9 orphans flagged (mostly test files).
+
+## 🔜 Deferred to Phase 27
+- Convert remaining `mortgage-radar-scanner` divorce/SOS/job-change `sonarSearch` shims to deterministic Firecrawl + extractor/verifier (per-source selectors + quota planning).
 
 ## Notes
 - Anthropic-only enforced at strict-json layer; existing Gemini call in `mortgage-radar-scanner` removed.

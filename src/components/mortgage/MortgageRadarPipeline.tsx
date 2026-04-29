@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { GripVertical } from "lucide-react";
+import LeadVerificationBadges from "@/components/admin/LeadVerificationBadges";
 
 type Lead = {
   id: string;
@@ -12,6 +13,11 @@ type Lead = {
   score: number;
   signal_type: string;
   pipeline_stage?: string | null;
+  verifier_grounded?: boolean | null;
+  verifier_citation_match?: boolean | null;
+  verification_method?: string | null;
+  lat?: number | null;
+  lng?: number | null;
 };
 
 const STAGES: { key: string; label: string; color: string }[] = [
@@ -103,6 +109,14 @@ export default function MortgageRadarPipeline({
                         >
                           {l.score}
                         </span>
+                      </div>
+                      <div className="mt-1.5">
+                        <LeadVerificationBadges
+                          verifier_grounded={l.verifier_grounded}
+                          verifier_citation_match={l.verifier_citation_match}
+                          verification_method={l.verification_method}
+                          has_coordinates={l.lat != null && l.lng != null}
+                        />
                       </div>
                     </div>
                   </div>
