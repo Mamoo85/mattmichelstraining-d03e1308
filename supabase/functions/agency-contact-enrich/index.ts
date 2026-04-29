@@ -19,7 +19,7 @@ const corsHeaders = {
 };
 
 const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
-const HUNTER_API_KEY = Deno.env.get("HUNTER_API_KEY") || "";
+const HUNTER_API_KEY = Deno.env.get("HUNTER_IO_API_KEY") || "";
 const SNOV_CLIENT_ID = Deno.env.get("SNOV_CLIENT_ID") || "";
 const SNOV_CLIENT_SECRET = Deno.env.get("SNOV_CLIENT_SECRET") || "";
 
