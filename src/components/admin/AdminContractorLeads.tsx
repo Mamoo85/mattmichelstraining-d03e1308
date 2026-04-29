@@ -74,12 +74,12 @@ export default function AdminContractorLeads() {
   const [expandedLead, setExpandedLead] = useState<string | null>(null);
   const [fbInputs, setFbInputs] = useState<Record<string, string>>({});
   const [savingFb, setSavingFb] = useState<string | null>(null);
-  const [prospectorTrade, setProspectorTrade] = useState("HVAC contractor");
-  const [prospectorCity, setProspectorCity] = useState("Warren MI");
   const [runningProspector, setRunningProspector] = useState(false);
   const [markedCalled, setMarkedCalled] = useState<Set<string>>(new Set());
   const [showFbGuide, setShowFbGuide] = useState(false);
   const [pipelineFilter, setPipelineFilter] = useState("all");
+  const [pipelineDays, setPipelineDays] = useState(30);
+  const [prospectorHeartbeat, setProspectorHeartbeat] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState(Date.now());
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickForm, setQuickForm] = useState({ site_id: "", name: "", phone: "", email: "", description: "" });
@@ -92,7 +92,9 @@ export default function AdminContractorLeads() {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    const [terrRes, clientRes, leadRes, pipeRes] = await Promise.all([
+    const pipelineSince = new Date(Date.now() - pipelineDays * 24 * 3600 * 1000).toISOString();
+
+    const [terrRes, clientRes, leadRes, pipeRes, hbRes] = await Promise.all([
       supabase.from("contractor_lead_sites" as never).select("*").order("trade, city"),
       supabase.from("contractor_clients" as never).select("*").order("created_at", { ascending: false }),
       supabase.from("contractor_leads" as never)
@@ -100,14 +102,19 @@ export default function AdminContractorLeads() {
         .order("created_at", { ascending: false }).limit(200),
       supabase.from("outreach_leads" as never)
         .select("*")
-        .or("offer_pitched.eq.leads,industry.ilike.%hvac%,industry.ilike.%plumb%,industry.ilike.%roof%,industry.ilike.%electric%")
-        .order("created_at", { ascending: false }).limit(150),
+        .gte("created_at", pipelineSince)
+        .order("created_at", { ascending: false }).limit(200),
+      supabase.from("agent_heartbeats" as never)
+        .select("last_beat, status")
+        .eq("agent_name" as never, "channel-prospector")
+        .maybeSingle(),
     ]);
 
     setTerritories((terrRes.data as any[]) || []);
     setClients((clientRes.data as any[]) || []);
     setLeads((leadRes.data as any[]) || []);
     setPipeline((pipeRes.data as any[]) || []);
+    setProspectorHeartbeat((hbRes.data as any)?.last_beat || null);
     setLoading(false);
     void [thirtyDaysAgo, sevenDaysAgo]; // used in derived values below
   }, []);
@@ -166,7 +173,11 @@ export default function AdminContractorLeads() {
   // Pipeline filter
   const filteredPipeline = pipelineFilter === "all"
     ? pipeline
-    : pipeline.filter((p) => p.offer_pitched === pipelineFilter || p.status === pipelineFilter);
+    : pipelineFilter === "emailed"
+      ? pipeline.filter((p) => p.status === "emailed" || p.status === "contacted")
+      : pipeline.filter((p) => !p.status || p.status === "lead_found");
+
+  const allDemo = leads.length > 0 && leads.every((l) => l.is_demo_record);
 
   // ── Quick Lead Entry ───────────────────────────────────────────────────────
   const submitQuickLead = async () => {
@@ -222,17 +233,15 @@ export default function AdminContractorLeads() {
     setSavingFb(null);
   };
 
-  // ── Run prospector for specific territory ─────────────────────────────────
+  // ── Run prospector across all active markets (reads prospector_targets from DB) ──
   const runProspector = async () => {
     setRunningProspector(true);
-    const { error } = await supabase.functions.invoke("contractor-prospector", {
-      body: { target_trade: prospectorTrade, target_city: prospectorCity },
-    });
+    const { error } = await supabase.functions.invoke("channel-prospector", { body: {} });
     if (error) {
       toast.error("Prospector error: " + error.message);
     } else {
-      toast.success(`Prospector launched for ${prospectorTrade} in ${prospectorCity}`);
-      setTimeout(load, 3000);
+      toast.success("Prospector launched — scanning all active markets");
+      setTimeout(load, 5000);
     }
     setRunningProspector(false);
   };
@@ -557,6 +566,15 @@ export default function AdminContractorLeads() {
 
       {/* ── Section 4: Live Lead Feed ─────────────────────────────────────── */}
       <div>
+        {allDemo && (
+          <div className="mb-3 bg-amber-950/30 border border-amber-500/30 rounded-lg px-4 py-3 flex flex-wrap items-center gap-3 text-xs">
+            <AlertTriangle size={14} className="text-amber-400 flex-shrink-0" />
+            <div className="flex-1">
+              <span className="text-amber-300 font-semibold">All leads shown are seeded demo records.</span>
+              <span className="text-muted-foreground ml-1">Real homeowner leads come in once your SEO pages or Facebook Lead Ads go live. Click "Clear Demo Leads" to remove them.</span>
+            </div>
+          </div>
+        )}
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Live Lead Feed</h2>
           <button
@@ -681,34 +699,18 @@ export default function AdminContractorLeads() {
               onChange={(e) => setPipelineFilter(e.target.value)}
               className="bg-card border border-border text-foreground px-2 py-1 text-xs rounded"
             >
-              <option value="all">All offers</option>
-              <option value="leads">Leads only</option>
-              <option value="gbp">GBP only</option>
-              <option value="missed_call">Missed Call only</option>
+              <option value="all">All statuses</option>
+              <option value="emailed">Emailed</option>
+              <option value="lead_found">Not yet emailed</option>
             </select>
             <select
-              value={prospectorTrade}
-              onChange={(e) => setProspectorTrade(e.target.value)}
+              value={String(pipelineDays)}
+              onChange={(e) => { setPipelineDays(Number(e.target.value)); setTimeout(load, 100); }}
               className="bg-card border border-border text-foreground px-2 py-1 text-xs rounded"
             >
-              <option value="HVAC contractor">HVAC</option>
-              <option value="plumber">Plumber</option>
-              <option value="roofer">Roofer</option>
-              <option value="electrician">Electrician</option>
-            </select>
-            <select
-              value={prospectorCity}
-              onChange={(e) => setProspectorCity(e.target.value)}
-              className="bg-card border border-border text-foreground px-2 py-1 text-xs rounded"
-            >
-              <option value="Warren MI">Warren</option>
-              <option value="Detroit MI">Detroit</option>
-              <option value="Sterling Heights MI">Sterling Heights</option>
-              <option value="Troy MI">Troy</option>
-              <option value="Livonia MI">Livonia</option>
-              <option value="Dearborn MI">Dearborn</option>
-              <option value="Grosse Pointe MI">Grosse Pointe</option>
-              <option value="Southfield MI">Southfield</option>
+              <option value="7">Last 7 days</option>
+              <option value="30">Last 30 days</option>
+              <option value="90">Last 90 days</option>
             </select>
             <Button
               size="sm"
@@ -717,16 +719,28 @@ export default function AdminContractorLeads() {
               className="text-xs h-7 gap-1"
             >
               {runningProspector ? <Activity size={12} className="animate-spin" /> : <Send size={12} />}
-              Run Prospector
+              Run All Now
             </Button>
           </div>
         </div>
 
+        {/* Automation status banner */}
+        <div className="mb-3 bg-green-950/20 border border-green-900/30 rounded-lg px-4 py-2.5 flex flex-wrap items-center gap-3 text-xs">
+          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse flex-shrink-0" />
+          <span className="text-green-300 font-semibold">Automated — runs daily 11am ET across all active markets</span>
+          <span className="text-muted-foreground">
+            {prospectorHeartbeat
+              ? `Last run: ${timeAgo(prospectorHeartbeat)}`
+              : "Last run: unknown — check agent_heartbeats"}
+          </span>
+          <span className="text-muted-foreground ml-auto hidden sm:block">Covers all trades + cities in prospector_targets table. "Run All Now" triggers immediately.</span>
+        </div>
+
         <div className="flex gap-4 mb-3">
           {[
-            { label: "In pipeline", count: pipeline.length, color: "text-foreground" },
+            { label: "In window", count: pipeline.length, color: "text-foreground" },
             { label: "Emailed", count: pipeline.filter((p) => p.status === "emailed" || p.status === "contacted").length, color: "text-blue-400" },
-            { label: "Leads offer", count: pipeline.filter((p) => p.offer_pitched === "leads").length, color: "text-primary" },
+            { label: "Not emailed", count: pipeline.filter((p) => !p.status || p.status === "lead_found").length, color: "text-amber-400" },
           ].map((s) => (
             <div key={s.label} className="text-xs">
               <span className={`font-bold text-sm ${s.color}`}>{s.count}</span>
@@ -739,41 +753,43 @@ export default function AdminContractorLeads() {
           <table className="w-full text-sm">
             <thead className="bg-muted/30">
               <tr>
+                <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2">Found</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2">Business</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2 hidden sm:table-cell">City</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2">Offer</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2 hidden md:table-cell">Trade</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2 hidden md:table-cell">Emails</th>
-                <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2 hidden md:table-cell">SMS</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2">Status</th>
               </tr>
             </thead>
             <tbody>
-              {filteredPipeline.slice(0, 80).map((p) => (
+              {filteredPipeline.slice(0, 100).map((p) => (
                 <tr key={p.id} className="border-t border-border hover:bg-muted/20">
-                  <td className="px-3 py-2 text-xs font-medium text-foreground">{p.business_name || "—"}</td>
+                  <td className="px-3 py-2 text-xs text-muted-foreground whitespace-nowrap">{timeAgo(p.created_at)}</td>
+                  <td className="px-3 py-2 text-xs font-medium text-foreground max-w-[160px] truncate">{p.business_name || "—"}</td>
                   <td className="px-3 py-2 text-xs text-muted-foreground hidden sm:table-cell">{p.city || "—"}</td>
-                  <td className="px-3 py-2">
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full border ${p.offer_pitched === "leads" ? "bg-primary/20 text-primary border-primary/30" : p.offer_pitched === "gbp" ? "bg-blue-500/20 text-blue-300 border-blue-500/30" : "bg-slate-500/20 text-slate-300 border-slate-500/30"}`}>
-                      {p.offer_pitched || "—"}
-                    </span>
+                  <td className="px-3 py-2 hidden md:table-cell">
+                    {p.industry ? (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 capitalize">
+                        {String(p.industry).replace(/_/g, " ")}
+                      </span>
+                    ) : <span className="text-xs text-muted-foreground">—</span>}
                   </td>
                   <td className="px-3 py-2 hidden md:table-cell">
                     <div className="flex gap-0.5">
                       {["D0", "D4", "D8", "D15"].map((d, i) => (
-                        <span key={d} className={`text-[9px] px-1 py-0.5 rounded ${i === 0 && p.status === "emailed" ? "bg-green-500/30 text-green-300" : i > 0 && p.last_contact_date ? "bg-blue-500/20 text-blue-300" : "bg-muted/30 text-muted-foreground"}`}>{d}</span>
+                        <span key={d} className={`text-[9px] px-1 py-0.5 rounded ${i === 0 && (p.status === "emailed" || p.status === "contacted") ? "bg-green-500/30 text-green-300" : i > 0 && p.last_contact_date ? "bg-blue-500/20 text-blue-300" : "bg-muted/30 text-muted-foreground"}`}>{d}</span>
                       ))}
                     </div>
                   </td>
-                  <td className="px-3 py-2 hidden md:table-cell">
-                    <span className="text-xs text-muted-foreground">{p.sms_sent ? (p.sms_2_sent ? "2 sent" : "1 sent") : "—"}</span>
-                  </td>
                   <td className="px-3 py-2">
-                    <span className="text-[10px] text-muted-foreground">{p.status || "lead_found"}</span>
+                    <span className={`text-[10px] ${p.status === "emailed" || p.status === "contacted" ? "text-green-400" : p.status === "replied" ? "text-blue-400" : "text-muted-foreground"}`}>
+                      {p.status || "lead_found"}
+                    </span>
                   </td>
                 </tr>
               ))}
               {filteredPipeline.length === 0 && (
-                <tr><td colSpan={6} className="px-3 py-6 text-center text-xs text-muted-foreground">No pipeline entries yet. The prospector runs daily at 11am ET automatically.</td></tr>
+                <tr><td colSpan={6} className="px-3 py-6 text-center text-xs text-muted-foreground">No entries in this window. The prospector adds new businesses daily — try expanding to 30 or 90 days.</td></tr>
               )}
             </tbody>
           </table>
