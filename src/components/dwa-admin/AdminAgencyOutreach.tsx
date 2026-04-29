@@ -38,6 +38,8 @@ export default function AdminAgencyOutreach() {
   const [drafting, setDrafting] = useState<string | null>(null);
   const [enriching, setEnriching] = useState<string | null>(null);
   const [sending, setSending] = useState<string | null>(null);
+  const [blasting, setBlasting] = useState<string | null>(null);
+  const [blastResults, setBlastResults] = useState<Record<string, { count: number; sentAt: string }>>({});
   const [drafts, setDrafts] = useState<Record<string, DraftPayload>>({});
   const [enrichments, setEnrichments] = useState<Record<string, ContactEnrichment>>({});
   const [pickedFor, setPickedFor] = useState<Record<string, string | null>>({});
