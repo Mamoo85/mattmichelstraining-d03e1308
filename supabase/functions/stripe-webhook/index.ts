@@ -2352,9 +2352,10 @@ serve(async (req) => {
           }
         } catch (e) {
           console.error("[WEBHOOK] site_radar_subscription error:", e);
+          await markFulfilled(false, e instanceof Error ? e.message : String(e), "site_radar_subscription");
           return new Response(JSON.stringify({ error: "site_radar_subscription failed" }), { status: 500 });
         }
-        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true, "site_radar_subscription"); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── MISSED CALL TEXT-BACK — $99/mo with 7-day trial ──────────────────
