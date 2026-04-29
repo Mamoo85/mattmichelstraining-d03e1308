@@ -129,6 +129,33 @@ serve(async (req) => {
     <p style="color:${scoreColor};font-size:14px;font-weight:700;margin:12px 0 0;">${scoreLabel}</p>
   </div>
 
+  <!-- Top 5 Candidate Spotlight -->
+  ${topCandidates.length > 0 ? `
+  <div style="padding:0 24px 24px;">
+    <p style="color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin:0 0 16px;">🔥 New Candidates This Week</p>
+    ${topCandidates.map((c: any) => {
+      const scoreColor = c.score >= 9 ? "#10b981" : c.score >= 7 ? "#f59e0b" : "#94a3b8";
+      const trade = c.trade || c.license_type || "Trade Professional";
+      const location = [c.city, c.state].filter(Boolean).join(", ") || "Michigan";
+      const exp = c.years_experience ? `${c.years_experience}yr exp` : "";
+      return `
+      <div style="background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.12);border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <p style="color:white;font-size:14px;font-weight:700;margin:0;">${c.name}</p>
+          <p style="color:#94a3b8;font-size:12px;margin:2px 0 0;">${trade} · ${location}${exp ? " · " + exp : ""}</p>
+        </div>
+        <div style="text-align:right;">
+          <span style="display:inline-block;background:${scoreColor}22;color:${scoreColor};font-size:13px;font-weight:800;padding:4px 10px;border-radius:6px;">Score ${c.score ?? "—"}</span>
+          <br/>
+          <a href="https://detroitwebagent.com/talent-radar/dashboard?token=${client.dashboard_token}" style="font-size:11px;color:#00d4ff;text-decoration:none;margin-top:4px;display:inline-block;">View profile →</a>
+        </div>
+      </div>`;
+    }).join("")}
+    <p style="text-align:center;margin:16px 0 0;">
+      <a href="https://detroitwebagent.com/talent-radar/dashboard?token=${client.dashboard_token}" style="display:inline-block;background:rgba(0,212,255,0.1);color:#00d4ff;font-weight:700;font-size:13px;padding:10px 24px;border-radius:8px;text-decoration:none;border:1px solid rgba(0,212,255,0.2);">See All Candidates →</a>
+    </p>
+  </div>` : ""}
+
   <!-- Pipeline Funnel -->
   <div style="padding:0 24px 24px;">
     <p style="color:#94a3b8;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin:0 0 16px;">This Week's Pipeline</p>
