@@ -1260,7 +1260,7 @@ serve(async (req) => {
           if (!email) throw new Error("missing email");
           const tier = meta.tier || "solo";
           const zips = (meta.zip_codes || "").split(",").map((z: string) => z.trim()).filter(Boolean);
-          const { error: insertErr } = await (sb.from as any)("mortgage_radar_clients").insert({
+          const { error: insertErr } = await (sb.from as any)("mortgage_radar_clients").upsert({
             email,
             contact_name: meta.contact_name || null,
             business_name: meta.business_name || null,
@@ -1275,8 +1275,8 @@ serve(async (req) => {
             dob: meta.dob || null,
             tcpa_consent_at: meta.tcpa_consent_at || new Date().toISOString(),
             manual_ack_at: meta.manual_ack_at || new Date().toISOString(),
-          });
-          if (insertErr) throw new Error(`mortgage_radar_clients insert: ${insertErr.message}`);
+          }, { onConflict: "email" });
+          if (insertErr) throw new Error(`mortgage_radar_clients upsert: ${insertErr.message}`);
 
           // Fire-and-forget initial scan so new subscriber sees leads within minutes
           fetch(`${SUPABASE_URL}/functions/v1/mortgage-radar-scanner`, {

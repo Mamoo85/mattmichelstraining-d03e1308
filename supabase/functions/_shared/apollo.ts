@@ -156,7 +156,7 @@ export async function apolloOrganizationSearch(params: {
   per_page?: number;
   page?: number;
 }): Promise<ApolloOrganization[]> {
-  const res = await apolloOrgSearch(params as Record<string, unknown>);
+  const res = await callApollo("/mixed_companies/search", { method: "POST", body: JSON.stringify(params) });
   return (res.data?.organizations || []) as ApolloOrganization[];
 }
 

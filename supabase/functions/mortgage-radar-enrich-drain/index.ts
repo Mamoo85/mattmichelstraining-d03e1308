@@ -55,6 +55,13 @@ serve(async (req) => {
     }
   }
 
+  await sb.from("agent_heartbeats").upsert({
+    agent_name: "mortgage-radar-enrich-drain",
+    last_beat: new Date().toISOString(),
+    status: "ok",
+    metadata: { processed, failed, queued: jobs?.length || 0 },
+  }, { onConflict: "agent_name" });
+
   return new Response(JSON.stringify({ ok: true, processed, failed, queued: jobs?.length || 0 }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });

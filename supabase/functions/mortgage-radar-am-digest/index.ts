@@ -114,6 +114,13 @@ serve(async (req) => {
     }
   }
 
+  await sb.from("agent_heartbeats").upsert({
+    agent_name: "mortgage-radar-am-digest",
+    last_beat: new Date().toISOString(),
+    status: "ok",
+    metadata: { digests_sent: sent },
+  }, { onConflict: "agent_name" });
+
   return new Response(JSON.stringify({ ok: true, digests_sent: sent }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });

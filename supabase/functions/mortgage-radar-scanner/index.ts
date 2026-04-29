@@ -690,6 +690,13 @@ serve(async (req) => {
     }
   }
 
+  await sb.from("agent_heartbeats").upsert({
+    agent_name: "mortgage-radar-scanner",
+    last_beat: new Date().toISOString(),
+    status: "ok",
+    metadata: { signals_fetched: signals.length, inserted, updated, hot_sms_fired: hotSmsFired },
+  }, { onConflict: "agent_name" });
+
   return new Response(JSON.stringify({
     ok: true,
     started_at: startedAt,
