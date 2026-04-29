@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import MissedCallPanel from "@/components/demo/MissedCallPanel";
 import BuyerRadarPanel from "@/components/demo/BuyerRadarPanel";
 import SizzleHero from "@/components/demo/SizzleHero";
-import { useKioskMode, StartDemoButton, ExitKioskButton, KIOSK_GLOBAL_STYLES } from "@/components/demo/KioskMode";
+import { useKioskMode, StartDemoButton, ExitKioskButton, FullscreenPrompt, KIOSK_GLOBAL_STYLES } from "@/components/demo/KioskMode";
 
 interface DemoConfig {
   companyName: string;
@@ -40,7 +40,7 @@ const scoreColor = (s: number) => (s >= 8 ? "#dc2626" : s >= 7 ? "#e8621a" : "#f
 
 export default function DemoTemplate() {
   const { slug } = useParams<{ slug: string }>();
-  const kiosk = useKioskMode();
+  const { kiosk, isFullscreen, requestFullscreen } = useKioskMode();
   const [config, setConfig] = useState<DemoConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -219,6 +219,7 @@ export default function DemoTemplate() {
 
       {!kiosk && <StartDemoButton />}
       {kiosk && <ExitKioskButton />}
+      {kiosk && !isFullscreen && <FullscreenPrompt onEnter={requestFullscreen} />}
     </div>
   );
 }
