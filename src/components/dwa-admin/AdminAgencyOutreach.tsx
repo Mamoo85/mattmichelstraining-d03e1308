@@ -183,6 +183,33 @@ export default function AdminAgencyOutreach() {
     }
   };
 
+  const blastProspects = async (agency: typeof METRO_DETROIT_AGENCIES[0]) => {
+    const enrich = enrichments[agency.name];
+    if (!enrich?.contact_email) { toast.error("Enrich the contact first to get their email"); return; }
+    if (!confirm(`Send 50-prospect teaser to ${enrich.contact_email}?\n\nThis sends immediately from matt@detroitwebagent.com.`)) return;
+    setBlasting(agency.name);
+    try {
+      const { data, error } = await supabase.functions.invoke("agency-prospect-list-blast", {
+        body: {
+          agency_name: agency.name,
+          agency_email: enrich.contact_email,
+          agency_contact_name: enrich.contact_full_name || agency.contact,
+          agency_contact_title: enrich.contact_title || agency.contact,
+          vertical: agency.vertical,
+          agency_note: agency.note,
+        },
+      });
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error || "Blast failed");
+      setBlastResults(r => ({ ...r, [agency.name]: { count: data.candidate_count, sentAt: new Date().toLocaleTimeString() } }));
+      toast.success(`✓ Sent ${data.candidate_count}-candidate teaser to ${enrich.contact_email}`);
+    } catch (e: any) {
+      toast.error(e?.message || "Blast failed");
+    } finally {
+      setBlasting(null);
+    }
+  };
+
   const copyHtml = (agencyName: string) => {
     const d = drafts[agencyName];
     if (!d) return;
