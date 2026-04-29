@@ -380,6 +380,7 @@ const StewartDentalProduction = lazyRetry(() => import("./pages/StewartDentalPro
 const StewartDentalPrivacy = lazyRetry(() => import("./pages/StewartDentalPrivacy"));
 const DJConleyDemo1 = lazyRetry(() => import("./pages/DJConleyDemo1"));
 const DJConleyDemo2 = lazyRetry(() => import("./pages/DJConleyDemo2"));
+const DemoTemplate = lazyRetry(() => import("./pages/DemoTemplate"));
 const CommunicationsCenter = lazyRetry(() => import("./pages/CommunicationsCenter"));
 
 const persister = createSyncStoragePersister({
