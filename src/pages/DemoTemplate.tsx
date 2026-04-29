@@ -4,6 +4,8 @@ import MissedCallPanel from "@/components/demo/MissedCallPanel";
 import BuyerRadarPanel from "@/components/demo/BuyerRadarPanel";
 import SizzleHero from "@/components/demo/SizzleHero";
 import { useKioskMode, StartDemoButton, ExitKioskButton, FullscreenPrompt, KIOSK_GLOBAL_STYLES } from "@/components/demo/KioskMode";
+import { AutoAdvance } from "@/components/demo/AutoAdvance";
+import { DemoAnalyticsPanel, demoAnalytics } from "@/components/demo/DemoAnalytics";
 
 interface DemoConfig {
   companyName: string;
