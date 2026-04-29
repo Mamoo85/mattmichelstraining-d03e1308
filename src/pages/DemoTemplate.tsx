@@ -139,39 +139,43 @@ export default function DemoTemplate() {
         </section>
 
         {/* SiteRadar */}
-        <div style={{ background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 16, padding: "18px 20px", marginBottom: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <div>
-              <p style={{ margin: 0, fontWeight: 800, fontSize: 14 }}>👁 Companies Visiting {c.currentSiteUrl} Today</p>
-              <p style={{ margin: "2px 0 0", fontSize: 12, color: "#64748b" }}>SiteRadar identifies businesses by IP — you see company names, not just traffic numbers</p>
+        <section id="demo-siteradar" style={{ scrollMarginTop: 16 }}>
+          <div style={{ background: "#0a1628", border: "1px solid #1e3a5f", borderRadius: 16, padding: "18px 20px", marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <div>
+                <p style={{ margin: 0, fontWeight: 800, fontSize: 14 }}>👁 Companies Visiting {c.currentSiteUrl} Today</p>
+                <p style={{ margin: "2px 0 0", fontSize: 12, color: "#64748b" }}>SiteRadar identifies businesses by IP — you see company names, not just traffic numbers</p>
+              </div>
+              <span style={{ background: `${c.accentColor}15`, border: `1px solid ${c.accentColor}40`, color: c.accentColor, borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 700 }}>LIVE</span>
             </div>
-            <span style={{ background: `${c.accentColor}15`, border: `1px solid ${c.accentColor}40`, color: c.accentColor, borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 700 }}>LIVE</span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {c.fakeVisitors.map((v) => (
-              <div key={v.company} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#060e1a", borderRadius: 10, padding: "10px 14px", border: "1px solid #1e3a5f" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <span style={{ fontSize: 20 }}>{v.badge}</span>
-                  <div>
-                    <p style={{ margin: 0, fontWeight: 700, fontSize: 13 }}>{v.company}</p>
-                    <p style={{ margin: 0, fontSize: 11, color: "#64748b" }}>Viewed: {v.page}</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {c.fakeVisitors.map((v) => (
+                <div key={v.company} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#060e1a", borderRadius: 10, padding: "10px 14px", border: "1px solid #1e3a5f" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ fontSize: 20 }}>{v.badge}</span>
+                    <div>
+                      <p style={{ margin: 0, fontWeight: 700, fontSize: 13 }}>{v.company}</p>
+                      <p style={{ margin: 0, fontSize: 11, color: "#64748b" }}>Viewed: {v.page}</p>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <p style={{ margin: 0, fontSize: 11, color: c.accentColor }}>{v.time}</p>
+                    <p style={{ margin: 0, fontSize: 10, color: "#10b981", fontWeight: 700 }}>{v.value}</p>
                   </div>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <p style={{ margin: 0, fontSize: 11, color: c.accentColor }}>{v.time}</p>
-                  <p style={{ margin: 0, fontSize: 10, color: "#10b981", fontWeight: 700 }}>{v.value}</p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        </section>
 
         {/* Missed-Call */}
-        <MissedCallPanel
-          responseTime={c.missedCallStats?.responseTime}
-          coverage={c.missedCallStats?.coverage}
-          recoveryRate={c.missedCallStats?.recoveryRate}
-        />
+        <section id="demo-missedcall" style={{ scrollMarginTop: 16 }}>
+          <MissedCallPanel
+            responseTime={c.missedCallStats?.responseTime}
+            coverage={c.missedCallStats?.coverage}
+            recoveryRate={c.missedCallStats?.recoveryRate}
+          />
+        </section>
 
         {/* Buyer Radar */}
         <BuyerRadarPanel city={c.city} buyerRadarValue={c.buyerRadarValue} />
