@@ -81,14 +81,17 @@ export default function ColdEmailEngineDialog({ open, onOpenChange, signalId, si
     setRanking(true);
     try {
       const { data, error } = await supabase.functions.invoke("cold-email-rank-buyers", {
-        body: { signal_id: signalId, top_n: topN, max_miles: maxMiles, vertical: vertical || undefined },
+        body: { signal_id: signalId, limit: topN, radius_miles: maxMiles, vertical: vertical || undefined },
       });
       if (error) throw new Error(error.message);
-      const list: Buyer[] = (data?.buyers || []).map((b: any) => ({
-        buyer_id: b.buyer_id, company_name: b.company_name,
-        city: b.city, vertical: b.vertical,
+      const list: Buyer[] = (data?.rows || []).map((b: any) => ({
+        buyer_id: b.buyer_id,
+        company_name: b.buyer?.company || b.company_name || "",
+        city: b.buyer?.city || b.city || "",
+        vertical: b.buyer?.vertical || b.vertical || "",
         bis: b.bis ?? b.score ?? 0,
-        breakdown: b.breakdown, miles: b.miles,
+        breakdown: b.breakdown,
+        miles: b.miles,
       }));
       setBuyers(list);
       if (list.length === 0) toast.warning("No matching buyers — widen radius or change vertical");
