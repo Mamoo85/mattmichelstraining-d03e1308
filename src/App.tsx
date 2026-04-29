@@ -80,6 +80,8 @@ const Quarantine = lazyRetry(() => import("./pages/admin/Quarantine"));
 const AdminEdgeHealth = lazyRetry(() => import("./pages/admin/AdminEdgeHealth"));
 const AdminSecretsHealth = lazyRetry(() => import("./pages/admin/AdminSecretsHealth"));
 const AdminMarketTargeting = lazyRetry(() => import("./pages/admin/AdminMarketTargeting"));
+const AdminProspectorTargetsAudit = lazyRetry(() => import("./pages/admin/AdminProspectorTargetsAudit"));
+const AdminCheckoutEvents = lazyRetry(() => import("./pages/admin/AdminCheckoutEvents"));
 const ProspectRedirect = lazyRetry(() => import("./pages/ProspectRedirect"));
 const Pricing = lazyRetry(() => import("./pages/Pricing"));
 const About = lazyRetry(() => import("./pages/About"));
