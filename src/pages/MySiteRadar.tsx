@@ -29,6 +29,20 @@ export default function MySiteRadar() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportFrom, setExportFrom] = useState(() => {
+    const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().slice(0, 10);
+  });
+  const [exportTo, setExportTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [bannerDismissed, setBannerDismissed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const raw = localStorage.getItem("siteradar_upsell_dismissed_v1");
+    if (!raw) return false;
+    const ts = parseInt(raw, 10);
+    if (!ts || isNaN(ts)) return false;
+    // resets after 14 days
+    return Date.now() - ts < 14 * 24 * 60 * 60 * 1000;
+  });
 
   useEffect(() => {
     if (!token) { setError("Missing access token. Use the link from your welcome email."); setLoading(false); return; }
