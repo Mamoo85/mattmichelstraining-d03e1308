@@ -285,6 +285,41 @@ export default function MySiteRadar() {
                 <p style={{ color: "#64748b", fontSize: 11, margin: "8px 0 0" }}>Paste before &lt;/body&gt; on every page.</p>
               </div>
 
+              {/* Export events */}
+              <div style={cardStyle}>
+                <p style={labelStyle}>Export events</p>
+                <p style={{ color: "#64748b", fontSize: 12, margin: "6px 0 12px" }}>
+                  Download a CSV of all visitor events in the date range below.
+                </p>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <span style={{ color: "#94a3b8", fontSize: 11 }}>From</span>
+                    <input
+                      type="date"
+                      value={exportFrom}
+                      onChange={(e) => setExportFrom(e.target.value)}
+                      style={{ background: "#030711", border: "1px solid #1e3a5f", color: "#e2e8f0", padding: "8px 10px", borderRadius: 6, fontSize: 13 }}
+                    />
+                  </label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <span style={{ color: "#94a3b8", fontSize: 11 }}>To</span>
+                    <input
+                      type="date"
+                      value={exportTo}
+                      onChange={(e) => setExportTo(e.target.value)}
+                      style={{ background: "#030711", border: "1px solid #1e3a5f", color: "#e2e8f0", padding: "8px 10px", borderRadius: 6, fontSize: 13 }}
+                    />
+                  </label>
+                  <button
+                    onClick={handleExport}
+                    disabled={exporting}
+                    style={{ background: "#00d4ff", color: "#0a1628", border: "none", borderRadius: 6, padding: "9px 14px", fontSize: 13, fontWeight: 700, cursor: exporting ? "wait" : "pointer", display: "inline-flex", alignItems: "center", gap: 6, opacity: exporting ? 0.6 : 1 }}
+                  >
+                    <Download className="h-4 w-4" /> {exporting ? "Exporting…" : "Export CSV"}
+                  </button>
+                </div>
+              </div>
+
               <div style={{ marginTop: 8 }}>
                 <ManageBillingButton email={client.email} />
               </div>
