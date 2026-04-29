@@ -163,6 +163,11 @@ export default function AdminMarketTargeting() {
                 Toggle cities + trades on or off for the channel prospector. Changes take effect on the
                 next prospector run — zero deploys. Inactive rows stay seeded so you can flip them on instantly.
               </p>
+              <p style={{ margin: "10px 0 0" }}>
+                <a href="/dwa-admin/market-targeting/audit" style={{ color: "#00d4ff", fontSize: 12, fontWeight: 600, textDecoration: "underline" }}>
+                  View audit log →
+                </a>
+              </p>
             </div>
             <div style={statBox}>
               <p style={{ ...labelStyle, margin: 0 }}>Active markets</p>

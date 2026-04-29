@@ -15,6 +15,7 @@ import EnterpriseFooterBlock from "@/components/shared/EnterpriseFooterBlock";
 import TechAlertROICalculator from "@/components/agency/TechAlertROICalculator";
 import ActionButton from "@/components/ui/action-button";
 import { US_METROS, DEFAULT_METRO_ID, getMetroById, getMetroPricing, getVisibleMetros } from "@/lib/usMetros";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const ROLE_OPTIONS = [
   { key: "boiler_operator", label: "Boiler Operator (1st/2nd Class)" },
@@ -587,32 +588,15 @@ export default function HireAlert() {
               onChange={(e) => setPhone(e.target.value)}
               style={{ background: "#001a33", border: "1px solid #1e3a5f", color: "#fff", padding: "12px 14px" }}
             />
-            <div>
-              <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 600, color: "#94a3b8" }}>Which market? *</p>
-              <select
-                value={metroId}
-                onChange={(e) => setMetroId(e.target.value)}
-                style={{ width: "100%", background: "#001a33", border: "1px solid #1e3a5f", color: "#fff", padding: "12px 14px", borderRadius: 6, fontSize: 14 }}
-              >
-                {(typeof window !== "undefined" && new URLSearchParams(window.location.search).get("all") === "1"
-                  ? getVisibleMetros(true)
-                  : getVisibleMetros(false)
-                ).map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.label}{m.priorityMarket ? " ⚡" : ""}{!m.betaActive ? " (coming soon)" : ""}
-                  </option>
-                ))}
-              </select>
-              <p style={{ margin: "8px 0 0", fontSize: 12, color: selectedMetro.coverage === "full" ? "#22c55e" : selectedMetro.coverage === "healthcare_full_trades_partial" ? "#fbbf24" : "#94a3b8", lineHeight: 1.5 }}>
-                {selectedMetro.coverage === "full" ? "✓ " : selectedMetro.coverage === "healthcare_full_trades_partial" ? "⚡ " : "ℹ️ "}
-                {selectedMetro.coverageLabel}
-              </p>
-              {metroId !== "detroit" && (
-                <p style={{ margin: "6px 0 0", fontSize: 12, color: ACCENT, fontWeight: 600 }}>
-                  ${metroStandalone}/mo standalone · ${metroBundle}/mo bundle
-                </p>
-              )}
-            </div>
+            <MetroPickerWithToggle
+              metroId={metroId}
+              setMetroId={setMetroId}
+              selectedMetro={selectedMetro}
+              metroStandalone={metroStandalone}
+              metroBundle={metroBundle}
+              accent={ACCENT}
+            />
+
             <div>
               <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 600, color: "#94a3b8" }}>Which roles do you want to monitor? *</p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -689,3 +673,81 @@ export default function HireAlert() {
     </div>
   );
 }
+
+function MetroPickerWithToggle({
+  metroId, setMetroId, selectedMetro, metroStandalone, metroBundle, accent,
+}: {
+  metroId: string;
+  setMetroId: (s: string) => void;
+  selectedMetro: { coverage: string; coverageLabel: string };
+  metroStandalone: number;
+  metroBundle: number;
+  accent: string;
+}) {
+  const { isAdmin } = useIsAdmin();
+  const urlAll = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("all") === "1";
+  const [showAll, setShowAll] = useState<boolean>(urlAll);
+  const canToggle = isAdmin || urlAll;
+
+  const visible = showAll ? getVisibleMetros(true) : getVisibleMetros(false);
+  const totalCount = getVisibleMetros(true).length;
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 0 10px", gap: 8, flexWrap: "wrap" }}>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#94a3b8" }}>Which market? *</p>
+        {canToggle && (
+          <button
+            type="button"
+            onClick={() => setShowAll((v) => !v)}
+            style={{
+              background: showAll ? "#fbbf2422" : "#00d4ff22",
+              border: `1px solid ${showAll ? "#fbbf24" : "#00d4ff"}`,
+              color: showAll ? "#fbbf24" : "#00d4ff",
+              borderRadius: 999,
+              padding: "4px 10px",
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: "pointer",
+              letterSpacing: 0.5,
+              textTransform: "uppercase",
+            }}
+            title="Admin/beta preview toggle"
+          >
+            {showAll ? "All markets (admin preview)" : "Beta markets only"}
+          </button>
+        )}
+      </div>
+      <select
+        value={metroId}
+        onChange={(e) => setMetroId(e.target.value)}
+        style={{ width: "100%", background: "#001a33", border: "1px solid #1e3a5f", color: "#fff", padding: "12px 14px", borderRadius: 6, fontSize: 14 }}
+      >
+        {visible.map((m) => (
+          <option key={m.id} value={m.id}>
+            {m.label}{m.priorityMarket ? " ⚡" : ""}{!m.betaActive ? " (coming soon)" : ""}
+          </option>
+        ))}
+      </select>
+      <p style={{ margin: "6px 0 0", fontSize: 11, color: "#64748b" }}>
+        Showing <strong style={{ color: showAll ? "#fbbf24" : "#00d4ff" }}>{visible.length}</strong> of {totalCount} markets
+        {showAll ? " — including coming-soon (not bookable yet)" : ""}
+      </p>
+      {showAll && (
+        <p style={{ margin: "6px 0 0", fontSize: 11, color: "#fbbf24", lineHeight: 1.4 }}>
+          ⚠️ Admin preview: coming-soon markets aren't yet available for customer signup.
+        </p>
+      )}
+      <p style={{ margin: "8px 0 0", fontSize: 12, color: selectedMetro.coverage === "full" ? "#22c55e" : selectedMetro.coverage === "healthcare_full_trades_partial" ? "#fbbf24" : "#94a3b8", lineHeight: 1.5 }}>
+        {selectedMetro.coverage === "full" ? "✓ " : selectedMetro.coverage === "healthcare_full_trades_partial" ? "⚡ " : "ℹ️ "}
+        {selectedMetro.coverageLabel}
+      </p>
+      {metroId !== "detroit" && (
+        <p style={{ margin: "6px 0 0", fontSize: 12, color: accent, fontWeight: 600 }}>
+          ${metroStandalone}/mo standalone · ${metroBundle}/mo bundle
+        </p>
+      )}
+    </div>
+  );
+}
+

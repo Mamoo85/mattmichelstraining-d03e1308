@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Copy, Check, Sparkles } from "lucide-react";
+import { Copy, Check, Sparkles, Download, ArrowUpRight, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 
@@ -29,6 +29,20 @@ export default function MySiteRadar() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportFrom, setExportFrom] = useState(() => {
+    const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().slice(0, 10);
+  });
+  const [exportTo, setExportTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [bannerDismissed, setBannerDismissed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const raw = localStorage.getItem("siteradar_upsell_dismissed_v1");
+    if (!raw) return false;
+    const ts = parseInt(raw, 10);
+    if (!ts || isNaN(ts)) return false;
+    // resets after 14 days
+    return Date.now() - ts < 14 * 24 * 60 * 60 * 1000;
+  });
 
   useEffect(() => {
     if (!token) { setError("Missing access token. Use the link from your welcome email."); setLoading(false); return; }
@@ -97,6 +111,59 @@ export default function MySiteRadar() {
     setCopied(true); setTimeout(() => setCopied(false), 1800);
   };
 
+  const dismissBanner = () => {
+    localStorage.setItem("siteradar_upsell_dismissed_v1", String(Date.now()));
+    setBannerDismissed(true);
+  };
+
+  const csvEscape = (v: unknown): string => {
+    if (v === null || v === undefined) return "";
+    const s = String(v);
+    if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+    return s;
+  };
+
+  const handleExport = async () => {
+    if (!client) return;
+    setExporting(true);
+    try {
+      const fromIso = new Date(exportFrom); fromIso.setHours(0, 0, 0, 0);
+      const toIso = new Date(exportTo); toIso.setHours(23, 59, 59, 999);
+      const { data, error: qErr } = await supabase
+        .from("crm_visitor_events")
+        .select("created_at, company_name, city, region, country, page_visited, referrer, ip_address, is_business, visit_count")
+        .eq("client_id", client.id)
+        .gte("created_at", fromIso.toISOString())
+        .lte("created_at", toIso.toISOString())
+        .order("created_at", { ascending: false })
+        .limit(10000);
+      if (qErr) throw qErr;
+      const rows = data || [];
+      if (rows.length === 0) {
+        alert("No events in the selected date range.");
+        return;
+      }
+      const header = ["created_at", "company_name", "city", "region", "country", "page_visited", "referrer", "ip_address", "is_business", "visit_count"];
+      const lines = [header.join(",")];
+      rows.forEach((r: any) => {
+        lines.push(header.map((k) => csvEscape(r[k])).join(","));
+      });
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `siteradar-events-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      alert(`Export failed: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <>
       <Helmet><title>SiteRadar — Your Dashboard | Detroit Web Agency</title></Helmet>
@@ -115,7 +182,40 @@ export default function MySiteRadar() {
 
           {client && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {/* Health + stats */}
+              {/* Upsell banner */}
+              {!bannerDismissed && (
+                <div style={{ background: "linear-gradient(135deg,#0a1628,#0d2547)", border: "1px solid #00d4ff66", borderRadius: 14, padding: "16px 18px", display: "flex", alignItems: "center", gap: 14, position: "relative" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ color: "#00d4ff", fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", margin: "0 0 4px" }}>
+                      {client.visitor_script_key ? "🚀 Upgrade" : "📡 Activate"}
+                    </p>
+                    <p style={{ color: "#fff", fontSize: 15, fontWeight: 700, margin: 0 }}>
+                      {client.visitor_script_key
+                        ? "Bundle SiteRadar with Lead Capture for $99/mo (save $49/mo)"
+                        : "Start tracking visitors today — $49/mo"}
+                    </p>
+                    <p style={{ color: "#94a3b8", fontSize: 12, margin: "4px 0 0" }}>
+                      {client.visitor_script_key
+                        ? "Identify visitors + capture missed-call leads in one bundle."
+                        : "See which companies visit your site — install in 60 seconds."}
+                    </p>
+                  </div>
+                  <a
+                    href={client.visitor_script_key ? "/site-radar?bundle=1" : "/site-radar"}
+                    style={{ background: "#00d4ff", color: "#0a1628", padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 800, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0 }}
+                  >
+                    {client.visitor_script_key ? "Upgrade" : "Start SiteRadar"} <ArrowUpRight className="h-4 w-4" />
+                  </a>
+                  <button
+                    onClick={dismissBanner}
+                    aria-label="Dismiss"
+                    style={{ position: "absolute", top: 8, right: 8, background: "transparent", border: "none", color: "#64748b", cursor: "pointer", padding: 4 }}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
                 <Stat label="Today's visitors" value={todayCount} />
                 <Stat label="Businesses identified" value={businessesIdentified} />
@@ -183,6 +283,41 @@ export default function MySiteRadar() {
                 </div>
                 <pre style={{ background: "#030711", color: "#94a3b8", fontSize: 11, padding: 12, borderRadius: 8, marginTop: 10, overflowX: "auto" }}>{snippet}</pre>
                 <p style={{ color: "#64748b", fontSize: 11, margin: "8px 0 0" }}>Paste before &lt;/body&gt; on every page.</p>
+              </div>
+
+              {/* Export events */}
+              <div style={cardStyle}>
+                <p style={labelStyle}>Export events</p>
+                <p style={{ color: "#64748b", fontSize: 12, margin: "6px 0 12px" }}>
+                  Download a CSV of all visitor events in the date range below.
+                </p>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <span style={{ color: "#94a3b8", fontSize: 11 }}>From</span>
+                    <input
+                      type="date"
+                      value={exportFrom}
+                      onChange={(e) => setExportFrom(e.target.value)}
+                      style={{ background: "#030711", border: "1px solid #1e3a5f", color: "#e2e8f0", padding: "8px 10px", borderRadius: 6, fontSize: 13 }}
+                    />
+                  </label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <span style={{ color: "#94a3b8", fontSize: 11 }}>To</span>
+                    <input
+                      type="date"
+                      value={exportTo}
+                      onChange={(e) => setExportTo(e.target.value)}
+                      style={{ background: "#030711", border: "1px solid #1e3a5f", color: "#e2e8f0", padding: "8px 10px", borderRadius: 6, fontSize: 13 }}
+                    />
+                  </label>
+                  <button
+                    onClick={handleExport}
+                    disabled={exporting}
+                    style={{ background: "#00d4ff", color: "#0a1628", border: "none", borderRadius: 6, padding: "9px 14px", fontSize: 13, fontWeight: 700, cursor: exporting ? "wait" : "pointer", display: "inline-flex", alignItems: "center", gap: 6, opacity: exporting ? 0.6 : 1 }}
+                  >
+                    <Download className="h-4 w-4" /> {exporting ? "Exporting…" : "Export CSV"}
+                  </button>
+                </div>
               </div>
 
               <div style={{ marginTop: 8 }}>

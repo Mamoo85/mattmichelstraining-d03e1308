@@ -343,15 +343,24 @@ serve(async (req) => {
 
     // Helper: mark the current Stripe event as completed/failed.
     // Called by the success path at the end + by the global catch on failure.
-    async function markFulfilled(success: boolean, errMsg?: string) {
+    // `productType` (optional) records which product fulfilled this event so the
+    // admin Checkout Events dashboard can filter by product (e.g. site_radar_subscription)
+    // instead of only by raw Stripe event name.
+    async function markFulfilled(success: boolean, errMsgOrProductType?: string, maybeProductType?: string) {
+      // Back-compat: existing call sites pass (true) or (false, "error msg").
+      // New call sites can pass (true, undefined, "site_radar_subscription").
+      const errMsg = success ? undefined : errMsgOrProductType;
+      const productType = success ? errMsgOrProductType : maybeProductType;
       try {
+        const update: Record<string, unknown> = {
+          fulfillment_status: success ? "completed" : "failed",
+          fulfillment_completed_at: success ? new Date().toISOString() : null,
+          fulfillment_error: success ? null : (errMsg || "unknown error").slice(0, 500),
+        };
+        if (productType) update.product_type = productType;
         await sb
           .from("processed_stripe_events")
-          .update({
-            fulfillment_status: success ? "completed" : "failed",
-            fulfillment_completed_at: success ? new Date().toISOString() : null,
-            fulfillment_error: success ? null : (errMsg || "unknown error").slice(0, 500),
-          })
+          .update(update)
           .eq("event_id", event.id);
       } catch (e) {
         console.error(`[WEBHOOK] markFulfilled(${success}) failed for ${event.id}:`, e);
@@ -2343,9 +2352,10 @@ serve(async (req) => {
           }
         } catch (e) {
           console.error("[WEBHOOK] site_radar_subscription error:", e);
+          await markFulfilled(false, e instanceof Error ? e.message : String(e), "site_radar_subscription");
           return new Response(JSON.stringify({ error: "site_radar_subscription failed" }), { status: 500 });
         }
-        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+        await markFulfilled(true, "site_radar_subscription"); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
       // ── MISSED CALL TEXT-BACK — $99/mo with 7-day trial ──────────────────

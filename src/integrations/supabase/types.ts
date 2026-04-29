@@ -14513,6 +14513,7 @@ export type Database = {
           fulfillment_error: string | null
           fulfillment_status: string
           processed_at: string
+          product_type: string | null
         }
         Insert: {
           event_id: string
@@ -14521,6 +14522,7 @@ export type Database = {
           fulfillment_error?: string | null
           fulfillment_status?: string
           processed_at?: string
+          product_type?: string | null
         }
         Update: {
           event_id?: string
@@ -14529,6 +14531,7 @@ export type Database = {
           fulfillment_error?: string | null
           fulfillment_status?: string
           processed_at?: string
+          product_type?: string | null
         }
         Relationships: []
       }
@@ -15548,6 +15551,42 @@ export type Database = {
           state?: string
           trade?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      prospector_targets_audit: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          city: string | null
+          id: string
+          new_active: boolean | null
+          old_active: boolean | null
+          state: string | null
+          target_id: string | null
+          trade: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          city?: string | null
+          id?: string
+          new_active?: boolean | null
+          old_active?: boolean | null
+          state?: string | null
+          target_id?: string | null
+          trade?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          city?: string | null
+          id?: string
+          new_active?: boolean | null
+          old_active?: boolean | null
+          state?: string | null
+          target_id?: string | null
+          trade?: string | null
         }
         Relationships: []
       }
