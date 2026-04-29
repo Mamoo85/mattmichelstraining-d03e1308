@@ -15,6 +15,7 @@ import EnterpriseFooterBlock from "@/components/shared/EnterpriseFooterBlock";
 import TechAlertROICalculator from "@/components/agency/TechAlertROICalculator";
 import ActionButton from "@/components/ui/action-button";
 import { US_METROS, DEFAULT_METRO_ID, getMetroById, getMetroPricing, getVisibleMetros } from "@/lib/usMetros";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const ROLE_OPTIONS = [
   { key: "boiler_operator", label: "Boiler Operator (1st/2nd Class)" },
