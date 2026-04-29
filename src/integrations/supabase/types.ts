@@ -534,6 +534,42 @@ export type Database = {
           },
         ]
       }
+      admin_decision_audit: {
+        Row: {
+          action_type: string
+          actor_user_id: string | null
+          after_value: Json | null
+          before_value: Json | null
+          created_at: string
+          id: string
+          reason: string | null
+          target_id: string | null
+          target_table: string
+        }
+        Insert: {
+          action_type: string
+          actor_user_id?: string | null
+          after_value?: Json | null
+          before_value?: Json | null
+          created_at?: string
+          id?: string
+          reason?: string | null
+          target_id?: string | null
+          target_table: string
+        }
+        Update: {
+          action_type?: string
+          actor_user_id?: string | null
+          after_value?: Json | null
+          before_value?: Json | null
+          created_at?: string
+          id?: string
+          reason?: string | null
+          target_id?: string | null
+          target_table?: string
+        }
+        Relationships: []
+      }
       admin_media_files: {
         Row: {
           created_at: string
@@ -4332,6 +4368,33 @@ export type Database = {
         }
         Relationships: []
       }
+      cron_health_events: {
+        Row: {
+          acknowledged_at: string | null
+          created_at: string
+          id: string
+          message: string | null
+          severity: string
+          surface_name: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          severity: string
+          surface_name: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          severity?: string
+          surface_name?: string
+        }
+        Relationships: []
+      }
       cron_job_health: {
         Row: {
           consecutive_failures: number
@@ -5701,6 +5764,33 @@ export type Database = {
           service_interested?: string | null
           source?: string | null
           stripe_checkout_completed?: boolean | null
+        }
+        Relationships: []
+      }
+      edge_health_events: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          function_name: string
+          id: string
+          latency_ms: number | null
+          status_code: number | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          function_name: string
+          id?: string
+          latency_ms?: number | null
+          status_code?: number | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          function_name?: string
+          id?: string
+          latency_ms?: number | null
+          status_code?: number | null
         }
         Relationships: []
       }
@@ -10195,6 +10285,39 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_event_corroborations: {
+        Row: {
+          created_at: string
+          detail: Json | null
+          event_type: string | null
+          id: string
+          lead_id: string
+          matched: boolean
+          source: string
+          source_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json | null
+          event_type?: string | null
+          id?: string
+          lead_id: string
+          matched?: boolean
+          source: string
+          source_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: Json | null
+          event_type?: string | null
+          id?: string
+          lead_id?: string
+          matched?: boolean
+          source?: string
+          source_url?: string | null
+        }
+        Relationships: []
+      }
       lead_exchange_enrichment_checks: {
         Row: {
           ai_summary_ok: boolean
@@ -12058,12 +12181,15 @@ export type Database = {
           est_loan_low_cents: number | null
           estimated_equity: number | null
           estimated_loan_amount: number | null
+          extractor_run_id: string | null
           free_enrich_at: string | null
           free_enrichment: Json | null
           full_name: string | null
           human_summary: string | null
           id: string
           intel_highlights: Json | null
+          intent_score: number | null
+          intent_score_updated_at: string | null
           last_sale_date: string | null
           last_sale_price_cents: number | null
           last_score_alert_at: string | null
@@ -12097,6 +12223,9 @@ export type Database = {
           suggested_opener: string | null
           tcpa_clear: boolean | null
           updated_at: string
+          verification_method: string | null
+          verifier_citation_match: boolean | null
+          verifier_grounded: boolean | null
           year_built: number | null
           zip: string | null
           zip_heat_index: number | null
@@ -12117,12 +12246,15 @@ export type Database = {
           est_loan_low_cents?: number | null
           estimated_equity?: number | null
           estimated_loan_amount?: number | null
+          extractor_run_id?: string | null
           free_enrich_at?: string | null
           free_enrichment?: Json | null
           full_name?: string | null
           human_summary?: string | null
           id?: string
           intel_highlights?: Json | null
+          intent_score?: number | null
+          intent_score_updated_at?: string | null
           last_sale_date?: string | null
           last_sale_price_cents?: number | null
           last_score_alert_at?: string | null
@@ -12156,6 +12288,9 @@ export type Database = {
           suggested_opener?: string | null
           tcpa_clear?: boolean | null
           updated_at?: string
+          verification_method?: string | null
+          verifier_citation_match?: boolean | null
+          verifier_grounded?: boolean | null
           year_built?: number | null
           zip?: string | null
           zip_heat_index?: number | null
@@ -12176,12 +12311,15 @@ export type Database = {
           est_loan_low_cents?: number | null
           estimated_equity?: number | null
           estimated_loan_amount?: number | null
+          extractor_run_id?: string | null
           free_enrich_at?: string | null
           free_enrichment?: Json | null
           full_name?: string | null
           human_summary?: string | null
           id?: string
           intel_highlights?: Json | null
+          intent_score?: number | null
+          intent_score_updated_at?: string | null
           last_sale_date?: string | null
           last_sale_price_cents?: number | null
           last_score_alert_at?: string | null
@@ -12215,6 +12353,9 @@ export type Database = {
           suggested_opener?: string | null
           tcpa_clear?: boolean | null
           updated_at?: string
+          verification_method?: string | null
+          verifier_citation_match?: boolean | null
+          verifier_grounded?: boolean | null
           year_built?: number | null
           zip?: string | null
           zip_heat_index?: number | null
@@ -12659,6 +12800,30 @@ export type Database = {
           product?: string
           step?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      orphan_scan_results: {
+        Row: {
+          category: string
+          id: string
+          path: string
+          reason: string | null
+          run_at: string
+        }
+        Insert: {
+          category: string
+          id?: string
+          path: string
+          reason?: string | null
+          run_at?: string
+        }
+        Update: {
+          category?: string
+          id?: string
+          path?: string
+          reason?: string | null
+          run_at?: string
         }
         Relationships: []
       }
@@ -21850,6 +22015,7 @@ export type Database = {
         Args: { p_created_at: string; p_half_life_days?: number }
         Returns: number
       }
+      compute_lead_intent_score: { Args: { _lead_id: string }; Returns: number }
       compute_prospect_quality_score: {
         Args: { _prospect_id: string }
         Returns: undefined
@@ -22082,6 +22248,13 @@ export type Database = {
           p_source_method?: string
         }
         Returns: string
+      }
+      quarantine_suspect_leads: {
+        Args: never
+        Returns: {
+          quarantined_count: number
+          sample_reasons: Json
+        }[]
       }
       queue_depth_snapshot: {
         Args: never
