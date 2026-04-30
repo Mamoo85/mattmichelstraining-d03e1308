@@ -652,10 +652,39 @@ serve(async (req) => {
         .eq("id", res.id);
       alertsQueued += matchedClientIds.length;
 
+      // Trial gating: decrement trial_leads_remaining; skip delivery when exhausted
+      if (matchedClientIds.length > 0) {
+        const { data: trialClients } = await (sb.from as any)("mortgage_radar_clients")
+          .select("id, trial_active, trial_leads_remaining, email, contact_name")
+          .in("id", matchedClientIds)
+          .eq("trial_active", true);
+        for (const tc of (trialClients || [])) {
+          const remaining = tc.trial_leads_remaining ?? 0;
+          if (remaining <= 0) {
+            // Trial exhausted — remove from matchedClientIds so no SMS fires
+            const idx = matchedClientIds.indexOf(tc.id);
+            if (idx > -1) matchedClientIds.splice(idx, 1);
+            // Notify Matt once (idempotent — scanner runs daily, check if already notified)
+            await (sb.from as any)("mortgage_radar_clients")
+              .update({ trial_active: false })
+              .eq("id", tc.id)
+              .eq("trial_active", true);
+            const adminPhone = Deno.env.get("ADMIN_PHONE") || "";
+            if (adminPhone) {
+              await sendSMS(adminPhone, DWA_PHONE, `⏰ Mortgage Radar trial exhausted: ${tc.contact_name || tc.email} — 10 free leads done. Card on file. Upgrade to $399/mo.`, "mortgage_radar_trial_expired").catch(() => {});
+            }
+          } else {
+            await (sb.from as any)("mortgage_radar_clients")
+              .update({ trial_leads_remaining: remaining - 1 })
+              .eq("id", tc.id);
+          }
+        }
+      }
+
       // Hot lead SMS (score >= 9) to matched clients with phone on file
       if (score >= 9 && res.created) {
         const { data: hotClients } = await (sb.from as any)("mortgage_radar_clients")
-          .select("phone, business_name")
+          .select("phone, business_name, trial_active, trial_leads_remaining")
           .in("id", matchedClientIds);
         for (const c of (hotClients || [])) {
           if (c.phone) {

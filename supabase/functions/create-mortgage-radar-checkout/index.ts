@@ -34,7 +34,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { email, business_name, contact_name, nmls_number, phone, zip_codes, extra_zip_count, tier, dob, tcpa_consent, manual_ack } = await req.json();
+    const { email, business_name, contact_name, nmls_number, phone, zip_codes, extra_zip_count, tier, dob, tcpa_consent, manual_ack, trial_mode } = await req.json();
 
     if (!email) {
       return new Response(JSON.stringify({ error: "email is required" }), {
@@ -62,6 +62,33 @@ serve(async (req) => {
     const selectedTier: Tier = (tier && tier in TIERS) ? tier : "solo";
     const t = TIERS[selectedTier];
     const origin = req.headers.get("origin") || "https://www.detroitwebagent.com";
+
+    // First-10-free trial: capture card now, no charge until trial ends
+    if (trial_mode) {
+      const trialSession = await stripe.checkout.sessions.create({
+        mode: "setup",
+        payment_method_types: ["card"],
+        customer_email: email,
+        metadata: {
+          type: "mortgage_radar_trial",
+          tier: selectedTier,
+          email,
+          business_name: business_name || "",
+          contact_name: contact_name || "",
+          nmls_number: nmls_number || "",
+          phone: phone || "",
+          zip_codes: Array.isArray(zip_codes) ? zip_codes.join(",") : (zip_codes || ""),
+          dob: String(dob),
+          tcpa_consent_at: new Date().toISOString(),
+          manual_ack_at: new Date().toISOString(),
+        },
+        success_url: `${origin}/mortgage-radar?trial=1&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/mortgage-radar`,
+      });
+      return new Response(JSON.stringify({ url: trialSession.url, trial: true }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Extra ZIPs add-on: $50/mo each beyond the base allotment
     const extraZips = Math.max(0, Number(extra_zip_count) || 0);

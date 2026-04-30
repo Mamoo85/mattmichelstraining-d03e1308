@@ -1365,6 +1365,40 @@ serve(async (req) => {
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      if (meta.type === "mortgage_radar_trial") {
+        const email = meta.email || customerEmail;
+        try {
+          const setupIntentId = session.setup_intent as string;
+          const setupIntent = setupIntentId ? await stripe.setupIntents.retrieve(setupIntentId) : null;
+          const paymentMethodId = setupIntent?.payment_method as string | null;
+
+          if (email) {
+            await (sb.from as any)("mortgage_radar_clients").upsert({
+              email,
+              business_name: meta.business_name || email,
+              contact_name: meta.contact_name || null,
+              nmls_number: meta.nmls_number || null,
+              phone: meta.phone || null,
+              zip_codes: meta.zip_codes ? meta.zip_codes.split(",").map((z: string) => z.trim()) : [],
+              stripe_customer_id: session.customer as string || null,
+              stripe_payment_method_id: paymentMethodId || null,
+              active: true,
+              trial_active: true,
+              trial_leads_remaining: 10,
+              tier: meta.tier || "solo",
+            }, { onConflict: "email" });
+          }
+
+          await notifyMatt(
+            `🎯 Mortgage Radar trial started: ${meta.contact_name || email}`,
+            `<p>10 free leads. Card saved — auto-charges $399/mo when trial exhausted.</p><p>Email: ${email}</p>`
+          ).catch(() => {});
+        } catch (e) {
+          console.error("[WEBHOOK] mortgage_radar_trial error:", e);
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       if (meta.type === "buyer_radar_subscription") {
         const email = (meta.email || customerEmail || "").toLowerCase();
         try {
