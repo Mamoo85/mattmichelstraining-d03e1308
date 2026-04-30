@@ -41,6 +41,12 @@ serve(async (req) => {
       agency_contact_title,
       vertical = "industrial",
       agency_note = "",
+      tier = "standard",
+      // whitelabel: send from agency's own brand (requires sender_name + sender_email)
+      sender_name,
+      sender_email,
+      recipient_email,
+      recipient_name,
     } = body;
 
     if (!agency_name || !agency_email) {
@@ -191,12 +197,18 @@ Output ONLY the 3-sentence intro paragraph. No subject line, no greeting, no sig
       });
     }
 
+    const isWhitelabel = tier === "whitelabel" && sender_name && sender_email;
+    const fromAddress = isWhitelabel
+      ? `${sender_name} <${sender_email}>`
+      : "Matt Michels — Detroit Web Agency <matt@detroitwebagent.com>";
+    const toAddress = isWhitelabel ? (recipient_email || agency_email) : agency_email;
+
     const sendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "Matt Michels — Detroit Web Agency <matt@detroitwebagent.com>",
-        to: [agency_email],
+        from: fromAddress,
+        to: [toAddress],
         bcc: ["matt@detroitwebagent.com"],
         subject,
         html,

@@ -2102,3 +2102,6 @@ verify_jwt = false
 
 [functions.haro-monitor]
 verify_jwt = false
+
+[functions.create-agency-whitelabel-checkout]
+verify_jwt = false

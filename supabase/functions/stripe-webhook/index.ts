@@ -1175,6 +1175,30 @@ serve(async (req) => {
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      if (meta.type === "agency_whitelabel_subscription") {
+        const email = meta.email || customerEmail;
+        try {
+          if (email) {
+            await (sb.from as any)("agency_whitelabel_clients").upsert({
+              agency_name: meta.agency_name || email,
+              contact_name: meta.contact_name || null,
+              email,
+              phone: meta.phone || null,
+              stripe_customer_id: session.customer as string || null,
+              stripe_subscription_id: session.subscription as string || null,
+              active: true,
+            }, { onConflict: "email" }).catch(() => {});
+          }
+          await notifyMatt(
+            `🏢 New Agency White-Label: ${meta.agency_name || email}`,
+            `<p>$999/mo white-label access activated. They can now blast candidates under their own brand.</p><p>Email: ${email}</p><p>Agency: ${meta.agency_name || "—"}</p>`
+          ).catch(() => {});
+        } catch (e) {
+          console.error("[WEBHOOK] agency_whitelabel_subscription error:", e);
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       if (meta.type === "high_volume_buyer_subscription") {
         const email = meta.email || customerEmail;
         try {
