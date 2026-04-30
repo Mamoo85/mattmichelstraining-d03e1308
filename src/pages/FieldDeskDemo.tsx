@@ -64,8 +64,23 @@ const FieldDeskDemo = () => {
           {tab === "tech" && <TechAppPreview />}
         </div>
 
+        {/* QR — scan to open on phone */}
+        <div className="mt-6 bg-white rounded-2xl p-5 text-center">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-[#0a1628] mb-3">
+            📱 Scan to open on your phone
+          </p>
+          <img
+            src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=10&data=https%3A%2F%2Fdetroitwebagent.com%2Ffielddesk-demo"
+            alt="Scan to open FieldDesk demo on your phone"
+            width={200}
+            height={200}
+            className="mx-auto block"
+          />
+          <p className="text-[10px] text-gray-600 mt-3 font-mono">detroitwebagent.com/fielddesk-demo</p>
+        </div>
+
         {/* CTA */}
-        <div className="mt-6 bg-gradient-to-br from-[#00d4ff]/15 to-[#00d4ff]/5 border border-[#00d4ff]/40 rounded-2xl p-5 text-center">
+        <div className="mt-4 bg-gradient-to-br from-[#00d4ff]/15 to-[#00d4ff]/5 border border-[#00d4ff]/40 rounded-2xl p-5 text-center">
           <p className="text-sm text-gray-300 mb-1">Like what you see?</p>
           <p className="text-lg font-black mb-4">Get FieldDesk for your shop.</p>
           <a
