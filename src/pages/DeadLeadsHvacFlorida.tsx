@@ -172,8 +172,13 @@ export default function DeadLeadsHvacFlorida() {
         </div>
       </section>
 
+      {/* ROI Calculator */}
+      <section className="max-w-3xl mx-auto px-6 pb-4">
+        <DeadLeadROICalculator trade={TRADE} geo={GEO} avgJobValue={AVG_JOB} defaultLeads={CONTACTS} />
+      </section>
+
       {/* CTA */}
-      <section id="start" className="max-w-xl mx-auto px-6 pb-20">
+      <section id="start" className="max-w-xl mx-auto px-6 pb-20 pt-8">
         <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
           <h2 className="text-2xl font-black text-center mb-2">Start Your $1 Pilot</h2>
           <p className="text-white/50 text-sm text-center mb-6">
