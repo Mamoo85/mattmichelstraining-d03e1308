@@ -58,9 +58,9 @@ const DJConleyDemo1 = () => {
             <a href="#service" className="hover:text-red-400 transition-colors">Service</a>
             <a href="#contact" className="hover:text-red-400 transition-colors">Contact</a>
           </div>
-          <a href="tel:248-589-8220" className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
-            <Phone className="w-4 h-4" />
-            <span className="hidden sm:inline">248-589-8220</span>
+          <a href="tel:248-589-8220" className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap">
+            <Phone className="w-4 h-4 shrink-0" />
+            <span>248-589-8220</span>
           </a>
         </div>
       </nav>
