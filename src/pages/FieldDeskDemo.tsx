@@ -1,9 +1,10 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import DispatchBoard from "@/components/field-service/DispatchBoard";
 import TechMap from "@/components/field-service/TechMap";
 import SEOHead from "@/components/layout/SEOHead";
 import { ArrowLeft, ClipboardList, Map, Smartphone } from "lucide-react";
+import { trackEvent as trackPostHog } from "@/lib/posthog";
 
 type Tab = "dispatch" | "map" | "tech";
 
@@ -14,9 +15,36 @@ const TABS = [
 ];
 const TAB_IDS: Tab[] = ["dispatch", "map", "tech"];
 
+/** Fire to PostHog + GA4 in one call */
+const trackDemo = (event: string, props: Record<string, unknown> = {}) => {
+  const payload = { surface: "fielddesk_demo", ...props };
+  try { trackPostHog(event, payload); } catch {}
+  try {
+    if (typeof window !== "undefined" && (window as any).gtag) {
+      (window as any).gtag("event", event, payload);
+    }
+  } catch {}
+};
+
 const FieldDeskDemo = () => {
   const [tab, setTab] = useState<Tab>("dispatch");
   const touchStartX = useRef<number | null>(null);
+  const viewedTabs = useRef<Set<Tab>>(new Set());
+
+  // Page view + initial tab view
+  useEffect(() => {
+    trackDemo("demo_page_view", { path: window.location.pathname });
+    viewedTabs.current.add("dispatch");
+    trackDemo("demo_tab_view", { tab: "dispatch", method: "initial" });
+  }, []);
+
+  const switchTab = (next: Tab, method: "click" | "swipe") => {
+    if (next === tab) return;
+    setTab(next);
+    const firstView = !viewedTabs.current.has(next);
+    viewedTabs.current.add(next);
+    trackDemo("demo_tab_view", { tab: next, method, first_view: firstView });
+  };
 
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -27,8 +55,8 @@ const FieldDeskDemo = () => {
     touchStartX.current = null;
     if (Math.abs(dx) < 50) return;
     const idx = TAB_IDS.indexOf(tab);
-    if (dx < 0 && idx < TAB_IDS.length - 1) setTab(TAB_IDS[idx + 1]);
-    if (dx > 0 && idx > 0) setTab(TAB_IDS[idx - 1]);
+    if (dx < 0 && idx < TAB_IDS.length - 1) switchTab(TAB_IDS[idx + 1], "swipe");
+    if (dx > 0 && idx > 0) switchTab(TAB_IDS[idx - 1], "swipe");
   };
 
   return (
