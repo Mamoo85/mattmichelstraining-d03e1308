@@ -2768,6 +2768,59 @@ serve(async (req) => {
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── Dead Lead Pilot — $1 proof-of-concept, fires first batch of texts ──
+      if (meta.type === "dead_lead_pilot") {
+        try {
+          const email = meta.email || customerEmail;
+          const bizName = meta.business_name || email || "there";
+          const contractorId = meta.contractor_id || null;
+
+          // Retrieve the PaymentIntent to save the payment method for future $50 charges
+          const pi = session.payment_intent
+            ? await stripe.paymentIntents.retrieve(session.payment_intent as string)
+            : null;
+          const pmId = pi?.payment_method as string | null;
+
+          if (contractorId && pmId) {
+            await (sb.from as any)("contractor_clients")
+              .update({ stripe_payment_method_id: pmId, pilot_active: true, dead_lead_billing_active: true })
+              .eq("id", contractorId);
+          } else if (email) {
+            // Pilot from cold ad landing page — upsert a minimal contractor record
+            const { data: existing } = await (sb.from as any)("contractor_clients")
+              .select("id").eq("email", email).maybeSingle();
+            if (!existing) {
+              await (sb.from as any)("contractor_clients").insert({
+                email,
+                business_name: meta.business_name || null,
+                stripe_customer_id: session.customer as string || null,
+                stripe_payment_method_id: pmId || null,
+                pilot_active: true,
+                dead_lead_billing_active: true,
+              });
+            } else {
+              await (sb.from as any)("contractor_clients")
+                .update({ stripe_payment_method_id: pmId || null, pilot_active: true, dead_lead_billing_active: true })
+                .eq("id", existing.id);
+            }
+          }
+
+          // Welcome email
+          if (email) {
+            await dwaEmail(email, "Your $1 Pilot is Live — We're Texting Your Old Leads",
+              `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #1e3a5f;border-radius:16px;padding:32px;"><p style="color:#ff6b35;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">♻️ DEAD LEAD REACTIVATION — PILOT</p><h1 style="color:#fff;font-size:22px;margin:0 0 8px;">You're in, ${bizName}.</h1><p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">We're texting your first batch of old leads within 24-48 hours. You'll be notified the moment someone replies. Card on file: $50 charged per interested reply — $0 if nobody responds.</p><div style="background:#0d1f3c;border:1px solid #1e3a5f;border-radius:12px;padding:20px;margin:0 0 20px;"><p style="color:#fff;font-weight:700;font-size:13px;margin:0 0 10px;">YOUR NEXT STEP:</p><p style="margin:0;color:#e2e8f0;font-size:13px;">Reply to this email with your contact list (spreadsheet, CSV, CRM export — any format). We'll handle the rest.</p></div><p style="color:#64748b;font-size:13px;margin:0;">Questions? Call or text Matt: <a href="tel:+13139921219" style="color:#ff6b35;">(313) 992-1219</a></p></div></div></body></html>`
+            ).catch(() => {});
+          }
+          await notifyMatt(
+            `🎯 $1 Dead Lead pilot started — ${bizName}`,
+            `<p><strong>${bizName}</strong> paid $1 for pilot.<br>Email: ${email || "unknown"}<br>Contractor ID: ${contractorId || "new"}<br>Watch for replies — send lead list request if they don't respond within 2 hours.</p>`
+          );
+        } catch (e) {
+          console.error("[WEBHOOK] dead_lead_pilot error:", e);
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // ── AI PHONE ANSWERING — $149/mo ─────────────────────────────────────
       if (meta.type === "phone_answering_subscription") {
         try {
