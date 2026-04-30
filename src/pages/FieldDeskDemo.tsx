@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import DispatchBoard from "@/components/field-service/DispatchBoard";
 import TechMap from "@/components/field-service/TechMap";
@@ -7,8 +7,29 @@ import { ArrowLeft, ClipboardList, Map, Smartphone } from "lucide-react";
 
 type Tab = "dispatch" | "map" | "tech";
 
+const TABS = [
+  { id: "dispatch" as const, label: "Dispatch", icon: ClipboardList },
+  { id: "map" as const, label: "Tech Map", icon: Map },
+  { id: "tech" as const, label: "Tech App", icon: Smartphone },
+];
+const TAB_IDS: Tab[] = ["dispatch", "map", "tech"];
+
 const FieldDeskDemo = () => {
   const [tab, setTab] = useState<Tab>("dispatch");
+  const touchStartX = useRef<number | null>(null);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(dx) < 50) return;
+    const idx = TAB_IDS.indexOf(tab);
+    if (dx < 0 && idx < TAB_IDS.length - 1) setTab(TAB_IDS[idx + 1]);
+    if (dx > 0 && idx > 0) setTab(TAB_IDS[idx - 1]);
+  };
 
   return (
     <div className="min-h-screen bg-[#0a1628] text-white">
@@ -36,33 +57,47 @@ const FieldDeskDemo = () => {
       </header>
 
       {/* Demo phone-frame on desktop, full width on mobile */}
-      <div className="max-w-md mx-auto px-3 py-4">
-        {/* Tabs */}
-        <div className="grid grid-cols-3 gap-1 bg-[#0f1f35] border border-[#1e3a5f] rounded-2xl p-1 mb-4">
-          {([
-            { id: "dispatch", label: "Dispatch", icon: ClipboardList },
-            { id: "map", label: "Tech Map", icon: Map },
-            { id: "tech", label: "Tech App", icon: Smartphone },
-          ] as const).map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => setTab(id)}
-              className={`flex flex-col items-center gap-1 py-2 rounded-xl text-[11px] font-bold transition ${
-                tab === id ? "bg-[#00d4ff] text-[#0a1628]" : "text-gray-400 hover:text-white"
-              }`}
-            >
-              <Icon size={16} />
-              {label}
-            </button>
-          ))}
+      <div className="max-w-md mx-auto px-3 py-3">
+        {/* Tabs — sticky, larger tap targets */}
+        <div className="sticky top-[57px] z-10 -mx-3 px-3 pb-2 pt-2 bg-[#0a1628]">
+          <div
+            role="tablist"
+            aria-label="FieldDesk demo sections"
+            className="grid grid-cols-3 gap-1 bg-[#0f1f35] border border-[#1e3a5f] rounded-2xl p-1"
+          >
+            {TABS.map(({ id, label, icon: Icon }) => {
+              const active = tab === id;
+              return (
+                <button
+                  key={id}
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setTab(id)}
+                  className={`flex flex-col items-center justify-center gap-1 min-h-[52px] px-1 rounded-xl text-[11px] font-bold leading-tight transition active:scale-95 ${
+                    active ? "bg-[#00d4ff] text-[#0a1628] shadow-[0_2px_8px_rgba(0,212,255,0.3)]" : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  <Icon size={18} />
+                  <span className="truncate max-w-full">{label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Tab content */}
-        <div className="bg-[#0f1f35] border border-[#1e3a5f] rounded-2xl overflow-hidden">
+        {/* Tab content — swipeable */}
+        <div
+          className="bg-[#0f1f35] border border-[#1e3a5f] rounded-2xl overflow-hidden touch-pan-y mt-1"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
           {tab === "dispatch" && <DispatchBoard clientId="demo" />}
           {tab === "map" && <TechMap clientId="demo" />}
           {tab === "tech" && <TechAppPreview />}
         </div>
+
+        {/* Swipe hint */}
+        <p className="text-center text-[10px] text-gray-500 mt-2">← Swipe to switch tabs →</p>
 
         {/* QR — scan to open on phone */}
         <div className="mt-6 bg-white rounded-2xl p-5 text-center">
