@@ -150,23 +150,25 @@ export default function DJConleyDemo2() {
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             <div>
-              <p style={{ margin: 0, fontWeight: 800, fontSize: 14, color: "#fff" }}>👁 Companies Visiting DJConley.com Today</p>
+              <p style={{ margin: 0, fontWeight: 800, fontSize: 14, color: "#fff" }}>👁 SiteRadar — Sample Visitor Feed</p>
               <p style={{ margin: "2px 0 0", fontSize: 12, color: "#64748b" }}>
-                SiteRadar identifies businesses by IP — you see company names, not just traffic numbers
+                Illustrative example using real Michigan buyer types. After install, this feed shows YOUR actual site visitors.
               </p>
             </div>
             <span
               style={{
-                background: "#00d4ff15",
-                border: "1px solid #00d4ff40",
-                color: "#00d4ff",
+                background: "#f59e0b20",
+                border: "1px solid #f59e0b60",
+                color: "#fbbf24",
                 borderRadius: 20,
                 padding: "3px 10px",
-                fontSize: 11,
-                fontWeight: 700,
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: 0.5,
+                whiteSpace: "nowrap",
               }}
             >
-              LIVE
+              SAMPLE DATA
             </span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -207,11 +209,11 @@ export default function DJConleyDemo2() {
             }}
           >
             <p style={{ margin: "0 0 6px", fontSize: 12, color: "#00d4ff", fontWeight: 700 }}>
-              💰 What's a single identified visitor worth to Pat?
+              💰 What's one identified visitor worth?
             </p>
             <p style={{ margin: 0, fontSize: 12, color: "#94a3b8", lineHeight: 1.7 }}>
-              Stellantis Facilities Mgmt viewed "Boiler Tune-Up Services" at 2:14 PM today. A multi-unit boiler service contract with a Stellantis plant runs{" "}
-              <strong style={{ color: "#10b981" }}>$40,000–$120,000/year</strong>. If Pat calls them before his competitor does, that's one phone call worth more than 4 months of FieldDesk fees.{" "}
+              When a buyer like Stellantis Facilities Mgmt lands on a "Boiler Tune-Up" page, a multi-unit service contract typically runs{" "}
+              <strong style={{ color: "#10b981" }}>$40,000–$120,000/year</strong>. One return call before your competitor sees them is worth more than 4 months of FieldDesk fees.{" "}
               <span style={{ color: "#475569" }}>SiteRadar names the company. eWay shows nothing. That's the gap.</span>
             </p>
           </div>
