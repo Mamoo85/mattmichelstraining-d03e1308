@@ -42,7 +42,7 @@ const scoreColor = (s: number) => (s >= 8 ? "#dc2626" : s >= 7 ? "#e8621a" : "#f
 
 export default function DemoTemplate() {
   const { slug } = useParams<{ slug: string }>();
-  const { kiosk, isFullscreen, requestFullscreen } = useKioskMode();
+  const { kiosk, isFullscreen, wakeLockActive, overlayDismissed, requestFullscreen } = useKioskMode();
   const [config, setConfig] = useState<DemoConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -241,8 +241,8 @@ export default function DemoTemplate() {
       </div>
 
       {!kiosk && <StartDemoButton />}
-      {kiosk && <ExitKioskButton />}
-      {kiosk && !isFullscreen && <FullscreenPrompt onEnter={requestFullscreen} />}
+      {kiosk && <ExitKioskButton isFullscreen={isFullscreen} wakeLockActive={wakeLockActive} />}
+      {kiosk && !isFullscreen && !overlayDismissed && <FullscreenPrompt onEnter={requestFullscreen} />}
 
       {/* Auto-advance + analytics in kiosk mode */}
       {kiosk && isFullscreen && (
