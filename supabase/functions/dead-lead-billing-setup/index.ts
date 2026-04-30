@@ -1,5 +1,6 @@
-// dead-lead-billing-setup — creates a Stripe Checkout Session in "setup" mode
-// Contractor saves their card once; we auto-charge $50 per revived lead.
+// dead-lead-billing-setup — creates a Stripe Checkout Session
+// Default (setup mode): contractor saves card once; auto-charged $50 per revived lead.
+// pilot_mode=true: $1 payment to prove it works; contractor_clients marked pilot_active=true.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
