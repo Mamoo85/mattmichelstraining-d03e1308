@@ -309,6 +309,7 @@ const DemandRadar = lazyRetry(() => import("./pages/DemandRadar"));
 const TalentRadarVsStaffing = lazyRetry(() => import("./pages/TalentRadarVsStaffing"));
 const FieldDeskVsEway = lazyRetry(() => import("./pages/FieldDeskVsEway"));
 const MortgageRadarVsTriggerLeads = lazyRetry(() => import("./pages/MortgageRadarVsTriggerLeads"));
+const FsboHeatmap = lazyRetry(() => import("./pages/FsboHeatmap"));
 const MortgageRadar = lazyRetry(() => import("./pages/MortgageRadar"));
 const Marketplace = lazyRetry(() => import("./pages/Marketplace"));
 const MarketplaceReceipts = lazyRetry(() => import("./pages/MarketplaceReceipts"));
@@ -786,6 +787,7 @@ const App = () => (
                     <Route path="/fielddesk-vs-eway" element={<FieldDeskVsEway />} />
                     <Route path="/mortgage-radar-vs-trigger-leads" element={<MortgageRadarVsTriggerLeads />} />
                     <Route path="/mortgage-radar" element={<MortgageRadar />} />
+                    <Route path="/fsbo-heatmap" element={<FsboHeatmap />} />
                     <Route path="/my-mortgage-radar" element={<MyMortgageRadar />} />
                     <Route path="/my-missed-call" element={<MyMissedCall />} />
                     <Route path="/my-site-radar" element={<MySiteRadar />} />
