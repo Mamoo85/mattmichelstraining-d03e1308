@@ -176,6 +176,15 @@ export default function DeadLeadIntake() {
     <Page>
       <SEOHead title="Dead Lead Reactivation — Detroit Web Agency" description="Upload your old unsold leads and let us text them for you. $50 per positive reply. No monthly fee, no contracts. We only get paid when you do." path="/dead-lead-intake" />
       <Card>
+        {urlParams.get("pilot") === "1" && (
+          <div style={{ marginBottom: 20, padding: "16px 18px", background: "linear-gradient(135deg, #16a34a25, #16a34a08)", border: "1px solid #16a34a60", borderRadius: 10 }}>
+            <p style={{ color: "#4ade80", fontSize: 12, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", margin: "0 0 4px" }}>✅ $1 Pilot Active</p>
+            <p style={{ color: "#fff", fontSize: 15, fontWeight: 700, margin: "0 0 4px" }}>You're in. One last step.</p>
+            <p style={{ color: "#94a3b8", fontSize: 13, margin: 0, lineHeight: 1.5 }}>
+              Paste your old lead list in the form below and we'll text the first batch within 60 minutes. You only pay $50 when someone replies YES — and your first reply is on the house.
+            </p>
+          </div>
+        )}
         <div style={{ marginBottom: 20, padding: "14px 16px", background: "linear-gradient(135deg, #00d4ff15, #00d4ff05)", border: "1px solid #00d4ff40", borderRadius: 10 }}>
           <p style={{ color: "#00d4ff", fontSize: 12, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", margin: "0 0 4px" }}>🎁 First Reply FREE</p>
           <p style={{ color: "#fff", fontSize: 15, fontWeight: 700, margin: "0 0 4px" }}>Your first positive reply is on the house.</p>
