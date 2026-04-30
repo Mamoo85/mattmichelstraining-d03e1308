@@ -121,25 +121,21 @@ export default function TechMap({ clientId }: TechMapProps) {
     );
   }
 
-  // Build Google Maps embed URL with markers
+  // Build Static Maps URL — supports multiple labeled markers
   const center = `${locations[0].lat},${locations[0].lng}`;
-  const markers = locations
-    .map((loc) => `markers=color:blue%7Clabel:${encodeURIComponent(loc.tech_name[0])}%7C${loc.lat},${loc.lng}`)
+  const markerParams = locations
+    .map((loc) => `markers=color:0x00d4ff%7Clabel:${encodeURIComponent(loc.tech_name[0].toUpperCase())}%7C${loc.lat},${loc.lng}`)
     .join("&");
-  const mapSrc = `https://www.google.com/maps/embed/v1/view?key=${mapsApiKey}&center=${center}&zoom=11&${markers}`;
+  const staticMapSrc = `https://maps.googleapis.com/maps/api/staticmap?center=${center}&zoom=10&size=640x400&scale=2&maptype=roadmap&${markerParams}&key=${mapsApiKey}`;
 
   return (
     <div className="px-4 py-4 space-y-4">
-      <div className="rounded-2xl overflow-hidden border border-[#1e3a5f]">
-        <iframe
-          title="Tech Locations Map"
-          src={mapSrc}
-          width="100%"
-          height="400"
-          style={{ border: 0 }}
-          allowFullScreen
+      <div className="rounded-2xl overflow-hidden border border-[#1e3a5f] bg-[#0a1628]">
+        <img
+          src={staticMapSrc}
+          alt="Live tech locations across Metro Detroit"
+          className="w-full h-auto block"
           loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
         />
       </div>
       <TechList locations={locations} formatRelativeTime={formatRelativeTime} />
