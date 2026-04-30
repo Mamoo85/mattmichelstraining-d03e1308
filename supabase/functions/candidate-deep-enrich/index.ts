@@ -659,6 +659,17 @@ serve(async (req: Request) => {
 
   for (const c of candidates as CandidateRow[]) {
     try {
+      const candidateName = c.full_name || c.name || "";
+      if (!isPlausibleHumanName(candidateName)) {
+        console.log(`[deep-enrich] Skipping junk name: "${candidateName}"`);
+        await sb.from("hire_alert_candidates").update({ enrichment_status: "junk", score: 0 }).eq("id", c.id);
+        continue;
+      }
+      if (!hasMinimalSignal(c as any)) {
+        console.log(`[deep-enrich] Skipping no-signal candidate: "${candidateName}"`);
+        await sb.from("hire_alert_candidates").update({ enrichment_status: "exhausted" }).eq("id", c.id);
+        continue;
+      }
       await sb.from("hire_alert_candidates").update({ enrichment_status: "enriching" }).eq("id", c.id);
       const merged: Record<string, any> = {};
       const audit = (provider: string, fields: string[], ok: boolean, err?: string) =>
