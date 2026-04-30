@@ -241,8 +241,8 @@ export default function DemoTemplate() {
       </div>
 
       {!kiosk && <StartDemoButton />}
-      {kiosk && <ExitKioskButton />}
-      {kiosk && !isFullscreen && <FullscreenPrompt onEnter={requestFullscreen} />}
+      {kiosk && <ExitKioskButton isFullscreen={isFullscreen} wakeLockActive={wakeLockActive} />}
+      {kiosk && !isFullscreen && !overlayDismissed && <FullscreenPrompt onEnter={requestFullscreen} />}
 
       {/* Auto-advance + analytics in kiosk mode */}
       {kiosk && isFullscreen && (
