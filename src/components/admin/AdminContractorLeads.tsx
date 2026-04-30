@@ -444,7 +444,7 @@ export default function AdminContractorLeads() {
                   <p className="text-xs text-muted-foreground">{leadsBySlug[t.slug] || 0} leads captured this month — no contractor to deliver to</p>
                 </div>
                 <button
-                  onClick={() => { setProspectorTrade(`${t.trade.toLowerCase()} contractor`); setProspectorCity(`${t.city} MI`); document.getElementById("prospector-section")?.scrollIntoView({ behavior: "smooth" }); }}
+                  onClick={() => { document.getElementById("prospector-section")?.scrollIntoView({ behavior: "smooth" }); }}
                   className="flex items-center gap-1 bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
                 >
                   <Send size={12} /> Run Prospector
