@@ -354,6 +354,15 @@ export default function AdminAgencyOutreach() {
                           <div className="min-w-0 flex-1">
                             <div className="text-white font-semibold truncate">{c.full_name || c.name || "(unnamed)"}</div>
                             <div className="text-slate-500 text-[11px] truncate">{c.current_title || c.trade || "—"} · {c.city || c.metro || "—"}</div>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {c.current_employer && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-500/10 text-blue-300">employer</span>}
+                              {c.email && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-300">email</span>}
+                              {c.phone && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/10 text-purple-300">phone</span>}
+                              {c.linkedin_url && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#00d4ff]/10 text-[#00d4ff]">linkedin</span>}
+                              {!c.current_employer && !c.email && !c.phone && !c.linkedin_url && (
+                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-700/30 text-slate-500">name only</span>
+                              )}
+                            </div>
                           </div>
                           <div className="flex items-center gap-2 ml-2">
                             <span className={`text-[10px] uppercase tracking-wider font-bold ${tierColor}`}>{tier}</span>
