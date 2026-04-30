@@ -171,6 +171,40 @@ serve(async (req) => {
         <p style="color:#22d3ee;">💡 Double down on <strong>${sorted[0][0]}</strong> — it's your top converter</p>`;
     }
 
+    // ── DAILY CALL SHEET SMS ─────────────────────────────────────────────
+    // Pull top 25 enriched outreach_leads not yet contacted, SMS Matt at run time
+    const ADMIN_PHONE = Deno.env.get("ADMIN_PHONE") || "";
+    if (ADMIN_PHONE) {
+      const { data: callTargets } = await sb
+        .from("outreach_leads" as any)
+        .select("company_name, owner_name, owner_phone, owner_email, source")
+        .eq("outreach_status", "new")
+        .not("owner_email", "is", null)
+        .order("enriched_at", { ascending: false, nullsFirst: false })
+        .limit(25);
+
+      if (callTargets && callTargets.length > 0) {
+        const lines = (callTargets as any[]).slice(0, 10).map((t: any, i: number) => {
+          const name = t.owner_name ? `${t.owner_name} @ ` : "";
+          const contact = t.owner_phone || t.owner_email || "?";
+          return `${i + 1}. ${name}${t.company_name} — ${contact}`;
+        });
+        const more = callTargets.length > 10 ? `\n+${callTargets.length - 10} more in /dwa-admin` : "";
+        await fetch(`https://api.twilio.com/2010-04-01/Accounts/${Deno.env.get("TWILIO_ACCOUNT_SID")}/Messages.json`, {
+          method: "POST",
+          headers: {
+            Authorization: `Basic ${btoa(`${Deno.env.get("TWILIO_ACCOUNT_SID")}:${Deno.env.get("TWILIO_AUTH_TOKEN")}`)}`,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            From: Deno.env.get("TWILIO_PHONE_NUMBER") || "",
+            To: ADMIN_PHONE,
+            Body: `📋 Tom's Daily Call Sheet (${callTargets.length} targets):\n${lines.join("\n")}${more}`,
+          }).toString(),
+        }).catch(() => {});
+      }
+    }
+
     // Only email if there's something to report
     if (alerts.length > 0 || (pipeline?.length || 0) > 0) {
       await sendTomEmail(
