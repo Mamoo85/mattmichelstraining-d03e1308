@@ -56,6 +56,21 @@ serve(async (req) => {
           }),
         });
 
+        // At 90-day milestone, also send a testimonial request to still-active customers
+        if (milestone === 90) {
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: "Matt @ Detroit Web Agency <matt@detroitwebagent.com>",
+              to: [email],
+              bcc: ["matt@detroitwebagent.com"],
+              subject: `One small favor — ${product.product}`,
+              html: `<div style="font-family:sans-serif;max-width:480px;background:#0a1628;color:#fff;padding:32px;border-radius:8px;"><p style="margin:0 0 16px;font-size:16px;">Hey — you've been using <strong>${product.product}</strong> for 90 days now. That means a lot.</p><p style="margin:0 0 16px;font-size:14px;color:#cbd5e1;">One small ask: could you record a 60-second Loom or phone video showing what changed for your business? Just real talk — what it's done for you.</p><p style="margin:0 0 16px;font-size:14px;color:#cbd5e1;">I'll give you <strong style="color:#00d4ff;">$50 in account credit</strong> the moment you send the link.</p><p style="margin:0 0 24px;font-size:14px;color:#cbd5e1;">Just reply to this email with the video link. Literally 60 seconds of your time.</p><p style="color:#94a3b8;font-size:13px;">Thanks — Matt Michels<br>Detroit Web Agency · (313) 992-1219</p></div>`,
+            }),
+          }).catch(() => {});
+        }
+
         // Insert placeholder row so we don't re-send
         await sb.from("client_nps_scores").insert({
           client_email: email,
