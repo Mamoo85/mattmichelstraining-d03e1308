@@ -34,6 +34,7 @@ const AdminCallList = lazy(() => import("@/components/admin/AdminCallList"));
 const AdminSMSInbox = lazy(() => import("@/components/dwa-admin/AdminSMSInbox"));
 const AdminPendingSMSDrafts = lazy(() => import("@/components/dwa-admin/AdminPendingSMSDrafts"));
 const AdminAdLauncher = lazy(() => import("@/components/dwa-admin/AdminAdLauncher"));
+const AdminDeadLeadAdStudio = lazy(() => import("@/components/dwa-admin/AdminDeadLeadAdStudio"));
 const AdminCoverageMap = lazy(() => import("@/components/admin/AdminCoverageMap"));
 const AdminCRMDashboard = lazy(() => import("@/components/admin/AdminCRMDashboard"));
 const AdminContractorOnboarding = lazy(() => import("@/components/dwa-admin/AdminContractorOnboarding"));
