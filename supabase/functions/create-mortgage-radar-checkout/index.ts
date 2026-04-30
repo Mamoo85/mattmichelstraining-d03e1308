@@ -34,7 +34,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { email, business_name, contact_name, nmls_number, phone, zip_codes, extra_zip_count, tier, dob, tcpa_consent, manual_ack, trial_mode } = await req.json();
+    const { email, business_name, contact_name, nmls_number, phone, zip_codes, extra_zip_count, tier, dob, tcpa_consent, manual_ack, trial_mode, annual } = await req.json();
 
     if (!email) {
       return new Response(JSON.stringify({ error: "email is required" }), {
@@ -62,6 +62,48 @@ serve(async (req) => {
     const selectedTier: Tier = (tier && tier in TIERS) ? tier : "solo";
     const t = TIERS[selectedTier];
     const origin = req.headers.get("origin") || "https://www.detroitwebagent.com";
+
+    // Annual prepay: 2 months free (10 monthly payments billed annually)
+    if (annual) {
+      const annualTier: Tier = (tier && tier in TIERS) ? (tier as Tier) : "solo";
+      const annualAmount = TIERS[annualTier].amount * 10;
+      const annualSession = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        payment_method_types: ["card"],
+        customer_email: email,
+        line_items: [{
+          quantity: 1,
+          price_data: {
+            currency: "usd",
+            unit_amount: annualAmount,
+            recurring: { interval: "year" },
+            product_data: {
+              name: `${TIERS[annualTier].name} — Annual (2 months free)`,
+              description: "12 months for the price of 10. Billed once annually.",
+            },
+          },
+        }],
+        metadata: {
+          type: "mortgage_radar_subscription",
+          tier: annualTier,
+          billing_cycle: "annual",
+          email,
+          business_name: business_name || "",
+          contact_name: contact_name || "",
+          nmls_number: nmls_number || "",
+          phone: phone || "",
+          zip_codes: Array.isArray(zip_codes) ? zip_codes.join(",") : (zip_codes || ""),
+          dob: String(dob),
+          tcpa_consent_at: new Date().toISOString(),
+          manual_ack_at: new Date().toISOString(),
+        },
+        success_url: `${origin}/mortgage-radar?success=1&tier=${annualTier}&billing=annual&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/mortgage-radar`,
+      });
+      return new Response(JSON.stringify({ url: annualSession.url, billing: "annual" }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // First-10-free trial: capture card now, no charge until trial ends
     if (trial_mode) {

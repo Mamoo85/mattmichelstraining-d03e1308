@@ -32,6 +32,47 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://www.detroitwebagent.com";
 
+    // Annual prepay: 2 months free (10 monthly payments billed annually)
+    if (plan === "annual") {
+      const annualSubPlan = tier === "bundle" ? "bundle" : "standalone";
+      const monthlyAmount = annualSubPlan === "bundle" ? 7900 : 14900;
+      const annualAmount = monthlyAmount * 10; // 10 months = 2 free
+      const annualSession = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        payment_method_types: ["card"],
+        customer_email: email,
+        line_items: [{
+          quantity: 1,
+          price_data: {
+            currency: "usd",
+            unit_amount: annualAmount,
+            recurring: { interval: "year" },
+            product_data: {
+              name: `Talent Radar — Annual (2 months free)`,
+              description: "12 months of Talent Radar for the price of 10. Billed once annually.",
+            },
+          },
+        }],
+        metadata: {
+          type: "hire_alert_subscription",
+          plan: annualSubPlan,
+          billing_cycle: "annual",
+          email,
+          company_name: company_name || "",
+          owner_phone: phone || "",
+          target_roles: Array.isArray(target_roles) && target_roles.length ? target_roles.join(",") : "boiler_operator,hvac_tech",
+          target_state: (target_state || "MI").toUpperCase(),
+          target_metro: (target_metro || "detroit").toLowerCase(),
+          ref: ref || "direct",
+        },
+        success_url: `${origin}/talent-radar?success=1&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/hire-alert`,
+      });
+      return new Response(JSON.stringify({ url: annualSession.url, billing: "annual" }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Pay-per-hire tier: capture card now, charge $499 per confirmed hire later
     if (plan === "pay_per_hire") {
       const session = await stripe.checkout.sessions.create({
