@@ -156,6 +156,7 @@ const DeadLeadIntake = lazyRetry(() => import("./pages/DeadLeadIntake"));
 const DeadLeadsRoofingTexas = lazyRetry(() => import("./pages/DeadLeadsRoofingTexas"));
 const DeadLeadsHvacFlorida = lazyRetry(() => import("./pages/DeadLeadsHvacFlorida"));
 const DeadLeadsRoofingFlorida = lazyRetry(() => import("./pages/DeadLeadsRoofingFlorida"));
+const HireTradeCity = lazyRetry(() => import("./pages/HireTradeCity"));
 const ContractorOnboardingStatus = lazyRetry(() => import("./pages/ContractorOnboardingStatus"));
 const ContractorQuoteLanding = lazyRetry(() => import("./pages/ContractorQuoteLanding"));
 const ContractorTrustDashboard = lazyRetry(() => import("./pages/ContractorTrustDashboard"));
