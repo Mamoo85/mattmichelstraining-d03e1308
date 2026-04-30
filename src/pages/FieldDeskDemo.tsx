@@ -149,6 +149,7 @@ const FieldDeskDemo = () => {
           <p className="text-lg font-black mb-4">Get FieldDesk for your shop.</p>
           <a
             href="tel:+13139921219"
+            onClick={() => trackDemo("demo_cta_call_click", { location: "footer", current_tab: tab, viewed_tabs: Array.from(viewedTabs.current) })}
             className="inline-block bg-[#00d4ff] text-[#0a1628] font-black px-6 py-3 rounded-full text-sm hover:opacity-90"
           >
             Call (313) 992-1219
