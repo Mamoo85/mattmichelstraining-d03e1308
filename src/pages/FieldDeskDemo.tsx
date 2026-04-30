@@ -78,6 +78,7 @@ const FieldDeskDemo = () => {
         </div>
         <a
           href="tel:+13139921219"
+          onClick={() => trackDemo("demo_cta_call_click", { location: "header", current_tab: tab })}
           className="text-[11px] font-bold text-[#00d4ff] border border-[#00d4ff]/40 rounded-full px-3 py-1 hover:bg-[#00d4ff]/10"
         >
           Call
