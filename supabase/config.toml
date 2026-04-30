@@ -2093,3 +2093,9 @@ verify_jwt = false
 
 [functions.agency-prospect-list-blast]
 verify_jwt = false
+
+[functions.generate-dead-lead-campaign]
+verify_jwt = false
+
+[functions.siteredar-self-pitch]
+verify_jwt = false
