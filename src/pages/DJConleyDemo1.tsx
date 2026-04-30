@@ -370,25 +370,26 @@ const DJConleyDemo1 = () => {
         </div>
       </footer>
 
-      {/* 🚨 Emergency Service Floating Button */}
+      {/* 🚨 Emergency Service Floating Button — compact, bottom-right, out of content */}
       <a
         href="tel:248-589-8220"
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 bg-red-600 hover:bg-red-700 text-white font-black text-sm px-6 py-3.5 rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95"
-        style={{ boxShadow: "0 0 24px rgba(220,38,38,0.6), 0 4px 16px rgba(0,0,0,0.4)", animation: "emergencyPulse 2.5s ease-in-out infinite" }}
+        aria-label="24/7 Emergency Service — Call 248-589-8220"
+        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs sm:text-sm px-3.5 py-2.5 rounded-full transition-all hover:scale-105 active:scale-95"
+        style={{ boxShadow: "0 0 18px rgba(220,38,38,0.55), 0 4px 12px rgba(0,0,0,0.4)", animation: "emergencyPulse 2.5s ease-in-out infinite" }}
       >
-        <span style={{ fontSize: 18 }}>🚨</span>
-        24/7 Emergency Service — Call Now
-        <span style={{ fontSize: 18 }}>☎️</span>
+        <span style={{ fontSize: 14 }}>🚨</span>
+        <span className="hidden sm:inline">24/7 Emergency</span>
+        <span className="sm:hidden">Emergency</span>
         <style>{`
           @keyframes emergencyPulse {
-            0%, 100% { box-shadow: 0 0 24px rgba(220,38,38,0.6), 0 4px 16px rgba(0,0,0,0.4); }
-            50% { box-shadow: 0 0 42px rgba(220,38,38,0.9), 0 4px 24px rgba(0,0,0,0.5); }
+            0%, 100% { box-shadow: 0 0 18px rgba(220,38,38,0.55), 0 4px 12px rgba(0,0,0,0.4); }
+            50% { box-shadow: 0 0 30px rgba(220,38,38,0.85), 0 4px 18px rgba(0,0,0,0.5); }
           }
         `}</style>
       </a>
 
       {/* M2 Dev Badge */}
-      <div className="fixed bottom-4 right-4 z-50 bg-slate-900/90 backdrop-blur border border-slate-700 rounded-full px-3 py-1.5 text-[10px] text-slate-500">
+      <div className="fixed bottom-4 left-4 z-40 bg-slate-900/90 backdrop-blur border border-slate-700 rounded-full px-3 py-1.5 text-[10px] text-slate-500">
         Demo by Detroit Web Agency
       </div>
     </div>
