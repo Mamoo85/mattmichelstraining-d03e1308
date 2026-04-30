@@ -174,7 +174,8 @@ export default function DWAAdmin() {
           {activeTab === "sms-drafts"       && <Suspense fallback={lazyFallback("pending drafts")}><AdminPendingSMSDrafts /></Suspense>}
           {activeTab === "call-list"        && <Suspense fallback={lazyFallback("call sheet")}><AdminCallList /></Suspense>}
           {activeTab === "linkedin-blitz"   && <Suspense fallback={lazyFallback("Growth Outreach")}><AdminGrowthSignalOutreach /></Suspense>}
-          {activeTab === "ad-launcher"      && <Suspense fallback={lazyFallback("Ad Launcher")}><AdminAdLauncher /></Suspense>}
+          {activeTab === "ad-launcher"        && <Suspense fallback={lazyFallback("Ad Launcher")}><AdminAdLauncher /></Suspense>}
+          {activeTab === "dead-lead-ad-studio" && <Suspense fallback={lazyFallback("Dead Lead Ad Studio")}><AdminDeadLeadAdStudio /></Suspense>}
           {activeTab === "agency-outreach"  && <Suspense fallback={lazyFallback("agency outreach")}><AdminAgencyOutreach /></Suspense>}
 
           {activeTab === "contractor-leads"      && <Suspense fallback={lazyFallback("contractor leads")}><AdminContractorLeads /></Suspense>}
