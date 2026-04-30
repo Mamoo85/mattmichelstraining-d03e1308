@@ -1213,6 +1213,11 @@ async function upsertCandidate(sb: any, c: LicenseCandidate): Promise<"new" | "u
       } catch { return "error"; }
     }
 
+    if (!isPlausibleHumanName(c.full_name)) {
+      console.log(`[miosha-scraper] Skipping junk name: "${c.full_name}" (source: ${c.source})`);
+      return "error";
+    }
+
     const row: Record<string, unknown> = {
       name: c.full_name,           // REQUIRED — NOT NULL column
       full_name: c.full_name,      // Also write full_name
