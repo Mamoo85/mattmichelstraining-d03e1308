@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import DeadLeadROICalculator from "@/components/dead-leads/DeadLeadROICalculator";
 
 const TRADE = "Roofing";
 const GEO = "Florida";
