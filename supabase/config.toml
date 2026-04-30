@@ -2105,3 +2105,6 @@ verify_jwt = false
 
 [functions.create-agency-whitelabel-checkout]
 verify_jwt = false
+
+[functions.sitemap-hire]
+verify_jwt = false
