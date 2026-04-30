@@ -131,19 +131,21 @@ export default function AdminDeadLeads() {
 
   // Prospecting pipeline — contractors we cold-emailed about dead lead service
   const [prospecting, setProspecting] = useState(false);
-  const { data: pipeline, refetch: refetchPipeline } = useQuery({
+  const { data: pipelineResult, refetch: refetchPipeline } = useQuery({
     queryKey: ["dead_lead_pipeline"],
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data, count } = await (supabase as any)
         .from("outreach_leads")
-        .select("id, business_name, city, industry, email, phone, status, drip_campaign_status, created_at, first_name")
+        .select("id, business_name, city, industry, email, phone, status, drip_campaign_status, created_at, first_name", { count: "exact" })
         .eq("offer_pitched", "dead_lead_reactivation")
         .order("created_at", { ascending: false })
-        .limit(100);
-      return data || [];
+        .limit(500);
+      return { rows: data || [], total: count ?? 0 };
     },
     refetchInterval: 15000,
   });
+  const pipeline = pipelineResult?.rows || [];
+  const totalEmailedExact = pipelineResult?.total ?? pipeline.length;
 
   // Today's pitch rotation badge
   const todayPitch = (() => {
@@ -165,7 +167,7 @@ export default function AdminDeadLeads() {
   })();
 
   const pipelineStats = {
-    total: pipeline?.length || 0,
+    total: totalEmailedExact,
     responded: pipeline?.filter((r: any) => r.status === "Responded").length || 0,
     active: pipeline?.filter((r: any) => r.status === "emailed" && !(r.drip_campaign_status?.d8_sent)).length || 0,
     complete: pipeline?.filter((r: any) => r.drip_campaign_status?.d8_sent || r.status === "closed" || r.status === "unsubscribed").length || 0,

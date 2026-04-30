@@ -99,6 +99,20 @@ function pickRandomCities(n: number): string[] {
   return shuffled.slice(0, Math.min(n, CITIES.length));
 }
 
+// Concurrency-limited Promise.all — runs at most `limit` promises at a time
+async function pLimit<T>(items: (() => Promise<T>)[], limit: number): Promise<T[]> {
+  const results: T[] = [];
+  let idx = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (idx < items.length) {
+      const i = idx++;
+      results[i] = await items[i]();
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
+
 // Pick 2 trade+city combos to run today (rotated by day of year)
 function getTodaysCombos(): { trade: string; city: string }[] {
   const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
@@ -160,7 +174,7 @@ async function searchGoogleMaps(query: string, apiKey: string): Promise<any[]> {
 async function scrapeEmail(websiteUrl: string): Promise<string | null> {
   try {
     const controller = new AbortController();
-    setTimeout(() => controller.abort(), 5000);
+    setTimeout(() => controller.abort(), 3000);
     const res = await fetch(websiteUrl, { signal: controller.signal, headers: { "User-Agent": "Mozilla/5.0" } });
     if (!res.ok) return null;
     const html = await res.text();
@@ -709,7 +723,7 @@ serve(async (req) => {
     let combos: { trade: string; city: string }[];
     const isAllMichigan = manualCity === "ALL_MI" || (manualTrade && !manualCity);
     if (isAllMichigan && manualTrade) {
-      combos = pickRandomCities(8).map(city => ({ trade: manualTrade, city }));
+      combos = pickRandomCities(5).map(city => ({ trade: manualTrade, city }));
       log("All-Michigan fan-out", { trade: manualTrade, cityCount: combos.length });
     } else if (manualTrade && manualCity) {
       const variants = TRADE_QUERY_VARIANTS[manualTrade] || [manualTrade];
@@ -723,7 +737,7 @@ serve(async (req) => {
     let totalFound = 0;
     let totalSkipped = 0;
     let totalScoutRejected = 0;
-    const maxToSend = Math.min(50, remainingCap);
+    const maxToSend = Math.min(20, remainingCap);
 
     // ── CARE ALERT DAY: search nursing homes instead of trade combos ──
     if (pitchRotation === "care_alert" && !manualTrade) {
@@ -811,16 +825,48 @@ serve(async (req) => {
       return q;
     };
 
-    for (const combo of combos) {
-      const tradeQuery = combo.trade;
-      const trade = canonicalTrade(tradeQuery);
-      const city = combo.city;
-      log("Searching", { tradeQuery, trade, city });
-      const places = await searchGoogleMaps(`${tradeQuery} in ${city}`, GOOGLE_MAPS_API_KEY);
-      totalFound += places.length;
+    // ── PHASE 1: Parallel searches + parallel email scraping ──────────────────
+    // Run all Google Maps searches concurrently, then scrape all websites in
+    // parallel batches. This reduces wall-clock time from O(combos × places × 5s)
+    // to O(max_scrape_time) ≈ 3–5 seconds regardless of combo count.
+    log("Phase 1: parallel search", { combos: combos.length });
+    const comboSearchResults = await Promise.all(
+      combos.map(async (combo) => {
+        const tradeQuery = combo.trade;
+        const trade = canonicalTrade(tradeQuery);
+        const city = combo.city;
+        try {
+          const places = await searchGoogleMaps(`${tradeQuery} in ${city}`, GOOGLE_MAPS_API_KEY);
+          return { trade, city, places: places.slice(0, 10), found: places.length };
+        } catch (err) {
+          log("Search error", { tradeQuery, city, error: String(err) });
+          return { trade, city, places: [], found: 0 };
+        }
+      })
+    );
+    totalFound = comboSearchResults.reduce((s, r) => s + r.found, 0);
+    const rawLeads = comboSearchResults.flatMap(({ trade, city, places }) =>
+      places.map(p => ({ place: p, trade, city }))
+    );
+    log("Phase 1 searches done", { raw: rawLeads.length });
 
-      for (const place of places.slice(0, 20)) {
-        const name = place.displayName?.text || "Unknown Business";
+    // Parallel email scraping — batches of 8 concurrent to avoid overwhelming hosts
+    const SCRAPE_CONCURRENCY = 8;
+    const scrapedLeads: { place: any; trade: string; city: string; email: string | null }[] = [];
+    await pLimit(
+      rawLeads.map(({ place, trade, city }) => async () => {
+        const email = place.websiteUri ? await scrapeEmail(place.websiteUri) : null;
+        scrapedLeads.push({ place, trade, city, email });
+      }),
+      SCRAPE_CONCURRENCY
+    );
+    log("Phase 1 scraping done", { withEmail: scrapedLeads.filter(l => l.email).length });
+
+    // ── PHASE 2: Serial dedup + AI qualification + send (capped by timeout/maxToSend) ──
+    for (const { place, trade, city, email } of scrapedLeads) {
+      if (totalEmailed >= maxToSend || isTimedOut()) break;
+
+      const name = place.displayName?.text || "Unknown Business";
         const phone = place.nationalPhoneNumber || null;
         const website = place.websiteUri || null;
         const rating = place.rating || 0;
