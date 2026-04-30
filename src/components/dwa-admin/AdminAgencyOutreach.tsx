@@ -56,13 +56,25 @@ export default function AdminAgencyOutreach() {
     const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
     const { data } = await supabase
       .from("hire_alert_candidates")
-      .select("id, name, full_name, trade, city, metro, score, current_title, qualifications_summary, created_at")
+      .select("id, name, full_name, trade, city, metro, score, current_title, qualifications_summary, created_at, current_employer, email, phone, linkedin_url, data_completeness")
       .eq("is_company_name", false)
       .eq("do_not_contact", false)
+      .neq("enrichment_status", "junk")
       .gte("created_at", since)
+      .order("data_completeness", { ascending: false })
       .order("score", { ascending: false })
       .limit(200);
-    setCandidates(data || []);
+    // Client-side: reject names that look like page nav text or are too short
+    const filtered = (data || []).filter((c: any) => {
+      const n = (c.full_name || c.name || "").trim();
+      if (n.length < 5) return false;
+      if (/[?:!@#$%/]/.test(n)) return false;
+      if (n.split(/\s+/).filter(Boolean).length < 2) return false;
+      if (/^\s*(go\s+back|uh\s+oh|search|loading|submit|sign\s+in|log\s+in|next|previous|view\s+all|learn\s+more|error|menu|home|click\s+here)\b/i.test(n)) return false;
+      const hasSignal = c.current_employer || c.current_title || c.city || c.phone || c.email || c.linkedin_url;
+      return !!hasSignal;
+    });
+    setCandidates(filtered);
     setLoadingCands(false);
   };
 
