@@ -1,3 +1,34 @@
+// Navigation/UI phrases that get scraped as names from Manta/PHCC/MIOSHA pages
+const JUNK_NAME_PATTERNS = [
+  /^\s*(go\s+back|uh\s+oh|search|loading|submit|sign\s+in|log\s+in|log\s+out|sign\s+out|next|previous|prev|view\s+all|see\s+all|learn\s+more|read\s+more|coming\s+soon|not\s+found|error|menu|home|homepage|click\s+here|back|continue|skip|cancel|close|accept|decline|verify|confirm)\b/i,
+];
+
+const JUNK_CHARS = /[?:!@#$%/\[\]{}|<>]/;
+const URL_PATTERN = /(https?:\/\/|www\.|\.com|\.org|@)/i;
+
+export function isPlausibleHumanName(name: string): boolean {
+  if (!name) return false;
+  const trimmed = name.trim();
+  if (trimmed.length < 5 || trimmed.length > 60) return false;
+  if (JUNK_CHARS.test(trimmed)) return false;
+  if (URL_PATTERN.test(trimmed)) return false;
+  for (const pat of JUNK_NAME_PATTERNS) {
+    if (pat.test(trimmed)) return false;
+  }
+  const tokens = trimmed.split(/\s+/).filter(t => t.length > 0);
+  if (tokens.length < 2) return false;
+  if (tokens.some(t => t.length < 2)) return false;
+  return true;
+}
+
+export function hasMinimalSignal(candidate: Partial<Record<string, unknown>>): boolean {
+  const fields = ["current_employer", "current_title", "city", "phone", "email", "linkedin_url"];
+  return fields.some(f => {
+    const v = candidate[f];
+    return v !== null && v !== undefined && String(v).trim() !== "";
+  });
+}
+
 /**
  * Black Box sanitization — strips all source attribution from candidate
  * records before returning them to agency clients.
