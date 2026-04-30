@@ -52,8 +52,8 @@ const AdminEnrichmentAudit = lazy(() => import("@/components/admin/AdminEnrichme
 type Tab =
   | "ai-command"
   | "dwa-overview" | "revenue" | "leads-e2e" | "prospect-tracker" | "agent-toolkit" | "pipeline-velocity"
-  | "command-center" | "sms-inbox" | "sms-drafts" | "call-list" | "linkedin-blitz" | "ad-launcher" | "agency-outreach"
-  | "contractor-leads" | "contractor-onboarding" | "contractor-market" | "dead-leads" | "fax-drip" | "postcard-drip" | "sms-sniper" | "fielddesk" | "techalert" | "missed-call" | "missed-call-leads" | "clients-all"
+  | "command-center" | "sms-inbox" | "sms-drafts" | "call-list" | "linkedin-blitz" | "ad-launcher" | "agency-outreach" | "dead-leads" | "fax-drip" | "postcard-drip" | "sms-sniper" | "dead-lead-ad-studio"
+  | "contractor-leads" | "contractor-onboarding" | "contractor-market" | "fielddesk" | "techalert" | "missed-call" | "missed-call-leads" | "clients-all"
   | "lead-marketplace" | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
   | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit";
