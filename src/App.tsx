@@ -157,6 +157,12 @@ const DeadLeadsRoofingTexas = lazyRetry(() => import("./pages/DeadLeadsRoofingTe
 const DeadLeadsHvacFlorida = lazyRetry(() => import("./pages/DeadLeadsHvacFlorida"));
 const DeadLeadsRoofingFlorida = lazyRetry(() => import("./pages/DeadLeadsRoofingFlorida"));
 const HireTradeCity = lazyRetry(() => import("./pages/HireTradeCity"));
+const CandidateJobBoard = lazyRetry(() => import("./pages/CandidateJobBoard"));
+const MortgageRadarDemo = lazyRetry(() => import("./pages/MortgageRadarDemo"));
+const TechAlertVsIndeed = lazyRetry(() => import("./pages/TechAlertVsIndeed"));
+const MortgageRadarVsZillow = lazyRetry(() => import("./pages/MortgageRadarVsZillow"));
+const DeadLeadsVsHomeAdvisor = lazyRetry(() => import("./pages/DeadLeadsVsHomeAdvisor"));
+const HireTradePage = lazyRetry(() => import("./pages/HireTradePage"));
 const ContractorOnboardingStatus = lazyRetry(() => import("./pages/ContractorOnboardingStatus"));
 const ContractorQuoteLanding = lazyRetry(() => import("./pages/ContractorQuoteLanding"));
 const ContractorTrustDashboard = lazyRetry(() => import("./pages/ContractorTrustDashboard"));
@@ -615,6 +621,12 @@ const App = () => (
                     <Route path="/dead-leads-hvac-florida" element={<DeadLeadsHvacFlorida />} />
                     <Route path="/dead-leads-roofing-florida" element={<DeadLeadsRoofingFlorida />} />
                     <Route path="/hire-:trade-in-:city" element={<HireTradeCity />} />
+                    <Route path="/jobs" element={<CandidateJobBoard />} />
+                    <Route path="/mortgage-radar-demo" element={<MortgageRadarDemo />} />
+                    <Route path="/techalert-vs-indeed" element={<TechAlertVsIndeed />} />
+                    <Route path="/mortgage-radar-vs-zillow-leads" element={<MortgageRadarVsZillow />} />
+                    <Route path="/dead-leads-vs-homeadvisor" element={<DeadLeadsVsHomeAdvisor />} />
+                    <Route path="/hire/:trade/:city" element={<HireTradePage />} />
                     <Route path="/contractor-onboarding-status" element={<ContractorOnboardingStatus />} />
                     <Route path="/quote/:trade/:city" element={<ContractorQuoteLanding />} />
                     <Route path="/contractor-portal/:token" element={<ContractorTrustDashboard />} />
