@@ -131,49 +131,131 @@ const FieldDeskDemo = () => {
   );
 };
 
-const DEMO_JOBS_TODAY = [
-  { time: "8:00 AM", customer: "GM Warren Plant", type: "Boiler PM", tech: "Mike J.", status: "En route" },
-  { time: "10:30 AM", customer: "Henry Ford Hospital", type: "Steam line repair", tech: "Tony R.", status: "On site" },
-  { time: "1:00 PM", customer: "Stellantis SHAP", type: "Quarterly inspection", tech: "Dan K.", status: "Scheduled" },
-  { time: "3:30 PM", customer: "DTE Conners Creek", type: "Emergency call", tech: "Chris O.", status: "Scheduled" },
+type JobStatus = "Scheduled" | "En route" | "On site" | "Complete";
+type DemoJob = {
+  id: string;
+  time: string;
+  customer: string;
+  customerPhone: string;
+  address: string;
+  type: string;
+  status: JobStatus;
+};
+
+const INITIAL_JOBS: DemoJob[] = [
+  { id: "j1", time: "8:00 AM", customer: "GM Warren Plant", customerPhone: "+15865551001", address: "30001 Van Dyke Ave, Warren, MI", type: "Boiler PM", status: "En route" },
+  { id: "j2", time: "10:30 AM", customer: "Henry Ford Hospital", customerPhone: "+13135552002", address: "2799 W Grand Blvd, Detroit, MI", type: "Steam line repair", status: "On site" },
+  { id: "j3", time: "1:00 PM", customer: "Stellantis SHAP", customerPhone: "+15865553003", address: "2000 Sterling Ave, Sterling Heights, MI", type: "Quarterly inspection", status: "Scheduled" },
+  { id: "j4", time: "3:30 PM", customer: "DTE Conners Creek", customerPhone: "+13135554004", address: "11700 Freud St, Detroit, MI", type: "Emergency call", status: "Scheduled" },
 ];
 
-const TechAppPreview = () => (
-  <div className="p-4 space-y-4">
-    <div className="text-center">
-      <div className="inline-block bg-[#00d4ff]/20 border border-[#00d4ff]/40 rounded-full px-3 py-1 text-[10px] font-bold text-[#00d4ff] uppercase tracking-widest mb-2">
-        Tech: Mike Johnson
-      </div>
-      <p className="text-xs text-gray-400">Today's route · 4 stops</p>
-    </div>
+const NEXT_STATUS: Record<JobStatus, JobStatus> = {
+  "Scheduled": "En route",
+  "En route": "On site",
+  "On site": "Complete",
+  "Complete": "Complete",
+};
 
-    {DEMO_JOBS_TODAY.map((job, i) => (
-      <div key={i} className="bg-[#0a1628] border border-[#1e3a5f] rounded-xl p-3">
-        <div className="flex justify-between items-start mb-1">
-          <span className="text-[#00d4ff] font-bold text-xs">{job.time}</span>
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-            job.status === "On site" ? "bg-green-500/20 text-green-400" :
-            job.status === "En route" ? "bg-yellow-500/20 text-yellow-400" :
-            "bg-gray-500/20 text-gray-400"
-          }`}>{job.status}</span>
-        </div>
-        <p className="text-white font-semibold text-sm">{job.customer}</p>
-        <p className="text-gray-400 text-xs mt-1">{job.type}</p>
-        <div className="flex gap-2 mt-3">
-          <button className="flex-1 bg-[#00d4ff] text-[#0a1628] text-[11px] font-bold py-2 rounded-lg">
-            Navigate
-          </button>
-          <button className="flex-1 border border-[#1e3a5f] text-white text-[11px] font-bold py-2 rounded-lg">
-            Start Job
-          </button>
-        </div>
-      </div>
-    ))}
+const ACTION_LABEL: Record<JobStatus, string> = {
+  "Scheduled": "Start Job",
+  "En route": "Arrive On Site",
+  "On site": "Complete Job",
+  "Complete": "Done ✓",
+};
 
-    <div className="text-center text-[10px] text-gray-500 pt-2">
-      Techs use this on their phone · Auto-text customer when 10 min away
+const STATUS_STYLE: Record<JobStatus, string> = {
+  "Scheduled": "bg-gray-500/20 text-gray-400",
+  "En route": "bg-yellow-500/20 text-yellow-400",
+  "On site": "bg-green-500/20 text-green-400",
+  "Complete": "bg-[#00d4ff]/20 text-[#00d4ff]",
+};
+
+type Toast = { id: number; text: string };
+
+const TechAppPreview = () => {
+  const [jobs, setJobs] = useState<DemoJob[]>(INITIAL_JOBS);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const pushToast = (text: string) => {
+    const id = Date.now() + Math.random();
+    setToasts((t) => [...t, { id, text }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3500);
+  };
+
+  const handleNavigate = (job: DemoJob) => {
+    pushToast(`📍 Opening Maps to ${job.customer}…`);
+    pushToast(`📲 Auto-text sent to customer: "Tech is 10 min away"`);
+    // Demo: also bump Scheduled → En route
+    if (job.status === "Scheduled") {
+      setJobs((prev) => prev.map((j) => (j.id === job.id ? { ...j, status: "En route" } : j)));
+    }
+  };
+
+  const handleAction = (job: DemoJob) => {
+    if (job.status === "Complete") return;
+    const next = NEXT_STATUS[job.status];
+    setJobs((prev) => prev.map((j) => (j.id === job.id ? { ...j, status: next } : j)));
+    if (next === "En route") pushToast(`🚐 En route to ${job.customer} — customer notified`);
+    if (next === "On site") pushToast(`✅ Checked in at ${job.customer} · Timer started`);
+    if (next === "Complete") pushToast(`💵 ${job.customer} — invoice auto-generated & emailed`);
+  };
+
+  return (
+    <div className="p-4 space-y-4 relative">
+      <div className="text-center">
+        <div className="inline-block bg-[#00d4ff]/20 border border-[#00d4ff]/40 rounded-full px-3 py-1 text-[10px] font-bold text-[#00d4ff] uppercase tracking-widest mb-2">
+          Tech: Mike Johnson
+        </div>
+        <p className="text-xs text-gray-400">Today's route · {jobs.filter((j) => j.status !== "Complete").length} stops left</p>
+      </div>
+
+      {jobs.map((job) => {
+        const isComplete = job.status === "Complete";
+        return (
+          <div key={job.id} className={`bg-[#0a1628] border rounded-xl p-3 transition ${isComplete ? "border-[#00d4ff]/40 opacity-70" : "border-[#1e3a5f]"}`}>
+            <div className="flex justify-between items-start mb-1">
+              <span className="text-[#00d4ff] font-bold text-xs">{job.time}</span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_STYLE[job.status]}`}>{job.status}</span>
+            </div>
+            <p className={`font-semibold text-sm ${isComplete ? "text-gray-400 line-through" : "text-white"}`}>{job.customer}</p>
+            <p className="text-gray-400 text-xs mt-1">{job.type}</p>
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => handleNavigate(job)}
+                disabled={isComplete}
+                className="flex-1 bg-[#00d4ff] text-[#0a1628] text-[11px] font-bold py-2.5 rounded-lg active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Navigate
+              </button>
+              <button
+                onClick={() => handleAction(job)}
+                disabled={isComplete}
+                className="flex-1 border border-[#1e3a5f] text-white text-[11px] font-bold py-2.5 rounded-lg active:scale-95 transition hover:bg-[#1e3a5f]/40 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {ACTION_LABEL[job.status]}
+              </button>
+            </div>
+          </div>
+        );
+      })}
+
+      <div className="text-center text-[10px] text-gray-500 pt-2">
+        Tap the buttons — every action auto-texts the customer & updates the office in real time.
+      </div>
+
+      {/* Toast stack */}
+      <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 w-[90%] max-w-sm pointer-events-none">
+        {toasts.map((t) => (
+          <div
+            key={t.id}
+            className="bg-[#00d4ff] text-[#0a1628] text-xs font-bold px-4 py-3 rounded-xl shadow-2xl animate-in slide-in-from-bottom-4 fade-in"
+          >
+            {t.text}
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default FieldDeskDemo;
