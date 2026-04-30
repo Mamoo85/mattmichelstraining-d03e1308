@@ -173,7 +173,7 @@ export default function AdminDeadLeads() {
     complete: pipeline?.filter((r: any) => r.drip_campaign_status?.d8_sent || r.status === "closed" || r.status === "unsubscribed").length || 0,
   };
 
-  const PROSPECT_TRADES = ["roofer", "HVAC contractor", "plumber", "electrician"];
+  const PROSPECT_TRADES = ["Roofing", "HVAC", "Plumbing", "Electrical", "General Contractor", "Siding", "Gutters", "Solar"];
   const PROSPECT_CITIES = [
     // Metro Detroit
     "Detroit MI", "Grosse Pointe MI", "Warren MI", "Sterling Heights MI",
