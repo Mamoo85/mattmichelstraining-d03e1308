@@ -78,32 +78,32 @@ const DJConleyDemo1 = () => {
               <Shield className="w-3.5 h-3.5" />
               51 Years of Exceptional Service
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.1] mb-6">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.1] mb-5">
               A Name You Can{" "}
               <span className="text-red-500">TRUST.</span>
             </h1>
-            <p className="text-lg text-slate-300 max-w-lg mb-8 leading-relaxed">
+            <p className="text-base sm:text-lg text-slate-300 max-w-lg mb-7 leading-relaxed">
               Manufacturer's Rep & Distributor for energy conversion and conservation — steam, hot water, and heat recovery solutions for Michigan's industrial backbone.
             </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-3">
               <Button
                 onClick={() => setShowForm(true)}
-                className="bg-red-600 hover:bg-red-700 text-white px-8 py-6 text-base font-bold rounded-lg"
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-5 text-sm sm:text-base font-bold rounded-lg"
               >
-                Request a Quote <ArrowRight className="w-5 h-5 ml-2" />
+                Request a Quote <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
               <a href="tel:248-589-8220">
-                <Button variant="outline" className="border-slate-600 text-slate-200 hover:bg-slate-800 px-8 py-6 text-base rounded-lg">
-                  <PhoneCall className="w-5 h-5 mr-2" /> Call Now
+                <Button variant="outline" className="border-slate-600 text-slate-200 hover:bg-slate-800 px-6 py-5 text-sm sm:text-base rounded-lg">
+                  <PhoneCall className="w-4 h-4 mr-2" /> Call Now
                 </Button>
               </a>
             </div>
           </div>
-          <div className="hidden md:grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-8 md:mt-0">
             {stats.map((s, i) => (
-              <div key={i} className="bg-slate-900/80 backdrop-blur border border-slate-700/50 rounded-xl p-6 text-center">
-                <div className="text-3xl font-black text-red-500 mb-1">{s.value}</div>
-                <div className="text-xs text-slate-400 uppercase tracking-wider">{s.label}</div>
+              <div key={i} className="bg-slate-900/80 backdrop-blur border border-slate-700/50 rounded-xl p-4 sm:p-5 text-center">
+                <div className="text-2xl sm:text-3xl font-black text-red-500 mb-1">{s.value}</div>
+                <div className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider">{s.label}</div>
               </div>
             ))}
           </div>
