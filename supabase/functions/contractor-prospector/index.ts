@@ -813,12 +813,7 @@ serve(async (req) => {
     }
 
     // Map a (possibly-variant) trade query string back to its canonical trade key
-    const canonicalTrade = (q: string): string => {
-      for (const [canonical, variants] of Object.entries(TRADE_QUERY_VARIANTS)) {
-        if (variants.some(v => q.toLowerCase().includes(v.toLowerCase()))) return canonical;
-      }
-      return q;
-    };
+    const canonicalTrade = (q: string): string => canonicalizeTrade(q);
 
     // ── PHASE 1: Parallel searches + parallel email scraping ──────────────────
     // Run all Google Maps searches concurrently, then scrape all websites in
