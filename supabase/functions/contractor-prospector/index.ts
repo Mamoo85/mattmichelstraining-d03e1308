@@ -905,10 +905,6 @@ serve(async (req) => {
         // GBP scoring (fast, no AI)
         const { score: gbpScore, issues } = scoreGbp(place);
 
-        // Get email from website
-        let email: string | null = null;
-        if (website) email = await scrapeEmail(website);
-
         // Email-level block check (after scrape)
         if (email) {
           const emailBlock = await isBlocked(sb, { email, business_name: name });
@@ -1203,8 +1199,6 @@ serve(async (req) => {
         await new Promise(r => setTimeout(r, 500));
 
         if (totalEmailed >= maxToSend || isTimedOut()) break;
-      }
-      if (totalEmailed >= maxToSend || isTimedOut()) break;
     }
 
     // ── Michigan SOS new business → Contractor Leads pitch ──
