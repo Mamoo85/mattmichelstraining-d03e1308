@@ -1,21 +1,28 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { demoAnalytics } from "./DemoAnalytics";
 
+const SS_KIOSK_KEY = "demo:kiosk:active";
+const SS_OVERLAY_DISMISSED = "demo:kiosk:overlayDismissed";
+
 /**
  * Presentation-grade kiosk mode for /demo/:slug.
  *
- * Activated by ?kiosk=1. While active:
- *  - Requests browser Fullscreen API (no chrome / address bar)
- *  - Acquires Screen Wake Lock (display never sleeps mid-pitch)
- *  - Locks scroll on html/body, hides app nav
- *  - Adds env(safe-area-inset-*) padding for notched displays / iPad
- *  - Hides the cursor after 3s of inactivity (presentation polish)
- *  - Re-enters fullscreen on click if user / ESC dropped out
+ * Activated by ?kiosk=1 OR sessionStorage flag (so reloads/auto-refresh stay in kiosk).
+ * While active:
+ *  - Fullscreen API + Screen Wake Lock with auto-retry on loss
+ *  - Locks scroll, hides app nav
+ *  - Disables pull-to-refresh, double-tap zoom, back-swipe gestures
+ *  - safe-area padding for notched displays
+ *  - Cursor auto-hide after 3s idle
+ *  - sessionStorage persistence so reloads boot directly back into kiosk
  */
 export function useKioskMode() {
   const [kiosk, setKiosk] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [wakeLockActive, setWakeLockActive] = useState(false);
+  const [overlayDismissed, setOverlayDismissed] = useState(false);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const retryTimerRef = useRef<number | undefined>(undefined);
 
   const requestFullscreen = useCallback(async () => {
     try {
@@ -25,6 +32,8 @@ export function useKioskMode() {
       if (document.fullscreenElement) return;
       if (el.requestFullscreen) await el.requestFullscreen({ navigationUI: "hide" } as FullscreenOptions);
       else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+      sessionStorage.setItem(SS_OVERLAY_DISMISSED, "1");
+      setOverlayDismissed(true);
     } catch {
       /* user gesture required — handled by overlay click */
     }
@@ -35,19 +44,37 @@ export function useKioskMode() {
       const nav = navigator as Navigator & { wakeLock?: { request: (type: "screen") => Promise<WakeLockSentinel> } };
       if (nav.wakeLock && !wakeLockRef.current) {
         wakeLockRef.current = await nav.wakeLock.request("screen");
+        setWakeLockActive(true);
         wakeLockRef.current.addEventListener("release", () => {
           wakeLockRef.current = null;
+          setWakeLockActive(false);
         });
       }
     } catch {
-      /* unsupported / denied — non-fatal */
+      setWakeLockActive(false);
     }
   }, []);
 
   useEffect(() => {
-    const isKiosk = new URLSearchParams(window.location.search).get("kiosk") === "1";
+    const urlKiosk = new URLSearchParams(window.location.search).get("kiosk") === "1";
+    const ssKiosk = sessionStorage.getItem(SS_KIOSK_KEY) === "1";
+    const isKiosk = urlKiosk || ssKiosk;
     setKiosk(isKiosk);
-    if (!isKiosk) return;
+    if (!isKiosk) {
+      // Cleanup any stale flags
+      sessionStorage.removeItem(SS_OVERLAY_DISMISSED);
+      return;
+    }
+
+    // Persist + sync URL so reload stays in kiosk even without ?kiosk=1
+    sessionStorage.setItem(SS_KIOSK_KEY, "1");
+    if (!urlKiosk) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("kiosk", "1");
+      window.history.replaceState({}, "", url.toString());
+    }
+
+    setOverlayDismissed(sessionStorage.getItem(SS_OVERLAY_DISMISSED) === "1");
 
     document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
@@ -56,21 +83,54 @@ export function useKioskMode() {
     const prevNavDisplay = nav ? (nav as HTMLElement).style.display : "";
     if (nav) (nav as HTMLElement).style.display = "none";
 
-    // First fullscreen attempt (works if reload was triggered by user gesture in same tab)
+    // First fullscreen attempt
     requestFullscreen();
     acquireWakeLock();
 
+    // Watch fullscreen — retry automatically if we lose it (ESC, browser interrupt, etc.)
     const onFsChange = () => {
       const fs = !!document.fullscreenElement;
       setIsFullscreen(fs);
-      if (fs) acquireWakeLock();
+      if (fs) {
+        acquireWakeLock();
+      } else if (sessionStorage.getItem(SS_KIOSK_KEY) === "1") {
+        // Lost fullscreen but still in kiosk → retry shortly. Browsers require a
+        // user gesture, so silent attempt may fail; the overlay will surface in that case.
+        window.clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = window.setTimeout(() => {
+          requestFullscreen();
+        }, 250);
+      }
     };
     document.addEventListener("fullscreenchange", onFsChange);
 
     const onVisibility = () => {
-      if (document.visibilityState === "visible") acquireWakeLock();
+      if (document.visibilityState === "visible") {
+        acquireWakeLock();
+        if (!document.fullscreenElement && sessionStorage.getItem(SS_KIOSK_KEY) === "1") {
+          requestFullscreen();
+        }
+      }
     };
     document.addEventListener("visibilitychange", onVisibility);
+
+    // Disable double-tap zoom + back-swipe gestures (kiosk-breakers on iOS/Android Chrome)
+    let lastTouchEnd = 0;
+    const blockDoubleTap = (e: TouchEvent) => {
+      const now = Date.now();
+      if (now - lastTouchEnd < 350) e.preventDefault();
+      lastTouchEnd = now;
+    };
+    const blockGesture = (e: Event) => e.preventDefault(); // iOS Safari pinch
+    const blockEdgeSwipe = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (!t) return;
+      // Block touches starting within 25px of left/right edge (back/forward gesture)
+      if (t.clientX < 25 || t.clientX > window.innerWidth - 25) e.preventDefault();
+    };
+    document.addEventListener("touchend", blockDoubleTap, { passive: false });
+    document.addEventListener("gesturestart", blockGesture as EventListener, { passive: false });
+    document.addEventListener("touchstart", blockEdgeSwipe, { passive: false });
 
     // Cursor auto-hide after idle
     let idleTimer: number | undefined;
@@ -93,9 +153,13 @@ export function useKioskMode() {
       if (nav) (nav as HTMLElement).style.display = prevNavDisplay;
       document.removeEventListener("fullscreenchange", onFsChange);
       document.removeEventListener("visibilitychange", onVisibility);
+      document.removeEventListener("touchend", blockDoubleTap);
+      document.removeEventListener("gesturestart", blockGesture as EventListener);
+      document.removeEventListener("touchstart", blockEdgeSwipe);
       window.removeEventListener("mousemove", showCursor);
       window.removeEventListener("touchstart", showCursor);
       window.clearTimeout(idleTimer);
+      window.clearTimeout(retryTimerRef.current);
       if (wakeLockRef.current) {
         wakeLockRef.current.release().catch(() => {});
         wakeLockRef.current = null;
@@ -106,12 +170,11 @@ export function useKioskMode() {
     };
   }, [requestFullscreen, acquireWakeLock]);
 
-  return { kiosk, isFullscreen, requestFullscreen };
+  return { kiosk, isFullscreen, wakeLockActive, overlayDismissed, requestFullscreen };
 }
 
 /**
- * Floating overlay shown when kiosk=1 but fullscreen hasn't been granted yet
- * (browsers require a user gesture). One click and the demo goes truly edge-to-edge.
+ * Floating overlay shown when kiosk=1 but fullscreen hasn't been granted yet.
  */
 export function FullscreenPrompt({ onEnter }: { onEnter: () => void }) {
   return (
@@ -147,6 +210,8 @@ export function FullscreenPrompt({ onEnter }: { onEnter: () => void }) {
 export function StartDemoButton() {
   const enter = () => {
     demoAnalytics.recordStartClick();
+    sessionStorage.setItem(SS_KIOSK_KEY, "1");
+    sessionStorage.removeItem(SS_OVERLAY_DISMISSED);
     const url = new URL(window.location.href);
     url.searchParams.set("kiosk", "1");
     window.location.href = url.toString();
@@ -183,12 +248,33 @@ export function StartDemoButton() {
 }
 
 /**
- * "Exit kiosk" subtle control — visible in kiosk mode only.
- * Removes the param and reloads (which also drops fullscreen + wake lock via effect cleanup).
+ * Touch-friendly kiosk control cluster:
+ *   - Status pill (Fullscreen + Wake Lock indicators)
+ *   - Restart button (reload while staying in kiosk)
+ *   - Exit button (drop kiosk + fullscreen)
+ *
+ * All controls are large tap targets (44px+) — no keyboard required.
  */
-export function ExitKioskButton() {
+export function KioskControls({
+  isFullscreen,
+  wakeLockActive,
+}: {
+  isFullscreen: boolean;
+  wakeLockActive: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const restart = () => {
+    // Stay in kiosk — sessionStorage flag survives reload
+    sessionStorage.setItem(SS_KIOSK_KEY, "1");
+    sessionStorage.removeItem(SS_OVERLAY_DISMISSED);
+    window.location.reload();
+  };
+
   const exit = () => {
     demoAnalytics.recordExitClick();
+    sessionStorage.removeItem(SS_KIOSK_KEY);
+    sessionStorage.removeItem(SS_OVERLAY_DISMISSED);
     if (document.fullscreenElement && document.exitFullscreen) {
       document.exitFullscreen().catch(() => {});
     }
@@ -196,33 +282,125 @@ export function ExitKioskButton() {
     url.searchParams.delete("kiosk");
     window.location.href = url.toString();
   };
+
+  const dotStyle = (on: boolean) => ({
+    display: "inline-block",
+    width: 8,
+    height: 8,
+    borderRadius: "50%",
+    background: on ? "#22c55e" : "#ef4444",
+    boxShadow: on ? "0 0 8px #22c55eaa" : "0 0 8px #ef4444aa",
+    marginRight: 6,
+  });
+
   return (
-    <button
-      onClick={exit}
+    <div
       style={{
         position: "fixed",
-        top: "calc(16px + env(safe-area-inset-top))",
-        right: "calc(16px + env(safe-area-inset-right))",
+        top: "calc(12px + env(safe-area-inset-top))",
+        right: "calc(12px + env(safe-area-inset-right))",
         zIndex: 9999,
-        padding: "8px 14px",
-        borderRadius: 20,
-        border: "1px solid #1e3a5f",
-        background: "#0a1628",
-        color: "#64748b",
-        fontWeight: 700,
-        fontSize: 11,
-        letterSpacing: "0.1em",
-        textTransform: "uppercase",
-        cursor: "pointer",
-        opacity: 0.4,
-        transition: "opacity 0.2s",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-end",
+        gap: 8,
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
       }}
-      onMouseEnter={(e) => ((e.target as HTMLButtonElement).style.opacity = "1")}
-      onMouseLeave={(e) => ((e.target as HTMLButtonElement).style.opacity = "0.4")}
     >
-      ✕ Exit Kiosk
-    </button>
+      {/* Status + toggle pill */}
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-label={open ? "Hide kiosk controls" : "Show kiosk controls"}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "10px 14px",
+          minHeight: 44,
+          borderRadius: 22,
+          border: "1px solid #1e3a5f",
+          background: "rgba(10, 22, 40, 0.85)",
+          backdropFilter: "blur(6px)",
+          color: "#e2e8f0",
+          fontWeight: 700,
+          fontSize: 11,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          cursor: "pointer",
+          opacity: open ? 1 : 0.55,
+          transition: "opacity 0.2s",
+        }}
+      >
+        <span style={{ display: "inline-flex", alignItems: "center" }}>
+          <span style={dotStyle(isFullscreen)} />
+          FS
+        </span>
+        <span style={{ display: "inline-flex", alignItems: "center" }}>
+          <span style={dotStyle(wakeLockActive)} />
+          Wake
+        </span>
+        <span style={{ marginLeft: 4, color: "#64748b" }}>{open ? "▾" : "▸"}</span>
+      </button>
+
+      {/* Expanded actions */}
+      {open && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <button
+            onClick={restart}
+            style={{
+              padding: "12px 18px",
+              minHeight: 44,
+              minWidth: 140,
+              borderRadius: 22,
+              border: "1px solid #1e3a5f",
+              background: "#0a1628",
+              color: "#00d4ff",
+              fontWeight: 800,
+              fontSize: 12,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              cursor: "pointer",
+            }}
+          >
+            ↻ Restart Kiosk
+          </button>
+          <button
+            onClick={exit}
+            style={{
+              padding: "12px 18px",
+              minHeight: 44,
+              minWidth: 140,
+              borderRadius: 22,
+              border: "1px solid #ef4444",
+              background: "#0a1628",
+              color: "#ef4444",
+              fontWeight: 800,
+              fontSize: 12,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              cursor: "pointer",
+            }}
+          >
+            ✕ Exit Kiosk
+          </button>
+        </div>
+      )}
+    </div>
   );
+}
+
+/**
+ * Backwards-compat alias — DemoTemplate still imports ExitKioskButton.
+ * Renders the new control cluster which includes Exit + Restart + Status.
+ */
+export function ExitKioskButton({
+  isFullscreen = false,
+  wakeLockActive = false,
+}: {
+  isFullscreen?: boolean;
+  wakeLockActive?: boolean;
+}) {
+  return <KioskControls isFullscreen={isFullscreen} wakeLockActive={wakeLockActive} />;
 }
 
 export const KIOSK_GLOBAL_STYLES = `
@@ -249,9 +427,14 @@ export const KIOSK_GLOBAL_STYLES = `
   }
   body.kiosk-mode-body {
     overscroll-behavior: none;
-    touch-action: none;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
     -webkit-user-select: none;
     user-select: none;
+  }
+  /* Block pull-to-refresh on Chrome Android */
+  html.kiosk-mode-body, body.kiosk-mode-body {
+    overscroll-behavior-y: none;
   }
   body.kiosk-mode-body nav,
   body.kiosk-mode-body [data-app-navbar],
