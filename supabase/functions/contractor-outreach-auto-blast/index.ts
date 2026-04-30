@@ -204,8 +204,10 @@ Deno.serve(async (req) => {
       .limit(effectiveMax);
 
     if (!prospects || prospects.length === 0) {
-      const reasonHint = scraped === 0
-        ? `Google Maps returned 0 ${trade} contractors in ${city}. Try a nearby metro or different trade.`
+      const reasonHint = scrapeSkipped
+        ? `Enrichment ran on ${needEnrich?.length || 0} existing prospects but none returned emails. Check that HUNTER_IO_API_KEY and APOLLO_API_KEY are set in Supabase secrets, or scrape new contractors first.`
+        : scraped === 0
+        ? `Google Maps returned 0 ${trade} contractors in ${city}. Try a nearby metro or different trade name.`
         : `Scraped ${scraped} businesses but none had findable emails. Top blockers: ${enrichTraces.slice(0, 3).map(t => `${t.name} (${t.reason})`).join(" · ") || "Apollo/Hunter coverage gap"}.`;
       return new Response(JSON.stringify({
         ok: false,
