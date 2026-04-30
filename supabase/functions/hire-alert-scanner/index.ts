@@ -1613,9 +1613,13 @@ serve(async (req: Request) => {
   };
   console.log(`[hire-alert-scanner] Raw candidates: MIOSHA=${mioshaCandidates.length} JobBoards=${jobBoardCandidates.length}`);
 
-  // Deduplicate by license_number or name+city
+  // Deduplicate by license_number or name+city; also reject junk names (nav text, punctuation, etc.)
   const seen = new Set<string>();
   const deduped = allRaw.filter((c) => {
+    if (!isPlausibleHumanName(c.full_name)) {
+      console.log(`[hire-alert-scanner] Skipping junk name: "${c.full_name}"`);
+      return false;
+    }
     const key = c.license_number || `${c.full_name.toLowerCase()}-${(c.city || "").toLowerCase()}`;
     if (seen.has(key)) return false;
     seen.add(key);
