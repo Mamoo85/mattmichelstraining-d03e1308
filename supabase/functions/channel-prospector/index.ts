@@ -36,7 +36,7 @@ const OFFER_PITCHED: Record<string, string> = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-const DEFAULT_TRADES = ["roofer", "HVAC contractor", "plumber", "electrician"];
+const DEFAULT_TRADES = ["roofer", "HVAC contractor", "plumber", "electrician", "general contractor", "siding contractor", "solar installer"];
 
 const MICHIGAN_CITIES = [
   "Detroit MI", "Warren MI", "Sterling Heights MI", "Troy MI", "Livonia MI", "Dearborn MI",
@@ -52,19 +52,39 @@ const MICHIGAN_CITIES = [
 ];
 
 const TRADE_QUERY_VARIANTS: Record<string, string[]> = {
-  "roofer": ["roofer", "roofing contractor", "roof repair", "roof replacement"],
-  "HVAC contractor": ["HVAC contractor", "heating and cooling", "AC repair", "furnace repair"],
-  "plumber": ["plumber", "plumbing service", "drain cleaning", "emergency plumber"],
-  "electrician": ["electrician", "electrical contractor", "electrical repair"],
+  "roofer": ["roofing contractor", "roof repair", "roof replacement", "licensed roofer"],
+  "HVAC contractor": ["HVAC contractor", "heating and cooling", "AC repair", "furnace repair", "air conditioning repair"],
+  "plumber": ["licensed plumber", "plumbing service", "drain cleaning", "emergency plumber"],
+  "electrician": ["licensed electrician", "electrical contractor", "electrical repair", "residential electrician"],
+  "general contractor": ["general contractor", "home remodeling contractor", "home renovation contractor"],
+  "siding contractor": ["siding contractor", "vinyl siding", "siding installation", "siding repair"],
+  "solar installer": ["solar panel installation", "solar energy contractor", "solar installer"],
 };
 
 function canonicalTrade(q: string): string {
   const lower = q.toLowerCase();
   if (lower.includes("roof")) return "roofer";
-  if (lower.includes("hvac") || lower.includes("heating") || lower.includes("ac repair") || lower.includes("furnace")) return "HVAC contractor";
+  if (lower.includes("hvac") || lower.includes("heating") || lower.includes("ac repair") || lower.includes("furnace") || lower.includes("air cond")) return "HVAC contractor";
   if (lower.includes("plumb") || lower.includes("drain")) return "plumber";
   if (lower.includes("electric")) return "electrician";
+  if (lower.includes("siding") || lower.includes("vinyl")) return "siding contractor";
+  if (lower.includes("solar")) return "solar installer";
+  if (lower.includes("general") || lower.includes("remodel") || lower.includes("renovati")) return "general contractor";
   return q;
+}
+
+// pLimit: run async tasks with bounded concurrency
+async function pLimit<T>(tasks: (() => Promise<T>)[], limit: number): Promise<T[]> {
+  const results: T[] = [];
+  let idx = 0;
+  const workers = Array.from({ length: Math.min(limit, tasks.length) }, async () => {
+    while (idx < tasks.length) {
+      const i = idx++;
+      results[i] = await tasks[i]();
+    }
+  });
+  await Promise.all(workers);
+  return results;
 }
 
 function pickRandomCities(n: number): string[] {
@@ -75,9 +95,14 @@ function pickRandomCities(n: number): string[] {
 // Fallback used only if prospector_targets table is empty or unreachable
 const FALLBACK_TARGETS = [
   { city: "Detroit", state: "MI", trade: "roofer" },
-  { city: "Detroit", state: "MI", trade: "HVAC contractor" },
-  { city: "Warren", state: "MI", trade: "plumber" },
+  { city: "Warren", state: "MI", trade: "HVAC contractor" },
+  { city: "Grand Rapids", state: "MI", trade: "plumber" },
   { city: "Troy", state: "MI", trade: "electrician" },
+  { city: "Houston", state: "TX", trade: "roofer" },
+  { city: "Dallas", state: "TX", trade: "HVAC contractor" },
+  { city: "Tampa", state: "FL", trade: "roofer" },
+  { city: "Atlanta", state: "GA", trade: "general contractor" },
+  { city: "Columbus", state: "OH", trade: "electrician" },
 ];
 
 async function getActiveTargets(sb: ReturnType<typeof createClient>): Promise<Array<{ city: string; state: string; trade: string }>> {
@@ -102,7 +127,8 @@ function pickTarget(targets: Array<{ city: string; state: string; trade: string 
 async function searchGoogleMaps(q: string): Promise<any[]> {
   if (!GOOGLE_MAPS_API_KEY) return [];
   try {
-    const r = await fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(q)}&key=${GOOGLE_MAPS_API_KEY}`);
+    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(q)}&components=country:us&key=${GOOGLE_MAPS_API_KEY}`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(10_000) });
     const j = await r.json().catch(() => ({}));
     return j.results || [];
   } catch (_) { return []; }
@@ -163,7 +189,7 @@ async function scrapeFax(website: string): Promise<string | null> {
 
   // Tier 2: raw fetch + regex fallback (faster, less accurate)
   try {
-    const r = await fetch(website, { signal: AbortSignal.timeout(8_000) });
+    const r = await fetch(website, { signal: AbortSignal.timeout(3_000) });
     const html = (await r.text()).toLowerCase();
     const patterns = [
       /fax[:\s]*\(?(\d{3})\)?[\s.\-]?(\d{3})[\s.\-]?(\d{4})/,
@@ -180,7 +206,7 @@ async function scrapeFax(website: string): Promise<string | null> {
 
 async function scrapePhone(website: string): Promise<string | null> {
   try {
-    const r = await fetch(website, { signal: AbortSignal.timeout(8000) });
+    const r = await fetch(website, { signal: AbortSignal.timeout(3_000) });
     const html = await r.text();
     const m = html.match(/(?:tel:|phone[:\s]*)\(?(\d{3})\)?[\s.-]?(\d{3})[\s.-]?(\d{4})/i)
           || html.match(/\(?(\d{3})\)?[\s.-]?(\d{3})[\s.-]?(\d{4})/);
@@ -305,23 +331,30 @@ serve(async (req) => {
   const sentBefore = sentToday || 0;
   const remaining = cap - sentBefore;
 
-  // ── Combo selection: DB-driven targets with manual override + All Michigan support ──
+  // ── Combo selection: DB-driven (includes out-of-state) with manual override ──
   const requestedTrade = (body.target_trade as string) || "";
   const requestedCity = (body.target_city as string) || "";
-  const isAllMichigan = requestedCity === "All Michigan" || requestedCity === "all_michigan" || requestedCity === "🌎 All Michigan";
+  const isAllTargets = requestedCity === "All Michigan" || requestedCity === "all_michigan" ||
+    requestedCity === "🌎 All Michigan" || requestedCity === "All States" || requestedCity === "All Active";
 
   let tradeForCopy: string;
   let cityList: string[];
+  let autoCity = "";
 
-  if (requestedTrade && requestedCity && !isAllMichigan) {
+  if (requestedTrade && requestedCity && !isAllTargets) {
     tradeForCopy = canonicalTrade(requestedTrade);
     cityList = [requestedCity];
-  } else if (isAllMichigan) {
-    tradeForCopy = canonicalTrade(requestedTrade) || DEFAULT_TRADES[0];
-    cityList = pickRandomCities(8);
+  } else if (isAllTargets) {
+    // Use DB prospector_targets (has MI + TX + FL + OH + GA etc.), sample 5 randomly
+    const targets = await getActiveTargets(sb);
+    const shuffled = [...targets].sort(() => Math.random() - 0.5);
+    const sampled = shuffled.slice(0, 5);
+    tradeForCopy = requestedTrade ? canonicalTrade(requestedTrade) : canonicalTrade(sampled[0]?.trade || DEFAULT_TRADES[0]);
+    cityList = sampled.map(t => `${t.city} ${t.state}`);
   } else {
     const targets = await getActiveTargets(sb);
     const combo = pickTarget(targets);
+    autoCity = combo.city;
     tradeForCopy = canonicalTrade(combo.trade);
     cityList = [combo.city];
   }
@@ -330,28 +363,29 @@ serve(async (req) => {
     return new Response(JSON.stringify({ ok: true, channel, trade: tradeForCopy, city: cityList[0], found: 0, sent: 0, skipped: 0, failed: 0, cap, sentBefore, sentAfter: sentBefore, note: `Daily cap of ${cap} ${channel} sends already reached today. Resets at midnight.` }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  // ── Build query list (multi-query fan-out) ──
-  const variants = TRADE_QUERY_VARIANTS[tradeForCopy] || [tradeForCopy];
+  // ── Build query list (multi-query fan-out, 2 variants per city to stay within budget) ──
+  const allVariants = TRADE_QUERY_VARIANTS[tradeForCopy] || [tradeForCopy];
+  const variants = allVariants.slice(0, 2); // cap at 2 variants per city to limit result count
 
   const queries: { q: string; city: string }[] = [];
   for (const c of cityList) {
     for (const v of variants) queries.push({ q: `${v} in ${c}`, city: c });
   }
 
-  // Run Google Maps + DataForSEO in parallel batches of 4
+  // ── PHASE 1: Parallel searches ──────────────────────────────────────────────
   const allPlaces: { place: any; city: string }[] = [];
-  for (let i = 0; i < queries.length; i += 4) {
-    const batch = queries.slice(i, i + 4);
-    const results = await Promise.all(batch.map(({ q, city }) =>
-      Promise.all([
+  await pLimit(
+    queries.map(({ q, city }) => async () => {
+      const [googlePlaces, dfsPlaces] = await Promise.all([
         searchGoogleMaps(q).then(places => places.map((p: any) => ({ place: p, city }))),
         searchDataForSEO(tradeForCopy, city).then(places => places.map((p: any) => ({ place: p, city }))),
-      ]).then(([gp, dp]) => [...gp, ...dp])
-    ));
-    for (const r of results) allPlaces.push(...r);
-  }
+      ]);
+      allPlaces.push(...googlePlaces, ...dfsPlaces);
+    }),
+    6, // 6 concurrent search pairs
+  );
 
-  // Dedupe: Google by place_id, DataForSEO by name (no place_id)
+  // Dedupe: Google by place_id, DataForSEO by name
   const seenPlaceIds = new Set<string>();
   const seenNames = new Set<string>();
   const dedupedPlaces = allPlaces.filter(({ place }) => {
@@ -368,57 +402,68 @@ serve(async (req) => {
   });
 
   const found = dedupedPlaces.length;
-  const maxToSend = Math.min(PER_RUN_MAX, remaining);
 
-  let sent = 0, skipped = 0, failed = 0;
+  // ── PHASE 1b: Parallel detail fetch + scraping (cap at 40 places) ──────────
+  const phase1Slice = dedupedPlaces.slice(0, 40);
+  const normalize = (raw: string): string => {
+    const digits = raw.replace(/[^\d]/g, "");
+    if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+    if (digits.length === 10) return `+1${digits}`;
+    return "";
+  };
+
+  interface EnrichedLead {
+    p: any; pCity: string; phone: string; websiteRaw: string;
+    target: string | null; toAddr: any | null;
+  }
+  const enriched: EnrichedLead[] = [];
+  let skipped = 0;
+
+  await pLimit(
+    phase1Slice.map(({ place: p, city: pCity }) => async () => {
+      const isDFS = p._source === "dataforseo";
+      const details = isDFS ? p : await getPlaceDetails(p.place_id);
+      const phone = details.international_phone_number || details.formatted_phone_number || "";
+      const websiteRaw = details.website || "";
+
+      let target: string | null = null;
+      let toAddr: any = null;
+
+      if (channel === "fax") {
+        target = websiteRaw ? await scrapeFax(websiteRaw) : null;
+        if (!target) { skipped++; return; }
+      } else if (channel === "postcard") {
+        toAddr = parseAddr(details.formatted_address || "", details.address_components || []);
+        if (!toAddr) { skipped++; return; }
+        toAddr.name = p.name;
+      } else {
+        let phoneClean = phone ? normalize(phone) : "";
+        if (!phoneClean && websiteRaw) {
+          const scraped = await scrapePhone(websiteRaw);
+          phoneClean = scraped ? normalize(scraped) : "";
+        }
+        target = phoneClean || null;
+        if (!target) { skipped++; return; }
+      }
+      enriched.push({ p, pCity, phone, websiteRaw, target, toAddr });
+    }),
+    8, // 8 concurrent detail+scrape operations
+  );
+
+  // ── PHASE 2: Serial DB dedup + AI copy + send (capped at 20) ───────────────
+  const maxToSend = Math.min(20, remaining);
+  let sent = 0, failed = 0;
   const sendErrors: string[] = [];
   const sentSamples: any[] = [];
+  const cutoff = new Date(Date.now() - REPITCH_DAYS * 86400000).toISOString();
 
-  for (const { place: p, city: pCity } of dedupedPlaces) {
+  for (const { p, pCity, phone, target, toAddr } of enriched) {
     if (sent >= maxToSend) break;
 
-    // Re-pitch window: skip if pitched in the last 90 days
-    const cutoff = new Date(Date.now() - REPITCH_DAYS * 86400000).toISOString();
     const { data: existing } = await sb.from("outreach_leads" as any)
-      .select("id, last_contact_date")
-      .eq("offer_pitched", offerKey)
-      .eq("business_name", p.name)
-      .gte("last_contact_date", cutoff)
-      .maybeSingle();
+      .select("id").eq("offer_pitched", offerKey).eq("business_name", p.name)
+      .gte("last_contact_date", cutoff).maybeSingle();
     if (existing) { skipped++; continue; }
-
-    // DataForSEO results have no place_id — use pre-normalized fields directly
-    const isDFS = p._source === "dataforseo";
-    const details = isDFS ? p : await getPlaceDetails(p.place_id);
-    const phone = details.international_phone_number || details.formatted_phone_number || "";
-    const websiteRaw = details.website || "";
-
-    let target: string | null = null;
-    let toAddr: any = null;
-    if (channel === "fax") {
-      target = websiteRaw ? await scrapeFax(websiteRaw) : null;
-      if (!target) { skipped++; continue; }
-    } else if (channel === "postcard") {
-      toAddr = parseAddr(details.formatted_address || "", details.address_components || []);
-      if (!toAddr) { skipped++; continue; }
-      toAddr.name = p.name;
-    } else {
-      // SMS: try Google phone first, fall back to website scrape
-      // Normalize to strict E.164 (+1XXXXXXXXXX) — strip dashes, parens, spaces
-      const normalize = (raw: string): string => {
-        const digits = raw.replace(/[^\d]/g, "");
-        if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
-        if (digits.length === 10) return `+1${digits}`;
-        return "";
-      };
-      let phoneClean = phone ? normalize(phone) : "";
-      if (!phoneClean && websiteRaw) {
-        const scraped = await scrapePhone(websiteRaw);
-        phoneClean = scraped ? normalize(scraped) : "";
-      }
-      target = phoneClean || null;
-      if (!target) { skipped++; continue; }
-    }
 
     const copy = await aiCopy(channel, p.name, tradeForCopy, pCity);
     let result: { ok: boolean; id?: string; err?: string };
@@ -453,7 +498,7 @@ serve(async (req) => {
   return new Response(JSON.stringify({
     ok: true,
     channel,
-    combo: { trade: tradeForCopy, city: isAllMichigan ? `All Michigan (${cityList.length} cities)` : (requestedCity || auto.city) },
+    combo: { trade: tradeForCopy, city: isAllTargets ? `All Active (${cityList.length} cities)` : (requestedCity || autoCity) },
     citiesScanned: cityList,
     queryCount: queries.length,
     found, sent, skipped, failed,
