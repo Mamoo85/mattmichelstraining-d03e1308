@@ -1,18 +1,20 @@
-// Contractor Outreach: enrich a prospect's email via Hunter → PDL → pattern guess.
-// Lightweight version of the unified waterfall, focused on domain-based discovery.
+// Contractor Outreach: enrich a prospect's email via full 6-stage waterfall.
 //
-// Sprint E hardening: every external call wrapped with safeJson + typed parsers,
-// fetchWithRetry for 429 handling, response bodies always cancelled on early exit
-// (Deno resource leak prevention), enrichment_trace defensively parsed.
+// Waterfall (in order, stops when email found):
+//   1. Hunter.io domain search  — if prospect already has a website/domain
+//   2. Apollo Org Enrich        — surface org email + website by domain
+//   3. Apollo Org Search        — find website by company name; then run Hunter on it
+//   4. Apollo People Search     — owner/GM/founder email by name + city
+//   5. Firecrawl contact scrape — scrape /about or /contact page for email
+//   6. Pattern guess            — info@domain (last resort, unverified)
+//
+// Previously only ran Hunter → PDL. Bug: read HUNTER_API_KEY instead of HUNTER_IO_API_KEY
+// (always null). Now uses _shared/hunter.ts which reads the correct env var name.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { fetchWithRetry } from "../_shared/fetch-with-retry.ts";
-import {
-  safeJson,
-  parseHunterDomainSearch,
-  parsePdlPersonSearch,
-  parseEnrichmentTrace,
-  asEmail,
-} from "../_shared/safe-parse.ts";
+import { hunterFindEmail } from "../_shared/hunter.ts";
+import { apolloOrgEnrich, apolloOrgSearch, apolloMixedPeopleSearch } from "../_shared/apollo.ts";
+import { extractContactInfo } from "../_shared/firecrawl.ts";
+import { parseEnrichmentTrace } from "../_shared/safe-parse.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,37 +23,6 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const HUNTER_API_KEY = Deno.env.get("HUNTER_API_KEY") || "";
-const PDL_API_KEY = Deno.env.get("PDL_API_KEY") || "";
-
-async function pdlNameOnlySearch(name: string, city?: string | null, state?: string | null):
-  Promise<{ email?: string; phone?: string; confidence: number } | null> {
-  if (!PDL_API_KEY || !name) return null;
-  try {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length < 2) return null;
-    const sql: string[] = [`first_name='${parts[0].replace(/'/g, "")}'`, `last_name='${parts.slice(-1)[0].replace(/'/g, "")}'`];
-    if (city) sql.push(`location_locality='${city.replace(/'/g, "")}'`);
-    if (state) sql.push(`location_region='${state.replace(/'/g, "")}'`);
-    const body = { sql: `SELECT * FROM person WHERE ${sql.join(" AND ")}`, size: 1 };
-    const res = await fetchWithRetry(
-      "https://api.peopledatalabs.com/v5/person/search",
-      {
-        method: "POST",
-        headers: { "X-Api-Key": PDL_API_KEY, "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(8000),
-      },
-      { label: "PDL-Search-Lite", maxRetries: 2 },
-    );
-    if (!res.ok) { await res.body?.cancel(); return null; }
-    const parsed = await safeJson(res);
-    if (!parsed.ok) return null;
-    const r = parsePdlPersonSearch(parsed.value);
-    if (!r.ok) return null;
-    return { email: r.value.email, phone: r.value.phone, confidence: r.value.confidence / 100 };
-  } catch { return null; }
-}
 
 function extractDomain(url?: string | null): string | null {
   if (!url) return null;
@@ -61,30 +32,7 @@ function extractDomain(url?: string | null): string | null {
   } catch { return null; }
 }
 
-async function hunterDomainSearch(domain: string): Promise<{ email?: string; first?: string; last?: string } | null> {
-  if (!HUNTER_API_KEY) return null;
-  try {
-    const res = await fetchWithRetry(
-      `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&api_key=${HUNTER_API_KEY}&limit=5`,
-      { signal: AbortSignal.timeout(6000) },
-      { label: "Hunter-Lite", maxRetries: 2 },
-    );
-    if (!res.ok) { await res.body?.cancel(); return null; }
-    const parsed = await safeJson(res);
-    if (!parsed.ok) return null;
-    const r = parseHunterDomainSearch(parsed.value);
-    if (!r.ok) return null;
-    // Prefer owner/CEO/manager/founder
-    const priority = ["owner", "ceo", "founder", "president", "manager", "general"];
-    for (const role of priority) {
-      const hit = r.value.find((e) => (e.position ?? "").toLowerCase().includes(role));
-      if (hit && asEmail(hit.email)) return { email: hit.email, first: hit.first, last: hit.last };
-    }
-    const first = r.value[0];
-    if (first && asEmail(first.email)) return { email: first.email, first: first.first, last: first.last };
-    return null;
-  } catch { return null; }
-}
+function now() { return new Date().toISOString(); }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -110,53 +58,122 @@ Deno.serve(async (req) => {
     }
 
     const trace: Array<Record<string, unknown>> = parseEnrichmentTrace(prospect.enrichment_trace);
-    const domain = extractDomain(prospect.website);
-
+    let domain = extractDomain(prospect.website);
     let email: string | null = prospect.email;
     let owner: string | null = prospect.owner_name;
+    let phone: string | null = prospect.phone;
     let verified = !!prospect.email_verified;
+    let website: string | null = prospect.website;
 
+    // ── Stage 1: Hunter.io domain search ─────────────────────────────────────
     if (!email && domain) {
-      const hunter = await hunterDomainSearch(domain);
-      trace.push({ stage: "hunter", domain, found: !!hunter?.email, ts: new Date().toISOString() });
-      if (hunter?.email) {
-        email = hunter.email;
+      const hit = await hunterFindEmail(domain);
+      trace.push({ stage: "hunter", domain, found: !!hit?.email, ts: now() });
+      if (hit?.email) {
+        email = hit.email;
         verified = true;
-        if (!owner && (hunter.first || hunter.last)) {
-          owner = [hunter.first, hunter.last].filter(Boolean).join(" ");
+        if (!owner && (hit.first_name || hit.last_name)) {
+          owner = [hit.first_name, hit.last_name].filter(Boolean).join(" ");
+        }
+        if (!phone && hit.phone_number) phone = hit.phone_number;
+      }
+    }
+
+    // ── Stage 2: Apollo Org Enrich via domain ─────────────────────────────────
+    if (!email && domain) {
+      const orgR = await apolloOrgEnrich({ domain });
+      if (orgR.ok && orgR.data) {
+        const org = orgR.data.organization || orgR.data;
+        const orgEmail = org.email || org.sanitized_email;
+        trace.push({ stage: "apollo_org_enrich", domain, found: !!orgEmail, ts: now() });
+        if (orgEmail) { email = orgEmail; verified = true; }
+      }
+    }
+
+    // ── Stage 3: Apollo Org Search by name → discover website → Hunter ────────
+    if (!email) {
+      const searchR = await apolloOrgSearch({
+        q_organization_name: prospect.business_name,
+        organization_locations: [prospect.city ? `${prospect.city}, ${prospect.state || "MI"}` : (prospect.state || "Michigan")],
+        per_page: 3,
+      });
+      if (searchR.ok && searchR.data?.organizations?.length > 0) {
+        const org = searchR.data.organizations[0];
+        const orgEmail = org.email || org.sanitized_email;
+        trace.push({ stage: "apollo_org_search", found: !!orgEmail || !!org.website_url, ts: now() });
+        if (orgEmail) { email = orgEmail; verified = true; }
+        // Discovered a website — store it and run Hunter on the new domain
+        if (!email && org.website_url && !website) {
+          website = org.website_url;
+          domain = extractDomain(website);
+          // Persist newly discovered website so future runs skip this stage
+          await supabase.from("contractor_outreach_prospects")
+            .update({ website }).eq("id", prospect_id);
+          if (domain) {
+            const hit = await hunterFindEmail(domain);
+            trace.push({ stage: "hunter_after_apollo", domain, found: !!hit?.email, ts: now() });
+            if (hit?.email) {
+              email = hit.email;
+              verified = true;
+              if (!owner && (hit.first_name || hit.last_name)) {
+                owner = [hit.first_name, hit.last_name].filter(Boolean).join(" ");
+              }
+            }
+          }
         }
       }
     }
 
-    let phone: string | null = prospect.phone;
-
-    // PDL name-only fallback (healthcare records: RN/CNA/LPN with no business+city domain)
-    if (!email && prospect.owner_name) {
-      const pdl = await pdlNameOnlySearch(prospect.owner_name, prospect.city, prospect.state);
-      trace.push({ stage: "pdl_name_only", name: prospect.owner_name, found: !!(pdl?.email || pdl?.phone), confidence: pdl?.confidence ?? 0, ts: new Date().toISOString() });
-      if (pdl?.email) { email = pdl.email; verified = true; }
-      if (pdl?.phone && !phone) phone = pdl.phone;
+    // ── Stage 4: Apollo People Search — owner/GM/founder by name + city ───────
+    if (!email) {
+      const location = prospect.city
+        ? `${prospect.city}, ${prospect.state || "MI"}`
+        : (prospect.state || "Michigan");
+      const peopleR = await apolloMixedPeopleSearch({
+        q_organization_name: prospect.business_name,
+        person_locations: [location],
+        person_titles: ["owner", "president", "general manager", "ceo", "founder", "principal", "proprietor"],
+        per_page: 5,
+        reveal_personal_emails: true,
+      });
+      if (peopleR.ok && peopleR.data?.people?.length > 0) {
+        const person = peopleR.data.people[0];
+        trace.push({ stage: "apollo_people", found: !!person?.email, name: person?.name, ts: now() });
+        if (person?.email) {
+          email = person.email;
+          owner = owner || person.name;
+          verified = true;
+        }
+        if (!phone && person?.phone_numbers?.length > 0) {
+          phone = person.phone_numbers[0].raw_number;
+        }
+      }
     }
 
-    // Fallback: pattern guess info@domain
+    // ── Stage 5: Firecrawl contact page scrape ────────────────────────────────
+    if (!email && website) {
+      const contact = await extractContactInfo(website);
+      trace.push({ stage: "firecrawl_contact", url: website, found: !!contact?.email, ts: now() });
+      if (contact?.email) { email = contact.email; verified = false; }
+      if (!owner && contact?.name) owner = contact.name;
+    }
+
+    // ── Stage 6: Pattern guess info@domain (last resort) ─────────────────────
     if (!email && domain) {
       email = `info@${domain}`;
       verified = false;
-      trace.push({ stage: "pattern_guess", email, confidence: 0.3, ts: new Date().toISOString() });
+      trace.push({ stage: "pattern_guess", email, confidence: 0.3, ts: now() });
     }
 
-    // Wave 5: compute enrichment_confidence (0–100) from current outcome.
-    // Used downstream to sort retries (backfill) and outreach priority.
+    // Compute enrichment_confidence (0–100)
     let confidence = 0;
     if (email && verified) confidence += 40;
-    else if (email) confidence += 20; // unverified guess
+    else if (email) confidence += 15;
     if (owner) confidence += 20;
     if (phone) confidence += 15;
     if (domain) confidence += 10;
-    // Trust bonus from trace: high-trust sources
     const sources = trace.map((t) => String((t as any).stage ?? ""));
-    if (sources.some((s) => s === "hunter" || s === "pdl_name_only")) confidence += 10;
-    if (sources.some((s) => s === "pattern_verify")) confidence += 5;
+    if (sources.some((s) => ["hunter", "hunter_after_apollo", "apollo_people", "apollo_org_enrich"].includes(s))) confidence += 10;
     if (confidence > 100) confidence = 100;
 
     const { data: updated, error: uErr } = await supabase
@@ -166,6 +183,7 @@ Deno.serve(async (req) => {
         email_verified: verified,
         owner_name: owner,
         phone,
+        website,
         enriched_at: new Date().toISOString(),
         enrichment_trace: trace,
         enrichment_confidence: confidence,
@@ -176,7 +194,7 @@ Deno.serve(async (req) => {
 
     if (uErr) throw uErr;
 
-    return new Response(JSON.stringify({ ok: true, prospect: updated }), {
+    return new Response(JSON.stringify({ ok: true, prospect: updated, stages_tried: sources }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {
