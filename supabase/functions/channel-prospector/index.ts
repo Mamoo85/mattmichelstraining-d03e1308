@@ -6,6 +6,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
 import { extractFaxNumber } from "../_shared/firecrawl.ts";
+import { canonicalizeTrade, getSearchQueries } from "../_shared/trade-canonical.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,7 +37,7 @@ const OFFER_PITCHED: Record<string, string> = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-const DEFAULT_TRADES = ["roofer", "HVAC contractor", "plumber", "electrician", "general contractor", "siding contractor", "solar installer"];
+const DEFAULT_TRADES = ["Roofing", "HVAC", "Plumbing", "Electrical", "General Contractor", "Siding", "Solar"];
 
 const MICHIGAN_CITIES = [
   "Detroit MI", "Warren MI", "Sterling Heights MI", "Troy MI", "Livonia MI", "Dearborn MI",
@@ -51,27 +52,7 @@ const MICHIGAN_CITIES = [
   "Alpena MI", "Marquette MI", "Sault Ste. Marie MI", "Escanaba MI", "Grosse Pointe MI",
 ];
 
-const TRADE_QUERY_VARIANTS: Record<string, string[]> = {
-  "roofer": ["roofing contractor", "roof repair", "roof replacement", "licensed roofer"],
-  "HVAC contractor": ["HVAC contractor", "heating and cooling", "AC repair", "furnace repair", "air conditioning repair"],
-  "plumber": ["licensed plumber", "plumbing service", "drain cleaning", "emergency plumber"],
-  "electrician": ["licensed electrician", "electrical contractor", "electrical repair", "residential electrician"],
-  "general contractor": ["general contractor", "home remodeling contractor", "home renovation contractor"],
-  "siding contractor": ["siding contractor", "vinyl siding", "siding installation", "siding repair"],
-  "solar installer": ["solar panel installation", "solar energy contractor", "solar installer"],
-};
-
-function canonicalTrade(q: string): string {
-  const lower = q.toLowerCase();
-  if (lower.includes("roof")) return "roofer";
-  if (lower.includes("hvac") || lower.includes("heating") || lower.includes("ac repair") || lower.includes("furnace") || lower.includes("air cond")) return "HVAC contractor";
-  if (lower.includes("plumb") || lower.includes("drain")) return "plumber";
-  if (lower.includes("electric")) return "electrician";
-  if (lower.includes("siding") || lower.includes("vinyl")) return "siding contractor";
-  if (lower.includes("solar")) return "solar installer";
-  if (lower.includes("general") || lower.includes("remodel") || lower.includes("renovati")) return "general contractor";
-  return q;
-}
+// Trade query variants and canonicalization are now in _shared/trade-canonical.ts
 
 // pLimit: run async tasks with bounded concurrency
 async function pLimit<T>(tasks: (() => Promise<T>)[], limit: number): Promise<T[]> {
@@ -94,15 +75,15 @@ function pickRandomCities(n: number): string[] {
 
 // Fallback used only if prospector_targets table is empty or unreachable
 const FALLBACK_TARGETS = [
-  { city: "Detroit", state: "MI", trade: "roofer" },
-  { city: "Warren", state: "MI", trade: "HVAC contractor" },
-  { city: "Grand Rapids", state: "MI", trade: "plumber" },
-  { city: "Troy", state: "MI", trade: "electrician" },
-  { city: "Houston", state: "TX", trade: "roofer" },
-  { city: "Dallas", state: "TX", trade: "HVAC contractor" },
-  { city: "Tampa", state: "FL", trade: "roofer" },
-  { city: "Atlanta", state: "GA", trade: "general contractor" },
-  { city: "Columbus", state: "OH", trade: "electrician" },
+  { city: "Detroit", state: "MI", trade: "Roofing" },
+  { city: "Warren", state: "MI", trade: "HVAC" },
+  { city: "Grand Rapids", state: "MI", trade: "Plumbing" },
+  { city: "Troy", state: "MI", trade: "Electrical" },
+  { city: "Houston", state: "TX", trade: "Roofing" },
+  { city: "Dallas", state: "TX", trade: "HVAC" },
+  { city: "Tampa", state: "FL", trade: "Roofing" },
+  { city: "Atlanta", state: "GA", trade: "General Contractor" },
+  { city: "Columbus", state: "OH", trade: "Electrical" },
 ];
 
 async function getActiveTargets(sb: ReturnType<typeof createClient>): Promise<Array<{ city: string; state: string; trade: string }>> {
@@ -342,20 +323,20 @@ serve(async (req) => {
   let autoCity = "";
 
   if (requestedTrade && requestedCity && !isAllTargets) {
-    tradeForCopy = canonicalTrade(requestedTrade);
+    tradeForCopy = canonicalizeTrade(requestedTrade);
     cityList = [requestedCity];
   } else if (isAllTargets) {
     // Use DB prospector_targets (has MI + TX + FL + OH + GA etc.), sample 5 randomly
     const targets = await getActiveTargets(sb);
     const shuffled = [...targets].sort(() => Math.random() - 0.5);
     const sampled = shuffled.slice(0, 5);
-    tradeForCopy = requestedTrade ? canonicalTrade(requestedTrade) : canonicalTrade(sampled[0]?.trade || DEFAULT_TRADES[0]);
+    tradeForCopy = requestedTrade ? canonicalizeTrade(requestedTrade) : canonicalizeTrade(sampled[0]?.trade || DEFAULT_TRADES[0]);
     cityList = sampled.map(t => `${t.city} ${t.state}`);
   } else {
     const targets = await getActiveTargets(sb);
     const combo = pickTarget(targets);
     autoCity = combo.city;
-    tradeForCopy = canonicalTrade(combo.trade);
+    tradeForCopy = canonicalizeTrade(combo.trade);
     cityList = [combo.city];
   }
 
@@ -364,8 +345,7 @@ serve(async (req) => {
   }
 
   // ── Build query list (multi-query fan-out, 2 variants per city to stay within budget) ──
-  const allVariants = TRADE_QUERY_VARIANTS[tradeForCopy] || [tradeForCopy];
-  const variants = allVariants.slice(0, 2); // cap at 2 variants per city to limit result count
+  const variants = getSearchQueries(tradeForCopy).slice(0, 2); // cap at 2 variants per city
 
   const queries: { q: string; city: string }[] = [];
   for (const c of cityList) {

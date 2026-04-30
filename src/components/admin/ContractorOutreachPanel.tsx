@@ -255,7 +255,7 @@ export default function ContractorOutreachPanel() {
 
   const hideThreshold = globalSettings?.hide_demo_leads_below_score ?? 60;
   const filtered = prospects.filter(p => {
-    if (filterTrade && p.trade !== filterTrade) return false;
+    if (filterTrade && p.trade?.toLowerCase() !== filterTrade.toLowerCase()) return false;
     if (filterCity && !(p.city || "").toLowerCase().includes(filterCity.toLowerCase())) return false;
     if (filterTerritory && String(p.territory_priority) !== filterTerritory) return false;
     if ((p.quality_score ?? 0) < filterMinQuality) return false;

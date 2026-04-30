@@ -57,8 +57,8 @@ const MISSED_CALL_CAP = 20;   // Missed-Call Text-Back pitches/day
 const CARE_ALERT_CAP = 5;     // CareAlert (healthcare TechAlert) pitches/day
 
 // ── Statewide Michigan targets ──
-const TRADES = ["roofer", "HVAC contractor", "plumber", "electrician", "dentist"];
-const DEAD_LEAD_TRADES = new Set(["roofer", "HVAC contractor", "plumber", "electrician"]);
+const TRADES = ["Roofing", "HVAC", "Plumbing", "Electrical", "General Contractor"];
+const DEAD_LEAD_TRADES = new Set(["Roofing", "HVAC", "Plumbing", "Electrical"]);
 const CITIES = [
   // Metro Detroit
   "Detroit MI", "Grosse Pointe MI", "Warren MI", "Sterling Heights MI",
