@@ -2412,6 +2412,20 @@ serve(async (req) => {
               `💰 New FieldDesk client — ${meta.company || meta.business_name || email} ($199/mo)`,
               `<p><strong>${meta.company || meta.business_name || email}</strong><br>${email} | ${meta.phone || "no phone"}<br>Industry: ${meta.industry || "not specified"}<br>Plan: ${meta.plan || "standalone"}</p>`
             );
+            // Bundle Missed-Call free with FieldDesk
+            await sb.from("missed_call_clients" as any).upsert({
+              email,
+              business_name: meta.company || meta.business_name || null,
+              business_phone: meta.phone || null,
+              active: true,
+              bundled_with: "fielddesk",
+              stripe_customer_id: session.customer as string || null,
+              dashboard_token: crypto.randomUUID(),
+            }, { onConflict: "email", ignoreDuplicates: true }).catch(() => {});
+            if (meta.phone) {
+              const { sendSMS } = await import("../_shared/twilio.ts");
+              await sendSMS({ to: meta.phone, body: `Good news — Missed-Call Text-Back is included free with your FieldDesk plan. Any missed call now gets an instant text-back to that customer. — Matt, Detroit Web Agency\nReply STOP to opt out` }).catch(() => {});
+            }
           }
         } catch (e) {
           console.error("[WEBHOOK] field_service_subscription error:", e);
