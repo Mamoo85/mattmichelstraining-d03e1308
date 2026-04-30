@@ -30,6 +30,33 @@ serve(async (req) => {
       );
     }
 
+    const origin = req.headers.get("origin") || "https://www.detroitwebagent.com";
+
+    // Pay-per-hire tier: capture card now, charge $499 per confirmed hire later
+    if (plan === "pay_per_hire") {
+      const session = await stripe.checkout.sessions.create({
+        mode: "setup",
+        payment_method_types: ["card"],
+        customer_email: email,
+        metadata: {
+          type: "techalert_pay_per_hire",
+          email,
+          company_name: company_name || "",
+          owner_phone: phone || "",
+          target_state: (target_state || "MI").toUpperCase(),
+          target_metro: (target_metro || "detroit").toLowerCase(),
+          target_roles: Array.isArray(target_roles) && target_roles.length ? target_roles.join(",") : "boiler_operator,hvac_tech",
+          ref: ref || "direct",
+        },
+        success_url: `${origin}/talent-radar?success=1&plan=pay_per_hire&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/hire-alert`,
+      });
+      return new Response(JSON.stringify({ url: session.url }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Check active client count for dynamic pricing
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     const { count } = await sb
@@ -83,8 +110,6 @@ serve(async (req) => {
     const planLabel = resolvedPlan === "bundle"
       ? `Talent Radar + FieldDesk Bundle — ${marketLabel}`
       : `Talent Radar — ${marketLabel}${isMI && isBeta ? " (Beta)" : ""}`;
-
-    const origin = req.headers.get("origin") || "https://www.detroitwebagent.com";
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",

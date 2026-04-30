@@ -1140,6 +1140,41 @@ serve(async (req) => {
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      if (meta.type === "techalert_pay_per_hire") {
+        const email = meta.email || customerEmail;
+        try {
+          // Retrieve SetupIntent to get the saved PaymentMethod
+          const setupIntentId = session.setup_intent as string;
+          const setupIntent = setupIntentId
+            ? await stripe.setupIntents.retrieve(setupIntentId)
+            : null;
+          const paymentMethodId = setupIntent?.payment_method as string | null;
+
+          if (email) {
+            await (sb.from as any)("hire_alert_clients").upsert({
+              company_name: meta.company_name || email,
+              owner_email: email,
+              owner_phone: meta.owner_phone || null,
+              stripe_customer_id: session.customer as string || null,
+              stripe_payment_method_id: paymentMethodId || null,
+              active: true,
+              plan: "pay_per_hire",
+              target_roles: meta.target_roles ? meta.target_roles.split(",").map((r: string) => r.trim()) : ["boiler_operator", "hvac_tech"],
+              target_state: (meta.target_state || "MI").toUpperCase(),
+              target_metro: (meta.target_metro || "detroit").toLowerCase(),
+            }, { onConflict: "owner_email" });
+          }
+
+          await notifyMatt(
+            `🎯 New TechAlert Pay-Per-Hire signup: ${meta.company_name || email}`,
+            `<p>Card saved. They pay $499 per confirmed hire. No monthly fee.</p><p>Email: ${email}</p><p>Company: ${meta.company_name || "—"}</p>`
+          ).catch(() => {});
+        } catch (e) {
+          console.error("[WEBHOOK] techalert_pay_per_hire error:", e);
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       if (meta.type === "high_volume_buyer_subscription") {
         const email = meta.email || customerEmail;
         try {
