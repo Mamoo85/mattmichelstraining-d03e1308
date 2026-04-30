@@ -192,7 +192,7 @@ async function scrapePhone(website: string): Promise<string | null> {
 async function aiCopy(channel: string, name: string, trade: string, city: string): Promise<string> {
   if (!ANTHROPIC_API_KEY) return defaultCopy(channel, name, trade, city);
   const prompts: Record<string, string> = {
-    fax: `Write a 1-page fax cover sheet (3 sentences, casual memo tone, like an internal bookkeeper note) to ${name}, a ${trade} in ${city}. Pitch: I'll hand them 5-15 exclusive homeowner leads/month for $399, no monthly contract. End with "Tear off & call (313) 992-1219 — Matt, Detroit Web Agency". No salutation, no signature block, no email.`,
+    fax: `Write a 1-page fax cover sheet (3 sentences, casual memo tone, like an internal bookkeeper note) to ${name}, a ${trade} in ${city}. Pitch: I'll hand them 5-15 exclusive homeowner leads/month for $399, no monthly contract. End with "Tear off & call (313) 992-1219 or visit DetroitWebAgent.com — Matt, Detroit Web Agency". No salutation, no signature block, no email.`,
     postcard: `Write the back of a 6x4 postcard (2 sentences max, bold and direct) to ${name}, a ${trade} in ${city}. Pitch: exclusive ${trade} leads in ${city}, $399/mo, scan QR to claim. End with "Matt — DetroitWebAgent.com". No greeting.`,
     sms: `Write a single SMS under 140 chars to ${name}, a ${trade} in ${city}. Pitch: I have 5-15 exclusive ${trade} homeowner leads/mo in ${city}, $399 flat. End with "Reply Y for details — Matt". No links (TCPA). No emoji.`,
   };
@@ -210,7 +210,7 @@ async function aiCopy(channel: string, name: string, trade: string, city: string
 }
 
 function defaultCopy(channel: string, name: string, trade: string, city: string): string {
-  if (channel === "fax") return `MEMO TO: ${name}\n\nI run Detroit Web Agency. We have 5-15 exclusive homeowner ${trade} leads/mo in ${city} that need claiming. $399/mo flat, no contract.\n\nTear off & call (313) 992-1219 — Matt, Detroit Web Agency`;
+  if (channel === "fax") return `MEMO TO: ${name}\n\nI run Detroit Web Agency. We have 5-15 exclusive homeowner ${trade} leads/mo in ${city} that need claiming. $399/mo flat, no contract.\n\nTear off & call (313) 992-1219 or visit DetroitWebAgent.com — Matt, Detroit Web Agency`;
   if (channel === "postcard") return `${name} — exclusive ${trade} leads in ${city}, $399/mo flat. Scan QR or call (313) 992-1219.\n\nMatt — DetroitWebAgent.com`;
   return `${name} — Matt at Detroit Web Agency. I have 5-15 exclusive ${trade} leads/mo in ${city}, $399 flat. Reply Y for details.`;
 }
