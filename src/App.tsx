@@ -613,6 +613,7 @@ const App = () => (
                     <Route path="/dead-leads-roofing-texas" element={<DeadLeadsRoofingTexas />} />
                     <Route path="/dead-leads-hvac-florida" element={<DeadLeadsHvacFlorida />} />
                     <Route path="/dead-leads-roofing-florida" element={<DeadLeadsRoofingFlorida />} />
+                    <Route path="/hire-:trade-in-:city" element={<HireTradeCity />} />
                     <Route path="/contractor-onboarding-status" element={<ContractorOnboardingStatus />} />
                     <Route path="/quote/:trade/:city" element={<ContractorQuoteLanding />} />
                     <Route path="/contractor-portal/:token" element={<ContractorTrustDashboard />} />
