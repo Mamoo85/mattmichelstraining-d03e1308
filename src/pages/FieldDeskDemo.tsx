@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import DispatchBoard from "@/components/field-service/DispatchBoard";
 import TechMap from "@/components/field-service/TechMap";
@@ -7,8 +7,29 @@ import { ArrowLeft, ClipboardList, Map, Smartphone } from "lucide-react";
 
 type Tab = "dispatch" | "map" | "tech";
 
+const TABS = [
+  { id: "dispatch" as const, label: "Dispatch", icon: ClipboardList },
+  { id: "map" as const, label: "Tech Map", icon: Map },
+  { id: "tech" as const, label: "Tech App", icon: Smartphone },
+];
+const TAB_IDS: Tab[] = ["dispatch", "map", "tech"];
+
 const FieldDeskDemo = () => {
   const [tab, setTab] = useState<Tab>("dispatch");
+  const touchStartX = useRef<number | null>(null);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(dx) < 50) return;
+    const idx = TAB_IDS.indexOf(tab);
+    if (dx < 0 && idx < TAB_IDS.length - 1) setTab(TAB_IDS[idx + 1]);
+    if (dx > 0 && idx > 0) setTab(TAB_IDS[idx - 1]);
+  };
 
   return (
     <div className="min-h-screen bg-[#0a1628] text-white">
