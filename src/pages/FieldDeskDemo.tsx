@@ -101,7 +101,7 @@ const FieldDeskDemo = () => {
                   key={id}
                   role="tab"
                   aria-selected={active}
-                  onClick={() => setTab(id)}
+                  onClick={() => switchTab(id, "click")}
                   className={`flex flex-col items-center justify-center gap-1 min-h-[52px] px-1 rounded-xl text-[11px] font-bold leading-tight transition active:scale-95 ${
                     active ? "bg-[#00d4ff] text-[#0a1628] shadow-[0_2px_8px_rgba(0,212,255,0.3)]" : "text-gray-400 hover:text-white"
                   }`}
