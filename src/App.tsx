@@ -642,6 +642,8 @@ const App = () => (
                     <Route path="/contractor-marketplace" element={<ContractorMarketplace />} />
                     <Route path="/field-service" element={<FieldServiceManagement />} />
                     <Route path="/field-service/dispatch" element={<FieldServiceDispatch />} />
+                    <Route path="/fielddesk-demo" element={<FieldDeskDemo />} />
+                    <Route path="/demo-fielddesk" element={<FieldDeskDemo />} />
                     <Route path="/field-service/tech" element={<FieldServiceTechApp />} />
                     <Route path="/field-service/:industry" element={<FieldServiceIndustry />} />
                     <Route path="/job-status" element={<JobStatusPage />} />
