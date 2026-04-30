@@ -704,7 +704,8 @@ serve(async (req) => {
     let careAlertSent = careAlertSentToday;
     // Optional manual override — allows dashboard to target a specific trade + city
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
-    const manualTrade = body.target_trade as string | undefined;
+    const rawTrade = body.target_trade as string | undefined;
+    const manualTrade = rawTrade ? canonicalizeTrade(rawTrade) : undefined;
     const manualCity = body.target_city as string | undefined;
     const pitchOverride = body.pitch_override as ("dead_lead" | "tech_alert" | "missed_call" | "web_design" | "care_alert" | undefined);
     const pitchRotation = pitchOverride || getTodayPitchRotation();
