@@ -2099,3 +2099,6 @@ verify_jwt = false
 
 [functions.siteredar-self-pitch]
 verify_jwt = false
+
+[functions.haro-monitor]
+verify_jwt = false
