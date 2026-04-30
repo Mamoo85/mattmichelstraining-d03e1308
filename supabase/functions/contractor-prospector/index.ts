@@ -721,7 +721,7 @@ serve(async (req) => {
       combos = pickRandomCities(5).map(city => ({ trade: manualTrade, city }));
       log("All-Michigan fan-out", { trade: manualTrade, cityCount: combos.length });
     } else if (manualTrade && manualCity) {
-      const variants = TRADE_QUERY_VARIANTS[manualTrade] || [manualTrade];
+      const variants = getSearchQueries(manualTrade);
       combos = variants.map(v => ({ trade: v, city: manualCity }));
       log("Single-city query expansion", { city: manualCity, variants: variants.length });
     } else {
