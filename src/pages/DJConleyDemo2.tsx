@@ -532,7 +532,7 @@ export default function DJConleyDemo2() {
 
         {/* ── Footer ── */}
         <p style={{ textAlign: "center", marginTop: 32, fontSize: 12, color: "#334155" }}>
-          Detroit Web Agency · detroitwebagent.com · matt@mattmichelstraining.com · (313) 992-1219
+          Detroit Web Agency · detroitwebagent.com · matt@detroitwebagent.com · (313) 992-1219
         </p>
       </div>
 
