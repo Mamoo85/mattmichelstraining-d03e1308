@@ -31,6 +31,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { generateText } from "../_shared/ai.ts";
 import { isBlocked, recordOutreach } from "../_shared/outreach-blocklist.ts";
+import { canonicalizeTrade, getSearchQueries } from "../_shared/trade-canonical.ts";
 
 function extractCityState(city: string): [string, string] {
   const parts = city.trim().split(/\s+/);
