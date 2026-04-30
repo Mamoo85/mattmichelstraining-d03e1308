@@ -1581,8 +1581,14 @@ serve(async (req) => {
 </div></body></html>`);
           }
           // GHOST-2 fix: stamp delivery timestamp so reconcile cron knows email was sent
+          // Check if buyer is a First Look subscriber — flag the lock accordingly
+          const { data: flSub } = await (sb.from as any)("marketplace_first_look_subscribers")
+            .select("id")
+            .eq("email", email)
+            .eq("status", "active")
+            .maybeSingle();
           await sb.from("marketplace_lead_locks" as any)
-            .update({ email_sent_at: new Date().toISOString() })
+            .update({ email_sent_at: new Date().toISOString(), first_look_active: !!flSub })
             .eq("lead_id", lead_id)
             .eq("product", product);
 
