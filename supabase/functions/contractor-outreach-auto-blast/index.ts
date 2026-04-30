@@ -139,6 +139,7 @@ Deno.serve(async (req) => {
 
     let scraped = 0;
     let scrapeInserted = 0;
+    let scrapeSkipped = false;
 
     // ---------- STEP 2: scrape if short ----------
     if ((existingWithEmail || 0) < target_email_count) {
@@ -157,6 +158,7 @@ Deno.serve(async (req) => {
       }
     } else {
       steps.push(`${existingWithEmail} prospects already have emails — skipping scrape.`);
+      scrapeSkipped = true;
     }
 
     // ---------- STEP 3: enrich prospects without email ----------
