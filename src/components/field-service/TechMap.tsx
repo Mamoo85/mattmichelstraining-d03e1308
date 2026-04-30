@@ -28,16 +28,15 @@ export default function TechMap({ clientId }: TechMapProps) {
   const [loading, setLoading] = useState(!isDemo);
   const [mapsApiKey, setMapsApiKey] = useState("");
 
-  // Fetch API key from edge function (skip for demo)
+  // Fetch Maps API key (also needed in demo mode to render the map)
   useEffect(() => {
-    if (isDemo) return;
     (async () => {
       try {
         const { data, error } = await supabase.functions.invoke("get-maps-key");
         if (!error && data?.key) setMapsApiKey(data.key);
       } catch {}
     })();
-  }, [isDemo]);
+  }, []);
 
   const fetchLocations = useCallback(async () => {
     if (isDemo) return; // demo data already set in initial state
