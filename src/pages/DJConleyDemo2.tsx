@@ -8,9 +8,9 @@ import { useKioskMode, StartDemoButton, ExitKioskButton, KIOSK_GLOBAL_STYLES } f
 
 // ── Fake SiteRadar visitor data for demo ──────────────────────────────────────
 const DEMO_VISITORS = [
-  { company: "Stellantis Facilities Mgmt", page: "Boiler Tune-Up Services", time: "Today, 2:14 PM", badge: "🏭", value: "$40k–$120k contract" },
-  { company: "Detroit Medical Center", page: "Service Contracts", time: "Today, 11:47 AM", badge: "🏥", value: "$25k–$60k contract" },
-  { company: "Wayne County Schools", page: "Homepage", time: "Today, 9:03 AM", badge: "🏫", value: "$15k–$35k contract" },
+  { company: "Stellantis Facilities Mgmt", page: "Boiler Tune-Up Services", time: "Example visit", badge: "🏭", value: "$40k–$120k contract" },
+  { company: "Detroit Medical Center", page: "Service Contracts", time: "Example visit", badge: "🏥", value: "$25k–$60k contract" },
+  { company: "Wayne County Schools", page: "Homepage", time: "Example visit", badge: "🏫", value: "$15k–$35k contract" },
 ];
 
 // ── Problems solved ────────────────────────────────────────────────────────────
