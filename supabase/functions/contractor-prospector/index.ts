@@ -84,15 +84,8 @@ const CITIES = [
   "Marquette MI", "Sault Ste. Marie MI", "Escanaba MI",
 ];
 
-// Trade-specific search query variants — used to multiply Google Places coverage
-// when targeting a single city (Places API caps at 20 results per query).
-const TRADE_QUERY_VARIANTS: Record<string, string[]> = {
-  "HVAC contractor": ["HVAC contractor", "heating and cooling", "AC repair", "furnace repair"],
-  "plumber": ["plumber", "plumbing contractor", "drain cleaning", "water heater repair"],
-  "electrician": ["electrician", "electrical contractor", "residential electrician"],
-  "roofer": ["roofer", "roofing contractor", "roof repair", "roof replacement"],
-  "dentist": ["dentist", "dental office", "family dentistry"],
-};
+// Trade-specific search query variants are now provided by _shared/trade-canonical.ts
+// via getSearchQueries(canonicalTrade). Local TRADE_QUERY_VARIANTS removed.
 
 // Pick N random cities from the statewide list (used when "All Michigan" selected)
 function pickRandomCities(n: number): string[] {
