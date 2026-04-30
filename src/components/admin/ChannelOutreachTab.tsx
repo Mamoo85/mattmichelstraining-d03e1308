@@ -23,7 +23,7 @@ export interface ChannelConfig {
   targetLabel: string; // "Fax #" / "Address" / "Phone"
 }
 
-const TRADES = ["", "roofer", "HVAC contractor", "plumber", "electrician"];
+const TRADES = ["", "Roofing", "HVAC", "Plumbing", "Electrical", "General Contractor", "Siding", "Gutters", "Solar"];
 const CITIES = [
   "", "🌎 All Michigan",
   "Detroit MI", "Warren MI", "Sterling Heights MI", "Troy MI", "Livonia MI", "Dearborn MI",
