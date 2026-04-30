@@ -199,6 +199,35 @@ async function runDripJob(): Promise<Response> {
     if (expiredErr) console.error("[drip] TCPA sweep error:", expiredErr);
     tcpaSkipped = expired?.length || 0;
 
+    // ── EBR EXPIRY ALERT ─────────────────────────────────────────────────
+    // Contacts whose last_contact_date is 17–17.5 months old are about to hit
+    // the 18-month TCPA window. SMS Matt so he can re-establish EBR before they expire.
+    const seventeenMonthsAgo = new Date(now.getTime() - 517 * 24 * 60 * 60 * 1000)
+      .toISOString().split("T")[0];
+    const seventeenHalfMonthsAgo = new Date(now.getTime() - 533 * 24 * 60 * 60 * 1000)
+      .toISOString().split("T")[0];
+    const { data: expiringContacts } = await sb
+      .from("dead_lead_contacts" as any)
+      .select("dead_lead_campaigns(contractor_id, contractor_clients(business_name, phone))")
+      .gte("last_contact_date", seventeenHalfMonthsAgo)
+      .lte("last_contact_date", seventeenMonthsAgo)
+      .in("drip_step", [0, 1, 2]);
+    if (expiringContacts && expiringContacts.length > 0) {
+      const byContractor: Record<string, { name: string; count: number }> = {};
+      for (const c of expiringContacts as any[]) {
+        const cam = c.dead_lead_campaigns;
+        if (!cam?.contractor_id) continue;
+        const key = cam.contractor_id;
+        if (!byContractor[key]) byContractor[key] = { name: cam.contractor_clients?.business_name || "Unknown", count: 0 };
+        byContractor[key].count++;
+      }
+      const ADMIN_PHONE = Deno.env.get("ADMIN_PHONE") || "";
+      if (ADMIN_PHONE) {
+        const lines = Object.values(byContractor).map(b => `${b.name}: ${b.count} leads`).join(", ");
+        await sendSMS(ADMIN_PHONE, `⚠️ Dead Lead EBR alert: leads expiring in ~2 weeks (18-mo TCPA window). ${lines}. Re-engage or they'll be TCPA-expired.`).catch(() => {});
+      }
+    }
+
     // Item 42: Sonar enrichment counter (cap to control cost)
     let sonarEnrichedCount = 0;
     const SONAR_ENRICH_LIMIT = 3;
