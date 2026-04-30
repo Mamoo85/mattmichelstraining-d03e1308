@@ -2481,6 +2481,20 @@ serve(async (req) => {
               `💰 New Contractor Leads client — ${bizName} (${trade} in ${city})`,
               `<p><strong>${bizName}</strong><br>Email: ${email}<br>Trade: ${trade}<br>City: ${city}<br>Phone: ${meta.phone || "n/a"}<br>Dashboard: <a href="${dashUrl}">${dashUrl}</a></p>`
             );
+            // Bundle Missed-Call free with Contractor Leads
+            await sb.from("missed_call_clients" as any).upsert({
+              email,
+              business_name: bizName !== "there" ? bizName : null,
+              business_phone: meta.phone || null,
+              active: true,
+              bundled_with: "contractor_leads",
+              stripe_customer_id: session.customer as string || null,
+              dashboard_token: crypto.randomUUID(),
+            }, { onConflict: "email", ignoreDuplicates: true }).catch(() => {});
+            if (meta.phone) {
+              const { sendSMS } = await import("../_shared/twilio.ts");
+              await sendSMS({ to: meta.phone, body: `Good news — Missed-Call Text-Back is included free with your Contractor Leads plan. Any missed call now gets an instant text-back to that customer. — Matt, Detroit Web Agency\nReply STOP to opt out` }).catch(() => {});
+            }
           }
         } catch (e) {
           console.error("[WEBHOOK] contractor_lead_subscription welcome email error:", e);
