@@ -195,9 +195,25 @@ export default function OnePressLauncher({
         </div>
 
         {!run && (
-          <Button onClick={launch} disabled={disabled || launching || !trades.length || !cities.length} className="w-full">
-            {launching ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Launching…</> : <><Zap className="h-4 w-4 mr-2" /> Launch One-Press Run</>}
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button onClick={launch} disabled={disabled || launching || !trades.length || !cities.length} className="w-full">
+              {launching ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Launching…</> : <><Zap className="h-4 w-4 mr-2" /> Launch One-Press Run</>}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={refreshProofPool}
+              disabled={refreshing || refreshCooldown > 0}
+              className="w-full"
+            >
+              {refreshing
+                ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Refreshing proof pool…</>
+                : refreshCooldown > 0
+                ? <><RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh proof pool ({refreshCooldown}s)</>
+                : <><RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh proof pool</>}
+            </Button>
+          </div>
         )}
 
         {run && (
