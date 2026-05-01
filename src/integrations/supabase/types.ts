@@ -1127,6 +1127,36 @@ export type Database = {
         }
         Relationships: []
       }
+      anniversary_notices: {
+        Row: {
+          client_email: string
+          id: string
+          notice_year: number
+          product: string
+          recap_data: Json
+          sent_at: string
+          signup_date: string
+        }
+        Insert: {
+          client_email: string
+          id?: string
+          notice_year: number
+          product: string
+          recap_data?: Json
+          sent_at?: string
+          signup_date: string
+        }
+        Update: {
+          client_email?: string
+          id?: string
+          notice_year?: number
+          product?: string
+          recap_data?: Json
+          sent_at?: string
+          signup_date?: string
+        }
+        Relationships: []
+      }
       annual_review_clients: {
         Row: {
           active: boolean | null
@@ -2532,6 +2562,39 @@ export type Database = {
           media_url?: string
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      client_health_scores: {
+        Row: {
+          client_email: string
+          created_at: string
+          id: string
+          matt_notified_at: string | null
+          product: string
+          score: number
+          signals: Json
+          status: string
+        }
+        Insert: {
+          client_email: string
+          created_at?: string
+          id?: string
+          matt_notified_at?: string | null
+          product: string
+          score: number
+          signals?: Json
+          status: string
+        }
+        Update: {
+          client_email?: string
+          created_at?: string
+          id?: string
+          matt_notified_at?: string | null
+          product?: string
+          score?: number
+          signals?: Json
+          status?: string
         }
         Relationships: []
       }
@@ -16838,6 +16901,54 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_partners: {
+        Row: {
+          cash_earned_cents: number
+          code: string
+          created_at: string
+          current_tier: string
+          email: string
+          free_months_earned: number
+          id: string
+          lifetime_discount_pct: number
+          name: string
+          paid_referrals: number
+          payout_handle: string | null
+          show_on_leaderboard: boolean
+          total_referrals: number
+        }
+        Insert: {
+          cash_earned_cents?: number
+          code: string
+          created_at?: string
+          current_tier?: string
+          email: string
+          free_months_earned?: number
+          id?: string
+          lifetime_discount_pct?: number
+          name: string
+          paid_referrals?: number
+          payout_handle?: string | null
+          show_on_leaderboard?: boolean
+          total_referrals?: number
+        }
+        Update: {
+          cash_earned_cents?: number
+          code?: string
+          created_at?: string
+          current_tier?: string
+          email?: string
+          free_months_earned?: number
+          id?: string
+          lifetime_discount_pct?: number
+          name?: string
+          paid_referrals?: number
+          payout_handle?: string | null
+          show_on_leaderboard?: boolean
+          total_referrals?: number
+        }
+        Relationships: []
+      }
       regulatory_monitor_clients: {
         Row: {
           active: boolean | null
@@ -20759,6 +20870,45 @@ export type Database = {
           recommended_services?: string[] | null
           sent_at?: string | null
           service_name?: string
+        }
+        Relationships: []
+      }
+      upsell_opportunities: {
+        Row: {
+          client_email: string
+          created_at: string
+          current_product: string
+          id: string
+          outcome: string | null
+          pitched_at: string | null
+          pitched_by: string | null
+          signal_data: Json
+          suggested_addon: string
+          trigger_reason: string
+        }
+        Insert: {
+          client_email: string
+          created_at?: string
+          current_product: string
+          id?: string
+          outcome?: string | null
+          pitched_at?: string | null
+          pitched_by?: string | null
+          signal_data?: Json
+          suggested_addon: string
+          trigger_reason: string
+        }
+        Update: {
+          client_email?: string
+          created_at?: string
+          current_product?: string
+          id?: string
+          outcome?: string | null
+          pitched_at?: string | null
+          pitched_by?: string | null
+          signal_data?: Json
+          suggested_addon?: string
+          trigger_reason?: string
         }
         Relationships: []
       }
