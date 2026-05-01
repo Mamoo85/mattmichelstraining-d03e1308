@@ -30,6 +30,7 @@ interface RunRow {
   started_at: string | null;
   completed_at: string | null;
   stage_progress: Record<string, unknown> | null;
+  min_quality_score?: number;
 }
 
 interface Props {
