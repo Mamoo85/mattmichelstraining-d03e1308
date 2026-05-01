@@ -25,10 +25,8 @@
     "reviewSub": "Last 30 days"
   },
   "yearOneSavings": "$14,412",
-  "candidates": [
-    { "name": "James P.", "license": "1st Class Boiler Op", "city": "Troy", "score": 9, "source": "State licensing records" },
-    { "name": "Kevin M.", "license": "2nd Class Boiler Op", "city": "Sterling Heights", "score": 7, "source": "Proprietary OSINT" }
-  ],
+  "hideTechAlert": true,
+  "candidates": [],
   "competitorPricing": [
     { "name": "FieldServio", "price": "$1,400/mo", "note": "Built for forklift rental companies" },
     { "name": "eWay-CRM", "price": "$300–400/mo", "note": "An Outlook plugin. For desk workers." }

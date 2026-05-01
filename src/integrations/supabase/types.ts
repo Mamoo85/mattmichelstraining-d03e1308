@@ -5809,6 +5809,57 @@ export type Database = {
         }
         Relationships: []
       }
+      dwa_product_catalog: {
+        Row: {
+          active: boolean
+          created_at: string
+          display_order: number
+          excluded_industries: string[]
+          id: string
+          in_predictive_family: boolean
+          legacy_name: string
+          monthly_price: number
+          recommended_industries: string[]
+          route: string
+          slug: string
+          tagline: string
+          umbrella_name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          display_order?: number
+          excluded_industries?: string[]
+          id?: string
+          in_predictive_family?: boolean
+          legacy_name: string
+          monthly_price?: number
+          recommended_industries?: string[]
+          route: string
+          slug: string
+          tagline: string
+          umbrella_name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          display_order?: number
+          excluded_industries?: string[]
+          id?: string
+          in_predictive_family?: boolean
+          legacy_name?: string
+          monthly_price?: number
+          recommended_industries?: string[]
+          route?: string
+          slug?: string
+          tagline?: string
+          umbrella_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       edge_health_events: {
         Row: {
           created_at: string
