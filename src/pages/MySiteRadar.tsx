@@ -315,24 +315,28 @@ export default function MySiteRadar() {
                   <p style={{ color: "#64748b", fontSize: 13, margin: "10px 0 0" }}>Waiting for visitors…</p>
                 ) : (
                   <ul style={{ margin: "10px 0 0", padding: 0, listStyle: "none", maxHeight: 360, overflowY: "auto" }}>
-                    {events.map((e) => (
-                      <li key={e.id} style={{ padding: "10px 0", borderBottom: "1px solid #1e3a5f", display: "flex", alignItems: "center", gap: 10 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: e.company_name ? "#34d399" : "#475569", flexShrink: 0 }} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ color: "#e2e8f0", fontSize: 13, margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {e.page_visited || "—"}
-                          </p>
-                          <p style={{ color: "#64748b", fontSize: 11, margin: "2px 0 0" }}>
-                            {e.company_name || "Unknown visitor"} · {new Date(e.created_at).toLocaleTimeString()}
-                          </p>
-                        </div>
-                        {!e.company_name && (
-                          <button onClick={() => enrich(e.id)} style={{ background: "transparent", border: "1px solid #1e3a5f", color: "#00d4ff", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                            <Sparkles className="h-3 w-3" /> Enrich
-                          </button>
-                        )}
-                      </li>
-                    ))}
+                    {events.map((e) => {
+                      const match = isIcpMatch(e);
+                      return (
+                        <li key={e.id} style={{ padding: "10px 0", borderBottom: "1px solid #1e3a5f", display: "flex", alignItems: "center", gap: 10, background: match ? "#10b9810d" : "transparent", borderLeft: match ? "3px solid #34d399" : "3px solid transparent", paddingLeft: match ? 8 : 0 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: e.company_name ? "#34d399" : "#475569", flexShrink: 0 }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ color: "#e2e8f0", fontSize: 13, margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {e.page_visited || "—"}
+                              {match && <span style={{ marginLeft: 8, fontSize: 9, padding: "2px 6px", background: "#10b98133", color: "#34d399", borderRadius: 4, fontWeight: 700, letterSpacing: 1 }}>ICP</span>}
+                            </p>
+                            <p style={{ color: "#64748b", fontSize: 11, margin: "2px 0 0" }}>
+                              {e.company_name || "Unknown visitor"} · {new Date(e.created_at).toLocaleTimeString()}
+                            </p>
+                          </div>
+                          {!e.company_name && (
+                            <button onClick={() => enrich(e.id)} style={{ background: "transparent", border: "1px solid #1e3a5f", color: "#00d4ff", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                              <Sparkles className="h-3 w-3" /> Enrich
+                            </button>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>
