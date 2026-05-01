@@ -76,6 +76,7 @@ const GROUPS: SidebarGroup[] = [
   {
     label: "Outreach",
     items: [
+      { id: "marketing-tools", label: "📡 Marketing Tools" },
       { id: "command-center",   label: "🎯 Command Center" },
       { id: "sms-inbox",        label: "💬 SMS Inbox" },
       { id: "sms-drafts",       label: "✍️ Pending Drafts" },
