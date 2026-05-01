@@ -2141,3 +2141,6 @@ verify_jwt = false
 
 [functions.dwa-v4-stripe-reconcile-diff]
 verify_jwt = false
+
+[functions.send-djconley-pitch-v2]
+verify_jwt = false
