@@ -3,6 +3,15 @@ project_id = "zmyczlfuufhngzovkjdh"
 [functions.dwa-v4-retention-sweep]
 verify_jwt = false
 
+[functions.dwa-v4-compliance-audit]
+verify_jwt = false
+
+[functions.dwa-v4-qbr-generator]
+verify_jwt = false
+
+[functions.create-addon-checkout]
+verify_jwt = false
+
 [functions.referral-tier-update]
 verify_jwt = false
 

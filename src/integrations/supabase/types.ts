@@ -427,6 +427,75 @@ export type Database = {
         }
         Relationships: []
       }
+      addon_catalog: {
+        Row: {
+          active: boolean | null
+          base_products: string[] | null
+          created_at: string
+          display_order: number | null
+          id: string
+          monthly_price_cents: number
+          name: string
+          pitch: string
+          slug: string
+          stripe_price_lookup_key: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          base_products?: string[] | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          monthly_price_cents: number
+          name: string
+          pitch: string
+          slug: string
+          stripe_price_lookup_key?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          base_products?: string[] | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          monthly_price_cents?: number
+          name?: string
+          pitch?: string
+          slug?: string
+          stripe_price_lookup_key?: string | null
+        }
+        Relationships: []
+      }
+      addon_pitches: {
+        Row: {
+          addon_slug: string
+          client_email: string
+          created_at: string
+          id: string
+          outcome: string | null
+          pitched_at: string
+          stripe_session_id: string | null
+        }
+        Insert: {
+          addon_slug: string
+          client_email: string
+          created_at?: string
+          id?: string
+          outcome?: string | null
+          pitched_at?: string
+          stripe_session_id?: string | null
+        }
+        Update: {
+          addon_slug?: string
+          client_email?: string
+          created_at?: string
+          id?: string
+          outcome?: string | null
+          pitched_at?: string
+          stripe_session_id?: string | null
+        }
+        Relationships: []
+      }
       address_validation_cache: {
         Row: {
           cache_key: string
@@ -3455,6 +3524,48 @@ export type Database = {
           last_report_at?: string | null
           report_count?: number | null
           stripe_customer_id?: string | null
+        }
+        Relationships: []
+      }
+      compliance_audit_log: {
+        Row: {
+          auto_disabled: boolean | null
+          campaign_id: string | null
+          campaign_table: string | null
+          channel: string
+          created_at: string
+          details: Json | null
+          id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          violation_type: string
+        }
+        Insert: {
+          auto_disabled?: boolean | null
+          campaign_id?: string | null
+          campaign_table?: string | null
+          channel: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          violation_type: string
+        }
+        Update: {
+          auto_disabled?: boolean | null
+          campaign_id?: string | null
+          campaign_table?: string | null
+          channel?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          violation_type?: string
         }
         Relationships: []
       }
@@ -16202,6 +16313,60 @@ export type Database = {
         }
         Relationships: []
       }
+      qbr_queue: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          client_email: string
+          client_name: string | null
+          created_at: string
+          id: string
+          manual_review_count: number | null
+          metrics: Json | null
+          pdf_generated_at: string | null
+          pdf_url: string | null
+          product: string
+          quarter: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          client_email: string
+          client_name?: string | null
+          created_at?: string
+          id?: string
+          manual_review_count?: number | null
+          metrics?: Json | null
+          pdf_generated_at?: string | null
+          pdf_url?: string | null
+          product: string
+          quarter: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          client_email?: string
+          client_name?: string | null
+          created_at?: string
+          id?: string
+          manual_review_count?: number | null
+          metrics?: Json | null
+          pdf_generated_at?: string | null
+          pdf_url?: string | null
+          product?: string
+          quarter?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       quarantine_history: {
         Row: {
           address_zip_key: string
@@ -17473,6 +17638,63 @@ export type Database = {
           phone?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+        }
+        Relationships: []
+      }
+      roofing_prospects: {
+        Row: {
+          city: string | null
+          company_name: string
+          created_at: string
+          enriched_at: string | null
+          estimated_revenue_band: string | null
+          id: string
+          largest_permit_value_cents: number | null
+          outreach_status: string | null
+          owner_email: string | null
+          owner_name: string | null
+          owner_phone: string | null
+          permit_count_90d: number | null
+          signal_source: string | null
+          signals: Json | null
+          state: string | null
+          website: string | null
+        }
+        Insert: {
+          city?: string | null
+          company_name: string
+          created_at?: string
+          enriched_at?: string | null
+          estimated_revenue_band?: string | null
+          id?: string
+          largest_permit_value_cents?: number | null
+          outreach_status?: string | null
+          owner_email?: string | null
+          owner_name?: string | null
+          owner_phone?: string | null
+          permit_count_90d?: number | null
+          signal_source?: string | null
+          signals?: Json | null
+          state?: string | null
+          website?: string | null
+        }
+        Update: {
+          city?: string | null
+          company_name?: string
+          created_at?: string
+          enriched_at?: string | null
+          estimated_revenue_band?: string | null
+          id?: string
+          largest_permit_value_cents?: number | null
+          outreach_status?: string | null
+          owner_email?: string | null
+          owner_name?: string | null
+          owner_phone?: string | null
+          permit_count_90d?: number | null
+          signal_source?: string | null
+          signals?: Json | null
+          state?: string | null
+          website?: string | null
         }
         Relationships: []
       }
