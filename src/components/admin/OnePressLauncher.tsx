@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Zap, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Zap, Loader2, CheckCircle2, XCircle, RefreshCw, Search } from "lucide-react";
 import { toast } from "sonner";
+import OnePressDiagnosticsDrawer from "./OnePressDiagnosticsDrawer";
 
 /**
  * OneePressLauncher
