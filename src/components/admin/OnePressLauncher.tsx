@@ -284,13 +284,30 @@ export default function OnePressLauncher({
             })()}
 
             {done && (
-              <Button variant="outline" size="sm" className="w-full" onClick={() => setRun(null)}>
-                Start another run
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => setRun(null)}>
+                  Start another run
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => setDiagOpen(true)}>
+                  <Search className="h-3.5 w-3.5 mr-1.5" /> Open diagnostics
+                </Button>
+              </div>
+            )}
+            {!done && (
+              <Button variant="ghost" size="sm" className="w-full" onClick={() => setDiagOpen(true)}>
+                <Search className="h-3.5 w-3.5 mr-1.5" /> Open diagnostics
               </Button>
             )}
           </div>
         )}
       </CardContent>
+      <OnePressDiagnosticsDrawer
+        runId={run?.id ?? null}
+        stageProgress={run?.stage_progress ?? null}
+        open={diagOpen}
+        onOpenChange={setDiagOpen}
+        onRetryRun={retryRun}
+      />
     </Card>
   );
 }
