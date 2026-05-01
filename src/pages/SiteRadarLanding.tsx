@@ -201,6 +201,39 @@ export default function SiteRadarLanding() {
             </div>
           </section>
 
+          {/* Honest disclosure — what we can/can't tell you */}
+          <section style={{ marginBottom: 64 }}>
+            <h2 style={sectionH2}>What SiteRadar can — and can't — tell you.</h2>
+            <p style={{ color: "#94a3b8", fontSize: 14, textAlign: "center", maxWidth: 680, margin: "0 auto 24px", lineHeight: 1.6 }}>
+              We hate marketing-speak. Here's the unvarnished truth so you know exactly what you're buying.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+              <div style={{ background: CARD, border: `1px solid #10b98144`, borderRadius: 14, padding: 22 }}>
+                <p style={{ color: "#34d399", fontSize: 12, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", margin: "0 0 12px" }}>✓ What we DO tell you</p>
+                <ul style={{ color: "#cbd5e1", fontSize: 13, lineHeight: 1.7, margin: 0, paddingLeft: 18 }}>
+                  <li>Which <strong>company</strong> visited (when their IP resolves to a registered business)</li>
+                  <li>City, state, ISP — for every visitor</li>
+                  <li>Which pages they visited and in what order</li>
+                  <li>Whether they came back (repeat-visit scoring)</li>
+                  <li>Time on site, scroll depth, bounce vs. engaged</li>
+                </ul>
+              </div>
+              <div style={{ background: CARD, border: `1px solid #f59e0b44`, borderRadius: 14, padding: 22 }}>
+                <p style={{ color: "#fbbf24", fontSize: 12, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", margin: "0 0 12px" }}>✗ What we DON'T tell you</p>
+                <ul style={{ color: "#cbd5e1", fontSize: 13, lineHeight: 1.7, margin: 0, paddingLeft: 18 }}>
+                  <li><strong>The individual person's name</strong> — that's not legal without consent</li>
+                  <li>Their email or phone (no de-anonymization tricks)</li>
+                  <li>Residential / consumer visitors (intentionally filtered)</li>
+                  <li>Anyone on a VPN, mobile carrier, or untracked ISP (~45–65% of traffic)</li>
+                  <li>What they searched for to find you (use Google Search Console for that)</li>
+                </ul>
+              </div>
+            </div>
+            <p style={{ color: "#64748b", fontSize: 12, textAlign: "center", margin: "20px auto 0", maxWidth: 600, lineHeight: 1.6 }}>
+              Anyone promising "we'll tell you the visitor's name and email" is either lying or breaking GDPR/CCPA. We won't. Identifying the <em>company</em> is enough — your sales team takes it from there.
+            </p>
+          </section>
+
           {/* FAQ */}
           <section style={{ marginBottom: 32 }}>
             <h2 style={sectionH2}>Common questions.</h2>
