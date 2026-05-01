@@ -1,10 +1,10 @@
 /* ============================================================
    D.J. Conley Associates — Clean Corporate / Premium Engineering
    Color System:
-   Primary Navy:   #0A2647
-   Accent:         #144272
-   Highlight:      #205295
-   Orange CTA:     #E8871A
+   Primary Navy:   #0a0a0a
+   Accent:         #1a1a1a
+   Highlight:      #27CCC0
+   Red CTA:        #c12a3b
    Background:     #FFFFFF
    Section Alt:    #F8FAFC
    Text:           #1A1A2E
@@ -14,10 +14,10 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --navy:      #0A2647;
-  --accent:    #144272;
-  --highlight: #205295;
-  --orange:    #E8871A;
+  --navy:      #0a0a0a;
+  --accent:    #1a1a1a;
+  --highlight: #27CCC0;
+  --red:    #c12a3b;
   --white:     #FFFFFF;
   --alt:       #F8FAFC;
   --text:      #1A1A2E;
@@ -117,7 +117,7 @@ ul { list-style: none; }
   bottom: -2px;
   left: 0; right: 0;
   height: 2px;
-  background: var(--orange);
+  background: var(--red);
 }
 
 .btn {
@@ -133,7 +133,7 @@ ul { list-style: none; }
 }
 
 .btn-primary {
-  background: var(--orange);
+  background: var(--red);
   color: var(--white);
 }
 
@@ -193,7 +193,7 @@ ul { list-style: none; }
   font-weight: 600;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--orange);
+  color: var(--red);
   margin-bottom: 20px;
 }
 
@@ -207,7 +207,7 @@ ul { list-style: none; }
 }
 
 .hero-left h1 span {
-  color: var(--orange);
+  color: var(--red);
 }
 
 .hero-left p {
@@ -349,7 +349,7 @@ ul { list-style: none; }
   font-weight: 600;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--orange);
+  color: var(--red);
   margin-bottom: 12px;
   display: block;
 }
@@ -444,7 +444,7 @@ ul { list-style: none; }
   font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--orange);
+  color: var(--red);
   transition: color 0.2s;
 }
 
@@ -465,7 +465,7 @@ ul { list-style: none; }
 }
 
 .service-card:hover {
-  border-left-color: var(--orange);
+  border-left-color: var(--red);
   box-shadow: 0 4px 20px rgba(10, 38, 71, 0.08);
   transform: translateY(-2px);
 }
@@ -517,7 +517,7 @@ ul { list-style: none; }
   font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--orange);
+  color: var(--red);
   margin-bottom: 20px;
 }
 
@@ -617,7 +617,7 @@ ul { list-style: none; }
 
 .testimonial-quote {
   font-size: 36px;
-  color: var(--orange);
+  color: var(--red);
   line-height: 1;
   margin-bottom: 16px;
   font-family: Georgia, serif;
@@ -851,7 +851,7 @@ ul { list-style: none; }
   font-weight: 600;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--orange);
+  color: var(--red);
   margin-bottom: 12px;
   display: block;
 }
@@ -899,7 +899,7 @@ ul { list-style: none; }
 
 .service-detail .service-body ul li::before {
   content: '—';
-  color: var(--orange);
+  color: var(--red);
   flex-shrink: 0;
   font-weight: 600;
   margin-top: 1px;
@@ -934,14 +934,14 @@ ul { list-style: none; }
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: var(--orange);
+  background: var(--red);
 }
 
 .timeline-year {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1.5px;
-  color: var(--orange);
+  color: var(--red);
   text-transform: uppercase;
   margin-bottom: 6px;
   display: block;
@@ -1043,7 +1043,7 @@ ul { list-style: none; }
   font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--orange);
+  color: var(--red);
   margin-bottom: 8px;
   display: block;
 }
