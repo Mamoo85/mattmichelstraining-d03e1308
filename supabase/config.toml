@@ -1924,34 +1924,37 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.agency-contact-enrich]
-verify_jwt = true
+verify_jwt = false
 
 [functions.gmail-send-outreach]
-verify_jwt = true
+verify_jwt = false
 
 [functions.contractor-outreach-scrape]
-verify_jwt = true
+verify_jwt = false
 
 [functions.contractor-outreach-enrich]
-verify_jwt = true
+verify_jwt = false
 
 [functions.contractor-outreach-email-blast]
-verify_jwt = true
+verify_jwt = false
 
 [functions.contractor-outreach-unsubscribe]
 verify_jwt = false
 
 [functions.contractor-outreach-auto-blast]
-verify_jwt = true
+verify_jwt = false
 
 [functions.contractor-outreach-statewide-sweep]
-verify_jwt = true
+verify_jwt = false
 
 [functions.contractor-outreach-statewide-enrich]
-verify_jwt = true
+verify_jwt = false
 
 [functions.outreach-one-press]
-verify_jwt = true
+verify_jwt = false
+
+[functions.agency-prospect-pool]
+verify_jwt = false
 
 [functions.outreach-lead-enrich-email]
 verify_jwt = true
