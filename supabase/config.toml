@@ -2135,3 +2135,9 @@ verify_jwt = false
 
 [functions.dwa-autopilot-sweep]
 verify_jwt = false
+
+[functions.dwa-v4-roofing-enrich]
+verify_jwt = false
+
+[functions.dwa-v4-stripe-reconcile-diff]
+verify_jwt = false
