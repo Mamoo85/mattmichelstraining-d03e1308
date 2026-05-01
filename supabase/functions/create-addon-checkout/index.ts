@@ -1,106 +1,89 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// v4 §5 — Add-On Marketplace Stripe checkout
+// Accepts { addon_slug, client_email } and creates a recurring Stripe subscription.
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[ADDON-CHECKOUT] ${step}${detailsStr}`);
-};
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const STRIPE_KEY = Deno.env.get("STRIPE_SECRET_KEY")!;
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  }
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    logStep("Function started");
-
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) throw new Error("No authorization header provided");
-
-    const token = authHeader.replace("Bearer ", "");
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
-
-    const body = await req.json();
-    const { service_key, service_name, price_cents, recurring, lead_id, price_id } = body;
-
-    if (!service_key || !service_name || !price_cents) {
-      throw new Error("Missing required fields: service_key, service_name, price_cents");
+    const { addon_slug, client_email } = await req.json();
+    if (!addon_slug || !client_email) {
+      return new Response(JSON.stringify({ error: "addon_slug and client_email required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+    const { data: addon, error } = await sb
+      .from("addon_catalog" as any)
+      .select("*")
+      .eq("slug", addon_slug)
+      .eq("active", true)
+      .maybeSingle();
 
-    // Find or create Stripe customer
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId: string | undefined;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
+    if (error || !addon) {
+      return new Response(JSON.stringify({ error: "addon not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const rawOrigin = req.headers.get("origin") || "https://www.detroitwebagent.com";
-    const ALLOWED_ORIGINS = ["https://www.mattmichelstraining.com", "https://mattmichelstraining.com", "http://localhost:5173", "http://localhost:3000", "https://www.detroitwebagent.com", "https://detroitwebagent.com"];
-    const origin = ALLOWED_ORIGINS.includes(rawOrigin) ? rawOrigin : "https://www.detroitwebagent.com";
+    const stripe = new Stripe(STRIPE_KEY, { apiVersion: "2024-11-20.acacia" });
+    const origin = req.headers.get("origin") ?? "https://detroitwebagent.com";
 
-    // Use registered Stripe Price ID when available, fallback to inline price_data
-    const lineItem: any = price_id
-      ? { price: price_id, quantity: 1 }
-      : {
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer_email: client_email,
+      line_items: [
+        {
+          quantity: 1,
           price_data: {
             currency: "usd",
-            product_data: { name: `Web Design Add-On: ${service_name}` },
-            unit_amount: price_cents,
-            ...(recurring !== false ? { recurring: { interval: "month" } } : {}),
+            unit_amount: (addon as any).monthly_price_cents,
+            recurring: { interval: "month" },
+            product_data: {
+              name: `${(addon as any).name} (Add-on)`,
+              description: (addon as any).pitch,
+            },
           },
-          quantity: 1,
-        };
-
-    const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [lineItem],
-      mode: recurring !== false ? "subscription" : "payment",
-      success_url: `${origin}/client-portal?checkout=success`,
-      cancel_url: `${origin}/client-portal?checkout=cancelled`,
+        },
+      ],
+      success_url: `${origin}/my-addons?session_id={CHECKOUT_SESSION_ID}&added=${addon_slug}`,
+      cancel_url: `${origin}/my-addons`,
       metadata: {
-        type: "web_design_addon",
-        service_key,
-        service_name,
-        lead_id: lead_id || "",
-        user_id: user.id,
+        type: "addon_subscription",
+        addon_slug,
+        client_email,
       },
-    };
+    });
 
-    const session = await stripe.checkout.sessions.create(sessionParams);
-    logStep("Checkout session created", { sessionId: session.id, url: session.url });
+    // Track the pitch
+    await sb.from("addon_pitches" as any).insert({
+      client_email,
+      addon_slug,
+      outcome: "pending",
+      stripe_session_id: session.id,
+    });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
     });
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: msg });
-    return new Response(JSON.stringify({ error: msg }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+  } catch (e) {
+    console.error(e);
+    return new Response(JSON.stringify({ error: String(e) }), {
       status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
