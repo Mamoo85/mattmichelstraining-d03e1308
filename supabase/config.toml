@@ -1,5 +1,11 @@
 project_id = "zmyczlfuufhngzovkjdh"
 
+[functions.dwa-v4-retention-sweep]
+verify_jwt = false
+
+[functions.referral-tier-update]
+verify_jwt = false
+
 [functions.new-business-radar]
 verify_jwt = false
 
