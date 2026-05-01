@@ -239,13 +239,14 @@ Deno.serve(async (req) => {
     const claimUrl = `https://detroitwebagent.com/contractor-marketplace?lead=${lead.id}`;
     const projectType = (lead as any).project_type || (lead as any).message || `${trade} project`;
 
-    let sent = 0;
+    let queued = 0;
     let skippedSuppressed = 0;
     const failures: string[] = [];
+    const queueRows: any[] = [];
 
-    steps.push(`Sending to ${prospects.length} contractors…`);
+    steps.push(`Queueing up to ${prospects.length} contractors for background sender…`);
 
-    // ---------- STEP 6: send ----------
+    // ---------- STEP 6: build queue rows (suppression-checked) ----------
     for (const p of prospects) {
       if (suppressedSet.has((p.email || "").toLowerCase())) {
         skippedSuppressed++;
@@ -255,73 +256,67 @@ Deno.serve(async (req) => {
         });
         continue;
       }
-      try {
-        const unsubUrl = `${SUPABASE_URL}/functions/v1/contractor-outreach-unsubscribe?id=${p.id}`;
-        const html = dwaEmailWrap(
-          buildBody({ businessName: p.business_name, trade, city, projectType, price, claimUrl }),
-          unsubUrl
-        );
-        const subject = `${city} homeowner needs ${trade.toLowerCase()} — claim for $${price}?`;
-
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
+      const unsubUrl = `${SUPABASE_URL}/functions/v1/contractor-outreach-unsubscribe?id=${p.id}`;
+      const html = dwaEmailWrap(
+        buildBody({ businessName: p.business_name, trade, city, projectType, price, claimUrl }),
+        unsubUrl,
+      );
+      const subject = `${city} homeowner needs ${trade.toLowerCase()} — claim for $${price}?`;
+      queueRows.push({
+        channel: "email",
+        prospect_id: p.id,
+        lead_id,
+        priority: 7, // higher than cold prospect blast (6)
+        payload: {
+          to: p.email,
+          subject,
+          html,
+          from: "Matt Michels <matt@detroitwebagent.com>",
           headers: {
-            Authorization: `Bearer ${RESEND_API_KEY}`,
-            "Content-Type": "application/json",
+            "List-Unsubscribe": `<${unsubUrl}>, <mailto:matt@detroitwebagent.com?subject=Unsubscribe>`,
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
           },
-          body: JSON.stringify({
-            from: "Matt Michels <matt@detroitwebagent.com>",
-            to: [p.email],
-            subject,
-            html,
-            headers: {
-              "List-Unsubscribe": `<${unsubUrl}>, <mailto:matt@detroitwebagent.com?subject=Unsubscribe>`,
-              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-            },
-          }),
-        });
-        if (!res.ok) {
-          const t = await res.text();
-          failures.push(`${p.email}: ${t.slice(0, 120)}`);
-          await logAudit(supabase, {
-            prospect_id: p.id, lead_id, channel: "email", event: "bounce",
-            reason: t.slice(0, 240),
-          });
-          continue;
-        }
-        await supabase
-          .from("contractor_outreach_prospects")
-          .update({
-            last_emailed_at: new Date().toISOString(),
-            email_send_count: (p.email_send_count || 0) + 1,
-          })
-          .eq("id", p.id);
-        await logAudit(supabase, {
-          prospect_id: p.id, lead_id, channel: "email", event: "sent",
-          reason: subject,
-          metadata: { price, claim_url: claimUrl, source: "auto-blast" },
-        });
-        sent++;
-      } catch (e: any) {
-        failures.push(`${p.email}: ${e?.message || "err"}`);
-        await logAudit(supabase, {
-          prospect_id: p.id, lead_id, channel: "email", event: "bounce",
-          reason: e?.message || "send error",
-        });
+        },
+      });
+    }
+
+    // ---------- STEP 7: enqueue ----------
+    if (queueRows.length > 0) {
+      const { data: inserted, error: qErr } = await supabase
+        .from("outreach_send_queue")
+        .upsert(queueRows, { onConflict: "prospect_id,lead_id,channel", ignoreDuplicates: true })
+        .select("id");
+      if (qErr) {
+        failures.push(`enqueue: ${qErr.message}`);
+      } else {
+        queued = inserted?.length || 0;
       }
     }
 
-    steps.push(`Sent ${sent} of ${prospects.length}. Suppressed ${skippedSuppressed}. Failures ${failures.length}.`);
+    // ---------- STEP 8: kick the worker so demos feel instant ----------
+    let workerSent = 0;
+    let workerFailed = 0;
+    if (queued > 0) {
+      const w = await invokeFn("outreach-queue-worker", { trigger: "auto-blast", lead_id });
+      if (w.ok && w.data?.stats) {
+        workerSent = Number(w.data.stats.sent || 0);
+        workerFailed = Number(w.data.stats.failed || 0);
+      } else if (!w.ok) {
+        failures.push(`worker: ${w.data?.error || `HTTP ${w.status}`}`);
+      }
+    }
+
+    steps.push(`Queued ${queued} · drained ${workerSent} · suppressed ${skippedSuppressed} · failures ${failures.length}.`);
 
     try {
       await supabase.from("system_comms_log").insert({
         channel: "email",
         direction: "outbound",
-        recipient: `${sent} contractors (auto-blast)`,
+        recipient: `${queued} contractors (auto-blast queued)`,
         subject: `Auto-blast: ${trade} / ${city}`,
         body: `Lead ${lead.id} — ${projectType} — $${price}`,
-        status: sent > 0 ? "sent" : "failed",
-        meta: { lead_id, sent, scraped, enriched: enrichedCount, suppressed: skippedSuppressed, failures: failures.slice(0, 5) },
+        status: queued > 0 ? "queued" : "failed",
+        meta: { lead_id, queued, sent: workerSent, scraped, enriched: enrichedCount, suppressed: skippedSuppressed, failures: failures.slice(0, 5) },
       });
     } catch (_e) { /* table may differ */ }
 
@@ -333,9 +328,11 @@ Deno.serve(async (req) => {
       enriched: enrichedCount,
       enrich_traces: enrichTraces,
       attempted: prospects.length,
-      sent,
+      queued_count: queued,
+      sent: workerSent,
+      worker_failed: workerFailed,
       skipped_suppressed: skippedSuppressed,
-      daily_remaining: remaining - sent,
+      daily_remaining: remaining - queued,
       failures,
     }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
