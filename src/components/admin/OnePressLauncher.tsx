@@ -171,8 +171,34 @@ export default function OnePressLauncher({
               <div className="text-xs text-amber-700">⚠ {run.failed_count} failures — see diagnostics drawer.</div>
             )}
             {run.error_message && (
-              <div className="text-xs text-rose-700 rounded border border-rose-300 bg-rose-50 p-2">{run.error_message}</div>
+              <div className="text-xs text-rose-700 rounded border border-rose-300 bg-rose-50 p-2 whitespace-pre-wrap">{run.error_message}</div>
             )}
+            {(() => {
+              const sp: any = run.stage_progress || {};
+              const sendErrs: string[] = Array.isArray(sp.send_errors) ? sp.send_errors : [];
+              const scrapeErrs: string[] = Array.isArray(sp.scrape_errors) ? sp.scrape_errors : [];
+              const queued = typeof sp.queued === "number" ? sp.queued : 0;
+              const eq = typeof sp.effective_quality === "number" ? sp.effective_quality : null;
+              return (
+                <div className="space-y-1 text-[11px] text-muted-foreground">
+                  {queued > 0 && <div className="text-emerald-700">✓ {queued} prospects queued for background sender (worker triggered)</div>}
+                  {eq != null && eq !== run.min_quality_score && <div>Auto-relaxed quality threshold to {eq} (no eligible at requested level)</div>}
+                  {sp.fallback && <div>📍 {String(sp.fallback)}</div>}
+                  {sendErrs.length > 0 && (
+                    <details className="rounded border border-amber-300 bg-amber-50 p-2 text-amber-900">
+                      <summary className="cursor-pointer font-semibold">Send blockers ({sendErrs.length})</summary>
+                      <ul className="mt-1 list-disc pl-4 space-y-0.5">{sendErrs.slice(0, 5).map((e, i) => <li key={i}>{e}</li>)}</ul>
+                    </details>
+                  )}
+                  {scrapeErrs.length > 0 && (
+                    <details className="rounded border border-slate-300 bg-slate-50 p-2 text-slate-700">
+                      <summary className="cursor-pointer font-semibold">Scrape errors ({scrapeErrs.length})</summary>
+                      <ul className="mt-1 list-disc pl-4 space-y-0.5">{scrapeErrs.slice(0, 5).map((e, i) => <li key={i}>{e}</li>)}</ul>
+                    </details>
+                  )}
+                </div>
+              );
+            })()}
 
             {done && (
               <Button variant="outline" size="sm" className="w-full" onClick={() => setRun(null)}>
