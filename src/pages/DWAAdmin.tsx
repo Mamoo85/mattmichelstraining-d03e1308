@@ -48,6 +48,7 @@ const LeadSalesOutreachHub = lazy(() => import("@/components/dwa-admin/LeadSales
 const PipelineVelocityDashboard = lazy(() => import("@/components/dwa-admin/PipelineVelocityDashboard"));
 const StrategyModeHub = lazy(() => import("@/components/dwa-admin/StrategyModeHub"));
 const AdminEnrichmentAudit = lazy(() => import("@/components/admin/AdminEnrichmentAudit"));
+const AdminMarketingTools = lazy(() => import("@/components/admin/AdminMarketingTools"));
 
 type Tab =
   | "ai-command"
@@ -56,7 +57,7 @@ type Tab =
   | "contractor-leads" | "contractor-onboarding" | "contractor-market" | "fielddesk" | "techalert" | "missed-call" | "missed-call-leads" | "clients-all"
   | "lead-marketplace" | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
-  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit";
+  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit" | "marketing-tools";
 
 const GROUPS: SidebarGroup[] = [
   {
@@ -75,6 +76,7 @@ const GROUPS: SidebarGroup[] = [
   {
     label: "Outreach",
     items: [
+      { id: "marketing-tools", label: "📡 Marketing Tools" },
       { id: "command-center",   label: "🎯 Command Center" },
       { id: "sms-inbox",        label: "💬 SMS Inbox" },
       { id: "sms-drafts",       label: "✍️ Pending Drafts" },
@@ -169,6 +171,7 @@ export default function DWAAdmin() {
           {activeTab === "prospect-tracker" && <Suspense fallback={lazyFallback("prospect tracker")}><AdminProspectTracker /></Suspense>}
           {activeTab === "agent-toolkit"    && <Suspense fallback={lazyFallback("agent toolkit")}><AgentToolkit /></Suspense>}
 
+          {activeTab === "marketing-tools" && <Suspense fallback={lazyFallback("Marketing Tools")}><AdminMarketingTools /></Suspense>}
           {activeTab === "command-center"   && <Suspense fallback={lazyFallback("Command Center")}><OutreachCommandCenter /></Suspense>}
           {activeTab === "sms-inbox"        && <Suspense fallback={lazyFallback("SMS inbox")}><AdminSMSInbox /></Suspense>}
           {activeTab === "sms-drafts"       && <Suspense fallback={lazyFallback("pending drafts")}><AdminPendingSMSDrafts /></Suspense>}

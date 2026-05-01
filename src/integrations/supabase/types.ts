@@ -3099,6 +3099,48 @@ export type Database = {
           },
         ]
       }
+      command_center_tiles: {
+        Row: {
+          category: string | null
+          created_at: string
+          icon_emoji: string | null
+          id: string
+          is_active: boolean
+          label: string
+          last_checked_at: string | null
+          last_status: string | null
+          owner_email: string
+          sort_order: number
+          url: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          icon_emoji?: string | null
+          id?: string
+          is_active?: boolean
+          label: string
+          last_checked_at?: string | null
+          last_status?: string | null
+          owner_email?: string
+          sort_order?: number
+          url: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          icon_emoji?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          last_checked_at?: string | null
+          last_status?: string | null
+          owner_email?: string
+          sort_order?: number
+          url?: string
+        }
+        Relationships: []
+      }
       community_workouts: {
         Row: {
           created_at: string
@@ -11442,6 +11484,30 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_kill_switch: {
+        Row: {
+          enabled: boolean
+          id: number
+          reason: string | null
+          toggled_at: string
+          toggled_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          id?: number
+          reason?: string | null
+          toggled_at?: string
+          toggled_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          id?: number
+          reason?: string | null
+          toggled_at?: string
+          toggled_by?: string | null
+        }
+        Relationships: []
+      }
       marketing_leads: {
         Row: {
           business_name: string | null
@@ -14264,6 +14330,39 @@ export type Database = {
           notes?: string | null
           pinned_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      pitch_send_audit: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          recipient_email: string
+          status: string
+          template_name: string
+          triggered_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_email: string
+          status: string
+          template_name: string
+          triggered_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string
+          status?: string
+          template_name?: string
+          triggered_by?: string | null
         }
         Relationships: []
       }
