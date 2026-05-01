@@ -103,29 +103,52 @@ async function runOrchestration(runId: string, input: RunInput) {
   try {
     await update({ status: "running", stage: "scraping", started_at: new Date().toISOString() });
 
-    // STAGE 1 — scrape across trade × city matrix
+    // STAGE 1 — scrape across trade × city matrix, with auto fallback to Metro Detroit ring
     let scrapedTotal = 0;
     const scrapeErrors: string[] = [];
+    const triedCities = new Set<string>();
     const perCityCap = Math.max(5, Math.ceil(max_prospects / Math.max(1, trades.length * cities.length)));
-    for (const trade of trades) {
-      for (const city of cities) {
-        if (scrapedTotal >= max_prospects) break;
-        const r = await invokeFn("contractor-outreach-scrape", { trade, city, state, limit: perCityCap });
-        // use scanned (total found) not inserted (new only) so count updates even when all are duplicates
-        if (r.ok) scrapedTotal += Number(r.data?.scanned || 0);
-        else scrapeErrors.push(`${trade}/${city}: ${r.error}`);
-        await update({ scraped_count: scrapedTotal, stage_progress: { scrape_errors: scrapeErrors.slice(-5) } });
+
+    async function scrapeCityList(cityList: string[]): Promise<number> {
+      let added = 0;
+      for (const trade of trades) {
+        for (const city of cityList) {
+          if (scrapedTotal >= max_prospects) break;
+          if (triedCities.has(`${trade}|${city}`)) continue;
+          triedCities.add(`${trade}|${city}`);
+          const r = await invokeFn("contractor-outreach-scrape", { trade, city, state, limit: perCityCap });
+          if (r.ok) {
+            const found = Number(r.data?.scanned || 0);
+            scrapedTotal += found; added += found;
+          } else {
+            scrapeErrors.push(`${trade}/${city}: ${r.error}`);
+          }
+          await update({ scraped_count: scrapedTotal, stage_progress: { scrape_errors: scrapeErrors.slice(-5), tried: Array.from(triedCities).slice(-10) } });
+        }
+      }
+      return added;
+    }
+
+    await scrapeCityList(cities);
+
+    // Self-heal #1 — if nothing was scraped, expand to the Metro Detroit ring
+    if (scrapedTotal === 0) {
+      const expanded = FALLBACK_CITIES.filter(c => !cities.includes(c));
+      if (expanded.length) {
+        await update({ stage_progress: { fallback: "expanding to Metro Detroit ring", tried: cities, expanded } });
+        await scrapeCityList(expanded);
       }
     }
 
     // STAGE 2 — enrich freshly scraped prospects (those without enriched_at)
     await update({ stage: "enriching" });
+    const allCities = Array.from(new Set([...cities, ...FALLBACK_CITIES]));
     const { data: toEnrich } = await supabase
       .from("contractor_outreach_prospects")
       .select("id")
       .is("enriched_at", null)
       .in("trade", trades)
-      .in("city", cities)
+      .in("city", allCities)
       .order("created_at", { ascending: false })
       .limit(max_prospects);
 
@@ -141,16 +164,31 @@ async function runOrchestration(runId: string, input: RunInput) {
     }
     await update({ enriched_count: enrichedTotal, stage_progress: { enrich_errors: enrichErrors.slice(-5) } });
 
-    // STAGE 3 — quality scoring is automatic via DB trigger; just count eligible
+    // STAGE 3 — count eligible at requested threshold; if 0, drop threshold to surface what's available
     await update({ stage: "scoring" });
-    const { count: scoredCount } = await supabase
+    let effectiveQuality = min_quality_score;
+    let { count: scoredCount } = await supabase
       .from("contractor_outreach_prospects")
       .select("id", { count: "exact", head: true })
-      .gte("quality_score", min_quality_score)
+      .gte("quality_score", effectiveQuality)
       .is("unsubscribed_at", null)
       .in("trade", trades)
-      .in("city", cities);
+      .in("city", allCities);
+
+    if ((scoredCount || 0) === 0 && effectiveQuality > 25) {
+      effectiveQuality = 25; // graceful degrade so a real run can ship
+      const fallback = await supabase
+        .from("contractor_outreach_prospects")
+        .select("id", { count: "exact", head: true })
+        .gte("quality_score", effectiveQuality)
+        .is("unsubscribed_at", null)
+        .in("trade", trades)
+        .in("city", allCities);
+      scoredCount = fallback.count || 0;
+      await update({ stage_progress: { quality_fallback: `dropped threshold to ${effectiveQuality}` } });
+    }
     await update({ scored_count: scoredCount || 0 });
+
 
     // STAGE 4 — send via configured channels (inline campaign send)
     await update({ stage: "sending" });
