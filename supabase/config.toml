@@ -3,6 +3,9 @@ project_id = "zmyczlfuufhngzovkjdh"
 [functions.new-business-radar]
 verify_jwt = false
 
+[functions.fielddesk-import-eway]
+verify_jwt = false
+
 [functions.buyer-radar-sneak-peek]
 verify_jwt = false
 

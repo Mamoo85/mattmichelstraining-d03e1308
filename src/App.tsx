@@ -317,6 +317,8 @@ const MyIndustryPulse = lazyRetry(() => import("./pages/MyIndustryPulse"));
 const DemandRadar = lazyRetry(() => import("./pages/DemandRadar"));
 const TalentRadarVsStaffing = lazyRetry(() => import("./pages/TalentRadarVsStaffing"));
 const FieldDeskVsEway = lazyRetry(() => import("./pages/FieldDeskVsEway"));
+const MarketingLayerForEway = lazyRetry(() => import("./pages/MarketingLayerForEway"));
+const FieldDeskMigration = lazyRetry(() => import("./pages/FieldDeskMigration"));
 const MortgageRadarVsTriggerLeads = lazyRetry(() => import("./pages/MortgageRadarVsTriggerLeads"));
 const FsboHeatmap = lazyRetry(() => import("./pages/FsboHeatmap"));
 const MortgageRadar = lazyRetry(() => import("./pages/MortgageRadar"));
@@ -804,6 +806,8 @@ const App = () => (
                     <Route path="/demand-radar" element={<Navigate to="/growth-radar" replace />} />
                     <Route path="/talent-radar-vs-staffing" element={<TalentRadarVsStaffing />} />
                     <Route path="/fielddesk-vs-eway" element={<FieldDeskVsEway />} />
+                    <Route path="/marketing-layer-for-eway" element={<MarketingLayerForEway />} />
+                    <Route path="/fielddesk-migration" element={<FieldDeskMigration />} />
                     <Route path="/mortgage-radar-vs-trigger-leads" element={<MortgageRadarVsTriggerLeads />} />
                     <Route path="/mortgage-radar" element={<MortgageRadar />} />
                     <Route path="/fsbo-heatmap" element={<FsboHeatmap />} />
