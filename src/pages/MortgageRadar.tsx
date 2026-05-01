@@ -274,6 +274,39 @@ export default function MortgageRadar() {
         </div>
       </section>
 
+      {/* Honest compliance disclosure — H.R. 2808 (trigger lead ban) */}
+      <section className="max-w-5xl mx-auto px-4 py-12">
+        <h2 className="text-2xl sm:text-3xl font-bold text-center text-white mb-2">What Mortgage Radar is — and what it isn't.</h2>
+        <p className="text-center text-[#94a3b8] mb-8 max-w-2xl mx-auto">
+          The mortgage industry is full of grey-area lead products. We won't pretend ours is something it isn't.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-5">
+          <div className="bg-[#0a1628] border border-[#10b98144] rounded-xl p-6">
+            <p className="text-[#34d399] text-xs font-extrabold tracking-widest uppercase mb-3">✓ What we DO</p>
+            <ul className="text-sm text-[#cbd5e1] space-y-2 list-disc pl-5 leading-relaxed">
+              <li>Scan <strong>public records</strong>: FSBO listings, court filings (divorce, probate), SOS business filings, building permits</li>
+              <li>Score homeowner intent based on observable behavior — never credit data</li>
+              <li>Require <strong>manual outreach</strong> from you (FCRA-safe approval gate before any lead leaves the dashboard)</li>
+              <li>Enforce TCPA quiet hours (8am–9pm local) on every outbound message</li>
+              <li>Lock ZIP codes per broker — no overlap, no auctioned leads</li>
+            </ul>
+          </div>
+          <div className="bg-[#0a1628] border border-[#f59e0b44] rounded-xl p-6">
+            <p className="text-[#fbbf24] text-xs font-extrabold tracking-widest uppercase mb-3">✗ What we WON'T do</p>
+            <ul className="text-sm text-[#cbd5e1] space-y-2 list-disc pl-5 leading-relaxed">
+              <li><strong>Buy or sell trigger leads</strong> — H.R. 2808 banned them, and we agreed before the law passed</li>
+              <li>Use credit bureau data of any kind (Experian, Equifax, TransUnion) — zero exposure</li>
+              <li>Auto-text or auto-call homeowners (every send requires your manual click)</li>
+              <li>Sell the same lead to multiple brokers in your ZIP</li>
+              <li>Promise "exclusive pre-approved buyers" — that phrase is marketing fiction</li>
+            </ul>
+          </div>
+        </div>
+        <p className="text-center text-[#64748b] text-xs mt-6 max-w-3xl mx-auto leading-relaxed">
+          Anyone selling you "trigger leads" in 2026 is either breaking federal law or about to. We built this product the way the regulators are telling the industry to operate — three years before they have to.
+        </p>
+      </section>
+
       <section id="plans" className="max-w-6xl mx-auto px-4 py-16">
         <h2 className="text-2xl sm:text-3xl font-bold text-center text-white mb-2">Pick your plan</h2>
         <p className="text-center text-[#94a3b8] mb-10">7-day free trial. ZIP-exclusive after checkout — first come, first served.</p>

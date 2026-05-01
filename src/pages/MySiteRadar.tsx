@@ -43,6 +43,27 @@ export default function MySiteRadar() {
     // resets after 14 days
     return Date.now() - ts < 14 * 24 * 60 * 60 * 1000;
   });
+  const [icpKeywords, setIcpKeywords] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem("siteradar_icp_keywords_v1") || "";
+  });
+  const [icpDraft, setIcpDraft] = useState("");
+  const [icpEditing, setIcpEditing] = useState(false);
+  const saveIcp = (v: string) => {
+    setIcpKeywords(v);
+    localStorage.setItem("siteradar_icp_keywords_v1", v);
+    setIcpEditing(false);
+  };
+  const icpTokens = useMemo(
+    () => icpKeywords.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean),
+    [icpKeywords]
+  );
+  const isIcpMatch = (e: { company_name?: string | null; city?: string | null; page_visited?: string | null }) => {
+    if (icpTokens.length === 0) return false;
+    const haystack = `${e.company_name || ""} ${e.city || ""} ${e.page_visited || ""}`.toLowerCase();
+    return icpTokens.some((t) => haystack.includes(t));
+  };
+  const icpMatchCount = useMemo(() => events.filter(isIcpMatch).length, [events, icpTokens]);
 
   useEffect(() => {
     if (!token) { setError("Missing access token. Use the link from your welcome email."); setLoading(false); return; }
@@ -244,6 +265,49 @@ export default function MySiteRadar() {
                 )}
               </div>
 
+              {/* ICP Filter (Pro) */}
+              <div style={cardStyle}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={labelStyle}>🎯 ICP filter <span style={{ color: "#fbbf24", fontSize: 9, marginLeft: 6, padding: "2px 6px", background: "#fbbf2422", borderRadius: 4, letterSpacing: 1 }}>PRO</span></p>
+                    <p style={{ color: "#64748b", fontSize: 11, margin: "4px 0 0" }}>
+                      Match visitors against your ideal customer profile. Comma-separated keywords (industry, city, page).
+                    </p>
+                  </div>
+                  {icpKeywords && !icpEditing && (
+                    <span style={{ background: "#10b98122", color: "#34d399", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 6 }}>
+                      {icpMatchCount} matches
+                    </span>
+                  )}
+                </div>
+                {icpEditing ? (
+                  <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                    <input
+                      autoFocus
+                      value={icpDraft}
+                      onChange={(e) => setIcpDraft(e.target.value)}
+                      placeholder="hvac, manufacturing, troy, /pricing"
+                      style={{ flex: 1, minWidth: 220, background: "#030711", border: "1px solid #1e3a5f", color: "#e2e8f0", padding: "8px 12px", borderRadius: 6, fontSize: 13 }}
+                    />
+                    <button onClick={() => saveIcp(icpDraft)} style={{ background: "#00d4ff", color: "#0a1628", border: "none", borderRadius: 6, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Save</button>
+                    <button onClick={() => setIcpEditing(false)} style={{ background: "transparent", border: "1px solid #1e3a5f", color: "#94a3b8", borderRadius: 6, padding: "8px 12px", fontSize: 12, cursor: "pointer" }}>Cancel</button>
+                  </div>
+                ) : (
+                  <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    {icpTokens.length === 0 ? (
+                      <span style={{ color: "#64748b", fontSize: 12, fontStyle: "italic" }}>No ICP set — visitors won't be flagged.</span>
+                    ) : (
+                      icpTokens.map((t) => (
+                        <span key={t} style={{ background: "#0099cc22", color: "#00d4ff", fontSize: 11, padding: "3px 9px", borderRadius: 999, fontWeight: 600 }}>{t}</span>
+                      ))
+                    )}
+                    <button onClick={() => { setIcpDraft(icpKeywords); setIcpEditing(true); }} style={{ background: "transparent", border: "1px solid #1e3a5f", color: "#00d4ff", borderRadius: 6, padding: "5px 11px", fontSize: 11, cursor: "pointer", marginLeft: "auto" }}>
+                      {icpKeywords ? "Edit" : "Set ICP"}
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* Live feed */}
               <div style={cardStyle}>
                 <p style={labelStyle}>Live visitor feed</p>
@@ -251,24 +315,28 @@ export default function MySiteRadar() {
                   <p style={{ color: "#64748b", fontSize: 13, margin: "10px 0 0" }}>Waiting for visitors…</p>
                 ) : (
                   <ul style={{ margin: "10px 0 0", padding: 0, listStyle: "none", maxHeight: 360, overflowY: "auto" }}>
-                    {events.map((e) => (
-                      <li key={e.id} style={{ padding: "10px 0", borderBottom: "1px solid #1e3a5f", display: "flex", alignItems: "center", gap: 10 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: e.company_name ? "#34d399" : "#475569", flexShrink: 0 }} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ color: "#e2e8f0", fontSize: 13, margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {e.page_visited || "—"}
-                          </p>
-                          <p style={{ color: "#64748b", fontSize: 11, margin: "2px 0 0" }}>
-                            {e.company_name || "Unknown visitor"} · {new Date(e.created_at).toLocaleTimeString()}
-                          </p>
-                        </div>
-                        {!e.company_name && (
-                          <button onClick={() => enrich(e.id)} style={{ background: "transparent", border: "1px solid #1e3a5f", color: "#00d4ff", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                            <Sparkles className="h-3 w-3" /> Enrich
-                          </button>
-                        )}
-                      </li>
-                    ))}
+                    {events.map((e) => {
+                      const match = isIcpMatch(e);
+                      return (
+                        <li key={e.id} style={{ padding: "10px 0", borderBottom: "1px solid #1e3a5f", display: "flex", alignItems: "center", gap: 10, background: match ? "#10b9810d" : "transparent", borderLeft: match ? "3px solid #34d399" : "3px solid transparent", paddingLeft: match ? 8 : 0 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: "50%", background: e.company_name ? "#34d399" : "#475569", flexShrink: 0 }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ color: "#e2e8f0", fontSize: 13, margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {e.page_visited || "—"}
+                              {match && <span style={{ marginLeft: 8, fontSize: 9, padding: "2px 6px", background: "#10b98133", color: "#34d399", borderRadius: 4, fontWeight: 700, letterSpacing: 1 }}>ICP</span>}
+                            </p>
+                            <p style={{ color: "#64748b", fontSize: 11, margin: "2px 0 0" }}>
+                              {e.company_name || "Unknown visitor"} · {new Date(e.created_at).toLocaleTimeString()}
+                            </p>
+                          </div>
+                          {!e.company_name && (
+                            <button onClick={() => enrich(e.id)} style={{ background: "transparent", border: "1px solid #1e3a5f", color: "#00d4ff", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                              <Sparkles className="h-3 w-3" /> Enrich
+                            </button>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>
