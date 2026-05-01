@@ -242,13 +242,27 @@ export default function AdminAgencyOutreach() {
   return (
     <div className="space-y-6">
       <div className="bg-[#0f1f35] border border-white/10 rounded-xl p-5">
-        <h3 className="text-white font-bold text-lg mb-2">🎯 Trojan Horse Outreach v2 (Enrich → Opus → Gmail)</h3>
-        <p className="text-slate-400 text-sm mb-3">
-          1) Cherry-pick a proof candidate · 2) Enrich the agency to find the decision-maker's email · 3) Draft with Opus · 4) One-click send from <code className="text-[#00d4ff]">matt@detroitwebagent.com</code> via Gmail. <strong className="text-amber-300">Manual confirm before every send.</strong>
-        </p>
-        <p className="text-slate-500 text-xs">
-          Last 7d: {loadingCands ? "loading..." : `${candidates.length} candidates available for matching`}
-        </p>
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-white font-bold text-lg mb-2">🎯 Trojan Horse Outreach v2 (Enrich → Opus → Gmail)</h3>
+            <p className="text-slate-400 text-sm mb-3">
+              1) Cherry-pick a proof candidate · 2) Enrich the agency to find the decision-maker's email · 3) Draft with Opus · 4) One-click send from <code className="text-[#00d4ff]">matt@detroitwebagent.com</code> via Gmail. <strong className="text-amber-300">Manual confirm before every send.</strong>
+            </p>
+            <p className="text-slate-500 text-xs">
+              {loadingCands
+                ? "loading proof pool..."
+                : `${candidates.length} candidates available · industrial window: ${windowUsed.industrial} · healthcare window: ${windowUsed.healthcare} · hiring-demand backup: ${hiringDemand.industrial.length} industrial companies`}
+            </p>
+          </div>
+          <button
+            onClick={refreshPool}
+            disabled={loadingCands}
+            className="px-3 py-1.5 rounded-lg bg-[#00d4ff]/10 border border-[#00d4ff]/30 text-[#00d4ff] hover:bg-[#00d4ff]/20 transition-colors text-[11px] font-semibold flex items-center gap-1.5 disabled:opacity-50"
+          >
+            {loadingCands ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+            Refresh Proof Pool
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-4">
