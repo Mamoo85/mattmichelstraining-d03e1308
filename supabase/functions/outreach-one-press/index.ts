@@ -190,71 +190,80 @@ async function runOrchestration(runId: string, input: RunInput) {
     await update({ scored_count: scoredCount || 0 });
 
 
-    // STAGE 4 — send via configured channels (inline campaign send)
+    // STAGE 4 — enqueue eligible prospects to outreach_send_queue, then trigger the worker.
+    // The queue gives us retries, backoff, suppression re-checks, and observability.
     await update({ stage: "sending" });
+    let queuedTotal = 0;
     let sentTotal = 0;
     let failedTotal = 0;
     const sendErrors: string[] = [];
 
-    if (channels.includes("email") && RESEND_API_KEY) {
-      // Query eligible prospects across all trade×city combos
+    if (channels.includes("email")) {
       const { data: targets } = await supabase
         .from("contractor_outreach_prospects")
-        .select("*")
+        .select("id, business_name, trade, city, state, email, email_send_count")
         .in("trade", trades)
-        .in("city", cities)
-        .gte("quality_score", min_quality_score)
+        .in("city", allCities)
+        .gte("quality_score", effectiveQuality)
         .not("email", "is", null)
         .is("unsubscribed_at", null)
         .order("last_emailed_at", { ascending: true, nullsFirst: true })
         .limit(max_prospects);
 
+      const queueRows: any[] = [];
       for (const p of (targets || [])) {
-        try {
-          const trade = p.trade || trades[0] || "Contractor";
-          const city = p.city || cities[0] || "Detroit";
-          const unsubUrl = `${SUPABASE_URL}/functions/v1/contractor-outreach-unsubscribe?id=${p.id}`;
-          const html = dwaEmailWrap(buildCampaignBody({ businessName: p.business_name, trade, city, state: p.state || state }), unsubUrl);
-          const subject = `${city} homeowner leads for ${trade.toLowerCase()} contractors — available now`;
+        const trade = p.trade || trades[0] || "Contractor";
+        const city = p.city || cities[0] || "Detroit";
+        const unsubUrl = `${SUPABASE_URL}/functions/v1/contractor-outreach-unsubscribe?id=${p.id}`;
+        const html = dwaEmailWrap(
+          buildCampaignBody({ businessName: p.business_name, trade, city, state: p.state || state }),
+          unsubUrl,
+        );
+        const subject = `${city} homeowner leads for ${trade.toLowerCase()} contractors — available now`;
+        queueRows.push({
+          channel: "email",
+          prospect_id: p.id,
+          priority: 6,
+          payload: {
+            to: p.email,
+            subject,
+            html,
+            from: "Matt Michels <matt@detroitwebagent.com>",
+            headers: {
+              "List-Unsubscribe": `<${unsubUrl}>, <mailto:matt@detroitwebagent.com?subject=Unsubscribe>`,
+              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            },
+          },
+        });
+      }
 
-          const res = await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              from: "Matt Michels <matt@detroitwebagent.com>",
-              to: [p.email],
-              subject,
-              html,
-              headers: {
-                "List-Unsubscribe": `<${unsubUrl}>, <mailto:matt@detroitwebagent.com?subject=Unsubscribe>`,
-                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-              },
-            }),
-          });
+      if (queueRows.length > 0) {
+        const { data: inserted, error: qErr } = await supabase
+          .from("outreach_send_queue")
+          .upsert(queueRows, { onConflict: "prospect_id,lead_id,channel", ignoreDuplicates: true })
+          .select("id");
+        if (qErr) {
+          sendErrors.push(`enqueue: ${qErr.message}`);
+          failedTotal += queueRows.length;
+        } else {
+          queuedTotal = inserted?.length || 0;
+        }
 
-          if (res.ok) {
-            sentTotal++;
-            await supabase.from("contractor_outreach_prospects")
-              .update({ last_emailed_at: new Date().toISOString(), email_send_count: (p.email_send_count || 0) + 1 })
-              .eq("id", p.id);
-            await supabase.from("contractor_outreach_audit_log").insert({
-              prospect_id: p.id, channel: "email", event: "sent",
-              reason: subject,
-              metadata: { source: "one-press", run_id: runId },
-            }).catch(() => {});
+        // Kick the worker once so the user sees activity quickly
+        if (queuedTotal > 0) {
+          const w = await invokeFn("outreach-queue-worker", { trigger: "one-press" });
+          if (w.ok) {
+            sentTotal = Number(w.data?.stats?.sent || 0);
+            failedTotal += Number(w.data?.stats?.failed || 0);
           } else {
-            failedTotal++;
-            const t = await res.text();
-            sendErrors.push(`${p.email}: ${t.slice(0, 120)}`);
+            sendErrors.push(`worker: ${w.error}`);
           }
-        } catch (e) {
-          failedTotal++;
-          sendErrors.push(`${p.email}: ${e instanceof Error ? e.message : String(e)}`);
         }
       }
-    } else if (channels.includes("email") && !RESEND_API_KEY) {
-      sendErrors.push("RESEND_API_KEY not configured");
-      failedTotal++;
+
+      if ((targets || []).length === 0) {
+        sendErrors.push(`No eligible prospects (quality ≥ ${effectiveQuality}, with email, in ${allCities.slice(0, 3).join(", ")}…). Try Auto-Blast on a real lead, or scrape more cities.`);
+      }
     }
 
     if (channels.includes("sms")) {
