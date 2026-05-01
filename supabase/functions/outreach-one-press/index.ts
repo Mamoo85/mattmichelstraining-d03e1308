@@ -279,12 +279,20 @@ async function runOrchestration(runId: string, input: RunInput) {
       }
     }
 
+    const finalStatus = sendErrors.length > 0 && sentTotal === 0 && queuedTotal === 0 ? "failed" : "completed";
     await update({
       stage: "completed",
-      status: "completed",
+      status: finalStatus,
       sent_count: sentTotal,
       failed_count: failedTotal,
-      stage_progress: { send_errors: sendErrors },
+      error_message: finalStatus === "failed" ? sendErrors.slice(0, 3).join(" · ") : null,
+      stage_progress: {
+        send_errors: sendErrors.slice(-10),
+        queued: queuedTotal,
+        effective_quality: effectiveQuality,
+        cities_used: allCities.slice(0, 10),
+        scrape_errors: scrapeErrors.slice(-5),
+      },
       completed_at: new Date().toISOString(),
     });
   } catch (err) {
