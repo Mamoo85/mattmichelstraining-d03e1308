@@ -363,7 +363,36 @@ export default function AdminAgencyOutreach() {
                   </div>
                   <div className="space-y-1.5 max-h-56 overflow-y-auto">
                     {matchingCandidatesFor(agency.vertical as any).length === 0 && (
-                      <p className="text-slate-500 text-xs text-center py-4">No matching candidates in last 7 days.</p>
+                      <div className="space-y-2 py-2">
+                        <p className="text-slate-400 text-xs">
+                          No matching person-level candidates yet (window tried: {windowUsed[agency.vertical] || "none"}).
+                        </p>
+                        {(hiringDemand[agency.vertical] || []).length > 0 ? (
+                          <>
+                            <p className="text-amber-300 text-[11px] font-bold uppercase tracking-wider">
+                              Hiring Demand Backup ({hiringDemand[agency.vertical].length} companies actively hiring)
+                            </p>
+                            <div className="space-y-1">
+                              {hiringDemand[agency.vertical].slice(0, 6).map((h: any) => (
+                                <div key={h.id} className="bg-[#0f1f35] border border-amber-500/20 rounded px-3 py-2 text-[11px] flex items-center justify-between">
+                                  <div className="min-w-0">
+                                    <div className="text-white font-semibold truncate">{h.company_name}</div>
+                                    <div className="text-slate-500 truncate">{h.role} · {h.city || "Metro Detroit"} · {h.source_label || "—"}</div>
+                                  </div>
+                                  <span className="text-amber-300 font-bold ml-2">★ {h.score}</span>
+                                </div>
+                              ))}
+                            </div>
+                            <p className="text-slate-500 text-[10px] italic">
+                              Use these as "demand proof" instead of named candidates — Opus will frame them as "{hiringDemand[agency.vertical].length} {agency.vertical} shops actively hiring this week."
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-slate-500 text-[11px] italic">
+                            No hiring-demand backup either. Run the TechAlert hunter (Admin → Outreach → Command Center) or wait for tomorrow's 6am ET scan.
+                          </p>
+                        )}
+                      </div>
                     )}
                     {matchingCandidatesFor(agency.vertical as any).map(c => {
                       const isPicked = pickedFor[agency.name] === c.id;
