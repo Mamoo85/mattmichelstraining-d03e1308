@@ -43,18 +43,18 @@ Deno.serve(async (req) => {
       }
     }
 
-    const result = await sendSMS({ to, body: message });
+    const result: any = await sendSMS({ to, body: message });
 
     await logPitchAudit(sb, {
       template_name: "djconley_followup_sms",
       recipient_email: to,
-      status: result?.sid ? "sent" : "failed",
+      status: result?.success ? "sent" : "failed",
       error_message: result?.error || undefined,
       triggered_by: String(body.triggered_by || "manual"),
-      metadata: { sid: result?.sid },
+      metadata: { sid: result?.sid, skipped: result?.skipped },
     });
 
-    return new Response(JSON.stringify({ sent: !!result?.sid, sid: result?.sid, error: result?.error }), {
+    return new Response(JSON.stringify({ sent: !!result?.success, sid: result?.sid, error: result?.error, skipped: result?.skipped }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
