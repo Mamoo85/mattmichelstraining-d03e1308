@@ -94,6 +94,7 @@ const TrialWelcome = lazyRetry(() => import("./pages/TrialWelcome"));
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
 const Unsubscribe = lazyRetry(() => import("./pages/Unsubscribe"));
 const Changelog = lazyRetry(() => import("./pages/Changelog"));
+const PredictiveSales = lazyRetry(() => import("./pages/PredictiveSales"));
 const Install = lazyRetry(() => import("./pages/Install"));
 const Nutrition = lazyRetry(() => import("./pages/Nutrition"));
 const TheEdge = lazyRetry(() => import("./pages/TheEdge"));
@@ -515,6 +516,7 @@ const App = () => (
                     <Route path="/computer-repair" element={<ComputerRepair />} />
                     <Route path="/unsubscribe" element={<Unsubscribe />} />
                     <Route path="/changelog" element={<Changelog />} />
+                    <Route path="/predictive-sales" element={<PredictiveSales />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/login" element={<Navigate to="/auth" replace />} />
                     <Route path="/signin" element={<Navigate to="/auth" replace />} />
