@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Copy, Wand2, Mail, Target, X, CheckCircle2, Send, Sparkles, AlertCircle } from "lucide-react";
+import SendDJConleyProposalCard from "@/components/admin/SendDJConleyProposalCard";
 
 const METRO_DETROIT_AGENCIES = [
   { name: "Qualified Staffing", contact: "Director of Recruiting", vertical: "industrial", note: "Troy, MI · CNC, machinist, light industrial placements since 1993", domain: "qualified-staffing.com", role_hint: "director" },
