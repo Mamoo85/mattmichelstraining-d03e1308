@@ -118,7 +118,61 @@ export default function OnePressLauncher({
     }
   };
 
-  const done = run?.status === "completed" || run?.status === "failed";
+  const refreshProofPool = async () => {
+    if (refreshing || refreshCooldown > 0) return;
+    setRefreshing(true);
+    try {
+      const tradeList = trades.length ? trades : ["hvac"];
+      const cityList = cities.length ? cities : ["Detroit"];
+      const [agency, techalert] = await Promise.allSettled([
+        supabase.functions.invoke("agency-prospect-pool", {
+          body: { trades: tradeList, cities: cityList, refresh: true },
+        }),
+        supabase.functions.invoke("techalert-prospect-hunter", { body: { trigger: "manual" } }),
+      ]);
+      const parts: string[] = [];
+      if (agency.status === "fulfilled" && !agency.value.error) {
+        const d = agency.value.data as any;
+        parts.push(`agency: ${d?.candidate_count ?? d?.count ?? 0}`);
+      } else {
+        parts.push(`agency: ${agency.status === "rejected" ? agency.reason?.message : agency.value.error?.message || "0"}`);
+      }
+      if (techalert.status === "fulfilled" && !techalert.value.error) {
+        const d = techalert.value.data as any;
+        const total = d?.signals
+          ? Object.values(d.signals as Record<string, number>).reduce((a, b) => a + (b || 0), 0)
+          : (d?.inserted ?? d?.count ?? 0);
+        parts.push(`techalert: ${total}`);
+      } else {
+        parts.push(`techalert: ${techalert.status === "rejected" ? techalert.reason?.message : techalert.value.error?.message || "0"}`);
+      }
+      toast.success(`Proof pool refreshed — ${parts.join(" · ")}`);
+      setRefreshCooldown(60);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Refresh failed");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const retryRun = async (resumeRunId: string) => {
+    try {
+      const { error } = await supabase.functions.invoke("outreach-one-press", {
+        body: {
+          trades, cities, channels,
+          max_prospects: maxProspects,
+          min_quality_score: minQualityScore,
+          resume_run_id: resumeRunId,
+        },
+      });
+      if (error) throw error;
+      toast.success("Retry launched — re-running failed stages");
+      setDiagOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Retry failed");
+    }
+  };
+
   const pct = run ? (STAGE_PCT[run.stage] ?? 0) : 0;
 
   return (
