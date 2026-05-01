@@ -101,11 +101,11 @@ Score candidates on:
 
 ---
 
-## Open Questions for Matt
+## Decisions Locked (2026-05-01)
 
-1. Which second vertical? (A roofing / B insurance restoration / C auto repair / other)
-2. Do you want NPS surveys auto-sent at 30 days, or only manually triggered?
-3. Referral tiers: $500 cash at 5 referrals — comfortable, or scale down to $250?
-4. Should QBR PDFs be auto-emailed quarterly, or queue them for your manual review first?
+1. **Second vertical:** **Commercial Roofing (Detroit metro)** — highest deal size, BSEED permits already scraped, Mortgage Radar reskin is fastest path to revenue.
+2. **NPS surveys:** **Auto-sent at 30 days**, then quarterly. Matt gets SMS only on detractor scores (≤6).
+3. **Referral tiers:** **$250 cash at 5 referrals** (scaled down from $500), free month at 3, lifetime 20% off at 10.
+4. **QBR PDFs:** **Queue for Matt's manual review first** — sent from `/dwa-admin/qbr-queue` with one-click approve & send. Auto-send only after 4 successful manual reviews per client.
 
-Approve a build order and I'll start.
+Build proceeding in the order above.
