@@ -367,13 +367,13 @@ Deno.serve(async (req) => {
     // @ts-ignore - EdgeRuntime is available in Supabase Edge runtime
     if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
       // @ts-ignore
-      EdgeRuntime.waitUntil(runOrchestration(run.id, body));
+      EdgeRuntime.waitUntil(runOrchestration(runId, body));
     } else {
-      runOrchestration(run.id, body);
+      runOrchestration(runId, body);
     }
 
     return new Response(
-      JSON.stringify({ ok: true, run_id: run.id }),
+      JSON.stringify({ ok: true, run_id: runId, resumed: !!body.resume_run_id }),
       { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
