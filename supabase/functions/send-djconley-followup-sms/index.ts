@@ -10,7 +10,7 @@ import { isMarketingBlocked, logPitchAudit } from "../_shared/marketing-kill-swi
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const PAT_PHONE = "+13135551234"; // TODO: replace with Pat's real cell when confirmed
+const PAT_PHONE = "+13135904404"; // Pat Michels — DJ Conley
 const DEFAULT_MSG =
   "Hey Pat — Matt @ Detroit Web Agency. Did the pitch email land? " +
   "Two quick yes/no's so I can lock your build slot:\n" +
