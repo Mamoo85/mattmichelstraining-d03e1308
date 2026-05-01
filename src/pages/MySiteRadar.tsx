@@ -265,6 +265,49 @@ export default function MySiteRadar() {
                 )}
               </div>
 
+              {/* ICP Filter (Pro) */}
+              <div style={cardStyle}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={labelStyle}>🎯 ICP filter <span style={{ color: "#fbbf24", fontSize: 9, marginLeft: 6, padding: "2px 6px", background: "#fbbf2422", borderRadius: 4, letterSpacing: 1 }}>PRO</span></p>
+                    <p style={{ color: "#64748b", fontSize: 11, margin: "4px 0 0" }}>
+                      Match visitors against your ideal customer profile. Comma-separated keywords (industry, city, page).
+                    </p>
+                  </div>
+                  {icpKeywords && !icpEditing && (
+                    <span style={{ background: "#10b98122", color: "#34d399", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 6 }}>
+                      {icpMatchCount} matches
+                    </span>
+                  )}
+                </div>
+                {icpEditing ? (
+                  <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                    <input
+                      autoFocus
+                      value={icpDraft}
+                      onChange={(e) => setIcpDraft(e.target.value)}
+                      placeholder="hvac, manufacturing, troy, /pricing"
+                      style={{ flex: 1, minWidth: 220, background: "#030711", border: "1px solid #1e3a5f", color: "#e2e8f0", padding: "8px 12px", borderRadius: 6, fontSize: 13 }}
+                    />
+                    <button onClick={() => saveIcp(icpDraft)} style={{ background: "#00d4ff", color: "#0a1628", border: "none", borderRadius: 6, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Save</button>
+                    <button onClick={() => setIcpEditing(false)} style={{ background: "transparent", border: "1px solid #1e3a5f", color: "#94a3b8", borderRadius: 6, padding: "8px 12px", fontSize: 12, cursor: "pointer" }}>Cancel</button>
+                  </div>
+                ) : (
+                  <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    {icpTokens.length === 0 ? (
+                      <span style={{ color: "#64748b", fontSize: 12, fontStyle: "italic" }}>No ICP set — visitors won't be flagged.</span>
+                    ) : (
+                      icpTokens.map((t) => (
+                        <span key={t} style={{ background: "#0099cc22", color: "#00d4ff", fontSize: 11, padding: "3px 9px", borderRadius: 999, fontWeight: 600 }}>{t}</span>
+                      ))
+                    )}
+                    <button onClick={() => { setIcpDraft(icpKeywords); setIcpEditing(true); }} style={{ background: "transparent", border: "1px solid #1e3a5f", color: "#00d4ff", borderRadius: 6, padding: "5px 11px", fontSize: 11, cursor: "pointer", marginLeft: "auto" }}>
+                      {icpKeywords ? "Edit" : "Set ICP"}
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* Live feed */}
               <div style={cardStyle}>
                 <p style={labelStyle}>Live visitor feed</p>
