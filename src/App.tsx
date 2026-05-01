@@ -83,6 +83,7 @@ const AdminMarketTargeting = lazyRetry(() => import("./pages/admin/AdminMarketTa
 const AdminProspectorTargetsAudit = lazyRetry(() => import("./pages/admin/AdminProspectorTargetsAudit"));
 const AdminCheckoutEvents = lazyRetry(() => import("./pages/admin/AdminCheckoutEvents"));
 const DwaAdminV4 = lazyRetry(() => import("./pages/DwaAdminV4"));
+const DwaAdminStripeReconcile = lazyRetry(() => import("./pages/DwaAdminStripeReconcile"));
 const DwaAdminQbrQueue = lazyRetry(() => import("./pages/DwaAdminQbrQueue"));
 const MyAddons = lazyRetry(() => import("./pages/MyAddons"));
 const CommercialRoofingDetroit = lazyRetry(() => import("./pages/CommercialRoofingDetroit"));
@@ -883,6 +884,7 @@ const App = () => (
                       <Route path="/dwa-admin/checkout-events" element={<AgencyAdminRoute><AdminCheckoutEvents /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/v4" element={<AgencyAdminRoute><DwaAdminV4 /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/qbr-queue" element={<AgencyAdminRoute><DwaAdminQbrQueue /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/stripe-reconcile" element={<AgencyAdminRoute><DwaAdminStripeReconcile /></AgencyAdminRoute>} />
                       <Route path="/my-addons" element={<ProtectedRoute><MyAddons /></ProtectedRoute>} />
                       <Route path="/commercial-roofing-detroit" element={<CommercialRoofingDetroit />} />
                      <Route path="/r/:token" element={<ProspectRedirect />} />
