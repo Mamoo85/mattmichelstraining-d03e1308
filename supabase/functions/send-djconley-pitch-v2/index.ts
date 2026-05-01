@@ -324,16 +324,37 @@ P.S. eWay stays. FieldServio stays. We're adding a layer on top through your own
 Detroit Web Agency · matt@detroitwebagent.com · (313) 992-1219`;
 }
 
+import { isMarketingBlocked, logPitchAudit } from "../_shared/marketing-kill-switch.ts";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+
+  const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
     const body = await req.json().catch(() => ({}));
     const recipientEmail: string = String(body.recipient_email || "").trim().toLowerCase();
     const firstName: string = String(body.first_name || "Pat").trim();
+    const triggeredBy: string = String(body.triggered_by || "manual").trim();
+    const force: boolean = body.force === true; // admin override from resend button
 
     if (!recipientEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
       return new Response(JSON.stringify({ error: "Valid recipient_email required" }), { status: 400, headers: CORS });
+    }
+
+    // Kill-switch check (skip on explicit admin force)
+    if (!force) {
+      const { blocked, reason } = await isMarketingBlocked(sb);
+      if (blocked) {
+        await logPitchAudit(sb, {
+          template_name: "djconley_pitch_v2",
+          recipient_email: recipientEmail,
+          status: "blocked",
+          error_message: `Marketing kill switch ON${reason ? `: ${reason}` : ""}`,
+          triggered_by: triggeredBy,
+        });
+        return new Response(JSON.stringify({ blocked: true, reason: reason || "kill_switch_on" }), { status: 423, headers: CORS });
+      }
     }
 
     const html = dwaShell(buildBody(firstName));
