@@ -13411,6 +13411,7 @@ export type Database = {
           prospect_id: string | null
           scheduled_for: string
           sent_at: string | null
+          source_run_id: string | null
           status: string
           updated_at: string
         }
@@ -13429,6 +13430,7 @@ export type Database = {
           prospect_id?: string | null
           scheduled_for?: string
           sent_at?: string | null
+          source_run_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -13447,6 +13449,7 @@ export type Database = {
           prospect_id?: string | null
           scheduled_for?: string
           sent_at?: string | null
+          source_run_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -22070,6 +22073,7 @@ export type Database = {
           prospect_id: string | null
           scheduled_for: string
           sent_at: string | null
+          source_run_id: string | null
           status: string
           updated_at: string
         }[]

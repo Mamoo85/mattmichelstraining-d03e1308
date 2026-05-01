@@ -26,6 +26,7 @@ interface RunInput {
   max_prospects?: number;
   min_quality_score?: number;
   state?: string;
+  resume_run_id?: string;
 }
 
 function dwaEmailWrap(bodyHtml: string, unsubUrl: string): string {
@@ -223,6 +224,7 @@ async function runOrchestration(runId: string, input: RunInput) {
         queueRows.push({
           channel: "email",
           prospect_id: p.id,
+          source_run_id: runId,
           priority: 6,
           payload: {
             to: p.email,
@@ -320,35 +322,58 @@ Deno.serve(async (req) => {
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-    const { data: run, error: insertErr } = await supabase
-      .from("outreach_one_press_runs")
-      .insert({
-        trades: body.trades,
-        cities: body.cities,
-        channels: body.channels || ["email"],
-        max_prospects: body.max_prospects || 50,
-        min_quality_score: body.min_quality_score || 50,
-        status: "queued",
-        stage: "queued",
-      })
-      .select("id")
-      .single();
 
-    if (insertErr || !run) {
-      throw new Error(`Failed to create run: ${insertErr?.message}`);
+    let runId: string;
+    if (body.resume_run_id) {
+      // Resume mode — reset the existing row and re-run the orchestrator
+      const { data: existing, error: loadErr } = await supabase
+        .from("outreach_one_press_runs")
+        .select("id, status")
+        .eq("id", body.resume_run_id)
+        .maybeSingle();
+      if (loadErr || !existing) {
+        throw new Error(`Resume failed: run ${body.resume_run_id} not found`);
+      }
+      const { error: resetErr } = await supabase
+        .from("outreach_one_press_runs")
+        .update({
+          status: "queued",
+          stage: "queued",
+          error_message: null,
+          completed_at: null,
+        })
+        .eq("id", body.resume_run_id);
+      if (resetErr) throw new Error(`Resume reset failed: ${resetErr.message}`);
+      runId = body.resume_run_id;
+    } else {
+      const { data: run, error: insertErr } = await supabase
+        .from("outreach_one_press_runs")
+        .insert({
+          trades: body.trades,
+          cities: body.cities,
+          channels: body.channels || ["email"],
+          max_prospects: body.max_prospects || 50,
+          min_quality_score: body.min_quality_score || 50,
+          status: "queued",
+          stage: "queued",
+        })
+        .select("id")
+        .single();
+      if (insertErr || !run) throw new Error(`Failed to create run: ${insertErr?.message}`);
+      runId = run.id;
     }
 
     // Fire-and-forget orchestration; client watches realtime
     // @ts-ignore - EdgeRuntime is available in Supabase Edge runtime
     if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
       // @ts-ignore
-      EdgeRuntime.waitUntil(runOrchestration(run.id, body));
+      EdgeRuntime.waitUntil(runOrchestration(runId, body));
     } else {
-      runOrchestration(run.id, body);
+      runOrchestration(runId, body);
     }
 
     return new Response(
-      JSON.stringify({ ok: true, run_id: run.id }),
+      JSON.stringify({ ok: true, run_id: runId, resumed: !!body.resume_run_id }),
       { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {

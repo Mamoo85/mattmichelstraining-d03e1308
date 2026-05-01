@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Zap, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Zap, Loader2, CheckCircle2, XCircle, RefreshCw, Search } from "lucide-react";
 import { toast } from "sonner";
+import OnePressDiagnosticsDrawer from "./OnePressDiagnosticsDrawer";
 
 /**
  * OneePressLauncher
@@ -61,7 +62,17 @@ export default function OnePressLauncher({
 }: Props) {
   const [run, setRun] = useState<RunRow | null>(null);
   const [launching, setLaunching] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshCooldown, setRefreshCooldown] = useState(0);
+  const [diagOpen, setDiagOpen] = useState(false);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
+  // Refresh button cooldown ticker
+  useEffect(() => {
+    if (refreshCooldown <= 0) return;
+    const t = setTimeout(() => setRefreshCooldown((c) => Math.max(0, c - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [refreshCooldown]);
 
   // Subscribe to realtime when we have an active run
   useEffect(() => {
@@ -107,6 +118,61 @@ export default function OnePressLauncher({
     }
   };
 
+  const refreshProofPool = async () => {
+    if (refreshing || refreshCooldown > 0) return;
+    setRefreshing(true);
+    try {
+      const tradeList = trades.length ? trades : ["hvac"];
+      const cityList = cities.length ? cities : ["Detroit"];
+      const [agency, techalert] = await Promise.allSettled([
+        supabase.functions.invoke("agency-prospect-pool", {
+          body: { trades: tradeList, cities: cityList, refresh: true },
+        }),
+        supabase.functions.invoke("techalert-prospect-hunter", { body: { trigger: "manual" } }),
+      ]);
+      const parts: string[] = [];
+      if (agency.status === "fulfilled" && !agency.value.error) {
+        const d = agency.value.data as any;
+        parts.push(`agency: ${d?.candidate_count ?? d?.count ?? 0}`);
+      } else {
+        parts.push(`agency: ${agency.status === "rejected" ? agency.reason?.message : agency.value.error?.message || "0"}`);
+      }
+      if (techalert.status === "fulfilled" && !techalert.value.error) {
+        const d = techalert.value.data as any;
+        const total = d?.signals
+          ? Object.values(d.signals as Record<string, number>).reduce((a, b) => a + (b || 0), 0)
+          : (d?.inserted ?? d?.count ?? 0);
+        parts.push(`techalert: ${total}`);
+      } else {
+        parts.push(`techalert: ${techalert.status === "rejected" ? techalert.reason?.message : techalert.value.error?.message || "0"}`);
+      }
+      toast.success(`Proof pool refreshed — ${parts.join(" · ")}`);
+      setRefreshCooldown(60);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Refresh failed");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const retryRun = async (resumeRunId: string) => {
+    try {
+      const { error } = await supabase.functions.invoke("outreach-one-press", {
+        body: {
+          trades, cities, channels,
+          max_prospects: maxProspects,
+          min_quality_score: minQualityScore,
+          resume_run_id: resumeRunId,
+        },
+      });
+      if (error) throw error;
+      toast.success("Retry launched — re-running failed stages");
+      setDiagOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Retry failed");
+    }
+  };
+
   const done = run?.status === "completed" || run?.status === "failed";
   const pct = run ? (STAGE_PCT[run.stage] ?? 0) : 0;
 
@@ -129,9 +195,25 @@ export default function OnePressLauncher({
         </div>
 
         {!run && (
-          <Button onClick={launch} disabled={disabled || launching || !trades.length || !cities.length} className="w-full">
-            {launching ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Launching…</> : <><Zap className="h-4 w-4 mr-2" /> Launch One-Press Run</>}
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button onClick={launch} disabled={disabled || launching || !trades.length || !cities.length} className="w-full">
+              {launching ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Launching…</> : <><Zap className="h-4 w-4 mr-2" /> Launch One-Press Run</>}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={refreshProofPool}
+              disabled={refreshing || refreshCooldown > 0}
+              className="w-full"
+            >
+              {refreshing
+                ? <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Refreshing proof pool…</>
+                : refreshCooldown > 0
+                ? <><RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh proof pool ({refreshCooldown}s)</>
+                : <><RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh proof pool</>}
+            </Button>
+          </div>
         )}
 
         {run && (
@@ -202,13 +284,30 @@ export default function OnePressLauncher({
             })()}
 
             {done && (
-              <Button variant="outline" size="sm" className="w-full" onClick={() => setRun(null)}>
-                Start another run
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => setRun(null)}>
+                  Start another run
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => setDiagOpen(true)}>
+                  <Search className="h-3.5 w-3.5 mr-1.5" /> Open diagnostics
+                </Button>
+              </div>
+            )}
+            {!done && (
+              <Button variant="ghost" size="sm" className="w-full" onClick={() => setDiagOpen(true)}>
+                <Search className="h-3.5 w-3.5 mr-1.5" /> Open diagnostics
               </Button>
             )}
           </div>
         )}
       </CardContent>
+      <OnePressDiagnosticsDrawer
+        runId={run?.id ?? null}
+        stageProgress={run?.stage_progress ?? null}
+        open={diagOpen}
+        onOpenChange={setDiagOpen}
+        onRetryRun={retryRun}
+      />
     </Card>
   );
 }
