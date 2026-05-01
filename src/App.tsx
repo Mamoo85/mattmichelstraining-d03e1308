@@ -319,6 +319,7 @@ const TalentRadarVsStaffing = lazyRetry(() => import("./pages/TalentRadarVsStaff
 const FieldDeskVsEway = lazyRetry(() => import("./pages/FieldDeskVsEway"));
 const MarketingLayerForEway = lazyRetry(() => import("./pages/MarketingLayerForEway"));
 const FieldDeskMigration = lazyRetry(() => import("./pages/FieldDeskMigration"));
+const HealthcareStaffingMI = lazyRetry(() => import("./pages/HealthcareStaffingMI"));
 const MortgageRadarVsTriggerLeads = lazyRetry(() => import("./pages/MortgageRadarVsTriggerLeads"));
 const FsboHeatmap = lazyRetry(() => import("./pages/FsboHeatmap"));
 const MortgageRadar = lazyRetry(() => import("./pages/MortgageRadar"));
@@ -808,6 +809,7 @@ const App = () => (
                     <Route path="/fielddesk-vs-eway" element={<FieldDeskVsEway />} />
                     <Route path="/marketing-layer-for-eway" element={<MarketingLayerForEway />} />
                     <Route path="/fielddesk-migration" element={<FieldDeskMigration />} />
+                    <Route path="/healthcare-staffing-michigan" element={<HealthcareStaffingMI />} />
                     <Route path="/mortgage-radar-vs-trigger-leads" element={<MortgageRadarVsTriggerLeads />} />
                     <Route path="/mortgage-radar" element={<MortgageRadar />} />
                     <Route path="/fsbo-heatmap" element={<FsboHeatmap />} />
