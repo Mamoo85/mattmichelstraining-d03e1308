@@ -138,7 +138,7 @@ ul { list-style: none; }
 }
 
 .btn-primary:hover {
-  background: #d4780f;
+  background: #a01e2d;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(232, 135, 26, 0.3);
 }
