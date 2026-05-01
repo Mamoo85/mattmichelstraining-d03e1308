@@ -359,15 +359,17 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Resend send failed", detail: resendBody }), { status: 502, headers: CORS });
     }
 
-    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    await sb.from("notifications" as any).insert({
-      type: "outreach_pitch_v2",
-      title: `DJ Conley pitch v2 sent → ${recipientEmail}`,
-      body: `Long-form visual pitch delivered. Resend id: ${resendBody?.id || "?"}`,
-      link: "/dwa-admin",
-      urgency: "fyi",
-      category: "outreach",
-    }).catch(() => {});
+    try {
+      const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      await sb.from("notifications" as any).insert({
+        type: "outreach_pitch_v2",
+        title: `DJ Conley pitch v2 sent → ${recipientEmail}`,
+        body: `Long-form visual pitch delivered. Resend id: ${resendBody?.id || "?"}`,
+        link: "/dwa-admin",
+        urgency: "fyi",
+        category: "outreach",
+      });
+    } catch (e) { console.error("audit log failed", e); }
 
     return new Response(JSON.stringify({ sent: true, resend_id: resendBody?.id, to: recipientEmail }), { headers: CORS });
   } catch (err) {
