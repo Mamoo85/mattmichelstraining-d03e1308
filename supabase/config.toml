@@ -2114,3 +2114,6 @@ verify_jwt = false
 
 [functions.sitemap-hire]
 verify_jwt = false
+
+[functions.dwa-contractor-referral]
+verify_jwt = false
