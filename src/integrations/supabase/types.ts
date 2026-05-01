@@ -2568,6 +2568,48 @@ export type Database = {
         }
         Relationships: []
       }
+      client_price_locks: {
+        Row: {
+          active: boolean
+          client_email: string
+          client_id: string | null
+          created_at: string
+          id: string
+          locked_monthly_price: number
+          locked_since: string
+          notes: string | null
+          product: string
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          client_email: string
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          locked_monthly_price: number
+          locked_since?: string
+          notes?: string | null
+          product: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          client_email?: string
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          locked_monthly_price?: number
+          locked_since?: string
+          notes?: string | null
+          product?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_ranking_snapshots: {
         Row: {
           checked_at: string | null
@@ -14535,6 +14577,39 @@ export type Database = {
           fulfillment_status?: string
           processed_at?: string
           product_type?: string | null
+        }
+        Relationships: []
+      }
+      product_changelog: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_public: boolean
+          product: string
+          ship_date: string
+          tags: string[]
+          title: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_public?: boolean
+          product: string
+          ship_date?: string
+          tags?: string[]
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_public?: boolean
+          product?: string
+          ship_date?: string
+          tags?: string[]
+          title?: string
         }
         Relationships: []
       }
