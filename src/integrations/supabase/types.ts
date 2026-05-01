@@ -7288,10 +7288,12 @@ export type Database = {
           business_name: string
           created_at: string | null
           dispatch_token: string
+          dual_run_until: string | null
           email: string | null
           google_review_url: string | null
           id: string
           industry: string | null
+          migration_status: Database["public"]["Enums"]["fielddesk_migration_status"]
           monthly_price: number | null
           owner_name: string | null
           phone: string | null
@@ -7306,10 +7308,12 @@ export type Database = {
           business_name: string
           created_at?: string | null
           dispatch_token?: string
+          dual_run_until?: string | null
           email?: string | null
           google_review_url?: string | null
           id?: string
           industry?: string | null
+          migration_status?: Database["public"]["Enums"]["fielddesk_migration_status"]
           monthly_price?: number | null
           owner_name?: string | null
           phone?: string | null
@@ -7324,10 +7328,12 @@ export type Database = {
           business_name?: string
           created_at?: string | null
           dispatch_token?: string
+          dual_run_until?: string | null
           email?: string | null
           google_review_url?: string | null
           id?: string
           industry?: string | null
+          migration_status?: Database["public"]["Enums"]["fielddesk_migration_status"]
           monthly_price?: number | null
           owner_name?: string | null
           phone?: string | null
@@ -7662,6 +7668,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      fielddesk_migration_requests: {
+        Row: {
+          contact_email: string
+          contacted_at: string | null
+          created_at: string
+          id: string
+          migration_status: Database["public"]["Enums"]["fielddesk_migration_status"]
+          mode: string
+          notes: string | null
+          org_name: string
+          tech_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          contact_email: string
+          contacted_at?: string | null
+          created_at?: string
+          id?: string
+          migration_status?: Database["public"]["Enums"]["fielddesk_migration_status"]
+          mode?: string
+          notes?: string | null
+          org_name: string
+          tech_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          contact_email?: string
+          contacted_at?: string | null
+          created_at?: string
+          id?: string
+          migration_status?: Database["public"]["Enums"]["fielddesk_migration_status"]
+          mode?: string
+          notes?: string | null
+          org_name?: string
+          tech_count?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       fitness_report_clients: {
         Row: {
@@ -22624,6 +22669,13 @@ export type Database = {
         | "coach"
         | "agency_admin"
         | "client"
+      fielddesk_migration_status:
+        | "none"
+        | "discovery"
+        | "mirror"
+        | "dual_run"
+        | "cutover"
+        | "complete"
       lift_video_status: "pending_review" | "approved" | "rejected" | "archived"
       wiki_category: "core_product" | "add_on" | "system" | "process"
     }
@@ -22762,6 +22814,14 @@ export const Constants = {
         "coach",
         "agency_admin",
         "client",
+      ],
+      fielddesk_migration_status: [
+        "none",
+        "discovery",
+        "mirror",
+        "dual_run",
+        "cutover",
+        "complete",
       ],
       lift_video_status: ["pending_review", "approved", "rejected", "archived"],
       wiki_category: ["core_product", "add_on", "system", "process"],
