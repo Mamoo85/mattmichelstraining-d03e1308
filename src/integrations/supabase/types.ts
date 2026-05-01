@@ -5809,6 +5809,69 @@ export type Database = {
         }
         Relationships: []
       }
+      dwa_contractor_referrals: {
+        Row: {
+          created_at: string
+          credit_amount_cents: number
+          credited_at: string | null
+          id: string
+          notes: string | null
+          paid_at: string | null
+          product_interest: string
+          referral_code: string
+          referred_business_name: string | null
+          referred_email: string
+          referred_phone: string | null
+          referrer_business_name: string | null
+          referrer_email: string
+          referrer_phone: string | null
+          signed_up_at: string | null
+          status: string
+          stripe_coupon_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          credit_amount_cents?: number
+          credited_at?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          product_interest?: string
+          referral_code: string
+          referred_business_name?: string | null
+          referred_email: string
+          referred_phone?: string | null
+          referrer_business_name?: string | null
+          referrer_email: string
+          referrer_phone?: string | null
+          signed_up_at?: string | null
+          status?: string
+          stripe_coupon_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          credit_amount_cents?: number
+          credited_at?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          product_interest?: string
+          referral_code?: string
+          referred_business_name?: string | null
+          referred_email?: string
+          referred_phone?: string | null
+          referrer_business_name?: string | null
+          referrer_email?: string
+          referrer_phone?: string | null
+          signed_up_at?: string | null
+          status?: string
+          stripe_coupon_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dwa_product_catalog: {
         Row: {
           active: boolean
