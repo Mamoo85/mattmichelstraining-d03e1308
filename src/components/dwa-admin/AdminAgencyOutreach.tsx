@@ -242,6 +242,7 @@ export default function AdminAgencyOutreach() {
 
   return (
     <div className="space-y-6">
+      <SendDJConleyProposalCard />
       <div className="bg-[#0f1f35] border border-white/10 rounded-xl p-5">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="min-w-0 flex-1">
