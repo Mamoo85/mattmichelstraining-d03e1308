@@ -40,9 +40,9 @@ Deno.serve(async (req) => {
         let owner_phone: string | null = null;
         let website: string | null = org?.website_url ?? null;
 
-        if (org?.id) {
+        if (org?.name) {
           const people = await apolloPeopleSearch({
-            organization_ids: [org.id],
+            organization_name: org.name,
             person_titles: ["owner", "president", "ceo", "founder", "general manager"],
             per_page: 1,
           });
