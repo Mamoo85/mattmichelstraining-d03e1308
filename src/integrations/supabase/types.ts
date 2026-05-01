@@ -5816,6 +5816,7 @@ export type Database = {
           credited_at: string | null
           id: string
           notes: string | null
+          nudged_at: string | null
           paid_at: string | null
           product_interest: string
           referral_code: string
@@ -5836,6 +5837,7 @@ export type Database = {
           credited_at?: string | null
           id?: string
           notes?: string | null
+          nudged_at?: string | null
           paid_at?: string | null
           product_interest?: string
           referral_code: string
@@ -5856,6 +5858,7 @@ export type Database = {
           credited_at?: string | null
           id?: string
           notes?: string | null
+          nudged_at?: string | null
           paid_at?: string | null
           product_interest?: string
           referral_code?: string
@@ -7353,6 +7356,7 @@ export type Database = {
           dispatch_token: string
           dual_run_until: string | null
           email: string | null
+          eway_followup_sent_at: string | null
           google_review_url: string | null
           id: string
           industry: string | null
@@ -7373,6 +7377,7 @@ export type Database = {
           dispatch_token?: string
           dual_run_until?: string | null
           email?: string | null
+          eway_followup_sent_at?: string | null
           google_review_url?: string | null
           id?: string
           industry?: string | null
@@ -7393,6 +7398,7 @@ export type Database = {
           dispatch_token?: string
           dual_run_until?: string | null
           email?: string | null
+          eway_followup_sent_at?: string | null
           google_review_url?: string | null
           id?: string
           industry?: string | null
