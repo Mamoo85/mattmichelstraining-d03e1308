@@ -43,6 +43,27 @@ export default function MySiteRadar() {
     // resets after 14 days
     return Date.now() - ts < 14 * 24 * 60 * 60 * 1000;
   });
+  const [icpKeywords, setIcpKeywords] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem("siteradar_icp_keywords_v1") || "";
+  });
+  const [icpDraft, setIcpDraft] = useState("");
+  const [icpEditing, setIcpEditing] = useState(false);
+  const saveIcp = (v: string) => {
+    setIcpKeywords(v);
+    localStorage.setItem("siteradar_icp_keywords_v1", v);
+    setIcpEditing(false);
+  };
+  const icpTokens = useMemo(
+    () => icpKeywords.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean),
+    [icpKeywords]
+  );
+  const isIcpMatch = (e: { company_name?: string | null; city?: string | null; page_visited?: string | null }) => {
+    if (icpTokens.length === 0) return false;
+    const haystack = `${e.company_name || ""} ${e.city || ""} ${e.page_visited || ""}`.toLowerCase();
+    return icpTokens.some((t) => haystack.includes(t));
+  };
+  const icpMatchCount = useMemo(() => events.filter(isIcpMatch).length, [events, icpTokens]);
 
   useEffect(() => {
     if (!token) { setError("Missing access token. Use the link from your welcome email."); setLoading(false); return; }
