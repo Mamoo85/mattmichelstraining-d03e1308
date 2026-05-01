@@ -34,6 +34,8 @@ interface ContactEnrichment {
 
 export default function AdminAgencyOutreach() {
   const [candidates, setCandidates] = useState<any[]>([]);
+  const [hiringDemand, setHiringDemand] = useState<Record<string, any[]>>({ industrial: [], healthcare: [] });
+  const [windowUsed, setWindowUsed] = useState<Record<string, string>>({ industrial: "—", healthcare: "—" });
   const [loadingCands, setLoadingCands] = useState(true);
   const [drafting, setDrafting] = useState<string | null>(null);
   const [enriching, setEnriching] = useState<string | null>(null);
@@ -47,35 +49,43 @@ export default function AdminAgencyOutreach() {
   const [previewMode, setPreviewMode] = useState<Record<string, "html" | "plain">>({});
 
   useEffect(() => {
-    loadCandidates();
+    loadProspectPool();
     loadEnrichments();
   }, []);
 
-  const loadCandidates = async () => {
+  const loadProspectPool = async () => {
     setLoadingCands(true);
-    const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
-    const { data } = await supabase
-      .from("hire_alert_candidates")
-      .select("id, name, full_name, trade, city, metro, score, current_title, qualifications_summary, created_at, current_employer, email, phone, linkedin_url, data_completeness")
-      .eq("is_company_name", false)
-      .eq("do_not_contact", false)
-      .neq("enrichment_status", "junk")
-      .gte("created_at", since)
-      .order("data_completeness", { ascending: false })
-      .order("score", { ascending: false })
-      .limit(200);
-    // Client-side: reject names that look like page nav text or are too short
-    const filtered = (data || []).filter((c: any) => {
-      const n = (c.full_name || c.name || "").trim();
-      if (n.length < 5) return false;
-      if (/[?:!@#$%/]/.test(n)) return false;
-      if (n.split(/\s+/).filter(Boolean).length < 2) return false;
-      if (/^\s*(go\s+back|uh\s+oh|search|loading|submit|sign\s+in|log\s+in|next|previous|view\s+all|learn\s+more|error|menu|home|click\s+here)\b/i.test(n)) return false;
-      const hasSignal = c.current_employer || c.current_title || c.city || c.phone || c.email || c.linkedin_url;
-      return !!hasSignal;
-    });
-    setCandidates(filtered);
-    setLoadingCands(false);
+    try {
+      const [indRes, hcRes] = await Promise.all([
+        supabase.functions.invoke("agency-prospect-pool", { body: { vertical: "industrial" } }),
+        supabase.functions.invoke("agency-prospect-pool", { body: { vertical: "healthcare" } }),
+      ]);
+      const ind = (indRes.data as any) || {};
+      const hc = (hcRes.data as any) || {};
+      // Merge candidate lists, dedupe by id
+      const merged = new Map<string, any>();
+      for (const c of (ind.candidates || [])) merged.set(c.id, c);
+      for (const c of (hc.candidates || [])) merged.set(c.id, c);
+      setCandidates(Array.from(merged.values()));
+      setHiringDemand({
+        industrial: ind.hiring_demand || [],
+        healthcare: hc.hiring_demand || [],
+      });
+      setWindowUsed({
+        industrial: ind.candidate_window || "none",
+        healthcare: hc.candidate_window || "none",
+      });
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to load prospect pool");
+    } finally {
+      setLoadingCands(false);
+    }
+  };
+
+  const refreshPool = async () => {
+    toast.info("Refreshing proof pool…");
+    await loadProspectPool();
+    toast.success("Proof pool refreshed");
   };
 
   const loadEnrichments = async () => {
@@ -92,15 +102,15 @@ export default function AdminAgencyOutreach() {
 
   const HC_TRADES = new Set(["nursing", "home_health"]);
   const IND_TRADES = new Set(["boiler", "hvac", "electrical", "plumbing"]);
-  const HC_RX = /\b(rn|lpn|cna|nurse|nursing|aide|home\s*health|caregiver|medical|clinical|therapist|hha)\b/;
-  const IND_RX = /\b(boiler|hvac|electric|plumb|stationary\s+engineer|machinist|welder|fitter|pipefitter|fabricat|cnc|millwright)\b/;
+  const HC_RX = /\b(rn|lpn|cna|nurse|nursing|aide|home\s*health|caregiver|medical|clinical|therapist|hha|healthcare|health|patient)\b/i;
+  const IND_RX = /\b(boiler|hvac|electric|plumb|stationary\s+engineer|machinist|welder|fitter|pipefitter|fabricat|cnc|millwright|trades|mechanic|technician|maintenance|operator|industrial|skilled)\b/i;
 
   const matchingCandidatesFor = (vertical: "industrial" | "healthcare") =>
     candidates.filter(c => {
-      const title = `${c.current_title || ""} ${c.trade || ""}`.toLowerCase();
+      const text = `${c.current_title || ""} ${c.trade || ""} ${c.license_type || ""} ${c.qualifications_summary || ""} ${c.current_employer || ""}`;
       const trade = (c.trade || "").toLowerCase();
-      if (vertical === "healthcare") return HC_TRADES.has(trade) || HC_RX.test(title);
-      return IND_TRADES.has(trade) || IND_RX.test(title);
+      if (vertical === "healthcare") return HC_TRADES.has(trade) || HC_RX.test(text);
+      return IND_TRADES.has(trade) || IND_RX.test(text);
     });
 
   const enrichContact = async (agency: typeof METRO_DETROIT_AGENCIES[0], force = false) => {
