@@ -223,6 +223,7 @@ async function runOrchestration(runId: string, input: RunInput) {
         queueRows.push({
           channel: "email",
           prospect_id: p.id,
+          source_run_id: runId,
           priority: 6,
           payload: {
             to: p.email,
