@@ -1,202 +1,98 @@
-# DJ Conley Follow-Up — Master Plan v3 (locked)
 
-> Incorporates your honest notes: forever-pricing is the moat, fusion is the wedge, person-level ID gets honest framing, demo colors come FIRST, follow-up email ships tonight.
+# Pat / D.J. Conley — "The Pitch" Email v4 (locked to actual meeting notes)
 
----
+## What I got wrong, now corrected
 
-## §0. Pricing (locked to your call)
+You were right to stop me. Re-read `.lovable/plan.md` (the **post-meeting** plan, not the pre-meeting brief). Locked-in truths:
 
-**New product: "DWA Managed Website + Owner Dashboard"**
+- **eWay stays.** Pat keeps using it. We do **NOT** replace it. The pivot is "Marketing Layer for eWay — don't fight eWay."
+- **FieldDesk runs in parallel** inside his admin panel. He uses both side-by-side, on his timeline. If/when he wants to consolidate, that's *his* call, not ours. (Schema already has `dual_run_until` + `migration_status` on `field_crm_clients` for exactly this.)
+- **FieldServio also stays** — full ERP, he needs it.
+- **SiteRadar honest framing is mandatory.** Never "we identify who visited." Always "we identify the **company** instantly + surface the **most likely decision-maker**." Person-level only via the optional **+$300/mo RB2B pass-through**.
+- **Owner Dashboard already specced** with these tabs: Dashboard · Visitor Intelligence · Predictive Sales · Email Campaigns · Review Queue · Job Snapshot (eWay-lite read-only) · Content · Settings/Billing.
+- **Pricing is set:** $499/mo all-in OR $499 + $199/mo. Optional RB2B add-on $300/mo at cost.
+- **Forever Pricing Promise** is the moat. Locked rate forever, every future ship is free.
+- **Predictive Sales umbrella** is the renamed family: Demand Radar / Buyer Radar / Industry Pulse / SiteRadar / TechAlert all roll up under it. **Hide TechAlert in DJ Conley's view** (boiler ops aren't license-gated trades — `hideTechAlert: true` already in `djconley.json`).
+- **The wedge** is the cross-radar **Fusion SMS** (Stellantis on /boiler-tune-up + active $2.4M MITN RFP → ONE text).
 
-| Option | Price | Includes |
-|---|---|---|
-| **All-in monthly** | **$499/mo** | Website + Owner Dashboard + SiteRadar Pro + Predictive Sales + Missed-Call/Review Texts + Email Blast Engine. Zero upfront. |
-| **Build + Maintain** | **$499 one-time + $199/mo** | Same product, lower recurring. |
+## Your new ask (Command Center for "all his tabs in one place")
 
-**Optional add-on:** RB2B person-level visitor ID — **+$300/mo at cost** (transparent pass-through).
+This is a **first-class new feature** in the email and a real expansion of the spec'd "Job Snapshot (eWay-lite)" tab.
 
-### The "Forever Pricing" promise (the moat)
-> "Your price never goes up. Every upgrade we ship — forever — is free. We push improvements every single day. You're not buying a snapshot, you're buying the cutting edge for life."
+**Command Center tab inside `/admin`:**
+- A grid of **tab tiles** Pat configures himself: eWay, FieldServio, QuickBooks, Gmail, Google Calendar, BSEED Permits, MITN.info RFPs, his bank, payroll, anything.
+- Each tile = one click → opens in embedded iframe **OR** new tab (his choice per tile, since some sites block iframe via X-Frame-Options).
+- **Drag-to-reorder, custom labels, custom icons.**
+- **Pinned bar across the top** of every admin page so Command Center is one click away from anywhere.
+- **SSO where supported** (Google Workspace, Microsoft 365). Where not, deep-link.
+- **He sends us the list, we wire them in before launch.**
 
----
+This sits *alongside* — not instead of — the Job Snapshot (eWay-lite) tab, which read-only mirrors his eWay jobs into the dashboard via CSV/webhook so he sees jobs without leaving.
 
-## §1. STEP ZERO — Recolor DJ Conley demos (do FIRST, before anything else)
+## The full offer (everything Pat gets in the email)
 
-Their explicit meeting objection. Nothing else gets built until this is done.
+Aligned to the meeting plan, not invented:
 
-- **Files:** `/public/demo-djconley-1/*`, `/public/demo-djconley-2/*` (or wherever the demos live — verify path), `src/data/demoConfigs/djconley.json`
-- **Palette:** Navy `#1B4F8A`, Orange `#E07B39`, cream `#FFF5E6`, white surfaces. Kill all teal/cyan (`#00d4ff`).
-- **Logo:** Use `/public/demo-logos/djc-wordmark.svg` (already on-brand) in header.
-- **Update `djconley.json`:** `accentColor: "#1B4F8A"`, alert color `#E07B39`.
-- **Verify:** screenshot both demo routes after recolor — zero teal pixels.
+1. **Brand-new website** at djconley.com — his navy `#1B4F8A` + orange `#E07B39`, mobile-perfect, Pat-editable via inline TipTap
+2. **Owner Dashboard** at `djconley.com/admin` — magic-link login, all tabs below
+3. **Command Center** *(NEW — your ask)* — unified hub for eWay, FieldServio, QuickBooks, etc.
+4. **Job Snapshot (eWay-lite)** — read-only mirror of his eWay jobs inside the dashboard so he sees them without switching
+5. **FieldDesk — running in parallel with eWay inside the admin panel** — he tries it side-by-side, his timeline. Live tech GPS, auto-SMS to customer (en route / on site / complete), photo-stamped completion. Zero pressure to switch.
+6. **SiteRadar Pro** with **honest framing**: company-ID instant + likely-decision-maker via Apollo + LinkedIn Insight Tag partial person-ID for ~10–20% of traffic. Person-level RB2B available as transparent **+$300/mo at cost** add-on.
+7. **Predictive Sales fusion alerts** (Demand + Buyer + Industry Pulse + SiteRadar overlaid) — the Stellantis/MITN wedge
+8. **Email Blast Engine** — manual / recurring seasonal / trigger-based, master ON/OFF, Pat-controlled
+9. **Missed-call text-back <60s + automated review request after every job + 2-way SMS inbox**
+10. **Review Queue** module — pending requests, resends, conversion tracking
+11. **Content tab** — Pat edits hero text / services / photos himself, no support ticket
+12. **Forever Pricing Promise** — contractually locked, every future feature free forever
+13. **What's New banner** + **Locked Price badge** in his dashboard so he sees value compounding
 
----
+## Email structure (top to bottom)
 
-## §2. STEP ONE — 24-hour follow-up email to Pat (ship TONIGHT)
+1. **Personal opener** — references the April 22 meeting honestly
+2. **Founder Moment callout** — "you're customer #1 of this stack, Forever Pricing locked, we ship daily"
+3. **Your Owner Dashboard guided tour** — mock dashboard graphic (HTML/CSS, no external image hosts so nothing breaks in his inbox), tab list visible
+4. **Command Center deep-dive** *(NEW)* — mock 3×3 tile grid graphic showing `eWay · FieldServio · QuickBooks · Gmail · Calendar · BSEED · MITN · Bank · Add Tile +`. Explicit ask: *"Send me the list of every tab you bounce between today and I'll wire them all in before launch."*
+5. **FieldDesk in parallel with eWay** — mock dispatcher kanban + tech-on-map graphic. Copy: *"eWay keeps doing what it does. FieldDesk lives next to it inside your admin panel. Run both, see which one your crew prefers, on your timeline. If FieldDesk wins, great. If eWay wins, no harm done — you've lost nothing."* Schema already supports this (`dual_run_until`).
+6. **SiteRadar Pro** with the **honest framing built in** — mock SMS bubble showing company + likely-decision-maker (NOT "person X visited"). Mention RB2B opt-in for person-level at $300/mo at cost.
+7. **Predictive Sales Fusion** — the wedge. Stellantis + MITN $2.4M example. One SMS, all signals tied together.
+8. **Email Blast Engine** — mock UI with 3 mode tiles + master kill switch
+9. **SMS Center + Reviews + Missed-Call Text-Back** — mock inbox graphic
+10. **Demo links + iteration promise** — Demo A `/demo-djconley-v2/index.html`, Demo B `/demo-djconley-v3/index.html`. Mock browser-frame previews. Explicit: *"Tell me what you want changed — color, layout, copy, photos, anything. We rebuild until you say 'that's it.' Unlimited revisions."*
+11. **Pricing**: Option A $499/mo all-in · Option B $499 + $199/mo · Optional RB2B +$300/mo at cost · Forever Pricing visual
+12. **What ships in next 90 days at no extra cost** (proof of "ship daily"): AI phone answering after-hours, Fusion v2 with more sources, auto-generated quarterly business review PDFs, Mortgage-Radar-style commercial property intel, FieldDesk multi-tech route optimization
+13. **Close**: reply `YES A` / `YES B` / `DEMOS: change X` / call (313) 992-1219
 
-Pat needs something in his inbox within 24 hours of the meeting or momentum dies.
+## What I will explicitly NOT say in the email
 
-**One-page proposal email** sent from `matt@detroitwebagent.com` to Pat. Contents:
+- Will not say we replace eWay
+- Will not say we replace FieldServio
+- Will not say "we identify who visited your site" (only "the company" + "likely decision-maker")
+- Will not pitch TechAlert (boiler ops aren't license-gated; already hidden in `djconley.json`)
+- Will not over-claim person-level ID without flagging RB2B as the paid opt-in path
 
-1. Thanks + recap in 2 sentences ("Loved meeting yesterday. Here's exactly what I'd build for D.J. Conley.")
-2. **The two pricing options** clearly laid out (§0 table).
-3. **The Forever Pricing promise** in a callout box.
-4. **What's included** — 6 bullet points (Website, Owner Dashboard, SiteRadar Pro, Predictive Sales fusion alerts, Missed-Call/Review automation, Email Blast Engine).
-5. **The fusion example, in their words:** *"When Stellantis visits your boiler tune-up page AND has an active RFP on MITN.info, you get one SMS with both signals. No competitor can do this."*
-6. **One-click close:** *"Reply YES and I'll send the setup form tonight + Stripe link in the morning."*
-7. P.S. with the demo links (post-recolor).
+## What gets built (technical)
 
-**Files:**
-- New email template `supabase/functions/_shared/transactional-email-templates/djconley-proposal.tsx` (one-shot, but using the system so it logs/tracks)
-- Trigger: one-time invoke from admin panel button "Send DJ Conley proposal" in `OnePressLauncher.tsx` or new tiny `src/components/admin/SendProposalButton.tsx`
-- Subject: `D.J. Conley + Detroit Web Agency — exactly what I'd build`
+- **New edge function** `supabase/functions/send-djconley-pitch-v2/index.ts`
+  - Mirrors `send-djconley-proposal` infra (Resend, DWA brand shell, BCC `matthewmichels4@gmail.com`, audit row in `notifications`)
+  - Long-form HTML body with all sections + mock graphics rendered as inline-styled HTML/CSS divs (mock browser chrome, dashboard panels, SMS bubbles, kanban cards, tile grid, toggle switches — all email-safe, no external image hosts)
+  - Plain-text fallback covering the same sections
+  - Subject: `Pat — the whole thing, top to bottom (D.J. Conley)`
+  - From: `Matt Michels — Detroit Web Agency <matt@detroitwebagent.com>`
+  - To: `pmichels@djconley.com`
+- **`supabase/config.toml`** — add `[functions.send-djconley-pitch-v2]` with `verify_jwt = false`
+- **No DB schema changes, no UI changes** — all the underlying infrastructure (Owner Dashboard tabs, Command Center spec, Forever Pricing tables, Predictive Sales rename, dual-run schema) is already on the build plan and lives in separate work — this email is the sales artifact only.
 
----
+## Send sequence
 
-## §3. Forever-Pricing infrastructure (§1 of v2 — build it for real)
+1. Deploy function
+2. **First invoke → `matthewmichels4@gmail.com`** (preview to your inbox)
+3. You approve / I tweak
+4. **Second invoke → `pmichels@djconley.com`**
 
-This is the moat. Build for every client, not just DJ Conley.
+## Acceptance
 
-**Tables:**
-- `product_changelog` (id, date, product, title, body, tags[])
-- `client_price_locks` (client_id, locked_monthly_price, locked_since, notes)
-
-**Pages/components:**
-- `src/pages/Changelog.tsx` — public, SEO'd, "what we shipped this week" page
-- `src/components/owner-portal/WhatsNewBanner.tsx` — top-of-dashboard, last 3 ships
-- `src/components/owner-portal/LockedPriceBadge.tsx` — "Locked at $499/mo since [date] — forever"
-- Add **"Lock today's price. Every future upgrade is free. Forever."** banner to `/managed-website`, `/predictive-sales`, all radar pages
-
-**Edge function + cron:**
-- `monthly-upgrade-recap-sender` — first of month 8am ET, transactional email to every locked-price client listing the upgrades they got free that month
-- Stripe metadata: `price_locked_forever: true` on every Managed Website subscription
-
-**Welcome email update:** add forever-pricing callout to `dwa-welcome` template.
-
----
-
-## §4. Predictive Sales umbrella + decision matrix
-
-- Rename in sidebar, landing pages, demos, emails:
-  - Demand Radar → "Predictive Sales — Active Buyers Right Now"
-  - Buyer Radar → "Predictive Sales — Companies in Buying Mode"
-  - Industry Pulse → "Predictive Sales — Market Trend Map"
-  - TechAlert → "Predictive Hiring (license-gated trades only)"
-  - SiteRadar → "Predictive Sales — Who's on YOUR Site Right Now"
-- New `src/pages/PredictiveSales.tsx` with industry → recommended-products decision matrix
-- `src/data/productCatalog.ts` + `dwa_product_catalog` table with `recommended_industries[]` / `excluded_industries[]`
-- `demoConfigs/djconley.json` — hide TechAlert (boiler ops aren't license-gated talent radar fits for them)
-
----
-
-## §5. FieldDesk pivot — "Marketing Layer for eWay" (don't fight eWay)
-
-- New `src/pages/MarketingLayerForEway.tsx` — hero "Keep eWay. Add the layer it doesn't have."
-- The 5 things eWay doesn't do: SMS arrival/leaving, automated review requests, missed-call text-back, Predictive Sales fusion alerts, SiteRadar visitor intel
-- **Honest** rewrite of `src/pages/FieldDeskVsEway.tsx` — pull false claims, link to Marketing Layer page for happy eWay shops
-- New `src/pages/FieldDeskMigration.tsx` + `fielddesk-import-eway` edge function — future upgrade path (when DJ Conley wants to consolidate later, not now)
-- Schema: `dual_run_until` + `migration_status` enum on `field_crm_clients`
-
----
-
-## §6. SiteRadar Pro — 20 enhancements (with HONEST framing)
-
-### ⚠ Honest framing (per your note)
-**Do NOT say:** "We identify who visited your site."
-**DO say:** "We identify the company instantly. Then we surface the most likely decision-maker to call." Apollo enriches the org. LinkedIn Insight Tag identifies the 10–20% of visitors who happen to be logged into LinkedIn in the same browser. RB2B is the only thing that gets close to "person X visited" — and that's the optional $300/mo add-on the client opts into transparently.
-
-This framing goes in: SiteRadar landing page, Owner Dashboard tooltips, demo scripts, sales emails. No overselling.
-
-### Tier A — Identification (days 1–2)
-1. Company ID via Clearbit Reveal *(shipped)*
-2. **Apollo "most likely decision-maker" lookup** — surface Facilities Director / VP Ops / Procurement *for the company* (clearly labeled as "likely contact at this org," not "the visitor")
-3. **LinkedIn Insight Tag** — partial person-ID for logged-in LinkedIn visitors (clearly labeled "LinkedIn-identified," ~10–20% of traffic)
-4. **Returning visitor fingerprinting** — same browser 2× in 7 days = hot
-5. **Account rollup view** — group all visits by company over time
-
-### Tier B — Cross-Radar Fusion (THE WEDGE — days 2–3)
-6. **Demand Radar overlay** — "Stellantis visited /boiler-service. Stellantis also has a $2.4M RFP on MITN.info."
-7. **Industry Pulse overlay** — "Auto manufacturing up 12% in SE MI; 3 auto suppliers visited this week."
-8. **Buyer Radar overlay** — visitor matches a flagged buyer signal
-9. **Page-level intent scoring** — `/pricing` + `/service-contracts` = high
-10. **Unified ONE SMS** combining all radars
-
-### Tier C — Outreach Triggers (days 3–4)
-11. Instant SMS to client on high-intent visit (<60s)
-12. AI-drafted cold email (Haiku) with page + industry context, owner reviews + sends
-13. 24-hour case-study auto-drop via Resend
-14. Visitor → outreach queue with Apollo-enriched contact
-
-### Tier D — Admin Power (days 4–5)
-15. Visitor heatmap by page
-16. Hot-zone alerts ("3 manufacturers on /boiler-tune-up in 24h")
-17. Saved-search rules ("alert me when any hospital or auto-Tier-1 visits")
-18. Weekly Monday PDF digest — top accounts, pages, recommended outreach, est. pipeline value
-19. Competitor watchlist (flag known-competitor IPs separately)
-20. Seasonal RFP calendar overlay
-
-**Files:** rewrite `visitor-identify/index.ts`; new edge functions `siteradar-fusion-alert`, `siteradar-draft-outreach`, `siteradar-account-rollup`, `siteradar-weekly-digest-pro`, `siteradar-case-study-dropper`. New tables: `siteradar_visitor_persons`, `siteradar_account_score`, `siteradar_alert_rules`, `siteradar_draft_outreach`, `siteradar_visitor_fingerprints`, `siteradar_competitor_watchlist`, `siteradar_case_studies`. Major rewrite: `src/pages/MySiteRadar.tsx` → tabs Live / Accounts / Persons / Drafts / Rules / Heatmap / Digest.
-
----
-
-## §7. Owner Dashboard — embedded in their website at `/admin`
-
-Magic-link login. Their website IS the hub.
-
-**Tabs:**
-- **Dashboard** — today's visitors, hottest accounts, recent leads, review score, est. pipeline + **WhatsNewBanner (§3)** + **LockedPriceBadge (§3)**
-- **Visitor Intelligence** — full SiteRadar Pro (Live / Accounts / Persons), with honest "company-level + likely contact" framing in every tooltip
-- **Predictive Sales** — Demand + Buyer Radar fused feed, industry-filtered
-- **Email Campaigns** — see §8
-- **Review Queue** — pending requests, resend failures, conversion tracking
-- **Job Snapshot (eWay-lite)** — *future, optional* read-only via eWay CSV/webhook
-- **Content** — TipTap inline editor for hero/services/photos. They edit their own site without calling.
-- **Settings + Billing** — colors, logo, alert routing, Locked Price badge
-
-**Files:** `src/components/owner-portal/OwnerLayout.tsx`, pages `Dashboard.tsx`, `OwnerVisitorIntel.tsx`, `OwnerPredictiveSales.tsx`, `OwnerEmailCampaigns.tsx`, `OwnerReviews.tsx`, `OwnerJobs.tsx`, `OwnerContent.tsx`, `OwnerSettings.tsx`. Edge functions `owner-portal-magic-link`, `owner-portal-content-update`. Tables `managed_websites`, `managed_website_pages`, `managed_website_content_blocks`. Extend `field_crm_clients` with `managed_website_id`, `price_locked_forever`, `locked_monthly_price`. New `create-managed-website-checkout` supporting both pricing options. New `src/pages/ManagedWebsite.tsx` landing page with both pricing options + Forever Pricing promise hero.
-
----
-
-## §8. Email Blast Engine (owner-controlled, in dashboard)
-
-- **Contact lists** — auto-pull FieldDesk customers + CSV upload + tag segments
-- **Templates** — boiler-service seasonal tune-up, off-season promo, emergency-prep, holiday + blank
-- **AI assist** — Haiku drafts body from one-line prompt
-- **Schedule modes:** manual blast / auto-recurring (toggle ON/OFF) / trigger-based (6 mo after service, 18-mo dormant, post-quote)
-- **Master on/off toggle** for all automation
-- **Compliance** — mandatory unsub footer (system-managed), `suppressed_emails` honored
-- **Stats** — opens, clicks, unsubs, replies per blast
-
-**Files:** `owner-portal-email-blast` edge function, tables `email_blast_campaigns`, `email_blast_recipients`, `email_blast_schedules`, `email_blast_templates`. Components `BlastComposer.tsx`, `BlastScheduler.tsx`, `BlastStats.tsx`, `ContactListManager.tsx`.
-
----
-
-## Build Order (revised)
-
-1. **§1 Recolor DJ Conley demos** (~1 hour) — blocker for everything else
-2. **§2 Send Pat the proposal email** (~1 hour) — must hit his inbox within 24h of meeting
-3. **§3 Forever-Pricing infrastructure** (~half day) — the moat, build once, every client benefits
-4. **§4 Predictive Sales umbrella** (~2 hours) — positioning consistency
-5. **§5 Marketing Layer for eWay + honest comparison** (~half day)
-6. **§7 Managed Website checkout + Owner Dashboard shell + landing page** (~full day) — the new product
-7. **§6 SiteRadar Pro Tiers A + B (with honest framing)** (~full day) — the wedge
-8. **§8 Email Blast Engine** (~half day)
-9. **§6 SiteRadar Pro Tiers C + D** (~full day)
-10. **§7 Remaining dashboard tabs (Reviews, Jobs, Settings)** (~half day)
-11. **§5 FieldDesk migration kit** (~half day, future-pitch only)
-
-Total: ~5.5 build days after the two same-day items (§1, §2).
-
----
-
-## What changed from v2
-
-- **§1 (NEW, top of list):** Recolor DJ Conley demos to navy/orange BEFORE anything else.
-- **§2 (NEW, top of list):** Send Pat the one-page proposal email tonight — was completely missing from v2.
-- **§6 honest framing:** Person-level ID is now framed as "company instantly + likely decision-maker" not "we know who visited." Goes in landing pages, tooltips, demo scripts, sales emails.
-- Pricing locked to $499/mo or $499+$199/mo (your call).
-- Forever Pricing infrastructure stays as a build-it-once moat.
-
----
-
-Approve and I'll start §1 and §2 in parallel right now.
+- Function deploys cleanly
+- Preview lands in your inbox with all sections rendered correctly on Gmail web + iOS Mail (no broken visuals, no image-blocking issues since everything is inline CSS)
+- Audit row appears in `notifications` after each send
+- After your OK → live send to Pat
