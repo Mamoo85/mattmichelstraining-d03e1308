@@ -2117,3 +2117,6 @@ verify_jwt = false
 
 [functions.dwa-contractor-referral]
 verify_jwt = false
+
+[functions.dwa-autopilot-sweep]
+verify_jwt = false
