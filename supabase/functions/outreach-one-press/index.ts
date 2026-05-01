@@ -26,6 +26,7 @@ interface RunInput {
   max_prospects?: number;
   min_quality_score?: number;
   state?: string;
+  resume_run_id?: string;
 }
 
 function dwaEmailWrap(bodyHtml: string, unsubUrl: string): string {
