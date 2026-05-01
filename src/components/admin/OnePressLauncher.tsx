@@ -62,7 +62,17 @@ export default function OnePressLauncher({
 }: Props) {
   const [run, setRun] = useState<RunRow | null>(null);
   const [launching, setLaunching] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshCooldown, setRefreshCooldown] = useState(0);
+  const [diagOpen, setDiagOpen] = useState(false);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
+  // Refresh button cooldown ticker
+  useEffect(() => {
+    if (refreshCooldown <= 0) return;
+    const t = setTimeout(() => setRefreshCooldown((c) => Math.max(0, c - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [refreshCooldown]);
 
   // Subscribe to realtime when we have an active run
   useEffect(() => {
