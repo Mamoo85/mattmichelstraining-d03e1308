@@ -377,11 +377,25 @@ Deno.serve(async (req) => {
     const resendBody = await resendRes.json().catch(() => ({}));
     if (!resendRes.ok) {
       console.error("[send-djconley-pitch-v2] Resend error", resendBody);
+      await logPitchAudit(sb, {
+        template_name: "djconley_pitch_v2",
+        recipient_email: recipientEmail,
+        status: "failed",
+        error_message: JSON.stringify(resendBody).slice(0, 500),
+        triggered_by: triggeredBy,
+      });
       return new Response(JSON.stringify({ error: "Resend send failed", detail: resendBody }), { status: 502, headers: CORS });
     }
 
+    await logPitchAudit(sb, {
+      template_name: "djconley_pitch_v2",
+      recipient_email: recipientEmail,
+      status: "sent",
+      triggered_by: triggeredBy,
+      metadata: { resend_id: resendBody?.id, force },
+    });
+
     try {
-      const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       await sb.from("notifications" as any).insert({
         type: "outreach_pitch_v2",
         title: `DJ Conley pitch v2 sent → ${recipientEmail}`,
