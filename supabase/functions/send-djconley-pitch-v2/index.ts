@@ -217,11 +217,11 @@ function buildBody(name: string): string {
 
     <!-- Section 8: Demos + iteration promise -->
     <h2 style="color:#ffffff;font-size:18px;font-weight:800;margin:32px 0 4px;border-bottom:2px solid ${ORANGE};padding-bottom:6px">8 · Your demo sites — tell me what to change</h2>
-    <p style="color:#cbd5e1;margin:8px 0 0">Two directions, your colors (navy + orange — no more teal). Click around, then tell me what you want different.</p>
-    ${demoMock("Demo A", "detroitwebagent.com/demo-djconley-v2")}
-    <p style="text-align:center;margin:8px 0"><a href="https://detroitwebagent.com/demo-djconley-v2" style="color:${TEAL};font-weight:700;text-decoration:none">→ Open Demo A</a></p>
-    ${demoMock("Demo B", "detroitwebagent.com/demo-djconley-v3")}
-    <p style="text-align:center;margin:8px 0"><a href="https://detroitwebagent.com/demo-djconley-v3" style="color:${TEAL};font-weight:700;text-decoration:none">→ Open Demo B</a></p>
+    <p style="color:#cbd5e1;margin:8px 0 0">Two directions, both built in <strong style="color:#fff">your actual brand colors</strong> (the teal + red from djconley.com — zero orange, zero navy). Click around, then tell me what you want different.</p>
+    ${demoMock("Demo A — Your Brand Colors (recommended)", "detroitwebagent.com/demo-djconley-v4")}
+    <p style="text-align:center;margin:8px 0"><a href="https://detroitwebagent.com/demo-djconley-v4/index.html" style="color:${TEAL};font-weight:700;text-decoration:none">→ Open Demo A (your real palette: teal + red)</a></p>
+    ${demoMock("Demo B — Bold Industrial Alt", "detroitwebagent.com/demo-djconley-v2")}
+    <p style="text-align:center;margin:8px 0"><a href="https://detroitwebagent.com/demo-djconley-v2/index.html" style="color:${TEAL};font-weight:700;text-decoration:none">→ Open Demo B (darker industrial direction)</a></p>
     <div style="background:#0d1f3c;border:2px solid ${ORANGE};border-radius:10px;padding:16px 18px;margin:14px 0">
       <p style="margin:0;color:#fff;font-size:14px"><strong style="color:${ORANGE}">We're not happy until you're happy.</strong> Don't like a color, a font, the layout, the photos, the copy, the hero, the navigation — anything? Reply and tell me. We rebuild. Unlimited revisions. We don't launch until you say <em>"that's it."</em></p>
     </div>
@@ -295,8 +295,8 @@ Three modes: Manual / Recurring seasonal / Trigger-based. Master kill switch. Yo
 Missed calls → text back in <60s. Every completed job → Google review request. Two-way SMS inbox in your dashboard.
 
 8. DEMO SITES — tell me what to change
-Demo A: https://detroitwebagent.com/demo-djconley-v2
-Demo B: https://detroitwebagent.com/demo-djconley-v3
+Demo A (your real brand colors — teal + red from djconley.com): https://detroitwebagent.com/demo-djconley-v4/index.html
+Demo B (bold industrial alternative): https://detroitwebagent.com/demo-djconley-v2/index.html
 We're not happy until you're happy. Unlimited revisions. We don't launch until you say "that's it."
 
 9. PRICING
