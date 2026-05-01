@@ -322,22 +322,45 @@ Deno.serve(async (req) => {
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-    const { data: run, error: insertErr } = await supabase
-      .from("outreach_one_press_runs")
-      .insert({
-        trades: body.trades,
-        cities: body.cities,
-        channels: body.channels || ["email"],
-        max_prospects: body.max_prospects || 50,
-        min_quality_score: body.min_quality_score || 50,
-        status: "queued",
-        stage: "queued",
-      })
-      .select("id")
-      .single();
 
-    if (insertErr || !run) {
-      throw new Error(`Failed to create run: ${insertErr?.message}`);
+    let runId: string;
+    if (body.resume_run_id) {
+      // Resume mode — reset the existing row and re-run the orchestrator
+      const { data: existing, error: loadErr } = await supabase
+        .from("outreach_one_press_runs")
+        .select("id, status")
+        .eq("id", body.resume_run_id)
+        .maybeSingle();
+      if (loadErr || !existing) {
+        throw new Error(`Resume failed: run ${body.resume_run_id} not found`);
+      }
+      const { error: resetErr } = await supabase
+        .from("outreach_one_press_runs")
+        .update({
+          status: "queued",
+          stage: "queued",
+          error_message: null,
+          completed_at: null,
+        })
+        .eq("id", body.resume_run_id);
+      if (resetErr) throw new Error(`Resume reset failed: ${resetErr.message}`);
+      runId = body.resume_run_id;
+    } else {
+      const { data: run, error: insertErr } = await supabase
+        .from("outreach_one_press_runs")
+        .insert({
+          trades: body.trades,
+          cities: body.cities,
+          channels: body.channels || ["email"],
+          max_prospects: body.max_prospects || 50,
+          min_quality_score: body.min_quality_score || 50,
+          status: "queued",
+          stage: "queued",
+        })
+        .select("id")
+        .single();
+      if (insertErr || !run) throw new Error(`Failed to create run: ${insertErr?.message}`);
+      runId = run.id;
     }
 
     // Fire-and-forget orchestration; client watches realtime
