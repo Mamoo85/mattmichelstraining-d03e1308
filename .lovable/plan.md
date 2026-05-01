@@ -1,101 +1,72 @@
+I found two concrete breakpoints behind the screenshots:
 
-# D.J. Conley Meeting Kit — 60-min Full Pitch (REVISED)
+1. The One-Press run is completing with zero sends because internal calls to protected backend functions are failing with `UNAUTHORIZED_INVALID_JWT_FORMAT`. Recent run rows show failures like `contractor-outreach-email-blast 401` and zero scraped/enriched/sent counts.
+2. The Agency Outreach cherry-pick drawer only looks at the last 7 days and only recognizes a narrow set of trade labels. Current live candidate data has almost no recent rows matching those exact labels, even though the TechAlert prospect hunter is producing company hiring targets and older candidate rows exist.
 
-Two existing live demos already shipped — `/demo-djconley-1` (website) and `/demo-djconley-2` (ops command center). This plan generates 3 PDFs + a click-by-click QA, with **the 4 critical fixes baked in**.
+Plan to fix and harden this properly:
 
----
+1. Rebuild One-Press execution around the send queue
+   - Stop treating a completed run with zero sends as success.
+   - Route One-Press sends through `outreach_send_queue` and `outreach-queue-worker` instead of direct provider sends where appropriate.
+   - Report `queued`, `sent`, `skipped`, and `failed` separately so the card never lies.
 
-## The 4 critical fixes (locked in)
+2. Fix internal backend-to-backend auth
+   - Update `outreach-one-press` and `contractor-outreach-auto-blast` internal function invocation headers to use the correct key format.
+   - Keep public/admin entrypoints protected where needed, but allow trusted server-side orchestration to call scrape/enrich/blast reliably.
+   - Deploy the affected backend functions after editing.
 
-### Fix 1 — Defuse the fake-visitor landmine
-The script's SiteRadar segment opens with this **mandatory disclaimer line**, said out loud before clicking:
+3. Add automatic One-Press self-healing
+   - If scrape returns zero, automatically broaden city fallback: selected city → nearby Metro Detroit cities → statewide priority cities.
+   - If eligible count is zero because quality threshold is too high, show the gate and optionally queue lower-confidence contacts as review-only instead of silently finishing.
+   - If enrichment returns no emails, log which waterfall stages failed per prospect.
 
-> *"Pat, before I show you this — what's on screen is a demo build seeded with the kind of buyers we already see hitting boiler-shop sites in Detroit. The Stellantis, DMC, and Wayne County rows are placeholders representing real buyer profiles, not actual visits to djconley.com today. Once we install the 1-line script tomorrow, this dashboard fills with YOUR real visitors within 48 hours."*
+4. Upgrade the One-Press UI from a progress bar to a diagnosis panel
+   - Add a latest-run summary with real blockers: auth failure, provider rate limit, no matching city/trade, no emails, daily cap, suppression, quality gate.
+   - Add buttons for `Run worker now`, `Retry failed stage`, and `Open diagnostics`.
+   - Add a visible warning when the run completed with zero sends.
 
-Then immediate hard pivot to the **real, defensible** Stellantis $2.4M RFP from Buyer Radar (sourced from MITN.info — actual public procurement board). The PDF mirrors this with a footnote on every dashboard screenshot: *"Demo data shown. Live data populates within 48 hours of installation."*
+5. Make Auto-Blast a true queued workflow
+   - Replace direct send loops in `contractor-outreach-auto-blast` with queue insertion for consistency, retries, and observability.
+   - Return `queued_count` immediately, then let the worker send with backoff.
+   - Trigger the worker once after queueing so manual demos still feel instant.
 
-### Fix 2 — Honest, defensible ROI math
-Throw out the $147k number. New conservative Year-1 ROI table that adds to **$48,612** — every line defensible:
+6. Fix the Agency Outreach candidate matching logic
+   - Expand candidate lookback from hard-coded 7 days to a tiered fallback: 7 days, then 30 days, then best available.
+   - Match on more fields (`trade`, `license_type`, `current_title`, `qualifications_summary`, `current_employer`) and normalize values like `other_trade`, `hvac_tech`, `boiler_operator`, healthcare terms, machinist/CNC, skilled trades, etc.
+   - Show the actual lookback window used in the UI so it does not misleadingly say “last 7 days” when fallback data is being used.
 
-| Source | Year-1 Value | How it's calculated |
-|---|---|---|
-| FieldServio software replacement | $14,412 | (config: `yearOneSavings`) — $1,400/mo competitor − $199/mo FieldDesk × 12 |
-| 1 new tech hired via TechAlert | $18,000 | Conservative: 1 hire × $1,500/mo billable margin × 12. (Industry avg = 2-3 hires/yr) |
-| 2 recovered missed-call jobs | $8,400 | 2 emergency calls × $4,200 avg ticket (boiler emergency repair) |
-| 1 small commercial contract from website redesign | $7,800 | 1 service contract × $650/mo × 12 |
-| **Year 1 conservative total** | **$48,612** | vs. $7,651 invested = **6.4x ROI** |
+7. Add prospect fallback sources for “No matching candidates”
+   - If no person-level candidates exist, use `techalert_prospect_targets` as a backup proof source: companies actively hiring HVAC/plumbing/electrical/boiler/industrial roles.
+   - Label these separately as “Hiring demand proof” instead of pretending they are candidates.
+   - Allow a draft/blast to use either candidate proof or hiring-demand proof.
 
-The PDF shows the math line-by-line on a dedicated page. The script tells you to walk Pat through each row with your finger.
+8. Add a one-click “Refresh proof pool” control
+   - Button triggers the relevant candidate/prospect refresh functions in sequence where available.
+   - Then reloads Agency Outreach automatically.
+   - Shows exact counts found by vertical, so failures are visible immediately.
 
-### Fix 3 — Real close mechanism (3 options, pick at the table)
-The kit includes all three so you can read the room:
+9. Improve Agency Outreach blast behavior
+   - If there are fewer than 50 candidate matches, send a smaller truthful teaser instead of failing.
+   - If there are zero candidates but there are hiring-demand targets, generate a hiring-demand teaser instead.
+   - If there is truly no proof, disable the blast and show the specific missing source/gate.
 
-1. **Stripe Payment Link** (texted at the table) — I'll create a $499 Website Deposit payment link via Stripe and embed the URL + QR code in both the Why-Choose-Us PDF and the script. One tap on Pat's phone → he's paid. (Real Stripe link, real product, generated today.)
-2. **30-second LOI email** — pre-written email template loaded into the script PDF as copy-paste text. Subject + body filled in, just needs Pat's name + signature line. Send from parking lot.
-3. **Paper LOI** — single-page tear-off at the back of the Business Plan PDF. "I, Pat ___, agree to engage Detroit Web Agency for the DWA Bundle ($596/mo) + Website ($499 one-time) starting [date]. 30-day cancel-anytime." Sign, photo, done.
+10. Add “never silently empty” safeguards
+   - Add empty-state cards with next actions instead of generic “No matching candidates.”
+   - Add run logging for candidate pool queries and agency blast fallbacks.
+   - Add warnings when recent ingestion is stale or the candidate scanner has not produced matching candidates recently.
 
-### Fix 4 — Actual discovery questions (written out, no improv)
-The script's 02:00–05:00 block contains these 3 questions verbatim, with follow-up prompts:
+Files/functions I expect to change:
+- `src/components/admin/OnePressLauncher.tsx`
+- `src/components/admin/ContractorOutreachPanel.tsx`
+- `src/components/dwa-admin/AdminAgencyOutreach.tsx`
+- `supabase/functions/outreach-one-press/index.ts`
+- `supabase/functions/contractor-outreach-auto-blast/index.ts`
+- `supabase/functions/agency-prospect-list-blast/index.ts`
+- Potentially one small migration for durable run/fallback diagnostics if the current JSON fields are not enough.
 
-1. **"Pat, walk me through last Tuesday — when a boiler call came in at 2 a.m., what actually happened from the phone ringing to the truck rolling?"**
-   *(Listening for: paper dispatch, missed calls, on-call confusion, wife answering phone)*
-2. **"Of your senior boiler ops, how many are within 5 years of retirement — and what's your plan when they walk out the door?"**
-   *(Listening for: hiring panic, no pipeline, "we'll figure it out")*
-3. **"When was the last time someone said 'I found you on Google' — and when you check your website on your phone, what do you actually see?"**
-   *(Listening for: word-of-mouth dependency, embarrassment about djconley.com, no online lead flow)*
-
-Each question has a script note: *"Shut up. Count to 5 in your head before responding. Take notes on his actual words — quote them back during the pricing reveal."*
-
----
-
-## What gets generated
-
-### 1. `DJConley_Business_Plan.pdf` — leave-behind (12 pages)
-- Cover, executive summary, 4 pains, integrated solution, **conservative $48,612 ROI breakdown** (Fix 2), 7-day timeline, why DWA, **paper LOI tear-off** (Fix 3 option C), competitor comparison appendix
-- Every dashboard screenshot footnoted: *"Demo data — live data within 48 hours"* (Fix 1)
-
-### 2. `DJConley_WhyChooseUs.pdf` — the handout (4 pages)
-- Hero, one-pager per product, **ROI table + Stripe payment link QR code** (Fix 3 option A), Matt's contact card
-
-### 3. `DJConley_Presentation_Script.pdf` — your cheat sheet (8 pages)
-Minute-by-minute with actual words to say:
-```
-00:00–02:00  Opening
-02:00–05:00  3 discovery questions (Fix 4 — verbatim)
-05:00–10:00  Pain validation — quote his answers back
-10:00–18:00  DEMO #1 → /demo-djconley-1 (website)
-18:00–24:00  DEMO #2 → /demo-djconley-2 (ops)
-24:00–28:00  SiteRadar segment with mandatory disclaimer (Fix 1)
-28:00–35:00  TechAlert — James P. + Kevin M.
-35:00–42:00  Buyer Radar — REAL $2.4M Stellantis RFP from MITN.info
-42:00–50:00  Pricing reveal + $48,612 walkthrough (Fix 2)
-50:00–55:00  Objections (3 scripted answers)
-55:00–60:00  THE ASK + close (3 mechanisms — Fix 3, pre-written LOI email)
-```
-
-### 4. `DJConley_Walkthrough_QA.md` — pre-meeting verification
-- Screenshots of `/demo-djconley-1` + `/demo-djconley-2` at iPad-portrait viewport
-- Verify sizzle video loads, candidate names render, djconley.com images resolve
-- Offline backup PDF generated in case WiFi fails at their office
-
----
-
-## Real Stripe close (Fix 3 mechanism)
-
-Before generating PDFs, I'll create a **real Stripe Payment Link** for "DWA Website — D.J. Conley Deposit — $499" using Stripe MCP. The live URL + QR code embeds in the Why-Choose-Us PDF and the script. Pat scans, pays, you have his card on file before you leave.
-
-(Bundle subscription stays as a separate post-meeting checkout — the $499 deposit is the friction-free yes today.)
-
----
-
-## Technical approach
-
-- PDFs via `reportlab` Python — DJC navy `#1B4F8A` + orange `#E07B39`
-- All numbers sourced from `djconley.json` or conservative industry estimates with shown math
-- QR code via `qrcode` Python lib pointing to real Stripe link
-- Visual QA: every PDF page rendered to JPG, inspected, fixed before delivery
-- Browser QA: `browser--navigate_to_sandbox` against preview URL for both demos at 768×1024 (iPad portrait)
-
-## Total time: 8–12 minutes once approved
-
-**Approve and I'll start. The 4 fixes are non-negotiable and locked in.**
+Validation after implementation:
+- Test `outreach-one-press` directly and confirm it no longer produces a completed zero-send run with hidden 401s.
+- Test Auto-Blast and confirm it queues/sends through `outreach_send_queue`.
+- Query latest queue rows and one-press rows to confirm counts update correctly.
+- Test Agency Outreach matching for industrial and healthcare agencies with fallback windows and no generic empty drawer.
+- Verify the UI on the current mobile-sized viewport still shows actionable buttons without clipping.

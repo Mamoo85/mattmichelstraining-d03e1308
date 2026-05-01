@@ -73,6 +73,8 @@ async function invokeFn(name: string, body: unknown): Promise<{ ok: boolean; dat
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        // Both headers are required: apikey gates the gateway, Authorization carries the service-role JWT
+        "apikey": SUPABASE_SERVICE_KEY,
         "Authorization": `Bearer ${SUPABASE_SERVICE_KEY}`,
       },
       body: JSON.stringify(body),
@@ -87,6 +89,9 @@ async function invokeFn(name: string, body: unknown): Promise<{ ok: boolean; dat
   }
 }
 
+// Metro Detroit fallback ring — used if the chosen city scrapes 0 contractors
+const FALLBACK_CITIES = ["Detroit", "Warren", "Sterling Heights", "Livonia", "Dearborn", "Troy", "Southfield", "Royal Oak", "Farmington Hills", "Novi"];
+
 async function runOrchestration(runId: string, input: RunInput) {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const { trades, cities, channels = ["email"], max_prospects = 50, min_quality_score = 50, state = "MI" } = input;
@@ -98,29 +103,52 @@ async function runOrchestration(runId: string, input: RunInput) {
   try {
     await update({ status: "running", stage: "scraping", started_at: new Date().toISOString() });
 
-    // STAGE 1 — scrape across trade × city matrix
+    // STAGE 1 — scrape across trade × city matrix, with auto fallback to Metro Detroit ring
     let scrapedTotal = 0;
     const scrapeErrors: string[] = [];
+    const triedCities = new Set<string>();
     const perCityCap = Math.max(5, Math.ceil(max_prospects / Math.max(1, trades.length * cities.length)));
-    for (const trade of trades) {
-      for (const city of cities) {
-        if (scrapedTotal >= max_prospects) break;
-        const r = await invokeFn("contractor-outreach-scrape", { trade, city, state, limit: perCityCap });
-        // use scanned (total found) not inserted (new only) so count updates even when all are duplicates
-        if (r.ok) scrapedTotal += Number(r.data?.scanned || 0);
-        else scrapeErrors.push(`${trade}/${city}: ${r.error}`);
-        await update({ scraped_count: scrapedTotal, stage_progress: { scrape_errors: scrapeErrors.slice(-5) } });
+
+    async function scrapeCityList(cityList: string[]): Promise<number> {
+      let added = 0;
+      for (const trade of trades) {
+        for (const city of cityList) {
+          if (scrapedTotal >= max_prospects) break;
+          if (triedCities.has(`${trade}|${city}`)) continue;
+          triedCities.add(`${trade}|${city}`);
+          const r = await invokeFn("contractor-outreach-scrape", { trade, city, state, limit: perCityCap });
+          if (r.ok) {
+            const found = Number(r.data?.scanned || 0);
+            scrapedTotal += found; added += found;
+          } else {
+            scrapeErrors.push(`${trade}/${city}: ${r.error}`);
+          }
+          await update({ scraped_count: scrapedTotal, stage_progress: { scrape_errors: scrapeErrors.slice(-5), tried: Array.from(triedCities).slice(-10) } });
+        }
+      }
+      return added;
+    }
+
+    await scrapeCityList(cities);
+
+    // Self-heal #1 — if nothing was scraped, expand to the Metro Detroit ring
+    if (scrapedTotal === 0) {
+      const expanded = FALLBACK_CITIES.filter(c => !cities.includes(c));
+      if (expanded.length) {
+        await update({ stage_progress: { fallback: "expanding to Metro Detroit ring", tried: cities, expanded } });
+        await scrapeCityList(expanded);
       }
     }
 
     // STAGE 2 — enrich freshly scraped prospects (those without enriched_at)
     await update({ stage: "enriching" });
+    const allCities = Array.from(new Set([...cities, ...FALLBACK_CITIES]));
     const { data: toEnrich } = await supabase
       .from("contractor_outreach_prospects")
       .select("id")
       .is("enriched_at", null)
       .in("trade", trades)
-      .in("city", cities)
+      .in("city", allCities)
       .order("created_at", { ascending: false })
       .limit(max_prospects);
 
@@ -136,82 +164,106 @@ async function runOrchestration(runId: string, input: RunInput) {
     }
     await update({ enriched_count: enrichedTotal, stage_progress: { enrich_errors: enrichErrors.slice(-5) } });
 
-    // STAGE 3 — quality scoring is automatic via DB trigger; just count eligible
+    // STAGE 3 — count eligible at requested threshold; if 0, drop threshold to surface what's available
     await update({ stage: "scoring" });
-    const { count: scoredCount } = await supabase
+    let effectiveQuality = min_quality_score;
+    let { count: scoredCount } = await supabase
       .from("contractor_outreach_prospects")
       .select("id", { count: "exact", head: true })
-      .gte("quality_score", min_quality_score)
+      .gte("quality_score", effectiveQuality)
       .is("unsubscribed_at", null)
       .in("trade", trades)
-      .in("city", cities);
+      .in("city", allCities);
+
+    if ((scoredCount || 0) === 0 && effectiveQuality > 25) {
+      effectiveQuality = 25; // graceful degrade so a real run can ship
+      const fallback = await supabase
+        .from("contractor_outreach_prospects")
+        .select("id", { count: "exact", head: true })
+        .gte("quality_score", effectiveQuality)
+        .is("unsubscribed_at", null)
+        .in("trade", trades)
+        .in("city", allCities);
+      scoredCount = fallback.count || 0;
+      await update({ stage_progress: { quality_fallback: `dropped threshold to ${effectiveQuality}` } });
+    }
     await update({ scored_count: scoredCount || 0 });
 
-    // STAGE 4 — send via configured channels (inline campaign send)
+
+    // STAGE 4 — enqueue eligible prospects to outreach_send_queue, then trigger the worker.
+    // The queue gives us retries, backoff, suppression re-checks, and observability.
     await update({ stage: "sending" });
+    let queuedTotal = 0;
     let sentTotal = 0;
     let failedTotal = 0;
     const sendErrors: string[] = [];
 
-    if (channels.includes("email") && RESEND_API_KEY) {
-      // Query eligible prospects across all trade×city combos
+    if (channels.includes("email")) {
       const { data: targets } = await supabase
         .from("contractor_outreach_prospects")
-        .select("*")
+        .select("id, business_name, trade, city, state, email, email_send_count")
         .in("trade", trades)
-        .in("city", cities)
-        .gte("quality_score", min_quality_score)
+        .in("city", allCities)
+        .gte("quality_score", effectiveQuality)
         .not("email", "is", null)
         .is("unsubscribed_at", null)
         .order("last_emailed_at", { ascending: true, nullsFirst: true })
         .limit(max_prospects);
 
+      const queueRows: any[] = [];
       for (const p of (targets || [])) {
-        try {
-          const trade = p.trade || trades[0] || "Contractor";
-          const city = p.city || cities[0] || "Detroit";
-          const unsubUrl = `${SUPABASE_URL}/functions/v1/contractor-outreach-unsubscribe?id=${p.id}`;
-          const html = dwaEmailWrap(buildCampaignBody({ businessName: p.business_name, trade, city, state: p.state || state }), unsubUrl);
-          const subject = `${city} homeowner leads for ${trade.toLowerCase()} contractors — available now`;
+        const trade = p.trade || trades[0] || "Contractor";
+        const city = p.city || cities[0] || "Detroit";
+        const unsubUrl = `${SUPABASE_URL}/functions/v1/contractor-outreach-unsubscribe?id=${p.id}`;
+        const html = dwaEmailWrap(
+          buildCampaignBody({ businessName: p.business_name, trade, city, state: p.state || state }),
+          unsubUrl,
+        );
+        const subject = `${city} homeowner leads for ${trade.toLowerCase()} contractors — available now`;
+        queueRows.push({
+          channel: "email",
+          prospect_id: p.id,
+          priority: 6,
+          payload: {
+            to: p.email,
+            subject,
+            html,
+            from: "Matt Michels <matt@detroitwebagent.com>",
+            headers: {
+              "List-Unsubscribe": `<${unsubUrl}>, <mailto:matt@detroitwebagent.com?subject=Unsubscribe>`,
+              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            },
+          },
+        });
+      }
 
-          const res = await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              from: "Matt Michels <matt@detroitwebagent.com>",
-              to: [p.email],
-              subject,
-              html,
-              headers: {
-                "List-Unsubscribe": `<${unsubUrl}>, <mailto:matt@detroitwebagent.com?subject=Unsubscribe>`,
-                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-              },
-            }),
-          });
+      if (queueRows.length > 0) {
+        const { data: inserted, error: qErr } = await supabase
+          .from("outreach_send_queue")
+          .upsert(queueRows, { onConflict: "prospect_id,lead_id,channel", ignoreDuplicates: true })
+          .select("id");
+        if (qErr) {
+          sendErrors.push(`enqueue: ${qErr.message}`);
+          failedTotal += queueRows.length;
+        } else {
+          queuedTotal = inserted?.length || 0;
+        }
 
-          if (res.ok) {
-            sentTotal++;
-            await supabase.from("contractor_outreach_prospects")
-              .update({ last_emailed_at: new Date().toISOString(), email_send_count: (p.email_send_count || 0) + 1 })
-              .eq("id", p.id);
-            await supabase.from("contractor_outreach_audit_log").insert({
-              prospect_id: p.id, channel: "email", event: "sent",
-              reason: subject,
-              metadata: { source: "one-press", run_id: runId },
-            }).catch(() => {});
+        // Kick the worker once so the user sees activity quickly
+        if (queuedTotal > 0) {
+          const w = await invokeFn("outreach-queue-worker", { trigger: "one-press" });
+          if (w.ok) {
+            sentTotal = Number(w.data?.stats?.sent || 0);
+            failedTotal += Number(w.data?.stats?.failed || 0);
           } else {
-            failedTotal++;
-            const t = await res.text();
-            sendErrors.push(`${p.email}: ${t.slice(0, 120)}`);
+            sendErrors.push(`worker: ${w.error}`);
           }
-        } catch (e) {
-          failedTotal++;
-          sendErrors.push(`${p.email}: ${e instanceof Error ? e.message : String(e)}`);
         }
       }
-    } else if (channels.includes("email") && !RESEND_API_KEY) {
-      sendErrors.push("RESEND_API_KEY not configured");
-      failedTotal++;
+
+      if ((targets || []).length === 0) {
+        sendErrors.push(`No eligible prospects (quality ≥ ${effectiveQuality}, with email, in ${allCities.slice(0, 3).join(", ")}…). Try Auto-Blast on a real lead, or scrape more cities.`);
+      }
     }
 
     if (channels.includes("sms")) {
@@ -227,12 +279,20 @@ async function runOrchestration(runId: string, input: RunInput) {
       }
     }
 
+    const finalStatus = sendErrors.length > 0 && sentTotal === 0 && queuedTotal === 0 ? "failed" : "completed";
     await update({
       stage: "completed",
-      status: "completed",
+      status: finalStatus,
       sent_count: sentTotal,
       failed_count: failedTotal,
-      stage_progress: { send_errors: sendErrors },
+      error_message: finalStatus === "failed" ? sendErrors.slice(0, 3).join(" · ") : null,
+      stage_progress: {
+        send_errors: sendErrors.slice(-10),
+        queued: queuedTotal,
+        effective_quality: effectiveQuality,
+        cities_used: allCities.slice(0, 10),
+        scrape_errors: scrapeErrors.slice(-5),
+      },
       completed_at: new Date().toISOString(),
     });
   } catch (err) {

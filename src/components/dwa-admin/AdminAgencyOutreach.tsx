@@ -34,6 +34,8 @@ interface ContactEnrichment {
 
 export default function AdminAgencyOutreach() {
   const [candidates, setCandidates] = useState<any[]>([]);
+  const [hiringDemand, setHiringDemand] = useState<Record<string, any[]>>({ industrial: [], healthcare: [] });
+  const [windowUsed, setWindowUsed] = useState<Record<string, string>>({ industrial: "—", healthcare: "—" });
   const [loadingCands, setLoadingCands] = useState(true);
   const [drafting, setDrafting] = useState<string | null>(null);
   const [enriching, setEnriching] = useState<string | null>(null);
@@ -47,35 +49,43 @@ export default function AdminAgencyOutreach() {
   const [previewMode, setPreviewMode] = useState<Record<string, "html" | "plain">>({});
 
   useEffect(() => {
-    loadCandidates();
+    loadProspectPool();
     loadEnrichments();
   }, []);
 
-  const loadCandidates = async () => {
+  const loadProspectPool = async () => {
     setLoadingCands(true);
-    const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
-    const { data } = await supabase
-      .from("hire_alert_candidates")
-      .select("id, name, full_name, trade, city, metro, score, current_title, qualifications_summary, created_at, current_employer, email, phone, linkedin_url, data_completeness")
-      .eq("is_company_name", false)
-      .eq("do_not_contact", false)
-      .neq("enrichment_status", "junk")
-      .gte("created_at", since)
-      .order("data_completeness", { ascending: false })
-      .order("score", { ascending: false })
-      .limit(200);
-    // Client-side: reject names that look like page nav text or are too short
-    const filtered = (data || []).filter((c: any) => {
-      const n = (c.full_name || c.name || "").trim();
-      if (n.length < 5) return false;
-      if (/[?:!@#$%/]/.test(n)) return false;
-      if (n.split(/\s+/).filter(Boolean).length < 2) return false;
-      if (/^\s*(go\s+back|uh\s+oh|search|loading|submit|sign\s+in|log\s+in|next|previous|view\s+all|learn\s+more|error|menu|home|click\s+here)\b/i.test(n)) return false;
-      const hasSignal = c.current_employer || c.current_title || c.city || c.phone || c.email || c.linkedin_url;
-      return !!hasSignal;
-    });
-    setCandidates(filtered);
-    setLoadingCands(false);
+    try {
+      const [indRes, hcRes] = await Promise.all([
+        supabase.functions.invoke("agency-prospect-pool", { body: { vertical: "industrial" } }),
+        supabase.functions.invoke("agency-prospect-pool", { body: { vertical: "healthcare" } }),
+      ]);
+      const ind = (indRes.data as any) || {};
+      const hc = (hcRes.data as any) || {};
+      // Merge candidate lists, dedupe by id
+      const merged = new Map<string, any>();
+      for (const c of (ind.candidates || [])) merged.set(c.id, c);
+      for (const c of (hc.candidates || [])) merged.set(c.id, c);
+      setCandidates(Array.from(merged.values()));
+      setHiringDemand({
+        industrial: ind.hiring_demand || [],
+        healthcare: hc.hiring_demand || [],
+      });
+      setWindowUsed({
+        industrial: ind.candidate_window || "none",
+        healthcare: hc.candidate_window || "none",
+      });
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to load prospect pool");
+    } finally {
+      setLoadingCands(false);
+    }
+  };
+
+  const refreshPool = async () => {
+    toast.info("Refreshing proof pool…");
+    await loadProspectPool();
+    toast.success("Proof pool refreshed");
   };
 
   const loadEnrichments = async () => {
@@ -92,15 +102,15 @@ export default function AdminAgencyOutreach() {
 
   const HC_TRADES = new Set(["nursing", "home_health"]);
   const IND_TRADES = new Set(["boiler", "hvac", "electrical", "plumbing"]);
-  const HC_RX = /\b(rn|lpn|cna|nurse|nursing|aide|home\s*health|caregiver|medical|clinical|therapist|hha)\b/;
-  const IND_RX = /\b(boiler|hvac|electric|plumb|stationary\s+engineer|machinist|welder|fitter|pipefitter|fabricat|cnc|millwright)\b/;
+  const HC_RX = /\b(rn|lpn|cna|nurse|nursing|aide|home\s*health|caregiver|medical|clinical|therapist|hha|healthcare|health|patient)\b/i;
+  const IND_RX = /\b(boiler|hvac|electric|plumb|stationary\s+engineer|machinist|welder|fitter|pipefitter|fabricat|cnc|millwright|trades|mechanic|technician|maintenance|operator|industrial|skilled)\b/i;
 
   const matchingCandidatesFor = (vertical: "industrial" | "healthcare") =>
     candidates.filter(c => {
-      const title = `${c.current_title || ""} ${c.trade || ""}`.toLowerCase();
+      const text = `${c.current_title || ""} ${c.trade || ""} ${c.license_type || ""} ${c.qualifications_summary || ""} ${c.current_employer || ""}`;
       const trade = (c.trade || "").toLowerCase();
-      if (vertical === "healthcare") return HC_TRADES.has(trade) || HC_RX.test(title);
-      return IND_TRADES.has(trade) || IND_RX.test(title);
+      if (vertical === "healthcare") return HC_TRADES.has(trade) || HC_RX.test(text);
+      return IND_TRADES.has(trade) || IND_RX.test(text);
     });
 
   const enrichContact = async (agency: typeof METRO_DETROIT_AGENCIES[0], force = false) => {
@@ -232,13 +242,27 @@ export default function AdminAgencyOutreach() {
   return (
     <div className="space-y-6">
       <div className="bg-[#0f1f35] border border-white/10 rounded-xl p-5">
-        <h3 className="text-white font-bold text-lg mb-2">🎯 Trojan Horse Outreach v2 (Enrich → Opus → Gmail)</h3>
-        <p className="text-slate-400 text-sm mb-3">
-          1) Cherry-pick a proof candidate · 2) Enrich the agency to find the decision-maker's email · 3) Draft with Opus · 4) One-click send from <code className="text-[#00d4ff]">matt@detroitwebagent.com</code> via Gmail. <strong className="text-amber-300">Manual confirm before every send.</strong>
-        </p>
-        <p className="text-slate-500 text-xs">
-          Last 7d: {loadingCands ? "loading..." : `${candidates.length} candidates available for matching`}
-        </p>
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-white font-bold text-lg mb-2">🎯 Trojan Horse Outreach v2 (Enrich → Opus → Gmail)</h3>
+            <p className="text-slate-400 text-sm mb-3">
+              1) Cherry-pick a proof candidate · 2) Enrich the agency to find the decision-maker's email · 3) Draft with Opus · 4) One-click send from <code className="text-[#00d4ff]">matt@detroitwebagent.com</code> via Gmail. <strong className="text-amber-300">Manual confirm before every send.</strong>
+            </p>
+            <p className="text-slate-500 text-xs">
+              {loadingCands
+                ? "loading proof pool..."
+                : `${candidates.length} candidates available · industrial window: ${windowUsed.industrial} · healthcare window: ${windowUsed.healthcare} · hiring-demand backup: ${hiringDemand.industrial.length} industrial companies`}
+            </p>
+          </div>
+          <button
+            onClick={refreshPool}
+            disabled={loadingCands}
+            className="px-3 py-1.5 rounded-lg bg-[#00d4ff]/10 border border-[#00d4ff]/30 text-[#00d4ff] hover:bg-[#00d4ff]/20 transition-colors text-[11px] font-semibold flex items-center gap-1.5 disabled:opacity-50"
+          >
+            {loadingCands ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+            Refresh Proof Pool
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-4">
@@ -339,7 +363,36 @@ export default function AdminAgencyOutreach() {
                   </div>
                   <div className="space-y-1.5 max-h-56 overflow-y-auto">
                     {matchingCandidatesFor(agency.vertical as any).length === 0 && (
-                      <p className="text-slate-500 text-xs text-center py-4">No matching candidates in last 7 days.</p>
+                      <div className="space-y-2 py-2">
+                        <p className="text-slate-400 text-xs">
+                          No matching person-level candidates yet (window tried: {windowUsed[agency.vertical] || "none"}).
+                        </p>
+                        {(hiringDemand[agency.vertical] || []).length > 0 ? (
+                          <>
+                            <p className="text-amber-300 text-[11px] font-bold uppercase tracking-wider">
+                              Hiring Demand Backup ({hiringDemand[agency.vertical].length} companies actively hiring)
+                            </p>
+                            <div className="space-y-1">
+                              {hiringDemand[agency.vertical].slice(0, 6).map((h: any) => (
+                                <div key={h.id} className="bg-[#0f1f35] border border-amber-500/20 rounded px-3 py-2 text-[11px] flex items-center justify-between">
+                                  <div className="min-w-0">
+                                    <div className="text-white font-semibold truncate">{h.company_name}</div>
+                                    <div className="text-slate-500 truncate">{h.role} · {h.city || "Metro Detroit"} · {h.source_label || "—"}</div>
+                                  </div>
+                                  <span className="text-amber-300 font-bold ml-2">★ {h.score}</span>
+                                </div>
+                              ))}
+                            </div>
+                            <p className="text-slate-500 text-[10px] italic">
+                              Use these as "demand proof" instead of named candidates — Opus will frame them as "{hiringDemand[agency.vertical].length} {agency.vertical} shops actively hiring this week."
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-slate-500 text-[11px] italic">
+                            No hiring-demand backup either. Run the TechAlert hunter (Admin → Outreach → Command Center) or wait for tomorrow's 6am ET scan.
+                          </p>
+                        )}
+                      </div>
                     )}
                     {matchingCandidatesFor(agency.vertical as any).map(c => {
                       const isPicked = pickedFor[agency.name] === c.id;
