@@ -73,6 +73,8 @@ async function invokeFn(name: string, body: unknown): Promise<{ ok: boolean; dat
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        // Both headers are required: apikey gates the gateway, Authorization carries the service-role JWT
+        "apikey": SUPABASE_SERVICE_KEY,
         "Authorization": `Bearer ${SUPABASE_SERVICE_KEY}`,
       },
       body: JSON.stringify(body),
@@ -86,6 +88,9 @@ async function invokeFn(name: string, body: unknown): Promise<{ ok: boolean; dat
     return { ok: false, data: null, error: err instanceof Error ? err.message : String(err) };
   }
 }
+
+// Metro Detroit fallback ring — used if the chosen city scrapes 0 contractors
+const FALLBACK_CITIES = ["Detroit", "Warren", "Sterling Heights", "Livonia", "Dearborn", "Troy", "Southfield", "Royal Oak", "Farmington Hills", "Novi"];
 
 async function runOrchestration(runId: string, input: RunInput) {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
