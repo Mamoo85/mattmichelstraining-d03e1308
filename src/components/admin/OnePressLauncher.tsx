@@ -173,6 +173,7 @@ export default function OnePressLauncher({
     }
   };
 
+  const done = run?.status === "completed" || run?.status === "failed";
   const pct = run ? (STAGE_PCT[run.stage] ?? 0) : 0;
 
   return (
