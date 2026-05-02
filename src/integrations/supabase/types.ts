@@ -14292,6 +14292,7 @@ export type Database = {
           do_not_fax: boolean
           do_not_mail: boolean
           email: string | null
+          enrichment_attempts: number
           enrichment_data: Json | null
           fax: string | null
           id: string
@@ -14326,6 +14327,7 @@ export type Database = {
           do_not_fax?: boolean
           do_not_mail?: boolean
           email?: string | null
+          enrichment_attempts?: number
           enrichment_data?: Json | null
           fax?: string | null
           id?: string
@@ -14360,6 +14362,7 @@ export type Database = {
           do_not_fax?: boolean
           do_not_mail?: boolean
           email?: string | null
+          enrichment_attempts?: number
           enrichment_data?: Json | null
           fax?: string | null
           id?: string
