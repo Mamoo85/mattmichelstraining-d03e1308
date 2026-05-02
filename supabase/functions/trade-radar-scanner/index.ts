@@ -282,13 +282,19 @@ async function notifyClients(
       const searchQ = l.address
         ? encodeURIComponent(`${l.address} ${l.city ?? ""} owner contact`)
         : encodeURIComponent(`${l.city ?? ""} ${label} lead`);
+      const raw = (l.raw_source_data ?? {}) as Record<string, any>;
+      const sourceUrl: string | undefined = raw.source_url ?? raw.url ?? raw.listing_url;
+      const confidence = typeof l.score === "number" ? `${Math.min(100, l.score * 10)}%` : "—";
+      const sourceLabel = l.source_method ?? raw.source ?? "internal";
       return `<div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;margin-bottom:12px;">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span style="color:${scoreColor};font-size:22px;font-weight:700;">${l.score ?? "?"}/10</span>
           <span style="color:#64748b;font-size:11px;text-transform:uppercase;">${sig}</span>
         </div>
-        <p style="color:#f1f5f9;font-weight:600;margin:8px 0 4px;">${addr || "Area lead"}</p>
-        ${l.signal_detail ? `<p style="color:#cbd5e1;font-size:12px;margin:4px 0;">${l.signal_detail}</p>` : ""}
+        <p style="color:#f1f5f9;font-weight:600;margin:8px 0 4px;">📍 ${addr || "Address pending"}</p>
+        ${l.signal_detail ? `<p style="color:#cbd5e1;font-size:12px;margin:4px 0;"><strong style="color:#94a3b8;">Why:</strong> ${l.signal_detail}</p>` : ""}
+        <p style="color:#94a3b8;font-size:11px;margin:4px 0;"><strong>Source:</strong> ${sourceLabel} · <strong>Confidence:</strong> ${confidence}${l.signal_date ? ` · <strong>Detected:</strong> ${l.signal_date}` : ""}</p>
+        ${sourceUrl ? `<p style="margin:4px 0;"><a href="${sourceUrl}" style="color:#00d4ff;font-size:11px;text-decoration:underline;">🔗 View source listing</a></p>` : ""}
         ${l.suggested_opener ? `<p style="color:#e2e8f0;font-size:12px;font-style:italic;margin:8px 0;">"${l.suggested_opener}"</p>` : ""}
         <a href="https://www.google.com/search?q=${searchQ}" style="display:inline-block;margin-top:8px;padding:6px 12px;background:#0f172a;color:#00d4ff;border:1px solid #00d4ff;border-radius:4px;font-size:11px;text-decoration:none;">🔍 Find Contact</a>
       </div>`;
@@ -298,10 +304,11 @@ async function notifyClients(
       <div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:14px;margin-bottom:16px;">
         <p style="color:#fbbf24;font-size:12px;font-weight:700;text-transform:uppercase;margin:0 0 8px;">⚠️ Market Intel — last 7 days</p>
         ${topArea.map((a) => `
-          <div style="border-top:1px solid #1e293b;padding:6px 0;">
-            <span style="color:#e2e8f0;font-size:12px;font-weight:600;">${(a.alert_type ?? "").replace(/_/g, " ")}</span>
-            <span style="color:#64748b;font-size:11px;"> · ${a.scope}: ${a.scope_value}</span>
-            ${a.alert_detail ? `<div style="color:#94a3b8;font-size:11px;margin-top:2px;">${a.alert_detail}</div>` : ""}
+          <div style="border-top:1px solid #1e293b;padding:8px 0;">
+            <div><span style="color:#e2e8f0;font-size:12px;font-weight:600;">${(a.alert_type ?? "").replace(/_/g, " ")}</span>
+            <span style="color:#64748b;font-size:11px;"> · ${a.scope}: ${a.scope_value}</span></div>
+            ${a.alert_detail ? `<div style="color:#94a3b8;font-size:11px;margin-top:2px;"><strong style="color:#cbd5e1;">Why:</strong> ${a.alert_detail}</div>` : ""}
+            <div style="color:#64748b;font-size:10px;margin-top:2px;"><strong>Source:</strong> ${a.source ?? "—"} · <strong>Date:</strong> ${a.signal_date ?? "—"}${a.source_url ? ` · <a href="${a.source_url}" style="color:#00d4ff;text-decoration:underline;">view</a>` : ""}</div>
           </div>
         `).join("")}
       </div>` : "";
