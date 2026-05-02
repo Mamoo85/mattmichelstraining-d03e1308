@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Crown, Link2, Sparkles, ShieldCheck, Loader2, Grid3x3, Trash2, Plus } from "lucide-react";
+import { Crown, Link2, Sparkles, ShieldCheck, Loader2, Grid3x3, Trash2, Plus, Mail, Copy } from "lucide-react";
 import SendDJConleyProposalCard from "./SendDJConleyProposalCard";
 
 /**
@@ -55,6 +55,46 @@ export default function DJConleyCommandPanel() {
     }
   };
 
+  // Email preferences manager
+  const [prefs, setPrefs] = useState<any[]>([]);
+  const [loadingPrefs, setLoadingPrefs] = useState(false);
+
+  const loadPrefs = async () => {
+    setLoadingPrefs(true);
+    try {
+      const { data, error } = await supabase
+        .from("client_email_preferences" as any)
+        .select("id, client_email, frequency, last_sent_at, unsubscribed_at, unsubscribe_token, source, created_at")
+        .eq("report_type", "value_report")
+        .order("client_email");
+      if (error) throw error;
+      setPrefs((data as any) || []);
+    } catch (err: any) {
+      toast.error("Prefs load failed", { description: err?.message });
+    } finally {
+      setLoadingPrefs(false);
+    }
+  };
+
+  const setFrequency = async (id: string, frequency: "weekly" | "monthly" | "off") => {
+    try {
+      const update: any = { frequency };
+      update.unsubscribed_at = frequency === "off" ? new Date().toISOString() : null;
+      const { error } = await supabase.from("client_email_preferences" as any).update(update).eq("id", id);
+      if (error) throw error;
+      toast.success(`Set to ${frequency}`);
+      await loadPrefs();
+    } catch (err: any) {
+      toast.error("Update failed", { description: err?.message });
+    }
+  };
+
+  const copyPrefsLink = (token: string) => {
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/email-preferences?token=${token}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Preferences link copied");
+  };
+
   // Command Center tile manager
   const [tiles, setTiles] = useState<any[]>([]);
   const [loadingTiles, setLoadingTiles] = useState(false);
@@ -115,65 +155,6 @@ export default function DJConleyCommandPanel() {
     }
   };
 
-  // Command Center tile manager
-  const [tiles, setTiles] = useState<any[]>([]);
-  const [loadingTiles, setLoadingTiles] = useState(false);
-  const [newTile, setNewTile] = useState({ label: "", url: "", icon_emoji: "🔗", category: "general" });
-  const [savingTile, setSavingTile] = useState(false);
-
-  const loadTiles = async (target?: string) => {
-    const e = (target ?? email).trim().toLowerCase();
-    if (!e) return;
-    setLoadingTiles(true);
-    try {
-      const { data, error } = await supabase
-        .from("command_center_tiles" as any)
-        .select("*")
-        .eq("owner_email", e)
-        .order("sort_order");
-      if (error) throw error;
-      setTiles((data as any) || []);
-    } catch (err: any) {
-      toast.error("Tiles load failed", { description: err?.message });
-    } finally {
-      setLoadingTiles(false);
-    }
-  };
-
-  const addTile = async () => {
-    if (!newTile.label.trim() || !newTile.url.trim()) return toast.error("Label + URL required");
-    setSavingTile(true);
-    try {
-      const { error } = await supabase.from("command_center_tiles" as any).insert({
-        owner_email: email.trim().toLowerCase(),
-        label: newTile.label.trim(),
-        url: newTile.url.trim(),
-        icon_emoji: newTile.icon_emoji || "🔗",
-        category: newTile.category || "general",
-        sort_order: tiles.length,
-        is_active: true,
-      } as any);
-      if (error) throw error;
-      toast.success("Tile added");
-      setNewTile({ label: "", url: "", icon_emoji: "🔗", category: "general" });
-      await loadTiles();
-    } catch (err: any) {
-      toast.error("Add failed", { description: err?.message });
-    } finally {
-      setSavingTile(false);
-    }
-  };
-
-  const deleteTile = async (id: string) => {
-    try {
-      const { error } = await supabase.from("command_center_tiles" as any).delete().eq("id", id);
-      if (error) throw error;
-      toast.success("Tile removed");
-      await loadTiles();
-    } catch (err: any) {
-      toast.error("Delete failed", { description: err?.message });
-    }
-  };
 
   const loadLock = async (target?: string) => {
     const e = (target ?? email).trim().toLowerCase();
@@ -200,6 +181,7 @@ export default function DJConleyCommandPanel() {
   useEffect(() => {
     loadLock("pat@djconley.com");
     loadTiles("pat@djconley.com");
+    loadPrefs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -476,6 +458,58 @@ export default function DJConleyCommandPanel() {
               {savingTile ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 mr-1" />Add</>}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Email preferences manager */}
+      <Card className="border-white/10 bg-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Mail className="h-4 w-4 text-[#00d4ff]" />
+            Value-report email consent ({prefs.length})
+          </CardTitle>
+          <p className="text-xs text-white/50">
+            Per-recipient frequency and unsubscribe state for the Forever-Pricing weekly report. Updates honor CAN-SPAM and reset on Stripe checkout.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {loadingPrefs ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : prefs.length === 0 ? (
+            <p className="text-xs text-white/40 italic">No preference rows yet. Run the Stripe checkout or seed manually.</p>
+          ) : (
+            prefs.map((p) => (
+              <div key={p.id} className="flex flex-wrap items-center gap-2 rounded-md border border-white/10 bg-white/5 p-2 text-sm">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{p.client_email}</p>
+                  <p className="text-[10px] text-white/40">
+                    last sent: {p.last_sent_at ? new Date(p.last_sent_at).toLocaleDateString() : "never"} · src: {p.source}
+                    {p.unsubscribed_at ? ` · unsub ${new Date(p.unsubscribed_at).toLocaleDateString()}` : ""}
+                  </p>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={
+                    p.frequency === "off"
+                      ? "border-red-400/40 text-red-300"
+                      : p.frequency === "monthly"
+                      ? "border-yellow-400/40 text-yellow-300"
+                      : "border-[#00d4ff]/40 text-[#00d4ff]"
+                  }
+                >
+                  {p.frequency}
+                </Badge>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => setFrequency(p.id, "weekly")}>W</Button>
+                  <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => setFrequency(p.id, "monthly")}>M</Button>
+                  <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => setFrequency(p.id, "off")}>Off</Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => copyPrefsLink(p.unsubscribe_token)} title="Copy preferences link">
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
         </CardContent>
       </Card>
     </div>

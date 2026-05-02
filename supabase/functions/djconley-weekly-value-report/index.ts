@@ -45,19 +45,22 @@ interface ChangelogEntry {
   ship_date: string;
 }
 
+const PREFS_BASE = `${SUPABASE_URL}/functions/v1/email-preferences`;
+
 function renderEmail(opts: {
   email: string;
   lock: Lock;
   entries: ChangelogEntry[];
   newTilesCount: number;
+  unsubscribeToken: string;
+  frequencyLabel: string;
 }) {
-  const { email, lock, entries, newTilesCount } = opts;
+  const { email, lock, entries, newTilesCount, unsubscribeToken, frequencyLabel } = opts;
+  const prefsUrl = `${PREFS_BASE}?token=${unsubscribeToken}`;
+  const oneClickUrl = `${PREFS_BASE}?token=${unsubscribeToken}&action=off`;
   const monthsLocked = Math.max(
     1,
-    Math.floor(
-      (Date.now() - new Date(lock.locked_since).getTime()) /
-        (30 * 86400_000),
-    ),
+    Math.floor((Date.now() - new Date(lock.locked_since).getTime()) / (30 * 86400_000)),
   );
   const itemsHtml = entries.length
     ? entries
@@ -75,11 +78,11 @@ function renderEmail(opts: {
   return `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,Segoe UI,sans-serif;">
 <div style="max-width:600px;margin:0 auto;padding:32px 16px;">
   <div style="background:#0a1628;border:1px solid #00d4ff;border-radius:16px;padding:32px;">
-    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">🔒 FOREVER PRICING · WEEK IN REVIEW</p>
-    <h1 style="color:#fff;font-size:24px;margin:0 0 8px;">Here's what you got this week.</h1>
+    <p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">🔒 FOREVER PRICING · ${frequencyLabel.toUpperCase()} REVIEW</p>
+    <h1 style="color:#fff;font-size:24px;margin:0 0 8px;">Here's what you got this ${frequencyLabel === "monthly" ? "month" : "week"}.</h1>
     <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">Your locked rate of <strong style="color:#00d4ff;">$${Number(lock.locked_monthly_price).toLocaleString()}/mo</strong> · ${monthsLocked} month${monthsLocked === 1 ? "" : "s"} in.</p>
 
-    <h2 style="color:#fff;font-size:16px;margin:0 0 12px;">📦 Shipped this week (${entries.length})</h2>
+    <h2 style="color:#fff;font-size:16px;margin:0 0 12px;">📦 Shipped (${entries.length})</h2>
     ${itemsHtml}
 
     ${newTilesCount > 0 ? `<div style="background:#00d4ff14;border:1px solid #00d4ff;border-radius:8px;padding:12px;margin:16px 0;"><p style="color:#00d4ff;font-size:13px;margin:0;font-weight:700;">+ ${newTilesCount} new Command Center tile${newTilesCount === 1 ? "" : "s"} added to your dashboard</p></div>` : ""}
@@ -88,15 +91,17 @@ function renderEmail(opts: {
       <a href="https://detroitwebagent.com/owner/login" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:800;font-size:14px;">Open my dashboard →</a>
     </p>
 
-    <p style="color:#475569;font-size:11px;margin:32px 0 0;border-top:1px solid #1e3a5f;padding-top:16px;">
-      You're receiving this because your Forever Pricing is active. Reply STOP to opt out of weekly reports (your subscription is unaffected).<br>
+    <p style="color:#475569;font-size:11px;margin:32px 0 0;border-top:1px solid #1e3a5f;padding-top:16px;text-align:center;">
+      You're getting this <strong>${frequencyLabel}</strong> because your Forever Pricing is active.<br>
+      <a href="${prefsUrl}" style="color:#00d4ff;text-decoration:underline;">Change frequency</a> · <a href="${oneClickUrl}" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a><br>
       — Matt · matt@detroitwebagent.com · (313) 992-1219
     </p>
   </div>
 </div></body></html>`;
 }
 
-async function sendEmail(to: string, subject: string, html: string) {
+async function sendEmail(to: string, subject: string, html: string, unsubscribeToken: string) {
+  const oneClickUrl = `${PREFS_BASE}?token=${unsubscribeToken}&action=off`;
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -110,6 +115,10 @@ async function sendEmail(to: string, subject: string, html: string) {
       subject,
       html,
       reply_to: "matt@detroitwebagent.com",
+      headers: {
+        "List-Unsubscribe": `<${oneClickUrl}>, <mailto:matt@detroitwebagent.com?subject=unsubscribe>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
     }),
   });
   if (!r.ok) {
@@ -152,25 +161,70 @@ Deno.serve(async (req) => {
     if (entryErr) throw entryErr;
 
     let sent = 0;
+    let skippedOff = 0;
+    let skippedTooSoon = 0;
     const errors: string[] = [];
+    const now = new Date();
+    const monthlyWindowMs = 28 * 86400_000;
+
     for (const lock of locks) {
       try {
-        // Per-client tile count delta
+        const emailLower = lock.client_email.toLowerCase();
+
+        // Ensure a preference row exists (idempotent upsert) and pull current state
+        await sb
+          .from("client_email_preferences")
+          .upsert(
+            { client_email: emailLower, report_type: "value_report", source: "auto" } as any,
+            { onConflict: "client_email,report_type", ignoreDuplicates: true } as any,
+          );
+
+        const { data: pref } = await sb
+          .from("client_email_preferences")
+          .select("id, frequency, unsubscribe_token, last_sent_at")
+          .eq("client_email", emailLower)
+          .eq("report_type", "value_report")
+          .maybeSingle();
+
+        if (!pref) {
+          errors.push(`${emailLower}: pref row missing after upsert`);
+          continue;
+        }
+        if (pref.frequency === "off") {
+          skippedOff++;
+          continue;
+        }
+        if (pref.frequency === "monthly" && pref.last_sent_at) {
+          const elapsed = now.getTime() - new Date(pref.last_sent_at).getTime();
+          if (elapsed < monthlyWindowMs) {
+            skippedTooSoon++;
+            continue;
+          }
+        }
+
         const { count: newTiles } = await sb
           .from("command_center_tiles")
           .select("id", { count: "exact", head: true })
-          .eq("owner_email", lock.client_email)
+          .eq("owner_email", emailLower)
           .eq("is_active", true)
           .gte("created_at", sevenDaysAgo.toISOString());
 
         const html = renderEmail({
-          email: lock.client_email,
+          email: emailLower,
           lock: lock as Lock,
           entries: (entries || []) as ChangelogEntry[],
           newTilesCount: newTiles || 0,
+          unsubscribeToken: pref.unsubscribe_token,
+          frequencyLabel: pref.frequency,
         });
-        const subject = `🔒 Forever Pricing · ${entries?.length || 0} shipped this week`;
-        await sendEmail(lock.client_email, subject, html);
+        const subject = `🔒 Forever Pricing · ${entries?.length || 0} shipped this ${pref.frequency === "monthly" ? "month" : "week"}`;
+        await sendEmail(emailLower, subject, html, pref.unsubscribe_token);
+
+        await sb
+          .from("client_email_preferences")
+          .update({ last_sent_at: now.toISOString() })
+          .eq("id", pref.id);
+
         sent++;
       } catch (e: any) {
         errors.push(`${lock.client_email}: ${e?.message || e}`);
@@ -178,7 +232,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ sent, total: locks.length, errors }),
+      JSON.stringify({ sent, total: locks.length, skipped_off: skippedOff, skipped_too_soon: skippedTooSoon, errors }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e: any) {

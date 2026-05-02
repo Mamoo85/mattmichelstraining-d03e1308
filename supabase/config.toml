@@ -2159,3 +2159,6 @@ verify_jwt = false
 
 [functions.create-djconley-checkout]
 verify_jwt = false
+
+[functions.email-preferences]
+verify_jwt = false
