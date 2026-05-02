@@ -451,22 +451,18 @@ Deno.serve(async (req) => {
         else stats.skipped++;
       }
 
-      if (insertedLeads.length || body.initial) {
-        // Fetch full leads for digest
-        const since24h = new Date(Date.now() - 24 * 3600_000).toISOString();
-        const { data: freshLeads } = await sb
-          .from("trade_radar_leads")
-          .select("*")
-          .eq("vertical", vertical)
-          .gte("created_at", since24h)
-          .order("score", { ascending: false })
-          .limit(10);
+      // Always notify clients — market intel goes out even with 0 per-address leads
+      const since24h = new Date(Date.now() - 24 * 3600_000).toISOString();
+      const { data: freshLeads } = await sb
+        .from("trade_radar_leads")
+        .select("*")
+        .eq("vertical", vertical)
+        .gte("created_at", since24h)
+        .order("score", { ascending: false })
+        .limit(10);
 
-        if (freshLeads?.length) {
-          await notifyClients(sb, vertical, freshLeads);
-          stats.notified = freshLeads.length;
-        }
-      }
+      await notifyClients(sb, vertical, (freshLeads as any[]) ?? []);
+      stats.notified = freshLeads?.length ?? 0;
     } catch (e: unknown) {
       console.error(`[trade-scanner] ${vertical} error:`, e instanceof Error ? e.message : String(e));
     }
