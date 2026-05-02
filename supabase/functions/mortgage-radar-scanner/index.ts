@@ -182,6 +182,7 @@ async function scanBSEEDPermits(): Promise<RawSignal[]> {
       out.push({
         address: a.address || "",
         city: "Detroit",
+        county: "Wayne",
         zip: String(a.zip_code || "").slice(0, 5) || undefined,
         signal_type: "renovation_permit",
         signal_source: "BSEED",
