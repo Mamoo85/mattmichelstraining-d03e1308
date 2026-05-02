@@ -873,7 +873,10 @@ const App = () => (
                      <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
                       <Route path="/admin" element={<AgencyAdminRoute><Admin /></AgencyAdminRoute>} />
                       <Route path="/admin/health" element={<AgencyAdminRoute><AdminHealth /></AgencyAdminRoute>} />
-                      <Route path="/dwa-admin" element={<AgencyAdminRoute><DWAAdmin /></AgencyAdminRoute>} />
+                       <Route path="/dwa-admin" element={<AgencyAdminRoute><DWAAdmin /></AgencyAdminRoute>} />
+                       <Route path="/owner/login" element={<OwnerLogin />} />
+                       <Route path="/owner/verify" element={<OwnerVerify />} />
+                       <Route path="/owner/dashboard" element={<OwnerDashboard />} />
                       <Route path="/dwa-admin/outreach-audit" element={<AgencyAdminRoute><OutreachAuditLog /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/outreach-queue" element={<AgencyAdminRoute><OutreachQueuePage /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/outreach-observability" element={<AgencyAdminRoute><OutreachObservabilityPage /></AgencyAdminRoute>} />
