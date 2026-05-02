@@ -215,6 +215,7 @@ async function scanForeclosureNotices(): Promise<RawSignal[]> {
   return items.map((i) => ({
     address: i.address,
     city: i.city,
+    county: i.county || inferCounty(i.city),
     zip: i.zip,
     signal_type: i.signal_type,
     signal_source: i.signal_source,
@@ -232,6 +233,7 @@ async function scanFSBOListings(): Promise<RawSignal[]> {
   return items.map((i) => ({
     address: i.address,
     city: i.city,
+    county: i.county || inferCounty(i.city),
     zip: i.zip,
     signal_type: i.signal_type,
     signal_source: i.signal_source,
@@ -267,7 +269,7 @@ async function scanDivorceFilings(): Promise<RawSignal[]> {
 async function scanHighEquityLowRate(): Promise<RawSignal[]> {
   try {
     // bseed_building_permits has amt_estimated_contractor_cost — correct layer for cost filtering
-    const url = "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permits/FeatureServer/0/query?where=amt_estimated_contractor_cost+%3E%3D+100000&outFields=address,zip_code,work_description,issued_date,amt_estimated_contractor_cost&resultRecordCount=30&f=json&orderByFields=issued_date+DESC";
+    const url = "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permits/FeatureServer/0/query?where=amt_estimated_contractor_cost+%3E%3D+25000&outFields=address,zip_code,work_description,issued_date,amt_estimated_contractor_cost&resultRecordCount=30&f=json&orderByFields=issued_date+DESC";
     const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!r.ok) return [];
     const j = await r.json();
@@ -275,11 +277,12 @@ async function scanHighEquityLowRate(): Promise<RawSignal[]> {
     for (const f of (j.features || [])) {
       const a = f.attributes || {};
       const cost = Number(a.amt_estimated_contractor_cost || 0);
-      if (cost < 100000) continue;
+      if (cost < 25000) continue;
       const desc = String(a.work_description || "Major renovation").slice(0, 200);
       out.push({
         address: a.address || undefined,
         city: "Detroit",
+        county: "Wayne",
         zip: String(a.zip_code || "").slice(0, 5) || undefined,
         signal_type: "high_equity_renovation",
         signal_source: "BSEED_HighValue",
@@ -313,6 +316,7 @@ async function scanNewMichiganLLCs(sb: ReturnType<typeof createClient>): Promise
         full_name: biz,
         address: `${biz}, ${city}`,
         city,
+        county: inferCounty(city),
         signal_type: "new_llc_self_employed",
         signal_source: "MI_SOS",
         signal_detail: `New LLC: ${biz} — self-employed owner may need bank-statement or DSCR loan`,
@@ -336,6 +340,7 @@ async function scanProbateFilings(): Promise<RawSignal[]> {
     full_name: i.full_name,
     address: i.address,
     city: i.city,
+    county: i.county || inferCounty(i.city),
     zip: i.zip,
     signal_type: i.signal_type,
     signal_source: i.signal_source,
@@ -352,6 +357,7 @@ async function scanEstateSales(): Promise<RawSignal[]> {
   return items.map((i) => ({
     address: i.address,
     city: i.city,
+    county: i.county || inferCounty(i.city),
     zip: i.zip,
     signal_type: i.signal_type,
     signal_source: i.signal_source,
@@ -368,6 +374,7 @@ async function scanTaxDelinquency(): Promise<RawSignal[]> {
   return items.map((i) => ({
     address: i.address,
     city: i.city,
+    county: i.county || inferCounty(i.city),
     zip: i.zip,
     signal_type: i.signal_type,
     signal_source: i.signal_source,
@@ -384,6 +391,7 @@ async function scanFixerUpperListings(): Promise<RawSignal[]> {
   return items.map((i) => ({
     address: i.address,
     city: i.city,
+    county: i.county || inferCounty(i.city),
     zip: i.zip,
     signal_type: i.signal_type,
     signal_source: i.signal_source,
@@ -433,6 +441,7 @@ async function scanSBAApprovals(): Promise<RawSignal[]> {
         full_name: rec["Recipient Name"] ?? rec.recipient_name ?? rec.awardee_name ?? undefined,
         address: rec.recipient_location_address_line1 ?? rec.address ?? "",
         city: rec.recipient_location_city_name || undefined,
+        county: inferCounty(rec.recipient_location_city_name),
         signal_type: "sba_loan_approved",
         signal_source: "USASpending",
         signal_detail: `SBA loan: $${Number(rec["Loan Value"] || 0).toLocaleString()} approved for ${rec["Recipient Name"] || "business"} in ${rec.recipient_location_city_name || "MI"}`,
@@ -447,12 +456,17 @@ async function scanSBAApprovals(): Promise<RawSignal[]> {
   }
 }
 
-async function notifyClients(sb: ReturnType<typeof createClient>, zip: string | undefined, score: number): Promise<string[]> {
-  if (!zip || score < 7) return [];
+async function notifyClients(sb: ReturnType<typeof createClient>, zip: string | undefined, county: string | undefined, score: number): Promise<string[]> {
+  if (score < 7) return [];
   const { data: clients } = await (sb.from as any)("mortgage_radar_clients")
-    .select("id, zip_codes")
+    .select("id, zip_codes, coverage_counties")
     .eq("active", true);
-  const matched = (clients || []).filter((c: any) => Array.isArray(c.zip_codes) && c.zip_codes.includes(zip));
+  const matched = (clients || []).filter((c: any) => {
+    if (county && Array.isArray(c.coverage_counties) && c.coverage_counties.length > 0) {
+      return c.coverage_counties.includes(county);
+    }
+    return zip && Array.isArray(c.zip_codes) && c.zip_codes.includes(zip);
+  });
   return matched.map((c: any) => c.id);
 }
 
@@ -520,6 +534,7 @@ async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal
     city: s.city || null,
     state: "MI",
     zip: s.zip || null,
+    county: s.county || null,
     signal_type: s.signal_type,
     signal_source: s.signal_source,
     signal_detail: s.signal_detail || null,
@@ -658,7 +673,7 @@ serve(async (req) => {
     // Phase B: respect the trust cap. Unverified LLM-only leads cannot trigger hot SMS.
     const rawScore = scoreFor(s.signal_type);
     const score = s.source_method === "llm_search" ? Math.min(3, rawScore) : rawScore;
-    const matchedClientIds = await notifyClients(sb, s.zip, score);
+    const matchedClientIds = await notifyClients(sb, s.zip, s.county, score);
     if (matchedClientIds.length > 0) {
       await (sb.from as any)("mortgage_radar_leads")
         .update({ notified_client_ids: matchedClientIds })
