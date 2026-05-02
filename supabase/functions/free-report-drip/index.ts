@@ -16,7 +16,7 @@ const SERVICE_MAP: Record<string, { name: string; price: string; url: string; be
   free_trending_products: {
     name: "AI Trending Product Finder",
     price: "$29/mo",
-    url: "https://www.mattmichelstraining.com/get-started?service=trending_product_finder",
+    url: "https://detroitwebagent.com/get-started?service=trending_product_finder",
     benefit: "15+ trending products weekly with profit margins, supplier links, and ad creative ideas",
   },
   free_grant_digest: {
