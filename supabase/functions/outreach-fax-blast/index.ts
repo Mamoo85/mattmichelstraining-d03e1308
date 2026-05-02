@@ -1,6 +1,6 @@
-// outreach-fax-blast — Drains active outreach_campaigns (channel='fax') via Phaxio.
-// Requires PHAXIO_API_KEY + PHAXIO_API_SECRET in Supabase secrets.
-// Sends a faxable HTML page (Phaxio renders it). Cost ~$0.07/page.
+// outreach-fax-blast — Drains active outreach_campaigns (channel='fax') via Sinch Fax API.
+// Requires SINCH_KEY_ID + SINCH_KEY_SECRET + SINCH_PROJECT_ID in Supabase secrets.
+// Sends an HTML page rendered to fax by Sinch. Cost ~$0.07/page.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isFounder } from "../_shared/founder-seats.ts";
@@ -12,35 +12,41 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const PHAXIO_KEY = Deno.env.get("PHAXIO_API_KEY") || "";
-const PHAXIO_SECRET = Deno.env.get("PHAXIO_API_SECRET") || "";
+const SINCH_KEY_ID = Deno.env.get("SINCH_KEY_ID") || "";
+const SINCH_KEY_SECRET = Deno.env.get("SINCH_KEY_SECRET") || "";
+const SINCH_PROJECT_ID = Deno.env.get("SINCH_PROJECT_ID") || "";
+const SINCH_FROM = Deno.env.get("SINCH_FAX_FROM") || ""; // optional caller-id fax number
 
 function fillTemplate(tpl: string, vars: Record<string, string>): string {
   return tpl.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k) => vars[k] ?? "");
 }
 
 async function sendFax(faxNumber: string, htmlContent: string): Promise<{ ok: boolean; id?: string; error?: string }> {
-  if (!PHAXIO_KEY || !PHAXIO_SECRET) return { ok: false, error: "phaxio_not_configured" };
-  const auth = "Basic " + btoa(`${PHAXIO_KEY}:${PHAXIO_SECRET}`);
-  const fd = new FormData();
-  fd.append("to", faxNumber);
-  fd.append("string_data", htmlContent);
-  fd.append("string_data_type", "html");
-  const r = await fetch("https://api.phaxio.com/v2.1/faxes", {
+  if (!SINCH_KEY_ID || !SINCH_KEY_SECRET || !SINCH_PROJECT_ID) return { ok: false, error: "sinch_not_configured" };
+  const auth = "Basic " + btoa(`${SINCH_KEY_ID}:${SINCH_KEY_SECRET}`);
+  // Sinch Fax API v3: POST https://fax.api.sinch.com/v3/projects/{projectId}/faxes
+  // contentUrl OR fileContent (base64). We use base64 HTML wrapped as a fax file.
+  const body: Record<string, unknown> = {
+    to: [faxNumber],
+    fileContent: btoa(unescape(encodeURIComponent(htmlContent))),
+    fileContentType: "text/html",
+  };
+  if (SINCH_FROM) body.from = SINCH_FROM;
+  const r = await fetch(`https://fax.api.sinch.com/v3/projects/${SINCH_PROJECT_ID}/faxes`, {
     method: "POST",
-    headers: { Authorization: auth },
-    body: fd,
+    headers: { Authorization: auth, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   });
   const j = await r.json().catch(() => ({} as any));
-  if (!r.ok || !j?.success) return { ok: false, error: j?.message || `phaxio_${r.status}` };
-  return { ok: true, id: String(j?.data?.id || "") };
+  if (!r.ok) return { ok: false, error: j?.message || j?.error?.message || `sinch_${r.status}` };
+  return { ok: true, id: String(j?.id || j?.faxId || "") };
 }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  if (!PHAXIO_KEY || !PHAXIO_SECRET) {
-    return new Response(JSON.stringify({ ok: false, error: "phaxio_credentials_missing", note: "Set PHAXIO_API_KEY and PHAXIO_API_SECRET in Supabase secrets to enable fax outreach." }), {
+  if (!SINCH_KEY_ID || !SINCH_KEY_SECRET || !SINCH_PROJECT_ID) {
+    return new Response(JSON.stringify({ ok: false, error: "sinch_credentials_missing", note: "Set SINCH_KEY_ID, SINCH_KEY_SECRET, and SINCH_PROJECT_ID in Supabase secrets to enable fax outreach." }), {
       status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
@@ -93,7 +99,7 @@ Deno.serve(async (req) => {
       </body></html>`;
       const res = await sendFax(t.fax!, html);
       await sb.from("outreach_sends").insert({
-        campaign_id: c.id, target_id: t.id, channel: "fax", provider: "phaxio",
+        campaign_id: c.id, target_id: t.id, channel: "fax", provider: "sinch",
         recipient_fax: t.fax, status: res.ok ? "sent" : "failed",
         provider_message_id: res.id || null, error_message: res.ok ? null : res.error,
         sent_at: res.ok ? new Date().toISOString() : null, cost_cents: 7,
