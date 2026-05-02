@@ -14,6 +14,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { encode } from "https://deno.land/std@0.190.0/encoding/base64url.ts";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -187,6 +188,20 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const sb = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
+
+  // Test SMS mode — send a confirmation text to specified numbers
+  let body: Record<string, unknown> = {};
+  try { body = await req.json(); } catch { /* empty body is fine */ }
+  if (body.test_sms) {
+    const phones: string[] = Array.isArray(body.test_sms) ? body.test_sms : ["+13139921219", "+13136719441"];
+    const { count } = await sb.from("mortgage_radar_leads").select("id", { count: "exact", head: true })
+      .gte("created_at", new Date(Date.now() - 24 * 3600_000).toISOString());
+    const msg = `🏠 Mortgage Radar is live. ${count ?? 0} new lead${count !== 1 ? "s" : ""} scanned in SE Michigan today. Daily email is on its way. — Detroit Web Agency`;
+    const results = await Promise.allSettled(phones.map(p => sendSMS(sb, p, msg)));
+    const summary = results.map((r, i) => ({ phone: phones[i], status: r.status === "fulfilled" ? "sent" : (r as PromiseRejectedResult).reason?.message }));
+    return new Response(JSON.stringify({ ok: true, test_sms: summary }), { headers: corsHeaders });
+  }
+
   const now = Date.now();
   const since24h = new Date(now - 24 * 3600_000).toISOString();
   const since7d  = new Date(now - 7 * 24 * 3600_000).toISOString();
