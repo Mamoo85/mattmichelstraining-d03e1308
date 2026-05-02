@@ -2153,3 +2153,6 @@ verify_jwt = false
 
 [functions.run-migration-once]
 verify_jwt = false
+
+[functions.start-radar-trial]
+verify_jwt = false
