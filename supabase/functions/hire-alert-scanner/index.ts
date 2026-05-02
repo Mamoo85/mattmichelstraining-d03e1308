@@ -9,6 +9,8 @@ import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
 import { generateJSON } from "../_shared/ai.ts";
 import { withBreaker } from "../_shared/circuit-breaker.ts";
 import { isPlausibleHumanName } from "../_shared/sanitize-candidate.ts";
+import { fetchHireSignals } from "../_shared/signal-waterfall.ts";
+import { fetchLicenses } from "../_shared/license-waterfall.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
