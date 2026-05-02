@@ -103,6 +103,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "missed-call",           label: "📞 Missed-Call Catch" },
       { id: "missed-call-leads",     label: "📞 Missed Call Leads" },
       { id: "clients-all",           label: "👥 All Clients / CRM" },
+      { id: "djconley",              label: "👑 D.J. Conley · Premium" },
     ],
   },
   {
