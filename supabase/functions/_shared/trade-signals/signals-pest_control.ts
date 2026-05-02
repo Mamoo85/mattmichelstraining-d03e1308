@@ -1,6 +1,9 @@
 // Pest Control Radar signal scanner.
-// Sources: EstateSales (vacant), probate filings, foreclosure notices, USPS vacancy proxy.
-// This is unique data — nobody else aggregates probate + estate + foreclosure into pest leads.
+// Sources: EstateSales (vacant), probate filings, foreclosure notices — unique aggregation.
+// Uses canonical shared scrapers instead of inline copies.
+
+import { scrapeEstateSales } from "../scrapers-public-listings.ts";
+import { scrapeProbateFilings, scrapeForeclosureNotices } from "../scrapers-county-records.ts";
 
 export interface RawSignal {
   address: string; city: string; zip: string;
@@ -31,78 +34,74 @@ export const OPENERS: Record<string, { opener: string; window: string }> = {
   },
 };
 
-async function scrapeEstateSalesZips(zips: string[]): Promise<RawSignal[]> {
-  const signals: RawSignal[] = [];
-  for (const zip of zips.slice(0, 5)) {
-    try {
-      const res = await fetch(
-        `https://www.estatesales.net/garage-sales/${zip}`,
-        { headers: { "User-Agent": "Mozilla/5.0 (compatible; DWA-TradeRadar/1.0)" } },
-      );
-      if (!res.ok) continue;
-      const html = await res.text();
-      const matches = html.matchAll(/<h2[^>]*class="[^"]*sale-title[^"]*"[^>]*>([^<]+)<\/h2>/gi);
-      for (const m of matches) {
-        signals.push({
-          address: zip,
-          city: zip,
-          zip,
-          signal_type: "vacant_estate_risk",
-          signal_detail: `EstateSales listing in ZIP ${zip}: ${m[1]?.trim().slice(0, 80)}`,
-          signal_date: new Date().toISOString().split("T")[0],
-          score: BASE_SCORES.vacant_estate_risk,
-          source_method: "estate_sales_scrape",
-          suggested_opener: OPENERS.vacant_estate_risk.opener,
-          best_call_window: OPENERS.vacant_estate_risk.window,
-          estimated_value: 600,
-          raw_source_data: { zip, title: m[1] },
-        });
-      }
-    } catch { /* fail open */ }
-  }
-  return signals;
-}
-
 export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<RawSignal[]> {
   const signals: RawSignal[] = [];
-  const targetZips = zipFilter?.length ? zipFilter.slice(0, 20) : ["48201","48205","48221","48224","48235","48227","48228","48214","48219","48223"];
 
-  // 1. Estate sales (vacant property indicator)
-  const estateSignals = await scrapeEstateSalesZips(targetZips);
-  signals.push(...estateSignals);
-
-  // 2. Wayne County probate court (proxy via foreclosure notices endpoint)
+  // 1. EstateSales (canonical shared scraper — replaces inline ZIP loop)
   try {
-    const since = new Date(Date.now() - 30 * 86400_000).toISOString().split("T")[0];
-    const where = encodeURIComponent(
-      `(work_description LIKE '%PROBATE%' OR work_description LIKE '%ESTATE%') AND issued_date >= DATE '${since}'`,
-    );
-    const res = await fetch(
-      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_permits/FeatureServer/0/query?where=${where}&outFields=address,issued_date,work_description&resultRecordCount=30&f=json`,
-      { headers: { "User-Agent": "DWA-TradeRadar/1.0" } },
-    );
-    if (res.ok) {
-      const d = await res.json();
-      for (const feat of (d?.features ?? [])) {
-        const a = feat?.attributes ?? {};
-        const addr: string = a.address ?? "";
-        const zip = addr.match(/\b(4\d{4})\b/)?.[1] ?? "";
-        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
-        signals.push({
-          address: addr, city: "Detroit", zip,
-          signal_type: "probate_vacant",
-          signal_detail: `Probate/estate permit: ${(a.work_description ?? "").slice(0, 80)}`,
-          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
-          score: BASE_SCORES.probate_vacant,
-          source_method: "bseed_arcgis",
-          suggested_opener: OPENERS.probate_vacant.opener,
-          best_call_window: OPENERS.probate_vacant.window,
-          estimated_value: 500,
-          raw_source_data: a,
-        });
-      }
+    const estateResults = await scrapeEstateSales({ perCityCap: 5 });
+    for (const s of estateResults) {
+      if (zipFilter?.length && s.zip && !zipFilter.includes(s.zip)) continue;
+      signals.push({
+        address: s.address,
+        city: s.city ?? "Detroit",
+        zip: s.zip ?? "",
+        signal_type: "vacant_estate_risk",
+        signal_detail: `EstateSales (${s.signal_source}): ${s.signal_detail ?? s.address}`,
+        signal_date: s.signal_date ?? new Date().toISOString().split("T")[0],
+        score: BASE_SCORES.vacant_estate_risk,
+        source_method: "estate_sales_scrape",
+        suggested_opener: OPENERS.vacant_estate_risk.opener,
+        best_call_window: OPENERS.vacant_estate_risk.window,
+        estimated_value: 600,
+        raw_source_data: { address: s.address, source: s.signal_source },
+      });
+    }
+  } catch (e) { console.error("[pest] EstateSales:", e); }
+
+  // 2. Probate filings (Wayne + Oakland + Macomb legal notices)
+  try {
+    const probates = await scrapeProbateFilings({ perSourceCap: 8 });
+    for (const p of probates) {
+      if (zipFilter?.length && p.zip && !zipFilter.includes(p.zip)) continue;
+      signals.push({
+        address: p.address,
+        city: p.city ?? "Detroit",
+        zip: p.zip ?? "",
+        signal_type: "probate_vacant",
+        signal_detail: `Probate filing (${p.signal_source}): ${p.signal_detail ?? p.address}`,
+        signal_date: p.signal_date ?? new Date().toISOString().split("T")[0],
+        score: BASE_SCORES.probate_vacant,
+        source_method: "legalnews_scrape",
+        suggested_opener: OPENERS.probate_vacant.opener,
+        best_call_window: OPENERS.probate_vacant.window,
+        estimated_value: 500,
+        raw_source_data: { address: p.address, source: p.signal_source },
+      });
     }
   } catch (e) { console.error("[pest] probate:", e); }
+
+  // 3. Foreclosure notices (vacant bank-owned properties = pest magnet)
+  try {
+    const foreclosures = await scrapeForeclosureNotices({ perSourceCap: 6 });
+    for (const f of foreclosures) {
+      if (zipFilter?.length && f.zip && !zipFilter.includes(f.zip)) continue;
+      signals.push({
+        address: f.address,
+        city: f.city ?? "Detroit",
+        zip: f.zip ?? "",
+        signal_type: "foreclosure_vacant",
+        signal_detail: `Foreclosure (${f.signal_source}): ${f.signal_detail ?? f.address}`,
+        signal_date: f.signal_date ?? new Date().toISOString().split("T")[0],
+        score: BASE_SCORES.foreclosure_vacant,
+        source_method: "legalnews_scrape",
+        suggested_opener: OPENERS.foreclosure_vacant.opener,
+        best_call_window: OPENERS.foreclosure_vacant.window,
+        estimated_value: 450,
+        raw_source_data: { address: f.address, source: f.signal_source },
+      });
+    }
+  } catch (e) { console.error("[pest] foreclosure:", e); }
 
   return signals;
 }

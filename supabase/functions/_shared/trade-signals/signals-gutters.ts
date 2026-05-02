@@ -13,6 +13,7 @@ export interface RawSignal {
 export const BASE_SCORES: Record<string, number> = {
   roof_permit_upsell: 8,
   storm_gutter_damage: 7,
+  fema_gutter_damage: 8,
 };
 
 export const OPENERS: Record<string, { opener: string; window: string }> = {
@@ -23,6 +24,10 @@ export const OPENERS: Record<string, { opener: string; window: string }> = {
   storm_gutter_damage: {
     opener: "The storm this week is the #1 cause of gutter failures in Michigan — we're in your neighborhood doing inspections and can take a quick look at no charge.",
     window: "Within 10 days of storm event",
+  },
+  fema_gutter_damage: {
+    opener: "Your area received a FEMA disaster declaration — storm-damaged gutters are one of the most overlooked items on insurance claims. We can assess and document yours at no charge.",
+    window: "Within 30 days of declaration",
   },
 };
 
@@ -93,6 +98,35 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
       }
     }
   } catch (e) { console.error("[gutters] NWS:", e); }
+
+  // 3. FEMA disaster declarations (storm damage → gutter insurance claims)
+  try {
+    const since = new Date(Date.now() - 30 * 86400_000).toISOString().split("T")[0];
+    const res = await fetch(
+      `https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?$filter=state eq '${state}' and declarationDate ge '${since}'&$top=10`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const dec of (d?.DisasterDeclarationsSummaries ?? [])) {
+        if (!dec.incidentType?.match(/Hurricane|Tornado|Severe Storm|Flood|Wind/i)) continue;
+        signals.push({
+          address: dec.designatedArea ?? state,
+          city: dec.designatedArea?.split(" County")[0] ?? state,
+          zip: "",
+          signal_type: "fema_gutter_damage",
+          signal_detail: `FEMA DR-${dec.disasterNumber}: ${dec.incidentType} — ${dec.designatedArea}`,
+          signal_date: dec.declarationDate?.split("T")[0] ?? since,
+          score: BASE_SCORES.fema_gutter_damage,
+          source_method: "fema_api",
+          suggested_opener: OPENERS.fema_gutter_damage.opener,
+          best_call_window: OPENERS.fema_gutter_damage.window,
+          estimated_value: 2200,
+          raw_source_data: dec,
+        });
+      }
+    }
+  } catch (e) { console.error("[gutters] FEMA:", e); }
 
   return signals;
 }

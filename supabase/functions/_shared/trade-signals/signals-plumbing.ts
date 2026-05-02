@@ -1,5 +1,7 @@
 // Plumbing Radar signal scanner.
-// Sources: Foreclosure notices, BSEED plumbing permits ≥$5k, EPA lead service lines.
+// Sources: Foreclosure notices (LegalNews), BSEED plumbing permits ≥$5k, EPA ECHO.
+
+import { scrapeForeclosureNotices } from "../scrapers-county-records.ts";
 
 export interface RawSignal {
   address: string; city: string; zip: string;
@@ -66,7 +68,29 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[plumbing] BSEED:", e); }
 
-  // 2. EPA ECHO — enforcement actions as lead-line proxy
+  // 2. Foreclosure notices (deferred maintenance signal)
+  try {
+    const foreclosures = await scrapeForeclosureNotices({ perSourceCap: 8 });
+    for (const f of foreclosures) {
+      if (zipFilter?.length && f.zip && !zipFilter.includes(f.zip)) continue;
+      signals.push({
+        address: f.address,
+        city: f.city ?? "Detroit",
+        zip: f.zip ?? "",
+        signal_type: "foreclosure_deferred",
+        signal_detail: `Foreclosure notice (${f.signal_source}): ${f.signal_detail ?? f.address}`,
+        signal_date: f.signal_date ?? new Date().toISOString().split("T")[0],
+        score: BASE_SCORES.foreclosure_deferred,
+        source_method: "legalnews_scrape",
+        suggested_opener: OPENERS.foreclosure_deferred.opener,
+        best_call_window: OPENERS.foreclosure_deferred.window,
+        estimated_value: 2500,
+        raw_source_data: { address: f.address, source: f.signal_source },
+      });
+    }
+  } catch (e) { console.error("[plumbing] foreclosure scrape:", e); }
+
+  // 3. EPA ECHO — enforcement actions as lead-line proxy
   try {
     const res = await fetch(
       `https://echodata.epa.gov/echo/cwa_rest_services.get_facilities?p_st=${state}&p_act=Y&output=JSON&p_limit=30`,

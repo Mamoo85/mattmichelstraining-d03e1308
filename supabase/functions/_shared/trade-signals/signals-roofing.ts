@@ -21,6 +21,7 @@ export const BASE_SCORES: Record<string, number> = {
   storm_wind_damage: 7,
   roof_permit_upsell: 6,
   fema_disaster: 8,
+  new_homeowner_roof: 5,
 };
 
 export const OPENERS: Record<string, { opener: string; window: string }> = {
@@ -39,6 +40,10 @@ export const OPENERS: Record<string, { opener: string; window: string }> = {
   fema_disaster: {
     opener: "Your area was declared a federal disaster zone — FEMA and your homeowner's insurance may cover full roof replacement. Want a free assessment?",
     window: "Within 30 days of declaration",
+  },
+  new_homeowner_roof: {
+    opener: "Congratulations on the new home! Most buyers don't think to get a roof inspection until it's too late — we offer a free 20-minute check so you know exactly what you're working with.",
+    window: "Within 90 days of purchase close",
   },
 };
 
@@ -148,6 +153,35 @@ export async function scanSignals(
       }
     }
   } catch (e) { console.error("[roofing] BSEED:", e); }
+
+  // 4. FFIEC HMDA — new homeowners as first-inspection targets
+  try {
+    const res = await fetch(
+      `https://ffiec.cfpb.gov/v2/data-browser-api/view/aggregations?states=${state}&years=2023&actions_taken=1&loan_purposes=1&loan_types=1&limit=5`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      const rows: any[] = d?.aggregations ?? [];
+      const total = rows.reduce((n, r) => n + (r.count || 0), 0);
+      if (total > 0) {
+        signals.push({
+          address: `${state} — ${total.toLocaleString()} new purchase loans (2023)`,
+          city: state,
+          zip: "",
+          signal_type: "new_homeowner_roof",
+          signal_detail: `FFIEC HMDA: ${total.toLocaleString()} purchase loan originations in ${state} — new homeowners primed for first roof inspection`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.new_homeowner_roof,
+          source_method: "ffiec_hmda",
+          suggested_opener: OPENERS.new_homeowner_roof.opener,
+          best_call_window: OPENERS.new_homeowner_roof.window,
+          estimated_value: 9000,
+          raw_source_data: { total, state, year: 2023 },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] HMDA:", e); }
 
   return signals;
 }

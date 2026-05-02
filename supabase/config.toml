@@ -2178,5 +2178,8 @@ verify_jwt = false
 [functions.trade-radar-scanner]
 verify_jwt = false
 
+[functions.trade-radar-health-check]
+verify_jwt = false
+
 [functions.create-trade-radar-checkout]
 verify_jwt = false

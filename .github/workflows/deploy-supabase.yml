@@ -72,6 +72,8 @@ jobs:
         run: supabase functions deploy create-trade-radar-checkout --project-ref $PRIMARY_REF --no-verify-jwt
       - name: Deploy stripe-webhook
         run: supabase functions deploy stripe-webhook --project-ref $PRIMARY_REF --no-verify-jwt
+      - name: Deploy trade-radar-health-check
+        run: supabase functions deploy trade-radar-health-check --project-ref $PRIMARY_REF --no-verify-jwt
 
   deploy:
     needs: test

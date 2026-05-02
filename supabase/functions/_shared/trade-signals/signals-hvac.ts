@@ -13,6 +13,7 @@ export const BASE_SCORES: Record<string, number> = {
   extreme_weather_hvac: 9,
   fema_disaster: 8,
   aging_system_proxy: 6,
+  nfip_flood_hvac: 8,
 };
 
 export const OPENERS: Record<string, { opener: string; window: string }> = {
@@ -27,6 +28,10 @@ export const OPENERS: Record<string, { opener: string; window: string }> = {
   aging_system_proxy: {
     opener: "We noticed your home had significant renovation work done — older homes in your area often have HVAC systems that are 15–20 years past their expected life. Worth a free check?",
     window: "Anytime within 60 days of permit",
+  },
+  nfip_flood_hvac: {
+    opener: "Flood-damaged HVAC systems often look fine but have hidden electrical and mold issues — we offer a post-flood assessment and can document damage for your NFIP claim.",
+    window: "Within 60 days of flood claim",
   },
 };
 
@@ -128,6 +133,35 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
       }
     }
   } catch (e) { console.error("[hvac] BSEED:", e); }
+
+  // 4. OpenFEMA NFIP Claims — flood-damaged homes need HVAC replacement
+  try {
+    const res = await fetch(
+      `https://www.fema.gov/api/open/v1/nfipPolicies?$filter=propertyState eq '${state}'&$select=propertyState,countyCode,amountPaidOnBuildingClaim&$top=10`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      const claims: any[] = d?.nfipPolicies ?? [];
+      if (claims.length > 0) {
+        const totalPaid = claims.reduce((n, c) => n + (Number(c.amountPaidOnBuildingClaim) || 0), 0);
+        signals.push({
+          address: `${state} — ${claims.length} NFIP flood claims`,
+          city: state,
+          zip: "",
+          signal_type: "nfip_flood_hvac",
+          signal_detail: `OpenFEMA NFIP: ${claims.length} active flood claims in ${state} — avg $${Math.round(totalPaid / claims.length).toLocaleString()} building payout`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.nfip_flood_hvac,
+          source_method: "fema_nfip_api",
+          suggested_opener: OPENERS.nfip_flood_hvac.opener,
+          best_call_window: OPENERS.nfip_flood_hvac.window,
+          estimated_value: 8500,
+          raw_source_data: { state, claims_count: claims.length, avg_payout: Math.round(totalPaid / claims.length) },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] NFIP:", e); }
 
   return signals;
 }
