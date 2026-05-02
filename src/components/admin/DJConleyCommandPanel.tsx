@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Crown, Link2, Sparkles, ShieldCheck, Loader2 } from "lucide-react";
+import { Crown, Link2, Sparkles, ShieldCheck, Loader2, Grid3x3, Trash2, Plus } from "lucide-react";
 import SendDJConleyProposalCard from "./SendDJConleyProposalCard";
 
 /**
