@@ -216,6 +216,23 @@ Deno.serve(async (req) => {
       if (allDiscovered.length >= limit * 2) break;
     }
 
+    // Augment with fresh-LLC formations per state — these are "no incumbent vendor" targets.
+    for (const st of input.states) {
+      try {
+        const fresh = await fetchFreshBusinessSignals(sb, { state: st });
+        for (const sig of fresh.slice(0, 30)) {
+          if (!sig.business_name) continue;
+          allDiscovered.push({
+            business_name: sig.business_name,
+            state: st,
+            vertical: input.verticals[0],
+            source: "state_corp_filings_rss",
+          });
+          stats.providers["state_corp_filings_rss"] = (stats.providers["state_corp_filings_rss"] ?? 0) + 1;
+        }
+      } catch { /* fail open */ }
+    }
+
     stats.discovered = allDiscovered.length;
     const trimmed = allDiscovered.slice(0, limit * 2);
 
@@ -260,10 +277,15 @@ Deno.serve(async (req) => {
         catch { /* fail open */ }
       }
 
-      // Compliance scrub
+      // Compliance scrub — founders + OFAC/EPA/OSHA/DOL via compliance-waterfall
       if (excludeFounders && email && (FOUNDER_EMAILS.includes(email.toLowerCase()) || isFounder(email))) {
         stats.skipped_compliance++; continue;
       }
+      try {
+        const comp = await runComplianceScrub(sb, { business_name: detailed.business_name, state: detailed.state });
+        if (!comp.pass) { stats.skipped_compliance++; continue; }
+        if (comp.flags.length) stats.providers["compliance_flags"] = (stats.providers["compliance_flags"] ?? 0) + comp.flags.length;
+      } catch { /* fail open — don't block on compliance API hiccup */ }
 
       const score = scoreTarget(detailed, !!email, !!fax, !!detailed.phone, !!detailed.website);
       if (score < minConfidence) { stats.skipped_low_confidence++; continue; }
