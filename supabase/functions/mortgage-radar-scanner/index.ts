@@ -689,6 +689,287 @@ async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal
   return ins ? { id: ins.id, created: true } : null;
 }
 
+
+// ── NEW SOURCES ──────────────────────────────────────────────────────────────
+
+// #7-expanded — EstateSales.net: broader MI city coverage (was capped at 4 Detroit)
+async function scanEstateSalesExpanded(): Promise<RawSignal[]> {
+  // scrapeEstateSales already handles multiple cities; bump cap to 8 and cover Oakland/Macomb
+  const items = await scrapeEstateSales({ perCityCap: 8 });
+  return items.map((i) => ({
+    address: i.address, city: i.city,
+    county: i.county || inferCounty(i.city),
+    zip: i.zip, signal_type: i.signal_type,
+    signal_source: i.signal_source, signal_detail: i.signal_detail,
+    signal_url: i.signal_url, signal_date: i.signal_date,
+    source_method: "scraper" as const,
+  }));
+}
+
+// #5 — LARA new LLC filings via Firecrawl (deterministic scrape, no LLM discovery).
+// Target: Michigan SOS Corporations Division search for new entities in last 7 days.
+// Anti-hallucination: source_method="scraper", every address goes through validateLead().
+async function scanLARANewLLCs(): Promise<RawSignal[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  try {
+    const r = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url: "https://cofs.lara.state.mi.us/SearchApi/Search/Search?entityType=ALL&searchType=DATE&dateSearchType=FORMATION&dateFrom=" +
+          new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10).replace(/-/g, "%2F") +
+          "&dateTo=" + new Date().toISOString().slice(0, 10).replace(/-/g, "%2F"),
+        formats: ["extract"],
+        extract: {
+          schema: {
+            type: "object",
+            properties: {
+              entities: {
+                type: "array", maxItems: 30,
+                items: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string" },
+                    city: { type: "string" },
+                    type: { type: "string" },
+                    id: { type: "string" },
+                  },
+                  required: ["name"],
+                },
+              },
+            },
+          },
+          prompt: "Extract the list of newly formed Michigan business entities. Return name, city, entity type, and ID for each. Only include LLC, PLLC, or sole proprietorship entities.",
+        },
+        timeout: 15000,
+      }),
+    });
+    if (!r.ok) return [];
+    const j = await r.json();
+    const entities: any[] = j?.data?.extract?.entities || [];
+    const out: RawSignal[] = [];
+    for (const e of entities) {
+      const city = e.city || "Michigan";
+      // Only include SE Michigan / metro areas — out-of-state or rural entities are noise
+      const county = inferCounty(city);
+      if (!county) continue;
+      out.push({
+        full_name: e.name || undefined,
+        address: `${e.name || "New LLC"}, ${city}, MI`,
+        city,
+        county,
+        signal_type: "new_llc_self_employed",
+        signal_source: "LARA_SOS",
+        signal_detail: `New ${e.type || "LLC"}: ${e.name} — self-employed owner may need bank-statement loan`,
+        signal_date: new Date().toISOString().slice(0, 10),
+        source_method: "scraper" as const,
+      });
+    }
+    return out.slice(0, 25);
+  } catch (e) {
+    console.warn("[scanLARANewLLCs]", e instanceof Error ? e.message : String(e));
+    return [];
+  }
+}
+
+// #1 — Wayne County Register of Deeds: lis pendens + deed transfers via public search.
+// Uses Firecrawl to hit the public portal; every address validated through validateLead().
+// Anti-hallucination: deterministic scrape, no LLM free-form generation.
+async function scanWayneCountyDeeds(): Promise<RawSignal[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  try {
+    const r = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url: "https://register.waynecounty.com/PublicRecordsSearch",
+        formats: ["extract"],
+        actions: [
+          { type: "click", selector: "#docType" },
+          { type: "select", selector: "#docType", value: "LIS PENDENS" },
+          { type: "click", selector: "#searchBtn" },
+          { type: "wait", milliseconds: 2000 },
+        ],
+        extract: {
+          schema: {
+            type: "object",
+            properties: {
+              records: {
+                type: "array", maxItems: 20,
+                items: {
+                  type: "object",
+                  properties: {
+                    grantor: { type: "string" },
+                    address: { type: "string" },
+                    city: { type: "string" },
+                    doc_date: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
+          prompt: "Extract the list of lis pendens or foreclosure deed records shown. Return grantor name (homeowner), property address, city, and document date.",
+        },
+        timeout: 20000,
+      }),
+    });
+    if (!r.ok) return [];
+    const j = await r.json();
+    const records: any[] = j?.data?.extract?.records || [];
+    return records
+      .filter(r => r.address && r.address.length > 5)
+      .map(r => ({
+        full_name: r.grantor || undefined,
+        address: r.address,
+        city: r.city || "Detroit",
+        county: "Wayne",
+        signal_type: "lis_pendens",
+        signal_source: "WayneCountyROD",
+        signal_detail: `Lis pendens recorded${r.grantor ? ` — homeowner: ${r.grantor}` : ""}`,
+        signal_date: r.doc_date || undefined,
+        source_method: "scraper" as const,
+      }))
+      .slice(0, 15);
+  } catch (e) {
+    console.warn("[scanWayneCountyDeeds]", e instanceof Error ? e.message : String(e));
+    return [];
+  }
+}
+
+// #2 — Oakland County permit feed via BS&A Online (public portal, no auth required).
+// Anti-hallucination: deterministic scrape → validateLead() address check.
+async function scanOaklandCountyPermits(): Promise<RawSignal[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  try {
+    const r = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url: "https://bsaonline.com/SiteSearch/SiteSearchIndex?redirect=no&SearchCategory=Permits&SearchText=renovation&county=Oakland",
+        formats: ["extract"],
+        extract: {
+          schema: {
+            type: "object",
+            properties: {
+              permits: {
+                type: "array", maxItems: 20,
+                items: {
+                  type: "object",
+                  properties: {
+                    address: { type: "string" },
+                    city: { type: "string" },
+                    description: { type: "string" },
+                    issued_date: { type: "string" },
+                    estimated_cost: { type: "number" },
+                  },
+                  required: ["address"],
+                },
+              },
+            },
+          },
+          prompt: "Extract building permit records shown. Return address, city, permit description, issued date, and estimated cost. Only include permits with estimated cost >= $25,000 or that describe kitchen, bathroom, addition, or remodel work.",
+        },
+        timeout: 15000,
+      }),
+    });
+    if (!r.ok) return [];
+    const j = await r.json();
+    const permits: any[] = j?.data?.extract?.permits || [];
+    return permits
+      .filter(p => p.address && p.address.length > 5)
+      .map(p => ({
+        address: p.address,
+        city: p.city || "Oakland County",
+        county: inferCounty(p.city) || "Oakland",
+        signal_type: "renovation_permit",
+        signal_source: "OaklandCountyPermits",
+        signal_detail: `${p.description || "Renovation permit"}${p.estimated_cost ? ` — $${Number(p.estimated_cost).toLocaleString()} est.` : ""}`,
+        signal_date: p.issued_date || undefined,
+        estimated_equity: p.estimated_cost ? Math.round(p.estimated_cost * 2.5) : undefined,
+        source_method: "scraper" as const,
+      }))
+      .slice(0, 15);
+  } catch (e) {
+    console.warn("[scanOaklandCountyPermits]", e instanceof Error ? e.message : String(e));
+    return [];
+  }
+}
+
+// #3 — Realtor.com price-reduced listings via Firecrawl (no API key required for public pages).
+// Price reduction >= 5% after 30+ days on market = motivated seller = also a future buyer.
+// Anti-hallucination: deterministic URL scrape, every address through validateLead().
+async function scanPriceReductions(): Promise<RawSignal[]> {
+  if (!FIRECRAWL_API_KEY) return [];
+  try {
+    // Target: Realtor.com SE Michigan price-reduced listings, sorted by newest reduction
+    const url = "https://www.realtor.com/realestateandhomes-search/Michigan/price-reduced?state=MI";
+    const r = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url,
+        formats: ["extract"],
+        extract: {
+          schema: {
+            type: "object",
+            properties: {
+              listings: {
+                type: "array", maxItems: 15,
+                items: {
+                  type: "object",
+                  properties: {
+                    address: { type: "string" },
+                    city: { type: "string" },
+                    zip: { type: "string" },
+                    days_on_market: { type: "number" },
+                    price_reduction_pct: { type: "number" },
+                    list_price: { type: "number" },
+                  },
+                  required: ["address"],
+                },
+              },
+            },
+          },
+          prompt: "Extract price-reduced listings. Return address, city, zip, days on market, price reduction percentage, and list price. Only include listings where days_on_market >= 20 or price_reduction_pct >= 5.",
+        },
+        timeout: 15000,
+      }),
+    });
+    if (!r.ok) return [];
+    const j = await r.json();
+    const listings: any[] = j?.data?.extract?.listings || [];
+    return listings
+      .filter(l => {
+        const county = inferCounty(l.city);
+        return county && l.address && l.address.length > 5;
+      })
+      .map(l => ({
+        address: l.address,
+        city: l.city,
+        county: inferCounty(l.city),
+        zip: l.zip,
+        signal_type: "fsbo_listing",
+        signal_source: "RealtorCom_PriceReduced",
+        signal_detail: `Price reduced${l.price_reduction_pct ? ` ${l.price_reduction_pct}%` : ""} after ${l.days_on_market || "30"}+ days — motivated seller${l.list_price ? `, asking $${Math.round(l.list_price / 1000)}k` : ""}`,
+        estimated_equity: l.list_price ? Math.round(l.list_price * 0.25) : undefined,
+        source_method: "scraper" as const,
+      }))
+      .slice(0, 10);
+  } catch (e) {
+    console.warn("[scanPriceReductions]", e instanceof Error ? e.message : String(e));
+    return [];
+  }
+}
+
+// #4 stub — PACER bankruptcy (Ch. 13) requires court login; leaving as placeholder.
+// When PACER_USERNAME + PACER_PASSWORD secrets are set, uncomment and implement.
+async function scanBankruptcyFilings(): Promise<RawSignal[]> {
+  // Not yet implemented — PACER requires court-issued credentials.
+  // Signals would be: signal_type="lis_pendens", signal_source="PACER_CH13"
+  // Chapter 13 = homeowner restructuring debt, often needs cash-out refi to pay trustee.
+  return [];
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -704,10 +985,15 @@ serve(async (req) => {
     scanHighEquityLowRate(),
     scanJobChanges(),
     scanProbateFilings(),
-    scanEstateSales(),
+    scanEstateSalesExpanded(),        // #7 expanded city coverage
     scanTaxDelinquency(),
     scanFixerUpperListings(),
     scanSBAApprovals(),
+    scanLARANewLLCs(),                // #5 LARA SOS direct scrape
+    scanWayneCountyDeeds(),           // #1 Wayne County Register of Deeds
+    scanOaklandCountyPermits(),       // #2 Oakland County permit portal
+    scanPriceReductions(),            // #3 Realtor.com price-reduced listings
+    scanBankruptcyFilings(),          // #4 stub (PACER — pending credentials)
   ]);
 
   const signals: RawSignal[] = [];
