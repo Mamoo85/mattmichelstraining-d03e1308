@@ -1669,7 +1669,7 @@ serve(async (req) => {
             const refundHtml = `<h2>Refunded — lead already claimed</h2>
               <p>Another contractor paid for this lead seconds before you. Your card has been refunded in full.</p>
               <p>More leads coming — keep an eye on your phone.</p>`;
-            await sendM2Email(buyerEmail, `Refunded — lead already claimed`, refundHtml).catch(()=>{});
+            await dwaEmail(buyerEmail, `Refunded — lead already claimed`, refundHtml).catch(()=>{});
           }
         } catch (e) {
           console.error("[WEBHOOK] alacarte_lead_purchase error:", e);
