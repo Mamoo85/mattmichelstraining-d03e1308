@@ -19,10 +19,11 @@ import SendDJConleyProposalCard from "./SendDJConleyProposalCard";
 type PriceLock = {
   id: string;
   client_email: string;
-  tier: string | null;
-  locked_price_cents: number | null;
-  carve_out_clause: string | null;
-  created_at: string | null;
+  product: string | null;
+  locked_monthly_price: number | null;
+  notes: string | null;
+  locked_since: string | null;
+  active: boolean | null;
 };
 
 export default function DJConleyCommandPanel() {
@@ -36,6 +37,83 @@ export default function DJConleyCommandPanel() {
   const [changelogTitle, setChangelogTitle] = useState("");
   const [changelogBody, setChangelogBody] = useState("");
   const [publishing, setPublishing] = useState(false);
+  const [sendingReport, setSendingReport] = useState(false);
+
+  const sendWeeklyReport = async () => {
+    setSendingReport(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("djconley-weekly-value-report", { body: {} });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success("Weekly value report sent", {
+        description: `Delivered to ${(data as any)?.sent ?? 0} of ${(data as any)?.total ?? 0} Forever-Pricing client(s).`,
+      });
+    } catch (err: any) {
+      toast.error("Send failed", { description: err?.message || String(err) });
+    } finally {
+      setSendingReport(false);
+    }
+  };
+
+  // Command Center tile manager
+  const [tiles, setTiles] = useState<any[]>([]);
+  const [loadingTiles, setLoadingTiles] = useState(false);
+  const [newTile, setNewTile] = useState({ label: "", url: "", icon_emoji: "🔗", category: "general" });
+  const [savingTile, setSavingTile] = useState(false);
+
+  const loadTiles = async (target?: string) => {
+    const e = (target ?? email).trim().toLowerCase();
+    if (!e) return;
+    setLoadingTiles(true);
+    try {
+      const { data, error } = await supabase
+        .from("command_center_tiles" as any)
+        .select("*")
+        .eq("owner_email", e)
+        .order("sort_order");
+      if (error) throw error;
+      setTiles((data as any) || []);
+    } catch (err: any) {
+      toast.error("Tiles load failed", { description: err?.message });
+    } finally {
+      setLoadingTiles(false);
+    }
+  };
+
+  const addTile = async () => {
+    if (!newTile.label.trim() || !newTile.url.trim()) return toast.error("Label + URL required");
+    setSavingTile(true);
+    try {
+      const { error } = await supabase.from("command_center_tiles" as any).insert({
+        owner_email: email.trim().toLowerCase(),
+        label: newTile.label.trim(),
+        url: newTile.url.trim(),
+        icon_emoji: newTile.icon_emoji || "🔗",
+        category: newTile.category || "general",
+        sort_order: tiles.length,
+        is_active: true,
+      } as any);
+      if (error) throw error;
+      toast.success("Tile added");
+      setNewTile({ label: "", url: "", icon_emoji: "🔗", category: "general" });
+      await loadTiles();
+    } catch (err: any) {
+      toast.error("Add failed", { description: err?.message });
+    } finally {
+      setSavingTile(false);
+    }
+  };
+
+  const deleteTile = async (id: string) => {
+    try {
+      const { error } = await supabase.from("command_center_tiles" as any).delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Tile removed");
+      await loadTiles();
+    } catch (err: any) {
+      toast.error("Delete failed", { description: err?.message });
+    }
+  };
 
   // Command Center tile manager
   const [tiles, setTiles] = useState<any[]>([]);
@@ -104,9 +182,10 @@ export default function DJConleyCommandPanel() {
     try {
       const { data, error } = await supabase
         .from("client_price_locks" as any)
-        .select("id, client_email, tier, locked_price_cents, carve_out_clause, created_at")
+        .select("id, client_email, product, locked_monthly_price, notes, locked_since, active")
         .eq("client_email", e)
-        .order("created_at", { ascending: false })
+        .eq("active", true)
+        .order("locked_since", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (error) throw error;
@@ -148,9 +227,12 @@ export default function DJConleyCommandPanel() {
     setPublishing(true);
     try {
       const { error } = await supabase.from("product_changelog" as any).insert({
+        product: "DJ Conley Premium",
         title: changelogTitle.trim(),
         body: changelogBody.trim(),
-        published_at: new Date().toISOString(),
+        ship_date: new Date().toISOString().slice(0, 10),
+        is_public: true,
+        tags: ["djconley", "forever-pricing"],
       } as any);
       if (error) throw error;
       toast.success("Changelog published", { description: "Pat will see it on next dashboard load." });
@@ -163,7 +245,7 @@ export default function DJConleyCommandPanel() {
     }
   };
 
-  const dollars = lock?.locked_price_cents != null ? `$${(lock.locked_price_cents / 100).toFixed(2)}/mo` : "—";
+  const dollars = lock?.locked_monthly_price != null ? `$${Number(lock.locked_monthly_price).toLocaleString()}/mo` : "—";
 
   return (
     <div className="space-y-6">
@@ -196,12 +278,12 @@ export default function DJConleyCommandPanel() {
           {lock ? (
             <div className="rounded-md border border-[#00d4ff]/20 bg-[#00d4ff]/5 p-4 space-y-2 text-sm">
               <div className="flex items-center gap-2">
-                <Badge className="bg-[#00d4ff] text-[#0a1628]">{lock.tier || "tier"}</Badge>
+                <Badge className="bg-[#00d4ff] text-[#0a1628]">{lock.product || "product"}</Badge>
                 <span className="font-bold text-lg">{dollars}</span>
-                <span className="text-xs text-white/50">locked {lock.created_at?.slice(0, 10)}</span>
+                <span className="text-xs text-white/50">locked {lock.locked_since?.slice(0, 10)}</span>
               </div>
               <p className="text-xs text-white/70 italic">
-                {lock.carve_out_clause || "No carve-out clause stored."}
+                {lock.notes || "No carve-out clause stored."}
               </p>
             </div>
           ) : (
@@ -263,6 +345,76 @@ export default function DJConleyCommandPanel() {
             {publishing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Publish to Pat's dashboard
           </Button>
+          <div className="border-t border-white/10 pt-3 mt-3">
+            <p className="text-xs text-white/60 mb-2">
+              📧 <strong>Weekly Value Report</strong> — auto-sends every Monday 8am ET to all Forever-Pricing clients with this week's shipped features + new tiles.
+            </p>
+            <Button onClick={sendWeeklyReport} disabled={sendingReport} variant="outline" className="w-full border-[#00d4ff]/40">
+              {sendingReport ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Send weekly value report now
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Command Center tile manager */}
+      <Card className="border-white/10 bg-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Grid3x3 className="h-4 w-4 text-[#00d4ff]" />
+            Command Center tiles ({tiles.length})
+          </CardTitle>
+          <p className="text-xs text-white/50">
+            Quick links shown on Pat's owner dashboard (eWay, QuickBooks, Gmail, etc.). Owner: <code>{email}</code>
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {loadingTiles ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <div className="space-y-2">
+              {tiles.map((t) => (
+                <div key={t.id} className="flex items-center gap-2 rounded-md border border-white/10 bg-white/5 p-2 text-sm">
+                  <span className="text-lg">{t.icon_emoji || "🔗"}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{t.label}</p>
+                    <p className="text-[11px] text-white/40 truncate">{t.url}</p>
+                  </div>
+                  <Badge variant="outline" className="text-[10px]">{t.category}</Badge>
+                  <Button size="icon" variant="ghost" onClick={() => deleteTile(t.id)}>
+                    <Trash2 className="h-4 w-4 text-red-400" />
+                  </Button>
+                </div>
+              ))}
+              {tiles.length === 0 && (
+                <p className="text-xs text-white/40 italic">No tiles yet. Add Pat's most-used tools below.</p>
+              )}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-2 pt-2 border-t border-white/10">
+            <Input
+              value={newTile.icon_emoji}
+              onChange={(e) => setNewTile({ ...newTile, icon_emoji: e.target.value })}
+              placeholder="🔗"
+              className="md:col-span-1"
+            />
+            <Input
+              value={newTile.label}
+              onChange={(e) => setNewTile({ ...newTile, label: e.target.value })}
+              placeholder="Label (e.g. eWay)"
+              className="md:col-span-1"
+            />
+            <Input
+              value={newTile.url}
+              onChange={(e) => setNewTile({ ...newTile, url: e.target.value })}
+              placeholder="https://…"
+              className="md:col-span-2"
+            />
+            <Button onClick={addTile} disabled={savingTile}>
+              {savingTile ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 mr-1" />Add</>}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
