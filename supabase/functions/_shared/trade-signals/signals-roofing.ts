@@ -155,7 +155,7 @@ export async function scanSignals(
   // 4. FFIEC HMDA — new homeowners as first-inspection targets
   try {
     const res = await fetch(
-      `https://ffiec.cfpb.gov/v2/data-browser-api/view/aggregations?states=${state}&years=2023&actions_taken=1&loan_purposes=1&loan_types=1&limit=5`,
+      `https://ffiec.cfpb.gov/v2/data-browser-api/view/aggregations?states=${state}&years=2023&actions_taken=1&loan_purposes=1`,
       { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
     );
     if (res.ok) {

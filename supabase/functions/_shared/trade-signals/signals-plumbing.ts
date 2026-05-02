@@ -1,5 +1,5 @@
 // Plumbing Radar signal scanner.
-// Sources: Foreclosure notices (LegalNews), BSEED plumbing permits ≥$5k, EPA ECHO.
+// Sources: BSEED plumbing permits, Foreclosure notices (LegalNews), FFIEC HMDA new homeowners.
 
 import { scrapeForeclosureNotices } from "../scrapers-county-records.ts";
 
@@ -87,33 +87,37 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[plumbing] foreclosure scrape:", e); }
 
-  // 3. EPA ECHO — enforcement actions as lead-line proxy
+  // 3. FFIEC HMDA — new homeowners as lead-pipe replacement targets.
+  // EPA ECHO get_facilities uses a 2-step QueryID pattern; d?.Results?.Facilities is always
+  // empty on the first call. Replaced with HMDA purchase loan originations — homes bought in
+  // the last year are the highest-probability lead service line replacement market.
   try {
     const res = await fetch(
-      `https://echodata.epa.gov/echo/cwa_rest_services.get_facilities?p_st=${state}&p_act=Y&output=JSON&p_limit=30`,
-      { headers: { "User-Agent": "DWA-TradeRadar/1.0" } },
+      `https://ffiec.cfpb.gov/v2/data-browser-api/view/aggregations?states=${state}&years=2023&actions_taken=1&loan_purposes=1`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
     );
     if (res.ok) {
       const d = await res.json();
-      for (const fac of (d?.Results?.Facilities ?? []).slice(0, 20)) {
-        if (!fac.CWAstatuses?.includes("Significant")) continue;
+      const rows: any[] = d?.aggregations ?? [];
+      const total = rows.reduce((n, r) => n + (r.count || 0), 0);
+      if (total > 0) {
         signals.push({
-          address: fac.FacName ?? "Unknown facility",
-          city: fac.City ?? state,
-          zip: fac.Zip ?? "",
+          address: `${state} — ${total.toLocaleString()} new purchase loans (2023)`,
+          city: state,
+          zip: "",
           signal_type: "lead_line_area",
-          signal_detail: `EPA enforcement: ${fac.CWAstatuses} — ${fac.FacName}`,
+          signal_detail: `FFIEC HMDA: ${total.toLocaleString()} home purchases in ${state} in 2023 — new owners in pre-1986 homes likely have lead service lines eligible for city replacement programs`,
           signal_date: new Date().toISOString().split("T")[0],
           score: BASE_SCORES.lead_line_area,
-          source_method: "epa_echo",
+          source_method: "ffiec_hmda",
           suggested_opener: OPENERS.lead_line_area.opener,
           best_call_window: OPENERS.lead_line_area.window,
           estimated_value: 4000,
-          raw_source_data: fac,
+          raw_source_data: { total, state, year: 2023 },
         });
       }
     }
-  } catch (e) { console.error("[plumbing] EPA ECHO:", e); }
+  } catch (e) { console.error("[plumbing] HMDA:", e); }
 
   return signals;
 }

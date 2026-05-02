@@ -131,30 +131,34 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[hvac] BSEED:", e); }
 
-  // 4. OpenFEMA NFIP Claims — flood-damaged homes need HVAC replacement
+  // 4. OpenFEMA NfipMultipleLossProperties — flood-damaged homes need HVAC replacement.
+  // nfipPolicies endpoint removed by FEMA (returns 404). Use NfipMultipleLossProperties
+  // (repeat-flood properties by zip) as area signal for flood-prone HVAC replacement market.
   try {
     const res = await fetch(
-      `https://www.fema.gov/api/open/v1/nfipPolicies?$filter=propertyState eq '${state}'&$select=propertyState,countyCode,amountPaidOnBuildingClaim&$top=10`,
+      `https://www.fema.gov/api/open/v1/NfipMultipleLossProperties?$filter=stateAbbreviation eq '${state}'&$select=stateAbbreviation,county,zipCode,totalLosses,floodZone&$top=10`,
       { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
     );
     if (res.ok) {
       const d = await res.json();
-      const claims: any[] = d?.nfipPolicies ?? [];
-      if (claims.length > 0) {
-        const totalPaid = claims.reduce((n, c) => n + (Number(c.amountPaidOnBuildingClaim) || 0), 0);
+      const props: any[] = d?.NfipMultipleLossProperties ?? [];
+      if (props.length > 0) {
+        const totalLosses = props.reduce((n, p) => n + (Number(p.totalLosses) || 0), 0);
+        const sorted = [...props].sort((a, b) => (b.totalLosses ?? 0) - (a.totalLosses ?? 0));
+        const topZip = sorted[0];
         signals.push({
-          address: `${state} — ${claims.length} NFIP flood claims`,
+          address: `${state} — ${props.length} NFIP repeat-loss properties`,
           city: state,
           zip: "",
           signal_type: "nfip_flood_hvac",
-          signal_detail: `OpenFEMA NFIP: ${claims.length} active flood claims in ${state} — avg $${Math.round(totalPaid / claims.length).toLocaleString()} building payout`,
+          signal_detail: `OpenFEMA NFIP Multiple-Loss Properties: ${props.length} properties in ${state} with repeat flood claims — flood damage always requires HVAC replacement. Top zip: ${topZip?.zipCode ?? "?"} (${topZip?.totalLosses ?? "?"} losses)`,
           signal_date: new Date().toISOString().split("T")[0],
           score: BASE_SCORES.nfip_flood_hvac,
           source_method: "fema_nfip_api",
           suggested_opener: OPENERS.nfip_flood_hvac.opener,
           best_call_window: OPENERS.nfip_flood_hvac.window,
           estimated_value: 8500,
-          raw_source_data: { state, claims_count: claims.length, avg_payout: Math.round(totalPaid / claims.length) },
+          raw_source_data: { state, properties_count: props.length, total_losses: totalLosses, top_zip: topZip },
         });
       }
     }
