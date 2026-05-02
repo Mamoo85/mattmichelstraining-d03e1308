@@ -227,7 +227,7 @@ interface RawCandidate {
   license_expiry?: string;
   city?: string;
   zip?: string;
-  source: "miosha" | "firecrawl";
+  source: "miosha" | "firecrawl" | "registry";
   raw_data?: Record<string, unknown>;
 }
 
