@@ -49,6 +49,7 @@ const PipelineVelocityDashboard = lazy(() => import("@/components/dwa-admin/Pipe
 const StrategyModeHub = lazy(() => import("@/components/dwa-admin/StrategyModeHub"));
 const AdminEnrichmentAudit = lazy(() => import("@/components/admin/AdminEnrichmentAudit"));
 const AdminMarketingTools = lazy(() => import("@/components/admin/AdminMarketingTools"));
+const DJConleyCommandPanel = lazy(() => import("@/components/admin/DJConleyCommandPanel"));
 
 type Tab =
   | "ai-command"
@@ -57,7 +58,7 @@ type Tab =
   | "contractor-leads" | "contractor-onboarding" | "contractor-market" | "fielddesk" | "techalert" | "missed-call" | "missed-call-leads" | "clients-all"
   | "lead-marketplace" | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
-  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit" | "marketing-tools";
+  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit" | "marketing-tools" | "djconley";
 
 const GROUPS: SidebarGroup[] = [
   {
@@ -102,6 +103,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "missed-call",           label: "📞 Missed-Call Catch" },
       { id: "missed-call-leads",     label: "📞 Missed Call Leads" },
       { id: "clients-all",           label: "👥 All Clients / CRM" },
+      { id: "djconley",              label: "👑 D.J. Conley · Premium" },
     ],
   },
   {
@@ -198,6 +200,8 @@ export default function DWAAdmin() {
               <Suspense fallback={lazyFallback("CRM")}><AdminCRMDashboard /></Suspense>
             </div>
           )}
+
+          {activeTab === "djconley" && <Suspense fallback={lazyFallback("D.J. Conley")}><DJConleyCommandPanel /></Suspense>}
 
           {activeTab === "lead-marketplace" && <Suspense fallback={lazyFallback("Lead Marketplace")}><LeadSalesOutreachHub /></Suspense>}
           {activeTab === "demand-radar"    && <Suspense fallback={lazyFallback("Demand Radar")}><DemandRadarHub /></Suspense>}

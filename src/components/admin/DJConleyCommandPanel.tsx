@@ -1,0 +1,209 @@
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Crown, Link2, Sparkles, ShieldCheck, Loader2 } from "lucide-react";
+import SendDJConleyProposalCard from "./SendDJConleyProposalCard";
+
+/**
+ * DJ Conley premium command panel.
+ * - View / verify Pat's locked Forever Pricing record
+ * - Send a magic-link login to Pat's owner dashboard
+ * - Publish a "What's New" changelog entry visible inside Pat's portal
+ * - Includes the post-meeting proposal sender card
+ */
+type PriceLock = {
+  id: string;
+  client_email: string;
+  tier: string | null;
+  locked_price_cents: number | null;
+  carve_out_clause: string | null;
+  created_at: string | null;
+};
+
+export default function DJConleyCommandPanel() {
+  const [email, setEmail] = useState("pat@djconley.com");
+  const [lock, setLock] = useState<PriceLock | null>(null);
+  const [loadingLock, setLoadingLock] = useState(false);
+
+  const [magicEmail, setMagicEmail] = useState("pat@djconley.com");
+  const [sendingMagic, setSendingMagic] = useState(false);
+
+  const [changelogTitle, setChangelogTitle] = useState("");
+  const [changelogBody, setChangelogBody] = useState("");
+  const [publishing, setPublishing] = useState(false);
+
+  const loadLock = async (target?: string) => {
+    const e = (target ?? email).trim().toLowerCase();
+    if (!e) return;
+    setLoadingLock(true);
+    try {
+      const { data, error } = await supabase
+        .from("client_price_locks" as any)
+        .select("id, client_email, tier, locked_price_cents, carve_out_clause, created_at")
+        .eq("client_email", e)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      setLock((data as any) || null);
+    } catch (err: any) {
+      toast.error("Lookup failed", { description: err?.message });
+    } finally {
+      setLoadingLock(false);
+    }
+  };
+
+  useEffect(() => {
+    loadLock("pat@djconley.com");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const sendMagicLink = async () => {
+    if (!magicEmail.trim()) return toast.error("Email required");
+    setSendingMagic(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("owner-magic-link-request", {
+        body: { email: magicEmail.trim().toLowerCase() },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success("Magic link sent", { description: `Sent to ${magicEmail}` });
+    } catch (err: any) {
+      toast.error("Magic link failed", { description: err?.message || String(err) });
+    } finally {
+      setSendingMagic(false);
+    }
+  };
+
+  const publishChangelog = async () => {
+    if (!changelogTitle.trim() || !changelogBody.trim()) {
+      return toast.error("Title and body required");
+    }
+    setPublishing(true);
+    try {
+      const { error } = await supabase.from("product_changelog" as any).insert({
+        title: changelogTitle.trim(),
+        body: changelogBody.trim(),
+        published_at: new Date().toISOString(),
+      } as any);
+      if (error) throw error;
+      toast.success("Changelog published", { description: "Pat will see it on next dashboard load." });
+      setChangelogTitle("");
+      setChangelogBody("");
+    } catch (err: any) {
+      toast.error("Publish failed", { description: err?.message });
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const dollars = lock?.locked_price_cents != null ? `$${(lock.locked_price_cents / 100).toFixed(2)}/mo` : "—";
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <Crown className="h-6 w-6 text-[#00d4ff]" />
+        <div>
+          <h2 className="text-xl font-bold">D.J. Conley · Premium Command</h2>
+          <p className="text-xs text-white/50">Forever Pricing · Owner Portal · Proposal · Changelog</p>
+        </div>
+      </div>
+
+      <SendDJConleyProposalCard />
+
+      {/* Forever Pricing lock viewer */}
+      <Card className="border-[#00d4ff]/30 bg-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ShieldCheck className="h-4 w-4 text-[#00d4ff]" />
+            Forever Pricing — locked record
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex gap-2">
+            <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="client email" />
+            <Button onClick={() => loadLock()} variant="outline" disabled={loadingLock}>
+              {loadingLock ? <Loader2 className="h-4 w-4 animate-spin" /> : "Lookup"}
+            </Button>
+          </div>
+
+          {lock ? (
+            <div className="rounded-md border border-[#00d4ff]/20 bg-[#00d4ff]/5 p-4 space-y-2 text-sm">
+              <div className="flex items-center gap-2">
+                <Badge className="bg-[#00d4ff] text-[#0a1628]">{lock.tier || "tier"}</Badge>
+                <span className="font-bold text-lg">{dollars}</span>
+                <span className="text-xs text-white/50">locked {lock.created_at?.slice(0, 10)}</span>
+              </div>
+              <p className="text-xs text-white/70 italic">
+                {lock.carve_out_clause || "No carve-out clause stored."}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-white/50">
+              No price lock found for this email. Will be created automatically on Stripe checkout success.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Magic link sender */}
+      <Card className="border-white/10 bg-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Link2 className="h-4 w-4 text-[#00d4ff]" />
+            Send owner magic-link login
+          </CardTitle>
+          <p className="text-xs text-white/50">
+            One-click access to Pat's premium owner dashboard (Forever Pricing badge, Command Center, What's New).
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex gap-2">
+            <Input value={magicEmail} onChange={(e) => setMagicEmail(e.target.value)} placeholder="pat@djconley.com" />
+            <Button onClick={sendMagicLink} disabled={sendingMagic}>
+              {sendingMagic ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send link"}
+            </Button>
+          </div>
+          <p className="text-[11px] text-white/40">
+            Link expires in 15 minutes. Lands at <code>/owner/verify</code>.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Changelog publisher */}
+      <Card className="border-white/10 bg-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Sparkles className="h-4 w-4 text-[#00d4ff]" />
+            Publish "What's New" entry
+          </CardTitle>
+          <p className="text-xs text-white/50">
+            Appears in Pat's owner dashboard banner. Reinforces Forever Pricing value.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Input
+            value={changelogTitle}
+            onChange={(e) => setChangelogTitle(e.target.value)}
+            placeholder="e.g. New: AI-generated job follow-up SMS"
+          />
+          <Textarea
+            value={changelogBody}
+            onChange={(e) => setChangelogBody(e.target.value)}
+            placeholder="One paragraph explaining the new value Pat just received."
+            rows={4}
+          />
+          <Button onClick={publishChangelog} disabled={publishing} className="w-full">
+            {publishing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            Publish to Pat's dashboard
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
