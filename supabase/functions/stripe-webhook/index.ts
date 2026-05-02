@@ -75,6 +75,33 @@ function m2Email(opts: { greeting: string; headline: string; body: string; cta?:
 </div></body></html>`;
 }
 
+// ── DWA BRANDED EMAIL TEMPLATE HELPER (Detroit Web Agency products) ────────
+function dwaEmailHtml(opts: { greeting: string; headline: string; body: string; cta?: { text: string; url: string }; signature?: string }): string {
+  const ctaBlock = opts.cta ? `<div style="text-align:center;margin:24px 0"><a href="${opts.cta.url}" style="display:inline-block;background:#00d4ff;color:#0a1628;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;font-family:sans-serif">${opts.cta.text}</a></div>` : "";
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0a1628;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<div style="max-width:560px;margin:0 auto;background:#0f1f3a;border-radius:10px;overflow:hidden;border:1px solid #1e3a5f">
+  <div style="background:#0a1628;padding:20px 28px;border-bottom:3px solid #00d4ff">
+    <p style="color:#00d4ff;font-weight:700;font-size:11px;letter-spacing:.15em;text-transform:uppercase;margin:0 0 4px">Detroit Web Agency</p>
+    <h1 style="color:#fff;margin:0;font-size:20px;font-family:-apple-system,sans-serif">${opts.headline}</h1>
+  </div>
+  <div style="padding:24px 28px;color:#e6f1ff;font-size:15px;line-height:1.8">
+    <p style="margin:0 0 16px">${opts.greeting}</p>
+    ${opts.body}
+    ${ctaBlock}
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid #1e3a5f">
+      <div style="font-size:13px;color:#7a8aa0">
+        <strong style="color:#e6f1ff">${opts.signature || "Matt Michels"}</strong><br>Detroit Web Agency · Grosse Pointe, MI · <a href="tel:+13139921219" style="color:#00d4ff">(313) 992-1219</a>
+      </div>
+    </div>
+  </div>
+  <div style="padding:12px 28px;background:#0a1628;border-top:1px solid #1e3a5f;text-align:center">
+    <p style="margin:0;color:#7a8aa0;font-size:11px">Detroit Web Agency · Grosse Pointe, MI 48230</p>
+    <p style="margin:4px 0 0;color:#7a8aa0;font-size:10px"><a href="https://detroitwebagent.com" style="color:#7a8aa0">detroitwebagent.com</a> · <a href="mailto:matt@detroitwebagent.com?subject=Unsubscribe" style="color:#7a8aa0">Unsubscribe</a></p>
+  </div>
+</div></body></html>`;
+}
+
 async function sendM2Email(to: string, subject: string, html: string, bcc?: string): Promise<void> {
   if (!RESEND_API_KEY) return;
   await fetch("https://api.resend.com/emails", {
