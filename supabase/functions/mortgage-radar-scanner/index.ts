@@ -49,6 +49,7 @@ interface RawSignal {
   address?: string;
   city?: string;
   zip?: string;
+  county?: string;               // Wayne / Oakland / Macomb / Washtenaw etc.
   signal_type: string;
   signal_source: string;
   signal_detail?: string;
@@ -62,6 +63,17 @@ interface RawSignal {
   lat?: number;
   lon?: number;
   formatted_address?: string;
+}
+
+// Infer county from city name. Covers SE Michigan metro.
+function inferCounty(city?: string): string | undefined {
+  if (!city) return undefined;
+  const c = city.toLowerCase().trim();
+  if (/detroit|dearborn|livonia|westland|taylor|garden city|inkster|wayne|romulus|belleville|flat rock|southgate|wyandotte|ecorse|river rouge|lincoln park|melvindale|allen park|trenton|grosse pointe|hamtramck|highland park/.test(c)) return "Wayne";
+  if (/troy|royal oak|birmingham|bloomfield|pontiac|southfield|farmington|novi|ferndale|madison heights|hazel park|warren city.*oak|clawson|berkley|pleasant ridge|oak park|huntington woods|sterling heights.*oak/.test(c)) return "Oakland";
+  if (/sterling heights|warren|clinton twp|clinton township|macomb|utica|shelby|chesterfield|richmond|new baltimore|eastpointe|roseville|st clair shores|saint clair shores/.test(c)) return "Macomb";
+  if (/ann arbor|ypsilanti|saline|milan|chelsea|dexter/.test(c)) return "Washtenaw";
+  return undefined;
 }
 
 const BASE_SCORES: Record<string, number> = {
