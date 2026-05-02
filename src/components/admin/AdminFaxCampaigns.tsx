@@ -3,7 +3,7 @@
  * Mirrors AdminPostcardCampaigns. 4 sub-tabs:
  *   🎯 Find Prospects · 📋 Prospects · 📠 Campaigns (send/diagnose/resend) · 📊 Conversions
  *
- * Honest pipeline: Phaxio sends, fax_send_log tracks every attempt, diagnose +
+ * Honest pipeline: Sinch Fax sends, fax_send_log tracks every attempt, diagnose +
  * resend failed mirror the postcard system.
  */
 import { useEffect, useState } from "react";
