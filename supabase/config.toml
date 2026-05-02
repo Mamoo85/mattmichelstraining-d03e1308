@@ -2156,3 +2156,9 @@ verify_jwt = false
 
 [functions.start-radar-trial]
 verify_jwt = false
+
+[functions.outreach-email-blast]
+verify_jwt = true
+
+[functions.outreach-fax-blast]
+verify_jwt = true
