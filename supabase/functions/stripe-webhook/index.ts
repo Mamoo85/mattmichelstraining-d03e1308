@@ -1701,7 +1701,7 @@ serve(async (req) => {
           }
 
           const productLabel = productKey === "all" ? "all marketplace products" : `${productKey} leads`;
-          await sendM2Email(email,
+          await dwaEmail(email,
             "✅ First Look access activated",
             `<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#0a1628;color:#e6f1ff;">
               <h1 style="color:#00d4ff;font-size:22px;margin:0 0 12px;">First Look is live</h1>
