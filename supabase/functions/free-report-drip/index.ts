@@ -16,19 +16,19 @@ const SERVICE_MAP: Record<string, { name: string; price: string; url: string; be
   free_trending_products: {
     name: "AI Trending Product Finder",
     price: "$29/mo",
-    url: "https://www.mattmichelstraining.com/get-started?service=trending_product_finder",
+    url: "https://detroitwebagent.com/get-started?service=trending_product_finder",
     benefit: "15+ trending products weekly with profit margins, supplier links, and ad creative ideas",
   },
   free_grant_digest: {
     name: "AI Grant & Funding Digest",
     price: "$29/mo",
-    url: "https://www.mattmichelstraining.com/get-started?service=grant_funding_digest",
+    url: "https://detroitwebagent.com/get-started?service=grant_funding_digest",
     benefit: "15+ matched grants weekly with deadlines, eligibility details, and direct application links",
   },
   free_real_estate_digest: {
     name: "AI Real Estate Market Digest",
     price: "$39/mo",
-    url: "https://www.mattmichelstraining.com/get-started?service=real_estate_digest",
+    url: "https://detroitwebagent.com/get-started?service=real_estate_digest",
     benefit: "20+ market insights weekly — price trends, inventory shifts, and investment opportunity scores",
   },
 };
@@ -36,7 +36,7 @@ const SERVICE_MAP: Record<string, { name: string; price: string; url: string; be
 const DEFAULT_SERVICE = {
   name: "Full Weekly Digest",
   price: "$29/mo",
-  url: "https://www.mattmichelstraining.com/get-started",
+  url: "https://detroitwebagent.com/get-started",
   benefit: "complete weekly reports with actionable insights delivered to your inbox",
 };
 

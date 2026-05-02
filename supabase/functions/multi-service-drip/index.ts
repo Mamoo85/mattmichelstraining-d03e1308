@@ -243,15 +243,15 @@ function buildMultiServiceEmailHtml(subject: string, body: string): string {
 const STEP_PROMPTS = [
   // Step 1: Industry-specific intro + demo link
   (biz: string, industry: string, city: string, serviceList: string, demoInfo?: string) =>
-    `Write a SHORT email (under 120 words) to ${biz}, a ${industry || "local business"} in ${city}. Introduce these services that could help them grow. Keep it casual, local, direct. Start with "Hey —". End with "— Matt". Mention you're based in Grosse Pointe MI.${demoInfo ? `\n\nIMPORTANT: Include this demo link naturally — say something like "Here's a site I built for a similar business" or "Check this out": ${demoInfo}` : ""}\n\nInclude a CTA: "Takes 30 seconds: mattmichelstraining.com/get-started"\n\nServices:\n${serviceList}`,
+    `Write a SHORT email (under 120 words) to ${biz}, a ${industry || "local business"} in ${city}. Introduce these services that could help them grow. Keep it casual, local, direct. Start with "Hey —". End with "— Matt, Detroit Web Agency". Mention you're based in Grosse Pointe MI.${demoInfo ? `\n\nIMPORTANT: Include this demo link naturally — say something like "Here's a site I built for a similar business" or "Check this out": ${demoInfo}` : ""}\n\nInclude a CTA: "Takes 30 seconds: detroitwebagent.com/get-started"\n\nServices:\n${serviceList}`,
 
   // Step 2: Social proof follow-up + demo link
   (biz: string, industry: string, city: string, serviceList: string, demoInfo?: string) =>
-    `Write a SHORT follow-up email (under 100 words) to ${biz}. You emailed them a few days ago about automation tools. Now share a quick win story — mention that a similar ${industry} business saved 10+ hours/week using your tools. Be specific about which service helped most. Casual tone. Start with "Hey —". End with "— Matt".${demoInfo ? `\n\nInclude this link to a demo site you built: ${demoInfo}` : ""}\n\nCTA: "See what I'd set up for you: mattmichelstraining.com/get-started"`,
+    `Write a SHORT follow-up email (under 100 words) to ${biz}. You emailed them a few days ago about automation tools. Now share a quick win story — mention that a similar ${industry} business saved 10+ hours/week using your tools. Be specific about which service helped most. Casual tone. Start with "Hey —". End with "— Matt, Detroit Web Agency".${demoInfo ? `\n\nInclude this link to a demo site you built: ${demoInfo}` : ""}\n\nCTA: "See what I'd set up for you: detroitwebagent.com/get-started"`,
 
   // Step 3: Final touch with urgency
   (biz: string, industry: string, city: string, serviceList: string, demoInfo?: string) =>
-    `Write a FINAL short email (under 80 words) to ${biz}. Last message, no hard feelings if not interested. Mention you only work with a limited number of ${industry} businesses per area so you can give real attention. If timing's ever right, your door's open. Start with "Hey —". End with "— Matt".${demoInfo ? `\n\nDrop this link as proof of your work: ${demoInfo}` : ""}\n\nCTA: "mattmichelstraining.com/get-started or text (313) 992-1219"`,
+    `Write a FINAL short email (under 80 words) to ${biz}. Last message, no hard feelings if not interested. Mention you only work with a limited number of ${industry} businesses per area so you can give real attention. If timing's ever right, your door's open. Start with "Hey —". End with "— Matt, Detroit Web Agency".${demoInfo ? `\n\nDrop this link as proof of your work: ${demoInfo}` : ""}\n\nCTA: "detroitwebagent.com/get-started or text (313) 992-1219"`,
 ];
 
 serve(async (req) => {
@@ -344,7 +344,7 @@ serve(async (req) => {
         const generatedBody = await generateText(prompt, 800);
         const emailBody: string =
           generatedBody ||
-          `Hey —\n\nI wanted to reach out about a few tools that might help ${businessName} get more calls and grow.\n\nHere's what I offer:\n${serviceList}\n\nAll automated — no extra work on your end.\n\nmattmichelstraining.com/get-started\n\n— Matt`;
+          `Hey —\n\nI wanted to reach out about a few tools that might help ${businessName} get more calls and grow.\n\nHere's what I offer:\n${serviceList}\n\nAll automated — no extra work on your end.\n\ndetroitwebagent.com/get-started\n\n— Matt, Detroit Web Agency`;
 
         const subjectLines = [
           `A few tools that could help ${businessName}`,
