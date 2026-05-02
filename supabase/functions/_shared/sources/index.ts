@@ -130,7 +130,7 @@ async function textGet(url: string, headers: Record<string, string> = {}): Promi
 // 1. HUD Fair Market Rent
 export const fetchHudFmr = (state: string) => {
   const key = Deno.env.get("HUD_API_TOKEN");
-  const headers = key ? { Authorization: `Bearer ${key}` } : {};
+  const headers: Record<string, string> = key ? { Authorization: `Bearer ${key}` } : {};
   return jsonGet(`https://www.huduser.gov/hudapi/public/fmr/statedata/${state}`, headers)
     .then((d) => d?.data?.counties ?? []).catch(() => []);
 };
