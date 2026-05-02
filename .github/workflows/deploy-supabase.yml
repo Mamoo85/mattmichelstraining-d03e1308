@@ -56,12 +56,22 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+      - name: Apply pending DB migrations to primary project
+        run: supabase db push --project-ref $PRIMARY_REF
       - name: Deploy mortgage-radar-am-digest
         run: supabase functions deploy mortgage-radar-am-digest --project-ref $PRIMARY_REF --no-verify-jwt
       - name: Deploy mortgage-radar-scanner
         run: supabase functions deploy mortgage-radar-scanner --project-ref $PRIMARY_REF --no-verify-jwt
       - name: Deploy run-migration-once
         run: supabase functions deploy run-migration-once --project-ref $PRIMARY_REF --no-verify-jwt
+      - name: Deploy start-radar-trial
+        run: supabase functions deploy start-radar-trial --project-ref $PRIMARY_REF --no-verify-jwt
+      - name: Deploy trade-radar-scanner
+        run: supabase functions deploy trade-radar-scanner --project-ref $PRIMARY_REF --no-verify-jwt
+      - name: Deploy create-trade-radar-checkout
+        run: supabase functions deploy create-trade-radar-checkout --project-ref $PRIMARY_REF --no-verify-jwt
+      - name: Deploy stripe-webhook
+        run: supabase functions deploy stripe-webhook --project-ref $PRIMARY_REF --no-verify-jwt
 
   deploy:
     needs: test
