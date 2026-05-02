@@ -16862,6 +16862,75 @@ export type Database = {
         }
         Relationships: []
       }
+      radar_trials: {
+        Row: {
+          business_name: string | null
+          city: string | null
+          converted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          ip_address: string | null
+          last_login_at: string | null
+          magic_token: string
+          metadata: Json | null
+          phone: string | null
+          product: string
+          source: string | null
+          state: string | null
+          status: string
+          trial_started_at: string
+          updated_at: string
+          user_agent: string | null
+          zip_codes: string[] | null
+        }
+        Insert: {
+          business_name?: string | null
+          city?: string | null
+          converted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          last_login_at?: string | null
+          magic_token: string
+          metadata?: Json | null
+          phone?: string | null
+          product: string
+          source?: string | null
+          state?: string | null
+          status?: string
+          trial_started_at?: string
+          updated_at?: string
+          user_agent?: string | null
+          zip_codes?: string[] | null
+        }
+        Update: {
+          business_name?: string | null
+          city?: string | null
+          converted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          last_login_at?: string | null
+          magic_token?: string
+          metadata?: Json | null
+          phone?: string | null
+          product?: string
+          source?: string | null
+          state?: string | null
+          status?: string
+          trial_started_at?: string
+          updated_at?: string
+          user_agent?: string | null
+          zip_codes?: string[] | null
+        }
+        Relationships: []
+      }
       raw_signals_dump: {
         Row: {
           ai_cost_usd: number | null
