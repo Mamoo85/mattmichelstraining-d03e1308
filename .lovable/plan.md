@@ -1,177 +1,316 @@
-## DWA "Premium Tier" Build Plan — Pat-Worthy Features Only
+# Wave 5 Plan — Build Order, Bug Defenses, and Claude Hand-Off
 
-Scope: **only the items from your list that don't exist yet** and that make the offer feel premium. Items I confirmed are already built are listed at the bottom under "Already Done — Skipping" so you can verify.
-
----
-
-## What survives the audit (the actual work)
-
-Grouped by the wave it ships in. Each item is a real gap I verified against the codebase.
-
-### Wave A — The "Forever Pricing" infrastructure (the moat made real)
-
-This is the single biggest premium signal Pat will see. Today none of it exists.
-
-**A1. `client_price_locks` table + write on checkout**
-- New migration: `client_id`, `stripe_subscription_id`, `locked_price_cents`, `locked_at`, `lock_version` (`v1`), `covered_features` (jsonb), `carve_out_clause` (text — see A2).
-- Modify `create-djconley-checkout` (or whichever checkout the $499 / $499+$199 use) to insert the lock row inside the Stripe webhook on `checkout.session.completed`.
-- RLS: client can SELECT their own row; only `service_role` can INSERT/UPDATE.
-
-**A2. Forever-Pricing carve-out clause baked in**
-- Default `carve_out_clause` text: *"Forever Pricing covers the v1 feature set + every monthly improvement to those features. Net-new product lines released after 24 months are opt-in at then-current rates."*
-- Display verbatim under the Locked Price badge.
-
-**A3. `LockedPriceBadge` component**
-- Reads from `client_price_locks` for the logged-in client.
-- Shows: locked monthly price, lock date, "Locked Forever" pill, hover/tap → carve-out text.
-- Drop into: Owner Dashboard header, Billing tab, Pat's `/admin` top bar.
-
-**A4. Stripe checkout for $499/mo and $499+$199/mo**
-- Two new edge functions (or one with a `tier` param): `create-djconley-checkout`.
-- Inline `price_data` per CLAUDE.md rules. `metadata.type = "djconley_subscription"`, `metadata.tier`, `metadata.locked_price_cents`.
-- Webhook handler in `stripe-webhook/index.ts` writes to `client_price_locks` + sends welcome email via `dwaEmail()`.
-
-### Wave B — Owner Dashboard premium surfaces
-
-**B1. Magic-link login at the client's own domain**
-- New edge function: `owner-magic-link-request` — accepts email, validates against `client_price_locks` or `field_crm_clients`, generates short-lived signed token (15 min), emails it via Resend with the `dwaEmail()` template.
-- New edge function: `owner-magic-link-verify` — exchanges token for a Supabase session.
-- New page: `/owner/login` (renders cleanly under client's branded domain when DNS points to us).
-- Route guard `OwnerRoute` checks magic-link session, falls through to `/owner/login` otherwise.
-
-**B2. `product_changelog` table + `/changelog` public page**
-- Table: `id`, `published_at`, `title`, `body_md`, `category` (feature|fix|polish), `included_in_forever_pricing` boolean (default true), `client_visible` boolean.
-- Public route at `/changelog` (page exists as `Changelog.tsx` — currently a stub; wire to table).
-- Server-rendered list, newest first, filter pills by category.
-
-**B3. "What's New" banner on Owner Dashboard**
-- Component reads last 30 days of `product_changelog` rows where `client_visible = true`.
-- Dismiss-per-row via localStorage; reappears when new rows ship.
-- "Included in your Forever Pricing" pill on every entry.
-
-**B4. `monthly-upgrade-recap-sender` cron wiring**
-- Edge function exists. Confirm: add pg_cron schedule for 1st of month 9am ET; query last month's `product_changelog` rows; render branded email per client; queue via `email_send_log`.
-- Add an admin "Send test recap to me" button on `DwaAdminQbrQueue` (or new `AdminUpgradeRecap` page).
-
-### Wave C — Command Center (Pat's daily-use surface)
-
-**C1. `command_center_tiles` table**
-- Columns: `id`, `client_id`, `label`, `url`, `icon_key`, `open_mode` (`iframe`|`new_tab`), `position` (int), `created_at`.
-- RLS: client reads/writes own rows only.
-
-**C2. Command Center grid component + `/admin/command-center` route**
-- CRUD UI: add tile, drag to reorder (`@dnd-kit/sortable`), per-tile open mode toggle.
-- Iframe attempt with X-Frame-Options fallback to "open in new tab" + auto-flip the tile's `open_mode` so it stays.
-- Pinned bar across `/admin/*` showing top 6 tiles.
-
-**C3. "Sync to Command Center" seed action**
-- Admin button on Marketing Tools panel that bulk-inserts Pat's most-used URLs (eWay, FieldServio, QuickBooks, Gmail, Google Calendar, BSEED, MITN.info, bank, payroll) — pulled from a config constant initially, editable after.
-
-### Wave D — ICP & SiteRadar Pro premium polish
-
-**D1. `icp_keywords` table (replace localStorage)**
-- Columns: `user_id`, `keyword`, `weight` (int 1–5), `created_at`.
-- RLS: user reads/writes own rows.
-- Migrate any existing `localStorage` ICP keywords on first login (one-shot client-side script).
-
-**D2. ICP scoring + filter on SiteRadar Pro dashboard**
-- Server-side scoring fn: visitor event → match keywords → weighted score 0–100.
-- New `match_score` column on `crm_visitor_events`.
-- UI: sort/filter by ICP score; gated to active SiteRadar Pro subscribers via existing subscription check.
-
-**D3. "ICP Matched" top-5 realtime panel**
-- Supabase Realtime subscription on `crm_visitor_events` filtered by `client_id` + `match_score >= 70`.
-- Tooltip on each row shows which keywords matched (returned from scoring fn as `matched_keywords[]`).
-
-**D4. Instant SMS alerts for ICP matches**
-- New edge function: `icp-match-sms-alert` triggered from a Postgres trigger on `crm_visitor_events` insert when `match_score >= threshold`.
-- Per-client config row (`icp_alert_settings`): phone, threshold, opt-in, quiet-hours respect via `_shared/twilio.ts`.
-
-### Wave E — Run reliability + observability (the items that block Pat from clicking "send")
-
-**E1. `outreach_runs` table + state machine**
-- Columns: `id`, `kind` (`one_press`|`djconley_proposal`|`followup`), `status` (`queued`|`running`|`succeeded`|`failed`|`canceled`), `total_targets`, `sent_count`, `failed_count`, `error_log` jsonb, `created_by`, `started_at`, `finished_at`.
-- Every outreach edge function writes a row + step events to `outreach_run_steps`.
-
-**E2. Preflight gate on `outreach-one-press`**
-- Before kicking off: check (a) eligible prospect count > 0, (b) all have valid email, (c) no rate-limit window breach, (d) marketing kill switch is OFF, (e) not in TCPA quiet hours for SMS branches.
-- Returns structured error per failed check; UI renders red banners with the specific cause.
-
-**E3. JWT/auth fix for `outreach-one-press → contractor-outreach-email-blast` chain**
-- Today the parent forwards the user's JWT to the child function, which sometimes hits `verify_jwt = true` and explodes with `UNAUTHORIZED_INVALID_JWT_FORMAT`.
-- Fix: parent invokes child with `SUPABASE_SERVICE_ROLE_KEY` in the Authorization header (server-to-server), and child validates a shared signed payload (HMAC of `run_id` + timestamp) instead of trusting the JWT.
-- Add `verify_jwt = false` for `contractor-outreach-email-blast` in `config.toml` if not already set, since it is now an internal callee.
-
-**E4. Queue-based send worker**
-- `outreach_send_queue` table (or pgmq queue if already in use for emails).
-- `outreach-send-worker` edge function drains N per cycle, writes step rows, retries with backoff, marks DLQ after 3 fails.
-- pg_cron every 1 min.
-
-**E5. Run dashboard + diagnostics panel**
-- New admin page `/admin/outreach/runs`: list of runs with status pill, retry/resume/cancel buttons (each calling a small edge function that mutates `outreach_runs.status`).
-- Drill-in panel shows step-by-step timeline, last error, payload that failed, "Retry this step" button.
-
-**E6. Alerting on unauthorized + zero-send outcomes**
-- pg_cron every 5 min: scan `outreach_runs` for `failed` with `error_log->>'code' = 'UNAUTHORIZED'` or `succeeded` with `sent_count = 0`.
-- Send `notifyMatt()` SMS once per run (idempotent via `alerted_at` column).
-
-**E7. Widen prospect search**
-- Bump default lookback in `outreach-one-press` prospect query from current window to **90 days**.
-- Trade-label match: switch from exact equality to `ILIKE %trade%` plus a synonym map (boiler↔heating, hvac↔mechanical, etc.) in a small `trade_synonyms` table.
-
-### Wave F — Pat-specific premium touches (small but visible)
-
-**F1. Proposal email preview + admin send card**
-- New admin component `DJConleyProposalCard`: shows rendered React Email template (iframe srcdoc), "Send test to me" + "Send to Pat" buttons.
-- "Send to Pat" calls existing `send-djconley-proposal` (already exists), logs to `outreach_runs`, shows confirmation toast with timestamp + recipient.
-
-**F2. Pitch Audit Log: pagination + inner scroll**
-- Existing `OutreachAuditLog.tsx` page: add server-side pagination (25/page), constrain table container to `max-h-[70vh] overflow-y-auto` so the page itself doesn't scroll-jack.
-
-**F3. Admin sidebar mobile fix**
-- Marketing Tools panel currently squeezes under 380px viewport.
-- Switch sidebar to `Sheet` overlay below `md:` breakpoint; pinned floating menu button.
-
-**F4. Unsubscribe link in pitch SMS/email**
-- Add `STOP` instruction (already in `_shared/twilio.ts` but verify) + `?unsub_token=...` link in proposal email pointing at existing `handle-email-unsubscribe`.
-- Verify token row is created when proposal sends.
+**Owner:** Matt Michels · **Date opened:** 2026-05-02 · **Status:** Awaiting "go"
 
 ---
 
-## Already Done — Skipping (verified in code)
+## Brother Map (locked — never confuse again)
 
-These appeared in your list but are already built — I checked the files. If any feel broken, tell me and I'll requeue them as bug fixes:
+- **Pat Michels** = DJ Conley = SiteRadar / DJ Conley site customer
+  - `pmichels@djconley.com` · (313) 590-4404
+  - In DB: `boiler-sector-intel`, `send-djconley-followup-sms`, `AdminMarketingTools`
+- **Mitchell Michels** = Mortgage Radar founder seat — **CONFIRMED IN DB:**
+  - `mitch.michels@rate.com` · (312) 752-1462 · business: Rate · `is_founder=true` · no Stripe sub · ZIPs: `[01890, 48236, 92407, 96103, 85233]`
+  - `mitchellm77@gmail.com` · same person, secondary record · `is_founder=true` · no Stripe sub · same ZIPs
+  - **Locked price: $0/mo** (founder seat, both records)
+  - **Only paying recipient of Mortgage Radar daily email + SMS besides Matt**
+- **Matt** = `matt@detroitwebagent.com` (also a founder row in `mortgage_radar_clients`) + `matt@mattmichelstraining.com` (M2 owner)
 
-- `outreach-one-press` edge function ✅ (exists, needs E2/E3/E5 hardening only)
-- `contractor-outreach-email-blast` ✅
-- `monthly-upgrade-recap-sender` ✅ (function exists; needs C-wave cron + admin trigger)
-- `nps-survey-sender` ✅ (needs 30-day cron schedule confirmed)
-- `dwa-v4-qbr-generator` + `DwaAdminQbrQueue.tsx` ✅
-- `dwa-v4-stripe-reconcile-diff` + `DwaAdminStripeReconcile.tsx` ✅ (set 6-hour cron)
-- `send-djconley-proposal`, `send-djconley-followup-sms`, `send-djconley-pitch-v2` ✅ (Pat phone now correct)
-- `DJConleyDemo1` + `DJConleyDemo2` ✅ — already redirect to brand-correct `/demo-djconley-v2` (navy #1B4F8A + orange #E07B39, zero teal)
-- `Changelog.tsx` page exists ✅ (needs B2 wiring to table)
-- `OutreachAuditLog`, `OutreachObservability`, `OutreachQueue` admin pages ✅ (need pagination + diagnostics drill-in)
-- `/dwa-admin` route exists ✅ — if it's loading homepage it's an auth-redirect bug; will verify in build pass
-- "Test SMS to my number only" ✅ — `_shared/twilio.ts` already has admin-test mode; just need a UI toggle on the proposal card
+These four emails go on the **Founder-Seat Protection list** at `_shared/founder-seats.ts`. Any "expire / mark inactive / cancel / downgrade / upcharge / cold-email" branch in any cron or webhook **must early-exit** when the email matches.
 
 ---
 
-## Order of execution (recommended)
+## Audit Finding (important)
 
-1. **Wave A** (price locks + checkout) — turns the offer into a real product Pat can buy.
-2. **Wave E** (run reliability) — without this, every other "send" button is a coin flip.
-3. **Wave B** (owner dashboard) — what Pat sees Day 1 after paying.
-4. **Wave C** (Command Center) — what makes him open the dashboard daily.
-5. **Wave F** (polish) — ship in parallel as small PRs.
-6. **Wave D** (ICP / SiteRadar Pro) — premium upsell, ship after Pat is live.
+Phase A and B from my prior plan are **already built and shipping**. I will NOT rebuild them — only verify + patch:
+- `/my-addons` page exists (`src/pages/MyAddons.tsx`) + `addon_catalog`, `addon_pitches` tables + `create-addon-checkout` ✅
+- Stripe reconciliation: `dwa-v4-stripe-reconcile-diff` + `dwa-v4-retention-sweep` + `client_health_scores` + `upsell_opportunities` + `/dwa-admin/v4` console ✅
+
+So the real new work for me is: brand-integrity fix, founder-seat protection, universal 7-day no-CC trials with magic-link entry, mass cold-outreach engine (email → fax → postcard), and "first reply free" surfacing. **Roofers/12-trades reskin is delegated to Claude — prompt at the bottom of this file.**
 
 ---
 
-## Open questions before I build
+## Decisions (locked from this conversation)
 
-1. **Magic-link domain strategy:** Do you want the magic link to land on `djconley.com/admin` (requires DNS work on Pat's domain) or on `app.detroitwebagent.com/owner/djconley`? The first is more premium, the second ships in a day.
-2. **Command Center seed list:** Do you want me to use the 9 default tiles (eWay, FieldServio, QuickBooks, Gmail, Google Calendar, BSEED, MITN, bank, payroll) or send Pat a form to fill in first?
-3. **Forever-Pricing carve-out language:** OK to ship the 24-month / net-new-product-line clause as written in A2, or do you want to soften/strengthen it?
+1. **Mitchell's founder protection:** both emails above, locked price `$0`, only recipient of Mortgage Radar daily email + SMS.
+2. **Trial CTA flow:** **Magic-link → straight into the dashboard.** Email gate on landing, magic-link redirects into the trialing dashboard. No password, no Stripe.
+3. **Trial length:** 7 days, no credit card, all radars EXCEPT Contractor Leads (we pay for those ads).
+4. **Channels in order:** Email → Fax → Postcard. Mass SMS already exists and is TCPA-tight; not adding to this engine.
+5. **Geographic scope:** MI first, then any state via DB toggle in `prospector_targets` (table already exists per CLAUDE.md Phase 27 — flip `active=true` for OH/TX/etc, no code deploy).
 
-Approve and I'll execute Wave A + Wave E first (the two that unlock revenue + reliability), then loop back for B/C/D/F.
+---
+
+## Build Order
+
+1. **Phase 3 — Brand Integrity Fix** (biggest defensive win, ~1 wave)
+2. **Phase 1 — Verify v4 + Founder-Seat Protection** (~½ wave)
+3. **Phase 2 — Universal 7-Day No-CC Trials w/ Magic Link** (~1 wave)
+4. **Phase 5 — First-Reply-Free Surfacing** (~¼ wave)
+5. **Phase 4a-c — Outreach Engine + Email Blaster** (~1.5 waves)
+6. **Phase 4d-f — Fax + Postcard + Admin UI** (~1 wave)
+
+Total: 4–5 build waves.
+
+---
+
+## Phase 1 — Verify v4 Retention/Reconciliation + Founder Protection
+
+1. Hit `dwa-v4-stripe-reconcile-diff` once via curl, confirm output covers all 8 DWA products. Patch any product type missing.
+2. **New `_shared/founder-seats.ts`** with the 5 emails above (case-insensitive lookup, product-scoped).
+3. Wire `isFounderSeat()` early-exit into:
+   - `dwa-v4-stripe-reconcile-diff` (skip mismatch flagging)
+   - `dwa-v4-retention-sweep` (skip downgrade logic)
+   - `trial-lifecycle-orchestrator` (Phase 2 — never expire)
+   - `cold-outreach-email-blaster` / fax / postcard (never email a founder)
+4. Verify `/my-addons` route is wired in `App.tsx`.
+
+---
+
+## Phase 2 — Universal 7-Day No-CC Trials (Magic-Link Entry)
+
+Eligible: Mortgage Radar, Talent Radar, Growth Radar, Demand Radar, Site Radar, Buyer Radar, Missed-Call Catch, FieldDesk, AI Phone Answering, Reputation Dashboard, Bundle Revenue Suite, Dead Lead Reactivation. **Excluded:** Contractor Leads.
+
+### 2.1 Migration `20260502_radar_trials.sql`
+- `radar_trials`: `email citext`, `product`, `name`, `business_name`, `phone`, `trial_started_at default now()`, `trial_ends_at default now()+interval '7 days'`, `magic_token uuid default gen_random_uuid()`, `status` (active/converted/expired/abandoned), `source_campaign`, `converted_at`, `stripe_customer_id`, `unique(email, product)`.
+- RLS enabled, service_role bypass.
+
+### 2.2 Edge function `start-radar-trial` (single entry point)
+- Body: `{ product, email, name?, phone?, business_name?, source }`
+- Validates product against eligible allowlist (rejects `contractor_leads` 400)
+- Rate-limit: 3 trials / IP / 24h via `outreach-blocklist.ts`
+- Inserts `radar_trials` row + corresponding `*_clients` row with `status='trialing'` and `trial_ends_at = now()+7d`
+- Sends DWA-branded magic-link email (uses `_shared/dwa-email.ts` from Phase 3): `https://detroitwebagent.com/trial/{magic_token}`
+- Returns `{ magic_url }`
+- `verify_jwt = false`
+
+### 2.3 Edge function `redeem-trial-magic-link`
+- GET `/redeem-trial-magic-link?token=<uuid>` — validates token, marks `last_login_at`, sets short-lived JWT cookie, 302s to product dashboard.
+
+### 2.4 Edge function `trial-lifecycle-orchestrator` (cron daily 9am ET)
+- Day 3: check-in email
+- Day 5: conversion email w/ Stripe Checkout deeplink
+- Day 6: final reminder
+- Day 7+: `status='expired'`, gate dashboard, send reactivation email
+- **`isFounderSeat()` early-exit at top of every branch.**
+- Skip rows already on a paid Stripe sub.
+
+### 2.5 Landing-page CTAs
+Add the magic-link CTA to: MortgageRadar.tsx (alongside existing paid checkout), BuyerRadar.tsx, GrowthRadarDashboard, SiteRadarLanding.tsx, MissedCallCatch.tsx, FieldDesk.tsx, AiPhone.tsx, Reputation.tsx, BundleRevenueSuite.tsx, DeadLeadIntake.tsx. Talent Radar: extend existing `create-hire-alert-trial` from 72h → 7 days, route through `start-radar-trial`. Mortgage Radar paid path **untouched** for Mitchell's founder seat.
+
+---
+
+## Phase 3 — Brand Integrity Fix (M² → DWA Leak)
+
+Most important defensive piece. `stripe-webhook/index.ts` calls `sendM2Email(...)` for ~9 DWA-product callsites — that's why M² Training branding leaks into DWA receipts.
+
+1. **New `_shared/dwa-email.ts`** — exports `dwaEmail(opts)` (HTML template w/ teal `#00d4ff`, near-black `#0a1628`, DWA logo, CAN-SPAM footer w/ Grosse Pointe address) + `sendDwaEmail(to, subject, html, bcc?)`. From: `Detroit Web Agency <matt@detroitwebagent.com>`.
+2. **Audit + replace `sendM2Email` callsites** for: Mortgage Radar, Talent Radar, Site Radar, Missed-Call, FieldDesk, Marketplace, Bundle, Dead Lead, Contractor Leads, Dark Web Monitor, SEO Guard, MSP Plan, AI Phone, Reputation. Keep `sendM2Email` ONLY for workout/coach/fitness/exercise/athlete/training-portal flows.
+3. **Guardrail Vitest** `src/lib/__tests__/brand-isolation.test.ts`: scans every `supabase/functions/**/index.ts`, fails CI if a known DWA-product handler imports `sendM2Email`. Locks the regression closed.
+4. All Phase 4 cold emails MUST use `sendDwaEmail`.
+
+---
+
+## Phase 4 — Unified Mass Cold-Outreach Engine
+
+12 trade verticals: roofers, arborists/tree care, landscapers, plumbers, electricians, HVAC, chimney sweeps, gutter installers, painters, pest control, paving/concrete, garage door.
+
+### 4a. Migration `20260502_mass_outreach_engine.sql`
+- `outreach_targets`: `business_name`, `state`, `city`, `trade`, `vertical_tag`, `email`, `email_confidence numeric(3,2)`, `fax`, `phone`, `mailing_address`, `website`, `naics`, `source`, `enrichment_trace jsonb`, `unsubscribed_at`, `bounced_at`, `last_contacted_at`, `state_priority int default 3`, `unique(business_name, state, city)`.
+- `outreach_campaigns`: `name`, `product_offering`, `channel` (email/fax/postcard), `target_filter jsonb`, `daily_cap int default 100`, `status text default 'draft'`, counters, `created_by`.
+- `outreach_sends` (append-only): `campaign_id`, `target_id`, `channel`, `status`, `provider_id`, `error`, `sent_at`, `replied_at`, `trial_signup_at`, `cost_cents`.
+- All RLS service_role-only.
+
+### 4b. `outreach-target-harvester` (cron daily 6am ET)
+- Extends `contractor-outreach-statewide-sweep` to all 12 trades, all 83 MI counties via Google Places + DataForSEO Local Pack.
+- Multi-state expansion via `prospector_targets.active=true`.
+- Email enrichment via existing `_shared/email-waterfall.ts` — every contact gets `enrichment_trace`.
+
+### 4c. `cold-outreach-email-blaster` (priority 1)
+- Cron: every 30 min, 8am-7pm ET, M-F.
+- Picks targets ordered by `state_priority ASC, email_confidence DESC, random()`.
+- Filters: not unsubscribed, not bounced, not contacted in last 90d, has email, passes `outreach-blocklist.ts`, **passes `isFounderSeat()`**.
+- Copy via `generateWithOpus` using a **Trial-Pitch template** that ALWAYS:
+  - Uses **DWA branding** (`sendDwaEmail`)
+  - Says "**7-day free trial — no credit card required**"
+  - Single CTA → `https://detroitwebagent.com/{product}/trial?email={prefilled}&campaign={id}` (server calls `start-radar-trial`, returns magic link)
+  - One-line OSINT methodology disclosure
+  - One-click unsubscribe
+  - CAN-SPAM physical address footer
+- Logs to `outreach_sends` + existing `email_send_log`.
+- Resend daily soft cap: 1500/day.
+
+### 4d. `cold-outreach-fax-blaster` (priority 2)
+- Cron: daily 11am ET, 80/day cap. DWA letterhead cover sheet → trial URL + (313) 992-1219. Phaxio integration (already in `channel-prospector`). `cost_cents=7`.
+
+### 4e. `cold-outreach-postcard-blaster` (priority 3)
+- Cron: daily 12pm ET, 50/day cap. Front: DWA "7-DAY FREE TRIAL" hero. Back: 3 bullets + QR → trial URL. Geo-batched by ZIP for postage discount via Lob. `cost_cents=85`.
+
+### 4f. Admin UI — DWAAdmin → "📡 Mass Outreach Engine" tab
+- Campaigns table (create/pause/resume, filter by state + trade + vertical)
+- Live counters (today's sends per channel, trial signups attributed, reply rate, cost-per-trial-signup)
+- Target browser (search, see enrichment trace, manual unsubscribe)
+- **Brand-integrity widget**: last 50 outbound emails with `From:` address — red flag any `mattmichelstraining.com` send originating from DWA-product code (catches future regressions live)
+- State expansion toggle (flip `prospector_targets.active`)
+
+---
+
+## Phase 5 — First-Reply-Free Surfacing for Contractor Leads
+
+1. Audit `dead-lead-drip`, `generate-dead-lead-campaign`, `dead-lead-outreach-drip`, `contractor-drip` — append the first-yes-free copy to drip body + admin preview when parent client is on a Contractor Leads sub.
+2. Persistent banner in `AdminDeadLeads` Prospecting Pipeline tab: "Reminder: First YES reply is FREE. Bills $50/reply only after the first."
+3. `dead_lead_charges` already handles first-free correctly — this is purely UI/copy clarity.
+
+---
+
+## Defensive Checklist (zero bugs allowed)
+
+1. Run Vitest + Deno tests — no new failures.
+2. ≥1 Deno test per new edge function (happy + 1 error).
+3. `curl_edge_functions` smoke test on every new function before declaring done.
+4. `verify_jwt = false` for any new public-callable function.
+5. RLS enabled + explicit service_role bypass on every new table.
+6. `isFounderSeat()` early-exit at top of every "expire / downgrade / mark inactive / cold-email" branch.
+7. Brand-integrity Vitest from Phase 3 prevents Phase 4 regressions.
+8. Idempotency keys on every transactional email send.
+9. CAN-SPAM physical address + one-click unsubscribe in every cold email.
+10. Rate limit on `start-radar-trial` (3/IP/24h) + email-domain blocklist.
+11. **Mitchell-specific guardrail Vitest**: loads `_shared/founder-seats.ts`, asserts both Mitchell emails resolve to `lockedPriceCents=0` and are products-scoped to `mortgage_radar`. Prevents accidental list edits from breaking his free seat.
+
+---
+
+# PROMPT FOR CLAUDE — Mortgage-Radar-Pattern → 12 Trade Radars
+
+> Copy everything between the `===` lines into Claude. He runs in your `mamoo85/m2training` repo with the `.claude/` agent system.
+
+```
+=== START PROMPT FOR CLAUDE ===
+
+CONTEXT
+You are working in the mamoo85/m2training monorepo on branch `dev`. Read
+CLAUDE.md at repo root FIRST — it contains the full session state, brand
+rules, secrets list, edge-function conventions, and architecture. Match
+all conventions exactly. Owner: Matt Michels — Grosse Pointe, MI. DWA
+brand: teal #00d4ff, near-black #0a1628, domain detroitwebagent.com,
+sender matt@detroitwebagent.com, work phone (313) 992-1219.
+
+YOUR ASSIGNMENT
+Build 12 NEW radar products — one per trade vertical — by REUSING the
+Mortgage Radar engine pattern (NOT migrating Mortgage Radar itself).
+Each product targets one trade and pitches homeowners-needing-service
+leads to that trade's businesses.
+
+VERTICALS (12)
+roofers, arborists/tree care, landscapers, plumbers, electricians, HVAC,
+chimney sweeps, gutter installers, painters, pest control,
+paving/concrete, garage door
+
+WHAT MORTGAGE RADAR ALREADY DOES (DO NOT BREAK, DO NOT MIGRATE)
+- 6 deterministic + LLM-validated signal sources (BSEED permits, Zillow
+  FSBO, EstateSales.net, court records, SOS LLC filings, NOAA storms)
+- Anti-hallucination gate: Google Address Validation + LLM-only leads
+  capped at score 3 until 2nd source confirms
+- Coordinate-locked Street View
+- 5–15 ZIPs per client, daily 8am ET scan
+- $399/mo solo, $899/mo team, manual-only outreach (FCRA-clean)
+- Founder seat: Mitchell Michels (Matt's brother) on
+  mitch.michels@rate.com AND mitchellm77@gmail.com — DO NOT TOUCH OR
+  MIGRATE THESE RECORDS. He stays on Mortgage Radar with $0 locked
+  pricing as the only paying recipient besides Matt.
+
+PHASE 1 — MARKET RESEARCH (write to .lovable/wave5-vertical-research.md)
+For each of the 12 trades deliver one row:
+| Vertical | Avg MI deal size | MI annual market $ | Top 3 lead competitors + their CPL | Public trigger signal | Best free + paid data source | Recommended $/mo |
+
+Examples to validate:
+- Roofers → recent hail (NOAA Storm Events DB) + age-of-roof from
+  permit history (BSEED, county permit portals)
+- Arborists → storm damage (NOAA) + tree-removal permits + 311 calls
+- Gutter installers → roof permit pulled in last 30d (upsell window)
+- Painters → home sale closing in 60d (deed records / MLS)
+- HVAC → furnace age >15yr from permit history; heat-wave / cold-snap
+  forecasts (NOAA)
+- Plumbers → water main breaks (DWSD), winter freeze events
+- Electricians → solar/EV-charger/panel-upgrade permits + age-of-home
+  + recent sale combo
+- Chimney sweeps → woodstove install permits + first frost forecast
+- Pest control → seasonal swarm forecasts + new home sales
+- Paving/concrete → driveway permits + freeze-thaw cycle data
+- Garage door → garage permits + recent home sales
+
+Anchor pricing: Mortgage Radar = $399 solo, but trade deal sizes are
+lower so target $99–$299/mo with $0 founder seats reserved.
+
+PHASE 2 — INFRASTRUCTURE
+1. New table `trade_radar_clients` (mirrors mortgage_radar_clients +
+   `vertical text not null`)
+2. New table `trade_radar_leads` (mirrors mortgage_radar_leads + vertical)
+3. New `_shared/trade-signals/` with `signals-{vertical}.ts` per trade
+4. New edge function `trade-radar-scanner` parameterized by vertical;
+   single function, branches on vertical to pick signal modules
+5. Cron: daily 8am ET, runs scanner for each active vertical with
+   paying clients
+6. REUSE the Google Address Validation + coordinate-locked Street View
+   + score-cap-at-3-until-corroborated pattern verbatim from Mortgage
+   Radar — do not invent new anti-hallucination patterns
+
+PHASE 3 — LANDING + DEMO PAGES
+For each vertical:
+1. `src/pages/{Vertical}Radar.tsx` — landing with hero, 3-signal
+   explainer, ROI calculator, CTA "Start 7-Day Free Trial — No Credit
+   Card" → POSTs to `start-radar-trial` (Lovable will have built this;
+   if not yet deployed, stub the call with a TODO and ship the page)
+2. `src/pages/{Vertical}RadarDemo.tsx` — interactive demo with 3 sample
+   leads in nearby ZIPs
+3. Routes wired into App.tsx + header nav
+
+PHASE 4 — STRIPE + PROVISIONING
+1. `create-trade-radar-checkout` — accepts `vertical` param, prices per
+   Phase 1 research, mirrors `create-mortgage-radar-checkout`
+2. Add `trade_radar_subscription` handler to
+   `supabase/functions/stripe-webhook/index.ts` — upserts
+   `trade_radar_clients`, sends DWA-branded welcome via the new
+   `_shared/dwa-email.ts` (Lovable will have built this; if not
+   present, stub `sendDwaEmail` inline with a TODO)
+3. NEVER use `sendM2Email` for these. Brand integrity is critical.
+
+CRITICAL RULES
+- DO NOT touch `mortgage_radar_clients`, `mortgage_radar_leads`, or any
+  Mortgage Radar function. New verticals are NEW products that share
+  the engine pattern — not migrations.
+- DO NOT touch records for: mitch.michels@rate.com,
+  mitchellm77@gmail.com (Mitchell), pmichels@djconley.com (Pat / DJ
+  Conley — different product), matt@detroitwebagent.com,
+  matt@mattmichelstraining.com (Matt — owner).
+- All new tables: ENABLE ROW LEVEL SECURITY + service_role bypass policy.
+- All new edge functions: `verify_jwt = false` in supabase/config.toml
+  if publicly callable.
+- Use `_shared/twilio.ts` `sendSMS` for any SMS (TCPA-checked).
+- AI: `generateWithOpus` for outreach copy, `generateWithHaiku` for
+  cheap classification.
+- All monetary amounts in cents.
+- All cron jobs in ET, with `cron-window.ts` guard.
+- No CHECK constraints on `expire_at > now()` — use validation triggers.
+- No backend code outside `supabase/functions/`. No Express, Flask, etc.
+- Stripe: inline `price_data` only, always set `metadata.type` for
+  webhook routing.
+
+WORK ON BRANCH: `wave5-trade-radars` (create it, commit, push, open PR
+to main with full vertical-by-vertical breakdown in the PR description).
+
+REPORT BACK with:
+1. Full vertical research table from Phase 1
+2. Migration filenames + brief schema description
+3. List of new edge functions + cron schedules
+4. List of new pages + routes
+5. Total LOC + estimated build time
+6. Any blockers, assumptions made, or coordination points needed with
+   the Lovable agent
+
+=== END PROMPT FOR CLAUDE ===
+```
+
+---
+
+## What I Need From You Before Starting
+
+Just say **"go"** and I'll start with Phase 3 (brand integrity), then Phase 1 (founder protection), then keep marching down the list. Everything I need is now confirmed in the DB or in this plan.
