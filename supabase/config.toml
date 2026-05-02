@@ -2148,17 +2148,8 @@ verify_jwt = false
 [functions.send-djconley-followup-sms]
 verify_jwt = false
 
-[functions.djconley-weekly-value-report]
+[functions.run-migration-once]
 verify_jwt = false
 
-[functions.owner-magic-link-request]
-verify_jwt = false
-
-[functions.owner-magic-link-verify]
-verify_jwt = false
-
-[functions.create-djconley-checkout]
-verify_jwt = false
-
-[functions.email-preferences]
+[functions.run-migration-once]
 verify_jwt = false
