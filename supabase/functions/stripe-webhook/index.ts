@@ -1657,7 +1657,7 @@ serve(async (req) => {
               <p><strong>Project:</strong> ${lead?.project_type || "—"}</p>
               <p><strong>Notes:</strong> ${lead?.message || "—"}</p>
               <p style="margin-top:24px;color:#64748b;">Call them within 5 minutes — that's how you win.</p>`;
-            await sendM2Email(buyerEmail, `🎯 You won: ${trade} lead in ${city}`, html).catch(()=>{});
+            await dwaEmail(buyerEmail, `🎯 You won: ${trade} lead in ${city}`, html).catch(()=>{});
             await notifyMatt(`💰 À la carte lead sold — ${buyerEmail} claimed ${trade}/${city}`, html).catch(()=>{});
           } else {
             // Refund — someone else got it first
