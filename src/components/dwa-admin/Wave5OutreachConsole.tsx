@@ -115,16 +115,22 @@ export default function Wave5OutreachConsole() {
         </div>
       </header>
 
-      <div className="flex gap-2 border-b border-white/10 mb-4">
-        {(["campaigns", "targets", "sends"] as const).map((t) => (
+      <div className="flex gap-2 border-b border-white/10 mb-4 flex-wrap">
+        {(["campaigns", "discover", "sources", "targets", "sends"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-semibold border-b-2 -mb-px ${
+            className={`px-4 py-2 text-sm font-semibold border-b-2 -mb-px flex items-center gap-1.5 ${
               tab === t ? "border-cyan-400 text-cyan-400" : "border-transparent text-white/50 hover:text-white/80"
             }`}
           >
-            {t === "campaigns" ? "Campaigns" : t === "targets" ? "Targets" : "Recent sends"}
+            {t === "discover" && <Radar className="w-3.5 h-3.5" />}
+            {t === "sources" && <Database className="w-3.5 h-3.5" />}
+            {t === "campaigns" ? "Campaigns"
+              : t === "discover" ? "Discover"
+              : t === "sources" ? "Sources"
+              : t === "targets" ? "CSV / Pool"
+              : "Recent sends"}
           </button>
         ))}
       </div>
@@ -133,6 +139,10 @@ export default function Wave5OutreachConsole() {
         <div className="text-white/40 flex items-center gap-2 text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
       ) : tab === "campaigns" ? (
         <CampaignsTab campaigns={campaigns} busy={busy} onFire={fireBlast} onStatus={setStatus} />
+      ) : tab === "discover" ? (
+        <TargetDiscoveryPanel />
+      ) : tab === "sources" ? (
+        <SourceCatalogPanel />
       ) : tab === "targets" ? (
         <TargetsTab count={targetCount} onChange={load} />
       ) : (
