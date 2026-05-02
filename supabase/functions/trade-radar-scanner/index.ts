@@ -13,7 +13,7 @@ import { scanSignals as scanElectrical } from "../_shared/trade-signals/signals-
 import { scanSignals as scanPestControl } from "../_shared/trade-signals/signals-pest_control.ts";
 import { scanSignals as scanGutters } from "../_shared/trade-signals/signals-gutters.ts";
 import { scanSignals as scanPainting } from "../_shared/trade-signals/signals-painting.ts";
-import { fetchFreshBusinessSignals, fetchMortgageSignals } from "../_shared/signal-waterfall.ts";
+import { fetchFreshBusinessSignals, fetchMortgageSignals, fetchHireSignals } from "../_shared/signal-waterfall.ts";
 
 // NAICS code per vertical (used to filter registry-driven signals)
 const VERTICAL_NAICS: Record<string, string> = {
@@ -270,15 +270,20 @@ Deno.serve(async (req) => {
     try {
       const rawSignals = await SCANNERS[vertical](state);
 
-      // Augment with registry-driven signals (FEMA storms, fresh business filings, etc.)
+      // Augment with registry-driven signals (FEMA storms, EPA, OSHA, HMDA, fresh LLCs).
       try {
         const naics = VERTICAL_NAICS[vertical] || "238220";
+        // Mortgage waterfall: FEMA+NOAA+HMDA+EPA — useful for weather/property-driven trades
+        const MORTGAGE_WATERFALL_VERTICALS = ["roofing", "gutters", "painting", "pest_control", "hvac", "plumbing"];
+        // Hire waterfall: OSHA inspections — useful for electricians targeting renovation sites
+        const HIRE_WATERFALL_VERTICALS = ["electrical"];
         const [biz, env] = await Promise.all([
           fetchFreshBusinessSignals(sb, { state, naics }).catch(() => []),
-          // Storms/disasters drive roofing/gutters/painting/pest_control demand
-          ["roofing", "gutters", "painting", "pest_control"].includes(vertical)
+          MORTGAGE_WATERFALL_VERTICALS.includes(vertical)
             ? fetchMortgageSignals(sb, { state, days: 14 }).catch(() => [])
-            : Promise.resolve([]),
+            : HIRE_WATERFALL_VERTICALS.includes(vertical)
+              ? fetchHireSignals(sb, { state, naics }).catch(() => [])
+              : Promise.resolve([]),
         ]);
         for (const s of [...(biz || []), ...(env || [])].slice(0, 100)) {
           const a = s as any;
