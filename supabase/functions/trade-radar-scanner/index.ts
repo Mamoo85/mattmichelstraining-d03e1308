@@ -13,6 +13,18 @@ import { scanSignals as scanElectrical } from "../_shared/trade-signals/signals-
 import { scanSignals as scanPestControl } from "../_shared/trade-signals/signals-pest_control.ts";
 import { scanSignals as scanGutters } from "../_shared/trade-signals/signals-gutters.ts";
 import { scanSignals as scanPainting } from "../_shared/trade-signals/signals-painting.ts";
+import { fetchFreshBusinessSignals, fetchMortgageSignals } from "../_shared/signal-waterfall.ts";
+
+// NAICS code per vertical (used to filter registry-driven signals)
+const VERTICAL_NAICS: Record<string, string> = {
+  roofing: "238160",
+  hvac: "238220",
+  plumbing: "238220",
+  electrical: "238210",
+  pest_control: "561710",
+  gutters: "238160",
+  painting: "238320",
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
