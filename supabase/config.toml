@@ -2183,3 +2183,10 @@ verify_jwt = false
 
 [functions.create-trade-radar-checkout]
 verify_jwt = false
+
+[functions.trade-radar-am-digest]
+verify_jwt = false
+
+[functions.trade-radar-weekly-digest]
+verify_jwt = false
+

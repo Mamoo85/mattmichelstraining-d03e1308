@@ -34,6 +34,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ADMIN_PHONE = Deno.env.get("ADMIN_PHONE_NUMBER") || "+13138064952";
+const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
 const ALL_VERTICALS = ["roofing", "hvac", "plumbing", "electrical", "pest_control", "gutters", "painting"] as const;
 type Vertical = typeof ALL_VERTICALS[number];
@@ -79,14 +80,26 @@ async function upsertWithDedup(
   const rawScore = signal.score ?? 5;
   const score = signal.source_method === "llm_search" ? Math.min(3, rawScore) : rawScore;
 
+  // Guard: skip any signal that has no address — registry/waterfall sometimes
+  // returns business-only or zip-only rows that can't be geocoded.
+  if (!signal || typeof signal.address !== "string" || !signal.address.trim()) {
+    return "skipped";
+  }
+
   // Anti-hallucination gate
-  const validation = await validateLead({
-    address: signal.address,
-    city: signal.city,
-    zip: signal.zip,
-    signal_type: signal.signal_type,
-    source_method: signal.source_method ?? "scraper",
-  });
+  let validation;
+  try {
+    validation = await validateLead({
+      address: signal.address,
+      city: signal.city,
+      zip: signal.zip,
+      signal_type: signal.signal_type,
+      source_method: signal.source_method ?? "scraper",
+    });
+  } catch (e) {
+    console.warn(`[trade-scanner] validateLead threw for ${vertical}:`, e instanceof Error ? e.message : String(e));
+    return "skipped";
+  }
 
   if (!validation.valid) {
     await quarantineRaw(sb, {
@@ -219,9 +232,12 @@ async function notifyClients(
     });
 
     if (client.phone && top.score >= 9) {
-      await sendSMS(client.phone,
+      await sendSMS(
+        client.phone,
+        TWILIO_FROM,
         `🏠 ${label} Radar: ${top5.length} new leads today. Top score: ${top.score}/10 — ${top.city ?? "your area"}. Check your email. — Detroit Web Agency`,
-      );
+        "trade_radar",
+      ).catch((e) => console.warn(`[trade-scanner] hot-lead SMS failed:`, e instanceof Error ? e.message : String(e)));
     }
   }
 }
@@ -337,8 +353,11 @@ Deno.serve(async (req) => {
 
   const totalInserted = Object.values(summary).reduce((n, s) => n + s.inserted, 0);
   if (totalInserted > 0) {
-    await sendSMS(ADMIN_PHONE,
+    await sendSMS(
+      ADMIN_PHONE,
+      TWILIO_FROM,
       `🏠 Trade Radar: ${totalInserted} new leads across ${verticals.join(", ")} today. — DWA`,
+      "trade_radar",
     ).catch(() => {});
   }
 
