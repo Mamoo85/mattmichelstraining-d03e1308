@@ -89,9 +89,9 @@ export default function MortgageRadarHub() {
 
   const sendDigest = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke("mortgage-radar-digest");
+      const { data, error } = await supabase.functions.invoke("mortgage-radar-am-digest");
       if (error) throw error;
-      toast.success(`Digest sent to ${data?.digests_sent ?? 0} clients`);
+      toast.success(`Digest sent to ${data?.digests_sent ?? data?.sent ?? 0} clients`);
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Digest failed");
     }
