@@ -1580,6 +1580,7 @@ serve(async (req: Request) => {
     scanOSHAIncidents(),
     scanSBALoanApprovals(),
     scanApprenticeshipCompletions(),
+    scanRegistryHireSignals(sb),
   ]);
 
   const mioshaCandidates = results[0].status === "fulfilled" ? results[0].value : [];
@@ -1587,9 +1588,10 @@ serve(async (req: Request) => {
   const oshaLeads = results[2].status === "fulfilled" ? results[2].value : [];
   const sbaLeads = results[3].status === "fulfilled" ? results[3].value : [];
   const apprenticeCandidates = results[4].status === "fulfilled" ? results[4].value : [];
+  const registryCandidates = results[5].status === "fulfilled" ? results[5].value : [];
 
   // Log new source counts
-  console.log(`[hire-alert-scanner] OSHA incident employers: ${oshaLeads.length}, SBA expansion employers: ${sbaLeads.length}, Apprenticeship completions: ${apprenticeCandidates.length}`);
+  console.log(`[hire-alert-scanner] OSHA: ${oshaLeads.length}, SBA: ${sbaLeads.length}, Apprenticeship: ${apprenticeCandidates.length}, Registry: ${registryCandidates.length}`);
 
   const sourceErrors: Record<string, string> = {};
   if (results[0].status === "rejected") {
