@@ -53,6 +53,45 @@ export default function DJConleyCommandPanel() {
     } finally {
       setSendingReport(false);
     }
+
+  // Email preferences manager
+  const [prefs, setPrefs] = useState<any[]>([]);
+  const [loadingPrefs, setLoadingPrefs] = useState(false);
+
+  const loadPrefs = async () => {
+    setLoadingPrefs(true);
+    try {
+      const { data, error } = await supabase
+        .from("client_email_preferences" as any)
+        .select("id, client_email, frequency, last_sent_at, unsubscribed_at, unsubscribe_token, source, created_at")
+        .eq("report_type", "value_report")
+        .order("client_email");
+      if (error) throw error;
+      setPrefs((data as any) || []);
+    } catch (err: any) {
+      toast.error("Prefs load failed", { description: err?.message });
+    } finally {
+      setLoadingPrefs(false);
+    }
+  };
+
+  const setFrequency = async (id: string, frequency: "weekly" | "monthly" | "off") => {
+    try {
+      const update: any = { frequency };
+      update.unsubscribed_at = frequency === "off" ? new Date().toISOString() : null;
+      const { error } = await supabase.from("client_email_preferences" as any).update(update).eq("id", id);
+      if (error) throw error;
+      toast.success(`Set to ${frequency}`);
+      await loadPrefs();
+    } catch (err: any) {
+      toast.error("Update failed", { description: err?.message });
+    }
+  };
+
+  const copyPrefsLink = (token: string) => {
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/email-preferences?token=${token}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Preferences link copied");
   };
 
   // Command Center tile manager
