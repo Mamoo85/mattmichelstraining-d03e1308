@@ -2634,6 +2634,48 @@ export type Database = {
         }
         Relationships: []
       }
+      client_email_preferences: {
+        Row: {
+          client_email: string
+          created_at: string
+          frequency: string
+          id: string
+          last_sent_at: string | null
+          notes: string | null
+          report_type: string
+          source: string
+          unsubscribe_token: string
+          unsubscribed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_email: string
+          created_at?: string
+          frequency?: string
+          id?: string
+          last_sent_at?: string | null
+          notes?: string | null
+          report_type?: string
+          source?: string
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_email?: string
+          created_at?: string
+          frequency?: string
+          id?: string
+          last_sent_at?: string | null
+          notes?: string | null
+          report_type?: string
+          source?: string
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_health_scores: {
         Row: {
           client_email: string
