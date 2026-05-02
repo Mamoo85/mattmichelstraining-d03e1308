@@ -4,6 +4,8 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { logEnrichment } from "../_shared/enrichment-audit.ts";
+import { fetchMortgageSignals } from "../_shared/signal-waterfall.ts";
+import { fetchMarketSnapshot } from "../_shared/market-waterfall.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
