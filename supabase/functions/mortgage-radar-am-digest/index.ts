@@ -206,15 +206,27 @@ serve(async (req) => {
   const since24h = new Date(now - 24 * 3600_000).toISOString();
   const since7d  = new Date(now - 7 * 24 * 3600_000).toISOString();
 
-  const { data: clients } = await (sb.from as any)("mortgage_radar_clients")
-    .select("id, email, contact_name, business_name, zip_codes, coverage_counties, coverage_regions, phone")
+  // Select core columns; coverage_counties + coverage_regions added by later migration —
+  // if those columns don't exist yet the whole query silently returns null, so fetch
+  // them separately and fall back gracefully.
+  const { data: clients } = await sb
+    .from("mortgage_radar_clients")
+    .select("id, email, contact_name, business_name, zip_codes, phone")
     .eq("active", true);
+
+  // Best-effort fetch of new geo columns (may not exist yet — ignore errors)
+  const { data: geoRows } = await (sb.from as any)("mortgage_radar_clients")
+    .select("id, coverage_counties, coverage_regions")
+    .eq("active", true);
+  const geoById: Record<string, { coverage_counties?: string[]; coverage_regions?: string[] }> = {};
+  for (const g of (geoRows || [])) geoById[g.id] = g;
 
   let sent = 0;
 
   for (const c of (clients || [])) {
-    const regions: string[] = Array.isArray(c.coverage_regions) ? c.coverage_regions : [];
-    const counties: string[] = Array.isArray(c.coverage_counties) ? c.coverage_counties : [];
+    const geo = geoById[c.id] || {};
+    const regions: string[] = Array.isArray(geo.coverage_regions) ? geo.coverage_regions : [];
+    const counties: string[] = Array.isArray(geo.coverage_counties) ? geo.coverage_counties : [];
     const zips: string[] = Array.isArray(c.zip_codes) ? c.zip_codes : [];
     const baseSelect = "id, full_name, address, city, zip, county, region, lat, lon, signal_type, signal_detail, score, suggested_opener, best_call_window, estimated_equity, intel_highlights, signal_count, last_signal_at, signal_date, created_at";
 
