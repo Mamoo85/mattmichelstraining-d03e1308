@@ -36,6 +36,9 @@ const BottomTabBar = lazyRetry(() => import("@/components/layout/BottomTabBar"))
 // Lazy-load ALL pages including Index for faster initial JS parse
 const Index = lazyRetry(() => import("./pages/Index"));
 const AgencyHome = lazyRetry(() => import("./pages/AgencyHome"));
+const OwnerLogin = lazyRetry(() => import("./pages/OwnerLogin"));
+const OwnerVerify = lazyRetry(() => import("./pages/OwnerVerify"));
+const OwnerDashboard = lazyRetry(() => import("./pages/OwnerDashboard"));
 const ClientDashboard = lazyRetry(() => import("./pages/ClientDashboard"));
 const AgencyClientPortal = lazyRetry(() => import("./pages/AgencyClientPortal"));
 const EmbedCapture = lazyRetry(() => import("./pages/EmbedCapture"));
