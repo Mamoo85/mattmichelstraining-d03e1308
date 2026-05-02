@@ -45,8 +45,8 @@ async function sendFax(faxNumber: string, htmlContent: string): Promise<{ ok: bo
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  if (!PHAXIO_KEY || !PHAXIO_SECRET) {
-    return new Response(JSON.stringify({ ok: false, error: "phaxio_credentials_missing", note: "Set PHAXIO_API_KEY and PHAXIO_API_SECRET in Supabase secrets to enable fax outreach." }), {
+  if (!SINCH_KEY_ID || !SINCH_KEY_SECRET || !SINCH_PROJECT_ID) {
+    return new Response(JSON.stringify({ ok: false, error: "sinch_credentials_missing", note: "Set SINCH_KEY_ID, SINCH_KEY_SECRET, and SINCH_PROJECT_ID in Supabase secrets to enable fax outreach." }), {
       status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
