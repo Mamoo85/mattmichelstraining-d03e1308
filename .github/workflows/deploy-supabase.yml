@@ -44,6 +44,25 @@ jobs:
       - name: Orphan page scan (advisory)
         run: npx tsx scripts/orphan-scan.ts || true
 
+  deploy-primary:
+    needs: test
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PRIMARY_REF: eauvubfpanpeuxsrqesu
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Deploy mortgage-radar-am-digest
+        run: supabase functions deploy mortgage-radar-am-digest --project-ref $PRIMARY_REF --no-verify-jwt
+      - name: Deploy mortgage-radar-scanner
+        run: supabase functions deploy mortgage-radar-scanner --project-ref $PRIMARY_REF --no-verify-jwt
+      - name: Deploy run-migration-once
+        run: supabase functions deploy run-migration-once --project-ref $PRIMARY_REF --no-verify-jwt
+
   deploy:
     needs: test
     runs-on: ubuntu-latest
