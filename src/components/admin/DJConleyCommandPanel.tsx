@@ -105,9 +105,10 @@ export default function DJConleyCommandPanel() {
     try {
       const { data, error } = await supabase
         .from("client_price_locks" as any)
-        .select("id, client_email, tier, locked_price_cents, carve_out_clause, created_at")
+        .select("id, client_email, product, locked_monthly_price, notes, locked_since, active")
         .eq("client_email", e)
-        .order("created_at", { ascending: false })
+        .eq("active", true)
+        .order("locked_since", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (error) throw error;
