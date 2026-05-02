@@ -353,7 +353,7 @@ export default function AdminDeadLeads() {
           <div style={{ marginBottom: 12 }}>
             <h2 style={{ color: "#fff", fontSize: 20, fontWeight: 800, margin: 0 }}>♻️ Dead Lead Reactivation</h2>
             <p style={{ color: "#64748b", fontSize: 12, margin: "4px 0 0" }}>
-              Upload contractor's old leads → 3-msg SMS drip → $50 per YES reply
+              Upload contractor's old leads → 3-msg SMS drip → <strong style={{ color: "#00d4ff" }}>1st positive reply FREE</strong>, then $50 per YES reply.
             </p>
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
