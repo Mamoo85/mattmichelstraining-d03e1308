@@ -165,7 +165,7 @@ export default function DJConleyCommandPanel() {
     }
   };
 
-  const dollars = lock?.locked_price_cents != null ? `$${(lock.locked_price_cents / 100).toFixed(2)}/mo` : "—";
+  const dollars = lock?.locked_monthly_price != null ? `$${Number(lock.locked_monthly_price).toLocaleString()}/mo` : "—";
 
   return (
     <div className="space-y-6">
