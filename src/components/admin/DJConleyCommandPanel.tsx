@@ -120,6 +120,7 @@ export default function DJConleyCommandPanel() {
 
   useEffect(() => {
     loadLock("pat@djconley.com");
+    loadTiles("pat@djconley.com");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
