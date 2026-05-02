@@ -44,7 +44,7 @@ export default function SourceCatalogPanel() {
     setBusy(sourceId);
     try {
       const { data, error } = await supabase.functions.invoke("data-source-fetch", {
-        body: { action: "fetch", source_id: sourceId },
+        body: { source_id: sourceId, force_refresh: true },
       });
       if (error) throw error;
       toast.success(`${sourceId}: ${data?.row_count ?? 0} rows cached`);
