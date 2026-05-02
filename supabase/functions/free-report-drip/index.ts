@@ -22,7 +22,7 @@ const SERVICE_MAP: Record<string, { name: string; price: string; url: string; be
   free_grant_digest: {
     name: "AI Grant & Funding Digest",
     price: "$29/mo",
-    url: "https://www.mattmichelstraining.com/get-started?service=grant_funding_digest",
+    url: "https://detroitwebagent.com/get-started?service=grant_funding_digest",
     benefit: "15+ matched grants weekly with deadlines, eligibility details, and direct application links",
   },
   free_real_estate_digest: {
