@@ -13532,6 +13532,75 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_campaigns: {
+        Row: {
+          channel: string
+          cities: string[] | null
+          created_at: string
+          created_by: string | null
+          cta_url: string | null
+          daily_send_cap: number
+          id: string
+          last_run_at: string | null
+          name: string
+          product: string
+          states: string[]
+          status: string
+          template_body: string
+          template_subject: string | null
+          total_bounced: number
+          total_replied: number
+          total_sent: number
+          total_targets: number
+          updated_at: string
+          verticals: string[]
+        }
+        Insert: {
+          channel: string
+          cities?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          cta_url?: string | null
+          daily_send_cap?: number
+          id?: string
+          last_run_at?: string | null
+          name: string
+          product: string
+          states?: string[]
+          status?: string
+          template_body: string
+          template_subject?: string | null
+          total_bounced?: number
+          total_replied?: number
+          total_sent?: number
+          total_targets?: number
+          updated_at?: string
+          verticals?: string[]
+        }
+        Update: {
+          channel?: string
+          cities?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          cta_url?: string | null
+          daily_send_cap?: number
+          id?: string
+          last_run_at?: string | null
+          name?: string
+          product?: string
+          states?: string[]
+          status?: string
+          template_body?: string
+          template_subject?: string | null
+          total_bounced?: number
+          total_replied?: number
+          total_sent?: number
+          total_targets?: number
+          updated_at?: string
+          verticals?: string[]
+        }
+        Relationships: []
+      }
       outreach_cooldowns: {
         Row: {
           created_at: string | null
@@ -13952,6 +14021,90 @@ export type Database = {
           },
         ]
       }
+      outreach_sends: {
+        Row: {
+          bounced_at: string | null
+          campaign_id: string
+          channel: string
+          cost_cents: number | null
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          id: string
+          opened_at: string | null
+          provider: string | null
+          provider_message_id: string | null
+          recipient_address: string | null
+          recipient_email: string | null
+          recipient_fax: string | null
+          recipient_phone: string | null
+          replied_at: string | null
+          sent_at: string | null
+          status: string
+          target_id: string
+          updated_at: string
+        }
+        Insert: {
+          bounced_at?: string | null
+          campaign_id: string
+          channel: string
+          cost_cents?: number | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          provider?: string | null
+          provider_message_id?: string | null
+          recipient_address?: string | null
+          recipient_email?: string | null
+          recipient_fax?: string | null
+          recipient_phone?: string | null
+          replied_at?: string | null
+          sent_at?: string | null
+          status?: string
+          target_id: string
+          updated_at?: string
+        }
+        Update: {
+          bounced_at?: string | null
+          campaign_id?: string
+          channel?: string
+          cost_cents?: number | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          provider?: string | null
+          provider_message_id?: string | null
+          recipient_address?: string | null
+          recipient_email?: string | null
+          recipient_fax?: string | null
+          recipient_phone?: string | null
+          replied_at?: string | null
+          sent_at?: string | null
+          status?: string
+          target_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreach_sends_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outreach_sends_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_targets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       outreach_signal_log: {
         Row: {
           admin_id: string | null
@@ -13979,6 +14132,93 @@ export type Database = {
           sent_at?: string
           signal_id?: string
           target_company?: string | null
+        }
+        Relationships: []
+      }
+      outreach_targets: {
+        Row: {
+          address_line1: string | null
+          business_name: string | null
+          city: string | null
+          contact_count: number
+          created_at: string
+          do_not_email: boolean
+          do_not_fax: boolean
+          do_not_mail: boolean
+          email: string | null
+          enrichment_data: Json | null
+          fax: string | null
+          id: string
+          is_dnc: boolean
+          is_founder: boolean
+          last_contacted_at: string | null
+          owner_first_name: string | null
+          owner_last_name: string | null
+          owner_title: string | null
+          phone: string | null
+          reply_count: number
+          source: string | null
+          source_url: string | null
+          state: string | null
+          updated_at: string
+          vertical: string
+          zip: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          business_name?: string | null
+          city?: string | null
+          contact_count?: number
+          created_at?: string
+          do_not_email?: boolean
+          do_not_fax?: boolean
+          do_not_mail?: boolean
+          email?: string | null
+          enrichment_data?: Json | null
+          fax?: string | null
+          id?: string
+          is_dnc?: boolean
+          is_founder?: boolean
+          last_contacted_at?: string | null
+          owner_first_name?: string | null
+          owner_last_name?: string | null
+          owner_title?: string | null
+          phone?: string | null
+          reply_count?: number
+          source?: string | null
+          source_url?: string | null
+          state?: string | null
+          updated_at?: string
+          vertical: string
+          zip?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          business_name?: string | null
+          city?: string | null
+          contact_count?: number
+          created_at?: string
+          do_not_email?: boolean
+          do_not_fax?: boolean
+          do_not_mail?: boolean
+          email?: string | null
+          enrichment_data?: Json | null
+          fax?: string | null
+          id?: string
+          is_dnc?: boolean
+          is_founder?: boolean
+          last_contacted_at?: string | null
+          owner_first_name?: string | null
+          owner_last_name?: string | null
+          owner_title?: string | null
+          phone?: string | null
+          reply_count?: number
+          source?: string | null
+          source_url?: string | null
+          state?: string | null
+          updated_at?: string
+          vertical?: string
+          zip?: string | null
         }
         Relationships: []
       }
