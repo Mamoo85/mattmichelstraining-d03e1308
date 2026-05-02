@@ -242,7 +242,7 @@ async function notifyClients(
   const since7d = new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10);
   const { data: areaSignals } = await sb
     .from("trade_radar_area_signals")
-    .select("scope, scope_value, alert_type, alert_detail, source, signal_date")
+    .select("scope, scope_value, alert_type, alert_detail, source, source_url, signal_date")
     .eq("vertical", vertical)
     .gte("signal_date", since7d)
     .order("signal_date", { ascending: false })
