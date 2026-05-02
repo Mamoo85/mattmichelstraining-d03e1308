@@ -229,8 +229,6 @@ async function notifyClients(
   vertical: Vertical,
   leads: any[],
 ): Promise<void> {
-  if (!leads.length) return;
-
   const { data: clients } = await sb
     .from("trade_radar_clients")
     .select("id, email, contact_name, business_name, phone, zip_codes")
@@ -238,6 +236,18 @@ async function notifyClients(
     .eq("active", true);
 
   if (!clients?.length) return;
+
+  // Pull last-7-day Market Intel (area signals) for this vertical so we can
+  // surface NOAA/FEMA/HMDA alerts even when per-address leads are zero.
+  const since7d = new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10);
+  const { data: areaSignals } = await sb
+    .from("trade_radar_area_signals")
+    .select("scope, scope_value, alert_type, alert_detail, source, signal_date")
+    .eq("vertical", vertical)
+    .gte("signal_date", since7d)
+    .order("signal_date", { ascending: false })
+    .limit(50);
+  const allArea = (areaSignals as any[]) ?? [];
 
   const VERTICAL_LABELS: Record<string, string> = {
     roofing: "Roofing", hvac: "HVAC", plumbing: "Plumbing",
