@@ -3035,6 +3035,49 @@ serve(async (req) => {
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      if (meta.type === "trade_radar_subscription" && meta.vertical) {
+        const vertical = meta.vertical as string;
+        const zipCodesRaw = meta.zip_codes as string ?? "";
+        const zipCodes = zipCodesRaw ? zipCodesRaw.split(",").map((z: string) => z.trim()).filter(Boolean) : [];
+        await sb.from("trade_radar_clients").upsert({
+          email: session.customer_email ?? (meta.email as string),
+          vertical,
+          contact_name: (meta.contact_name as string) || null,
+          business_name: (meta.business_name as string) || null,
+          phone: (meta.phone as string) || null,
+          zip_codes: zipCodes,
+          active: true,
+          stripe_customer_id: session.customer as string,
+          stripe_subscription_id: session.subscription as string,
+        }, { onConflict: "email,vertical", ignoreDuplicates: false });
+
+        const clientEmail = session.customer_email ?? (meta.email as string);
+        const clientName = (meta.contact_name as string) || (meta.business_name as string) || "there";
+        const verticalLabel = vertical.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+        const dashPath = `/${vertical.replace(/_/g, "-")}-radar`;
+
+        await dwaEmail(clientEmail, `Welcome to ${verticalLabel} Radar — your 7-day trial has started`, `<!DOCTYPE html><html><body style="margin:0;background:#0a1628;font-family:-apple-system,sans-serif;color:#e6f1ff;"><div style="max-width:560px;margin:0 auto;padding:32px 24px;"><span style="color:#00d4ff;font-weight:800;font-size:13px;letter-spacing:1px;text-transform:uppercase;">Detroit Web Agency</span><h1 style="color:#fff;font-size:22px;margin:24px 0 12px;">Your ${verticalLabel} Radar trial is live.</h1><p style="color:#94a3b8;line-height:1.6;">Hi ${clientName}, your 7-day free trial has started. You'll receive your first lead digest by tomorrow morning — exclusive homeowner signals in your ZIPs that nobody else is sending to ${verticalLabel.toLowerCase()} contractors.</p><p style="color:#94a3b8;margin:16px 0;"><strong style="color:#e6f1ff;">What happens next:</strong><br>• Daily email with scored leads (1–10)<br>• SMS alert when a 9+/10 lead drops<br>• No charge for 7 days, then 50% off for 3 months</p><p style="margin:28px 0 8px;"><a href="https://detroitwebagent.com${dashPath}" style="background:#00d4ff;color:#0a1628;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:700;display:inline-block;">View Your Dashboard</a></p><hr style="border:0;border-top:1px solid #1e3a5f;margin:32px 0 16px;"/><p style="font-size:11px;color:#7a8aa0;">Detroit Web Agency · (313) 992-1219 · <a href="mailto:matt@detroitwebagent.com" style="color:#7a8aa0;">matt@detroitwebagent.com</a></p></div></body></html>`);
+
+        if (meta.phone) {
+          await sendSMS(meta.phone as string, `Welcome to ${verticalLabel} Radar! Your 7-day free trial just started. Expect your first leads tomorrow morning. Questions? Call (313) 992-1219. — Detroit Web Agency`);
+        }
+
+        await notifyMatt(
+          `🏠 NEW Trade Radar client: ${verticalLabel}`,
+          `<p>${clientEmail} signed up for ${verticalLabel} Radar — ${zipCodes.length} ZIPs configured.</p>`,
+        );
+
+        // Fire initial scan for this vertical (fire-and-forget)
+        const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+        fetch(`${SUPABASE_URL}/functions/v1/trade-radar-scanner`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${anonKey}` },
+          body: JSON.stringify({ vertical, initial: true }),
+        }).catch(() => {});
+
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // Unmatched checkout.session.completed — log and acknowledge
       console.log(`[WEBHOOK] checkout.session.completed with unhandled meta.type: ${meta.type || "none"}`);
       await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
