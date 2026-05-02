@@ -2171,3 +2171,6 @@ verify_jwt = false
 
 [functions.data-source-fetch]
 verify_jwt = false
+
+[functions.outreach-target-enrich-backfill]
+verify_jwt = false
