@@ -65,15 +65,117 @@ interface RawSignal {
   formatted_address?: string;
 }
 
-// Infer county from city name. Covers SE Michigan metro.
+// County → Michigan region mapping
+const COUNTY_TO_REGION: Record<string, string> = {
+  // Southeast Michigan
+  Wayne: "Southeast Michigan", Oakland: "Southeast Michigan", Macomb: "Southeast Michigan",
+  Washtenaw: "Southeast Michigan", Monroe: "Southeast Michigan", Livingston: "Southeast Michigan",
+  "St. Clair": "Southeast Michigan", Lenawee: "Southeast Michigan",
+  // West Michigan
+  Kent: "West Michigan", Ottawa: "West Michigan", Kalamazoo: "West Michigan",
+  Muskegon: "West Michigan", Allegan: "West Michigan", "Van Buren": "West Michigan",
+  Berrien: "West Michigan", Cass: "West Michigan", "St. Joseph": "West Michigan",
+  // Mid-Michigan
+  Ingham: "Mid-Michigan", Eaton: "Mid-Michigan", Genesee: "Mid-Michigan",
+  Saginaw: "Mid-Michigan", Bay: "Mid-Michigan", Midland: "Mid-Michigan",
+  Clinton: "Mid-Michigan", Shiawassee: "Mid-Michigan", Gratiot: "Mid-Michigan",
+  Ionia: "Mid-Michigan", Montcalm: "Mid-Michigan", Isabella: "Mid-Michigan",
+  // Northern Michigan
+  "Grand Traverse": "Northern Michigan", Emmet: "Northern Michigan",
+  Charlevoix: "Northern Michigan", Leelanau: "Northern Michigan",
+  Benzie: "Northern Michigan", Otsego: "Northern Michigan", Antrim: "Northern Michigan",
+  Manistee: "Northern Michigan", Wexford: "Northern Michigan", Missaukee: "Northern Michigan",
+  // East Michigan
+  Lapeer: "East Michigan", Tuscola: "East Michigan", Sanilac: "East Michigan",
+  Huron: "East Michigan", "St. Clair": "East Michigan",  // St. Clair is SE but overlaps
+  // Upper Peninsula
+  Marquette: "Upper Peninsula", Chippewa: "Upper Peninsula", Delta: "Upper Peninsula",
+  Mackinac: "Upper Peninsula", Luce: "Upper Peninsula", Schoolcraft: "Upper Peninsula",
+  Alger: "Upper Peninsula", Baraga: "Upper Peninsula", Houghton: "Upper Peninsula",
+  Ontonagon: "Upper Peninsula", Gogebic: "Upper Peninsula", Iron: "Upper Peninsula",
+  Dickinson: "Upper Peninsula", Menominee: "Upper Peninsula",
+};
+
+// Infer Michigan county from city name — covers the full state.
 function inferCounty(city?: string): string | undefined {
   if (!city) return undefined;
   const c = city.toLowerCase().trim();
-  if (/detroit|dearborn|livonia|westland|taylor|garden city|inkster|wayne|romulus|belleville|flat rock|southgate|wyandotte|ecorse|river rouge|lincoln park|melvindale|allen park|trenton|grosse pointe|hamtramck|highland park/.test(c)) return "Wayne";
-  if (/troy|royal oak|birmingham|bloomfield|pontiac|southfield|farmington|novi|ferndale|madison heights|hazel park|warren city.*oak|clawson|berkley|pleasant ridge|oak park|huntington woods|sterling heights.*oak/.test(c)) return "Oakland";
-  if (/sterling heights|warren|clinton twp|clinton township|macomb|utica|shelby|chesterfield|richmond|new baltimore|eastpointe|roseville|st clair shores|saint clair shores/.test(c)) return "Macomb";
-  if (/ann arbor|ypsilanti|saline|milan|chelsea|dexter/.test(c)) return "Washtenaw";
+  // Southeast Michigan — Wayne
+  if (/\b(detroit|dearborn heights|dearborn|livonia|westland|taylor|garden city|inkster|romulus|belleville|flat rock|southgate|wyandotte|ecorse|river rouge|lincoln park|melvindale|allen park|trenton|hamtramck|highland park|redford|canton|plymouth|northville|brownstown|woodhaven|riverview|rockwood|gibraltar|grosse pointe)\b/.test(c)) return "Wayne";
+  // Southeast Michigan — Oakland
+  if (/\b(troy|royal oak|birmingham|bloomfield hills|pontiac|southfield|farmington hills|farmington|novi|ferndale|madison heights|hazel park|clawson|berkley|pleasant ridge|oak park|huntington woods|auburn hills|rochester hills|rochester|milford|highland|commerce|walled lake|wixom|lake orion|waterford|west bloomfield|clarkston|orion|oxford)\b/.test(c)) return "Oakland";
+  // Southeast Michigan — Macomb
+  if (/\b(sterling heights|warren|clinton township|clinton twp|mount clemens|utica|shelby township|chesterfield|richmond|new baltimore|eastpointe|roseville|st clair shores|saint clair shores|fraser|center line|anchor bay|romeo)\b/.test(c)) return "Macomb";
+  // Southeast Michigan — Washtenaw
+  if (/\b(ann arbor|ypsilanti|saline|milan|chelsea|dexter|manchester|pittsfield|superior township)\b/.test(c)) return "Washtenaw";
+  // Southeast Michigan — Livingston
+  if (/\b(brighton|howell|hartland|hamburg|green oak|genoa|pinckney|fowlerville)\b/.test(c)) return "Livingston";
+  // Southeast Michigan — Monroe
+  if (/\b(monroe|frenchtown|dundee|bedford|temperance|lasalle|petersburg|ida|erie)\b/.test(c)) return "Monroe";
+  // Southeast Michigan — St. Clair
+  if (/\b(port huron|marysville|st clair|saint clair|port huron township|clay|east china|fort gratiot|kimball|algonac)\b/.test(c)) return "St. Clair";
+  // Southeast Michigan — Lenawee
+  if (/\b(adrian|tecumseh|blissfield|morenci|hudson|onsted|addison|madison|jasper)\b/.test(c)) return "Lenawee";
+  // West Michigan — Kent
+  if (/\b(grand rapids|kentwood|wyoming|walker|grandville|east grand rapids|forest hills|rockford|lowell|ada|cascade|caledonia|byron center|comstock park)\b/.test(c)) return "Kent";
+  // West Michigan — Ottawa
+  if (/\b(holland|grand haven|zeeland|hudsonville|coopersville|spring lake|ferrysburg|allendale|jenison|west olive|nunica)\b/.test(c)) return "Ottawa";
+  // West Michigan — Kalamazoo
+  if (/\b(kalamazoo|portage|oshtemo|texas township|comstock|richland|vicksburg|parchment)\b/.test(c)) return "Kalamazoo";
+  // West Michigan — Muskegon
+  if (/\b(muskegon|norton shores|muskegon heights|fruitport|north muskegon|whitehall|montague|ravenna|twin lake)\b/.test(c)) return "Muskegon";
+  // West Michigan — Allegan
+  if (/\b(allegan|saugatuck|douglas|fennville|plainwell|wayland|otsego|martin|hamilton)\b/.test(c)) return "Allegan";
+  // West Michigan — Van Buren
+  if (/\b(south haven|bangor|lawrence|paw paw|gobles|covert|decatur)\b/.test(c)) return "Van Buren";
+  // West Michigan — Berrien
+  if (/\b(benton harbor|st joseph|saint joseph|niles|buchanan|stevensville|bridgman|coloma|watervliet|new buffalo|baroda)\b/.test(c)) return "Berrien";
+  // Mid-Michigan — Ingham
+  if (/\b(lansing|east lansing|meridian|haslett|williamston|mason|okemos|holt|delhi|leslie)\b/.test(c)) return "Ingham";
+  // Mid-Michigan — Eaton
+  if (/\b(charlotte|grand ledge|delta township|eaton rapids|olivet|mulliken|vermontville)\b/.test(c)) return "Eaton";
+  // Mid-Michigan — Genesee
+  if (/\b(flint|burton|grand blanc|flushing|davison|swartz creek|clio|fenton|linden|mount morris|atlas|mundy)\b/.test(c)) return "Genesee";
+  // Mid-Michigan — Saginaw
+  if (/\b(saginaw|saginaw township|thomas township|tittabawassee|chesaning|birch run|frankenmuth)\b/.test(c)) return "Saginaw";
+  // Mid-Michigan — Bay
+  if (/\b(bay city|essexville|hampton|pinconning|monitor|bangor township|fraser township)\b/.test(c)) return "Bay";
+  // Mid-Michigan — Midland
+  if (/\b(midland|sanford|coleman|hope|larkin)\b/.test(c)) return "Midland";
+  // Mid-Michigan — Clinton
+  if (/\b(st johns|saint johns|dewitt|bath|ovid|fowler|westphalia)\b/.test(c)) return "Clinton";
+  // Mid-Michigan — Isabella
+  if (/\b(mount pleasant|alma|gratiot|shepherd|winn|rosebush)\b/.test(c)) return "Isabella";
+  // Northern Michigan — Grand Traverse
+  if (/\b(traverse city|garfield|acme|blair|east bay|paradise|long lake)\b/.test(c)) return "Grand Traverse";
+  // Northern Michigan — Emmet
+  if (/\b(petoskey|harbor springs|conway|harbor|bliss|littlefield|readmond)\b/.test(c)) return "Emmet";
+  // Northern Michigan — Charlevoix
+  if (/\b(charlevoix|boyne city|east jordan|boyne falls|beaver island|horton bay)\b/.test(c)) return "Charlevoix";
+  // Northern Michigan — Leelanau
+  if (/\b(leland|suttons bay|northport|lake leelanau|maple city|cedar|empire|glen arbor)\b/.test(c)) return "Leelanau";
+  // East Michigan — Lapeer
+  if (/\b(lapeer|imlay city|dryden|clifford|columbiaville|metamora|attica)\b/.test(c)) return "Lapeer";
+  // East Michigan — Tuscola
+  if (/\b(caro|vassar|cass city|millington|gagetown|akron|reese)\b/.test(c)) return "Tuscola";
+  // East Michigan — Sanilac
+  if (/\b(sandusky|marlette|bad axe|port sanilac|forester|lexington)\b/.test(c)) return "Sanilac";
+  // East Michigan — Huron
+  if (/\b(bad axe|harbor beach|caseville|sebewaing|pigeon|ubly)\b/.test(c)) return "Huron";
+  // Upper Peninsula — Marquette
+  if (/\b(marquette|ishpeming|negaunee|republic|gwinn|champion)\b/.test(c)) return "Marquette";
+  // Upper Peninsula — Chippewa
+  if (/\b(sault ste marie|sault sainte marie|kinross|pickford|rudyard|dafter|brimley)\b/.test(c)) return "Chippewa";
+  // Upper Peninsula — Delta
+  if (/\b(escanaba|gladstone|ford river|rapid river|garden)\b/.test(c)) return "Delta";
+  // Upper Peninsula — Mackinac
+  if (/\b(st ignace|saint ignace|mackinac island|mackinaw city|brevort|naubinway)\b/.test(c)) return "Mackinac";
   return undefined;
+}
+
+function inferRegion(county?: string): string | undefined {
+  if (!county) return undefined;
+  return COUNTY_TO_REGION[county];
 }
 
 const BASE_SCORES: Record<string, number> = {
@@ -458,13 +560,20 @@ async function scanSBAApprovals(): Promise<RawSignal[]> {
 
 async function notifyClients(sb: ReturnType<typeof createClient>, zip: string | undefined, county: string | undefined, score: number): Promise<string[]> {
   if (score < 7) return [];
+  const region = inferRegion(county);
   const { data: clients } = await (sb.from as any)("mortgage_radar_clients")
-    .select("id, zip_codes, coverage_counties")
+    .select("id, zip_codes, coverage_counties, coverage_regions")
     .eq("active", true);
   const matched = (clients || []).filter((c: any) => {
-    if (county && Array.isArray(c.coverage_counties) && c.coverage_counties.length > 0) {
-      return c.coverage_counties.includes(county);
+    // Region match (broadest — try first)
+    if (region && Array.isArray(c.coverage_regions) && c.coverage_regions.length > 0) {
+      if (c.coverage_regions.includes(region)) return true;
     }
+    // County match (medium)
+    if (county && Array.isArray(c.coverage_counties) && c.coverage_counties.length > 0) {
+      if (c.coverage_counties.includes(county)) return true;
+    }
+    // Zip match (narrowest fallback)
     return zip && Array.isArray(c.zip_codes) && c.zip_codes.includes(zip);
   });
   return matched.map((c: any) => c.id);
@@ -535,6 +644,7 @@ async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal
     state: "MI",
     zip: s.zip || null,
     county: s.county || null,
+    region: s.county ? inferRegion(s.county) || null : null,
     signal_type: s.signal_type,
     signal_source: s.signal_source,
     signal_detail: s.signal_detail || null,
