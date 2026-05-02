@@ -14,6 +14,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-05-02*
 
+### Phase 33 — 20+ New Open Data Sources Across All 11 Trade Radar Verticals COMPLETE ✅
+
+**New shared utility:** `_shared/census-housing.ts` — US Census ACS 5-year housing age data for all MI ZIPs (B25035_001E median year built, B25034_002E pre-1940 units). Cached 24h.
+
+**New sources added per vertical (all free/open APIs, no new keys):**
+- **Roofing**: NOAA SPC daily storm reports (`today.csv`), 14-day SPC archive (score decays with age), CFPB HMDA refi loans (`homeowner_equity_area`)
+- **Exterior/Painting**: NOAA SPC daily storm reports (`storm_siding_damage`), CFPB HMDA home improvement loans (`home_improvement_loan_area`)
+- **Restoration**: Detroit `blight_tickets` (water/structural/mold citations), USGS streamflow flood gauges, OpenFEMA PA projects
+- **Demo/Junk**: Detroit `blight_tickets` (debris/vacant/dumping), DLBA vacant properties
+- **Foundation**: USGS streamflow flood gauges, USGS earthquake catalog (M2.5+ within 400km), US Drought Monitor (D2+ = clay soil shrinkage)
+- **HVAC**: US Drought Monitor (D1+ = AC continuous-run failure), CFPB HMDA refi loans
+- **Gutters**: CFPB HMDA refi loans, Detroit `parcel_file_current` (pre-1960 home count)
+- **Plumbing**: Detroit 311 ArcGIS (water/sewer issues), CFPB HMDA home improvement loans
+- **Electrical**: Census ACS pre-1960 ZIPs (`aging_panel_area`), CFPB HMDA home improvement loans
+- **Tree**: NOAA SPC wind reports (58+ mph = tree damage threshold), US Drought Monitor (root stress)
+- **Pest Control**: DLBA vacant properties (pest harborage), Detroit `blight_tickets` (overgrown/rodent citations)
+
+**Scanner:** Added `homeowner_equity_area`, `home_improvement_loan_area`, `aging_panel_area` to `AREA_ALERT_TYPES`.
+
+**Key technical notes:**
+- SPC CSV: two-section format (hail then wind), `parts[0] === "Time"` toggles `inWind` flag; filter `parts[4]?.trim() !== "MI"` for state
+- `blight_tickets`: `ticket_issued_date` is corrupt (returns year 8535+); use `orderByFields=OBJECTID+DESC`, set `signal_date = today`
+- DLBA: no `zip_code` field; construct address from `[street_number, street_direction, street_name, street_type].filter(Boolean).join(" ")`
+- Drought Monitor: filter `c.fips?.startsWith("26")` for MI; drought level in `c.dm` field (1=D1, 2=D2, etc.)
+- Census ACS multi-ZIP: use `for=zip+code+tabulation+area:*&in=state:26` (not comma-list — that 404s)
+
+**Commit:** `2af402fe`
+
+---
+
 ### Phase 32 — Trade Radar Expansion to 11 Verticals COMPLETE ✅
 
 **Expanded from 7 → 11 verticals.** `painting` vertical renamed/replaced by `exterior` (broader buyer pool). 4 net-new verticals added.
