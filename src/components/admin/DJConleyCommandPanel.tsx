@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Crown, Link2, Sparkles, ShieldCheck, Loader2 } from "lucide-react";
+import { Crown, Link2, Sparkles, ShieldCheck, Loader2, Grid3x3, Trash2, Plus } from "lucide-react";
 import SendDJConleyProposalCard from "./SendDJConleyProposalCard";
 
 /**
@@ -37,6 +37,66 @@ export default function DJConleyCommandPanel() {
   const [changelogBody, setChangelogBody] = useState("");
   const [publishing, setPublishing] = useState(false);
 
+  // Command Center tile manager
+  const [tiles, setTiles] = useState<any[]>([]);
+  const [loadingTiles, setLoadingTiles] = useState(false);
+  const [newTile, setNewTile] = useState({ label: "", url: "", icon_emoji: "🔗", category: "general" });
+  const [savingTile, setSavingTile] = useState(false);
+
+  const loadTiles = async (target?: string) => {
+    const e = (target ?? email).trim().toLowerCase();
+    if (!e) return;
+    setLoadingTiles(true);
+    try {
+      const { data, error } = await supabase
+        .from("command_center_tiles" as any)
+        .select("*")
+        .eq("owner_email", e)
+        .order("sort_order");
+      if (error) throw error;
+      setTiles((data as any) || []);
+    } catch (err: any) {
+      toast.error("Tiles load failed", { description: err?.message });
+    } finally {
+      setLoadingTiles(false);
+    }
+  };
+
+  const addTile = async () => {
+    if (!newTile.label.trim() || !newTile.url.trim()) return toast.error("Label + URL required");
+    setSavingTile(true);
+    try {
+      const { error } = await supabase.from("command_center_tiles" as any).insert({
+        owner_email: email.trim().toLowerCase(),
+        label: newTile.label.trim(),
+        url: newTile.url.trim(),
+        icon_emoji: newTile.icon_emoji || "🔗",
+        category: newTile.category || "general",
+        sort_order: tiles.length,
+        is_active: true,
+      } as any);
+      if (error) throw error;
+      toast.success("Tile added");
+      setNewTile({ label: "", url: "", icon_emoji: "🔗", category: "general" });
+      await loadTiles();
+    } catch (err: any) {
+      toast.error("Add failed", { description: err?.message });
+    } finally {
+      setSavingTile(false);
+    }
+  };
+
+  const deleteTile = async (id: string) => {
+    try {
+      const { error } = await supabase.from("command_center_tiles" as any).delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Tile removed");
+      await loadTiles();
+    } catch (err: any) {
+      toast.error("Delete failed", { description: err?.message });
+    }
+  };
+
   const loadLock = async (target?: string) => {
     const e = (target ?? email).trim().toLowerCase();
     if (!e) return;
@@ -60,6 +120,7 @@ export default function DJConleyCommandPanel() {
 
   useEffect(() => {
     loadLock("pat@djconley.com");
+    loadTiles("pat@djconley.com");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -202,6 +263,67 @@ export default function DJConleyCommandPanel() {
             {publishing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Publish to Pat's dashboard
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Command Center tile manager */}
+      <Card className="border-white/10 bg-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Grid3x3 className="h-4 w-4 text-[#00d4ff]" />
+            Command Center tiles ({tiles.length})
+          </CardTitle>
+          <p className="text-xs text-white/50">
+            Quick links shown on Pat's owner dashboard (eWay, QuickBooks, Gmail, etc.). Owner: <code>{email}</code>
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {loadingTiles ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <div className="space-y-2">
+              {tiles.map((t) => (
+                <div key={t.id} className="flex items-center gap-2 rounded-md border border-white/10 bg-white/5 p-2 text-sm">
+                  <span className="text-lg">{t.icon_emoji || "🔗"}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{t.label}</p>
+                    <p className="text-[11px] text-white/40 truncate">{t.url}</p>
+                  </div>
+                  <Badge variant="outline" className="text-[10px]">{t.category}</Badge>
+                  <Button size="icon" variant="ghost" onClick={() => deleteTile(t.id)}>
+                    <Trash2 className="h-4 w-4 text-red-400" />
+                  </Button>
+                </div>
+              ))}
+              {tiles.length === 0 && (
+                <p className="text-xs text-white/40 italic">No tiles yet. Add Pat's most-used tools below.</p>
+              )}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-2 pt-2 border-t border-white/10">
+            <Input
+              value={newTile.icon_emoji}
+              onChange={(e) => setNewTile({ ...newTile, icon_emoji: e.target.value })}
+              placeholder="🔗"
+              className="md:col-span-1"
+            />
+            <Input
+              value={newTile.label}
+              onChange={(e) => setNewTile({ ...newTile, label: e.target.value })}
+              placeholder="Label (e.g. eWay)"
+              className="md:col-span-1"
+            />
+            <Input
+              value={newTile.url}
+              onChange={(e) => setNewTile({ ...newTile, url: e.target.value })}
+              placeholder="https://…"
+              className="md:col-span-2"
+            />
+            <Button onClick={addTile} disabled={savingTile}>
+              {savingTile ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 mr-1" />Add</>}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -22,7 +22,13 @@ export default function OwnerDashboard() {
       if (s.exp < Date.now()) { localStorage.removeItem("owner_session"); navigate("/owner/login"); return; }
       setEmail(s.email);
       // Load command center tiles for this owner
-      (supabase as any).from("command_center_tiles").select("*").eq("client_email", s.email).order("position").then(({ data }: any) => setTiles(data || []));
+      (supabase as any)
+        .from("command_center_tiles")
+        .select("*")
+        .eq("owner_email", s.email)
+        .eq("is_active", true)
+        .order("sort_order")
+        .then(({ data }: any) => setTiles(data || []));
     } catch {
       navigate("/owner/login");
     }
@@ -65,11 +71,11 @@ export default function OwnerDashboard() {
                 <a key={t.id} href={t.url} target="_blank" rel="noopener noreferrer" className="block">
                   <Card className="p-5 hover:border-primary/50 transition-colors h-full">
                     <div className="flex items-start justify-between mb-2">
-                      <span className="text-2xl">{t.icon || "🔗"}</span>
+                      <span className="text-2xl">{t.icon_emoji || "🔗"}</span>
                       <ExternalLink className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    <p className="font-semibold text-sm">{t.title}</p>
-                    {t.description && <p className="text-xs text-muted-foreground mt-1">{t.description}</p>}
+                    <p className="font-semibold text-sm">{t.label}</p>
+                    {t.category && <p className="text-xs text-muted-foreground mt-1 capitalize">{t.category}</p>}
                   </Card>
                 </a>
               ))}
