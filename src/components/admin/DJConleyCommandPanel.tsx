@@ -150,9 +150,12 @@ export default function DJConleyCommandPanel() {
     setPublishing(true);
     try {
       const { error } = await supabase.from("product_changelog" as any).insert({
+        product: "DJ Conley Premium",
         title: changelogTitle.trim(),
         body: changelogBody.trim(),
-        published_at: new Date().toISOString(),
+        ship_date: new Date().toISOString().slice(0, 10),
+        is_public: true,
+        tags: ["djconley", "forever-pricing"],
       } as any);
       if (error) throw error;
       toast.success("Changelog published", { description: "Pat will see it on next dashboard load." });
