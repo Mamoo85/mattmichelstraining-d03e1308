@@ -43,21 +43,28 @@ serve(async (req) => {
   const since = new Date(Date.now() - 24 * 3600_000).toISOString();
 
   const { data: clients } = await (sb.from as any)("mortgage_radar_clients")
-    .select("id, email, contact_name, business_name, zip_codes")
+    .select("id, email, contact_name, business_name, zip_codes, coverage_counties")
     .eq("active", true);
 
   let sent = 0;
 
   for (const c of (clients || [])) {
+    const counties: string[] = Array.isArray(c.coverage_counties) ? c.coverage_counties : [];
     const zips: string[] = Array.isArray(c.zip_codes) ? c.zip_codes : [];
-    if (zips.length === 0) continue;
+    if (counties.length === 0 && zips.length === 0) continue;
 
-    const { data: leads } = await (sb.from as any)("mortgage_radar_leads")
-      .select("id, full_name, address, city, zip, lat, lon, signal_type, signal_detail, score, suggested_opener, best_call_window, estimated_equity, intel_highlights")
-      .in("zip", zips)
+    // Prefer county-level match; fall back to zip list for legacy clients
+    let leadsQuery = (sb.from as any)("mortgage_radar_leads")
+      .select("id, full_name, address, city, zip, county, lat, lon, signal_type, signal_detail, score, suggested_opener, best_call_window, estimated_equity, intel_highlights")
       .gte("created_at", since)
       .order("score", { ascending: false })
       .limit(5);
+    if (counties.length > 0) {
+      leadsQuery = leadsQuery.in("county", counties);
+    } else {
+      leadsQuery = leadsQuery.in("zip", zips);
+    }
+    const { data: leads } = await leadsQuery;
 
     if (!leads || leads.length === 0) continue;
 
