@@ -37,6 +37,66 @@ export default function DJConleyCommandPanel() {
   const [changelogBody, setChangelogBody] = useState("");
   const [publishing, setPublishing] = useState(false);
 
+  // Command Center tile manager
+  const [tiles, setTiles] = useState<any[]>([]);
+  const [loadingTiles, setLoadingTiles] = useState(false);
+  const [newTile, setNewTile] = useState({ label: "", url: "", icon_emoji: "🔗", category: "general" });
+  const [savingTile, setSavingTile] = useState(false);
+
+  const loadTiles = async (target?: string) => {
+    const e = (target ?? email).trim().toLowerCase();
+    if (!e) return;
+    setLoadingTiles(true);
+    try {
+      const { data, error } = await supabase
+        .from("command_center_tiles" as any)
+        .select("*")
+        .eq("owner_email", e)
+        .order("sort_order");
+      if (error) throw error;
+      setTiles((data as any) || []);
+    } catch (err: any) {
+      toast.error("Tiles load failed", { description: err?.message });
+    } finally {
+      setLoadingTiles(false);
+    }
+  };
+
+  const addTile = async () => {
+    if (!newTile.label.trim() || !newTile.url.trim()) return toast.error("Label + URL required");
+    setSavingTile(true);
+    try {
+      const { error } = await supabase.from("command_center_tiles" as any).insert({
+        owner_email: email.trim().toLowerCase(),
+        label: newTile.label.trim(),
+        url: newTile.url.trim(),
+        icon_emoji: newTile.icon_emoji || "🔗",
+        category: newTile.category || "general",
+        sort_order: tiles.length,
+        is_active: true,
+      } as any);
+      if (error) throw error;
+      toast.success("Tile added");
+      setNewTile({ label: "", url: "", icon_emoji: "🔗", category: "general" });
+      await loadTiles();
+    } catch (err: any) {
+      toast.error("Add failed", { description: err?.message });
+    } finally {
+      setSavingTile(false);
+    }
+  };
+
+  const deleteTile = async (id: string) => {
+    try {
+      const { error } = await supabase.from("command_center_tiles" as any).delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Tile removed");
+      await loadTiles();
+    } catch (err: any) {
+      toast.error("Delete failed", { description: err?.message });
+    }
+  };
+
   const loadLock = async (target?: string) => {
     const e = (target ?? email).trim().toLowerCase();
     if (!e) return;
