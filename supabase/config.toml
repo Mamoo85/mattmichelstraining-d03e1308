@@ -2162,3 +2162,6 @@ verify_jwt = true
 
 [functions.outreach-fax-blast]
 verify_jwt = true
+
+[functions.outreach-postcard-blast]
+verify_jwt = true
