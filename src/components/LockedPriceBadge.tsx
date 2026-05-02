@@ -29,6 +29,8 @@ interface Props {
   fallbackTier?: string;
   className?: string;
   variant?: "default" | "compact" | "hero";
+  /** Optional — look up the lock by email instead of the authenticated user (owner dashboard / magic link). */
+  clientEmail?: string;
 }
 
 const formatPrice = (cents: number) => `$${(cents / 100).toLocaleString()}/mo`;
@@ -38,6 +40,7 @@ export function LockedPriceBadge({
   fallbackTier,
   className,
   variant = "default",
+  clientEmail,
 }: Props) {
   const [lock, setLock] = useState<PriceLock | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,17 +48,22 @@ export function LockedPriceBadge({
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData?.user) {
-        if (!cancelled) setLoading(false);
-        return;
-      }
-      const { data, error } = await supabase
+      let query = supabase
         .from("client_price_locks" as any)
-        .select("locked_price_cents, tier, locked_at, carve_out_clause, lock_version")
-        .order("locked_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .select("locked_price_cents, tier, locked_at, carve_out_clause, lock_version");
+
+      if (clientEmail) {
+        query = query.eq("client_email", clientEmail.toLowerCase());
+      } else {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData?.user?.email) {
+          if (!cancelled) setLoading(false);
+          return;
+        }
+        query = query.eq("client_email", userData.user.email.toLowerCase());
+      }
+
+      const { data, error } = await query.order("locked_at", { ascending: false }).limit(1).maybeSingle();
       if (!cancelled) {
         if (!error && data) setLock(data as unknown as PriceLock);
         setLoading(false);
@@ -64,7 +72,7 @@ export function LockedPriceBadge({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [clientEmail]);
 
   if (loading) return null;
 

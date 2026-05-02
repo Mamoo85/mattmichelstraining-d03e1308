@@ -36,6 +36,9 @@ const BottomTabBar = lazyRetry(() => import("@/components/layout/BottomTabBar"))
 // Lazy-load ALL pages including Index for faster initial JS parse
 const Index = lazyRetry(() => import("./pages/Index"));
 const AgencyHome = lazyRetry(() => import("./pages/AgencyHome"));
+const OwnerLogin = lazyRetry(() => import("./pages/OwnerLogin"));
+const OwnerVerify = lazyRetry(() => import("./pages/OwnerVerify"));
+const OwnerDashboard = lazyRetry(() => import("./pages/OwnerDashboard"));
 const ClientDashboard = lazyRetry(() => import("./pages/ClientDashboard"));
 const AgencyClientPortal = lazyRetry(() => import("./pages/AgencyClientPortal"));
 const EmbedCapture = lazyRetry(() => import("./pages/EmbedCapture"));
@@ -870,7 +873,10 @@ const App = () => (
                      <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
                       <Route path="/admin" element={<AgencyAdminRoute><Admin /></AgencyAdminRoute>} />
                       <Route path="/admin/health" element={<AgencyAdminRoute><AdminHealth /></AgencyAdminRoute>} />
-                      <Route path="/dwa-admin" element={<AgencyAdminRoute><DWAAdmin /></AgencyAdminRoute>} />
+                       <Route path="/dwa-admin" element={<AgencyAdminRoute><DWAAdmin /></AgencyAdminRoute>} />
+                       <Route path="/owner/login" element={<OwnerLogin />} />
+                       <Route path="/owner/verify" element={<OwnerVerify />} />
+                       <Route path="/owner/dashboard" element={<OwnerDashboard />} />
                       <Route path="/dwa-admin/outreach-audit" element={<AgencyAdminRoute><OutreachAuditLog /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/outreach-queue" element={<AgencyAdminRoute><OutreachQueuePage /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/outreach-observability" element={<AgencyAdminRoute><OutreachObservabilityPage /></AgencyAdminRoute>} />

@@ -13940,6 +13940,33 @@ export type Database = {
         }
         Relationships: []
       }
+      owner_magic_tokens: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          token_hash: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          token_hash: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          token_hash?: string
+        }
+        Relationships: []
+      }
       parent_child_links: {
         Row: {
           child_user_id: string

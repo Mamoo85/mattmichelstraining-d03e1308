@@ -2985,6 +2985,29 @@ serve(async (req) => {
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // ── DJ Conley Forever-Pricing subscription ────────────────────────────
+      if (meta.type === "djconley_subscription") {
+        try {
+          const email = (meta.email || (session.customer_details as Record<string, string>)?.email || "").toLowerCase();
+          const tier = meta.tier || "core";
+          const lockedCents = parseInt(meta.locked_price_cents || "49900", 10);
+          if (email) {
+            await sb.from("client_price_locks").upsert({
+              client_email: email,
+              tier,
+              locked_price_cents: lockedCents,
+              stripe_subscription_id: session.subscription as string || null,
+              stripe_customer_id: session.customer as string || null,
+              carve_out_clause: "Price locked for the lifetime of this subscription. Carve-outs apply only to net-new product lines launched 24+ months from start date, and only with 60-day written notice.",
+              locked_at: new Date().toISOString(),
+            }, { onConflict: "client_email" });
+            await dwaEmail(email, "🔒 Your Forever Pricing is Locked", `<!DOCTYPE html><html><body style="margin:0;background:#030711;font-family:-apple-system,sans-serif;"><div style="max-width:600px;margin:0 auto;padding:32px 16px;"><div style="background:#0a1628;border:1px solid #00d4ff;border-radius:16px;padding:32px;"><p style="color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;">🔒 FOREVER PRICING ACTIVE</p><h1 style="color:#fff;font-size:24px;margin:0 0 16px;">Welcome aboard.</h1><p style="color:#94a3b8;font-size:14px;line-height:1.6;margin:0 0 16px;">Your monthly rate of <strong style="color:#00d4ff;">$${(lockedCents/100).toFixed(0)}/mo</strong> is locked for the lifetime of your subscription. As long as you stay active, your price never goes up — even when we add new features.</p><p style="color:#64748b;font-size:12px;margin:16px 0 0;border-top:1px solid #1e3a5f;padding-top:16px;">Carve-outs apply only to net-new product lines launched 24+ months from start date, with 60-day written notice.</p><p style="color:#94a3b8;font-size:13px;margin:24px 0 0;">— Matt · (313) 992-1219</p></div></div></body></html>`);
+            await notifyMatt(`🔒 DJ Conley Forever-Lock — ${email}`, `<p><strong>${email}</strong><br>Tier: ${tier}<br>Locked at: $${(lockedCents/100).toFixed(0)}/mo</p>`);
+          }
+        } catch (e) { console.error("[WEBHOOK] djconley_subscription error:", e); return new Response(JSON.stringify({ error: "djconley_subscription failed" }), { status: 500 }); }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
+      }
+
       // Unmatched checkout.session.completed — log and acknowledge
       console.log(`[WEBHOOK] checkout.session.completed with unhandled meta.type: ${meta.type || "none"}`);
       await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
