@@ -229,7 +229,8 @@ serve(async (req) => {
     const regions: string[] = Array.isArray(geo.coverage_regions) ? geo.coverage_regions : [];
     const counties: string[] = Array.isArray(geo.coverage_counties) ? geo.coverage_counties : [];
     const zips: string[] = Array.isArray(c.zip_codes) ? c.zip_codes : [];
-    const baseSelect = "id, full_name, address, city, zip, county, region, lat, lon, signal_type, signal_detail, score, suggested_opener, best_call_window, estimated_equity, intel_highlights, signal_count, last_signal_at, signal_date, created_at";
+    // county + region added by later migration — omit them here; they'll be null until applied
+    const baseSelect = "id, full_name, address, city, zip, lat, lon, signal_type, signal_detail, score, suggested_opener, best_call_window, estimated_equity, intel_highlights, signal_count, last_signal_at, signal_date, created_at";
 
     function applyGeoFilter(q: any) {
       if (regions.length > 0) return q.in("region", regions);
