@@ -106,10 +106,10 @@ export function LockedPriceBadge({
               className,
             )}
             role="status"
-            aria-label={`Price locked at ${formatPrice(priceCents)} forever`}
+            aria-label={`Price locked at ${priceLabel} forever`}
           >
             <Lock className="h-4 w-4 shrink-0" aria-hidden />
-            <span className="font-black">{formatPrice(priceCents)}</span>
+            <span className="font-black">{priceLabel}</span>
             <span className="opacity-70 font-medium">·</span>
             <span className="uppercase text-[0.7em] tracking-widest font-extrabold">Locked Forever</span>
           </div>
