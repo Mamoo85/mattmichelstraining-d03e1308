@@ -13,6 +13,7 @@ export interface SourceMeta {
   url: string;
   refresh_h: number;
   free: boolean;
+  engines?: string[];   // every consumer that calls this source. empty = orphan.
 }
 
 export interface FetchResult<T = unknown> {
