@@ -49,6 +49,7 @@ const PipelineVelocityDashboard = lazy(() => import("@/components/dwa-admin/Pipe
 const StrategyModeHub = lazy(() => import("@/components/dwa-admin/StrategyModeHub"));
 const AdminEnrichmentAudit = lazy(() => import("@/components/admin/AdminEnrichmentAudit"));
 const AdminMarketingTools = lazy(() => import("@/components/admin/AdminMarketingTools"));
+const DJConleyCommandPanel = lazy(() => import("@/components/admin/DJConleyCommandPanel"));
 
 type Tab =
   | "ai-command"
