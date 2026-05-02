@@ -10,6 +10,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { runEmailWaterfall } from "../_shared/email-waterfall.ts";
 import { extractFaxNumber } from "../_shared/firecrawl.ts";
 import { isFounder } from "../_shared/founder-seats.ts";
+import { runComplianceScrub } from "../_shared/compliance-waterfall.ts";
+import { fetchFreshBusinessSignals } from "../_shared/signal-waterfall.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
