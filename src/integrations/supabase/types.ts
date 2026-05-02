@@ -21314,6 +21314,138 @@ export type Database = {
         }
         Relationships: []
       }
+      trade_radar_clients: {
+        Row: {
+          active: boolean
+          business_name: string | null
+          contact_name: string | null
+          created_at: string
+          dashboard_token: string | null
+          email: string
+          id: string
+          phone: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_ends_at: string | null
+          vertical: string
+          zip_codes: string[]
+        }
+        Insert: {
+          active?: boolean
+          business_name?: string | null
+          contact_name?: string | null
+          created_at?: string
+          dashboard_token?: string | null
+          email: string
+          id?: string
+          phone?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          vertical: string
+          zip_codes?: string[]
+        }
+        Update: {
+          active?: boolean
+          business_name?: string | null
+          contact_name?: string | null
+          created_at?: string
+          dashboard_token?: string | null
+          email?: string
+          id?: string
+          phone?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          vertical?: string
+          zip_codes?: string[]
+        }
+        Relationships: []
+      }
+      trade_radar_leads: {
+        Row: {
+          address: string | null
+          best_call_window: string | null
+          city: string | null
+          county: string | null
+          created_at: string
+          estimated_value: number | null
+          full_name: string | null
+          id: string
+          intel_highlights: string[] | null
+          last_signal_at: string | null
+          lat: number | null
+          lon: number | null
+          quarantine_reason: string | null
+          raw_source_data: Json | null
+          region: string | null
+          score: number
+          signal_count: number
+          signal_date: string | null
+          signal_detail: string | null
+          signal_type: string | null
+          source_method: string | null
+          status: string
+          suggested_opener: string | null
+          vertical: string
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          best_call_window?: string | null
+          city?: string | null
+          county?: string | null
+          created_at?: string
+          estimated_value?: number | null
+          full_name?: string | null
+          id?: string
+          intel_highlights?: string[] | null
+          last_signal_at?: string | null
+          lat?: number | null
+          lon?: number | null
+          quarantine_reason?: string | null
+          raw_source_data?: Json | null
+          region?: string | null
+          score?: number
+          signal_count?: number
+          signal_date?: string | null
+          signal_detail?: string | null
+          signal_type?: string | null
+          source_method?: string | null
+          status?: string
+          suggested_opener?: string | null
+          vertical: string
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          best_call_window?: string | null
+          city?: string | null
+          county?: string | null
+          created_at?: string
+          estimated_value?: number | null
+          full_name?: string | null
+          id?: string
+          intel_highlights?: string[] | null
+          last_signal_at?: string | null
+          lat?: number | null
+          lon?: number | null
+          quarantine_reason?: string | null
+          raw_source_data?: Json | null
+          region?: string | null
+          score?: number
+          signal_count?: number
+          signal_date?: string | null
+          signal_detail?: string | null
+          signal_type?: string | null
+          source_method?: string | null
+          status?: string
+          suggested_opener?: string | null
+          vertical?: string
+          zip?: string | null
+        }
+        Relationships: []
+      }
       trade_show_clients: {
         Row: {
           active: boolean | null
