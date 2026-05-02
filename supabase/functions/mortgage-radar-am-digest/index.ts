@@ -193,10 +193,16 @@ serve(async (req) => {
   let body: Record<string, unknown> = {};
   try { body = await req.json(); } catch { /* empty body is fine */ }
   if (body.test_sms) {
-    const phones: string[] = Array.isArray(body.test_sms) ? body.test_sms : ["+13139921219", "+13136719441"];
-    const { count } = await sb.from("mortgage_radar_leads").select("id", { count: "exact", head: true })
-      .gte("created_at", new Date(Date.now() - 24 * 3600_000).toISOString());
-    const msg = `🏠 Mortgage Radar is live. ${count ?? 0} new lead${count !== 1 ? "s" : ""} scanned in SE Michigan today. Daily email is on its way. — Detroit Web Agency`;
+    // Default to Matt's PERSONAL line + brother. Pass an explicit array to override.
+    const phones: string[] = Array.isArray(body.test_sms) ? body.test_sms as string[] : ["+13138064952", "+13136719441"];
+    let msg: string;
+    if (typeof body.custom_body === "string" && body.custom_body.trim()) {
+      msg = body.custom_body as string;
+    } else {
+      const { count } = await sb.from("mortgage_radar_leads").select("id", { count: "exact", head: true })
+        .gte("created_at", new Date(Date.now() - 24 * 3600_000).toISOString());
+      msg = `🏠 Mortgage Radar is live. ${count ?? 0} new lead${count !== 1 ? "s" : ""} scanned in SE Michigan today. Daily email is on its way. — Detroit Web Agency`;
+    }
     const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
     const results = await Promise.allSettled(phones.map(p => sendSMS(p, TWILIO_FROM, msg, "mortgage_radar")));
     const summary = results.map((r, i) => ({ phone: phones[i], status: r.status === "fulfilled" ? "sent" : (r as PromiseRejectedResult).reason?.message }));

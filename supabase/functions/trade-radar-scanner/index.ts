@@ -14,6 +14,39 @@ import { scanSignals as scanPestControl } from "../_shared/trade-signals/signals
 import { scanSignals as scanGutters } from "../_shared/trade-signals/signals-gutters.ts";
 import { scanSignals as scanPainting } from "../_shared/trade-signals/signals-painting.ts";
 import { fetchFreshBusinessSignals, fetchMortgageSignals, fetchHireSignals } from "../_shared/signal-waterfall.ts";
+import { scrapeZillowFSBO, scrapeEstateSales } from "../_shared/scrapers-public-listings.ts";
+
+// Signal types that describe an AREA (county/zip/state), not a single street address.
+// These bypass the per-address validator and are written to trade_radar_area_signals.
+const AREA_ALERT_TYPES = new Set<string>([
+  "hail_damage_area", "storm_wind_damage", "fema_disaster", "fema_gutter_damage",
+  "new_homeowner_roof", "lead_line_area", "extreme_weather_hvac", "nfip_flood_hvac",
+  "storm_panel_check", "storm_gutter_damage", "registry_signal",
+]);
+
+// Verticals where home turnover (FSBO listing, estate sale) is a high-quality
+// per-address inspection/install opportunity.
+const HOME_TURNOVER_VERTICALS = new Set<string>([
+  "roofing", "hvac", "plumbing", "gutters", "painting", "pest_control", "electrical",
+]);
+
+// Suggested openers/scores by vertical for FSBO + estate-sale leads.
+const TURNOVER_SCORE = 6;
+function turnoverOpener(vertical: string, signalType: string, address: string): string {
+  const isFSBO = signalType === "fsbo_listing";
+  const verb = isFSBO ? "you're selling" : "your family is going through an estate sale";
+  const askMap: Record<string, string> = {
+    roofing: "a quick free roof inspection could add $5-15k to the sale price",
+    hvac: "a free HVAC tune-up gives buyers peace of mind and helps the appraisal",
+    plumbing: "a free plumbing walkthrough catches issues before the buyer's inspector does",
+    gutters: "clean gutters and downspouts make a huge curb-appeal difference for showings",
+    painting: "a free paint touch-up consult could add real ROI before listing photos",
+    pest_control: "a free pest inspection keeps closing on track if any treatment is needed",
+    electrical: "a quick free electrical safety check catches anything that would flag in inspection",
+  };
+  const ask = askMap[vertical] ?? "we can offer a complimentary inspection";
+  return `Hi — saw ${verb} at ${address}. ${ask}. Want me to swing by this week?`;
+}
 
 // NAICS code per vertical (used to filter registry-driven signals)
 const VERTICAL_NAICS: Record<string, string> = {
@@ -75,7 +108,33 @@ async function upsertWithDedup(
   sb: ReturnType<typeof createClient>,
   vertical: Vertical,
   signal: any,
-): Promise<"inserted" | "updated" | "quarantined" | "skipped"> {
+): Promise<"inserted" | "updated" | "quarantined" | "skipped" | "area"> {
+  // Route AREA-level signals (NOAA/FEMA/HMDA/registry) to trade_radar_area_signals
+  // INSTEAD of the per-address validator. This is the bug fix — these used to be
+  // 100% skipped because their "address" field is actually a county/state name.
+  if (signal && typeof signal.signal_type === "string" && AREA_ALERT_TYPES.has(signal.signal_type)) {
+    const inferred = inferCounty(signal.city);
+    const scope = signal.zip ? "zip" : inferred ? "county" : "state";
+    const scope_value = signal.zip || inferred || signal.city || "MI";
+    try {
+      await sb.from("trade_radar_area_signals").upsert({
+        vertical,
+        scope,
+        scope_value,
+        alert_type: signal.signal_type,
+        alert_detail: signal.signal_detail ?? null,
+        source: signal.source_method ?? "unknown",
+        source_url: signal.signal_url ?? null,
+        signal_date: signal.signal_date ?? new Date().toISOString().slice(0, 10),
+        raw_data: signal.raw_source_data ?? null,
+      }, { onConflict: "vertical,scope,scope_value,alert_type,signal_date", ignoreDuplicates: true });
+      return "area";
+    } catch (e) {
+      console.warn(`[trade-scanner] area upsert failed (${vertical}):`, e instanceof Error ? e.message : String(e));
+      return "skipped";
+    }
+  }
+
   // LLM score cap — same rule as mortgage scanner
   const rawScore = signal.score ?? 5;
   const score = signal.source_method === "llm_search" ? Math.min(3, rawScore) : rawScore;
@@ -280,18 +339,45 @@ Deno.serve(async (req) => {
   const summary: Record<string, { inserted: number; updated: number; quarantined: number; skipped: number; notified: number }> = {};
 
   for (const vertical of verticals) {
-    const stats = { inserted: 0, updated: 0, quarantined: 0, skipped: 0, notified: 0 };
+    const stats = { inserted: 0, updated: 0, quarantined: 0, skipped: 0, area: 0, notified: 0 };
     summary[vertical] = stats;
 
     try {
       const rawSignals = await SCANNERS[vertical](state);
 
-      // Augment with registry-driven signals (FEMA storms, EPA, OSHA, HMDA, fresh LLCs).
+      // Plug in proven address-yielding scrapers (Zillow FSBO + EstateSales).
+      // Same scrapers powering 21 leads/day for mortgage radar. Home turnover
+      // = inspection/install opportunity for every trade vertical.
+      if (HOME_TURNOVER_VERTICALS.has(vertical)) {
+        try {
+          const [fsbo, estates] = await Promise.all([
+            scrapeZillowFSBO({ perCityCap: 5 }).catch(() => []),
+            scrapeEstateSales({ perCityCap: 4 }).catch(() => []),
+          ]);
+          for (const s of [...fsbo, ...estates]) {
+            rawSignals.push({
+              address: s.address,
+              city: s.city,
+              zip: s.zip,
+              signal_type: s.signal_type,
+              signal_detail: s.signal_detail,
+              signal_date: s.signal_date,
+              score: TURNOVER_SCORE,
+              source_method: "scraper",
+              suggested_opener: turnoverOpener(vertical, s.signal_type, s.address),
+              best_call_window: "Within 7 days of listing",
+              estimated_value: 5000,
+              raw_source_data: { source: s.signal_source, url: s.signal_url },
+            });
+          }
+        } catch (e) {
+          console.warn(`[trade-scanner] ${vertical} turnover scrape failed:`, e instanceof Error ? e.message : String(e));
+        }
+      }
+
       try {
         const naics = VERTICAL_NAICS[vertical] || "238220";
-        // Mortgage waterfall: FEMA+NOAA+HMDA+EPA — useful for weather/property-driven trades
         const MORTGAGE_WATERFALL_VERTICALS = ["roofing", "gutters", "painting", "pest_control", "hvac", "plumbing"];
-        // Hire waterfall: OSHA inspections — useful for electricians targeting renovation sites
         const HIRE_WATERFALL_VERTICALS = ["electrical"];
         const [biz, env] = await Promise.all([
           fetchFreshBusinessSignals(sb, { state, naics }).catch(() => []),
@@ -327,6 +413,7 @@ Deno.serve(async (req) => {
         if (result === "inserted") { stats.inserted++; insertedLeads.push(sig); }
         else if (result === "updated") stats.updated++;
         else if (result === "quarantined") stats.quarantined++;
+        else if (result === "area") stats.area++;
         else stats.skipped++;
       }
 
