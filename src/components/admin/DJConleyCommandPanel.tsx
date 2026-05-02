@@ -37,6 +37,23 @@ export default function DJConleyCommandPanel() {
   const [changelogTitle, setChangelogTitle] = useState("");
   const [changelogBody, setChangelogBody] = useState("");
   const [publishing, setPublishing] = useState(false);
+  const [sendingReport, setSendingReport] = useState(false);
+
+  const sendWeeklyReport = async () => {
+    setSendingReport(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("djconley-weekly-value-report", { body: {} });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success("Weekly value report sent", {
+        description: `Delivered to ${(data as any)?.sent ?? 0} of ${(data as any)?.total ?? 0} Forever-Pricing client(s).`,
+      });
+    } catch (err: any) {
+      toast.error("Send failed", { description: err?.message || String(err) });
+    } finally {
+      setSendingReport(false);
+    }
+  };
 
   // Command Center tile manager
   const [tiles, setTiles] = useState<any[]>([]);
