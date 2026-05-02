@@ -58,7 +58,7 @@ type Tab =
   | "contractor-leads" | "contractor-onboarding" | "contractor-market" | "fielddesk" | "techalert" | "missed-call" | "missed-call-leads" | "clients-all"
   | "lead-marketplace" | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
-  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit" | "marketing-tools";
+  | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit" | "marketing-tools" | "djconley";
 
 const GROUPS: SidebarGroup[] = [
   {
