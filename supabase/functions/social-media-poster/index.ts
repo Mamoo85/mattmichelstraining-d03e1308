@@ -146,7 +146,7 @@ async function postToGBP(accountId: string, locationId: string, accessToken: str
         topicType: "STANDARD",
         callToAction: {
           actionType: "LEARN_MORE",
-          url: "https://www.mattmichelstraining.com/get-started",
+          url: "https://detroitwebagent.com/get-started",
         },
       }),
     });
