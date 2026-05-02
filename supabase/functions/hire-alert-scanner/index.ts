@@ -1606,50 +1606,6 @@ serve(async (req: Request) => {
     console.warn("[hire-alert-scanner] zero-result check failed:", e instanceof Error ? e.message : String(e));
 }
 
-// 50-source registry: pull DOL WARN layoffs (= newly available workers) +
-// licensed-pro lookups via license_waterfall. Best-effort, won't break scanner.
-async function scanRegistryHireSignals(sb: any, state = "MI"): Promise<RawCandidate[]> {
-  const out: RawCandidate[] = [];
-  try {
-    const [hire, lic] = await Promise.all([
-      fetchHireSignals(sb, { state, days: 30 }).catch(() => []),
-      fetchLicenses(sb, { state, board: "contractor" }).catch(() => []),
-    ]);
-    for (const s of (hire || []).slice(0, 50)) {
-      const a = s as any;
-      // Only emit if we have a plausible name
-      if (a.full_name && isPlausibleHumanName(a.full_name)) {
-        out.push({
-          full_name: a.full_name,
-          phone: a.phone,
-          email: a.email,
-          city: a.city,
-          zip: a.zip,
-          source: "registry",
-          raw_data: { type: a.type, source: a.source, detail: a.detail, url: a.url },
-        });
-      }
-    }
-    for (const l of (lic || []).slice(0, 100)) {
-      const a = l as any;
-      if (a.full_name && isPlausibleHumanName(a.full_name)) {
-        out.push({
-          full_name: a.full_name,
-          license_type: a.license_type || a.board,
-          license_number: a.license_number,
-          license_expiry: a.expires_at || a.expiry,
-          city: a.city,
-          zip: a.zip,
-          source: "registry",
-          raw_data: { board: a.board, source: a.source },
-        });
-      }
-    }
-  } catch (e) {
-    console.warn("[hire-alert-scanner] registry scan failed:", e instanceof Error ? e.message : String(e));
-  }
-  return out;
-}
 
 
   const sourceHealth: Record<string, string> = {
