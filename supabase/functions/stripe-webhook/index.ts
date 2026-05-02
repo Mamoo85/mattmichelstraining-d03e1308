@@ -2062,7 +2062,7 @@ serve(async (req) => {
             }).catch((e: unknown) => console.error("[WEBHOOK] dark-web initial scan error:", e));
 
             // Welcome email
-            await dwaEmail(email, "Your Dark Web Monitor is Active — First Scan Starting Now", m2Email({
+            await dwaEmail(email, "Your Dark Web Monitor is Active — First Scan Starting Now", dwaEmailHtml({
               greeting: `Hey${meta.customer_name ? " " + meta.customer_name : ""} —`,
               headline: "Your Dark Web Monitor is Active",
               body: `<p style="margin:0 0 12px"><strong>We're scanning the dark web for your domain credentials right now.</strong></p>
@@ -2103,7 +2103,7 @@ serve(async (req) => {
               trial_ends_at: new Date(Date.now() + 7 * 86400000).toISOString(),
             }, { onConflict: "email" });
 
-            await dwaEmail(email, "Your SEO Guard is Active — First Report Arrives Monday", m2Email({
+            await dwaEmail(email, "Your SEO Guard is Active — First Report Arrives Monday", dwaEmailHtml({
               greeting: `Hey${meta.business_name ? " " + meta.business_name + " team" : ""} —`,
               headline: "Your SEO Guard is Active",
               body: `<p style="margin:0 0 12px"><strong>We're now monitoring your website for SEO issues every week.</strong></p>
@@ -2152,7 +2152,7 @@ serve(async (req) => {
             }).catch((e: unknown) => console.error("[WEBHOOK] dark-web-reseller initial scan error:", e));
 
             // Welcome email
-            await dwaEmail(email, "Your Dark Web Monitor MSP Plan is Active — Up to 10 Domains", m2Email({
+            await dwaEmail(email, "Your Dark Web Monitor MSP Plan is Active — Up to 10 Domains", dwaEmailHtml({
               greeting: `Hey${meta.customer_name ? " " + meta.customer_name : ""} —`,
               headline: "Your MSP Dark Web Monitor is Active",
               body: `<p style="margin:0 0 12px"><strong>Your reseller account is live. You can now monitor up to 10 client domains.</strong></p>
