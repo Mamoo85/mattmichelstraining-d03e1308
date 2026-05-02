@@ -192,6 +192,12 @@ Deno.serve(async (req) => {
       lead.owner_name ? wrap("perplexity_sonar", ["mi_sos"], () => miSosSonar(lead.owner_name!)) : Promise.resolve(null),
     ]);
 
+    // Pull registry-driven signals + market snapshot in parallel (free sources from 50-source registry)
+    const [signals, market] = await Promise.all([
+      fetchMortgageSignals(supabase, { state: lead.state || "MI", zip: lead.zip || undefined, days: 30 }).catch(() => []),
+      fetchMarketSnapshot(supabase, { state: lead.state || "MI", state_fips: lead.state === "MI" ? "26" : undefined }).catch(() => ({})),
+    ]);
+
     const govBlob = {
       usps,
       hud_fmr: hud,
@@ -199,6 +205,8 @@ Deno.serve(async (req) => {
       epa_echo: epa,
       npi_registry: npi,
       mi_sos: sos,
+      registry_signals: signals,
+      market_snapshot: market,
       enriched_at: new Date().toISOString(),
     };
 
