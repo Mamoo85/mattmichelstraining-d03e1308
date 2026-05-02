@@ -53,6 +53,7 @@ export default function DJConleyCommandPanel() {
     } finally {
       setSendingReport(false);
     }
+  };
 
   // Email preferences manager
   const [prefs, setPrefs] = useState<any[]>([]);
