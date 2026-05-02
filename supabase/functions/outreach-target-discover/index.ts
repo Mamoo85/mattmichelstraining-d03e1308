@@ -247,9 +247,10 @@ Deno.serve(async (req) => {
 
       if (input.channel_intent === "email" && domain) {
         try {
-          const r = await resolveOwnerEmail({ domain, businessName: detailed.business_name });
-          email = r?.email ?? null;
-          if (r?.source) stats.providers[r.source] = (stats.providers[r.source] ?? 0) + 1;
+          const r = await runEmailWaterfall({ domain, businessName: detailed.business_name } as any);
+          email = (r as any)?.email ?? null;
+          const src = (r as any)?.source;
+          if (src) stats.providers[src] = (stats.providers[src] ?? 0) + 1;
         } catch { /* fail open */ }
       }
       if (input.channel_intent === "fax" && detailed.website) {
@@ -258,7 +259,7 @@ Deno.serve(async (req) => {
       }
 
       // Compliance scrub
-      if (excludeFounders && email && (FOUNDER_EMAILS.includes(email.toLowerCase()) || isFounderSeat?.(email))) {
+      if (excludeFounders && email && (FOUNDER_EMAILS.includes(email.toLowerCase()) || isFounder(email))) {
         stats.skipped_compliance++; continue;
       }
 
