@@ -34,14 +34,12 @@ export const OPENERS: Record<string, { opener: string; window: string }> = {
 export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<RawSignal[]> {
   const signals: RawSignal[] = [];
 
-  // 1. BSEED roof permits — same signal as Roofing Radar but pitched as gutter upsell
+  // 1. BSEED building permits — roof keyword = gutter upsell window (service: bseed_building_permits)
   try {
     const since = new Date(Date.now() - 21 * 86400_000).toISOString().split("T")[0];
-    const where = encodeURIComponent(
-      `work_description LIKE '%ROOF%' AND issued_date >= DATE '${since}'`,
-    );
+    const where = encodeURIComponent(`(work_description LIKE '%ROOF%' OR work_description LIKE '%GUTTER%') AND issued_date >= '${since}'`);
     const res = await fetch(
-      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_permits/FeatureServer/0/query?where=${where}&outFields=address,issued_date,work_description,amt_estimated_contractor_cost&resultRecordCount=50&f=json`,
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permits/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date,work_description,amt_estimated_contractor_cost,latitude,longitude&resultRecordCount=50&orderByFields=issued_date+DESC&f=json`,
       { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
     );
     if (res.ok) {
@@ -49,19 +47,19 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
       for (const feat of (d?.features ?? [])) {
         const a = feat?.attributes ?? {};
         const addr: string = a.address ?? "";
-        const zip = addr.match(/\b(4\d{4})\b/)?.[1] ?? "";
+        const zip: string = a.zip_code ?? addr.match(/\b(4\d{4})\b/)?.[1] ?? "";
         if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
         signals.push({
           address: addr, city: "Detroit", zip,
           signal_type: "roof_permit_upsell",
           signal_detail: `Roof permit pulled: ${(a.work_description ?? "").slice(0, 80)} — gutter upsell window open`,
-          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+          signal_date: a.issued_date ?? new Date().toISOString().split("T")[0],
           score: BASE_SCORES.roof_permit_upsell,
           source_method: "bseed_arcgis",
           suggested_opener: OPENERS.roof_permit_upsell.opener,
           best_call_window: OPENERS.roof_permit_upsell.window,
           estimated_value: 2000,
-          raw_source_data: a,
+          raw_source_data: { ...a, lat: a.latitude, lon: a.longitude },
         });
       }
     }

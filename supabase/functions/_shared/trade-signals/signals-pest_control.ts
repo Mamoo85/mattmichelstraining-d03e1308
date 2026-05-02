@@ -81,7 +81,38 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[pest] probate:", e); }
 
-  // 3. Foreclosure notices (vacant bank-owned properties = pest magnet)
+  // 3. BSEED vacant property registrations — city-confirmed vacant = pest magnet
+  try {
+    const since = new Date(Date.now() - 60 * 86400_000).toISOString().split("T")[0];
+    const where = encodeURIComponent(`issued_date >= '${since}'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_vacant_property_registrations/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date,owner_name,latitude,longitude&resultRecordCount=30&orderByFields=issued_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? addr.match(/\b(4\d{4})\b/)?.[1] ?? "";
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "foreclosure_vacant",
+          signal_detail: `BSEED vacant registration: ${addr}${a.owner_name ? ` — Owner: ${a.owner_name}` : ""}`,
+          signal_date: a.issued_date ?? new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.foreclosure_vacant + 1,
+          source_method: "bseed_arcgis",
+          suggested_opener: OPENERS.foreclosure_vacant.opener,
+          best_call_window: OPENERS.foreclosure_vacant.window,
+          estimated_value: 500,
+          raw_source_data: { ...a, lat: a.latitude, lon: a.longitude },
+        });
+      }
+    }
+  } catch (e) { console.error("[pest] vacant registrations:", e); }
+
+  // 4. Foreclosure notices (vacant bank-owned properties = pest magnet)
   try {
     const foreclosures = await scrapeForeclosureNotices({ perSourceCap: 6 });
     for (const f of foreclosures) {

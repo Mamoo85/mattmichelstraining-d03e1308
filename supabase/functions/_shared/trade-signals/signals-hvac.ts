@@ -101,14 +101,12 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[hvac] FEMA:", e); }
 
-  // 3. BSEED major renovation permits (aging system proxy)
+  // 3. BSEED Mechanical Permits (service: bseed_trades_permits, permit_type = Mechanical)
   try {
     const since = new Date(Date.now() - 21 * 86400_000).toISOString().split("T")[0];
-    const where = encodeURIComponent(
-      `(work_description LIKE '%HVAC%' OR work_description LIKE '%FURNACE%' OR work_description LIKE '%MECHANICAL%') AND issued_date >= DATE '${since}'`,
-    );
+    const where = encodeURIComponent(`permit_type = 'Mechanical Permit' AND issued_date >= '${since}'`);
     const res = await fetch(
-      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_permits/FeatureServer/0/query?where=${where}&outFields=address,issued_date,work_description,amt_estimated_contractor_cost&resultRecordCount=40&f=json`,
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_trades_permits/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date,permit_type,work_description,latitude,longitude&resultRecordCount=40&orderByFields=issued_date+DESC&f=json`,
       { headers: { "User-Agent": "DWA-TradeRadar/1.0" } },
     );
     if (res.ok) {
@@ -116,19 +114,19 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
       for (const feat of (d?.features ?? [])) {
         const a = feat?.attributes ?? {};
         const addr: string = a.address ?? "";
-        const zip = addr.match(/\b(4\d{4})\b/)?.[1] ?? "";
+        const zip: string = a.zip_code ?? addr.match(/\b(4\d{4})\b/)?.[1] ?? "";
         if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
         signals.push({
           address: addr, city: "Detroit", zip,
           signal_type: "aging_system_proxy",
-          signal_detail: `BSEED permit: ${(a.work_description ?? "").slice(0, 100)}`,
-          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+          signal_detail: `BSEED Mechanical Permit: ${(a.work_description ?? "").slice(0, 100)}`,
+          signal_date: a.issued_date ?? new Date().toISOString().split("T")[0],
           score: BASE_SCORES.aging_system_proxy,
           source_method: "bseed_arcgis",
           suggested_opener: OPENERS.aging_system_proxy.opener,
           best_call_window: OPENERS.aging_system_proxy.window,
-          estimated_value: Number(a.amt_estimated_contractor_cost ?? 6000),
-          raw_source_data: a,
+          estimated_value: 6000,
+          raw_source_data: { ...a, lat: a.latitude, lon: a.longitude },
         });
       }
     }

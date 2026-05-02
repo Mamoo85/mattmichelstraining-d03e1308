@@ -45,38 +45,62 @@ export const OPENERS: Record<string, { opener: string; window: string }> = {
 export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<RawSignal[]> {
   const signals: RawSignal[] = [];
 
-  // 1. BSEED electrical + renovation + addition permits
+  // 1. BSEED Electrical Permits + renovation/addition from building permits
   try {
     const since = new Date(Date.now() - 14 * 86400_000).toISOString().split("T")[0];
-    const where = encodeURIComponent(
-      `(work_description LIKE '%ELECTRIC%' OR work_description LIKE '%ADDITION%' OR work_description LIKE '%RENOVATION%' OR work_description LIKE '%REMODEL%') AND issued_date >= DATE '${since}'`,
-    );
-    const res = await fetch(
-      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_permits/FeatureServer/0/query?where=${where}&outFields=address,issued_date,work_description,amt_estimated_contractor_cost&resultRecordCount=60&f=json`,
+    // Trades: dedicated electrical permits
+    const tradeWhere = encodeURIComponent(`permit_type = 'Electrical Permit' AND issued_date >= '${since}'`);
+    const tradeRes = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_trades_permits/FeatureServer/0/query?where=${tradeWhere}&outFields=address,zip_code,issued_date,work_description,latitude,longitude&resultRecordCount=40&orderByFields=issued_date+DESC&f=json`,
       { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
     );
-    if (res.ok) {
-      const d = await res.json();
+    if (tradeRes.ok) {
+      const d = await tradeRes.json();
       for (const feat of (d?.features ?? [])) {
         const a = feat?.attributes ?? {};
         const addr: string = a.address ?? "";
-        const zip = addr.match(/\b(4\d{4})\b/)?.[1] ?? "";
+        const zip: string = a.zip_code ?? addr.match(/\b(4\d{4})\b/)?.[1] ?? "";
         if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
-        const desc: string = (a.work_description ?? "").toUpperCase();
-        const isAddition = desc.includes("ADDITION");
-        const isElectric = desc.includes("ELECTRIC");
-        const signalType = isAddition ? "addition_permit" : isElectric ? "renovation_electrical" : "renovation_electrical";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "renovation_electrical",
+          signal_detail: `BSEED Electrical Permit: ${(a.work_description ?? "").slice(0, 100)}`,
+          signal_date: a.issued_date ?? new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.renovation_electrical,
+          source_method: "bseed_arcgis",
+          suggested_opener: OPENERS.renovation_electrical.opener,
+          best_call_window: OPENERS.renovation_electrical.window,
+          estimated_value: 4000,
+          raw_source_data: { ...a, lat: a.latitude, lon: a.longitude },
+        });
+      }
+    }
+    // Building permits: additions and renovations → panel upgrade signal
+    const bldgWhere = encodeURIComponent(`(work_description LIKE '%ADDITION%' OR work_description LIKE '%RENOVATION%' OR work_description LIKE '%REMODEL%') AND issued_date >= '${since}'`);
+    const bldgRes = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permits/FeatureServer/0/query?where=${bldgWhere}&outFields=address,zip_code,issued_date,work_description,amt_estimated_contractor_cost,latitude,longitude&resultRecordCount=30&orderByFields=issued_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0" } },
+    );
+    if (bldgRes.ok) {
+      const d = await bldgRes.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? addr.match(/\b(4\d{4})\b/)?.[1] ?? "";
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const desc = (a.work_description ?? "").toUpperCase();
+        const signalType = desc.includes("ADDITION") ? "addition_permit" : "renovation_electrical";
         signals.push({
           address: addr, city: "Detroit", zip,
           signal_type: signalType,
-          signal_detail: `BSEED permit: ${(a.work_description ?? "").slice(0, 100)} — Est. $${a.amt_estimated_contractor_cost ?? "?"}`,
-          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+          signal_detail: `BSEED building permit: ${(a.work_description ?? "").slice(0, 100)}`,
+          signal_date: a.issued_date ?? new Date().toISOString().split("T")[0],
           score: BASE_SCORES[signalType],
           source_method: "bseed_arcgis",
           suggested_opener: OPENERS[signalType].opener,
           best_call_window: OPENERS[signalType].window,
-          estimated_value: Number(a.amt_estimated_contractor_cost ?? 4000),
-          raw_source_data: a,
+          estimated_value: Number(a.amt_estimated_contractor_cost) || 4000,
+          raw_source_data: { ...a, lat: a.latitude, lon: a.longitude },
         });
       }
     }

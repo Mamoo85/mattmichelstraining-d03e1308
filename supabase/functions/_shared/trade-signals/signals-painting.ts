@@ -63,7 +63,38 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[painting] FSBO:", e); }
 
-  // 2. Foreclosure notices (pre-sale paint opportunity — bank wants turnkey listing)
+  // 2. BSEED presale inspections — FAIL result = house needs work before sale → painting opportunity
+  try {
+    const since = new Date(Date.now() - 30 * 86400_000).toISOString().split("T")[0];
+    const where = encodeURIComponent(`inspection_result = 'FAIL' AND inspection_date >= '${since}'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_presale_inspections/FeatureServer/0/query?where=${where}&outFields=address,zip_code,inspection_date,inspection_result,latitude,longitude&resultRecordCount=30&orderByFields=inspection_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? addr.match(/\b(4\d{4})\b/)?.[1] ?? "";
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "fsbo_prep",
+          signal_detail: `BSEED presale inspection FAILED — seller must fix before closing: ${addr}`,
+          signal_date: a.inspection_date ?? new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.fsbo_prep + 1,
+          source_method: "bseed_arcgis",
+          suggested_opener: "This home just failed its presale inspection — a fresh interior paint is often the fastest fix. We can quote and start within 48 hours.",
+          best_call_window: "Within 14 days of failed inspection",
+          estimated_value: 4500,
+          raw_source_data: { ...a, lat: a.latitude, lon: a.longitude },
+        });
+      }
+    }
+  } catch (e) { console.error("[painting] presale inspections:", e); }
+
+  // 3. Foreclosure notices (pre-sale paint opportunity — bank wants turnkey listing)
   try {
     const foreclosures = await scrapeForeclosureNotices({ perSourceCap: 6 });
     for (const f of foreclosures) {

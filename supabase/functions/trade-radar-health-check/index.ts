@@ -105,50 +105,25 @@ async function checkUSGS(): Promise<{ count: number; sample?: unknown }> {
   return { count: feats.length, sample: feats[0]?.properties?.place };
 }
 
-// ── BSEED ArcGIS (try 4 URL variants) ───────────────────────────────────────
+// ── BSEED ArcGIS building + trades permits ────────────────────────────────────
 async function checkBSEED(): Promise<{ count: number; sample?: unknown; notes?: string }> {
   const base = "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services";
-  const variants = [
-    `${base}/bseed_permits/FeatureServer/0/query?where=objectid+>+0&outFields=address&resultRecordCount=1&f=json`,
-    `${base}/bseed_Permits/FeatureServer/0/query?where=objectid+>+0&outFields=address&resultRecordCount=1&f=json`,
-    `${base}/BSEED_Permits/FeatureServer/0/query?where=objectid+>+0&outFields=address&resultRecordCount=1&f=json`,
-    `${base}/bseed/FeatureServer/0/query?where=objectid+>+0&outFields=address&resultRecordCount=1&f=json`,
-  ];
-
-  for (const url of variants) {
-    try {
-      const r = await fetch(url, { headers: { "User-Agent": UA } });
-      if (r.ok) {
-        const d = await r.json();
-        if (d?.features?.length > 0) {
-          return {
-            count: d.features.length,
-            sample: d.features[0]?.attributes,
-            notes: `Working URL: ${url}`,
-          };
-        }
-        if (d?.error) {
-          console.log(`[bseed] variant ${url}: error`, d.error.message);
-          continue;
-        }
-      }
-    } catch (e) {
-      console.log(`[bseed] variant ${url}: exception`, e);
-    }
-  }
-
-  // Try Oakland County BSA Online as fallback
-  try {
-    const r = await fetch(
-      "https://bsaonline.com/SiteSearch/SiteSearchList?searchType=permit&searchText=&ExcludeExpired=1&Limit=5",
-      { headers: { "User-Agent": UA } },
-    );
-    if (r.ok) {
-      return { count: 1, notes: "BSEED 400 on all variants — Oakland BSA Online responding (fallback available)" };
-    }
-  } catch { /* ignore */ }
-
-  throw new Error("BSEED ArcGIS: all 4 URL variants returned 400/error. Primary permit source is down.");
+  // Test both active services
+  const since = new Date(Date.now() - 14 * 86400_000).toISOString().split("T")[0];
+  const [bldg, trades] = await Promise.all([
+    fetch(`${base}/bseed_building_permits/FeatureServer/0/query?where=issued_date+>=+'${since}'&outFields=address,zip_code,issued_date,work_description&resultRecordCount=3&orderByFields=issued_date+DESC&f=json`, { headers: { "User-Agent": UA } }),
+    fetch(`${base}/bseed_trades_permits/FeatureServer/0/query?where=issued_date+>=+'${since}'&outFields=address,zip_code,issued_date,permit_type&resultRecordCount=3&orderByFields=issued_date+DESC&f=json`, { headers: { "User-Agent": UA } }),
+  ]);
+  const bldgData = bldg.ok ? await bldg.json() : {};
+  const tradesData = trades.ok ? await trades.json() : {};
+  const bldgCount = bldgData?.features?.length ?? 0;
+  const tradesCount = tradesData?.features?.length ?? 0;
+  if (bldgCount === 0 && tradesCount === 0) throw new Error("Both bseed_building_permits and bseed_trades_permits returned 0 results");
+  return {
+    count: bldgCount + tradesCount,
+    sample: bldgData?.features?.[0]?.attributes ?? tradesData?.features?.[0]?.attributes,
+    notes: `bseed_building_permits: ${bldgCount} | bseed_trades_permits: ${tradesCount} (last 14 days)`,
+  };
 }
 
 // ── EstateSales.net ──────────────────────────────────────────────────────────
