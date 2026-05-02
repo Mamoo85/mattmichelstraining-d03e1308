@@ -314,3 +314,104 @@ REPORT BACK with:
 ## What I Need From You Before Starting
 
 Just say **"go"** and I'll start with Phase 3 (brand integrity), then Phase 1 (founder protection), then keep marching down the list. Everything I need is now confirmed in the DB or in this plan.
+
+---
+
+## Wave 5 — Build Status (2026-05-02)
+
+### Phase 1 — Founder Protection ✅
+- `_shared/founder-seats.ts` shipped — exports `FOUNDER_SEATS`, `isFounder()`, `stripFounders()`.
+- Whitelist: matt@detroitwebagent.com, matt@mattmichelstraining.com, matthewmichels4@gmail.com, mitch.michels@rate.com, mitchellm77@gmail.com, pmichels@djconley.com.
+- DB confirmed: both Mitchell rows have `is_founder=true`, no Stripe sub. No automated downgrade exists today (sweepers are read-only) — helper is staged for any future churn/billing automation to import.
+
+### Phase 2 — Universal 7-Day No-CC Trials ✅
+- Migration: `radar_trials` table (email, product, magic_token, status, expires_at, founder bypass).
+- Edge function: `start-radar-trial` — accepts `{email, product, business_name?, phone?, city?, zip_codes?}`, generates 32-byte magic token, 7-day expiry (founders → 100yr), idempotent re-issue if active row exists, sends DWA-branded email with one-click magic-link button into `/my-<product>?trial=<token>`.
+- 8 supported products: mortgage_radar, techalert, site_radar, contractor_leads, missed_call, industry_pulse, fielddesk, bundle_revenue_suite.
+- Public (verify_jwt=false). **Lovable UI todo: trial CTA on each radar landing page → POST to `start-radar-trial` → "check your email" thank-you.**
+
+### Phase 3 — Brand Integrity ✅
+- New `_shared/dwa-email.ts`: `dwaEmail({to, subject, html})`, `dwaWrap(inner, {ctaText, ctaUrl})`, brand constants.
+- Inside `stripe-webhook/index.ts`: new `dwaEmailHtml()` template wrapper (teal #00d4ff / dark #0a1628).
+- All 6 DWA-product brand leaks fixed:
+  - À la carte lead win → dwaEmail
+  - À la carte refund → dwaEmail
+  - First Look subscription → dwaEmail
+  - Dark Web Monitor welcome → dwaEmail + dwaEmailHtml
+  - SEO Guard welcome → dwaEmail + dwaEmailHtml
+  - Dark Web Monitor MSP welcome → dwaEmail + dwaEmailHtml
+- Remaining `sendM2Email` calls (line 105 helper definition + line 2711 catch-all for unknown `meta.type`) intentionally kept on M2 brand — catch-all is a true unknown fallback.
+
+### Phase 4 — Outreach Engine ✅ (foundations)
+- Migration: `outreach_targets`, `outreach_campaigns`, `outreach_sends`. De-dupe by email/phone, opt-out tracking (is_dnc, do_not_email, do_not_fax, do_not_mail), founder bypass column, vertical+state indexed.
+- `outreach-email-blast/index.ts` — drains active email campaigns up to `daily_send_cap`, skips founders/DNC/already-sent, personalizes via `{{first_name}} {{business_name}} {{vertical}} {{city}} {{cta_url}}`, 1.5s throttle, sends through `dwaEmail` + `dwaWrap`.
+- `outreach-fax-blast/index.ts` — same pattern via Phaxio (~$0.07/page). **Returns 503 until Matt adds `PHAXIO_API_KEY` + `PHAXIO_API_SECRET` to Supabase secrets** — clear error message, no silent failures.
+- Postcard blaster (Lob) deferred until Matt adds `LOB_API_KEY` (already pending per CLAUDE.md).
+- Cron schedules for blasters intentionally NOT auto-created — Matt should run a campaign manually from `/dwa-admin/outreach` first to QA copy + opt-out flow before automating.
+
+### Phase 5 — First-Reply-Free Surfacing ✅
+- `AdminDeadLeads` header now reads: "→ **1st positive reply FREE**, then $50 per YES reply." (was: "$50 per YES reply").
+- Customer-facing `FreeBoostCard` already covers this on the contractor dashboard.
+
+### Open Items (for next wave)
+1. **Lovable UI to build:** trial CTA blocks on radar landing pages (mortgage-radar, techalert, etc) that POST to `start-radar-trial`.
+2. **Lovable UI to build:** `/dwa-admin/outreach` console — list campaigns, create new, view sends, opt-out manager.
+3. **Magic-link landing handler:** the existing `/my-*` dashboards need a small `?trial=<token>` reader that calls a `claim-trial-magic-link` function (TODO) to mint a Supabase session.
+4. **Secrets needed in Supabase:** `PHAXIO_API_KEY`, `PHAXIO_API_SECRET`, `LOB_API_KEY` (postcards).
+
+---
+
+## Claude Hand-Off Prompt — 12-Trade Vertical Reskin (copy block below)
+
+> **Context:** This is the Detroit Web Agency (DWA) codebase. Lovable AI is owner-side. Mortgage Radar is the existing flagship — a Postgres-backed lead-finder that scrapes BSEED permits, court records, FSBO listings, and equity data, scores prospects, and notifies clients via SMS + daily digest email.
+>
+> **Your mission:** Adapt the Mortgage Radar engine — DO NOT MODIFY THE EXISTING MORTGAGE RADAR CODE — into 12 sister verticals so DWA can sell similar lead-finding products to other Michigan trades on a 7-day free trial (no credit card, magic-link entry).
+>
+> **Verticals to target (in priority order):**
+> 1. Roofers — storm damage, BSEED roofing permits, insurance claims
+> 2. Plumbers — emergency-service signals, water-main breaks, code violations
+> 3. Electricians — solar permits, panel upgrades, code violations
+> 4. HVAC contractors — heat-wave / cold-snap demand, age-of-system signals
+> 5. Arborists — storm damage, EAB infestation, city tree-removal permits
+> 6. Painters — for-sale-soon listings, exterior weathering signals
+> 7. Concrete / masonry — sidewalk repair permits, foundation inspections
+> 8. Landscapers — new-build closings, HOA listings
+> 9. Window installers — energy-rebate program enrollees, age-of-home
+> 10. Insulation contractors — winter heating-cost spikes, federal rebate claims
+> 11. Garage-door installers — break-in reports, age-of-home
+> 12. Fence installers — new-pet-license filings, new-baby filings, divorce filings
+>
+> **Hard constraints:**
+> - Do **not** touch any file matching `mortgage_radar*` or `mortgage-radar-*`. Build sister products in parallel.
+> - All 12 share one shared scanner orchestrator + one shared scoring/scrubbing pipeline. Each vertical only differs in (a) signal sources, (b) scoring weights, (c) outreach copy.
+> - All sister products must be sellable through the existing `start-radar-trial` edge function — register each new product key in `PRODUCT_CONFIG` map (`supabase/functions/start-radar-trial/index.ts`).
+> - Geographic targeting: use the existing `prospector_targets` DB table (per CLAUDE.md Phase 27) — toggle `active=true` for any state/city to expand. Default to MI.
+> - Brand: ALWAYS use `_shared/dwa-email.ts` (`dwaEmail()` / `dwaWrap()`). NEVER use `sendM2Email` or `m2Email()`. Teal `#00d4ff`, dark `#0a1628`, sender `matt@detroitwebagent.com`, phone `(313) 992-1219`.
+> - Founder seats from `_shared/founder-seats.ts` MUST be excluded from any cold outreach.
+> - Compliance: TCPA quiet hours (8am–9pm local), no credit-bureau data (H.R. 2808), Manual-Only outbound calls, OSINT methods never disclosed to clients. Use `_shared/twilio.ts` `sendSMS` for any SMS — never raw fetch (it bakes in opt-out scrub + quiet hours).
+> - Data validation: every signal source must run through `_shared/anti-hallucination.ts` + `_shared/llm-contradiction-check.ts` + `_shared/event-corroboration.ts` before a lead is written. Mortgage Radar lessons (per `mem://tech/mortgage-radar-anti-hallucination`) apply.
+>
+> **What I (Lovable) have already built that you should USE:**
+> - `outreach_targets` + `outreach_campaigns` + `outreach_sends` tables (mass cold email/fax/postcard).
+> - `outreach-email-blast` edge function (drains email campaigns, skips founders/DNC, personalizes templates).
+> - `outreach-fax-blast` edge function (Phaxio — needs PHAXIO_API_KEY).
+> - `start-radar-trial` edge function (universal 7-day no-CC trial with magic-link, founder bypass).
+> - `radar_trials` table for trial tracking.
+> - `_shared/dwa-email.ts`, `_shared/founder-seats.ts`.
+>
+> **Your specific deliverables:**
+> 1. **Market research first** (Sonar / Apollo / public BSEED data): for each of the 12 verticals, document the top 3-5 OSINT signal sources Matt can use to find motivated buyers in MI. Save findings to `knowledge/12_Trade_Signal_Sources.md`.
+> 2. **Scanner skeleton:** one shared orchestrator function `trade-radar-scanner` that takes `{vertical}` and dispatches to per-vertical signal modules in `supabase/functions/_shared/trade-signals/<vertical>.ts`. All 12 modules implement the same interface: `async function scan(state, city): Promise<TradeLead[]>`.
+> 3. **Lead scoring:** shared `_shared/trade-lead-score.ts` — 0–10 scale, vertical-specific weights from a config map.
+> 4. **Per-vertical landing pages:** Lovable owns the actual React pages. You produce a one-page brief per vertical (`knowledge/landing-pages/<vertical>-brief.md`) with: pitch (1 paragraph), 3 bullet pain points, 3 sample lead types we'll show, the trial CTA wording, and the trade-specific objection handler.
+> 5. **Outreach copy:** for each vertical produce:
+>    - 1 cold email template (200 words, Matt's voice — "Hey ${first_name} — saw you do ${vertical} in ${city}. We built a tool that…")
+>    - 1 fax cover sheet (single page, big headline + 5 bullets + CTA URL + phone)
+>    - 1 postcard message (60 words max, big headline)
+>    - 3 follow-up SMS templates (TCPA-compliant, includes STOP)
+>    - Save all under `knowledge/outreach-templates/<vertical>/`.
+> 6. **DB seed migration:** `supabase/migrations/<ts>_trade_outreach_campaigns.sql` — INSERT one draft `outreach_campaigns` row per vertical/channel combo (12 verticals × 3 channels = 36 draft campaigns) with the templates above pre-loaded. Status='draft' so Matt activates manually.
+>
+> **Workflow:** commit to a feature branch `claude/12-trade-vertical-reskin`, do not push to main, open a PR with a checklist of what you built per vertical. Matt will merge after Lovable QA passes.
+>
+> **What success looks like:** Matt can flip one campaign per vertical to `status='active'`, the email blaster drains it, and within 24h trial signups start flowing into `radar_trials` for those verticals.
