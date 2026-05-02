@@ -478,10 +478,47 @@ export async function runEmailWaterfall(
     miss("pdl_name");
   }
 
+  // 7. crtsh — certificate-transparency subdomain enum → look for info@/contact@ on subdomains
+  // 8. rdap_whois — domain-registrant email when contact pages are dead
+  // 9. opencorporates_free — registered-agent email fallback for LLCs
+  // All three are free, fail-open, no rate limits.
+  if (domain) {
+    try {
+      const { dispatchFetch } = await import("./sources/index.ts");
+      const subs = await dispatchFetch("crtsh", { domain }) as Array<{ name_value?: string }>;
+      const candidate = (subs ?? []).slice(0, 5)
+        .flatMap((s) => String(s?.name_value ?? "").split(/\s+/))
+        .find((host) => host && host.endsWith(domain) && !host.startsWith("*"));
+      if (candidate) {
+        const guess = `info@${candidate}`;
+        if (looksValidEmail(guess)) { await bump(sb, "crtsh", true); return hit("crtsh", guess, 45); }
+      }
+      miss("crtsh");
+    } catch { miss("crtsh"); }
+
+    try {
+      const { dispatchFetch } = await import("./sources/index.ts");
+      const rdap = await dispatchFetch("rdap_whois", { domain }) as Array<{ email?: string }>;
+      const e = (rdap ?? []).map((r) => r?.email).find((x) => x && looksValidEmail(x!));
+      if (e) { await bump(sb, "rdap_whois", true); return hit("rdap_whois", e!, 50); }
+      miss("rdap_whois");
+    } catch { miss("rdap_whois"); }
+  }
+
+  if (input.business_name) {
+    try {
+      const { dispatchFetch } = await import("./sources/index.ts");
+      const oc = await dispatchFetch("opencorporates_free", { q: input.business_name, jurisdiction: "us" }) as Array<{ registered_agent_email?: string }>;
+      const e = (oc ?? []).map((r) => r?.registered_agent_email).find((x) => x && looksValidEmail(x!));
+      if (e) { await bump(sb, "opencorporates", true); return hit("opencorporates", e!, 55); }
+      miss("opencorporates");
+    } catch { miss("opencorporates"); }
+  }
+
   return { email: null, source: null, confidence: 0, trace };
 }
 
-export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "hunter", "pdl", "pdl_name"] as const;
+export const WATERFALL_PROVIDERS = ["site_scrape", "snov", "apollo", "pattern_verify", "hunter", "pdl", "pdl_name", "crtsh", "rdap_whois", "opencorporates"] as const;
 
 /**
  * runFieldWaterfall — wrapper around runEmailWaterfall that reports which
