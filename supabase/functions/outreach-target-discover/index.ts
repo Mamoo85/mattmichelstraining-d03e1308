@@ -7,9 +7,9 @@
 //   4. Compliance scrub (DNC, founders)
 //   5. Score & insert into outreach_targets
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { resolveOwnerEmail } from "../_shared/email-waterfall.ts";
+import { runEmailWaterfall } from "../_shared/email-waterfall.ts";
 import { extractFaxNumber } from "../_shared/firecrawl.ts";
-import { isFounderSeat } from "../_shared/founder-seats.ts";
+import { isFounder } from "../_shared/founder-seats.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
