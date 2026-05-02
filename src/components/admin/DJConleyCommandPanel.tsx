@@ -285,6 +285,15 @@ export default function DJConleyCommandPanel() {
             {publishing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Publish to Pat's dashboard
           </Button>
+          <div className="border-t border-white/10 pt-3 mt-3">
+            <p className="text-xs text-white/60 mb-2">
+              📧 <strong>Weekly Value Report</strong> — auto-sends every Monday 8am ET to all Forever-Pricing clients with this week's shipped features + new tiles.
+            </p>
+            <Button onClick={sendWeeklyReport} disabled={sendingReport} variant="outline" className="w-full border-[#00d4ff]/40">
+              {sendingReport ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Send weekly value report now
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
