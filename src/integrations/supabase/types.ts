@@ -21314,6 +21314,51 @@ export type Database = {
         }
         Relationships: []
       }
+      trade_radar_area_signals: {
+        Row: {
+          alert_detail: string | null
+          alert_type: string
+          created_at: string
+          expires_at: string
+          id: string
+          raw_data: Json | null
+          scope: string
+          scope_value: string
+          signal_date: string
+          source: string
+          source_url: string | null
+          vertical: string
+        }
+        Insert: {
+          alert_detail?: string | null
+          alert_type: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          raw_data?: Json | null
+          scope: string
+          scope_value: string
+          signal_date?: string
+          source: string
+          source_url?: string | null
+          vertical: string
+        }
+        Update: {
+          alert_detail?: string | null
+          alert_type?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          raw_data?: Json | null
+          scope?: string
+          scope_value?: string
+          signal_date?: string
+          source?: string
+          source_url?: string | null
+          vertical?: string
+        }
+        Relationships: []
+      }
       trade_radar_clients: {
         Row: {
           active: boolean
