@@ -24,6 +24,7 @@ const AdminMissedCall = lazy(() => import("@/components/admin/AdminMissedCall"))
 const AdminMissedCallLeads = lazy(() => import("@/components/admin/AdminMissedCallLeads"));
 const AdminFaxOutreach = lazy(() => import("@/components/admin/AdminFaxOutreach"));
 const AdminPostcardOutreach = lazy(() => import("@/components/admin/AdminPostcardOutreach"));
+const Wave5OutreachConsole = lazy(() => import("@/components/dwa-admin/Wave5OutreachConsole"));
 const AdminSMSOutreach = lazy(() => import("@/components/admin/AdminSMSOutreach"));
 const VisitorIntelFeed = lazy(() => import("@/components/admin/VisitorIntelFeed"));
 const AdminSimulationSuite = lazy(() => import("@/components/admin/AdminSimulationSuite"));
@@ -54,7 +55,7 @@ const DJConleyCommandPanel = lazy(() => import("@/components/admin/DJConleyComma
 type Tab =
   | "ai-command"
   | "dwa-overview" | "revenue" | "leads-e2e" | "prospect-tracker" | "agent-toolkit" | "pipeline-velocity"
-  | "command-center" | "sms-inbox" | "sms-drafts" | "call-list" | "linkedin-blitz" | "ad-launcher" | "agency-outreach" | "dead-leads" | "fax-drip" | "postcard-drip" | "sms-sniper" | "dead-lead-ad-studio"
+  | "command-center" | "sms-inbox" | "sms-drafts" | "call-list" | "linkedin-blitz" | "ad-launcher" | "agency-outreach" | "dead-leads" | "fax-drip" | "postcard-drip" | "sms-sniper" | "dead-lead-ad-studio" | "wave5-outreach"
   | "contractor-leads" | "contractor-onboarding" | "contractor-market" | "fielddesk" | "techalert" | "missed-call" | "missed-call-leads" | "clients-all"
   | "lead-marketplace" | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
@@ -77,6 +78,7 @@ const GROUPS: SidebarGroup[] = [
   {
     label: "Outreach",
     items: [
+      { id: "wave5-outreach",  label: "📡 Wave 5 Console (NEW)" },
       { id: "marketing-tools", label: "📡 Marketing Tools" },
       { id: "command-center",   label: "🎯 Command Center" },
       { id: "sms-inbox",        label: "💬 SMS Inbox" },
@@ -187,6 +189,7 @@ export default function DWAAdmin() {
           {activeTab === "contractor-onboarding" && <Suspense fallback={lazyFallback("onboarding")}><AdminContractorOnboarding /></Suspense>}
           {activeTab === "contractor-market"     && <Suspense fallback={lazyFallback("PPL marketplace")}><AdminContractorLeadsStatus /></Suspense>}
           {activeTab === "dead-leads"            && <Suspense fallback={lazyFallback("dead leads")}><AdminDeadLeads /></Suspense>}
+          {activeTab === "wave5-outreach"        && <Suspense fallback={lazyFallback("Wave 5 outreach")}><Wave5OutreachConsole /></Suspense>}
           {activeTab === "fax-drip"              && <Suspense fallback={lazyFallback("fax outreach")}><AdminFaxOutreach /></Suspense>}
           {activeTab === "postcard-drip"         && <Suspense fallback={lazyFallback("postcard outreach")}><AdminPostcardOutreach /></Suspense>}
           {activeTab === "sms-sniper"            && <Suspense fallback={lazyFallback("sms outreach")}><AdminSMSOutreach /></Suspense>}
