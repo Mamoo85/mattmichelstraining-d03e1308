@@ -161,25 +161,70 @@ Deno.serve(async (req) => {
     if (entryErr) throw entryErr;
 
     let sent = 0;
+    let skippedOff = 0;
+    let skippedTooSoon = 0;
     const errors: string[] = [];
+    const now = new Date();
+    const monthlyWindowMs = 28 * 86400_000;
+
     for (const lock of locks) {
       try {
-        // Per-client tile count delta
+        const emailLower = lock.client_email.toLowerCase();
+
+        // Ensure a preference row exists (idempotent upsert) and pull current state
+        await sb
+          .from("client_email_preferences")
+          .upsert(
+            { client_email: emailLower, report_type: "value_report", source: "auto" } as any,
+            { onConflict: "client_email,report_type", ignoreDuplicates: true } as any,
+          );
+
+        const { data: pref } = await sb
+          .from("client_email_preferences")
+          .select("id, frequency, unsubscribe_token, last_sent_at")
+          .eq("client_email", emailLower)
+          .eq("report_type", "value_report")
+          .maybeSingle();
+
+        if (!pref) {
+          errors.push(`${emailLower}: pref row missing after upsert`);
+          continue;
+        }
+        if (pref.frequency === "off") {
+          skippedOff++;
+          continue;
+        }
+        if (pref.frequency === "monthly" && pref.last_sent_at) {
+          const elapsed = now.getTime() - new Date(pref.last_sent_at).getTime();
+          if (elapsed < monthlyWindowMs) {
+            skippedTooSoon++;
+            continue;
+          }
+        }
+
         const { count: newTiles } = await sb
           .from("command_center_tiles")
           .select("id", { count: "exact", head: true })
-          .eq("owner_email", lock.client_email)
+          .eq("owner_email", emailLower)
           .eq("is_active", true)
           .gte("created_at", sevenDaysAgo.toISOString());
 
         const html = renderEmail({
-          email: lock.client_email,
+          email: emailLower,
           lock: lock as Lock,
           entries: (entries || []) as ChangelogEntry[],
           newTilesCount: newTiles || 0,
+          unsubscribeToken: pref.unsubscribe_token,
+          frequencyLabel: pref.frequency,
         });
-        const subject = `🔒 Forever Pricing · ${entries?.length || 0} shipped this week`;
-        await sendEmail(lock.client_email, subject, html);
+        const subject = `🔒 Forever Pricing · ${entries?.length || 0} shipped this ${pref.frequency === "monthly" ? "month" : "week"}`;
+        await sendEmail(emailLower, subject, html, pref.unsubscribe_token);
+
+        await sb
+          .from("client_email_preferences")
+          .update({ last_sent_at: now.toISOString() })
+          .eq("id", pref.id);
+
         sent++;
       } catch (e: any) {
         errors.push(`${lock.client_email}: ${e?.message || e}`);
@@ -187,7 +232,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ sent, total: locks.length, errors }),
+      JSON.stringify({ sent, total: locks.length, skipped_off: skippedOff, skipped_too_soon: skippedTooSoon, errors }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e: any) {
