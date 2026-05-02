@@ -201,6 +201,8 @@ export default function DWAAdmin() {
             </div>
           )}
 
+          {activeTab === "djconley" && <Suspense fallback={lazyFallback("D.J. Conley")}><DJConleyCommandPanel /></Suspense>}
+
           {activeTab === "lead-marketplace" && <Suspense fallback={lazyFallback("Lead Marketplace")}><LeadSalesOutreachHub /></Suspense>}
           {activeTab === "demand-radar"    && <Suspense fallback={lazyFallback("Demand Radar")}><DemandRadarHub /></Suspense>}
           {activeTab === "mortgage-radar"  && <Suspense fallback={lazyFallback("Mortgage Radar")}><MortgageRadarHub /></Suspense>}
