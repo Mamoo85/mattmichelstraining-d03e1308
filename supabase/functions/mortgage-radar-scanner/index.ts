@@ -20,6 +20,7 @@ import {
   scrapeTaxDelinquency,
   scrapeFixerUpperListings,
 } from "../_shared/scrapers-county-records.ts";
+import { fetchMortgageSignals } from "../_shared/signal-waterfall.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
