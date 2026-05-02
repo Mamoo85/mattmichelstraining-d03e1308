@@ -339,18 +339,45 @@ Deno.serve(async (req) => {
   const summary: Record<string, { inserted: number; updated: number; quarantined: number; skipped: number; notified: number }> = {};
 
   for (const vertical of verticals) {
-    const stats = { inserted: 0, updated: 0, quarantined: 0, skipped: 0, notified: 0 };
+    const stats = { inserted: 0, updated: 0, quarantined: 0, skipped: 0, area: 0, notified: 0 };
     summary[vertical] = stats;
 
     try {
       const rawSignals = await SCANNERS[vertical](state);
 
-      // Augment with registry-driven signals (FEMA storms, EPA, OSHA, HMDA, fresh LLCs).
+      // Plug in proven address-yielding scrapers (Zillow FSBO + EstateSales).
+      // Same scrapers powering 21 leads/day for mortgage radar. Home turnover
+      // = inspection/install opportunity for every trade vertical.
+      if (HOME_TURNOVER_VERTICALS.has(vertical)) {
+        try {
+          const [fsbo, estates] = await Promise.all([
+            scrapeZillowFSBO({ perCityCap: 5 }).catch(() => []),
+            scrapeEstateSales({ perCityCap: 4 }).catch(() => []),
+          ]);
+          for (const s of [...fsbo, ...estates]) {
+            rawSignals.push({
+              address: s.address,
+              city: s.city,
+              zip: s.zip,
+              signal_type: s.signal_type,
+              signal_detail: s.signal_detail,
+              signal_date: s.signal_date,
+              score: TURNOVER_SCORE,
+              source_method: "scraper",
+              suggested_opener: turnoverOpener(vertical, s.signal_type, s.address),
+              best_call_window: "Within 7 days of listing",
+              estimated_value: 5000,
+              raw_source_data: { source: s.signal_source, url: s.signal_url },
+            });
+          }
+        } catch (e) {
+          console.warn(`[trade-scanner] ${vertical} turnover scrape failed:`, e instanceof Error ? e.message : String(e));
+        }
+      }
+
       try {
         const naics = VERTICAL_NAICS[vertical] || "238220";
-        // Mortgage waterfall: FEMA+NOAA+HMDA+EPA — useful for weather/property-driven trades
         const MORTGAGE_WATERFALL_VERTICALS = ["roofing", "gutters", "painting", "pest_control", "hvac", "plumbing"];
-        // Hire waterfall: OSHA inspections — useful for electricians targeting renovation sites
         const HIRE_WATERFALL_VERTICALS = ["electrical"];
         const [biz, env] = await Promise.all([
           fetchFreshBusinessSignals(sb, { state, naics }).catch(() => []),
@@ -386,6 +413,7 @@ Deno.serve(async (req) => {
         if (result === "inserted") { stats.inserted++; insertedLeads.push(sig); }
         else if (result === "updated") stats.updated++;
         else if (result === "quarantined") stats.quarantined++;
+        else if (result === "area") stats.area++;
         else stats.skipped++;
       }
 
