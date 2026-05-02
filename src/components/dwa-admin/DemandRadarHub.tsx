@@ -102,10 +102,12 @@ function FilteredSignalList({ types, label }: { types: string[]; label: string }
   );
 }
 
-export default function DemandRadarHub() {
-  const [tab, setTab] = useState("throughput");
-  const [narrativeOpen, setNarrativeOpen] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<{ key: string; name: string } | null>(null);
+export default function DemandRadarHub({ initialAccountKey }: { initialAccountKey?: string } = {}) {
+  const [tab, setTab] = useState(initialAccountKey ? "predictive" : "throughput");
+  const [narrativeOpen, setNarrativeOpen] = useState(!!initialAccountKey);
+  const [selectedAccount, setSelectedAccount] = useState<{ key: string; name: string } | null>(
+    initialAccountKey ? { key: initialAccountKey, name: initialAccountKey } : null
+  );
 
   const openNarrative = (key: string, name: string) => {
     setSelectedAccount({ key, name });

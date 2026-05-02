@@ -136,7 +136,8 @@ const GROUPS: SidebarGroup[] = [
 const lazyFallback = (label: string) => <div className="text-white/40 text-sm p-6">Loading {label}…</div>;
 
 export default function DWAAdmin() {
-  const [activeTab, setActiveTab] = useState<Tab>("ai-command");
+  const initialAccountKey = new URLSearchParams(window.location.search).get("account") || undefined;
+  const [activeTab, setActiveTab] = useState<Tab>(initialAccountKey ? "demand-radar" : "ai-command");
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -200,7 +201,7 @@ export default function DWAAdmin() {
           )}
 
           {activeTab === "lead-marketplace" && <Suspense fallback={lazyFallback("Lead Marketplace")}><LeadSalesOutreachHub /></Suspense>}
-          {activeTab === "demand-radar"    && <Suspense fallback={lazyFallback("Demand Radar")}><DemandRadarHub /></Suspense>}
+          {activeTab === "demand-radar"    && <Suspense fallback={lazyFallback("Demand Radar")}><DemandRadarHub initialAccountKey={initialAccountKey} /></Suspense>}
           {activeTab === "mortgage-radar"  && <Suspense fallback={lazyFallback("Mortgage Radar")}><MortgageRadarHub /></Suspense>}
           {activeTab === "hvb"             && <Suspense fallback={lazyFallback("HVB")}><AdminHighVolumeBuyer /></Suspense>}
           {activeTab === "growth-signals"  && <Suspense fallback={lazyFallback("growth signals")}><AdminGrowthSignals /></Suspense>}
