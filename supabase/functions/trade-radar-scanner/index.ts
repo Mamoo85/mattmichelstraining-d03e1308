@@ -229,8 +229,6 @@ async function notifyClients(
   vertical: Vertical,
   leads: any[],
 ): Promise<void> {
-  if (!leads.length) return;
-
   const { data: clients } = await sb
     .from("trade_radar_clients")
     .select("id, email, contact_name, business_name, phone, zip_codes")
@@ -238,6 +236,18 @@ async function notifyClients(
     .eq("active", true);
 
   if (!clients?.length) return;
+
+  // Pull last-7-day Market Intel (area signals) for this vertical so we can
+  // surface NOAA/FEMA/HMDA alerts even when per-address leads are zero.
+  const since7d = new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10);
+  const { data: areaSignals } = await sb
+    .from("trade_radar_area_signals")
+    .select("scope, scope_value, alert_type, alert_detail, source, signal_date")
+    .eq("vertical", vertical)
+    .gte("signal_date", since7d)
+    .order("signal_date", { ascending: false })
+    .limit(50);
+  const allArea = (areaSignals as any[]) ?? [];
 
   const VERTICAL_LABELS: Record<string, string> = {
     roofing: "Roofing", hvac: "HVAC", plumbing: "Plumbing",
@@ -252,7 +262,15 @@ async function notifyClients(
       ? leads.filter((l) => !l.zip || clientZips.has(l.zip))
       : leads;
     const top5 = filtered.slice(0, 5);
-    if (!top5.length) continue;
+
+    // Filter area intel by client zip when scope=zip; always include
+    // county/state-scope alerts (broader signals).
+    const clientArea = clientZips.size
+      ? allArea.filter((a) => a.scope !== "zip" || clientZips.has(a.scope_value))
+      : allArea;
+    const topArea = clientArea.slice(0, 3);
+
+    if (!top5.length && !topArea.length) continue;
 
     const name = client.contact_name || client.business_name || "there";
     const top = top5[0];
@@ -276,13 +294,29 @@ async function notifyClients(
       </div>`;
     }).join("\n");
 
-    const innerHtml = `
-      <h2 style="color:#00d4ff;font-size:18px;margin:0 0 8px;">${label} Radar — ${top5.length} new lead${top5.length > 1 ? "s" : ""} today</h2>
-      <p style="color:#94a3b8;margin:0 0 20px;">Hi ${name}, here are today's top ${label.toLowerCase()} signals in your market.</p>
-      ${cards}
-      <p style="color:#64748b;font-size:11px;margin-top:16px;">${leads.length} total leads scanned today · ${label} Radar by Detroit Web Agency</p>`;
+    const areaHtml = topArea.length ? `
+      <div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:14px;margin-bottom:16px;">
+        <p style="color:#fbbf24;font-size:12px;font-weight:700;text-transform:uppercase;margin:0 0 8px;">⚠️ Market Intel — last 7 days</p>
+        ${topArea.map((a) => `
+          <div style="border-top:1px solid #1e293b;padding:6px 0;">
+            <span style="color:#e2e8f0;font-size:12px;font-weight:600;">${(a.alert_type ?? "").replace(/_/g, " ")}</span>
+            <span style="color:#64748b;font-size:11px;"> · ${a.scope}: ${a.scope_value}</span>
+            ${a.alert_detail ? `<div style="color:#94a3b8;font-size:11px;margin-top:2px;">${a.alert_detail}</div>` : ""}
+          </div>
+        `).join("")}
+      </div>` : "";
 
-    const subject = `🏠 ${top5.length} new ${label.toLowerCase()} lead${top5.length > 1 ? "s" : ""} in your ZIPs — top score ${top.score ?? "?"}/10`;
+    const headlineLeads = top5.length;
+    const innerHtml = `
+      <h2 style="color:#00d4ff;font-size:18px;margin:0 0 8px;">${label} Radar — ${headlineLeads ? `${headlineLeads} new lead${headlineLeads > 1 ? "s" : ""}` : "Market Intel"} today</h2>
+      <p style="color:#94a3b8;margin:0 0 20px;">Hi ${name}, here are today's top ${label.toLowerCase()} signals in your market.</p>
+      ${areaHtml}
+      ${cards || `<p style="color:#94a3b8;font-size:13px;">No new per-address signals matched your ZIPs today — scanning continues. Market intel above shows broader trends to help you target outreach.</p>`}
+      <p style="color:#64748b;font-size:11px;margin-top:16px;">${leads.length} per-address scan · ${allArea.length} area alerts · ${label} Radar by Detroit Web Agency</p>`;
+
+    const subject = headlineLeads
+      ? `🏠 ${headlineLeads} new ${label.toLowerCase()} lead${headlineLeads > 1 ? "s" : ""} in your ZIPs — top score ${top.score ?? "?"}/10`
+      : `📊 ${label} Market Intel — ${topArea.length} alert${topArea.length > 1 ? "s" : ""} in your area`;
 
     await dwaEmail({
       to: client.email,
@@ -290,11 +324,11 @@ async function notifyClients(
       html: dwaWrap(innerHtml),
     });
 
-    if (client.phone && top.score >= 9) {
+    if (client.phone && top && top.score >= 9) {
       await sendSMS(
         client.phone,
         TWILIO_FROM,
-        `🏠 ${label} Radar: ${top5.length} new leads today. Top score: ${top.score}/10 — ${top.city ?? "your area"}. Check your email. — Detroit Web Agency`,
+        `🏠 ${label} Radar: ${headlineLeads} new leads today. Top score: ${top.score}/10 — ${top.city ?? "your area"}. Check your email. — Detroit Web Agency`,
         "trade_radar",
       ).catch((e) => console.warn(`[trade-scanner] hot-lead SMS failed:`, e instanceof Error ? e.message : String(e)));
     }
@@ -417,22 +451,18 @@ Deno.serve(async (req) => {
         else stats.skipped++;
       }
 
-      if (insertedLeads.length || body.initial) {
-        // Fetch full leads for digest
-        const since24h = new Date(Date.now() - 24 * 3600_000).toISOString();
-        const { data: freshLeads } = await sb
-          .from("trade_radar_leads")
-          .select("*")
-          .eq("vertical", vertical)
-          .gte("created_at", since24h)
-          .order("score", { ascending: false })
-          .limit(10);
+      // Always notify clients — market intel goes out even with 0 per-address leads
+      const since24h = new Date(Date.now() - 24 * 3600_000).toISOString();
+      const { data: freshLeads } = await sb
+        .from("trade_radar_leads")
+        .select("*")
+        .eq("vertical", vertical)
+        .gte("created_at", since24h)
+        .order("score", { ascending: false })
+        .limit(10);
 
-        if (freshLeads?.length) {
-          await notifyClients(sb, vertical, freshLeads);
-          stats.notified = freshLeads.length;
-        }
-      }
+      await notifyClients(sb, vertical, (freshLeads as any[]) ?? []);
+      stats.notified = freshLeads?.length ?? 0;
     } catch (e: unknown) {
       console.error(`[trade-scanner] ${vertical} error:`, e instanceof Error ? e.message : String(e));
     }
