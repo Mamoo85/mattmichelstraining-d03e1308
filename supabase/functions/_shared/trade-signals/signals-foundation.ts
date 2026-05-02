@@ -1,0 +1,182 @@
+// Foundation Radar signal scanner.
+// Highest close rate of any restoration-adjacent vertical (~50%).
+// Michigan-specific: freeze/thaw cycles, high water table near Great Lakes,
+// millions of homes built pre-1960 with no waterproofing.
+//
+// Sources:
+//   Area: FEMA flood zone / NFIP data, NWS flood/heavy-rain events
+//   Per-address: BSEED foundation/structural permits
+
+export interface RawSignal {
+  address: string; city: string; zip: string;
+  signal_type: string; signal_detail: string; signal_date: string;
+  score: number; source_method: string;
+  suggested_opener: string; best_call_window: string;
+  estimated_value: number; raw_source_data?: Record<string, unknown>;
+}
+
+export const BASE_SCORES: Record<string, number> = {
+  foundation_flood_risk: 8,
+  heavy_rain_foundation: 7,
+  fema_flood_foundation: 9,
+  foundation_repair_permit: 9,
+  structural_permit: 8,
+  nfip_foundation: 7,
+};
+
+export const OPENERS: Record<string, { opener: string; window: string }> = {
+  foundation_flood_risk: {
+    opener: "Your home is in a FEMA-designated flood zone — that means your foundation has above-average hydrostatic pressure risk. A free assessment tells you exactly what you're dealing with before a $40k problem develops.",
+    window: "Evergreen — flood zone designation is permanent",
+  },
+  heavy_rain_foundation: {
+    opener: "The heavy rain this week is when foundation issues show themselves. If you're seeing any water intrusion, efflorescence, or cracks you haven't noticed before, now is the time to get it looked at before it worsens.",
+    window: "Within 7 days of rain event",
+  },
+  fema_flood_foundation: {
+    opener: "Your area has a federal disaster declaration — foundation damage from flooding often isn't visible for 30–90 days as the soil dries and shifts. A structural assessment now protects your FEMA claim window.",
+    window: "Within 60 days of declaration",
+  },
+  foundation_repair_permit: {
+    opener: "A foundation repair permit was just filed on your street — these are often neighborhood-wide issues where the same soil conditions affect multiple homes. We're offering free assessments to neighbors this week.",
+    window: "Within 21 days of permit",
+  },
+  structural_permit: {
+    opener: "A structural permit was filed nearby — major structural work often reveals underlying foundation issues in adjacent properties. A free 20-minute assessment tells you exactly where you stand.",
+    window: "Within 30 days of permit",
+  },
+  nfip_foundation: {
+    opener: "Flood insurance claims in your area are at elevated levels — NFIP data shows repeated payouts in your zip code, which is a strong indicator of chronic foundation water intrusion. We can assess yours at no charge.",
+    window: "Anytime — area is actively flood-prone",
+  },
+};
+
+export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<RawSignal[]> {
+  const signals: RawSignal[] = [];
+
+  // 1. NOAA NWS — flood and heavy rain events (area signals)
+  try {
+    const res = await fetch(
+      `https://api.weather.gov/alerts/active?area=${state}&status=actual`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)", Accept: "application/geo+json" } },
+    );
+    if (res.ok) {
+      const geo = await res.json();
+      for (const feat of (geo?.features ?? []).slice(0, 40)) {
+        const props = feat?.properties ?? {};
+        const event: string = props.event ?? "";
+        if (!["Flood", "Flash Flood", "Excessive Rain", "Heavy Rain", "Lakeshore", "Coastal"].some((e) => event.includes(e))) continue;
+        const areaDesc: string = props.areaDesc ?? "";
+        const effective = (props.effective ?? props.onset ?? new Date().toISOString()).split("T")[0];
+        signals.push({
+          address: areaDesc.split(";")[0]?.trim() ?? areaDesc,
+          city: areaDesc.split(",")[0]?.trim() ?? state,
+          zip: "",
+          signal_type: event.includes("Flood") ? "fema_flood_foundation" : "heavy_rain_foundation",
+          signal_detail: `${event}: ${props.headline ?? props.description?.slice(0, 120) ?? ""}`,
+          signal_date: effective,
+          score: BASE_SCORES[event.includes("Flood") ? "fema_flood_foundation" : "heavy_rain_foundation"],
+          source_method: "noaa_nws_alerts",
+          suggested_opener: OPENERS[event.includes("Flood") ? "fema_flood_foundation" : "heavy_rain_foundation"].opener,
+          best_call_window: OPENERS[event.includes("Flood") ? "fema_flood_foundation" : "heavy_rain_foundation"].window,
+          estimated_value: 12000,
+          raw_source_data: { event, areaDesc },
+        });
+      }
+    }
+  } catch (e) { console.error("[foundation] NWS:", e); }
+
+  // 2. FEMA disaster declarations (flood-type)
+  try {
+    const since = new Date(Date.now() - 30 * 86400_000).toISOString().split("T")[0];
+    const res = await fetch(
+      `https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?$filter=state eq '${state}' and declarationDate ge '${since}'&$top=15`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const dec of (d?.DisasterDeclarationsSummaries ?? [])) {
+        if (!dec.incidentType?.match(/Flood|Severe Storm|Hurricane/i)) continue;
+        signals.push({
+          address: dec.designatedArea ?? state,
+          city: dec.designatedArea?.split(" County")[0] ?? state,
+          zip: "",
+          signal_type: "fema_flood_foundation",
+          signal_detail: `FEMA DR-${dec.disasterNumber}: ${dec.incidentType} — ${dec.designatedArea}`,
+          signal_date: dec.declarationDate?.split("T")[0] ?? since,
+          score: BASE_SCORES.fema_flood_foundation,
+          source_method: "fema_api",
+          suggested_opener: OPENERS.fema_flood_foundation.opener,
+          best_call_window: OPENERS.fema_flood_foundation.window,
+          estimated_value: 15000,
+          raw_source_data: dec,
+        });
+      }
+    }
+  } catch (e) { console.error("[foundation] FEMA:", e); }
+
+  // 3. OpenFEMA NFIP claims — flood-prone zips = foundation risk
+  try {
+    const res = await fetch(
+      `https://www.fema.gov/api/open/v1/nfipPolicies?$filter=propertyState eq '${state}'&$select=propertyState,countyCode,amountPaidOnBuildingClaim,originalNBDate&$top=20`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      const claims: any[] = d?.nfipPolicies ?? [];
+      if (claims.length > 0) {
+        const totalPaid = claims.reduce((n, c) => n + (Number(c.amountPaidOnBuildingClaim) || 0), 0);
+        signals.push({
+          address: `${state} — ${claims.length} active NFIP flood claims`,
+          city: state,
+          zip: "",
+          signal_type: "nfip_foundation",
+          signal_detail: `OpenFEMA NFIP: ${claims.length} active flood claims in ${state} — avg payout $${Math.round(totalPaid / claims.length).toLocaleString()}. High-repeat-claim zips = chronic foundation water intrusion.`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.nfip_foundation,
+          source_method: "fema_nfip_api",
+          suggested_opener: OPENERS.nfip_foundation.opener,
+          best_call_window: OPENERS.nfip_foundation.window,
+          estimated_value: 14000,
+          raw_source_data: { state, claims_count: claims.length, avg_payout: Math.round(totalPaid / claims.length) },
+        });
+      }
+    }
+  } catch (e) { console.error("[foundation] NFIP:", e); }
+
+  // 4. BSEED foundation/structural permits — per-address (confirmed service)
+  try {
+    const where = encodeURIComponent(
+      `(work_description LIKE '%FOUNDATION%' OR work_description LIKE '%STRUCTURAL%' OR work_description LIKE '%WATERPROOF%' OR work_description LIKE '%BASEMENT%' OR work_description LIKE '%UNDERPINNING%' OR work_description LIKE '%CRAWL SPACE%')`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permits/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date,work_description,amt_estimated_contractor_cost,latitude,longitude&resultRecordCount=40&orderByFields=issued_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? addr.match(/\b(4\d{4})\b/)?.[1] ?? "";
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const desc = (a.work_description ?? "").toUpperCase();
+        const signalType = desc.includes("STRUCTURAL") ? "structural_permit" : "foundation_repair_permit";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: signalType,
+          signal_detail: `BSEED permit: ${(a.work_description ?? "").slice(0, 100)}`,
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES[signalType],
+          source_method: "bseed_arcgis",
+          suggested_opener: OPENERS[signalType].opener,
+          best_call_window: OPENERS[signalType].window,
+          estimated_value: Number(a.amt_estimated_contractor_cost) || 12000,
+          raw_source_data: { ...a, lat: a.latitude, lon: a.longitude },
+        });
+      }
+    }
+  } catch (e) { console.error("[foundation] BSEED:", e); }
+
+  return signals;
+}

@@ -1,7 +1,7 @@
-// Trade Radar AM Digest — daily 8am ET. For every active client across all 7
+// Trade Radar AM Digest — daily 8am ET. For every active client across all 11
 // verticals, sends a DWA-branded morning brief. ALWAYS sends, even on 0-lead
 // days (shows the watch-list so subscribers see proof of work). One function,
-// all 7 verticals.
+// all 11 verticals.
 //
 // POST shapes:
 //   {}                                → run all verticals, all clients
@@ -25,7 +25,8 @@ const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
 const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
 const ALL_VERTICALS = [
-  "roofing", "hvac", "plumbing", "electrical", "pest_control", "gutters", "painting",
+  "roofing", "hvac", "plumbing", "electrical", "pest_control", "gutters",
+  "exterior", "tree", "restoration", "demo_junk", "foundation",
 ] as const;
 type Vertical = typeof ALL_VERTICALS[number];
 
@@ -36,7 +37,11 @@ const VERTICAL_LABELS: Record<Vertical, string> = {
   electrical: "Electrical Radar",
   pest_control: "Pest Control Radar",
   gutters: "Gutters Radar",
-  painting: "Painting Radar",
+  exterior: "Exterior Radar",
+  tree: "Tree Service Radar",
+  restoration: "Restoration Radar",
+  demo_junk: "Demo & Junk Radar",
+  foundation: "Foundation Radar",
 };
 
 // Watch-list shown on 0-lead days so subscribers see what's being monitored.
@@ -83,12 +88,40 @@ const VERTICAL_WATCHLIST: Record<Vertical, string[]> = {
     "FEMA flood disaster declarations",
     "New homeowner records (closings ≤90 days)",
   ],
-  painting: [
-    "BSEED exterior renovation permits",
-    "MLS listings under 14 days on market",
+  exterior: [
+    "NOAA hail/wind storm alerts (siding damage area signals)",
+    "BSEED exterior/siding/window/paint permits",
+    "Zillow FSBO listings (pre-sale exterior prep opportunity)",
+    "Foreclosure notices (pre-REO exterior refresh)",
     "New homeowner records (closings ≤90 days)",
-    "HOA violation notices (curb-appeal driven)",
-    "Pre-listing prep service requests",
+  ],
+  tree: [
+    "NOAA wind/storm alerts (tree hazard area signals)",
+    "FEMA disaster declarations",
+    "BSEED tree removal/trim/stump permits",
+    "Detroit 311 tree service requests (Socrata)",
+    "Estate sales (clearance of mature trees)",
+  ],
+  restoration: [
+    "NOAA flood/flash-flood warnings (area signal)",
+    "NOAA fire weather alerts (area signal)",
+    "FEMA disaster declarations (flood/fire/storm)",
+    "BSEED water damage / fire repair / mold remediation permits",
+    "Heavy rain events (basement backup / sump failure)",
+  ],
+  demo_junk: [
+    "BSEED demolition permits (per-address)",
+    "Estate sales (day-after cleanout opportunity)",
+    "Wayne/Oakland/Macomb probate filings",
+    "Foreclosure notices (bank-owned cleanout)",
+    "Detroit 311 bulk/debris pickup requests",
+  ],
+  foundation: [
+    "FEMA flood zone / NFIP data (chronic hydrostatic risk)",
+    "NOAA flood/heavy-rain events (area signal)",
+    "FEMA disaster declarations (flood-type)",
+    "OpenFEMA NFIP claims (repeat-payout zips)",
+    "BSEED foundation/structural/waterproofing permits",
   ],
 };
 

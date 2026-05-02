@@ -368,6 +368,11 @@ const MyElectricalRadar = lazyRetry(() => import("./pages/MyElectricalRadar"));
 const MyPestControlRadar = lazyRetry(() => import("./pages/MyPestControlRadar"));
 const MyGuttersRadar = lazyRetry(() => import("./pages/MyGuttersRadar"));
 const MyPaintingRadar = lazyRetry(() => import("./pages/MyPaintingRadar"));
+const MyExteriorRadar = lazyRetry(() => import("./pages/MyExteriorRadar"));
+const MyTreeRadar = lazyRetry(() => import("./pages/MyTreeRadar"));
+const MyRestorationRadar = lazyRetry(() => import("./pages/MyRestorationRadar"));
+const MyDemoJunkRadar = lazyRetry(() => import("./pages/MyDemoJunkRadar"));
+const MyFoundationRadar = lazyRetry(() => import("./pages/MyFoundationRadar"));
 
 const AgencyPortal = lazyRetry(() => import("./pages/AgencyPortal"));
 const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
@@ -880,6 +885,11 @@ const App = () => (
                     <Route path="/my-pest-control-radar" element={<MyPestControlRadar />} />
                     <Route path="/my-gutters-radar" element={<MyGuttersRadar />} />
                     <Route path="/my-painting-radar" element={<MyPaintingRadar />} />
+                    <Route path="/my-exterior-radar" element={<MyExteriorRadar />} />
+                    <Route path="/my-tree-radar" element={<MyTreeRadar />} />
+                    <Route path="/my-restoration-radar" element={<MyRestorationRadar />} />
+                    <Route path="/my-demo-junk-radar" element={<MyDemoJunkRadar />} />
+                    <Route path="/my-foundation-radar" element={<MyFoundationRadar />} />
                     <Route path="/agency-portal" element={<AgencyPortal />} />
                     <Route path="/license-monitor" element={<LicenseMonitor />} />
                     <Route path="/regulatory-filing-monitor" element={<RegulatoryFilingMonitor />} />

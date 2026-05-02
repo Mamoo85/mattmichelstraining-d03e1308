@@ -1,6 +1,5 @@
-// Trade Radar daily scanner — 7 trade verticals, Michigan-first then nationwide.
-// Reuses the same anti-hallucination gate as mortgage-radar-scanner.
-// POST { vertical?: "roofing"|"hvac"|"plumbing"|"electrical"|"pest_control"|"gutters"|"painting"|"all" }
+// Trade Radar daily scanner — 10 trade verticals.
+// POST { vertical?: "roofing"|"hvac"|"plumbing"|"electrical"|"pest_control"|"gutters"|"exterior"|"tree"|"restoration"|"demo_junk"|"foundation"|"all" }
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { validateLead, quarantineRaw } from "../_shared/anti-hallucination.ts";
@@ -12,9 +11,19 @@ import { scanSignals as scanPlumbing } from "../_shared/trade-signals/signals-pl
 import { scanSignals as scanElectrical } from "../_shared/trade-signals/signals-electrical.ts";
 import { scanSignals as scanPestControl } from "../_shared/trade-signals/signals-pest_control.ts";
 import { scanSignals as scanGutters } from "../_shared/trade-signals/signals-gutters.ts";
-import { scanSignals as scanPainting } from "../_shared/trade-signals/signals-painting.ts";
+import { scanSignals as scanExterior } from "../_shared/trade-signals/signals-painting.ts";
+import { scanSignals as scanTree } from "../_shared/trade-signals/signals-tree.ts";
+import { scanSignals as scanRestoration } from "../_shared/trade-signals/signals-restoration.ts";
+import { scanSignals as scanDemoJunk } from "../_shared/trade-signals/signals-demo_junk.ts";
+import { scanSignals as scanFoundation } from "../_shared/trade-signals/signals-foundation.ts";
 import { fetchFreshBusinessSignals, fetchMortgageSignals, fetchHireSignals } from "../_shared/signal-waterfall.ts";
 import { scrapeZillowFSBO, scrapeEstateSales } from "../_shared/scrapers-public-listings.ts";
+
+// Warn loudly at startup if FIRECRAWL_API_KEY is missing — half the per-address
+// signal sources (FSBO, estate sales, probate, foreclosure) depend on it.
+if (!Deno.env.get("FIRECRAWL_API_KEY")) {
+  console.error("[trade-scanner] CRITICAL: FIRECRAWL_API_KEY not set — FSBO, estate sale, probate, foreclosure scrapers will return empty. Add this secret to Supabase Edge Function secrets.");
+}
 
 // Signal types that describe an AREA (county/zip/state), not a single street address.
 // These bypass the per-address validator and are written to trade_radar_area_signals.
@@ -22,12 +31,17 @@ const AREA_ALERT_TYPES = new Set<string>([
   "hail_damage_area", "storm_wind_damage", "fema_disaster", "fema_gutter_damage",
   "new_homeowner_roof", "lead_line_area", "extreme_weather_hvac", "nfip_flood_hvac",
   "storm_panel_check", "storm_gutter_damage", "registry_signal",
+  // New verticals
+  "tree_hazard_area", "storm_tree_damage",
+  "flood_warning", "heavy_rain_event", "fire_incident_area", "water_damage_area", "mold_risk_zone",
+  "heavy_rain_foundation", "fema_flood_foundation", "foundation_flood_risk", "nfip_foundation",
+  "storm_siding_damage",
 ]);
 
 // Verticals where home turnover (FSBO listing, estate sale) is a high-quality
 // per-address inspection/install opportunity.
 const HOME_TURNOVER_VERTICALS = new Set<string>([
-  "roofing", "hvac", "plumbing", "gutters", "painting", "pest_control", "electrical",
+  "roofing", "hvac", "plumbing", "gutters", "exterior", "pest_control", "electrical", "demo_junk",
 ]);
 
 // Suggested openers/scores by vertical for FSBO + estate-sale leads.
@@ -40,9 +54,10 @@ function turnoverOpener(vertical: string, signalType: string, address: string): 
     hvac: "a free HVAC tune-up gives buyers peace of mind and helps the appraisal",
     plumbing: "a free plumbing walkthrough catches issues before the buyer's inspector does",
     gutters: "clean gutters and downspouts make a huge curb-appeal difference for showings",
-    painting: "a free paint touch-up consult could add real ROI before listing photos",
+    exterior: "a fresh exterior paint and siding check could add real ROI before listing photos",
     pest_control: "a free pest inspection keeps closing on track if any treatment is needed",
     electrical: "a quick free electrical safety check catches anything that would flag in inspection",
+    demo_junk: "most families need a full cleanout crew the day after the sale — we can have a truck there in 24 hours",
   };
   const ask = askMap[vertical] ?? "we can offer a complimentary inspection";
   return `Hi — saw ${verb} at ${address}. ${ask}. Want me to swing by this week?`;
@@ -56,7 +71,11 @@ const VERTICAL_NAICS: Record<string, string> = {
   electrical: "238210",
   pest_control: "561710",
   gutters: "238160",
-  painting: "238320",
+  exterior: "238320",
+  tree: "561730",
+  restoration: "238390",
+  demo_junk: "238910",
+  foundation: "238110",
 };
 
 const corsHeaders = {
@@ -69,7 +88,10 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ADMIN_PHONE = Deno.env.get("ADMIN_PHONE_NUMBER") || "+13138064952";
 const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
-const ALL_VERTICALS = ["roofing", "hvac", "plumbing", "electrical", "pest_control", "gutters", "painting"] as const;
+const ALL_VERTICALS = [
+  "roofing", "hvac", "plumbing", "electrical", "pest_control", "gutters",
+  "exterior", "tree", "restoration", "demo_junk", "foundation",
+] as const;
 type Vertical = typeof ALL_VERTICALS[number];
 
 // County → region map (verbatim from mortgage scanner)
@@ -253,7 +275,9 @@ async function notifyClients(
   const VERTICAL_LABELS: Record<string, string> = {
     roofing: "Roofing", hvac: "HVAC", plumbing: "Plumbing",
     electrical: "Electrical", pest_control: "Pest Control",
-    gutters: "Gutters", painting: "Painting",
+    gutters: "Gutters", exterior: "Exterior (Painting/Siding/Windows)",
+    tree: "Tree Service", restoration: "Water/Fire/Mold Restoration",
+    demo_junk: "Demo & Junk Removal", foundation: "Foundation Repair",
   };
   const label = VERTICAL_LABELS[vertical] ?? vertical;
 
@@ -350,7 +374,11 @@ const SCANNERS: Record<Vertical, (state: string, zips?: string[]) => Promise<any
   electrical: scanElectrical,
   pest_control: scanPestControl,
   gutters: scanGutters,
-  painting: scanPainting,
+  exterior: scanExterior,
+  tree: scanTree,
+  restoration: scanRestoration,
+  demo_junk: scanDemoJunk,
+  foundation: scanFoundation,
 };
 
 Deno.serve(async (req) => {
@@ -419,7 +447,7 @@ Deno.serve(async (req) => {
 
       try {
         const naics = VERTICAL_NAICS[vertical] || "238220";
-        const MORTGAGE_WATERFALL_VERTICALS = ["roofing", "gutters", "painting", "pest_control", "hvac", "plumbing"];
+        const MORTGAGE_WATERFALL_VERTICALS = ["roofing", "gutters", "exterior", "pest_control", "hvac", "plumbing", "foundation", "restoration"];
         const HIRE_WATERFALL_VERTICALS = ["electrical"];
         const [biz, env] = await Promise.all([
           fetchFreshBusinessSignals(sb, { state, naics }).catch(() => []),

@@ -14,6 +14,46 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-05-02*
 
+### Phase 32 — Trade Radar Expansion to 11 Verticals COMPLETE ✅
+
+**Expanded from 7 → 11 verticals.** `painting` vertical renamed/replaced by `exterior` (broader buyer pool). 4 net-new verticals added.
+
+**New verticals:** `exterior` | `tree` | `restoration` | `demo_junk` | `foundation`
+
+**New signal files** (`supabase/functions/_shared/trade-signals/`):
+- `signals-painting.ts` → **rewritten as Exterior Radar** (painting + siding + windows). Sources: NOAA storm/hail (siding damage area), BSEED building permits (SIDING/EXTERIOR/WINDOW/PAINT), Zillow FSBO, foreclosure notices, Wayne County deeds (new owners).
+- `signals-tree.ts` (NEW): NOAA wind/storm alerts (area), FEMA disasters (area), BSEED TREE/STUMP/TRIM permits (per-address), Detroit 311 Socrata API (per-address).
+- `signals-restoration.ts` (NEW): NOAA flood/fire/rain alerts (area), FEMA disasters (area), BSEED WATER DAMAGE/FIRE/MOLD/REMEDIATION permits (per-address). Honest positioning: area intel, not hot-incident dispatch.
+- `signals-demo_junk.ts` (NEW): BSEED DEMO/DEMOLITION permits (per-address), estate sales scraper, probate filings scraper, foreclosure notices scraper.
+- `signals-foundation.ts` (NEW): NOAA flood/rain alerts (area), FEMA disasters (area), OpenFEMA NFIP claims (area — repeat-payout zips), BSEED FOUNDATION/STRUCTURAL/WATERPROOF/BASEMENT permits (per-address).
+
+**Scanner updates** (`trade-radar-scanner/index.ts`):
+- SCANNERS Record: removed `painting: scanPainting`, added `exterior, tree, restoration, demo_junk, foundation`
+- AREA_ALERT_TYPES expanded with 12 new signal types for new verticals
+- MORTGAGE_WATERFALL_VERTICALS: `"painting"` → `"exterior"`, added `"foundation"`, `"restoration"`
+- HOME_TURNOVER_VERTICALS: added `exterior`, `demo_junk`
+- VERTICAL_LABELS updated for all 11 verticals
+
+**Digest updates** (`trade-radar-am-digest/index.ts`):
+- ALL_VERTICALS, VERTICAL_LABELS, VERTICAL_WATCHLIST expanded to all 11 verticals
+
+**Frontend pages** (5 new):
+- `src/pages/MyExteriorRadar.tsx` → `/my-exterior-radar`
+- `src/pages/MyTreeRadar.tsx` → `/my-tree-radar`
+- `src/pages/MyRestorationRadar.tsx` → `/my-restoration-radar`
+- `src/pages/MyDemoJunkRadar.tsx` → `/my-demo-junk-radar`
+- `src/pages/MyFoundationRadar.tsx` → `/my-foundation-radar`
+
+**Migrations:**
+- `20260502170000_trade_radar_add_verticals.sql`: updates `radar_trials.product` CHECK to include 5 new product slugs; marks `painting` inactive in `trade_radar_clients`
+- `20260502180000_matt_new_verticals_enrollment.sql`: enrolls Matt across all 5 new verticals (118 SE Michigan ZIPs)
+
+**ArcGIS date bug fixed across all signal files:** `issued_date >= 'date-string'` → keyword-only WHERE + `new Date(a.issued_date).toISOString().slice(0,10)` conversion (ArcGIS stores as Unix ms timestamps).
+
+**Zero-lead bugs fixed (validateLead + quarantineRaw + LeadGateResult field names)** — see Phase 31 notes.
+
+---
+
 ### Phase 31 — Trade Radar (7 Verticals) COMPLETE ✅
 
 **New product: Trade Radar** — mirrors Mortgage Radar structure across 7 home-service trade verticals.
