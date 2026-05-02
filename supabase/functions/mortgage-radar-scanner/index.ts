@@ -971,6 +971,32 @@ async function scanBankruptcyFilings(): Promise<RawSignal[]> {
   return [];
 }
 
+// 50-source registry: pulls FEMA/NOAA/HUD vacancy/EPA lead lines etc. via signal_waterfall.
+// Address-less rows get quarantined by validateLead but update sourceBreakdown for coverage.
+async function scanRegistryWaterfall(sb: any): Promise<RawSignal[]> {
+  try {
+    const sigs = await fetchMortgageSignals(sb, { state: "MI", days: 30 });
+    const out: RawSignal[] = [];
+    for (const s of (sigs || []).slice(0, 200)) {
+      const a = s as any;
+      out.push({
+        address: a.address,
+        city: a.city,
+        zip: a.zip,
+        signal_type: a.type || "registry_signal",
+        signal_source: a.source || "registry",
+        signal_detail: a.detail || a.description,
+        signal_url: a.url,
+        signal_date: a.date || new Date().toISOString(),
+      });
+    }
+    return out;
+  } catch (e) {
+    console.warn("[scanner] registry waterfall failed:", e instanceof Error ? e.message : String(e));
+    return [];
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
