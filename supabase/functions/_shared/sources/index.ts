@@ -513,7 +513,39 @@ export async function dispatchFetch(sourceId: string, params: Record<string, str
     case "bls_oews": return fetchBlsOews(params.series_id ?? "OEUM0198980000000000001");
     case "fred_indicators": return fetchFred(params.series_id ?? "MIBP1FH");
     case "google_trends_unofficial": return fetchGoogleTrends(params.query ?? "plumber near me", params.geo ?? "US");
-    // Catalog-only sources: handled by dedicated radar functions, return empty stub
+    case "ffiec_hmda": return fetchFfiecHmda(params.state ?? "MI", Number(params.year ?? 2023));
+    case "census_acs_housing": return fetchCensusAcsHousing(params.state ?? "26");
+    case "hud_uspsvacancy": return fetchHudUspsVacancy(params.state ?? "MI");
+    case "openaddresses": return fetchOpenAddresses(params.state ?? "MI");
+    case "zillow_research": return fetchZillowResearch();
+    case "realtor_research": return fetchRealtorResearch();
+    case "epa_lead_lines": return fetchEpaLeadLines(params.state ?? "MI");
+    case "opensecrets_pacs": return fetchOpenSecretsPacs(params.cycle ?? "2024");
+    case "county_gis_arcgis": return fetchCountyArcgis(params.endpoint ?? "", params.where ?? "1=1", params.outFields ?? "*");
+    case "dol_apprenticeship": return fetchDolApprenticeship(params.state ?? "MI", params.keyword ?? "construction");
+    case "bls_qcew": return fetchBlsQcew(params.state ?? "26", Number(params.year ?? new Date().getFullYear() - 1), params.qtr ?? "1", params.industry ?? "1012");
+    case "state_sos_filings": return fetchStateSosFilings(params.feed_url ?? "");
+    case "fed_audit_clearinghouse": return fetchFedAuditClearinghouse(params.state ?? "MI");
+    case "dol_warn": return fetchDolWarn(params.state ?? "MI");
+    case "naics_directory": return fetchNaicsDirectory(params.code ?? "238220");
+    case "github_search_expanded": return fetchGithubExpanded(params.query ?? "hvac contractor");
+    case "abms_certmatters": return fetchAbmsCert();
+    case "state_nursing_boards": return fetchStateNursingBoard(params.lookup_url ?? "");
+    case "state_teaching_boards": return fetchStateTeachingBoard(params.lookup_url ?? "");
+    case "state_bar_associations": return fetchStateBar(params.lookup_url ?? "");
+    case "state_cpa_boards": return fetchStateCpa(params.lookup_url ?? "");
+    case "ncees_engineers": return fetchNcees();
+    case "va_provider_db": return fetchVaProvider(params.zip ?? "48226");
+    case "state_contractor_licenses": return fetchStateContractorLicense(params.lookup_url ?? "");
+    case "county_permits_arcgis": return fetchCountyPermits(params.endpoint ?? "", params.where ?? "1=1");
+    case "epa_rrp": return fetchEpaRrp(params.state ?? "MI");
+    case "phmsa_pipeline": return fetchPhmsa(params.state ?? "MI");
+    case "fcc_antenna": return fetchFccAntenna(params.state ?? "MI");
+    case "state_dot_prequalified": return fetchStateDotPrequal(params.lookup_url ?? "");
+    case "peeringdb": return fetchPeeringDb(params.asn ? Number(params.asn) : undefined);
+    case "state_corp_filings_rss": return fetchStateCorpRss(params.feed_url ?? "");
+    case "sec_edgar_ein": return fetchSecEdgar(params.ein ?? "");
+    case "opencorporates_free": return fetchOpenCorporates(params.q ?? "", params.jurisdiction ?? "us");
     default: return [];
   }
 }
