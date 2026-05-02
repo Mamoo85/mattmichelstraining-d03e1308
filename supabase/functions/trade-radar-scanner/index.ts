@@ -14,6 +14,39 @@ import { scanSignals as scanPestControl } from "../_shared/trade-signals/signals
 import { scanSignals as scanGutters } from "../_shared/trade-signals/signals-gutters.ts";
 import { scanSignals as scanPainting } from "../_shared/trade-signals/signals-painting.ts";
 import { fetchFreshBusinessSignals, fetchMortgageSignals, fetchHireSignals } from "../_shared/signal-waterfall.ts";
+import { scrapeZillowFSBO, scrapeEstateSales } from "../_shared/scrapers-public-listings.ts";
+
+// Signal types that describe an AREA (county/zip/state), not a single street address.
+// These bypass the per-address validator and are written to trade_radar_area_signals.
+const AREA_ALERT_TYPES = new Set<string>([
+  "hail_damage_area", "storm_wind_damage", "fema_disaster", "fema_gutter_damage",
+  "new_homeowner_roof", "lead_line_area", "extreme_weather_hvac", "nfip_flood_hvac",
+  "storm_panel_check", "storm_gutter_damage", "registry_signal",
+]);
+
+// Verticals where home turnover (FSBO listing, estate sale) is a high-quality
+// per-address inspection/install opportunity.
+const HOME_TURNOVER_VERTICALS = new Set<string>([
+  "roofing", "hvac", "plumbing", "gutters", "painting", "pest_control", "electrical",
+]);
+
+// Suggested openers/scores by vertical for FSBO + estate-sale leads.
+const TURNOVER_SCORE = 6;
+function turnoverOpener(vertical: string, signalType: string, address: string): string {
+  const isFSBO = signalType === "fsbo_listing";
+  const verb = isFSBO ? "you're selling" : "your family is going through an estate sale";
+  const askMap: Record<string, string> = {
+    roofing: "a quick free roof inspection could add $5-15k to the sale price",
+    hvac: "a free HVAC tune-up gives buyers peace of mind and helps the appraisal",
+    plumbing: "a free plumbing walkthrough catches issues before the buyer's inspector does",
+    gutters: "clean gutters and downspouts make a huge curb-appeal difference for showings",
+    painting: "a free paint touch-up consult could add real ROI before listing photos",
+    pest_control: "a free pest inspection keeps closing on track if any treatment is needed",
+    electrical: "a quick free electrical safety check catches anything that would flag in inspection",
+  };
+  const ask = askMap[vertical] ?? "we can offer a complimentary inspection";
+  return `Hi — saw ${verb} at ${address}. ${ask}. Want me to swing by this week?`;
+}
 
 // NAICS code per vertical (used to filter registry-driven signals)
 const VERTICAL_NAICS: Record<string, string> = {
