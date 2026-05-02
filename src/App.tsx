@@ -347,6 +347,21 @@ const BuyerRadarPricing = lazyRetry(() => import("./pages/BuyerRadarPricing"));
 const HighVolumeBuyerAlerts = lazyRetry(() => import("./pages/HighVolumeBuyerAlerts"));
 const StaffingAgency = lazyRetry(() => import("./pages/StaffingAgency"));
 
+const RoofingRadar = lazyRetry(() => import("./pages/RoofingRadar"));
+const RoofingRadarDemo = lazyRetry(() => import("./pages/RoofingRadarDemo"));
+const HVACRadar = lazyRetry(() => import("./pages/HVACRadar"));
+const HVACRadarDemo = lazyRetry(() => import("./pages/HVACRadarDemo"));
+const PlumbingRadar = lazyRetry(() => import("./pages/PlumbingRadar"));
+const PlumbingRadarDemo = lazyRetry(() => import("./pages/PlumbingRadarDemo"));
+const ElectricalRadar = lazyRetry(() => import("./pages/ElectricalRadar"));
+const ElectricalRadarDemo = lazyRetry(() => import("./pages/ElectricalRadarDemo"));
+const PestControlRadar = lazyRetry(() => import("./pages/PestControlRadar"));
+const PestControlRadarDemo = lazyRetry(() => import("./pages/PestControlRadarDemo"));
+const GuttersRadar = lazyRetry(() => import("./pages/GuttersRadar"));
+const GuttersRadarDemo = lazyRetry(() => import("./pages/GuttersRadarDemo"));
+const PaintingRadar = lazyRetry(() => import("./pages/PaintingRadar"));
+const PaintingRadarDemo = lazyRetry(() => import("./pages/PaintingRadarDemo"));
+
 const AgencyPortal = lazyRetry(() => import("./pages/AgencyPortal"));
 const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
 const RegulatoryFilingMonitor = lazyRetry(() => import("./pages/RegulatoryFilingMonitor"));
@@ -837,6 +852,20 @@ const App = () => (
                     <Route path="/my-buyer-radar" element={<MyBuyerRadar />} />
                     <Route path="/high-volume-buyer-alerts" element={<HighVolumeBuyerAlerts />} />
                     <Route path="/staffing" element={<StaffingAgency />} />
+                    <Route path="/roofing-radar" element={<RoofingRadar />} />
+                    <Route path="/roofing-radar/demo" element={<RoofingRadarDemo />} />
+                    <Route path="/hvac-radar" element={<HVACRadar />} />
+                    <Route path="/hvac-radar/demo" element={<HVACRadarDemo />} />
+                    <Route path="/plumbing-radar" element={<PlumbingRadar />} />
+                    <Route path="/plumbing-radar/demo" element={<PlumbingRadarDemo />} />
+                    <Route path="/electrical-radar" element={<ElectricalRadar />} />
+                    <Route path="/electrical-radar/demo" element={<ElectricalRadarDemo />} />
+                    <Route path="/pest-control-radar" element={<PestControlRadar />} />
+                    <Route path="/pest-control-radar/demo" element={<PestControlRadarDemo />} />
+                    <Route path="/gutters-radar" element={<GuttersRadar />} />
+                    <Route path="/gutters-radar/demo" element={<GuttersRadarDemo />} />
+                    <Route path="/painting-radar" element={<PaintingRadar />} />
+                    <Route path="/painting-radar/demo" element={<PaintingRadarDemo />} />
                     <Route path="/agency-portal" element={<AgencyPortal />} />
                     <Route path="/license-monitor" element={<LicenseMonitor />} />
                     <Route path="/regulatory-filing-monitor" element={<RegulatoryFilingMonitor />} />
