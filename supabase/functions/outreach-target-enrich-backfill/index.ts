@@ -1,9 +1,14 @@
 // Backfill enrichment for outreach_targets missing email/fax/phone.
 // Runs every 6h via pg_cron. Drains 50 records/run, calls email-waterfall + firecrawl fax.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "../_shared/cors.ts";
 import { firecrawlScrape, extractFaxNumber, extractContactInfo } from "../_shared/firecrawl.ts";
 import { runEmailWaterfall } from "../_shared/email-waterfall.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
