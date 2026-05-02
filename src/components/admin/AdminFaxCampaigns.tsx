@@ -162,7 +162,7 @@ export default function AdminFaxCampaigns() {
       `   ⚠️ ${data.no_fax_number} have no fax number`,
       `   📨 ${data.already_sent} already sent`,
       ``,
-      `🔑 Phaxio API: ${data.phaxio_api_ok ? "✅ Working" : "❌ FAILED"}`,
+      `🔑 Sinch Fax API: ${data.phaxio_api_ok ? "✅ Working" : "❌ FAILED"}`,
       data.phaxio_error ? `   Error: ${String(data.phaxio_error).slice(0, 140)}` : ``,
       ``,
       `💰 Month so far: ${data.month_sent_so_far} sent · ${data.month_remaining} remaining of cap`,
@@ -176,7 +176,7 @@ export default function AdminFaxCampaigns() {
     const ready = ((sendLogs[id] || []).length === 0);
     if (!confirm(`Send fax campaign now? This is irreversible.${ready ? "" : "\n\n(Note: this campaign already has send-log entries — running again will only send to prospects that haven't been faxed yet.)"}`)) return;
     setSending(id);
-    toast.info("Sending faxes via Phaxio…");
+    toast.info("Sending faxes via Sinch…");
     const { data, error } = await supabase.functions.invoke("send-fax-phaxio", {
       body: { campaign_id: id },
     });
@@ -209,7 +209,7 @@ export default function AdminFaxCampaigns() {
   return (
     <div className="space-y-6 text-white">
       <div>
-        <h2 className="text-xl font-bold">📠 Fax Campaigns (Phaxio)</h2>
+        <h2 className="text-xl font-bold">📠 Fax Campaigns (Sinch)</h2>
         <p className="text-white/50 text-sm mt-1">
           B2B faxes to verified public business numbers · multi-offer footer w/ landing URL ·
           TCPA opt-out · caps: 200/run · 1000/month · ${COST_PER_FAX}/fax
@@ -412,7 +412,7 @@ export default function AdminFaxCampaigns() {
                       <div className="mt-3 max-h-72 overflow-y-auto border-t border-white/10 pt-2">
                         <table className="w-full text-[11px]">
                           <thead className="text-white/40 uppercase text-left">
-                            <tr><th className="px-2 py-1">Business</th><th className="px-2 py-1">Fax</th><th className="px-2 py-1">Status</th><th className="px-2 py-1">Phaxio ID / Error</th><th className="px-2 py-1">When</th></tr>
+                            <tr><th className="px-2 py-1">Business</th><th className="px-2 py-1">Fax</th><th className="px-2 py-1">Status</th><th className="px-2 py-1">Sinch ID / Error</th><th className="px-2 py-1">When</th></tr>
                           </thead>
                           <tbody>
                             {logs.map((l: any) => (
