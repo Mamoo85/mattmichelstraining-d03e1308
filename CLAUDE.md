@@ -45,6 +45,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Per-lead verification emails shipped** (commit `d3df0e78` — "Sent per-lead verification e-mls")
 
+**⚠️ Zero-lead bug fixed (Phase 31 post-ship):**
+- `trade-radar-scanner`: `validateLead` was called without `sb` arg → threw on every lead → 100% skipped
+- Fixed field names: `validation.valid` → `validation.pass`, `validation.formatted_address` → `validation.formatted`, `validation.reason` → `validation.reject_reason`
+- Fixed `quarantineRaw` call signature (was passing object instead of positional args)
+- All 7 signal files: ArcGIS `issued_date >= 'date-string'` date filter replaced with keyword-only WHERE + `new Date(a.issued_date).toISOString().slice(0,10)` conversion (ArcGIS stores dates as Unix ms timestamps)
+
 ---
 
 ### Phase 30 — Mortgage Radar Geographic Expansion + Digest Hardening COMPLETE ✅

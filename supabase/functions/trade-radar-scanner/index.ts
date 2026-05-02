@@ -148,25 +148,26 @@ async function upsertWithDedup(
   // Anti-hallucination gate
   let validation;
   try {
-    validation = await validateLead({
+    validation = await validateLead(sb, {
       address: signal.address,
       city: signal.city,
       zip: signal.zip,
-      signal_type: signal.signal_type,
-      source_method: signal.source_method ?? "scraper",
-    });
+      state: "MI",
+      signal_url: signal.signal_url,
+      signal_detail: signal.signal_detail,
+    }, { sourceMethod: signal.source_method === "llm_search" ? "llm_search" : "scraper" });
   } catch (e) {
     console.warn(`[trade-scanner] validateLead threw for ${vertical}:`, e instanceof Error ? e.message : String(e));
     return "skipped";
   }
 
-  if (!validation.valid) {
-    await quarantineRaw(sb, {
-      table: "trade_radar_leads",
-      vertical,
-      raw: signal,
-      reason: validation.reason ?? "validation_failed",
-    });
+  if (!validation.pass) {
+    await quarantineRaw(
+      sb, signal,
+      validation.reject_code ?? "validation_failed",
+      validation.reject_reason ?? "validation_failed",
+      signal.source_method ?? "unknown",
+    );
     return "quarantined";
   }
 
@@ -195,7 +196,7 @@ async function upsertWithDedup(
 
   const { error } = await sb.from("trade_radar_leads").insert({
     vertical,
-    address: validation.formatted_address ?? signal.address,
+    address: validation.formatted ?? signal.address,
     city: signal.city,
     zip: signal.zip,
     lat: validation.lat,

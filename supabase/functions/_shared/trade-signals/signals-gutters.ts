@@ -36,8 +36,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
 
   // 1. BSEED building permits — roof keyword = gutter upsell window (service: bseed_building_permits)
   try {
-    const since = new Date(Date.now() - 21 * 86400_000).toISOString().split("T")[0];
-    const where = encodeURIComponent(`(work_description LIKE '%ROOF%' OR work_description LIKE '%GUTTER%') AND issued_date >= '${since}'`);
+    const where = encodeURIComponent(`(work_description LIKE '%ROOF%' OR work_description LIKE '%GUTTER%')`);
     const res = await fetch(
       `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permits/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date,work_description,amt_estimated_contractor_cost,latitude,longitude&resultRecordCount=50&orderByFields=issued_date+DESC&f=json`,
       { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
@@ -53,7 +52,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
           address: addr, city: "Detroit", zip,
           signal_type: "roof_permit_upsell",
           signal_detail: `Roof permit pulled: ${(a.work_description ?? "").slice(0, 80)} — gutter upsell window open`,
-          signal_date: a.issued_date ?? new Date().toISOString().split("T")[0],
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
           score: BASE_SCORES.roof_permit_upsell,
           source_method: "bseed_arcgis",
           suggested_opener: OPENERS.roof_permit_upsell.opener,

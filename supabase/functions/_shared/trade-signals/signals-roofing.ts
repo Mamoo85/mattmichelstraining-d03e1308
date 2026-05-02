@@ -119,8 +119,7 @@ export async function scanSignals(
 
   // 3. BSEED building permits — roof keyword (service: bseed_building_permits)
   try {
-    const since = new Date(Date.now() - 14 * 86400_000).toISOString().split("T")[0];
-    const where = encodeURIComponent(`work_description LIKE '%ROOF%' AND issued_date >= '${since}'`);
+    const where = encodeURIComponent(`work_description LIKE '%ROOF%' AND amt_estimated_contractor_cost >= 5000`);
     const res = await fetch(
       `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permits/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date,work_description,amt_estimated_contractor_cost,latitude,longitude&resultRecordCount=50&orderByFields=issued_date+DESC&f=json`,
       { headers: { "User-Agent": "DWA-TradeRadar/1.0" } },
@@ -139,7 +138,7 @@ export async function scanSignals(
           zip,
           signal_type: "roof_permit_upsell",
           signal_detail: `BSEED permit: ${(a.work_description ?? "").slice(0, 100)} — Est. $${a.amt_estimated_contractor_cost ?? "?"}`,
-          signal_date: a.issued_date ?? new Date().toISOString().split("T")[0],
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
           score: BASE_SCORES.roof_permit_upsell,
           source_method: "bseed_arcgis",
           suggested_opener: OPENERS.roof_permit_upsell.opener.replace("[address]", addr),

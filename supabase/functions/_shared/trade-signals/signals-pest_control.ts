@@ -83,10 +83,8 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
 
   // 3. BSEED vacant property registrations — city-confirmed vacant = pest magnet
   try {
-    const since = new Date(Date.now() - 60 * 86400_000).toISOString().split("T")[0];
-    const where = encodeURIComponent(`issued_date >= '${since}'`);
     const res = await fetch(
-      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_vacant_property_registrations/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date,owner_name,latitude,longitude&resultRecordCount=30&orderByFields=issued_date+DESC&f=json`,
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_vacant_property_registrations/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,issued_date,owner_name,latitude,longitude&resultRecordCount=30&orderByFields=issued_date+DESC&f=json`,
       { headers: { "User-Agent": "DWA-TradeRadar/1.0" } },
     );
     if (res.ok) {
@@ -100,7 +98,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
           address: addr, city: "Detroit", zip,
           signal_type: "foreclosure_vacant",
           signal_detail: `BSEED vacant registration: ${addr}${a.owner_name ? ` — Owner: ${a.owner_name}` : ""}`,
-          signal_date: a.issued_date ?? new Date().toISOString().split("T")[0],
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
           score: BASE_SCORES.foreclosure_vacant + 1,
           source_method: "bseed_arcgis",
           suggested_opener: OPENERS.foreclosure_vacant.opener,

@@ -82,7 +82,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
           address: addr, city: "Detroit", zip,
           signal_type: "fsbo_prep",
           signal_detail: `BSEED presale inspection FAILED — seller must fix before closing: ${addr}`,
-          signal_date: a.inspection_date ?? new Date().toISOString().split("T")[0],
+          signal_date: a.inspection_date ? new Date(a.inspection_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
           score: BASE_SCORES.fsbo_prep + 1,
           source_method: "bseed_arcgis",
           suggested_opener: "This home just failed its presale inspection — a fresh interior paint is often the fastest fix. We can quote and start within 48 hours.",

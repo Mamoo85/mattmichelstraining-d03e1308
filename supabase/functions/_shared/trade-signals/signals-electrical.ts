@@ -47,9 +47,8 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
 
   // 1. BSEED Electrical Permits + renovation/addition from building permits
   try {
-    const since = new Date(Date.now() - 14 * 86400_000).toISOString().split("T")[0];
     // Trades: dedicated electrical permits
-    const tradeWhere = encodeURIComponent(`permit_type = 'Electrical Permit' AND issued_date >= '${since}'`);
+    const tradeWhere = encodeURIComponent(`permit_type = 'Electrical Permit'`);
     const tradeRes = await fetch(
       `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_trades_permits/FeatureServer/0/query?where=${tradeWhere}&outFields=address,zip_code,issued_date,work_description,latitude,longitude&resultRecordCount=40&orderByFields=issued_date+DESC&f=json`,
       { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
@@ -65,7 +64,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
           address: addr, city: "Detroit", zip,
           signal_type: "renovation_electrical",
           signal_detail: `BSEED Electrical Permit: ${(a.work_description ?? "").slice(0, 100)}`,
-          signal_date: a.issued_date ?? new Date().toISOString().split("T")[0],
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
           score: BASE_SCORES.renovation_electrical,
           source_method: "bseed_arcgis",
           suggested_opener: OPENERS.renovation_electrical.opener,
@@ -76,7 +75,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
       }
     }
     // Building permits: additions and renovations → panel upgrade signal
-    const bldgWhere = encodeURIComponent(`(work_description LIKE '%ADDITION%' OR work_description LIKE '%RENOVATION%' OR work_description LIKE '%REMODEL%') AND issued_date >= '${since}'`);
+    const bldgWhere = encodeURIComponent(`(work_description LIKE '%ADDITION%' OR work_description LIKE '%RENOVATION%' OR work_description LIKE '%REMODEL%')`);
     const bldgRes = await fetch(
       `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permits/FeatureServer/0/query?where=${bldgWhere}&outFields=address,zip_code,issued_date,work_description,amt_estimated_contractor_cost,latitude,longitude&resultRecordCount=30&orderByFields=issued_date+DESC&f=json`,
       { headers: { "User-Agent": "DWA-TradeRadar/1.0" } },
@@ -94,7 +93,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
           address: addr, city: "Detroit", zip,
           signal_type: signalType,
           signal_detail: `BSEED building permit: ${(a.work_description ?? "").slice(0, 100)}`,
-          signal_date: a.issued_date ?? new Date().toISOString().split("T")[0],
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
           score: BASE_SCORES[signalType],
           source_method: "bseed_arcgis",
           suggested_opener: OPENERS[signalType].opener,

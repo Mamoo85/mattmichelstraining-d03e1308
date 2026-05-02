@@ -103,8 +103,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
 
   // 3. BSEED Mechanical Permits (service: bseed_trades_permits, permit_type = Mechanical)
   try {
-    const since = new Date(Date.now() - 21 * 86400_000).toISOString().split("T")[0];
-    const where = encodeURIComponent(`permit_type = 'Mechanical Permit' AND issued_date >= '${since}'`);
+    const where = encodeURIComponent(`permit_type = 'Mechanical Permit'`);
     const res = await fetch(
       `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_trades_permits/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date,permit_type,work_description,latitude,longitude&resultRecordCount=40&orderByFields=issued_date+DESC&f=json`,
       { headers: { "User-Agent": "DWA-TradeRadar/1.0" } },
@@ -120,7 +119,7 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
           address: addr, city: "Detroit", zip,
           signal_type: "aging_system_proxy",
           signal_detail: `BSEED Mechanical Permit: ${(a.work_description ?? "").slice(0, 100)}`,
-          signal_date: a.issued_date ?? new Date().toISOString().split("T")[0],
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
           score: BASE_SCORES.aging_system_proxy,
           source_method: "bseed_arcgis",
           suggested_opener: OPENERS.aging_system_proxy.opener,
