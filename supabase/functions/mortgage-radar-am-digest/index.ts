@@ -237,14 +237,27 @@ serve(async (req) => {
       return q; // no geo restriction set — show all leads
     }
 
-    // Today's top 5 leads
-    const { data: leads } = await applyGeoFilter(
+    // Today's top 5 leads — if zip filter returns 0 (leads pre-date county/region columns
+    // and have null zip), fall back to unfiltered so the digest always sends when leads exist.
+    let leads: any[] | null = null;
+    const geoFiltered = await applyGeoFilter(
       (sb.from as any)("mortgage_radar_leads")
         .select(baseSelect)
         .gte("created_at", since24h)
         .order("score", { ascending: false })
         .limit(5)
     );
+    leads = geoFiltered.data;
+    if ((!leads || leads.length === 0) && zips.length > 0 && regions.length === 0 && counties.length === 0) {
+      // Zip filter matched nothing — leads likely have null zip (pre-migration).
+      // Fall back to all leads so the digest isn't silently empty.
+      const fallback = await (sb.from as any)("mortgage_radar_leads")
+        .select(baseSelect)
+        .gte("created_at", since24h)
+        .order("score", { ascending: false })
+        .limit(5);
+      leads = fallback.data;
+    }
     if (!leads || leads.length === 0) continue;
 
     // #14 — This week's lead count (separate query, last 7 days)
