@@ -108,7 +108,33 @@ async function upsertWithDedup(
   sb: ReturnType<typeof createClient>,
   vertical: Vertical,
   signal: any,
-): Promise<"inserted" | "updated" | "quarantined" | "skipped"> {
+): Promise<"inserted" | "updated" | "quarantined" | "skipped" | "area"> {
+  // Route AREA-level signals (NOAA/FEMA/HMDA/registry) to trade_radar_area_signals
+  // INSTEAD of the per-address validator. This is the bug fix — these used to be
+  // 100% skipped because their "address" field is actually a county/state name.
+  if (signal && typeof signal.signal_type === "string" && AREA_ALERT_TYPES.has(signal.signal_type)) {
+    const inferred = inferCounty(signal.city);
+    const scope = signal.zip ? "zip" : inferred ? "county" : "state";
+    const scope_value = signal.zip || inferred || signal.city || "MI";
+    try {
+      await sb.from("trade_radar_area_signals").upsert({
+        vertical,
+        scope,
+        scope_value,
+        alert_type: signal.signal_type,
+        alert_detail: signal.signal_detail ?? null,
+        source: signal.source_method ?? "unknown",
+        source_url: signal.signal_url ?? null,
+        signal_date: signal.signal_date ?? new Date().toISOString().slice(0, 10),
+        raw_data: signal.raw_source_data ?? null,
+      }, { onConflict: "vertical,scope,scope_value,alert_type,signal_date", ignoreDuplicates: true });
+      return "area";
+    } catch (e) {
+      console.warn(`[trade-scanner] area upsert failed (${vertical}):`, e instanceof Error ? e.message : String(e));
+      return "skipped";
+    }
+  }
+
   // LLM score cap — same rule as mortgage scanner
   const rawScore = signal.score ?? 5;
   const score = signal.source_method === "llm_search" ? Math.min(3, rawScore) : rawScore;
