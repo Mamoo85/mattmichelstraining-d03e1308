@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
       </body></html>`;
       const res = await sendFax(t.fax!, html);
       await sb.from("outreach_sends").insert({
-        campaign_id: c.id, target_id: t.id, channel: "fax", provider: "phaxio",
+        campaign_id: c.id, target_id: t.id, channel: "fax", provider: "sinch",
         recipient_fax: t.fax, status: res.ok ? "sent" : "failed",
         provider_message_id: res.id || null, error_message: res.ok ? null : res.error,
         sent_at: res.ok ? new Date().toISOString() : null, cost_cents: 7,
