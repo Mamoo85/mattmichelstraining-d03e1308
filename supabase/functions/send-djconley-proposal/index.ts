@@ -162,16 +162,20 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Resend send failed", detail: resendBody }), { status: 502, headers: CORS });
     }
 
-    // Audit log to notifications
-    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    await sb.from("notifications" as any).insert({
-      type: "outreach_proposal",
-      title: `DJ Conley proposal sent → ${recipientEmail}`,
-      body: `Post-meeting proposal email delivered. Resend id: ${resendBody?.id || "?"}`,
-      link: "/dwa-admin",
-      urgency: "fyi",
-      category: "outreach",
-    }).catch(() => {});
+    // Audit log to notifications (best-effort, never fails the response)
+    try {
+      const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      await sb.from("notifications" as any).insert({
+        type: "outreach_proposal",
+        title: `DJ Conley proposal sent → ${recipientEmail}`,
+        body: `Post-meeting proposal email delivered. Resend id: ${resendBody?.id || "?"}`,
+        link: "/dwa-admin",
+        urgency: "fyi",
+        category: "outreach",
+      });
+    } catch (logErr) {
+      console.warn("[send-djconley-proposal] audit log failed (non-fatal):", logErr);
+    }
 
     return new Response(JSON.stringify({ sent: true, resend_id: resendBody?.id, to: recipientEmail }), { headers: CORS });
   } catch (err) {
