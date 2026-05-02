@@ -115,30 +115,34 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[foundation] FEMA:", e); }
 
-  // 3. OpenFEMA NFIP claims — flood-prone zips = foundation risk
+  // 3. OpenFEMA NfipMultipleLossProperties — repeat-flood properties by zip = foundation risk.
+  // nfipPolicies endpoint was removed (returns 404). NfipMultipleLossProperties is the
+  // correct dataset — properties with 2+ paid claims, indexed by zip. Filter: stateAbbreviation.
   try {
     const res = await fetch(
-      `https://www.fema.gov/api/open/v1/nfipPolicies?$filter=propertyState eq '${state}'&$select=propertyState,countyCode,amountPaidOnBuildingClaim,originalNBDate&$top=20`,
+      `https://www.fema.gov/api/open/v1/NfipMultipleLossProperties?$filter=stateAbbreviation eq '${state}'&$select=stateAbbreviation,county,zipCode,totalLosses,floodZone,mostRecentDateofLoss&$top=20`,
       { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
     );
     if (res.ok) {
       const d = await res.json();
-      const claims: any[] = d?.nfipPolicies ?? [];
-      if (claims.length > 0) {
-        const totalPaid = claims.reduce((n, c) => n + (Number(c.amountPaidOnBuildingClaim) || 0), 0);
+      const props: any[] = d?.NfipMultipleLossProperties ?? [];
+      if (props.length > 0) {
+        const totalLosses = props.reduce((n, p) => n + (Number(p.totalLosses) || 0), 0);
+        const sorted = [...props].sort((a, b) => (b.totalLosses ?? 0) - (a.totalLosses ?? 0));
+        const topZip = sorted[0];
         signals.push({
-          address: `${state} — ${claims.length} active NFIP flood claims`,
+          address: `${state} — ${props.length} NFIP repeat-loss properties`,
           city: state,
           zip: "",
           signal_type: "nfip_foundation",
-          signal_detail: `OpenFEMA NFIP: ${claims.length} active flood claims in ${state} — avg payout $${Math.round(totalPaid / claims.length).toLocaleString()}. High-repeat-claim zips = chronic foundation water intrusion.`,
+          signal_detail: `OpenFEMA NFIP Multiple-Loss Properties: ${props.length} properties in ${state} with 2+ flood claims. Highest-risk zip: ${topZip?.zipCode ?? "?"} (${topZip?.totalLosses ?? "?"} claims, zone ${topZip?.floodZone ?? "?"}). Chronic repeat flooding = foundation water intrusion.`,
           signal_date: new Date().toISOString().split("T")[0],
           score: BASE_SCORES.nfip_foundation,
           source_method: "fema_nfip_api",
           suggested_opener: OPENERS.nfip_foundation.opener,
           best_call_window: OPENERS.nfip_foundation.window,
           estimated_value: 14000,
-          raw_source_data: { state, claims_count: claims.length, avg_payout: Math.round(totalPaid / claims.length) },
+          raw_source_data: { state, properties_count: props.length, total_losses: totalLosses, top_zip: topZip },
         });
       }
     }

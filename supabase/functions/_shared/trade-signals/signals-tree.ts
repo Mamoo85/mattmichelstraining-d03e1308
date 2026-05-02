@@ -1,7 +1,7 @@
 // Tree Service Radar signal scanner.
 // Sources: NOAA NWS wind/storm alerts (area), FEMA disasters (area),
-// BSEED tree-removal/trimming permits (per-address),
-// Detroit 311 open data tree service requests (per-address).
+// BSEED tree-removal/stump permits (per-address),
+// SeeClickFix 311 tree service requests (request_type=6636, per-address).
 
 export interface RawSignal {
   address: string; city: string; zip: string;
@@ -111,9 +111,10 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[tree] FEMA:", e); }
 
-  // 3. BSEED permits with TREE keyword — per-address (confirmed service: bseed_building_permits)
+  // 3. BSEED permits with TREE/STUMP keyword — per-address.
+  // Note: TRIM is intentionally excluded — it matches "exterior trim" not tree trimming.
   try {
-    const where = encodeURIComponent(`(work_description LIKE '%TREE%' OR work_description LIKE '%STUMP%' OR work_description LIKE '%TRIM%')`);
+    const where = encodeURIComponent(`(work_description LIKE '%TREE%' OR work_description LIKE '%STUMP%')`);
     const res = await fetch(
       `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permits/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date,work_description,latitude,longitude&resultRecordCount=40&orderByFields=issued_date+DESC&f=json`,
       { headers: { "User-Agent": "DWA-TradeRadar/1.0" } },
@@ -141,36 +142,42 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[tree] BSEED:", e); }
 
-  // 4. Detroit 311 open data — tree service requests (Socrata, no key required)
+  // 4. SeeClickFix 311 — Detroit tree service requests (request_type=6636).
+  // Replaces defunct Detroit Open Data Socrata endpoint (redirects to ArcGIS Hub HTML).
   try {
     const res = await fetch(
-      `https://data.detroitmi.gov/resource/irmj-sax8.json?$where=category=%27Trees%27%20OR%20issue_type%20LIKE%20%27%25tree%25%27&$limit=40&$order=created_at%20DESC`,
+      `https://seeclickfix.com/api/v2/issues?request_types=6636&place_url=detroit&per_page=30&sort=created_at&direction=desc`,
       { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)", "Accept": "application/json" } },
     );
     if (res.ok) {
-      const rows: any[] = await res.json();
-      for (const row of rows) {
-        const addr: string = row.address ?? row.location_address ?? "";
-        if (!addr) continue;
-        const zip: string = row.zip_code ?? row.location?.zip ?? addr.match(/\b(4\d{4})\b/)?.[1] ?? "";
+      const data = await res.json();
+      const issues: any[] = data?.issues ?? [];
+      for (const issue of issues) {
+        const fullAddr: string = issue.address ?? "";
+        if (!fullAddr) continue;
+        // Address format: "1234 Main St Detroit, Michigan, 48208" or "...Detroit, MI, 48208, USA"
+        const zipMatch = fullAddr.match(/\b(4[0-9]{4})\b/);
+        const zip = zipMatch?.[1] ?? "";
         if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        // Strip state/country suffix to get street address
+        const addr = fullAddr.split(",")[0]?.trim() ?? fullAddr;
         signals.push({
           address: addr,
-          city: row.city ?? "Detroit",
+          city: "Detroit",
           zip,
           signal_type: "tree_311_request",
-          signal_detail: `Detroit 311: ${row.issue_type ?? row.description ?? "Tree service request"}`,
-          signal_date: row.created_at ? row.created_at.slice(0, 10) : new Date().toISOString().split("T")[0],
+          signal_detail: `SeeClickFix 311: ${issue.summary ?? "Tree service request"} — ${issue.status ?? "open"}`,
+          signal_date: issue.created_at ? issue.created_at.slice(0, 10) : new Date().toISOString().split("T")[0],
           score: BASE_SCORES.tree_311_request,
-          source_method: "detroit_311",
+          source_method: "seeclickfix_311",
           suggested_opener: OPENERS.tree_311_request.opener,
           best_call_window: OPENERS.tree_311_request.window,
           estimated_value: 1500,
-          raw_source_data: row,
+          raw_source_data: { id: issue.id, address: fullAddr, status: issue.status, url: issue.html_url },
         });
       }
     }
-  } catch (e) { console.error("[tree] Detroit 311:", e); }
+  } catch (e) { console.error("[tree] SeeClickFix 311:", e); }
 
   return signals;
 }

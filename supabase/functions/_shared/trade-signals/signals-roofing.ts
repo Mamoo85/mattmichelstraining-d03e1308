@@ -119,9 +119,11 @@ export async function scanSignals(
 
   // 3. BSEED building permits — roof keyword (service: bseed_building_permits)
   try {
-    const where = encodeURIComponent(`work_description LIKE '%ROOF%' AND amt_estimated_contractor_cost >= 5000`);
+    // amt_estimated_contractor_cost is esriFieldTypeString — numeric compare fails.
+    // amt_permit_cost is esriFieldTypeDouble — safe for >= filter.
+    const where = encodeURIComponent(`work_description LIKE '%ROOF%' AND amt_permit_cost >= 5000`);
     const res = await fetch(
-      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permits/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date,work_description,amt_estimated_contractor_cost,latitude,longitude&resultRecordCount=50&orderByFields=issued_date+DESC&f=json`,
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permits/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date,work_description,amt_permit_cost,amt_estimated_contractor_cost,latitude,longitude&resultRecordCount=50&orderByFields=issued_date+DESC&f=json`,
       { headers: { "User-Agent": "DWA-TradeRadar/1.0" } },
     );
     if (res.ok) {
