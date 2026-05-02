@@ -265,6 +265,67 @@ export default function DJConleyCommandPanel() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Command Center tile manager */}
+      <Card className="border-white/10 bg-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Grid3x3 className="h-4 w-4 text-[#00d4ff]" />
+            Command Center tiles ({tiles.length})
+          </CardTitle>
+          <p className="text-xs text-white/50">
+            Quick links shown on Pat's owner dashboard (eWay, QuickBooks, Gmail, etc.). Owner: <code>{email}</code>
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {loadingTiles ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <div className="space-y-2">
+              {tiles.map((t) => (
+                <div key={t.id} className="flex items-center gap-2 rounded-md border border-white/10 bg-white/5 p-2 text-sm">
+                  <span className="text-lg">{t.icon_emoji || "🔗"}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{t.label}</p>
+                    <p className="text-[11px] text-white/40 truncate">{t.url}</p>
+                  </div>
+                  <Badge variant="outline" className="text-[10px]">{t.category}</Badge>
+                  <Button size="icon" variant="ghost" onClick={() => deleteTile(t.id)}>
+                    <Trash2 className="h-4 w-4 text-red-400" />
+                  </Button>
+                </div>
+              ))}
+              {tiles.length === 0 && (
+                <p className="text-xs text-white/40 italic">No tiles yet. Add Pat's most-used tools below.</p>
+              )}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-2 pt-2 border-t border-white/10">
+            <Input
+              value={newTile.icon_emoji}
+              onChange={(e) => setNewTile({ ...newTile, icon_emoji: e.target.value })}
+              placeholder="🔗"
+              className="md:col-span-1"
+            />
+            <Input
+              value={newTile.label}
+              onChange={(e) => setNewTile({ ...newTile, label: e.target.value })}
+              placeholder="Label (e.g. eWay)"
+              className="md:col-span-1"
+            />
+            <Input
+              value={newTile.url}
+              onChange={(e) => setNewTile({ ...newTile, url: e.target.value })}
+              placeholder="https://…"
+              className="md:col-span-2"
+            />
+            <Button onClick={addTile} disabled={savingTile}>
+              {savingTile ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 mr-1" />Add</>}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
