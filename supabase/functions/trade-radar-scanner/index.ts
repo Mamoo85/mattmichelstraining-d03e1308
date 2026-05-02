@@ -269,6 +269,36 @@ Deno.serve(async (req) => {
 
     try {
       const rawSignals = await SCANNERS[vertical](state);
+
+      // Augment with registry-driven signals (FEMA storms, fresh business filings, etc.)
+      try {
+        const naics = VERTICAL_NAICS[vertical] || "238220";
+        const [biz, env] = await Promise.all([
+          fetchFreshBusinessSignals(sb, { state, naics }).catch(() => []),
+          // Storms/disasters drive roofing/gutters/painting/pest_control demand
+          ["roofing", "gutters", "painting", "pest_control"].includes(vertical)
+            ? fetchMortgageSignals(sb, { state, days: 14 }).catch(() => [])
+            : Promise.resolve([]),
+        ]);
+        for (const s of [...(biz || []), ...(env || [])].slice(0, 100)) {
+          const a = s as any;
+          rawSignals.push({
+            address: a.address,
+            city: a.city,
+            zip: a.zip,
+            signal_type: a.type || "registry_signal",
+            signal_source: a.source || "registry",
+            signal_detail: a.detail || a.description,
+            signal_url: a.url,
+            signal_date: a.date || new Date().toISOString(),
+            source_method: "registry",
+            score: 4,
+          });
+        }
+      } catch (e) {
+        console.warn(`[trade-scanner] ${vertical} registry augment failed:`, e instanceof Error ? e.message : String(e));
+      }
+
       const insertedLeads: any[] = [];
 
       for (const sig of rawSignals) {
