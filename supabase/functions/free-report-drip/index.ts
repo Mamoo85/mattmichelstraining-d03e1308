@@ -36,7 +36,7 @@ const SERVICE_MAP: Record<string, { name: string; price: string; url: string; be
 const DEFAULT_SERVICE = {
   name: "Full Weekly Digest",
   price: "$29/mo",
-  url: "https://www.mattmichelstraining.com/get-started",
+  url: "https://detroitwebagent.com/get-started",
   benefit: "complete weekly reports with actionable insights delivered to your inbox",
 };
 
