@@ -962,13 +962,62 @@ async function scanPriceReductions(): Promise<RawSignal[]> {
   }
 }
 
-// #4 stub — PACER bankruptcy (Ch. 13) requires court login; leaving as placeholder.
-// When PACER_USERNAME + PACER_PASSWORD secrets are set, uncomment and implement.
+// CourtListener — Michigan Eastern District federal bankruptcy filings (free, no key)
+// Chapter 13 = homeowner restructuring debt, often needs a cash-out refi to satisfy trustee.
 async function scanBankruptcyFilings(): Promise<RawSignal[]> {
-  // Not yet implemented — PACER requires court-issued credentials.
-  // Signals would be: signal_type="lis_pendens", signal_source="PACER_CH13"
-  // Chapter 13 = homeowner restructuring debt, often needs cash-out refi to pay trustee.
-  return [];
+  const results: RawSignal[] = [];
+  try {
+    const since = new Date(Date.now() - 14 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://www.courtlistener.com/api/rest/v3/dockets/?court=mied&date_filed__gte=${since}&nature_of_suit=410&format=json&page_size=20`,
+      { headers: { "User-Agent": "DWA-MortgageRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(12_000) },
+    );
+    if (!res.ok) return results;
+    const data = await res.json();
+    for (const d of (data?.results || [])) {
+      const partyName: string = d?.case_name || "";
+      if (!partyName) continue;
+      results.push({
+        address: partyName,
+        city: "Detroit",
+        zip: "",
+        signal_type: "lis_pendens",
+        signal_source: "CourtListener_CH13",
+        signal_detail: `Chapter 13 bankruptcy filed in MIED: ${partyName} — homeowner restructuring debt often precedes cash-out refi to satisfy trustee`,
+        signal_url: `https://www.courtlistener.com${d?.absolute_url || ""}`,
+        signal_date: d?.date_filed || new Date().toISOString(),
+      });
+    }
+  } catch (e) { console.warn("[scanner] CourtListener:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
+// OpenFEMA HMGP — Hazard Mitigation Grant Program projects in MI (flood-elevated homes)
+// Areas receiving mitigation grants = neighbors who didn't apply but have the same exposure.
+async function scanFEMAHazardMitigation(): Promise<RawSignal[]> {
+  const results: RawSignal[] = [];
+  try {
+    const res = await fetch(
+      `https://www.fema.gov/api/open/v2/HazardMitigationGrants?$filter=state eq 'MI'&$top=20&$orderby=projectDate desc`,
+      { headers: { "User-Agent": "DWA-MortgageRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(12_000) },
+    );
+    if (!res.ok) return results;
+    const d = await res.json();
+    for (const proj of (d?.HazardMitigationGrants || []).slice(0, 10)) {
+      if (!proj.county && !proj.subgrantee) continue;
+      results.push({
+        address: proj.subgrantee ?? proj.county ?? "Michigan",
+        city: proj.county?.split(" County")[0] ?? "Michigan",
+        zip: "",
+        signal_type: "fema_disaster",
+        signal_source: "FEMA_HMGP",
+        signal_detail: `FEMA HMGP: ${proj.projectType ?? "hazard mitigation"} grant in ${proj.county ?? "MI"} — areas receiving mitigation funding had documented severe damage; adjacent homeowners are prime mortgage leads`,
+        signal_url: `https://www.fema.gov/grants/mitigation`,
+        signal_date: proj.projectDate?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
+      });
+    }
+  } catch (e) { console.warn("[scanner] FEMA HMGP:", e instanceof Error ? e.message : e); }
+  return results;
 }
 
 // 50-source registry: pulls FEMA/NOAA/HUD vacancy/EPA lead lines etc. via signal_waterfall.
@@ -1020,7 +1069,8 @@ serve(async (req) => {
     scanWayneCountyDeeds(),           // #1 Wayne County Register of Deeds
     scanOaklandCountyPermits(),       // #2 Oakland County permit portal
     scanPriceReductions(),            // #3 Realtor.com price-reduced listings
-    scanBankruptcyFilings(),          // #4 stub (PACER — pending credentials)
+    scanBankruptcyFilings(),          // CourtListener MIED Chapter 13 filings
+    scanFEMAHazardMitigation(),       // FEMA HMGP grant areas = adjacent homeowner leads
     scanRegistryWaterfall(sb),        // 50-source registry: FEMA/NOAA/HUD vacancy/EPA lead lines etc.
   ]);
 

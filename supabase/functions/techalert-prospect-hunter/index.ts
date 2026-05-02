@@ -433,6 +433,117 @@ async function scanLinkedInJobs(): Promise<Posting[]> {
   return results;
 }
 
+// OSHA enforcement data — MI NAICS 23x (construction) violations = active company signal
+async function scanOSHAViolations(): Promise<Posting[]> {
+  const results: Posting[] = [];
+  try {
+    const since = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+    const url = `https://data.dol.gov/get/full_case/rows/0/offset/0?_where=site_state%3D%27MI%27%20AND%20primary_site_naics%20LIKE%20%2723%25%27%20AND%20open_date%20%3E%3D%20%27${since}%27&_sort=open_date%20DESC`;
+    const res = await fetch(url, {
+      headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" },
+      signal: AbortSignal.timeout(12_000),
+    });
+    if (!res.ok) return results;
+    const data = await res.json();
+    for (const c of (data || []).slice(0, 15)) {
+      const name: string = c?.establishment_name || "";
+      if (!name) continue;
+      results.push({
+        company_name: name,
+        city: c?.site_city || undefined,
+        role: "hvac_tech",
+        days_posted: null,
+        source_url: `https://www.osha.gov/pls/imis/establishment.inspection_detail?id=${c?.activity_nr || ""}`,
+        source_label: "OSHA",
+        is_boiler: false,
+      });
+    }
+  } catch (e) { console.error("[hunter] OSHA:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
+// Michigan LARA — newly licensed contractors (fresh businesses = TechAlert sweet spot)
+async function scanLARANewLicenses(): Promise<Posting[]> {
+  const results: Posting[] = [];
+  try {
+    const twoWeeksAgo = new Date(Date.now() - 14 * 86400_000).toISOString().slice(0, 10);
+    const url = `https://cofs.lara.state.mi.us/SearchApi/Search/Search?entityType=ALL&searchType=DATE&dateSearchType=LICENSURE&dateFrom=${twoWeeksAgo}&licenseTypes=2601,2602,2604,2605,2606`; // HVAC/electrical/plumbing codes
+    const res = await fetch(url, { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(12_000) });
+    if (!res.ok) return results;
+    const data = await res.json();
+    for (const lic of (data?.items || data || []).slice(0, 20)) {
+      const name: string = lic?.entityName || lic?.name || "";
+      if (!name) continue;
+      results.push({
+        company_name: name,
+        city: lic?.city || undefined,
+        role: "hvac_tech",
+        days_posted: null,
+        source_url: `https://cofs.lara.state.mi.us/CorpWeb/CorpSearch/CorpSummary.aspx?ID=${lic?.id || ""}`,
+        source_label: "LARA New License",
+        is_boiler: false,
+      });
+    }
+  } catch (e) { console.error("[hunter] LARA new license:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
+// Michigan LARA — dissolved LLCs (employees now available; competitors hiring)
+async function scanLARADissolved(): Promise<Posting[]> {
+  const results: Posting[] = [];
+  try {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 86400_000).toISOString().slice(0, 10);
+    const url = `https://cofs.lara.state.mi.us/SearchApi/Search/Search?entityType=ALL&searchType=DATE&dateSearchType=DISSOLUTION&dateFrom=${thirtyDaysAgo}`;
+    const res = await fetch(url, { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(12_000) });
+    if (!res.ok) return results;
+    const data = await res.json();
+    for (const ent of (data?.items || data || []).slice(0, 20)) {
+      const name: string = ent?.entityName || ent?.name || "";
+      if (!name) continue;
+      // Only flag trade-adjacent company names
+      if (!/(hvac|heat|cool|plumb|electric|mechanical|contractor|construction|services|repair)/i.test(name)) continue;
+      results.push({
+        company_name: name,
+        city: ent?.city || undefined,
+        role: "hvac_tech",
+        days_posted: null,
+        source_url: `https://cofs.lara.state.mi.us/CorpWeb/CorpSearch/CorpSummary.aspx?ID=${ent?.id || ""}`,
+        source_label: "LARA Dissolved LLC",
+        is_boiler: false,
+      });
+    }
+  } catch (e) { console.error("[hunter] LARA dissolved:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
+// NLRB union election petitions — construction industry organizing = active workforce, scaling company
+async function scanNLRBPetitions(): Promise<Posting[]> {
+  const results: Posting[] = [];
+  try {
+    const since = new Date(Date.now() - 30 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://www.nlrb.gov/reports-research/api/cases?filed_from=${since}&industry_code=23`,
+      { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) return results;
+    const data = await res.json();
+    for (const c of (data?.results || data?.cases || []).slice(0, 10)) {
+      const name: string = c?.employer_name || c?.respondent || "";
+      if (!name) continue;
+      results.push({
+        company_name: name,
+        city: c?.city || undefined,
+        role: "hvac_tech",
+        days_posted: null,
+        source_url: `https://www.nlrb.gov/case/${c?.case_number || ""}`,
+        source_label: "NLRB Petition",
+        is_boiler: false,
+      });
+    }
+  } catch (e) { console.error("[hunter] NLRB:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
 function scorePosting(p: Posting, openRolesCount: number, repostCount: number, weatherBonus = 0): number {
   let score = 0;
   if ((p.days_posted ?? 0) > 14) score += 3;
@@ -464,7 +575,7 @@ serve(async (req) => {
     // Supplemental signals + NOAA weather bonus — all run in parallel
     // Includes the new signal-waterfall (DOL WARN, OSHA, FMCSA, DOT prequal, SAM expanded)
     const { fetchHireSignals } = await import("../_shared/signal-waterfall.ts");
-    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
+    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, nlrbSignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
       scanGitHubSignals(),
       scanEDGARFundings(),
       scanUSPTOPatents(),
@@ -473,10 +584,14 @@ serve(async (req) => {
       scanEventbriteSignals(),
       scanUSASpending(),
       scanLinkedInJobs(),
+      scanOSHAViolations(),
+      scanLARANewLicenses(),
+      scanLARADissolved(),
+      scanNLRBPetitions(),
       getWeatherHiringBonus(),
       fetchHireSignals(sb, { state: "MI", naics: "238220" }).catch(() => []),
     ]);
-    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals];
+    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...nlrbSignals];
     all.push(...supplemental);
     scanned += supplemental.length;
     // Log waterfall signal volume to heartbeat metadata (don't insert as job postings — different shape)
@@ -557,6 +672,10 @@ serve(async (req) => {
           eventbrite: eventbriteSignals.length,
           usaspending: usaSpendingSignals.length,
           linkedin: linkedinSignals.length,
+          osha: oshaSignals.length,
+          lara_new: laraNewSignals.length,
+          lara_dissolved: laraDissolvedSignals.length,
+          nlrb: nlrbSignals.length,
           hire_waterfall: waterfallCount,
         },
         duration_ms: Date.now() - startedAt,
