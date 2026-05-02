@@ -8,6 +8,7 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const TWILIO_SID = Deno.env.get("TWILIO_ACCOUNT_SID")!;
 const TWILIO_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN")!;
 const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
+const MATT_CELL = Deno.env.get("ADMIN_PHONE_NUMBER") || "+13138064952";
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY")!;
 const SECRET = "mig-2026-05-02";
 
@@ -172,7 +173,7 @@ serve(async (req) => {
   if (url.searchParams.get("sms") === "1") {
     const msg = `🏠 Mortgage Radar: ${leads.length} new leads in SE Michigan today. Top score: ${leads[0]?.score}/10 in ${leads[0]?.city || "Detroit"}. Email sent. — DWA`;
     const [r1, r2] = await Promise.all([
-      sendTwilio("+13139921219", msg),
+      sendTwilio(MATT_CELL, msg),
       sendTwilio("+13136719441", msg),
     ]);
     results.sms_matt = r1;
