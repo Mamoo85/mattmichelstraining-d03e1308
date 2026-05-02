@@ -198,12 +198,12 @@ export default function DJConleyCommandPanel() {
           {lock ? (
             <div className="rounded-md border border-[#00d4ff]/20 bg-[#00d4ff]/5 p-4 space-y-2 text-sm">
               <div className="flex items-center gap-2">
-                <Badge className="bg-[#00d4ff] text-[#0a1628]">{lock.tier || "tier"}</Badge>
+                <Badge className="bg-[#00d4ff] text-[#0a1628]">{lock.product || "product"}</Badge>
                 <span className="font-bold text-lg">{dollars}</span>
-                <span className="text-xs text-white/50">locked {lock.created_at?.slice(0, 10)}</span>
+                <span className="text-xs text-white/50">locked {lock.locked_since?.slice(0, 10)}</span>
               </div>
               <p className="text-xs text-white/70 italic">
-                {lock.carve_out_clause || "No carve-out clause stored."}
+                {lock.notes || "No carve-out clause stored."}
               </p>
             </div>
           ) : (
