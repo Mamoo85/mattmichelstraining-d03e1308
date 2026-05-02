@@ -222,6 +222,7 @@ serve(async (req) => {
   for (const g of (geoRows || [])) geoById[g.id] = g;
 
   let sent = 0;
+  const debug: Record<string, unknown> = { clients_count: clients?.length ?? 0, clients_null: clients === null };
 
   for (const c of (clients || [])) {
     const geo = geoById[c.id] || {};
@@ -408,7 +409,7 @@ serve(async (req) => {
     metadata: { digests_sent: sent },
   }, { onConflict: "agent_name" });
 
-  return new Response(JSON.stringify({ ok: true, digests_sent: sent }), {
+  return new Response(JSON.stringify({ ok: true, digests_sent: sent, debug }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
