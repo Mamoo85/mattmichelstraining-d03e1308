@@ -27,9 +27,9 @@ const TODAY = () => new Date().toISOString().slice(0, 10);
 // Oakland and Macomb each publish to their county legal newspapers.
 // These are statutory public notices — addresses are printed verbatim.
 const FORECLOSURE_URLS = [
-  "https://www.legalnews.com/detroit/PublicNotice/foreclosures",
-  "https://www.legalnews.com/oakland/PublicNotice/foreclosures",
-  "https://www.legalnews.com/macomb/PublicNotice/foreclosures",
+  "https://www.legalnews.com/detroit/foreclosures",
+  "https://www.legalnews.com/oakland/foreclosures",
+  "https://www.legalnews.com/macomb/foreclosures",
 ];
 
 function countyFromLegalNewsUrl(url: string): string {
@@ -67,9 +67,9 @@ export async function scrapeForeclosureNotices(opts: { perSourceCap?: number } =
 // Wayne County Probate Court publishes opened estates with property addresses
 // in the legal newspaper public-notices section ("Estate of ...").
 const PROBATE_URLS = [
-  "https://www.legalnews.com/detroit/PublicNotice/probate",
-  "https://www.legalnews.com/oakland/PublicNotice/probate",
-  "https://www.legalnews.com/macomb/PublicNotice/probate",
+  "https://www.legalnews.com/detroit/probate",
+  "https://www.legalnews.com/oakland/probate",
+  "https://www.legalnews.com/macomb/probate",
 ];
 
 export async function scrapeProbateFilings(opts: { perSourceCap?: number } = {}): Promise<CountySignal[]> {
@@ -114,7 +114,7 @@ export async function scrapeProbateFilings(opts: { perSourceCap?: number } = {})
 const TAX_DELINQUENCY_URLS = [
   "https://www.waynecounty.com/elected/treasurer/foreclosure-properties.aspx",
   "https://www.oakgov.com/treasurer/property-tax/foreclosure-list",
-  "https://www.macombgov.org/Treasurer/foreclosure",
+  "https://www.macombgov.org/departments/treasurers-office/tax-foreclosure",
 ];
 
 export async function scrapeTaxDelinquency(opts: { perSourceCap?: number } = {}): Promise<CountySignal[]> {
