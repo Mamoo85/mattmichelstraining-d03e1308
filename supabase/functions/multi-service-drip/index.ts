@@ -344,7 +344,7 @@ serve(async (req) => {
         const generatedBody = await generateText(prompt, 800);
         const emailBody: string =
           generatedBody ||
-          `Hey —\n\nI wanted to reach out about a few tools that might help ${businessName} get more calls and grow.\n\nHere's what I offer:\n${serviceList}\n\nAll automated — no extra work on your end.\n\nmattmichelstraining.com/get-started\n\n— Matt`;
+          `Hey —\n\nI wanted to reach out about a few tools that might help ${businessName} get more calls and grow.\n\nHere's what I offer:\n${serviceList}\n\nAll automated — no extra work on your end.\n\ndetroitwebagent.com/get-started\n\n— Matt, Detroit Web Agency`;
 
         const subjectLines = [
           `A few tools that could help ${businessName}`,
