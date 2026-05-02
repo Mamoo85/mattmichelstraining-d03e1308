@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Mail, Printer, Inbox, Upload, Play, Pause, RefreshCw } from "lucide-react";
+import { Loader2, Mail, Printer, Inbox, Upload, Play, Pause, RefreshCw, Radar, Database } from "lucide-react";
+import TargetDiscoveryPanel from "./TargetDiscoveryPanel";
+import SourceCatalogPanel from "./SourceCatalogPanel";
 
 type Channel = "email" | "fax" | "postcard";
 
@@ -49,7 +51,7 @@ const VERTICAL_OPTIONS = [
 const STATE_OPTIONS = ["MI", "OH", "IN", "IL", "WI", "TX", "FL"];
 
 export default function Wave5OutreachConsole() {
-  const [tab, setTab] = useState<"campaigns" | "targets" | "sends">("campaigns");
+  const [tab, setTab] = useState<"campaigns" | "discover" | "sources" | "targets" | "sends">("campaigns");
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [sends, setSends] = useState<Send[]>([]);
   const [targetCount, setTargetCount] = useState(0);
