@@ -51,13 +51,13 @@ export function LockedPriceBadge({
         return;
       }
       const { data, error } = await supabase
-        .from("client_price_locks")
+        .from("client_price_locks" as any)
         .select("locked_price_cents, tier, locked_at, carve_out_clause, lock_version")
         .order("locked_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (!cancelled) {
-        if (!error && data) setLock(data as PriceLock);
+        if (!error && data) setLock(data as unknown as PriceLock);
         setLoading(false);
       }
     })();
