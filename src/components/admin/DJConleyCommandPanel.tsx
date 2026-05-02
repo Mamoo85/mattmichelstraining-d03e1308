@@ -19,10 +19,11 @@ import SendDJConleyProposalCard from "./SendDJConleyProposalCard";
 type PriceLock = {
   id: string;
   client_email: string;
-  tier: string | null;
-  locked_price_cents: number | null;
-  carve_out_clause: string | null;
-  created_at: string | null;
+  product: string | null;
+  locked_monthly_price: number | null;
+  notes: string | null;
+  locked_since: string | null;
+  active: boolean | null;
 };
 
 export default function DJConleyCommandPanel() {
