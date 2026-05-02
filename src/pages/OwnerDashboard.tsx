@@ -22,7 +22,13 @@ export default function OwnerDashboard() {
       if (s.exp < Date.now()) { localStorage.removeItem("owner_session"); navigate("/owner/login"); return; }
       setEmail(s.email);
       // Load command center tiles for this owner
-      (supabase as any).from("command_center_tiles").select("*").eq("client_email", s.email).order("position").then(({ data }: any) => setTiles(data || []));
+      (supabase as any)
+        .from("command_center_tiles")
+        .select("*")
+        .eq("owner_email", s.email)
+        .eq("is_active", true)
+        .order("sort_order")
+        .then(({ data }: any) => setTiles(data || []));
     } catch {
       navigate("/owner/login");
     }
