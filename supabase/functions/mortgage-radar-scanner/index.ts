@@ -995,6 +995,7 @@ serve(async (req) => {
     scanOaklandCountyPermits(),       // #2 Oakland County permit portal
     scanPriceReductions(),            // #3 Realtor.com price-reduced listings
     scanBankruptcyFilings(),          // #4 stub (PACER — pending credentials)
+    scanRegistryWaterfall(sb),        // 50-source registry: FEMA/NOAA/HUD vacancy/EPA lead lines etc.
   ]);
 
   const signals: RawSignal[] = [];
