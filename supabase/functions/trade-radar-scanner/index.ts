@@ -34,6 +34,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ADMIN_PHONE = Deno.env.get("ADMIN_PHONE_NUMBER") || "+13138064952";
+const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
 
 const ALL_VERTICALS = ["roofing", "hvac", "plumbing", "electrical", "pest_control", "gutters", "painting"] as const;
 type Vertical = typeof ALL_VERTICALS[number];
@@ -219,9 +220,12 @@ async function notifyClients(
     });
 
     if (client.phone && top.score >= 9) {
-      await sendSMS(client.phone,
+      await sendSMS(
+        client.phone,
+        TWILIO_FROM,
         `🏠 ${label} Radar: ${top5.length} new leads today. Top score: ${top.score}/10 — ${top.city ?? "your area"}. Check your email. — Detroit Web Agency`,
-      );
+        "trade_radar",
+      ).catch((e) => console.warn(`[trade-scanner] hot-lead SMS failed:`, e instanceof Error ? e.message : String(e)));
     }
   }
 }
@@ -337,8 +341,11 @@ Deno.serve(async (req) => {
 
   const totalInserted = Object.values(summary).reduce((n, s) => n + s.inserted, 0);
   if (totalInserted > 0) {
-    await sendSMS(ADMIN_PHONE,
+    await sendSMS(
+      ADMIN_PHONE,
+      TWILIO_FROM,
       `🏠 Trade Radar: ${totalInserted} new leads across ${verticals.join(", ")} today. — DWA`,
+      "trade_radar",
     ).catch(() => {});
   }
 

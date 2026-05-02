@@ -197,7 +197,8 @@ serve(async (req) => {
     const { count } = await sb.from("mortgage_radar_leads").select("id", { count: "exact", head: true })
       .gte("created_at", new Date(Date.now() - 24 * 3600_000).toISOString());
     const msg = `🏠 Mortgage Radar is live. ${count ?? 0} new lead${count !== 1 ? "s" : ""} scanned in SE Michigan today. Daily email is on its way. — Detroit Web Agency`;
-    const results = await Promise.allSettled(phones.map(p => sendSMS(sb, p, msg)));
+    const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
+    const results = await Promise.allSettled(phones.map(p => sendSMS(p, TWILIO_FROM, msg, "mortgage_radar")));
     const summary = results.map((r, i) => ({ phone: phones[i], status: r.status === "fulfilled" ? "sent" : (r as PromiseRejectedResult).reason?.message }));
     return new Response(JSON.stringify({ ok: true, test_sms: summary }), { headers: corsHeaders });
   }
