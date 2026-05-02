@@ -16,11 +16,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils";
 
 interface PriceLock {
-  locked_price_cents: number;
-  tier: string;
-  locked_at: string;
-  carve_out_clause: string;
-  lock_version: string;
+  locked_monthly_price: number;
+  product: string;
+  locked_since: string;
+  notes: string | null;
 }
 
 interface Props {
@@ -34,6 +33,7 @@ interface Props {
 }
 
 const formatPrice = (cents: number) => `$${(cents / 100).toLocaleString()}/mo`;
+const formatDollars = (dollars: number) => `$${Number(dollars).toLocaleString()}/mo`;
 
 export function LockedPriceBadge({
   fallbackPriceCents,
@@ -50,7 +50,8 @@ export function LockedPriceBadge({
     (async () => {
       let query = supabase
         .from("client_price_locks" as any)
-        .select("locked_price_cents, tier, locked_at, carve_out_clause, lock_version");
+        .select("locked_monthly_price, product, locked_since, notes")
+        .eq("active", true);
 
       if (clientEmail) {
         query = query.eq("client_email", clientEmail.toLowerCase());
@@ -63,7 +64,7 @@ export function LockedPriceBadge({
         query = query.eq("client_email", userData.user.email.toLowerCase());
       }
 
-      const { data, error } = await query.order("locked_at", { ascending: false }).limit(1).maybeSingle();
+      const { data, error } = await query.order("locked_since", { ascending: false }).limit(1).maybeSingle();
       if (!cancelled) {
         if (!error && data) setLock(data as unknown as PriceLock);
         setLoading(false);
@@ -76,15 +77,15 @@ export function LockedPriceBadge({
 
   if (loading) return null;
 
-  const priceCents = lock?.locked_price_cents ?? fallbackPriceCents;
-  const tier = lock?.tier ?? fallbackTier;
-  if (!priceCents) return null;
+  const priceLabel = lock ? formatDollars(lock.locked_monthly_price) : (fallbackPriceCents ? formatPrice(fallbackPriceCents) : null);
+  const tier = lock?.product ?? fallbackTier;
+  if (!priceLabel) return null;
 
   const lockedSince = lock
-    ? `Locked ${new Date(lock.locked_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`
+    ? `Locked ${new Date(lock.locked_since).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`
     : "Forever Pricing";
   const carveOut =
-    lock?.carve_out_clause ||
+    lock?.notes ||
     "Forever Pricing covers the v1 feature set plus every monthly improvement. Net-new product lines released after 24 months are opt-in at then-current rates.";
 
   const sizeClasses = {
