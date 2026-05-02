@@ -462,7 +462,9 @@ serve(async (req) => {
     }
 
     // Supplemental signals + NOAA weather bonus — all run in parallel
-    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, weatherBonus] = await Promise.all([
+    // Includes the new signal-waterfall (DOL WARN, OSHA, FMCSA, DOT prequal, SAM expanded)
+    const { fetchHireSignals } = await import("../_shared/signal-waterfall.ts");
+    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
       scanGitHubSignals(),
       scanEDGARFundings(),
       scanUSPTOPatents(),
@@ -472,10 +474,13 @@ serve(async (req) => {
       scanUSASpending(),
       scanLinkedInJobs(),
       getWeatherHiringBonus(),
+      fetchHireSignals(sb, { state: "MI", naics: "238220" }).catch(() => []),
     ]);
     const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals];
     all.push(...supplemental);
     scanned += supplemental.length;
+    // Log waterfall signal volume to heartbeat metadata (don't insert as job postings — different shape)
+    const waterfallCount = (hireWaterfallSignals as any[]).length;
 
     // Group by company to compute open_roles_count
     const byCompany = new Map<string, Posting[]>();
@@ -552,6 +557,7 @@ serve(async (req) => {
           eventbrite: eventbriteSignals.length,
           usaspending: usaSpendingSignals.length,
           linkedin: linkedinSignals.length,
+          hire_waterfall: waterfallCount,
         },
         duration_ms: Date.now() - startedAt,
       }),

@@ -2,61 +2,696 @@
   "version": 1,
   "updated_at": "2026-05-02",
   "sources": [
-    { "id": "hud_fmr", "name": "HUD Fair Market Rent", "radar": "mortgage", "auth": "none", "states": "ALL", "url": "https://www.huduser.gov/hudapi/public/fmr", "refresh_h": 720, "free": true },
-    { "id": "ffiec_hmda", "name": "FFIEC HMDA Mortgage Originations", "radar": "mortgage", "auth": "none", "states": "ALL", "url": "https://ffiec.cfpb.gov/v2/data-browser-api/view/aggregations", "refresh_h": 720, "free": true },
-    { "id": "census_acs_housing", "name": "Census ACS Housing Profile", "radar": "mortgage", "auth": "optional", "states": "ALL", "url": "https://api.census.gov/data/2022/acs/acs5/profile", "refresh_h": 720, "free": true },
-    { "id": "fema_disasters", "name": "FEMA Disaster Declarations", "radar": "mortgage", "auth": "none", "states": "ALL", "url": "https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries", "refresh_h": 24, "free": true },
-    { "id": "hud_uspsvacancy", "name": "HUD/USPS Vacant Address Index", "radar": "mortgage", "auth": "none", "states": "ALL", "url": "https://www.huduser.gov/portal/datasets/usps.html", "refresh_h": 720, "free": true },
-    { "id": "openaddresses", "name": "OpenAddresses.io Bulk Parcels", "radar": "mortgage", "auth": "none", "states": "30+", "url": "https://results.openaddresses.io/", "refresh_h": 720, "free": true },
-    { "id": "zillow_research", "name": "Zillow Research CSVs (ZHVI/ZORI/DOM)", "radar": "mortgage", "auth": "none", "states": "ALL", "url": "https://www.zillow.com/research/data/", "refresh_h": 720, "free": true },
-    { "id": "realtor_research", "name": "Realtor.com Research CSVs", "radar": "mortgage", "auth": "none", "states": "ALL", "url": "https://www.realtor.com/research/data/", "refresh_h": 168, "free": true },
-    { "id": "noaa_storm_events", "name": "NOAA Storm Events Database", "radar": "mortgage", "auth": "optional", "states": "ALL", "url": "https://www.ncdc.noaa.gov/stormevents", "refresh_h": 24, "free": true },
-    { "id": "epa_lead_lines", "name": "EPA Lead Service Line Inventory", "radar": "mortgage", "auth": "none", "states": "ALL", "url": "https://www.epa.gov/ground-water-and-drinking-water/lead-service-line-inventory", "refresh_h": 720, "free": true },
-    { "id": "opensecrets_pacs", "name": "OpenSecrets PAC Contributions", "radar": "mortgage", "auth": "key", "states": "ALL", "url": "https://www.opensecrets.org/api/", "refresh_h": 720, "free": true },
-    { "id": "county_gis_arcgis", "name": "County GIS ArcGIS REST (multi-county)", "radar": "mortgage", "auth": "none", "states": "MI/OH/IL/TX/AZ/FL", "url": "varies", "refresh_h": 24, "free": true },
-
-    { "id": "dol_apprenticeship", "name": "DOL CareerOneStop Apprenticeships", "radar": "techalert", "auth": "key", "states": "ALL", "url": "https://api.careeronestop.org/v1/apprenticeship", "refresh_h": 168, "free": true },
-    { "id": "bls_qcew", "name": "BLS Quarterly Census Employment & Wages", "radar": "techalert", "auth": "key", "states": "ALL", "url": "https://api.bls.gov/publicAPI/v2/timeseries/data/", "refresh_h": 168, "free": true },
-    { "id": "osha_establishment", "name": "OSHA Establishment Inspection Search", "radar": "techalert", "auth": "none", "states": "ALL", "url": "https://www.osha.gov/pls/imis/establishment.html", "refresh_h": 168, "free": true },
-    { "id": "epa_echo", "name": "EPA ECHO Enforcement", "radar": "techalert", "auth": "none", "states": "ALL", "url": "https://echo.epa.gov/tools/web-services", "refresh_h": 168, "free": true },
-    { "id": "state_sos_filings", "name": "State SOS New Business Filings", "radar": "techalert", "auth": "none", "states": "MI/OH/IN/IL/TX/FL/GA/NC/PA/AZ/CA", "url": "varies", "refresh_h": 24, "free": true },
-    { "id": "fed_audit_clearinghouse", "name": "Federal Audit Clearinghouse", "radar": "techalert", "auth": "none", "states": "ALL", "url": "https://app.fac.gov/api/", "refresh_h": 720, "free": true },
-    { "id": "sam_gov_opps_expanded", "name": "SAM.gov Opportunities (all NAICS)", "radar": "techalert", "auth": "key", "states": "ALL", "url": "https://api.sam.gov/opportunities/v2/search", "refresh_h": 24, "free": true },
-    { "id": "dol_warn", "name": "DOL WARN Layoff Notices", "radar": "techalert", "auth": "none", "states": "ALL", "url": "https://www.dol.gov/agencies/eta/layoffs/warn", "refresh_h": 168, "free": true },
-    { "id": "naics_directory", "name": "NAICS Association Directory", "radar": "techalert", "auth": "none", "states": "ALL", "url": "https://www.naics.com/", "refresh_h": 720, "free": true },
-    { "id": "github_search_expanded", "name": "GitHub Search (expanded verticals)", "radar": "techalert", "auth": "key", "states": "ALL", "url": "https://api.github.com/search/repositories", "refresh_h": 24, "free": true },
-
-    { "id": "cms_npi_expanded", "name": "CMS NPI Registry (all healthcare)", "radar": "talent", "auth": "none", "states": "ALL", "url": "https://npiregistry.cms.hhs.gov/api/", "refresh_h": 168, "free": true },
-    { "id": "abms_certmatters", "name": "ABMS Certification Matters", "radar": "talent", "auth": "none", "states": "ALL", "url": "https://www.certificationmatters.org/", "refresh_h": 720, "free": true },
-    { "id": "state_nursing_boards", "name": "State Nursing Board Lookups", "radar": "talent", "auth": "none", "states": "MI/OH/FL/TX/CA/IL/PA", "url": "varies", "refresh_h": 720, "free": true },
-    { "id": "state_teaching_boards", "name": "State Teaching License Boards", "radar": "talent", "auth": "none", "states": "ALL", "url": "varies", "refresh_h": 720, "free": true },
-    { "id": "state_bar_associations", "name": "State Bar Association Directories", "radar": "talent", "auth": "none", "states": "ALL", "url": "varies", "refresh_h": 720, "free": true },
-    { "id": "state_cpa_boards", "name": "State CPA License Boards", "radar": "talent", "auth": "none", "states": "ALL", "url": "varies", "refresh_h": 720, "free": true },
-    { "id": "ncees_engineers", "name": "NCEES PE/SE Engineering Licenses", "radar": "talent", "auth": "none", "states": "ALL", "url": "https://ncees.org/records/", "refresh_h": 720, "free": true },
-    { "id": "va_provider_db", "name": "VA Provider Database", "radar": "talent", "auth": "none", "states": "ALL", "url": "https://www.va.gov/health-care/", "refresh_h": 720, "free": true },
-
-    { "id": "state_contractor_licenses", "name": "State Contractor License Lookups (TX/FL/CA/AZ/NV/OR/WA/GA)", "radar": "contractor", "auth": "none", "states": "TX/FL/CA/AZ/NV/OR/WA/GA", "url": "varies", "refresh_h": 720, "free": true },
-    { "id": "county_permits_arcgis", "name": "County Building Permits ArcGIS (30+ counties)", "radar": "contractor", "auth": "none", "states": "MI/OH/IN/IL/TX/FL/GA/NC/AZ/NV/WA", "url": "varies", "refresh_h": 24, "free": true },
-    { "id": "osha_sir", "name": "OSHA Severe Injury Reports", "radar": "contractor", "auth": "none", "states": "ALL", "url": "https://www.osha.gov/severeinjury", "refresh_h": 168, "free": true },
-    { "id": "epa_rrp", "name": "EPA RRP Lead-Safe Certified Firms", "radar": "contractor", "auth": "none", "states": "ALL", "url": "https://cfpub.epa.gov/flpp/pub/", "refresh_h": 720, "free": true },
-    { "id": "fmcsa_mcs150", "name": "FMCSA MCS-150 Carrier Registry", "radar": "contractor", "auth": "none", "states": "ALL", "url": "https://safer.fmcsa.dot.gov/", "refresh_h": 168, "free": true },
-    { "id": "phmsa_pipeline", "name": "PHMSA Pipeline Operator Registry", "radar": "contractor", "auth": "none", "states": "ALL", "url": "https://www.phmsa.dot.gov/", "refresh_h": 720, "free": true },
-    { "id": "fcc_antenna", "name": "FCC Antenna Structure Registry", "radar": "contractor", "auth": "none", "states": "ALL", "url": "https://www.fcc.gov/antenna-structure-registration", "refresh_h": 720, "free": true },
-    { "id": "state_dot_prequalified", "name": "State DOT Prequalified Bidders (NCDOT/TxDOT/MDOT/etc)", "radar": "contractor", "auth": "none", "states": "ALL", "url": "varies", "refresh_h": 720, "free": true },
-
-    { "id": "asn_cidr_report", "name": "CIDR Report ASN Database", "radar": "siteradar", "auth": "none", "states": "ALL", "url": "https://www.cidr-report.org/as2.0/", "refresh_h": 168, "free": true },
-    { "id": "peeringdb", "name": "PeeringDB API", "radar": "siteradar", "auth": "none", "states": "ALL", "url": "https://www.peeringdb.com/api/", "refresh_h": 168, "free": true },
-    { "id": "crtsh", "name": "CRT.sh Certificate Transparency", "radar": "siteradar", "auth": "none", "states": "ALL", "url": "https://crt.sh/", "refresh_h": 24, "free": true },
-    { "id": "rdap_whois", "name": "RDAP WHOIS Lookup", "radar": "siteradar", "auth": "none", "states": "ALL", "url": "https://rdap.org/", "refresh_h": 720, "free": true },
-
-    { "id": "state_corp_filings_rss", "name": "State Corporation Filings RSS", "radar": "marketplace", "auth": "none", "states": "ALL", "url": "varies", "refresh_h": 24, "free": true },
-    { "id": "sec_edgar_ein", "name": "SEC EDGAR EIN Verification", "radar": "marketplace", "auth": "none", "states": "ALL", "url": "https://www.sec.gov/cgi-bin/browse-edgar", "refresh_h": 168, "free": true },
-    { "id": "ofac_sdn", "name": "OFAC SDN Sanctions List", "radar": "marketplace", "auth": "none", "states": "ALL", "url": "https://www.treasury.gov/ofac/downloads/sdn.csv", "refresh_h": 24, "free": true },
-    { "id": "opencorporates_free", "name": "OpenCorporates Free Tier", "radar": "marketplace", "auth": "optional", "states": "ALL", "url": "https://api.opencorporates.com/", "refresh_h": 168, "free": true },
-
-    { "id": "census_business_patterns", "name": "Census County Business Patterns", "radar": "credibility", "auth": "optional", "states": "ALL", "url": "https://api.census.gov/data/2021/cbp", "refresh_h": 720, "free": true },
-    { "id": "bls_oews", "name": "BLS Occupational Employment & Wages", "radar": "credibility", "auth": "key", "states": "ALL", "url": "https://api.bls.gov/publicAPI/v2/timeseries/data/", "refresh_h": 720, "free": true },
-    { "id": "fred_indicators", "name": "FRED Economic Indicators", "radar": "credibility", "auth": "key", "states": "ALL", "url": "https://api.stlouisfed.org/fred/series/observations", "refresh_h": 168, "free": true },
-    { "id": "google_trends_unofficial", "name": "Google Trends Unofficial JSON", "radar": "credibility", "auth": "none", "states": "ALL", "url": "https://trends.google.com/trends/api/", "refresh_h": 24, "free": true }
+    {
+      "id": "hud_fmr",
+      "name": "HUD Fair Market Rent",
+      "radar": "mortgage",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.huduser.gov/hudapi/public/fmr",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "mortgage_radar",
+        "market_waterfall"
+      ]
+    },
+    {
+      "id": "ffiec_hmda",
+      "name": "FFIEC HMDA Mortgage Originations",
+      "radar": "mortgage",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://ffiec.cfpb.gov/v2/data-browser-api/view/aggregations",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "mortgage_radar",
+        "market_waterfall"
+      ]
+    },
+    {
+      "id": "census_acs_housing",
+      "name": "Census ACS Housing Profile",
+      "radar": "mortgage",
+      "auth": "optional",
+      "states": "ALL",
+      "url": "https://api.census.gov/data/2022/acs/acs5/profile",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "mortgage_radar",
+        "market_waterfall"
+      ]
+    },
+    {
+      "id": "fema_disasters",
+      "name": "FEMA Disaster Declarations",
+      "radar": "mortgage",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries",
+      "refresh_h": 24,
+      "free": true,
+      "engines": [
+        "mortgage_radar",
+        "signal_waterfall"
+      ]
+    },
+    {
+      "id": "hud_uspsvacancy",
+      "name": "HUD/USPS Vacant Address Index",
+      "radar": "mortgage",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.huduser.gov/portal/datasets/usps.html",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "mortgage_radar",
+        "signal_waterfall"
+      ]
+    },
+    {
+      "id": "openaddresses",
+      "name": "OpenAddresses.io Bulk Parcels",
+      "radar": "mortgage",
+      "auth": "none",
+      "states": "30+",
+      "url": "https://results.openaddresses.io/",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "mortgage_radar"
+      ]
+    },
+    {
+      "id": "zillow_research",
+      "name": "Zillow Research CSVs (ZHVI/ZORI/DOM)",
+      "radar": "mortgage",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.zillow.com/research/data/",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "mortgage_radar",
+        "market_waterfall"
+      ]
+    },
+    {
+      "id": "realtor_research",
+      "name": "Realtor.com Research CSVs",
+      "radar": "mortgage",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.realtor.com/research/data/",
+      "refresh_h": 168,
+      "free": true,
+      "engines": [
+        "mortgage_radar",
+        "market_waterfall"
+      ]
+    },
+    {
+      "id": "noaa_storm_events",
+      "name": "NOAA Storm Events Database",
+      "radar": "mortgage",
+      "auth": "optional",
+      "states": "ALL",
+      "url": "https://www.ncdc.noaa.gov/stormevents",
+      "refresh_h": 24,
+      "free": true,
+      "engines": [
+        "mortgage_radar",
+        "signal_waterfall"
+      ]
+    },
+    {
+      "id": "epa_lead_lines",
+      "name": "EPA Lead Service Line Inventory",
+      "radar": "mortgage",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.epa.gov/ground-water-and-drinking-water/lead-service-line-inventory",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "mortgage_radar",
+        "signal_waterfall"
+      ]
+    },
+    {
+      "id": "opensecrets_pacs",
+      "name": "OpenSecrets PAC Contributions",
+      "radar": "mortgage",
+      "auth": "key",
+      "states": "ALL",
+      "url": "https://www.opensecrets.org/api/",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "credibility_dossier"
+      ]
+    },
+    {
+      "id": "county_gis_arcgis",
+      "name": "County GIS ArcGIS REST (multi-county)",
+      "radar": "mortgage",
+      "auth": "none",
+      "states": "MI/OH/IL/TX/AZ/FL",
+      "url": "varies",
+      "refresh_h": 24,
+      "free": true,
+      "engines": [
+        "mortgage_radar",
+        "outreach_discover"
+      ]
+    },
+    {
+      "id": "dol_apprenticeship",
+      "name": "DOL CareerOneStop Apprenticeships",
+      "radar": "techalert",
+      "auth": "key",
+      "states": "ALL",
+      "url": "https://api.careeronestop.org/v1/apprenticeship",
+      "refresh_h": 168,
+      "free": true,
+      "engines": [
+        "techalert"
+      ]
+    },
+    {
+      "id": "bls_qcew",
+      "name": "BLS Quarterly Census Employment & Wages",
+      "radar": "techalert",
+      "auth": "key",
+      "states": "ALL",
+      "url": "https://api.bls.gov/publicAPI/v2/timeseries/data/",
+      "refresh_h": 168,
+      "free": true,
+      "engines": [
+        "techalert",
+        "market_waterfall"
+      ]
+    },
+    {
+      "id": "osha_establishment",
+      "name": "OSHA Establishment Inspection Search",
+      "radar": "techalert",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.osha.gov/pls/imis/establishment.html",
+      "refresh_h": 168,
+      "free": true,
+      "engines": [
+        "techalert",
+        "signal_waterfall",
+        "compliance_waterfall"
+      ]
+    },
+    {
+      "id": "epa_echo",
+      "name": "EPA ECHO Enforcement",
+      "radar": "techalert",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://echo.epa.gov/tools/web-services",
+      "refresh_h": 168,
+      "free": true,
+      "engines": [
+        "compliance_waterfall"
+      ]
+    },
+    {
+      "id": "state_sos_filings",
+      "name": "State SOS New Business Filings",
+      "radar": "techalert",
+      "auth": "none",
+      "states": "MI/OH/IN/IL/TX/FL/GA/NC/PA/AZ/CA",
+      "url": "varies",
+      "refresh_h": 24,
+      "free": true,
+      "engines": [
+        "outreach_discover"
+      ]
+    },
+    {
+      "id": "fed_audit_clearinghouse",
+      "name": "Federal Audit Clearinghouse",
+      "radar": "techalert",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://app.fac.gov/api/",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "techalert"
+      ]
+    },
+    {
+      "id": "sam_gov_opps_expanded",
+      "name": "SAM.gov Opportunities (all NAICS)",
+      "radar": "techalert",
+      "auth": "key",
+      "states": "ALL",
+      "url": "https://api.sam.gov/opportunities/v2/search",
+      "refresh_h": 24,
+      "free": true,
+      "engines": [
+        "techalert",
+        "signal_waterfall"
+      ]
+    },
+    {
+      "id": "dol_warn",
+      "name": "DOL WARN Layoff Notices",
+      "radar": "techalert",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.dol.gov/agencies/eta/layoffs/warn",
+      "refresh_h": 168,
+      "free": true,
+      "engines": [
+        "techalert",
+        "signal_waterfall",
+        "compliance_waterfall"
+      ]
+    },
+    {
+      "id": "naics_directory",
+      "name": "NAICS Association Directory",
+      "radar": "techalert",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.naics.com/",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "outreach_discover",
+        "techalert"
+      ]
+    },
+    {
+      "id": "github_search_expanded",
+      "name": "GitHub Search (expanded verticals)",
+      "radar": "techalert",
+      "auth": "key",
+      "states": "ALL",
+      "url": "https://api.github.com/search/repositories",
+      "refresh_h": 24,
+      "free": true,
+      "engines": [
+        "techalert"
+      ]
+    },
+    {
+      "id": "cms_npi_expanded",
+      "name": "CMS NPI Registry (all healthcare)",
+      "radar": "talent",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://npiregistry.cms.hhs.gov/api/",
+      "refresh_h": 168,
+      "free": true,
+      "engines": [
+        "talent_radar"
+      ]
+    },
+    {
+      "id": "abms_certmatters",
+      "name": "ABMS Certification Matters",
+      "radar": "talent",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.certificationmatters.org/",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "talent_radar",
+        "license_waterfall"
+      ]
+    },
+    {
+      "id": "state_nursing_boards",
+      "name": "State Nursing Board Lookups",
+      "radar": "talent",
+      "auth": "none",
+      "states": "MI/OH/FL/TX/CA/IL/PA",
+      "url": "varies",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "talent_radar",
+        "license_waterfall"
+      ]
+    },
+    {
+      "id": "state_teaching_boards",
+      "name": "State Teaching License Boards",
+      "radar": "talent",
+      "auth": "none",
+      "states": "ALL",
+      "url": "varies",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "talent_radar",
+        "license_waterfall"
+      ]
+    },
+    {
+      "id": "state_bar_associations",
+      "name": "State Bar Association Directories",
+      "radar": "talent",
+      "auth": "none",
+      "states": "ALL",
+      "url": "varies",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "talent_radar",
+        "license_waterfall"
+      ]
+    },
+    {
+      "id": "state_cpa_boards",
+      "name": "State CPA License Boards",
+      "radar": "talent",
+      "auth": "none",
+      "states": "ALL",
+      "url": "varies",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "talent_radar",
+        "license_waterfall"
+      ]
+    },
+    {
+      "id": "ncees_engineers",
+      "name": "NCEES PE/SE Engineering Licenses",
+      "radar": "talent",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://ncees.org/records/",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "talent_radar",
+        "license_waterfall"
+      ]
+    },
+    {
+      "id": "va_provider_db",
+      "name": "VA Provider Database",
+      "radar": "talent",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.va.gov/health-care/",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "talent_radar",
+        "license_waterfall"
+      ]
+    },
+    {
+      "id": "state_contractor_licenses",
+      "name": "State Contractor License Lookups (TX/FL/CA/AZ/NV/OR/WA/GA)",
+      "radar": "contractor",
+      "auth": "none",
+      "states": "TX/FL/CA/AZ/NV/OR/WA/GA",
+      "url": "varies",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "talent_radar",
+        "license_waterfall",
+        "outreach_discover"
+      ]
+    },
+    {
+      "id": "county_permits_arcgis",
+      "name": "County Building Permits ArcGIS (30+ counties)",
+      "radar": "contractor",
+      "auth": "none",
+      "states": "MI/OH/IN/IL/TX/FL/GA/NC/AZ/NV/WA",
+      "url": "varies",
+      "refresh_h": 24,
+      "free": true,
+      "engines": [
+        "mortgage_radar",
+        "techalert"
+      ]
+    },
+    {
+      "id": "osha_sir",
+      "name": "OSHA Severe Injury Reports",
+      "radar": "contractor",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.osha.gov/severeinjury",
+      "refresh_h": 168,
+      "free": true,
+      "engines": [
+        "techalert",
+        "signal_waterfall",
+        "compliance_waterfall"
+      ]
+    },
+    {
+      "id": "epa_rrp",
+      "name": "EPA RRP Lead-Safe Certified Firms",
+      "radar": "contractor",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://cfpub.epa.gov/flpp/pub/",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "mortgage_radar",
+        "signal_waterfall"
+      ]
+    },
+    {
+      "id": "fmcsa_mcs150",
+      "name": "FMCSA MCS-150 Carrier Registry",
+      "radar": "contractor",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://safer.fmcsa.dot.gov/",
+      "refresh_h": 168,
+      "free": true,
+      "engines": [
+        "techalert",
+        "signal_waterfall"
+      ]
+    },
+    {
+      "id": "phmsa_pipeline",
+      "name": "PHMSA Pipeline Operator Registry",
+      "radar": "contractor",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.phmsa.dot.gov/",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "techalert"
+      ]
+    },
+    {
+      "id": "fcc_antenna",
+      "name": "FCC Antenna Structure Registry",
+      "radar": "contractor",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.fcc.gov/antenna-structure-registration",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "techalert"
+      ]
+    },
+    {
+      "id": "state_dot_prequalified",
+      "name": "State DOT Prequalified Bidders (NCDOT/TxDOT/MDOT/etc)",
+      "radar": "contractor",
+      "auth": "none",
+      "states": "ALL",
+      "url": "varies",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "techalert",
+        "signal_waterfall"
+      ]
+    },
+    {
+      "id": "asn_cidr_report",
+      "name": "CIDR Report ASN Database",
+      "radar": "siteradar",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.cidr-report.org/as2.0/",
+      "refresh_h": 168,
+      "free": true,
+      "engines": [
+        "siteradar"
+      ]
+    },
+    {
+      "id": "peeringdb",
+      "name": "PeeringDB API",
+      "radar": "siteradar",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.peeringdb.com/api/",
+      "refresh_h": 168,
+      "free": true,
+      "engines": [
+        "siteradar"
+      ]
+    },
+    {
+      "id": "crtsh",
+      "name": "CRT.sh Certificate Transparency",
+      "radar": "siteradar",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://crt.sh/",
+      "refresh_h": 24,
+      "free": true,
+      "engines": [
+        "siteradar",
+        "email_waterfall"
+      ]
+    },
+    {
+      "id": "rdap_whois",
+      "name": "RDAP WHOIS Lookup",
+      "radar": "siteradar",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://rdap.org/",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "siteradar",
+        "email_waterfall"
+      ]
+    },
+    {
+      "id": "state_corp_filings_rss",
+      "name": "State Corporation Filings RSS",
+      "radar": "marketplace",
+      "auth": "none",
+      "states": "ALL",
+      "url": "varies",
+      "refresh_h": 24,
+      "free": true,
+      "engines": [
+        "outreach_discover",
+        "signal_waterfall"
+      ]
+    },
+    {
+      "id": "sec_edgar_ein",
+      "name": "SEC EDGAR EIN Verification",
+      "radar": "marketplace",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar",
+      "refresh_h": 168,
+      "free": true,
+      "engines": [
+        "outreach_discover"
+      ]
+    },
+    {
+      "id": "ofac_sdn",
+      "name": "OFAC SDN Sanctions List",
+      "radar": "marketplace",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://www.treasury.gov/ofac/downloads/sdn.csv",
+      "refresh_h": 24,
+      "free": true,
+      "engines": [
+        "compliance_waterfall",
+        "outreach_discover"
+      ]
+    },
+    {
+      "id": "opencorporates_free",
+      "name": "OpenCorporates Free Tier",
+      "radar": "marketplace",
+      "auth": "optional",
+      "states": "ALL",
+      "url": "https://api.opencorporates.com/",
+      "refresh_h": 168,
+      "free": true,
+      "engines": [
+        "outreach_discover",
+        "email_waterfall"
+      ]
+    },
+    {
+      "id": "census_business_patterns",
+      "name": "Census County Business Patterns",
+      "radar": "credibility",
+      "auth": "optional",
+      "states": "ALL",
+      "url": "https://api.census.gov/data/2021/cbp",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "market_waterfall",
+        "credibility_dossier"
+      ]
+    },
+    {
+      "id": "bls_oews",
+      "name": "BLS Occupational Employment & Wages",
+      "radar": "credibility",
+      "auth": "key",
+      "states": "ALL",
+      "url": "https://api.bls.gov/publicAPI/v2/timeseries/data/",
+      "refresh_h": 720,
+      "free": true,
+      "engines": [
+        "market_waterfall",
+        "credibility_dossier"
+      ]
+    },
+    {
+      "id": "fred_indicators",
+      "name": "FRED Economic Indicators",
+      "radar": "credibility",
+      "auth": "key",
+      "states": "ALL",
+      "url": "https://api.stlouisfed.org/fred/series/observations",
+      "refresh_h": 168,
+      "free": true,
+      "engines": [
+        "market_waterfall",
+        "credibility_dossier"
+      ]
+    },
+    {
+      "id": "google_trends_unofficial",
+      "name": "Google Trends Unofficial JSON",
+      "radar": "credibility",
+      "auth": "none",
+      "states": "ALL",
+      "url": "https://trends.google.com/trends/api/",
+      "refresh_h": 24,
+      "free": true,
+      "engines": [
+        "market_waterfall",
+        "credibility_dossier"
+      ]
+    }
   ]
 }
