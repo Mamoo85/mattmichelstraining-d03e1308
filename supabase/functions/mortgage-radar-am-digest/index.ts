@@ -49,17 +49,20 @@ serve(async (req) => {
   let sent = 0;
 
   for (const c of (clients || [])) {
+    const regions: string[] = Array.isArray(c.coverage_regions) ? c.coverage_regions : [];
     const counties: string[] = Array.isArray(c.coverage_counties) ? c.coverage_counties : [];
     const zips: string[] = Array.isArray(c.zip_codes) ? c.zip_codes : [];
-    if (counties.length === 0 && zips.length === 0) continue;
+    if (regions.length === 0 && counties.length === 0 && zips.length === 0) continue;
 
-    // Prefer county-level match; fall back to zip list for legacy clients
+    // Match priority: region (broadest) → county → zip (narrowest fallback)
     let leadsQuery = (sb.from as any)("mortgage_radar_leads")
-      .select("id, full_name, address, city, zip, county, lat, lon, signal_type, signal_detail, score, suggested_opener, best_call_window, estimated_equity, intel_highlights")
+      .select("id, full_name, address, city, zip, county, region, lat, lon, signal_type, signal_detail, score, suggested_opener, best_call_window, estimated_equity, intel_highlights")
       .gte("created_at", since)
       .order("score", { ascending: false })
       .limit(5);
-    if (counties.length > 0) {
+    if (regions.length > 0) {
+      leadsQuery = leadsQuery.in("region", regions);
+    } else if (counties.length > 0) {
       leadsQuery = leadsQuery.in("county", counties);
     } else {
       leadsQuery = leadsQuery.in("zip", zips);
@@ -85,7 +88,7 @@ serve(async (req) => {
           <table width="100%"><tr>
             <td style="vertical-align:top;">
               <p style="margin:0;color:#fff;font-size:16px;font-weight:700;">${l.address || "Address pending"}</p>
-              <p style="margin:4px 0 0;color:#94a3b8;font-size:12px;">${l.city || ""} ${l.zip || ""} · ${(l.signal_type || "").replace(/_/g, " ")}</p>
+              <p style="margin:4px 0 0;color:#94a3b8;font-size:12px;">${l.city || ""} ${l.zip ? l.zip : l.county || l.region || ""} · ${(l.signal_type || "").replace(/_/g, " ")}</p>
             </td>
             <td style="vertical-align:top;text-align:right;width:60px;">
               <span style="display:inline-block;color:${scoreColor};font-size:24px;font-weight:900;">${l.score}/10</span>
