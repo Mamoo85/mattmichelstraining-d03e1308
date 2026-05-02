@@ -59,6 +59,41 @@ const PRODUCT_CONFIG: Record<string, { label: string; dashboardPath: string; pit
     dashboardPath: "/bundle-revenue-suite",
     pitch: "all five revenue tools at one bundled price",
   },
+  roofing_radar: {
+    label: "Roofing Radar",
+    dashboardPath: "/my-roofing-radar",
+    pitch: "homeowners hit by hail or roof permits pulled in your ZIPs — before they call anyone",
+  },
+  hvac_radar: {
+    label: "HVAC Radar",
+    dashboardPath: "/my-hvac-radar",
+    pitch: "homes needing HVAC replacement flagged by extreme weather + aging system permits",
+  },
+  plumbing_radar: {
+    label: "Plumbing Radar",
+    dashboardPath: "/my-plumbing-radar",
+    pitch: "foreclosures and major plumbing permits signaling deferred maintenance in your ZIPs",
+  },
+  electrical_radar: {
+    label: "Electrical Radar",
+    dashboardPath: "/my-electrical-radar",
+    pitch: "renovation and addition permits triggering panel upgrades in your service area",
+  },
+  pest_control_radar: {
+    label: "Pest Control Radar",
+    dashboardPath: "/my-pest-control-radar",
+    pitch: "vacant estate sales, probates, and foreclosures — the highest-risk pest properties",
+  },
+  gutters_radar: {
+    label: "Gutters Radar",
+    dashboardPath: "/my-gutters-radar",
+    pitch: "roof permits pulled = open gutter upsell window in your ZIPs",
+  },
+  painting_radar: {
+    label: "Painting Radar",
+    dashboardPath: "/my-painting-radar",
+    pitch: "new ownership deed transfers and FSBO prep listings in your service area",
+  },
 };
 
 function genToken(): string {

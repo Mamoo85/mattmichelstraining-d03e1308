@@ -2174,3 +2174,9 @@ verify_jwt = false
 
 [functions.outreach-target-enrich-backfill]
 verify_jwt = false
+
+[functions.trade-radar-scanner]
+verify_jwt = false
+
+[functions.create-trade-radar-checkout]
+verify_jwt = false
