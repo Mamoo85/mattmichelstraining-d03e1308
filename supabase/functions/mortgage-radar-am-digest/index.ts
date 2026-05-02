@@ -201,14 +201,13 @@ serve(async (req) => {
     const regions: string[] = Array.isArray(c.coverage_regions) ? c.coverage_regions : [];
     const counties: string[] = Array.isArray(c.coverage_counties) ? c.coverage_counties : [];
     const zips: string[] = Array.isArray(c.zip_codes) ? c.zip_codes : [];
-    if (regions.length === 0 && counties.length === 0 && zips.length === 0) continue;
-
     const baseSelect = "id, full_name, address, city, zip, county, region, lat, lon, signal_type, signal_detail, score, suggested_opener, best_call_window, estimated_equity, intel_highlights, signal_count, last_signal_at, signal_date, created_at";
 
     function applyGeoFilter(q: any) {
       if (regions.length > 0) return q.in("region", regions);
       if (counties.length > 0) return q.in("county", counties);
-      return q.in("zip", zips);
+      if (zips.length > 0) return q.in("zip", zips);
+      return q; // no geo restriction set — show all leads
     }
 
     // Today's top 5 leads
