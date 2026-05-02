@@ -80,14 +80,26 @@ async function upsertWithDedup(
   const rawScore = signal.score ?? 5;
   const score = signal.source_method === "llm_search" ? Math.min(3, rawScore) : rawScore;
 
+  // Guard: skip any signal that has no address — registry/waterfall sometimes
+  // returns business-only or zip-only rows that can't be geocoded.
+  if (!signal || typeof signal.address !== "string" || !signal.address.trim()) {
+    return "skipped";
+  }
+
   // Anti-hallucination gate
-  const validation = await validateLead({
-    address: signal.address,
-    city: signal.city,
-    zip: signal.zip,
-    signal_type: signal.signal_type,
-    source_method: signal.source_method ?? "scraper",
-  });
+  let validation;
+  try {
+    validation = await validateLead({
+      address: signal.address,
+      city: signal.city,
+      zip: signal.zip,
+      signal_type: signal.signal_type,
+      source_method: signal.source_method ?? "scraper",
+    });
+  } catch (e) {
+    console.warn(`[trade-scanner] validateLead threw for ${vertical}:`, e instanceof Error ? e.message : String(e));
+    return "skipped";
+  }
 
   if (!validation.valid) {
     await quarantineRaw(sb, {
