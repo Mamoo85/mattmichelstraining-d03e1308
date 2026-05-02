@@ -2165,3 +2165,9 @@ verify_jwt = true
 
 [functions.outreach-postcard-blast]
 verify_jwt = true
+
+[functions.outreach-target-discover]
+verify_jwt = false
+
+[functions.data-source-fetch]
+verify_jwt = false
