@@ -20,15 +20,21 @@ export default function SourceCatalogPanel() {
   const [filter, setFilter] = useState("");
 
   async function load() {
-    // Read registry via edge function (it lives in deno-only filesystem)
-    const [{ data: reg }, { data: cacheRows }] = await Promise.all([
-      supabase.functions.invoke("data-source-fetch", { body: { action: "list" } }).catch(() => ({ data: null })),
-      supabase.from("data_source_cache" as any)
-        .select("source_id, cache_key, row_count, fetched_at, expires_at, fetch_error")
-        .order("fetched_at", { ascending: false })
-        .limit(200),
-    ]);
-    setRegistry((reg as any)?.sources || []);
+    const projectId = (import.meta as any).env?.VITE_SUPABASE_PROJECT_ID;
+    const anon = (import.meta as any).env?.VITE_SUPABASE_PUBLISHABLE_KEY;
+    let sources: any[] = [];
+    try {
+      const res = await fetch(`https://${projectId}.supabase.co/functions/v1/data-source-fetch?list=1`, {
+        headers: { Authorization: `Bearer ${anon}`, apikey: anon },
+      });
+      const json = await res.json();
+      sources = json?.sources || [];
+    } catch { /* ignore */ }
+    const { data: cacheRows } = await supabase.from("data_source_cache" as any)
+      .select("source_id, cache_key, row_count, fetched_at, expires_at, fetch_error")
+      .order("fetched_at", { ascending: false })
+      .limit(200);
+    setRegistry(sources);
     setCache((cacheRows as any) || []);
   }
 
