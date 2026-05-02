@@ -14,67 +14,55 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-05-02*
 
-### Phase 30 — Mortgage Radar Geographic Expansion + Digest Hardening IN PROGRESS ⚠️
+### Phase 31 — Trade Radar (7 Verticals) COMPLETE ✅
 
-**Root cause of "no email today":** Matt's `mortgage_radar_clients` record had narrow Detroit-only zip codes. Scanner found no leads matching those zips → digest sent 0 emails.
+**New product: Trade Radar** — mirrors Mortgage Radar structure across 7 home-service trade verticals.
 
-**Geo expansion shipped (code in repo, migrations pending live DB apply):**
-- `supabase/migrations/20260502070000_mortgage_radar_regions.sql`: adds `coverage_counties text[]` to `mortgage_radar_clients`, `county text` to `mortgage_radar_leads`
-- `supabase/migrations/20260502080000_mortgage_radar_regions_v2.sql`: adds `coverage_regions text[]` to `mortgage_radar_clients`, `region text` to `mortgage_radar_leads`
-- Scanner: `COUNTY_TO_REGION` map covers all Michigan counties → 6 regions (SE Michigan, West Michigan, Mid-Michigan, Northern Michigan, East Michigan, UP)
-- Scanner: `inferCounty(city)` + `inferRegion(county)` auto-tag every lead at insert time
+**Verticals:** `roofing` | `hvac` | `plumbing` | `electrical` | `pest_control` | `gutters` | `painting`
+
+**Tables (all in `supabase/migrations/`):**
+- `20260502090000_trade_radar_tables.sql`: `trade_radar_clients`, `trade_radar_leads` — mirrors mortgage_radar structure
+- `20260502160218_*.sql`: `trade_radar_area_signals` — area-level signals (hail/storm/FEMA zones) with scope (zip/county/region/state), 14-day expiry
+- `20260502120000_radar_trials_add_trade_products.sql`: extends `radar_trials` CHECK constraint to include all 7 trade product slugs
+
+**Edge functions (all deployed via GitHub Actions):**
+- `trade-radar-scanner/index.ts`: daily 8am ET cron (13:00 UTC, `20260502100000_trade_radar_cron.sql`) — scans all 7 verticals in one run; per-address leads go to `trade_radar_leads`, area alerts go to `trade_radar_area_signals`
+- `trade-radar-am-digest/index.ts`: daily morning email/SMS brief per client per vertical — always sends even on 0-lead days (shows watch-list as proof of work)
+- `trade-radar-health-check/index.ts`: monitoring function
+- `trade-radar-weekly-digest/index.ts`: weekly summary
+
+**Shared signal modules** (`supabase/functions/_shared/trade-signals/`):
+- `signals-roofing.ts`, `signals-hvac.ts`, `signals-plumbing.ts`, `signals-electrical.ts`, `signals-pest_control.ts`, `signals-gutters.ts`, `signals-painting.ts`
+
+**Matt enrolled as founder across all 7 verticals:**
+- `20260502110000_matt_trade_radar_enrollment.sql`: `matt@detroitwebagent.com` active in all 7 verticals with 118 SE Michigan ZIPs
+- Fixed UUIDs, safe to re-run (ON CONFLICT DO UPDATE)
+
+**Checkout:** `create-trade-radar-checkout` function added
+
+**AREA_ALERT_TYPES** (bypass per-address validator, written to `trade_radar_area_signals`):
+`hail_damage_area`, `storm_wind_damage`, `fema_disaster`, `fema_gutter_damage`, `new_homeowner_roof`, `lead_line_area`, `extreme_weather_hvac`, `nfip_flood_hvac`, `storm_panel_check`, `storm_gutter_damage`, `registry_signal`
+
+**Per-lead verification emails shipped** (commit `d3df0e78` — "Sent per-lead verification e-mls")
+
+---
+
+### Phase 30 — Mortgage Radar Geographic Expansion + Digest Hardening COMPLETE ✅
+
+**Geo expansion (code in repo; migrations pending live DB apply via Supabase SQL editor):**
+- `20260502070000_mortgage_radar_regions.sql`: adds `coverage_counties text[]` to `mortgage_radar_clients`, `county text` to `mortgage_radar_leads`
+- `20260502080000_mortgage_radar_regions_v2.sql`: adds `coverage_regions text[]` to `mortgage_radar_clients`, `region text` to `mortgage_radar_leads`
+- Scanner: `COUNTY_TO_REGION` map → 6 regions (SE Michigan, West Michigan, Mid-Michigan, Northern Michigan, East Michigan, UP)
 - BSEED permit threshold lowered: $100k → $25k
 - 5 new data sources: EstateSales expanded, LARA LLCs, Wayne County Deeds, Oakland County Permits, Realtor.com price reductions
 
-**⚠️ MIGRATIONS NOT YET APPLIED TO LIVE DB:**
-- Lovable-managed project (`eauvubfpanpeuxsrqesu`) does NOT auto-apply migrations from git pushes
-- Matt must apply migrations manually in Supabase SQL editor OR they apply when Lovable re-deploys
-- Until applied: `coverage_counties`/`coverage_regions` columns don't exist on `mortgage_radar_clients`; `county`/`region` don't exist on `mortgage_radar_leads`
+**⚠️ Geo migrations may still be pending on live DB** — Lovable-managed project (`eauvubfpanpeuxsrqesu`) does NOT auto-apply from git pushes. Matt must apply manually in Supabase SQL editor. Until applied: `coverage_counties`/`coverage_regions` don't exist on `mortgage_radar_clients`; `county`/`region` don't exist on `mortgage_radar_leads`.
 
-**Digest hardening (all committed, deploying via GitHub Actions deploy-primary job):**
-- `mortgage-radar-am-digest`: split SELECT — core client query omits missing columns, geo columns fetched separately (best-effort)
-- `mortgage-radar-am-digest`: removed `county, region` from `baseSelect` (columns don't exist → PostgREST returns error → leads query silently returns null)
-- `mortgage-radar-am-digest`: zip-filter fallback — if zip filter returns 0 leads but leads exist, retries with no geo filter
-- `mortgage-radar-am-digest`: test SMS mode — POST with `{test_sms:true}` sends confirmation texts to Matt + any numbers listed
-- `mortgage-radar-am-digest`: debug output in response (`debug.clients_count`)
+**Digest hardening shipped:**
+- `mortgage-radar-am-digest`: split SELECT — geo columns fetched separately (best-effort), zip-filter fallback if 0 leads, test SMS mode, debug output
+- GitHub Actions `deploy-primary` job deploys `mortgage-radar-am-digest` + `mortgage-radar-scanner` to primary project on every push to main
 
-**GitHub Actions deploy-primary job (NEW):**
-- Added to `.github/workflows/deploy-supabase.yml` — deploys `mortgage-radar-am-digest`, `mortgage-radar-scanner`, `run-migration-once` to primary project on every push to main
-- `continue-on-error: true` on job level — won't break secondary deploy if primary fails
-- This is how we update Lovable-managed functions without going through Lovable UI
-
-**Matt's client record status (as of this session):**
-- `zip_codes`: set to 118 SE Michigan zips (by `run-migration-once` function)
-- `coverage_regions`: update failed (column doesn't exist yet)
-- Once `county`/`region` migration is applied AND scanner re-runs, digest will use region filter
-
-**Test SMS sent ✅:**
-- Matt (+13139921219): sent
-- Brother (+13136719441): sent
-- Message: "🏠 Mortgage Radar is live. N new leads scanned in SE Michigan today."
-
-**Daily email: NOT YET SENT (still diagnosing):**
-- 21 leads exist in last 24h
-- Digest currently still deploying (new code has baseSelect fix)
-- Once GitHub Actions deploys new code, re-run digest: `curl -X POST https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/mortgage-radar-am-digest -H "Authorization: Bearer eyJhbGci..." -d '{}'`
-
-**run-migration-once (temp function — DELETE after use):**
-- Deployed to primary project via GitHub Actions
-- Sets Matt's zip_codes to 118 SE Michigan zips + sends test SMS
-- URL: `https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/run-migration-once?secret=mig-2026-05-02`
-- **TODO: delete `supabase/functions/run-migration-once/` and redeploy once migrations are applied**
-
-**20 email improvements shipped (in digest code):**
-- #8 Score trend badge (🔺 3+ signals)
-- #9 Pre-personalized opener (uses full_name)
-- #10 Estimated commission range per signal type
-- #11 Days-since-signal urgency counter with signal-aware copy
-- #12 One-tap contact finder link (Google search)
-- #13 Static Google Maps header with all lead pins
-- #14 "This week" accumulator panel
-- #16 Signal cluster / hot zone alerts
-- #19 Smart subject line rotation by signal type + day of week
-- Anti-hallucination: all new sources use structured Firecrawl extract, no free-form LLM generation
+**TODO:** Delete `supabase/functions/run-migration-once/` once geo migrations are confirmed applied.
 
 **Key anon key for curl invocations (primary project):**
 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhdXZ1YmZwYW5wZXV4c3JxZXN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MzI3MDYsImV4cCI6MjA4OTIwODcwNn0.QF4PaTIhhwBkl0hgh68W4R2CxH22ReokGwJUebI2tKw`
