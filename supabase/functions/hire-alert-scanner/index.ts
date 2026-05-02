@@ -1618,7 +1618,7 @@ serve(async (req: Request) => {
       .then(() => {}, (e: unknown) => console.warn("[hire-alert-scanner] failed to stamp source errors:", e));
   }
 
-  const allRaw = [...mioshaCandidates, ...jobBoardCandidates, ...apprenticeCandidates, ...oshaLeads, ...sbaLeads];
+  const allRaw = [...mioshaCandidates, ...jobBoardCandidates, ...apprenticeCandidates, ...oshaLeads, ...sbaLeads, ...registryCandidates];
 
   // Fix 4: 2-strike zero-result alert — only fires after 2 consecutive zero runs to avoid Sunday noise.
   try {
