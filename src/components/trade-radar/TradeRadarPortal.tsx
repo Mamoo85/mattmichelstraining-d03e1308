@@ -170,7 +170,7 @@ export default function TradeRadarPortal({
     return (
       <div className="min-h-screen bg-[#030711] text-foreground">
         <SEOHead title={`My ${productLabel} — Subscriber Dashboard`} description={`Daily ${productLabel} leads from public records.`} />
-        <DWASuiteNav email={clientEmail || undefined} />
+        <DWASuiteNav activeProduct="contractor_leads" email={clientEmail || undefined} />
         <div className="max-w-7xl mx-auto px-4 py-24 flex items-center justify-center">
           <div className="bg-[#0a1628] border border-red-900 rounded-xl p-8 text-center max-w-md w-full">
             <Lock className="w-8 h-8 text-red-400 mx-auto mb-3" />
@@ -186,7 +186,7 @@ export default function TradeRadarPortal({
     return (
       <div className="min-h-screen bg-[#030711] text-foreground">
         <SEOHead title={`My ${productLabel} — Subscriber Dashboard`} description={`Daily ${productLabel} leads.`} />
-        <DWASuiteNav email={clientEmail || undefined} />
+        <DWASuiteNav activeProduct="contractor_leads" email={clientEmail || undefined} />
         <div className="max-w-2xl mx-auto px-4 py-24">
           <Card className="bg-[#0a1628] border-[#1e3a5f]">
             <CardContent className="p-8 text-center">
@@ -213,7 +213,7 @@ export default function TradeRadarPortal({
         title={`My ${productLabel} — Subscriber Dashboard`}
         description={`Daily ${productLabel} leads matched to your service area.`}
       />
-      <DWASuiteNav email={clientEmail || undefined} />
+      <DWASuiteNav activeProduct="contractor_leads" email={clientEmail || undefined} />
 
       <header className="border-b border-[#1e3a5f] bg-[#0a1628]/80 backdrop-blur sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
