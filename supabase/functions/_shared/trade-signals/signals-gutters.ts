@@ -125,5 +125,62 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[gutters] FEMA:", e); }
 
+  // 4. CFPB HMDA Refinance Loans — homeowners with equity fund gutter/exterior upgrades
+  try {
+    const res = await fetch(
+      `https://ffiec.cfpb.gov/v2/data-browser-api/view/aggregations?states=${state}&years=2023&actions_taken=1&loan_purposes=3`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      const total = (d?.aggregations ?? []).reduce((n: number, r: any) => n + (r.count || 0), 0);
+      if (total > 0) {
+        signals.push({
+          address: `${state} — ${total.toLocaleString()} refinances (2023)`,
+          city: state, zip: "",
+          signal_type: "homeowner_equity_area",
+          signal_detail: `CFPB HMDA: ${total.toLocaleString()} refinance originations in ${state} (2023) — equity-flush homeowners frequently bundle gutter/roof work`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: 5,
+          source_method: "ffiec_hmda",
+          suggested_opener: "You recently refinanced — many homeowners use that equity to handle deferred gutter work before small blockages become $5,000 fascia and soffit problems. Want a free inspection?",
+          best_call_window: "Within 90 days of refinance close",
+          estimated_value: 2000,
+          raw_source_data: { total, state, year: 2023, loan_purpose: "refinance" },
+        });
+      }
+    }
+  } catch (e) { console.error("[gutters] CFPB refi:", e); }
+
+  // 5. Detroit Parcel Data — pre-1960 homes with no gutters replaced in 60+ years
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/parcel_file_current/FeatureServer/0/query?where=year_built+<+1960+AND+year_built+>+1880&outFields=address,zip_code,year_built&resultRecordCount=30&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      const count = d?.features?.length ?? 0;
+      if (count > 0) {
+        const oldest = d.features.reduce((m: any, f: any) =>
+          (f.attributes?.year_built ?? 9999) < (m.attributes?.year_built ?? 9999) ? f : m, d.features[0]);
+        const a = oldest.attributes;
+        signals.push({
+          address: `Detroit — ${count} sampled parcels built before 1960`,
+          city: "Detroit", zip: "",
+          signal_type: "roof_permit_upsell",
+          signal_detail: `Detroit parcel data: ${count} sample pre-1960 homes in query — oldest at ${a.address} (built ${a.year_built}). Gutters on 60+ year old homes are almost always undersized or blocked`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.roof_permit_upsell - 1,
+          source_method: "detroit_parcel_arcgis",
+          suggested_opener: "Your home was built before 1960 — most gutters on homes this age are undersized for modern rain events and clogged with decades of debris. We're doing free inspections in your area.",
+          best_call_window: "Evergreen — pre-1960 homes always need gutter work",
+          estimated_value: 2000,
+          raw_source_data: { count, oldest_address: a.address, oldest_year: a.year_built },
+        });
+      }
+    }
+  } catch (e) { console.error("[gutters] parcel:", e); }
+
   return signals;
 }

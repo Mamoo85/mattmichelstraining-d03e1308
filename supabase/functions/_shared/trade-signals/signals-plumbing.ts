@@ -119,5 +119,63 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[plumbing] HMDA:", e); }
 
+  // 4. Detroit 311 — water main breaks and flooding near an address
+  try {
+    const where = encodeURIComponent(`issue_type LIKE '%WATER%' OR issue_type LIKE '%FLOOD%' OR issue_type LIKE '%SEWER%'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/311_Service_Requests/FeatureServer/0/query?where=${where}&outFields=address,zip_code,created_at,issue_type&resultRecordCount=30&orderByFields=created_at+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = `${a.address ?? ""}`.trim();
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "lead_line_area",
+          signal_detail: `Detroit 311: ${(a.issue_type ?? "water/sewer issue").slice(0, 100)} — aging infrastructure signal for plumbing replacement`,
+          signal_date: a.created_at ? new Date(a.created_at).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.lead_line_area - 1,
+          source_method: "detroit_311_arcgis",
+          suggested_opener: OPENERS.lead_line_area.opener,
+          best_call_window: OPENERS.lead_line_area.window,
+          estimated_value: 3500,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[plumbing] 311:", e); }
+
+  // 5. CFPB HMDA Home Improvement Loans — homeowners actively borrowing for renovation = plumbing upgrade market
+  try {
+    const res = await fetch(
+      `https://ffiec.cfpb.gov/v2/data-browser-api/view/aggregations?states=${state}&years=2023&actions_taken=1&loan_purposes=2`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      const total = (d?.aggregations ?? []).reduce((n: number, r: any) => n + (r.count || 0), 0);
+      if (total > 0) {
+        signals.push({
+          address: `${state} — ${total.toLocaleString()} home improvement loans (2023)`,
+          city: state, zip: "",
+          signal_type: "home_improvement_loan_area",
+          signal_detail: `CFPB HMDA: ${total.toLocaleString()} home improvement loan originations in ${state} (2023) — homeowners already borrowing for renovation are prime plumbing upgrade prospects`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: 6,
+          source_method: "ffiec_hmda",
+          suggested_opener: "You're renovating your home — most contractors don't tell you that updating supply lines and shutoff valves during a remodel costs 60% less than doing it separately. Want a free estimate on what plumbing is worth bundling in?",
+          best_call_window: "Within 90 days of loan origination",
+          estimated_value: 3500,
+          raw_source_data: { total, state, year: 2023, loan_purpose: "home_improvement" },
+        });
+      }
+    }
+  } catch (e) { console.error("[plumbing] CFPB HI:", e); }
+
   return signals;
 }

@@ -143,5 +143,67 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[demo_junk] foreclosure:", e); }
 
+  // 5. Detroit Blight Violations — debris, excessive growth, structural hazards
+  try {
+    const where = encodeURIComponent(
+      `ordinance_description LIKE '%debris%' OR ordinance_description LIKE '%junk%' OR ordinance_description LIKE '%dumping%' OR ordinance_description LIKE '%vacant%' OR ordinance_description LIKE '%abandoned%'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/blight_tickets/FeatureServer/0/query?where=${where}&outFields=address,zip_code,ordinance_description,latitude,longitude&resultRecordCount=40&orderByFields=OBJECTID+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = `${a.address ?? ""}`.trim();
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "demo_permit",
+          signal_detail: `Detroit blight citation: ${(a.ordinance_description ?? "").slice(0, 120)} — junk/debris removal opportunity`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.demo_permit - 2,
+          source_method: "detroit_blight_arcgis",
+          suggested_opener: OPENERS.estate_clearout.opener,
+          best_call_window: OPENERS.estate_clearout.window,
+          estimated_value: 800,
+          raw_source_data: { ...a, lat: a.latitude, lon: a.longitude },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] blight:", e); }
+
+  // 6. Detroit Land Bank Authority (DLBA) — city-owned vacant properties available for sale
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/DLBA_Owned_Properties/FeatureServer/0/query?where=1%3D1&outFields=name,street_number,street_direction,street_name,street_type,neighborhood,latitude,longitude&resultRecordCount=40&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = [a.street_number, a.street_direction, a.street_name, a.street_type]
+          .filter(Boolean).join(" ").trim();
+        if (!addr) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "demo_permit",
+          signal_detail: `DLBA vacant property (${a.neighborhood ?? "Detroit"}): city-owned lot available — demolition/clearout opportunity`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.demo_permit - 1,
+          source_method: "detroit_dlba",
+          suggested_opener: OPENERS.foreclosure_clearout.opener,
+          best_call_window: OPENERS.foreclosure_clearout.window,
+          estimated_value: 1500,
+          raw_source_data: { ...a, lat: a.latitude, lon: a.longitude },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] DLBA:", e); }
+
   return signals;
 }

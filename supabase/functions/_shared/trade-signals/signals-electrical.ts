@@ -159,5 +159,64 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[electrical] NWS:", e); }
 
+  // 4. US Census ACS — pre-1960 ZIP codes need panel upgrades (knob-and-tube / 60A service)
+  try {
+    const acsRes = await fetch(
+      "https://api.census.gov/data/2022/acs/acs5?get=B25035_001E,B25034_002E&for=zip+code+tabulation+area:*&in=state:26",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (acsRes.ok) {
+      const rows: string[][] = await acsRes.json();
+      const data = rows.slice(1); // skip header
+      const old = data.filter((r) => {
+        const yr = Number(r[0]);
+        return yr > 0 && yr <= 1960;
+      }).sort((a, b) => Number(a[0]) - Number(b[0]));
+      if (old.length > 0) {
+        const topZips = old.slice(0, 5).map((r) => r[2]);
+        signals.push({
+          address: `Michigan — ${old.length} ZIPs with median year built ≤ 1960`,
+          city: state, zip: "",
+          signal_type: "aging_panel_area",
+          signal_detail: `Census ACS: ${old.length} MI ZIP codes have median year-built at or before 1960 — homes this age overwhelmingly have undersized 60A/100A panels, knob-and-tube, and no AFCI protection. Top aging ZIPs: ${topZips.join(", ")}`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: 7,
+          source_method: "census_acs",
+          suggested_opener: "Homes built before 1960 were wired for 1960 appliances — two window ACs and a modern kitchen will trip a 60A panel constantly. We offer free panel assessments in your area.",
+          best_call_window: "Evergreen — aging housing stock always needs upgrades",
+          estimated_value: 4500,
+          raw_source_data: { old_zip_count: old.length, top_zips: topZips },
+        });
+      }
+    }
+  } catch (e) { console.error("[electrical] Census ACS:", e); }
+
+  // 5. CFPB HMDA Home Improvement Loans — renovation borrowers = panel upgrade market
+  try {
+    const res = await fetch(
+      `https://ffiec.cfpb.gov/v2/data-browser-api/view/aggregations?states=${state}&years=2023&actions_taken=1&loan_purposes=2`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      const total = (d?.aggregations ?? []).reduce((n: number, r: any) => n + (r.count || 0), 0);
+      if (total > 0) {
+        signals.push({
+          address: `${state} — ${total.toLocaleString()} home improvement loans (2023)`,
+          city: state, zip: "",
+          signal_type: "home_improvement_loan_area",
+          signal_detail: `CFPB HMDA: ${total.toLocaleString()} home improvement loan originations in ${state} (2023) — major renovations almost always require panel upgrades to meet code`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: 6,
+          source_method: "ffiec_hmda",
+          suggested_opener: "You're doing major renovations — most contractors don't tell you until inspection fails that adding a kitchen or bathroom almost always requires a panel upgrade. We can quote yours before you start.",
+          best_call_window: "Within 90 days of loan origination",
+          estimated_value: 4000,
+          raw_source_data: { total, state, year: 2023, loan_purpose: "home_improvement" },
+        });
+      }
+    }
+  } catch (e) { console.error("[electrical] CFPB HI:", e); }
+
   return signals;
 }

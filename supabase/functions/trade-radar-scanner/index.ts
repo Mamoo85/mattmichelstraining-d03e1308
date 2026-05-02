@@ -36,6 +36,8 @@ const AREA_ALERT_TYPES = new Set<string>([
   "flood_warning", "heavy_rain_event", "fire_incident_area", "water_damage_area", "mold_risk_zone",
   "heavy_rain_foundation", "fema_flood_foundation", "foundation_flood_risk", "nfip_foundation",
   "storm_siding_damage",
+  // Phase 33 new sources
+  "homeowner_equity_area", "home_improvement_loan_area", "aging_panel_area",
 ]);
 
 // Verticals where home turnover (FSBO listing, estate sale) is a high-quality

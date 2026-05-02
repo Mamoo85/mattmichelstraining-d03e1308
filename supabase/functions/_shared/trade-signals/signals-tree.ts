@@ -179,5 +179,69 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[tree] SeeClickFix 311:", e); }
 
+  // 5. NOAA SPC Daily Storm Reports — high-wind and tornado events = tree damage
+  try {
+    const today = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const yy = String(today.getFullYear()).slice(2);
+    const mm = pad(today.getMonth() + 1);
+    const dd = pad(today.getDate());
+    const csvUrl = `https://www.spc.noaa.gov/climo/reports/${yy}${mm}${dd}_rpts.csv`;
+    const csvRes = await fetch(csvUrl, { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } });
+    if (csvRes.ok) {
+      const text = await csvRes.text();
+      const lines = text.split("\n").slice(1);
+      let inWind = false;
+      for (const line of lines) {
+        const parts = line.split(",");
+        if (parts[0]?.trim() === "Time") { inWind = true; continue; }
+        if (!inWind) continue;
+        if (parts[4]?.trim() !== "MI") continue;
+        const speed = Number(parts[1]) || 0;
+        if (speed < 58) continue; // EF1+ equivalent (58 mph+ for tree damage)
+        const lat = Number(parts[5]); const lon = Number(parts[6]);
+        signals.push({
+          address: `${parts[3]?.trim() ?? "MI"} County — ${speed} mph wind report`,
+          city: parts[3]?.trim() ?? state, zip: "",
+          signal_type: "storm_tree_damage",
+          signal_detail: `NOAA SPC wind report: ${speed} mph wind in ${parts[3]?.trim() ?? "MI"} County — high-wind events cause significant tree damage requiring immediate removal`,
+          signal_date: today.toISOString().split("T")[0],
+          score: Math.min(9, BASE_SCORES.storm_tree_damage + (speed >= 75 ? 1 : 0)),
+          source_method: "noaa_spc_storm_reports",
+          suggested_opener: OPENERS.storm_tree_damage.opener,
+          best_call_window: OPENERS.storm_tree_damage.window,
+          estimated_value: 2500,
+          raw_source_data: { speed, lat, lon, county: parts[3]?.trim() },
+        });
+      }
+    }
+  } catch (e) { console.error("[tree] SPC storm reports:", e); }
+
+  // 6. US Drought Monitor — D1+ drought causes root stress and dead limb drop risk
+  try {
+    const dmRes = await fetch("https://usdm.climate.gov/currentConditions/usdm_counties.json", {
+      headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" },
+    });
+    if (dmRes.ok) {
+      const counties: any[] = await dmRes.json();
+      const miDrought = counties.filter((c: any) => c.fips?.startsWith("26") && Number(c.dm ?? 0) >= 1);
+      if (miDrought.length > 0) {
+        signals.push({
+          address: `Michigan — ${miDrought.length} counties in drought`,
+          city: state, zip: "",
+          signal_type: "tree_hazard_area",
+          signal_detail: `US Drought Monitor: ${miDrought.length} MI counties in D1+ drought — drought-stressed trees lose root integrity and drop large limbs unpredictably, creating hazard tree removal market`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.tree_hazard_area - 1,
+          source_method: "drought_monitor",
+          suggested_opener: OPENERS.tree_hazard_area.opener,
+          best_call_window: "During and 30 days after drought period",
+          estimated_value: 2000,
+          raw_source_data: { drought_counties: miDrought.length },
+        });
+      }
+    }
+  } catch (e) { console.error("[tree] drought monitor:", e); }
+
   return signals;
 }

@@ -171,5 +171,62 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[exterior] foreclosure:", e); }
 
+  // 5. NOAA SPC Daily Storm Reports — same-day siding/window damage in MI
+  try {
+    const res = await fetch("https://www.spc.noaa.gov/climo/reports/today.csv", {
+      headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" },
+    });
+    if (res.ok) {
+      const csv = await res.text();
+      let inWind = false;
+      for (const line of csv.split("\n").slice(1)) {
+        if (!line.trim()) continue;
+        const parts = line.split(",");
+        if (parts[0] === "Time") { inWind = true; continue; }
+        if (parts[4]?.trim() !== "MI") continue;
+        const county = parts[3]?.trim() ?? "";
+        signals.push({
+          address: `${county} County, MI`, city: county, zip: "",
+          signal_type: "storm_siding_damage",
+          signal_detail: `SPC storm report (today): ${inWind ? "wind" : "hail"} in ${county} County — siding/window damage likely`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.storm_siding_damage,
+          source_method: "noaa_spc_reports",
+          suggested_opener: OPENERS.storm_siding_damage.opener,
+          best_call_window: OPENERS.storm_siding_damage.window,
+          estimated_value: 8000,
+          raw_source_data: { county, inWind, source: "spc_today" },
+        });
+      }
+    }
+  } catch (e) { console.error("[exterior] SPC today:", e); }
+
+  // 6. CFPB HMDA Home Improvement Loans — direct renovation intent signal
+  try {
+    const res = await fetch(
+      `https://ffiec.cfpb.gov/v2/data-browser-api/view/aggregations?states=${state}&years=2023&actions_taken=1&loan_purposes=2`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      const total = (d?.aggregations ?? []).reduce((n: number, r: any) => n + (r.count || 0), 0);
+      if (total > 0) {
+        signals.push({
+          address: `${state} — ${total.toLocaleString()} home improvement loans (2023)`,
+          city: state, zip: "",
+          signal_type: "home_improvement_loan_area",
+          signal_detail: `CFPB HMDA: ${total.toLocaleString()} approved home improvement loans in ${state} (2023) — borrowers are actively funding exterior renovations`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: 6,
+          source_method: "ffiec_hmda",
+          suggested_opener: "You recently took out a home improvement loan — exterior work like siding and painting delivers the highest ROI on those dollars. Want a free quote?",
+          best_call_window: "Within 60 days of loan close",
+          estimated_value: 6000,
+          raw_source_data: { total, state, year: 2023, loan_purpose: "home_improvement" },
+        });
+      }
+    }
+  } catch (e) { console.error("[exterior] CFPB HI:", e); }
+
   return signals;
 }

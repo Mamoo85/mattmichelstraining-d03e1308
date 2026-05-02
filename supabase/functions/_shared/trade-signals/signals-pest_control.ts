@@ -132,5 +132,67 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[pest] foreclosure:", e); }
 
+  // 5. Detroit Land Bank Authority (DLBA) — city-owned vacant properties = guaranteed pest pressure on neighbors
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/DLBA_Owned_Properties/FeatureServer/0/query?where=1%3D1&outFields=name,street_number,street_direction,street_name,street_type,neighborhood,latitude,longitude&resultRecordCount=40&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = [a.street_number, a.street_direction, a.street_name, a.street_type]
+          .filter(Boolean).join(" ").trim();
+        if (!addr) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "foreclosure_vacant",
+          signal_detail: `DLBA vacant property (${a.neighborhood ?? "Detroit"}): city-owned lot — vacant structures are #1 pest harborage source affecting neighbors`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.foreclosure_vacant - 1,
+          source_method: "detroit_dlba",
+          suggested_opener: OPENERS.foreclosure_vacant.opener,
+          best_call_window: OPENERS.foreclosure_vacant.window,
+          estimated_value: 400,
+          raw_source_data: { ...a, lat: a.latitude, lon: a.longitude },
+        });
+      }
+    }
+  } catch (e) { console.error("[pest] DLBA:", e); }
+
+  // 6. Detroit Blight Violations — overgrown/debris properties = pest harborage adjacent to real homeowners
+  try {
+    const where = encodeURIComponent(
+      `ordinance_description LIKE '%overgrown%' OR ordinance_description LIKE '%debris%' OR ordinance_description LIKE '%vacant%' OR ordinance_description LIKE '%rodent%' OR ordinance_description LIKE '%infestation%'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/blight_tickets/FeatureServer/0/query?where=${where}&outFields=address,zip_code,ordinance_description,latitude,longitude&resultRecordCount=40&orderByFields=OBJECTID+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = `${a.address ?? ""}`.trim();
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "foreclosure_vacant",
+          signal_detail: `Detroit blight citation: ${(a.ordinance_description ?? "").slice(0, 120)} — overgrown/debris properties generate rodent and pest pressure on neighbors`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.foreclosure_vacant - 1,
+          source_method: "detroit_blight_arcgis",
+          suggested_opener: "Your neighbor's property was just cited for overgrowth or debris — that's the #1 source of rodent migration into adjacent homes. A free inspection takes 20 minutes and we can show you exactly what we're seeing.",
+          best_call_window: "Within 30 days of blight citation",
+          estimated_value: 350,
+          raw_source_data: { ...a, lat: a.latitude, lon: a.longitude },
+        });
+      }
+    }
+  } catch (e) { console.error("[pest] blight:", e); }
+
   return signals;
 }

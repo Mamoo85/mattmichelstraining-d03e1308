@@ -199,5 +199,98 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] BSEED:", e); }
 
+  // 4. Detroit Blight Violations — per-address city citations for structural/water issues
+  try {
+    const where = encodeURIComponent(
+      `ordinance_description LIKE '%water%' OR ordinance_description LIKE '%structural%' OR ordinance_description LIKE '%collapse%' OR ordinance_description LIKE '%mold%' OR ordinance_description LIKE '%sewage%'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/blight_tickets/FeatureServer/0/query?where=${where}&outFields=address,zip_code,ordinance_description,latitude,longitude&resultRecordCount=30&orderByFields=OBJECTID+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = `${a.address ?? ""}`.trim();
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "water_damage_permit",
+          signal_detail: `Detroit blight citation: ${(a.ordinance_description ?? "").slice(0, 120)}`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.water_damage_permit - 1,
+          source_method: "detroit_blight_arcgis",
+          suggested_opener: OPENERS.water_damage_permit.opener,
+          best_call_window: OPENERS.water_damage_permit.window,
+          estimated_value: 6000,
+          raw_source_data: { ...a, lat: a.latitude, lon: a.longitude },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] blight:", e); }
+
+  // 5. USGS Real-Time Streamflow — Michigan river gauges at/above flood stage
+  try {
+    const res = await fetch(
+      "https://waterservices.usgs.gov/nwis/iv/?format=json&stateCd=mi&parameterCd=00065&period=P1D&siteStatus=active",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      const sites: any[] = d?.value?.timeSeries ?? [];
+      const flooded = sites.filter((s: any) => {
+        const val = Number(s?.values?.[0]?.value?.[0]?.value);
+        const action = Number(s?.variable?.actionStage?.value ?? s?.variable?.floodStage?.value ?? 999);
+        return val > 0 && action < 999 && val >= action;
+      });
+      if (flooded.length > 0) {
+        const siteNames = flooded.slice(0, 3).map((s: any) => s?.sourceInfo?.siteName ?? "").join("; ");
+        signals.push({
+          address: `Michigan — ${flooded.length} river gauge(s) at/above flood stage`,
+          city: state, zip: "",
+          signal_type: "flood_warning",
+          signal_detail: `USGS streamflow: ${flooded.length} MI gauges at or above action stage — ${siteNames}`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.flood_warning,
+          source_method: "usgs_streamflow",
+          suggested_opener: OPENERS.flood_warning.opener,
+          best_call_window: OPENERS.flood_warning.window,
+          estimated_value: 8000,
+          raw_source_data: { flooded_count: flooded.length, sites: siteNames },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] USGS streamflow:", e); }
+
+  // 6. OpenFEMA Public Assistance Projects — infrastructure repair = adjacent private damage
+  try {
+    const res = await fetch(
+      `https://www.fema.gov/api/open/v2/PublicAssistanceFundedProjectsDetails?$filter=state eq '${state}'&$orderby=projectDeclarationDate desc&$top=20`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const proj of (d?.PublicAssistanceFundedProjectsDetails ?? []).slice(0, 5)) {
+        if (!proj.damageCategory?.match(/water|flood|fire|debris|infrastructure/i)) continue;
+        signals.push({
+          address: proj.countyCode ?? proj.applicantName ?? state,
+          city: proj.countyCode ?? state, zip: "",
+          signal_type: "fema_disaster",
+          signal_detail: `FEMA PA Project: ${proj.damageCategory} — $${(Number(proj.federalShareObligated) || 0).toLocaleString()} funded in ${proj.countyCode ?? state}`,
+          signal_date: proj.projectDeclarationDate?.split("T")[0] ?? new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.fema_disaster - 1,
+          source_method: "fema_pa_projects",
+          suggested_opener: OPENERS.fema_disaster.opener,
+          best_call_window: OPENERS.fema_disaster.window,
+          estimated_value: 10000,
+          raw_source_data: proj,
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] FEMA PA:", e); }
+
   return signals;
 }

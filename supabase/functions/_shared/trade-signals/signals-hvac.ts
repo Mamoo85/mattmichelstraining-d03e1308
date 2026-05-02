@@ -164,5 +164,58 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[hvac] NFIP:", e); }
 
+  // 5. US Drought Monitor — D1+ drought pushes AC/heating to continuous-run failure
+  try {
+    const res = await fetch("https://usdm.climate.gov/currentConditions/usdm_counties.json", {
+      headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" },
+    });
+    if (res.ok) {
+      const counties: any[] = await res.json();
+      const miDrought = counties.filter((c: any) => c.fips?.startsWith("26") && Number(c.dm ?? 0) >= 1);
+      if (miDrought.length > 0) {
+        signals.push({
+          address: `Michigan — ${miDrought.length} counties in drought`,
+          city: state, zip: "",
+          signal_type: "extreme_weather_hvac",
+          signal_detail: `US Drought Monitor: ${miDrought.length} MI counties in D1+ drought — HVAC systems running continuously under heat stress, accelerating compressor failure`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.extreme_weather_hvac - 1,
+          source_method: "drought_monitor",
+          suggested_opener: OPENERS.extreme_weather_hvac.opener,
+          best_call_window: "During drought period",
+          estimated_value: 7000,
+          raw_source_data: { drought_counties: miDrought.length },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] drought monitor:", e); }
+
+  // 6. CFPB HMDA Refinance Loans — equity-flush homeowners fund HVAC replacement
+  try {
+    const res = await fetch(
+      `https://ffiec.cfpb.gov/v2/data-browser-api/view/aggregations?states=${state}&years=2023&actions_taken=1&loan_purposes=3`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      const total = (d?.aggregations ?? []).reduce((n: number, r: any) => n + (r.count || 0), 0);
+      if (total > 0) {
+        signals.push({
+          address: `${state} — ${total.toLocaleString()} refinances (2023)`,
+          city: state, zip: "",
+          signal_type: "homeowner_equity_area",
+          signal_detail: `CFPB HMDA: ${total.toLocaleString()} refinance originations in ${state} (2023) — homeowners with tapped equity often fund HVAC replacement as first major upgrade`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: 5,
+          source_method: "ffiec_hmda",
+          suggested_opener: "You recently refinanced — a 15-year-old HVAC system costs $400/yr more to run than a new one. Many homeowners use that equity to upgrade before it fails. Want a free efficiency check?",
+          best_call_window: "Within 90 days of refinance close",
+          estimated_value: 7000,
+          raw_source_data: { total, state, year: 2023, loan_purpose: "refinance" },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] CFPB refi:", e); }
+
   return signals;
 }

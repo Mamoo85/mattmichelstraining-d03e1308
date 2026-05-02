@@ -182,5 +182,95 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[foundation] BSEED:", e); }
 
+  // 5. USGS Real-Time Streamflow — Michigan rivers at/above flood stage
+  try {
+    const res = await fetch(
+      "https://waterservices.usgs.gov/nwis/iv/?format=json&stateCd=mi&parameterCd=00065&period=P1D&siteStatus=active",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      const sites: any[] = d?.value?.timeSeries ?? [];
+      const flooded = sites.filter((s: any) => {
+        const val = Number(s?.values?.[0]?.value?.[0]?.value);
+        const action = Number(s?.variable?.actionStage?.value ?? s?.variable?.floodStage?.value ?? 999);
+        return val > 0 && action < 999 && val >= action;
+      });
+      if (flooded.length > 0) {
+        const siteNames = flooded.slice(0, 3).map((s: any) => s?.sourceInfo?.siteName ?? "").join("; ");
+        signals.push({
+          address: `Michigan — ${flooded.length} river gauge(s) at/above flood stage`,
+          city: state, zip: "",
+          signal_type: "heavy_rain_foundation",
+          signal_detail: `USGS streamflow: ${flooded.length} MI gauges at or above action stage — saturated soil creates hydrostatic pressure on foundations. Sites: ${siteNames}`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.heavy_rain_foundation,
+          source_method: "usgs_streamflow",
+          suggested_opener: OPENERS.heavy_rain_foundation.opener,
+          best_call_window: OPENERS.heavy_rain_foundation.window,
+          estimated_value: 12000,
+          raw_source_data: { flooded_count: flooded.length, sites: siteNames },
+        });
+      }
+    }
+  } catch (e) { console.error("[foundation] USGS streamflow:", e); }
+
+  // 6. USGS Earthquake Catalog — seismic events within 400km of SE Michigan
+  try {
+    const since = new Date(Date.now() - 30 * 86400_000).toISOString().split("T")[0];
+    const res = await fetch(
+      `https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=${since}&minmagnitude=2.5&maxradiuskm=400&latitude=42.33&longitude=-83.05`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? []).slice(0, 3)) {
+        const props = feat?.properties ?? {};
+        const [lon, lat] = feat?.geometry?.coordinates ?? [];
+        const mag: number = props.mag ?? 0;
+        signals.push({
+          address: props.place ?? `${state} region`,
+          city: props.place?.split(", ").pop() ?? state, zip: "",
+          signal_type: "foundation_flood_risk",
+          signal_detail: `USGS M${mag} earthquake: ${props.place} — seismic events cause foundation cracking and joint separation in older homes`,
+          signal_date: new Date(props.time).toISOString().split("T")[0],
+          score: Math.min(9, BASE_SCORES.foundation_flood_risk - 1 + Math.floor(mag)),
+          source_method: "usgs_earthquakes",
+          suggested_opener: OPENERS.foundation_flood_risk.opener,
+          best_call_window: "Within 30 days of seismic event",
+          estimated_value: 12000,
+          raw_source_data: { mag, place: props.place, lat, lon, time: props.time },
+        });
+      }
+    }
+  } catch (e) { console.error("[foundation] USGS earthquakes:", e); }
+
+  // 7. US Drought Monitor — D2+ drought causes clay soil shrinkage → foundation movement
+  try {
+    const res = await fetch("https://usdm.climate.gov/currentConditions/usdm_counties.json", {
+      headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" },
+    });
+    if (res.ok) {
+      const counties: any[] = await res.json();
+      const miDrought = counties.filter((c: any) => c.fips?.startsWith("26") && Number(c.dm ?? 0) >= 2);
+      if (miDrought.length > 0) {
+        const worst = [...miDrought].sort((a: any, b: any) => Number(b.dm) - Number(a.dm))[0];
+        signals.push({
+          address: `Michigan — ${miDrought.length} counties in D${worst.dm}+ drought`,
+          city: state, zip: "",
+          signal_type: "foundation_flood_risk",
+          signal_detail: `US Drought Monitor: ${miDrought.length} MI counties in D2+ drought — severe clay soil shrinkage causes foundation settlement and new cracking`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.foundation_flood_risk,
+          source_method: "drought_monitor",
+          suggested_opener: OPENERS.foundation_flood_risk.opener,
+          best_call_window: "During and 60 days after drought period",
+          estimated_value: 12000,
+          raw_source_data: { drought_counties: miDrought.length, worst_level: worst.dm },
+        });
+      }
+    }
+  } catch (e) { console.error("[foundation] drought monitor:", e); }
+
   return signals;
 }

@@ -181,5 +181,104 @@ export async function scanSignals(
     }
   } catch (e) { console.error("[roofing] HMDA:", e); }
 
+  // 5. NOAA SPC Daily Storm Reports — same-day hail/wind in MI
+  try {
+    const res = await fetch("https://www.spc.noaa.gov/climo/reports/today.csv", {
+      headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" },
+    });
+    if (res.ok) {
+      const csv = await res.text();
+      let inWindSection = false;
+      for (const line of csv.split("\n").slice(1)) {
+        if (!line.trim()) continue;
+        const parts = line.split(",");
+        if (parts[0] === "Time") { inWindSection = true; continue; }
+        if (parts[4]?.trim() !== "MI") continue;
+        const isHail = !inWindSection;
+        const sType = isHail ? "hail_damage_area" : "storm_wind_damage";
+        const county = parts[3]?.trim() ?? "";
+        signals.push({
+          address: `${county} County, MI`, city: county, zip: "",
+          signal_type: sType,
+          signal_detail: `SPC storm report (today): ${isHail ? "hail" : "wind"} in ${county} County`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES[sType],
+          source_method: "noaa_spc_reports",
+          suggested_opener: OPENERS[sType].opener,
+          best_call_window: OPENERS[sType].window,
+          estimated_value: 10000,
+          raw_source_data: { county, isHail, source: "spc_today" },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] SPC today:", e); }
+
+  // 6. NOAA SPC Archive — MI hail/wind last 14 days (unaddressed damage window)
+  try {
+    for (let daysAgo = 1; daysAgo <= 14; daysAgo++) {
+      const dt = new Date(Date.now() - daysAgo * 86400_000);
+      const yy = String(dt.getFullYear()).slice(2);
+      const mm = String(dt.getMonth() + 1).padStart(2, "0");
+      const dd = String(dt.getDate()).padStart(2, "0");
+      const res = await fetch(`https://www.spc.noaa.gov/climo/reports/${yy}${mm}${dd}_rpts.csv`, {
+        headers: { "User-Agent": "DWA-TradeRadar/1.0" },
+      });
+      if (!res.ok) continue;
+      const csv = await res.text();
+      const dateStr = dt.toISOString().split("T")[0];
+      let inWind = false;
+      let miHits = 0;
+      for (const line of csv.split("\n").slice(1)) {
+        if (!line.trim()) continue;
+        const parts = line.split(",");
+        if (parts[0] === "Time") { inWind = true; continue; }
+        if (parts[4]?.trim() !== "MI") continue;
+        if (miHits++ >= 3) break;
+        const isHail = !inWind;
+        const sType = isHail ? "hail_damage_area" : "storm_wind_damage";
+        const county = parts[3]?.trim() ?? "";
+        signals.push({
+          address: `${county} County, MI`, city: county, zip: "",
+          signal_type: sType,
+          signal_detail: `SPC archive (${daysAgo}d ago): ${isHail ? "hail" : "wind"} in ${county} County — homes may have unaddressed damage`,
+          signal_date: dateStr,
+          score: Math.max(5, BASE_SCORES[sType] - Math.floor(daysAgo / 5)),
+          source_method: "noaa_spc_archive",
+          suggested_opener: OPENERS[sType].opener,
+          best_call_window: OPENERS[sType].window,
+          estimated_value: 10000,
+          raw_source_data: { daysAgo, county, isHail },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] SPC archive:", e); }
+
+  // 7. CFPB HMDA Refinance Loans — equity-tapping homeowners = active renovation buyers
+  try {
+    const res = await fetch(
+      `https://ffiec.cfpb.gov/v2/data-browser-api/view/aggregations?states=${state}&years=2023&actions_taken=1&loan_purposes=3`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      const total = (d?.aggregations ?? []).reduce((n: number, r: any) => n + (r.count || 0), 0);
+      if (total > 0) {
+        signals.push({
+          address: `${state} — ${total.toLocaleString()} refinances (2023)`,
+          city: state, zip: "",
+          signal_type: "homeowner_equity_area",
+          signal_detail: `CFPB HMDA: ${total.toLocaleString()} refinance originations in ${state} (2023) — equity-flush homeowners are high-probability roofing buyers`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: 5,
+          source_method: "ffiec_hmda",
+          suggested_opener: "You recently refinanced — many homeowners use that equity for roofing that adds 5-10% to resale value. Want a free inspection?",
+          best_call_window: "Within 90 days of refinance close",
+          estimated_value: 10000,
+          raw_source_data: { total, state, year: 2023, loan_purpose: "refinance" },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] CFPB refi:", e); }
+
   return signals;
 }
