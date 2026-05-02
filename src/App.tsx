@@ -361,6 +361,13 @@ const GuttersRadar = lazyRetry(() => import("./pages/GuttersRadar"));
 const GuttersRadarDemo = lazyRetry(() => import("./pages/GuttersRadarDemo"));
 const PaintingRadar = lazyRetry(() => import("./pages/PaintingRadar"));
 const PaintingRadarDemo = lazyRetry(() => import("./pages/PaintingRadarDemo"));
+const MyRoofingRadar = lazyRetry(() => import("./pages/MyRoofingRadar"));
+const MyHVACRadar = lazyRetry(() => import("./pages/MyHVACRadar"));
+const MyPlumbingRadar = lazyRetry(() => import("./pages/MyPlumbingRadar"));
+const MyElectricalRadar = lazyRetry(() => import("./pages/MyElectricalRadar"));
+const MyPestControlRadar = lazyRetry(() => import("./pages/MyPestControlRadar"));
+const MyGuttersRadar = lazyRetry(() => import("./pages/MyGuttersRadar"));
+const MyPaintingRadar = lazyRetry(() => import("./pages/MyPaintingRadar"));
 
 const AgencyPortal = lazyRetry(() => import("./pages/AgencyPortal"));
 const LicenseMonitor = lazyRetry(() => import("./pages/LicenseMonitor"));
@@ -866,6 +873,13 @@ const App = () => (
                     <Route path="/gutters-radar/demo" element={<GuttersRadarDemo />} />
                     <Route path="/painting-radar" element={<PaintingRadar />} />
                     <Route path="/painting-radar/demo" element={<PaintingRadarDemo />} />
+                    <Route path="/my-roofing-radar" element={<MyRoofingRadar />} />
+                    <Route path="/my-hvac-radar" element={<MyHVACRadar />} />
+                    <Route path="/my-plumbing-radar" element={<MyPlumbingRadar />} />
+                    <Route path="/my-electrical-radar" element={<MyElectricalRadar />} />
+                    <Route path="/my-pest-control-radar" element={<MyPestControlRadar />} />
+                    <Route path="/my-gutters-radar" element={<MyGuttersRadar />} />
+                    <Route path="/my-painting-radar" element={<MyPaintingRadar />} />
                     <Route path="/agency-portal" element={<AgencyPortal />} />
                     <Route path="/license-monitor" element={<LicenseMonitor />} />
                     <Route path="/regulatory-filing-monitor" element={<RegulatoryFilingMonitor />} />
