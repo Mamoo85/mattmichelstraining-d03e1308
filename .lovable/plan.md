@@ -1,98 +1,177 @@
+## DWA "Premium Tier" Build Plan — Pat-Worthy Features Only
 
-# Pat / D.J. Conley — "The Pitch" Email v4 (locked to actual meeting notes)
+Scope: **only the items from your list that don't exist yet** and that make the offer feel premium. Items I confirmed are already built are listed at the bottom under "Already Done — Skipping" so you can verify.
 
-## What I got wrong, now corrected
+---
 
-You were right to stop me. Re-read `.lovable/plan.md` (the **post-meeting** plan, not the pre-meeting brief). Locked-in truths:
+## What survives the audit (the actual work)
 
-- **eWay stays.** Pat keeps using it. We do **NOT** replace it. The pivot is "Marketing Layer for eWay — don't fight eWay."
-- **FieldDesk runs in parallel** inside his admin panel. He uses both side-by-side, on his timeline. If/when he wants to consolidate, that's *his* call, not ours. (Schema already has `dual_run_until` + `migration_status` on `field_crm_clients` for exactly this.)
-- **FieldServio also stays** — full ERP, he needs it.
-- **SiteRadar honest framing is mandatory.** Never "we identify who visited." Always "we identify the **company** instantly + surface the **most likely decision-maker**." Person-level only via the optional **+$300/mo RB2B pass-through**.
-- **Owner Dashboard already specced** with these tabs: Dashboard · Visitor Intelligence · Predictive Sales · Email Campaigns · Review Queue · Job Snapshot (eWay-lite read-only) · Content · Settings/Billing.
-- **Pricing is set:** $499/mo all-in OR $499 + $199/mo. Optional RB2B add-on $300/mo at cost.
-- **Forever Pricing Promise** is the moat. Locked rate forever, every future ship is free.
-- **Predictive Sales umbrella** is the renamed family: Demand Radar / Buyer Radar / Industry Pulse / SiteRadar / TechAlert all roll up under it. **Hide TechAlert in DJ Conley's view** (boiler ops aren't license-gated trades — `hideTechAlert: true` already in `djconley.json`).
-- **The wedge** is the cross-radar **Fusion SMS** (Stellantis on /boiler-tune-up + active $2.4M MITN RFP → ONE text).
+Grouped by the wave it ships in. Each item is a real gap I verified against the codebase.
 
-## Your new ask (Command Center for "all his tabs in one place")
+### Wave A — The "Forever Pricing" infrastructure (the moat made real)
 
-This is a **first-class new feature** in the email and a real expansion of the spec'd "Job Snapshot (eWay-lite)" tab.
+This is the single biggest premium signal Pat will see. Today none of it exists.
 
-**Command Center tab inside `/admin`:**
-- A grid of **tab tiles** Pat configures himself: eWay, FieldServio, QuickBooks, Gmail, Google Calendar, BSEED Permits, MITN.info RFPs, his bank, payroll, anything.
-- Each tile = one click → opens in embedded iframe **OR** new tab (his choice per tile, since some sites block iframe via X-Frame-Options).
-- **Drag-to-reorder, custom labels, custom icons.**
-- **Pinned bar across the top** of every admin page so Command Center is one click away from anywhere.
-- **SSO where supported** (Google Workspace, Microsoft 365). Where not, deep-link.
-- **He sends us the list, we wire them in before launch.**
+**A1. `client_price_locks` table + write on checkout**
+- New migration: `client_id`, `stripe_subscription_id`, `locked_price_cents`, `locked_at`, `lock_version` (`v1`), `covered_features` (jsonb), `carve_out_clause` (text — see A2).
+- Modify `create-djconley-checkout` (or whichever checkout the $499 / $499+$199 use) to insert the lock row inside the Stripe webhook on `checkout.session.completed`.
+- RLS: client can SELECT their own row; only `service_role` can INSERT/UPDATE.
 
-This sits *alongside* — not instead of — the Job Snapshot (eWay-lite) tab, which read-only mirrors his eWay jobs into the dashboard via CSV/webhook so he sees jobs without leaving.
+**A2. Forever-Pricing carve-out clause baked in**
+- Default `carve_out_clause` text: *"Forever Pricing covers the v1 feature set + every monthly improvement to those features. Net-new product lines released after 24 months are opt-in at then-current rates."*
+- Display verbatim under the Locked Price badge.
 
-## The full offer (everything Pat gets in the email)
+**A3. `LockedPriceBadge` component**
+- Reads from `client_price_locks` for the logged-in client.
+- Shows: locked monthly price, lock date, "Locked Forever" pill, hover/tap → carve-out text.
+- Drop into: Owner Dashboard header, Billing tab, Pat's `/admin` top bar.
 
-Aligned to the meeting plan, not invented:
+**A4. Stripe checkout for $499/mo and $499+$199/mo**
+- Two new edge functions (or one with a `tier` param): `create-djconley-checkout`.
+- Inline `price_data` per CLAUDE.md rules. `metadata.type = "djconley_subscription"`, `metadata.tier`, `metadata.locked_price_cents`.
+- Webhook handler in `stripe-webhook/index.ts` writes to `client_price_locks` + sends welcome email via `dwaEmail()`.
 
-1. **Brand-new website** at djconley.com — his navy `#1B4F8A` + orange `#E07B39`, mobile-perfect, Pat-editable via inline TipTap
-2. **Owner Dashboard** at `djconley.com/admin` — magic-link login, all tabs below
-3. **Command Center** *(NEW — your ask)* — unified hub for eWay, FieldServio, QuickBooks, etc.
-4. **Job Snapshot (eWay-lite)** — read-only mirror of his eWay jobs inside the dashboard so he sees them without switching
-5. **FieldDesk — running in parallel with eWay inside the admin panel** — he tries it side-by-side, his timeline. Live tech GPS, auto-SMS to customer (en route / on site / complete), photo-stamped completion. Zero pressure to switch.
-6. **SiteRadar Pro** with **honest framing**: company-ID instant + likely-decision-maker via Apollo + LinkedIn Insight Tag partial person-ID for ~10–20% of traffic. Person-level RB2B available as transparent **+$300/mo at cost** add-on.
-7. **Predictive Sales fusion alerts** (Demand + Buyer + Industry Pulse + SiteRadar overlaid) — the Stellantis/MITN wedge
-8. **Email Blast Engine** — manual / recurring seasonal / trigger-based, master ON/OFF, Pat-controlled
-9. **Missed-call text-back <60s + automated review request after every job + 2-way SMS inbox**
-10. **Review Queue** module — pending requests, resends, conversion tracking
-11. **Content tab** — Pat edits hero text / services / photos himself, no support ticket
-12. **Forever Pricing Promise** — contractually locked, every future feature free forever
-13. **What's New banner** + **Locked Price badge** in his dashboard so he sees value compounding
+### Wave B — Owner Dashboard premium surfaces
 
-## Email structure (top to bottom)
+**B1. Magic-link login at the client's own domain**
+- New edge function: `owner-magic-link-request` — accepts email, validates against `client_price_locks` or `field_crm_clients`, generates short-lived signed token (15 min), emails it via Resend with the `dwaEmail()` template.
+- New edge function: `owner-magic-link-verify` — exchanges token for a Supabase session.
+- New page: `/owner/login` (renders cleanly under client's branded domain when DNS points to us).
+- Route guard `OwnerRoute` checks magic-link session, falls through to `/owner/login` otherwise.
 
-1. **Personal opener** — references the April 22 meeting honestly
-2. **Founder Moment callout** — "you're customer #1 of this stack, Forever Pricing locked, we ship daily"
-3. **Your Owner Dashboard guided tour** — mock dashboard graphic (HTML/CSS, no external image hosts so nothing breaks in his inbox), tab list visible
-4. **Command Center deep-dive** *(NEW)* — mock 3×3 tile grid graphic showing `eWay · FieldServio · QuickBooks · Gmail · Calendar · BSEED · MITN · Bank · Add Tile +`. Explicit ask: *"Send me the list of every tab you bounce between today and I'll wire them all in before launch."*
-5. **FieldDesk in parallel with eWay** — mock dispatcher kanban + tech-on-map graphic. Copy: *"eWay keeps doing what it does. FieldDesk lives next to it inside your admin panel. Run both, see which one your crew prefers, on your timeline. If FieldDesk wins, great. If eWay wins, no harm done — you've lost nothing."* Schema already supports this (`dual_run_until`).
-6. **SiteRadar Pro** with the **honest framing built in** — mock SMS bubble showing company + likely-decision-maker (NOT "person X visited"). Mention RB2B opt-in for person-level at $300/mo at cost.
-7. **Predictive Sales Fusion** — the wedge. Stellantis + MITN $2.4M example. One SMS, all signals tied together.
-8. **Email Blast Engine** — mock UI with 3 mode tiles + master kill switch
-9. **SMS Center + Reviews + Missed-Call Text-Back** — mock inbox graphic
-10. **Demo links + iteration promise** — Demo A `/demo-djconley-v2/index.html`, Demo B `/demo-djconley-v3/index.html`. Mock browser-frame previews. Explicit: *"Tell me what you want changed — color, layout, copy, photos, anything. We rebuild until you say 'that's it.' Unlimited revisions."*
-11. **Pricing**: Option A $499/mo all-in · Option B $499 + $199/mo · Optional RB2B +$300/mo at cost · Forever Pricing visual
-12. **What ships in next 90 days at no extra cost** (proof of "ship daily"): AI phone answering after-hours, Fusion v2 with more sources, auto-generated quarterly business review PDFs, Mortgage-Radar-style commercial property intel, FieldDesk multi-tech route optimization
-13. **Close**: reply `YES A` / `YES B` / `DEMOS: change X` / call (313) 992-1219
+**B2. `product_changelog` table + `/changelog` public page**
+- Table: `id`, `published_at`, `title`, `body_md`, `category` (feature|fix|polish), `included_in_forever_pricing` boolean (default true), `client_visible` boolean.
+- Public route at `/changelog` (page exists as `Changelog.tsx` — currently a stub; wire to table).
+- Server-rendered list, newest first, filter pills by category.
 
-## What I will explicitly NOT say in the email
+**B3. "What's New" banner on Owner Dashboard**
+- Component reads last 30 days of `product_changelog` rows where `client_visible = true`.
+- Dismiss-per-row via localStorage; reappears when new rows ship.
+- "Included in your Forever Pricing" pill on every entry.
 
-- Will not say we replace eWay
-- Will not say we replace FieldServio
-- Will not say "we identify who visited your site" (only "the company" + "likely decision-maker")
-- Will not pitch TechAlert (boiler ops aren't license-gated; already hidden in `djconley.json`)
-- Will not over-claim person-level ID without flagging RB2B as the paid opt-in path
+**B4. `monthly-upgrade-recap-sender` cron wiring**
+- Edge function exists. Confirm: add pg_cron schedule for 1st of month 9am ET; query last month's `product_changelog` rows; render branded email per client; queue via `email_send_log`.
+- Add an admin "Send test recap to me" button on `DwaAdminQbrQueue` (or new `AdminUpgradeRecap` page).
 
-## What gets built (technical)
+### Wave C — Command Center (Pat's daily-use surface)
 
-- **New edge function** `supabase/functions/send-djconley-pitch-v2/index.ts`
-  - Mirrors `send-djconley-proposal` infra (Resend, DWA brand shell, BCC `matthewmichels4@gmail.com`, audit row in `notifications`)
-  - Long-form HTML body with all sections + mock graphics rendered as inline-styled HTML/CSS divs (mock browser chrome, dashboard panels, SMS bubbles, kanban cards, tile grid, toggle switches — all email-safe, no external image hosts)
-  - Plain-text fallback covering the same sections
-  - Subject: `Pat — the whole thing, top to bottom (D.J. Conley)`
-  - From: `Matt Michels — Detroit Web Agency <matt@detroitwebagent.com>`
-  - To: `pmichels@djconley.com`
-- **`supabase/config.toml`** — add `[functions.send-djconley-pitch-v2]` with `verify_jwt = false`
-- **No DB schema changes, no UI changes** — all the underlying infrastructure (Owner Dashboard tabs, Command Center spec, Forever Pricing tables, Predictive Sales rename, dual-run schema) is already on the build plan and lives in separate work — this email is the sales artifact only.
+**C1. `command_center_tiles` table**
+- Columns: `id`, `client_id`, `label`, `url`, `icon_key`, `open_mode` (`iframe`|`new_tab`), `position` (int), `created_at`.
+- RLS: client reads/writes own rows only.
 
-## Send sequence
+**C2. Command Center grid component + `/admin/command-center` route**
+- CRUD UI: add tile, drag to reorder (`@dnd-kit/sortable`), per-tile open mode toggle.
+- Iframe attempt with X-Frame-Options fallback to "open in new tab" + auto-flip the tile's `open_mode` so it stays.
+- Pinned bar across `/admin/*` showing top 6 tiles.
 
-1. Deploy function
-2. **First invoke → `matthewmichels4@gmail.com`** (preview to your inbox)
-3. You approve / I tweak
-4. **Second invoke → `pmichels@djconley.com`**
+**C3. "Sync to Command Center" seed action**
+- Admin button on Marketing Tools panel that bulk-inserts Pat's most-used URLs (eWay, FieldServio, QuickBooks, Gmail, Google Calendar, BSEED, MITN.info, bank, payroll) — pulled from a config constant initially, editable after.
 
-## Acceptance
+### Wave D — ICP & SiteRadar Pro premium polish
 
-- Function deploys cleanly
-- Preview lands in your inbox with all sections rendered correctly on Gmail web + iOS Mail (no broken visuals, no image-blocking issues since everything is inline CSS)
-- Audit row appears in `notifications` after each send
-- After your OK → live send to Pat
+**D1. `icp_keywords` table (replace localStorage)**
+- Columns: `user_id`, `keyword`, `weight` (int 1–5), `created_at`.
+- RLS: user reads/writes own rows.
+- Migrate any existing `localStorage` ICP keywords on first login (one-shot client-side script).
+
+**D2. ICP scoring + filter on SiteRadar Pro dashboard**
+- Server-side scoring fn: visitor event → match keywords → weighted score 0–100.
+- New `match_score` column on `crm_visitor_events`.
+- UI: sort/filter by ICP score; gated to active SiteRadar Pro subscribers via existing subscription check.
+
+**D3. "ICP Matched" top-5 realtime panel**
+- Supabase Realtime subscription on `crm_visitor_events` filtered by `client_id` + `match_score >= 70`.
+- Tooltip on each row shows which keywords matched (returned from scoring fn as `matched_keywords[]`).
+
+**D4. Instant SMS alerts for ICP matches**
+- New edge function: `icp-match-sms-alert` triggered from a Postgres trigger on `crm_visitor_events` insert when `match_score >= threshold`.
+- Per-client config row (`icp_alert_settings`): phone, threshold, opt-in, quiet-hours respect via `_shared/twilio.ts`.
+
+### Wave E — Run reliability + observability (the items that block Pat from clicking "send")
+
+**E1. `outreach_runs` table + state machine**
+- Columns: `id`, `kind` (`one_press`|`djconley_proposal`|`followup`), `status` (`queued`|`running`|`succeeded`|`failed`|`canceled`), `total_targets`, `sent_count`, `failed_count`, `error_log` jsonb, `created_by`, `started_at`, `finished_at`.
+- Every outreach edge function writes a row + step events to `outreach_run_steps`.
+
+**E2. Preflight gate on `outreach-one-press`**
+- Before kicking off: check (a) eligible prospect count > 0, (b) all have valid email, (c) no rate-limit window breach, (d) marketing kill switch is OFF, (e) not in TCPA quiet hours for SMS branches.
+- Returns structured error per failed check; UI renders red banners with the specific cause.
+
+**E3. JWT/auth fix for `outreach-one-press → contractor-outreach-email-blast` chain**
+- Today the parent forwards the user's JWT to the child function, which sometimes hits `verify_jwt = true` and explodes with `UNAUTHORIZED_INVALID_JWT_FORMAT`.
+- Fix: parent invokes child with `SUPABASE_SERVICE_ROLE_KEY` in the Authorization header (server-to-server), and child validates a shared signed payload (HMAC of `run_id` + timestamp) instead of trusting the JWT.
+- Add `verify_jwt = false` for `contractor-outreach-email-blast` in `config.toml` if not already set, since it is now an internal callee.
+
+**E4. Queue-based send worker**
+- `outreach_send_queue` table (or pgmq queue if already in use for emails).
+- `outreach-send-worker` edge function drains N per cycle, writes step rows, retries with backoff, marks DLQ after 3 fails.
+- pg_cron every 1 min.
+
+**E5. Run dashboard + diagnostics panel**
+- New admin page `/admin/outreach/runs`: list of runs with status pill, retry/resume/cancel buttons (each calling a small edge function that mutates `outreach_runs.status`).
+- Drill-in panel shows step-by-step timeline, last error, payload that failed, "Retry this step" button.
+
+**E6. Alerting on unauthorized + zero-send outcomes**
+- pg_cron every 5 min: scan `outreach_runs` for `failed` with `error_log->>'code' = 'UNAUTHORIZED'` or `succeeded` with `sent_count = 0`.
+- Send `notifyMatt()` SMS once per run (idempotent via `alerted_at` column).
+
+**E7. Widen prospect search**
+- Bump default lookback in `outreach-one-press` prospect query from current window to **90 days**.
+- Trade-label match: switch from exact equality to `ILIKE %trade%` plus a synonym map (boiler↔heating, hvac↔mechanical, etc.) in a small `trade_synonyms` table.
+
+### Wave F — Pat-specific premium touches (small but visible)
+
+**F1. Proposal email preview + admin send card**
+- New admin component `DJConleyProposalCard`: shows rendered React Email template (iframe srcdoc), "Send test to me" + "Send to Pat" buttons.
+- "Send to Pat" calls existing `send-djconley-proposal` (already exists), logs to `outreach_runs`, shows confirmation toast with timestamp + recipient.
+
+**F2. Pitch Audit Log: pagination + inner scroll**
+- Existing `OutreachAuditLog.tsx` page: add server-side pagination (25/page), constrain table container to `max-h-[70vh] overflow-y-auto` so the page itself doesn't scroll-jack.
+
+**F3. Admin sidebar mobile fix**
+- Marketing Tools panel currently squeezes under 380px viewport.
+- Switch sidebar to `Sheet` overlay below `md:` breakpoint; pinned floating menu button.
+
+**F4. Unsubscribe link in pitch SMS/email**
+- Add `STOP` instruction (already in `_shared/twilio.ts` but verify) + `?unsub_token=...` link in proposal email pointing at existing `handle-email-unsubscribe`.
+- Verify token row is created when proposal sends.
+
+---
+
+## Already Done — Skipping (verified in code)
+
+These appeared in your list but are already built — I checked the files. If any feel broken, tell me and I'll requeue them as bug fixes:
+
+- `outreach-one-press` edge function ✅ (exists, needs E2/E3/E5 hardening only)
+- `contractor-outreach-email-blast` ✅
+- `monthly-upgrade-recap-sender` ✅ (function exists; needs C-wave cron + admin trigger)
+- `nps-survey-sender` ✅ (needs 30-day cron schedule confirmed)
+- `dwa-v4-qbr-generator` + `DwaAdminQbrQueue.tsx` ✅
+- `dwa-v4-stripe-reconcile-diff` + `DwaAdminStripeReconcile.tsx` ✅ (set 6-hour cron)
+- `send-djconley-proposal`, `send-djconley-followup-sms`, `send-djconley-pitch-v2` ✅ (Pat phone now correct)
+- `DJConleyDemo1` + `DJConleyDemo2` ✅ — already redirect to brand-correct `/demo-djconley-v2` (navy #1B4F8A + orange #E07B39, zero teal)
+- `Changelog.tsx` page exists ✅ (needs B2 wiring to table)
+- `OutreachAuditLog`, `OutreachObservability`, `OutreachQueue` admin pages ✅ (need pagination + diagnostics drill-in)
+- `/dwa-admin` route exists ✅ — if it's loading homepage it's an auth-redirect bug; will verify in build pass
+- "Test SMS to my number only" ✅ — `_shared/twilio.ts` already has admin-test mode; just need a UI toggle on the proposal card
+
+---
+
+## Order of execution (recommended)
+
+1. **Wave A** (price locks + checkout) — turns the offer into a real product Pat can buy.
+2. **Wave E** (run reliability) — without this, every other "send" button is a coin flip.
+3. **Wave B** (owner dashboard) — what Pat sees Day 1 after paying.
+4. **Wave C** (Command Center) — what makes him open the dashboard daily.
+5. **Wave F** (polish) — ship in parallel as small PRs.
+6. **Wave D** (ICP / SiteRadar Pro) — premium upsell, ship after Pat is live.
+
+---
+
+## Open questions before I build
+
+1. **Magic-link domain strategy:** Do you want the magic link to land on `djconley.com/admin` (requires DNS work on Pat's domain) or on `app.detroitwebagent.com/owner/djconley`? The first is more premium, the second ships in a day.
+2. **Command Center seed list:** Do you want me to use the 9 default tiles (eWay, FieldServio, QuickBooks, Gmail, Google Calendar, BSEED, MITN, bank, payroll) or send Pat a form to fill in first?
+3. **Forever-Pricing carve-out language:** OK to ship the 24-month / net-new-product-line clause as written in A2, or do you want to soften/strengthen it?
+
+Approve and I'll execute Wave A + Wave E first (the two that unlock revenue + reliability), then loop back for B/C/D/F.
