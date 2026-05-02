@@ -28,7 +28,7 @@ const SERVICE_MAP: Record<string, { name: string; price: string; url: string; be
   free_real_estate_digest: {
     name: "AI Real Estate Market Digest",
     price: "$39/mo",
-    url: "https://www.mattmichelstraining.com/get-started?service=real_estate_digest",
+    url: "https://detroitwebagent.com/get-started?service=real_estate_digest",
     benefit: "20+ market insights weekly — price trends, inventory shifts, and investment opportunity scores",
   },
 };
