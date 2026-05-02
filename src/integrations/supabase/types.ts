@@ -5201,6 +5201,42 @@ export type Database = {
           },
         ]
       }
+      data_source_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          expires_at: string | null
+          fetch_error: string | null
+          fetched_at: string
+          id: string
+          payload: Json
+          row_count: number
+          source_id: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          expires_at?: string | null
+          fetch_error?: string | null
+          fetched_at?: string
+          id?: string
+          payload?: Json
+          row_count?: number
+          source_id: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          expires_at?: string | null
+          fetch_error?: string | null
+          fetched_at?: string
+          id?: string
+          payload?: Json
+          row_count?: number
+          source_id?: string
+        }
+        Relationships: []
+      }
       data_source_endpoints: {
         Row: {
           backup_url: string | null
@@ -5726,6 +5762,68 @@ export type Database = {
           stripe_customer_id?: string | null
         }
         Relationships: []
+      }
+      discovery_runs: {
+        Row: {
+          completed_at: string | null
+          cost_cents: number
+          criteria: Json
+          discovered: number
+          enriched: number
+          error_message: string | null
+          id: string
+          inserted: number
+          provider_breakdown: Json | null
+          recipe_id: string | null
+          skipped_compliance: number
+          skipped_dupe: number
+          skipped_low_confidence: number
+          started_at: string
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          cost_cents?: number
+          criteria?: Json
+          discovered?: number
+          enriched?: number
+          error_message?: string | null
+          id?: string
+          inserted?: number
+          provider_breakdown?: Json | null
+          recipe_id?: string | null
+          skipped_compliance?: number
+          skipped_dupe?: number
+          skipped_low_confidence?: number
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          cost_cents?: number
+          criteria?: Json
+          discovered?: number
+          enriched?: number
+          error_message?: string | null
+          id?: string
+          inserted?: number
+          provider_breakdown?: Json | null
+          recipe_id?: string | null
+          skipped_compliance?: number
+          skipped_dupe?: number
+          skipped_low_confidence?: number
+          started_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discovery_runs_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "outreach_target_recipes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dol_labor_snapshots: {
         Row: {
@@ -14135,13 +14233,61 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_target_recipes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          criteria: Json
+          id: string
+          is_active: boolean
+          last_run_at: string | null
+          last_run_stats: Json | null
+          name: string
+          schedule_cron: string | null
+          total_discovered: number
+          total_inserted: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          last_run_stats?: Json | null
+          name: string
+          schedule_cron?: string | null
+          total_discovered?: number
+          total_inserted?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          last_run_stats?: Json | null
+          name?: string
+          schedule_cron?: string | null
+          total_discovered?: number
+          total_inserted?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       outreach_targets: {
         Row: {
           address_line1: string | null
           business_name: string | null
           city: string | null
+          confidence_score: number
           contact_count: number
           created_at: string
+          cross_licensed: boolean
+          discovery_run_id: string | null
           do_not_email: boolean
           do_not_fax: boolean
           do_not_mail: boolean
@@ -14152,6 +14298,9 @@ export type Database = {
           is_dnc: boolean
           is_founder: boolean
           last_contacted_at: string | null
+          last_enriched_at: string | null
+          license_number: string | null
+          license_state: string | null
           owner_first_name: string | null
           owner_last_name: string | null
           owner_title: string | null
@@ -14168,8 +14317,11 @@ export type Database = {
           address_line1?: string | null
           business_name?: string | null
           city?: string | null
+          confidence_score?: number
           contact_count?: number
           created_at?: string
+          cross_licensed?: boolean
+          discovery_run_id?: string | null
           do_not_email?: boolean
           do_not_fax?: boolean
           do_not_mail?: boolean
@@ -14180,6 +14332,9 @@ export type Database = {
           is_dnc?: boolean
           is_founder?: boolean
           last_contacted_at?: string | null
+          last_enriched_at?: string | null
+          license_number?: string | null
+          license_state?: string | null
           owner_first_name?: string | null
           owner_last_name?: string | null
           owner_title?: string | null
@@ -14196,8 +14351,11 @@ export type Database = {
           address_line1?: string | null
           business_name?: string | null
           city?: string | null
+          confidence_score?: number
           contact_count?: number
           created_at?: string
+          cross_licensed?: boolean
+          discovery_run_id?: string | null
           do_not_email?: boolean
           do_not_fax?: boolean
           do_not_mail?: boolean
@@ -14208,6 +14366,9 @@ export type Database = {
           is_dnc?: boolean
           is_founder?: boolean
           last_contacted_at?: string | null
+          last_enriched_at?: string | null
+          license_number?: string | null
+          license_state?: string | null
           owner_first_name?: string | null
           owner_last_name?: string | null
           owner_title?: string | null
@@ -14220,7 +14381,15 @@ export type Database = {
           vertical?: string
           zip?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "outreach_targets_discovery_run_id_fkey"
+            columns: ["discovery_run_id"]
+            isOneToOne: false
+            referencedRelation: "discovery_runs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       owner_magic_tokens: {
         Row: {
