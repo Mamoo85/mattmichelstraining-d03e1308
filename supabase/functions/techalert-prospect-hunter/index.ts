@@ -9,6 +9,13 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
+
+const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
+// Below this many fresh prospects in a run, SMS Matt
+const LOW_YIELD_THRESHOLD = Number(Deno.env.get("TECHALERT_LOW_YIELD_THRESHOLD") || "5");
+// Below this many pending dead-lead contacts, auto-trigger pool refill
+const DEAD_LEAD_MIN_POOL = Number(Deno.env.get("DEAD_LEAD_MIN_POOL") || "25");
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
