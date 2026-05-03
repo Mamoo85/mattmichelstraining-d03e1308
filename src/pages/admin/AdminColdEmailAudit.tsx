@@ -31,6 +31,9 @@ interface TplBucket { template: string; count: number }
 interface PoolRow { name: string; fn: string; available: number }
 interface PlanRow { fn: string; pool: string; available: number; planned_send: number }
 interface SupplyPool { product: string; key: string; unsent_with_email: number; unenriched_no_email: number }
+interface KpiRow { run_at: string; function_name: string; leads_attempted: number; leads_enriched: number; leads_failed: number; leads_skipped: number; throughput_per_hour: number; cost_cents_total: number; provider_breakdown: any; }
+interface BudgetRow { provider: string; cap_usd: number; spent_usd: number; pct: number; }
+interface BreakerRow { id: string; tripped_at: string; reason: string; metric_value: number; threshold: number; cleared_at: string | null; auto_reset_at: string; }
 
 export default function AdminColdEmailAudit() {
   const [days, setDays] = useState<DayBucket[]>([]);
