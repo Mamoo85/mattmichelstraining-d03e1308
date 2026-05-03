@@ -757,5 +757,37 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] fire inspections:", e); }
 
+  // Detroit Historic District Violations — porch/deck and structural violations (open cases)
+  try {
+    const where = encodeURIComponent(`case_status = 'Open' AND (has_porch_deck_violati = 'True' OR has_addition_violation = 'True' OR has_construction_new_violation = 'True')`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Historic_District_Violations/FeatureServer/0/query?where=${where}&outFields=address,zip_code,intake_date,historic_district,violation_scope&resultRecordCount=25&orderByFields=OBJECTID+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const district = a.historic_district || "Detroit historic district";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "water_damage_permit",
+          signal_detail: `Historic District Violation (Open): ${addr} in ${district} — ${a.violation_scope ?? "structural violation"}. Porch, deck, and structural violations in historic districts require full restoration-grade repairs to pass re-inspection`,
+          signal_date: a.intake_date ? String(a.intake_date).slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.water_damage_permit,
+          source_method: "historic_district_violations",
+          suggested_opener: `Your property at ${addr} in ${district} has an open structural violation — historic district compliance requires restoration-grade repair by an approved contractor. We specialize in historic porch and structural restoration that passes city re-inspection.`,
+          best_call_window: "Any time — open violation creates deadline pressure",
+          estimated_value: 18000,
+          raw_source_data: { addr, zip, district, scope: a.violation_scope },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] historic violations:", e); }
+
   return signals;
 }

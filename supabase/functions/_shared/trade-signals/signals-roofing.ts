@@ -611,5 +611,66 @@ export async function scanSignals(
     }
   } catch (e) { console.error("[roofing] ROW permits:", e); }
 
+  // 17. NOAA SPC Day-2 Convective Outlook — 48-hour pre-storm outreach window
+  try {
+    const res = await fetch("https://www.spc.noaa.gov/products/outlook/day2otlk_cat.nolyr.geojson", {
+      headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" },
+    });
+    if (res.ok) {
+      const geo = await res.json();
+      for (const feat of (geo?.features ?? [])) {
+        const props = feat?.properties ?? {};
+        if (!["SLGT", "ENH", "MDT", "HIGH"].some((r) => props.LABEL?.includes(r))) continue;
+        const label: string = props.LABEL2 ?? props.LABEL ?? "";
+        const valid = (props.VALID_ISO ?? new Date().toISOString()).slice(0, 10);
+        signals.push({
+          address: "Michigan region",
+          city: state, zip: "",
+          signal_type: "hail_damage_area",
+          signal_detail: `NOAA SPC Day-2 Outlook: ${label} — severe thunderstorm/hail risk in 24–48 hours. Two-day window gives roofing contractors the longest pre-booking lead time`,
+          signal_date: valid,
+          score: BASE_SCORES.hail_damage_area,
+          source_method: "noaa_spc_day2_outlook",
+          suggested_opener: "Hail and severe weather is in the 48-hour forecast for your area — we're filling pre-storm inspection slots now. Contractors get slammed after a storm; locking in early saves you weeks of wait time.",
+          best_call_window: "48-hour pre-storm window",
+          estimated_value: 12000,
+          raw_source_data: { label, valid },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] SPC day-2:", e); }
+
+  // 18. Detroit Historic District Violations — open cases with roof/gutter/chimney flags
+  try {
+    const where = encodeURIComponent(`case_status = 'Open' AND has_roof_gutter_chimney_violati = 'True'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Historic_District_Violations/FeatureServer/0/query?where=${where}&outFields=address,zip_code,intake_date,historic_district,violation_scope&resultRecordCount=30&orderByFields=OBJECTID+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const district = a.historic_district || "Detroit historic district";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "roof_permit_upsell",
+          signal_detail: `Detroit Historic District Violation (Open): ${addr} in ${district} — roof/gutter/chimney violation. Historic district repairs require certified contractors and period-appropriate materials`,
+          signal_date: a.intake_date ? String(a.intake_date).slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.roof_permit_upsell + 2,
+          source_method: "historic_district_violations",
+          suggested_opener: `Your property at ${addr} is in ${district} and has an open city violation for roof or chimney — historic district compliance requires an approved contractor. We're certified for historic restoration work and can close the violation quickly.`,
+          best_call_window: "Any time — open violation creates compliance urgency",
+          estimated_value: 15000,
+          raw_source_data: { addr, zip, district, scope: a.violation_scope },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] historic violations:", e); }
+
   return signals;
 }

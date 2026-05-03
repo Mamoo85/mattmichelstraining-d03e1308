@@ -460,5 +460,67 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[exterior] ROW permits:", e); }
 
+  // Day-2 SPC Convective Outlook — 48-hour pre-storm siding/exterior window
+  try {
+    const res = await fetch("https://www.spc.noaa.gov/products/outlook/day2otlk_cat.nolyr.geojson", {
+      headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" },
+    });
+    if (res.ok) {
+      const geo = await res.json();
+      for (const feat of (geo?.features ?? [])) {
+        const props = feat?.properties ?? {};
+        if (!["SLGT", "ENH", "MDT", "HIGH"].some((r) => props.LABEL?.includes(r))) continue;
+        const label: string = props.LABEL2 ?? props.LABEL ?? "";
+        const valid = (props.VALID_ISO ?? new Date().toISOString()).slice(0, 10);
+        signals.push({
+          address: "Michigan region",
+          city: state, zip: "",
+          signal_type: "storm_siding_damage",
+          signal_detail: `SPC Day-2 Outlook: ${label} — hail/high-wind risk in 24–48 hours. Pre-storm exterior check + booking window`,
+          signal_date: valid,
+          score: BASE_SCORES.storm_siding_damage - 1,
+          source_method: "noaa_spc_day2_outlook",
+          suggested_opener: "Severe weather including hail is in the 48-hour forecast — siding and exterior damage from hail is often invisible until paint starts failing. We do fast free exterior checks and can book you in before the rush.",
+          best_call_window: "48-hour pre-storm window",
+          estimated_value: 8000,
+          raw_source_data: { label, valid },
+        });
+      }
+    }
+  } catch (e) { console.error("[exterior] SPC day-2:", e); }
+
+  // Detroit Historic District Violations — siding, paint, windows, doors violations (open cases)
+  try {
+    const where = encodeURIComponent(`case_status = 'Open' AND (has_siding_walls_violation = 'True' OR has_paint_violation = 'True' OR has_windows_violation = 'True' OR has_doors_violation = 'True')`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Historic_District_Violations/FeatureServer/0/query?where=${where}&outFields=address,zip_code,intake_date,historic_district,violation_scope,has_siding_walls_violation,has_paint_violation,has_windows_violation&resultRecordCount=30&orderByFields=OBJECTID+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const district = a.historic_district || "Detroit historic district";
+        const violationType = a.has_paint_violation === "True" ? "paint" : a.has_windows_violation === "True" ? "windows" : "siding";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "new_owner_exterior",
+          signal_detail: `Historic District Violation (Open): ${addr} in ${district} — ${a.violation_scope ?? violationType}. Historic exterior repairs require period-accurate materials and approved contractors — premium job size`,
+          signal_date: a.intake_date ? String(a.intake_date).slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.new_owner_exterior + 1,
+          source_method: "historic_district_violations",
+          suggested_opener: `Your property at ${addr} in ${district} has an open ${violationType} violation — historic district compliance requires approved materials and certified contractors. We specialize in historic exterior restoration and can close the violation quickly with work that won't get re-cited.`,
+          best_call_window: "Any time — open violation creates compliance urgency",
+          estimated_value: 12000,
+          raw_source_data: { addr, zip, district, scope: a.violation_scope },
+        });
+      }
+    }
+  } catch (e) { console.error("[exterior] historic violations:", e); }
+
   return signals;
 }

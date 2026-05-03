@@ -368,5 +368,34 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[tree] Detroit assessment roll:", e); }
 
+  // Day-2 SPC Convective Outlook — 48-hour pre-storm tree limb/safety window
+  try {
+    const res = await fetch("https://www.spc.noaa.gov/products/outlook/day2otlk_cat.nolyr.geojson", {
+      headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" },
+    });
+    if (res.ok) {
+      const geo = await res.json();
+      for (const feat of (geo?.features ?? [])) {
+        const props = feat?.properties ?? {};
+        if (!["SLGT", "ENH", "MDT", "HIGH"].some((r) => props.LABEL?.includes(r))) continue;
+        const label: string = props.LABEL2 ?? props.LABEL ?? "";
+        const valid = (props.VALID_ISO ?? new Date().toISOString()).slice(0, 10);
+        signals.push({
+          address: "Michigan region",
+          city: state, zip: "",
+          signal_type: "storm_tree_damage",
+          signal_detail: `SPC Day-2 Outlook: ${label} — high wind and thunderstorm risk in 24–48 hours. Pre-storm tree limb removal prevents roof and fence damage`,
+          signal_date: valid,
+          score: BASE_SCORES.storm_tree_damage - 1,
+          source_method: "noaa_spc_day2_outlook",
+          suggested_opener: "Severe wind and storms are forecast for your area tomorrow — overhanging limbs are the #1 cause of roof and fence damage during windstorms. We can remove at-risk limbs today before the storm hits. Slots are filling fast.",
+          best_call_window: "48-hour pre-storm window — before limbs become emergency",
+          estimated_value: 1500,
+          raw_source_data: { label, valid },
+        });
+      }
+    }
+  } catch (e) { console.error("[tree] SPC day-2:", e); }
+
   return signals;
 }

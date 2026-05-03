@@ -338,5 +338,37 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[gutters] multifamily construction:", e); }
 
+  // Historic District Violations — open cases with roof/gutter/chimney flags
+  try {
+    const where = encodeURIComponent(`case_status = 'Open' AND has_roof_gutter_chimney_violati = 'True'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Historic_District_Violations/FeatureServer/0/query?where=${where}&outFields=address,zip_code,intake_date,historic_district,violation_scope&resultRecordCount=25&orderByFields=OBJECTID+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const district = a.historic_district || "Detroit historic district";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "roof_permit_upsell",
+          signal_detail: `Historic District Violation (Open): ${addr} in ${district} — roof/gutter violation. Gutters in historic districts must match the period aesthetic; improper materials can result in additional violations`,
+          signal_date: a.intake_date ? String(a.intake_date).slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 8,
+          source_method: "historic_district_violations",
+          suggested_opener: `Your property at ${addr} in ${district} has an open city violation that includes gutters — historic district compliance requires approved materials and contractors. We specialize in historic gutter replacement and can get the violation closed fast.`,
+          best_call_window: "Any time — open violation creates compliance urgency",
+          estimated_value: 4000,
+          raw_source_data: { addr, zip, district, scope: a.violation_scope },
+        });
+      }
+    }
+  } catch (e) { console.error("[gutters] historic violations:", e); }
+
   return signals;
 }
