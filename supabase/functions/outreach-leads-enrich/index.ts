@@ -25,6 +25,10 @@ import {
   domainFromUrl,
   googlePlacesWebsite,
 } from "../_shared/enrichment-pipeline.ts";
+import { canSpend, PROVIDER_COST_ESTIMATES, type Provider } from "../_shared/enrichment-budget.ts";
+
+interface ProviderTally { ok: number; fail: number; cost_cents: number; capped: number; ms: number; }
+const newTally = (): ProviderTally => ({ ok: 0, fail: 0, cost_cents: 0, capped: 0, ms: 0 });
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
