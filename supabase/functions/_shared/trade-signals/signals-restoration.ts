@@ -489,5 +489,35 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] historic register:", e); }
 
+  // 12. BSEED Vacant Property Registrations — owners planning to sell/rehab often need full restoration
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_vacant_property_registrations/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,issued_date,owner_name,neighborhood&resultRecordCount=40&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "water_damage_permit",
+          signal_detail: `BSEED Vacant Registration: ${addr} — owner: ${a.owner_name ?? "on file"}. Properties vacant for over a year in Detroit have near-certain water intrusion, mold, and vandalism damage that requires professional restoration before listing or occupancy`,
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.water_damage_permit - 1,
+          source_method: "bseed_vacant_registrations",
+          suggested_opener: "Your vacant property at this address requires annual registration — most owners of registered vacants don't realize the extent of interior damage until they try to sell. We offer pre-listing restoration assessments.",
+          best_call_window: "Within 60 days of registration or renewal",
+          estimated_value: 8000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] vacant registrations:", e); }
+
   return signals;
 }

@@ -289,7 +289,37 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[exterior] assessor sales:", e); }
 
-  // 9. NOAA CDO Historical Hail + Wind — Wayne/Oakland/Macomb (past 12 months)
+  // 9. BSEED Acceptance Certificates — completed renovations = neighbors see fresh exterior, want same
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/acceptance_certificates/FeatureServer/0/query?where=task_status+%3D+'CofA+Issued'+AND+is_residential+%3D+'True'&outFields=address,zip_code,issued_date,record_type&resultRecordCount=25&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "foreclosure_exterior",
+          signal_detail: `BSEED Certificate of Acceptance: ${addr} — new CofA issued for renovation completion. Newly renovated homes create an aesthetic contrast with adjacent properties, prompting neighbors to consider exterior updates`,
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 6,
+          source_method: "bseed_cofa",
+          suggested_opener: "A home on your block just completed a full renovation — we're doing free exterior assessments for neighbors while our painters are in the area. New siding and fresh paint can add $10k+ to your home's value.",
+          best_call_window: "Within 30 days of CofA issuance",
+          estimated_value: 6000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[exterior] CofA:", e); }
+
+  // 10. NOAA CDO Historical Hail + Wind — Wayne/Oakland/Macomb (past 12 months)
   // WT09 = hail occurred; WT11 = high/damaging winds. Uses existing NOAA_API_KEY.
   try {
     const noaaKey = Deno.env.get("NOAA_API_KEY");

@@ -382,7 +382,37 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[demo_junk] DLBA project:", e); }
 
-  // 14. Detroit Commercial Demolitions — city-tracked commercial demo projects (contractor referral signal)
+  // 14. BSEED Vacant Property Registrations — registered vacants are candidates for demo or sale prep
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_vacant_property_registrations/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,issued_date,owner_name,neighborhood&resultRecordCount=50&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "foreclosure_clearout",
+          signal_detail: `BSEED Vacant Registration: ${addr} — owner: ${a.owner_name ?? "on file"}. Registered vacants approaching 2+ years are heading toward city demo order or forced sale — owners often need clearout before listing`,
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.foreclosure_clearout,
+          source_method: "bseed_vacant_registrations",
+          suggested_opener: "Your property is registered as vacant with the city — registered vacants often require emergency cleanup before the city issues an order. We can clear and secure the property to avoid escalation.",
+          best_call_window: "Within 60 days of registration or renewal",
+          estimated_value: 1500,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] vacant registrations:", e); }
+
+  // 16. Detroit Commercial Demolitions — city-tracked commercial demo projects (contractor referral signal)
   try {
     const res = await fetch(
       "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Commercial_Demolitions/FeatureServer/0/query?where=1%3D1&outFields=address,demo_date,projected_demo_date,demolition_contractor,status,neighborhood&resultRecordCount=40&orderByFields=ObjectId+DESC&f=json",

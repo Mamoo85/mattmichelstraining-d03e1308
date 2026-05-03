@@ -224,5 +224,35 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[pest] DLBA auction:", e); }
 
+  // 8. BSEED Vacant Property Registrations — owners must register vacants; active registrations = reachable owner
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_vacant_property_registrations/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,issued_date,owner_name,neighborhood&resultRecordCount=50&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "foreclosure_vacant",
+          signal_detail: `BSEED Vacant Property Registration: ${addr} — owner: ${a.owner_name ?? "on file"}. Registered vacants in Detroit have active rodent, raccoon, and insect infestations migrating to adjacent occupied homes`,
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.foreclosure_vacant,
+          source_method: "bseed_vacant_registrations",
+          suggested_opener: "The vacant property next to you at this address is registered with the city — vacant properties generate active pest migration into adjacent homes. A free inspection takes 20 minutes.",
+          best_call_window: "While property is registered vacant (typically 12-month registration)",
+          estimated_value: 400,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[pest] vacant registrations:", e); }
+
   return signals;
 }

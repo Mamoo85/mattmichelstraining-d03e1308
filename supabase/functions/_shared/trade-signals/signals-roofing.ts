@@ -373,7 +373,37 @@ export async function scanSignals(
     }
   } catch (e) { console.error("[roofing] occupancy certs:", e); }
 
-  // 11. NOAA CDO Historical Hail Events — Wayne/Oakland/Macomb counties (past 12 months)
+  // 11. BSEED Acceptance Certificates (CofA) — just-completed renovations trigger neighborhood demand
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/acceptance_certificates/FeatureServer/0/query?where=task_status+%3D+'CofA+Issued'+AND+is_residential+%3D+'True'&outFields=address,zip_code,issued_date,record_type&resultRecordCount=30&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "new_homeowner_roof",
+          signal_detail: `BSEED Certificate of Acceptance: ${addr} — full renovation completion certificate issued (${(a.record_type ?? "permit").replace("Building Permit", "").trim()}). Neighbors on the same block with same-era homes now see their roof by comparison`,
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 6,
+          source_method: "bseed_cofa",
+          suggested_opener: "A home on your block just completed a full renovation and received a certificate of acceptance — we're offering free roof assessments to neighbors while our crew is in the area.",
+          best_call_window: "Within 30 days of CofA issuance",
+          estimated_value: 12000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] CofA:", e); }
+
+  // 12. NOAA CDO Historical Hail Events — Wayne/Oakland/Macomb counties (past 12 months)
   // Uses existing NOAA_API_KEY. WT09 = hail occurred on that date.
   try {
     const noaaKey = Deno.env.get("NOAA_API_KEY");
