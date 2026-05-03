@@ -692,5 +692,70 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] Detroit assessment roll:", e); }
 
+  // 18. Demolition Post-Abatement Reports — abatement clearance triggers remediation referrals
+  try {
+    const since90 = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Demolition_Post_Abatement_Verification_Reports/FeatureServer/0/query?where=pav_passed_date+%3E%3D+%27${since90}%27+AND+structure_type+%3D+'Residential'&outFields=address,structure_type,pav_passed_date,demolition_contractor,zip_code,neighborhood&resultRecordCount=30&orderByFields=OBJECTID+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        if (!addr) continue;
+        const zip = String(a.zip_code || "").trim();
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const passed = a.pav_passed_date ? String(a.pav_passed_date).slice(0, 10) : new Date().toISOString().split("T")[0];
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "water_damage_permit",
+          signal_detail: `Post-abatement verification passed at ${addr} (${passed}) — residential demolition required abatement for hazardous materials (asbestos/lead). Adjacent properties with similar construction dates may need environmental assessments`,
+          signal_date: passed,
+          score: BASE_SCORES.water_damage_permit,
+          source_method: "demo_post_abatement_reports",
+          suggested_opener: `A home on your block was just demolished and required environmental abatement — neighboring homes built in the same era frequently have the same hazardous materials present. We offer free environmental assessments.`,
+          best_call_window: "Within 60 days of abatement clearance",
+          estimated_value: 15000,
+          raw_source_data: { addr, zip, passed, contractor: a.demolition_contractor },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] post-abatement reports:", e); }
+
+  // 19. Fire Inspections — buildings that failed fire inspection often have water/mold damage
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Fire_Inspections/FeatureServer/0/query?where=InspWithinLastYear+%3D+'No'+AND+propusetype+NOT+LIKE+'%25Office%25'&outFields=Address,zip,OccupantName,InspectionType_Full,LatestInspDate,propusetypedescription&resultRecordCount=40&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.Address || "").trim();
+        const zip = String(a.zip || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const occupant = a.OccupantName || "";
+        const lastInspMs = typeof a.LatestInspDate === "number" ? a.LatestInspDate : null;
+        const lastInsp = lastInspMs ? new Date(lastInspMs).toISOString().slice(0, 10) : "";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "water_damage_permit",
+          signal_detail: `Fire inspection overdue: ${addr} (${occupant || a.propusetypedescription || "property"}) — last inspected ${lastInsp || "unknown"}. Buildings with lapsed fire inspections often have pre-existing water intrusion and mold that compound fire risk`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.water_damage_permit - 1,
+          source_method: "fire_inspections",
+          suggested_opener: `${occupant ? occupant + " — " : ""}We noticed ${addr} is overdue for its fire inspection — buildings with deferred maintenance often have water damage and mold that creates additional fire risk. A free walk-through assessment can help you get ahead of it.`,
+          best_call_window: "Any time — deferred maintenance compounds risk",
+          estimated_value: 8000,
+          raw_source_data: { addr, zip, occupant, last_insp: lastInsp, type: a.propusetypedescription },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] fire inspections:", e); }
+
   return signals;
 }

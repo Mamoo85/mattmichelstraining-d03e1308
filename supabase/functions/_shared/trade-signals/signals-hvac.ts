@@ -477,5 +477,130 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[hvac] commercial cert expiry:", e); }
 
+  // 15. Multifamily Housing Construction Sites — new builds needing fresh HVAC installs
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/multifamily_housing_construction_sites/FeatureServer/0/query?where=construction_status+IN+('Under+Construction','Construction+Not+Started')&outFields=address,zip_code,owner_developer_name,legal_entity,total_units,construction_status,construction_start_year&resultRecordCount=40&orderByFields=OBJECTID+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const units = a.total_units || 0;
+        const developer = a.owner_developer_name || a.legal_entity || "developer";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "commercial_compliance_hvac",
+          signal_detail: `Multifamily construction site: ${addr} (${units} units, ${a.construction_status}) — ${developer}. New construction requires full HVAC system specification and installation`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: units >= 20 ? BASE_SCORES.commercial_compliance_hvac + 1 : BASE_SCORES.commercial_compliance_hvac,
+          source_method: "multifamily_construction_sites",
+          suggested_opener: `I noticed ${addr} is under construction — ${units} units of new multifamily housing needs full HVAC specification and installation. Are you locked in with a mechanical contractor yet?`,
+          best_call_window: "During construction phase — pre-drywall for new builds",
+          estimated_value: units * 3500,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] multifamily construction:", e); }
+
+  // 16. Existing Multifamily Housing — aging HVAC in regulated affordable housing
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/existing_multifamily_housing_sites/FeatureServer/0/query?where=regulatory_status+%3D+'Regulated'+AND+total_units+%3E+10&outFields=address,zip_code,owner_developer_name,legal_entity,total_units,regulatory_status&resultRecordCount=50&orderByFields=OBJECTID+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const units = a.total_units || 0;
+        const developer = a.owner_developer_name || a.legal_entity || "property manager";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "aging_system_proxy",
+          signal_detail: `Existing regulated multifamily: ${addr} (${units} units) — ${developer}. Regulated affordable housing has deferred HVAC maintenance and compliance-mandated upgrade schedules`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: units >= 25 ? BASE_SCORES.aging_system_proxy + 1 : BASE_SCORES.aging_system_proxy,
+          source_method: "existing_multifamily_sites",
+          suggested_opener: `We work with property managers at ${addr}-type regulated multifamily buildings — HVAC service contracts with priority emergency response. Are you currently contracted?`,
+          best_call_window: "Any time — multifamily HVAC is evergreen B2B",
+          estimated_value: units * 1200,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] existing multifamily:", e); }
+
+  // 17. Energy/Water Benchmarking — high EUI buildings need HVAC upgrades
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/energy_water_benchmarking_ordinance_-_buildings/FeatureServer/0/query?where=is_municipal+%3D+0+AND+site_total_eui+%3E+100&outFields=parcel_address,zip_code,energystar_name,assessor_year_built,site_total_eui,energystar_score,square_footage_category&resultRecordCount=40&orderByFields=site_total_eui+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.parcel_address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const eui = a.site_total_eui || 0;
+        const score = a.energystar_score;
+        const name = a.energystar_name || "";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "commercial_compliance_hvac",
+          signal_detail: `Energy benchmarking: ${addr} (${name}) — EUI ${eui}, Energy Star score ${score ?? "not rated"}, built ${a.assessor_year_built || "unknown"}. High energy use = inefficient HVAC system needing replacement/upgrade`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: eui > 200 ? BASE_SCORES.commercial_compliance_hvac + 1 : BASE_SCORES.commercial_compliance_hvac,
+          source_method: "energy_benchmarking_ordinance",
+          suggested_opener: `${name || addr} shows a high energy use intensity score in Detroit's benchmarking database — buildings with high EUI almost always have aging, inefficient HVAC as the primary driver. We do free commercial HVAC energy audits.`,
+          best_call_window: "Any time — energy cost is always top of mind for property managers",
+          estimated_value: 25000,
+          raw_source_data: { addr, zip, eui, energystar_score: score, year_built: a.assessor_year_built },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] energy benchmarking:", e); }
+
+  // 18. BSEED Rental Compliance — non-compliant rentals need HVAC service contracts
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_rental_compliance_public_view/FeatureServer/0/query?where=current_cofc_expired_date+IS+NULL+OR+current_reg_issued_date+IS+NULL&outFields=record_addresses,parcel_address,current_cofc_issued_date,current_cofc_expired_date,current_reg_issued_date&resultRecordCount=40&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.record_addresses || a.parcel_address || "").trim();
+        if (!addr) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "aging_system_proxy",
+          signal_detail: `Rental compliance gap: ${addr} — missing or expired CofC/registration. Non-compliant rentals frequently have deferred HVAC maintenance as root cause of inspection failures`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.aging_system_proxy,
+          source_method: "bseed_rental_compliance_view",
+          suggested_opener: `Your rental property at ${addr} has a gap in its compliance certificate history — HVAC failures are the most common reason rental inspections fail in Detroit. We offer same-week service and documentation for re-inspection.`,
+          best_call_window: "Immediately — compliance gap creates urgency",
+          estimated_value: 4000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] rental compliance view:", e); }
+
   return signals;
 }

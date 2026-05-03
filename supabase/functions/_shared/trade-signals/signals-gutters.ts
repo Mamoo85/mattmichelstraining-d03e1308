@@ -306,5 +306,37 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[gutters] Detroit assessment roll:", e); }
 
+  // New: Multifamily Construction — new builds need complete gutter/downspout systems
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/multifamily_housing_construction_sites/FeatureServer/0/query?where=construction_status+IN+('Under+Construction','Construction+Not+Started')&outFields=address,zip_code,owner_developer_name,legal_entity,total_units,construction_status&resultRecordCount=30&orderByFields=OBJECTID+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const units = a.total_units || 0;
+        const developer = a.owner_developer_name || a.legal_entity || "developer";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "roof_permit_upsell",
+          signal_detail: `Multifamily construction: ${addr} (${units} units, ${a.construction_status}) — ${developer}. New multifamily requires full commercial gutter and downspout system to meet city drainage requirements`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: units >= 20 ? BASE_SCORES.roof_permit_upsell + 1 : BASE_SCORES.roof_permit_upsell,
+          source_method: "multifamily_construction_sites",
+          suggested_opener: `We saw ${addr} is under construction — ${units} units of new multifamily requires a commercial-grade gutter and drainage system. Are you taking bids on the exterior drainage package?`,
+          best_call_window: "Late construction phase — exterior close-in",
+          estimated_value: units * 800,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[gutters] multifamily construction:", e); }
+
   return signals;
 }

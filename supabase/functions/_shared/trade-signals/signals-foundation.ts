@@ -427,5 +427,67 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[foundation] Detroit assessment roll:", e); }
 
+  // New: Residential Inspections — failed or pending results signal structural/foundation issues
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Residential_Inspections_%28combined%29/FeatureServer/0/query?where=result+IS+NOT+NULL+AND+(result+LIKE+%27%25FAIL%25%27+OR+result+LIKE+%27%25REJECT%25%27+OR+result+LIKE+%27%25NOT+PASS%25%27)&outFields=address,zipcode,date,result,record_id&resultRecordCount=40&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").replace(/-+/g, " ").trim();
+        if (!addr || addr.length < 5) continue;
+        const zip = String(a.zipcode || "").trim();
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const inspDate = a.date ? String(a.date).slice(0, 10) : new Date().toISOString().split("T")[0];
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "heavy_rain_foundation",
+          signal_detail: `Residential inspection failed/rejected: ${addr} (record ${a.record_id || "?"}) — ${a.result || "failed inspection"}. Failed inspections frequently cite foundation cracks, water intrusion, or structural settling`,
+          signal_date: inspDate,
+          score: 7,
+          source_method: "residential_inspections",
+          suggested_opener: `Your property at ${addr} had a failed city inspection on record — foundation and structural issues are the most common reason Detroit homes fail inspection. We offer free foundation assessments and can help you get the property cleared.`,
+          best_call_window: "Within 60 days of failed inspection",
+          estimated_value: 8000,
+          raw_source_data: { addr, zip, result: a.result, record_id: a.record_id, date: inspDate },
+        });
+      }
+    }
+  } catch (e) { console.error("[foundation] residential inspections:", e); }
+
+  // New: ROW Permits — utility excavation near foundations = vibration/settlement signal
+  try {
+    const since90 = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/ROW_Permits/FeatureServer/0/query?where=issued_date+%3E%3D+%27${since90}%27+AND+(description+LIKE+%27%25excavat%25%27+OR+description+LIKE+%27%25sewer%25%27+OR+description+LIKE+%27%25water+main%25%27)&outFields=permit_address,permit_type,issued_date,description,contractor&resultRecordCount=30&orderByFields=ObjectId+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.permit_address || "").trim();
+        if (!addr || addr.length < 5) continue;
+        const issued = a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0];
+        const desc = (a.description || "").slice(0, 100);
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "heavy_rain_foundation",
+          signal_detail: `ROW excavation permit near ${addr}: ${desc}. Underground excavation for sewers and water mains causes soil settlement and vibration that can open existing foundation cracks in adjacent properties`,
+          signal_date: issued,
+          score: 6,
+          source_method: "row_permits",
+          suggested_opener: `Excavation work was recently permitted near ${addr} — underground utility work causes soil movement that can trigger foundation settlement in adjacent homes built on Detroit's clay soil. A free inspection now catches any movement early.`,
+          best_call_window: "Within 60 days of ROW permit",
+          estimated_value: 8000,
+          raw_source_data: { addr, permit_type: a.permit_type, issued, desc },
+        });
+      }
+    }
+  } catch (e) { console.error("[foundation] ROW permits:", e); }
+
   return signals;
 }

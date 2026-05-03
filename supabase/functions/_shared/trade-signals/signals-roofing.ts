@@ -548,5 +548,68 @@ export async function scanSignals(
     }
   } catch (e) { console.error("[roofing] Detroit assessment roll:", e); }
 
+  // 16. Multifamily Construction Sites — new builds need full roofing packages
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/multifamily_housing_construction_sites/FeatureServer/0/query?where=construction_status+IN+('Under+Construction','Construction+Not+Started')&outFields=address,zip_code,owner_developer_name,legal_entity,total_units,construction_status&resultRecordCount=40&orderByFields=OBJECTID+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const units = a.total_units || 0;
+        const developer = a.owner_developer_name || a.legal_entity || "developer";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "roof_permit_upsell",
+          signal_detail: `Multifamily construction site: ${addr} (${units} units, ${a.construction_status}) — ${developer}. New multifamily construction requires full commercial roofing installation and inspection`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: units >= 20 ? BASE_SCORES.roof_permit_upsell + 2 : BASE_SCORES.roof_permit_upsell + 1,
+          source_method: "multifamily_construction_sites",
+          suggested_opener: `We saw ${addr} is in active construction — ${units}-unit multifamily projects require commercial roofing specs and installation. Have you sourced a roofing contractor for this build?`,
+          best_call_window: "During construction — pre-sheathing to close-in phase",
+          estimated_value: units * 4000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] multifamily construction:", e); }
+
+  // 17. ROW Permits (utility work) — disrupted roof penetrations = inspection opportunity
+  try {
+    const since90 = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/ROW_Permits/FeatureServer/0/query?where=issued_date+%3E%3D+%27${since90}%27+AND+(description+LIKE+%27%25DTE+Energy%25%27+OR+description+LIKE+%27%25gas%25%27+OR+description+LIKE+%27%25utility%25%27)&outFields=permit_address,permit_type,issued_date,description,contractor&resultRecordCount=30&orderByFields=ObjectId+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.permit_address || "").trim();
+        if (!addr || addr.length < 5) continue;
+        const issued = a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0];
+        const desc = (a.description || "").slice(0, 100);
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "roof_permit_upsell",
+          signal_detail: `ROW utility permit at ${addr}: ${desc}. Utility work near a property often requires roof penetration access and can expose pre-existing roof damage homeowners weren't aware of`,
+          signal_date: issued,
+          score: BASE_SCORES.roof_permit_upsell - 1,
+          source_method: "row_permits",
+          suggested_opener: `Utility work was permitted on your block recently — when crews are in the area working near rooflines, it's a good time to check for any unsealed penetrations or damage. We're doing free block inspections this week.`,
+          best_call_window: "Within 30 days of ROW permit",
+          estimated_value: 8000,
+          raw_source_data: { addr, permit_type: a.permit_type, issued, contractor: a.contractor },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] ROW permits:", e); }
+
   return signals;
 }

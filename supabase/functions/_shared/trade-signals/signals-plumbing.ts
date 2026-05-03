@@ -397,5 +397,65 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[plumbing] commercial cert expiry:", e); }
 
+  // 13. Multifamily Construction Sites — new plumbing rough-in opportunity
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/multifamily_housing_construction_sites/FeatureServer/0/query?where=construction_status+IN+('Under+Construction','Construction+Not+Started')&outFields=address,zip_code,owner_developer_name,legal_entity,total_units,construction_status&resultRecordCount=40&orderByFields=OBJECTID+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const units = a.total_units || 0;
+        const developer = a.owner_developer_name || a.legal_entity || "developer";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "commercial_compliance_plumb",
+          signal_detail: `Multifamily construction: ${addr} (${units} units, ${a.construction_status}) — ${developer}. New construction needs full plumbing rough-in, fixture installation, and city inspection sign-off`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: units >= 20 ? BASE_SCORES.commercial_compliance_plumb + 1 : BASE_SCORES.commercial_compliance_plumb,
+          source_method: "multifamily_construction_sites",
+          suggested_opener: `We saw ${addr} is in active construction — ${units} units of new multifamily means a major plumbing package. Do you have a licensed plumber bid for the rough-in and fixture installation?`,
+          best_call_window: "During construction — foundation to drywall phase",
+          estimated_value: units * 2800,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[plumbing] multifamily construction:", e); }
+
+  // 14. BSEED Rental Compliance — missing CofC signals deferred plumbing maintenance
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_rental_compliance_public_view/FeatureServer/0/query?where=current_cofc_expired_date+IS+NULL+OR+current_reg_issued_date+IS+NULL&outFields=record_addresses,parcel_address,current_cofc_issued_date,current_cofc_expired_date,current_reg_issued_date&resultRecordCount=40&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.record_addresses || a.parcel_address || "").trim();
+        if (!addr) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "plumbing_permit_major",
+          signal_detail: `Rental compliance gap: ${addr} — missing Certificate of Compliance or registration. Plumbing violations (leaking pipes, failed backflow prevention, water heater issues) are top reasons Detroit rentals fail re-inspection`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.plumbing_permit_major || 6,
+          source_method: "bseed_rental_compliance_view",
+          suggested_opener: `Your rental at ${addr} has a compliance certificate gap — plumbing is one of the most common reasons Detroit rentals fail inspection. We get landlords cleared fast with same-week service and all inspection documentation.`,
+          best_call_window: "Immediately — compliance gap = hard deadline pressure",
+          estimated_value: 3000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[plumbing] rental compliance view:", e); }
+
   return signals;
 }

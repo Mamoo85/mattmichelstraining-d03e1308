@@ -287,5 +287,68 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[pest] assessment roll:", e); }
 
+  // 7. Fire Inspections overdue — neglected buildings = pest harborage
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Fire_Inspections/FeatureServer/0/query?where=InspWithinLastYear+%3D+'No'+AND+(propusetype+LIKE+'%25Residential%25'+OR+propusetype+LIKE+'%25Vacant%25'+OR+propusetypedescription+LIKE+'%25warehouse%25')&outFields=Address,zip,OccupantName,propusetypedescription,LatestInspDate&resultRecordCount=40&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.Address || "").trim();
+        const zip = String(a.zip || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const occupant = a.OccupantName || "";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "foreclosure_vacant",
+          signal_detail: `Fire inspection overdue: ${addr} (${occupant || a.propusetypedescription || "building"}) — deferred building maintenance creates harborage for rodents and insects, especially around structural gaps, open utilities, and debris accumulation`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.foreclosure_vacant,
+          source_method: "fire_inspections",
+          suggested_opener: `${occupant ? occupant + " — " : ""}Buildings with deferred maintenance like ${addr} are a magnet for rodents and insects — structural gaps, open crawlspaces, and accumulated debris are the main entry points. We offer commercial pest contracts with monthly service reports.`,
+          best_call_window: "Any time — deferred maintenance compounds over time",
+          estimated_value: 800,
+          raw_source_data: { addr, zip, occupant, type: a.propusetypedescription },
+        });
+      }
+    }
+  } catch (e) { console.error("[pest] fire inspections:", e); }
+
+  // 8. Existing Multifamily Housing — large regulated properties need pest service contracts
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/existing_multifamily_housing_sites/FeatureServer/0/query?where=regulatory_status+%3D+'Regulated'+AND+total_units+%3E+5&outFields=address,zip_code,owner_developer_name,legal_entity,total_units&resultRecordCount=40&orderByFields=OBJECTID+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const units = a.total_units || 0;
+        const manager = a.owner_developer_name || a.legal_entity || "property manager";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "foreclosure_vacant",
+          signal_detail: `Regulated multifamily property: ${addr} (${units} units) — ${manager}. Regulated affordable housing is required to maintain pest-free conditions per HUD guidelines. Properties without active pest contracts face HUD audit risk`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: units >= 20 ? BASE_SCORES.foreclosure_vacant + 1 : BASE_SCORES.foreclosure_vacant,
+          source_method: "existing_multifamily_sites",
+          suggested_opener: `We work with regulated multifamily property managers like ${manager} — HUD requires documented pest control programs for regulated units. Are you currently covered by a licensed pest service contract with monthly reporting?`,
+          best_call_window: "Any time — compliance mandate creates recurring contract value",
+          estimated_value: units * 120,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[pest] existing multifamily:", e); }
+
   return signals;
 }

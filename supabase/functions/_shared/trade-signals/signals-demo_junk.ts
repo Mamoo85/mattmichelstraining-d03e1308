@@ -627,5 +627,69 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[demo_junk] completed demos:", e); }
 
+  // 23. Demolition Post-Abatement Verification Reports — lot passed abatement = needs grading/cleanup
+  try {
+    const since90 = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Demolition_Post_Abatement_Verification_Reports/FeatureServer/0/query?where=pav_passed_date+%3E%3D+%27${since90}%27&outFields=address,structure_type,pav_passed_date,demolition_contractor,zip_code,neighborhood,latitude,longitude&resultRecordCount=40&orderByFields=OBJECTID+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        if (!addr) continue;
+        const zip = String(a.zip_code || "").trim();
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const passed = a.pav_passed_date ? String(a.pav_passed_date).slice(0, 10) : new Date().toISOString().split("T")[0];
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "demo_permit",
+          signal_detail: `Post-abatement verification passed: ${addr} (${a.structure_type || "structure"}) — abatement cleared ${passed} by ${a.demolition_contractor || "contractor"}. Lot now cleared for full debris removal and site grading`,
+          signal_date: passed,
+          score: BASE_SCORES.demo_permit,
+          source_method: "demo_post_abatement_reports",
+          suggested_opener: `The post-abatement report was just cleared at ${addr} — the lot is now approved for full cleanup and grading. We specialize in post-demo lot clearance and can be on-site within 48 hours.`,
+          best_call_window: "Within 30 days of abatement clearance",
+          estimated_value: 3000,
+          raw_source_data: { addr, zip, passed, contractor: a.demolition_contractor, type: a.structure_type },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] post-abatement reports:", e); }
+
+  // 24. ARPA Blight Remediation (Industrial/Commercial Completed) — commercial lot cleanup opportunity
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/ARPA_Blight_Remediation_Industrial_and_Commercial_Completed_EDD/FeatureServer/0/query?where=Commercial_Demo_Status+%3D+'Demolished'&outFields=Property_Account__Account_Name,Commercial_Demo_Status,ENV_Phase1_Date&resultRecordCount=30&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const name = (a.Property_Account__Account_Name || "").trim();
+        if (!name) continue;
+        // Normalize address from account name (e.g. "6075 Begole")
+        const addr = name.replace(/[^0-9A-Za-z\s\-]/g, "").trim();
+        if (!addr || addr.length < 5) continue;
+        const phase1 = a.ENV_Phase1_Date ? String(a.ENV_Phase1_Date).slice(0, 10) : new Date().toISOString().split("T")[0];
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "demo_permit",
+          signal_detail: `ARPA commercial demolition completed: ${addr} — commercial/industrial structure demolished. Large-scale lot cleanup, debris removal, and site prep needed`,
+          signal_date: phase1,
+          score: BASE_SCORES.demo_permit + 1,
+          source_method: "arpa_commercial_demo",
+          suggested_opener: `The ARPA-funded demolition at ${addr} is complete — commercial demo sites need comprehensive lot cleanup, foundation removal, and site grading. We handle large-scale post-demo work.`,
+          best_call_window: "Within 60 days of demolition completion",
+          estimated_value: 8000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] ARPA commercial demo:", e); }
+
   return signals;
 }

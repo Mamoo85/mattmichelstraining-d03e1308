@@ -398,5 +398,67 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[exterior] Detroit assessment roll:", e); }
 
+  // New: Multifamily Construction — new builds need exterior painting/cladding
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/multifamily_housing_construction_sites/FeatureServer/0/query?where=construction_status+IN+('Under+Construction','Construction+Not+Started')&outFields=address,zip_code,owner_developer_name,legal_entity,total_units,construction_status&resultRecordCount=30&orderByFields=OBJECTID+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const units = a.total_units || 0;
+        const developer = a.owner_developer_name || a.legal_entity || "developer";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "new_owner_exterior",
+          signal_detail: `Multifamily construction: ${addr} (${units} units, ${a.construction_status}) — ${developer}. New multifamily requires commercial exterior painting, cladding, and waterproofing`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: units >= 20 ? BASE_SCORES.new_owner_exterior + 2 : BASE_SCORES.new_owner_exterior + 1,
+          source_method: "multifamily_construction_sites",
+          suggested_opener: `We saw ${addr} is in active construction — ${units}-unit multifamily projects need commercial exterior painting and cladding. Are you taking bids on the exterior package?`,
+          best_call_window: "Late construction phase — before landscaping",
+          estimated_value: units * 2000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[exterior] multifamily construction:", e); }
+
+  // New: ROW Permits — street/utility work creates exterior disruption signal
+  try {
+    const since90 = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/ROW_Permits/FeatureServer/0/query?where=issued_date+%3E%3D+%27${since90}%27&outFields=permit_address,permit_type,issued_date,contractor&resultRecordCount=30&orderByFields=ObjectId+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.permit_address || "").trim();
+        if (!addr || addr.length < 5) continue;
+        const issued = a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0];
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "new_owner_exterior",
+          signal_detail: `ROW permit issued at ${addr} — street/utility work disrupts exterior surfaces and exposes weathering on surrounding properties`,
+          signal_date: issued,
+          score: BASE_SCORES.new_owner_exterior - 1,
+          source_method: "row_permits",
+          suggested_opener: `Street work was recently permitted near your home — a good time to refresh the exterior before the neighborhood looks run-down again. We're doing free estimates this week for homes on your block.`,
+          best_call_window: "Within 30 days of ROW permit",
+          estimated_value: 5000,
+          raw_source_data: { addr, permit_type: a.permit_type, issued },
+        });
+      }
+    }
+  } catch (e) { console.error("[exterior] ROW permits:", e); }
+
   return signals;
 }

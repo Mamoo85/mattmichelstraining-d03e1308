@@ -347,5 +347,97 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[electrical] commercial cert expiry:", e); }
 
+  // 9. Multifamily Construction Sites — new builds needing full electrical service
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/multifamily_housing_construction_sites/FeatureServer/0/query?where=construction_status+IN+('Under+Construction','Construction+Not+Started')&outFields=address,zip_code,owner_developer_name,legal_entity,total_units,construction_status&resultRecordCount=40&orderByFields=OBJECTID+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const units = a.total_units || 0;
+        const developer = a.owner_developer_name || a.legal_entity || "developer";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "commercial_compliance_elec",
+          signal_detail: `Multifamily construction: ${addr} (${units} units, ${a.construction_status}) — ${developer}. New multifamily construction requires full electrical service panels, wiring, and inspection sign-off`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: units >= 20 ? BASE_SCORES.commercial_compliance_elec + 1 : BASE_SCORES.commercial_compliance_elec,
+          source_method: "multifamily_construction_sites",
+          suggested_opener: `We saw ${addr} is in active multifamily construction — ${units} units means a significant electrical package. Do you have a licensed electrician bid on the service panels and unit wiring yet?`,
+          best_call_window: "During construction — pre-drywall phase",
+          estimated_value: units * 2500,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[electrical] multifamily construction:", e); }
+
+  // 10. Energy Benchmarking — low Energy Star scores signal aging electrical infrastructure
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/energy_water_benchmarking_ordinance_-_buildings/FeatureServer/0/query?where=is_municipal+%3D+0+AND+greenhouse_emissions+%3E+100&outFields=parcel_address,zip_code,energystar_name,assessor_year_built,greenhouse_emissions,energystar_score&resultRecordCount=40&orderByFields=greenhouse_emissions+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.parcel_address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const emissions = a.greenhouse_emissions || 0;
+        const name = a.energystar_name || "";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "aging_panel_area",
+          signal_detail: `Energy benchmarking: ${addr} (${name}) — ${emissions} metric tons CO2, built ${a.assessor_year_built || "unknown"}. High emissions + old construction = aging electrical infrastructure likely needing panel upgrades`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.aging_panel_area || 6,
+          source_method: "energy_benchmarking_ordinance",
+          suggested_opener: `${name || addr} appears in Detroit's energy benchmarking data with high emissions — buildings of that age typically have outdated electrical panels that are both inefficient and a fire risk. We do free commercial electrical assessments.`,
+          best_call_window: "Any time — energy costs are always pressing for property owners",
+          estimated_value: 15000,
+          raw_source_data: { addr, zip, emissions, year_built: a.assessor_year_built },
+        });
+      }
+    }
+  } catch (e) { console.error("[electrical] energy benchmarking:", e); }
+
+  // 11. BSEED Rental Compliance — non-compliant rentals with electrical citation history
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_rental_compliance_public_view/FeatureServer/0/query?where=current_cofc_expired_date+IS+NULL&outFields=record_addresses,parcel_address,current_cofc_issued_date,current_reg_issued_date&resultRecordCount=40&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.record_addresses || a.parcel_address || "").trim();
+        if (!addr) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "panel_upgrade_permit",
+          signal_detail: `Rental compliance gap: ${addr} — no Certificate of Compliance on file. Electrical violations (outdated wiring, missing GFCI, overloaded panels) are frequently the root cause of failed rental inspections`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.panel_upgrade_permit || 6,
+          source_method: "bseed_rental_compliance_view",
+          suggested_opener: `Your rental at ${addr} shows a compliance certificate gap — electrical issues are the #1 reason Detroit rentals fail inspection. We specialize in getting landlords cleared fast with same-week service and inspection documentation.`,
+          best_call_window: "Immediately — compliance creates hard deadline",
+          estimated_value: 3500,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[electrical] rental compliance view:", e); }
+
   return signals;
 }

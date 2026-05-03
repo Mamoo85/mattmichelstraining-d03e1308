@@ -12,7 +12,47 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-05-02*
+*Last updated: 2026-05-03*
+
+### Phase 34 — ArcGIS Audit + New Sources + TradeRadarHub Admin Panel COMPLETE ✅
+
+**ArcGIS service directory audited** (770 total services, ~110 unused relevant ones identified).
+
+**New ArcGIS sources added to signal files (6 new services across 10 signal files):**
+
+| Service | Signal Files Updated | Signal Type |
+|---|---|---|
+| `multifamily_housing_construction_sites` | hvac, electrical, plumbing, roofing, exterior, gutters | commercial_compliance + roof_permit_upsell |
+| `existing_multifamily_housing_sites` | hvac, pest_control | aging_system_proxy + foreclosure_vacant |
+| `energy_water_benchmarking_ordinance_-_buildings` | hvac, electrical | commercial_compliance + aging_panel_area |
+| `bseed_building_rental_compliance_public_view` | hvac, electrical, plumbing | aging_system_proxy + per-address |
+| `ROW_Permits` | roofing, exterior, foundation | per-address signals |
+| `Demolition_Post_Abatement_Verification_Reports` | demo_junk, restoration | demo_permit + water_damage_permit |
+| `ARPA_Blight_Remediation_Industrial_and_Commercial_Completed_EDD` | demo_junk | demo_permit |
+| `Fire_Inspections` | restoration, pest_control | water_damage_permit + foreclosure_vacant |
+| `existing_multifamily_housing_sites` | pest_control | foreclosure_vacant (HUD compliance angle) |
+| `Residential_Inspections_(combined)` | foundation | heavy_rain_foundation (failed inspection filter) |
+
+**New Admin Panel component:**
+- `src/components/dwa-admin/TradeRadarHub.tsx` — full admin hub for all 11 Trade Radar verticals
+  - Scanner control (run any vertical or all)
+  - Leads tab (per-address leads with score, Street View link, opener preview)
+  - Area Signals tab (county/zip/state level signals)
+  - Clients tab (all enrolled clients across all verticals)
+  - Data Sources tab (all 40+ ArcGIS sources + 17 external API sources listed)
+  - Vertical filter pills with per-vertical lead counts
+  - AM Digest trigger button
+
+**DWAAdmin updated:**
+- `src/pages/DWAAdmin.tsx` — new "Trade Radar (11 Verticals)" tab in Intel & Radars section
+
+**Services audited but NOT added (genuinely useful for future consideration):**
+- `Residential_Inspections_(combined)` — date field is null in 90%+ of records (old data). Used for foundation failed-inspection filter only.
+- `LandUsebyParcel` — returns 0 records (permissions issue)
+- `Flood_Bulk_Collection_Status` — routing/district geometry only, no addresses
+- `Rezonings_in_Process` — useful for future TechAlert commercial signals (developer activity)
+- `Neighborhoods_CDBG_DR_Private_Sewer_Repair_Program` — neighborhood-level only
+- `LeadReports` — returns 0 records
 
 ### Phase 33 — 100+ New Data Sources Across All 11 Trade Radar Verticals + TechAlert COMPLETE ✅
 

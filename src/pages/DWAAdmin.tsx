@@ -45,6 +45,7 @@ const AdminCommandBar = lazy(() => import("@/components/dwa-admin/AdminCommandBa
 const ProductSalesHub = lazy(() => import("@/components/dwa-admin/ProductSalesHub"));
 const BuyerRadarQAChecklist = lazy(() => import("@/components/dwa-admin/BuyerRadarQAChecklist"));
 const MortgageRadarHub = lazy(() => import("@/components/dwa-admin/MortgageRadarHub"));
+const TradeRadarHub = lazy(() => import("@/components/dwa-admin/TradeRadarHub"));
 const LeadSalesOutreachHub = lazy(() => import("@/components/dwa-admin/LeadSalesOutreachHub"));
 const PipelineVelocityDashboard = lazy(() => import("@/components/dwa-admin/PipelineVelocityDashboard"));
 const StrategyModeHub = lazy(() => import("@/components/dwa-admin/StrategyModeHub"));
@@ -57,7 +58,7 @@ type Tab =
   | "dwa-overview" | "revenue" | "leads-e2e" | "prospect-tracker" | "agent-toolkit" | "pipeline-velocity"
   | "command-center" | "sms-inbox" | "sms-drafts" | "call-list" | "linkedin-blitz" | "ad-launcher" | "agency-outreach" | "dead-leads" | "fax-drip" | "postcard-drip" | "sms-sniper" | "dead-lead-ad-studio" | "wave5-outreach"
   | "contractor-leads" | "contractor-onboarding" | "contractor-market" | "fielddesk" | "techalert" | "missed-call" | "missed-call-leads" | "clients-all"
-  | "lead-marketplace" | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map"
+  | "lead-marketplace" | "demand-radar" | "hvb" | "growth-signals" | "visitor-intel" | "the-wire" | "coverage-map" | "trade-radar"
   | "health" | "simulation" | "playbook-hub" | "field-ops" | "command"
   | "sales-hub" | "buyer-radar-qa" | "mortgage-radar" | "strategy-mode" | "enrichment-audit" | "marketing-tools" | "djconley";
 
@@ -115,6 +116,7 @@ const GROUPS: SidebarGroup[] = [
       { id: "lead-marketplace", label: "🏪 Lead Marketplace" },
       { id: "demand-radar",    label: "📈 Demand Radar" },
       { id: "mortgage-radar",  label: "🏠 Mortgage Radar" },
+      { id: "trade-radar",     label: "🔨 Trade Radar (11 Verticals)" },
       { id: "hvb",             label: "📦 High-Volume Buyers" },
       { id: "growth-signals",  label: "📡 Growth Signals" },
       { id: "visitor-intel",   label: "👁️ Visitor Intel" },
@@ -209,6 +211,7 @@ export default function DWAAdmin() {
           {activeTab === "lead-marketplace" && <Suspense fallback={lazyFallback("Lead Marketplace")}><LeadSalesOutreachHub /></Suspense>}
           {activeTab === "demand-radar"    && <Suspense fallback={lazyFallback("Demand Radar")}><DemandRadarHub /></Suspense>}
           {activeTab === "mortgage-radar"  && <Suspense fallback={lazyFallback("Mortgage Radar")}><MortgageRadarHub /></Suspense>}
+          {activeTab === "trade-radar"     && <Suspense fallback={lazyFallback("Trade Radar")}><TradeRadarHub /></Suspense>}
           {activeTab === "hvb"             && <Suspense fallback={lazyFallback("HVB")}><AdminHighVolumeBuyer /></Suspense>}
           {activeTab === "growth-signals"  && <Suspense fallback={lazyFallback("growth signals")}><AdminGrowthSignals /></Suspense>}
           {activeTab === "visitor-intel"   && <Suspense fallback={lazyFallback("visitor intel")}><VisitorIntelFeed /></Suspense>}
