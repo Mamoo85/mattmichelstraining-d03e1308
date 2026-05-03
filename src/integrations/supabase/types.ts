@@ -20858,6 +20858,42 @@ export type Database = {
         }
         Relationships: []
       }
+      techalert_hunter_runs: {
+        Row: {
+          alert_sent: boolean
+          duration_ms: number | null
+          id: string
+          inserted: number
+          notes: string | null
+          ran_at: string
+          scanned: number
+          signals: Json | null
+          updated: number
+        }
+        Insert: {
+          alert_sent?: boolean
+          duration_ms?: number | null
+          id?: string
+          inserted?: number
+          notes?: string | null
+          ran_at?: string
+          scanned?: number
+          signals?: Json | null
+          updated?: number
+        }
+        Update: {
+          alert_sent?: boolean
+          duration_ms?: number | null
+          id?: string
+          inserted?: number
+          notes?: string | null
+          ran_at?: string
+          scanned?: number
+          signals?: Json | null
+          updated?: number
+        }
+        Relationships: []
+      }
       techalert_prospect_targets: {
         Row: {
           city: string | null
@@ -20865,11 +20901,19 @@ export type Database = {
           created_at: string
           days_posted: number | null
           email: string | null
+          employee_count: number | null
+          enriched_at: string | null
           id: string
           is_boiler: boolean | null
           last_contacted_at: string | null
           notes: string | null
           open_roles_count: number | null
+          outreach_sent_at: string | null
+          outreach_status: string | null
+          owner_email: string | null
+          owner_linkedin: string | null
+          owner_name: string | null
+          owner_phone: string | null
           phone: string | null
           repost_count: number | null
           role: string | null
@@ -20887,11 +20931,19 @@ export type Database = {
           created_at?: string
           days_posted?: number | null
           email?: string | null
+          employee_count?: number | null
+          enriched_at?: string | null
           id?: string
           is_boiler?: boolean | null
           last_contacted_at?: string | null
           notes?: string | null
           open_roles_count?: number | null
+          outreach_sent_at?: string | null
+          outreach_status?: string | null
+          owner_email?: string | null
+          owner_linkedin?: string | null
+          owner_name?: string | null
+          owner_phone?: string | null
           phone?: string | null
           repost_count?: number | null
           role?: string | null
@@ -20909,11 +20961,19 @@ export type Database = {
           created_at?: string
           days_posted?: number | null
           email?: string | null
+          employee_count?: number | null
+          enriched_at?: string | null
           id?: string
           is_boiler?: boolean | null
           last_contacted_at?: string | null
           notes?: string | null
           open_roles_count?: number | null
+          outreach_sent_at?: string | null
+          outreach_status?: string | null
+          owner_email?: string | null
+          owner_linkedin?: string | null
+          owner_name?: string | null
+          owner_phone?: string | null
           phone?: string | null
           repost_count?: number | null
           role?: string | null

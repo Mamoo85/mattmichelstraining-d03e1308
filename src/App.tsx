@@ -84,6 +84,7 @@ const AdminEdgeHealth = lazyRetry(() => import("./pages/admin/AdminEdgeHealth"))
 const AdminSecretsHealth = lazyRetry(() => import("./pages/admin/AdminSecretsHealth"));
 const AdminMarketTargeting = lazyRetry(() => import("./pages/admin/AdminMarketTargeting"));
 const AdminProspectorTargetsAudit = lazyRetry(() => import("./pages/admin/AdminProspectorTargetsAudit"));
+const AdminTechAlertProspects = lazyRetry(() => import("./pages/admin/AdminTechAlertProspects"));
 const AdminCheckoutEvents = lazyRetry(() => import("./pages/admin/AdminCheckoutEvents"));
 const DwaAdminV4 = lazyRetry(() => import("./pages/DwaAdminV4"));
 const DwaAdminStripeReconcile = lazyRetry(() => import("./pages/DwaAdminStripeReconcile"));
@@ -941,6 +942,7 @@ const App = () => (
                       <Route path="/dwa-admin/market-targeting" element={<AgencyAdminRoute><AdminMarketTargeting /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/market-targeting/audit" element={<AgencyAdminRoute><AdminProspectorTargetsAudit /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/checkout-events" element={<AgencyAdminRoute><AdminCheckoutEvents /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/techalert-prospects" element={<AgencyAdminRoute><AdminTechAlertProspects /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/v4" element={<AgencyAdminRoute><DwaAdminV4 /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/qbr-queue" element={<AgencyAdminRoute><DwaAdminQbrQueue /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/stripe-reconcile" element={<AgencyAdminRoute><DwaAdminStripeReconcile /></AgencyAdminRoute>} />

@@ -9,6 +9,13 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS, ADMIN_PHONE } from "../_shared/twilio.ts";
+
+const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
+// Below this many fresh prospects in a run, SMS Matt
+const LOW_YIELD_THRESHOLD = Number(Deno.env.get("TECHALERT_LOW_YIELD_THRESHOLD") || "5");
+// Below this many pending dead-lead contacts, auto-trigger pool refill
+const DEAD_LEAD_MIN_POOL = Number(Deno.env.get("DEAD_LEAD_MIN_POOL") || "25");
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -44,8 +51,12 @@ interface Posting {
   is_boiler: boolean;
 }
 
+// Module-level guard so once we get a 402 from Sonar in this run we stop hammering it
+let SONAR_DISABLED_REASON: string | null = null;
+
 async function sonarSearch(role: typeof ROLES[number]): Promise<Posting[]> {
   if (!OPENROUTER_API_KEY) return [];
+  if (SONAR_DISABLED_REASON) return [];
   const prompt = `Find ACTIVE job postings on Indeed, ZipRecruiter, SimplyHired, and LinkedIn Jobs for "${role.q}" in ${METRO_QUERY}. Return ONLY a JSON array, no prose. Each item: {"company_name": "string", "city": "string", "days_posted": number_estimate_or_null, "source_url": "url", "source_label": "Indeed|ZipRecruiter|SimplyHired|LinkedIn"}. Find at least 12 distinct companies. Skip staffing agencies, temp agencies, recruiters. Only direct employers (HVAC contractors, plumbing companies, electrical contractors, mechanical contractors, manufacturers).`;
 
   try {
@@ -63,7 +74,14 @@ async function sonarSearch(role: typeof ROLES[number]): Promise<Posting[]> {
       signal: AbortSignal.timeout(45_000),
     });
     if (!res.ok) {
-      console.error(`[hunter] sonar ${role.key} HTTP ${res.status}`);
+      // 402 = out of credits / payment required. Disable Sonar for the rest of this run
+      // so we don't burn time hammering a paid endpoint that will keep saying no.
+      if (res.status === 402 || res.status === 429) {
+        SONAR_DISABLED_REASON = `HTTP ${res.status}`;
+        console.warn(`[hunter] sonar disabled for this run: ${SONAR_DISABLED_REASON}`);
+      } else {
+        console.error(`[hunter] sonar ${role.key} HTTP ${res.status}`);
+      }
       return [];
     }
     const data = await res.json();
@@ -187,18 +205,20 @@ async function scanUSPTOPatents(): Promise<Posting[]> {
 
   for (const cpc of cpcSubclasses) {
     try {
-      const body = {
-        q: { _and: [{ _gte: { patent_date: ninetyDaysAgo } }, { _text_any: { cpc_subgroup_id: cpc } }] },
-        f: ["assignee_organization", "patent_date", "patent_title", "patent_id"],
-        o: { per_page: 15 },
-      };
-      const res = await fetch("https://search.patentsview.org/api/v1/patent/", {
+      const res = await fetch("https://api.patentsview.org/patents/query", {
         method: "POST",
         headers: { "Content-Type": "application/json", "User-Agent": "TechAlert matt@detroitwebagent.com" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          q: { _and: [{ _gte: { patent_date: ninetyDaysAgo } }, { _begins: { cpc_subgroup_id: cpc } }] },
+          f: ["assignee_organization", "patent_date", "patent_title", "patent_number"],
+          o: { per_page: 15 },
+        }),
         signal: AbortSignal.timeout(12_000),
       });
-      if (!res.ok) continue;
+      if (!res.ok) {
+        console.warn(`[hunter] uspto ${cpc} HTTP ${res.status} — skipping`);
+        continue;
+      }
       const data = await res.json();
       for (const patent of (data?.patents || [])) {
         const assignee: string = patent.assignee_organization || "";
@@ -208,7 +228,7 @@ async function scanUSPTOPatents(): Promise<Posting[]> {
           city: undefined,
           role: cpc === "F22B" ? "boiler_operator" : "hvac_tech",
           days_posted: null,
-          source_url: `https://search.patentsview.org/api/v1/patent/${patent.patent_id}`,
+          source_url: `https://patents.google.com/?q=${encodeURIComponent(assignee)}&oq=${encodeURIComponent(assignee)}`,
           source_label: "USPTO",
           is_boiler: cpc === "F22B",
         });
@@ -1143,50 +1163,100 @@ serve(async (req) => {
       }
     }
 
-    // Log heartbeat
+    const durationMs = Date.now() - startedAt;
+    const signals = {
+      github: githubSignals.length,
+      edgar: edgarSignals.length,
+      uspto: usptoSignals.length,
+      sam: samSignals.length,
+      eventbrite: eventbriteSignals.length,
+      usaspending: usaSpendingSignals.length,
+      linkedin: linkedinSignals.length,
+      osha: oshaSignals.length,
+      lara_new: laraNewSignals.length,
+      lara_dissolved: laraDissolvedSignals.length,
+      lara_expiring: laraExpiringSignals.length,
+      nlrb: nlrbSignals.length,
+      cfpb_complaints: cfpbSignals.length,
+      ch7_liquidations: ch7Signals.length,
+      detroit_certified: detroitCertifiedSignals.length,
+      detroit_open_biz: detroitOpenBizSignals.length,
+      council_surveyed: councilSurveyedSignals.length,
+      detroit_city_contracts: detroitCityContractSignals.length,
+      demo_pipeline_rfps: demoPipelineSignals.length,
+      detroit_multifamily: multifamilySignals.length,
+      detroit_demo_contractors: demoContractorSignals.length,
+      detroit_billion_dollar: billionDollarSignals.length,
+      detroit_biz_license_expiry: detroitBizLicenseSignals.length,
+      commercial_compliance_red: commercialRedSignals.length,
+      sam_entities: samEntitySignals.length,
+      hire_waterfall: waterfallCount,
+      sonar_disabled: SONAR_DISABLED_REASON,
+    };
+
+    // Heartbeat
     await sb.from("agent_heartbeats").upsert({
       agent_name: "techalert-prospect-hunter",
       last_beat: new Date().toISOString(),
       status: "ok",
-      metadata: { scanned, inserted, updated, duration_ms: Date.now() - startedAt },
+      metadata: { scanned, inserted, updated, duration_ms: durationMs, signals },
     }, { onConflict: "agent_name" });
 
+    // Yield monitoring: low-yield SMS alert (only once per day) + persistent run log
+    let alertSent = false;
+    const lowYield = inserted < LOW_YIELD_THRESHOLD;
+    if (lowYield) {
+      const since = new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString();
+      const { count: recentAlerts } = await sb
+        .from("techalert_hunter_runs")
+        .select("id", { count: "exact", head: true })
+        .gte("ran_at", since)
+        .eq("alert_sent", true);
+      if ((recentAlerts ?? 0) === 0) {
+        try {
+          await sendSMS(
+            ADMIN_PHONE,
+            TWILIO_PHONE,
+            `⚠️ TechAlert hunter low yield: ${inserted} new (${updated} updated, ${scanned} scanned). ${SONAR_DISABLED_REASON ? "Sonar OFF (" + SONAR_DISABLED_REASON + "). " : ""}Check /admin/techalert-prospects`,
+            "techalert_yield_alert",
+          );
+          alertSent = true;
+        } catch (e) { console.error("[hunter] alert SMS failed:", e); }
+      }
+    }
+    await sb.from("techalert_hunter_runs").insert({
+      scanned, inserted, updated, duration_ms: durationMs, signals, alert_sent: alertSent,
+      notes: SONAR_DISABLED_REASON ? `sonar_disabled:${SONAR_DISABLED_REASON}` : null,
+    });
+
+    // Auto-refill dead-lead pool when below threshold (fire-and-forget)
+    try {
+      const { count: pendingCount } = await sb
+        .from("dead_lead_contacts")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      if ((pendingCount ?? 0) < DEAD_LEAD_MIN_POOL) {
+        console.log(`[hunter] dead-lead pool low (${pendingCount} < ${DEAD_LEAD_MIN_POOL}), notifying admin`);
+        await sendSMS(
+          ADMIN_PHONE, TWILIO_PHONE,
+          `⚠️ Dead Lead pool low: ${pendingCount ?? 0} pending contacts (min ${DEAD_LEAD_MIN_POOL}). Need contractor intake refill: ${Deno.env.get("SITE_URL") || "https://detroitwebagent.com"}/dead-lead-intake`,
+          "dead_lead_pool_low",
+        );
+        // Trigger any auto-refill function if present
+        try {
+          await fetch(`${SUPABASE_URL}/functions/v1/dead-lead-pool-refill`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ trigger: "low_pool", current: pendingCount }),
+            signal: AbortSignal.timeout(5000),
+          }).catch(() => {});
+        } catch (_) {}
+      }
+    } catch (e) { console.error("[hunter] dead-lead pool check:", e); }
+
+
     return new Response(
-      JSON.stringify({
-        ok: true,
-        scanned,
-        inserted,
-        updated,
-        signals: {
-          github: githubSignals.length,
-          edgar: edgarSignals.length,
-          uspto: usptoSignals.length,
-          sam: samSignals.length,
-          eventbrite: eventbriteSignals.length,
-          usaspending: usaSpendingSignals.length,
-          linkedin: linkedinSignals.length,
-          osha: oshaSignals.length,
-          lara_new: laraNewSignals.length,
-          lara_dissolved: laraDissolvedSignals.length,
-          lara_expiring: laraExpiringSignals.length,
-          nlrb: nlrbSignals.length,
-          cfpb_complaints: cfpbSignals.length,
-          ch7_liquidations: ch7Signals.length,
-          detroit_certified: detroitCertifiedSignals.length,
-          detroit_open_biz: detroitOpenBizSignals.length,
-          council_surveyed: councilSurveyedSignals.length,
-          detroit_city_contracts: detroitCityContractSignals.length,
-          demo_pipeline_rfps: demoPipelineSignals.length,
-          detroit_multifamily: multifamilySignals.length,
-          detroit_demo_contractors: demoContractorSignals.length,
-          detroit_billion_dollar: billionDollarSignals.length,
-          detroit_biz_license_expiry: detroitBizLicenseSignals.length,
-          commercial_compliance_red: commercialRedSignals.length,
-          sam_entities: samEntitySignals.length,
-          hire_waterfall: waterfallCount,
-        },
-        duration_ms: Date.now() - startedAt,
-      }),
+      JSON.stringify({ ok: true, scanned, inserted, updated, signals, duration_ms: durationMs, low_yield: lowYield, alert_sent: alertSent }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e: unknown) {
