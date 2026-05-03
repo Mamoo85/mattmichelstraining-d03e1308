@@ -273,5 +273,38 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[gutters] occupancy certs:", e); }
 
+  // 7. Detroit Assessment Roll 2026 — recently sold pre-1970 homes (old gutters/fascia)
+  try {
+    const since = new Date(Date.now() - 120 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/tentative_assessment_roll_2026/FeatureServer/0/query?where=sale_date+%3E%3D+'${since}'+AND+residential_year_built+%3C+1970+AND+residential_year_built+%3E+1880+AND+is_improved+%3D+1&outFields=address,zip_code,residential_year_built,sale_date,taxpayer_1&resultRecordCount=40&orderByFields=sale_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const yrBuilt: number = a.residential_year_built || 0;
+        const owner = (a.taxpayer_1 || "").trim();
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "roof_permit_upsell",
+          signal_detail: `Detroit new owner: ${addr} (built ${yrBuilt}, sold ${a.sale_date}) — pre-1970 homes have original galvanized steel gutters that are corroded and disconnected. New owners rarely realize gutters are the #1 cause of basement flooding`,
+          signal_date: a.sale_date || new Date().toISOString().split("T")[0],
+          score: 7,
+          source_method: "detroit_assessment_roll",
+          suggested_opener: `${owner ? owner + " — " : ""}Welcome to ${addr}! Homes built in ${yrBuilt} have original gutters that are almost certainly failing — the leading cause of the basement flooding issues Detroit homeowners discover after the first big rain. Free inspection this week?`,
+          best_call_window: "Within 90 days of purchase, or before first heavy rain season",
+          estimated_value: 2200,
+          raw_source_data: { address: addr, zip, year_built: yrBuilt, sale_date: a.sale_date, owner },
+        });
+      }
+    }
+  } catch (e) { console.error("[gutters] Detroit assessment roll:", e); }
+
   return signals;
 }
