@@ -233,37 +233,23 @@ serve(async (req) => {
 
         const subject = nextStep.subject(business, industry);
         const bodyText = nextStep.body(business, industry);
-        const html = buildDripEmailHtml(subject, bodyText);
+        const page = getIndustryPage(industry);
+        const ctaUrl = `https://detroitwebagent.com${page.path}`;
 
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${RESEND_API_KEY}`,
-          },
-          body: JSON.stringify({
-            from: "Matt Michels <matt@detroitwebagent.com>",
-            to: [email],
-            bcc: ["matthewmichels4@gmail.com"],
-            subject,
-            html,
-          }),
-        });
+        const r = await dwaColdEmail({
+          to: email,
+          subject,
+          bodyHtml: bodyText.replace(/\n/g, "<br>"),
+          product: "Detroit Web Agency Website Build",
+          ctaUrl,
+          templateName: nextStep.templateName,
+        }, sb);
 
-        if (!res.ok) {
-          const errText = await res.text();
-          log("Send failed", { email, error: errText });
-          errors.push(`${email}: ${errText}`);
+        if (!r.ok) {
+          log("Send failed", { email, error: r.error });
+          errors.push(`${email}: ${r.error}`);
           continue;
         }
-        await res.json();
-
-        await sb.from("email_send_log").insert({
-          recipient_email: email,
-          template_name: nextStep.templateName,
-          status: "sent",
-          message_id: `drip_${lead.id}_${nextStep.templateName}`,
-        });
 
         // Update lead status
         await sb.from("outreach_leads").update({
