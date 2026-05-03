@@ -916,6 +916,42 @@ async function scanMultifamilyConstruction(): Promise<Posting[]> {
   return results;
 }
 
+// Detroit active business licenses expiring in 60 days — compliance urgency = TechAlert window
+async function scanDetroitBizLicenseExpiry(): Promise<Posting[]> {
+  const results: Posting[] = [];
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const in60 = new Date(Date.now() + 60 * 86400_000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(
+      `expiration_date >= '${today}' AND expiration_date <= '${in60}' AND (license_category = 'Construction' OR license_category = 'Trade' OR license_type LIKE '%Contractor%' OR license_type LIKE '%HVAC%' OR license_type LIKE '%Electrical%' OR license_type LIKE '%Plumbing%')`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_active_business_licenses/FeatureServer/0/query?where=${where}&outFields=business_name,address,license_type,license_category,expiration_date,zip_code,neighborhood&resultRecordCount=50&orderByFields=expiration_date+ASC&f=json`,
+      { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) return results;
+    const d = await res.json();
+    for (const feat of (d?.features ?? [])) {
+      const a = feat?.attributes ?? {};
+      const name: string = a.business_name || "";
+      if (!name) continue;
+      const zip = a.zip_code ? ` ${a.zip_code}` : "";
+      const city = `Detroit MI${zip}`;
+      const daysUntilExpiry = Math.round((new Date(a.expiration_date).getTime() - Date.now()) / 86400_000);
+      results.push({
+        company_name: name,
+        city,
+        role: "hvac_tech",
+        days_posted: null,
+        source_url: "https://detroitmi.gov/departments/buildings-safety-engineering-and-environment-department",
+        source_label: `Detroit Business License Expiring in ${daysUntilExpiry}d (${a.license_type ?? a.license_category})`,
+        is_boiler: false,
+      });
+    }
+  } catch (e) { console.error("[hunter] biz license expiry:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
 function scorePosting(p: Posting, openRolesCount: number, repostCount: number, weatherBonus = 0): number {
   let score = 0;
   if ((p.days_posted ?? 0) > 14) score += 3;
@@ -947,7 +983,7 @@ serve(async (req) => {
     // Supplemental signals + NOAA weather bonus — all run in parallel
     // Includes the new signal-waterfall (DOL WARN, OSHA, FMCSA, DOT prequal, SAM expanded)
     const { fetchHireSignals } = await import("../_shared/signal-waterfall.ts");
-    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, councilSurveyedSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, demoPipelineSignals, billionDollarSignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
+    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, councilSurveyedSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, demoPipelineSignals, billionDollarSignals, detroitBizLicenseSignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
       scanGitHubSignals(),
       scanEDGARFundings(),
       scanUSPTOPatents(),
@@ -971,10 +1007,11 @@ serve(async (req) => {
       scanDemoContractors(),
       scanDemoPipelineRFPs(),
       scanBillionDollarConstruction(),
+      scanDetroitBizLicenseExpiry(),
       getWeatherHiringBonus(),
       fetchHireSignals(sb, { state: "MI", naics: "238220" }).catch(() => []),
     ]);
-    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...councilSurveyedSignals, ...detroitCityContractSignals, ...multifamilySignals, ...demoContractorSignals, ...demoPipelineSignals, ...billionDollarSignals];
+    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...councilSurveyedSignals, ...detroitCityContractSignals, ...multifamilySignals, ...demoContractorSignals, ...demoPipelineSignals, ...billionDollarSignals, ...detroitBizLicenseSignals];
     all.push(...supplemental);
     scanned += supplemental.length;
     // Log waterfall signal volume to heartbeat metadata (don't insert as job postings — different shape)
@@ -1070,6 +1107,7 @@ serve(async (req) => {
           detroit_multifamily: multifamilySignals.length,
           detroit_demo_contractors: demoContractorSignals.length,
           detroit_billion_dollar: billionDollarSignals.length,
+          detroit_biz_license_expiry: detroitBizLicenseSignals.length,
           hire_waterfall: waterfallCount,
         },
         duration_ms: Date.now() - startedAt,

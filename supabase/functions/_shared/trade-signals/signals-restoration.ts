@@ -854,5 +854,43 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] plan reviews:", e); }
 
+  // Detroit Fire Investigations — structure fires at occupied/residential dwellings (highest urgency restoration signal)
+  try {
+    const since = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(
+      `FIRE_INCIDENT_DATE >= '${since}' AND (OBJECT_BURNED LIKE '%Dwelling%' OR OBJECT_BURNED LIKE '%Residential%' OR OBJECT_BURNED LIKE '%Apartment%' OR OBJECT_BURNED LIKE '%House%')`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Fire_Investigations/FeatureServer/0/query?where=${where}&outFields=ADDRESS,ZIP_CODE,FIRE_INCIDENT_DATE,OBJECT_BURNED,DETERMINATION,HAS_INJURIES,NEIGHBORHOOD&resultRecordCount=40&orderByFields=FIRE_INCIDENT_DATE+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.ADDRESS || "").trim();
+        const zip = String(a.ZIP_CODE || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const isOccupied = (a.OBJECT_BURNED ?? "").includes("Occupied");
+        const isVacant = (a.OBJECT_BURNED ?? "").includes("Vacant");
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "water_damage_permit",
+          signal_detail: `Detroit Fire Investigation: ${addr} — ${a.OBJECT_BURNED ?? "dwelling"} fire on ${a.FIRE_INCIDENT_DATE ?? "recent"}. ${isOccupied ? "Occupied dwelling fire = immediate restoration need — family displaced and looking for contractor within 24-48h" : isVacant ? "Vacant dwelling fire — investor will need full restoration before sale or rental" : "Structure fire requiring remediation"}`,
+          signal_date: a.FIRE_INCIDENT_DATE ?? new Date().toISOString().split("T")[0],
+          score: isOccupied ? 10 : 8,
+          source_method: "detroit_fire_investigations",
+          suggested_opener: isOccupied
+            ? `Your home at ${addr} was damaged by fire — we specialize in emergency fire and smoke restoration. We can have a crew on-site within hours and work directly with your insurance adjuster to start the claim.`
+            : `The property at ${addr} sustained fire damage — we provide full fire, smoke, and water restoration services and can have a damage assessment done same-day.`,
+          best_call_window: isOccupied ? "Within 48 hours — family is displaced and moving fast" : "Within 14 days of incident",
+          estimated_value: 25000,
+          raw_source_data: { addr, zip, date: a.FIRE_INCIDENT_DATE, type: a.OBJECT_BURNED, injuries: a.HAS_INJURIES },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] fire investigations:", e); }
+
   return signals;
 }

@@ -440,6 +440,43 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[demo_junk] commercial demo:", e); }
 
+  // Detroit Fire Investigations — structure fires require immediate debris removal
+  try {
+    const since = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(
+      `FIRE_INCIDENT_DATE >= '${since}' AND (OBJECT_BURNED LIKE '%Dwelling%' OR OBJECT_BURNED LIKE '%Residential%' OR OBJECT_BURNED LIKE '%Structure%')`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Fire_Investigations/FeatureServer/0/query?where=${where}&outFields=ADDRESS,ZIP_CODE,FIRE_INCIDENT_DATE,OBJECT_BURNED,NEIGHBORHOOD&resultRecordCount=40&orderByFields=FIRE_INCIDENT_DATE+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.ADDRESS || "").trim();
+        const zip = String(a.ZIP_CODE || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const isVacant = (a.OBJECT_BURNED ?? "").includes("Vacant");
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "demo_permit",
+          signal_detail: `Detroit fire investigation: ${addr} — ${a.OBJECT_BURNED ?? "structure"} fire on ${a.FIRE_INCIDENT_DATE ?? "recent"}. ${isVacant ? "Vacant structure fire = city will likely issue demo order. Owner needs demolition and debris hauling" : "Fire-damaged structure requires immediate debris removal before restoration or demolition"}`,
+          signal_date: a.FIRE_INCIDENT_DATE ?? new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.demo_permit + (isVacant ? 1 : 0),
+          source_method: "detroit_fire_investigations",
+          suggested_opener: isVacant
+            ? `The vacant structure at ${addr} sustained fire damage — the city will likely issue a demo order. We can coordinate demolition and debris hauling before the city bill lands on the owner.`
+            : `Your property at ${addr} had a fire — once restoration is complete we handle all debris removal and haul-away, often same-day. We work directly with restoration contractors.`,
+          best_call_window: "Within 48 hours of fire incident",
+          estimated_value: isVacant ? 5000 : 2500,
+          raw_source_data: { addr, zip, date: a.FIRE_INCIDENT_DATE, type: a.OBJECT_BURNED },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] fire investigations:", e); }
+
   // 17. DLBA Side Lots For Sale — city sells cleared lots; buyers need debris removal + site prep
   try {
     const res = await fetch(

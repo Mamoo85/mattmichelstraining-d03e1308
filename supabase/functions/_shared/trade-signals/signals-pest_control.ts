@@ -382,5 +382,71 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[pest] presale inspections:", e); }
 
+  // Detroit Fire Investigations — fire-damaged structures attract pests
+  try {
+    const since = new Date(Date.now() - 60 * 86400_000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(
+      `FIRE_INCIDENT_DATE >= '${since}' AND (OBJECT_BURNED LIKE '%Dwelling%' OR OBJECT_BURNED LIKE '%Vacant%' OR OBJECT_BURNED LIKE '%Residential%')`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Fire_Investigations/FeatureServer/0/query?where=${where}&outFields=ADDRESS,ZIP_CODE,FIRE_INCIDENT_DATE,OBJECT_BURNED,NEIGHBORHOOD&resultRecordCount=30&orderByFields=FIRE_INCIDENT_DATE+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.ADDRESS || "").trim();
+        const zip = String(a.ZIP_CODE || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "foreclosure_vacant",
+          signal_detail: `Detroit fire at ${addr}: ${a.OBJECT_BURNED ?? "dwelling"} fire — fire-damaged structures attract rodents, raccoons, and insects immediately. Neighbors are at risk within 30 days`,
+          signal_date: a.FIRE_INCIDENT_DATE ?? new Date().toISOString().split("T")[0],
+          score: 8,
+          source_method: "detroit_fire_investigations",
+          suggested_opener: `A fire at ${addr} is creating a harborage risk for the entire block — rodents and insects move to neighboring properties within weeks. We offer same-week perimeter protection for surrounding homes.`,
+          best_call_window: "Within 30 days of fire incident — neighboring properties are at risk",
+          estimated_value: 600,
+          raw_source_data: { addr, zip, date: a.FIRE_INCIDENT_DATE, type: a.OBJECT_BURNED },
+        });
+      }
+    }
+  } catch (e) { console.error("[pest] fire investigations:", e); }
+
+  // Detroit Residential CofC expiring — pest issues commonly cited during re-inspection
+  try {
+    const certWhere = encodeURIComponent(`num_days_until_expired <= 45 AND num_days_until_expired > 0`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_active_residential_compliance_certificates/FeatureServer/0/query?where=${certWhere}&outFields=address,zip_code,num_days_until_expired&resultRecordCount=30&orderByFields=num_days_until_expired+ASC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const daysLeft = Number(a.num_days_until_expired) || 45;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "foreclosure_vacant",
+          signal_detail: `Detroit residential CofC expires in ${daysLeft} days: ${addr}. Pest/rodent evidence is a common inspection item — inspectors flag entry points, droppings, and active infestations`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: daysLeft <= 14 ? 8 : 7,
+          source_method: "bseed_residential_cert_expiry",
+          suggested_opener: `Your Certificate of Compliance at ${addr} expires in ${daysLeft} days — pest activity and rodent entry points are commonly cited items. A pre-inspection treatment now avoids a failed re-inspection and city re-scheduling delays.`,
+          best_call_window: `Within ${Math.min(daysLeft, 30)} days`,
+          estimated_value: 500,
+          raw_source_data: { addr, zip, days_left: daysLeft },
+        });
+      }
+    }
+  } catch (e) { console.error("[pest] residential cert expiry:", e); }
+
   return signals;
 }

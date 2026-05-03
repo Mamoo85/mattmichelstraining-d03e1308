@@ -402,5 +402,70 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[gutters] historic violations:", e); }
 
+  // BSEED Plan Reviews — approved roof/drainage plans (gutter replacement usually bundled)
+  try {
+    const where = encodeURIComponent(
+      `(work_description LIKE '%ROOF%' OR work_description LIKE '%DRAINAGE%' OR work_description LIKE '%GUTTER%' OR work_description LIKE '%DOWNSPOUT%') AND task_status LIKE '%Approved%'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permit_plan_reviews/FeatureServer/0/query?where=${where}&outFields=address,zip_code,submitted_date,work_description,task_status&resultRecordCount=25&orderByFields=ObjectId+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "storm_gutter_damage",
+          signal_detail: `BSEED plan review approved: ${(a.work_description ?? "roof project").slice(0, 100)} — roof replacement almost always bundles new gutters and downspouts`,
+          signal_date: a.submitted_date ? new Date(a.submitted_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 8,
+          source_method: "bseed_plan_reviews",
+          suggested_opener: `Your roof project at ${addr} just got plans approved — most roofing contracts miss gutters and downspouts. We can often get gutter work done the same week as your roofing crew and bundle the cleanup.`,
+          best_call_window: "Immediately — plans approved means work starts within days",
+          estimated_value: 3500,
+          raw_source_data: { addr, zip, desc: a.work_description, status: a.task_status },
+        });
+      }
+    }
+  } catch (e) { console.error("[gutters] plan reviews:", e); }
+
+  // Detroit Residential Compliance Certificates expiring in 60 days — pre-inspection gutter window
+  try {
+    const certWhere = encodeURIComponent(`num_days_until_expired <= 60 AND num_days_until_expired > 0`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_active_residential_compliance_certificates/FeatureServer/0/query?where=${certWhere}&outFields=address,zip_code,expired_date,num_days_until_expired&resultRecordCount=30&orderByFields=num_days_until_expired+ASC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const daysLeft = Number(a.num_days_until_expired) || 60;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "storm_gutter_damage",
+          signal_detail: `Detroit residential CofC expires in ${daysLeft} days: ${addr}. Gutter condition is inspected during CofC re-inspection — clogged, detached, or damaged gutters are flagged`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: daysLeft <= 7 ? 8 : daysLeft <= 30 ? 7 : 6,
+          source_method: "bseed_residential_cert_expiry",
+          suggested_opener: `Your Certificate of Compliance at ${addr} expires in ${daysLeft} days — gutter condition is checked during re-inspection. We can clean, repair, or replace your gutters so you pass the first time.`,
+          best_call_window: `Within ${Math.min(daysLeft, 45)} days`,
+          estimated_value: 2500,
+          raw_source_data: { addr, zip, days_left: daysLeft },
+        });
+      }
+    }
+  } catch (e) { console.error("[gutters] residential cert expiry:", e); }
+
   return signals;
 }
