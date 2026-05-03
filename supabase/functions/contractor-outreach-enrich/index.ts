@@ -127,11 +127,11 @@ Deno.serve(async (req) => {
         const orgEmail = org.email || org.sanitized_email;
         trace.push({ stage: "apollo_org_search", found: !!orgEmail || !!org.website_url, ts: now() });
         if (orgEmail) { email = orgEmail; verified = true; }
-        // Discovered a website — store it and run Hunter on the new domain
-        if (!email && org.website_url && !website) {
-          website = org.website_url;
+        // Discovered a website — scrub aggregator hits, persist, then re-Hunter
+        const candidate = cleanWebsite(org.website_url);
+        if (!email && candidate && !website) {
+          website = candidate;
           domain = extractDomain(website);
-          // Persist newly discovered website so future runs skip this stage
           await supabase.from("contractor_outreach_prospects")
             .update({ website }).eq("id", prospect_id);
           if (domain) {
@@ -143,6 +143,29 @@ Deno.serve(async (req) => {
               if (!owner && (hit.first_name || hit.last_name)) {
                 owner = [hit.first_name, hit.last_name].filter(Boolean).join(" ");
               }
+            }
+          }
+        }
+      }
+    }
+
+    // ── Stage 3.5: Google Places fallback ─────────────────────────────────────
+    if (!website) {
+      const places = await googlePlacesWebsite(prospect.business_name, prospect.city, prospect.state);
+      trace.push({ stage: "google_places", found: !!places, ts: now() });
+      if (places) {
+        website = places;
+        domain = extractDomain(website);
+        await supabase.from("contractor_outreach_prospects")
+          .update({ website }).eq("id", prospect_id);
+        if (!email && domain) {
+          const hit = await hunterFindEmail(domain);
+          trace.push({ stage: "hunter_after_places", domain, found: !!hit?.email, ts: now() });
+          if (hit?.email) {
+            email = hit.email;
+            verified = true;
+            if (!owner && (hit.first_name || hit.last_name)) {
+              owner = [hit.first_name, hit.last_name].filter(Boolean).join(" ");
             }
           }
         }
