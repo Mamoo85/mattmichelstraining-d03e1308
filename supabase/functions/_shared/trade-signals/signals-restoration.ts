@@ -579,5 +579,48 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] city buildings:", e); }
 
+  // 15. Detroit Fire Incidents — residential building fires (last 30 days)
+  // Live 2025 data; filter client-side since ArcGIS timestamp WHERE can be unreliable
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Fire_Incidents/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,incident_type_description,property_use,called_at,latitude,longitude&resultRecordCount=100&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      const cutoffMs = Date.now() - 30 * 86400_000;
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const calledMs: number | null = typeof a.called_at === "number" ? a.called_at : null;
+        if (!calledMs || calledMs < cutoffMs) continue;
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const incType = (a.incident_type_description || "").toLowerCase();
+        const propUse = (a.property_use || "").toLowerCase();
+        const isResidential = /family|dwelling|residential|apartment|boarding|hotel|motel/.test(propUse);
+        if (!isResidential) continue;
+        const isFire = /fire|smoke|explosion|arson/.test(incType);
+        const isWater = /water|flood|pipe|leak/.test(incType);
+        if (!isFire && !isWater) continue;
+        const signalType = isFire ? "fire_damage_permit" : "water_damage_permit";
+        const humanDate = new Date(calledMs).toISOString().split("T")[0];
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "water_damage_permit",
+          signal_detail: `Detroit Fire Department incident: ${a.incident_type_description || "fire/smoke"} at ${addr} (${a.property_use || "residential"}) on ${humanDate} — fire and smoke damage restoration required before re-occupancy`,
+          signal_date: humanDate,
+          score: BASE_SCORES.water_damage_permit + 2,
+          source_method: "detroit_fire_incidents",
+          suggested_opener: `There was a ${a.incident_type_description?.toLowerCase() || "fire incident"} at ${addr} on ${humanDate}. We handle fire and smoke damage remediation — board-up, contents removal, structural drying, and odor mitigation. Are they coordinating with insurance yet?`,
+          best_call_window: "Within 48-72 hours of incident for emergency restoration",
+          estimated_value: 18000,
+          raw_source_data: { address: addr, zip, incident_type: a.incident_type_description, property_use: a.property_use, date: humanDate },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] fire incidents:", e); }
+
   return signals;
 }

@@ -22,6 +22,59 @@ const FAX_FROM = Deno.env.get("SINCH_FAX_FROM") || ""; // optional Sinch-provisi
 const LOB_API_KEY = Deno.env.get("LOB_API_KEY") || "";
 const DATAFORSEO_LOGIN = Deno.env.get("DATAFORSEO_LOGIN") || "";
 const DATAFORSEO_PASSWORD = Deno.env.get("DATAFORSEO_PASSWORD") || "";
+const SAM_GOV_API_KEY = Deno.env.get("SAM_GOV_API_KEY") || "";
+
+// SAM.gov NAICS codes for construction trades
+const TRADE_NAICS: Record<string, string[]> = {
+  "Roofing": ["238160"],
+  "HVAC": ["238220"],
+  "Plumbing": ["238220", "238210"],
+  "Electrical": ["238210"],
+  "General Contractor": ["236115", "236116", "236118"],
+  "Siding": ["238170"],
+  "Solar": ["238210"],
+  "Gutters": ["238160", "238170"],
+  "Pest Control": ["561710"],
+  "Foundation": ["238110", "238990"],
+  "Insulation": ["238310"],
+};
+
+// Query SAM.gov Entity Information API for active MI trade contractors
+async function searchSAMEntities(trade: string, state = "MI"): Promise<any[]> {
+  if (!SAM_GOV_API_KEY) return [];
+  const naicsList = TRADE_NAICS[trade] || TRADE_NAICS[trade.split(" ")[0]] || ["238"];
+  const results: any[] = [];
+  for (const naics of naicsList.slice(0, 2)) {
+    try {
+      const url = `https://api.sam.gov/entity-information/v3/entities?api_key=${SAM_GOV_API_KEY}&stateOrProvinceCode=${state}&primaryNaics=${naics}&entityStatus=Active&includeSections=entityRegistration,coreData&pageSize=25`;
+      const r = await fetch(url, { signal: AbortSignal.timeout(15_000), headers: { "User-Agent": "DetroitWebAgency/1.0" } });
+      if (!r.ok) continue;
+      const data = await r.json().catch(() => ({}));
+      const entities: any[] = data?.entityData ?? [];
+      for (const ent of entities) {
+        const reg = ent?.entityRegistration ?? {};
+        const addr = reg?.physicalAddress ?? {};
+        const name = reg?.legalBusinessName || reg?.dbaName || "";
+        if (!name || !addr.addressLine1) continue;
+        results.push({
+          name,
+          formatted_address: `${addr.addressLine1}, ${addr.city}, ${addr.stateOrProvinceCode} ${addr.zipCode}`,
+          international_phone_number: "",
+          website: ent?.coreData?.generalInformation?.entityURL || "",
+          place_id: null,
+          _source: "sam_gov",
+          _sam_city: addr.city || "",
+          _sam_zip: addr.zipCode || "",
+          _sam_line1: addr.addressLine1 || "",
+          _sam_state: addr.stateOrProvinceCode || state,
+        });
+      }
+    } catch (e) {
+      console.error("[prospector] sam.gov error:", e instanceof Error ? e.message : e);
+    }
+  }
+  return results;
+}
 
 // ── Daily caps (massively scaled up) ──
 const CAPS: Record<string, number> = { fax: 80, postcard: 80, sms: 150 };
@@ -352,8 +405,17 @@ serve(async (req) => {
     for (const v of variants) queries.push({ q: `${v} in ${c}`, city: c });
   }
 
-  // ── PHASE 1: Parallel searches ──────────────────────────────────────────────
+  // ── PHASE 1: Parallel searches (Google + DataForSEO + SAM.gov) ───────────
   const allPlaces: { place: any; city: string }[] = [];
+
+  // SAM.gov: single batch per trade (state-level, not per-city)
+  const samState = cityList[0]?.split(" ").pop() || "MI";
+  const [samResults] = await Promise.all([
+    searchSAMEntities(tradeForCopy, samState),
+  ]);
+  const samCity = cityList[0] || "Michigan";
+  allPlaces.push(...samResults.map((p: any) => ({ place: p, city: p._sam_city ? `${p._sam_city} ${p._sam_state}` : samCity })));
+
   await pLimit(
     queries.map(({ q, city }) => async () => {
       const [googlePlaces, dfsPlaces] = await Promise.all([
@@ -365,12 +427,12 @@ serve(async (req) => {
     6, // 6 concurrent search pairs
   );
 
-  // Dedupe: Google by place_id, DataForSEO by name
+  // Dedupe: Google by place_id, DataForSEO/SAM by name
   const seenPlaceIds = new Set<string>();
   const seenNames = new Set<string>();
   const dedupedPlaces = allPlaces.filter(({ place }) => {
     const name = (place.name || "").toLowerCase().trim();
-    if (place._source === "dataforseo") {
+    if (place._source === "dataforseo" || place._source === "sam_gov") {
       if (seenNames.has(name)) return false;
       seenNames.add(name);
       return true;
@@ -401,8 +463,9 @@ serve(async (req) => {
 
   await pLimit(
     phase1Slice.map(({ place: p, city: pCity }) => async () => {
+      const isSAM = p._source === "sam_gov";
       const isDFS = p._source === "dataforseo";
-      const details = isDFS ? p : await getPlaceDetails(p.place_id);
+      const details = (isDFS || isSAM) ? p : await getPlaceDetails(p.place_id);
       const phone = details.international_phone_number || details.formatted_phone_number || "";
       const websiteRaw = details.website || "";
 
@@ -413,9 +476,14 @@ serve(async (req) => {
         target = websiteRaw ? await scrapeFax(websiteRaw) : null;
         if (!target) { skipped++; return; }
       } else if (channel === "postcard") {
-        toAddr = parseAddr(details.formatted_address || "", details.address_components || []);
-        if (!toAddr) { skipped++; return; }
-        toAddr.name = p.name;
+        if (isSAM && p._sam_line1 && p._sam_city && p._sam_state && p._sam_zip) {
+          // SAM.gov already has parsed address components
+          toAddr = { name: p.name, line1: p._sam_line1, city: p._sam_city, state: p._sam_state, zip: p._sam_zip };
+        } else {
+          toAddr = parseAddr(details.formatted_address || "", details.address_components || []);
+          if (!toAddr) { skipped++; return; }
+          toAddr.name = p.name;
+        }
       } else {
         let phoneClean = phone ? normalize(phone) : "";
         if (!phoneClean && websiteRaw) {
@@ -481,6 +549,7 @@ serve(async (req) => {
     combo: { trade: tradeForCopy, city: isAllTargets ? `All Active (${cityList.length} cities)` : (requestedCity || autoCity) },
     citiesScanned: cityList,
     queryCount: queries.length,
+    sources: { google_places: allPlaces.filter(x => !x.place._source).length, dataforseo: allPlaces.filter(x => x.place._source === "dataforseo").length, sam_gov: samResults.length },
     found, sent, skipped, failed,
     cap, sentBefore, sentAfter: sentBefore + sent,
     samples: sentSamples,
