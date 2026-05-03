@@ -90,6 +90,7 @@ const AdminCheckoutEvents = lazyRetry(() => import("./pages/admin/AdminCheckoutE
 const AdminColdEmailAudit = lazyRetry(() => import("./pages/admin/AdminColdEmailAudit"));
 const LinkHealth = lazyRetry(() => import("./pages/admin/LinkHealth"));
 const TrialDripPreview = lazyRetry(() => import("./pages/admin/TrialDripPreview"));
+const ScannerHealth = lazyRetry(() => import("./pages/admin/ScannerHealth"));
 const DwaAdminV4 = lazyRetry(() => import("./pages/DwaAdminV4"));
 const DwaAdminStripeReconcile = lazyRetry(() => import("./pages/DwaAdminStripeReconcile"));
 const DwaAdminQbrQueue = lazyRetry(() => import("./pages/DwaAdminQbrQueue"));
