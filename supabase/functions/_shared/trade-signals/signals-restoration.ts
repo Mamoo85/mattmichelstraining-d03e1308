@@ -320,7 +320,40 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] DLBA for sale:", e); }
 
-  // 9. Historic District Violations — per-address violations in designated historic districts
+  // 9. Detroit Fire Incidents — structure fires are the highest-value restoration leads
+  try {
+    const where = encodeURIComponent(
+      `incident_type_description LIKE '%Structure Fire%' OR incident_type_description LIKE '%structure fire%'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Fire_Incidents/FeatureServer/0/query?where=${where}&outFields=address,zip_code,incident_type_description,called_at,property_use,latitude,longitude&resultRecordCount=30&orderByFields=called_at+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "fire_damage_permit",
+          signal_detail: `Detroit Fire Incident: ${a.incident_type_description ?? "structure fire"} at ${addr} — structural fire damage requires immediate professional assessment. Property use: ${a.property_use ?? "residential"}`,
+          signal_date: a.called_at ? new Date(a.called_at).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.fire_damage_permit + 1, // live fire incident = highest priority
+          source_method: "detroit_fire_incidents",
+          suggested_opener: OPENERS.fire_incident_area.opener,
+          best_call_window: "Within 48 hours of fire incident",
+          estimated_value: 18000,
+          raw_source_data: { ...a, lat: a.latitude, lon: a.longitude },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] fire incidents:", e); }
+
+  // 10. Historic District Violations — per-address violations in designated historic districts
   try {
     const res = await fetch(
       "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Historic_District_Violations/FeatureServer/0/query?where=case_status+%3C%3E+'Closed'&outFields=address,zip_code,intake_date,historic_district,case_status,has_roof_gutter_chimney_violati,has_siding_walls_violation,has_paint_violation,has_construction_new_violation,has_demolition_violation&resultRecordCount=40&orderByFields=OBJECTID+DESC&f=json",

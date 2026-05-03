@@ -606,6 +606,69 @@ async function scanNLRBPetitions(): Promise<Posting[]> {
   return results;
 }
 
+// Detroit Business Certification Register — city-certified contractors with phone/website
+async function scanDetroitCertifiedContractors(): Promise<Posting[]> {
+  const results: Posting[] = [];
+  try {
+    // NIGP codes: 91x = construction services, 92x = engineering, 76x = demolition/wrecking
+    const where = encodeURIComponent(`nigp_code LIKE '%91%' OR nigp_code LIKE '%92%' OR nigp_code LIKE '%76%'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Detroit_Business_Certification_Register/FeatureServer/0/query?where=${where}&outFields=business_name,authorized_contact_first_name,authorized_contact_last_name,business_phone_number,business_website,business_zip_code,nigp_code,longitude,latitude&resultRecordCount=50&f=json`,
+      { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) return results;
+    const d = await res.json();
+    for (const feat of (d?.features ?? [])) {
+      const a = feat?.attributes ?? {};
+      const name: string = a.business_name || "";
+      if (!name) continue;
+      const city = a.business_zip_code ? `Detroit MI ${a.business_zip_code}` : "Detroit, MI";
+      results.push({
+        company_name: name,
+        city,
+        role: "hvac_tech",
+        days_posted: null,
+        source_url: a.business_website ? `https://${a.business_website.replace(/^https?:\/\//, "")}` : "https://detroitmi.gov/contractors",
+        source_label: "Detroit Certified Contractor",
+        is_boiler: false,
+      });
+    }
+  } catch (e) { console.error("[hunter] Detroit certified:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
+// Currently Open Detroit Businesses — city's pandemic business registry; trade businesses have email+phone
+async function scanDetroitOpenTradeBiz(): Promise<Posting[]> {
+  const results: Posting[] = [];
+  try {
+    const tradeFilter = encodeURIComponent(
+      `Offers_Services LIKE '%roof%' OR Offers_Services LIKE '%HVAC%' OR Offers_Services LIKE '%plumb%' OR Offers_Services LIKE '%electric%' OR Offers_Services LIKE '%construct%' OR Offers_Services LIKE '%demolit%' OR Offers_Services LIKE '%pest%' OR Offers_Services LIKE '%gutter%'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Currently_Open_Businesses/FeatureServer/0/query?where=${tradeFilter}&outFields=Business_Name,Email,Phone,Website,Clean_Address,Zip_Code,Offers_Services&resultRecordCount=50&f=json`,
+      { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) return results;
+    const d = await res.json();
+    for (const feat of (d?.features ?? [])) {
+      const a = feat?.attributes ?? {};
+      const name: string = a.Business_Name || "";
+      if (!name || !a.Email) continue; // only use records with email addresses
+      const city = a.Zip_Code ? `Detroit MI ${String(a.Zip_Code).split(".")[0]}` : "Detroit, MI";
+      results.push({
+        company_name: name,
+        city,
+        role: "hvac_tech",
+        days_posted: null,
+        source_url: a.Website ? `https://${String(a.Website).replace(/^https?:\/\//, "")}` : "https://detroitmi.gov/opendetroit",
+        source_label: "Detroit Open Business Registry",
+        is_boiler: false,
+      });
+    }
+  } catch (e) { console.error("[hunter] Detroit open biz:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
 function scorePosting(p: Posting, openRolesCount: number, repostCount: number, weatherBonus = 0): number {
   let score = 0;
   if ((p.days_posted ?? 0) > 14) score += 3;
@@ -637,7 +700,7 @@ serve(async (req) => {
     // Supplemental signals + NOAA weather bonus — all run in parallel
     // Includes the new signal-waterfall (DOL WARN, OSHA, FMCSA, DOT prequal, SAM expanded)
     const { fetchHireSignals } = await import("../_shared/signal-waterfall.ts");
-    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, nlrbSignals, cfpbSignals, ch7Signals, weatherBonus, hireWaterfallSignals] = await Promise.all([
+    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
       scanGitHubSignals(),
       scanEDGARFundings(),
       scanUSPTOPatents(),
@@ -652,10 +715,12 @@ serve(async (req) => {
       scanNLRBPetitions(),
       scanCFPBComplaints(),
       scanChapter7Liquidations(),
+      scanDetroitCertifiedContractors(),
+      scanDetroitOpenTradeBiz(),
       getWeatherHiringBonus(),
       fetchHireSignals(sb, { state: "MI", naics: "238220" }).catch(() => []),
     ]);
-    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals];
+    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals];
     all.push(...supplemental);
     scanned += supplemental.length;
     // Log waterfall signal volume to heartbeat metadata (don't insert as job postings — different shape)
@@ -742,6 +807,8 @@ serve(async (req) => {
           nlrb: nlrbSignals.length,
           cfpb_complaints: cfpbSignals.length,
           ch7_liquidations: ch7Signals.length,
+          detroit_certified: detroitCertifiedSignals.length,
+          detroit_open_biz: detroitOpenBizSignals.length,
           hire_waterfall: waterfallCount,
         },
         duration_ms: Date.now() - startedAt,

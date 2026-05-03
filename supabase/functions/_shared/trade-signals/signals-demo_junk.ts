@@ -265,7 +265,124 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[demo_junk] DLBA auction:", e); }
 
-  // 9. Detroit Commercial Demolitions — city-tracked commercial demo projects (contractor referral signal)
+  // 9. Detroit Demo Pipeline — upcoming planned demolitions (advance positioning signal)
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Demo_Pipeline/FeatureServer/0/query?where=1%3D1&outFields=address,neighborhood,commercial_building,demo_rfp_group,latitude,longitude&resultRecordCount=50&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        if (!addr) continue;
+        const isCommercial = (a.commercial_building ?? "No") === "Yes";
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "demo_permit",
+          signal_detail: `Detroit Demo Pipeline: ${addr} (${a.neighborhood ?? "Detroit"}) — ${isCommercial ? "commercial" : "residential"} property in city demolition queue. Group: ${a.demo_rfp_group ?? "active"} — adjacent properties need pre-demo cleanup and debris services`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.demo_permit,
+          source_method: "detroit_demo_pipeline",
+          suggested_opener: "This address is in the city demolition queue — we partner with demo contractors for same-day debris and material hauling to keep your project on schedule.",
+          best_call_window: "While property is in pipeline (90-day window)",
+          estimated_value: 3000,
+          raw_source_data: { ...a, lat: a.latitude, lon: a.longitude },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] demo pipeline:", e); }
+
+  // 10. Demolitions under Contract — contracted demolitions imminent (highest urgency signal)
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Demolitions_under_Contract/FeatureServer/0/query?where=1%3D1&outFields=address,demolish_by_date,price,contractor_name,council_district,neighborhood&resultRecordCount=40&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        if (!addr) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "demo_permit",
+          signal_detail: `Demolition Under Contract: ${addr} — contractor: ${a.contractor_name ?? "active"}, demolish by: ${a.demolish_by_date ? new Date(a.demolish_by_date).toISOString().slice(0, 10) : "imminent"}, contract value: $${(a.price || 0).toLocaleString()}`,
+          signal_date: a.demolish_by_date ? new Date(a.demolish_by_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.demo_permit + 1, // contracted = guaranteed demolition = highest priority
+          source_method: "detroit_demolitions_contracted",
+          suggested_opener: "A demolition is contracted at this address — we do post-demo site clearance and debris hauling, and coordinate directly with the demo contractor for zero scheduling gaps.",
+          best_call_window: "Immediately — demo is imminent",
+          estimated_value: 4000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] contracted demo:", e); }
+
+  // 11. DLBA Own-It-Now Sales — buyers who bought off the DLBA "own it now" direct listing
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/dlba_own_it_now_sales/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,sale_closed_date,amt_final_sale_price,sale_program,neighborhood&resultRecordCount=30&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "estate_clearout",
+          signal_detail: `DLBA Own-It-Now Sale: ${addr} sold for $${(a.amt_final_sale_price || 0).toLocaleString()} — direct DLBA purchasers are typically first-time investors doing their first renovation, often unaware of scope`,
+          signal_date: a.sale_closed_date ? new Date(a.sale_closed_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.estate_clearout,
+          source_method: "dlba_own_it_now",
+          suggested_opener: "You just purchased through the DLBA own-it-now program — these properties require full debris removal before renovation can start. We do same-week clearouts for new DLBA buyers.",
+          best_call_window: "Within 30 days of sale close",
+          estimated_value: 1800,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] DLBA own-it-now:", e); }
+
+  // 12. DLBA Project Sales — developers buying distressed properties in bulk = large-scale clearout demand
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/dlba_project_sales/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,sale_closed_date,amt_final_sale_price,sale_program,project_group_id,neighborhood&resultRecordCount=30&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "demo_permit",
+          signal_detail: `DLBA Project Sale: ${addr} sold to developer (project: ${a.project_group_id ?? "DLBA"}) for $${(a.amt_final_sale_price || 0).toLocaleString()} — developers buying in project groups need coordinated bulk clearout services across multiple properties`,
+          signal_date: a.sale_closed_date ? new Date(a.sale_closed_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.demo_permit,
+          source_method: "dlba_project_sales",
+          suggested_opener: "You're buying properties through the DLBA project program — we offer bulk clearout pricing for developers acquiring multiple addresses and can coordinate across your entire project group.",
+          best_call_window: "Within 30 days of project sale close",
+          estimated_value: 6000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] DLBA project:", e); }
+
+  // 14. Detroit Commercial Demolitions — city-tracked commercial demo projects (contractor referral signal)
   try {
     const res = await fetch(
       "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Commercial_Demolitions/FeatureServer/0/query?where=1%3D1&outFields=address,demo_date,projected_demo_date,demolition_contractor,status,neighborhood&resultRecordCount=40&orderByFields=ObjectId+DESC&f=json",
