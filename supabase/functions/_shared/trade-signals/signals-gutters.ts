@@ -467,5 +467,36 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[gutters] residential cert expiry:", e); }
 
+  // Historic District Violations — open cases with roof/gutter/chimney violations
+  try {
+    const where = encodeURIComponent(`case_status = 'Open' AND has_roof_gutter_chimney_violati = 'True'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Historic_District_Violations/FeatureServer/0/query?where=${where}&outFields=address,zip_code,intake_date,violation_scope,historic_district,neighborhood&resultRecordCount=30&orderByFields=ObjectId+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "storm_gutter_damage",
+          signal_detail: `Historic District open violation: ${addr} — roof/gutter/chimney cited. Scope: ${a.violation_scope ?? "not specified"}. Must be historically compliant`,
+          signal_date: a.intake_date ? a.intake_date.slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 8,
+          source_method: "historic_district_violations",
+          suggested_opener: `Your property at ${addr} has an open historic district violation that includes gutter condition. We're experienced with historically-compliant gutter replacements and can provide documentation for your case closure.`,
+          best_call_window: "Before next violation hearing — typically 30-60 days",
+          estimated_value: 3000,
+          raw_source_data: { addr, zip, scope: a.violation_scope, district: a.historic_district, intake: a.intake_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[gutters] historic district violations:", e); }
+
   return signals;
 }

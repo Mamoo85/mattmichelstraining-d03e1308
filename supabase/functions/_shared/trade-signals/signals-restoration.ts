@@ -952,5 +952,41 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] fire escrow:", e); }
 
+  // OpenStreetMap Overpass — abandoned buildings (remediation/renovation candidates)
+  try {
+    const query = `[out:json][timeout:25]; (way["building"="abandoned"](41.8,-83.3,42.7,-82.7); way["abandoned:building"](41.8,-83.3,42.7,-82.7); node["building"="abandoned"](41.8,-83.3,42.7,-82.7);); out center 50;`;
+    const res = await fetch("https://overpass-api.de/api/interpreter", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `data=${encodeURIComponent(query)}`,
+    });
+    if (res.ok) {
+      const d = await res.json();
+      for (const el of (d?.elements ?? [])) {
+        const tags = el.tags ?? {};
+        const houseNum = tags["addr:housenumber"] || "";
+        const street = tags["addr:street"] || tags["name"] || "";
+        if (!street) continue;
+        const addr = houseNum ? `${houseNum} ${street}` : street;
+        const zip = (tags["addr:postcode"] || "").trim();
+        const city = (tags["addr:city"] || tags["addr:suburb"] || "Detroit").trim();
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const buildingType = tags["building"] || tags["abandoned:building"] || "building";
+        signals.push({
+          address: addr, city, zip,
+          signal_type: "water_damage_permit",
+          signal_detail: `Abandoned ${buildingType} at ${addr}, ${city} — OSM-mapped derelict structure, high mold/water-damage likelihood after years of neglect`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: 7,
+          source_method: "osm_abandoned_buildings",
+          suggested_opener: `The abandoned ${buildingType} at ${addr} likely has significant mold, water intrusion, and structural damage from years of neglect. We specialize in full restoration assessments and can provide a complete remediation scope before any rehab work begins.`,
+          best_call_window: "Any time — long-standing vacant",
+          estimated_value: 25000,
+          raw_source_data: { osm_id: el.id, type: el.type, tags, lat: el.center?.lat ?? el.lat, lon: el.center?.lon ?? el.lon },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] OSM abandoned buildings:", e); }
+
   return signals;
 }
