@@ -768,5 +768,69 @@ export async function scanSignals(
     }
   } catch (e) { console.error("[roofing] historic district violations:", e); }
 
+  // BSEED Rental Registrations — new landlords need roof inspection before occupancy
+  try {
+    const since60 = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`issued_date >= '${since60}' AND registration_type IS NOT NULL`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_rental_registrations/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date,registration_type&resultRecordCount=30&orderByFields=issued_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "roof_permit_upsell",
+          signal_detail: `New rental registration: ${addr} — Detroit requires annual roof inspection for rental compliance. New landlords often don't realize roof condition affects CofC renewal`,
+          signal_date: a.issued_date ? a.issued_date.slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 7,
+          source_method: "bseed_rental_registration",
+          suggested_opener: `You just registered ${addr} as a rental — Detroit inspectors cite roofing deficiencies as one of the top reasons rental CofC applications are denied. A pre-inspection assessment now can prevent a failed compliance visit later.`,
+          best_call_window: "Within 60 days of registration",
+          estimated_value: 8000,
+          raw_source_data: { addr, zip, reg_type: a.registration_type, issued: a.issued_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] rental registrations:", e); }
+
+  // BSEED Vacant Property Registrations — new vacants registered with city
+  try {
+    const since60 = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`issued_date >= '${since60}'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_vacant_property_registrations/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date,owner_name&resultRecordCount=30&orderByFields=issued_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "new_homeowner_roof",
+          signal_detail: `BSEED vacant registration: ${a.owner_name ?? "owner"} — ${addr}. Vacant properties accumulate roof damage from undetected leaks; unknown condition = unknown liability before renovation`,
+          signal_date: a.issued_date ? a.issued_date.slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 7,
+          source_method: "bseed_vacant_registration",
+          suggested_opener: `Your property at ${addr} was recently registered as vacant with the city — vacant homes in Detroit have high rates of undetected roof damage and ice dam issues. We offer investors a full roof assessment before renovation budgets are finalized.`,
+          best_call_window: "Before renovation begins",
+          estimated_value: 8000,
+          raw_source_data: { addr, zip, owner: a.owner_name, issued: a.issued_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] vacant registrations:", e); }
+
   return signals;
 }

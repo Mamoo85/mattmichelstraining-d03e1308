@@ -511,5 +511,37 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[pest] assessor sales:", e); }
 
+  // BSEED Rental Registrations — new landlords need pest clearance before tenant occupancy
+  try {
+    const since60 = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`issued_date >= '${since60}'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_rental_registrations/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date&resultRecordCount=25&orderByFields=issued_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "foreclosure_vacant",
+          signal_detail: `New rental registration: ${addr} — tenant pest complaints create landlord liability; a pre-occupancy inspection and treatment protects against future disputes`,
+          signal_date: a.issued_date ? a.issued_date.slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 7,
+          source_method: "bseed_rental_registration",
+          suggested_opener: `You just registered ${addr} as a rental — pest complaints are one of the top reasons Detroit tenants withhold rent or file habitability complaints. A pre-move-in treatment + our 30-day guarantee protects you from day one.`,
+          best_call_window: "Before first tenant move-in",
+          estimated_value: 400,
+          raw_source_data: { addr, zip, issued: a.issued_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[pest] rental registrations:", e); }
+
   return signals;
 }

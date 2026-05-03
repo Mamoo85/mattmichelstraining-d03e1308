@@ -610,5 +610,37 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[foundation] demo pipeline:", e); }
 
+  // BSEED Rental Registrations — new landlords need foundation inspection for rental compliance
+  try {
+    const since60 = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`issued_date >= '${since60}'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_rental_registrations/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date,registration_type&resultRecordCount=25&orderByFields=issued_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "heavy_rain_foundation",
+          signal_detail: `New rental registration: ${addr} — pre-1980 Detroit homes registered for rental often have undisclosed basement water intrusion that becomes a landlord liability after tenant move-in`,
+          signal_date: a.issued_date ? a.issued_date.slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 6,
+          source_method: "bseed_rental_registration",
+          suggested_opener: `You just registered ${addr} as a rental — basement water intrusion is the #1 undisclosed defect that landlords get called on after tenant move-in. A waterproofing inspection before occupancy protects you from liability.`,
+          best_call_window: "Before first tenant occupancy",
+          estimated_value: 7000,
+          raw_source_data: { addr, zip, reg_type: a.registration_type, issued: a.issued_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[foundation] rental registrations:", e); }
+
   return signals;
 }

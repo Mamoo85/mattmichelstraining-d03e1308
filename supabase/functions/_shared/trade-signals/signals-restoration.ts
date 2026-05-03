@@ -1022,5 +1022,37 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] assessor sales:", e); }
 
+  // BSEED Rental Registrations — new landlords need hidden water/mold assessment
+  try {
+    const since60 = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`issued_date >= '${since60}'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_rental_registrations/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date&resultRecordCount=25&orderByFields=issued_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "water_damage_permit",
+          signal_detail: `New rental registration: ${addr} — mold and hidden water damage discovered by tenants after move-in is a leading cause of Detroit landlord liability claims`,
+          signal_date: a.issued_date ? a.issued_date.slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 6,
+          source_method: "bseed_rental_registration",
+          suggested_opener: `You just registered ${addr} as a rental — mold and hidden water damage discovered after tenant move-in is the most expensive surprise for Detroit landlords. We do pre-rental assessments with a written clear-or-remediate report.`,
+          best_call_window: "Before first tenant occupancy",
+          estimated_value: 5000,
+          raw_source_data: { addr, zip, issued: a.issued_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] rental registrations:", e); }
+
   return signals;
 }
