@@ -33,6 +33,15 @@ import { generateText } from "../_shared/ai.ts";
 import { isBlocked, recordOutreach } from "../_shared/outreach-blocklist.ts";
 import { canonicalizeTrade, getSearchQueries } from "../_shared/trade-canonical.ts";
 import { cleanWebsite } from "../_shared/enrichment-pipeline.ts";
+import { dwaWrap, trialCtaHtml } from "../_shared/dwa-email.ts";
+
+/**
+ * Standard DWA cold-email shell + auto-injected trial CTA (7-day or 30-day
+ * by product). All cold-outreach builders in this file should call this.
+ */
+function wrapDwaShell(innerHtml: string, opts: { product: string; ctaUrl: string }): string {
+  return dwaWrap(`${innerHtml}\n${trialCtaHtml(opts)}`);
+}
 
 function extractCityState(city: string): [string, string] {
   const parts = city.trim().split(/\s+/);
@@ -337,21 +346,10 @@ BODY:
 
 function buildEmailHtml(body: string): string {
   const htmlBody = body.replace(/\n/g, "<br>");
-  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
-<tr><td style="background:#e8621a;padding:3px 0;"></td></tr>
-<tr><td style="padding:24px;color:#334155;font-size:15px;line-height:1.8;">
-${htmlBody}
-<div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
-<img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;vertical-align:middle;" alt="Matt">
-<span style="margin-left:12px;font-size:13px;color:#334155;vertical-align:middle;"><strong>Matt Michels</strong> · Grosse Pointe, MI · (313) 992-1219</span>
-</div>
-</td></tr>
-<tr><td style="background:#f8fafc;padding:12px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
-M2 Development · Grosse Pointe, MI
-</td></tr>
-</table></td></tr></table></body></html>`;
+  return wrapDwaShell(htmlBody, {
+    product: "Contractor Leads",
+    ctaUrl: "https://detroitwebagent.com/contractor-leads?utm_source=cold&utm_campaign=contractor_drip",
+  });
 }
 
 // ── AGENT 3: SNIPER_DEAD — Dead Lead Reactivation Pitch ──
@@ -397,20 +395,10 @@ BODY:
 
 function buildDeadLeadEmailHtml(body: string): string {
   const htmlBody = body.replace(/\n/g, "<br>");
-  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
-<tr><td style="background:#00d4ff;padding:3px 0;"></td></tr>
-<tr><td style="padding:24px;color:#334155;font-size:15px;line-height:1.8;">
-${htmlBody}
-<div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
-<span style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency · (313) 992-1219 · detroitwebagent.com</span>
-</div>
-</td></tr>
-<tr><td style="background:#f8fafc;padding:12px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
-Detroit Web Agency · Grosse Pointe, MI
-</td></tr>
-</table></td></tr></table></body></html>`;
+  return wrapDwaShell(htmlBody, {
+    product: "Dead Lead Reactivation",
+    ctaUrl: "https://detroitwebagent.com/dead-lead-intake?utm_source=cold&utm_campaign=dead_lead",
+  });
 }
 
 // ── Check how many dead lead emails sent today ──
@@ -512,23 +500,10 @@ BODY:
 
 function buildTechAlertEmailHtml(body: string): string {
   const htmlBody = body.replace(/\n/g, "<br>");
-  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a1628;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#0f172a;border:1px solid #00d4ff30;border-radius:8px;overflow:hidden;">
-<tr><td style="background:#00d4ff;padding:3px 0;"></td></tr>
-<tr><td style="padding:8px 24px 4px;background:#0a1628;">
-  <span style="font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#00d4ff;">⚡ TechAlert by Detroit Web Agency</span>
-</td></tr>
-<tr><td style="padding:16px 24px 24px;color:#e2e8f0;font-size:15px;line-height:1.8;background:#0f172a;">
-${htmlBody}
-<div style="margin-top:20px;padding-top:16px;border-top:1px solid #1e3a5f;">
-<span style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13139921219" style="color:#00d4ff;text-decoration:none;">(313) 992-1219</a> · <a href="https://detroitwebagent.com" style="color:#00d4ff;text-decoration:none;">detroitwebagent.com</a></span>
-</div>
-</td></tr>
-<tr><td style="background:#0a1628;padding:12px 24px;border-top:1px solid #1e3a5f;font-size:11px;color:#475569;">
-Detroit Web Agency · Grosse Pointe, MI
-</td></tr>
-</table></td></tr></table></body></html>`;
+  return wrapDwaShell(htmlBody, {
+    product: "TechAlert", // hiring → 30-day trial
+    ctaUrl: "https://detroitwebagent.com/talent-radar?utm_source=cold&utm_campaign=techalert_pitch",
+  });
 }
 
 async function sniperMissedCallEmail(
@@ -572,23 +547,10 @@ BODY:
 
 function buildMissedCallEmailHtml(body: string): string {
   const htmlBody = body.replace(/\n/g, "<br>");
-  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
-<tr><td style="background:#e8621a;padding:3px 0;"></td></tr>
-<tr><td style="padding:8px 24px 4px;background:#fff3ec;">
-  <span style="font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#e8621a;">📞 Missed-Call Text-Back · Detroit Web Agency</span>
-</td></tr>
-<tr><td style="padding:16px 24px 24px;color:#334155;font-size:15px;line-height:1.8;">
-${htmlBody}
-<div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
-<span style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13139921219" style="color:#e8621a;text-decoration:none;">(313) 992-1219</a> · <a href="https://detroitwebagent.com" style="color:#e8621a;text-decoration:none;">detroitwebagent.com</a></span>
-</div>
-</td></tr>
-<tr><td style="background:#f8fafc;padding:12px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
-Detroit Web Agency · Grosse Pointe, MI
-</td></tr>
-</table></td></tr></table></body></html>`;
+  return wrapDwaShell(htmlBody, {
+    product: "Missed-Call Catch",
+    ctaUrl: "https://detroitwebagent.com/missed-call-catch?utm_source=cold&utm_campaign=missed_call",
+  });
 }
 
 async function getDailyCareAlertCount(sb: any): Promise<number> {
@@ -639,23 +601,10 @@ BODY:
 
 function buildCareAlertEmailHtml(body: string): string {
   const htmlBody = body.replace(/\n/g, "<br>");
-  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a1628;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#0f172a;border:1px solid #22c55e30;border-radius:8px;overflow:hidden;">
-<tr><td style="background:#22c55e;padding:3px 0;"></td></tr>
-<tr><td style="padding:8px 24px 4px;background:#0a1628;">
-  <span style="font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#22c55e;">🏥 CareAlert · Detroit Web Agency</span>
-</td></tr>
-<tr><td style="padding:16px 24px 24px;color:#e2e8f0;font-size:15px;line-height:1.8;background:#0f172a;">
-${htmlBody}
-<div style="margin-top:20px;padding-top:16px;border-top:1px solid #1e3a5f;">
-<span style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13139921219" style="color:#22c55e;text-decoration:none;">(313) 992-1219</a> · <a href="https://detroitwebagent.com" style="color:#22c55e;text-decoration:none;">detroitwebagent.com</a></span>
-</div>
-</td></tr>
-<tr><td style="background:#0a1628;padding:12px 24px;border-top:1px solid #1e3a5f;font-size:11px;color:#475569;">
-Detroit Web Agency · Grosse Pointe, MI
-</td></tr>
-</table></td></tr></table></body></html>`;
+  return wrapDwaShell(htmlBody, {
+    product: "CareAlert", // hiring → 30-day trial
+    ctaUrl: "https://detroitwebagent.com/hire-alert?utm_source=cold&utm_campaign=carealert",
+  });
 }
 
 // ── Check how many emails sent today from this domain ──
@@ -733,7 +682,7 @@ serve(async (req) => {
     let totalFound = 0;
     let totalSkipped = 0;
     let totalScoutRejected = 0;
-    const maxToSend = Math.min(20, remainingCap);
+    const maxToSend = Math.min(60, remainingCap);
 
     // ── CARE ALERT DAY: search nursing homes instead of trade combos ──
     if (pitchRotation === "care_alert" && !manualTrade) {
