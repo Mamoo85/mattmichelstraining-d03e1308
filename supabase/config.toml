@@ -402,6 +402,9 @@ verify_jwt = false
 [functions.contractor-prospector]
 verify_jwt = false
 
+[functions.contractor-lead-prospector]
+verify_jwt = false
+
 [functions.contractor-sms-follow]
 verify_jwt = false
 
