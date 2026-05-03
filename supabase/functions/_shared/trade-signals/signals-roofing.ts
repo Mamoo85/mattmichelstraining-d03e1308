@@ -447,5 +447,72 @@ export async function scanSignals(
     }
   } catch (e) { console.error("[roofing] NOAA CDO:", e); }
 
+  // 13. Wayne County Parcel Sales — recently sold suburban Wayne County properties (non-Detroit)
+  // New owner + house built pre-1980 in Dearborn/Livonia/Plymouth/Canton = roof inspection opportunity
+  try {
+    const since180 = new Date(Date.now() - 180 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://utility.waynecountymi.gov/arcgis/rest/services/Property/FeatureServer/0/query?where=SALE_DATE+%3E%3D+DATE+%27${since180}%27+AND+YEAR_BUILT+%3C+1990&outFields=ADDRESS,ZIPCODE,YEAR_BUILT,SALE_DATE,OWNER_NAME&resultRecordCount=60&orderByFields=SALE_DATE+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(12_000) },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.ADDRESS ?? "";
+        const zip: string = String(a.ZIPCODE ?? "").replace(/[^0-9]/g, "").slice(0, 5);
+        if (!addr || addr.length < 5) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const yearBuilt: number = a.YEAR_BUILT ?? 0;
+        const saleDate: string = a.SALE_DATE ? String(a.SALE_DATE).slice(0, 10) : new Date().toISOString().split("T")[0];
+        signals.push({
+          address: addr, city: "Wayne County", zip,
+          signal_type: "roof_permit_upsell",
+          signal_detail: `Wayne County new owner: ${addr} sold ${saleDate}. Home built ${yearBuilt > 0 ? yearBuilt : "pre-1990"} — new owner likely hasn't inspected a roof that's 35+ years old`,
+          signal_date: saleDate,
+          score: yearBuilt < 1970 ? BASE_SCORES.new_homeowner_roof + 1 : BASE_SCORES.new_homeowner_roof,
+          source_method: "wayne_county_parcel",
+          suggested_opener: `Welcome to the neighborhood! You recently purchased the home at ${addr} — homes of that vintage typically need a professional roof inspection to identify any hidden wear. We offer a free 30-minute inspection.`,
+          best_call_window: "Within 90 days of purchase",
+          estimated_value: 12000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] Wayne County parcel:", e); }
+
+  // 14. Oakland County Parcel Sales — recently sold Oakland County properties
+  try {
+    const since180 = new Date(Date.now() - 180 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://www.oakgov.com/egis/rest/services/Property/ParcelInfo/FeatureServer/0/query?where=SALE_DATE+%3E%3D+DATE+%27${since180}%27+AND+YEAR_BUILT+%3C+1990&outFields=SITUS_ADDRESS,ZIP,YEAR_BUILT,SALE_DATE&resultRecordCount=60&orderByFields=SALE_DATE+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(12_000) },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.SITUS_ADDRESS ?? "";
+        const zip: string = String(a.ZIP ?? "").replace(/[^0-9]/g, "").slice(0, 5);
+        if (!addr || addr.length < 5) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const yearBuilt: number = a.YEAR_BUILT ?? 0;
+        const saleDate: string = a.SALE_DATE ? String(a.SALE_DATE).slice(0, 10) : new Date().toISOString().split("T")[0];
+        signals.push({
+          address: addr, city: "Oakland County", zip,
+          signal_type: "roof_permit_upsell",
+          signal_detail: `Oakland County new owner: ${addr} sold ${saleDate}. Home built ${yearBuilt > 0 ? yearBuilt : "pre-1990"} — new owner likely hasn't inspected a roof that's 35+ years old`,
+          signal_date: saleDate,
+          score: yearBuilt < 1970 ? BASE_SCORES.new_homeowner_roof + 1 : BASE_SCORES.new_homeowner_roof,
+          source_method: "oakland_county_parcel",
+          suggested_opener: `Welcome to the neighborhood! You recently purchased the home at ${addr} — homes of that vintage typically need a professional roof inspection. We offer a free 30-minute assessment with no obligation.`,
+          best_call_window: "Within 90 days of purchase",
+          estimated_value: 12000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] Oakland County parcel:", e); }
+
   return signals;
 }

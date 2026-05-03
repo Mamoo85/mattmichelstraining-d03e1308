@@ -314,5 +314,68 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[hvac] rental registrations:", e); }
 
+  // 10. Wayne County Parcel Sales — new owner + old house in Wayne County suburbs (non-Detroit)
+  try {
+    const since180 = new Date(Date.now() - 180 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://utility.waynecountymi.gov/arcgis/rest/services/Property/FeatureServer/0/query?where=SALE_DATE+%3E%3D+DATE+%27${since180}%27+AND+YEAR_BUILT+%3C+1990&outFields=ADDRESS,ZIPCODE,YEAR_BUILT,SALE_DATE&resultRecordCount=60&orderByFields=SALE_DATE+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(12_000) },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.ADDRESS ?? "";
+        const zip: string = String(a.ZIPCODE ?? "").replace(/[^0-9]/g, "").slice(0, 5);
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const yearBuilt: number = a.YEAR_BUILT ?? 0;
+        signals.push({
+          address: addr, city: "Wayne County", zip,
+          signal_type: "aging_system_proxy",
+          signal_detail: `Wayne County new owner: ${addr} built ${yearBuilt > 0 ? yearBuilt : "pre-1990"} — HVAC systems in homes this age are 30-40+ years old, well past the 15-20 year expected lifespan`,
+          signal_date: a.SALE_DATE ? String(a.SALE_DATE).slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 6,
+          source_method: "wayne_county_parcel",
+          suggested_opener: `Congrats on the new home at ${addr}! Homes of that age typically have HVAC systems at or past end of life. We offer a free system assessment — most new owners are surprised at what they find.`,
+          best_call_window: "Within 90 days of purchase",
+          estimated_value: 8000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] Wayne County parcel:", e); }
+
+  // 11. Oakland County Parcel Sales — new owner + old house in Oakland County suburbs
+  try {
+    const since180 = new Date(Date.now() - 180 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://www.oakgov.com/egis/rest/services/Property/ParcelInfo/FeatureServer/0/query?where=SALE_DATE+%3E%3D+DATE+%27${since180}%27+AND+YEAR_BUILT+%3C+1990&outFields=SITUS_ADDRESS,ZIP,YEAR_BUILT,SALE_DATE&resultRecordCount=60&orderByFields=SALE_DATE+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(12_000) },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.SITUS_ADDRESS ?? "";
+        const zip: string = String(a.ZIP ?? "").replace(/[^0-9]/g, "").slice(0, 5);
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Oakland County", zip,
+          signal_type: "aging_system_proxy",
+          signal_detail: `Oakland County new owner: ${addr} built ${a.YEAR_BUILT > 0 ? a.YEAR_BUILT : "pre-1990"} — HVAC systems in older Oakland County homes are commonly original equipment`,
+          signal_date: a.SALE_DATE ? String(a.SALE_DATE).slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 6,
+          source_method: "oakland_county_parcel",
+          suggested_opener: `New home at ${addr}? Homes built in that era typically have HVAC systems approaching or past end of life. Free system assessment with no obligation.`,
+          best_call_window: "Within 90 days of purchase",
+          estimated_value: 8000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] Oakland County parcel:", e); }
+
   return signals;
 }
