@@ -202,7 +202,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       ok: true, sentToday, gap, target, totalSupply, supplyShort,
-      pools, invoked: results,
+      budgetScaled, pools, invoked: results,
     }), { headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
