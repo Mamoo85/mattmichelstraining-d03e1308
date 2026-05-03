@@ -46,7 +46,11 @@ const OWNER_TITLES = ["owner", "president", "general manager", "operations manag
 
 interface EnrichSource { name: string; ms: number; got_email: boolean; }
 
-async function enrichOne(sb: any, lead: any): Promise<{ status: "enriched" | "skipped" | "failed"; trace: EnrichSource[]; }> {
+async function enrichOne(
+  sb: any,
+  lead: any,
+  tallies: Record<Provider, ProviderTally>,
+): Promise<{ status: "enriched" | "skipped" | "failed"; trace: EnrichSource[]; }> {
   const trace: EnrichSource[] = [];
   let ownerName: string | null = null;
   let ownerEmail: string | null = null;
@@ -65,60 +69,92 @@ async function enrichOne(sb: any, lead: any): Promise<{ status: "enriched" | "sk
   if (!website) {
     const t = Date.now();
     website = await googlePlacesWebsite(lead.business_name, lead.city, "MI").catch(() => null);
-    trace.push({ name: "google_places", ms: Date.now() - t, got_email: false });
+    const ms = Date.now() - t;
+    tallies.places.ms += ms; if (website) tallies.places.ok++; else tallies.places.fail++;
+    trace.push({ name: "google_places", ms, got_email: false });
   }
 
   // ── Tier 2 (CHEAP): Firecrawl scrape of contact page
   if (!ownerEmail && website) {
-    const t = Date.now();
-    try {
-      const scraped = await extractContactInfo(website);
-      if (scraped?.email) ownerEmail = scraped.email;
-      if (!ownerName && scraped?.name) ownerName = scraped.name;
-    } catch (_) { /* ignore */ }
-    trace.push({ name: "firecrawl", ms: Date.now() - t, got_email: !!ownerEmail });
+    const gate = await canSpend(sb, "firecrawl", PROVIDER_COST_ESTIMATES.firecrawl);
+    if (!gate.ok) {
+      tallies.firecrawl.capped++;
+      trace.push({ name: `firecrawl_capped:${gate.reason}`, ms: 0, got_email: false });
+    } else {
+      const t = Date.now();
+      try {
+        const scraped = await extractContactInfo(website);
+        if (scraped?.email) ownerEmail = scraped.email;
+        if (!ownerName && scraped?.name) ownerName = scraped.name;
+        tallies.firecrawl.ok++;
+        tallies.firecrawl.cost_cents += PROVIDER_COST_ESTIMATES.firecrawl;
+      } catch (_) { tallies.firecrawl.fail++; }
+      const ms = Date.now() - t;
+      tallies.firecrawl.ms += ms;
+      trace.push({ name: "firecrawl", ms, got_email: !!ownerEmail });
+    }
   }
 
   // ── Tier 3 (PAID-CHEAP): Hunter domain search
   if (!ownerEmail && website) {
-    const t = Date.now();
     const domain = domainFromUrl(website);
     if (domain && !isAggregatorDomain(domain)) {
-      try {
-        const hc = await hunterFindEmail(domain);
-        if (hc?.email) {
-          ownerEmail = hc.email;
-          ownerName = ownerName || (hc.first_name && hc.last_name ? `${hc.first_name} ${hc.last_name}` : null);
-          ownerPhone = ownerPhone || hc.phone_number || null;
-        }
-      } catch (_) { /* ignore */ }
+      const gate = await canSpend(sb, "hunter", PROVIDER_COST_ESTIMATES.hunter);
+      if (!gate.ok) {
+        tallies.hunter.capped++;
+        trace.push({ name: `hunter_capped:${gate.reason}`, ms: 0, got_email: false });
+      } else {
+        const t = Date.now();
+        try {
+          const hc = await hunterFindEmail(domain);
+          if (hc?.email) {
+            ownerEmail = hc.email;
+            ownerName = ownerName || (hc.first_name && hc.last_name ? `${hc.first_name} ${hc.last_name}` : null);
+            ownerPhone = ownerPhone || hc.phone_number || null;
+          }
+          tallies.hunter.ok++;
+          tallies.hunter.cost_cents += PROVIDER_COST_ESTIMATES.hunter;
+        } catch (_) { tallies.hunter.fail++; }
+        const ms = Date.now() - t;
+        tallies.hunter.ms += ms;
+        trace.push({ name: "hunter", ms, got_email: !!ownerEmail });
+      }
     }
-    trace.push({ name: "hunter", ms: Date.now() - t, got_email: !!ownerEmail });
   }
 
   // ── Tier 4 (PAID-EXPENSIVE): Apollo people/org last resort
   if (!ownerEmail) {
-    const t = Date.now();
-    try {
-      const orgs = await apolloOrganizationSearch({
-        q_organization_name: lead.business_name,
-        organization_locations: lead.city ? [lead.city] : ["Michigan"],
-        per_page: 1,
-      });
-      const org = orgs[0] || null;
-      website = website || cleanWebsite(org?.website_url) || null;
-      const people = await apolloPeopleSearch({
-        organization_name: lead.business_name,
-        person_titles: OWNER_TITLES,
-        person_locations: lead.city ? [lead.city] : ["Michigan"],
-        per_page: 3,
-      });
-      const p = people[0] || null;
-      ownerEmail = ownerEmail || p?.email || null;
-      ownerPhone = ownerPhone || p?.phone_numbers?.[0]?.raw_number || null;
-      ownerName = ownerName || p?.name || (p?.first_name && p?.last_name ? `${p.first_name} ${p.last_name}` : null);
-    } catch (_) { /* ignore */ }
-    trace.push({ name: "apollo", ms: Date.now() - t, got_email: !!ownerEmail });
+    const gate = await canSpend(sb, "apollo", PROVIDER_COST_ESTIMATES.apollo);
+    if (!gate.ok) {
+      tallies.apollo.capped++;
+      trace.push({ name: `apollo_capped:${gate.reason}`, ms: 0, got_email: false });
+    } else {
+      const t = Date.now();
+      try {
+        const orgs = await apolloOrganizationSearch({
+          q_organization_name: lead.business_name,
+          organization_locations: lead.city ? [lead.city] : ["Michigan"],
+          per_page: 1,
+        });
+        const org = orgs[0] || null;
+        website = website || cleanWebsite(org?.website_url) || null;
+        const people = await apolloPeopleSearch({
+          organization_name: lead.business_name,
+          person_titles: OWNER_TITLES,
+          person_locations: lead.city ? [lead.city] : ["Michigan"],
+          per_page: 3,
+        });
+        const p = people[0] || null;
+        ownerEmail = ownerEmail || p?.email || null;
+        ownerPhone = ownerPhone || p?.phone_numbers?.[0]?.raw_number || null;
+        ownerName = ownerName || p?.name || (p?.first_name && p?.last_name ? `${p.first_name} ${p.last_name}` : null);
+        tallies.apollo.ok++;
+        tallies.apollo.cost_cents += PROVIDER_COST_ESTIMATES.apollo;
+      } catch (_) { tallies.apollo.fail++; }
+      const ms = Date.now() - t;
+      tallies.apollo.ms += ms;
+      trace.push({ name: "apollo", ms, got_email: !!ownerEmail });
+    }
   }
 
   // Reject if email is suppressed/duplicate before we save it
