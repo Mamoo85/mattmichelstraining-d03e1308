@@ -180,16 +180,21 @@ serve(async (req) => {
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const startedAt = Date.now();
-  let enriched = 0, failed = 0, skipped = 0, batches = 0;
+  let enriched = 0, failed = 0, skipped = 0, batches = 0, attempted = 0;
 
   const body = await req.json().catch(() => ({} as any));
   const drain = body?.drain === true;
+  const triggeredBy: string = body?.triggered_by || (drain ? "drain" : "cron");
+  const targetGap: number | null = typeof body?.target_gap === "number" ? body.target_gap : null;
   const requestedBatch = Number(body?.batch) || DEFAULT_BATCH;
   const BATCH = Math.max(1, Math.min(HARD_MAX_BATCH, requestedBatch));
 
+  const tallies: Record<Provider, ProviderTally> = {
+    apollo: newTally(), hunter: newTally(), firecrawl: newTally(), places: newTally(),
+  };
+
   try {
     while (true) {
-      // Pull leads with no email at all (NULL owner_email AND NULL email AND NULL validated/enriched)
       const { data: leads, error } = await sb.from("outreach_leads")
         .select("id, business_name, city, industry, phone, website")
         .is("owner_email", null)
@@ -204,8 +209,9 @@ serve(async (req) => {
       batches++;
 
       for (const lead of leads) {
+        attempted++;
         try {
-          const r = await enrichOne(sb, lead);
+          const r = await enrichOne(sb, lead, tallies);
           if (r.status === "enriched") enriched++;
           else if (r.status === "skipped") skipped++;
           else failed++;
@@ -221,15 +227,42 @@ serve(async (req) => {
       if (Date.now() - startedAt > DRAIN_TIME_BUDGET_MS) break;
     }
 
+    const totalDur = Date.now() - startedAt;
+    const avgMs = attempted > 0 ? Math.round(totalDur / attempted) : 0;
+    const costTotal = Object.values(tallies).reduce((s, t) => s + t.cost_cents, 0);
+    const throughputPerHour = totalDur > 0 ? (enriched * 3600000) / totalDur : 0;
+    const meetsTarget = targetGap === null ? null : enriched >= Math.min(targetGap, attempted) * 0.6;
+
+    await sb.from("enrichment_run_kpis").insert({
+      function_name: "outreach-leads-enrich",
+      triggered_by: triggeredBy,
+      leads_attempted: attempted,
+      leads_enriched: enriched,
+      leads_failed: failed,
+      leads_skipped: skipped,
+      provider_breakdown: tallies,
+      total_duration_ms: totalDur,
+      avg_ms_per_lead: avgMs,
+      cost_cents_total: costTotal,
+      target_gap: targetGap,
+      throughput_per_hour: throughputPerHour,
+      meets_target: meetsTarget,
+      meta: { drain, batches, batch_size: BATCH },
+    }).then(() => {}, () => {});
+
     await sb.from("agent_heartbeats").upsert({
       agent_name: "outreach-leads-enrich",
       last_beat: new Date().toISOString(),
       status: "ok",
-      metadata: { enriched, failed, skipped, batches, drain, duration_ms: Date.now() - startedAt },
+      metadata: { enriched, failed, skipped, batches, drain, duration_ms: totalDur, cost_cents: costTotal },
     }, { onConflict: "agent_name" });
 
     return new Response(
-      JSON.stringify({ ok: true, enriched, failed, skipped, batches, drain, duration_ms: Date.now() - startedAt }),
+      JSON.stringify({
+        ok: true, enriched, failed, skipped, batches, drain,
+        duration_ms: totalDur, cost_cents: costTotal,
+        provider_breakdown: tallies, throughput_per_hour: throughputPerHour,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e: unknown) {
