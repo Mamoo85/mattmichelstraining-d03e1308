@@ -334,5 +334,39 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[tree] demo permits:", e); }
 
+  // (next source) Detroit Assessment Roll 2026 — recently sold pre-1950 homes (mature/overgrown trees)
+  try {
+    const since = new Date(Date.now() - 120 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/tentative_assessment_roll_2026/FeatureServer/0/query?where=sale_date+%3E%3D+'${since}'+AND+residential_year_built+%3C+1950+AND+residential_year_built+%3E+1880+AND+is_improved+%3D+1&outFields=address,zip_code,residential_year_built,sale_date,taxpayer_1&resultRecordCount=40&orderByFields=sale_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const yrBuilt: number = a.residential_year_built || 0;
+        const owner = (a.taxpayer_1 || "").trim();
+        const treeAge = 2026 - yrBuilt;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "tree_permit_upsell",
+          signal_detail: `Detroit new owner: ${addr} (built ${yrBuilt}, sold ${a.sale_date}) — ${treeAge}-year-old property typically has mature trees with dead limbs, root heave, and canopy overgrowth. New owners inherit tree liability the day they close`,
+          signal_date: a.sale_date || new Date().toISOString().split("T")[0],
+          score: 6,
+          source_method: "detroit_assessment_roll",
+          suggested_opener: `${owner ? owner + " — " : ""}Congrats on ${addr}! ${treeAge}-year-old property trees are at peak risk age — dead limbs over the roof and root heave under the driveway. As the new owner you're now liable for damage they cause. Free assessment?`,
+          best_call_window: "Within 60 days of purchase, before first storm season",
+          estimated_value: 1800,
+          raw_source_data: { address: addr, zip, year_built: yrBuilt, sale_date: a.sale_date, owner },
+        });
+      }
+    }
+  } catch (e) { console.error("[tree] Detroit assessment roll:", e); }
+
   return signals;
 }

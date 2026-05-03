@@ -324,7 +324,11 @@ async function scanBLSEmployment(): Promise<Posting[]> {
 async function scanEventbriteSignals(): Promise<Posting[]> {
   if (!EVENTBRITE_API_KEY) return [];
   const results: Posting[] = [];
-  const queries = ["HVAC trade show", "contractor expo michigan", "plumbing electrical conference detroit"];
+  const queries = [
+    "HVAC trade show", "contractor expo michigan", "plumbing electrical conference detroit",
+    "home improvement expo michigan", "home show detroit", "remodeling expo michigan",
+    "building contractor conference", "construction trade show michigan",
+  ];
   for (const q of queries) {
     try {
       const url = `https://www.eventbriteapi.com/v3/events/search/?q=${encodeURIComponent(q)}&location.address=Michigan&expand=organizer&token=${EVENTBRITE_API_KEY}`;
