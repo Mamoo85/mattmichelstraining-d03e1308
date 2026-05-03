@@ -5,12 +5,12 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { dwaColdEmail } from "../_shared/dwa-email.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
-const DAILY_CAP = 30; // cold emails per day
+const DAILY_CAP = 50; // cold emails per day (TechAlert)
 const MIN_SCORE = 3;  // skip low-signal prospects
 
 const corsHeaders = {
@@ -18,79 +18,42 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-function dwaEmail(bodyHtml: string): string {
-  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a1628;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
-<div style="max-width:600px;margin:0 auto;background:#0a1628">
-  <div style="padding:28px 32px 20px;text-align:center;border-bottom:2px solid #00d4ff">
-    <div style="color:#ffffff;font-size:20px;font-weight:900;letter-spacing:3px">DETROIT <span style="color:#00d4ff">WEB AGENCY</span></div>
-    <div style="color:#00d4ff;font-size:10px;letter-spacing:4px;margin-top:5px;font-weight:600">WE HANDLE THE TECH</div>
-  </div>
-  <div style="padding:32px;color:#e2e8f0;font-size:15px;line-height:1.8">${bodyHtml}</div>
-  <div style="padding:20px 32px;border-top:1px solid #1e3a5f;text-align:center">
-    <p style="margin:0;color:#4a6fa5;font-size:12px">Detroit Web Agency · Grosse Pointe Park, MI · (313) 992-1219</p>
-    <p style="margin:6px 0 0;color:#4a6fa5;font-size:11px"><a href="https://detroitwebagent.com/unsubscribe?email={{email}}" style="color:#4a6fa5">Unsubscribe</a></p>
-  </div>
-</div></body></html>`;
-}
-
 function buildEmailBody(ownerName: string | null, companyName: string, role: string, isBoiler: boolean): string {
   const greeting = ownerName ? ownerName.split(" ")[0] : "there";
   const tradeLabel = isBoiler ? "boiler/stationary engineer" : role.replace(/_/g, " ");
   const jobType = isBoiler ? "licensed boiler operators" : `qualified ${tradeLabel}s`;
 
   return `
-<p>Hi ${greeting},</p>
-
-<p>I noticed <strong>${companyName}</strong> is actively hiring ${jobType} — the market's tight right now and the best candidates get picked up fast.</p>
-
-<p>I run <strong>TechAlert</strong>, a Detroit-area hiring intelligence service. We monitor job boards, licensing databases, and contractor networks 24/7 and alert you the moment a qualified candidate becomes available in your area.</p>
-
-<p><strong>What you get:</strong></p>
-<ul style="margin:8px 0;padding-left:20px">
+<p style="color:#e6f1ff;">Hi ${greeting},</p>
+<p style="color:#e6f1ff;">I noticed <strong>${companyName}</strong> is actively hiring ${jobType} — the market's tight right now and the best candidates get picked up fast.</p>
+<p style="color:#e6f1ff;">I run <strong>TechAlert</strong>, a Detroit-area hiring intelligence service. We monitor job boards, licensing databases, and contractor networks 24/7 and alert you the moment a qualified candidate becomes available in your area.</p>
+<p style="color:#e6f1ff;"><strong>What you get:</strong></p>
+<ul style="margin:8px 0;padding-left:20px;color:#e6f1ff;">
   <li>Same-day alerts when a licensed ${tradeLabel} enters the job market near you</li>
   <li>Candidate profile: license status, years of experience, trade specialties</li>
   <li>Direct contact info so you reach them before anyone else</li>
 </ul>
-
-<p><strong>$149/month. No contract. Cancel anytime.</strong></p>
-
-<p>Most clients fill their open role within 3 weeks. Want me to send over a sample alert for ${companyName}'s area?</p>
-
-<p>Just reply or call/text (313) 992-1219.</p>
-
-<p>— Matt Michels<br>Detroit Web Agency</p>
+<p style="color:#e6f1ff;">Most clients fill their open role within 3 weeks. Want me to send over a sample alert for ${companyName}'s area?</p>
+<p style="color:#e6f1ff;">Just reply or call/text (313) 992-1219.</p>
+<p style="color:#e6f1ff;">— Matt Michels<br>Detroit Web Agency</p>
 `;
 }
 
-async function sendEmail(to: string, ownerName: string | null, companyName: string, role: string, isBoiler: boolean): Promise<{ ok: boolean; id?: string; err?: string }> {
-  if (!RESEND_API_KEY) return { ok: false, err: "RESEND_API_KEY not set" };
-
+async function sendEmail(sb: ReturnType<typeof createClient>, to: string, ownerName: string | null, companyName: string, role: string, isBoiler: boolean) {
   const firstName = ownerName ? ownerName.split(" ")[0] : null;
   const subject = firstName
     ? `${firstName} — still hiring ${role.replace(/_/g, " ")}s?`
     : `${companyName} — still hiring ${role.replace(/_/g, " ")}s?`;
 
-  const html = dwaEmail(buildEmailBody(ownerName, companyName, role, isBoiler))
-    .replace("{{email}}", encodeURIComponent(to));
-
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: "Matt at Detroit Web Agency <matt@detroitwebagent.com>",
-        to: [to],
-        subject,
-        html,
-      }),
-      signal: AbortSignal.timeout(15_000),
-    });
-    const data = await res.json();
-    if (!res.ok) return { ok: false, err: data?.message || JSON.stringify(data) };
-    return { ok: true, id: data.id };
-  } catch (e) {
-    return { ok: false, err: e instanceof Error ? e.message : String(e) };
-  }
+  const r = await dwaColdEmail({
+    to,
+    subject,
+    bodyHtml: buildEmailBody(ownerName, companyName, role, isBoiler),
+    product: "TechAlert", // hiring → 30-day trial automatically
+    ctaUrl: "https://detroitwebagent.com/talent-radar?utm_source=cold&utm_campaign=techalert",
+    templateName: "techalert_cold_d0",
+  }, sb);
+  return { ok: r.ok, err: r.error };
 }
 
 serve(async (req) => {
