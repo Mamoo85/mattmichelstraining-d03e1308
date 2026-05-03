@@ -67,7 +67,14 @@ async function sonarSearch(role: typeof ROLES[number]): Promise<Posting[]> {
       signal: AbortSignal.timeout(45_000),
     });
     if (!res.ok) {
-      console.error(`[hunter] sonar ${role.key} HTTP ${res.status}`);
+      // 402 = out of credits / payment required. Disable Sonar for the rest of this run
+      // so we don't burn time hammering a paid endpoint that will keep saying no.
+      if (res.status === 402 || res.status === 429) {
+        SONAR_DISABLED_REASON = `HTTP ${res.status}`;
+        console.warn(`[hunter] sonar disabled for this run: ${SONAR_DISABLED_REASON}`);
+      } else {
+        console.error(`[hunter] sonar ${role.key} HTTP ${res.status}`);
+      }
       return [];
     }
     const data = await res.json();
