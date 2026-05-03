@@ -7,10 +7,14 @@ export default function MyDemoJunkRadar() {
       productLabel="Demo & Junk Radar"
       landingPath="/demo-junk-radar"
       signalTypes={[
-        { value: "demo_permit", label: "Demo Permit" },
-        { value: "estate_clearout", label: "Estate Sale" },
-        { value: "probate_clearout", label: "Probate Filing" },
-        { value: "foreclosure_clearout", label: "Foreclosure Notice" },
+        { value: "cofc_debris_inspection", label: "🔴 Rental License Expiring" },
+        { value: "demo_permit", label: "🏚️ Demolition Order Issued" },
+        { value: "completed_demo_lot", label: "🏗️ Completed Demo — Lot Cleanup" },
+        { value: "estate_clearout", label: "📦 Estate Sale — Full Cleanout" },
+        { value: "foreclosure_vacant", label: "🏦 Bank-Owned / Vacant" },
+        { value: "blight_debris_vacant", label: "🗑️ Blight: Debris / Overgrown" },
+        { value: "dlba_property", label: "🏙️ DLBA City-Owned Property" },
+        { value: "osm_abandoned", label: "🏚️ Abandoned Structure" },
       ]}
     />
   );

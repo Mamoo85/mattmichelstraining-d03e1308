@@ -2,29 +2,19 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import SEOHead from "@/components/layout/SEOHead";
 import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
 import MortgageRadarTerritoryPicker from "@/components/mortgage/MortgageRadarTerritoryPicker";
-import { Wrench, Lock, MapPin, Bell, Search, ExternalLink, TrendingUp, Calendar, Target } from "lucide-react";
+import TradeRadarLeadCard, { TradeRadarLead } from "@/components/trade-radar/TradeRadarLeadCard";
+import { Wrench, Lock, Bell, TrendingUp, Calendar, Target, MapPin } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-type Lead = {
-  id: string;
+type Lead = TradeRadarLead & {
   full_name: string | null;
-  address: string | null;
-  city: string | null;
-  zip: string | null;
-  signal_type: string | null;
-  signal_detail: string | null;
-  signal_date: string | null;
-  score: number;
   signal_count: number | null;
-  suggested_opener: string | null;
-  estimated_value: number | null;
   created_at: string;
 };
 
@@ -52,16 +42,6 @@ interface TradeRadarPortalProps {
   landingPath: string;
 }
 
-const scoreColor = (score: number) => {
-  if (score >= 9) return "border-emerald-500 text-emerald-300 bg-emerald-500/10";
-  if (score >= 7) return "border-amber-500 text-amber-300 bg-amber-500/10";
-  return "border-slate-600 text-slate-300 bg-slate-500/10";
-};
-
-const findContactUrl = (l: Lead) => {
-  const parts = [l.full_name, l.address, l.city].filter(Boolean).join(" ");
-  return `https://www.google.com/search?q=${encodeURIComponent(parts || "homeowner contact")}`;
-};
 
 export default function TradeRadarPortal({
   vertical,
@@ -120,7 +100,7 @@ export default function TradeRadarPortal({
       const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
       let query = (supabase.from as any)("trade_radar_leads")
         .select(
-          "id, full_name, address, city, zip, signal_type, signal_detail, signal_date, score, signal_count, suggested_opener, estimated_value, created_at"
+          "id, full_name, address, city, zip, signal_type, signal_detail, signal_date, score, signal_count, suggested_opener, best_call_window, estimated_value, street_view_url, created_at"
         )
         .eq("vertical", vertical)
         .gte("created_at", since)
@@ -316,65 +296,10 @@ export default function TradeRadarPortal({
             </Card>
           )
         ) : (
-          <div className="grid gap-4">
-            {filtered.map((l) => {
-              const opener = (l.suggested_opener || "")
-                .replace(/\{name\}/g, l.full_name || "there")
-                .replace(/\{address\}/g, l.address || "your property");
-              return (
-                <Card
-                  key={l.id}
-                  className={`bg-[#0a1628] border ${l.score >= 9 ? "border-[#00d4ff]" : "border-[#1e3a5f]"}`}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <CardTitle className="text-white text-lg truncate">{l.address || "Address pending"}</CardTitle>
-                        <p className="text-xs text-[#94a3b8] mt-1 flex items-center gap-1 flex-wrap">
-                          <MapPin className="w-3 h-3" /> {l.city || ""} {l.zip || ""}
-                          {(l.signal_count || 1) > 1 && (
-                            <span className="ml-1 px-1.5 py-0.5 rounded bg-[#00d4ff]/20 text-[#00d4ff] font-bold">
-                              ×{l.signal_count} signals
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                      <div className={`flex flex-col items-end shrink-0 px-2.5 py-1 rounded-lg border ${scoreColor(l.score)}`}>
-                        <span className="text-2xl font-black leading-none tabular-nums">{l.score}</span>
-                        <span className="text-[9px] uppercase tracking-widest mt-0.5">/ 10</span>
-                      </div>
-                    </div>
-                    {l.signal_type && (
-                      <p className="text-[10px] text-[#00d4ff] uppercase tracking-widest font-bold mt-1">
-                        {l.signal_type.replace(/_/g, " ")}
-                      </p>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    {l.signal_detail && <p className="text-sm text-[#cbd5e1] mb-3">{l.signal_detail}</p>}
-                    {opener && (
-                      <div className="bg-[#030711] border border-[#1e3a5f] rounded p-3 mb-3">
-                        <p className="text-[10px] uppercase tracking-widest text-[#00d4ff] mb-1">Suggested opener</p>
-                        <p className="text-sm text-[#cbd5e1] italic">"{opener}"</p>
-                      </div>
-                    )}
-                    <div className="flex flex-wrap gap-2 items-center">
-                      <a href={findContactUrl(l)} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" className="bg-[#00d4ff] text-black hover:bg-[#00d4ff]/90 font-bold">
-                          <Search className="w-3 h-3 mr-1" /> Find Contact
-                          <ExternalLink className="w-3 h-3 ml-1" />
-                        </Button>
-                      </a>
-                      {l.estimated_value && (
-                        <span className="text-xs text-[#94a3b8] ml-auto">
-                          Est. value: ${l.estimated_value.toLocaleString()}
-                        </span>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+          <div className="grid gap-5">
+            {filtered.map((l) => (
+              <TradeRadarLeadCard key={l.id} lead={l} />
+            ))}
           </div>
         )}
 

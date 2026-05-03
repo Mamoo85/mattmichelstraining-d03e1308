@@ -7,11 +7,12 @@ export default function MyPlumbingRadar() {
       productLabel="Plumbing Radar"
       landingPath="/plumbing-radar"
       signalTypes={[
-        { value: "plumbing_permit", label: "Plumbing Permit" },
-        { value: "water_main_break", label: "Water Main Break" },
-        { value: "leak_report", label: "Leak Report" },
-        { value: "sewer_backup", label: "Sewer Backup" },
-        { value: "water_heater_age", label: "Water Heater Age" },
+        { value: "cofc_plumbing_inspection", label: "🔴 Rental License Expiring" },
+        { value: "bseed_trades_permits_plumb", label: "🚿 Plumbing Permit Filed" },
+        { value: "plumbing_permit_major", label: "🔧 Major Plumbing Permit" },
+        { value: "water_main_area", label: "💧 Water Main Break Area" },
+        { value: "lead_line_area", label: "⚠️ Lead Line Replacement Zone" },
+        { value: "home_improvement_loan_area", label: "🏦 Home Improvement Loan Area" },
       ]}
     />
   );

@@ -43,7 +43,9 @@
       "Bash(git status*)",
       "Bash(python3 -m json.tool)",
       "Bash(python3 -c ' *)",
-      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); flds=[f['name'] for f in d.get\\('fields',[]\\)]; print\\('FIELDS:', flds\\); feats=d.get\\('features',[]\\); [print\\(f['attributes']\\) for f in feats[:2]]\")"
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); flds=[f['name'] for f in d.get\\('fields',[]\\)]; print\\('FIELDS:', flds\\); feats=d.get\\('features',[]\\); [print\\(f['attributes']\\) for f in feats[:2]]\")",
+      "Bash(gh workflow *)",
+      "Bash(gh run *)"
     ],
     "deny": []
   },

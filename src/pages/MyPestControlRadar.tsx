@@ -7,11 +7,11 @@ export default function MyPestControlRadar() {
       productLabel="Pest Control Radar"
       landingPath="/pest-control-radar"
       signalTypes={[
-        { value: "pest_sighting", label: "Pest Sighting" },
-        { value: "code_violation", label: "Code Violation" },
-        { value: "storm_damage", label: "Storm Damage" },
-        { value: "seasonal", label: "Seasonal" },
-        { value: "new_owner", label: "New Owner" },
+        { value: "cofc_pest_inspection", label: "🔴 Rental License Expiring" },
+        { value: "foreclosure_vacant", label: "🏦 Vacant/Foreclosed Property" },
+        { value: "blight_pest_harborage", label: "🐀 Blight Violation — Pest Risk" },
+        { value: "demo_neighbor_pest", label: "🏚️ Neighboring Demo — Displacement" },
+        { value: "new_homeowner_pest", label: "🏠 New Homeowner Discovery" },
       ]}
     />
   );

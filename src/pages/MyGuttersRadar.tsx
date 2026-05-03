@@ -7,11 +7,13 @@ export default function MyGuttersRadar() {
       productLabel="Gutters Radar"
       landingPath="/gutters-radar"
       signalTypes={[
-        { value: "storm_damage", label: "Storm Damage" },
-        { value: "roof_permit", label: "Roof Permit" },
-        { value: "heavy_rain", label: "Heavy Rain" },
-        { value: "fema_disaster", label: "FEMA Disaster" },
-        { value: "gutter_permit", label: "Gutter Permit" },
+        { value: "cofc_gutter_inspection", label: "🔴 Rental License Expiring" },
+        { value: "historical_hail_county", label: "📊 County Wind/Hail History" },
+        { value: "historic_district_violation", label: "🚨 Historic Violation: Gutters" },
+        { value: "storm_gutter_damage", label: "💨 Storm Gutter Damage" },
+        { value: "fema_gutter_damage", label: "🌊 FEMA Disaster Zone" },
+        { value: "roof_permit_upsell", label: "🔨 Roof Permit — Gutter Upsell" },
+        { value: "homeowner_equity_area", label: "💰 Equity Tap Signal" },
       ]}
     />
   );
