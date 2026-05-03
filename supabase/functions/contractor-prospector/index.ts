@@ -32,6 +32,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { generateText } from "../_shared/ai.ts";
 import { isBlocked, recordOutreach } from "../_shared/outreach-blocklist.ts";
 import { canonicalizeTrade, getSearchQueries } from "../_shared/trade-canonical.ts";
+import { cleanWebsite } from "../_shared/enrichment-pipeline.ts";
 
 function extractCityState(city: string): [string, string] {
   const parts = city.trim().split(/\s+/);
