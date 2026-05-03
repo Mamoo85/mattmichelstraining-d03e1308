@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { generateText } from "../_shared/ai.ts";
+import { dwaColdEmail } from "../_shared/dwa-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -511,7 +512,7 @@ Price: ${landingPage.price} setup + ${landingPage.monthly}`;
   return await generateText(prompt, 600);
 }
 
-// ── Check daily volume cap ──
+// ── Check daily volume cap (raised to 60 to support 150/day floor) ──
 async function checkDailyVolumeCap(serviceClient: any): Promise<boolean> {
   const today = new Date().toISOString().split("T")[0];
   const { count } = await serviceClient
@@ -520,7 +521,7 @@ async function checkDailyVolumeCap(serviceClient: any): Promise<boolean> {
     .eq("template_name", "cold_outreach")
     .eq("status", "sent")
     .gte("created_at", `${today}T00:00:00Z`);
-  return (count || 0) >= 40;
+  return (count || 0) >= 60;
 }
 
 serve(async (req) => {
@@ -893,18 +894,21 @@ serve(async (req) => {
             || `Quick observation about ${businessName}`;
           emailBody = emailLines.slice(emailLines.findIndex(l => l === "---") + 1).join("\n").trim();
           const emailBodyHtml = emailBody.replace(/\n/g, "<br>");
+          const ctaUrl = `https://detroitwebagent.com${landingPage.path}`;
 
-          const sent = await sendColdEmail(contactEmail, subjectLine, emailBodyHtml, RESEND_API_KEY);
+          const r = await dwaColdEmail({
+            to: contactEmail,
+            subject: subjectLine,
+            bodyHtml: emailBodyHtml,
+            product: "Detroit Web Agency",
+            ctaUrl,
+            templateName: "cold_outreach",
+          }, serviceClient);
+          const sent = r.ok;
           if (sent) {
             emailStatus = "sent";
             emailed++;
             dripCampaignStatus.current_stage = "1_Initial_Email_Sent";
-            await serviceClient.from("email_send_log").insert({
-              recipient_email: contactEmail,
-              template_name: "cold_outreach",
-              status: "sent",
-              metadata: { business: businessName, industry, city, gap_score: gapScore, lead_score: scoutResult.lead_score, agent: "sniper" },
-            });
             // ── Bridge into web_design_leads so the 4-step drip picks this lead up ──
             const { data: existingWdl } = await serviceClient
               .from("web_design_leads" as any)

@@ -2187,3 +2187,5 @@ verify_jwt = false
 [functions.trade-radar-weekly-digest]
 verify_jwt = false
 
+[functions.cold-email-volume-sentinel]
+verify_jwt = false
