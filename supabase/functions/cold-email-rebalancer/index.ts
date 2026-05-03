@@ -190,10 +190,24 @@ serve(async (req) => {
     }
 
     let budgetScaled: any = null;
-    if (supplyShort && !breakerBlocked) {
-      // ── Auto-scale per-provider daily budgets ──────────────────────────
+    if (supplyShort && !breakerBlocked && frugal) {
+      // ── FRUGAL MODE: free-first only. No paid-budget scale-up.
+      // Trigger free scanners + drain free enrichment sources only.
+      console.log("[rebalancer] frugal mode — free enrichment only, no scale-up");
+      await Promise.all([
+        sb.functions.invoke("techalert-prospect-hunter", { body: {} }).catch(() => {}),
+        sb.functions.invoke("contractor-prospector", { body: {} }).catch(() => {}),
+        sb.functions.invoke("prospect-local-businesses", { body: { discoverOnly: true } }).catch(() => {}),
+        // outreach-leads-enrich respects per-provider caps (frugal caps applied via shared helper)
+        sb.functions.invoke("outreach-leads-enrich", {
+          body: { batch: 50, triggered_by: "rebalancer_frugal", target_gap: gap, free_first_only: true },
+        }).catch(() => {}),
+      ]);
+      budgetScaled = { frugal: true, note: "no scale-up; free-first enrichment only" };
+    } else if (supplyShort && !breakerBlocked) {
+      // ── Open mode (MRR covers spend) — auto-scale per-provider budgets ──
       try {
-        const shortfallRatio = gap > 0 ? (gap - totalSupply) / gap : 0; // 0..1
+        const shortfallRatio = gap > 0 ? (gap - totalSupply) / gap : 0;
         const multiplier = 1 + Math.min(2, Math.max(0.5, shortfallRatio * 3));
         const changes: Array<{ label: string; from: number; to: number }> = [];
 
@@ -214,7 +228,6 @@ serve(async (req) => {
             changes.push({ label: pb.label, from: current, to: next });
           }
         }
-
         if (changes.length) {
           budgetScaled = { changes, multiplier: multiplier.toFixed(2), shortfallRatio: shortfallRatio.toFixed(2) };
         }
@@ -233,7 +246,7 @@ serve(async (req) => {
         `${scaleSummary}. Triggering scanners + enrichment.`,
       ).catch(() => {});
 
-      const enrichBatch = budgetScaled ? 100 : 50;
+      const enrichBatch = budgetScaled?.changes?.length ? 100 : 50;
       await Promise.all([
         sb.functions.invoke("techalert-prospect-hunter", { body: {} }).catch(() => {}),
         sb.functions.invoke("contractor-prospector", { body: {} }).catch(() => {}),
@@ -245,10 +258,9 @@ serve(async (req) => {
         sb.functions.invoke("enrichment-matrix-walker", { body: {} }).catch(() => {}),
       ]);
     } else if (supplyShort && breakerBlocked) {
-      // Breaker is tripped — do not scale, do not burst enrichment
       console.log("[rebalancer] supply short but breaker blocked, skipping enrichment burst");
-    } else {
-      // ── Auto-decay each provider budget back toward baseline ───────────
+    } else if (!frugal) {
+      // Auto-decay (only meaningful when not frugal)
       try {
         const { data: cfg } = await sb
           .from("enrichment_walker_config")
