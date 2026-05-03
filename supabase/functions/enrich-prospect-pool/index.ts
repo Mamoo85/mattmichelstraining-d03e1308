@@ -307,7 +307,10 @@ async function stageGooglePlaces(p: Prospect): Promise<{ patch: Prospect; trace:
     if (r) {
       if (typeof r.rating === "number") { patch.google_rating = r.rating; trace.filled.push("google_rating"); }
       if (typeof r.user_ratings_total === "number") { patch.review_count = r.user_ratings_total; trace.filled.push("review_count"); }
-      if (r.website && !p.website) { patch.website = r.website; trace.filled.push("website"); }
+      if (r.website && !p.website) {
+        const clean = cleanWebsite(r.website);
+        if (clean) { patch.website = clean; trace.filled.push("website"); }
+      }
       if (r.formatted_phone_number && !p.phone) { patch.phone = r.formatted_phone_number; trace.filled.push("phone"); }
     }
     trace.ok = true;
