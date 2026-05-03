@@ -2196,3 +2196,6 @@ verify_jwt = false
 [functions.enrichment-kpi-monitor]
 verify_jwt = false
 
+
+[functions.cold-email-daily-economics]
+verify_jwt = false
