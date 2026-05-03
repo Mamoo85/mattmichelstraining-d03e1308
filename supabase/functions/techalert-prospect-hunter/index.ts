@@ -701,6 +701,36 @@ async function scanDetroitOpenTradeBiz(): Promise<Posting[]> {
   return results;
 }
 
+// Detroit City Council Business Survey — has is_construction flag + phone + website
+async function scanCouncilSurveyedBiz(): Promise<Posting[]> {
+  const results: Posting[] = [];
+  try {
+    const where = encodeURIComponent(`is_construction = 1 OR primary_type_of_service LIKE '%construct%' OR primary_type_of_service LIKE '%HVAC%' OR primary_type_of_service LIKE '%plumb%' OR primary_type_of_service LIKE '%electr%' OR primary_type_of_service LIKE '%roof%'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/council_surveyed_businesses/FeatureServer/0/query?where=${where}&outFields=business_name,business_phone_number,business_website,address,zip_code,primary_type_of_service&resultRecordCount=50&f=json`,
+      { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) return results;
+    const d = await res.json();
+    for (const feat of (d?.features ?? [])) {
+      const a = feat?.attributes ?? {};
+      const name: string = a.business_name || "";
+      if (!name) continue;
+      const city = a.zip_code ? `Detroit MI ${String(a.zip_code).split(".")[0]}` : "Detroit, MI";
+      results.push({
+        company_name: name,
+        city,
+        role: "hvac_tech",
+        days_posted: null,
+        source_url: a.business_website ? `https://${String(a.business_website).replace(/^https?:\/\//, "")}` : "https://detroitmi.gov/opendetroit",
+        source_label: "Detroit Council Business Survey",
+        is_boiler: false,
+      });
+    }
+  } catch (e) { console.error("[hunter] Detroit council surveyed:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
 // Completed Residential Demolitions — city demo contractors are growing Detroit businesses
 async function scanDemoContractors(): Promise<Posting[]> {
   const results: Posting[] = [];
@@ -853,7 +883,7 @@ serve(async (req) => {
     // Supplemental signals + NOAA weather bonus — all run in parallel
     // Includes the new signal-waterfall (DOL WARN, OSHA, FMCSA, DOT prequal, SAM expanded)
     const { fetchHireSignals } = await import("../_shared/signal-waterfall.ts");
-    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, billionDollarSignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
+    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, councilSurveyedSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, billionDollarSignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
       scanGitHubSignals(),
       scanEDGARFundings(),
       scanUSPTOPatents(),
@@ -871,6 +901,7 @@ serve(async (req) => {
       scanChapter7Liquidations(),
       scanDetroitCertifiedContractors(),
       scanDetroitOpenTradeBiz(),
+      scanCouncilSurveyedBiz(),
       scanDetroitCityContracts(),
       scanMultifamilyConstruction(),
       scanDemoContractors(),
@@ -878,7 +909,7 @@ serve(async (req) => {
       getWeatherHiringBonus(),
       fetchHireSignals(sb, { state: "MI", naics: "238220" }).catch(() => []),
     ]);
-    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...detroitCityContractSignals, ...multifamilySignals, ...demoContractorSignals, ...billionDollarSignals];
+    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...councilSurveyedSignals, ...detroitCityContractSignals, ...multifamilySignals, ...demoContractorSignals, ...billionDollarSignals];
     all.push(...supplemental);
     scanned += supplemental.length;
     // Log waterfall signal volume to heartbeat metadata (don't insert as job postings — different shape)
@@ -968,6 +999,7 @@ serve(async (req) => {
           ch7_liquidations: ch7Signals.length,
           detroit_certified: detroitCertifiedSignals.length,
           detroit_open_biz: detroitOpenBizSignals.length,
+          council_surveyed: councilSurveyedSignals.length,
           detroit_city_contracts: detroitCityContractSignals.length,
           detroit_multifamily: multifamilySignals.length,
           detroit_demo_contractors: demoContractorSignals.length,

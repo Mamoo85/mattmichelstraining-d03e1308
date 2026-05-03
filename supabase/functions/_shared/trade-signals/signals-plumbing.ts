@@ -15,6 +15,7 @@ export const BASE_SCORES: Record<string, number> = {
   plumbing_permit_major: 8,
   foreclosure_deferred: 7,
   lead_line_area: 6,
+  commercial_compliance_plumb: 7,
 };
 
 export const OPENERS: Record<string, { opener: string; window: string }> = {
@@ -332,6 +333,69 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
       }
     }
   } catch (e) { console.error("[plumbing] Detroit assessment roll:", e); }
+
+  // 11. Detroit commercial building compliance failures — plumbing code issues
+  try {
+    const complianceWhere = encodeURIComponent(`commercial_compliance_indicator = 'YELLOW' OR commercial_compliance_indicator = 'RED'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_commercial_building_compliance/FeatureServer/0/query?where=${complianceWhere}&outFields=parcel_address,taxpayer_1,commercial_compliance_indicator,commercial_compliance_detail,latest_inspection_result&resultRecordCount=40&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.parcel_address || "").trim();
+        if (!addr) continue;
+        const status = a.commercial_compliance_indicator ?? "YELLOW";
+        const owner = (a.taxpayer_1 || "").trim();
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "commercial_compliance_plumb",
+          signal_detail: `Detroit commercial compliance ${status}: ${addr}${owner ? " — " + owner : ""}. Plumbing code compliance (backflow prevention, fixture clearance, trap requirements) is frequently flagged during commercial CofC inspections`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.commercial_compliance_plumb - (status === "YELLOW" ? 1 : 0),
+          source_method: "bseed_commercial_compliance",
+          suggested_opener: `Your commercial property at ${addr} has a ${status} compliance flag in the city system — plumbing issues are commonly cited during CofC inspections. We specialize in commercial plumbing compliance and can get you cleared fast.`,
+          best_call_window: "Any time — compliance deadline creates urgency",
+          estimated_value: 5000,
+          raw_source_data: { addr, status, owner, detail: a.commercial_compliance_detail },
+        });
+      }
+    }
+  } catch (e) { console.error("[plumbing] commercial compliance:", e); }
+
+  // 12. Detroit commercial compliance certificates expiring in 90 days
+  try {
+    const certWhere = encodeURIComponent(`num_days_until_expired <= 90 AND num_days_until_expired > 0`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_active_commercial_compliance_certificates/FeatureServer/0/query?where=${certWhere}&outFields=address,zip_code,expired_date,num_days_until_expired&resultRecordCount=40&orderByFields=num_days_until_expired+ASC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const daysLeft = Number(a.num_days_until_expired) || 90;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "commercial_compliance_plumb",
+          signal_detail: `Detroit commercial CofC expires in ${daysLeft} days: ${addr}. Plumbing pre-inspection now prevents failed re-inspection and city fines`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.commercial_compliance_plumb - (daysLeft > 45 ? 1 : 0),
+          source_method: "bseed_commercial_cert_expiry",
+          suggested_opener: `Your Certificate of Compliance at ${addr} expires in ${daysLeft} days — we do commercial plumbing pre-inspections so you pass the first time and avoid delays that cost you tenants.`,
+          best_call_window: `Within ${Math.min(daysLeft, 60)} days`,
+          estimated_value: 4500,
+          raw_source_data: { addr, zip, days_left: daysLeft },
+        });
+      }
+    }
+  } catch (e) { console.error("[plumbing] commercial cert expiry:", e); }
 
   return signals;
 }

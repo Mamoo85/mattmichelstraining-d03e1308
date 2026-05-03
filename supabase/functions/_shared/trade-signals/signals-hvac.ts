@@ -14,6 +14,7 @@ export const BASE_SCORES: Record<string, number> = {
   fema_disaster: 8,
   aging_system_proxy: 6,
   nfip_flood_hvac: 8,
+  commercial_compliance_hvac: 8,
 };
 
 export const OPENERS: Record<string, { opener: string; window: string }> = {
@@ -410,6 +411,71 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
       }
     }
   } catch (e) { console.error("[hvac] Detroit assessment roll:", e); }
+
+  // 13. Detroit commercial building compliance failures (YELLOW/RED) — commercial HVAC demand
+  try {
+    const complianceWhere = encodeURIComponent(`commercial_compliance_indicator = 'YELLOW' OR commercial_compliance_indicator = 'RED'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_commercial_building_compliance/FeatureServer/0/query?where=${complianceWhere}&outFields=parcel_address,taxpayer_1,commercial_compliance_indicator,commercial_compliance_detail,latest_inspection_result,amt_balance_due,longitude,latitude&resultRecordCount=40&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.parcel_address || "").trim();
+        if (!addr) continue;
+        const status = a.commercial_compliance_indicator ?? "YELLOW";
+        const detail = (a.commercial_compliance_detail || "").slice(0, 100);
+        const owner = (a.taxpayer_1 || "").trim();
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "commercial_compliance_hvac",
+          signal_detail: `Detroit commercial compliance ${status}: ${addr}. ${detail}${owner ? ` — Owner: ${owner}` : ""}. Failing commercial inspection often means outdated HVAC that doesn't meet current energy code`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.commercial_compliance_hvac - (status === "YELLOW" ? 1 : 0),
+          source_method: "bseed_commercial_compliance",
+          suggested_opener: `Your commercial property at ${addr} is flagged ${status} in the city compliance system — HVAC code compliance is a top reason commercial buildings fail inspection. We do commercial HVAC audits and can document everything for your CofC renewal.`,
+          best_call_window: "Any time — compliance deadline creates urgency",
+          estimated_value: 15000,
+          raw_source_data: { addr, status, detail, owner, amt_balance_due: a.amt_balance_due },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] commercial compliance:", e); }
+
+  // 14. Detroit commercial compliance certificates expiring in 90 days — pre-inspection window
+  try {
+    const certWhere = encodeURIComponent(`num_days_until_expired <= 90 AND num_days_until_expired > 0`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_active_commercial_compliance_certificates/FeatureServer/0/query?where=${certWhere}&outFields=address,zip_code,expired_date,num_days_until_expired&resultRecordCount=40&orderByFields=num_days_until_expired+ASC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const daysLeft = Number(a.num_days_until_expired) || 90;
+        const expDate = a.expired_date ? String(a.expired_date).slice(0, 10) : "";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "commercial_compliance_hvac",
+          signal_detail: `Detroit commercial CofC expires in ${daysLeft} days${expDate ? " (" + expDate + ")" : ""}: ${addr}. Pre-inspection HVAC tune-up prevents re-inspection delays and failed CofC`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.commercial_compliance_hvac - (daysLeft > 45 ? 1 : 0),
+          source_method: "bseed_commercial_cert_expiry",
+          suggested_opener: `Your Certificate of Compliance at ${addr} expires in ${daysLeft} days — a failing HVAC system is one of the top reasons commercial buildings don't pass re-inspection. We can do a pre-inspection audit this week so you're not scrambling at the deadline.`,
+          best_call_window: `Within ${Math.min(daysLeft, 60)} days`,
+          estimated_value: 12000,
+          raw_source_data: { addr, zip, days_left: daysLeft, expired_date: expDate },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] commercial cert expiry:", e); }
 
   return signals;
 }
