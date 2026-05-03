@@ -5,10 +5,10 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { dwaColdEmail } from "../_shared/dwa-email.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 
 const DAILY_CAP = 50;
 
@@ -16,21 +16,6 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-function dwaEmail(bodyHtml: string): string {
-  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a1628;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
-<div style="max-width:600px;margin:0 auto;background:#0a1628">
-  <div style="padding:28px 32px 20px;text-align:center;border-bottom:2px solid #00d4ff">
-    <div style="color:#ffffff;font-size:20px;font-weight:900;letter-spacing:3px">DETROIT <span style="color:#00d4ff">WEB AGENCY</span></div>
-    <div style="color:#00d4ff;font-size:10px;letter-spacing:4px;margin-top:5px;font-weight:600">WE HANDLE THE TECH</div>
-  </div>
-  <div style="padding:32px;color:#e2e8f0;font-size:15px;line-height:1.8">${bodyHtml}</div>
-  <div style="padding:20px 32px;border-top:1px solid #1e3a5f;text-align:center">
-    <p style="margin:0;color:#4a6fa5;font-size:12px">Detroit Web Agency · Grosse Pointe Park, MI · (313) 992-1219</p>
-    <p style="margin:6px 0 0;color:#4a6fa5;font-size:11px"><a href="https://detroitwebagent.com/unsubscribe?email={{email}}" style="color:#4a6fa5">Unsubscribe</a></p>
-  </div>
-</div></body></html>`;
-}
 
 type Touch = "d3" | "d7" | "d14";
 
@@ -40,72 +25,55 @@ function buildFollowupBody(touch: Touch, ownerName: string | null, companyName: 
 
   if (touch === "d3") {
     return `
-<p>Hi ${first},</p>
-<p>Just bumping this up — wanted to make sure my note didn't get buried.</p>
-<p>We track the ${tradeLabel} labor market in Metro Detroit daily. Right now there are <strong>fewer than 12 licensed ${tradeLabel}s actively looking</strong> in your area. The ones who are available get snapped up within 48 hours.</p>
-<p>TechAlert puts you on the short list the moment one becomes available — $149/mo, no contract.</p>
-<p>Worth a 5-minute call? Reply here or text (313) 992-1219.</p>
-<p>— Matt</p>`;
+<p style="color:#e6f1ff;">Hi ${first},</p>
+<p style="color:#e6f1ff;">Just bumping this up — wanted to make sure my note didn't get buried.</p>
+<p style="color:#e6f1ff;">We track the ${tradeLabel} labor market in Metro Detroit daily. Right now there are <strong>fewer than 12 licensed ${tradeLabel}s actively looking</strong> in your area. The ones who are available get snapped up within 48 hours.</p>
+<p style="color:#e6f1ff;">TechAlert puts you on the short list the moment one becomes available — $149/mo, no contract.</p>
+<p style="color:#e6f1ff;">— Matt</p>`;
   }
 
   if (touch === "d7") {
     return `
-<p>Hi ${first},</p>
-<p>One more note on the ${tradeLabel} shortage — I know you're busy.</p>
-<p>Three ${companyName}-area contractors signed up for TechAlert this week. When a qualified candidate surfaces, they'll get the alert first.</p>
-<p><strong>$149/month. 30-day free trial available this week only.</strong></p>
-<p>Reply "YES" and I'll activate the trial today — no card required to start.</p>
-<p>— Matt, Detroit Web Agency · (313) 992-1219</p>`;
+<p style="color:#e6f1ff;">Hi ${first},</p>
+<p style="color:#e6f1ff;">One more note on the ${tradeLabel} shortage — I know you're busy.</p>
+<p style="color:#e6f1ff;">Three ${companyName}-area contractors signed up for TechAlert this week. When a qualified candidate surfaces, they'll get the alert first.</p>
+<p style="color:#e6f1ff;">Reply "YES" and I'll activate your trial today — no card required.</p>
+<p style="color:#e6f1ff;">— Matt, Detroit Web Agency · (313) 992-1219</p>`;
   }
 
-  // d14 — final touch, escalate to phone
   return `
-<p>Hi ${first},</p>
-<p>Last note — I don't want to keep cluttering your inbox.</p>
-<p>If hiring ${tradeLabel}s is still a challenge at ${companyName}, I'd love to show you what TechAlert looks like for your area. Takes 10 minutes on the phone.</p>
-<p><strong>Call or text me directly: (313) 992-1219</strong><br>
-Or reply "CALL" and I'll reach out at a time that works for you.</p>
-<p>Either way — good luck with the search.</p>
-<p>— Matt Michels<br>Detroit Web Agency</p>`;
+<p style="color:#e6f1ff;">Hi ${first},</p>
+<p style="color:#e6f1ff;">Last note — I don't want to keep cluttering your inbox.</p>
+<p style="color:#e6f1ff;">If hiring ${tradeLabel}s is still a challenge at ${companyName}, I'd love to show you what TechAlert looks like for your area. Takes 10 minutes on the phone.</p>
+<p style="color:#e6f1ff;"><strong>Call or text me directly: (313) 992-1219</strong></p>
+<p style="color:#e6f1ff;">— Matt Michels<br>Detroit Web Agency</p>`;
 }
 
 async function sendFollowup(
+  sb: ReturnType<typeof createClient>,
   to: string,
   ownerName: string | null,
   companyName: string,
   role: string,
   touch: Touch,
-): Promise<{ ok: boolean; id?: string; err?: string }> {
-  if (!RESEND_API_KEY) return { ok: false, err: "RESEND_API_KEY not set" };
-
+) {
   const subjects: Record<Touch, string> = {
     d3: `Re: ${companyName} — still looking for ${role.replace(/_/g, " ")}s?`,
-    d7: `${ownerName?.split(" ")[0] || companyName} — 30-day TechAlert trial (this week only)`,
+    d7: `${ownerName?.split(" ")[0] || companyName} — TechAlert trial`,
     d14: `Last note — ${companyName} hiring`,
   };
 
-  const html = dwaEmail(buildFollowupBody(touch, ownerName, companyName, role))
-    .replace("{{email}}", encodeURIComponent(to));
-
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: "Matt at Detroit Web Agency <matt@detroitwebagent.com>",
-        to: [to],
-        subject: subjects[touch],
-        html,
-      }),
-      signal: AbortSignal.timeout(15_000),
-    });
-    const data = await res.json();
-    if (!res.ok) return { ok: false, err: data?.message || JSON.stringify(data) };
-    return { ok: true, id: data.id };
-  } catch (e) {
-    return { ok: false, err: e instanceof Error ? e.message : String(e) };
-  }
+  const r = await dwaColdEmail({
+    to,
+    subject: subjects[touch],
+    bodyHtml: buildFollowupBody(touch, ownerName, companyName, role),
+    product: "TechAlert", // → 30-day trial CTA auto-injected
+    ctaUrl: "https://detroitwebagent.com/talent-radar?utm_source=cold&utm_campaign=techalert_" + touch,
+    templateName: `techalert_followup_${touch}`,
+  }, sb);
+  return { ok: r.ok, err: r.error };
 }
+
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
