@@ -516,6 +516,68 @@ async function scanLARADissolved(): Promise<Posting[]> {
   return results;
 }
 
+// CFPB Complaint Database — MI home mortgage/improvement complaints: competitor spike = market opening
+async function scanCFPBComplaints(): Promise<Posting[]> {
+  const results: Posting[] = [];
+  try {
+    const since = new Date(Date.now() - 30 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://www.consumerfinance.gov/data-research/consumer-complaints/search/api/v1/?product=Home+Mortgage&state=MI&date_received_min=${since}&format=json&size=20`,
+      { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(12_000) },
+    );
+    if (!res.ok) return results;
+    const data = await res.json();
+    const companies = new Map<string, number>();
+    for (const c of (data?.hits?.hits || [])) {
+      const name: string = c?._source?.company ?? "";
+      if (!name) continue;
+      companies.set(name, (companies.get(name) || 0) + 1);
+    }
+    for (const [name, count] of companies) {
+      if (count < 2) continue; // only surface companies with complaint spikes
+      results.push({
+        company_name: name,
+        city: undefined,
+        role: "hvac_tech",
+        days_posted: null,
+        source_url: `https://www.consumerfinance.gov/data-research/consumer-complaints/search/?company=${encodeURIComponent(name)}`,
+        source_label: "CFPB Complaints",
+        is_boiler: false,
+      });
+    }
+  } catch (e) { console.error("[hunter] CFPB complaints:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
+// CourtListener Chapter 7 liquidations — company dissolving = employees available, competitors hiring
+async function scanChapter7Liquidations(): Promise<Posting[]> {
+  const results: Posting[] = [];
+  try {
+    const since = new Date(Date.now() - 14 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://www.courtlistener.com/api/rest/v3/dockets/?court=mied&date_filed__gte=${since}&nature_of_suit=470&format=json&page_size=20`,
+      { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(12_000) },
+    );
+    if (!res.ok) return results;
+    const data = await res.json();
+    for (const d of (data?.results || [])) {
+      const name: string = d?.case_name || "";
+      if (!name) continue;
+      if (!/(hvac|heat|cool|plumb|electric|mechanical|contractor|construction|services)/i.test(name)) continue;
+      results.push({
+        company_name: name,
+        city: undefined,
+        role: "hvac_tech",
+        days_posted: null,
+        source_url: `https://www.courtlistener.com${d?.absolute_url || ""}`,
+        source_label: "Ch.7 Liquidation",
+        is_boiler: false,
+      });
+    }
+  } catch (e) { console.error("[hunter] Chapter 7:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
 // NLRB union election petitions — construction industry organizing = active workforce, scaling company
 async function scanNLRBPetitions(): Promise<Posting[]> {
   const results: Posting[] = [];
@@ -575,7 +637,7 @@ serve(async (req) => {
     // Supplemental signals + NOAA weather bonus — all run in parallel
     // Includes the new signal-waterfall (DOL WARN, OSHA, FMCSA, DOT prequal, SAM expanded)
     const { fetchHireSignals } = await import("../_shared/signal-waterfall.ts");
-    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, nlrbSignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
+    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, nlrbSignals, cfpbSignals, ch7Signals, weatherBonus, hireWaterfallSignals] = await Promise.all([
       scanGitHubSignals(),
       scanEDGARFundings(),
       scanUSPTOPatents(),
@@ -588,10 +650,12 @@ serve(async (req) => {
       scanLARANewLicenses(),
       scanLARADissolved(),
       scanNLRBPetitions(),
+      scanCFPBComplaints(),
+      scanChapter7Liquidations(),
       getWeatherHiringBonus(),
       fetchHireSignals(sb, { state: "MI", naics: "238220" }).catch(() => []),
     ]);
-    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...nlrbSignals];
+    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals];
     all.push(...supplemental);
     scanned += supplemental.length;
     // Log waterfall signal volume to heartbeat metadata (don't insert as job postings — different shape)
@@ -676,6 +740,8 @@ serve(async (req) => {
           lara_new: laraNewSignals.length,
           lara_dissolved: laraDissolvedSignals.length,
           nlrb: nlrbSignals.length,
+          cfpb_complaints: cfpbSignals.length,
+          ch7_liquidations: ch7Signals.length,
           hire_waterfall: waterfallCount,
         },
         duration_ms: Date.now() - startedAt,

@@ -182,5 +182,66 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[gutters] parcel:", e); }
 
+  // 6. NOAA SPC Day-1 Outlook — severe weather clogs and damages gutters overnight
+  try {
+    const res = await fetch("https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson", {
+      headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" },
+    });
+    if (res.ok) {
+      const geo = await res.json();
+      for (const feat of (geo?.features ?? [])) {
+        const props = feat?.properties ?? {};
+        if (!["SLGT", "ENH", "MDT", "HIGH"].some((r) => props.LABEL?.includes(r))) continue;
+        const label: string = props.LABEL2 ?? props.LABEL ?? "";
+        const valid = (props.VALID_ISO ?? new Date().toISOString()).slice(0, 10);
+        signals.push({
+          address: "Michigan region",
+          city: state, zip: "",
+          signal_type: "storm_gutter_damage",
+          signal_detail: `NOAA SPC Day-1 Outlook: ${label} — severe storm forecast. Heavy rain + debris flow is the leading cause of gutter failures. Outreach before the storm prevents emergency calls`,
+          signal_date: valid,
+          score: BASE_SCORES.storm_gutter_damage + 1,
+          source_method: "noaa_spc_day1_outlook",
+          suggested_opener: OPENERS.storm_gutter_damage.opener,
+          best_call_window: OPENERS.storm_gutter_damage.window,
+          estimated_value: 2000,
+          raw_source_data: { label, valid, forecaster: props.FORECASTER },
+        });
+      }
+    }
+  } catch (e) { console.error("[gutters] SPC day-1:", e); }
+
+  // 7. Detroit Assessor property sales — new homeowners discover neglected gutters
+  try {
+    const cutoff = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`sale_date >= '${cutoff}' AND amt_sale_price > 10000`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/assessor_property_sales_view/FeatureServer/0/query?where=${where}&outFields=address,zip_code,sale_date,grantee&resultRecordCount=25&orderByFields=sale_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "roof_permit_upsell",
+          signal_detail: `Detroit property sale: ${a.grantee ?? "New owner"} — gutters are the most frequently deferred maintenance item on older Detroit homes`,
+          signal_date: a.sale_date ? new Date(a.sale_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 7,
+          source_method: "detroit_assessor_sales",
+          suggested_opener: "Congratulations on your new home — gutters are the most overlooked item during home inspections. A clogged or damaged gutter causes $5k+ in fascia and foundation damage. Free inspection for new homeowners this month.",
+          best_call_window: "Within 90 days of purchase",
+          estimated_value: 2000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[gutters] assessor sales:", e); }
+
   return signals;
 }

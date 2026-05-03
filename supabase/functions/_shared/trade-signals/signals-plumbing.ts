@@ -177,5 +177,67 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[plumbing] CFPB HI:", e); }
 
+  // 6. BSEED Lead Clearance Reports — active lead remediation = neighborhood lead pipe signal
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_lead_clearance_reports/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,task,task_status,task_status_date,neighborhood&resultRecordCount=40&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "lead_line_area",
+          signal_detail: `BSEED Lead Clearance: ${a.task ?? "lead clearance"} at ${addr} (${a.task_status ?? "active"}) — lead remediation activity indicates neighborhood-wide lead service line risk`,
+          signal_date: a.task_status_date ? new Date(a.task_status_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.lead_line_area,
+          source_method: "bseed_lead_clearance",
+          suggested_opener: OPENERS.lead_line_area.opener,
+          best_call_window: OPENERS.lead_line_area.window,
+          estimated_value: 4500,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[plumbing] lead clearance:", e); }
+
+  // 7. Detroit Assessor property sales — new homeowners want plumbing inspected
+  try {
+    const cutoff = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`sale_date >= '${cutoff}' AND amt_sale_price > 10000`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/assessor_property_sales_view/FeatureServer/0/query?where=${where}&outFields=address,zip_code,sale_date,grantee&resultRecordCount=25&orderByFields=sale_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "lead_line_area",
+          signal_detail: `Detroit property sale: ${a.grantee ?? "New owner"} — pre-1960 Detroit homes have a near-100% rate of lead service lines. New owners are eligible for city replacement programs`,
+          signal_date: a.sale_date ? new Date(a.sale_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 7,
+          source_method: "detroit_assessor_sales",
+          suggested_opener: "Congratulations on your new home — Detroit homes built before 1960 almost certainly have a lead service line. The city has a replacement program and we can help you navigate it at no out-of-pocket cost.",
+          best_call_window: "Within 90 days of purchase",
+          estimated_value: 4500,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[plumbing] assessor sales:", e); }
+
   return signals;
 }

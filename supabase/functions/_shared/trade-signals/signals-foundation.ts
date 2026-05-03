@@ -272,5 +272,65 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[foundation] drought monitor:", e); }
 
+  // 8. Detroit Assessor property sales — new homeowners discover foundation issues first season
+  try {
+    const cutoff = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`sale_date >= '${cutoff}' AND amt_sale_price > 10000`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/assessor_property_sales_view/FeatureServer/0/query?where=${where}&outFields=address,zip_code,sale_date,grantee&resultRecordCount=30&orderByFields=sale_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "heavy_rain_foundation",
+          signal_detail: `Detroit property sale: ${a.grantee ?? "New owner"} — foundation issues in Detroit's older housing stock are almost never disclosed during sale. New owners discover them at first heavy rain`,
+          signal_date: a.sale_date ? new Date(a.sale_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 7,
+          source_method: "detroit_assessor_sales",
+          suggested_opener: "Congratulations on your new home — foundation issues in Detroit's older homes are rarely visible until the first heavy rain. A 30-minute assessment before spring identifies problems before they cost $40k.",
+          best_call_window: "Within 90 days of purchase, especially before spring rains",
+          estimated_value: 12000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[foundation] assessor sales:", e); }
+
+  // 9. National Register of Historic Places — historic homes require specialized foundation work
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/national_register_of_historic_places/FeatureServer/0/query?where=1%3D1&outFields=resource_name,address,city,period_of_significance,area_of_significance,listed_date&resultRecordCount=40&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        if (!addr) continue;
+        signals.push({
+          address: addr, city: a.city ?? "Detroit", zip: "",
+          signal_type: "foundation_flood_risk",
+          signal_detail: `National Register of Historic Places: ${a.resource_name ?? addr} — historic structures require specialized masonry and foundation techniques. Period: ${a.period_of_significance ?? "pre-1960"}`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.foundation_flood_risk - 1,
+          source_method: "detroit_historic_register",
+          suggested_opener: "Your home is on the National Register of Historic Places — standard foundation contractors can void historic designation. We specialize in preservation-compliant waterproofing that protects the structure and your historic tax credits.",
+          best_call_window: "Evergreen — historic homes always need specialized work",
+          estimated_value: 15000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[foundation] historic register:", e); }
+
   return signals;
 }

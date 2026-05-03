@@ -243,5 +243,66 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[tree] drought monitor:", e); }
 
+  // 7. NOAA SPC Day-1 Convective Outlook — tornado/severe thunderstorm = tree damage pre-alert
+  try {
+    const res = await fetch("https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson", {
+      headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" },
+    });
+    if (res.ok) {
+      const geo = await res.json();
+      for (const feat of (geo?.features ?? [])) {
+        const props = feat?.properties ?? {};
+        if (!["SLGT", "ENH", "MDT", "HIGH"].some((r) => props.LABEL?.includes(r))) continue;
+        const label: string = props.LABEL2 ?? props.LABEL ?? "";
+        const valid = (props.VALID_ISO ?? new Date().toISOString()).slice(0, 10);
+        signals.push({
+          address: "Michigan region",
+          city: state, zip: "",
+          signal_type: "storm_tree_damage",
+          signal_detail: `NOAA SPC Day-1 Outlook: ${label} — severe thunderstorm/tornado risk. Property owners with large trees should know their removal options before a storm drops a limb on their roof`,
+          signal_date: valid,
+          score: BASE_SCORES.storm_tree_damage + 1,
+          source_method: "noaa_spc_day1_outlook",
+          suggested_opener: "Severe weather is forecast for your area today — if you have large trees near your home or power lines, now is the time to identify hazards before the storm makes it an emergency. We're doing free risk assessments this week.",
+          best_call_window: "Day before / day of storm event",
+          estimated_value: 3000,
+          raw_source_data: { label, valid, forecaster: props.FORECASTER },
+        });
+      }
+    }
+  } catch (e) { console.error("[tree] SPC day-1:", e); }
+
+  // 8. Detroit Assessor property sales — new homeowners assess trees they inherit
+  try {
+    const cutoff = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`sale_date >= '${cutoff}' AND amt_sale_price > 10000`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/assessor_property_sales_view/FeatureServer/0/query?where=${where}&outFields=address,zip_code,sale_date,grantee&resultRecordCount=25&orderByFields=sale_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "tree_311_request",
+          signal_detail: `Detroit property sale: ${a.grantee ?? "New owner"} — new homeowners routinely discover hazard trees and overgrowth that the previous owner ignored`,
+          signal_date: a.sale_date ? new Date(a.sale_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 6,
+          source_method: "detroit_assessor_sales",
+          suggested_opener: "Congratulations on your new home — many new owners discover trees that were ignored for years. A free hazard assessment takes 20 minutes and can prevent a $15,000 emergency removal.",
+          best_call_window: "Within 90 days of purchase",
+          estimated_value: 2000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[tree] assessor sales:", e); }
+
   return signals;
 }

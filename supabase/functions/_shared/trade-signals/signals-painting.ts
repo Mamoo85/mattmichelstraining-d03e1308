@@ -228,5 +228,66 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[exterior] CFPB HI:", e); }
 
+  // 7. NOAA SPC Day-1 Convective Outlook — hail/wind damages siding before homeowners realize
+  try {
+    const res = await fetch("https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson", {
+      headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" },
+    });
+    if (res.ok) {
+      const geo = await res.json();
+      for (const feat of (geo?.features ?? [])) {
+        const props = feat?.properties ?? {};
+        if (!["SLGT", "ENH", "MDT", "HIGH"].some((r) => props.LABEL?.includes(r))) continue;
+        const label: string = props.LABEL2 ?? props.LABEL ?? "";
+        const valid = (props.VALID_ISO ?? new Date().toISOString()).slice(0, 10);
+        signals.push({
+          address: "Michigan region",
+          city: state, zip: "",
+          signal_type: "storm_siding_damage",
+          signal_detail: `NOAA SPC Day-1 Outlook: ${label} — hail and damaging winds forecast. Vinyl and wood siding damage from hail is invisible from the street but voids manufacturer warranties if not documented within 12 months`,
+          signal_date: valid,
+          score: BASE_SCORES.storm_siding_damage + 1,
+          source_method: "noaa_spc_day1_outlook",
+          suggested_opener: "Severe weather is forecast for your area today — hail damage to siding is invisible from the street but voids manufacturer warranties. We're reserving inspection slots now for homeowners who want priority service.",
+          best_call_window: "Day of / day after storm event",
+          estimated_value: 8000,
+          raw_source_data: { label, valid, forecaster: props.FORECASTER },
+        });
+      }
+    }
+  } catch (e) { console.error("[exterior] SPC day-1:", e); }
+
+  // 8. Detroit Assessor property sales — new homeowners notice deferred exterior work
+  try {
+    const cutoff = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`sale_date >= '${cutoff}' AND amt_sale_price > 10000`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/assessor_property_sales_view/FeatureServer/0/query?where=${where}&outFields=address,zip_code,sale_date,amt_sale_price,grantee&resultRecordCount=30&orderByFields=sale_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "foreclosure_exterior",
+          signal_detail: `Detroit property sale: ${a.grantee ?? "New owner"} purchased for $${(a.amt_sale_price || 0).toLocaleString()} — new homeowners typically repaint, reside, or update windows within the first year`,
+          signal_date: a.sale_date ? new Date(a.sale_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 7,
+          source_method: "detroit_assessor_sales",
+          suggested_opener: "Congratulations on your new home — most new homeowners tackle exterior painting or siding within the first year. We're offering free estimates for new owners in your neighborhood this month.",
+          best_call_window: "Within 90 days of purchase",
+          estimated_value: 6000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[exterior] assessor sales:", e); }
+
   return signals;
 }

@@ -280,5 +280,68 @@ export async function scanSignals(
     }
   } catch (e) { console.error("[roofing] CFPB refi:", e); }
 
+  // 8. NOAA SPC Day-1 Convective Outlook — severe thunderstorm / tornado risk polygons
+  // This fires BEFORE the storm, enabling outreach while homeowner is already worried.
+  try {
+    const res = await fetch("https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson", {
+      headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" },
+    });
+    if (res.ok) {
+      const geo = await res.json();
+      for (const feat of (geo?.features ?? [])) {
+        const props = feat?.properties ?? {};
+        const label: string = props.LABEL2 ?? props.LABEL ?? "";
+        // Only act on Slight Risk (SLGT) or higher — general tstm is too broad
+        if (!["SLGT", "ENH", "MDT", "HIGH"].some((r) => props.LABEL?.includes(r))) continue;
+        const valid = (props.VALID_ISO ?? new Date().toISOString()).slice(0, 10);
+        signals.push({
+          address: "Michigan region",
+          city: state, zip: "",
+          signal_type: "hail_damage_area",
+          signal_detail: `NOAA SPC Day-1 Outlook: ${label} — severe thunderstorm/hail risk in next 24 hours. Pre-storm outreach window: reach homeowners before they start calling contractors post-storm`,
+          signal_date: valid,
+          score: BASE_SCORES.hail_damage_area + 1, // higher than archive — same-day pre-storm
+          source_method: "noaa_spc_day1_outlook",
+          suggested_opener: "Severe thunderstorm and hail risk is forecast for your area today — if a storm hits, roofing contractors are booked 4-6 weeks out. We're reserving inspection slots right now for homeowners who want priority scheduling.",
+          best_call_window: "Before the storm event — 24-hour pre-storm window",
+          estimated_value: 12000,
+          raw_source_data: { label, valid, forecaster: props.FORECASTER },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] SPC day-1:", e); }
+
+  // 9. Detroit Assessor property sales — new homeowners in last 90 days
+  try {
+    const cutoff = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`sale_date >= '${cutoff}' AND amt_sale_price > 10000`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/assessor_property_sales_view/FeatureServer/0/query?where=${where}&outFields=address,zip_code,sale_date,amt_sale_price,grantee&resultRecordCount=40&orderByFields=sale_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "new_homeowner_roof",
+          signal_detail: `Detroit property sale: ${a.grantee ?? "New owner"} purchased for $${(a.amt_sale_price || 0).toLocaleString()} — new homeowners in older Detroit homes have unaddressed roof issues from previous owner`,
+          signal_date: a.sale_date ? new Date(a.sale_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 7,
+          source_method: "detroit_assessor_sales",
+          suggested_opener: "Congratulations on your new home — most buyers don't get a roof inspection during the sale process and discover issues within the first year. We offer a free 30-minute inspection for new homeowners.",
+          best_call_window: "Within 90 days of purchase",
+          estimated_value: 12000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] assessor sales:", e); }
+
   return signals;
 }

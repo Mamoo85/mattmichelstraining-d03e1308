@@ -292,5 +292,61 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] FEMA PA:", e); }
 
+  // 7. DLBA For Sale properties — vacant structures listed for sale = restoration opportunity
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/DLBA_For_Sale/FeatureServer/0/query?where=1%3D1&outFields=address,neighborhood,listing_date,program&resultRecordCount=40&orderByFields=listing_date+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = [a.street_number, a.street_direction, a.street_name, a.street_type].filter(Boolean).join(" ").trim() || a.address || "";
+        if (!addr) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "water_damage_permit",
+          signal_detail: `DLBA For Sale: ${addr} (${a.neighborhood ?? "Detroit"}, program: ${a.program ?? "DLBA"}) — DLBA vacant properties sold to investors always require full interior restoration before occupancy`,
+          signal_date: a.listing_date ? new Date(a.listing_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.water_damage_permit - 1,
+          source_method: "detroit_dlba_for_sale",
+          suggested_opener: "You're purchasing a DLBA property — these homes need full interior assessment before renovation begins. Water damage, mold, and fire damage are almost guaranteed after years of vacancy. We offer restoration assessments for DLBA buyers.",
+          best_call_window: "Within 30 days of DLBA listing",
+          estimated_value: 12000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] DLBA for sale:", e); }
+
+  // 8. National Register of Historic Places — historic structures require preservation-compliant restoration
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/national_register_of_historic_places/FeatureServer/0/query?where=1%3D1&outFields=resource_name,address,city,period_of_significance&resultRecordCount=40&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        if (!addr) continue;
+        signals.push({
+          address: addr, city: a.city ?? "Detroit", zip: "",
+          signal_type: "mold_remediation_permit",
+          signal_detail: `National Register Historic Place: ${a.resource_name ?? addr} — historic properties require preservation-compliant restoration contractors. Period: ${a.period_of_significance ?? "pre-1960"}`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.mold_remediation_permit - 1,
+          source_method: "detroit_historic_register",
+          suggested_opener: "Your property is on the National Register of Historic Places — standard restoration contractors can void your historic designation and tax credits. We specialize in preservation-compliant fire, water, and mold remediation.",
+          best_call_window: "Evergreen — historic properties need specialized contractors",
+          estimated_value: 18000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] historic register:", e); }
+
   return signals;
 }

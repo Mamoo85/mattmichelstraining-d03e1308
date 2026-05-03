@@ -962,6 +962,96 @@ async function scanPriceReductions(): Promise<RawSignal[]> {
   }
 }
 
+// BSEED Pre-Sale Inspections — homes being inspected before listing = imminent transactions
+async function scanPresaleInspections(): Promise<RawSignal[]> {
+  const results: RawSignal[] = [];
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_presale_inspections/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,inspection_date,inspection_type,inspection_result,neighborhood&resultRecordCount=50&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-MortgageRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(12_000) },
+    );
+    if (!res.ok) return results;
+    const d = await res.json();
+    for (const feat of (d?.features ?? [])) {
+      const a = feat?.attributes ?? {};
+      const addr: string = a.address ?? "";
+      const zip: string = a.zip_code ?? "";
+      if (!addr) continue;
+      results.push({
+        address: addr,
+        city: "Detroit",
+        zip,
+        signal_type: "fsbo_presale",
+        signal_source: "BSEED_Presale",
+        signal_detail: `BSEED Pre-Sale Inspection: ${a.inspection_type ?? "presale"} at ${addr} (result: ${a.inspection_result ?? "pending"}) — home entering market. Sellers often need cash-out refi to fund repairs before listing`,
+        signal_url: undefined,
+        signal_date: a.inspection_date ? new Date(a.inspection_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+      });
+    }
+  } catch (e) { console.warn("[scanner] BSEED presale:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
+// DLBA For Sale — investors buying vacant DLBA properties often need renovation loans
+async function scanDLBAForSale(): Promise<RawSignal[]> {
+  const results: RawSignal[] = [];
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/DLBA_For_Sale/FeatureServer/0/query?where=1%3D1&outFields=address,neighborhood,listing_date,program&resultRecordCount=40&orderByFields=listing_date+DESC&f=json",
+      { headers: { "User-Agent": "DWA-MortgageRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(12_000) },
+    );
+    if (!res.ok) return results;
+    const d = await res.json();
+    for (const feat of (d?.features ?? [])) {
+      const a = feat?.attributes ?? {};
+      const addr = [a.street_number, a.street_direction, a.street_name, a.street_type].filter(Boolean).join(" ").trim() || a.address || "";
+      if (!addr) continue;
+      results.push({
+        address: addr,
+        city: "Detroit",
+        zip: "",
+        signal_type: "fixer_upper",
+        signal_source: "DLBA_For_Sale",
+        signal_detail: `DLBA For Sale: ${addr} (${a.neighborhood ?? "Detroit"}, ${a.program ?? "DLBA"}) — investors buying DLBA properties need renovation financing. FHA 203(k) and MSHDA programs apply`,
+        signal_url: `https://detroitlandbank.org/buy/`,
+        signal_date: a.listing_date ? new Date(a.listing_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+      });
+    }
+  } catch (e) { console.warn("[scanner] DLBA for sale:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
+// Detroit Assessor recent property sales — new homeowners need mortgage review / equity products
+async function scanDetroitPropertySales(): Promise<RawSignal[]> {
+  const results: RawSignal[] = [];
+  try {
+    const cutoff = new Date(Date.now() - 60 * 86400_000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`sale_date >= '${cutoff}' AND amt_sale_price > 15000`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/assessor_property_sales_view/FeatureServer/0/query?where=${where}&outFields=address,zip_code,sale_date,amt_sale_price,grantee&resultRecordCount=60&orderByFields=sale_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-MortgageRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(12_000) },
+    );
+    if (!res.ok) return results;
+    const d = await res.json();
+    for (const feat of (d?.features ?? [])) {
+      const a = feat?.attributes ?? {};
+      const addr: string = a.address ?? "";
+      if (!addr) continue;
+      results.push({
+        address: addr,
+        city: "Detroit",
+        zip: a.zip_code ?? "",
+        signal_type: "new_homeowner",
+        signal_source: "Detroit_Assessor_Sales",
+        signal_detail: `Detroit property sale: ${a.grantee ?? "buyer"} paid $${(a.amt_sale_price || 0).toLocaleString()} — recent buyer in older Detroit home likely needs renovation financing or equity assessment`,
+        signal_url: undefined,
+        signal_date: a.sale_date ? new Date(a.sale_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+      });
+    }
+  } catch (e) { console.warn("[scanner] Detroit assessor sales:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
 // CourtListener — Michigan Eastern District federal bankruptcy filings (free, no key)
 // Chapter 13 = homeowner restructuring debt, often needs a cash-out refi to satisfy trustee.
 async function scanBankruptcyFilings(): Promise<RawSignal[]> {
@@ -1071,6 +1161,9 @@ serve(async (req) => {
     scanPriceReductions(),            // #3 Realtor.com price-reduced listings
     scanBankruptcyFilings(),          // CourtListener MIED Chapter 13 filings
     scanFEMAHazardMitigation(),       // FEMA HMGP grant areas = adjacent homeowner leads
+    scanPresaleInspections(),         // BSEED pre-sale inspections = imminent transactions
+    scanDLBAForSale(),                // DLBA for sale = investor renovation loans
+    scanDetroitPropertySales(),       // Detroit assessor recent sales = new homeowners
     scanRegistryWaterfall(sb),        // 50-source registry: FEMA/NOAA/HUD vacancy/EPA lead lines etc.
   ]);
 

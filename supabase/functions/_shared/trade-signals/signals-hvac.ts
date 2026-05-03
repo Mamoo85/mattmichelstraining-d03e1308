@@ -217,5 +217,72 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[hvac] CFPB refi:", e); }
 
+  // 7. NOAA NWS 7-Day Forecast — extreme temps incoming (advance outreach before the spike)
+  try {
+    const res = await fetch("https://api.weather.gov/gridpoints/DTX/65,33/forecast", {
+      headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)", Accept: "application/geo+json" },
+    });
+    if (res.ok) {
+      const geo = await res.json();
+      const periods: any[] = geo?.properties?.periods ?? [];
+      for (const p of periods.slice(0, 14)) {
+        const temp: number = p?.temperature ?? 0;
+        const isDaytime: boolean = p?.isDaytime ?? true;
+        if ((isDaytime && temp >= 92) || (!isDaytime && temp <= 10)) {
+          const forecastDate = p?.startTime ? new Date(p.startTime).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0];
+          const isHeat = temp >= 92;
+          signals.push({
+            address: "SE Michigan — forecast extreme temperature",
+            city: state, zip: "",
+            signal_type: "extreme_weather_hvac",
+            signal_detail: `NWS 7-day forecast: ${p.name} ${temp}°F — ${isHeat ? "heat wave" : "polar vortex"} in ${Math.round((new Date(p.startTime).getTime() - Date.now()) / 86400000)} days. HVAC systems that haven't been serviced fail under extreme load.`,
+            signal_date: forecastDate,
+            score: BASE_SCORES.extreme_weather_hvac,
+            source_method: "noaa_nws_forecast",
+            suggested_opener: isHeat
+              ? `A heat wave is forecast for ${p.name} — HVAC systems that haven't been serviced fail exactly when you need them most. We're doing pre-season tune-ups this week before slots fill up.`
+              : `A severe cold snap is forecast for ${p.name} — heating systems that haven't been serviced fail on the coldest nights. We're doing pre-storm checks this week.`,
+            best_call_window: "3-5 days before extreme temperature event",
+            estimated_value: 7000,
+            raw_source_data: { name: p.name, temp, isDaytime, forecastDate },
+          });
+          break; // one pre-storm signal per run is enough
+        }
+      }
+    }
+  } catch (e) { console.error("[hvac] NWS 7-day forecast:", e); }
+
+  // 8. Detroit Assessor property sales — new homeowners need HVAC assessment
+  try {
+    const cutoff = new Date(Date.now() - 90 * 86400_000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`sale_date >= '${cutoff}' AND amt_sale_price > 10000`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/assessor_property_sales_view/FeatureServer/0/query?where=${where}&outFields=address,zip_code,sale_date,amt_sale_price,grantee&resultRecordCount=30&orderByFields=sale_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "aging_system_proxy",
+          signal_detail: `Detroit property sale: ${a.grantee ?? "New owner"} purchased for $${(a.amt_sale_price || 0).toLocaleString()} — HVAC system age is unknown to new owner; pre-1980 homes often have original equipment`,
+          signal_date: a.sale_date ? new Date(a.sale_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 7,
+          source_method: "detroit_assessor_sales",
+          suggested_opener: "Welcome to your new home — the HVAC system age is rarely disclosed during sale. A free assessment tells you the equipment's life expectancy before you have a problem in the middle of summer.",
+          best_call_window: "Within 90 days of purchase",
+          estimated_value: 7000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] assessor sales:", e); }
+
   return signals;
 }
