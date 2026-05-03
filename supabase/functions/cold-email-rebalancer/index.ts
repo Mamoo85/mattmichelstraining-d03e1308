@@ -97,6 +97,7 @@ serve(async (req) => {
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     const body = await req.json().catch(() => ({}));
     const force = body.force === true;
+    const dryRun = body.dry_run === true || body.preview === true;
     const target = Number(body.target) || FLOOR;
 
     const sentToday = await countSentToday(sb);
