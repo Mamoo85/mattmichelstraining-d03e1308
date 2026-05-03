@@ -20,7 +20,9 @@ serve(async (req) => {
       mode: "subscription",
       payment_method_types: ["card"],
       customer_email: email,
-      subscription_data: { trial_period_days: 7 },
+      payment_method_collection: "if_required",
+      subscription_data: { trial_period_days: 7, trial_settings: { end_behavior: { missing_payment_method: "cancel" } } },
+      discounts: [{ coupon: "s5f2M1Vq" }],
       line_items: [{
         price_data: {
           currency: "usd",
