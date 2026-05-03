@@ -942,6 +942,7 @@ const App = () => (
                       <Route path="/dwa-admin/market-targeting" element={<AgencyAdminRoute><AdminMarketTargeting /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/market-targeting/audit" element={<AgencyAdminRoute><AdminProspectorTargetsAudit /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/checkout-events" element={<AgencyAdminRoute><AdminCheckoutEvents /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/techalert-prospects" element={<AgencyAdminRoute><AdminTechAlertProspects /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/v4" element={<AgencyAdminRoute><DwaAdminV4 /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/qbr-queue" element={<AgencyAdminRoute><DwaAdminQbrQueue /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/stripe-reconcile" element={<AgencyAdminRoute><DwaAdminStripeReconcile /></AgencyAdminRoute>} />
