@@ -132,7 +132,7 @@ serve(async (req) => {
 
       if (!touch) { skipped++; continue; }
 
-      const result = await sendFollowup(t.owner_email, t.owner_name, t.company_name, t.role, touch);
+      const result = await sendFollowup(sb, t.owner_email, t.owner_name, t.company_name, t.role, touch);
 
       if (!result.ok) {
         console.error(`[drip] ${t.company_name} ${touch}: ${result.err}`);
