@@ -894,18 +894,21 @@ serve(async (req) => {
             || `Quick observation about ${businessName}`;
           emailBody = emailLines.slice(emailLines.findIndex(l => l === "---") + 1).join("\n").trim();
           const emailBodyHtml = emailBody.replace(/\n/g, "<br>");
+          const ctaUrl = `https://detroitwebagent.com${landingPage.path}`;
 
-          const sent = await sendColdEmail(contactEmail, subjectLine, emailBodyHtml, RESEND_API_KEY);
+          const r = await dwaColdEmail({
+            to: contactEmail,
+            subject: subjectLine,
+            bodyHtml: emailBodyHtml,
+            product: "Detroit Web Agency",
+            ctaUrl,
+            templateName: "cold_outreach",
+          }, serviceClient);
+          const sent = r.ok;
           if (sent) {
             emailStatus = "sent";
             emailed++;
             dripCampaignStatus.current_stage = "1_Initial_Email_Sent";
-            await serviceClient.from("email_send_log").insert({
-              recipient_email: contactEmail,
-              template_name: "cold_outreach",
-              status: "sent",
-              metadata: { business: businessName, industry, city, gap_score: gapScore, lead_score: scoutResult.lead_score, agent: "sniper" },
-            });
             // ── Bridge into web_design_leads so the 4-step drip picks this lead up ──
             const { data: existingWdl } = await serviceClient
               .from("web_design_leads" as any)
