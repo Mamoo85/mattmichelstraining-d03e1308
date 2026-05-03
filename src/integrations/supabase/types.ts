@@ -4239,6 +4239,7 @@ export type Database = {
           email_verified: boolean | null
           enriched_at: string | null
           enrichment_confidence: number | null
+          enrichment_reset_at: string | null
           enrichment_trace: Json | null
           hard_bounced_at: string | null
           id: string
@@ -4279,6 +4280,7 @@ export type Database = {
           email_verified?: boolean | null
           enriched_at?: string | null
           enrichment_confidence?: number | null
+          enrichment_reset_at?: string | null
           enrichment_trace?: Json | null
           hard_bounced_at?: string | null
           id?: string
@@ -4319,6 +4321,7 @@ export type Database = {
           email_verified?: boolean | null
           enriched_at?: string | null
           enrichment_confidence?: number | null
+          enrichment_reset_at?: string | null
           enrichment_trace?: Json | null
           hard_bounced_at?: string | null
           id?: string
@@ -13820,6 +13823,7 @@ export type Database = {
           enriched_email_at: string | null
           enriched_email_confidence: number | null
           enriched_email_source: string | null
+          enrichment_reset_at: string | null
           enrichment_trace: Json | null
           first_name: string | null
           gmail_message_id: string | null
@@ -13861,6 +13865,7 @@ export type Database = {
           enriched_email_at?: string | null
           enriched_email_confidence?: number | null
           enriched_email_source?: string | null
+          enrichment_reset_at?: string | null
           enrichment_trace?: Json | null
           first_name?: string | null
           gmail_message_id?: string | null
@@ -13902,6 +13907,7 @@ export type Database = {
           enriched_email_at?: string | null
           enriched_email_confidence?: number | null
           enriched_email_source?: string | null
+          enrichment_reset_at?: string | null
           enrichment_trace?: Json | null
           first_name?: string | null
           gmail_message_id?: string | null
@@ -20903,6 +20909,7 @@ export type Database = {
           email: string | null
           employee_count: number | null
           enriched_at: string | null
+          enrichment_reset_at: string | null
           id: string
           is_boiler: boolean | null
           last_contacted_at: string | null
@@ -20933,6 +20940,7 @@ export type Database = {
           email?: string | null
           employee_count?: number | null
           enriched_at?: string | null
+          enrichment_reset_at?: string | null
           id?: string
           is_boiler?: boolean | null
           last_contacted_at?: string | null
@@ -20963,6 +20971,7 @@ export type Database = {
           email?: string | null
           employee_count?: number | null
           enriched_at?: string | null
+          enrichment_reset_at?: string | null
           id?: string
           is_boiler?: boolean | null
           last_contacted_at?: string | null
@@ -23726,6 +23735,7 @@ export type Database = {
         Args: { _roster_id: string; _user_id: string }
         Returns: boolean
       }
+      is_aggregator_domain: { Args: { url: string }; Returns: boolean }
       is_enrichment_provider_disabled: {
         Args: { p_provider: string }
         Returns: boolean
