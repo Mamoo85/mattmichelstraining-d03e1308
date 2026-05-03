@@ -502,6 +502,52 @@ serve(async (req) => {
           } catch (e) { console.error("[WEBHOOK] Subscription email error:", e); }
         }
       }
+
+      // ── TRIAL SIGNUP TRACKING (Phase 3 drip wiring) ──
+      // Track no-CC 7-day trials and convert them when status flips trialing → active.
+      try {
+        const meta = (subscription.metadata || {}) as Record<string, string>;
+        const productKey = meta.product_key || meta.type || "unknown";
+        const isTrialing = subscription.status === "trialing";
+        const isActive = subscription.status === "active";
+
+        if (isTrialing) {
+          // Upsert trial signup row (idempotent on stripe_subscription_id)
+          await sb.from("trial_signups").upsert({
+            email: email || null,
+            phone: meta.phone || null,
+            product_key: productKey,
+            stripe_customer_id: customerId,
+            stripe_subscription_id: subscription.id,
+            trial_started_at: new Date(subscription.start_date * 1000).toISOString(),
+            trial_ends_at: subscription.trial_end
+              ? new Date(subscription.trial_end * 1000).toISOString()
+              : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            status: "active",
+            utm: {
+              utm_source: meta.utm_source || null,
+              utm_medium: meta.utm_medium || null,
+              utm_campaign: meta.utm_campaign || null,
+            },
+          }, { onConflict: "stripe_subscription_id" });
+          console.log(`[WEBHOOK] Trial signup tracked for ${email} (${productKey})`);
+        } else if (isActive && event.type === "customer.subscription.updated") {
+          // Trial converted → paid
+          const { data: existing } = await sb
+            .from("trial_signups")
+            .select("id, status, converted_at")
+            .eq("stripe_subscription_id", subscription.id)
+            .maybeSingle();
+          if (existing && existing.status !== "converted") {
+            await sb.from("trial_signups")
+              .update({ status: "converted", converted_at: new Date().toISOString() })
+              .eq("id", existing.id);
+            console.log(`[WEBHOOK] Trial converted to paid: ${subscription.id}`);
+          }
+        }
+      } catch (e) {
+        console.error("[WEBHOOK] trial_signups tracking error:", e);
+      }
     }
 
     if (event.type === "customer.subscription.deleted") {
@@ -551,6 +597,14 @@ serve(async (req) => {
         }
 
         console.log(`[WEBHOOK] Deactivated B2B clients for subscription ${subscription.id}`);
+
+        // Mark trial signup as cancelled (if it was a trial)
+        try {
+          await sb.from("trial_signups")
+            .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
+            .eq("stripe_subscription_id", subscription.id)
+            .neq("status", "converted");
+        } catch (e) { console.error("[WEBHOOK] trial cancel update error:", e); }
 
         // Trigger Shield win-back sequence
         const productName = (subscription.items?.data?.[0]?.price?.nickname) || "M² subscription";

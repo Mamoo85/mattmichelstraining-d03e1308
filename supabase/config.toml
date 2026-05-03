@@ -2205,3 +2205,6 @@ verify_jwt = false
 
 [functions.cold-email-daily-economics]
 verify_jwt = false
+
+[functions.scanner-health-matrix]
+verify_jwt = false
