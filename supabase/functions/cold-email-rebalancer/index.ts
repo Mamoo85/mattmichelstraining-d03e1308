@@ -14,11 +14,19 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
+import { evaluateBreaker, getActiveBreaker } from "../_shared/enrichment-breaker.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ADMIN_PHONE = Deno.env.get("ADMIN_PHONE") ?? "+13138064952";
 const FLOOR = 150;
+
+// Per-provider scaling: each provider has its own baseline + ceiling.
+const PROVIDER_BUDGETS = [
+  { key: "apollo_daily_budget_usd",    max_key: "apollo_max_budget_usd",    base: 30, hard_max: 120, label: "Apollo" },
+  { key: "hunter_daily_budget_usd",    max_key: "hunter_max_budget_usd",    base: 15, hard_max: 60,  label: "Hunter" },
+  { key: "firecrawl_daily_budget_usd", max_key: "firecrawl_max_budget_usd", base: 5,  hard_max: 20,  label: "Firecrawl" },
+];
 
 const COLD_TEMPLATES = [
   "cold_outreach",
@@ -146,79 +154,109 @@ serve(async (req) => {
       }
     }));
 
-    // Supply early-warning: if total ready-to-send supply < remaining gap, scanners are behind
-    const supplyShort = totalSupply < gap;
+    // ── Safety circuit breaker — evaluate before any scale-up ──────────────
+    const breakerEval = await evaluateBreaker(sb).catch((e) => {
+      console.error("breaker eval failed", e);
+      return { tripped: false, details: { error: String(e) } };
+    });
+    const activeBreaker = await getActiveBreaker(sb);
+    const breakerBlocked = activeBreaker.tripped || breakerEval.tripped;
+
+    if (breakerEval.tripped) {
+      await sendSMS(
+        ADMIN_PHONE,
+        `🛑 ENRICHMENT CIRCUIT TRIPPED: ${breakerEval.reason} ` +
+        `(${(breakerEval.metric_value || 0).toFixed?.(2) ?? breakerEval.metric_value} > ${breakerEval.threshold}). ` +
+        `Budget frozen. Reset in 6h or manually clear.`,
+      ).catch(() => {});
+    }
+
     let budgetScaled: any = null;
-    if (supplyShort) {
-      // ── Auto-scale Apollo/Hunter daily budget ─────────────────────────────
-      // The enrichment_matrix_walker is gated by enrichment_walker_config.daily_budget_usd.
-      // When sends are falling short of supply, bump the cap proportionally so
-      // Apollo + Hunter can keep up. Severity scales with shortfall ratio.
+    if (supplyShort && !breakerBlocked) {
+      // ── Auto-scale per-provider daily budgets ──────────────────────────
       try {
         const shortfallRatio = gap > 0 ? (gap - totalSupply) / gap : 0; // 0..1
+        const multiplier = 1 + Math.min(2, Math.max(0.5, shortfallRatio * 3));
+        const changes: Array<{ label: string; from: number; to: number }> = [];
+
         const { data: cfg } = await sb
           .from("enrichment_walker_config")
-          .select("value_numeric")
-          .eq("key", "daily_budget_usd")
-          .maybeSingle();
-        const current = Number(cfg?.value_numeric ?? 50);
-        // 1.5x for mild shortfall, up to 3x for severe; capped at $200/day
-        const multiplier = 1 + Math.min(2, Math.max(0.5, shortfallRatio * 3));
-        const next = Math.min(200, Math.round(current * multiplier));
-        if (next > current) {
-          await sb.from("enrichment_walker_config").upsert({
-            key: "daily_budget_usd",
-            value_numeric: next,
-          }, { onConflict: "key" });
-          budgetScaled = { from: current, to: next, multiplier: multiplier.toFixed(2), shortfallRatio: shortfallRatio.toFixed(2) };
+          .select("key, value_numeric")
+          .in("key", PROVIDER_BUDGETS.flatMap(p => [p.key, p.max_key]));
+        const cfgMap = new Map<string, number>((cfg || []).map((r: any) => [r.key, Number(r.value_numeric)]));
+
+        for (const pb of PROVIDER_BUDGETS) {
+          const current = cfgMap.get(pb.key) ?? pb.base;
+          const ceiling = cfgMap.get(pb.max_key) ?? pb.hard_max;
+          const next = Math.min(ceiling, Math.round(current * multiplier));
+          if (next > current) {
+            await sb.from("enrichment_walker_config").upsert({
+              key: pb.key, value_numeric: next,
+            }, { onConflict: "key" });
+            changes.push({ label: pb.label, from: current, to: next });
+          }
+        }
+
+        if (changes.length) {
+          budgetScaled = { changes, multiplier: multiplier.toFixed(2), shortfallRatio: shortfallRatio.toFixed(2) };
         }
       } catch (e) {
         console.error("budget scale failed", e);
       }
 
+      const scaleSummary = budgetScaled?.changes?.length
+        ? budgetScaled.changes.map((c: any) => `${c.label} $${c.from}→$${c.to}`).join(", ")
+        : "no scale (caps reached)";
+
       await sendSMS(
         ADMIN_PHONE,
-        `🟡 SUPPLY LOW: only ${totalSupply} ready-to-send leads vs gap of ${gap}. ` +
+        `🟡 SUPPLY LOW: ${totalSupply} ready vs gap ${gap}. ` +
         `Pools — outreach:${outreachSupply} contractor:${contractorSupply} techalert:${techalertSupply}. ` +
-        (budgetScaled ? `Apollo/Hunter budget bumped $${budgetScaled.from}→$${budgetScaled.to}/day. ` : "") +
-        `Triggering scanners + enrichment drain.`,
+        `${scaleSummary}. Triggering scanners + enrichment.`,
       ).catch(() => {});
 
-      // Auto-trigger scanners + enrichment with scaled batch sizes
       const enrichBatch = budgetScaled ? 100 : 50;
       await Promise.all([
         sb.functions.invoke("techalert-prospect-hunter", { body: {} }).catch(() => {}),
         sb.functions.invoke("contractor-prospector", { body: {} }).catch(() => {}),
         sb.functions.invoke("prospect-local-businesses", { body: { discoverOnly: true } }).catch(() => {}),
-        sb.functions.invoke("outreach-leads-enrich", { body: { batch: enrichBatch } }).catch(() => {}),
+        sb.functions.invoke("outreach-leads-enrich", {
+          body: { batch: enrichBatch, triggered_by: "rebalancer", target_gap: gap },
+        }).catch(() => {}),
         sb.functions.invoke("contractor-outreach-statewide-enrich", { body: { batch: enrichBatch } }).catch(() => {}),
-        // Kick the matrix walker now that it has fresh budget headroom
         sb.functions.invoke("enrichment-matrix-walker", { body: {} }).catch(() => {}),
       ]);
+    } else if (supplyShort && breakerBlocked) {
+      // Breaker is tripped — do not scale, do not burst enrichment
+      console.log("[rebalancer] supply short but breaker blocked, skipping enrichment burst");
     } else {
-      // ── Auto-decay budget back toward baseline on healthy days ────────────
-      // If supply is comfortable for 2+ runs, gently relax the cap to baseline $50
-      // so we don't permanently overspend after a one-day spike.
+      // ── Auto-decay each provider budget back toward baseline ───────────
       try {
         const { data: cfg } = await sb
           .from("enrichment_walker_config")
-          .select("value_numeric")
-          .eq("key", "daily_budget_usd")
-          .maybeSingle();
-        const current = Number(cfg?.value_numeric ?? 50);
-        if (current > 50 && totalSupply > gap * 2) {
-          const next = Math.max(50, Math.round(current * 0.85));
-          await sb.from("enrichment_walker_config").upsert({
-            key: "daily_budget_usd",
-            value_numeric: next,
-          }, { onConflict: "key" });
-          budgetScaled = { from: current, to: next, decayed: true };
+          .select("key, value_numeric")
+          .in("key", PROVIDER_BUDGETS.map(p => p.key));
+        const cfgMap = new Map<string, number>((cfg || []).map((r: any) => [r.key, Number(r.value_numeric)]));
+        const decayed: any[] = [];
+        for (const pb of PROVIDER_BUDGETS) {
+          const current = cfgMap.get(pb.key) ?? pb.base;
+          if (current > pb.base && totalSupply > gap * 2) {
+            const next = Math.max(pb.base, Math.round(current * 0.85));
+            if (next < current) {
+              await sb.from("enrichment_walker_config").upsert({
+                key: pb.key, value_numeric: next,
+              }, { onConflict: "key" });
+              decayed.push({ label: pb.label, from: current, to: next });
+            }
+          }
         }
+        if (decayed.length) budgetScaled = { decayed };
       } catch (_) { /* best effort */ }
     }
 
     return new Response(JSON.stringify({
       ok: true, sentToday, gap, target, totalSupply, supplyShort,
+      breakerBlocked, breaker: breakerEval, activeBreaker,
       budgetScaled, pools, plan, invoked: results,
     }), { headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e) {

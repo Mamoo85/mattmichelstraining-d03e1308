@@ -25,6 +25,10 @@ import {
   domainFromUrl,
   googlePlacesWebsite,
 } from "../_shared/enrichment-pipeline.ts";
+import { canSpend, PROVIDER_COST_ESTIMATES, type Provider } from "../_shared/enrichment-budget.ts";
+
+interface ProviderTally { ok: number; fail: number; cost_cents: number; capped: number; ms: number; }
+const newTally = (): ProviderTally => ({ ok: 0, fail: 0, cost_cents: 0, capped: 0, ms: 0 });
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -42,7 +46,11 @@ const OWNER_TITLES = ["owner", "president", "general manager", "operations manag
 
 interface EnrichSource { name: string; ms: number; got_email: boolean; }
 
-async function enrichOne(sb: any, lead: any): Promise<{ status: "enriched" | "skipped" | "failed"; trace: EnrichSource[]; }> {
+async function enrichOne(
+  sb: any,
+  lead: any,
+  tallies: Record<Provider, ProviderTally>,
+): Promise<{ status: "enriched" | "skipped" | "failed"; trace: EnrichSource[]; }> {
   const trace: EnrichSource[] = [];
   let ownerName: string | null = null;
   let ownerEmail: string | null = null;
@@ -61,60 +69,92 @@ async function enrichOne(sb: any, lead: any): Promise<{ status: "enriched" | "sk
   if (!website) {
     const t = Date.now();
     website = await googlePlacesWebsite(lead.business_name, lead.city, "MI").catch(() => null);
-    trace.push({ name: "google_places", ms: Date.now() - t, got_email: false });
+    const ms = Date.now() - t;
+    tallies.places.ms += ms; if (website) tallies.places.ok++; else tallies.places.fail++;
+    trace.push({ name: "google_places", ms, got_email: false });
   }
 
   // ── Tier 2 (CHEAP): Firecrawl scrape of contact page
   if (!ownerEmail && website) {
-    const t = Date.now();
-    try {
-      const scraped = await extractContactInfo(website);
-      if (scraped?.email) ownerEmail = scraped.email;
-      if (!ownerName && scraped?.name) ownerName = scraped.name;
-    } catch (_) { /* ignore */ }
-    trace.push({ name: "firecrawl", ms: Date.now() - t, got_email: !!ownerEmail });
+    const gate = await canSpend(sb, "firecrawl", PROVIDER_COST_ESTIMATES.firecrawl);
+    if (!gate.ok) {
+      tallies.firecrawl.capped++;
+      trace.push({ name: `firecrawl_capped:${gate.reason}`, ms: 0, got_email: false });
+    } else {
+      const t = Date.now();
+      try {
+        const scraped = await extractContactInfo(website);
+        if (scraped?.email) ownerEmail = scraped.email;
+        if (!ownerName && scraped?.name) ownerName = scraped.name;
+        tallies.firecrawl.ok++;
+        tallies.firecrawl.cost_cents += PROVIDER_COST_ESTIMATES.firecrawl;
+      } catch (_) { tallies.firecrawl.fail++; }
+      const ms = Date.now() - t;
+      tallies.firecrawl.ms += ms;
+      trace.push({ name: "firecrawl", ms, got_email: !!ownerEmail });
+    }
   }
 
   // ── Tier 3 (PAID-CHEAP): Hunter domain search
   if (!ownerEmail && website) {
-    const t = Date.now();
     const domain = domainFromUrl(website);
     if (domain && !isAggregatorDomain(domain)) {
-      try {
-        const hc = await hunterFindEmail(domain);
-        if (hc?.email) {
-          ownerEmail = hc.email;
-          ownerName = ownerName || (hc.first_name && hc.last_name ? `${hc.first_name} ${hc.last_name}` : null);
-          ownerPhone = ownerPhone || hc.phone_number || null;
-        }
-      } catch (_) { /* ignore */ }
+      const gate = await canSpend(sb, "hunter", PROVIDER_COST_ESTIMATES.hunter);
+      if (!gate.ok) {
+        tallies.hunter.capped++;
+        trace.push({ name: `hunter_capped:${gate.reason}`, ms: 0, got_email: false });
+      } else {
+        const t = Date.now();
+        try {
+          const hc = await hunterFindEmail(domain);
+          if (hc?.email) {
+            ownerEmail = hc.email;
+            ownerName = ownerName || (hc.first_name && hc.last_name ? `${hc.first_name} ${hc.last_name}` : null);
+            ownerPhone = ownerPhone || hc.phone_number || null;
+          }
+          tallies.hunter.ok++;
+          tallies.hunter.cost_cents += PROVIDER_COST_ESTIMATES.hunter;
+        } catch (_) { tallies.hunter.fail++; }
+        const ms = Date.now() - t;
+        tallies.hunter.ms += ms;
+        trace.push({ name: "hunter", ms, got_email: !!ownerEmail });
+      }
     }
-    trace.push({ name: "hunter", ms: Date.now() - t, got_email: !!ownerEmail });
   }
 
   // ── Tier 4 (PAID-EXPENSIVE): Apollo people/org last resort
   if (!ownerEmail) {
-    const t = Date.now();
-    try {
-      const orgs = await apolloOrganizationSearch({
-        q_organization_name: lead.business_name,
-        organization_locations: lead.city ? [lead.city] : ["Michigan"],
-        per_page: 1,
-      });
-      const org = orgs[0] || null;
-      website = website || cleanWebsite(org?.website_url) || null;
-      const people = await apolloPeopleSearch({
-        organization_name: lead.business_name,
-        person_titles: OWNER_TITLES,
-        person_locations: lead.city ? [lead.city] : ["Michigan"],
-        per_page: 3,
-      });
-      const p = people[0] || null;
-      ownerEmail = ownerEmail || p?.email || null;
-      ownerPhone = ownerPhone || p?.phone_numbers?.[0]?.raw_number || null;
-      ownerName = ownerName || p?.name || (p?.first_name && p?.last_name ? `${p.first_name} ${p.last_name}` : null);
-    } catch (_) { /* ignore */ }
-    trace.push({ name: "apollo", ms: Date.now() - t, got_email: !!ownerEmail });
+    const gate = await canSpend(sb, "apollo", PROVIDER_COST_ESTIMATES.apollo);
+    if (!gate.ok) {
+      tallies.apollo.capped++;
+      trace.push({ name: `apollo_capped:${gate.reason}`, ms: 0, got_email: false });
+    } else {
+      const t = Date.now();
+      try {
+        const orgs = await apolloOrganizationSearch({
+          q_organization_name: lead.business_name,
+          organization_locations: lead.city ? [lead.city] : ["Michigan"],
+          per_page: 1,
+        });
+        const org = orgs[0] || null;
+        website = website || cleanWebsite(org?.website_url) || null;
+        const people = await apolloPeopleSearch({
+          organization_name: lead.business_name,
+          person_titles: OWNER_TITLES,
+          person_locations: lead.city ? [lead.city] : ["Michigan"],
+          per_page: 3,
+        });
+        const p = people[0] || null;
+        ownerEmail = ownerEmail || p?.email || null;
+        ownerPhone = ownerPhone || p?.phone_numbers?.[0]?.raw_number || null;
+        ownerName = ownerName || p?.name || (p?.first_name && p?.last_name ? `${p.first_name} ${p.last_name}` : null);
+        tallies.apollo.ok++;
+        tallies.apollo.cost_cents += PROVIDER_COST_ESTIMATES.apollo;
+      } catch (_) { tallies.apollo.fail++; }
+      const ms = Date.now() - t;
+      tallies.apollo.ms += ms;
+      trace.push({ name: "apollo", ms, got_email: !!ownerEmail });
+    }
   }
 
   // Reject if email is suppressed/duplicate before we save it
@@ -140,16 +180,21 @@ serve(async (req) => {
 
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const startedAt = Date.now();
-  let enriched = 0, failed = 0, skipped = 0, batches = 0;
+  let enriched = 0, failed = 0, skipped = 0, batches = 0, attempted = 0;
 
   const body = await req.json().catch(() => ({} as any));
   const drain = body?.drain === true;
+  const triggeredBy: string = body?.triggered_by || (drain ? "drain" : "cron");
+  const targetGap: number | null = typeof body?.target_gap === "number" ? body.target_gap : null;
   const requestedBatch = Number(body?.batch) || DEFAULT_BATCH;
   const BATCH = Math.max(1, Math.min(HARD_MAX_BATCH, requestedBatch));
 
+  const tallies: Record<Provider, ProviderTally> = {
+    apollo: newTally(), hunter: newTally(), firecrawl: newTally(), places: newTally(),
+  };
+
   try {
     while (true) {
-      // Pull leads with no email at all (NULL owner_email AND NULL email AND NULL validated/enriched)
       const { data: leads, error } = await sb.from("outreach_leads")
         .select("id, business_name, city, industry, phone, website")
         .is("owner_email", null)
@@ -164,8 +209,9 @@ serve(async (req) => {
       batches++;
 
       for (const lead of leads) {
+        attempted++;
         try {
-          const r = await enrichOne(sb, lead);
+          const r = await enrichOne(sb, lead, tallies);
           if (r.status === "enriched") enriched++;
           else if (r.status === "skipped") skipped++;
           else failed++;
@@ -181,15 +227,42 @@ serve(async (req) => {
       if (Date.now() - startedAt > DRAIN_TIME_BUDGET_MS) break;
     }
 
+    const totalDur = Date.now() - startedAt;
+    const avgMs = attempted > 0 ? Math.round(totalDur / attempted) : 0;
+    const costTotal = Object.values(tallies).reduce((s, t) => s + t.cost_cents, 0);
+    const throughputPerHour = totalDur > 0 ? (enriched * 3600000) / totalDur : 0;
+    const meetsTarget = targetGap === null ? null : enriched >= Math.min(targetGap, attempted) * 0.6;
+
+    await sb.from("enrichment_run_kpis").insert({
+      function_name: "outreach-leads-enrich",
+      triggered_by: triggeredBy,
+      leads_attempted: attempted,
+      leads_enriched: enriched,
+      leads_failed: failed,
+      leads_skipped: skipped,
+      provider_breakdown: tallies,
+      total_duration_ms: totalDur,
+      avg_ms_per_lead: avgMs,
+      cost_cents_total: costTotal,
+      target_gap: targetGap,
+      throughput_per_hour: throughputPerHour,
+      meets_target: meetsTarget,
+      meta: { drain, batches, batch_size: BATCH },
+    }).then(() => {}, () => {});
+
     await sb.from("agent_heartbeats").upsert({
       agent_name: "outreach-leads-enrich",
       last_beat: new Date().toISOString(),
       status: "ok",
-      metadata: { enriched, failed, skipped, batches, drain, duration_ms: Date.now() - startedAt },
+      metadata: { enriched, failed, skipped, batches, drain, duration_ms: totalDur, cost_cents: costTotal },
     }, { onConflict: "agent_name" });
 
     return new Response(
-      JSON.stringify({ ok: true, enriched, failed, skipped, batches, drain, duration_ms: Date.now() - startedAt }),
+      JSON.stringify({
+        ok: true, enriched, failed, skipped, batches, drain,
+        duration_ms: totalDur, cost_cents: costTotal,
+        provider_breakdown: tallies, throughput_per_hour: throughputPerHour,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e: unknown) {

@@ -6627,6 +6627,42 @@ export type Database = {
         }
         Relationships: []
       }
+      enrichment_circuit_breaker_state: {
+        Row: {
+          auto_reset_at: string
+          cleared_at: string | null
+          id: string
+          metric_value: number
+          notes: string | null
+          provider: string | null
+          reason: string
+          threshold: number
+          tripped_at: string
+        }
+        Insert: {
+          auto_reset_at?: string
+          cleared_at?: string | null
+          id?: string
+          metric_value: number
+          notes?: string | null
+          provider?: string | null
+          reason: string
+          threshold: number
+          tripped_at?: string
+        }
+        Update: {
+          auto_reset_at?: string
+          cleared_at?: string | null
+          id?: string
+          metric_value?: number
+          notes?: string | null
+          provider?: string | null
+          reason?: string
+          threshold?: number
+          tripped_at?: string
+        }
+        Relationships: []
+      }
       enrichment_dead_letter: {
         Row: {
           attempt_count: number
@@ -6942,6 +6978,63 @@ export type Database = {
           started_at?: string
           succeeded?: number
           triggered_by?: string | null
+        }
+        Relationships: []
+      }
+      enrichment_run_kpis: {
+        Row: {
+          avg_ms_per_lead: number
+          cost_cents_total: number
+          function_name: string
+          id: string
+          leads_attempted: number
+          leads_enriched: number
+          leads_failed: number
+          leads_skipped: number
+          meets_target: boolean | null
+          meta: Json
+          provider_breakdown: Json
+          run_at: string
+          target_gap: number | null
+          throughput_per_hour: number | null
+          total_duration_ms: number
+          triggered_by: string
+        }
+        Insert: {
+          avg_ms_per_lead?: number
+          cost_cents_total?: number
+          function_name: string
+          id?: string
+          leads_attempted?: number
+          leads_enriched?: number
+          leads_failed?: number
+          leads_skipped?: number
+          meets_target?: boolean | null
+          meta?: Json
+          provider_breakdown?: Json
+          run_at?: string
+          target_gap?: number | null
+          throughput_per_hour?: number | null
+          total_duration_ms?: number
+          triggered_by?: string
+        }
+        Update: {
+          avg_ms_per_lead?: number
+          cost_cents_total?: number
+          function_name?: string
+          id?: string
+          leads_attempted?: number
+          leads_enriched?: number
+          leads_failed?: number
+          leads_skipped?: number
+          meets_target?: boolean | null
+          meta?: Json
+          provider_breakdown?: Json
+          run_at?: string
+          target_gap?: number | null
+          throughput_per_hour?: number | null
+          total_duration_ms?: number
+          triggered_by?: string
         }
         Relationships: []
       }
@@ -23383,6 +23476,16 @@ export type Database = {
           provider: string | null
           unit: string | null
           units_total: number | null
+        }
+        Relationships: []
+      }
+      provider_spend_today: {
+        Row: {
+          calls: number | null
+          failures: number | null
+          provider: string | null
+          spend_cents: number | null
+          successes: number | null
         }
         Relationships: []
       }

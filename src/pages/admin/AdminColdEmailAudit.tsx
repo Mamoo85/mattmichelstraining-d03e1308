@@ -31,6 +31,9 @@ interface TplBucket { template: string; count: number }
 interface PoolRow { name: string; fn: string; available: number }
 interface PlanRow { fn: string; pool: string; available: number; planned_send: number }
 interface SupplyPool { product: string; key: string; unsent_with_email: number; unenriched_no_email: number }
+interface KpiRow { run_at: string; function_name: string; leads_attempted: number; leads_enriched: number; leads_failed: number; leads_skipped: number; throughput_per_hour: number; cost_cents_total: number; provider_breakdown: any; }
+interface BudgetRow { provider: string; cap_usd: number; spent_usd: number; pct: number; }
+interface BreakerRow { id: string; tripped_at: string; reason: string; metric_value: number; threshold: number; cleared_at: string | null; auto_reset_at: string; }
 
 export default function AdminColdEmailAudit() {
   const [days, setDays] = useState<DayBucket[]>([]);
@@ -42,6 +45,9 @@ export default function AdminColdEmailAudit() {
   const [planMeta, setPlanMeta] = useState<{ sentToday: number; gap: number; target: number } | null>(null);
   const [target, setTarget] = useState(FLOOR);
   const [poolThreshold, setPoolThreshold] = useState(DEFAULT_POOL_THRESHOLD);
+  const [kpis, setKpis] = useState<KpiRow[]>([]);
+  const [budgets, setBudgets] = useState<BudgetRow[]>([]);
+  const [breaker, setBreaker] = useState<BreakerRow | null>(null);
 
   const loadVolume = async () => {
     const since = new Date(Date.now() - 14 * 86400_000).toISOString();
@@ -97,13 +103,50 @@ export default function AdminColdEmailAudit() {
     ]);
   };
 
+  const loadKpisAndBudgets = async () => {
+    const [kpiRes, spendRes, capsRes, breakerRes] = await Promise.all([
+      supabase.from("enrichment_run_kpis" as any).select("*").order("run_at", { ascending: false }).limit(20),
+      supabase.from("provider_spend_today" as any).select("provider, spend_cents"),
+      supabase.from("enrichment_walker_config" as any).select("key, value_numeric")
+        .in("key", ["apollo_daily_budget_usd", "hunter_daily_budget_usd", "firecrawl_daily_budget_usd"]),
+      supabase.from("enrichment_circuit_breaker_state" as any).select("*")
+        .is("cleared_at", null).order("tripped_at", { ascending: false }).limit(1),
+    ]);
+    setKpis((kpiRes.data as any) || []);
+    const capMap = new Map<string, number>(((capsRes.data as any) || []).map((r: any) => [r.key, Number(r.value_numeric)]));
+    const spendMap = new Map<string, number>(((spendRes.data as any) || []).map((r: any) => [r.provider, Number(r.spend_cents)]));
+    const rows: BudgetRow[] = [
+      { provider: "apollo",    cap_usd: capMap.get("apollo_daily_budget_usd") ?? 30 },
+      { provider: "hunter",    cap_usd: capMap.get("hunter_daily_budget_usd") ?? 15 },
+      { provider: "firecrawl", cap_usd: capMap.get("firecrawl_daily_budget_usd") ?? 5 },
+    ].map((r) => {
+      const spent = (spendMap.get(r.provider) || 0) / 100;
+      return { ...r, spent_usd: spent, pct: r.cap_usd > 0 ? Math.round((spent / r.cap_usd) * 100) : 0 };
+    });
+    setBudgets(rows);
+    setBreaker(((breakerRes.data as any) || [])[0] || null);
+  };
+
   const load = async () => {
     setLoading(true);
-    await Promise.all([loadVolume(), loadSupply()]);
+    await Promise.all([loadVolume(), loadSupply(), loadKpisAndBudgets()]);
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
+
+  const resetBreaker = async () => {
+    if (!breaker) return;
+    if (!confirm("Reset circuit breaker and unfreeze enrichment budgets?")) return;
+    const { error } = await supabase.from("enrichment_circuit_breaker_state" as any)
+      .update({ cleared_at: new Date().toISOString(), notes: "manual_reset_ui" })
+      .eq("id", breaker.id);
+    if (error) { toast.error(error.message); return; }
+    await supabase.from("enrichment_walker_config" as any)
+      .upsert({ key: "budget_frozen", value_numeric: 0, value_text: "false" }, { onConflict: "key" });
+    toast.success("Breaker cleared, budget unfrozen");
+    load();
+  };
 
   const previewAllocation = async () => {
     setBusy("preview");
@@ -223,6 +266,71 @@ export default function AdminColdEmailAudit() {
             );
           })}
         </div>
+      </Card>
+
+      {/* Circuit Breaker */}
+      {breaker && (
+        <Card className="p-4 border-destructive bg-destructive/5">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-bold text-destructive">🛑 Enrichment Circuit Tripped</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Reason: <strong>{breaker.reason}</strong> · {Number(breaker.metric_value).toFixed(3)} &gt; {Number(breaker.threshold).toFixed(3)} ·
+                tripped {new Date(breaker.tripped_at).toLocaleString()} · auto-reset {new Date(breaker.auto_reset_at).toLocaleString()}
+              </div>
+            </div>
+            <Button size="sm" variant="destructive" onClick={resetBreaker}>Reset Breaker</Button>
+          </div>
+        </Card>
+      )}
+
+      {/* Provider Budgets */}
+      <Card className="p-4">
+        <h2 className="font-semibold mb-3">Per-Provider Daily Budgets (today)</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {budgets.map((b) => {
+            const danger = b.pct >= 90;
+            const warn = b.pct >= 70;
+            return (
+              <div key={b.provider} className={`border rounded p-3 ${danger ? "border-destructive" : warn ? "border-amber-500" : "border-border"}`}>
+                <div className="text-xs text-muted-foreground uppercase">{b.provider}</div>
+                <div className="text-2xl font-bold">${b.spent_usd.toFixed(2)} <span className="text-sm text-muted-foreground">/ ${b.cap_usd}</span></div>
+                <div className="w-full bg-muted h-1.5 rounded mt-2 overflow-hidden">
+                  <div className={`h-full ${danger ? "bg-destructive" : warn ? "bg-amber-500" : "bg-primary"}`} style={{ width: `${Math.min(100, b.pct)}%` }} />
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-1">{b.pct}% used</div>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* Enrichment KPIs */}
+      <Card className="p-4">
+        <h2 className="font-semibold mb-3">Enrichment Throughput (last 20 runs)</h2>
+        {kpis.length === 0 ? (
+          <div className="text-xs text-muted-foreground">No KPI rows yet — first run will populate after next enrichment cycle.</div>
+        ) : (
+          <table className="w-full text-xs">
+            <thead className="text-muted-foreground border-b">
+              <tr><th className="text-left py-1">When</th><th className="text-left">Function</th><th className="text-right">Att</th><th className="text-right">Enriched</th><th className="text-right">Failed</th><th className="text-right">Skipped</th><th className="text-right">/hr</th><th className="text-right">$</th></tr>
+            </thead>
+            <tbody>
+              {kpis.map((k, i) => (
+                <tr key={i} className="border-b">
+                  <td className="py-1">{new Date(k.run_at).toLocaleTimeString()}</td>
+                  <td className="font-mono">{k.function_name}</td>
+                  <td className="text-right">{k.leads_attempted}</td>
+                  <td className="text-right text-emerald-500">{k.leads_enriched}</td>
+                  <td className="text-right text-destructive">{k.leads_failed}</td>
+                  <td className="text-right">{k.leads_skipped}</td>
+                  <td className="text-right">{Math.round(k.throughput_per_hour || 0)}</td>
+                  <td className="text-right">${((k.cost_cents_total || 0) / 100).toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </Card>
 
       {/* Allocation preview */}
