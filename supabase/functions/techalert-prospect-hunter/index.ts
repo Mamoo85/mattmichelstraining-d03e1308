@@ -758,6 +758,70 @@ async function scanDemoContractors(): Promise<Posting[]> {
       });
     }
   } catch (e) { console.error("[hunter] demo contractors:", e instanceof Error ? e.message : e); }
+
+  // Post-Abatement Verification Reports — demolition + abatement contractors doing city work
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Post_Abatement_Verification_Reports/FeatureServer/0/query?where=posted_timestamp+IS+NOT+NULL&outFields=demo_contractor,contractor,rfp_group&resultRecordCount=100&orderByFields=posted_timestamp+DESC&f=json",
+      { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(10_000) },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        for (const nameField of ["demo_contractor", "contractor"]) {
+          const name: string = (a[nameField] || "").trim();
+          if (!name || seen.has(name.toLowerCase())) continue;
+          seen.add(name.toLowerCase());
+          results.push({
+            company_name: name,
+            city: "Detroit, MI",
+            role: "hvac_tech",
+            days_posted: null,
+            source_url: "https://detroitmi.gov/departments/housing-and-revitalization-department/detroit-demolition-program",
+            source_label: `Detroit Demo/Abatement Contractor (Post-Abatement Report)`,
+            is_boiler: false,
+          });
+        }
+      }
+    }
+  } catch (e) { console.error("[hunter] post-abatement contractors:", e instanceof Error ? e.message : e); }
+
+  return results;
+}
+
+// Demo Pipeline — active RFP bidding groups (contractors bidding these need FieldDesk)
+async function scanDemoPipelineRFPs(): Promise<Posting[]> {
+  const results: Posting[] = [];
+  const seenGroups = new Set<string>();
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Demo_Pipeline/FeatureServer/0/query?where=1%3D1&outFields=demo_rfp_group,neighborhood,commercial_building&resultRecordCount=250&f=json",
+      { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) return results;
+    const d = await res.json();
+    const rfpGroups = new Map<string, number>();
+    for (const feat of (d?.features ?? [])) {
+      const a = feat?.attributes ?? {};
+      const group: string = a.demo_rfp_group || "";
+      if (!group) continue;
+      rfpGroups.set(group, (rfpGroups.get(group) || 0) + 1);
+    }
+    for (const [group, count] of rfpGroups) {
+      if (seenGroups.has(group)) continue;
+      seenGroups.add(group);
+      results.push({
+        company_name: `Detroit Demo RFP: ${group} (${count} properties)`,
+        city: "Detroit, MI",
+        role: "hvac_tech",
+        days_posted: null,
+        source_url: "https://detroitmi.gov/departments/housing-and-revitalization-department/detroit-demolition-program",
+        source_label: "Detroit Active Demolition RFP Bid Group",
+        is_boiler: false,
+      });
+    }
+  } catch (e) { console.error("[hunter] demo pipeline RFPs:", e instanceof Error ? e.message : e); }
   return results;
 }
 
@@ -883,7 +947,7 @@ serve(async (req) => {
     // Supplemental signals + NOAA weather bonus — all run in parallel
     // Includes the new signal-waterfall (DOL WARN, OSHA, FMCSA, DOT prequal, SAM expanded)
     const { fetchHireSignals } = await import("../_shared/signal-waterfall.ts");
-    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, councilSurveyedSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, billionDollarSignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
+    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, councilSurveyedSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, demoPipelineSignals, billionDollarSignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
       scanGitHubSignals(),
       scanEDGARFundings(),
       scanUSPTOPatents(),
@@ -905,11 +969,12 @@ serve(async (req) => {
       scanDetroitCityContracts(),
       scanMultifamilyConstruction(),
       scanDemoContractors(),
+      scanDemoPipelineRFPs(),
       scanBillionDollarConstruction(),
       getWeatherHiringBonus(),
       fetchHireSignals(sb, { state: "MI", naics: "238220" }).catch(() => []),
     ]);
-    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...councilSurveyedSignals, ...detroitCityContractSignals, ...multifamilySignals, ...demoContractorSignals, ...billionDollarSignals];
+    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...councilSurveyedSignals, ...detroitCityContractSignals, ...multifamilySignals, ...demoContractorSignals, ...demoPipelineSignals, ...billionDollarSignals];
     all.push(...supplemental);
     scanned += supplemental.length;
     // Log waterfall signal volume to heartbeat metadata (don't insert as job postings — different shape)
@@ -1001,6 +1066,7 @@ serve(async (req) => {
           detroit_open_biz: detroitOpenBizSignals.length,
           council_surveyed: councilSurveyedSignals.length,
           detroit_city_contracts: detroitCityContractSignals.length,
+          demo_pipeline_rfps: demoPipelineSignals.length,
           detroit_multifamily: multifamilySignals.length,
           detroit_demo_contractors: demoContractorSignals.length,
           detroit_billion_dollar: billionDollarSignals.length,
