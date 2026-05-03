@@ -69,7 +69,26 @@ Deno.serve(async (req) => {
     let owner: string | null = prospect.owner_name;
     let phone: string | null = prospect.phone;
     let verified = !!prospect.email_verified;
-    let website: string | null = prospect.website;
+    let website: string | null = cleanWebsite(prospect.website);
+    if (prospect.website && !website) {
+      // existing website was an aggregator — clear it so we re-discover
+      trace.push({ stage: "website_scrub_aggregator", original: prospect.website, ts: now() });
+    }
+    domain = extractDomain(website);
+
+    // Skip enterprises early — wrong outreach motion (RFP, not cold email)
+    if (isEnterprise(prospect.business_name)) {
+      await supabase
+        .from("contractor_outreach_prospects")
+        .update({
+          enriched_at: new Date().toISOString(),
+          enrichment_trace: [...trace, { stage: "skipped_enterprise", ts: now() }],
+        })
+        .eq("id", prospect_id);
+      return new Response(JSON.stringify({ ok: true, skipped: "enterprise" }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // ── Stage 1: Hunter.io domain search ─────────────────────────────────────
     if (!email && domain) {
