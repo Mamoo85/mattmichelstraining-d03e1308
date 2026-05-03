@@ -56,15 +56,19 @@ export async function dwaEmail(opts: DwaEmailOpts): Promise<{ ok: boolean; error
  *   trialCtaHtml({ product: "TechAlert",      url: "https://..." })  // → 30 days
  */
 export function trialCtaHtml(opts: { product: string; url: string }): string {
-  const days = isHiringProduct(opts.product) ? 30 : 7;
+  const hiring = isHiringProduct(opts.product);
+  const days = hiring ? 30 : 7;
+  const offerLine = hiring
+    ? `Start your free ${days}-day trial of ${opts.product} — no credit card required.`
+    : `Start your free ${days}-day trial of ${opts.product} — no credit card required. <strong style="color:${DWA_TEAL};">Plus 50% off your first 3 months</strong> when you continue.`;
   return `
 <div style="margin:28px 0;padding:20px 22px;background:rgba(0,212,255,0.08);border:1px solid ${DWA_TEAL};border-radius:8px;">
   <p style="margin:0 0 12px;font-size:15px;color:#e6f1ff;font-weight:600;">
-    Start your free ${days}-day trial of ${opts.product} — no card required.
+    ${offerLine}
   </p>
   <p style="margin:0;">
     <a href="${opts.url}" style="background:${DWA_TEAL};color:${DWA_BG};padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:700;display:inline-block;">
-      Start Free ${days}-Day Trial
+      Start Free ${days}-Day Trial${hiring ? "" : " + 50% Off"}
     </a>
   </p>
 </div>`;
