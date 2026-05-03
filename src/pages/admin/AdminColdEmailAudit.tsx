@@ -103,13 +103,50 @@ export default function AdminColdEmailAudit() {
     ]);
   };
 
+  const loadKpisAndBudgets = async () => {
+    const [kpiRes, spendRes, capsRes, breakerRes] = await Promise.all([
+      supabase.from("enrichment_run_kpis" as any).select("*").order("run_at", { ascending: false }).limit(20),
+      supabase.from("provider_spend_today" as any).select("provider, spend_cents"),
+      supabase.from("enrichment_walker_config" as any).select("key, value_numeric")
+        .in("key", ["apollo_daily_budget_usd", "hunter_daily_budget_usd", "firecrawl_daily_budget_usd"]),
+      supabase.from("enrichment_circuit_breaker_state" as any).select("*")
+        .is("cleared_at", null).order("tripped_at", { ascending: false }).limit(1),
+    ]);
+    setKpis((kpiRes.data as any) || []);
+    const capMap = new Map<string, number>(((capsRes.data as any) || []).map((r: any) => [r.key, Number(r.value_numeric)]));
+    const spendMap = new Map<string, number>(((spendRes.data as any) || []).map((r: any) => [r.provider, Number(r.spend_cents)]));
+    const rows: BudgetRow[] = [
+      { provider: "apollo",    cap_usd: capMap.get("apollo_daily_budget_usd") ?? 30 },
+      { provider: "hunter",    cap_usd: capMap.get("hunter_daily_budget_usd") ?? 15 },
+      { provider: "firecrawl", cap_usd: capMap.get("firecrawl_daily_budget_usd") ?? 5 },
+    ].map((r) => {
+      const spent = (spendMap.get(r.provider) || 0) / 100;
+      return { ...r, spent_usd: spent, pct: r.cap_usd > 0 ? Math.round((spent / r.cap_usd) * 100) : 0 };
+    });
+    setBudgets(rows);
+    setBreaker(((breakerRes.data as any) || [])[0] || null);
+  };
+
   const load = async () => {
     setLoading(true);
-    await Promise.all([loadVolume(), loadSupply()]);
+    await Promise.all([loadVolume(), loadSupply(), loadKpisAndBudgets()]);
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
+
+  const resetBreaker = async () => {
+    if (!breaker) return;
+    if (!confirm("Reset circuit breaker and unfreeze enrichment budgets?")) return;
+    const { error } = await supabase.from("enrichment_circuit_breaker_state" as any)
+      .update({ cleared_at: new Date().toISOString(), notes: "manual_reset_ui" })
+      .eq("id", breaker.id);
+    if (error) { toast.error(error.message); return; }
+    await supabase.from("enrichment_walker_config" as any)
+      .upsert({ key: "budget_frozen", value_numeric: 0, value_text: "false" }, { onConflict: "key" });
+    toast.success("Breaker cleared, budget unfrozen");
+    load();
+  };
 
   const previewAllocation = async () => {
     setBusy("preview");
