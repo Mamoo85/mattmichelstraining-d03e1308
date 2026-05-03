@@ -1088,5 +1088,44 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] cofc expiring:", e); }
 
+  // --- Detroit Fire Incidents — recent residential fires ---
+  try {
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const fireWhere = encodeURIComponent(
+      `(incident_type_description LIKE '%fire%' OR incident_type_description LIKE '%smoke%' OR incident_type_description LIKE '%CO incident%') AND property_use LIKE '%1 or 2 family%'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Fire_Incidents/FeatureServer/0/query?where=${fireWhere}&outFields=address,zip_code,incident_type_description,called_at,structure_status&resultRecordCount=30&orderByFields=called_at+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const ts = a.called_at ?? 0;
+        if (ts < thirtyDaysAgo) continue;
+        const signalDate = ts ? new Date(ts).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
+        const isBuildingFire = /building.fire|structure.fire/i.test(a.incident_type_description ?? "");
+        const score = isBuildingFire ? 9 : 7;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "fire_smoke_restoration",
+          signal_detail: `DFD incident at ${addr}: "${a.incident_type_description}" on ${signalDate}. Fire/smoke damage requires immediate structural drying, soot removal, and odor treatment`,
+          signal_date: signalDate,
+          score,
+          source_method: "detroit_fire_incidents",
+          suggested_opener: `Detroit Fire records show an incident at ${addr} on ${signalDate}. Fire and smoke damage must be mitigated within 24-72 hours to prevent secondary mold — are you working with a restoration contractor yet?`,
+          best_call_window: "Within 72 hours of incident",
+          estimated_value: 15000,
+          raw_source_data: { addr, zip, incident: a.incident_type_description, date: signalDate },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] fire incidents:", e); }
+
   return signals;
 }
