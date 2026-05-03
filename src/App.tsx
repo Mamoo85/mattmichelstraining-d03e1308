@@ -102,6 +102,7 @@ const Progress = lazyRetry(() => import("./pages/Progress"));
 const Merch = lazyRetry(() => import("./pages/Merch"));
 const Learn = lazyRetry(() => import("./pages/Learn"));
 const TrialWelcome = lazyRetry(() => import("./pages/TrialWelcome"));
+const StartTrial = lazyRetry(() => import("./pages/StartTrial"));
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
 const Unsubscribe = lazyRetry(() => import("./pages/Unsubscribe"));
 const Changelog = lazyRetry(() => import("./pages/Changelog"));
@@ -813,6 +814,7 @@ const App = () => (
                     <Route path="/talent-radar/healthcare" element={<HealthcareHireAlert />} />
                     <Route path="/talent-radar/dashboard" element={<MyTechAlert />} />
                     <Route path="/talent-radar/trial" element={<HireAlertTrial />} />
+                    <Route path="/start-trial" element={<StartTrial />} />
                     {/* Legacy redirects → Talent Radar */}
                     <Route path="/hire-alert" element={<Navigate to="/talent-radar" replace />} />
                     <Route path="/hire-alert/enterprise" element={<Navigate to="/talent-radar/enterprise" replace />} />
