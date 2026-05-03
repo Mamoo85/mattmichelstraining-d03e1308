@@ -498,5 +498,48 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[gutters] historic district violations:", e); }
 
+  // NOAA CDO Historical Wind Events — Wayne/Oakland/Macomb (past 12 months)
+  // WT11 = high or damaging winds. County with wind events = detached/clogged gutters.
+  try {
+    const noaaKey = Deno.env.get("NOAA_API_KEY");
+    if (noaaKey) {
+      const today = new Date().toISOString().slice(0, 10);
+      const twelveMonthsAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const counties = [
+        { name: "Wayne County", fips: "FIPS:26163" },
+        { name: "Oakland County", fips: "FIPS:26125" },
+        { name: "Macomb County", fips: "FIPS:26099" },
+      ];
+      let windDays = 0;
+      const windCounties: string[] = [];
+      for (const county of counties) {
+        const r = await fetch(
+          `https://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=GHCND&locationid=${county.fips}&datatypeid=WT11&startdate=${twelveMonthsAgo}&enddate=${today}&limit=100`,
+          { headers: { token: noaaKey } },
+        );
+        if (r.ok) {
+          const d2 = await r.json();
+          const days = (d2?.results ?? []).length;
+          if (days > 0) { windDays += days; windCounties.push(`${county.name} (${days}d)`); }
+        }
+      }
+      if (windCounties.length > 0) {
+        signals.push({
+          address: "SE Michigan — county-wide wind event history",
+          city: "Detroit", zip: "",
+          signal_type: "storm_gutter_damage",
+          signal_detail: `NOAA CDO: ${windCounties.join("; ")} — ${windDays} days of high/damaging winds in past year. Wind is the #1 cause of gutter detachment and downspout separation in Michigan`,
+          signal_date: today,
+          score: 8,
+          source_method: "noaa_cdo_wind_historical",
+          suggested_opener: "Your area has had significant high-wind events in the past year — wind is the primary cause of gutters separating from fascia and downspouts pulling away from walls. A free inspection this week can prevent a $2,000 fascia repair next spring.",
+          best_call_window: "Year-round, higher urgency before spring rain",
+          estimated_value: 2500,
+          raw_source_data: { wind_days: windDays, counties: windCounties },
+        });
+      }
+    }
+  } catch (e) { console.error("[gutters] NOAA CDO wind:", e); }
+
   return signals;
 }
