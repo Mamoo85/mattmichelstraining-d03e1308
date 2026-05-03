@@ -411,9 +411,6 @@ verify_jwt = false
 [functions.create-abandoned-cart-checkout]
 verify_jwt = false
 
-[functions.create-addon-checkout]
-verify_jwt = false
-
 [functions.create-ads-copy-checkout]
 verify_jwt = false
 
@@ -2149,9 +2146,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.send-djconley-followup-sms]
-verify_jwt = false
-
-[functions.run-migration-once]
 verify_jwt = false
 
 [functions.run-migration-once]
