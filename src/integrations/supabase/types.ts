@@ -22048,6 +22048,50 @@ export type Database = {
         }
         Relationships: []
       }
+      trial_drip_state: {
+        Row: {
+          channel: string
+          created_at: string
+          error: string | null
+          id: string
+          meta: Json | null
+          sent_at: string
+          status: string
+          touch_key: string
+          trial_signup_id: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          meta?: Json | null
+          sent_at?: string
+          status?: string
+          touch_key: string
+          trial_signup_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          meta?: Json | null
+          sent_at?: string
+          status?: string
+          touch_key?: string
+          trial_signup_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trial_drip_state_trial_signup_id_fkey"
+            columns: ["trial_signup_id"]
+            isOneToOne: false
+            referencedRelation: "trial_signups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trial_emails_sent: {
         Row: {
           email_type: string
@@ -22096,6 +22140,60 @@ export type Database = {
           tech_support_auto_reply?: string
           trial_days?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      trial_signups: {
+        Row: {
+          cancelled_at: string | null
+          converted_at: string | null
+          created_at: string
+          email: string
+          id: string
+          phone: string | null
+          product_key: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_ends_at: string
+          trial_started_at: string
+          updated_at: string
+          user_id: string | null
+          utm: Json | null
+        }
+        Insert: {
+          cancelled_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          phone?: string | null
+          product_key: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string
+          trial_started_at?: string
+          updated_at?: string
+          user_id?: string | null
+          utm?: Json | null
+        }
+        Update: {
+          cancelled_at?: string | null
+          converted_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          phone?: string | null
+          product_key?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string
+          trial_started_at?: string
+          updated_at?: string
+          user_id?: string | null
+          utm?: Json | null
         }
         Relationships: []
       }
