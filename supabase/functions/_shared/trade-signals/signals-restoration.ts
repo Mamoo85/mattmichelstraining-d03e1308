@@ -579,7 +579,44 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] city buildings:", e); }
 
-  // 15. Detroit Fire Incidents — residential building fires (last 30 days)
+  // 15. Detroit Fire Escrow Properties — insurance escrowed on fire-damaged homes
+  // 1,131 residential properties with insurance funds withheld pending contractor repairs.
+  // Owner has the insurance money locked up — they need us to release it.
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Fire_Escrow_Properties/FeatureServer/0/query?where=Amount_Withheld+%3E+5000+AND+Property_Class+LIKE+'%25Residential%25'&outFields=Loss_Address,Assessor_Taxpayer_Name,Assessor_Taxpayer_Zip,Date_Of_Loss,Amount_Withheld,No_of_Days_Outstanding&resultRecordCount=60&orderByFields=No_of_Days_Outstanding+ASC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.Loss_Address || "").trim();
+        const zip = String(a.Assessor_Taxpayer_Zip || "").slice(0, 5);
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const withheld: number = a.Amount_Withheld || 0;
+        const daysOut: number = a.No_of_Days_Outstanding || 0;
+        const lossDate = a.Date_Of_Loss ? new Date(a.Date_Of_Loss).toISOString().split("T")[0] : null;
+        const ownerName = (a.Assessor_Taxpayer_Name || "").replace(/,/, " ").trim();
+        const urgencyNote = daysOut < 90 ? "URGENT — recent fire, insurance claim just filed" : daysOut < 365 ? "insurance claim open less than 1 year" : "long-outstanding claim — owner may have given up";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "water_damage_permit",
+          signal_detail: `Detroit Fire Escrow: ${addr} — $${withheld.toLocaleString()} insurance funds held in escrow${lossDate ? ` since ${lossDate}` : ""} (${urgencyNote}). Owner needs licensed contractor to complete repairs before insurer releases funds`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.water_damage_permit + (daysOut < 90 ? 3 : daysOut < 365 ? 2 : 1),
+          source_method: "detroit_fire_escrow",
+          suggested_opener: `${ownerName ? ownerName + " — " : ""}I saw that ${addr} has ${`$${withheld.toLocaleString()}`} in fire insurance escrow. The insurance company holds those funds until a licensed contractor completes the repairs and signs off. We do exactly this work — can we schedule an assessment this week?`,
+          best_call_window: "Business hours, reference insurance escrow",
+          estimated_value: Math.max(withheld * 1.2, 8000),
+          raw_source_data: { address: addr, zip, owner: ownerName, withheld, days_outstanding: daysOut, loss_date: lossDate },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] fire escrow:", e); }
+
+  // 16. Detroit Fire Incidents — residential building fires (last 30 days)
   // Live 2025 data; filter client-side since ArcGIS timestamp WHERE can be unreliable
   try {
     const res = await fetch(

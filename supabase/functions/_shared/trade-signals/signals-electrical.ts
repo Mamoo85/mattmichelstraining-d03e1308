@@ -248,5 +248,39 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[electrical] rental registrations:", e); }
 
+  // 6. Detroit Assessment Roll 2026 — recently sold pre-1970 homes (new owner + aging electrical)
+  try {
+    const since = new Date(Date.now() - 120 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/tentative_assessment_roll_2026/FeatureServer/0/query?where=sale_date+%3E%3D+'${since}'+AND+residential_year_built+%3C+1970+AND+residential_year_built+%3E+1880+AND+is_improved+%3D+1+AND+property_class+%3D+'401'&outFields=address,zip_code,residential_year_built,sale_date,taxpayer_1&resultRecordCount=40&orderByFields=sale_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const yrBuilt: number = a.residential_year_built || 0;
+        const owner = (a.taxpayer_1 || "").trim();
+        const era = yrBuilt < 1950 ? "pre-1950 knob-and-tube wiring era" : yrBuilt < 1960 ? "pre-1960 60-amp service era" : "pre-1970 ungrounded outlet era";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "renovation_electrical",
+          signal_detail: `New owner at ${addr} (built ${yrBuilt}, sold ${a.sale_date}) — ${era}. Pre-1970 Detroit homes almost universally need panel upgrades, grounding, and AFCI protection during ownership transitions`,
+          signal_date: a.sale_date || new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.renovation_electrical + 1,
+          source_method: "detroit_assessment_roll",
+          suggested_opener: `${owner ? owner + " — " : ""}Congrats on the new home at ${addr}! Built ${yrBuilt}, so it's almost certainly running on ${yrBuilt < 1950 ? "knob-and-tube wiring" : "a 60-amp or ungrounded panel"}. Insurance companies often require upgrades before binding coverage. Want a free assessment this week?`,
+          best_call_window: "Within 60 days of purchase",
+          estimated_value: 4500,
+          raw_source_data: { address: addr, zip, year_built: yrBuilt, sale_date: a.sale_date, owner },
+        });
+      }
+    }
+  } catch (e) { console.error("[electrical] assessment roll:", e); }
+
   return signals;
 }
