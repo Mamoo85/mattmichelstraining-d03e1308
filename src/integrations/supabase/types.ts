@@ -11429,6 +11429,42 @@ export type Database = {
           },
         ]
       }
+      link_audit_results: {
+        Row: {
+          channel: string
+          checked_at: string
+          error: string | null
+          id: string
+          ok: boolean
+          product_key: string
+          response_ms: number | null
+          status_code: number | null
+          url: string
+        }
+        Insert: {
+          channel: string
+          checked_at?: string
+          error?: string | null
+          id?: string
+          ok?: boolean
+          product_key: string
+          response_ms?: number | null
+          status_code?: number | null
+          url: string
+        }
+        Update: {
+          channel?: string
+          checked_at?: string
+          error?: string | null
+          id?: string
+          ok?: boolean
+          product_key?: string
+          response_ms?: number | null
+          status_code?: number | null
+          url?: string
+        }
+        Relationships: []
+      }
       linkedin_ghostwriting_clients: {
         Row: {
           active: boolean | null
