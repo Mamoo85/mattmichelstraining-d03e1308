@@ -19,7 +19,8 @@ import {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-const BATCH = 20; // Apollo rate limit ceiling per run
+const DEFAULT_BATCH = 30; // Apollo rate limit ceiling per run
+const HARD_MAX_BATCH = 100; // upper safety cap when rebalancer requests scale-up
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
