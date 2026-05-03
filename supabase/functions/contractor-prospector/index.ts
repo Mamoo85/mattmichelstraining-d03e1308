@@ -33,6 +33,15 @@ import { generateText } from "../_shared/ai.ts";
 import { isBlocked, recordOutreach } from "../_shared/outreach-blocklist.ts";
 import { canonicalizeTrade, getSearchQueries } from "../_shared/trade-canonical.ts";
 import { cleanWebsite } from "../_shared/enrichment-pipeline.ts";
+import { dwaWrap, trialCtaHtml } from "../_shared/dwa-email.ts";
+
+/**
+ * Standard DWA cold-email shell + auto-injected trial CTA (7-day or 30-day
+ * by product). All cold-outreach builders in this file should call this.
+ */
+function wrapDwaShell(innerHtml: string, opts: { product: string; ctaUrl: string }): string {
+  return dwaWrap(`${innerHtml}\n${trialCtaHtml(opts)}`);
+}
 
 function extractCityState(city: string): [string, string] {
   const parts = city.trim().split(/\s+/);
