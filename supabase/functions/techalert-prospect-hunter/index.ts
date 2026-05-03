@@ -1256,41 +1256,7 @@ serve(async (req) => {
 
 
     return new Response(
-      JSON.stringify({
-        ok: true,
-        scanned,
-        inserted,
-        updated,
-        signals: {
-          github: githubSignals.length,
-          edgar: edgarSignals.length,
-          uspto: usptoSignals.length,
-          sam: samSignals.length,
-          eventbrite: eventbriteSignals.length,
-          usaspending: usaSpendingSignals.length,
-          linkedin: linkedinSignals.length,
-          osha: oshaSignals.length,
-          lara_new: laraNewSignals.length,
-          lara_dissolved: laraDissolvedSignals.length,
-          lara_expiring: laraExpiringSignals.length,
-          nlrb: nlrbSignals.length,
-          cfpb_complaints: cfpbSignals.length,
-          ch7_liquidations: ch7Signals.length,
-          detroit_certified: detroitCertifiedSignals.length,
-          detroit_open_biz: detroitOpenBizSignals.length,
-          council_surveyed: councilSurveyedSignals.length,
-          detroit_city_contracts: detroitCityContractSignals.length,
-          demo_pipeline_rfps: demoPipelineSignals.length,
-          detroit_multifamily: multifamilySignals.length,
-          detroit_demo_contractors: demoContractorSignals.length,
-          detroit_billion_dollar: billionDollarSignals.length,
-          detroit_biz_license_expiry: detroitBizLicenseSignals.length,
-          commercial_compliance_red: commercialRedSignals.length,
-          sam_entities: samEntitySignals.length,
-          hire_waterfall: waterfallCount,
-        },
-        duration_ms: Date.now() - startedAt,
-      }),
+      JSON.stringify({ ok: true, scanned, inserted, updated, signals, duration_ms: durationMs, low_yield: lowYield, alert_sent: alertSent }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e: unknown) {
