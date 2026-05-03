@@ -13,7 +13,8 @@ const log = (step: string, data?: any) =>
 
 // THROTTLED: Web design outreach is the priority. Automation pitches are secondary.
 // Only 5 per run, with longer delays between steps so web design drip has room.
-const MAX_LEADS_PER_RUN = 5;
+// Raised cap to contribute meaningfully to the 150/day cold-email floor.
+const MAX_LEADS_PER_RUN = 35;
 const SEND_DELAY_MS = 500;
 
 // ── INDUSTRY → DEMO LINK MAPPING ──
