@@ -598,6 +598,14 @@ serve(async (req) => {
 
         console.log(`[WEBHOOK] Deactivated B2B clients for subscription ${subscription.id}`);
 
+        // Mark trial signup as cancelled (if it was a trial)
+        try {
+          await sb.from("trial_signups")
+            .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
+            .eq("stripe_subscription_id", subscription.id)
+            .neq("status", "converted");
+        } catch (e) { console.error("[WEBHOOK] trial cancel update error:", e); }
+
         // Trigger Shield win-back sequence
         const productName = (subscription.items?.data?.[0]?.price?.nickname) || "M² subscription";
         await fetch(`${SUPABASE_URL}/functions/v1/shield-winback`, {
