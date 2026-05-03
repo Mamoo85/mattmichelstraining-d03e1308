@@ -3,6 +3,9 @@ project_id = "zmyczlfuufhngzovkjdh"
 [functions.e2e-link-auditor]
 verify_jwt = false
 
+[functions.trial-drip-runner]
+verify_jwt = false
+
 [functions.dwa-v4-retention-sweep]
 verify_jwt = false
 
