@@ -267,6 +267,45 @@ async function getWeatherHiringBonus(): Promise<number> {
 }
 
 // SAM.gov: awarded federal contracts to trades/HVAC firms = scaling signal
+// SAM.gov Entity Management — federally registered MI trade contractors (pre-qualified, real businesses)
+async function scanSAMGovEntities(): Promise<Posting[]> {
+  if (!SAM_GOV_API_KEY) return [];
+  const results: Posting[] = [];
+  // NAICS: 238110=poured concrete, 238210=electrical, 238220=plumbing/HVAC, 238310=drywall, 238910=roofing
+  const naicsCodes = [
+    { code: "238220", role: "hvac_tech" },
+    { code: "238210", role: "electrician" },
+    { code: "238110", role: "hvac_tech" },  // concrete = foundation work
+    { code: "238910", role: "hvac_tech" },  // roofing
+  ];
+  for (const { code, role } of naicsCodes) {
+    try {
+      const url = `https://api.sam.gov/entity-information/v3/entities?api_key=${SAM_GOV_API_KEY}&addressCountryCode=USA&stateOrProvinceCode=MI&primaryNaics=${code}&entityEFTIndicator=Y&registrationStatus=A&purposeOfRegistrationCode=Z2&limit=25`;
+      const res = await fetch(url, { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(12_000) });
+      if (!res.ok) continue;
+      const data = await res.json();
+      for (const entity of (data?.entityData || [])) {
+        const name: string = entity?.entityRegistration?.legalBusinessName || "";
+        const city: string = entity?.coreData?.physicalAddress?.city || "";
+        const zip: string = entity?.coreData?.physicalAddress?.zipCode || "";
+        if (!name) continue;
+        results.push({
+          company_name: name,
+          city: city ? `${city}, MI${zip ? " " + zip : ""}` : "Michigan",
+          role,
+          days_posted: null,
+          source_url: `https://sam.gov/entity/${entity?.entityRegistration?.ueiSAM}/general-information`,
+          source_label: `SAM.gov Entity (NAICS ${code}) — federally registered MI contractor`,
+          is_boiler: false,
+        });
+      }
+    } catch (e) {
+      console.error("[hunter] sam.gov entities:", e instanceof Error ? e.message : e);
+    }
+  }
+  return results;
+}
+
 async function scanSAMGovContracts(): Promise<Posting[]> {
   if (!SAM_GOV_API_KEY) return [];
   const results: Posting[] = [];
@@ -983,11 +1022,12 @@ serve(async (req) => {
     // Supplemental signals + NOAA weather bonus — all run in parallel
     // Includes the new signal-waterfall (DOL WARN, OSHA, FMCSA, DOT prequal, SAM expanded)
     const { fetchHireSignals } = await import("../_shared/signal-waterfall.ts");
-    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, councilSurveyedSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, demoPipelineSignals, billionDollarSignals, detroitBizLicenseSignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
+    const [githubSignals, edgarSignals, usptoSignals, samSignals, samEntitySignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, councilSurveyedSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, demoPipelineSignals, billionDollarSignals, detroitBizLicenseSignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
       scanGitHubSignals(),
       scanEDGARFundings(),
       scanUSPTOPatents(),
       scanSAMGovContracts(),
+      scanSAMGovEntities(),
       scanBLSEmployment(),
       scanEventbriteSignals(),
       scanUSASpending(),
@@ -1011,7 +1051,7 @@ serve(async (req) => {
       getWeatherHiringBonus(),
       fetchHireSignals(sb, { state: "MI", naics: "238220" }).catch(() => []),
     ]);
-    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...councilSurveyedSignals, ...detroitCityContractSignals, ...multifamilySignals, ...demoContractorSignals, ...demoPipelineSignals, ...billionDollarSignals, ...detroitBizLicenseSignals];
+    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...samEntitySignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...councilSurveyedSignals, ...detroitCityContractSignals, ...multifamilySignals, ...demoContractorSignals, ...demoPipelineSignals, ...billionDollarSignals, ...detroitBizLicenseSignals];
     all.push(...supplemental);
     scanned += supplemental.length;
     // Log waterfall signal volume to heartbeat metadata (don't insert as job postings — different shape)
@@ -1108,6 +1148,7 @@ serve(async (req) => {
           detroit_demo_contractors: demoContractorSignals.length,
           detroit_billion_dollar: billionDollarSignals.length,
           detroit_biz_license_expiry: detroitBizLicenseSignals.length,
+          sam_entities: samEntitySignals.length,
           hire_waterfall: waterfallCount,
         },
         duration_ms: Date.now() - startedAt,
