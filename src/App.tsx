@@ -84,6 +84,7 @@ const AdminEdgeHealth = lazyRetry(() => import("./pages/admin/AdminEdgeHealth"))
 const AdminSecretsHealth = lazyRetry(() => import("./pages/admin/AdminSecretsHealth"));
 const AdminMarketTargeting = lazyRetry(() => import("./pages/admin/AdminMarketTargeting"));
 const AdminProspectorTargetsAudit = lazyRetry(() => import("./pages/admin/AdminProspectorTargetsAudit"));
+const AdminTechAlertProspects = lazyRetry(() => import("./pages/admin/AdminTechAlertProspects"));
 const AdminCheckoutEvents = lazyRetry(() => import("./pages/admin/AdminCheckoutEvents"));
 const DwaAdminV4 = lazyRetry(() => import("./pages/DwaAdminV4"));
 const DwaAdminStripeReconcile = lazyRetry(() => import("./pages/DwaAdminStripeReconcile"));
