@@ -440,5 +440,99 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[demo_junk] commercial demo:", e); }
 
+  // 17. DLBA Side Lots For Sale — city sells cleared lots; buyers need debris removal + site prep
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Side_Lots_For_Sale/FeatureServer/0/query?where=Status+%3D+%27For+Sale%27&outFields=Address,Status,Knock_Down_Date,Demo_RFP__RFP_Group,latitude,longitude&resultRecordCount=40&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.Address ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length) continue; // side lots have no ZIP in this dataset
+        const knockDate = a.Knock_Down_Date ? new Date(a.Knock_Down_Date).toISOString().slice(0, 10) : null;
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "demo_permit",
+          signal_detail: `DLBA side lot for sale: ${addr} — cleared lot available for purchase. Buyers need debris removal, site grading, and final prep before building or landscaping${knockDate ? `. Demo completed: ${knockDate}` : ""}`,
+          signal_date: knockDate ?? new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.demo_permit - 2,
+          source_method: "dlba_side_lots",
+          suggested_opener: "You're looking at a DLBA side lot — after purchase, most buyers need a final debris sweep, grade leveling, and fence removal before they can use the space. We can usually knock that out in half a day.",
+          best_call_window: "Within 30 days of lot sale closing",
+          estimated_value: 1200,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] side lots:", e); }
+
+  // 18. BSEED Demolition Inspections — passed inspection = structure is down, lot needs immediate cleanup
+  try {
+    const since = new Date(Date.now() - 90 * 86400_000).toISOString().split("T")[0];
+    const where = encodeURIComponent(`inspection_result LIKE '%PASS%' OR inspection_result LIKE '%pass%' OR inspection_result LIKE '%Approved%'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_demolition_inspections/FeatureServer/0/query?where=${where}&outFields=address,inspection_date,inspection_type,inspection_result,zip_code,neighborhood&resultRecordCount=40&orderByFields=OBJECTID+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = String(a.zip_code ?? "").split(".")[0];
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const inspDate = a.inspection_date ? new Date(a.inspection_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0];
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "demo_permit",
+          signal_detail: `BSEED demolition inspection passed: ${addr} — ${a.inspection_type ?? "final"} inspection approved. Structure is confirmed down. Lot cleanup, debris removal, and grading typically needed within 2 weeks of final inspection`,
+          signal_date: inspDate,
+          score: BASE_SCORES.demo_permit,
+          source_method: "bseed_demo_inspection",
+          suggested_opener: "The demolition inspection at this address just passed — we specialize in immediate post-demo cleanouts. Structure down means the owner needs debris hauled, foundation capped, and the lot graded before it can be listed or reused.",
+          best_call_window: "Within 2 weeks of inspection pass date",
+          estimated_value: 3500,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] demo inspections:", e); }
+
+  // 19. DLBA Vacant Land Program Sales — recently sold vacant land = new owner needs site prep
+  try {
+    const since90 = new Date(Date.now() - 90 * 86400_000).toISOString().split("T")[0];
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/dlba_vacant_land_program_sales/FeatureServer/0/query?where=sale_closed_date+%3E%3D+%27${since90}%27&outFields=address,sale_closed_date,amt_final_sale_price,sale_program,neighborhood,zip_code,latitude,longitude&resultRecordCount=40&orderByFields=OBJECTID+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "demo_permit",
+          signal_detail: `DLBA vacant land sale: ${addr} — sold ${a.sale_closed_date ? a.sale_closed_date.slice(0, 10) : "recently"} for $${a.amt_final_sale_price ?? "N/A"} (${a.sale_program ?? "land program"}). New land owners typically need debris clearing, grading, and fence removal before any build or garden project`,
+          signal_date: a.sale_closed_date ?? new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.demo_permit - 2,
+          source_method: "dlba_vacant_land_sales",
+          suggested_opener: "You just purchased a DLBA vacant lot — most of these lots have leftover foundation debris, overgrowth, and fence remnants that need to come out before you can break ground. We do same-week site clearances.",
+          best_call_window: "Within 60 days of lot sale closing",
+          estimated_value: 1500,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] vacant land sales:", e); }
+
   return signals;
 }

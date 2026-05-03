@@ -91,6 +91,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ADMIN_PHONE = Deno.env.get("ADMIN_PHONE_NUMBER") || "+13138064952";
 const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "";
+const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") ?? "";
 
 const ALL_VERTICALS = [
   "roofing", "hvac", "plumbing", "electrical", "pest_control", "gutters",
@@ -238,6 +239,9 @@ async function upsertWithDedup(
     estimated_value: signal.estimated_value,
     source_method: signal.source_method,
     raw_source_data: signal.raw_source_data,
+    street_view_url: validation.lat != null && validation.lon != null && GOOGLE_MAPS_API_KEY
+      ? `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${validation.lat},${validation.lon}&fov=80&source=outdoor&key=${GOOGLE_MAPS_API_KEY}`
+      : null,
     status: "new",
     signal_count: 1,
     last_signal_at: new Date().toISOString(),

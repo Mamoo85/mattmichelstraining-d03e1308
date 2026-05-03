@@ -669,6 +669,69 @@ async function scanDetroitOpenTradeBiz(): Promise<Posting[]> {
   return results;
 }
 
+// Detroit city procurement contracts — active MI contractors doing city work = growth signal
+async function scanDetroitCityContracts(): Promise<Posting[]> {
+  const results: Posting[] = [];
+  try {
+    const keywords = ["construction", "roofing", "HVAC", "demolition", "plumbing", "electrical", "building", "renovation", "restoration", "mechanical", "contractor"];
+    const where = encodeURIComponent(
+      `(${keywords.map((k) => `description LIKE '%${k}%'`).join(" OR ")}) AND status = 'Open' AND state = 'MI'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/OCP_Procurement_Contracts/FeatureServer/0/query?where=${where}&outFields=supplier,supp_addr,city,state,amount,description,contract_link&resultRecordCount=50&orderByFields=OBJECTID+DESC&f=json`,
+      { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) return results;
+    const d = await res.json();
+    for (const feat of (d?.features ?? [])) {
+      const a = feat?.attributes ?? {};
+      const name: string = a.supplier || "";
+      if (!name) continue;
+      const city = [a.city, a.state].filter(Boolean).join(", ") || "Detroit, MI";
+      results.push({
+        company_name: name,
+        city,
+        role: "hvac_tech",
+        days_posted: null,
+        source_url: a.contract_link || "https://detroitmi.gov/contracts",
+        source_label: "Detroit City Contract (Active)",
+        is_boiler: false,
+      });
+    }
+  } catch (e) { console.error("[hunter] Detroit city contracts:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
+// Multifamily housing construction sites — active developers building in Detroit = they hire subs
+async function scanMultifamilyConstruction(): Promise<Posting[]> {
+  const results: Posting[] = [];
+  try {
+    const where = encodeURIComponent(`construction_status = 'Under Construction'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/multifamily_housing_construction_sites/FeatureServer/0/query?where=${where}&outFields=owner_developer_name,site_name,address,zip_code,neighborhood,total_units,construction_start_year&resultRecordCount=40&orderByFields=OBJECTID+DESC&f=json`,
+      { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) return results;
+    const d = await res.json();
+    for (const feat of (d?.features ?? [])) {
+      const a = feat?.attributes ?? {};
+      const name: string = a.owner_developer_name || a.site_name || "";
+      if (!name) continue;
+      const city = a.zip_code ? `Detroit MI ${a.zip_code}` : a.neighborhood ? `Detroit (${a.neighborhood})` : "Detroit, MI";
+      results.push({
+        company_name: name,
+        city,
+        role: "hvac_tech",
+        days_posted: null,
+        source_url: "https://detroitmi.gov/housing",
+        source_label: `Detroit Multifamily Construction (${a.total_units ?? "?"} units)`,
+        is_boiler: false,
+      });
+    }
+  } catch (e) { console.error("[hunter] multifamily construction:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
 function scorePosting(p: Posting, openRolesCount: number, repostCount: number, weatherBonus = 0): number {
   let score = 0;
   if ((p.days_posted ?? 0) > 14) score += 3;
@@ -700,7 +763,7 @@ serve(async (req) => {
     // Supplemental signals + NOAA weather bonus — all run in parallel
     // Includes the new signal-waterfall (DOL WARN, OSHA, FMCSA, DOT prequal, SAM expanded)
     const { fetchHireSignals } = await import("../_shared/signal-waterfall.ts");
-    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
+    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, detroitCityContractSignals, multifamilySignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
       scanGitHubSignals(),
       scanEDGARFundings(),
       scanUSPTOPatents(),
@@ -717,10 +780,12 @@ serve(async (req) => {
       scanChapter7Liquidations(),
       scanDetroitCertifiedContractors(),
       scanDetroitOpenTradeBiz(),
+      scanDetroitCityContracts(),
+      scanMultifamilyConstruction(),
       getWeatherHiringBonus(),
       fetchHireSignals(sb, { state: "MI", naics: "238220" }).catch(() => []),
     ]);
-    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals];
+    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...detroitCityContractSignals, ...multifamilySignals];
     all.push(...supplemental);
     scanned += supplemental.length;
     // Log waterfall signal volume to heartbeat metadata (don't insert as job postings — different shape)
@@ -809,6 +874,8 @@ serve(async (req) => {
           ch7_liquidations: ch7Signals.length,
           detroit_certified: detroitCertifiedSignals.length,
           detroit_open_biz: detroitOpenBizSignals.length,
+          detroit_city_contracts: detroitCityContractSignals.length,
+          detroit_multifamily: multifamilySignals.length,
           hire_waterfall: waterfallCount,
         },
         duration_ms: Date.now() - startedAt,
