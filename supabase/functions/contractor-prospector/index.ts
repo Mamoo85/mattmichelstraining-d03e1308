@@ -601,23 +601,10 @@ BODY:
 
 function buildCareAlertEmailHtml(body: string): string {
   const htmlBody = body.replace(/\n/g, "<br>");
-  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0a1628;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#0f172a;border:1px solid #22c55e30;border-radius:8px;overflow:hidden;">
-<tr><td style="background:#22c55e;padding:3px 0;"></td></tr>
-<tr><td style="padding:8px 24px 4px;background:#0a1628;">
-  <span style="font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#22c55e;">🏥 CareAlert · Detroit Web Agency</span>
-</td></tr>
-<tr><td style="padding:16px 24px 24px;color:#e2e8f0;font-size:15px;line-height:1.8;background:#0f172a;">
-${htmlBody}
-<div style="margin-top:20px;padding-top:16px;border-top:1px solid #1e3a5f;">
-<span style="font-size:13px;color:#94a3b8;"><strong style="color:#e2e8f0;">Matt Michels</strong> · Detroit Web Agency · <a href="tel:+13139921219" style="color:#22c55e;text-decoration:none;">(313) 992-1219</a> · <a href="https://detroitwebagent.com" style="color:#22c55e;text-decoration:none;">detroitwebagent.com</a></span>
-</div>
-</td></tr>
-<tr><td style="background:#0a1628;padding:12px 24px;border-top:1px solid #1e3a5f;font-size:11px;color:#475569;">
-Detroit Web Agency · Grosse Pointe, MI
-</td></tr>
-</table></td></tr></table></body></html>`;
+  return wrapDwaShell(htmlBody, {
+    product: "CareAlert", // hiring → 30-day trial
+    ctaUrl: "https://detroitwebagent.com/hire-alert?utm_source=cold&utm_campaign=carealert",
+  });
 }
 
 // ── Check how many emails sent today from this domain ──
