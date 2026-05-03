@@ -118,6 +118,23 @@ serve(async (req) => {
     const contractorSupply = pools.find(p => p.name === "contractor")?.available || 0;
     const techalertSupply = pools.find(p => p.name === "techalert")?.available || 0;
     const totalSupply = outreachSupply + contractorSupply + techalertSupply;
+    const supplyShort = totalSupply < gap;
+
+    // ── MRR-vs-spend gate: force frugal ON if cold-email MRR < 30d spend ─────
+    const { data: econ } = await sb
+      .from("cold_email_economics_today")
+      .select("spend_30d_cents, mrr_attributed_cents, mrr_covers_spend")
+      .maybeSingle();
+    const mrrCovers = !!econ?.mrr_covers_spend;
+    let frugal = await isFrugalMode(sb);
+    if (!mrrCovers && !frugal) {
+      // Force ON
+      await sb.from("enrichment_walker_config").upsert(
+        { key: "frugal_mode", value_text: "true" },
+        { onConflict: "key" },
+      );
+      frugal = true;
+    }
 
     if (gap === 0 && !force) {
       return new Response(JSON.stringify({
