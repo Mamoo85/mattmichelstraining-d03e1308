@@ -45,6 +45,9 @@ export default function AdminColdEmailAudit() {
   const [planMeta, setPlanMeta] = useState<{ sentToday: number; gap: number; target: number } | null>(null);
   const [target, setTarget] = useState(FLOOR);
   const [poolThreshold, setPoolThreshold] = useState(DEFAULT_POOL_THRESHOLD);
+  const [kpis, setKpis] = useState<KpiRow[]>([]);
+  const [budgets, setBudgets] = useState<BudgetRow[]>([]);
+  const [breaker, setBreaker] = useState<BreakerRow | null>(null);
 
   const loadVolume = async () => {
     const since = new Date(Date.now() - 14 * 86400_000).toISOString();
