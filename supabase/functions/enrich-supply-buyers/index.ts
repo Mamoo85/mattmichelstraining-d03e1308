@@ -10,6 +10,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { cleanWebsite } from "../_shared/enrichment-pipeline.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -130,7 +131,7 @@ serve(async (req) => {
 
         const phone = toE164(det.formatted_phone_number);
         const addr = pickAddr(det.address_components || []);
-        const website = det.website || null;
+        const website = cleanWebsite(det.website || null);
         const fax = website ? await scrapeFax(website) : null;
 
         const hasCore = !!phone && !!addr.line1 && !!addr.zip;

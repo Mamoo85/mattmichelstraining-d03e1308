@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { cleanWebsite } from "../_shared/enrichment-pipeline.ts";
 
 const DATAFORSEO_LOGIN = Deno.env.get("DATAFORSEO_LOGIN") || "";
 const DATAFORSEO_PASSWORD = Deno.env.get("DATAFORSEO_PASSWORD") || "";
@@ -96,7 +97,7 @@ Use null for missing fields. Return up to ${limit} businesses.`,
     reviews: item.reviews ?? 0,
     address: item.address || "",
     phone: item.phone || null,
-    website: item.website || item.url || null,
+    website: cleanWebsite(item.website || item.url),
     email: item.email || null,
     category: item.category || industry,
     place_id: null,
@@ -322,7 +323,7 @@ serve(async (req) => {
               reviews: item.rating?.votes_count ?? 0,
               address: item.address || item.address_info?.address || "",
               phone: item.phone || null,
-              website: item.url || item.domain || null,
+              website: cleanWebsite(item.url || item.domain),
               email: null, // Will be enriched later
               category: item.category || "",
               place_id: item.place_id || null,

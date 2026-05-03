@@ -10,6 +10,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { runEmailWaterfall, WaterfallCounters } from "../_shared/email-waterfall.ts";
+import { isAggregatorDomain, isEnterprise, googlePlacesWebsite, cleanWebsite } from "../_shared/enrichment-pipeline.ts";
+import { apolloPeopleSearch } from "../_shared/apollo.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -156,19 +158,15 @@ async function stageApolloPeople(p: Prospect): Promise<{ patch: Prospect; trace:
   if (!APOLLO_API_KEY) { trace.error = "no_key"; trace.duration_ms = Date.now() - t0; return { patch, trace }; }
   const domain = extractDomain(p.website);
   if (!domain) { trace.error = "no_domain"; trace.duration_ms = Date.now() - t0; return { patch, trace }; }
+  if (isAggregatorDomain(domain)) { trace.error = "aggregator_domain"; trace.duration_ms = Date.now() - t0; return { patch, trace }; }
+  if (isEnterprise(p.business_name || "", null)) { trace.error = "enterprise_skip"; trace.duration_ms = Date.now() - t0; return { patch, trace }; }
   try {
-    const res = await safeFetch("https://api.apollo.io/api/v1/mixed_people/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Api-Key": APOLLO_API_KEY },
-      body: JSON.stringify({
-        q_organization_domains: domain,
-        person_titles: ["owner", "president", "ceo", "operations manager", "general manager"],
-        page: 1,
-        per_page: 3,
-      }),
+    const people = await apolloPeopleSearch({
+      domain,
+      titles: ["owner", "president", "ceo", "operations manager", "general manager"],
+      perPage: 3,
     });
-    const j = await res.json();
-    const person = (j?.people || [])[0];
+    const person = people?.[0];
     if (person) {
       const name = `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim();
       if (name && !p.contact_name) {
@@ -309,7 +307,10 @@ async function stageGooglePlaces(p: Prospect): Promise<{ patch: Prospect; trace:
     if (r) {
       if (typeof r.rating === "number") { patch.google_rating = r.rating; trace.filled.push("google_rating"); }
       if (typeof r.user_ratings_total === "number") { patch.review_count = r.user_ratings_total; trace.filled.push("review_count"); }
-      if (r.website && !p.website) { patch.website = r.website; trace.filled.push("website"); }
+      if (r.website && !p.website) {
+        const clean = cleanWebsite(r.website);
+        if (clean) { patch.website = clean; trace.filled.push("website"); }
+      }
       if (r.formatted_phone_number && !p.phone) { patch.phone = r.formatted_phone_number; trace.filled.push("phone"); }
     }
     trace.ok = true;
