@@ -582,5 +582,33 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[foundation] repetitive loss:", e); }
 
+  // Detroit Demo Pipeline — demolition vibration damages neighboring foundations
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Demo_Pipeline/FeatureServer/0/query?where=commercial_building%3D'No'&outFields=address,neighborhood,council_district&resultRecordCount=50&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        if (!addr) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "heavy_rain_foundation",
+          signal_detail: `Demo Pipeline: ${addr} (${a.neighborhood ?? "Detroit"}) — scheduled for city demolition. Mechanical demolition equipment causes ground vibration that can widen existing foundation cracks in neighboring homes`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: 6,
+          source_method: "detroit_demo_pipeline",
+          suggested_opener: `A house near you is on the city's demolition list — the heavy equipment used in teardown creates ground vibration that can widen existing cracks in nearby foundations. A quick inspection now costs nothing; missing it can cost $15,000 to fix later.`,
+          best_call_window: "Before demolition equipment arrives on block",
+          estimated_value: 8000,
+          raw_source_data: { addr, neighborhood: a.neighborhood, district: a.council_district },
+        });
+      }
+    }
+  } catch (e) { console.error("[foundation] demo pipeline:", e); }
+
   return signals;
 }

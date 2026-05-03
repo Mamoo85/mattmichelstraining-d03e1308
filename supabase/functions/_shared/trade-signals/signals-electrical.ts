@@ -536,5 +536,39 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[electrical] plan reviews:", e); }
 
+  // Detroit Assessor property sales — new homeowners need electrical assessment
+  try {
+    const since90 = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(
+      `sale_date >= '${since90}' AND property_class_description = 'RESIDENTIAL' AND amt_sale_price > 5000`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/assessor_property_sales_view/FeatureServer/0/query?where=${where}&outFields=address,zip_code,sale_date,amt_sale_price,grantee&resultRecordCount=30&orderByFields=sale_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "panel_upgrade_permit",
+          signal_detail: `Detroit property sale: ${a.grantee ?? "New owner"} purchased for $${(a.amt_sale_price || 0).toLocaleString()} — new owners in Detroit's pre-1970 housing stock frequently inherit Federal Pacific or Zinsco panels and aluminum wiring`,
+          signal_date: a.sale_date ? a.sale_date.slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 7,
+          source_method: "detroit_assessor_sales",
+          suggested_opener: `You recently purchased ${addr} — Detroit homes built before 1980 commonly have outdated electrical panels and aluminum wiring that fail modern code and are a fire risk. We offer a free panel inspection for new homeowners.`,
+          best_call_window: "Within 90 days of purchase",
+          estimated_value: 4500,
+          raw_source_data: { addr, zip, sale_date: a.sale_date, price: a.amt_sale_price, buyer: a.grantee },
+        });
+      }
+    }
+  } catch (e) { console.error("[electrical] assessor sales:", e); }
+
   return signals;
 }
