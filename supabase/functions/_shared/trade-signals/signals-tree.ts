@@ -368,6 +368,38 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[tree] Detroit assessment roll:", e); }
 
+  // BSEED Presale Inspections — FAIL results (overgrown trees / root damage to foundation cited)
+  try {
+    const since = new Date(Date.now() - 60 * 86400_000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`(inspection_result = 'FAIL' OR inspection_result = '***Failed Insp') AND inspection_date >= '${since}'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_presale_inspections/FeatureServer/0/query?where=${where}&outFields=address,zip_code,inspection_date&resultRecordCount=20&orderByFields=inspection_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "tree_removal_permit",
+          signal_detail: `Detroit presale inspection FAILED: ${addr} — tree roots, overhanging limbs touching rooflines, and overgrown vegetation over structures are commonly cited in Detroit presale inspection`,
+          signal_date: a.inspection_date ? String(a.inspection_date).slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 8,
+          source_method: "bseed_presale_inspection",
+          suggested_opener: `Your property at ${addr} failed its presale inspection — overhanging branches and root damage near the foundation are common citations. We can remove problem trees fast and provide a clearance letter for your re-inspection.`,
+          best_call_window: "Within 14 days — seller has closing deadline",
+          estimated_value: 2500,
+          raw_source_data: { addr, zip, inspection_date: a.inspection_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[tree] presale inspections:", e); }
+
   // Day-2 SPC Convective Outlook — 48-hour pre-storm tree limb/safety window
   try {
     const res = await fetch("https://www.spc.noaa.gov/products/outlook/day2otlk_cat.nolyr.geojson", {

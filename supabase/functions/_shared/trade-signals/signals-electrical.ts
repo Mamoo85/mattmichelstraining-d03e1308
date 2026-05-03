@@ -284,7 +284,39 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[electrical] assessment roll:", e); }
 
-  // 7. Detroit commercial building compliance failures — electrical code violations
+  // 7. BSEED Presale Inspections — FAIL results (electrical deficiencies commonly cited)
+  try {
+    const since = new Date(Date.now() - 60 * 86400_000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`(inspection_result = 'FAIL' OR inspection_result = '***Failed Insp') AND inspection_date >= '${since}'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_presale_inspections/FeatureServer/0/query?where=${where}&outFields=address,zip_code,inspection_date&resultRecordCount=25&orderByFields=inspection_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "renovation_electrical",
+          signal_detail: `Detroit presale inspection FAILED: ${addr} — electrical panel capacity and wiring safety are standard inspection items. Knob-and-tube, 60-amp panels, and ungrounded outlets commonly fail`,
+          signal_date: a.inspection_date ? String(a.inspection_date).slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 9,
+          source_method: "bseed_presale_inspection",
+          suggested_opener: `Your property at ${addr} failed its presale inspection — electrical deficiencies are one of the most common reasons older Detroit homes fail. We can upgrade the panel and rewire key circuits fast, with a re-inspection scheduled within days.`,
+          best_call_window: "Within 14 days — seller has closing deadline",
+          estimated_value: 5000,
+          raw_source_data: { addr, zip, inspection_date: a.inspection_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[electrical] presale inspections:", e); }
+
+  // 8. Detroit commercial building compliance failures — electrical code violations
   try {
     const complianceWhere = encodeURIComponent(`commercial_compliance_indicator = 'YELLOW' OR commercial_compliance_indicator = 'RED'`);
     const res = await fetch(

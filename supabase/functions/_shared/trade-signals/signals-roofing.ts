@@ -640,7 +640,39 @@ export async function scanSignals(
     }
   } catch (e) { console.error("[roofing] SPC day-2:", e); }
 
-  // 18. Detroit Historic District Violations — open cases with roof/gutter/chimney flags
+  // 18. BSEED Presale Inspections — FAIL results (seller must repair before closing)
+  try {
+    const since = new Date(Date.now() - 60 * 86400_000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`(inspection_result = 'FAIL' OR inspection_result = '***Failed Insp') AND inspection_date >= '${since}'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_presale_inspections/FeatureServer/0/query?where=${where}&outFields=address,zip_code,inspection_date,inspection_result&resultRecordCount=30&orderByFields=inspection_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "roof_permit_upsell",
+          signal_detail: `Detroit presale inspection FAILED: ${addr} (${a.inspection_date ?? "recent"}) — property failed city inspection before sale. Seller must remediate to close; roof condition is commonly cited`,
+          signal_date: a.inspection_date ? String(a.inspection_date).slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 9,
+          source_method: "bseed_presale_inspection",
+          suggested_opener: `Your property at ${addr} failed its presale inspection — roofing deficiencies are one of the most common reasons Detroit homes fail. We can assess and repair fast so you don't lose the buyer. Free inspection this week.`,
+          best_call_window: "Within 14 days of fail — seller has closing deadline",
+          estimated_value: 12000,
+          raw_source_data: { addr, zip, inspection_date: a.inspection_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] presale inspections:", e); }
+
+  // 19. Detroit Historic District Violations — open cases with roof/gutter/chimney flags
   try {
     const where = encodeURIComponent(`case_status = 'Open' AND has_roof_gutter_chimney_violati = 'True'`);
     const res = await fetch(

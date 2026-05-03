@@ -757,6 +757,38 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] fire inspections:", e); }
 
+  // BSEED Presale Inspections — FAIL results (water damage and mold cited)
+  try {
+    const since = new Date(Date.now() - 60 * 86400_000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`(inspection_result = 'FAIL' OR inspection_result = '***Failed Insp') AND inspection_date >= '${since}'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_presale_inspections/FeatureServer/0/query?where=${where}&outFields=address,zip_code,inspection_date&resultRecordCount=25&orderByFields=inspection_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "water_damage_permit",
+          signal_detail: `Detroit presale inspection FAILED: ${addr} — water intrusion, active leaks, and visible mold are frequently cited items in presale inspection. Seller must remediate before closing`,
+          signal_date: a.inspection_date ? String(a.inspection_date).slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 9,
+          source_method: "bseed_presale_inspection",
+          suggested_opener: `Your property at ${addr} failed its presale inspection — water damage and moisture intrusion are among the most common reasons. We specialize in fast water damage remediation and mold treatment, and we document everything so you can pass re-inspection and close on time.`,
+          best_call_window: "Within 14 days — seller has closing deadline",
+          estimated_value: 12000,
+          raw_source_data: { addr, zip, inspection_date: a.inspection_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] presale inspections:", e); }
+
   // Detroit Historic District Violations — porch/deck and structural violations (open cases)
   try {
     const where = encodeURIComponent(`case_status = 'Open' AND (has_porch_deck_violati = 'True' OR has_addition_violation = 'True' OR has_construction_new_violation = 'True')`);

@@ -412,7 +412,39 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[hvac] Detroit assessment roll:", e); }
 
-  // 13. Detroit commercial building compliance failures (YELLOW/RED) — commercial HVAC demand
+  // 13. BSEED Presale Inspections — FAIL results (HVAC is frequently cited)
+  try {
+    const since = new Date(Date.now() - 60 * 86400_000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(`(inspection_result = 'FAIL' OR inspection_result = '***Failed Insp') AND inspection_date >= '${since}'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_presale_inspections/FeatureServer/0/query?where=${where}&outFields=address,zip_code,inspection_date&resultRecordCount=25&orderByFields=inspection_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "aging_system_proxy",
+          signal_detail: `Detroit presale inspection FAILED: ${addr} — furnace/HVAC performance and carbon monoxide testing are standard presale inspection items. Seller must repair before closing`,
+          signal_date: a.inspection_date ? String(a.inspection_date).slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 9,
+          source_method: "bseed_presale_inspection",
+          suggested_opener: `Your property at ${addr} failed its presale inspection — HVAC systems are inspected for safety and operation. We can assess and repair fast so you can get your re-inspection scheduled before losing the buyer.`,
+          best_call_window: "Within 14 days — seller has closing deadline",
+          estimated_value: 7000,
+          raw_source_data: { addr, zip, inspection_date: a.inspection_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] presale inspections:", e); }
+
+  // 14. Detroit commercial building compliance failures (YELLOW/RED) — commercial HVAC demand
   try {
     const complianceWhere = encodeURIComponent(`commercial_compliance_indicator = 'YELLOW' OR commercial_compliance_indicator = 'RED'`);
     const res = await fetch(
