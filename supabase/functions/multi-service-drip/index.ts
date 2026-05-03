@@ -354,41 +354,23 @@ serve(async (req) => {
           `Last note from me, ${businessName}`,
         ];
         const subject = subjectLines[stepIndex];
-        const html = buildMultiServiceEmailHtml(subject, emailBody);
+        const ctaUrl = demo?.url || "https://detroitwebagent.com/get-started";
 
-        const resendRes = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${RESEND_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: "Matt Michels <matt@mattmichelstraining.com>",
-            reply_to: "matt@mattmichelstraining.com",
-            to: [email], bcc: ["matthewmichels4@gmail.com"],
-            subject,
-            html,
-          }),
-        });
+        const r = await dwaColdEmail({
+          to: email,
+          subject,
+          bodyHtml: emailBody.replace(/\n/g, "<br>"),
+          product: "Detroit Web Agency",
+          ctaUrl,
+          templateName: DRIP_TEMPLATES[stepIndex],
+        }, serviceClient);
 
-        if (!resendRes.ok) {
-          const errText = await resendRes.text();
-          log("Resend error", { leadId, email, error: errText });
+        if (!r.ok) {
+          log("Send error", { leadId, email, error: r.error });
           continue;
         }
 
-        const resendJson = await resendRes.json();
-        const messageId: string = resendJson?.id || `multi_${leadId}_${stepIndex}`;
-
-        await serviceClient
-          .from("email_send_log" as any)
-          .insert({
-            recipient_email: email,
-            template_name: DRIP_TEMPLATES[stepIndex],
-            status: "sent",
-            message_id: messageId,
-            metadata: { lead_id: leadId, step: stepIndex + 1, industry, city, services_pitched: services.map(s => s.name) },
-          });
+        const messageId = r.messageId || `multi_${leadId}_${stepIndex}`;
 
         sent++;
         log("Email sent", { leadId, email, businessName, step: stepIndex + 1, industry });
