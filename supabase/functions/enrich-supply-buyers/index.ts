@@ -131,7 +131,7 @@ serve(async (req) => {
 
         const phone = toE164(det.formatted_phone_number);
         const addr = pickAddr(det.address_components || []);
-        const website = det.website || null;
+        const website = cleanWebsite(det.website || null);
         const fax = website ? await scrapeFax(website) : null;
 
         const hasCore = !!phone && !!addr.line1 && !!addr.zip;
