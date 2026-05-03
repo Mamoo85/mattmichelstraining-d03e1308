@@ -97,6 +97,7 @@ serve(async (req) => {
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     const body = await req.json().catch(() => ({}));
     const force = body.force === true;
+    const dryRun = body.dry_run === true || body.preview === true;
     const target = Number(body.target) || FLOOR;
 
     const sentToday = await countSentToday(sb);
@@ -117,6 +118,22 @@ serve(async (req) => {
 
     // Pick non-empty pools to invoke. Each sender enforces its own per-run cap.
     const chosen = pools.filter(p => p.available > 0);
+
+    // Build allocation plan: weight by available supply, capped by remaining gap
+    const totalAvail = chosen.reduce((s, p) => s + p.available, 0) || 1;
+    const plan = chosen.map(p => ({
+      fn: p.fn,
+      pool: p.name,
+      available: p.available,
+      planned_send: Math.min(p.available, Math.ceil((p.available / totalAvail) * gap)),
+    }));
+
+    if (dryRun) {
+      return new Response(JSON.stringify({
+        ok: true, dry_run: true, sentToday, gap, target, totalSupply,
+        supplyShort: totalSupply < gap, pools, plan,
+      }), { headers: { ...cors, "Content-Type": "application/json" } });
+    }
 
     const results = await Promise.all(chosen.map(async (p) => {
       try {
@@ -202,7 +219,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       ok: true, sentToday, gap, target, totalSupply, supplyShort,
-      budgetScaled, pools, invoked: results,
+      budgetScaled, pools, plan, invoked: results,
     }), { headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
