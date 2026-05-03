@@ -1,82 +1,94 @@
-# Game Plan: Guarantee 150 Cold Emails/Day With Auto-Failover
+## Plan: Enrichment KPIs, Per-Provider Budgets, Safety Circuit Breaker
 
-## The Diagnosis
+Three additions on top of the existing `cold-email-rebalancer` + `outreach-leads-enrich` + `enrichment_walker_config` system.
 
-Current pool (live DB pull just now):
-- **outreach_leads**: 2,272 total · **194 ready-to-send** (have email, never contacted) · **1,376 missing email** (enrichment-blocked)
-- **contractor_outreach_prospects**: 623 total · **118 ready-to-send** · **505 missing email**
-- **hire_alert_candidates (TechAlert)**: **0 enriched-and-unsent** ← TechAlert is dry, hunter cron is barely producing
-- **Yesterday's send mix** (2-day window, 104 sends): multi_service 58, web_drip 18, contractor 14, techalert 9, generic cold 5 → all senders work, but each one runs once, hits its own pool, and stops. Nothing rebalances when one pool empties.
+---
 
-So the 78/150 shortfall isn't a sender bug — it's three things:
-1. **Enrichment throughput < scanner throughput** (1,881 leads sitting with no email)
-2. **No failover** between senders when one pool dries
-3. **Scanner volume per day is too low** for some products (TechAlert produced 0 enriched leads)
+### 1. Automatic KPI Tracking + Throughput Alerts
 
-## The Fix — Three-Layer Waterfall
+**New table** `enrichment_run_kpis` (migration):
+- `id`, `run_at`, `function_name` (`outreach-leads-enrich` | `enrichment-matrix-walker`), `triggered_by` (cron|rebalancer|manual|drain)
+- `leads_attempted`, `leads_enriched`, `leads_failed`, `leads_skipped` (suppressed/dup/no-domain)
+- `provider_breakdown` jsonb — `{apollo:{ok,fail,cost_cents}, hunter:{...}, firecrawl:{...}, places:{...}}`
+- `total_duration_ms`, `avg_ms_per_lead`, `cost_cents_total`
+- `target_gap` (snapshot of remaining sends needed at run start), `throughput_per_hour`, `meets_target` boolean
 
-### Layer 1 — Pump up lead SUPPLY (scanners + enrichment)
+**Wire-up**: `outreach-leads-enrich` already loops batches — wrap each run in a KPI accumulator, insert one row at end. Same for the walker. Use existing `lead_enrichment_audit` rows as source of truth for per-provider counts (aggregate by `run_id` we tag at start).
 
-**Scanner cadence increases (pg_cron edits):**
-- `techalert-prospect-hunter` 1×/day → **3×/day** (8a, 1p, 6p ET) — adds GitHub/EDGAR/USPTO/SAM/BLS/Eventbrite/USAspending/LinkedIn signals each pass
-- `contractor-prospector` 1×/day → **2×/day** (10a, 4p ET)
-- `prospect-local-businesses` 1×/day → **2×/day** (10a, 3p ET)
-- `enrichment-matrix-walker` already runs every 30m — **raise daily budget +50%** via `set_walker_daily_budget()` so it doesn't bottleneck on $$ cap
-- New: `outreach-leads-enrich` cron drained 20/run @ 1×/day → **30/run × every 2h** (15 runs/day = 450 enrichment attempts) to chew through the 1,376 backlog
-- New: `contractor-outreach-enrich` (statewide) → bumped from 4h to **2h** cadence, batch 25→50
+**Alerting** (new edge function `enrichment-kpi-monitor`, cron every 30 min 11 AM–8 PM ET):
+- Compute last-2-hour throughput (sum `leads_enriched`).
+- Compute current `target_gap` from rebalancer's pool view.
+- Required rate = `gap / hours_left_in_window`.
+- If `actual < 0.6 * required` for 2 consecutive checks → SMS Matt: `"⚠️ Enrichment throughput 42/hr vs 110/hr needed. Gap=380, 4h left."`
+- Cooldown: max 1 SMS per 90 min.
 
-**New parallel waterfall sources** (when Apollo/Hunter exhaust on a domain):
-- Already wired: Apollo → Hunter → Firecrawl contact-page → PDL. Confirm all 4 stages fire in `_shared/email-waterfall.ts`.
-- Add **DataForSEO Local Pack** as an extra discovery source inside `prospect-local-businesses` (already env-keyed, used in `channel-prospector`) — typically yields 30-40% more contractors not in Google Places.
-- Add **SAM.gov + USAspending + LARA new-LLC** feeds into a new tiny pull job that pre-fills `outreach_leads` with company+website (then enrichment fills email).
+**Dashboard card** on `/dwa-admin/cold-email-audit`: "Enrichment Throughput (24h)" — sparkline + last run KPIs + red badge when behind target.
 
-### Layer 2 — Sender FAILOVER (the "rebalancer")
+---
 
-Today each sender (`multi-service-drip`, `web-design-drip`, `prospect-local-businesses`, `contractor-prospector`, `techalert-outreach`) runs on its own clock against its own pool. When the pool is empty it just exits with 0.
+### 2. Per-Provider Daily Budget Caps
 
-Build **`cold-email-rebalancer`** (new edge function, hourly cron 11a–8p ET):
-1. For each product, count `unsent_with_email` (the queries above).
-2. Track today's `email_send_log` count by template family.
-3. Compute remaining gap = max(0, 150 − sent_today).
-4. Allocate gap proportionally across products **weighted by available supply**:
-   - If contractor pool = 0, route 100% of remaining quota to multi-service + web-design.
-   - If TechAlert pool = 0, skip it entirely until hunter refills.
-5. Invoke each sender with `{ batch: N, force: true }` to send N emails right now.
-6. Per-sender hard cap (e.g. 60/day per template family) so we don't blow up one product's deliverability.
-7. Self-throttle: 25/hour pacing across 8 hours (8 hrs × 19 sends ≈ 152) — keeps Gmail/Resend happy and avoids spam-trap clustering.
+**Schema change** to `enrichment_walker_config`:
+- Replace single `daily_budget_usd` with: `apollo_daily_budget_usd` (default $30), `hunter_daily_budget_usd` (default $15), `firecrawl_daily_budget_usd` (default $5), plus existing total cap as `max_total_budget_usd` (default $200).
+- Keep `daily_budget_usd` as a generated column (sum) for backward compatibility, or migrate readers.
 
-### Layer 3 — Sentinel + alerting (already built, tighten it)
+**New view** `provider_spend_today`: rolls up `lead_enrichment_audit.cost_cents` grouped by `provider`, scoped to `created_at::date = current_date`.
 
-`cold-email-volume-sentinel` already fires at 9pm ET and SMS-alerts on shortfall. Add:
-- **3pm ET early-warning sentinel** — if sent_today < 75 by 3pm, SMS Matt + auto-trigger rebalancer in `force` mode
-- **Daily morning supply digest SMS** at 8am ET: "Pools: outreach 194 / contractor 118 / techalert 0. Yesterday 78/150. Bottleneck: techalert hunter."
-- **Auto-pause** any sender that returns 0 leads 3 runs in a row → write to `system_health` so admin dashboard shows the stuck pool red.
+**Enforcement** (in `_shared/enrichment-budget.ts` — new helper):
+- `canSpend(provider, est_cents)` → checks today's spend + estimate vs that provider's cap.
+- Apollo/Hunter call sites in `outreach-leads-enrich` and `email-waterfall.ts` gate every call through this. On block → log to audit with `error_code='budget_capped'`, fall through to next provider in waterfall.
 
-## Admin Dashboard Updates
+**Rebalancer scaling change** (`cold-email-rebalancer`):
+- Scale-up logic now bumps each provider's cap independently with per-provider headroom (Apollo max $120/day, Hunter max $60/day, Firecrawl max $20/day). Total still capped at $200.
+- Decay also per-provider toward each baseline.
+- SMS now reports: `"Apollo $30→$80, Hunter $15→$40 (gap=420)"`.
 
-Add two cards to `/dwa-admin/cold-email-audit`:
-- **Supply Pool**: bar chart of `unsent_with_email` per product, refreshed every 5 min. Red bar when pool < 50.
-- **Enrichment Backlog**: count of `email IS NULL` per product, with "Drain Now" button → invokes the relevant enrich function with `{ batch: 100 }`.
+**Admin UI**: Cold Email Audit page gains a "Provider Budgets" card showing today's spend, cap, % used, and inline editable caps (admin only).
 
-## Technical Details
+---
 
-**New files:**
-- `supabase/functions/cold-email-rebalancer/index.ts` — hourly orchestrator
-- `supabase/migrations/<ts>_cold_email_rebalancer_cron.sql` — schedules rebalancer hourly + 3pm early-warning + 8am supply digest, bumps existing scanner crons (techalert-prospect-hunter to 3×, contractor-prospector to 2×, etc.)
+### 3. Safety Circuit Breaker
 
-**Edited files:**
-- `supabase/functions/cold-email-volume-sentinel/index.ts` — call rebalancer instead of 3 hardcoded fns
-- `supabase/functions/outreach-leads-enrich/index.ts` — accept `{ batch }`, raise default 20→30
-- `supabase/functions/prospect-local-businesses/index.ts` — add DataForSEO discovery alongside Google Places
-- `src/pages/admin/AdminColdEmailAudit.tsx` — add Supply Pool + Enrichment Backlog cards
-- `supabase/config.toml` — `verify_jwt = false` for `cold-email-rebalancer`
+**New table** `enrichment_circuit_breaker_state`:
+- `id`, `tripped_at`, `reason` (failure_rate|bounce_rate|cost_runaway), `metric_value`, `threshold`, `cleared_at`, `auto_reset_at` (default tripped_at + 6h).
 
-## Verification After Deploy
+**Thresholds** (configurable in `enrichment_walker_config`):
+- `failure_rate_threshold` (default 0.40) — calculated from last 200 audit rows.
+- `bounce_rate_threshold` (default 0.08) — calculated from `email_send_log` bounces in last 24h, scoped to leads enriched today.
+- `cost_per_validated_email_threshold_cents` (default 75) — runaway cost guard.
 
-1. Manually invoke `cold-email-rebalancer` with `{ force: true, target: 150 }` — confirm it fans out across senders proportional to supply.
-2. Run all bumped scanners once each, check `outreach_leads` and `hire_alert_candidates` counts climbed.
-3. Trigger `outreach-leads-enrich` 5× to drain ~150 from the 1,376 backlog and confirm pool grows.
-4. Watch `email_send_log` over 1 hr — expect ≥ 19 sends with diversified template_name distribution.
-5. Wait for 9pm sentinel — it should report 150/150 sent and send no shortfall SMS.
+**Evaluator** runs at the start of every rebalancer scale-up call:
+1. Pull last-200 audit rows; compute `failure_rate` per provider AND overall.
+2. Pull last-24h bounces from leads enriched today; compute bounce rate.
+3. Compute cost-per-validated.
+4. If any threshold breached → write `enrichment_circuit_breaker_state` row, set `enrichment_walker_config.budget_frozen=true`, freeze all per-provider caps at their current values (no scale-ups), SMS Matt: `"🛑 Enrichment circuit tripped: Apollo failure 47% (>40%). Budget frozen until 8 PM."`
+5. Auto-reset after `auto_reset_at` if metric recovers; otherwise stays tripped and re-alerts every 4h.
+6. Admin "Reset Breaker" button on dashboard (with confirm).
 
-If approved I will execute all of the above, then run the full 150-email push and report exact counts per template family.
+**Rebalancer behavior when tripped**: Still runs sender allocation (uses already-enriched supply) but skips all "scale up budget" + "trigger enrichment burst" branches. Logs `breaker_blocked: true` in response.
+
+---
+
+### Files Touched
+
+**New**:
+- `supabase/migrations/<ts>_enrichment_kpis_budgets_breaker.sql` (3 tables + view + config columns)
+- `supabase/functions/enrichment-kpi-monitor/index.ts` + cron entry
+- `supabase/functions/_shared/enrichment-budget.ts` (per-provider gate)
+- `supabase/functions/_shared/enrichment-breaker.ts` (evaluator + state read/write)
+
+**Edited**:
+- `supabase/functions/outreach-leads-enrich/index.ts` — KPI accumulator, per-provider gate
+- `supabase/functions/cold-email-rebalancer/index.ts` — per-provider scaling, breaker check
+- `supabase/functions/_shared/email-waterfall.ts` — gate Apollo/Hunter calls
+- `src/pages/admin/AdminColdEmailAudit.tsx` — Throughput card, Provider Budgets card, Breaker status + reset
+- `supabase/config.toml` — register `enrichment-kpi-monitor`
+
+**Cron**:
+- `enrichment-kpi-monitor` every 30 min, 11 AM–8 PM ET
+
+### Acceptance
+- KPI row written for every enrichment run, visible on dashboard.
+- Apollo overspend (e.g. $120 single run) blocked at $80 cap; Hunter still callable.
+- Simulated 50% failure spike trips breaker, SMS sent, scale-ups frozen, sender allocation continues.
+- Throughput shortfall for 60 min → SMS alert with required vs actual rate.
