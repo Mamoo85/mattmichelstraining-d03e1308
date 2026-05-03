@@ -15,6 +15,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders, extractDomain, seniorityScore } from "../_shared/coldEmailShared.ts";
+import { isAggregatorDomain, isEnterprise, googlePlacesWebsite, cleanWebsite } from "../_shared/enrichment-pipeline.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -76,7 +77,26 @@ serve(async (req) => {
 
     const trace: { stage: string; status: string; count: number; ms: number; error?: string }[] = [];
     const collected: Contact[] = [];
-    const domain = extractDomain(buyer.website || buyer.email);
+    let domain = extractDomain(buyer.website || buyer.email);
+    // Aggregator scrub: ignore job-board / directory domains
+    if (domain && isAggregatorDomain(domain)) {
+      trace.push({ stage: "aggregator_scrub", status: "scrubbed", count: 0, ms: 0 });
+      domain = null;
+    }
+    // Enterprise blocklist: skip mega-orgs (no SMB ROI)
+    if (isEnterprise(buyer.company || "")) {
+      return json({ ok: true, source: "skipped_enterprise", contacts: [], trace: [{ stage: "enterprise_skip", status: "skip", count: 0, ms: 0 }] });
+    }
+    // Google Places fallback for missing/dirty domain
+    if (!domain) {
+      const placesSite = await googlePlacesWebsite(buyer.company || "", buyer.city, buyer.state);
+      if (placesSite) {
+        domain = extractDomain(placesSite);
+        trace.push({ stage: "google_places", status: "hit", count: 1, ms: 0 });
+      } else {
+        trace.push({ stage: "google_places", status: "miss", count: 0, ms: 0 });
+      }
+    }
 
     async function runStage(name: string, fn: () => Promise<Contact[]>) {
       if (collected.length >= max_per_buyer) return;

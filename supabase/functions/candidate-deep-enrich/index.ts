@@ -277,6 +277,9 @@ async function stageHunter(c: CandidateRow, employer?: string): Promise<Record<s
     const dom = await domRes.json();
     const domain = dom?.data?.domain;
     if (!domain) return {};
+    // Aggregator scrub — never accept job-board / directory domains
+    const { isAggregatorDomain } = await import("../_shared/enrichment-pipeline.ts");
+    if (isAggregatorDomain(domain)) return {};
 
     // Email finder
     const findRes = await fetch(`https://api.hunter.io/v2/email-finder?domain=${domain}&first_name=${encodeURIComponent(first)}&last_name=${encodeURIComponent(last)}&api_key=${HUNTER_API_KEY}`, {

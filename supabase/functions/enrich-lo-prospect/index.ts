@@ -12,10 +12,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { logEnrichment } from "../_shared/enrichment-audit.ts";
+import { apolloPeopleSearch, hasApolloKey } from "../_shared/apollo.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 
 const corsHeaders = {
@@ -26,28 +26,21 @@ const corsHeaders = {
 type EnrichResult = { email?: string; phone?: string; source: string };
 
 async function enrichViaApollo(name: string, company: string | null): Promise<EnrichResult> {
-  if (!APOLLO_API_KEY) return { source: "none" };
+  if (!hasApolloKey()) return { source: "none" };
   try {
-    const res = await fetch("https://api.apollo.io/api/v1/people/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Api-Key": APOLLO_API_KEY },
-      body: JSON.stringify({
-        q_keywords: name,
-        q_organization_name: company || undefined,
-        person_titles: ["loan officer", "mortgage loan officer", "MLO", "mortgage banker"],
-        person_locations: ["Michigan"],
-        page: 1,
-        per_page: 1,
-      }),
-      signal: AbortSignal.timeout(8000),
+    const people = await apolloPeopleSearch({
+      name,
+      organization_name: company || undefined,
+      person_titles: ["loan officer", "mortgage loan officer", "MLO", "mortgage banker"],
+      person_locations: ["Michigan"],
+      page: 1,
+      per_page: 1,
     });
-    if (!res.ok) return { source: "none" };
-    const data = await res.json();
-    const person = data?.people?.[0];
+    const person = people?.[0];
     if (!person) return { source: "none" };
     return {
       email: person.email || undefined,
-      phone: person.phone_numbers?.[0]?.sanitized_number || undefined,
+      phone: (person.phone_numbers as any)?.[0]?.sanitized_number || (person.phone_numbers as any)?.[0]?.raw_number || undefined,
       source: "apollo",
     };
   } catch {

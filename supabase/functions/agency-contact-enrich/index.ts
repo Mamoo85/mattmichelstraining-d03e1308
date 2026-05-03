@@ -12,6 +12,7 @@
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { isAggregatorDomain, googlePlacesWebsite } from "../_shared/enrichment-pipeline.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -247,7 +248,12 @@ async function patternVerifyDomain(domain: string, apolloFirst: string | null): 
 }
 
 async function resolveDomain(agencyName: string, providedDomain?: string): Promise<string | null> {
-  if (providedDomain) return providedDomain.replace(/^https?:\/\//, "").replace(/\/.*$/, "").toLowerCase();
+  const clean = (d: string) => d.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "").toLowerCase();
+  if (providedDomain) {
+    const d = clean(providedDomain);
+    if (isAggregatorDomain(d)) return null;
+    return d;
+  }
   // Try Apollo organization search to pull the canonical website
   if (APOLLO_API_KEY) {
     try {
@@ -261,10 +267,16 @@ async function resolveDomain(agencyName: string, providedDomain?: string): Promi
         const data = await res.json();
         const org = (data?.organizations || [])[0];
         const site = org?.website_url || org?.primary_domain;
-        if (site) return site.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "").toLowerCase();
+        if (site) {
+          const d = clean(site);
+          if (!isAggregatorDomain(d)) return d;
+        }
       }
     } catch (_) { /* ignore */ }
   }
+  // Google Places fallback
+  const placesSite = await googlePlacesWebsite(agencyName);
+  if (placesSite) return clean(placesSite);
   return null;
 }
 
