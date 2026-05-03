@@ -1,78 +1,168 @@
-## Goal
+# HBS-Grade Conversion & Quality Audit
 
-Stop scaling enrichment budgets aggressively. Spend only what's needed to fill 150 sends/day. Hold this cap until DWA cold-email-sourced MRR exceeds total enrichment spend. Daily SMS reports the average cost-per-day to hit 150.
-
----
-
-## Behavior changes
-
-### 1. Frugal Mode (default ON until MRR > spend)
-
-New flag `enrichment_walker_config.frugal_mode` (default `true`).
-
-When ON, the rebalancer will:
-- Compute **leads needed today** = `150 - sends_so_far`.
-- Compute **enrichment supply gap** = `leads_needed - unsent_with_email_count`. If ≤ 0, skip all enrichment scaling (we have enough supply).
-- If gap > 0, use **free-first waterfall only** (Google Places → Firecrawl → site_scrape → Hunter free tier). Apollo/Hunter paid only fire when free sources can't close the gap.
-- Per-provider caps reduced to **just-enough**:
-  - Apollo cap = `gap × $0.05` (Apollo cost-per-validated, ~ $7.50 for 150 leads worst case)
-  - Hunter cap = `gap × $0.02` (~$3)
-  - Firecrawl cap = `gap × $0.005` (~$0.75)
-  - Hard ceiling = $15/day total in frugal mode.
-- No "scale-up" branch runs. No SMS scale-up alerts.
-
-### 2. MRR-vs-spend gate
-
-New view `cold_email_economics_today`:
-- `spend_today_cents` = sum of `lead_enrichment_audit.cost_cents` today
-- `spend_30d_cents` = same, last 30 days
-- `mrr_attributed_cents` = sum of active subscriptions where `signup_source IN ('cold_email','outreach_lead')` × monthly price
-- `mrr_covers_spend` = `mrr_attributed_cents >= spend_30d_cents`
-
-Rebalancer checks `mrr_covers_spend` at top of run:
-- `false` → frugal_mode forced ON (even if admin toggled off)
-- `true` → frugal_mode respects admin toggle (allows opt-in scale-up)
-
-### 3. Daily cost-per-150 SMS (8 PM ET)
-
-New cron `cold-email-daily-economics` (8 PM ET, after send window closes):
-- Queries today's: sends_count, spend_cents, leads_enriched, replies, new_signups
-- Computes: `cost_per_send = spend / sends`, `cost_per_150 = cost_per_send × 150`
-- Computes 7-day rolling avg `avg_cost_per_150_7d`
-- Sends SMS to Matt:
-  ```
-  📧 Cold Email Daily
-  Sent: 148/150 ✓
-  Spend: $4.20 ($0.028/send)
-  Cost to hit 150: $4.26
-  7d avg: $5.10/day
-  30d spend: $142 | MRR cov: $0
-  Mode: FRUGAL 🔒
-  ```
-- If `mrr_covers_spend` flips true, SMS includes: `🟢 MRR now covers spend — scale-up unlocked`.
-
-### 4. Admin UI updates (`/dwa-admin/cold-email-audit`)
-
-- New "Economics" card: today spend, 7d avg cost/150, 30d spend vs attributed MRR, gauge showing coverage ratio.
-- Frugal Mode toggle (disabled/locked when MRR < spend, with tooltip "Locked until MRR covers spend").
-- Provider budget cards now show "Frugal cap" vs "Max cap" side-by-side.
+This is a multi-week scope compressed into a single phased delivery. We have **154 checkout functions**, **902 edge functions**, 11 trade-radar verticals, 8 DWA products, plus M2 fitness. Doing this responsibly requires phasing — anything else is theater. Below is the full plan; each phase ends in a verifiable artifact you can sign off on before we proceed.
 
 ---
 
-## Files
+## Phase 0 — Pricing & Offer Source-of-Truth (foundational, must come first)
 
-**New**
-- `supabase/migrations/<ts>_frugal_mode_economics.sql` — adds `frugal_mode` column, `cold_email_economics_today` view, signup_source attribution on `field_crm_clients`/`hire_alert_clients`/etc.
-- `supabase/functions/cold-email-daily-economics/index.ts` + cron entry
+**Decision required from you (one question — see clarifications below).** Then:
 
-**Edited**
-- `supabase/functions/cold-email-rebalancer/index.ts` — frugal-mode branch, MRR gate, skip scale-up when supply ≥ gap
-- `supabase/functions/_shared/enrichment-budget.ts` — frugal-mode cap calculator
-- `src/pages/admin/AdminColdEmailAudit.tsx` — Economics card + locked toggle
-- `supabase/config.toml` — register new function
+1. Create `_shared/offers.ts` — single source of truth:
+  - `TRIAL_DAYS = 7` (no CC required)
+  - `INTRO_DISCOUNT_PCT = 50` for first **3** months
+  - `DEAD_LEAD_FIRST_YES_FREE = true`
+  - Per-product map: `{ productKey → { trialEligible: bool, monthlyPriceCents, stripePriceLogic } }`
+2. Create Stripe coupon `INTRO50_3MO` (50% off, repeating, 3 months) via stripe tool — single coupon reused across all products.
+3. Refactor every `create-*-checkout` that's in scope (the **8 DWA products + Mortgage Radar + Trade Radar + TechAlert + FieldDesk + SiteRadar + Missed-Call + Contractor Leads + Bundle**) to:
+  - Add `trial_period_days: 7` + `payment_method_collection: 'if_required'`
+  - Apply `INTRO50_3MO` coupon by default
+  - Dead Lead Reactivation: first positive-reply charge waived (flag in `dead_lead_charges`)
+4. Update `cold-email-generate-row`, `cold-email-bulk-queue`, all dwa email templates, every postcard/fax/SMS template to render the offer from `offers.ts` (no hardcoded prices anywhere).
 
-## Acceptance
-- Default day: spend < $10, hits 150 sends, SMS at 8 PM with cost breakdown.
-- Admin can't disable frugal mode while MRR=0.
-- When supply > gap, Apollo/Hunter never called (zero spend).
-- 7-day rolling cost-per-150 visible in SMS + dashboard.
+**Deliverable:** A `pricing-matrix.md` showing every product · monthly price · trial eligibility · coupon applied. You eyeball-confirm before we touch outbound.
+
+---
+
+## Phase 1 — Outbound Offer Consistency Sweep
+
+1. Grep every cold-email/fax/postcard/SMS template for price strings, "trial", "free", "%" — replace with offer constants.
+2. Trial CTAs in every email link to `/start-trial?product=X&utm=...` (new lightweight page that triggers the no-CC checkout via Stripe trial).
+3. QR codes regenerated server-side from the same URL builder so every printed asset matches every email.
+4. Audit `ad_launch_drafts` AI prompts → bake offer into Meta/Google ad copy generation.
+
+**Deliverable:** Smoke test — fire one cold email, one fax, one postcard, one SMS, one Meta ad draft per product to your inbox/phone. You confirm copy + price + link in 15 minutes.
+
+---
+
+## Phase 2 — Link & Onboarding End-to-End Test Harness
+
+Build `e2e-link-auditor` edge function (runs nightly + on-demand from admin):
+
+- Pulls every URL referenced in: emails, dashboards, postcards (LOB), SMS, QR payloads, success_url, cancel_url, drip touches.
+- HEAD-checks each URL → records 200/3xx/4xx/5xx in `link_audit_results`.
+- Specifically validates per product:
+  - Cold email → `/start-trial` → Stripe checkout returns 200 → success_url redirects to product dashboard → `claim-session` fires → welcome email logged in `email_send_log` with status `sent`.
+  - Magic-link login from welcome email → resolves to dashboard.
+  - QR codes decoded server-side, URL re-checked.
+- Admin page `/dwa-admin/link-health` shows pass/fail per product with red flag for any 4xx/5xx.
+
+**Deliverable:** Link health dashboard. Any product showing red = blocked from outbound until fixed.
+
+---
+
+## Phase 3 — Trial → Paid Recovery Drip
+
+For every trial signup that doesn't convert by day 6:
+
+- Day 3: value reminder + first-result proof (per product)
+- Day 5: case study + "your trial ends in 48h" + 50% reminder
+- Day 6: founder note from Matt (Opus-drafted, personal tone) + extend trial 3 days offer
+- Day 8 (post-expiry): "miss us?" + reactivation 50% coupon
+- Day 14: final win-back
+
+Tables: `trial_signups`, `trial_drip_state`. Cron `trial-drip-runner` daily 9am ET. Reuses existing `_shared/twilio.ts` + `dwa-email.ts`.
+
+**Deliverable:** Drip preview UI in admin showing the 5 touches per product.
+
+---
+
+## Phase 4 — Scanner & Waterfall Quality Audit ("no silent killers")
+
+For every product with a scanner (Mortgage Radar, all 11 Trade Radars, TechAlert, Contractor Leads, SiteRadar, Marketplace):
+
+1. Source matrix: list every data source, last-success timestamp from `agent_heartbeats`/run logs, fallback chain.
+2. Run a synthetic lead through each waterfall end-to-end; assert ≥1 source per stage hit.
+3. Flag any source silent >7 days; add to circuit-breaker dashboard.
+4. Verify enrichment waterfall (Snov→Apollo→pattern→Hunter→PDL→site-scrape) per existing memory.
+5. Lead quality gate: every new lead must satisfy product-specific minimum (e.g. Mortgage Radar: validated address + ≥2 corroborating sources for score>3 per anti-hallucination memory).
+
+**Deliverable:** `/dwa-admin/scanner-health` matrix — green/yellow/red per source per product.
+
+---
+
+## Phase 5 — Cold Email Volume Optimization (deliverability-aware)
+
+Current: 150/day frugal-mode floor (per existing economics plan).
+
+Plan to scale safely to **2,000/day** without spam classification:
+
+- Warm new sender domains via `mailgun`-style ramp: +10%/day, capped by 7-day rolling bounce <2% AND complaint <0.1%.
+- Add 3 sending subdomains (`hi.`, `team.`, `notify.`) with separate IP pools.
+- DKIM/SPF/DMARC verification check in `e2e-link-auditor`.
+- `cold-email-volume-sentinel` (already exists) → extend with: bounce/complaint/spam-trap rate gates that **freeze the ramp** automatically.
+- Subject-line variant testing already in cold-email-bandit-pick — pipe winners to higher-volume tier.
+
+Keeps frugal economics (cost ceiling) intact; only volume changes when deliverability is proven.
+
+**Deliverable:** Daily cap auto-adjuster + admin override slider with "current safe ceiling: N" indicator.
+
+---
+
+## Phase 6 — Bug Sweep on Recent AI-Generated Code
+
+- Run `rg` for known AI-codegen smells: swallowed errors, missing `await`, `console.log` in prod paths, `any` casts hiding nulls, hardcoded prices/URLs.
+- Per DWA Defensive Programming Protocol — fail-fast on webhooks, RPC for concurrency.
+- Fix everything found; produce a delta report.
+
+**Deliverable:** Bug-fix changelog grouped by severity.
+
+---
+
+## Technical implementation summary
+
+```text
+New files:
+  supabase/functions/_shared/offers.ts                 (offer + price source of truth)
+  supabase/functions/e2e-link-auditor/index.ts         (link + checkout E2E)
+  supabase/functions/trial-drip-runner/index.ts        (5-touch recovery)
+  supabase/functions/scanner-health-probe/index.ts     (source-level liveness)
+  supabase/migrations/<ts>_trial_drip.sql              (trial_signups, trial_drip_state)
+  supabase/migrations/<ts>_link_audit.sql              (link_audit_results)
+  supabase/migrations/<ts>_volume_ramp.sql             (sender pool config + ramp state)
+  src/pages/StartTrial.tsx                              (universal no-CC trial entry)
+  src/pages/admin/LinkHealth.tsx
+  src/pages/admin/ScannerHealth.tsx
+  src/pages/admin/PricingMatrix.tsx
+  pricing-matrix.md                                     (audit artifact)
+
+Edited:
+  Every create-<dwa-product>-checkout (~14 functions) → trial + coupon
+  cold-email-generate-row, cold-email-bulk-queue, dwa-email.ts templates
+  All postcard/fax/SMS template strings (offer constants)
+  ad_launch_drafts AI prompt (offer baked in)
+  cold-email-volume-sentinel (deliverability-gated ramp)
+  stripe-webhook (handle trial_will_end, trial_ended events)
+```
+
+---
+
+## Sequencing & ETA
+
+Each phase = one user-approved batch. Estimate (assuming approval at each gate):
+
+- Phase 0: 1 batch
+- Phase 1: 1 batch
+- Phase 2: 1 batch
+- Phase 3: 1 batch
+- Phase 4: 2 batches (scanners are big)
+- Phase 5: 1 batch
+- Phase 6: 1 batch
+
+Total ~8 batches. **No phase ships until the prior phase's deliverable passes your eyeball test** — that's how we avoid silent killers.
+
+---
+
+## Clarifying question (one only)
+
+**Which products get the 7-day no-CC trial + 50%/3mo combo? All radars besides hiring radars and contractor Leads and dead leads**
+
+Default proposed (recurring SaaS only — trial doesn't make sense for one-shot):
+
+- ✅ FieldDesk, TechAlert, SiteRadar, Mortgage Radar, all Trade Radars, Missed-Call, AI Phone Answering, Contractor Leads ($399/mo), Bundle Revenue Suite
+- ❌ Dead Lead Reactivation (uses "first yes free" instead — your instruction)
+- ❌ Marketplace pay-per-lead (one-shot purchases)
+- ❌ Web Design ($X one-time)
+- ❌ M2 Training (different brand — left alone unless you say otherwise)
+
+Confirm or tell me to adjust, then I execute Phase 0 immediately.
