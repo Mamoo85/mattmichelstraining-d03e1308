@@ -36,6 +36,11 @@ serve(async (req) => {
   const startedAt = Date.now();
   let enriched = 0, failed = 0, skipped = 0;
 
+  // Allow rebalancer / sentinel to scale batch size up when supply is short
+  const body = await req.json().catch(() => ({} as any));
+  const requestedBatch = Number(body?.batch) || DEFAULT_BATCH;
+  const BATCH = Math.max(1, Math.min(HARD_MAX_BATCH, requestedBatch));
+
   try {
     // Fetch leads with no owner_email — exclude ones already tried (enriched_at set)
     const { data: leads, error } = await (sb.from as any)("outreach_leads")
