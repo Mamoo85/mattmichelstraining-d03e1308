@@ -15,6 +15,12 @@ import { hunterFindEmail } from "../_shared/hunter.ts";
 import { apolloOrgEnrich, apolloOrgSearch, apolloMixedPeopleSearch } from "../_shared/apollo.ts";
 import { extractContactInfo } from "../_shared/firecrawl.ts";
 import { parseEnrichmentTrace } from "../_shared/safe-parse.ts";
+import {
+  isAggregatorDomain,
+  isEnterprise,
+  cleanWebsite,
+  googlePlacesWebsite,
+} from "../_shared/enrichment-pipeline.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
