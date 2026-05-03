@@ -682,7 +682,7 @@ serve(async (req) => {
     let totalFound = 0;
     let totalSkipped = 0;
     let totalScoutRejected = 0;
-    const maxToSend = Math.min(20, remainingCap);
+    const maxToSend = Math.min(60, remainingCap);
 
     // ── CARE ALERT DAY: search nursing homes instead of trade combos ──
     if (pitchRotation === "care_alert" && !manualTrade) {
