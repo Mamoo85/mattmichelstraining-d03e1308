@@ -892,5 +892,33 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] fire investigations:", e); }
 
+  // FEMA Repetitive Loss Properties — multi-flood-claim addresses have chronic water damage
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Repetitive_Loss/FeatureServer/0/query?where=1%3D1&outFields=address,City&resultRecordCount=100&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        if (!addr) continue;
+        signals.push({
+          address: addr, city: a.City || "Detroit", zip: "",
+          signal_type: "water_damage_permit",
+          signal_detail: `FEMA Repetitive Loss: ${addr} — this property has filed multiple FEMA flood insurance claims. Repeated flooding = mold, structural damage, and damaged drywall/insulation that hasn't been properly remediated`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.water_damage_permit + 1,
+          source_method: "fema_repetitive_loss",
+          suggested_opener: `Your home at ${addr} is on FEMA's repetitive flood loss list — multiple floods almost certainly mean mold, damaged insulation, and structural moisture. We do free moisture assessments and can scope what remediation you actually need.`,
+          best_call_window: "Any time — chronic flooding creates ongoing restoration need",
+          estimated_value: 15000,
+          raw_source_data: { address: addr, city: a.City },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] repetitive loss:", e); }
+
   return signals;
 }

@@ -554,5 +554,33 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[foundation] plan reviews:", e); }
 
+  // FEMA Repetitive Loss Properties — multi-flood-claim addresses = highest foundation risk in Detroit
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Repetitive_Loss/FeatureServer/0/query?where=1%3D1&outFields=address,City&resultRecordCount=100&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        if (!addr) continue;
+        signals.push({
+          address: addr, city: a.City || "Detroit", zip: "",
+          signal_type: "heavy_rain_foundation",
+          signal_detail: `FEMA Repetitive Loss: ${addr} — this address has filed multiple flood insurance claims with FEMA. Repeated flooding = the foundation waterproofing has failed. These homeowners spend thousands on insurance but haven't fixed the root cause`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.heavy_rain_foundation + 2,
+          source_method: "fema_repetitive_loss",
+          suggested_opener: `Your address at ${addr} appears on FEMA's repetitive flood loss list — that means multiple flood insurance claims. We specialize in permanent basement waterproofing that stops the flooding instead of just paying for cleanup every year. Want a free estimate?`,
+          best_call_window: "Any time — these homeowners have chronic flooding and are actively looking for solutions",
+          estimated_value: 12000,
+          raw_source_data: { address: addr, city: a.City },
+        });
+      }
+    }
+  } catch (e) { console.error("[foundation] repetitive loss:", e); }
+
   return signals;
 }
