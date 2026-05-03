@@ -2,6 +2,15 @@
 // Apollo organization → people search waterfall. 20 records/run, daily 11am ET.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { apolloOrganizationSearch, apolloPeopleSearch } from "../_shared/apollo.ts";
+import { hunterFindEmail } from "../_shared/hunter.ts";
+import { extractContactInfo } from "../_shared/firecrawl.ts";
+import {
+  isAggregatorDomain,
+  isEnterprise,
+  cleanWebsite,
+  domainFromUrl,
+  googlePlacesWebsite,
+} from "../_shared/enrichment-pipeline.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
