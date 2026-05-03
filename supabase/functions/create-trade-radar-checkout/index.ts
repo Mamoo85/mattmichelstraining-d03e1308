@@ -98,6 +98,8 @@ Deno.serve(async (req) => {
       customer: customerId,
       mode: "subscription",
       payment_method_types: ["card"],
+      payment_method_collection: "if_required",
+      discounts: [{ coupon: "s5f2M1Vq" }],
       line_items: [{
         price_data: {
           currency: "usd",
@@ -112,7 +114,7 @@ Deno.serve(async (req) => {
       }],
       subscription_data: {
         trial_period_days: 7,
-        discounts: [{ coupon: "LAUNCH50" }],
+        trial_settings: { end_behavior: { missing_payment_method: "cancel" } },
         metadata: {
           type: "trade_radar_subscription",
           vertical: vertical as string,

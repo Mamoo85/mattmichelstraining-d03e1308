@@ -72,6 +72,8 @@ serve(async (req) => {
       mode: "subscription",
       payment_method_types: ["card"],
       customer_email: email,
+      payment_method_collection: "if_required",
+      subscription_data: { trial_period_days: 7, trial_settings: { end_behavior: { missing_payment_method: "cancel" } } },
       line_items: [{
         price_data: {
           currency: "usd",
@@ -99,10 +101,10 @@ serve(async (req) => {
       cancel_url: `${origin}/field-service`,
     };
 
-    // Apply discount
-    if (stripeCouponId) {
-      sessionParams.discounts = [{ coupon: stripeCouponId }];
-    }
+    // Apply discount: prefer custom coupon if provided; otherwise default INTRO50_3MO
+    sessionParams.discounts = stripeCouponId
+      ? [{ coupon: stripeCouponId }]
+      : [{ coupon: "s5f2M1Vq" }];
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 

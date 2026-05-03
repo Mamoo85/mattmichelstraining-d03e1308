@@ -55,6 +55,9 @@ serve(async (req: Request) => {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer_email: email,
+      payment_method_collection: "if_required",
+      subscription_data: { trial_period_days: 7, trial_settings: { end_behavior: { missing_payment_method: "cancel" } } },
+      discounts: [{ coupon: "s5f2M1Vq" }],
       line_items: [
         {
           quantity: 1,
