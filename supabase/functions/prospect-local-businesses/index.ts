@@ -511,7 +511,7 @@ Price: ${landingPage.price} setup + ${landingPage.monthly}`;
   return await generateText(prompt, 600);
 }
 
-// ── Check daily volume cap ──
+// ── Check daily volume cap (raised to 60 to support 150/day floor) ──
 async function checkDailyVolumeCap(serviceClient: any): Promise<boolean> {
   const today = new Date().toISOString().split("T")[0];
   const { count } = await serviceClient
@@ -520,7 +520,7 @@ async function checkDailyVolumeCap(serviceClient: any): Promise<boolean> {
     .eq("template_name", "cold_outreach")
     .eq("status", "sent")
     .gte("created_at", `${today}T00:00:00Z`);
-  return (count || 0) >= 40;
+  return (count || 0) >= 60;
 }
 
 serve(async (req) => {
