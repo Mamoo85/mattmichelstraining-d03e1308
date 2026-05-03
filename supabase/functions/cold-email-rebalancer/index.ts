@@ -119,6 +119,22 @@ serve(async (req) => {
     // Pick non-empty pools to invoke. Each sender enforces its own per-run cap.
     const chosen = pools.filter(p => p.available > 0);
 
+    // Build allocation plan: weight by available supply, capped by remaining gap
+    const totalAvail = chosen.reduce((s, p) => s + p.available, 0) || 1;
+    const plan = chosen.map(p => ({
+      fn: p.fn,
+      pool: p.name,
+      available: p.available,
+      planned_send: Math.min(p.available, Math.ceil((p.available / totalAvail) * gap)),
+    }));
+
+    if (dryRun) {
+      return new Response(JSON.stringify({
+        ok: true, dry_run: true, sentToday, gap, target, totalSupply,
+        supplyShort: totalSupply < gap, pools, plan,
+      }), { headers: { ...cors, "Content-Type": "application/json" } });
+    }
+
     const results = await Promise.all(chosen.map(async (p) => {
       try {
         const { data, error } = await sb.functions.invoke(p.fn, {
