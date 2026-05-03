@@ -475,3 +475,47 @@ Target industries (in priority order):
 **For senior care:** "How are you finding CNAs right now?" If the answer is Indeed, staffing agencies, or word of mouth — that's a TechAlert sale. Use Template C2. Pitch is $149/mo (or $99/mo founders' lock) vs. $8,000+ agency fees per hire.
 
 Always pitch the website first — it unlocks the bundle discounts and builds the relationship before the recurring SaaS.
+
+---
+
+## Trade Radar — New Signal Capabilities (May 2026)
+
+Trade Radar is now the strongest contractor lead product in the DWA lineup. $149/mo per vertical. 11 verticals. 100% public record sources — never resold intent queries.
+
+### Who to Target (Trade Radar buyers)
+- **Restoration contractors** (fire/water/mold) — sell on same-day fire incident leads
+- **Roofers** — sell on SPC same-day storm/hail GPS reports + rental license deadlines
+- **HVAC companies** — sell on rental license countdown (landlord must pass HVAC inspection)
+- **Plumbers/Electricians** — sell on permit-based targeting (owner names + neighbor upsell)
+- **Foundation repair** — sell on USGS seismic + drought clay heave signals
+- **Demo/junk haulers** — sell on city demolition pipeline + DLBA vacant lot signals
+- **Exterior painters/siders** — sell on Historic District violation routing (city-ordered repairs)
+- **Pest control** — sell on rental license expiring (pest clearance required for renewal)
+
+### Top 5 Pitch Lines (Tom's voice)
+1. "This isn't Angie's List. Every lead is from a city database — fire department, permit office, or code enforcement. The homeowner hasn't even Googled a roofer yet."
+2. "The rental license at 15328 Lawton expires in 8 days. That landlord MUST fix the roof or the city shuts them down. That's your call to make today."
+3. "A fire was reported at 14891 Burgess this morning. We flagged it at 8am. That's a $15k restoration job — do you want to be the one who calls first?"
+4. "We pull from 40+ city and government sources daily. Zero shared leads. One roofer per ZIP cluster."
+5. "Angi sells you homeowners who searched 'roofer.' We sell you the address hail hit this morning."
+
+### Template J — Trade Radar Cold Email
+Subject: Live leads in [City] for [Trade]
+
+Hi [Name],
+
+Quick one — we built a lead platform for [trade] contractors in Metro Detroit that pulls daily from city permit databases, the fire department dispatch log, and BSEED code enforcement records.
+
+You get leads *before* homeowners start searching — same day as the triggering event (fire, storm, permit pulled, rental license expiring).
+
+14-day free trial, no card needed. I can send you 3 blurred sample leads from your ZIP right now if you want to see what the data looks like.
+
+Worth a look?
+
+— Matt | Detroit Web Agency | (313) 992-1219
+
+### Objection Handling
+- "I already use Angi" → "Angi is homeowner-search leads, usually shared with 4–8 other contractors. These are city database events — fire incidents, permit triggers, code violations. No overlap."
+- "How do you get fire incident data?" → "Detroit Fire Department publishes daily dispatch records. We monitor it every morning."
+- "Is this legal?" → "100% public records. No credit data, no FCRA concerns. Every source is a government database."
+- "I don't have time to follow up on leads" → "Every lead comes with a suggested call opener specific to that address. Copy-paste it into your phone."

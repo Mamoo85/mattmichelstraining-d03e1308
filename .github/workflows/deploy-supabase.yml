@@ -56,8 +56,10 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+      - name: Link to primary project
+        run: supabase link --project-ref $PRIMARY_REF
       - name: Apply pending DB migrations to primary project
-        run: supabase db push --project-ref $PRIMARY_REF
+        run: supabase db push
       - name: Deploy mortgage-radar-am-digest
         run: supabase functions deploy mortgage-radar-am-digest --project-ref $PRIMARY_REF --no-verify-jwt
       - name: Deploy mortgage-radar-scanner

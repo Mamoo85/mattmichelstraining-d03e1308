@@ -47,3 +47,59 @@ Once Matt has a testimonial, Hype creates a publication schedule: Week 1 — add
 - Focus on clients who've had time to see value (30+ days)
 - **DWA product testimonials are highest priority** — TechAlert hires, dead lead revivals, and Mortgage Radar closed loans are the most compelling proof points
 - **OSINT Privacy Rule**: Never mention data sources (Sonar/PDL/NPI) in any testimonial request or public content
+
+---
+
+## Trade Radar — Ad Copy & Social Proof (May 2026)
+
+### Hero Ad Headlines (A/B test these)
+1. "The landlord at 15328 Lawton has 8 days to fix the roof or lose their rental license. That's your call."
+2. "We found a fire at 14891 Burgess at 8am. Your competitor called by noon. You got this at 5pm."
+3. "Angie's List sells you a homeowner who searched 'roofer.' We sell you the address hail hit this morning."
+4. "11 data sources. Zero shared leads. Every lead is from a city database."
+5. "Same-day fire leads. Same-day storm leads. Before homeowners open Google."
+
+### Social Proof to Hunt (Trade Radar wins to chase)
+After any contractor is live 30+ days, query `trade_radar_leads` for their claimed leads. Look for:
+- Leads with `score >= 9` that were claimed AND the contractor was contacted — these are warm case study candidates
+- Restoration contractor + `fire_smoke_restoration` signal → "Did you land that fire job at [address]? What was the ticket?"
+- Roofer + `spc_storm_report_today` → "We sent you a hail lead on [date]. Did it turn into a job?"
+- Any vertical + `cofc_*` signal + a follow-up conversion → "That rental license deadline lead — did the landlord call you back?"
+
+### Case Study Template (Trade Radar)
+> **Problem:** [Trade] contractor in [City] was buying shared leads from Angi at $40–80 each.
+> **Tool:** Trade Radar [Vertical] — $149/mo, exclusive ZIP territory.
+> **Result:** First week — [N] leads from [source]. Closed [N] within 30 days.
+> **ROI:** [Job value] / $149 = [X]x return in month 1.
+
+### Differentiator Bullets for Ads/Landing Pages
+- Same-day fire incident leads — before insurance adjusters arrive
+- Rental license deadlines — landlords who MUST fix everything in 30 days
+- City-issued demolition orders — neighbor lots needing immediate cleanup
+- Live storm spotter GPS reports — hours before homeowners start searching
+- Historic district violations — city-ordered repairs with fines attached
+- Every lead includes Street View photo + AI-written call opener
+- NOT Angie's List recycles (zero intent-query leads)
+- NOT credit bureau trigger data (100% FCRA compliant)
+
+### Comparison Table (use in landing page and ads)
+| | Angie's List | HomeAdvisor | Trade Radar |
+|---|---|---|---|
+| Lead source | Homeowner searches | Homeowner searches | City databases + gov records |
+| Shared w/ competitors? | Up to 8 contractors | Up to 4 | Exclusive per vertical |
+| How fast? | After homeowner searches | After homeowner searches | Same day as triggering event |
+| Fire damage leads? | No | No | Yes — day of incident |
+| Rental deadline leads? | No | No | Yes — 11 verticals |
+| FCRA compliant? | N/A | N/A | Yes — zero credit data |
+
+### Free Trial Teaser Copy (for the blurred lead cards)
+- "14 roofing leads found in your area this week. This one has a 9/10 urgency score."
+- "This address had a fire 3 days ago. The homeowner hasn't called anyone yet."
+- "The landlord at [blurred address] has 8 days to pass their HVAC inspection or lose their rental license."
+- "See 3 real leads in your ZIP — blurred until you start your free trial."
+
+### Video Testimonial Prompts (Trade Radar)
+Ask contractors: (1) "Before Trade Radar, where were you getting leads?" (2) "What was the first lead we sent you, and what happened?" (3) "How many jobs have you closed from city database signals?"
+
+### Scarlett Handoff (social proof ads)
+When Hype has a confirmed win, hand to Scarlett with: contractor trade + city + job value + which signal triggered it. Scarlett builds a Facebook/Google ad: "A [trade] contractor in [city] just closed a $[value] job from a [signal type] lead. Here's the signal that started it."
