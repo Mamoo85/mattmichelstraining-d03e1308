@@ -519,5 +519,65 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] vacant registrations:", e); }
 
+  // 13. Detroit Commercial Properties for Sale — retail/commercial listings; buyers need pre-occupancy restoration
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Commercial_Properties_for_Sale/FeatureServer/0/query?where=1%3D1&outFields=address,title,size,price,property_type&resultRecordCount=30&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        if (!addr) continue;
+        const isCommercial = (a.property_type ?? "").toLowerCase().includes("retail") || (a.property_type ?? "").toLowerCase().includes("commercial") || (a.property_type ?? "").toLowerCase().includes("industrial");
+        if (!isCommercial) continue; // land goes to demo_junk
+        if (zipFilter?.length) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "water_damage_permit",
+          signal_detail: `City commercial property for sale: ${addr} — "${a.title ?? a.property_type}" listed at ${a.price ?? "TBD"} (${a.size ?? "?"}). City-owned commercial buildings held vacant for years almost always have water infiltration, mold, and structural damage requiring professional remediation before any tenant buildout`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.water_damage_permit - 2,
+          source_method: "detroit_commercial_for_sale",
+          suggested_opener: `You're looking at the commercial property at ${addr} — buildings the city has held vacant for years almost always have water infiltration and mold issues. A pre-purchase remediation assessment protects your investment and speeds up the permitting process.`,
+          best_call_window: "Before purchase closes or during due diligence period",
+          estimated_value: 15000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] commercial for sale:", e); }
+
+  // 14. Detroit City-Owned Development Buildings — city real estate buildings available for redevelopment
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/development_opportunities_city_real_estate_buildings/FeatureServer/0/query?where=1%3D1&outFields=address,street_number,street_prefix,street_name,street_type&resultRecordCount=40&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = a.address || [a.street_number, a.street_prefix, a.street_name, a.street_type].filter(Boolean).join(" ").trim();
+        if (!addr) continue;
+        if (zipFilter?.length) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "water_damage_permit",
+          signal_detail: `City-owned development building: ${addr} — available for redevelopment. City-held buildings require full remediation assessment before occupancy permit can be issued; water, mold, and fire damage common in long-vacant structures`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.water_damage_permit - 3,
+          source_method: "detroit_city_buildings",
+          suggested_opener: "This is a city-owned development building — before any tenant can occupy, a full remediation assessment and clearance is required. We do pre-permit water/mold assessments for developers and have experience navigating city inspections.",
+          best_call_window: "During developer acquisition process",
+          estimated_value: 12000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] city buildings:", e); }
+
   return signals;
 }

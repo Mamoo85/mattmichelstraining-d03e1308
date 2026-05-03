@@ -534,5 +534,65 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[demo_junk] vacant land sales:", e); }
 
+  // 20. Detroit Commercial Properties for Sale — city-owned commercial listings; buyers need demo/clearout
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Commercial_Properties_for_Sale/FeatureServer/0/query?where=1%3D1&outFields=address,title,size,price,property_type&resultRecordCount=30&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        if (!addr) continue;
+        const isLand = (a.property_type ?? "").toLowerCase().includes("land") || (a.property_type ?? "").toLowerCase().includes("vacant");
+        if (!isLand) continue; // only land/vacant listings need demo junk — commercial buildings go to restoration
+        if (zipFilter?.length) continue; // no ZIP in dataset
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "demo_permit",
+          signal_detail: `City commercial property for sale: ${addr} — "${a.title ?? a.property_type}" listed at ${a.price ?? "TBD"} (${a.size ?? "?"}). Vacant land buyers almost always need site clearance, debris removal, and grading before any build`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.demo_permit - 3,
+          source_method: "detroit_commercial_for_sale",
+          suggested_opener: `We saw the ${a.property_type ?? "vacant lot"} listing at ${addr} — buyers of city land typically need a site clearance before they can break ground. We do same-week debris and foundation clearing.`,
+          best_call_window: "While property is listed or just after sale closes",
+          estimated_value: 2000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] commercial for sale:", e); }
+
+  // 21. Detroit City Real Estate Land — city-owned development land (adjacent signal to DLBA)
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/development_opportunities_city_real_estate_land/FeatureServer/0/query?where=1%3D1&outFields=address,street_number,street_prefix,street_name,street_type&resultRecordCount=40&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = a.address || [a.street_number, a.street_prefix, a.street_name, a.street_type].filter(Boolean).join(" ").trim();
+        if (!addr) continue;
+        if (zipFilter?.length) continue; // no ZIP in dataset
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "demo_permit",
+          signal_detail: `City-owned development land available: ${addr} — city real estate listings attract developers and contractors; post-acquisition site clearing and prep is standard`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.demo_permit - 4,
+          source_method: "detroit_city_land",
+          suggested_opener: "We work with Detroit land developers for post-acquisition site clearing. If you're buying or developing city land in this area, we can have a clearance crew on-site within days of closing.",
+          best_call_window: "Active during city land sale period",
+          estimated_value: 1500,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] city land:", e); }
+
   return signals;
 }

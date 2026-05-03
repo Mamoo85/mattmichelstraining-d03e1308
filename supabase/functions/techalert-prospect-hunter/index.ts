@@ -516,6 +516,34 @@ async function scanLARADissolved(): Promise<Posting[]> {
   return results;
 }
 
+// Michigan LARA — licenses expiring in next 30 days: renewal moment = TechAlert sales opportunity
+async function scanLARAExpirations(): Promise<Posting[]> {
+  const results: Posting[] = [];
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const nextMonth = new Date(Date.now() + 30 * 86400_000).toISOString().slice(0, 10);
+    // HVAC/electrical/plumbing/mechanical license type codes
+    const url = `https://cofs.lara.state.mi.us/SearchApi/Search/Search?entityType=ALL&searchType=DATE&dateSearchType=EXPIRATION&dateFrom=${today}&dateTo=${nextMonth}&licenseTypes=2601,2602,2604,2605,2606`;
+    const res = await fetch(url, { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(12_000) });
+    if (!res.ok) return results;
+    const data = await res.json();
+    for (const lic of (data?.items || data || []).slice(0, 20)) {
+      const name: string = lic?.entityName || lic?.name || "";
+      if (!name) continue;
+      results.push({
+        company_name: name,
+        city: lic?.city || undefined,
+        role: "hvac_tech",
+        days_posted: null,
+        source_url: `https://cofs.lara.state.mi.us/CorpWeb/CorpSearch/CorpSummary.aspx?ID=${lic?.id || ""}`,
+        source_label: "LARA License Expiring (30 days)",
+        is_boiler: false,
+      });
+    }
+  } catch (e) { console.error("[hunter] LARA expirations:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
 // CFPB Complaint Database — MI home mortgage/improvement complaints: competitor spike = market opening
 async function scanCFPBComplaints(): Promise<Posting[]> {
   const results: Posting[] = [];
@@ -763,7 +791,7 @@ serve(async (req) => {
     // Supplemental signals + NOAA weather bonus — all run in parallel
     // Includes the new signal-waterfall (DOL WARN, OSHA, FMCSA, DOT prequal, SAM expanded)
     const { fetchHireSignals } = await import("../_shared/signal-waterfall.ts");
-    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, detroitCityContractSignals, multifamilySignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
+    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, detroitCityContractSignals, multifamilySignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
       scanGitHubSignals(),
       scanEDGARFundings(),
       scanUSPTOPatents(),
@@ -775,6 +803,7 @@ serve(async (req) => {
       scanOSHAViolations(),
       scanLARANewLicenses(),
       scanLARADissolved(),
+      scanLARAExpirations(),
       scanNLRBPetitions(),
       scanCFPBComplaints(),
       scanChapter7Liquidations(),
@@ -785,7 +814,7 @@ serve(async (req) => {
       getWeatherHiringBonus(),
       fetchHireSignals(sb, { state: "MI", naics: "238220" }).catch(() => []),
     ]);
-    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...detroitCityContractSignals, ...multifamilySignals];
+    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...detroitCityContractSignals, ...multifamilySignals];
     all.push(...supplemental);
     scanned += supplemental.length;
     // Log waterfall signal volume to heartbeat metadata (don't insert as job postings — different shape)
@@ -869,6 +898,7 @@ serve(async (req) => {
           osha: oshaSignals.length,
           lara_new: laraNewSignals.length,
           lara_dissolved: laraDissolvedSignals.length,
+          lara_expiring: laraExpiringSignals.length,
           nlrb: nlrbSignals.length,
           cfpb_complaints: cfpbSignals.length,
           ch7_liquidations: ch7Signals.length,
