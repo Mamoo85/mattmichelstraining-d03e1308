@@ -198,11 +198,6 @@ async function scanUSPTOPatents(): Promise<Posting[]> {
 
   for (const cpc of cpcSubclasses) {
     try {
-      const body = {
-        q: { _and: [{ _gte: { patent_date: ninetyDaysAgo } }, { _text_any: { cpc_subgroup_id: cpc } }] },
-        f: ["assignee_organization", "patent_date", "patent_title", "patent_id"],
-        o: { per_page: 15 },
-      };
       const res = await fetch("https://api.patentsview.org/patents/query", {
         method: "POST",
         headers: { "Content-Type": "application/json", "User-Agent": "TechAlert matt@detroitwebagent.com" },
