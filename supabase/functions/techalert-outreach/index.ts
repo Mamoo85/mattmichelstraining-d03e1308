@@ -99,7 +99,7 @@ serve(async (req) => {
     }
 
     for (const t of targets) {
-      const result = await sendEmail(t.owner_email, t.owner_name, t.company_name, t.role, t.is_boiler);
+      const result = await sendEmail(sb, t.owner_email, t.owner_name, t.company_name, t.role, t.is_boiler);
 
       if (!result.ok) {
         console.error(`[outreach] ${t.company_name}: ${result.err}`);
