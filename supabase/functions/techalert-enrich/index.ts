@@ -190,11 +190,12 @@ serve(async (req) => {
         // Fallback website: derive from source_url if Apollo didn't give one
         if (!website && target.source_url) {
           const d = domainFromUrl(target.source_url);
-          // Skip aggregator domains (indeed, ziprecruiter, github, sec.gov, etc.)
-          const aggregators = ["indeed", "ziprecruiter", "linkedin", "github", "sec.gov", "uspto", "sam.gov", "eventbrite", "usaspending", "nlrb", "courtlistener", "consumerfinance", "detroitmi.gov", "michigan.gov"];
-          if (d && !aggregators.some((a) => d.includes(a))) {
-            website = `https://${d}`;
-          }
+          if (d && !isAggregatorDomain(d)) website = `https://${d}`;
+        }
+
+        // Tier 1.5 — Google Places fallback for an authentic business website
+        if (!website) {
+          website = await googlePlacesWebsite(target.company_name, target.city, target.state);
         }
 
         // Tier 2 — Unified 10-stage email waterfall (only if we still need email)
