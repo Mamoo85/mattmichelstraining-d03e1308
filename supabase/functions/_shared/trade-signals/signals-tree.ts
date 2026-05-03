@@ -429,5 +429,42 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[tree] SPC day-2:", e); }
 
+  // Projected Tree Removals — city-assessed hazardous trees with failure probability ratings
+  try {
+    const where = encodeURIComponent(`Active = 1 AND (COND = 'Dead' OR COND = 'Poor' OR PFAIL = 'High' OR PFAIL = 'Extremely High')`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Projected_Tree_Removals/FeatureServer/0/query?where=${where}&outFields=Address,Street,SPP,DBH,COND,PFAIL,RATING,GROW,DISTRICT&resultRecordCount=50&orderByFields=RATING+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const streetNum = (a.Address || "").toString().trim();
+        const streetName = (a.Street || "").trim();
+        const addr = `${streetNum} ${streetName}`.trim();
+        if (!addr || addr.length < 5) continue;
+        const species = a.SPP || "tree";
+        const dbh = a.DBH || 0;
+        const condition = a.COND || "Poor";
+        const failRisk = a.PFAIL || "High";
+        const rating = Number(a.RATING) || 5;
+        const score = rating >= 8 ? 9 : rating >= 6 ? 8 : 7;
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "storm_tree_damage",
+          signal_detail: `City-assessed hazardous tree: ${addr} — ${species} (${dbh}" DBH), condition: ${condition}, failure probability: ${failRisk}, hazard rating: ${rating}/10. City flagged for removal — homeowner needs private contractor`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score,
+          source_method: "projected_tree_removals",
+          suggested_opener: `The city flagged a ${condition.toLowerCase()} ${species} at ${addr} with a ${failRisk.toLowerCase()} probability of failure — before it drops on your property or a car, we can take it down safely and have the debris hauled same-day.`,
+          best_call_window: "Any time — hazardous tree is an active liability",
+          estimated_value: dbh >= 30 ? 4000 : dbh >= 20 ? 2500 : 1500,
+          raw_source_data: { addr, species, dbh, condition, failRisk, rating },
+        });
+      }
+    }
+  } catch (e) { console.error("[tree] projected removals:", e); }
+
   return signals;
 }

@@ -503,5 +503,38 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[electrical] residential cert expiry:", e); }
 
+  // 13. BSEED Plan Reviews — approved electrical/addition plans (service upgrade imminent)
+  try {
+    const where = encodeURIComponent(
+      `(work_description LIKE '%ELECTRICAL%' OR work_description LIKE '%ADDITION%' OR work_description LIKE '%PANEL%') AND task_status LIKE '%Approved%'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permit_plan_reviews/FeatureServer/0/query?where=${where}&outFields=address,zip_code,submitted_date,work_description,task_status&resultRecordCount=30&orderByFields=ObjectId+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "renovation_electrical",
+          signal_detail: `BSEED plan review approved: ${(a.work_description ?? "electrical project").slice(0, 100)} — approved plans mean the permit will be pulled within days`,
+          signal_date: a.submitted_date ? new Date(a.submitted_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.renovation_electrical + 2,
+          source_method: "bseed_plan_reviews",
+          suggested_opener: `Your project at ${addr} has approved plans — we can provide same-week electrical service once the permit clears. Want a parallel bid before the work starts?`,
+          best_call_window: "Immediately — plans approved means permit imminent",
+          estimated_value: 5000,
+          raw_source_data: { addr, zip, desc: a.work_description, status: a.task_status },
+        });
+      }
+    }
+  } catch (e) { console.error("[electrical] plan reviews:", e); }
+
   return signals;
 }

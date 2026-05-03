@@ -40,7 +40,10 @@
       "Bash(git pull*)",
       "Bash(git log*)",
       "Bash(git diff*)",
-      "Bash(git status*)"
+      "Bash(git status*)",
+      "Bash(python3 -m json.tool)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); flds=[f['name'] for f in d.get\\('fields',[]\\)]; print\\('FIELDS:', flds\\); feats=d.get\\('features',[]\\); [print\\(f['attributes']\\) for f in feats[:2]]\")"
     ],
     "deny": []
   },

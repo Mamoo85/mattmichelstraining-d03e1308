@@ -412,7 +412,39 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[hvac] Detroit assessment roll:", e); }
 
-  // 13. BSEED Presale Inspections — FAIL results (HVAC is frequently cited)
+  // 13. BSEED Residential Compliance Certificates expiring in 60 days — pre-inspection HVAC window
+  try {
+    const certWhere = encodeURIComponent(`num_days_until_expired <= 60 AND num_days_until_expired > 0`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_active_residential_compliance_certificates/FeatureServer/0/query?where=${certWhere}&outFields=address,zip_code,expired_date,num_days_until_expired&resultRecordCount=40&orderByFields=num_days_until_expired+ASC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const daysLeft = Number(a.num_days_until_expired) || 60;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "aging_system_proxy",
+          signal_detail: `Detroit residential CofC expires in ${daysLeft} day${daysLeft === 1 ? "" : "s"} (${a.expired_date ?? ""}): ${addr}. Rental inspection requires functional heating — landlords scramble before the deadline`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: daysLeft <= 7 ? 9 : daysLeft <= 30 ? 8 : 7,
+          source_method: "bseed_residential_cert_expiry",
+          suggested_opener: `Your rental certificate at ${addr} expires in ${daysLeft} day${daysLeft === 1 ? "" : "s"} — a functioning heating system is required to pass the city re-inspection. We do same-week furnace assessments and repairs so you're not scrambling at the deadline.`,
+          best_call_window: `Within ${Math.min(daysLeft, 30)} days`,
+          estimated_value: 5000,
+          raw_source_data: { addr, zip, days_left: daysLeft, expired_date: a.expired_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] residential cert expiry:", e); }
+
+  // 14. BSEED Presale Inspections — FAIL results (HVAC is frequently cited)
   try {
     const since = new Date(Date.now() - 60 * 86400_000).toISOString().slice(0, 10);
     const where = encodeURIComponent(`(inspection_result = 'FAIL' OR inspection_result = '***Failed Insp') AND inspection_date >= '${since}'`);
@@ -633,6 +665,39 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
       }
     }
   } catch (e) { console.error("[hvac] rental compliance view:", e); }
+
+  // 17. BSEED Plan Reviews — approved HVAC/mechanical plans (installation imminent)
+  try {
+    const where = encodeURIComponent(
+      `(work_description LIKE '%HVAC%' OR work_description LIKE '%MECHANICAL%' OR work_description LIKE '%FURNACE%' OR work_description LIKE '%BOILER%' OR work_description LIKE '%AIR CONDITION%') AND task_status LIKE '%Approved%'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permit_plan_reviews/FeatureServer/0/query?where=${where}&outFields=address,zip_code,submitted_date,work_description,task_status&resultRecordCount=30&orderByFields=ObjectId+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "aging_system_proxy",
+          signal_detail: `BSEED HVAC plan review approved: ${(a.work_description ?? "HVAC project").slice(0, 100)} — plans approved means installation is imminent`,
+          signal_date: a.submitted_date ? new Date(a.submitted_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.aging_system_proxy + 2,
+          source_method: "bseed_plan_reviews",
+          suggested_opener: `Your HVAC project at ${addr} has plans approved — we can often provide same-week installation once the permit clears. Want a parallel bid before the contractor order is finalized?`,
+          best_call_window: "Immediately — plans approved means permit imminent",
+          estimated_value: 8000,
+          raw_source_data: { addr, zip, desc: a.work_description, status: a.task_status },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] plan reviews:", e); }
 
   return signals;
 }

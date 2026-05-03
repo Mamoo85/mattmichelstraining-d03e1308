@@ -704,5 +704,38 @@ export async function scanSignals(
     }
   } catch (e) { console.error("[roofing] historic violations:", e); }
 
+  // 20. BSEED Plan Reviews — approved roof plans (job is definitely happening, target before bid is placed)
+  try {
+    const where = encodeURIComponent(
+      `(work_description LIKE '%ROOF%' OR work_description LIKE '%RE-ROOF%' OR work_description LIKE '%REROOFING%') AND task_status LIKE '%Approved%'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permit_plan_reviews/FeatureServer/0/query?where=${where}&outFields=address,zip_code,submitted_date,work_description,task_status&resultRecordCount=30&orderByFields=ObjectId+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "roof_permit_upsell",
+          signal_detail: `BSEED plan review approved: ${(a.work_description ?? "roof project").slice(0, 100)} — plans approved means a permit is imminent and work will start within days`,
+          signal_date: a.submitted_date ? new Date(a.submitted_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.roof_permit_upsell + 3,
+          source_method: "bseed_plan_reviews",
+          suggested_opener: `Your roof project at ${addr} just got plans approved — we can often slot in same-week once permitting clears. Want a parallel quote before the contractor order is finalized?`,
+          best_call_window: "Immediately — plans approved means permit will be pulled within days",
+          estimated_value: 12000,
+          raw_source_data: { addr, zip, desc: a.work_description, status: a.task_status },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] plan reviews:", e); }
+
   return signals;
 }

@@ -521,5 +521,38 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[plumbing] residential cert expiry:", e); }
 
+  // 16. BSEED Plan Reviews — approved plumbing/remodel plans (installation imminent)
+  try {
+    const where = encodeURIComponent(
+      `(work_description LIKE '%PLUMB%' OR work_description LIKE '%BATHROOM%' OR work_description LIKE '%KITCHEN%' OR work_description LIKE '%ADDITION%') AND task_status LIKE '%Approved%'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permit_plan_reviews/FeatureServer/0/query?where=${where}&outFields=address,zip_code,submitted_date,work_description,task_status&resultRecordCount=30&orderByFields=ObjectId+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "plumbing_permit_major",
+          signal_detail: `BSEED plan review approved: ${(a.work_description ?? "plumbing project").slice(0, 100)} — approved plans mean the permit will be pulled within days and rough-in starts imminently`,
+          signal_date: a.submitted_date ? new Date(a.submitted_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.plumbing_permit_major + 2,
+          source_method: "bseed_plan_reviews",
+          suggested_opener: `Your project at ${addr} has approved plans — additions and remodels almost always need plumbing updates. We can provide same-week rough-in once the permit clears.`,
+          best_call_window: "Immediately — plans approved means permit imminent",
+          estimated_value: 4500,
+          raw_source_data: { addr, zip, desc: a.work_description, status: a.task_status },
+        });
+      }
+    }
+  } catch (e) { console.error("[plumbing] plan reviews:", e); }
+
   return signals;
 }

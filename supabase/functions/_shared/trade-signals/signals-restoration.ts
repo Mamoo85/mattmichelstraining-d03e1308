@@ -821,5 +821,38 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] historic violations:", e); }
 
+  // Plan Reviews — approved renovation/remodel plans involving structural/water work
+  try {
+    const where = encodeURIComponent(
+      `(work_description LIKE '%WATER%' OR work_description LIKE '%RESTORE%' OR work_description LIKE '%REMEDIAT%' OR work_description LIKE '%FIRE%' OR work_description LIKE '%MOLD%') AND task_status LIKE '%Approved%'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permit_plan_reviews/FeatureServer/0/query?where=${where}&outFields=address,zip_code,submitted_date,work_description,task_status&resultRecordCount=25&orderByFields=ObjectId+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "water_damage_permit",
+          signal_detail: `BSEED plan review approved: ${(a.work_description ?? "restoration project").slice(0, 100)} — approved restoration/remediation plans mean work is imminent`,
+          signal_date: a.submitted_date ? new Date(a.submitted_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.water_damage_permit + 1,
+          source_method: "bseed_plan_reviews",
+          suggested_opener: `Your restoration project at ${addr} has approved plans — we specialize in water damage, mold, and fire remediation and can often coordinate same-week with your renovation crew.`,
+          best_call_window: "Immediately — plans approved means work starts within days",
+          estimated_value: 12000,
+          raw_source_data: { addr, zip, desc: a.work_description, status: a.task_status },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] plan reviews:", e); }
+
   return signals;
 }

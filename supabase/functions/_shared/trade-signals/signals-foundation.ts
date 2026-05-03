@@ -521,5 +521,38 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[foundation] presale inspections:", e); }
 
+  // Plan Reviews — approved foundation/basement/structural plans (work imminent)
+  try {
+    const where = encodeURIComponent(
+      `(work_description LIKE '%FOUNDATION%' OR work_description LIKE '%BASEMENT%' OR work_description LIKE '%STRUCTURAL%' OR work_description LIKE '%WATERPROOF%' OR work_description LIKE '%CRAWL%') AND task_status LIKE '%Approved%'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permit_plan_reviews/FeatureServer/0/query?where=${where}&outFields=address,zip_code,submitted_date,work_description,task_status&resultRecordCount=25&orderByFields=ObjectId+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "heavy_rain_foundation",
+          signal_detail: `BSEED plan review approved: ${(a.work_description ?? "foundation project").slice(0, 100)} — approved plans mean foundation/basement work is imminent`,
+          signal_date: a.submitted_date ? new Date(a.submitted_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.heavy_rain_foundation + 2,
+          source_method: "bseed_plan_reviews",
+          suggested_opener: `Your foundation project at ${addr} has approved plans — we can provide a same-week assessment and often coordinate directly with your contractor for seamless waterproofing integration.`,
+          best_call_window: "Immediately — plans approved means permit imminent",
+          estimated_value: 10000,
+          raw_source_data: { addr, zip, desc: a.work_description, status: a.task_status },
+        });
+      }
+    }
+  } catch (e) { console.error("[foundation] plan reviews:", e); }
+
   return signals;
 }
