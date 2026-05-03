@@ -268,6 +268,71 @@ export default function AdminColdEmailAudit() {
         </div>
       </Card>
 
+      {/* Circuit Breaker */}
+      {breaker && (
+        <Card className="p-4 border-destructive bg-destructive/5">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-bold text-destructive">🛑 Enrichment Circuit Tripped</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Reason: <strong>{breaker.reason}</strong> · {Number(breaker.metric_value).toFixed(3)} &gt; {Number(breaker.threshold).toFixed(3)} ·
+                tripped {new Date(breaker.tripped_at).toLocaleString()} · auto-reset {new Date(breaker.auto_reset_at).toLocaleString()}
+              </div>
+            </div>
+            <Button size="sm" variant="destructive" onClick={resetBreaker}>Reset Breaker</Button>
+          </div>
+        </Card>
+      )}
+
+      {/* Provider Budgets */}
+      <Card className="p-4">
+        <h2 className="font-semibold mb-3">Per-Provider Daily Budgets (today)</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {budgets.map((b) => {
+            const danger = b.pct >= 90;
+            const warn = b.pct >= 70;
+            return (
+              <div key={b.provider} className={`border rounded p-3 ${danger ? "border-destructive" : warn ? "border-amber-500" : "border-border"}`}>
+                <div className="text-xs text-muted-foreground uppercase">{b.provider}</div>
+                <div className="text-2xl font-bold">${b.spent_usd.toFixed(2)} <span className="text-sm text-muted-foreground">/ ${b.cap_usd}</span></div>
+                <div className="w-full bg-muted h-1.5 rounded mt-2 overflow-hidden">
+                  <div className={`h-full ${danger ? "bg-destructive" : warn ? "bg-amber-500" : "bg-primary"}`} style={{ width: `${Math.min(100, b.pct)}%` }} />
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-1">{b.pct}% used</div>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* Enrichment KPIs */}
+      <Card className="p-4">
+        <h2 className="font-semibold mb-3">Enrichment Throughput (last 20 runs)</h2>
+        {kpis.length === 0 ? (
+          <div className="text-xs text-muted-foreground">No KPI rows yet — first run will populate after next enrichment cycle.</div>
+        ) : (
+          <table className="w-full text-xs">
+            <thead className="text-muted-foreground border-b">
+              <tr><th className="text-left py-1">When</th><th className="text-left">Function</th><th className="text-right">Att</th><th className="text-right">Enriched</th><th className="text-right">Failed</th><th className="text-right">Skipped</th><th className="text-right">/hr</th><th className="text-right">$</th></tr>
+            </thead>
+            <tbody>
+              {kpis.map((k, i) => (
+                <tr key={i} className="border-b">
+                  <td className="py-1">{new Date(k.run_at).toLocaleTimeString()}</td>
+                  <td className="font-mono">{k.function_name}</td>
+                  <td className="text-right">{k.leads_attempted}</td>
+                  <td className="text-right text-emerald-500">{k.leads_enriched}</td>
+                  <td className="text-right text-destructive">{k.leads_failed}</td>
+                  <td className="text-right">{k.leads_skipped}</td>
+                  <td className="text-right">{Math.round(k.throughput_per_hour || 0)}</td>
+                  <td className="text-right">${((k.cost_cents_total || 0) / 100).toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </Card>
+
       {/* Allocation preview */}
       <Card className="p-4">
         <div className="flex items-center justify-between mb-3">
