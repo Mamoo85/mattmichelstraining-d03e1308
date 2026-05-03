@@ -14,11 +14,19 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
+import { evaluateBreaker, getActiveBreaker } from "../_shared/enrichment-breaker.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ADMIN_PHONE = Deno.env.get("ADMIN_PHONE") ?? "+13138064952";
 const FLOOR = 150;
+
+// Per-provider scaling: each provider has its own baseline + ceiling.
+const PROVIDER_BUDGETS = [
+  { key: "apollo_daily_budget_usd",    max_key: "apollo_max_budget_usd",    base: 30, hard_max: 120, label: "Apollo" },
+  { key: "hunter_daily_budget_usd",    max_key: "hunter_max_budget_usd",    base: 15, hard_max: 60,  label: "Hunter" },
+  { key: "firecrawl_daily_budget_usd", max_key: "firecrawl_max_budget_usd", base: 5,  hard_max: 20,  label: "Firecrawl" },
+];
 
 const COLD_TEMPLATES = [
   "cold_outreach",
