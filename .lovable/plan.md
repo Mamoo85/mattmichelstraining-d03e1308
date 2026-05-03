@@ -1,94 +1,78 @@
-## Plan: Enrichment KPIs, Per-Provider Budgets, Safety Circuit Breaker
+## Goal
 
-Three additions on top of the existing `cold-email-rebalancer` + `outreach-leads-enrich` + `enrichment_walker_config` system.
-
----
-
-### 1. Automatic KPI Tracking + Throughput Alerts
-
-**New table** `enrichment_run_kpis` (migration):
-- `id`, `run_at`, `function_name` (`outreach-leads-enrich` | `enrichment-matrix-walker`), `triggered_by` (cron|rebalancer|manual|drain)
-- `leads_attempted`, `leads_enriched`, `leads_failed`, `leads_skipped` (suppressed/dup/no-domain)
-- `provider_breakdown` jsonb — `{apollo:{ok,fail,cost_cents}, hunter:{...}, firecrawl:{...}, places:{...}}`
-- `total_duration_ms`, `avg_ms_per_lead`, `cost_cents_total`
-- `target_gap` (snapshot of remaining sends needed at run start), `throughput_per_hour`, `meets_target` boolean
-
-**Wire-up**: `outreach-leads-enrich` already loops batches — wrap each run in a KPI accumulator, insert one row at end. Same for the walker. Use existing `lead_enrichment_audit` rows as source of truth for per-provider counts (aggregate by `run_id` we tag at start).
-
-**Alerting** (new edge function `enrichment-kpi-monitor`, cron every 30 min 11 AM–8 PM ET):
-- Compute last-2-hour throughput (sum `leads_enriched`).
-- Compute current `target_gap` from rebalancer's pool view.
-- Required rate = `gap / hours_left_in_window`.
-- If `actual < 0.6 * required` for 2 consecutive checks → SMS Matt: `"⚠️ Enrichment throughput 42/hr vs 110/hr needed. Gap=380, 4h left."`
-- Cooldown: max 1 SMS per 90 min.
-
-**Dashboard card** on `/dwa-admin/cold-email-audit`: "Enrichment Throughput (24h)" — sparkline + last run KPIs + red badge when behind target.
+Stop scaling enrichment budgets aggressively. Spend only what's needed to fill 150 sends/day. Hold this cap until DWA cold-email-sourced MRR exceeds total enrichment spend. Daily SMS reports the average cost-per-day to hit 150.
 
 ---
 
-### 2. Per-Provider Daily Budget Caps
+## Behavior changes
 
-**Schema change** to `enrichment_walker_config`:
-- Replace single `daily_budget_usd` with: `apollo_daily_budget_usd` (default $30), `hunter_daily_budget_usd` (default $15), `firecrawl_daily_budget_usd` (default $5), plus existing total cap as `max_total_budget_usd` (default $200).
-- Keep `daily_budget_usd` as a generated column (sum) for backward compatibility, or migrate readers.
+### 1. Frugal Mode (default ON until MRR > spend)
 
-**New view** `provider_spend_today`: rolls up `lead_enrichment_audit.cost_cents` grouped by `provider`, scoped to `created_at::date = current_date`.
+New flag `enrichment_walker_config.frugal_mode` (default `true`).
 
-**Enforcement** (in `_shared/enrichment-budget.ts` — new helper):
-- `canSpend(provider, est_cents)` → checks today's spend + estimate vs that provider's cap.
-- Apollo/Hunter call sites in `outreach-leads-enrich` and `email-waterfall.ts` gate every call through this. On block → log to audit with `error_code='budget_capped'`, fall through to next provider in waterfall.
+When ON, the rebalancer will:
+- Compute **leads needed today** = `150 - sends_so_far`.
+- Compute **enrichment supply gap** = `leads_needed - unsent_with_email_count`. If ≤ 0, skip all enrichment scaling (we have enough supply).
+- If gap > 0, use **free-first waterfall only** (Google Places → Firecrawl → site_scrape → Hunter free tier). Apollo/Hunter paid only fire when free sources can't close the gap.
+- Per-provider caps reduced to **just-enough**:
+  - Apollo cap = `gap × $0.05` (Apollo cost-per-validated, ~ $7.50 for 150 leads worst case)
+  - Hunter cap = `gap × $0.02` (~$3)
+  - Firecrawl cap = `gap × $0.005` (~$0.75)
+  - Hard ceiling = $15/day total in frugal mode.
+- No "scale-up" branch runs. No SMS scale-up alerts.
 
-**Rebalancer scaling change** (`cold-email-rebalancer`):
-- Scale-up logic now bumps each provider's cap independently with per-provider headroom (Apollo max $120/day, Hunter max $60/day, Firecrawl max $20/day). Total still capped at $200.
-- Decay also per-provider toward each baseline.
-- SMS now reports: `"Apollo $30→$80, Hunter $15→$40 (gap=420)"`.
+### 2. MRR-vs-spend gate
 
-**Admin UI**: Cold Email Audit page gains a "Provider Budgets" card showing today's spend, cap, % used, and inline editable caps (admin only).
+New view `cold_email_economics_today`:
+- `spend_today_cents` = sum of `lead_enrichment_audit.cost_cents` today
+- `spend_30d_cents` = same, last 30 days
+- `mrr_attributed_cents` = sum of active subscriptions where `signup_source IN ('cold_email','outreach_lead')` × monthly price
+- `mrr_covers_spend` = `mrr_attributed_cents >= spend_30d_cents`
+
+Rebalancer checks `mrr_covers_spend` at top of run:
+- `false` → frugal_mode forced ON (even if admin toggled off)
+- `true` → frugal_mode respects admin toggle (allows opt-in scale-up)
+
+### 3. Daily cost-per-150 SMS (8 PM ET)
+
+New cron `cold-email-daily-economics` (8 PM ET, after send window closes):
+- Queries today's: sends_count, spend_cents, leads_enriched, replies, new_signups
+- Computes: `cost_per_send = spend / sends`, `cost_per_150 = cost_per_send × 150`
+- Computes 7-day rolling avg `avg_cost_per_150_7d`
+- Sends SMS to Matt:
+  ```
+  📧 Cold Email Daily
+  Sent: 148/150 ✓
+  Spend: $4.20 ($0.028/send)
+  Cost to hit 150: $4.26
+  7d avg: $5.10/day
+  30d spend: $142 | MRR cov: $0
+  Mode: FRUGAL 🔒
+  ```
+- If `mrr_covers_spend` flips true, SMS includes: `🟢 MRR now covers spend — scale-up unlocked`.
+
+### 4. Admin UI updates (`/dwa-admin/cold-email-audit`)
+
+- New "Economics" card: today spend, 7d avg cost/150, 30d spend vs attributed MRR, gauge showing coverage ratio.
+- Frugal Mode toggle (disabled/locked when MRR < spend, with tooltip "Locked until MRR covers spend").
+- Provider budget cards now show "Frugal cap" vs "Max cap" side-by-side.
 
 ---
 
-### 3. Safety Circuit Breaker
+## Files
 
-**New table** `enrichment_circuit_breaker_state`:
-- `id`, `tripped_at`, `reason` (failure_rate|bounce_rate|cost_runaway), `metric_value`, `threshold`, `cleared_at`, `auto_reset_at` (default tripped_at + 6h).
+**New**
+- `supabase/migrations/<ts>_frugal_mode_economics.sql` — adds `frugal_mode` column, `cold_email_economics_today` view, signup_source attribution on `field_crm_clients`/`hire_alert_clients`/etc.
+- `supabase/functions/cold-email-daily-economics/index.ts` + cron entry
 
-**Thresholds** (configurable in `enrichment_walker_config`):
-- `failure_rate_threshold` (default 0.40) — calculated from last 200 audit rows.
-- `bounce_rate_threshold` (default 0.08) — calculated from `email_send_log` bounces in last 24h, scoped to leads enriched today.
-- `cost_per_validated_email_threshold_cents` (default 75) — runaway cost guard.
+**Edited**
+- `supabase/functions/cold-email-rebalancer/index.ts` — frugal-mode branch, MRR gate, skip scale-up when supply ≥ gap
+- `supabase/functions/_shared/enrichment-budget.ts` — frugal-mode cap calculator
+- `src/pages/admin/AdminColdEmailAudit.tsx` — Economics card + locked toggle
+- `supabase/config.toml` — register new function
 
-**Evaluator** runs at the start of every rebalancer scale-up call:
-1. Pull last-200 audit rows; compute `failure_rate` per provider AND overall.
-2. Pull last-24h bounces from leads enriched today; compute bounce rate.
-3. Compute cost-per-validated.
-4. If any threshold breached → write `enrichment_circuit_breaker_state` row, set `enrichment_walker_config.budget_frozen=true`, freeze all per-provider caps at their current values (no scale-ups), SMS Matt: `"🛑 Enrichment circuit tripped: Apollo failure 47% (>40%). Budget frozen until 8 PM."`
-5. Auto-reset after `auto_reset_at` if metric recovers; otherwise stays tripped and re-alerts every 4h.
-6. Admin "Reset Breaker" button on dashboard (with confirm).
-
-**Rebalancer behavior when tripped**: Still runs sender allocation (uses already-enriched supply) but skips all "scale up budget" + "trigger enrichment burst" branches. Logs `breaker_blocked: true` in response.
-
----
-
-### Files Touched
-
-**New**:
-- `supabase/migrations/<ts>_enrichment_kpis_budgets_breaker.sql` (3 tables + view + config columns)
-- `supabase/functions/enrichment-kpi-monitor/index.ts` + cron entry
-- `supabase/functions/_shared/enrichment-budget.ts` (per-provider gate)
-- `supabase/functions/_shared/enrichment-breaker.ts` (evaluator + state read/write)
-
-**Edited**:
-- `supabase/functions/outreach-leads-enrich/index.ts` — KPI accumulator, per-provider gate
-- `supabase/functions/cold-email-rebalancer/index.ts` — per-provider scaling, breaker check
-- `supabase/functions/_shared/email-waterfall.ts` — gate Apollo/Hunter calls
-- `src/pages/admin/AdminColdEmailAudit.tsx` — Throughput card, Provider Budgets card, Breaker status + reset
-- `supabase/config.toml` — register `enrichment-kpi-monitor`
-
-**Cron**:
-- `enrichment-kpi-monitor` every 30 min, 11 AM–8 PM ET
-
-### Acceptance
-- KPI row written for every enrichment run, visible on dashboard.
-- Apollo overspend (e.g. $120 single run) blocked at $80 cap; Hunter still callable.
-- Simulated 50% failure spike trips breaker, SMS sent, scale-ups frozen, sender allocation continues.
-- Throughput shortfall for 60 min → SMS alert with required vs actual rate.
+## Acceptance
+- Default day: spend < $10, hits 150 sends, SMS at 8 PM with cost breakdown.
+- Admin can't disable frugal mode while MRR=0.
+- When supply > gap, Apollo/Hunter never called (zero spend).
+- 7-day rolling cost-per-150 visible in SMS + dashboard.
