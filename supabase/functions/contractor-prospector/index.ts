@@ -751,7 +751,7 @@ serve(async (req) => {
           if (careAlertSent >= CARE_ALERT_CAP || isTimedOut()) break;
           const name = place.displayName?.text || "Unknown Facility";
           const phone = place.nationalPhoneNumber || null;
-          const website = place.websiteUri || null;
+          const website = cleanWebsite(place.websiteUri);
 
           const { data: existing } = await sb.from("outreach_leads").select("id")
             .ilike("business_name", name).ilike("city", city.replace(" MI", "")).limit(1);
@@ -859,7 +859,7 @@ serve(async (req) => {
 
       const name = place.displayName?.text || "Unknown Business";
         const phone = place.nationalPhoneNumber || null;
-        const website = place.websiteUri || null;
+        const website = cleanWebsite(place.websiteUri);
         const rating = place.rating || 0;
         const reviewCount = place.userRatingCount || 0;
 
@@ -1223,7 +1223,7 @@ serve(async (req) => {
           }
 
           const name = place.displayName?.text || sig.company_name;
-          const website = place.websiteUri || null;
+          const website = cleanWebsite(place.websiteUri);
           let email: string | null = null;
           if (website) email = await scrapeEmail(website);
           if (!email) {
