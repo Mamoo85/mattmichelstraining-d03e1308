@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 const FLOOR = 150;
+const DEFAULT_POOL_THRESHOLD = 50;
+
 const COLD_TEMPLATES = [
   "cold_outreach",
   "multi_service_pitch_1", "multi_service_pitch_2", "multi_service_pitch_3",
@@ -26,15 +28,22 @@ const SENDERS: { fn: string; label: string; product: string; trial: string }[] =
 
 interface DayBucket { date: string; count: number }
 interface TplBucket { template: string; count: number }
+interface PoolRow { name: string; fn: string; available: number }
+interface PlanRow { fn: string; pool: string; available: number; planned_send: number }
+interface SupplyPool { product: string; key: string; unsent_with_email: number; unenriched_no_email: number }
 
 export default function AdminColdEmailAudit() {
   const [days, setDays] = useState<DayBucket[]>([]);
   const [today, setToday] = useState<TplBucket[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [supply, setSupply] = useState<SupplyPool[]>([]);
+  const [plan, setPlan] = useState<PlanRow[] | null>(null);
+  const [planMeta, setPlanMeta] = useState<{ sentToday: number; gap: number; target: number } | null>(null);
+  const [target, setTarget] = useState(FLOOR);
+  const [poolThreshold, setPoolThreshold] = useState(DEFAULT_POOL_THRESHOLD);
 
-  const load = async () => {
-    setLoading(true);
+  const loadVolume = async () => {
     const since = new Date(Date.now() - 14 * 86400_000).toISOString();
     const { data, error } = await supabase
       .from("email_send_log")
@@ -43,19 +52,13 @@ export default function AdminColdEmailAudit() {
       .eq("status", "sent")
       .gte("created_at", since)
       .limit(10000);
-    if (error) {
-      toast.error(error.message);
-      setLoading(false);
-      return;
-    }
-    // dedupe by message_id
+    if (error) { toast.error(error.message); return; }
     const seen = new Set<string>();
     const dedup = (data || []).filter((r: any) => {
       if (!r.message_id || seen.has(r.message_id)) return false;
       seen.add(r.message_id);
       return true;
     });
-
     const byDay = new Map<string, number>();
     for (let i = 13; i >= 0; i--) {
       const d = new Date(Date.now() - i * 86400_000).toISOString().slice(0, 10);
@@ -70,10 +73,75 @@ export default function AdminColdEmailAudit() {
     }
     setDays([...byDay.entries()].map(([date, count]) => ({ date, count })));
     setToday([...tplToday.entries()].map(([template, count]) => ({ template, count })).sort((a, b) => b.count - a.count));
+  };
+
+  const loadSupply = async () => {
+    // Outreach pool (multi-service / web design / local business all share this)
+    const [unsentOutreach, unenrichedOutreach, unsentContractor, unenrichedContractor, unsentTech] = await Promise.all([
+      supabase.from("outreach_leads").select("id", { count: "exact", head: true })
+        .or("owner_email.not.is.null,enriched_email.not.is.null,validated_email.not.is.null,email.not.is.null")
+        .is("last_contact_date", null),
+      supabase.from("outreach_leads").select("id", { count: "exact", head: true })
+        .is("owner_email", null).is("enriched_email", null).is("validated_email", null).is("email", null),
+      supabase.from("contractor_outreach_prospects").select("id", { count: "exact", head: true })
+        .not("email", "is", null).is("last_emailed_at", null).is("suppressed_at", null),
+      supabase.from("contractor_outreach_prospects").select("id", { count: "exact", head: true })
+        .is("email", null).is("suppressed_at", null),
+      supabase.from("hire_alert_candidates").select("id", { count: "exact", head: true })
+        .eq("enrichment_status", "enriched"),
+    ]);
+    setSupply([
+      { product: "Outreach Pool (Multi/Web/Local)", key: "outreach", unsent_with_email: unsentOutreach.count ?? 0, unenriched_no_email: unenrichedOutreach.count ?? 0 },
+      { product: "Contractor Prospects", key: "contractor", unsent_with_email: unsentContractor.count ?? 0, unenriched_no_email: unenrichedContractor.count ?? 0 },
+      { product: "TechAlert Candidates", key: "techalert", unsent_with_email: unsentTech.count ?? 0, unenriched_no_email: 0 },
+    ]);
+  };
+
+  const load = async () => {
+    setLoading(true);
+    await Promise.all([loadVolume(), loadSupply()]);
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
+
+  const previewAllocation = async () => {
+    setBusy("preview");
+    const { data, error } = await supabase.functions.invoke("cold-email-rebalancer", {
+      body: { dry_run: true, target },
+    });
+    setBusy(null);
+    if (error) { toast.error(error.message); return; }
+    const d = data as any;
+    setPlan(d.plan || []);
+    setPlanMeta({ sentToday: d.sentToday, gap: d.gap, target: d.target });
+    toast.success(`Preview: ${d.gap} sends planned across ${(d.plan || []).filter((p: any) => p.planned_send > 0).length} senders.`);
+  };
+
+  const runRebalancer = async () => {
+    if (!confirm(`Run rebalancer LIVE — send up to ${target} emails today?`)) return;
+    setBusy("rebalance");
+    const { data, error } = await supabase.functions.invoke("cold-email-rebalancer", {
+      body: { force: true, target },
+    });
+    setBusy(null);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Rebalancer fired: ${(data as any)?.invoked?.length || 0} senders invoked.`);
+    setTimeout(load, 4000);
+  };
+
+  const drainEnrichment = async () => {
+    if (!confirm("Drain the enrichment backlog? This loops until all unenriched leads have an email or 4 minutes elapse.")) return;
+    setBusy("drain");
+    const { data, error } = await supabase.functions.invoke("outreach-leads-enrich", {
+      body: { drain: true, batch: 50 },
+    });
+    setBusy(null);
+    if (error) { toast.error(error.message); return; }
+    const d = data as any;
+    toast.success(`Drain complete — enriched ${d.enriched}, failed ${d.failed}, skipped ${d.skipped} across ${d.batches} batches`);
+    setTimeout(load, 2000);
+  };
 
   const runFn = async (fn: string) => {
     setBusy(fn);
@@ -89,12 +157,12 @@ export default function AdminColdEmailAudit() {
     const { data, error } = await supabase.functions.invoke("cold-email-volume-sentinel", { body: { force: true } });
     setBusy(null);
     if (error) toast.error(error.message);
-    else toast.success(`Sentinel: sent ${(data as any)?.count}/${FLOOR}, shortfall ${(data as any)?.shortfall}`);
+    else toast.success(`Sentinel: sent ${(data as any)?.count}/${target}, shortfall ${(data as any)?.shortfall}`);
     setTimeout(load, 5000);
   };
 
   const todayCount = days[days.length - 1]?.count || 0;
-  const max = Math.max(FLOOR, ...days.map((d) => d.count));
+  const max = Math.max(target, ...days.map((d) => d.count));
 
   return (
     <div className="min-h-screen bg-background p-6 space-y-6">
@@ -106,8 +174,8 @@ export default function AdminColdEmailAudit() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-4">
           <div className="text-xs text-muted-foreground">Today</div>
-          <div className={`text-3xl font-bold ${todayCount >= FLOOR ? "text-green-500" : "text-destructive"}`}>{todayCount}</div>
-          <div className="text-xs">/ {FLOOR} floor</div>
+          <div className={`text-3xl font-bold ${todayCount >= target ? "text-green-500" : "text-destructive"}`}>{todayCount}</div>
+          <div className="text-xs">/ {target} target</div>
         </Card>
         <Card className="p-4">
           <div className="text-xs text-muted-foreground">14-day total</div>
@@ -118,17 +186,96 @@ export default function AdminColdEmailAudit() {
           <div className="text-3xl font-bold">{Math.round(days.reduce((a, d) => a + d.count, 0) / 14)}</div>
         </Card>
         <Card className="p-4">
-          <div className="text-xs text-muted-foreground">Days under floor</div>
-          <div className="text-3xl font-bold text-destructive">{days.filter((d) => d.count < FLOOR).length}</div>
+          <div className="text-xs text-muted-foreground">Days under target</div>
+          <div className="text-3xl font-bold text-destructive">{days.filter((d) => d.count < target).length}</div>
         </Card>
       </div>
 
+      {/* Supply Pool Card */}
       <Card className="p-4">
-        <h2 className="font-semibold mb-4">14-Day Volume vs 150 Floor</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold">Live Supply Pools (unsent with email)</h2>
+          <div className="flex items-center gap-2 text-xs">
+            <label>Alert threshold:</label>
+            <input
+              type="number" min={1} value={poolThreshold}
+              onChange={(e) => setPoolThreshold(Number(e.target.value) || 50)}
+              className="bg-background border border-border px-2 py-0.5 rounded w-20"
+            />
+            <Button size="sm" variant="outline" onClick={drainEnrichment} disabled={busy === "drain"}>
+              {busy === "drain" ? "Draining…" : "Drain Enrichment Backlog"}
+            </Button>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {supply.map((s) => {
+            const low = s.unsent_with_email < poolThreshold;
+            return (
+              <div key={s.key} className={`border rounded p-3 ${low ? "border-destructive bg-destructive/5" : "border-border"}`}>
+                <div className="text-xs text-muted-foreground">{s.product}</div>
+                <div className={`text-2xl font-bold ${low ? "text-destructive" : ""}`}>{s.unsent_with_email}</div>
+                <div className="text-[10px] text-muted-foreground">ready to send</div>
+                {s.unenriched_no_email > 0 && (
+                  <div className="text-[11px] text-amber-500 mt-1">⚠ {s.unenriched_no_email} need enrichment</div>
+                )}
+                {low && <Badge variant="destructive" className="mt-2 text-[9px]">Below threshold</Badge>}
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* Allocation preview */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold">Rebalancer Allocation</h2>
+          <div className="flex items-center gap-2">
+            <label className="text-xs">Target:</label>
+            <input
+              type="number" min={1} value={target}
+              onChange={(e) => setTarget(Number(e.target.value) || FLOOR)}
+              className="bg-background border border-border px-2 py-0.5 rounded w-20 text-sm"
+            />
+            <Button size="sm" variant="outline" onClick={previewAllocation} disabled={busy === "preview"}>
+              {busy === "preview" ? "..." : "Preview"}
+            </Button>
+            <Button size="sm" onClick={runRebalancer} disabled={busy === "rebalance"}>
+              {busy === "rebalance" ? "Sending…" : "Run Live"}
+            </Button>
+          </div>
+        </div>
+        {planMeta && (
+          <div className="text-sm mb-2 text-muted-foreground">
+            Sent today: <strong>{planMeta.sentToday}</strong> • Gap to target: <strong>{planMeta.gap}</strong> • Target: <strong>{planMeta.target}</strong>
+          </div>
+        )}
+        {plan && plan.length > 0 ? (
+          <table className="w-full text-sm">
+            <thead className="text-xs text-muted-foreground border-b">
+              <tr><th className="text-left py-1">Sender</th><th className="text-left">Pool</th><th className="text-right">Available</th><th className="text-right">Planned Send</th></tr>
+            </thead>
+            <tbody>
+              {plan.map((p) => (
+                <tr key={p.fn} className="border-b">
+                  <td className="py-1 font-mono text-xs">{p.fn}</td>
+                  <td>{p.pool}</td>
+                  <td className="text-right">{p.available}</td>
+                  <td className="text-right font-bold">{p.planned_send}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="text-xs text-muted-foreground">Click Preview to see how the rebalancer would split the next {target}-send batch across senders.</div>
+        )}
+      </Card>
+
+      <Card className="p-4">
+        <h2 className="font-semibold mb-4">14-Day Volume vs {target} Target</h2>
         <div className="flex items-end gap-2 h-48">
           {days.map((d) => {
             const pct = (d.count / max) * 100;
-            const under = d.count < FLOOR;
+            const under = d.count < target;
             return (
               <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
                 <div className="text-[10px]">{d.count}</div>
@@ -141,7 +288,7 @@ export default function AdminColdEmailAudit() {
             );
           })}
         </div>
-        <div className="mt-2 text-xs text-muted-foreground">Red bars = under 150/day floor</div>
+        <div className="mt-2 text-xs text-muted-foreground">Red bars = under target/day</div>
       </Card>
 
       <Card className="p-4">
@@ -161,7 +308,7 @@ export default function AdminColdEmailAudit() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">Senders & Trial Verification</h2>
           <Button onClick={runSentinel} disabled={busy === "sentinel"}>
-            {busy === "sentinel" ? "Running..." : `Force 150 Top-Off`}
+            {busy === "sentinel" ? "Running..." : `Force ${target} Top-Off`}
           </Button>
         </div>
         <div className="space-y-2">
@@ -187,7 +334,8 @@ export default function AdminColdEmailAudit() {
         <ul className="text-sm space-y-1 list-disc pl-5">
           <li>Hiring radars (TechAlert / CareAlert / Talent / Hire) → <strong>30-day</strong> trial, no CC</li>
           <li>All other monthly products → <strong>7-day</strong> trial, no CC, <strong>+ 50% off first 3 months</strong></li>
-          <li>Enforced in <code>_shared/dwa-email.ts</code> &rarr; <code>trialCtaHtml()</code></li>
+          <li>Suppression + dedup enforced via <code>email_suppression_unified</code> view</li>
+          <li>Free-first enrichment waterfall: Google Places → Firecrawl → Hunter → Apollo</li>
         </ul>
       </Card>
     </div>
