@@ -337,21 +337,10 @@ BODY:
 
 function buildEmailHtml(body: string): string {
   const htmlBody = body.replace(/\n/g, "<br>");
-  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
-<tr><td style="background:#e8621a;padding:3px 0;"></td></tr>
-<tr><td style="padding:24px;color:#334155;font-size:15px;line-height:1.8;">
-${htmlBody}
-<div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
-<img src="https://www.mattmichelstraining.com/images/matt-boat.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;vertical-align:middle;" alt="Matt">
-<span style="margin-left:12px;font-size:13px;color:#334155;vertical-align:middle;"><strong>Matt Michels</strong> · Grosse Pointe, MI · (313) 992-1219</span>
-</div>
-</td></tr>
-<tr><td style="background:#f8fafc;padding:12px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
-M2 Development · Grosse Pointe, MI
-</td></tr>
-</table></td></tr></table></body></html>`;
+  return wrapDwaShell(htmlBody, {
+    product: "Contractor Leads",
+    ctaUrl: "https://detroitwebagent.com/contractor-leads?utm_source=cold&utm_campaign=contractor_drip",
+  });
 }
 
 // ── AGENT 3: SNIPER_DEAD — Dead Lead Reactivation Pitch ──
