@@ -44,8 +44,12 @@ interface Posting {
   is_boiler: boolean;
 }
 
+// Module-level guard so once we get a 402 from Sonar in this run we stop hammering it
+let SONAR_DISABLED_REASON: string | null = null;
+
 async function sonarSearch(role: typeof ROLES[number]): Promise<Posting[]> {
   if (!OPENROUTER_API_KEY) return [];
+  if (SONAR_DISABLED_REASON) return [];
   const prompt = `Find ACTIVE job postings on Indeed, ZipRecruiter, SimplyHired, and LinkedIn Jobs for "${role.q}" in ${METRO_QUERY}. Return ONLY a JSON array, no prose. Each item: {"company_name": "string", "city": "string", "days_posted": number_estimate_or_null, "source_url": "url", "source_label": "Indeed|ZipRecruiter|SimplyHired|LinkedIn"}. Find at least 12 distinct companies. Skip staffing agencies, temp agencies, recruiters. Only direct employers (HVAC contractors, plumbing companies, electrical contractors, mechanical contractors, manufacturers).`;
 
   try {
