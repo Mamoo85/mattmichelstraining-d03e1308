@@ -13,6 +13,13 @@ import {
   apolloPeopleSearch,
 } from "../_shared/apollo.ts";
 import { runEmailWaterfall, type WaterfallCounters } from "../_shared/email-waterfall.ts";
+import {
+  isAggregatorDomain,
+  isEnterprise,
+  cleanWebsite,
+  domainFromUrl,
+  googlePlacesWebsite,
+} from "../_shared/enrichment-pipeline.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
