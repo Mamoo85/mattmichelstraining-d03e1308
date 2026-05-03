@@ -269,5 +269,36 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[plumbing] rental registrations:", e); }
 
+  // 9. SeeClickFix 311 — Detroit water/sewer service requests (keyword-routed from all-issue feed)
+  try {
+    const res = await fetch(
+      "https://seeclickfix.com/api/v2/issues?place_url=detroit&per_page=50&sort=created_at&direction=desc",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(12_000) },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const issue of (d?.issues ?? [])) {
+        const summary: string = (issue?.summary ?? issue?.description ?? "").toLowerCase();
+        if (!/water|sewer|pipe|drain|plumb|leak|flood|backup|raw sewage|sewage/i.test(summary)) continue;
+        const addr: string = issue?.address ?? issue?.location_name ?? "";
+        const zip: string = (addr.match(/\b(4\d{4})\b/) ?? [])[1] ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: issue?.city ?? "Detroit", zip,
+          signal_type: "plumbing_permit_major",
+          signal_detail: `SeeClickFix 311 water/sewer report: "${issue.summary ?? "issue"}" — ${issue.status ?? "open"}. Resident-reported water or drainage issue = active plumbing problem`,
+          signal_date: issue.created_at ? issue.created_at.slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 7,
+          source_method: "seeclickfix_water",
+          suggested_opener: "We saw a water or sewer issue was recently reported at your address — these are often signs of a line failure or serious blockage. We can assess same-day and have repairs permitted within 48 hours.",
+          best_call_window: "While issue is open or unresolved",
+          estimated_value: 3500,
+          raw_source_data: { id: issue.id, summary: issue.summary, status: issue.status },
+        });
+      }
+    }
+  } catch (e) { console.error("[plumbing] SeeClickFix:", e); }
+
   return signals;
 }

@@ -362,5 +362,36 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[foundation] compliance certs:", e); }
 
+  // 11. SeeClickFix 311 — Detroit flooding, sinkhole, and structural collapse reports (keyword-routed)
+  try {
+    const res = await fetch(
+      "https://seeclickfix.com/api/v2/issues?place_url=detroit&per_page=50&sort=created_at&direction=desc",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(12_000) },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const issue of (d?.issues ?? [])) {
+        const summary: string = (issue?.summary ?? issue?.description ?? "").toLowerCase();
+        if (!/flood|sinkhole|collapse|settling|crack|sink hole|basement.*water|water.*basement|foundation/i.test(summary)) continue;
+        const addr: string = issue?.address ?? issue?.location_name ?? "";
+        const zip: string = (addr.match(/\b(4\d{4})\b/) ?? [])[1] ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: issue?.city ?? "Detroit", zip,
+          signal_type: "heavy_rain_foundation",
+          signal_detail: `SeeClickFix 311 foundation/flood report: "${issue.summary ?? "issue"}" — ${issue.status ?? "open"}. Resident-reported flooding, settling, or structural issue = active foundation concern`,
+          signal_date: issue.created_at ? issue.created_at.slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 8,
+          source_method: "seeclickfix_foundation",
+          suggested_opener: "A flooding or sinking issue was recently reported at your address — Detroit clay soil causes seasonal foundation movement that only gets worse without intervention. We do free assessments and most repairs are covered by homeowner's insurance.",
+          best_call_window: "Within 30 days of report",
+          estimated_value: 12000,
+          raw_source_data: { id: issue.id, summary: issue.summary, status: issue.status },
+        });
+      }
+    }
+  } catch (e) { console.error("[foundation] SeeClickFix:", e); }
+
   return signals;
 }
