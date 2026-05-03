@@ -13819,6 +13819,7 @@ export type Database = {
           custom_flaw: string | null
           drip_campaign_status: Json | null
           email: string | null
+          enriched_at: string | null
           enriched_email: string | null
           enriched_email_at: string | null
           enriched_email_confidence: number | null
@@ -13837,7 +13838,9 @@ export type Database = {
           lead_score_indicators: string[] | null
           notes: string | null
           offer_pitched: string | null
+          owner_email: string | null
           owner_name: string | null
+          owner_phone: string | null
           phone: string | null
           sms_2_sent: boolean
           sms_2_sent_at: string | null
@@ -13861,6 +13864,7 @@ export type Database = {
           custom_flaw?: string | null
           drip_campaign_status?: Json | null
           email?: string | null
+          enriched_at?: string | null
           enriched_email?: string | null
           enriched_email_at?: string | null
           enriched_email_confidence?: number | null
@@ -13879,7 +13883,9 @@ export type Database = {
           lead_score_indicators?: string[] | null
           notes?: string | null
           offer_pitched?: string | null
+          owner_email?: string | null
           owner_name?: string | null
+          owner_phone?: string | null
           phone?: string | null
           sms_2_sent?: boolean
           sms_2_sent_at?: string | null
@@ -13903,6 +13909,7 @@ export type Database = {
           custom_flaw?: string | null
           drip_campaign_status?: Json | null
           email?: string | null
+          enriched_at?: string | null
           enriched_email?: string | null
           enriched_email_at?: string | null
           enriched_email_confidence?: number | null
@@ -13921,7 +13928,9 @@ export type Database = {
           lead_score_indicators?: string[] | null
           notes?: string | null
           offer_pitched?: string | null
+          owner_email?: string | null
           owner_name?: string | null
+          owner_phone?: string | null
           phone?: string | null
           sms_2_sent?: boolean
           sms_2_sent_at?: string | null
@@ -23028,6 +23037,14 @@ export type Database = {
         }
         Relationships: []
       }
+      email_suppression_unified: {
+        Row: {
+          email: string | null
+          origin: string | null
+          reason: string | null
+        }
+        Relationships: []
+      }
       enrich_observability: {
         Row: {
           calls_24h: number | null
@@ -23736,6 +23753,7 @@ export type Database = {
         Returns: boolean
       }
       is_aggregator_domain: { Args: { url: string }; Returns: boolean }
+      is_email_suppressed: { Args: { p_email: string }; Returns: boolean }
       is_enrichment_provider_disabled: {
         Args: { p_provider: string }
         Returns: boolean
