@@ -2192,3 +2192,7 @@ verify_jwt = false
 
 [functions.cold-email-rebalancer]
 verify_jwt = false
+
+[functions.enrichment-kpi-monitor]
+verify_jwt = false
+
