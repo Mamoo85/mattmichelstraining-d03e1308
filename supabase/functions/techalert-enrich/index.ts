@@ -13,6 +13,13 @@ import {
   apolloPeopleSearch,
 } from "../_shared/apollo.ts";
 import { runEmailWaterfall, type WaterfallCounters } from "../_shared/email-waterfall.ts";
+import {
+  isAggregatorDomain,
+  isEnterprise,
+  cleanWebsite,
+  domainFromUrl,
+  googlePlacesWebsite,
+} from "../_shared/enrichment-pipeline.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -36,66 +43,8 @@ const OWNER_TITLES = [
   "facilities manager",
 ];
 
-// Skip enterprise targets (Ford/GM/DTE/Wayne State/Magna…) — they need a
-// totally different sales motion (RFP), not a cold email to "the owner".
-const ENTERPRISE_BLOCKLIST = [
-  "ford motor", "general motors", "stellantis", "dte energy", "consumers energy",
-  "wayne state", "university of michigan", "michigan state", "henry ford health",
-  "beaumont", "trinity health", "ascension", "corewell", "magna international",
-  "lear", "borgwarner", "delphi", "denso", "fca", "gm", "ge ", "amazon",
-  "google", "microsoft", "wayne resa",
-];
-
-function isEnterprise(name: string, employeeCount?: number | null): boolean {
-  const n = name.toLowerCase();
-  if (ENTERPRISE_BLOCKLIST.some((b) => n.includes(b))) return true;
-  if (employeeCount && employeeCount > 500) return true;
-  return false;
-}
-
-const AGGREGATOR_DOMAINS = [
-  "indeed", "ziprecruiter", "linkedin", "github", "sec.gov", "uspto", "sam.gov",
-  "eventbrite", "usaspending", "nlrb", "courtlistener", "consumerfinance",
-  "detroitmi.gov", "michigan.gov", "mitalent.org", "simplyhired", "glassdoor",
-  "monster.com", "careerbuilder", "snagajob", "jobs2careers", "talent.com",
-  "jobcase", "google.com", "facebook.com", "yelp.com", "bbb.org", "yellowpages",
-  "manta.com", "dnb.com", "bizapedia", "buzzfile", "opencorporates",
-];
-
-function isAggregatorDomain(d: string | null): boolean {
-  if (!d) return true;
-  return AGGREGATOR_DOMAINS.some((a) => d.includes(a));
-}
-
-function domainFromUrl(raw?: string | null): string | null {
-  if (!raw) return null;
-  try {
-    const u = raw.startsWith("http") ? raw : `https://${raw}`;
-    return new URL(u).hostname.replace(/^www\./, "").toLowerCase();
-  } catch { return null; }
-}
-
-const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
-
-async function googlePlacesWebsite(name: string, city?: string | null, state?: string | null): Promise<string | null> {
-  if (!GOOGLE_MAPS_API_KEY) return null;
-  try {
-    const q = encodeURIComponent([name, city, state || "MI"].filter(Boolean).join(" "));
-    const findUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${q}&inputtype=textquery&fields=place_id&key=${GOOGLE_MAPS_API_KEY}`;
-    const f = await fetch(findUrl).then((r) => r.json());
-    const pid = f?.candidates?.[0]?.place_id;
-    if (!pid) return null;
-    const detUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${pid}&fields=website&key=${GOOGLE_MAPS_API_KEY}`;
-    const d = await fetch(detUrl).then((r) => r.json());
-    const site = d?.result?.website || null;
-    const dom = domainFromUrl(site);
-    if (dom && !isAggregatorDomain(dom)) return `https://${dom}`;
-    return null;
-  } catch (e) {
-    console.warn("[enrich] google places:", e instanceof Error ? e.message : e);
-    return null;
-  }
-}
+// Aggregator filter, enterprise guard, and Google Places fallback are all
+// imported from _shared/enrichment-pipeline.ts (single source of truth).
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });

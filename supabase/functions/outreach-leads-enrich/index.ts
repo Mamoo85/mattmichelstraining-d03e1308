@@ -8,6 +8,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { apolloOrganizationSearch, apolloPeopleSearch } from "../_shared/apollo.ts";
 import { hunterFindEmail } from "../_shared/hunter.ts";
 import { extractContactInfo } from "../_shared/firecrawl.ts";
+import {
+  isAggregatorDomain,
+  isEnterprise,
+  cleanWebsite,
+  domainFromUrl,
+  googlePlacesWebsite,
+} from "../_shared/enrichment-pipeline.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -52,6 +59,16 @@ serve(async (req) => {
         let ownerPhone: string | null = null;
         let website: string | null = null;
 
+        // Skip enterprise targets early
+        if (isEnterprise(lead.business_name)) {
+          await (sb.from as any)("outreach_leads").update({
+            enriched_at: new Date().toISOString(),
+            notes: "skipped_enterprise",
+          }).eq("id", lead.id);
+          skipped++;
+          continue;
+        }
+
         // Tier 1 — Apollo: org + people search
         const orgs = await apolloOrganizationSearch({
           q_organization_name: lead.business_name,
@@ -59,7 +76,7 @@ serve(async (req) => {
           per_page: 1,
         });
         const org = orgs[0] || null;
-        website = org?.website_url || null;
+        website = cleanWebsite(org?.website_url) || null;
 
         const people = await apolloPeopleSearch({
           organization_name: lead.business_name,
@@ -74,10 +91,15 @@ serve(async (req) => {
           (apolloContact?.first_name && apolloContact?.last_name
             ? `${apolloContact.first_name} ${apolloContact.last_name}` : null);
 
+        // Tier 1.5 — Google Places fallback when Apollo gave no website
+        if (!website) {
+          website = await googlePlacesWebsite(lead.business_name, lead.city, "MI");
+        }
+
         // Tier 2 — Hunter.io: domain search when Apollo has no email
         if (!ownerEmail && website) {
-          const domain = website.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "");
-          if (domain) {
+          const domain = domainFromUrl(website);
+          if (domain && !isAggregatorDomain(domain)) {
             const hunterContact = await hunterFindEmail(domain);
             if (hunterContact?.email) {
               ownerEmail = hunterContact.email;

@@ -15,6 +15,12 @@ import { hunterFindEmail } from "../_shared/hunter.ts";
 import { apolloOrgEnrich, apolloOrgSearch, apolloMixedPeopleSearch } from "../_shared/apollo.ts";
 import { extractContactInfo } from "../_shared/firecrawl.ts";
 import { parseEnrichmentTrace } from "../_shared/safe-parse.ts";
+import {
+  isAggregatorDomain,
+  isEnterprise,
+  cleanWebsite,
+  googlePlacesWebsite,
+} from "../_shared/enrichment-pipeline.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -63,7 +69,26 @@ Deno.serve(async (req) => {
     let owner: string | null = prospect.owner_name;
     let phone: string | null = prospect.phone;
     let verified = !!prospect.email_verified;
-    let website: string | null = prospect.website;
+    let website: string | null = cleanWebsite(prospect.website);
+    if (prospect.website && !website) {
+      // existing website was an aggregator — clear it so we re-discover
+      trace.push({ stage: "website_scrub_aggregator", original: prospect.website, ts: now() });
+    }
+    domain = extractDomain(website);
+
+    // Skip enterprises early — wrong outreach motion (RFP, not cold email)
+    if (isEnterprise(prospect.business_name)) {
+      await supabase
+        .from("contractor_outreach_prospects")
+        .update({
+          enriched_at: new Date().toISOString(),
+          enrichment_trace: [...trace, { stage: "skipped_enterprise", ts: now() }],
+        })
+        .eq("id", prospect_id);
+      return new Response(JSON.stringify({ ok: true, skipped: "enterprise" }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // ── Stage 1: Hunter.io domain search ─────────────────────────────────────
     if (!email && domain) {
@@ -102,11 +127,11 @@ Deno.serve(async (req) => {
         const orgEmail = org.email || org.sanitized_email;
         trace.push({ stage: "apollo_org_search", found: !!orgEmail || !!org.website_url, ts: now() });
         if (orgEmail) { email = orgEmail; verified = true; }
-        // Discovered a website — store it and run Hunter on the new domain
-        if (!email && org.website_url && !website) {
-          website = org.website_url;
+        // Discovered a website — scrub aggregator hits, persist, then re-Hunter
+        const candidate = cleanWebsite(org.website_url);
+        if (!email && candidate && !website) {
+          website = candidate;
           domain = extractDomain(website);
-          // Persist newly discovered website so future runs skip this stage
           await supabase.from("contractor_outreach_prospects")
             .update({ website }).eq("id", prospect_id);
           if (domain) {
@@ -118,6 +143,29 @@ Deno.serve(async (req) => {
               if (!owner && (hit.first_name || hit.last_name)) {
                 owner = [hit.first_name, hit.last_name].filter(Boolean).join(" ");
               }
+            }
+          }
+        }
+      }
+    }
+
+    // ── Stage 3.5: Google Places fallback ─────────────────────────────────────
+    if (!website) {
+      const places = await googlePlacesWebsite(prospect.business_name, prospect.city, prospect.state);
+      trace.push({ stage: "google_places", found: !!places, ts: now() });
+      if (places) {
+        website = places;
+        domain = extractDomain(website);
+        await supabase.from("contractor_outreach_prospects")
+          .update({ website }).eq("id", prospect_id);
+        if (!email && domain) {
+          const hit = await hunterFindEmail(domain);
+          trace.push({ stage: "hunter_after_places", domain, found: !!hit?.email, ts: now() });
+          if (hit?.email) {
+            email = hit.email;
+            verified = true;
+            if (!owner && (hit.first_name || hit.last_name)) {
+              owner = [hit.first_name, hit.last_name].filter(Boolean).join(" ");
             }
           }
         }

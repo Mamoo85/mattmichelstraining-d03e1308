@@ -6,6 +6,7 @@
  * POST {} → { ok, found, inserted, skipped, apollo_count, seed_count }
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { apolloMixedPeopleSearch } from "../_shared/apollo.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -75,23 +76,17 @@ const MI_MLO_SEED: Array<{ company: string; city?: string }> = [
 async function searchApollo(page = 1): Promise<any[]> {
   if (!APOLLO_API_KEY) return [];
   try {
-    const res = await fetch("https://api.apollo.io/api/v1/mixed_people/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-api-key": APOLLO_API_KEY },
-      body: JSON.stringify({
-        person_titles: ["Mortgage Loan Originator", "MLO", "Loan Officer", "Mortgage Banker", "Senior Loan Officer", "Loan Originator"],
-        person_locations: ["Michigan, US", "Michigan"],
-        page,
-        per_page: 25,
-      }),
-      signal: AbortSignal.timeout(12000),
+    const r = await apolloMixedPeopleSearch({
+      person_titles: ["Mortgage Loan Originator", "MLO", "Loan Officer", "Mortgage Banker", "Senior Loan Officer", "Loan Originator"],
+      person_locations: ["Michigan, US", "Michigan"],
+      page,
+      per_page: 25,
     });
-    if (!res.ok) {
-      console.warn("[find-lo apollo] HTTP", res.status, await res.text().catch(() => ""));
+    if (!r.ok) {
+      console.warn("[find-lo apollo] failed:", r.error);
       return [];
     }
-    const data = await res.json();
-    return data?.people ?? [];
+    return r.data?.people ?? [];
   } catch (e) {
     console.warn("[find-lo apollo]", e instanceof Error ? e.message : String(e));
     return [];
