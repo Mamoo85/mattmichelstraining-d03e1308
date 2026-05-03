@@ -194,5 +194,35 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[pest] blight:", e); }
 
+  // 7. DLBA Auction Sales — vacant property buyers inherit severe pest problems
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/dlba_auction_sales/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,sale_closed_date,amt_final_sale_price,sale_program&resultRecordCount=30&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "foreclosure_vacant",
+          signal_detail: `DLBA Auction Sale: ${addr} — DLBA properties vacant for years have active rodent colonies, raccoon nesting, and cockroach infestations before renovation can begin`,
+          signal_date: a.sale_closed_date ? new Date(a.sale_closed_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.foreclosure_vacant,
+          source_method: "dlba_auction_sales",
+          suggested_opener: "You just purchased a DLBA property — these homes almost always have active pest infestations from years of vacancy. We do pre-renovation pest assessments and exclusion work so you don't seal rodents inside your new walls.",
+          best_call_window: "Before renovation begins — within 30 days of auction close",
+          estimated_value: 600,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[pest] DLBA auction:", e); }
+
   return signals;
 }

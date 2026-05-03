@@ -320,6 +320,114 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] DLBA for sale:", e); }
 
+  // 9. Historic District Violations — per-address violations in designated historic districts
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Historic_District_Violations/FeatureServer/0/query?where=case_status+%3C%3E+'Closed'&outFields=address,zip_code,intake_date,historic_district,case_status,has_roof_gutter_chimney_violati,has_siding_walls_violation,has_paint_violation,has_construction_new_violation,has_demolition_violation&resultRecordCount=40&orderByFields=OBJECTID+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const violationTypes: string[] = [];
+        if (a.has_roof_gutter_chimney_violati) violationTypes.push("roof/chimney");
+        if (a.has_siding_walls_violation) violationTypes.push("siding/walls");
+        if (a.has_paint_violation) violationTypes.push("paint");
+        if (a.has_construction_new_violation) violationTypes.push("construction");
+        if (a.has_demolition_violation) violationTypes.push("demolition risk");
+        if (!violationTypes.length) violationTypes.push("historic compliance");
+        const signalType = (a.has_roof_gutter_chimney_violati || a.has_siding_walls_violation)
+          ? "water_damage_permit" : "mold_remediation_permit";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: signalType,
+          signal_detail: `Historic District Violation (${a.historic_district ?? "Detroit"}): ${violationTypes.join(", ")} — historic properties require preservation-compliant contractors to avoid fines`,
+          signal_date: a.intake_date ? new Date(a.intake_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES[signalType],
+          source_method: "detroit_historic_violations",
+          suggested_opener: `Your property in the ${a.historic_district ?? "historic"} district has an open violation — standard contractors can void your tax credits. We specialize in preservation-compliant restoration and can resolve the citation with HPC-approved methods.`,
+          best_call_window: "While violation is open",
+          estimated_value: 15000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] historic violations:", e); }
+
+  // 10. DLBA Auction Sales — investor buyers need full interior restoration before occupancy
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/dlba_auction_sales/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,sale_closed_date,amt_final_sale_price,sale_program,neighborhood&resultRecordCount=30&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "water_damage_permit",
+          signal_detail: `DLBA Auction Sale: ${addr} sold for $${(a.amt_final_sale_price || 0).toLocaleString()} (${a.sale_program ?? "auction"}) — DLBA properties have 90%+ rate of water intrusion, mold, and structural damage after years of vacancy`,
+          signal_date: a.sale_closed_date ? new Date(a.sale_closed_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.water_damage_permit,
+          source_method: "dlba_auction_sales",
+          suggested_opener: "You just bought a DLBA property — these homes almost always have hidden water damage and mold from years of vacancy. A full restoration assessment before renovation starts saves 30-40% in change orders.",
+          best_call_window: "Within 30 days of auction close",
+          estimated_value: 15000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] DLBA auction:", e); }
+
+  // 11. BSEED Building Permit Plan Reviews — pending remediation work signals upcoming demand
+  try {
+    const where = encodeURIComponent(
+      `work_description LIKE '%WATER%' OR work_description LIKE '%FIRE%' OR work_description LIKE '%MOLD%' OR work_description LIKE '%FLOOD%' OR work_description LIKE '%REMEDIATION%'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permit_plan_reviews/FeatureServer/0/query?where=${where}&outFields=address,zip_code,submitted_date,task,task_status,work_description&resultRecordCount=30&orderByFields=ObjectId+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const desc = (a.work_description ?? "").toUpperCase();
+        const signalType = desc.includes("FIRE") || desc.includes("SMOKE")
+          ? "fire_damage_permit"
+          : desc.includes("MOLD") || desc.includes("REMEDIATION")
+            ? "mold_remediation_permit"
+            : "water_damage_permit";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: signalType,
+          signal_detail: `BSEED Plan Review (${a.task_status ?? "pending"}): ${(a.work_description ?? "").slice(0, 100)} — permit under review = work authorized but contractor not yet selected`,
+          signal_date: a.submitted_date ? new Date(a.submitted_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES[signalType] - 1,
+          source_method: "bseed_plan_reviews",
+          suggested_opener: OPENERS[signalType].opener,
+          best_call_window: "While plan review is pending — 2-4 week window",
+          estimated_value: 8000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] plan reviews:", e); }
+
   // 8. National Register of Historic Places — historic structures require preservation-compliant restoration
   try {
     const res = await fetch(

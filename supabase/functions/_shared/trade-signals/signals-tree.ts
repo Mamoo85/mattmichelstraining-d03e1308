@@ -304,5 +304,35 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[tree] assessor sales:", e); }
 
+  // 9. BSEED Demolition Permits — trees near demolition sites are damaged during work
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_demolition_permits/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,issued_date,work_description&resultRecordCount=30&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "tree_permit_upsell",
+          signal_detail: `BSEED Demolition Permit: ${addr} — demolition disturbs root systems of adjacent trees. Heavy equipment compacts soil, severs roots, and causes structural damage that appears 6-24 months after demo work completes`,
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 5,
+          source_method: "bseed_demo_permits",
+          suggested_opener: "A demolition permit was just filed next door — heavy equipment causes root compression and mechanical damage to adjacent trees. A post-demo tree health assessment takes 20 minutes and identifies risk before a tree fails into your property.",
+          best_call_window: "During and within 6 months of demolition",
+          estimated_value: 1500,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[tree] demo permits:", e); }
+
   return signals;
 }

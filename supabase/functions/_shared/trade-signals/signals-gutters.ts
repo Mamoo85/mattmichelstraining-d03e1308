@@ -243,5 +243,35 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[gutters] assessor sales:", e); }
 
+  // 8. BSEED Occupancy Certificates — recently completed major renovations trigger neighborhood attention
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_occupancy_certificates/FeatureServer/0/query?where=task_status+%3D+'Completed'&outFields=address,zip_code,issued_date,permit_type,work_description,construction_type&resultRecordCount=40&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "roof_permit_upsell",
+          signal_detail: `BSEED Occupancy Certificate: ${addr} — completed ${(a.work_description ?? a.permit_type ?? "renovation").slice(0, 80)}. New occupancy = visible renovation on the block; neighbors notice and want the same curb appeal improvement`,
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 6,
+          source_method: "bseed_occupancy_certs",
+          suggested_opener: "A home on your block just completed a full renovation and received a new occupancy certificate — we're in the neighborhood offering assessments to adjacent homeowners on the same permit cycle.",
+          best_call_window: "Within 45 days of occupancy certificate issuance",
+          estimated_value: 2000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[gutters] occupancy certs:", e); }
+
   return signals;
 }

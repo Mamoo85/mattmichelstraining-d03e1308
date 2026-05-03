@@ -205,5 +205,93 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[demo_junk] DLBA:", e); }
 
+  // 7. BSEED Dedicated Demolition Permits — cleaner data than keyword-filtering building permits
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_demolition_permits/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,issued_date,work_description,owner_name,latitude,longitude&resultRecordCount=50&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "demo_permit",
+          signal_detail: `BSEED Demolition Permit: ${(a.work_description ?? "demolition").slice(0, 100)} — owner: ${a.owner_name ?? "on file"}`,
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.demo_permit,
+          source_method: "bseed_demo_permits",
+          suggested_opener: OPENERS.demo_permit.opener,
+          best_call_window: OPENERS.demo_permit.window,
+          estimated_value: 3500,
+          raw_source_data: { ...a, lat: a.latitude, lon: a.longitude },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] BSEED demo permits:", e); }
+
+  // 8. DLBA Auction Sales — new buyers of distressed properties need immediate clearout
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/dlba_auction_sales/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,sale_closed_date,amt_final_sale_price,sale_program,neighborhood&resultRecordCount=40&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "estate_clearout",
+          signal_detail: `DLBA Auction Sale: ${addr} (${a.sale_program ?? "auction"}) sold for $${(a.amt_final_sale_price || 0).toLocaleString()} — investors who buy at DLBA auction need immediate debris removal to start renovation`,
+          signal_date: a.sale_closed_date ? new Date(a.sale_closed_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.estate_clearout,
+          source_method: "dlba_auction_sales",
+          suggested_opener: "You just picked up a DLBA property — these homes are full of debris, personal property, and often hazardous materials. We do same-week full clearouts so you can start renovation on schedule.",
+          best_call_window: "Within 30 days of auction close",
+          estimated_value: 2000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] DLBA auction:", e); }
+
+  // 9. Detroit Commercial Demolitions — city-tracked commercial demo projects (contractor referral signal)
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Commercial_Demolitions/FeatureServer/0/query?where=1%3D1&outFields=address,demo_date,projected_demo_date,demolition_contractor,status,neighborhood&resultRecordCount=40&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        if (!addr) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "demo_permit",
+          signal_detail: `City commercial demolition: ${addr} — contractor: ${a.demolition_contractor ?? "TBD"}, status: ${a.status ?? "active"}, projected: ${a.projected_demo_date ? new Date(a.projected_demo_date).toISOString().slice(0, 10) : "TBD"}`,
+          signal_date: a.demo_date ? new Date(a.demo_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.demo_permit - 1,
+          source_method: "detroit_commercial_demo",
+          suggested_opener: "We see a commercial demo is scheduled at this address — we specialize in post-demolition debris hauling and site clearance, and coordinate directly with the demolition crew for zero downtime.",
+          best_call_window: "Within 2 weeks of projected demo date",
+          estimated_value: 5000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] commercial demo:", e); }
+
   return signals;
 }

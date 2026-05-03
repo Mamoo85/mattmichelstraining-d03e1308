@@ -332,5 +332,35 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[foundation] historic register:", e); }
 
+  // 10. BSEED Active Residential Compliance Certificates expiring — reinspection = must fix issues first
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_active_residential_compliance_certificates/FeatureServer/0/query?where=num_days_until_expired+%3C%3D+60+AND+num_days_until_expired+%3E%3D+0&outFields=address,zip_code,issued_date,expired_date,num_days_until_expired&resultRecordCount=40&orderByFields=num_days_until_expired+ASC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "heavy_rain_foundation",
+          signal_detail: `BSEED Compliance Cert expiring in ${a.num_days_until_expired ?? "?"} days: ${addr} — reinspection requires all structural issues resolved. Foundation cracks, water intrusion, and settlement must be remediated before certificate renewal`,
+          signal_date: a.expired_date ? new Date(a.expired_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 8,
+          source_method: "bseed_compliance_certs",
+          suggested_opener: "Your BSEED compliance certificate expires soon — the reinspection will flag any foundation or structural issues. We offer a pre-inspection assessment so you know what to fix before the city inspector arrives.",
+          best_call_window: "30-60 days before certificate expiration",
+          estimated_value: 10000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[foundation] compliance certs:", e); }
+
   return signals;
 }

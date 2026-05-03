@@ -284,5 +284,35 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[hvac] assessor sales:", e); }
 
+  // 9. BSEED Rental Registrations — landlords actively registering properties need HVAC service contracts
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_rental_registrations/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,issued_date,registration_type,neighborhood&resultRecordCount=50&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "aging_system_proxy",
+          signal_detail: `BSEED Rental Registration (${a.registration_type ?? "rental"}): landlord at ${addr} — rental properties in Detroit average 50+ years old with original HVAC. City registration = actively managed, decision-maker reachable`,
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 7,
+          source_method: "bseed_rental_registrations",
+          suggested_opener: "Your rental property at this address is registered with the city — most Detroit rental properties haven't had an HVAC inspection in years. Tenant comfort complaints and emergency breakdowns cost landlords $500-2k more than preventive service contracts.",
+          best_call_window: "Within 60 days of registration",
+          estimated_value: 4000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] rental registrations:", e); }
+
   return signals;
 }

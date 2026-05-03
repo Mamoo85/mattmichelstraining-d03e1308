@@ -343,5 +343,79 @@ export async function scanSignals(
     }
   } catch (e) { console.error("[roofing] assessor sales:", e); }
 
+  // 10. BSEED Occupancy Certificates — completed renovations = adjacent homes need same roof work
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_occupancy_certificates/FeatureServer/0/query?where=task_status+%3D+'Completed'+AND+(work_description+LIKE+'%25ROOF%25'+OR+work_description+LIKE+'%25REROOF%25'+OR+permit_type+LIKE+'%25ROOF%25')&outFields=address,zip_code,issued_date,work_description,permit_type&resultRecordCount=30&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "new_homeowner_roof",
+          signal_detail: `BSEED Occupancy: roof work completed at ${addr} — neighboring homes on the same block/era were built at the same time and have the same remaining roof life`,
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 6,
+          source_method: "bseed_occupancy_certs",
+          suggested_opener: "A home on your block just had a full roof replacement. Homes built in the same era have the same roof life — we're doing free block inspections this week while our crew is in the area.",
+          best_call_window: "Within 30 days of occupancy certificate",
+          estimated_value: 12000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] occupancy certs:", e); }
+
+  // 11. NOAA CDO Historical Hail Events — Wayne/Oakland/Macomb counties (past 12 months)
+  // Uses existing NOAA_API_KEY. WT09 = hail occurred on that date.
+  try {
+    const noaaKey = Deno.env.get("NOAA_API_KEY");
+    if (noaaKey) {
+      const twelveMonthsAgo = new Date(Date.now() - 365 * 86400_000).toISOString().slice(0, 10);
+      const today = new Date().toISOString().slice(0, 10);
+      const counties = [
+        { fips: "FIPS:26163", name: "Wayne County" },
+        { fips: "FIPS:26125", name: "Oakland County" },
+        { fips: "FIPS:26099", name: "Macomb County" },
+      ];
+      let hailDays = 0;
+      const hailCounties: string[] = [];
+      for (const county of counties) {
+        const res = await fetch(
+          `https://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=GHCND&locationid=${county.fips}&datatypeid=WT09&startdate=${twelveMonthsAgo}&enddate=${today}&limit=100`,
+          { headers: { token: noaaKey, "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+        );
+        if (res.ok) {
+          const d = await res.json();
+          const results: any[] = d?.results ?? [];
+          const days = results.filter((r) => r.value === 1 || r.value === "1").length;
+          if (days > 0) { hailDays += days; hailCounties.push(`${county.name} (${days} days)`); }
+        }
+      }
+      if (hailDays > 0) {
+        signals.push({
+          address: `SE Michigan — ${hailDays} hail days in past 12 months`,
+          city: state, zip: "",
+          signal_type: "hail_damage_area",
+          signal_detail: `NOAA CDO: ${hailCounties.join("; ")} — hail events in past year leave unaddressed damage on roofs not inspected post-storm`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.hail_damage_area,
+          source_method: "noaa_cdo_historical",
+          suggested_opener: "SE Michigan had multiple hail events this past year — many homeowners had minor damage that wasn't worth an insurance claim but is accelerating roof wear. We do free damage assessments.",
+          best_call_window: "Evergreen — historical hail creates ongoing demand",
+          estimated_value: 12000,
+          raw_source_data: { hail_days: hailDays, counties: hailCounties },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] NOAA CDO:", e); }
+
   return signals;
 }

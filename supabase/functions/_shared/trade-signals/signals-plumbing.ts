@@ -239,5 +239,35 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[plumbing] assessor sales:", e); }
 
+  // 8. BSEED Rental Registrations — landlords need plumbing compliance inspections
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_rental_registrations/FeatureServer/0/query?where=1%3D1&outFields=address,zip_code,issued_date,registration_type&resultRecordCount=50&orderByFields=ObjectId+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        const zip: string = a.zip_code ?? "";
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "plumbing_permit_major",
+          signal_detail: `BSEED Rental Registration: ${addr} — Detroit rental units built before 1986 must disclose lead service lines. Landlords registering older properties face city compliance requirements for lead testing`,
+          signal_date: a.issued_date ? new Date(a.issued_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 6,
+          source_method: "bseed_rental_registrations",
+          suggested_opener: "Your rental property registration triggers Detroit's lead service line disclosure requirement — we can test and replace your lead line under the city's program, often at no out-of-pocket cost to you.",
+          best_call_window: "Within 60 days of registration",
+          estimated_value: 4500,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[plumbing] rental registrations:", e); }
+
   return signals;
 }

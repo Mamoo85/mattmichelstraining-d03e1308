@@ -289,5 +289,50 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[exterior] assessor sales:", e); }
 
+  // 9. NOAA CDO Historical Hail + Wind — Wayne/Oakland/Macomb (past 12 months)
+  // WT09 = hail occurred; WT11 = high/damaging winds. Uses existing NOAA_API_KEY.
+  try {
+    const noaaKey = Deno.env.get("NOAA_API_KEY");
+    if (noaaKey) {
+      const twelveMonthsAgo = new Date(Date.now() - 365 * 86400_000).toISOString().slice(0, 10);
+      const today = new Date().toISOString().slice(0, 10);
+      const counties = [
+        { fips: "FIPS:26163", name: "Wayne County" },
+        { fips: "FIPS:26125", name: "Oakland County" },
+      ];
+      let stormDays = 0;
+      const stormCounties: string[] = [];
+      for (const county of counties) {
+        for (const datatype of ["WT09", "WT11"]) {
+          const res = await fetch(
+            `https://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=GHCND&locationid=${county.fips}&datatypeid=${datatype}&startdate=${twelveMonthsAgo}&enddate=${today}&limit=100`,
+            { headers: { token: noaaKey, "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+          );
+          if (res.ok) {
+            const d = await res.json();
+            const results: any[] = d?.results ?? [];
+            const days = results.filter((r) => r.value === 1 || r.value === "1").length;
+            if (days > 0) { stormDays += days; stormCounties.push(`${county.name} ${datatype === "WT09" ? "hail" : "wind"} (${days}d)`); }
+          }
+        }
+      }
+      if (stormDays > 0) {
+        signals.push({
+          address: `SE Michigan — ${stormDays} hail/wind event days past year`,
+          city: state, zip: "",
+          signal_type: "storm_siding_damage",
+          signal_detail: `NOAA CDO: ${stormCounties.join("; ")} — hail and high winds cause siding dents, fascia damage, and paint peeling that many homeowners don't address until they see the neighbor's fresh exterior`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.storm_siding_damage,
+          source_method: "noaa_cdo_historical",
+          suggested_opener: "SE Michigan had significant hail and wind this past year — siding dents and paint damage from storms are easy to miss but show up at resale inspection. We offer free storm damage assessments.",
+          best_call_window: "Evergreen — post-storm siding/paint demand builds over months",
+          estimated_value: 6000,
+          raw_source_data: { storm_days: stormDays, counties: stormCounties },
+        });
+      }
+    }
+  } catch (e) { console.error("[exterior] NOAA CDO:", e); }
+
   return signals;
 }
