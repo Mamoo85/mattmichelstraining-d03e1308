@@ -19,7 +19,8 @@ import {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-const BATCH = 20; // Apollo rate limit ceiling per run
+const DEFAULT_BATCH = 30; // Apollo rate limit ceiling per run
+const HARD_MAX_BATCH = 100; // upper safety cap when rebalancer requests scale-up
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,6 +35,11 @@ serve(async (req) => {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const startedAt = Date.now();
   let enriched = 0, failed = 0, skipped = 0;
+
+  // Allow rebalancer / sentinel to scale batch size up when supply is short
+  const body = await req.json().catch(() => ({} as any));
+  const requestedBatch = Number(body?.batch) || DEFAULT_BATCH;
+  const BATCH = Math.max(1, Math.min(HARD_MAX_BATCH, requestedBatch));
 
   try {
     // Fetch leads with no owner_email — exclude ones already tried (enriched_at set)

@@ -131,27 +131,78 @@ serve(async (req) => {
 
     // Supply early-warning: if total ready-to-send supply < remaining gap, scanners are behind
     const supplyShort = totalSupply < gap;
+    let budgetScaled: any = null;
     if (supplyShort) {
+      // ── Auto-scale Apollo/Hunter daily budget ─────────────────────────────
+      // The enrichment_matrix_walker is gated by enrichment_walker_config.daily_budget_usd.
+      // When sends are falling short of supply, bump the cap proportionally so
+      // Apollo + Hunter can keep up. Severity scales with shortfall ratio.
+      try {
+        const shortfallRatio = gap > 0 ? (gap - totalSupply) / gap : 0; // 0..1
+        const { data: cfg } = await sb
+          .from("enrichment_walker_config")
+          .select("value_numeric")
+          .eq("key", "daily_budget_usd")
+          .maybeSingle();
+        const current = Number(cfg?.value_numeric ?? 50);
+        // 1.5x for mild shortfall, up to 3x for severe; capped at $200/day
+        const multiplier = 1 + Math.min(2, Math.max(0.5, shortfallRatio * 3));
+        const next = Math.min(200, Math.round(current * multiplier));
+        if (next > current) {
+          await sb.from("enrichment_walker_config").upsert({
+            key: "daily_budget_usd",
+            value_numeric: next,
+          }, { onConflict: "key" });
+          budgetScaled = { from: current, to: next, multiplier: multiplier.toFixed(2), shortfallRatio: shortfallRatio.toFixed(2) };
+        }
+      } catch (e) {
+        console.error("budget scale failed", e);
+      }
+
       await sendSMS(
         ADMIN_PHONE,
         `🟡 SUPPLY LOW: only ${totalSupply} ready-to-send leads vs gap of ${gap}. ` +
         `Pools — outreach:${outreachSupply} contractor:${contractorSupply} techalert:${techalertSupply}. ` +
-        `Triggering scanners next cycle.`,
+        (budgetScaled ? `Apollo/Hunter budget bumped $${budgetScaled.from}→$${budgetScaled.to}/day. ` : "") +
+        `Triggering scanners + enrichment drain.`,
       ).catch(() => {});
 
-      // Auto-trigger scanners + enrichment to refill
+      // Auto-trigger scanners + enrichment with scaled batch sizes
+      const enrichBatch = budgetScaled ? 100 : 50;
       await Promise.all([
         sb.functions.invoke("techalert-prospect-hunter", { body: {} }).catch(() => {}),
         sb.functions.invoke("contractor-prospector", { body: {} }).catch(() => {}),
         sb.functions.invoke("prospect-local-businesses", { body: { discoverOnly: true } }).catch(() => {}),
-        sb.functions.invoke("outreach-leads-enrich", { body: { batch: 50 } }).catch(() => {}),
-        sb.functions.invoke("contractor-outreach-statewide-enrich", { body: { batch: 50 } }).catch(() => {}),
+        sb.functions.invoke("outreach-leads-enrich", { body: { batch: enrichBatch } }).catch(() => {}),
+        sb.functions.invoke("contractor-outreach-statewide-enrich", { body: { batch: enrichBatch } }).catch(() => {}),
+        // Kick the matrix walker now that it has fresh budget headroom
+        sb.functions.invoke("enrichment-matrix-walker", { body: {} }).catch(() => {}),
       ]);
+    } else {
+      // ── Auto-decay budget back toward baseline on healthy days ────────────
+      // If supply is comfortable for 2+ runs, gently relax the cap to baseline $50
+      // so we don't permanently overspend after a one-day spike.
+      try {
+        const { data: cfg } = await sb
+          .from("enrichment_walker_config")
+          .select("value_numeric")
+          .eq("key", "daily_budget_usd")
+          .maybeSingle();
+        const current = Number(cfg?.value_numeric ?? 50);
+        if (current > 50 && totalSupply > gap * 2) {
+          const next = Math.max(50, Math.round(current * 0.85));
+          await sb.from("enrichment_walker_config").upsert({
+            key: "daily_budget_usd",
+            value_numeric: next,
+          }, { onConflict: "key" });
+          budgetScaled = { from: current, to: next, decayed: true };
+        }
+      } catch (_) { /* best effort */ }
     }
 
     return new Response(JSON.stringify({
       ok: true, sentToday, gap, target, totalSupply, supplyShort,
-      pools, invoked: results,
+      budgetScaled, pools, invoked: results,
     }), { headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
