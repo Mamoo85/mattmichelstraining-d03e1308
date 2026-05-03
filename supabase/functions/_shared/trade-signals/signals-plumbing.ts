@@ -489,5 +489,37 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[plumbing] rental compliance view:", e); }
 
+  // 15. BSEED Residential Compliance Certificates expiring in 60 days — pre-inspection plumbing window
+  try {
+    const certWhere = encodeURIComponent(`num_days_until_expired <= 60 AND num_days_until_expired > 0`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_active_residential_compliance_certificates/FeatureServer/0/query?where=${certWhere}&outFields=address,zip_code,expired_date,num_days_until_expired&resultRecordCount=40&orderByFields=num_days_until_expired+ASC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const daysLeft = Number(a.num_days_until_expired) || 60;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "plumbing_permit_major",
+          signal_detail: `Detroit residential CofC expires in ${daysLeft} days: ${addr}. Water heater condition, backflow prevention, and fixture compliance are standard plumbing items in residential re-inspection`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: daysLeft <= 7 ? 9 : daysLeft <= 30 ? 8 : 7,
+          source_method: "bseed_residential_cert_expiry",
+          suggested_opener: `Your Certificate of Compliance at ${addr} expires in ${daysLeft} days — plumbing issues are commonly cited during re-inspection. We'll do a pre-audit so you pass clean the first time and avoid delays.`,
+          best_call_window: `Within ${Math.min(daysLeft, 45)} days`,
+          estimated_value: 3500,
+          raw_source_data: { addr, zip, days_left: daysLeft, expired_date: a.expired_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[plumbing] residential cert expiry:", e); }
+
   return signals;
 }
