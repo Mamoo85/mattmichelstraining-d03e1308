@@ -14,6 +14,47 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-05-03*
 
+### Phase 35 — ArcGIS Full Catalog Exhaustion + CofC Signal Across All 11 Verticals COMPLETE ✅
+
+**New sources added (this session continuation after context compaction):**
+
+**BSEED Residential CofC Expiring (`bseed_active_residential_compliance_certificates`):**
+- Added to ALL 11 trade radar verticals as `cofc_*_inspection` signal type
+- 11,487 total CofC records; `num_days_until_expired <= 90` returns 100+ expiring per 30/60/90-day windows
+- Scoring: `daysLeft <= 7 → 9`, `daysLeft <= 30 → 8`, `daysLeft <= 90 → 7`  
+- Signal types per vertical: `cofc_roof_inspection`, `cofc_hvac_inspection`, `cofc_plumbing_inspection`, `cofc_electrical_inspection`, `cofc_pest_inspection`, `cofc_gutter_inspection`, `cofc_exterior_inspection`, `cofc_tree_inspection`, `cofc_mold_water_inspection`, `cofc_debris_inspection`, `cofc_foundation_inspection`
+- These are per-address signals (not in AREA_ALERT_TYPES) — go through `validateLead` into `trade_radar_leads`
+- Commits: `338b03f3`
+
+**Detroit Fire Incidents (`Fire_Incidents` ArcGIS service):**
+- Added to restoration vertical as `fire_smoke_restoration` signal
+- Filter: `incident_type_description LIKE '%fire%' OR '%smoke%' OR '%CO incident%'` AND `property_use LIKE '%1 or 2 family%'`
+- 30-day rolling window; building fires → score 9, other incidents → score 7; `$15,000` estimated value
+- Live 2026 data confirmed (timestamps up to March 2026 in dataset)
+- Commit: `4a39a830`
+
+**Full ArcGIS catalog audit complete (770 services, 0 more untapped useful sources remaining):**
+Services checked this session and skipped (all confirmed non-useful):
+- `CSO_Events` — outfall location geometry only, no addresses
+- `bseed_active_residential_compliance_certificates` — expiring certificates ADDED (see above)
+- `bseed_occupancy_certificates` — old data (2021-2022 max)
+- `CAD_Demolitions` — 0 records (empty)
+- `Fire_Escrow_Properties` — 4-record dataset, all 5000+ days outstanding (2007-2010 era)
+- `Demolitions_under_Contract` — 0 records
+- `ROW_Permits` / `detroit_right_of_way_permits` — street-level only, no property addresses
+- `development_opportunities_dlba_buildings` — no date field for freshness
+- `dlba_vacant_land_program_sales` — max 2022 data
+- `RentalStatuses` — 2020 data, no useful signal fields
+- `Rental_Compliance_Enforcement_Map` — ZIP-level aggregates only
+- `Priority_Water_Replacements` — 2019 construction jobs, no addresses
+- `parcel_property_tax_estimates` — only parcel_id + tax estimate, no address
+- `tentative_assessment_roll_2026` — has `residential_year_built` but numeric WHERE filter returns 400 error; sale_date 30-day filter returns 0 results (delayed updates); skip for now
+- `CR_Complaints` — category/count summary table only
+- `911 Calls for Service` — 2022 data, traffic stops, not property-specific
+- `Rental_Registrations_(Combined)` — 2020 era data, fewer fields than `bseed_rental_registrations`
+- `Stop_Work_Locations_(View)` — 2018 data only, no address fields
+- `energy_water_benchmarking_ordinance_-_buildings` — large commercial buildings only (100k+ sqft), no residential
+
 ### Phase 34 — ArcGIS Audit + New Sources + TradeRadarHub Admin Panel COMPLETE ✅
 
 **ArcGIS service directory audited** (770 total services, ~110 unused relevant ones identified).
