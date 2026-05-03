@@ -554,5 +554,43 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[plumbing] plan reviews:", e); }
 
+  // BSEED Trades Permits — Plumbing Permits with owner name
+  try {
+    const since90 = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(
+      `permit_type = 'Plumbing Permit' AND address IS NOT NULL AND issued_date >= '${since90}'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_trades_permits/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date,permit_type,work_description,owner_name&resultRecordCount=50&orderByFields=issued_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const desc = (a.work_description || "").toLowerCase();
+        const isWaterMain = /water.main|service.line|main.replace|psrp/.test(desc);
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: isWaterMain ? "water_main_break" : "plumbing_permit_major",
+          signal_detail: `BSEED Plumbing Permit: ${a.owner_name ?? "owner"} — ${a.work_description ?? "plumbing work"} at ${addr}`,
+          signal_date: a.issued_date ? a.issued_date.slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES[isWaterMain ? "water_main_break" : "plumbing_permit_major"],
+          source_method: "bseed_trades_permits_plumb",
+          suggested_opener: isWaterMain
+            ? `You have a water service line replacement in progress at ${addr} — while the trench is open, many homeowners add a whole-house water filter and pressure-reducing valve at a fraction of normal install cost.`
+            : `You have an active plumbing permit at ${addr} — we specialize in bundling water heater replacement, trap updates, and backflow prevention into a single visit to keep permitting costs down.`,
+          best_call_window: "While permit is active",
+          estimated_value: isWaterMain ? 4000 : 2000,
+          raw_source_data: { addr, zip, desc: a.work_description, owner: a.owner_name, issued: a.issued_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[plumbing] trades permits:", e); }
+
   return signals;
 }

@@ -699,5 +699,43 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[hvac] plan reviews:", e); }
 
+  // BSEED Trades Permits — Mechanical Permits (HVAC/furnace/AC replacements) with owner name
+  // Separate service from bseed_building_permits — trade-specific permits only
+  try {
+    const since90 = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(
+      `permit_type = 'Mechanical Permit' AND address IS NOT NULL AND issued_date >= '${since90}'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_trades_permits/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date,permit_type,work_description,owner_name&resultRecordCount=50&orderByFields=issued_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const desc = (a.work_description || "").toLowerCase();
+        const isFurnace = /furnace|heat|boiler|heater/.test(desc);
+        const isAC = /a\/c|ac |air.cond|cooling|cool/.test(desc);
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "aging_system_proxy",
+          signal_detail: `BSEED Mechanical Permit: ${a.owner_name ?? "owner"} — ${a.work_description ?? "HVAC work"} at ${addr}. New ${isFurnace ? "heating" : isAC ? "cooling" : "HVAC"} install is the ideal time to add a maintenance contract`,
+          signal_date: a.issued_date ? a.issued_date.slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: 8,
+          source_method: "bseed_trades_permits_hvac",
+          suggested_opener: `You just had ${a.work_description ?? "an HVAC system"} installed at ${addr} — the first year is the most critical for catching install issues. Our maintenance contract covers one annual tune-up plus emergency priority service all year.`,
+          best_call_window: "Within 30 days of permit issuance",
+          estimated_value: 1200,
+          raw_source_data: { addr, zip, desc: a.work_description, owner: a.owner_name, issued: a.issued_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] trades permits:", e); }
+
   return signals;
 }

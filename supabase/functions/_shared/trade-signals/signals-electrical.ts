@@ -570,5 +570,43 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[electrical] assessor sales:", e); }
 
+  // BSEED Trades Permits — Electrical Permits with owner name
+  try {
+    const since90 = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const where = encodeURIComponent(
+      `permit_type = 'Electrical Permit' AND address IS NOT NULL AND issued_date >= '${since90}'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_trades_permits/FeatureServer/0/query?where=${where}&outFields=address,zip_code,issued_date,permit_type,work_description,owner_name&resultRecordCount=50&orderByFields=issued_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const desc = (a.work_description || "").toLowerCase();
+        const isPanel = /panel|service|upgrade|100 amp|200 amp|meter|disconnect/.test(desc);
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: isPanel ? "panel_upgrade_permit" : "renovation_electrical",
+          signal_detail: `BSEED Electrical Permit: ${a.owner_name ?? "owner"} — ${a.work_description ?? "electrical work"} at ${addr}`,
+          signal_date: a.issued_date ? a.issued_date.slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: isPanel ? BASE_SCORES.panel_upgrade_permit : BASE_SCORES.renovation_electrical,
+          source_method: "bseed_trades_permits_elec",
+          suggested_opener: isPanel
+            ? `You just permitted a ${a.work_description ?? "panel upgrade"} at ${addr} — while the service is being upgraded, it's an ideal time to add arc-fault breakers and ground-fault protection at no extra permit cost.`
+            : `You have an open electrical permit at ${addr} — if you're adding circuits or outlets, we can often quote generator hookup and EV charger rough-in at the same time to save you a second permit fee.`,
+          best_call_window: "While permit is active",
+          estimated_value: isPanel ? 4500 : 2500,
+          raw_source_data: { addr, zip, desc: a.work_description, owner: a.owner_name, issued: a.issued_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[electrical] trades permits:", e); }
+
   return signals;
 }
