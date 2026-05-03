@@ -554,5 +554,74 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[exterior] historic violations:", e); }
 
+  // Detroit Commercial Corridor Blight — properties flagged for exterior repair
+  try {
+    const where = encodeURIComponent(`repair_exterior_damage = 'yes' OR graffiti = 'yes' OR boarding = 'yes'`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Commercial_Corridor_Blight_Work_Completed_(View)/FeatureServer/0/query?where=${where}&outFields=address,owner,repair_exterior_damage,graffiti,boarding,wall_damage&resultRecordCount=40&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        if (!addr) continue;
+        const owner = (a.owner || "").trim();
+        const issues = [
+          a.repair_exterior_damage === "yes" ? "exterior damage" : "",
+          a.graffiti === "yes" ? "graffiti" : "",
+          a.boarding === "yes" ? "boarding" : "",
+          a.wall_damage === "yes" ? "wall damage" : "",
+        ].filter(Boolean).join(", ");
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "new_owner_exterior",
+          signal_detail: `Commercial corridor blight survey: ${addr} — flagged for: ${issues}. ${owner ? "Owner: " + owner : ""}`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.new_owner_exterior,
+          source_method: "commercial_corridor_blight",
+          suggested_opener: `Your property at ${addr} was flagged by the city for ${issues}. We specialize in commercial exterior restoration — painting, siding repair, and graffiti removal — and can give you a quote within 24 hours.`,
+          best_call_window: "Any time — city survey creates compliance pressure",
+          estimated_value: 8000,
+          raw_source_data: { addr, owner, issues },
+        });
+      }
+    }
+  } catch (e) { console.error("[exterior] commercial corridor blight:", e); }
+
+  // BSEED Plan Reviews — approved exterior/siding/window/addition plans
+  try {
+    const where = encodeURIComponent(
+      `(work_description LIKE '%SIDING%' OR work_description LIKE '%EXTERIOR%' OR work_description LIKE '%WINDOW%' OR work_description LIKE '%ADDITION%' OR work_description LIKE '%PAINT%') AND task_status LIKE '%Approved%'`,
+    );
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_building_permit_plan_reviews/FeatureServer/0/query?where=${where}&outFields=address,zip_code,submitted_date,work_description,task_status&resultRecordCount=25&orderByFields=ObjectId+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "new_owner_exterior",
+          signal_detail: `BSEED plan review approved: ${(a.work_description ?? "exterior project").slice(0, 100)} — approved exterior plans mean the work is starting within days`,
+          signal_date: a.submitted_date ? new Date(a.submitted_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.new_owner_exterior + 2,
+          source_method: "bseed_plan_reviews",
+          suggested_opener: `Your exterior project at ${addr} has approved plans — we can provide same-week painting, siding, or window installation once the permit clears.`,
+          best_call_window: "Immediately — plans approved means permit imminent",
+          estimated_value: 7000,
+          raw_source_data: { addr, zip, desc: a.work_description, status: a.task_status },
+        });
+      }
+    }
+  } catch (e) { console.error("[exterior] plan reviews:", e); }
+
   return signals;
 }
