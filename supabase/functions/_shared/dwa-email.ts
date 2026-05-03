@@ -72,7 +72,8 @@ export function trialCtaHtml(opts: { product: string; url: string }): string {
 
 export function isHiringProduct(product: string): boolean {
   const p = product.toLowerCase();
-  return p.includes("techalert") || p.includes("hire") || p.includes("talent") || p.includes("hiring");
+  return p.includes("techalert") || p.includes("hire") || p.includes("talent")
+      || p.includes("hiring") || p.includes("carealert");
 }
 
 /**
