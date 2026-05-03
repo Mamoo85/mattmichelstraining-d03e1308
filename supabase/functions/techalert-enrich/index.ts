@@ -145,6 +145,7 @@ serve(async (req) => {
           website = org?.website_url || org?.primary_domain
             ? (org.website_url || `https://${org.primary_domain}`)
             : null;
+          if (isAggregatorDomain(domainFromUrl(website))) website = null;
           employeeCount = org?.estimated_num_employees || org?.employee_count || null;
         } catch (e) {
           console.warn(`[enrich] apollo org ${target.company_name}:`, e instanceof Error ? e.message : e);
