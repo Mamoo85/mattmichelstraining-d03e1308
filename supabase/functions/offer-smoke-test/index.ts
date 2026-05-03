@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
 
     const [emailRes, smsRes] = await Promise.all([
       dwaEmail({ to: toEmail, subject: `[SMOKE] ${OFFERS[productKey].displayName} — offer preview`, html }),
-      sendSMS(toPhone, sms, { skipOptOutCheck: true }).catch((e: Error) => ({ ok: false, error: e.message })),
+      sendSMS(toPhone, Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219", sms, "offer_smoke_test").catch((e: Error) => ({ success: false, error: e.message })),
     ]);
 
     results.push({
