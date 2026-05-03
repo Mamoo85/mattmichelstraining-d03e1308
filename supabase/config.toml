@@ -2189,3 +2189,6 @@ verify_jwt = false
 
 [functions.cold-email-volume-sentinel]
 verify_jwt = false
+
+[functions.cold-email-rebalancer]
+verify_jwt = false

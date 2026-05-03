@@ -50,21 +50,20 @@ serve(async (req) => {
     }
 
     const shortfall = Math.max(0, FLOOR - count);
-    let topupResults: Record<string, any> = {};
+    let topupResults: any = null;
 
     if (shortfall > 0) {
-      // Fire 3 backfill runs in parallel
-      const fns = ["multi-service-drip", "web-design-drip", "prospect-local-businesses"];
-      const out = await Promise.all(fns.map((fn) =>
-        sb.functions.invoke(fn, { body: { backfill: true } })
-          .then((r) => ({ fn, ok: !r.error, error: r.error?.message }))
-          .catch((e) => ({ fn, ok: false, error: String(e) }))
-      ));
-      topupResults = Object.fromEntries(out.map((o) => [o.fn, o]));
+      // Delegate to rebalancer — it inventories supply per pool and routes
+      // to the senders that actually have leads available.
+      const { data, error: rebErr } = await sb.functions.invoke("cold-email-rebalancer", {
+        body: { force: true, target: FLOOR },
+      });
+      topupResults = rebErr ? { error: rebErr.message } : data;
 
       await sendSMS(
         ADMIN_PHONE,
-        `⚠️ COLD EMAIL FLOOR MISS: ${count}/${FLOOR} sent today (short ${shortfall}). Triggered 3 top-off runs. Check /dwa-admin/cold-email-audit.`,
+        `⚠️ COLD EMAIL FLOOR MISS: ${count}/${FLOOR} sent today (short ${shortfall}). ` +
+        `Rebalancer fired across all live pools. Check /dwa-admin/cold-email-audit.`,
       );
     }
 
