@@ -286,7 +286,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       ok: true, sentToday, gap, target, totalSupply, supplyShort,
-      breakerBlocked, breaker: breakerEval, activeBreaker,
+      frugal, mrrCovers, breakerBlocked, breaker: breakerEval, activeBreaker,
       budgetScaled, pools, plan, invoked: results,
     }), { headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e) {
