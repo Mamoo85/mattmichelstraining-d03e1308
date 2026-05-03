@@ -3058,6 +3058,45 @@ export type Database = {
         }
         Relationships: []
       }
+      cold_email_daily_cost_log: {
+        Row: {
+          cost_per_150_cents: number | null
+          cost_per_send_cents: number | null
+          created_at: string
+          frugal_mode: boolean | null
+          id: string
+          log_date: string
+          mrr_attributed_cents: number | null
+          mrr_covers_spend: boolean | null
+          sends_count: number
+          spend_cents: number
+        }
+        Insert: {
+          cost_per_150_cents?: number | null
+          cost_per_send_cents?: number | null
+          created_at?: string
+          frugal_mode?: boolean | null
+          id?: string
+          log_date: string
+          mrr_attributed_cents?: number | null
+          mrr_covers_spend?: boolean | null
+          sends_count: number
+          spend_cents: number
+        }
+        Update: {
+          cost_per_150_cents?: number | null
+          cost_per_send_cents?: number | null
+          created_at?: string
+          frugal_mode?: boolean | null
+          id?: string
+          log_date?: string
+          mrr_attributed_cents?: number | null
+          mrr_covers_spend?: boolean | null
+          sends_count?: number
+          spend_cents?: number
+        }
+        Relationships: []
+      }
       collections_clients: {
         Row: {
           active: boolean | null
@@ -23070,6 +23109,17 @@ export type Database = {
           tier?: string | null
           updated_at?: string | null
           website?: string | null
+        }
+        Relationships: []
+      }
+      cold_email_economics_today: {
+        Row: {
+          mrr_attributed_cents: number | null
+          mrr_covers_spend: boolean | null
+          sends_today: number | null
+          spend_30d_cents: number | null
+          spend_7d_cents: number | null
+          spend_today_cents: number | null
         }
         Relationships: []
       }
