@@ -15,6 +15,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendSMS } from "../_shared/twilio.ts";
 import { evaluateBreaker, getActiveBreaker } from "../_shared/enrichment-breaker.ts";
+import { isFrugalMode } from "../_shared/enrichment-budget.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -117,6 +118,23 @@ serve(async (req) => {
     const contractorSupply = pools.find(p => p.name === "contractor")?.available || 0;
     const techalertSupply = pools.find(p => p.name === "techalert")?.available || 0;
     const totalSupply = outreachSupply + contractorSupply + techalertSupply;
+    const supplyShort = totalSupply < gap;
+
+    // ── MRR-vs-spend gate: force frugal ON if cold-email MRR < 30d spend ─────
+    const { data: econ } = await sb
+      .from("cold_email_economics_today")
+      .select("spend_30d_cents, mrr_attributed_cents, mrr_covers_spend")
+      .maybeSingle();
+    const mrrCovers = !!econ?.mrr_covers_spend;
+    let frugal = await isFrugalMode(sb);
+    if (!mrrCovers && !frugal) {
+      // Force ON
+      await sb.from("enrichment_walker_config").upsert(
+        { key: "frugal_mode", value_text: "true" },
+        { onConflict: "key" },
+      );
+      frugal = true;
+    }
 
     if (gap === 0 && !force) {
       return new Response(JSON.stringify({
@@ -172,10 +190,24 @@ serve(async (req) => {
     }
 
     let budgetScaled: any = null;
-    if (supplyShort && !breakerBlocked) {
-      // ── Auto-scale per-provider daily budgets ──────────────────────────
+    if (supplyShort && !breakerBlocked && frugal) {
+      // ── FRUGAL MODE: free-first only. No paid-budget scale-up.
+      // Trigger free scanners + drain free enrichment sources only.
+      console.log("[rebalancer] frugal mode — free enrichment only, no scale-up");
+      await Promise.all([
+        sb.functions.invoke("techalert-prospect-hunter", { body: {} }).catch(() => {}),
+        sb.functions.invoke("contractor-prospector", { body: {} }).catch(() => {}),
+        sb.functions.invoke("prospect-local-businesses", { body: { discoverOnly: true } }).catch(() => {}),
+        // outreach-leads-enrich respects per-provider caps (frugal caps applied via shared helper)
+        sb.functions.invoke("outreach-leads-enrich", {
+          body: { batch: 50, triggered_by: "rebalancer_frugal", target_gap: gap, free_first_only: true },
+        }).catch(() => {}),
+      ]);
+      budgetScaled = { frugal: true, note: "no scale-up; free-first enrichment only" };
+    } else if (supplyShort && !breakerBlocked) {
+      // ── Open mode (MRR covers spend) — auto-scale per-provider budgets ──
       try {
-        const shortfallRatio = gap > 0 ? (gap - totalSupply) / gap : 0; // 0..1
+        const shortfallRatio = gap > 0 ? (gap - totalSupply) / gap : 0;
         const multiplier = 1 + Math.min(2, Math.max(0.5, shortfallRatio * 3));
         const changes: Array<{ label: string; from: number; to: number }> = [];
 
@@ -196,7 +228,6 @@ serve(async (req) => {
             changes.push({ label: pb.label, from: current, to: next });
           }
         }
-
         if (changes.length) {
           budgetScaled = { changes, multiplier: multiplier.toFixed(2), shortfallRatio: shortfallRatio.toFixed(2) };
         }
@@ -215,7 +246,7 @@ serve(async (req) => {
         `${scaleSummary}. Triggering scanners + enrichment.`,
       ).catch(() => {});
 
-      const enrichBatch = budgetScaled ? 100 : 50;
+      const enrichBatch = budgetScaled?.changes?.length ? 100 : 50;
       await Promise.all([
         sb.functions.invoke("techalert-prospect-hunter", { body: {} }).catch(() => {}),
         sb.functions.invoke("contractor-prospector", { body: {} }).catch(() => {}),
@@ -227,10 +258,9 @@ serve(async (req) => {
         sb.functions.invoke("enrichment-matrix-walker", { body: {} }).catch(() => {}),
       ]);
     } else if (supplyShort && breakerBlocked) {
-      // Breaker is tripped — do not scale, do not burst enrichment
       console.log("[rebalancer] supply short but breaker blocked, skipping enrichment burst");
-    } else {
-      // ── Auto-decay each provider budget back toward baseline ───────────
+    } else if (!frugal) {
+      // Auto-decay (only meaningful when not frugal)
       try {
         const { data: cfg } = await sb
           .from("enrichment_walker_config")
@@ -256,7 +286,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       ok: true, sentToday, gap, target, totalSupply, supplyShort,
-      breakerBlocked, breaker: breakerEval, activeBreaker,
+      frugal, mrrCovers, breakerBlocked, breaker: breakerEval, activeBreaker,
       budgetScaled, pools, plan, invoked: results,
     }), { headers: { ...cors, "Content-Type": "application/json" } });
   } catch (e) {

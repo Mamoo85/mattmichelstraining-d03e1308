@@ -5,22 +5,47 @@
 
 export type Provider = "apollo" | "hunter" | "firecrawl" | "places";
 
+export async function isFrugalMode(sb: any): Promise<boolean> {
+  const { data } = await sb
+    .from("enrichment_walker_config")
+    .select("value_text")
+    .eq("key", "frugal_mode")
+    .maybeSingle();
+  // Default ON if missing
+  return (data?.value_text ?? "true").toLowerCase() === "true";
+}
+
 export async function getProviderCapsCents(sb: any): Promise<Record<Provider, number>> {
   const { data } = await sb
     .from("enrichment_walker_config")
-    .select("key, value_numeric")
+    .select("key, value_numeric, value_text")
     .in("key", [
       "apollo_daily_budget_usd",
       "hunter_daily_budget_usd",
       "firecrawl_daily_budget_usd",
-      "budget_frozen",
+      "frugal_max_daily_usd",
+      "frugal_mode",
     ]);
-  const map = new Map<string, number>((data || []).map((r: any) => [r.key, Number(r.value_numeric ?? 0)]));
+  const num = new Map<string, number>((data || []).map((r: any) => [r.key, Number(r.value_numeric ?? 0)]));
+  const txt = new Map<string, string>((data || []).map((r: any) => [r.key, String(r.value_text ?? "")]));
+  const frugal = (txt.get("frugal_mode") ?? "true").toLowerCase() === "true";
+
+  if (frugal) {
+    // Frugal: split frugal_max_daily_usd 60/30/10 across Apollo/Hunter/Firecrawl
+    const totalCents = Math.round((num.get("frugal_max_daily_usd") ?? 15) * 100);
+    return {
+      apollo: Math.round(totalCents * 0.60),
+      hunter: Math.round(totalCents * 0.30),
+      firecrawl: Math.round(totalCents * 0.10),
+      places: Number.MAX_SAFE_INTEGER,
+    };
+  }
+
   return {
-    apollo: Math.round((map.get("apollo_daily_budget_usd") ?? 30) * 100),
-    hunter: Math.round((map.get("hunter_daily_budget_usd") ?? 15) * 100),
-    firecrawl: Math.round((map.get("firecrawl_daily_budget_usd") ?? 5) * 100),
-    places: Number.MAX_SAFE_INTEGER, // free
+    apollo: Math.round((num.get("apollo_daily_budget_usd") ?? 30) * 100),
+    hunter: Math.round((num.get("hunter_daily_budget_usd") ?? 15) * 100),
+    firecrawl: Math.round((num.get("firecrawl_daily_budget_usd") ?? 5) * 100),
+    places: Number.MAX_SAFE_INTEGER,
   };
 }
 
