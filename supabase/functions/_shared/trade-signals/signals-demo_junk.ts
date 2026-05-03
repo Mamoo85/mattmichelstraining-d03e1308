@@ -796,5 +796,39 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[demo_junk] OSM abandoned buildings:", e); }
 
+  // --- BSEED Residential CofC Expiring ---
+  try {
+    const where = encodeURIComponent(`num_days_until_expired <= 90 AND num_days_until_expired >= 0`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_active_residential_compliance_certificates/FeatureServer/0/query?where=${where}&outFields=address,zip_code,num_days_until_expired,expired_date&resultRecordCount=50&orderByFields=num_days_until_expired+ASC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      const today = new Date().toISOString().split("T")[0];
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const daysLeft = a.num_days_until_expired ?? 90;
+        const score = daysLeft <= 7 ? 9 : daysLeft <= 30 ? 8 : 7;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "cofc_debris_inspection",
+          signal_detail: `CofC expires in ${daysLeft} days — BSEED inspects for accumulated junk, debris, and accessory structure conditions at renewal. ${addr} landlord must have yard/interior cleared`,
+          signal_date: today,
+          score,
+          source_method: "bseed_cofc_expiring",
+          suggested_opener: `Your rental at ${addr} has a Certificate of Compliance expiring in ${daysLeft} days — inspectors flag accumulated bulk trash, junk vehicles, and debris in yards as automatic failures. A junk removal before the inspection protects your license.`,
+          best_call_window: "Immediately — renewal deadline",
+          estimated_value: 1500,
+          raw_source_data: { addr, zip, days_left: daysLeft, expires: a.expired_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] cofc expiring:", e); }
+
   return signals;
 }

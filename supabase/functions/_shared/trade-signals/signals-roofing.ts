@@ -832,5 +832,39 @@ export async function scanSignals(
     }
   } catch (e) { console.error("[roofing] vacant registrations:", e); }
 
+  // --- BSEED Residential CofC Expiring (landlords must pass all inspections) ---
+  try {
+    const where = encodeURIComponent(`num_days_until_expired <= 90 AND num_days_until_expired >= 0`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_active_residential_compliance_certificates/FeatureServer/0/query?where=${where}&outFields=address,zip_code,num_days_until_expired,expired_date&resultRecordCount=50&orderByFields=num_days_until_expired+ASC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      const today = new Date().toISOString().split("T")[0];
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const daysLeft = a.num_days_until_expired ?? 90;
+        const score = daysLeft <= 7 ? 9 : daysLeft <= 30 ? 8 : 7;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "cofc_roof_inspection",
+          signal_detail: `CofC expires in ${daysLeft} days (${a.expired_date}) — landlord must pass BSEED roof inspection or lose rental license at ${addr}`,
+          signal_date: today,
+          score,
+          source_method: "bseed_cofc_expiring",
+          suggested_opener: `Your rental property at ${addr} has a Certificate of Compliance expiring in ${daysLeft} days — BSEED inspectors check roof condition as part of the renewal. We can do a pre-inspection assessment so you know exactly what to fix before they arrive.`,
+          best_call_window: "Immediately — deadline-driven urgency",
+          estimated_value: 7500,
+          raw_source_data: { addr, zip, days_left: daysLeft, expires: a.expired_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[roofing] cofc expiring:", e); }
+
   return signals;
 }

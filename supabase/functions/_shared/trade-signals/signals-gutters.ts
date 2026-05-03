@@ -573,5 +573,39 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[gutters] rental registrations:", e); }
 
+  // --- BSEED Residential CofC Expiring ---
+  try {
+    const where = encodeURIComponent(`num_days_until_expired <= 90 AND num_days_until_expired >= 0`);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/bseed_active_residential_compliance_certificates/FeatureServer/0/query?where=${where}&outFields=address,zip_code,num_days_until_expired,expired_date&resultRecordCount=50&orderByFields=num_days_until_expired+ASC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      const today = new Date().toISOString().split("T")[0];
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const daysLeft = a.num_days_until_expired ?? 90;
+        const score = daysLeft <= 7 ? 9 : daysLeft <= 30 ? 8 : 7;
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "cofc_gutter_inspection",
+          signal_detail: `CofC expires in ${daysLeft} days — BSEED inspects exterior drainage at renewal. ${addr} clogged/detached gutters are a common CofC failure point`,
+          signal_date: today,
+          score,
+          source_method: "bseed_cofc_expiring",
+          suggested_opener: `Your rental at ${addr} has a Certificate of Compliance expiring in ${daysLeft} days — inspectors flag gutters pulling away from fascia or directing water toward the foundation. A gutter tune-up now prevents a CofC failure.`,
+          best_call_window: "Immediately — renewal deadline",
+          estimated_value: 2000,
+          raw_source_data: { addr, zip, days_left: daysLeft, expires: a.expired_date },
+        });
+      }
+    }
+  } catch (e) { console.error("[gutters] cofc expiring:", e); }
+
   return signals;
 }
