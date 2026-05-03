@@ -364,5 +364,39 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[exterior] NOAA CDO:", e); }
 
+  // (next source) Detroit Assessment Roll 2026 — recently sold pre-1970 homes (aging siding/paint)
+  try {
+    const since = new Date(Date.now() - 120 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/tentative_assessment_roll_2026/FeatureServer/0/query?where=sale_date+%3E%3D+'${since}'+AND+residential_year_built+%3C+1970+AND+residential_year_built+%3E+1880+AND+is_improved+%3D+1&outFields=address,zip_code,residential_year_built,sale_date,taxpayer_1&resultRecordCount=50&orderByFields=sale_date+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.address || "").trim();
+        const zip = String(a.zip_code || "").trim();
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const yrBuilt: number = a.residential_year_built || 0;
+        const owner = (a.taxpayer_1 || "").trim();
+        const sidingNote = yrBuilt < 1960 ? "original asbestos or fiber cement siding — professional removal required" : yrBuilt < 1970 ? "aging aluminum siding with oxidation and chalking" : "dated exterior needing fresh curb appeal";
+        signals.push({
+          address: addr, city: "Detroit", zip,
+          signal_type: "new_owner_exterior",
+          signal_detail: `Detroit new owner: ${addr} (built ${yrBuilt}, sold ${a.sale_date}) — ${sidingNote}. New owners frequently want exterior work done within the first year`,
+          signal_date: a.sale_date || new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.new_owner_exterior,
+          source_method: "detroit_assessment_roll",
+          suggested_opener: `${owner ? owner + " — " : ""}Welcome to ${addr}! Homes built in ${yrBuilt} have ${yrBuilt < 1960 ? "aging siding that may contain hazardous materials requiring licensed removal" : "original exterior that new owners usually refresh within the first year"}. Free exterior assessment with no obligation?`,
+          best_call_window: "Within 120 days of purchase",
+          estimated_value: 8000,
+          raw_source_data: { address: addr, zip, year_built: yrBuilt, sale_date: a.sale_date, owner },
+        });
+      }
+    }
+  } catch (e) { console.error("[exterior] Detroit assessment roll:", e); }
+
   return signals;
 }
