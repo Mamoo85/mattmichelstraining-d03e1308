@@ -697,6 +697,64 @@ async function scanDetroitOpenTradeBiz(): Promise<Posting[]> {
   return results;
 }
 
+// Completed Residential Demolitions — city demo contractors are growing Detroit businesses
+async function scanDemoContractors(): Promise<Posting[]> {
+  const results: Posting[] = [];
+  const seen = new Set<string>();
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Completed_Residential_Demolitions/FeatureServer/0/query?where=1%3D1&outFields=contractor_name,neighborhood&resultRecordCount=100&orderByFields=demolition_date+DESC&f=json",
+      { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) return results;
+    const d = await res.json();
+    for (const feat of (d?.features ?? [])) {
+      const a = feat?.attributes ?? {};
+      const name: string = a.contractor_name || "";
+      if (!name || seen.has(name.toLowerCase())) continue;
+      seen.add(name.toLowerCase());
+      results.push({
+        company_name: name,
+        city: "Detroit, MI",
+        role: "hvac_tech",
+        days_posted: null,
+        source_url: "https://detroitmi.gov/departments/housing-and-revitalization-department/detroit-demolition-program",
+        source_label: "Detroit Demolition Contractor (Active City Contract)",
+        is_boiler: false,
+      });
+    }
+  } catch (e) { console.error("[hunter] demo contractors:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
+// One-Billion-Dollar affordable housing construction sites — large-scale developers = enterprise targets
+async function scanBillionDollarConstruction(): Promise<Posting[]> {
+  const results: Posting[] = [];
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Multifamily_Housing_One_Billion_Dollar_Construction_Sites/FeatureServer/0/query?where=1%3D1&outFields=owner_developer_name,site_name,address,total_units&resultRecordCount=50&f=json",
+      { headers: { "User-Agent": "TechAlert matt@detroitwebagent.com" }, signal: AbortSignal.timeout(10_000) },
+    );
+    if (!res.ok) return results;
+    const d = await res.json();
+    for (const feat of (d?.features ?? [])) {
+      const a = feat?.attributes ?? {};
+      const name: string = a.owner_developer_name || a.site_name || "";
+      if (!name) continue;
+      results.push({
+        company_name: name,
+        city: "Detroit, MI",
+        role: "hvac_tech",
+        days_posted: null,
+        source_url: "https://detroitmi.gov/housing",
+        source_label: `Detroit $1B Housing Developer (${a.total_units ?? "?"} units)`,
+        is_boiler: false,
+      });
+    }
+  } catch (e) { console.error("[hunter] billion-dollar construction:", e instanceof Error ? e.message : e); }
+  return results;
+}
+
 // Detroit city procurement contracts — active MI contractors doing city work = growth signal
 async function scanDetroitCityContracts(): Promise<Posting[]> {
   const results: Posting[] = [];
@@ -791,7 +849,7 @@ serve(async (req) => {
     // Supplemental signals + NOAA weather bonus — all run in parallel
     // Includes the new signal-waterfall (DOL WARN, OSHA, FMCSA, DOT prequal, SAM expanded)
     const { fetchHireSignals } = await import("../_shared/signal-waterfall.ts");
-    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, detroitCityContractSignals, multifamilySignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
+    const [githubSignals, edgarSignals, usptoSignals, samSignals, blsSignals, eventbriteSignals, usaSpendingSignals, linkedinSignals, oshaSignals, laraNewSignals, laraDissolvedSignals, laraExpiringSignals, nlrbSignals, cfpbSignals, ch7Signals, detroitCertifiedSignals, detroitOpenBizSignals, detroitCityContractSignals, multifamilySignals, demoContractorSignals, billionDollarSignals, weatherBonus, hireWaterfallSignals] = await Promise.all([
       scanGitHubSignals(),
       scanEDGARFundings(),
       scanUSPTOPatents(),
@@ -811,10 +869,12 @@ serve(async (req) => {
       scanDetroitOpenTradeBiz(),
       scanDetroitCityContracts(),
       scanMultifamilyConstruction(),
+      scanDemoContractors(),
+      scanBillionDollarConstruction(),
       getWeatherHiringBonus(),
       fetchHireSignals(sb, { state: "MI", naics: "238220" }).catch(() => []),
     ]);
-    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...detroitCityContractSignals, ...multifamilySignals];
+    const supplemental = [...githubSignals, ...edgarSignals, ...usptoSignals, ...samSignals, ...blsSignals, ...eventbriteSignals, ...usaSpendingSignals, ...linkedinSignals, ...oshaSignals, ...laraNewSignals, ...laraDissolvedSignals, ...laraExpiringSignals, ...nlrbSignals, ...cfpbSignals, ...ch7Signals, ...detroitCertifiedSignals, ...detroitOpenBizSignals, ...detroitCityContractSignals, ...multifamilySignals, ...demoContractorSignals, ...billionDollarSignals];
     all.push(...supplemental);
     scanned += supplemental.length;
     // Log waterfall signal volume to heartbeat metadata (don't insert as job postings — different shape)
@@ -906,6 +966,8 @@ serve(async (req) => {
           detroit_open_biz: detroitOpenBizSignals.length,
           detroit_city_contracts: detroitCityContractSignals.length,
           detroit_multifamily: multifamilySignals.length,
+          detroit_demo_contractors: demoContractorSignals.length,
+          detroit_billion_dollar: billionDollarSignals.length,
           hire_waterfall: waterfallCount,
         },
         duration_ms: Date.now() - startedAt,

@@ -594,5 +594,38 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[demo_junk] city land:", e); }
 
+  // 22. Completed Residential Demolitions — structure just came down; lot needs immediate cleanup
+  // This dataset updates DAILY with real demolition completions (latest data: May 2026)
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Completed_Residential_Demolitions/FeatureServer/0/query?where=1%3D1&outFields=address,demolition_date,contractor_name,neighborhood,emergency_demo,latitude,longitude&resultRecordCount=50&orderByFields=demolition_date+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      // Cut off records older than 45 days
+      const cutoffMs = Date.now() - 45 * 86400_000;
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr: string = a.address ?? "";
+        if (!addr) continue;
+        const demoMs: number | null = typeof a.demolition_date === "number" ? a.demolition_date : null;
+        if (demoMs && demoMs < cutoffMs) continue;
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "demo_permit",
+          signal_detail: `Residential demolition COMPLETED: ${addr} — structure demolished ${demoMs ? new Date(demoMs).toISOString().slice(0, 10) : "recently"} by ${a.contractor_name ?? "city contractor"}${a.emergency_demo === "Yes" ? " (emergency demolition)" : ""}. Lot needs debris removal, foundation cap, grading, and site cleanup within 30 days of completion`,
+          signal_date: demoMs ? new Date(demoMs).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+          score: BASE_SCORES.demo_permit,
+          source_method: "completed_residential_demolitions",
+          suggested_opener: `The city just completed the demolition at ${addr}. The lot is down but needs debris cleared, the foundation capped, and the site graded before it's clean and usable. We can typically be on-site within 48 hours of demo completion.`,
+          best_call_window: "Within 2 weeks of demolition date",
+          estimated_value: 3500,
+          raw_source_data: { ...a, lat: a.latitude, lon: a.longitude },
+        });
+      }
+    }
+  } catch (e) { console.error("[demo_junk] completed demos:", e); }
+
   return signals;
 }
