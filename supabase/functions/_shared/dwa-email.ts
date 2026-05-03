@@ -48,6 +48,86 @@ export async function dwaEmail(opts: DwaEmailOpts): Promise<{ ok: boolean; error
 }
 
 /**
+ * Trial CTA block — 7 days for all DWA products EXCEPT TechAlert / Hire Alert
+ * (hiring radars stay at 30 days because hiring cycles are slower).
+ *
+ * Use:
+ *   trialCtaHtml({ product: "Mortgage Radar", url: "https://..." })
+ *   trialCtaHtml({ product: "TechAlert",      url: "https://..." })  // → 30 days
+ */
+export function trialCtaHtml(opts: { product: string; url: string }): string {
+  const days = isHiringProduct(opts.product) ? 30 : 7;
+  return `
+<div style="margin:28px 0;padding:20px 22px;background:rgba(0,212,255,0.08);border:1px solid ${DWA_TEAL};border-radius:8px;">
+  <p style="margin:0 0 12px;font-size:15px;color:#e6f1ff;font-weight:600;">
+    Start your free ${days}-day trial of ${opts.product} — no card required.
+  </p>
+  <p style="margin:0;">
+    <a href="${opts.url}" style="background:${DWA_TEAL};color:${DWA_BG};padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:700;display:inline-block;">
+      Start Free ${days}-Day Trial
+    </a>
+  </p>
+</div>`;
+}
+
+export function isHiringProduct(product: string): boolean {
+  const p = product.toLowerCase();
+  return p.includes("techalert") || p.includes("hire") || p.includes("talent") || p.includes("hiring");
+}
+
+/**
+ * Canonical cold-email sender. Wraps body in DWA branded shell, auto-injects
+ * the correct trial CTA (7 or 30 days), and logs to email_send_log.
+ */
+export interface DwaColdEmailOpts {
+  to: string;
+  subject: string;
+  bodyHtml: string;       // inner copy (greeting + pitch). NO trial CTA — added automatically.
+  product: string;        // e.g. "TechAlert", "Mortgage Radar", "Contractor Leads"
+  ctaUrl: string;         // landing page / trial start URL
+  templateName: string;   // for email_send_log audit
+  bcc?: string;
+}
+
+export async function dwaColdEmail(
+  opts: DwaColdEmailOpts,
+  sb?: { from: (t: string) => any },
+): Promise<{ ok: boolean; error?: string; messageId?: string }> {
+  const inner = `${opts.bodyHtml}\n${trialCtaHtml({ product: opts.product, url: opts.ctaUrl })}`;
+  const html = dwaWrap(inner);
+  const messageId = `cold-${opts.templateName}-${crypto.randomUUID()}`;
+
+  if (sb) {
+    try {
+      await sb.from("email_send_log").insert({
+        message_id: messageId,
+        template_name: opts.templateName,
+        recipient_email: opts.to,
+        status: "pending",
+        metadata: { product: opts.product, cold: true },
+      });
+    } catch { /* best-effort */ }
+  }
+
+  const r = await dwaEmail({ to: opts.to, subject: opts.subject, html, bcc: opts.bcc });
+
+  if (sb) {
+    try {
+      await sb.from("email_send_log").insert({
+        message_id: messageId,
+        template_name: opts.templateName,
+        recipient_email: opts.to,
+        status: r.ok ? "sent" : "failed",
+        error_message: r.error ?? null,
+        metadata: { product: opts.product, cold: true },
+      });
+    } catch { /* best-effort */ }
+  }
+
+  return { ...r, messageId };
+}
+
+/**
  * Wraps inner HTML body in the standard DWA branded shell (teal accents, dark bg).
  */
 export function dwaWrap(innerHtml: string, opts?: { ctaText?: string; ctaUrl?: string }): string {
