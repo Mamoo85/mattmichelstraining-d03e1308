@@ -203,13 +203,20 @@ async function scanUSPTOPatents(): Promise<Posting[]> {
         f: ["assignee_organization", "patent_date", "patent_title", "patent_id"],
         o: { per_page: 15 },
       };
-      const res = await fetch("https://search.patentsview.org/api/v1/patent/", {
+      const res = await fetch("https://api.patentsview.org/patents/query", {
         method: "POST",
         headers: { "Content-Type": "application/json", "User-Agent": "TechAlert matt@detroitwebagent.com" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          q: { _and: [{ _gte: { patent_date: ninetyDaysAgo } }, { _begins: { cpc_subgroup_id: cpc } }] },
+          f: ["assignee_organization", "patent_date", "patent_title", "patent_number"],
+          o: { per_page: 15 },
+        }),
         signal: AbortSignal.timeout(12_000),
       });
-      if (!res.ok) continue;
+      if (!res.ok) {
+        console.warn(`[hunter] uspto ${cpc} HTTP ${res.status} — skipping`);
+        continue;
+      }
       const data = await res.json();
       for (const patent of (data?.patents || [])) {
         const assignee: string = patent.assignee_organization || "";
@@ -219,7 +226,7 @@ async function scanUSPTOPatents(): Promise<Posting[]> {
           city: undefined,
           role: cpc === "F22B" ? "boiler_operator" : "hvac_tech",
           days_posted: null,
-          source_url: `https://search.patentsview.org/api/v1/patent/${patent.patent_id}`,
+          source_url: `https://patents.google.com/?q=${encodeURIComponent(assignee)}&oq=${encodeURIComponent(assignee)}`,
           source_label: "USPTO",
           is_boiler: cpc === "F22B",
         });
