@@ -1,6 +1,10 @@
 // techalert-enrich — 7am ET daily
 // Takes new rows from techalert_prospect_targets (enriched_at IS NULL)
-// and fills owner contact info via Apollo. Runs after the 6am hunter.
+// and fills owner contact info using the UNIFIED 10-stage email waterfall
+// (site_scrape → Snov → Apollo → pattern_verify → Hunter → PDL → PDL-name
+//  → crt.sh → RDAP/whois → OpenCorporates) plus Apollo people-search for
+// owner name / phone / LinkedIn. Always persists `website` even when no
+// email is found, so subsequent runs can extend the waterfall.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -8,8 +12,7 @@ import {
   apolloOrganizationSearch,
   apolloPeopleSearch,
 } from "../_shared/apollo.ts";
-import { hunterFindEmail } from "../_shared/hunter.ts";
-import { extractContactInfo } from "../_shared/firecrawl.ts";
+import { runEmailWaterfall, type WaterfallCounters } from "../_shared/email-waterfall.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -19,7 +22,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Titles most likely to own the hiring decision at a small trades shop
+// Titles most likely to own the hiring decision at a small trades shop.
+// Skip enterprise titles (CEO/CFO at GM, DTE, etc.) — those orgs are filtered separately.
 const OWNER_TITLES = [
   "owner",
   "president",
@@ -28,7 +32,34 @@ const OWNER_TITLES = [
   "vp operations",
   "director of operations",
   "hr manager",
+  "facilities director",
+  "facilities manager",
 ];
+
+// Skip enterprise targets (Ford/GM/DTE/Wayne State/Magna…) — they need a
+// totally different sales motion (RFP), not a cold email to "the owner".
+const ENTERPRISE_BLOCKLIST = [
+  "ford motor", "general motors", "stellantis", "dte energy", "consumers energy",
+  "wayne state", "university of michigan", "michigan state", "henry ford health",
+  "beaumont", "trinity health", "ascension", "corewell", "magna international",
+  "lear", "borgwarner", "delphi", "denso", "fca", "gm", "ge ", "amazon",
+  "google", "microsoft", "wayne resa",
+];
+
+function isEnterprise(name: string, employeeCount?: number | null): boolean {
+  const n = name.toLowerCase();
+  if (ENTERPRISE_BLOCKLIST.some((b) => n.includes(b))) return true;
+  if (employeeCount && employeeCount > 500) return true;
+  return false;
+}
+
+function domainFromUrl(raw?: string | null): string | null {
+  if (!raw) return null;
+  try {
+    const u = raw.startsWith("http") ? raw : `https://${raw}`;
+    return new URL(u).hostname.replace(/^www\./, "").toLowerCase();
+  } catch { return null; }
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -36,12 +67,13 @@ serve(async (req) => {
   const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const startedAt = Date.now();
   let enriched = 0, skipped = 0, failed = 0;
+  const waterfallCounters: WaterfallCounters = {};
 
   try {
-    // Fetch up to 25 unenriched new prospects per run (Apollo rate limits)
+    // Fetch up to 25 unenriched new prospects per run
     const { data: targets, error } = await sb
       .from("techalert_prospect_targets")
-      .select("id, company_name, city, role")
+      .select("id, company_name, city, state, role, source_url")
       .is("enriched_at", null)
       .eq("status", "new")
       .order("score", { ascending: false })
@@ -57,68 +89,114 @@ serve(async (req) => {
 
     for (const target of targets) {
       try {
-        // Tier 1 — Apollo: org domain + decision-maker contact
-        const orgs = await apolloOrganizationSearch({
-          q_organization_name: target.company_name,
-          organization_locations: target.city ? [target.city] : ["Michigan"],
-          per_page: 1,
-        });
-        const org = orgs[0] || null;
-        const website = org?.website_url || null;
-        const employeeCount = org?.estimated_num_employees || org?.employee_count || null;
+        // Tier 0 — Apollo org lookup (gets website, employee count, owner contact)
+        let website: string | null = null;
+        let employeeCount: number | null = null;
+        let ownerEmail: string | null = null;
+        let ownerPhone: string | null = null;
+        let ownerName: string | null = null;
+        let ownerLinkedin: string | null = null;
+        let firstName: string | null = null;
+        let lastName: string | null = null;
 
-        const people = await apolloPeopleSearch({
-          organization_name: target.company_name,
-          person_titles: OWNER_TITLES,
-          person_locations: target.city ? [target.city] : ["Michigan"],
-          per_page: 3,
-        });
-        const apolloContact = people[0] || null;
+        try {
+          const orgs = await apolloOrganizationSearch({
+            q_organization_name: target.company_name,
+            organization_locations: target.city ? [target.city] : ["Michigan"],
+            per_page: 1,
+          });
+          const org = orgs[0] || null;
+          website = org?.website_url || org?.primary_domain
+            ? (org.website_url || `https://${org.primary_domain}`)
+            : null;
+          employeeCount = org?.estimated_num_employees || org?.employee_count || null;
+        } catch (e) {
+          console.warn(`[enrich] apollo org ${target.company_name}:`, e instanceof Error ? e.message : e);
+        }
 
-        let ownerEmail: string | null = apolloContact?.email || null;
-        let ownerPhone: string | null = apolloContact?.phone_numbers?.[0]?.raw_number || null;
-        let ownerName: string | null = apolloContact?.name ||
-          (apolloContact?.first_name && apolloContact?.last_name
-            ? `${apolloContact.first_name} ${apolloContact.last_name}` : null);
-        const ownerLinkedin: string | null = apolloContact?.linkedin_url || null;
+        // Skip enterprises before burning Apollo people-search credits
+        if (isEnterprise(target.company_name, employeeCount)) {
+          await sb.from("techalert_prospect_targets").update({
+            website,
+            employee_count: employeeCount,
+            enriched_at: new Date().toISOString(),
+            outreach_status: "skipped_enterprise",
+            notes: `Skipped: enterprise (${employeeCount || "n/a"} employees)`,
+          }).eq("id", target.id);
+          skipped++;
+          continue;
+        }
 
-        // Tier 2 — Hunter.io: if Apollo didn't return an email, search by domain
-        if (!ownerEmail && (website || org?.website_url)) {
-          const domain = (website || org?.website_url || "")
-            .replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "");
-          if (domain) {
-            const hunterContact = await hunterFindEmail(domain);
-            if (hunterContact?.email) {
-              ownerEmail = hunterContact.email;
-              ownerName = ownerName || (hunterContact.first_name && hunterContact.last_name
-                ? `${hunterContact.first_name} ${hunterContact.last_name}` : ownerName);
-              ownerPhone = ownerPhone || hunterContact.phone_number || null;
+        // Tier 1 — Apollo people search (owner name + LinkedIn + maybe email/phone)
+        try {
+          const people = await apolloPeopleSearch({
+            organization_name: target.company_name,
+            person_titles: OWNER_TITLES,
+            person_locations: target.city ? [target.city] : ["Michigan"],
+            per_page: 3,
+          });
+          const apolloContact = people[0] || null;
+          if (apolloContact) {
+            ownerEmail = apolloContact.email || null;
+            ownerPhone = apolloContact.phone_numbers?.[0]?.raw_number || null;
+            ownerName = apolloContact.name ||
+              (apolloContact.first_name && apolloContact.last_name
+                ? `${apolloContact.first_name} ${apolloContact.last_name}` : null);
+            ownerLinkedin = apolloContact.linkedin_url || null;
+            firstName = apolloContact.first_name || null;
+            lastName = apolloContact.last_name || null;
+          }
+        } catch (e) {
+          console.warn(`[enrich] apollo people ${target.company_name}:`, e instanceof Error ? e.message : e);
+        }
+
+        // Fallback website: derive from source_url if Apollo didn't give one
+        if (!website && target.source_url) {
+          const d = domainFromUrl(target.source_url);
+          // Skip aggregator domains (indeed, ziprecruiter, github, sec.gov, etc.)
+          const aggregators = ["indeed", "ziprecruiter", "linkedin", "github", "sec.gov", "uspto", "sam.gov", "eventbrite", "usaspending", "nlrb", "courtlistener", "consumerfinance", "detroitmi.gov", "michigan.gov"];
+          if (d && !aggregators.some((a) => d.includes(a))) {
+            website = `https://${d}`;
+          }
+        }
+
+        // Tier 2 — Unified 10-stage email waterfall (only if we still need email)
+        let waterfallTrace: any[] = [];
+        if (!ownerEmail) {
+          const wf = await runEmailWaterfall(sb, {
+            website,
+            business_name: target.company_name,
+            city: target.city || null,
+            state: target.state || "MI",
+            contact_first_name: firstName,
+            contact_last_name: lastName,
+          }, waterfallCounters);
+          ownerEmail = wf.email;
+          waterfallTrace = wf.trace;
+          if (wf.email && !ownerName) {
+            // Extract a name from the email local-part as a soft fallback
+            const local = wf.email.split("@")[0];
+            if (/^[a-z]+\.[a-z]+$/i.test(local)) {
+              const [f, l] = local.split(".");
+              ownerName = `${f.charAt(0).toUpperCase() + f.slice(1)} ${l.charAt(0).toUpperCase() + l.slice(1)}`;
             }
           }
         }
 
-        // Tier 3 — Firecrawl: scrape website contact/about page for email + owner name
-        if (!ownerEmail && website) {
-          const scraped = await extractContactInfo(website);
-          if (scraped?.email) ownerEmail = scraped.email;
-          if (!ownerName && scraped?.name) ownerName = scraped.name;
-        }
-
-        await sb
-          .from("techalert_prospect_targets")
-          .update({
-            owner_name: ownerName,
-            owner_email: ownerEmail,
-            owner_phone: ownerPhone,
-            owner_linkedin: ownerLinkedin,
-            website,
-            employee_count: employeeCount,
-            enriched_at: new Date().toISOString(),
-          })
-          .eq("id", target.id);
+        await sb.from("techalert_prospect_targets").update({
+          owner_name: ownerName,
+          owner_email: ownerEmail,
+          owner_phone: ownerPhone,
+          owner_linkedin: ownerLinkedin,
+          website,
+          employee_count: employeeCount,
+          enriched_at: new Date().toISOString(),
+          notes: waterfallTrace.length
+            ? `Waterfall: ${waterfallTrace.map((t) => `${t.source}=${t.ok ? "✓" : "✗"}`).join(", ")}`
+            : null,
+        }).eq("id", target.id);
 
         enriched++;
-        // Throttle to stay within Apollo rate limits
         await new Promise((r) => setTimeout(r, 300));
       } catch (e) {
         console.error(`[enrich] ${target.company_name}:`, e instanceof Error ? e.message : e);
@@ -126,16 +204,15 @@ serve(async (req) => {
       }
     }
 
-    // Heartbeat
     await sb.from("agent_heartbeats").upsert({
       agent_name: "techalert-enrich",
       last_beat: new Date().toISOString(),
       status: "ok",
-      metadata: { enriched, skipped, failed, duration_ms: Date.now() - startedAt },
+      metadata: { enriched, skipped, failed, waterfall: waterfallCounters, duration_ms: Date.now() - startedAt },
     }, { onConflict: "agent_name" });
 
     return new Response(
-      JSON.stringify({ ok: true, enriched, skipped, failed, duration_ms: Date.now() - startedAt }),
+      JSON.stringify({ ok: true, enriched, skipped, failed, waterfall: waterfallCounters, duration_ms: Date.now() - startedAt }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e: unknown) {
