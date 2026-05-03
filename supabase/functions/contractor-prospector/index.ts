@@ -395,20 +395,10 @@ BODY:
 
 function buildDeadLeadEmailHtml(body: string): string {
   const htmlBody = body.replace(/\n/g, "<br>");
-  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 16px;">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
-<tr><td style="background:#00d4ff;padding:3px 0;"></td></tr>
-<tr><td style="padding:24px;color:#334155;font-size:15px;line-height:1.8;">
-${htmlBody}
-<div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;">
-<span style="font-size:13px;color:#334155;"><strong>Matt Michels</strong> · Detroit Web Agency · (313) 992-1219 · detroitwebagent.com</span>
-</div>
-</td></tr>
-<tr><td style="background:#f8fafc;padding:12px 24px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">
-Detroit Web Agency · Grosse Pointe, MI
-</td></tr>
-</table></td></tr></table></body></html>`;
+  return wrapDwaShell(htmlBody, {
+    product: "Dead Lead Reactivation",
+    ctaUrl: "https://detroitwebagent.com/dead-lead-intake?utm_source=cold&utm_campaign=dead_lead",
+  });
 }
 
 // ── Check how many dead lead emails sent today ──
