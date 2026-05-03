@@ -12,10 +12,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { logEnrichment } from "../_shared/enrichment-audit.ts";
+import { apolloPeopleSearch, hasApolloKey } from "../_shared/apollo.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY") || "";
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY") || "";
 
 const corsHeaders = {
