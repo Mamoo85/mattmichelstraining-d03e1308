@@ -14,33 +14,99 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-05-02*
 
-### Phase 33 — 20+ New Open Data Sources Across All 11 Trade Radar Verticals COMPLETE ✅
+### Phase 33 — 100+ New Data Sources Across All 11 Trade Radar Verticals + TechAlert COMPLETE ✅
 
-**New shared utility:** `_shared/census-housing.ts` — US Census ACS 5-year housing age data for all MI ZIPs (B25035_001E median year built, B25034_002E pre-1940 units). Cached 24h.
+**Phase 33 was implemented in 10 batches. Total: 100+ new sources added. All pushed to main.**
 
-**New sources added per vertical (all free/open APIs, no new keys):**
-- **Roofing**: NOAA SPC daily storm reports (`today.csv`), 14-day SPC archive (score decays with age), CFPB HMDA refi loans (`homeowner_equity_area`)
-- **Exterior/Painting**: NOAA SPC daily storm reports (`storm_siding_damage`), CFPB HMDA home improvement loans (`home_improvement_loan_area`)
-- **Restoration**: Detroit `blight_tickets` (water/structural/mold citations), USGS streamflow flood gauges, OpenFEMA PA projects
-- **Demo/Junk**: Detroit `blight_tickets` (debris/vacant/dumping), DLBA vacant properties
-- **Foundation**: USGS streamflow flood gauges, USGS earthquake catalog (M2.5+ within 400km), US Drought Monitor (D2+ = clay soil shrinkage)
-- **HVAC**: US Drought Monitor (D1+ = AC continuous-run failure), CFPB HMDA refi loans
-- **Gutters**: CFPB HMDA refi loans, Detroit `parcel_file_current` (pre-1960 home count)
-- **Plumbing**: Detroit 311 ArcGIS (water/sewer issues), CFPB HMDA home improvement loans
-- **Electrical**: Census ACS pre-1960 ZIPs (`aging_panel_area`), CFPB HMDA home improvement loans
-- **Tree**: NOAA SPC wind reports (58+ mph = tree damage threshold), US Drought Monitor (root stress)
-- **Pest Control**: DLBA vacant properties (pest harborage), Detroit `blight_tickets` (overgrown/rodent citations)
+**Batch 1 (commit 2af402fe) — First wave open APIs:**
+- Shared utility: `_shared/census-housing.ts` (Census ACS housing age by ZIP, cached 24h)
+- Roofing: SPC storm CSV, 14-day archive, CFPB refi loans
+- Exterior: SPC storm CSV, CFPB HI loans
+- Restoration: blight_tickets water/structural, USGS streamflow, OpenFEMA PA
+- Demo/Junk: blight_tickets debris/vacant, DLBA_Owned_Properties
+- Foundation: USGS streamflow, USGS earthquakes (M2.5+ 400km), Drought Monitor D2+
+- HVAC: Drought Monitor D1+, CFPB refi loans
+- Gutters: CFPB refi loans, parcel_file_current pre-1960 count
+- Plumbing: 311 ArcGIS water/sewer, CFPB HI loans
+- Electrical: Census ACS pre-1960 ZIPs, CFPB HI loans
+- Tree: SPC wind CSV 58+ mph, Drought Monitor root stress
+- Pest: DLBA_Owned_Properties, blight_tickets overgrown/rodent
+- Scanner: added `homeowner_equity_area`, `home_improvement_loan_area`, `aging_panel_area` to AREA_ALERT_TYPES
 
-**Scanner:** Added `homeowner_equity_area`, `home_improvement_loan_area`, `aging_panel_area` to `AREA_ALERT_TYPES`.
+**Batch 2 (commit 9643439a) — Detroit ArcGIS + SPC Day-1 Outlook + Assessor Sales:**
+- Roofing: SPC Day-1 Convective Outlook (pre-storm, score+1), assessor_property_sales_view
+- Exterior: SPC Day-1 Outlook, assessor sales
+- Foundation: assessor sales, national_register_of_historic_places
+- Restoration: DLBA_For_Sale, national_register_of_historic_places
+- Demo/Junk: bseed_lead_clearance_reports → plumbing; DLBA_For_Sale → restoration
+- Plumbing: bseed_lead_clearance_reports, assessor sales
+- HVAC: NWS 7-day forecast (extreme temp signal), assessor sales
+- Gutters: SPC Day-1 Outlook, assessor sales
+- Tree: SPC Day-1 Outlook, assessor sales
+- TechAlert: OSHA DOL violations, LARA new licenses, LARA dissolved LLCs, NLRB petitions, CFPB complaints, CourtListener Ch.7 liquidations (Promise.all now 16 calls)
+- Mortgage Radar: CourtListener Ch.13, FEMA HMGP, bseed_presale_inspections, DLBA_For_Sale, assessor sales
 
-**Key technical notes:**
-- SPC CSV: two-section format (hail then wind), `parts[0] === "Time"` toggles `inWind` flag; filter `parts[4]?.trim() !== "MI"` for state
-- `blight_tickets`: `ticket_issued_date` is corrupt (returns year 8535+); use `orderByFields=OBJECTID+DESC`, set `signal_date = today`
-- DLBA: no `zip_code` field; construct address from `[street_number, street_direction, street_name, street_type].filter(Boolean).join(" ")`
-- Drought Monitor: filter `c.fips?.startsWith("26")` for MI; drought level in `c.dm` field (1=D1, 2=D2, etc.)
-- Census ACS multi-ZIP: use `for=zip+code+tabulation+area:*&in=state:26` (not comma-list — that 404s)
+**Batch 3 (commit ed2914ec) — 9 new BSEED/DLBA services + NOAA CDO + rental registrations:**
+- Demo/Junk: bseed_demolition_permits (dedicated), dlba_auction_sales, Commercial_Demolitions
+- Restoration: Historic_District_Violations (type-routed), dlba_auction_sales, bseed_building_permit_plan_reviews
+- Roofing: bseed_occupancy_certificates, NOAA CDO historical hail (NOAA_API_KEY, Wayne/Oakland/Macomb)
+- Exterior: NOAA CDO historical hail+wind
+- Foundation: bseed_active_residential_compliance_certificates (expiring ≤60 days)
+- Gutters: bseed_occupancy_certificates
+- HVAC/Plumbing/Electrical: bseed_rental_registrations (landlord service contract targeting)
+- Pest: dlba_auction_sales
+- Tree: bseed_demolition_permits (root compression signal)
+- Scanner: added `historical_hail_county` to AREA_ALERT_TYPES
+- **IMPORTANT**: rental_registrations signal types must be per-address: hvac→`aging_system_proxy`, plumbing→`plumbing_permit_major`, electrical→`panel_upgrade_permit` (NOT in AREA_ALERT_TYPES)
 
-**Commit:** `2af402fe`
+**Batch 4 (commit a0df86e6) — Fire Incidents + Demo Pipeline + DLBA sales + TechAlert certified:**
+- Restoration: Detroit Fire_Incidents (structure fire filter, score+1 = highest priority restoration lead)
+- Demo/Junk: Demo_Pipeline (upcoming city demolition queue), Demolitions_under_Contract (contracted = imminent, score+1), dlba_own_it_now_sales, dlba_project_sales (bulk developer)
+- TechAlert: `scanDetroitCertifiedContractors()` — 305 city-certified contractors (NIGP 91x/92x/76x) with phone/website
+- TechAlert: `scanDetroitOpenTradeBiz()` — trade businesses with email addresses from Open Business registry
+- Promise.all in techalert-prospect-hunter now has 18 parallel scan calls
+
+**Batch 5 (commit 0b7a3ee4) — Acceptance certs + vacant registrations:**
+- Roofing + Exterior: bseed `acceptance_certificates` (status='CofA Issued', is_residential='True') — neighborhood renovation trigger
+- Pest + Restoration + Demo/Junk: `bseed_vacant_property_registrations` (owner_name available, fresh 2025-2026 data)
+
+**Batch 6 (commit 3c0e0ce2) — Street View + Demo/Junk + TechAlert:**
+- Migration: `street_view_url` added to `trade_radar_leads`
+- Scanner: Street View URL generated on every lead insert using lat/lon from validateLead (`GOOGLE_MAPS_API_KEY`)
+- Demo/Junk: `Side_Lots_For_Sale` (DLBA cleared lots), `bseed_demolition_inspections` (passed = lot cleanup), `dlba_vacant_land_program_sales` (recent land buyers)
+- TechAlert: `scanDetroitCityContracts()` (OCP active MI construction contracts), `scanMultifamilyConstruction()` (Under Construction sites); Promise.all now 20 parallel calls
+
+**Batch 7 (commit 53b98af2) — LARA expirations + commercial property signals:**
+- TechAlert: `scanLARAExpirations()` — licenses expiring in next 30 days; Promise.all now 21 calls
+- Demo/Junk: `Commercial_Properties_for_Sale` (land/vacant listings), `development_opportunities_city_real_estate_land`
+- Restoration: `Commercial_Properties_for_Sale` (retail/commercial buildings), `development_opportunities_city_real_estate_buildings`
+
+**Batch 8 (commit 443fd58a) — Completed Residential Demolitions + TechAlert city contractors:**
+- Demo/Junk: `Completed_Residential_Demolitions` — **LIVE DAILY DATA** (latest: May 2026), 45-day cutoff. Per-address lot-cleanup signal
+- TechAlert: `scanDemoContractors()` (contractor_name from city demo dataset), `scanBillionDollarConstruction()` (One Billion Dollar initiative developers); Promise.all now 23 calls
+
+**Batch 9 (commit 9a406bc3) — SeeClickFix keyword routing:**
+- Plumbing: SeeClickFix all-issues feed filtered for water/sewer/drain/flood/pipe keywords
+- Foundation: SeeClickFix all-issues feed filtered for flood/sinkhole/collapse/foundation keywords
+
+**Batch 10 (commit 501894b0) — Wayne County + Oakland County parcel data:**
+- Roofing: Wayne County GIS parcel (6-month sales + pre-1990) + Oakland County GIS parcel → `roof_permit_upsell` (per-address)
+- HVAC: Wayne County GIS parcel + Oakland County GIS parcel → `aging_system_proxy` (per-address)
+- **NOTE**: Both county GIS servers may be blocked from Supabase edge functions (blocked from this container). Fail gracefully via try/catch. If 0 leads from these sources, skip or replace with FFIEC HMDA area signals.
+
+**Key technical notes for all Detroit ArcGIS services:**
+- Server: `services2.arcgis.com/qvkbeam7Wirps6zC` — 400+ FeatureServer layers
+- `blight_tickets`: `ticket_issued_date` corrupt (year 8535+), use `orderByFields=OBJECTID+DESC`, set `signal_date = today`
+- `dlba_auction_sales`: use `sale_closed_date` field (not `sale_date`)
+- `acceptance_certificates`: filter `task_status='CofA Issued'` and `is_residential='True'`
+- `bseed_rental_registrations`: `issued_date` is DateOnly type, works with `new Date()`
+- DLBA: no `zip_code` in `DLBA_Owned_Properties`; construct address from `[street_number, street_direction, street_name, street_type].filter(Boolean).join(" ")`
+- Drought Monitor: filter `c.fips?.startsWith("26")` for MI; drought level in `c.dm` field
+- Census ACS multi-ZIP: use `for=zip+code+tabulation+area:*&in=state:26` (comma-list returns 404)
+- SPC CSV two-section format: `parts[0] === "Time"` toggles `inWind` flag; filter `parts[4]?.trim() !== "MI"` for state
+- NOAA CDO: requires `token: ${NOAA_API_KEY}` header; WT09=hail, WT11=high winds; filter `r.value === 1 || r.value === "1"`
+- **Services tested/confirmed live (all return data):** bseed_demolition_permits, bseed_occupancy_certificates, bseed_active_business_licenses, dlba_auction_sales, dlba_own_it_now_sales, dlba_project_sales, development_opportunities_dlba_buildings, Historic_District_Violations, bseed_rental_registrations, Commercial_Demolitions, ARPA_Blight_Remediation, Demo_Pipeline, Demolitions_under_Contract, Fire_Incidents, annual_life_safety_fire_inspections (old data 2016), bseed_vacant_property_registrations, acceptance_certificates, Detroit_Business_Certification_Register (305 records), Currently_Open_Businesses
+- **Services tested but skipped (bad data):** `Fire_Escrow_Properties` (4000+ days outstanding = 2007-2010 era), `annual_life_safety_fire_inspections` (2016 timestamps), `Rental_Compliance_Enforcement_Map` (polygon/ZIP-level only), `Priority_Water_Replacements` (old 2019 jobs), `parcel_property_tax_estimates` (only parcel_id + tax estimate, no address)
 
 ---
 
