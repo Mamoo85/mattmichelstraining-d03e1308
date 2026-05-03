@@ -920,5 +920,37 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[restoration] repetitive loss:", e); }
 
+  // Detroit Fire Escrow Properties — insurance holdbacks waiting for contractor to release funds
+  try {
+    const res = await fetch(
+      "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Fire_Escrow_Properties/FeatureServer/0/query?where=Updated_Balance+%3E+0&outFields=Assessor_Address,Loss_Address,Insured_Party,Amount_Withheld,Updated_Balance,No_of_Days_Outstanding,Property_Class&resultRecordCount=50&orderByFields=Updated_Balance+DESC&f=json",
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" } },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = (a.Loss_Address || a.Assessor_Address || "").trim();
+        if (!addr) continue;
+        const balance = Number(a.Updated_Balance) || 0;
+        const withheld = Number(a.Amount_Withheld) || 0;
+        const daysOut = Number(a.No_of_Days_Outstanding) || 0;
+        const owner = (a.Insured_Party || "").trim();
+        signals.push({
+          address: addr, city: "Detroit", zip: "",
+          signal_type: "water_damage_permit",
+          signal_detail: `Fire escrow holdback: ${addr} — $${balance.toLocaleString()} in insurance funds held pending repairs. ${daysOut} days outstanding. Owner: ${owner}. Insurance company releases escrowed funds once a licensed contractor completes repairs`,
+          signal_date: new Date().toISOString().split("T")[0],
+          score: balance >= 25000 ? 10 : balance >= 10000 ? 9 : 8,
+          source_method: "detroit_fire_escrow",
+          suggested_opener: `Your property at ${addr} has $${balance.toLocaleString()} in insurance escrow funds being held pending fire restoration. We're licensed for insurance restoration work and can help you release those funds — no upfront cost to you.`,
+          best_call_window: "Any time — money is waiting",
+          estimated_value: Math.max(balance, 15000),
+          raw_source_data: { addr, owner, balance, withheld, days_outstanding: daysOut, class: a.Property_Class },
+        });
+      }
+    }
+  } catch (e) { console.error("[restoration] fire escrow:", e); }
+
   return signals;
 }
