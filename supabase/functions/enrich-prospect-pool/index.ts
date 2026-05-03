@@ -158,19 +158,15 @@ async function stageApolloPeople(p: Prospect): Promise<{ patch: Prospect; trace:
   if (!APOLLO_API_KEY) { trace.error = "no_key"; trace.duration_ms = Date.now() - t0; return { patch, trace }; }
   const domain = extractDomain(p.website);
   if (!domain) { trace.error = "no_domain"; trace.duration_ms = Date.now() - t0; return { patch, trace }; }
+  if (isAggregatorDomain(domain)) { trace.error = "aggregator_domain"; trace.duration_ms = Date.now() - t0; return { patch, trace }; }
+  if (isEnterprise(p.business_name || "", null)) { trace.error = "enterprise_skip"; trace.duration_ms = Date.now() - t0; return { patch, trace }; }
   try {
-    const res = await safeFetch("https://api.apollo.io/api/v1/mixed_people/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Api-Key": APOLLO_API_KEY },
-      body: JSON.stringify({
-        q_organization_domains: domain,
-        person_titles: ["owner", "president", "ceo", "operations manager", "general manager"],
-        page: 1,
-        per_page: 3,
-      }),
+    const people = await apolloPeopleSearch({
+      domain,
+      titles: ["owner", "president", "ceo", "operations manager", "general manager"],
+      perPage: 3,
     });
-    const j = await res.json();
-    const person = (j?.people || [])[0];
+    const person = people?.[0];
     if (person) {
       const name = `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim();
       if (name && !p.contact_name) {
