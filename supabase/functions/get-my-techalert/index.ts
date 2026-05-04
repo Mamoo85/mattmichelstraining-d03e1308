@@ -50,6 +50,7 @@ serve(async (req) => {
     if (!clientCandidates || !clientCandidates.length) {
       return new Response(JSON.stringify({
         client: {
+          id: client.id,
           company_name: client.company_name,
           target_roles: client.target_roles || [],
           target_zip_codes: client.target_zip_codes || [],
