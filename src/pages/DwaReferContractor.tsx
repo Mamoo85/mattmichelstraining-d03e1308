@@ -97,6 +97,17 @@ const DwaReferContractor = () => {
       }
       setResult({ code: data.code });
       toast.success("Referral sent! We just emailed them.");
+      // Persist leaderboard opt-in (best-effort)
+      if (optInLeaderboard && form.referrer_email) {
+        supabase.functions.invoke("dwa-contractor-referral", {
+          body: {
+            action: "toggle_leaderboard",
+            email: form.referrer_email.trim().toLowerCase(),
+            name: form.referrer_business_name || form.referrer_email.split("@")[0],
+            opt_in: true,
+          },
+        }).catch(() => {});
+      }
       setForm({ ...form, referred_email: "", referred_business_name: "", referred_phone: "" });
       loadStats();
     } catch (err: any) {
