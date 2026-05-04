@@ -98,8 +98,7 @@ serve(async (req) => {
       // Enrichment failed — still log the raw visit
     }
 
-    // Clearbit Reveal: secondary enrichment when ipinfo doesn't identify a business
-    // Returns company name, domain, industry, employee range from Clearbit's B2B database
+    // Clearbit Reveal (legacy IP→company; service is sunset, kept as fallback if key still works)
     if (!isBusiness && CLEARBIT_API_KEY) {
       try {
         const cbRes = await fetch(`https://reveal.clearbit.com/v1/companies/find?ip=${ip}`, {
@@ -117,9 +116,30 @@ serve(async (req) => {
             enrichment = { ...enrichment, clearbit_domain: cb?.domain, clearbit_industry: cb?.category?.industry, clearbit_employees: String(cb?.metrics?.employees || ""), clearbit_type: cb?.type };
           }
         }
-      } catch (_) {
-        // Clearbit failed — ipinfo result stands
-      }
+      } catch (_) { /* fallthrough to HubSpot Breeze */ }
+    }
+
+    // HubSpot Breeze Intelligence: enrich by domain (industry, employees, name).
+    // Note: HubSpot has no IP→company reveal; we use any domain hint we have.
+    const domainHint: string = (enrichment as any)?.clearbit_domain
+      || (companyName && companyName.includes(".") ? companyName : "")
+      || "";
+    if (domainHint) {
+      try {
+        const { lookupCompanyByDomain } = await import("../_shared/hubspot.ts");
+        const breeze = await lookupCompanyByDomain(domainHint);
+        if (breeze && !isNoise(breeze.name || "")) {
+          if (breeze.name) { companyName = breeze.name; isBusiness = true; }
+          enrichment = {
+            ...enrichment,
+            hubspot_domain: breeze.domain,
+            hubspot_industry: breeze.industry,
+            hubspot_employees: String(breeze.numberofemployees || ""),
+            hubspot_city: breeze.city,
+            hubspot_state: breeze.state,
+          };
+        }
+      } catch (_) { /* Breeze enrichment optional */ }
     }
 
     // Upsert: if same IP + client visited today, increment count instead of duplicate
