@@ -25,6 +25,7 @@ import DemoModeBadge, { isDemoMode, DEMO_MASTER_TOKEN } from "@/components/DemoM
 import { supabase } from "@/integrations/supabase/client";
 import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
+import CrmWebhookSettings from "@/components/shared/CrmWebhookSettings";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
 
 const HEALTHCARE_ROLES = ["cna", "rn", "lpn", "director_of_nursing", "home_health_aide"];
