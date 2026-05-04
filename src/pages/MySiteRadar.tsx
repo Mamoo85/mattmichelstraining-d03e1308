@@ -65,6 +65,22 @@ export default function MySiteRadar() {
     return icpTokens.some((t) => haystack.includes(t));
   };
   const icpMatchCount = useMemo(() => events.filter(isIcpMatch).length, [events, icpTokens]);
+  const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
+  const companyDetail = useMemo(() => {
+    if (!selectedCompany) return null;
+    const ces = events.filter((e) => e.company_name === selectedCompany);
+    const pages = [...new Set(ces.map((e) => e.page_visited).filter(Boolean))] as string[];
+    return {
+      name: selectedCompany,
+      city: ces[0]?.city ?? null,
+      pages,
+      visitCount: ces.length,
+      firstSeen: ces[ces.length - 1]?.created_at ?? null,
+      lastSeen: ces[0]?.created_at ?? null,
+      icpMatch: ces.some(isIcpMatch),
+      latestEventId: ces[0]?.id ?? null,
+    };
+  }, [selectedCompany, events, icpTokens]);
 
   useEffect(() => {
     if (!token) { setError("Missing access token. Use the link from your welcome email."); setLoading(false); return; }
