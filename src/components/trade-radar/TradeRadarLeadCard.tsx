@@ -271,6 +271,7 @@ export default function TradeRadarLeadCard({
               </Button>
             )}
           </div>
+          {actionBar}
         </div>
       </div>
     </div>
