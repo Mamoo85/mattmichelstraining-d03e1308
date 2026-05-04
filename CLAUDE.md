@@ -14,6 +14,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-05-04*
 
+### Phase 41 — Grand Rapids Expansion + Lead Guarantee + Compliance PDF COMPLETE ✅
+
+**This session deliverables:**
+- `supabase/migrations/20260504140000_grand_rapids_zip_expansion.sql` — adds Grand Rapids metro ZIPs (49503–49546 + suburbs) to all 11 Matt trade_radar_clients rows. Statewide sources (NOAA/SPC/FEMA/Census/CFPB/FSBO) now automatically cover West Michigan.
+- `src/components/trade-radar/TradeRadarPortal.tsx` — lead quality guarantee section added (4 credit scenarios: invalid address, 30-day duplicate, out-of-area ZIP, wrong signal; pre-filled mailto credit request link)
+- `src/pages/MortgageRadarCompliance.tsx` — "Save / Print PDF" button added to header (`window.print()`; header hidden during print via `print:hidden`)
+
+**Revised % Customer-Ready scores (Phase 41):**
+- Trade Radar (all 11): **91%** (lead guarantee policy now codified in portal)
+- Mortgage Radar: **95%** (compliance PDF download now live)
+- Grand Rapids coverage: **live** (all 11 verticals; NOAA/SPC/FEMA statewide sources)
+
+**Remaining gaps (still require business decisions or external API keys):**
+- CRM integrations (Salesforce, Jobber) — requires API keys from those platforms
+- ATS integration for TechAlert (Greenhouse/Lever) — requires partner API access
+- Wayne County/Oakland County GIS signals don't cover Grand Rapids (BSEED is Detroit-only) — Grand Rapids gets statewide signals only, not city-permit-level
+
+**Matt action items (none new this session — all cleared):**
+- `EVENTBRITE_API_KEY` added ✅ (Matt confirmed)
+- `GOOGLE_MAPS_API_KEY` added ✅ (Phase 39)
+- `FIRECRAWL_API_KEY` added ✅ (Phase 39)
+
 ### Phase 40 — Product Polish Sweep COMPLETE ✅
 
 **This session deliverables:**
@@ -33,16 +55,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Missed-Call: **80%** (unchanged)
 - Dead Lead Reactivation: **72%** (unchanged)
 - Demand Radar: **75%** (unchanged)
-
-**Remaining gaps that require business decisions (not code):**
-- Lead guarantee policy terms (Trade Radar, Contractor Leads) — what qualifies for a credit?
-- Nationwide ZIP expansion — which Michigan cities beyond Detroit to enable?
-- CRM integrations (Salesforce, Jobber) — requires API keys from those platforms
-- ATS integration for TechAlert (Greenhouse/Lever) — requires partner API access
-- Compliance PDF bundle for Mortgage Radar (page exists; PDF download not yet)
-
-**One remaining Matt action item:**
-- Add `EVENTBRITE_API_KEY` to Supabase Edge Function secrets — `scanEventbriteSignals()` in TechAlert silently returns empty without it. Key was in Lovable Cloud (see Phase 28) but may not be in Supabase secrets store.
 
 ### Phase 39 — Portal Polish + Secrets Fixed COMPLETE ✅
 
