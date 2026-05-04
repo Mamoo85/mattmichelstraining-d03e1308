@@ -27,11 +27,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - CI `.github/workflows/deploy-supabase.yml` — Fixed `db push` (continue-on-error), removed duplicate config.toml entries
 - `supabase/config.toml` — Removed duplicate `[functions.create-addon-checkout]` and `[functions.run-migration-once]` entries
 
-**⚠️ CRITICAL PENDING: trade-radar-scanner NOT deployed**
-- Scanner deployed = old 7-vertical version. `restoration`, `demo_junk`, `foundation`, `exterior`, `tree` all return "Unknown vertical" 
-- Root cause: `SUPABASE_ACCESS_TOKEN` in GitHub Secrets is expired/invalid → all `deploy-primary` function deploys return 403
-- **Matt must fix**: Go to supabase.com/dashboard/account/tokens → create new token → update GitHub Secret `SUPABASE_ACCESS_TOKEN` → re-run CI job
-- All code is correct and ready — just needs to be deployed
+**✅ RESOLVED — trade-radar-scanner IS deployed (corrected 2026-05-04)**
+- Earlier note in this file claimed `SUPABASE_ACCESS_TOKEN` was a blocker. **That was wrong.**
+- The primary project (`eauvubfpanpeuxsrqesu`) is **Lovable-managed** and deploys edge functions directly via the Lovable agent — GitHub Actions and `SUPABASE_ACCESS_TOKEN` are NOT in the deploy path for the primary project.
+- `SUPABASE_ACCESS_TOKEN` only deploys to the **secondary** project (`zmyczlfuufhngzovkjdh`), which only hosts ~2 legacy functions and is not customer-facing.
+- All 11 trade-radar verticals (`roofing`, `hvac`, `plumbing`, `electrical`, `pest_control`, `gutters`, `exterior`, `tree`, `restoration`, `demo_junk`, `foundation`) are LIVE on the primary project as of Phase 31–36.
+- **Do NOT re-add this as a Matt action item.** If you (Claude) think the scanner is missing verticals, curl the primary project directly to verify before flagging.
 
 ### Phase 35 — ArcGIS Full Catalog Exhaustion + CofC Signal Across All 11 Verticals COMPLETE ✅
 
