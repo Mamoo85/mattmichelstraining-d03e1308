@@ -8,6 +8,7 @@ import SEOHead from "@/components/layout/SEOHead";
 import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
+import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 import { Activity, MapPin, TrendingUp, Building2, Lock, Download, Phone } from "lucide-react";
 
 type Signal = {
