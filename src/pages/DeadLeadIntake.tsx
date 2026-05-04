@@ -17,6 +17,9 @@ export default function DeadLeadIntake() {
   const [contactsAdded, setContactsAdded] = useState(0);
   const [error, setError] = useState("");
   const [billingRedirectUrl, setBillingRedirectUrl] = useState<string | null>(null);
+  const [inputMode, setInputMode] = useState<"paste" | "csv">("paste");
+  const [csvFileName, setCsvFileName] = useState<string>("");
+  const [csvPreview, setCsvPreview] = useState<string[]>([]);
 
   const [form, setForm] = useState({
     business_name: "",
@@ -27,6 +30,47 @@ export default function DeadLeadIntake() {
     leads: "",
     google_review_link: "",
   });
+
+  function handleCsvUpload(file: File) {
+    setError("");
+    setCsvFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = String(ev.target?.result || "");
+      // Strip BOM, split lines
+      const rawLines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((l) => l.trim().length > 0);
+      // Detect header row (contains "phone", "email", or "name" word)
+      const first = rawLines[0]?.toLowerCase() || "";
+      const hasHeader = /phone|email|name|number/.test(first) && !/^\+?\d/.test(rawLines[0]);
+      const dataLines = hasHeader ? rawLines.slice(1) : rawLines;
+
+      // Parse: take the first cell that looks like a phone number, then remaining as name
+      const parsed = dataLines
+        .map((line) => {
+          const cells = line.split(/[,\t]/).map((c) => c.trim().replace(/^"|"$/g, ""));
+          const phoneCell = cells.find((c) => /\d{10,}/.test(c.replace(/\D/g, "")));
+          if (!phoneCell) return null;
+          const phone = phoneCell.replace(/[^\d+]/g, "");
+          if (phone.replace(/\D/g, "").length < 10) return null;
+          const nameCell = cells.find((c) => c !== phoneCell && !/@/.test(c) && /[a-zA-Z]/.test(c));
+          return nameCell ? `${phone}, ${nameCell}` : phone;
+        })
+        .filter((l): l is string => l !== null)
+        .slice(0, 500); // match edge function 500 cap
+
+      if (parsed.length === 0) {
+        setError("No valid phone numbers found in this file. Make sure each row has a 10+ digit phone number.");
+        setCsvPreview([]);
+        setForm({ ...form, leads: "" });
+        return;
+      }
+
+      setCsvPreview(parsed);
+      setForm({ ...form, leads: parsed.join("\n") });
+    };
+    reader.onerror = () => setError("Could not read the file. Try saving as .csv and uploading again.");
+    reader.readAsText(file);
+  }
 
   const urlParams = new URLSearchParams(window.location.search);
   const billingStatus = urlParams.get("billing");
