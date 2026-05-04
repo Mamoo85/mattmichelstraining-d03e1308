@@ -674,6 +674,7 @@ async function upsertWithDedup(sb: ReturnType<typeof createClient>, s: RawSignal
       : streetViewUrl(s.address || "", s.city || "", s.zip || ""),
     lat: s.lat ?? null,
     lon: s.lon ?? null,
+    pipeline_stage: (s as any).pipeline_stage || "active",
     raw: s as unknown as Record<string, unknown>,
   };
   const { data: ins, error } = await (sb.from as any)("mortgage_radar_leads")
