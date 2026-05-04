@@ -238,6 +238,15 @@ export default function MySiteRadar() {
                 </div>
               )}
 
+              <OnboardingChecklist
+                product="SiteRadar"
+                steps={[
+                  { id: "auth", label: "Dashboard link verified", done: !!client, hint: "Open from your welcome email." },
+                  { id: "snippet", label: "Tracking snippet installed", done: !!client?.visitor_script_key, hint: "Paste the script tag into your site." },
+                  { id: "events", label: "First visitor tracked", done: events.length > 0, hint: "Visit your own site to test." },
+                  { id: "company", label: "First business identified", done: businessesIdentified > 0, hint: "Company-level reveal happens automatically." },
+                ]}
+              />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
                 <Stat label="Today's visitors" value={todayCount} />
                 <Stat label="Businesses identified" value={businessesIdentified} />
