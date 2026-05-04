@@ -280,13 +280,34 @@ export default function TradeRadarLeadCard({
               <Button
                 variant="outline"
                 className="border-green-500/30 text-green-400 hover:bg-green-500/10 text-sm rounded-xl"
-                onClick={() => window.open(`tel:`, "_self")}
+                onClick={() => window.open(`tel:${lead.owner_phone ?? ""}`, "_self")}
               >
                 <Phone className="w-4 h-4 mr-1.5" />
-                Call Now
+                {lead.owner_phone ? "Call Owner" : "Call Now"}
               </Button>
             )}
           </div>
+
+          {/* Owner contact info — populated by Apollo/Hunter enrichment waterfall */}
+          {(lead.owner_name || lead.owner_phone || lead.owner_email) && (
+            <div className="mt-3 pt-3 border-t border-white/10 space-y-1">
+              <p className="text-[10px] font-bold tracking-widest uppercase text-[#00d4ff]/60">Owner Contact</p>
+              {lead.owner_name && (
+                <p className="text-sm text-white font-medium">{lead.owner_name}</p>
+              )}
+              {lead.owner_phone && (
+                <a href={`tel:${lead.owner_phone}`} className="flex items-center gap-1.5 text-sm text-green-400 hover:text-green-300">
+                  <Phone className="w-3.5 h-3.5" />{lead.owner_phone}
+                </a>
+              )}
+              {lead.owner_email && (
+                <a href={`mailto:${lead.owner_email}`} className="flex items-center gap-1.5 text-sm text-[#00d4ff] hover:text-[#00d4ff]/80 break-all">
+                  <MessageSquare className="w-3.5 h-3.5" />{lead.owner_email}
+                </a>
+              )}
+            </div>
+          )}
+
           {actionBar}
         </div>
       </div>
