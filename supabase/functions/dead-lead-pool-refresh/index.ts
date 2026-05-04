@@ -50,7 +50,10 @@ serve(async (req) => {
       );
     }
 
-    const need = Math.max(0, gate.target - gate.fresh);
+    // Always pull a healthy candidate pool; dedupe + slice handle final size.
+    // Bug fix: previously `need * 2` could collapse to 0 when target was barely
+    // missed, starving each source query and producing 0 inserts.
+    const need = Math.max(25, gate.target - gate.fresh);
     const candidates: PoolCandidate[] = [];
 
     // SOURCE A — FieldDesk closed jobs aged >90d, opt-in customers only
