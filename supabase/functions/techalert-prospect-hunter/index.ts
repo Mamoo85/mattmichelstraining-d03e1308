@@ -74,11 +74,21 @@ async function sonarSearch(role: typeof ROLES[number]): Promise<Posting[]> {
       signal: AbortSignal.timeout(45_000),
     });
     if (!res.ok) {
-      // 402 = out of credits / payment required. Disable Sonar for the rest of this run
-      // so we don't burn time hammering a paid endpoint that will keep saying no.
-      if (res.status === 402 || res.status === 429) {
+      // 402 = out of credits, 403 = blocked, 429 = rate limited.
+      // Disable Sonar for the rest of this run so we don't burn time hammering
+      // a paid endpoint that will keep saying no.
+      if (res.status === 402 || res.status === 403 || res.status === 429) {
         SONAR_DISABLED_REASON = `HTTP ${res.status}`;
         console.warn(`[hunter] sonar disabled for this run: ${SONAR_DISABLED_REASON}`);
+        try {
+          const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+          await sb.from("system_comms_log").insert({
+            product: "techalert_sonar",
+            status: "skipped",
+            channel: "api",
+            meta: { reason: `sonar_${res.status}`, role: role.key },
+          });
+        } catch { /* swallow — logging must never break the run */ }
       } else {
         console.error(`[hunter] sonar ${role.key} HTTP ${res.status}`);
       }
@@ -205,7 +215,7 @@ async function scanUSPTOPatents(): Promise<Posting[]> {
 
   for (const cpc of cpcSubclasses) {
     try {
-      const res = await fetch("https://api.patentsview.org/patents/query", {
+      const res = await fetch("https://search.patentsview.org/api/v1/patent/", {
         method: "POST",
         headers: { "Content-Type": "application/json", "User-Agent": "TechAlert matt@detroitwebagent.com" },
         body: JSON.stringify({
