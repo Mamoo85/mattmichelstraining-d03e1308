@@ -92,6 +92,25 @@ export default function MyFieldDesk() {
     return jobs;
   }, [jobs, tab]);
 
+  function exportJobsCsv() {
+    const headers = ["title", "status", "priority", "scheduled_date", "scheduled_time", "customer_contact_phone", "created_at", "completed_at"];
+    const rows = [
+      headers.join(","),
+      ...filtered.map((j) =>
+        [j.title, j.status, j.priority, j.scheduled_date || "", j.scheduled_time || "", j.customer_contact_phone || "", j.created_at, j.completed_at || ""]
+          .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+          .join(",")
+      ),
+    ];
+    const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `fielddesk-jobs-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const stats = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
     return {
