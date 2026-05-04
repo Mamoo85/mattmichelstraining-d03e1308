@@ -3160,8 +3160,35 @@ serve(async (req) => {
         await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
+      // Generic fallback for any *_subscription type without a dedicated handler.
+      // Sends welcome email, alerts Matt, marks fulfilled so reconcile doesn't retry.
+      // Wave/long-tail products land here — better than silent acknowledge.
+      if (typeof meta.type === "string" && meta.type.endsWith("_subscription")) {
+        const productSlug = (meta.type as string).replace(/_subscription$/, "");
+        const productLabel = productSlug.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+        const email = session.customer_email ?? (meta.email as string);
+        try {
+          if (email) {
+            await dwaEmail(email, `Welcome to ${productLabel} — you're all set`,
+              `<!DOCTYPE html><html><body style="font-family:-apple-system,sans-serif;background:#0a1628;color:#e6f1ff;padding:32px"><div style="max-width:560px;margin:0 auto"><h1 style="color:#fff">Welcome to ${productLabel}</h1><p style="color:#94a3b8;line-height:1.6">Your subscription is active. Matt will reach out within 24 hours to get you onboarded and answer any questions.</p><p style="color:#94a3b8">Need anything sooner? Reply to this email or call <a href="tel:+13139921219" style="color:#00d4ff">(313) 992-1219</a>.</p><hr style="border:0;border-top:1px solid #1e3a5f;margin:24px 0"/><p style="font-size:11px;color:#7a8aa0">Detroit Web Agency</p></div></body></html>`
+            ).catch((e) => console.error(`[WEBHOOK] generic welcome email failed:`, e));
+          }
+          await notifyMatt(
+            `🆕 NEW ${productLabel} signup — manual onboarding needed`,
+            `<p><strong>${email || "no email"}</strong> just subscribed to <strong>${productLabel}</strong> ($${((session.amount_total || 0) / 100).toFixed(2)}).</p><p>This product has no automated provisioning handler — reach out within 24h to onboard them.</p><p>Stripe sub: ${session.subscription || "n/a"}</p>`,
+          ).catch(() => {});
+        } catch (e) {
+          console.error(`[WEBHOOK] generic ${meta.type} fallback error:`, e);
+        }
+        await markFulfilled(true); return new Response(JSON.stringify({ received: true, fallback: true }), { status: 200 });
+      }
+
       // Unmatched checkout.session.completed — log and acknowledge
       console.log(`[WEBHOOK] checkout.session.completed with unhandled meta.type: ${meta.type || "none"}`);
+      await notifyMatt(
+        `⚠️ Stripe checkout with unknown type: ${meta.type || "none"}`,
+        `<p>A checkout completed but no handler matched. Customer: ${session.customer_email || "unknown"}. Amount: $${((session.amount_total || 0) / 100).toFixed(2)}. Session: ${session.id}</p>`
+      ).catch(() => {});
       await markFulfilled(true); return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
