@@ -3173,9 +3173,18 @@ serve(async (req) => {
               `<!DOCTYPE html><html><body style="font-family:-apple-system,sans-serif;background:#0a1628;color:#e6f1ff;padding:32px"><div style="max-width:560px;margin:0 auto"><h1 style="color:#fff">Welcome to ${productLabel}</h1><p style="color:#94a3b8;line-height:1.6">Your subscription is active. Matt will reach out within 24 hours to get you onboarded and answer any questions.</p><p style="color:#94a3b8">Need anything sooner? Reply to this email or call <a href="tel:+13139921219" style="color:#00d4ff">(313) 992-1219</a>.</p><hr style="border:0;border-top:1px solid #1e3a5f;margin:24px 0"/><p style="font-size:11px;color:#7a8aa0">Detroit Web Agency</p></div></body></html>`
             ).catch((e) => console.error(`[WEBHOOK] generic welcome email failed:`, e));
           }
+          await sb.from("manual_onboarding_queue").insert({
+            product_slug: productSlug,
+            product_label: productLabel,
+            customer_email: email || null,
+            stripe_session_id: session.id,
+            stripe_subscription_id: (session.subscription as string) || null,
+            amount_paid_cents: session.amount_total || 0,
+            status: "pending",
+          }).then(({ error }) => { if (error) console.error("[WEBHOOK] manual_onboarding_queue insert:", error); });
           await notifyMatt(
-            `🆕 NEW ${productLabel} signup — manual onboarding needed`,
-            `<p><strong>${email || "no email"}</strong> just subscribed to <strong>${productLabel}</strong> ($${((session.amount_total || 0) / 100).toFixed(2)}).</p><p>This product has no automated provisioning handler — reach out within 24h to onboard them.</p><p>Stripe sub: ${session.subscription || "n/a"}</p>`,
+            `🆕 NEW ${productLabel} signup — manual onboarding queued`,
+            `<p><strong>${email || "no email"}</strong> just subscribed to <strong>${productLabel}</strong> ($${((session.amount_total || 0) / 100).toFixed(2)}).</p><p>Added to manual onboarding queue. Reach out within 24h.</p><p>Stripe sub: ${session.subscription || "n/a"}</p>`,
           ).catch(() => {});
         } catch (e) {
           console.error(`[WEBHOOK] generic ${meta.type} fallback error:`, e);
