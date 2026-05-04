@@ -247,14 +247,30 @@ async function sendDigestForClient(
   let subject: string;
 
   if (leads.length === 0) {
-    // 0-lead day — still send "we're watching" email so subscriber sees daily proof of work
     const watchItems = VERTICAL_WATCHLIST[vertical]
       .map(w => `<li style="margin:6px 0;color:#cbd5e1;font-size:13px;">${w}</li>`).join("");
-    subject = buildSubject(vertical, 0, null);
+
+    // Build area-intel section when NOAA/FEMA/county signals fired even with no street-level leads
+    const areaHtml = areaSignals.length > 0
+      ? `<div style="margin:0 0 20px;background:#0d1f35;border:1px solid #1e4a6f;border-radius:8px;padding:16px;">
+           <p style="margin:0 0 10px;color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;">📡 Market Intel — Active in Your Region</p>
+           ${areaSignals.map(a => `
+             <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #1e3a5f;">
+               <p style="margin:0;color:#e2e8f0;font-size:13px;font-weight:600;">${a.alert_type.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}</p>
+               <p style="margin:2px 0 0;color:#94a3b8;font-size:12px;">${a.alert_detail ?? ""} · ${a.scope_value ?? a.scope}</p>
+             </div>`).join("")}
+         </div>`
+      : "";
+
+    subject = areaSignals.length > 0
+      ? `🏠 ${label} — ${areaSignals.length} market signal${areaSignals.length > 1 ? "s" : ""} in your region`
+      : buildSubject(vertical, 0, null);
+
     body = `
       <p style="margin:0;color:#00d4ff;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;">🏠 ${label} — Morning Brief</p>
-      <h1 style="color:#fff;font-size:22px;margin:10px 0 6px;line-height:1.3;">Good morning ${name} — a quiet day in your ${zips.length || "monitored"} ZIPs.</h1>
-      <p style="color:#94a3b8;font-size:13px;margin:0 0 18px;">No new ${label.toLowerCase().replace(" radar", "")} signals fired in the last 24 hours. We're actively monitoring:</p>
+      <h1 style="color:#fff;font-size:22px;margin:10px 0 6px;line-height:1.3;">Good morning ${name}${areaSignals.length > 0 ? ` — ${areaSignals.length} regional signal${areaSignals.length > 1 ? "s" : ""} detected` : ` — a quiet day in your ${zips.length || "monitored"} ZIPs`}.</h1>
+      <p style="color:#94a3b8;font-size:13px;margin:0 0 18px;">${areaSignals.length > 0 ? "No individual property leads yet, but these market signals indicate activity in your area:" : `No new ${label.toLowerCase().replace(" radar", "")} signals fired in the last 24 hours. We're actively monitoring:`}</p>
+      ${areaHtml}
       <ul style="margin:0 0 20px;padding-left:20px;background:#0a1628;border:1px solid #1e3a5f;border-radius:8px;padding:16px 16px 16px 36px;">
         ${watchItems}
       </ul>
