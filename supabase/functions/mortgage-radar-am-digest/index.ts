@@ -447,6 +447,19 @@ serve(async (req) => {
         console.warn("[mortgage-radar-am-digest] send failed:", e instanceof Error ? e.message : String(e));
       }
     }
+
+    // CRM webhook fan-out — fire-and-forget, one POST per top lead
+    if ((c as any).crm_webhook_url && leads?.length && !isProofOfWork) {
+      for (const lead of leads) {
+        deliverCrmWebhook({
+          product: "mortgage_radar",
+          client_id: c.id,
+          url: (c as any).crm_webhook_url,
+          secret: (c as any).crm_webhook_secret,
+          payload: { lead },
+        }).catch(() => {});
+      }
+    }
   }
 
   await (sb.from as any)("agent_heartbeats").upsert({
