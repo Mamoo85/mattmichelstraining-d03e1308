@@ -200,7 +200,7 @@ async function sendDigestForClient(
   const label = VERTICAL_LABELS[vertical];
   const zips: string[] = Array.isArray(client.zip_codes) ? client.zip_codes : [];
 
-  // Today's leads — zip filter if client has zips, otherwise all
+  // Today's per-address leads — zip filter if client has zips, otherwise all
   let q = (sb.from as any)("trade_radar_leads")
     .select("*")
     .eq("vertical", vertical)
@@ -222,6 +222,15 @@ async function sendDigestForClient(
       .limit(5);
     leads = fallback || [];
   }
+
+  // Area signals (NOAA/FEMA/county-level) — always pull, shown when 0 per-address leads
+  const { data: areaData } = await (sb.from as any)("trade_radar_area_signals")
+    .select("alert_type, alert_detail, scope, scope_value, signal_date, source")
+    .eq("vertical", vertical)
+    .gte("created_at", since24h)
+    .order("created_at", { ascending: false })
+    .limit(5);
+  const areaSignals: any[] = areaData || [];
 
   // Week count
   let weekQ = (sb.from as any)("trade_radar_leads")
