@@ -1293,8 +1293,10 @@ serve(async (req) => {
     }
 
     // Phase B: respect the trust cap. Unverified LLM-only leads cannot trigger hot SMS.
+    // Soft-pass (street/block-only geocode) leads also capped at 4 — surfaced in digest, no SMS.
     const rawScore = scoreFor(s.signal_type);
-    const score = s.source_method === "llm_search" ? Math.min(3, rawScore) : rawScore;
+    let score = s.source_method === "llm_search" ? Math.min(3, rawScore) : rawScore;
+    if (gate.soft_pass) score = Math.min(4, score);
     const matchedClientIds = await notifyClients(sb, s.zip, s.county, score);
     if (matchedClientIds.length > 0) {
       await (sb.from as any)("mortgage_radar_leads")
