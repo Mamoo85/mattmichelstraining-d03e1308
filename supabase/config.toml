@@ -2214,3 +2214,7 @@ verify_jwt = false
 
 [functions.hubspot-form-webhook]
 verify_jwt = false
+
+[functions.hubspot-bootstrap-properties]
+verify_jwt = false
+
