@@ -924,7 +924,12 @@ Two purposes in one codebase:
 - Files: `supabase/migrations/YYYYMMDDHHMMSS_description.sql`
 - All new tables: `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` + `service_role` bypass policy
 - **No manual SQL** — GitHub Actions runs `supabase db push` on every merge to main
-- pg_cron: use `vault.decrypted_secrets` pattern for URLs — `current_setting('app.supabase_url')` returns NULL in cron context
+- pg_cron: use hardcoded URL + vault key — `current_setting('app.supabase_url')` returns NULL in cron context. Correct pattern (confirmed working in `20260504041815`):
+  ```sql
+  url := 'https://eauvubfpanpeuxsrqesu.supabase.co' || '/functions/v1/<function-name>',
+  headers := jsonb_build_object('Authorization','Bearer ' || (SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'SUPABASE_SERVICE_ROLE_KEY_VAULT'))
+  ```
+  Wrong patterns (DO NOT USE): `vault WHERE name = 'SUPABASE_URL'`, `vault WHERE name = 'SUPABASE_SERVICE_ROLE_KEY'`, `current_setting('app.supabase_url')` — none of these vault keys exist.
 
 ---
 
