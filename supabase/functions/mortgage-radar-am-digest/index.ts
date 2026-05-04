@@ -26,6 +26,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
+const TWILIO_FROM = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -295,6 +296,7 @@ serve(async (req) => {
         trace.outcome = "zero_leads_sms";
         await sendSMS(
           "+13138064952",
+          TWILIO_FROM,
           `Mortgage Radar digest ran for ${c.email} — 0 leads in 7 days. Check scanner logs.`,
           "mortgage_digest_zero_leads"
         );
