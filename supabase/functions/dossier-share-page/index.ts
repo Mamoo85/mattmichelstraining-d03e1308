@@ -116,7 +116,7 @@ body { font:16px/1.55 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-seri
     try { fetch(window.location.pathname + window.location.search, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify(Object.assign({token:token, event:event}, extra||{}))
-    }); } catch(e){}
+    }); } catch(e){ console.warn("[silent-catch]", e instanceof Error ? e.message : e); }
   }
   document.getElementById('cta').addEventListener('click', function(){ ping('cta_click'); });
   window.addEventListener('beforeunload', function(){

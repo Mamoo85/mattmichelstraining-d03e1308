@@ -50,7 +50,10 @@ serve(async (req) => {
       );
     }
 
-    const need = Math.max(0, gate.target - gate.fresh);
+    // Always pull a healthy candidate pool; dedupe + slice handle final size.
+    // Bug fix: previously `need * 2` could collapse to 0 when target was barely
+    // missed, starving each source query and producing 0 inserts.
+    const need = Math.max(25, gate.target - gate.fresh);
     const candidates: PoolCandidate[] = [];
 
     // SOURCE A — FieldDesk closed jobs aged >90d, opt-in customers only
@@ -195,10 +198,13 @@ serve(async (req) => {
       });
     }
     if (gate.fresh < gate.target / 2 && inserted < 5) {
-      // Pool still very low after refresh — alert Matt
+      // Pool still very low after refresh — alert Matt (throttle handled by caller cron throttle)
+      const fromNum = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
       await sendSMS(
         ADMIN_PHONE,
+        fromNum,
         `Dead lead pool low: ${gate.fresh} fresh, target ${gate.target}, refresh added ${inserted}.`,
+        "dead_lead_pool",
       );
     }
 
