@@ -10,7 +10,7 @@ import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
-import { Briefcase, MapPin, Clock, CheckCircle2, AlertCircle, User } from "lucide-react";
+import { Briefcase, MapPin, Clock, CheckCircle2, AlertCircle, User, Download } from "lucide-react";
 
 type Job = {
   id: string;
