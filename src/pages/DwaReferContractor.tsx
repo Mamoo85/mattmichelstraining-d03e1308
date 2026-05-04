@@ -192,6 +192,39 @@ const DwaReferContractor = () => {
             </div>
           )}
 
+          {/* Public leaderboard — opt-in, first names only */}
+          {leaderboard.length > 0 && (
+            <div className="bg-gradient-to-br from-yellow-500/5 to-cyan-500/5 border border-yellow-500/20 p-5 mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <Trophy className="w-4 h-4 text-yellow-400" />
+                <p className="text-xs font-bold uppercase tracking-widest text-yellow-400">Top Referrers This Year</p>
+              </div>
+              <div className="space-y-1.5">
+                {leaderboard.map((p: any, i: number) => {
+                  const meta = TIER_META[p.current_tier] || TIER_META.bronze;
+                  const Icon = meta.icon;
+                  return (
+                    <div key={i} className="flex items-center justify-between bg-slate-950/50 px-3 py-2 border border-slate-800">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-xs font-mono text-slate-500 w-5">#{i + 1}</span>
+                        <Icon className={`w-3.5 h-3.5 ${meta.color} shrink-0`} />
+                        <span className="text-sm font-semibold text-white truncate">{p.first_name}</span>
+                        <span className={`text-[10px] uppercase tracking-wider ${meta.color}`}>{meta.label}</span>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-sm font-black text-[#00d4ff]">{p.paid_referrals}</span>
+                        <span className="text-[10px] text-slate-500 ml-1">paid</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-slate-500 mt-3 text-center">
+                First names only · Opt in below to appear · 3 = free month · 5 = $250 cash · 10 = lifetime 20% off
+              </p>
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="bg-slate-900/50 border border-slate-800 p-6 space-y-5">
             <div>
