@@ -563,7 +563,10 @@ export default function MyMortgageRadar() {
         )}
 
         <p className="text-[10px] text-[#64748b] text-center mt-10 max-w-2xl mx-auto">
-          Mortgage Radar uses public records and behavioral signals only. We do not access, purchase, or resell credit-bureau trigger leads. Every outreach requires your explicit approval before send (TCPA + FCRA).
+          Mortgage Radar uses public records and behavioral signals only. We do not access, purchase, or resell credit-bureau trigger leads. Every outreach requires your explicit approval before send (TCPA + FCRA).{" "}
+          <a href="/mortgage-radar-compliance" className="text-[#00d4ff]/60 hover:text-[#00d4ff] underline transition-colors">
+            View full compliance disclosure →
+          </a>
         </p>
 
         {/* Add-on suite */}
