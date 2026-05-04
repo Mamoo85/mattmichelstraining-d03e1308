@@ -11792,6 +11792,54 @@ export type Database = {
         }
         Relationships: []
       }
+      manual_onboarding_queue: {
+        Row: {
+          amount_paid_cents: number | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          customer_email: string | null
+          id: string
+          notes: string | null
+          product_label: string
+          product_slug: string
+          status: string
+          stripe_session_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_paid_cents?: number | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          customer_email?: string | null
+          id?: string
+          notes?: string | null
+          product_label: string
+          product_slug: string
+          status?: string
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_paid_cents?: number | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          customer_email?: string | null
+          id?: string
+          notes?: string | null
+          product_label?: string
+          product_slug?: string
+          status?: string
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       market_intel_clients: {
         Row: {
           active: boolean | null
