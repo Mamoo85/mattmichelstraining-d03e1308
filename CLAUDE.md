@@ -12,7 +12,49 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ---
 
 ## Current Session State
-*Last updated: 2026-05-04*
+*Last updated: 2026-05-04 (Phase 43)*
+
+### Phase 43 — SMS Noise Fixes + Dead Lead Pool External Sources + Cron Repair COMPLETE ✅
+
+**This session deliverables:**
+
+**Fix 1 — Duplicate Trade Radar SMS removed** (`trade-radar-scanner/index.ts`)
+- Removed end-of-scan summary SMS that duplicated what `trade-radar-am-digest` sends at 9:30am ET
+- Commit: `49ea1e9b`
+
+**Fix 2 — Dead lead pool external sources added** (`dead-lead-pool-refresh/index.ts`)
+- All 3 internal sources (FieldDesk, marketplace, contractor) are empty tables — pool was starving
+- Added SOURCE D: BSEED Detroit city-certified contractor registry (ArcGIS, ~305 records, free)
+- Added SOURCE E: Google Maps Places API (11 Detroit trade queries, 5/run, 10 results each, uses GOOGLE_MAPS_API_KEY)
+- Commit: `3e8f83e4`
+
+**Fix 3 — Broken pg_cron vault patterns fixed** (2 new migrations)
+- `20260505000000_fix_broken_cron_patterns.sql` — Fixed 12 broken crons using wrong vault key names + added `trade-radar-am-digest-daily` cron (13:30 UTC = 9:30am EDT) — previously had NO cron scheduled
+- `20260505000001_fix_remaining_broken_crons.sql` — Fixed 3 remaining crons (hire-alert-healthcare, hire-alert-industrial, industry-pulse-commercial) that used `COALESCE(name='SUPABASE_SERVICE_ROLE_KEY', name='service_role_key')` — neither vault key exists
+- Wrong patterns fixed → correct pattern: hardcoded URL + `WHERE name = 'SUPABASE_SERVICE_ROLE_KEY_VAULT'`
+- Commits: `a77fac09`, `8981d4a7`
+
+**Fix 4 — Mortgage digest silence breaker** (`mortgage-radar-am-digest/index.ts`)
+- Root cause of missed email: old code used `created_at >= since24h`; scanner updated `last_signal_at` but inserted 0 new rows → old query found 0 leads → silent skip
+- Fixed: query now uses `last_signal_at >= since24h` (finds leads refreshed by today's scanner even if originally inserted days ago)
+- Added 7-day tier-3 fallback with score >= 6 filter (proof-of-work email on quiet days)
+- Added debug output: `clients_count`, `resend_key_set`, `client_traces` per client with `tier1_count`, `tier2_count`, `tier3_count`, `outcome`, `resend_response`
+- Fixed zero-leads SMS: was missing `from` argument → now correctly calls `sendSMS(to, TWILIO_FROM, body, product)`
+- Commits: `4821c706`, `7e4b7e84`, `f1834d96`, `a997a308`
+
+**⚠️ DEPLOYMENT BLOCKER — SUPABASE_ACCESS_TOKEN may be expired**
+- All fixes committed to `main` — code is correct in repo
+- `deploy-primary` GitHub Actions job deploys `mortgage-radar-am-digest` to primary project
+- If token expired again: Matt → github.com/mamoo85/m2training/settings/secrets/actions → update `SUPABASE_ACCESS_TOKEN` → re-run workflow
+- Once deployed, trigger today's digest manually:
+  ```
+  curl -X POST https://eauvubfpanpeuxsrqesu.supabase.co/functions/v1/mortgage-radar-am-digest -H "Content-Type: application/json" -d '{}'
+  ```
+  Should return `digests_sent: 1` with `outcome: "email_sent"` in client_traces
+
+**Throttle bug also fixed** (in intake-throttle.ts — see Phase 38 context):
+- Scanner was being skipped daily because `freshDays: 1` + `freshColumn: last_signal_at` wasn't updated
+- With `last_signal_at` query fix, digest now correctly finds leads scanner refreshed today
 
 ### Phase 42 — SE Michigan Geographic Coverage Board Fixes COMPLETE ✅
 
