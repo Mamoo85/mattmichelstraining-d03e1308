@@ -21,6 +21,7 @@ export interface TradeRadarLead {
   street_view_url?: string;
   raw_source_data?: Record<string, unknown>;
   status: "pending" | "approved" | "rejected";
+  signal_count?: number | null;
 }
 
 interface TradeRadarLeadCardProps {
