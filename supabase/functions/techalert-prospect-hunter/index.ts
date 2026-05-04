@@ -476,37 +476,39 @@ async function scanUSASpending(): Promise<Posting[]> {
 }
 
 // LinkedIn: job postings via People API search (uses existing LINKEDIN_ACCESS_TOKEN)
-async function scanLinkedInJobs(): Promise<Posting[]> {
-  if (!LINKEDIN_ACCESS_TOKEN) return [];
+// Google Maps Places — active HVAC/electrical/plumbing businesses in SE Michigan.
+// LinkedIn Jobs API (/v2/jobPostings) requires LinkedIn Partner Program access and
+// is not available on standard OAuth tokens — replaced with this.
+async function scanGoogleMapsTrades(): Promise<Posting[]> {
+  const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY") || "";
+  if (!GOOGLE_MAPS_API_KEY) return [];
   const results: Posting[] = [];
-  // LinkedIn Job Search API — searches public job postings
-  const keywords = ["HVAC technician hiring Michigan", "boiler operator Detroit", "electrician jobs Michigan"];
-  for (const kw of keywords) {
+  const searches = [
+    { type: "electrician",       role: "electrician" as const,  is_boiler: false },
+    { type: "plumber",           role: "hvac_tech" as const,    is_boiler: false },
+    { type: "hvac_contractor",   role: "hvac_tech" as const,    is_boiler: false },
+  ];
+  for (const { type, role, is_boiler } of searches) {
     try {
-      const res = await fetch(
-        `https://api.linkedin.com/v2/jobPostings?q=jobPostingsByKeywordsAndLocation&keywords=${encodeURIComponent(kw)}&locationId=us%3A0&count=10`,
-        {
-          headers: { Authorization: `Bearer ${LINKEDIN_ACCESS_TOKEN}`, "LinkedIn-Version": "202401" },
-          signal: AbortSignal.timeout(10_000),
-        },
-      );
+      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=42.33,-83.04&radius=80000&type=${type}&key=${GOOGLE_MAPS_API_KEY}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
       if (!res.ok) continue;
       const data = await res.json();
-      for (const job of (data?.elements || [])) {
-        const companyName: string = job?.companyDetails?.["com.linkedin.voyager.jobs.JobPostingCompany"]?.company?.name || "";
-        if (!companyName) continue;
+      for (const place of (data?.results || []).slice(0, 10)) {
+        if (place.business_status !== "OPERATIONAL") continue;
+        if ((place.user_ratings_total || 0) < 3) continue;
         results.push({
-          company_name: companyName,
-          city: job?.formattedLocation || undefined,
-          role: kw.includes("boiler") ? "boiler_operator" : kw.includes("electrician") ? "electrician" : "hvac_tech",
+          company_name: place.name,
+          city: place.vicinity || undefined,
+          role,
           days_posted: null,
-          source_url: job?.applyMethod?.["com.linkedin.voyager.jobs.OffsiteApply"]?.companyApplyUrl || undefined,
-          source_label: "LinkedIn",
-          is_boiler: kw.includes("boiler"),
+          source_url: `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
+          source_label: "Google Maps",
+          is_boiler,
         });
       }
     } catch (e) {
-      console.error("[hunter] linkedin error:", e instanceof Error ? e.message : e);
+      console.error("[hunter] google maps trades:", e instanceof Error ? e.message : e);
     }
   }
   return results;
