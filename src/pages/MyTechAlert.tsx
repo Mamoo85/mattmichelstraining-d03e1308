@@ -1183,6 +1183,13 @@ export default function MyTechAlert() {
           </CardContent>
         </Card>
 
+        {/* CRM/ATS webhook bridge */}
+        {data?.client?.id && (
+          <div className="mt-6">
+            <CrmWebhookSettings table="hire_alert_clients" clientId={data.client.id} brand="dwa" />
+          </div>
+        )}
+
         {/* Footer */}
         <div className="text-center py-6 border-t border-white/5 space-y-3">
           <p className="text-slate-600 text-[11px]">
