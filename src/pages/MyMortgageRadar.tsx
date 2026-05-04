@@ -488,6 +488,9 @@ export default function MyMortgageRadar() {
                             </span>
                           )}
                         </div>
+                        {clientId && (
+                          <LeadActionBar leadId={l.id} clientId={clientId} product="mortgage" />
+                        )}
                       </CardContent>
                     </Card>
                   ))}
