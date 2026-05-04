@@ -771,5 +771,37 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[hvac] cofc expiring:", e); }
 
+  // Macomb County Parcel Sales — new owner + old home (SE Michigan suburban expansion)
+  try {
+    const since180 = new Date(Date.now() - 180 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://gis.macombcountymi.gov/arcgis/rest/services/Property/Parcels/FeatureServer/0/query?where=SALE_DATE+%3E%3D+DATE+'${since180}'+AND+YEAR_BUILT+%3C+1990&outFields=ADDRESS,ZIP,YEAR_BUILT,SALE_DATE&resultRecordCount=60&orderByFields=SALE_DATE+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(10_000) },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat.attributes ?? feat;
+        const addr = String(a.ADDRESS ?? "").trim();
+        const zip = String(a.ZIP ?? "").replace(/[^0-9]/g, "").slice(0, 5);
+        if (!addr || !zip) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const yearBuilt = Number(a.YEAR_BUILT ?? 0);
+        const saleDate = a.SALE_DATE ? new Date(typeof a.SALE_DATE === "number" ? a.SALE_DATE : a.SALE_DATE).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0];
+        signals.push({
+          address: addr, city: "Macomb County", zip,
+          signal_type: "aging_system_proxy",
+          signal_date: saleDate, score: 6,
+          signal_detail: `Macomb County new owner: ${addr} sold ${saleDate}. Home built ${yearBuilt > 0 ? yearBuilt : "pre-1990"} — HVAC systems in older Macomb County homes are commonly original equipment`,
+          source_method: "macomb_county_parcel",
+          suggested_opener: `Congrats on the new home at ${addr}! Homes built before 1990 often have HVAC systems approaching or past end of life. Free system assessment with no obligation.`,
+          best_call_window: "Within 90 days of purchase",
+          estimated_value: 8000,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[hvac] Macomb County parcel:", e); }
+
   return signals;
 }
