@@ -14,6 +14,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Current Session State
 *Last updated: 2026-05-04*
 
+### Phase 42 — SE Michigan Geographic Coverage Board Fixes COMPLETE ✅
+
+**This session deliverables:**
+- `signals-roofing.ts` — Macomb County parcel scan added (new owner + pre-1990 → `roof_permit_upsell`, $12k)
+- `signals-hvac.ts` — Macomb County parcel scan added (new owner + pre-1990 → `aging_system_proxy`, $8k)
+- `signals-plumbing.ts` — Wayne + Oakland + Macomb County parcel scans added (→ `plumbing_permit_major`, $5k each)
+- `signals-electrical.ts` — Wayne + Oakland + Macomb County parcel scans added (→ `panel_upgrade_permit`, $6k each)
+- `signals-gutters.ts` — Wayne + Oakland + Macomb County parcel scans added (→ `roof_permit_upsell`, $2.5k each)
+- `signals-painting.ts` (exterior) — Wayne + Oakland + Macomb County parcel scans added (→ `storm_siding_damage`, $8k each)
+- `signals-demo_junk.ts` — CourtListener foreclosure scan added (DLBA proxy, nature_of_suit=320, courts=miwd+mied → `courtlistener_foreclosure`, $4.5k)
+- `signals-restoration.ts` — CourtListener foreclosure scan added (same, → `courtlistener_foreclosure`, $8k)
+- `trade-radar-scanner/index.ts` — `courtlistener_foreclosure` added to `AREA_ALERT_TYPES` (CourtListener returns case names not street addresses)
+
+**Coverage board status after Phase 42:**
+| Signal type | Detroit | SE Michigan (Wayne/Oakland/Macomb) |
+|---|---|---|
+| BSEED/ArcGIS permits | ✅ Full | ⚠️ Parcel proxy (new-owner + old-home) — all 6 relevant verticals |
+| CofC expirations | ✅ Full | ❌ Detroit BSEED only — no statewide equivalent (unfixable) |
+| Fire incidents / DLBA | ✅ Full | ⚠️ NWS fire weather (statewide) ✅ + CourtListener foreclosure proxy ✅ |
+
+**County GIS endpoints used (fail-gracefully via try/catch):**
+- Wayne: `https://utility.waynecountymi.gov/arcgis/rest/services/Property/FeatureServer/0/query` (fields: ADDRESS, ZIPCODE, YEAR_BUILT, SALE_DATE)
+- Oakland: `https://www.oakgov.com/egis/rest/services/Property/ParcelInfo/FeatureServer/0/query` (fields: SITUS_ADDRESS, ZIP, YEAR_BUILT, SALE_DATE)
+- Macomb: `https://gis.macombcountymi.gov/arcgis/rest/services/Property/Parcels/FeatureServer/0/query` (fields: ADDRESS, ZIP, YEAR_BUILT, SALE_DATE) — best-guess endpoint, fails gracefully
+
+**CourtListener API note:** Works without API key (public) but `COURTLISTENER_API_KEY` secret in Supabase unlocks higher rate limits. Sends `User-Agent` header as fallback. `courtlistener_foreclosure` is in `AREA_ALERT_TYPES` so it routes to `trade_radar_area_signals` (bypasses per-address validator).
+
 ### Phase 41 — Grand Rapids Expansion + Lead Guarantee + Compliance PDF COMPLETE ✅
 
 **This session deliverables:**
