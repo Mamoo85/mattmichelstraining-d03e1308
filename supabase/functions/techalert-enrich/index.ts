@@ -20,6 +20,7 @@ import {
   domainFromUrl,
   googlePlacesWebsite,
 } from "../_shared/enrichment-pipeline.ts";
+import { upsertContact, upsertCompany } from "../_shared/hubspot.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -182,6 +183,31 @@ serve(async (req) => {
             ? `Waterfall: ${waterfallTrace.map((t) => `${t.source}=${t.ok ? "✓" : "✗"}`).join(", ")}`
             : null,
         }).eq("id", target.id);
+
+        // Mirror to HubSpot CRM (fire-and-forget; helper swallows errors)
+        const domain = domainFromUrl(website);
+        const companyId = await upsertCompany({
+          domain: domain || undefined,
+          name: target.company_name,
+          city: target.city || undefined,
+          state: target.state || undefined,
+          numberofemployees: employeeCount || undefined,
+          dwa_signal_source: "techalert",
+        });
+        if (ownerEmail) {
+          await upsertContact({
+            email: ownerEmail,
+            firstname: firstName || undefined,
+            lastname: lastName || undefined,
+            phone: ownerPhone || undefined,
+            company: target.company_name,
+            website: website || undefined,
+            lifecyclestage: "lead",
+            hs_lead_status: "NEW",
+            dwa_signal_source: "techalert",
+            dwa_role: target.role || undefined,
+          });
+        }
 
         enriched++;
         await new Promise((r) => setTimeout(r, 300));

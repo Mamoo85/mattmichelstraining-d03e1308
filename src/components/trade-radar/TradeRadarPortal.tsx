@@ -7,8 +7,11 @@ import SEOHead from "@/components/layout/SEOHead";
 import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
+import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 import MortgageRadarTerritoryPicker from "@/components/mortgage/MortgageRadarTerritoryPicker";
 import TradeRadarLeadCard, { TradeRadarLead } from "@/components/trade-radar/TradeRadarLeadCard";
+import LeadActionBar from "@/components/trade-radar/LeadActionBar";
+import RadarExportBar from "@/components/shared/RadarExportBar";
 import { Wrench, Lock, Bell, TrendingUp, Calendar, Target, MapPin } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -55,6 +58,7 @@ export default function TradeRadarPortal({
   const [authError, setAuthError] = useState<string | null>(null);
   const [client, setClient] = useState<Client | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [actions, setActions] = useState<Record<string, { status: string; snooze_until: string | null }>>({});
   const [loading, setLoading] = useState(true);
   const [activeSignalType, setActiveSignalType] = useState<string>("all");
   const [notEnrolled, setNotEnrolled] = useState(false);
@@ -96,8 +100,8 @@ export default function TradeRadarPortal({
       }
       setClient(clientRow as Client);
 
-      // Pull leads for this vertical, filtered by client's zip_codes (last 14 days)
-      const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
+      // Pull leads for this vertical, filtered by client's zip_codes (last 90 days)
+      const since = new Date(Date.now() - 90 * 86_400_000).toISOString();
       let query = (supabase.from as any)("trade_radar_leads")
         .select(
           "id, full_name, address, city, zip, signal_type, signal_detail, signal_date, score, signal_count, suggested_opener, best_call_window, estimated_value, street_view_url, created_at"
@@ -117,7 +121,21 @@ export default function TradeRadarPortal({
         toast.error("Could not load leads");
         console.warn("[TradeRadarPortal] lead query failed", error);
       } else {
-        setLeads((data as Lead[]) || []);
+        const rows = (data as Lead[]) || [];
+        setLeads(rows);
+        // Load this client's actions for those leads
+        if (rows.length) {
+          const ids = rows.map((r) => r.id);
+          const { data: actData } = await (supabase.from as any)("trade_radar_lead_actions")
+            .select("lead_id, status, snooze_until")
+            .eq("client_id", clientRow.id)
+            .in("lead_id", ids);
+          const map: Record<string, { status: string; snooze_until: string | null }> = {};
+          (actData || []).forEach((a: any) => {
+            map[a.lead_id] = { status: a.status, snooze_until: a.snooze_until };
+          });
+          setActions(map);
+        }
       }
       setLoading(false);
     })();
@@ -208,6 +226,16 @@ export default function TradeRadarPortal({
       </header>
 
       <section className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+        <OnboardingChecklist
+          product={productLabel}
+          storageKey={`trade-radar-${vertical}`}
+          steps={[
+            { id: "auth", label: "Dashboard link verified", done: !!client, hint: "Open this page from your weekly digest email." },
+            { id: "leads", label: "First leads delivered", done: leads.length > 0, hint: "Scanner runs daily at 8am ET." },
+            { id: "hot", label: "First hot lead (score 8+)", done: weeklyStats.hotLeads > 0, hint: "Highest-intent signals — call today." },
+            { id: "outreach", label: "First outreach sent", done: Object.values(actions).some((a) => a.status === "called" || a.status === "emailed"), hint: "Use the action bar on any lead." },
+          ]}
+        />
         {/* This week summary */}
         <div className="mb-6">
           <h2 className="text-[10px] uppercase tracking-widest text-[#00d4ff] font-bold mb-2 flex items-center gap-1.5">
@@ -285,6 +313,13 @@ export default function TradeRadarPortal({
                 "Weekly digest email queued",
               ]}
               setupGuideHref="mailto:matt@detroitwebagent.com?subject=Trade%20Radar%20setup"
+              sampleLead={{
+                title: `Homeowner — ${productLabel} signal`,
+                address: "1842 Maplewood Dr, Grosse Pointe, MI 48230",
+                signal: "Permit pulled 2 days ago · public records match",
+                score: 8,
+                opener: `Saw the recent permit activity on Maplewood — wanted to reach out before someone else does. We handle ${productLabel.toLowerCase()} work in your area and can be out this week.`,
+              }}
             />
           ) : (
             <Card className="bg-[#0a1628] border-[#1e3a5f]">
@@ -296,11 +331,48 @@ export default function TradeRadarPortal({
             </Card>
           )
         ) : (
-          <div className="grid gap-5">
-            {filtered.map((l) => (
-              <TradeRadarLeadCard key={l.id} lead={l} />
-            ))}
-          </div>
+          <>
+            <div className="mb-4">
+              <RadarExportBar
+                radar="growth"
+                records={filtered.map((l) => ({
+                  id: l.id,
+                  full_name: l.full_name,
+                  signal_type: l.signal_type,
+                  vertical,
+                  score: l.score,
+                  city: (l as any).city ?? null,
+                  recommended_pitch: l.suggested_opener ?? null,
+                  detected_at: l.signal_date ?? l.created_at,
+                  source_url: (l as any).source_url ?? null,
+                }))}
+                clientId={client?.id}
+                businessName={client?.business_name ?? undefined}
+              />
+            </div>
+            <div className="grid gap-5">
+              {filtered.map((l) => {
+                const a = actions[l.id];
+                return (
+                  <TradeRadarLeadCard
+                    key={l.id}
+                    lead={l}
+                    actionBar={
+                      client ? (
+                        <LeadActionBar
+                          leadId={l.id}
+                          clientId={client.id}
+                          product="trade"
+                          initialStatus={(a?.status as any) || "new"}
+                          initialSnoozeUntil={a?.snooze_until || null}
+                        />
+                      ) : null
+                    }
+                  />
+                );
+              })}
+            </div>
+          </>
         )}
 
         {/* Territory picker — reused from Mortgage Radar (preview UI; ZIP saves persisted via support) */}

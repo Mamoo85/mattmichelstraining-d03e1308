@@ -13,6 +13,7 @@ import FreeBoostCard from "@/components/contractor/FreeBoostCard";
 import DWASuiteNav from "@/components/shared/DWASuiteNav";
 import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
+import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
 
 interface Lead {
   id: string;
@@ -210,6 +211,15 @@ export default function MyContractorLeads() {
         </header>
 
         <main className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+          <OnboardingChecklist
+            product="Contractor Leads"
+            steps={[
+              { id: "auth", label: "Dashboard link verified", done: !!contractor, hint: "Open from your welcome email." },
+              { id: "leads", label: "First lead delivered", done: stats.total > 0, hint: "Leads delivered as they hit your trade + city." },
+              { id: "called", label: "First lead called", done: stats.called > 0 || stats.hired > 0, hint: "Tap the Call button on any lead." },
+              { id: "hired", label: "First job won", done: stats.hired > 0, hint: "Mark Hired so we tune your scoring." },
+            ]}
+          />
           {/* Shipping Upgrades banner */}
           {!bannerDismissed && (
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-3 flex items-start gap-3">
@@ -387,6 +397,13 @@ export default function MyContractorLeads() {
                   "First-look priority enabled",
                 ]}
                 setupGuideHref="mailto:matt@detroitwebagent.com?subject=Contractor%20Leads%20setup"
+                sampleLead={{
+                  title: "Sarah K. — needs estimate this week",
+                  address: "Royal Oak, MI 48067",
+                  signal: "Submitted form 14 min ago · phone verified",
+                  score: 9,
+                  opener: "Hi Sarah, this is [your name] — got your request for an estimate. I can swing by Thursday morning or Friday afternoon, which works better?",
+                }}
               />
             ) : (
               <div className="bg-[#0f1f35] border border-white/10 rounded-xl py-16 text-center">

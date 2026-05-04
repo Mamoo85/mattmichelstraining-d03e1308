@@ -5,7 +5,14 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle, Copy, Users, DollarSign, Send } from "lucide-react";
+import { Loader2, CheckCircle, Copy, Users, DollarSign, Send, Trophy, Crown } from "lucide-react";
+
+const TIER_META: Record<string, { label: string; color: string; icon: any }> = {
+  platinum: { label: "Platinum", color: "text-cyan-300", icon: Crown },
+  gold: { label: "Gold", color: "text-yellow-400", icon: Trophy },
+  silver: { label: "Silver", color: "text-slate-300", icon: Trophy },
+  bronze: { label: "Bronze", color: "text-amber-700", icon: Trophy },
+};
 
 const PRODUCTS = [
   { value: "any", label: "Any DWA product" },
@@ -31,6 +38,25 @@ const DwaReferContractor = () => {
   const [result, setResult] = useState<{ code: string } | null>(null);
   const [stats, setStats] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [optInLeaderboard, setOptInLeaderboard] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("referral_partners")
+        .select("name, current_tier, paid_referrals, total_referrals")
+        .eq("show_on_leaderboard", true)
+        .order("paid_referrals", { ascending: false })
+        .limit(10);
+      // first-name only
+      const masked = (data || []).map((r: any) => ({
+        ...r,
+        first_name: (r.name || "").split(/\s+/)[0] || "Anonymous",
+      }));
+      setLeaderboard(masked);
+    })();
+  }, []);
 
   useEffect(() => {
     if (!form.referrer_email || !form.referrer_email.includes("@")) return;
@@ -71,6 +97,17 @@ const DwaReferContractor = () => {
       }
       setResult({ code: data.code });
       toast.success("Referral sent! We just emailed them.");
+      // Persist leaderboard opt-in (best-effort)
+      if (optInLeaderboard && form.referrer_email) {
+        supabase.functions.invoke("dwa-contractor-referral", {
+          body: {
+            action: "toggle_leaderboard",
+            email: form.referrer_email.trim().toLowerCase(),
+            name: form.referrer_business_name || form.referrer_email.split("@")[0],
+            opt_in: true,
+          },
+        }).catch(() => {});
+      }
       setForm({ ...form, referred_email: "", referred_business_name: "", referred_phone: "" });
       loadStats();
     } catch (err: any) {
@@ -166,6 +203,39 @@ const DwaReferContractor = () => {
             </div>
           )}
 
+          {/* Public leaderboard — opt-in, first names only */}
+          {leaderboard.length > 0 && (
+            <div className="bg-gradient-to-br from-yellow-500/5 to-cyan-500/5 border border-yellow-500/20 p-5 mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <Trophy className="w-4 h-4 text-yellow-400" />
+                <p className="text-xs font-bold uppercase tracking-widest text-yellow-400">Top Referrers This Year</p>
+              </div>
+              <div className="space-y-1.5">
+                {leaderboard.map((p: any, i: number) => {
+                  const meta = TIER_META[p.current_tier] || TIER_META.bronze;
+                  const Icon = meta.icon;
+                  return (
+                    <div key={i} className="flex items-center justify-between bg-slate-950/50 px-3 py-2 border border-slate-800">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-xs font-mono text-slate-500 w-5">#{i + 1}</span>
+                        <Icon className={`w-3.5 h-3.5 ${meta.color} shrink-0`} />
+                        <span className="text-sm font-semibold text-white truncate">{p.first_name}</span>
+                        <span className={`text-[10px] uppercase tracking-wider ${meta.color}`}>{meta.label}</span>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-sm font-black text-[#00d4ff]">{p.paid_referrals}</span>
+                        <span className="text-[10px] text-slate-500 ml-1">paid</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-slate-500 mt-3 text-center">
+                First names only · Opt in below to appear · 3 = free month · 5 = $250 cash · 10 = lifetime 20% off
+              </p>
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="bg-slate-900/50 border border-slate-800 p-6 space-y-5">
             <div>
@@ -231,6 +301,18 @@ const DwaReferContractor = () => {
                 </select>
               </div>
             </div>
+
+            <label className="flex items-start gap-2 text-xs text-slate-400 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={optInLeaderboard}
+                onChange={(e) => setOptInLeaderboard(e.target.checked)}
+                className="mt-0.5 accent-[#00d4ff]"
+              />
+              <span>
+                Show my <strong className="text-slate-200">first name only</strong> on the public Top Referrers leaderboard above.
+              </span>
+            </label>
 
             <Button
               type="submit"

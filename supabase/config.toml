@@ -3,6 +3,9 @@ project_id = "zmyczlfuufhngzovkjdh"
 [functions.e2e-link-auditor]
 verify_jwt = false
 
+[functions.cold-email-ramp-scheduler]
+verify_jwt = false
+
 [functions.trial-drip-runner]
 verify_jwt = false
 
@@ -1881,6 +1884,9 @@ verify_jwt = false
 [functions.marketplace-lead-summarize]
 verify_jwt = false
 
+[functions.anniversary-notice-sender]
+verify_jwt = false
+
 [functions.create-mortgage-radar-checkout]
 verify_jwt = false
 
@@ -2205,3 +2211,13 @@ verify_jwt = false
 
 [functions.cold-email-daily-economics]
 verify_jwt = false
+
+[functions.scanner-health-matrix]
+verify_jwt = false
+
+[functions.hubspot-form-webhook]
+verify_jwt = false
+
+[functions.hubspot-bootstrap-properties]
+verify_jwt = false
+

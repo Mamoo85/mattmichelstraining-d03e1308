@@ -3097,6 +3097,93 @@ export type Database = {
         }
         Relationships: []
       }
+      cold_email_ramp_history: {
+        Row: {
+          action: string
+          bounce_pct: number
+          complaint_pct: number
+          day_index: number
+          evaluated_at: string
+          id: string
+          new_cap: number
+          notes: string | null
+          prev_cap: number
+          sent_24h: number
+        }
+        Insert: {
+          action: string
+          bounce_pct?: number
+          complaint_pct?: number
+          day_index: number
+          evaluated_at?: string
+          id?: string
+          new_cap: number
+          notes?: string | null
+          prev_cap: number
+          sent_24h?: number
+        }
+        Update: {
+          action?: string
+          bounce_pct?: number
+          complaint_pct?: number
+          day_index?: number
+          evaluated_at?: string
+          id?: string
+          new_cap?: number
+          notes?: string | null
+          prev_cap?: number
+          sent_24h?: number
+        }
+        Relationships: []
+      }
+      cold_email_ramp_state: {
+        Row: {
+          base_cap: number
+          bounce_threshold_pct: number
+          ceiling: number
+          complaint_threshold_pct: number
+          created_at: string | null
+          current_cap: number
+          id: number
+          last_evaluated_at: string | null
+          pause_reason: string | null
+          paused: boolean
+          ramp_start_date: string
+          step_per_day: number
+          updated_at: string | null
+        }
+        Insert: {
+          base_cap?: number
+          bounce_threshold_pct?: number
+          ceiling?: number
+          complaint_threshold_pct?: number
+          created_at?: string | null
+          current_cap?: number
+          id?: number
+          last_evaluated_at?: string | null
+          pause_reason?: string | null
+          paused?: boolean
+          ramp_start_date?: string
+          step_per_day?: number
+          updated_at?: string | null
+        }
+        Update: {
+          base_cap?: number
+          bounce_threshold_pct?: number
+          ceiling?: number
+          complaint_threshold_pct?: number
+          created_at?: string | null
+          current_cap?: number
+          id?: number
+          last_evaluated_at?: string | null
+          pause_reason?: string | null
+          paused?: boolean
+          ramp_start_date?: string
+          step_per_day?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       collections_clients: {
         Row: {
           active: boolean | null
@@ -11705,6 +11792,54 @@ export type Database = {
         }
         Relationships: []
       }
+      manual_onboarding_queue: {
+        Row: {
+          amount_paid_cents: number | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          customer_email: string | null
+          id: string
+          notes: string | null
+          product_label: string
+          product_slug: string
+          status: string
+          stripe_session_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_paid_cents?: number | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          customer_email?: string | null
+          id?: string
+          notes?: string | null
+          product_label: string
+          product_slug: string
+          status?: string
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_paid_cents?: number | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          customer_email?: string | null
+          id?: string
+          notes?: string | null
+          product_label?: string
+          product_slug?: string
+          status?: string
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       market_intel_clients: {
         Row: {
           active: boolean | null
@@ -12872,6 +13007,54 @@ export type Database = {
             foreignKeyName: "mortgage_radar_enrich_queue_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: true
+            referencedRelation: "mortgage_radar_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mortgage_radar_lead_actions: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          lead_id: string
+          notes: string | null
+          snooze_until: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          lead_id: string
+          notes?: string | null
+          snooze_until?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+          notes?: string | null
+          snooze_until?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mortgage_radar_lead_actions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "mortgage_radar_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mortgage_radar_lead_actions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
             referencedRelation: "mortgage_radar_leads"
             referencedColumns: ["id"]
           },
@@ -21653,6 +21836,54 @@ export type Database = {
         }
         Relationships: []
       }
+      trade_radar_lead_actions: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          lead_id: string
+          notes: string | null
+          snooze_until: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          lead_id: string
+          notes?: string | null
+          snooze_until?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+          notes?: string | null
+          snooze_until?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_radar_lead_actions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "trade_radar_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_radar_lead_actions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "trade_radar_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trade_radar_leads: {
         Row: {
           address: string | null
@@ -21677,6 +21908,7 @@ export type Database = {
           signal_type: string | null
           source_method: string | null
           status: string
+          street_view_url: string | null
           suggested_opener: string | null
           vertical: string
           zip: string | null
@@ -21704,6 +21936,7 @@ export type Database = {
           signal_type?: string | null
           source_method?: string | null
           status?: string
+          street_view_url?: string | null
           suggested_opener?: string | null
           vertical: string
           zip?: string | null
@@ -21731,6 +21964,7 @@ export type Database = {
           signal_type?: string | null
           source_method?: string | null
           status?: string
+          street_view_url?: string | null
           suggested_opener?: string | null
           vertical?: string
           zip?: string | null

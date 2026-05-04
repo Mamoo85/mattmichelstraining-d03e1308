@@ -15,6 +15,10 @@ import MortgageRadarMap from "@/components/mortgage/MortgageRadarMap";
 import MortgageRadarPipeline from "@/components/mortgage/MortgageRadarPipeline";
 import MortgageRadarWelcome from "@/components/mortgage/MortgageRadarWelcome";
 import MortgageRadarSeedLead from "@/components/mortgage/MortgageRadarSeedLead";
+import LeadActionBar from "@/components/trade-radar/LeadActionBar";
+import RadarExportBar from "@/components/shared/RadarExportBar";
+import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
+import ScoreBreakdown from "@/components/shared/ScoreBreakdown";
 
 type Lead = {
   id: string;
@@ -102,7 +106,7 @@ export default function MyMortgageRadar() {
         if (resolvedClientId) setClientId(resolvedClientId);
       }
 
-      const since = new Date(Date.now() - 14 * 86_400_000).toISOString();
+      const since = new Date(Date.now() - 90 * 86_400_000).toISOString();
       let query = (supabase.from as any)("mortgage_radar_leads")
         .select("id, full_name, address, city, zip, phone, email, signal_type, signal_source, signal_detail, signal_date, score, signal_count, suggested_opener, best_call_window, created_at, pipeline_stage")
         .gte("created_at", since)
@@ -290,6 +294,15 @@ export default function MyMortgageRadar() {
       </header>
 
       <section className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+        <OnboardingChecklist
+          product="Mortgage Radar"
+          steps={[
+            { id: "auth", label: "Dashboard link verified", done: !!clientId, hint: "Open this page from your weekly digest email." },
+            { id: "leads", label: "First leads delivered", done: leads.length > 0, hint: "Scanner runs daily at 8am ET." },
+            { id: "hot", label: "First hot lead (score 9+)", done: hotCount > 0, hint: "Highest-intent in-market signal." },
+            { id: "outreach", label: "First outreach sent", done: outreach.length > 0, hint: "Use the Reach Out button on any lead." },
+          ]}
+        />
         {/* KPI cards with hero glow — explicit 1-2-3 hierarchy */}
         <div className="relative mb-5 sm:mb-6">
           <div
@@ -433,6 +446,13 @@ export default function MyMortgageRadar() {
                         "Weekly digest email queued",
                       ]}
                       setupGuideHref="mailto:matt@detroitwebagent.com?subject=Mortgage%20Radar%20setup"
+                      sampleLead={{
+                        title: "Refi candidate — rate trigger",
+                        address: "2914 Lakeshore Dr, St. Clair Shores, MI 48080",
+                        signal: "Originated 2019 @ 6.8% · current rate would save $340/mo",
+                        score: 9,
+                        opener: "Hi — saw your 2019 mortgage is sitting around 6.8%. Quick math says you could drop ~$340/mo at today's rates. 5-min call this week to walk through it?",
+                      }}
                     />
                   </>
                 ) : (
@@ -443,6 +463,25 @@ export default function MyMortgageRadar() {
                   </CardContent></Card>
                 )
               ) : (
+                <>
+                <div className="mb-4">
+                  <RadarExportBar
+                    radar="growth"
+                    records={filtered.map((l) => ({
+                      id: l.id,
+                      full_name: l.full_name,
+                      name: l.address,
+                      city: l.city,
+                      signal_type: l.signal_type,
+                      score: l.score,
+                      phone: l.phone,
+                      email: l.email,
+                      recommended_pitch: l.suggested_opener,
+                      detected_at: l.signal_date ?? l.created_at,
+                    }))}
+                    clientId={clientId ?? undefined}
+                  />
+                </div>
                 <div className="grid gap-4">
                   {filtered.map((l) => (
                     <Card key={l.id} className={`bg-[#0a1628] border ${l.score >= 9 ? "border-[#00d4ff]" : "border-[#1e3a5f]"}`}>
@@ -465,6 +504,16 @@ export default function MyMortgageRadar() {
                       </CardHeader>
                       <CardContent>
                         {l.signal_detail && <p className="text-sm text-[#cbd5e1] mb-3">{l.signal_detail}</p>}
+                        <div className="mb-3">
+                          <ScoreBreakdown
+                            score={l.score}
+                            signalType={l.signal_type}
+                            signalLabel={l.signal_type.replace(/_/g, " ")}
+                            signalDate={(l as any).signal_date ?? null}
+                            sourceMethod={l.signal_source}
+                            signalCount={l.signal_count ?? null}
+                          />
+                        </div>
                         {l.suggested_opener && (
                           <div className="bg-[#030711] border border-[#1e3a5f] rounded p-3 mb-3">
                             <p className="text-[10px] uppercase tracking-widest text-[#00d4ff] mb-1">Suggested opener</p>
@@ -487,10 +536,14 @@ export default function MyMortgageRadar() {
                             </span>
                           )}
                         </div>
+                        {clientId && (
+                          <LeadActionBar leadId={l.id} clientId={clientId} product="mortgage" />
+                        )}
                       </CardContent>
                     </Card>
                   ))}
                 </div>
+                </>
               )}
             </TabsContent>
 

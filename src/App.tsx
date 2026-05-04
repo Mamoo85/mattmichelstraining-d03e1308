@@ -90,6 +90,8 @@ const AdminCheckoutEvents = lazyRetry(() => import("./pages/admin/AdminCheckoutE
 const AdminColdEmailAudit = lazyRetry(() => import("./pages/admin/AdminColdEmailAudit"));
 const LinkHealth = lazyRetry(() => import("./pages/admin/LinkHealth"));
 const TrialDripPreview = lazyRetry(() => import("./pages/admin/TrialDripPreview"));
+const ScannerHealth = lazyRetry(() => import("./pages/admin/ScannerHealth"));
+const ColdEmailRamp = lazyRetry(() => import("./pages/admin/ColdEmailRamp"));
 const DwaAdminV4 = lazyRetry(() => import("./pages/DwaAdminV4"));
 const DwaAdminStripeReconcile = lazyRetry(() => import("./pages/DwaAdminStripeReconcile"));
 const DwaAdminQbrQueue = lazyRetry(() => import("./pages/DwaAdminQbrQueue"));
@@ -375,6 +377,8 @@ const MyPestControlRadar = lazyRetry(() => import("./pages/MyPestControlRadar"))
 const MyGuttersRadar = lazyRetry(() => import("./pages/MyGuttersRadar"));
 const MyPaintingRadar = lazyRetry(() => import("./pages/MyPaintingRadar"));
 const MyExteriorRadar = lazyRetry(() => import("./pages/MyExteriorRadar"));
+const MyFieldDesk = lazyRetry(() => import("./pages/MyFieldDesk"));
+const MyDemandRadar = lazyRetry(() => import("./pages/MyDemandRadar"));
 const MyTreeRadar = lazyRetry(() => import("./pages/MyTreeRadar"));
 const MyRestorationRadar = lazyRetry(() => import("./pages/MyRestorationRadar"));
 const MyDemoJunkRadar = lazyRetry(() => import("./pages/MyDemoJunkRadar"));
@@ -893,6 +897,8 @@ const App = () => (
                     <Route path="/my-gutters-radar" element={<MyGuttersRadar />} />
                     <Route path="/my-painting-radar" element={<MyPaintingRadar />} />
                     <Route path="/my-exterior-radar" element={<MyExteriorRadar />} />
+                    <Route path="/my-field-desk" element={<MyFieldDesk />} />
+                    <Route path="/my-demand-radar" element={<MyDemandRadar />} />
                     <Route path="/my-tree-radar" element={<MyTreeRadar />} />
                     <Route path="/my-restoration-radar" element={<MyRestorationRadar />} />
                     <Route path="/my-demo-junk-radar" element={<MyDemoJunkRadar />} />
@@ -951,6 +957,8 @@ const App = () => (
                       <Route path="/dwa-admin/cold-email-audit" element={<AgencyAdminRoute><AdminColdEmailAudit /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/link-health" element={<AgencyAdminRoute><LinkHealth /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/trial-drip" element={<AgencyAdminRoute><TrialDripPreview /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/scanner-health" element={<AgencyAdminRoute><ScannerHealth /></AgencyAdminRoute>} />
+                      <Route path="/dwa-admin/cold-email-ramp" element={<AgencyAdminRoute><ColdEmailRamp /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/techalert-prospects" element={<AgencyAdminRoute><AdminTechAlertProspects /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/scanner-hub" element={<AgencyAdminRoute><AdminScannerHub /></AgencyAdminRoute>} />
                       <Route path="/dwa-admin/v4" element={<AgencyAdminRoute><DwaAdminV4 /></AgencyAdminRoute>} />
