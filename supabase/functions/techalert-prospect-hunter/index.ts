@@ -1294,7 +1294,7 @@ serve(async (req) => {
           await sendSMS(
             ADMIN_PHONE,
             TWILIO_PHONE,
-            `⚠️ TechAlert hunter low yield: ${inserted} new (${updated} updated, ${scanned} scanned). ${SONAR_DISABLED_REASON ? "Sonar OFF (" + SONAR_DISABLED_REASON + "). " : ""}Check /admin/techalert-prospects`,
+            `⚠️ TechAlert hunter low yield: ${inserted} new (${updated} updated, ${scanned} scanned). ${SONAR_DISABLED_REASON ? `Sonar OFF (${SONAR_DISABLED_REASON}) — failed over to Lovable AI Gateway. Top up OpenRouter to restore Sonar. ` : ""}Check /admin/techalert-prospects`,
             "techalert_yield_alert",
           );
           alertSent = true;
