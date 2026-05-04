@@ -977,9 +977,33 @@ Two purposes in one codebase:
 
 ## Deployment
 
-- Claude commits to dev branch → Matt merges to main → Lovable auto-deploys
-- GitHub Actions deploys to secondary project `zmyczlfuufhngzovkjdh` (contractor-lead-notify + missed-call-handler only)
-- Secondary project is at free-tier function limit (~25) — don't add new functions there via MCP
+## ⚠️ Deployment Architecture (CRITICAL — READ BEFORE TOUCHING EDGE FUNCTIONS)
+
+**Primary project `eauvubfpanpeuxsrqesu` is owned by Lovable's Supabase org, not Matt's personal account.**
+- Matt's Supabase PAT (`SUPABASE_ACCESS_TOKEN`) only has access to the secondary project.
+- The Supabase MCP (`list_projects`) only shows the secondary project — confirmed.
+- The GitHub Actions `deploy-primary` job was removed by Lovable (it always failed with 403).
+
+**How edge functions actually get deployed to the primary project:**
+- Lovable deploys functions IT generates/modifies when it pushes to main.
+- External git commits (from Claude Code sessions) to edge functions are NOT auto-deployed by Lovable.
+- Direct code changes to edge functions will sit in the repo but won't go live until Lovable touches them.
+
+**To deploy edge function changes made by Claude Code:**
+1. Go to lovable.dev → open the project
+2. In the Lovable chat, ask: "Please deploy the `<function-name>` edge function with the latest code from the repo."
+3. Lovable will make a trivial change and deploy it.
+
+**OR for a permanent fix** (one-time setup):
+1. In Lovable → project settings → click the Supabase project link
+2. From the Supabase dashboard (opened via Lovable), go to Account → Access Tokens → create new PAT
+3. Add it to GitHub Secrets as `PRIMARY_SUPABASE_ACCESS_TOKEN`
+4. Restore a `deploy-primary` job in `.github/workflows/deploy-supabase.yml` using this secret
+
+**Secondary project `zmyczlfuufhngzovkjdh`** is in Matt's own Supabase account:
+- GitHub Actions CAN deploy here (but the `deploy` job is currently disabled with `if: false`)
+- Only hosts: `contractor-lead-notify`, `missed-call-handler`, `missed-call-status`, `inbound-sms-relay`
+- At free-tier function limit (~25) — don't add new functions there
 
 ---
 
