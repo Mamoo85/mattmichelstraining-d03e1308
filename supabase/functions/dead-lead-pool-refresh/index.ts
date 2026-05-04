@@ -198,10 +198,13 @@ serve(async (req) => {
       });
     }
     if (gate.fresh < gate.target / 2 && inserted < 5) {
-      // Pool still very low after refresh — alert Matt
+      // Pool still very low after refresh — alert Matt (throttle handled by caller cron throttle)
+      const fromNum = Deno.env.get("TWILIO_PHONE_NUMBER") || "+13139921219";
       await sendSMS(
         ADMIN_PHONE,
+        fromNum,
         `Dead lead pool low: ${gate.fresh} fresh, target ${gate.target}, refresh added ${inserted}.`,
+        "dead_lead_pool",
       );
     }
 
