@@ -142,12 +142,20 @@ export async function validateAddress(
     const missing: string[] = addr.missingComponentTypes || [];
     const unconfirmed: string[] = addr.unconfirmedComponentTypes || [];
 
-    // Pass = real PREMISE/SUB_PREMISE granularity, USPS-recognized, no missing/unconfirmed components.
+    // Pass = real PREMISE/SUB_PREMISE granularity, USPS-recognized.
+    // Apartments without unit numbers (missing=[subpremise]) are EXTREMELY common
+    // in FSBO/estate-sale data and the geocode is still accurate to the building.
+    // Same for unconfirmed=[street_number] when granularity is PREMISE — Google
+    // verified the street + city + zip but couldn't confirm the exact number.
+    // We accept these and let downstream score-cap + pipeline_stage handle review.
+    const SOFT_MISSING = new Set(["subpremise"]);
+    const SOFT_UNCONFIRMED = new Set(["street_number", "subpremise", "locality", "postal_code", "route"]);
+    const realMissing = missing.filter((m: string) => !SOFT_MISSING.has(m));
+    const realUnconfirmed = unconfirmed.filter((u: string) => !SOFT_UNCONFIRMED.has(u));
     const pass =
       ACCEPTABLE_GRANULARITY.has(granularity) &&
-      missing.length === 0 &&
-      unconfirmed.length === 0 &&
-      verdict.addressComplete === true;
+      realMissing.length === 0 &&
+      realUnconfirmed.length === 0;
 
     // Cache result
     try {
