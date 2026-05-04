@@ -282,8 +282,12 @@ export default function MySiteRadar() {
                 ) : (
                   <ul style={{ margin: "10px 0 0", padding: 0, listStyle: "none" }}>
                     {topCompanies.map((c) => (
-                      <li key={c.name} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #1e3a5f" }}>
-                        <span style={{ color: "#e2e8f0", fontSize: 14 }}>{c.name} {c.city && <span style={{ color: "#64748b" }}>· {c.city}</span>}</span>
+                      <li
+                        key={c.name}
+                        onClick={() => setSelectedCompany(c.name)}
+                        style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #1e3a5f", cursor: "pointer" }}
+                      >
+                        <span style={{ color: "#00d4ff", fontSize: 14, textDecoration: "underline", textDecorationStyle: "dotted" }}>{c.name} {c.city && <span style={{ color: "#64748b", textDecoration: "none" }}>· {c.city}</span>}</span>
                         <span style={{ color: "#00d4ff", fontWeight: 700, fontSize: 14 }}>{c.count}</span>
                       </li>
                     ))}
