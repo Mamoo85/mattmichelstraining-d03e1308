@@ -12964,6 +12964,54 @@ export type Database = {
           },
         ]
       }
+      mortgage_radar_lead_actions: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          lead_id: string
+          notes: string | null
+          snooze_until: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          lead_id: string
+          notes?: string | null
+          snooze_until?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+          notes?: string | null
+          snooze_until?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mortgage_radar_lead_actions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "mortgage_radar_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mortgage_radar_lead_actions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "mortgage_radar_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mortgage_radar_lead_locks: {
         Row: {
           client_id: string
@@ -21739,6 +21787,54 @@ export type Database = {
           zip_codes?: string[]
         }
         Relationships: []
+      }
+      trade_radar_lead_actions: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          lead_id: string
+          notes: string | null
+          snooze_until: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          lead_id: string
+          notes?: string | null
+          snooze_until?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+          notes?: string | null
+          snooze_until?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_radar_lead_actions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "trade_radar_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_radar_lead_actions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "trade_radar_leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trade_radar_leads: {
         Row: {
