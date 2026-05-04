@@ -57,7 +57,7 @@ export interface AddressValidationResult {
 
 const ACCEPTABLE_GRANULARITY = new Set(["PREMISE", "SUB_PREMISE"]);
 // Softer granularities we accept with score cap + manual_review flag (recovers ~60% of mortgage rejects).
-const SOFT_GRANULARITY = new Set(["ROUTE", "BLOCK", "NEIGHBORHOOD"]);
+const SOFT_GRANULARITY = new Set(["PREMISE_PROXIMITY", "ROUTE", "BLOCK", "NEIGHBORHOOD"]);
 
 function cacheKey(address: string, zip: string | undefined): string {
   return `${(address || "").trim().toLowerCase()}|${(zip || "").trim()}`;
