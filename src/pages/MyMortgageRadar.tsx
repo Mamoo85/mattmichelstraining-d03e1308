@@ -18,6 +18,7 @@ import MortgageRadarSeedLead from "@/components/mortgage/MortgageRadarSeedLead";
 import LeadActionBar from "@/components/trade-radar/LeadActionBar";
 import RadarExportBar from "@/components/shared/RadarExportBar";
 import OnboardingChecklist from "@/components/shared/OnboardingChecklist";
+import ScoreBreakdown from "@/components/shared/ScoreBreakdown";
 
 type Lead = {
   id: string;
