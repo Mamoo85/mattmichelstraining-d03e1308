@@ -1,7 +1,9 @@
 // Outreach Queue Worker
 // Claims pending send jobs via SELECT FOR UPDATE SKIP LOCKED, sends them, marks results.
 // Designed to run every minute via pg_cron — safe for concurrent invocation.
+// SMS goes through _shared/twilio.ts → enforces TCPA opt-out + quiet-hours.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendSMS } from "../_shared/twilio.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
