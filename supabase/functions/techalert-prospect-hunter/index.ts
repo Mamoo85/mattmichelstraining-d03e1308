@@ -1078,6 +1078,24 @@ serve(async (req) => {
   const startedAt = Date.now();
   let inserted = 0, updated = 0, scanned = 0;
 
+  // Right-size: skip if we already have plenty of fresh prospects for the
+  // current TechAlert customer count. Body {force:true} overrides.
+  let _force = false;
+  try { const b = await req.clone().json(); _force = !!b?.force; } catch { /* default */ }
+  if (!_force) {
+    try {
+      const { shouldScanMore } = await import("../_shared/intake-throttle.ts");
+      const gate = await shouldScanMore(sb, "techalert");
+      if (gate.skip) {
+        return new Response(
+          JSON.stringify({ skipped: true, reason: gate.reason, fresh: gate.fresh, target: gate.target }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    } catch { /* throttle failure must never block scanning */ }
+  }
+
+
   try {
     const all: Posting[] = [];
     for (const role of ROLES) {
