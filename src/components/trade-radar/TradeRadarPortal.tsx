@@ -9,6 +9,7 @@ import ManageBillingButton from "@/components/billing/ManageBillingButton";
 import EmptyDashboardState from "@/components/shared/EmptyDashboardState";
 import MortgageRadarTerritoryPicker from "@/components/mortgage/MortgageRadarTerritoryPicker";
 import TradeRadarLeadCard, { TradeRadarLead } from "@/components/trade-radar/TradeRadarLeadCard";
+import LeadActionBar from "@/components/trade-radar/LeadActionBar";
 import { Wrench, Lock, Bell, TrendingUp, Calendar, Target, MapPin } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -55,6 +56,7 @@ export default function TradeRadarPortal({
   const [authError, setAuthError] = useState<string | null>(null);
   const [client, setClient] = useState<Client | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [actions, setActions] = useState<Record<string, { status: string; snooze_until: string | null }>>({});
   const [loading, setLoading] = useState(true);
   const [activeSignalType, setActiveSignalType] = useState<string>("all");
   const [notEnrolled, setNotEnrolled] = useState(false);
@@ -117,7 +119,21 @@ export default function TradeRadarPortal({
         toast.error("Could not load leads");
         console.warn("[TradeRadarPortal] lead query failed", error);
       } else {
-        setLeads((data as Lead[]) || []);
+        const rows = (data as Lead[]) || [];
+        setLeads(rows);
+        // Load this client's actions for those leads
+        if (rows.length) {
+          const ids = rows.map((r) => r.id);
+          const { data: actData } = await (supabase.from as any)("trade_radar_lead_actions")
+            .select("lead_id, status, snooze_until")
+            .eq("client_id", clientRow.id)
+            .in("lead_id", ids);
+          const map: Record<string, { status: string; snooze_until: string | null }> = {};
+          (actData || []).forEach((a: any) => {
+            map[a.lead_id] = { status: a.status, snooze_until: a.snooze_until };
+          });
+          setActions(map);
+        }
       }
       setLoading(false);
     })();
@@ -297,9 +313,26 @@ export default function TradeRadarPortal({
           )
         ) : (
           <div className="grid gap-5">
-            {filtered.map((l) => (
-              <TradeRadarLeadCard key={l.id} lead={l} />
-            ))}
+            {filtered.map((l) => {
+              const a = actions[l.id];
+              return (
+                <TradeRadarLeadCard
+                  key={l.id}
+                  lead={l}
+                  actionBar={
+                    client ? (
+                      <LeadActionBar
+                        leadId={l.id}
+                        clientId={client.id}
+                        product="trade"
+                        initialStatus={(a?.status as any) || "new"}
+                        initialSnoozeUntil={a?.snooze_until || null}
+                      />
+                    ) : null
+                  }
+                />
+              );
+            })}
           </div>
         )}
 

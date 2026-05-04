@@ -27,6 +27,8 @@ interface TradeRadarLeadCardProps {
   claimed?: boolean;
   onClaim?: (lead: TradeRadarLead) => void | Promise<void>;
   className?: string;
+  /** Optional action bar (Mark Called / Snooze / Pass). Renders below CTA when provided. */
+  actionBar?: React.ReactNode;
 }
 
 const SIGNAL_LABELS: Record<string, string> = {
@@ -121,6 +123,7 @@ export default function TradeRadarLeadCard({
   claimed = false,
   onClaim,
   className,
+  actionBar,
 }: TradeRadarLeadCardProps) {
   const [loading, setLoading] = useState(false);
   const signalLabel = getSignalLabel(lead.signal_type);
@@ -268,6 +271,7 @@ export default function TradeRadarLeadCard({
               </Button>
             )}
           </div>
+          {actionBar}
         </div>
       </div>
     </div>
