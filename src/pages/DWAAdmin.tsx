@@ -54,6 +54,7 @@ const AdminMarketingTools = lazy(() => import("@/components/admin/AdminMarketing
 const DJConleyCommandPanel = lazy(() => import("@/components/admin/DJConleyCommandPanel"));
 const AdminManualOnboardingQueue = lazy(() => import("@/components/dwa-admin/AdminManualOnboardingQueue"));
 const AdminSuppressionLists = lazy(() => import("@/components/dwa-admin/AdminSuppressionLists"));
+const AdminSystemAudit = lazy(() => import("@/components/dwa-admin/AdminSystemAudit"));
 
 type Tab =
   | "ai-command"
