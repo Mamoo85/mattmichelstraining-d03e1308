@@ -66,20 +66,12 @@ async function sendEmail(job: Job): Promise<{ ok: boolean; error?: string }> {
 }
 
 async function sendSms(job: Job): Promise<{ ok: boolean; error?: string }> {
-  if (!TWILIO_SID || !TWILIO_TOKEN || !TWILIO_FROM) return { ok: false, error: "twilio not configured" };
+  if (!TWILIO_FROM) return { ok: false, error: "twilio not configured" };
   const { to, body } = job.payload;
   if (!to || !body) return { ok: false, error: "missing sms payload fields" };
-  const auth = btoa(`${TWILIO_SID}:${TWILIO_TOKEN}`);
-  const params = new URLSearchParams({ To: to, From: TWILIO_FROM, Body: body });
-  const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`, {
-    method: "POST",
-    headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/x-www-form-urlencoded" },
-    body: params.toString(),
-  });
-  if (!res.ok) {
-    const t = await res.text();
-    return { ok: false, error: t.slice(0, 400) };
-  }
+  // Route via shared helper → TCPA opt-out scrub + FCC quiet-hours + audit log.
+  const r = await sendSMS(to, TWILIO_FROM, body, "outreach_drip");
+  if (!r.success) return { ok: false, error: r.error || "send failed" };
   return { ok: true };
 }
 
