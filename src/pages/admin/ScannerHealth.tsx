@@ -5,14 +5,16 @@ import { Activity, Loader2, RefreshCw } from "lucide-react";
 
 interface AgentStatus { name: string; last_beat: string | null; hours_since: number | null; status: "green" | "yellow" | "red"; }
 interface TableStatus { table: string; last_row: string | null; hours_since: number | null; status: "green" | "yellow" | "red"; error?: string; }
+interface ProbeStatus { name: string; url: string; status: "green" | "yellow" | "red"; http_status: number | null; latency_ms: number | null; error?: string; skipped?: boolean; checked_at: string; }
 interface ProductRow {
   product: string;
   overall: "green" | "yellow" | "red";
   agents: AgentStatus[];
   tables: TableStatus[];
   sources: string[];
+  probes: ProbeStatus[];
 }
-interface Matrix { ok: boolean; generated_at: string; products: ProductRow[]; }
+interface Matrix { ok: boolean; generated_at: string; products: ProductRow[]; circuit_breakers?: Record<string, { open: boolean; failures: number }>; }
 
 const tone: Record<string, string> = {
   green: "bg-emerald-500/10 border-emerald-500/30 text-emerald-300",
