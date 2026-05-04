@@ -607,5 +607,101 @@ export async function scanSignals(state = "MI", zipFilter?: string[]): Promise<R
     }
   } catch (e) { console.error("[gutters] cofc expiring:", e); }
 
+  // Wayne County Parcel Sales — new owner + old home → gutter upsell proxy
+  try {
+    const since180 = new Date(Date.now() - 180 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://utility.waynecountymi.gov/arcgis/rest/services/Property/FeatureServer/0/query?where=SALE_DATE+%3E%3D+DATE+'${since180}'+AND+YEAR_BUILT+%3C+1990&outFields=ADDRESS,ZIPCODE,YEAR_BUILT,SALE_DATE&resultRecordCount=60&orderByFields=SALE_DATE+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(10_000) },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat.attributes ?? feat;
+        const addr = String(a.ADDRESS ?? "").trim();
+        const zip = String(a.ZIPCODE ?? "").replace(/[^0-9]/g, "").slice(0, 5);
+        if (!addr || !zip) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const yearBuilt = Number(a.YEAR_BUILT ?? 0);
+        const saleDate = a.SALE_DATE ? new Date(typeof a.SALE_DATE === "number" ? a.SALE_DATE : a.SALE_DATE).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0];
+        signals.push({
+          address: addr, city: "Wayne County", zip,
+          signal_type: "roof_permit_upsell",
+          signal_date: saleDate, score: 6,
+          signal_detail: `Wayne County new owner: ${addr} sold ${saleDate}. Home built ${yearBuilt > 0 ? yearBuilt : "pre-1990"} — gutters are the first thing new owners notice on older homes`,
+          source_method: "wayne_county_parcel",
+          suggested_opener: `Saw the recent sale at ${addr} — gutters are the first thing new owners notice on older homes. We're in the area this week and can take a quick look at no charge.`,
+          best_call_window: "Within 90 days of purchase",
+          estimated_value: 2500,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[gutters] Wayne County parcel:", e); }
+
+  // Oakland County Parcel Sales — new owner + old home → gutter upsell proxy
+  try {
+    const since180 = new Date(Date.now() - 180 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://www.oakgov.com/egis/rest/services/Property/ParcelInfo/FeatureServer/0/query?where=SALE_DATE+%3E%3D+DATE+%27${since180}%27+AND+YEAR_BUILT+%3C+1990&outFields=SITUS_ADDRESS,ZIP,YEAR_BUILT,SALE_DATE&resultRecordCount=60&orderByFields=SALE_DATE+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(12_000) },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat?.attributes ?? {};
+        const addr = String(a.SITUS_ADDRESS ?? "").trim();
+        const zip = String(a.ZIP ?? "").replace(/[^0-9]/g, "").slice(0, 5);
+        if (!addr) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const yearBuilt = Number(a.YEAR_BUILT ?? 0);
+        const saleDate = a.SALE_DATE ? String(a.SALE_DATE).slice(0, 10) : new Date().toISOString().split("T")[0];
+        signals.push({
+          address: addr, city: "Oakland County", zip,
+          signal_type: "roof_permit_upsell",
+          signal_date: saleDate, score: 6,
+          signal_detail: `Oakland County new owner: ${addr} built ${yearBuilt > 0 ? yearBuilt : "pre-1990"} — older Oakland County homes commonly have original or failing gutters`,
+          source_method: "oakland_county_parcel",
+          suggested_opener: `Saw the recent sale at ${addr} — gutters are the first thing new owners notice on older homes. We're in the area this week and can take a quick look at no charge.`,
+          best_call_window: "Within 90 days of purchase",
+          estimated_value: 2500,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[gutters] Oakland County parcel:", e); }
+
+  // Macomb County Parcel Sales — new owner + old home → gutter upsell proxy
+  try {
+    const since180 = new Date(Date.now() - 180 * 86400_000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://gis.macombcountymi.gov/arcgis/rest/services/Property/Parcels/FeatureServer/0/query?where=SALE_DATE+%3E%3D+DATE+'${since180}'+AND+YEAR_BUILT+%3C+1990&outFields=ADDRESS,ZIP,YEAR_BUILT,SALE_DATE&resultRecordCount=60&orderByFields=SALE_DATE+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-TradeRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(10_000) },
+    );
+    if (res.ok) {
+      const d = await res.json();
+      for (const feat of (d?.features ?? [])) {
+        const a = feat.attributes ?? feat;
+        const addr = String(a.ADDRESS ?? "").trim();
+        const zip = String(a.ZIP ?? "").replace(/[^0-9]/g, "").slice(0, 5);
+        if (!addr || !zip) continue;
+        if (zipFilter?.length && zip && !zipFilter.includes(zip)) continue;
+        const yearBuilt = Number(a.YEAR_BUILT ?? 0);
+        const saleDate = a.SALE_DATE ? new Date(typeof a.SALE_DATE === "number" ? a.SALE_DATE : a.SALE_DATE).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0];
+        signals.push({
+          address: addr, city: "Macomb County", zip,
+          signal_type: "roof_permit_upsell",
+          signal_date: saleDate, score: 6,
+          signal_detail: `Macomb County new owner: ${addr} sold ${saleDate}. Home built ${yearBuilt > 0 ? yearBuilt : "pre-1990"} — gutters are the first thing new owners notice on older homes`,
+          source_method: "macomb_county_parcel",
+          suggested_opener: `Saw the recent sale at ${addr} — gutters are the first thing new owners notice on older homes. We're in the area this week and can take a quick look at no charge.`,
+          best_call_window: "Within 90 days of purchase",
+          estimated_value: 2500,
+          raw_source_data: { ...a },
+        });
+      }
+    }
+  } catch (e) { console.error("[gutters] Macomb County parcel:", e); }
+
   return signals;
 }
