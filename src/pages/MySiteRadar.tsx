@@ -356,7 +356,14 @@ export default function MySiteRadar() {
                               {match && <span style={{ marginLeft: 8, fontSize: 9, padding: "2px 6px", background: "#10b98133", color: "#34d399", borderRadius: 4, fontWeight: 700, letterSpacing: 1 }}>ICP</span>}
                             </p>
                             <p style={{ color: "#64748b", fontSize: 11, margin: "2px 0 0" }}>
-                              {e.company_name || "Unknown visitor"} · {new Date(e.created_at).toLocaleTimeString()}
+                              {e.company_name ? (
+                                <span
+                                  onClick={() => setSelectedCompany(e.company_name!)}
+                                  style={{ color: "#00d4ff", cursor: "pointer", textDecoration: "underline", textDecorationStyle: "dotted" }}
+                                >
+                                  {e.company_name}
+                                </span>
+                              ) : "Unknown visitor"} · {new Date(e.created_at).toLocaleTimeString()}
                             </p>
                           </div>
                           {!e.company_name && (
