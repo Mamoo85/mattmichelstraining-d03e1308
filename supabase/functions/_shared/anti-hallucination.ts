@@ -307,8 +307,11 @@ export async function quarantineRaw(
       source_method,
     });
 
-    // Update history so this address can't keep cycling
-    if (signal.address) {
+    // Update history so this address can't keep cycling — but skip infrastructure
+    // failures (validation_unavailable = missing API key) so they don't poison
+    // the blocklist when the key is later added.
+    const INFRA_CODES = new Set(["validation_unavailable", "validation_api_error"]);
+    if (signal.address && !INFRA_CODES.has(reject_code)) {
       const key = cacheKey(signal.address, signal.zip);
       await sb.from("quarantine_history").upsert({
         address_zip_key: key,
