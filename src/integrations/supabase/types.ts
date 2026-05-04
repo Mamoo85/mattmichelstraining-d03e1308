@@ -21860,6 +21860,7 @@ export type Database = {
           signal_type: string | null
           source_method: string | null
           status: string
+          street_view_url: string | null
           suggested_opener: string | null
           vertical: string
           zip: string | null
@@ -21887,6 +21888,7 @@ export type Database = {
           signal_type?: string | null
           source_method?: string | null
           status?: string
+          street_view_url?: string | null
           suggested_opener?: string | null
           vertical: string
           zip?: string | null
@@ -21914,6 +21916,7 @@ export type Database = {
           signal_type?: string | null
           source_method?: string | null
           status?: string
+          street_view_url?: string | null
           suggested_opener?: string | null
           vertical?: string
           zip?: string | null
