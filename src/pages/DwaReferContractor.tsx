@@ -38,6 +38,25 @@ const DwaReferContractor = () => {
   const [result, setResult] = useState<{ code: string } | null>(null);
   const [stats, setStats] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [optInLeaderboard, setOptInLeaderboard] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("referral_partners")
+        .select("name, current_tier, paid_referrals, total_referrals")
+        .eq("show_on_leaderboard", true)
+        .order("paid_referrals", { ascending: false })
+        .limit(10);
+      // first-name only
+      const masked = (data || []).map((r: any) => ({
+        ...r,
+        first_name: (r.name || "").split(/\s+/)[0] || "Anonymous",
+      }));
+      setLeaderboard(masked);
+    })();
+  }, []);
 
   useEffect(() => {
     if (!form.referrer_email || !form.referrer_email.includes("@")) return;
