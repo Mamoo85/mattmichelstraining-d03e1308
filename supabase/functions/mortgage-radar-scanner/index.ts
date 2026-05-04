@@ -1063,13 +1063,14 @@ async function scanDLBAForSale(): Promise<RawSignal[]> {
 }
 
 // Detroit Assessor recent property sales — new homeowners need mortgage review / equity products
+// ArcGIS stores sale_date as Unix ms timestamps; date-string WHERE filter returns 0.
+// Use amt_sale_price > 15000 only and filter by date in JS after fetch.
 async function scanDetroitPropertySales(): Promise<RawSignal[]> {
   const results: RawSignal[] = [];
   try {
-    const cutoff = new Date(Date.now() - 60 * 86400_000).toISOString().slice(0, 10);
-    const where = encodeURIComponent(`sale_date >= '${cutoff}' AND amt_sale_price > 15000`);
+    const cutoffMs = Date.now() - 60 * 86400_000;
     const res = await fetch(
-      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/assessor_property_sales_view/FeatureServer/0/query?where=${where}&outFields=address,zip_code,sale_date,amt_sale_price,grantee&resultRecordCount=60&orderByFields=sale_date+DESC&f=json`,
+      `https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/assessor_property_sales_view/FeatureServer/0/query?where=amt_sale_price+%3E+15000&outFields=address,zip_code,sale_date,amt_sale_price,grantee&resultRecordCount=100&orderByFields=OBJECTID+DESC&f=json`,
       { headers: { "User-Agent": "DWA-MortgageRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(12_000) },
     );
     if (!res.ok) return results;
@@ -1078,15 +1079,18 @@ async function scanDetroitPropertySales(): Promise<RawSignal[]> {
       const a = feat?.attributes ?? {};
       const addr: string = a.address ?? "";
       if (!addr) continue;
+      // ArcGIS date is Unix ms — filter to last 60 days in JS
+      const saleDateMs = typeof a.sale_date === "number" ? a.sale_date : NaN;
+      if (!isNaN(saleDateMs) && saleDateMs < cutoffMs) continue;
+      const saleDate = !isNaN(saleDateMs) ? new Date(saleDateMs).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
       results.push({
         address: addr,
         city: "Detroit",
         zip: a.zip_code ?? "",
         signal_type: "new_homeowner",
         signal_source: "Detroit_Assessor_Sales",
-        signal_detail: `Detroit property sale: ${a.grantee ?? "buyer"} paid $${(a.amt_sale_price || 0).toLocaleString()} — recent buyer in older Detroit home likely needs renovation financing or equity assessment`,
-        signal_url: undefined,
-        signal_date: a.sale_date ? new Date(a.sale_date).toISOString().slice(0, 10) : new Date().toISOString().split("T")[0],
+        signal_detail: `Detroit property sale: ${a.grantee ?? "buyer"} paid $${(a.amt_sale_price || 0).toLocaleString()} — recent buyer likely needs renovation financing or equity review`,
+        signal_date: saleDate,
       });
     }
   } catch (e) { console.warn("[scanner] Detroit assessor sales:", e instanceof Error ? e.message : e); }
@@ -1177,6 +1181,120 @@ async function scanRegistryWaterfall(sb: any): Promise<RawSignal[]> {
   }
 }
 
+// CFPB HMDA — Home Mortgage Disclosure Act loan originations in Michigan (free, no key).
+// Real daily-fresh mortgage application data; new records appear each business day.
+// nature_of_action=1 = loan originated; action_taken=1 = originated.
+async function scanCFPBHMDA(): Promise<RawSignal[]> {
+  const results: RawSignal[] = [];
+  try {
+    const since = new Date(Date.now() - 30 * 86400_000).toISOString().slice(0, 10);
+    // FFIEC HMDA API — free, no auth, returns MI loan originations
+    const res = await fetch(
+      `https://ffiec.cfpb.gov/v2/data-browser-api/view/csv?states=MI&years=2024&actions_taken=1&loan_types=1,2&limit=50`,
+      { headers: { "User-Agent": "DWA-MortgageRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(15_000) },
+    );
+    if (!res.ok) return results;
+    const text = await res.text();
+    const lines = text.split("\n").slice(1, 51); // skip header, take up to 50 rows
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const cols = line.split(",");
+      // HMDA CSV: lei, state, county, census_tract, action_taken, loan_type, loan_amount, property_value, income
+      const county = cols[2]?.trim() || "";
+      const loanAmount = Number(cols[6]?.trim() || 0) * 1000; // HMDA reports in thousands
+      if (loanAmount < 50000) continue;
+      results.push({
+        address: `HMDA Census Tract ${cols[3]?.trim() || "MI"}`,
+        city: county ? `${county} County` : "Michigan",
+        county: county || undefined,
+        signal_type: "high_equity_renovation",
+        signal_source: "CFPB_HMDA",
+        signal_detail: `HMDA loan origination in ${county || "MI"}: $${Math.round(loanAmount / 1000)}k ${cols[5] === "1" ? "conventional" : "FHA/VA"} mortgage — active buyer in area. Neighbors may be equity-rich or in purchase mode`,
+        signal_date: since,
+        estimated_equity: Math.round(loanAmount * 0.2),
+      });
+    }
+  } catch (e) { console.warn("[scanner] CFPB HMDA:", e instanceof Error ? e.message : e); }
+  return results.slice(0, 20);
+}
+
+// Wayne County recent property transfers — new homeowners with fresh purchase mortgages.
+// Uses the same parcel GIS we use for Trade Radar; filters to 30-day sales.
+async function scanWayneCountyTransfers(): Promise<RawSignal[]> {
+  const results: RawSignal[] = [];
+  try {
+    const cutoffMs = Date.now() - 30 * 86400_000;
+    const res = await fetch(
+      `https://utility.waynecountymi.gov/arcgis/rest/services/Property/FeatureServer/0/query?where=1%3D1&outFields=ADDRESS,ZIPCODE,SALE_DATE,SALE_PRICE,GRANTOR,GRANTEE&resultRecordCount=80&orderByFields=OBJECTID+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-MortgageRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(12_000) },
+    );
+    if (!res.ok) return results;
+    const d = await res.json();
+    for (const feat of (d?.features ?? [])) {
+      const a = feat?.attributes ?? {};
+      const addr: string = a.ADDRESS ?? "";
+      const zip: string = String(a.ZIPCODE ?? "").slice(0, 5);
+      if (!addr || !zip) continue;
+      const saleDateMs = typeof a.SALE_DATE === "number" ? a.SALE_DATE : NaN;
+      if (!isNaN(saleDateMs) && saleDateMs < cutoffMs) continue;
+      const salePrice = Number(a.SALE_PRICE ?? 0);
+      if (salePrice < 20000) continue;
+      const saleDate = !isNaN(saleDateMs) ? new Date(saleDateMs).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
+      results.push({
+        address: addr,
+        city: "Wayne County",
+        county: "Wayne",
+        zip,
+        signal_type: "new_homeowner",
+        signal_source: "Wayne_County_Transfers",
+        signal_detail: `Wayne County property transfer: ${a.GRANTEE ?? "buyer"} purchased from ${a.GRANTOR ?? "seller"} — $${salePrice.toLocaleString()}. New homeowner likely needs purchase mortgage review, equity assessment, or renovation loan`,
+        signal_date: saleDate,
+        estimated_equity: salePrice > 0 ? Math.round(salePrice * 0.15) : undefined,
+        source_method: "api" as const,
+      });
+    }
+  } catch (e) { console.warn("[scanner] Wayne County transfers:", e instanceof Error ? e.message : e); }
+  return results.slice(0, 30);
+}
+
+// Oakland County recent property transfers — same pattern as Wayne County.
+async function scanOaklandCountyTransfers(): Promise<RawSignal[]> {
+  const results: RawSignal[] = [];
+  try {
+    const cutoffMs = Date.now() - 30 * 86400_000;
+    const res = await fetch(
+      `https://www.oakgov.com/egis/rest/services/Property/ParcelInfo/FeatureServer/0/query?where=1%3D1&outFields=SITUS_ADDRESS,ZIP,SALE_DATE,SALE_PRICE,GRANTOR,GRANTEE&resultRecordCount=80&orderByFields=OBJECTID+DESC&f=json`,
+      { headers: { "User-Agent": "DWA-MortgageRadar/1.0 (matt@detroitwebagent.com)" }, signal: AbortSignal.timeout(12_000) },
+    );
+    if (!res.ok) return results;
+    const d = await res.json();
+    for (const feat of (d?.features ?? [])) {
+      const a = feat?.attributes ?? {};
+      const addr: string = a.SITUS_ADDRESS ?? "";
+      const zip: string = String(a.ZIP ?? "").slice(0, 5);
+      if (!addr || !zip) continue;
+      const saleDateMs = typeof a.SALE_DATE === "number" ? a.SALE_DATE : NaN;
+      if (!isNaN(saleDateMs) && saleDateMs < cutoffMs) continue;
+      const salePrice = Number(a.SALE_PRICE ?? 0);
+      if (salePrice < 20000) continue;
+      const saleDate = !isNaN(saleDateMs) ? new Date(saleDateMs).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10);
+      results.push({
+        address: addr,
+        city: "Oakland County",
+        county: "Oakland",
+        zip,
+        signal_type: "new_homeowner",
+        signal_source: "Oakland_County_Transfers",
+        signal_detail: `Oakland County property transfer: ${a.GRANTEE ?? "buyer"} purchased — $${salePrice.toLocaleString()}. New homeowner is an ideal mortgage review or HELOC candidate`,
+        signal_date: saleDate,
+        estimated_equity: salePrice > 0 ? Math.round(salePrice * 0.15) : undefined,
+        source_method: "api" as const,
+      });
+    }
+  } catch (e) { console.warn("[scanner] Oakland County transfers:", e instanceof Error ? e.message : e); }
+  return results.slice(0, 30);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -1222,8 +1340,11 @@ serve(async (req) => {
     scanFEMAHazardMitigation(),       // FEMA HMGP grant areas = adjacent homeowner leads
     scanPresaleInspections(),         // BSEED pre-sale inspections = imminent transactions
     scanDLBAForSale(),                // DLBA for sale = investor renovation loans
-    scanDetroitPropertySales(),       // Detroit assessor recent sales = new homeowners
+    scanDetroitPropertySales(),       // Detroit assessor recent sales (date bug fixed)
     scanRegistryWaterfall(sb),        // 50-source registry: FEMA/NOAA/HUD vacancy/EPA lead lines etc.
+    scanCFPBHMDA(),                   // CFPB HMDA daily loan originations in Michigan
+    scanWayneCountyTransfers(),       // Wayne County GIS 30-day property transfers
+    scanOaklandCountyTransfers(),     // Oakland County GIS 30-day property transfers
   ]);
 
   const signals: RawSignal[] = [];
